@@ -806,3 +806,164 @@ Error performing operation: The object/attribute does not exist
   </status>
 </cib>
 * Passed: crm_resource   - Un-migrate a resource
+scope=tickets  name=granted-ticket-ticketA value=false
+<cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+* Passed: crm_ticket     - Default granted-ticket value
+<cib epoch="18" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <tickets>
+      <instance_attributes id="status-tickets">
+        <nvpair id="status-tickets-granted-ticket-ticketA" name="granted-ticket-ticketA" value="false"/>
+      </instance_attributes>
+    </tickets>
+  </status>
+</cib>
+* Passed: crm_ticket     - Set granted-ticket value
+scope=tickets  name=granted-ticket-ticketA value=false
+<cib epoch="18" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <tickets>
+      <instance_attributes id="status-tickets">
+        <nvpair id="status-tickets-granted-ticket-ticketA" name="granted-ticket-ticketA" value="false"/>
+      </instance_attributes>
+    </tickets>
+  </status>
+</cib>
+* Passed: crm_ticket     - Query granted-ticket value
+Deleted tickets option: id=status-tickets-granted-ticket-ticketA name=granted-ticket-ticketA
+
+<cib epoch="18" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <tickets>
+      <instance_attributes id="status-tickets"/>
+    </tickets>
+  </status>
+</cib>
+* Passed: crm_ticket     - Delete granted-ticket value

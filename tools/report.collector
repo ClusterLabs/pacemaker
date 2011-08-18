@@ -21,10 +21,10 @@
 if 
     echo $REPORT_HOME | grep -qs '^/'
 then
-    debug "Using full path to working directory"
+    debug "Using full path to working directory: $REPORT_HOME"
 else
-    debug "Canonicalizing working directory path"
     REPORT_HOME="$HOME/$REPORT_HOME"
+    debug "Canonicalizing working directory path: $REPORT_HOME"
 fi
 
 findlogdcf() {
@@ -187,6 +187,11 @@ getbt() {
 	[ x = x"$absbinpath" ] && continue
 	echo "====================== start backtrace ======================"
 	ls -l $corefile
+	# Summary first...
+	gdb -batch -n -quiet -ex ${BT_OPTS:-"thread apply all bt"} -ex quit \
+	    $absbinpath $corefile 2>/dev/null
+	echo "====================== start detail ======================"
+	# Now the unreadable details...
 	gdb -batch -n -quiet -ex ${BT_OPTS:-"thread apply all bt full"} -ex quit \
 	    $absbinpath $corefile 2>/dev/null
 	echo "======================= end backtrace ======================="
@@ -194,11 +199,12 @@ getbt() {
 }
 
 getconfig() {
+    cluster=$1; shift;
     target=$1; shift;
 
     for cf in $*; do
-	if [ -f "$cf" ]; then
-	    cp -p "$cf" $target/
+	if [ -e "$cf" ]; then
+	    cp -a "$cf" $target/
 	fi
     done
 
@@ -208,8 +214,13 @@ getconfig() {
 	ps -ef | egrep -qs [c]rmd
     then
 	crm_mon -1 2>&1 | grep -v '^Last upd' > $target/$CRM_MON_F
-	cibadmin -Ql > $target/${CIB_F}.live
-	crm_node -p > $target/$MEMBERSHIP_F 2>&1
+	cibadmin -Ql 2>/dev/null > $target/${CIB_F}.live
+	case $cluster in
+	    cman)             crm_node -p --cman > $target/$MEMBERSHIP_F 2>&1;;
+	    corosync|openais) crm_node -p --openais > $target/$MEMBERSHIP_F 2>&1;;
+	    heartbeat)        crm_node -p --heartbeat > $target/$MEMBERSHIP_F 2>&1;;
+	    *) 	              crm_node -p > $target/$MEMBERSHIP_F 2>&1;;
+	esac
 	echo "$host" > $target/RUNNING
     else
 	echo "$host" > $target/STOPPED
@@ -251,7 +262,7 @@ sanitize_one_clean() {
 sanitize() {
     file=$1
     compress=""
-    if [ -z $SANITIZE ]; then
+    if [ -z "$SANITIZE" ]; then
 	return 
     fi
     echo $file | grep -qs 'gz$' && compress=gzip
@@ -376,8 +387,21 @@ getbacktraces() {
 	    echo $f
 	done)
     if [ "$flist" ]; then
-	log "Found core files: `echo $flist | tr '\n' ' '`"
-	getbt "$flist"
+	for core in $flist; do
+	    log "Found core file: `ls -al $core`"
+	done
+
+	# Make a copy of them in case we need more data later
+	# Luckily they compress well
+	mkdir cores &> /dev/null
+	cp -a $flist cores/
+	shrink cores
+	rm -rf cores
+
+	# Now get as much as we can from them automagically
+	for f in $flist; do
+	    getbt $f
+        done
     fi
 }
 
@@ -409,6 +433,10 @@ sys_info() {
 	openais)
 	    : echo "openais version: how?"
 	    ;;
+	cman)
+	    cman_tool -V
+	    /usr/sbin/corosync -v 2>&1
+	    ;;
 	corosync)
 	    /usr/sbin/corosync -v 2>&1
 	    ;;
@@ -417,7 +445,10 @@ sys_info() {
 	    ;;
     esac
 
-    # TODO: Get cluster-glue build version
+    # Cluster glue version hash (if available)
+    stonith -V 2>/dev/null
+    
+    # Resource agents version hash
     echo "resource-agents: `grep 'Build version:' /usr/lib/ocf/resource.d/heartbeat/.ocf-shellfuncs`"
 
     pkg_ver $*
@@ -498,7 +529,7 @@ get_logfile() {
 
     debug "Reading $cf_type log settings"
     case $cf_type in
-	openais|corosync)
+	cman|openais|corosync)
 	    debug "Reading log settings from $cf_file"
 	    if iscfvartrue $cf_type to_syslog $cf_file; then
 		facility_var=syslog_facility
@@ -543,7 +574,7 @@ d $PE_STATE_DIR 0750 hacluster haclient
 d $CRM_STATE_DIR 0750 hacluster haclient
 EOF
     case $1 in
-	openais|corosync)
+	openais|corosync|cman)
 	    ;;
 	heartbeat)
 	cat<<EOF
@@ -554,6 +585,13 @@ EOF
 }
 
 debug "Initializing $host subdir"
+if [ "$REPORT_MASTER" != "$host" ]; then
+  if [ -e $REPORT_HOME/$host ]; then
+    warning "Directory $REPORT_HOME/$host already exists, using /tmp/$$/$host instead"
+    REPORT_HOME=/tmp/$$
+  fi
+fi
+
 mkdir -p $REPORT_HOME/$host
 cd $REPORT_HOME/$host
 
@@ -564,31 +602,54 @@ esac
 
 logd_cf=`findlogdcf`
 cluster_cf=`find_cluster_cf $cluster`
+if [ -z $cluster_cf ]; then
+   warning "Could not determine the location of your cluster configuration"
+fi
+
 if [ $SEARCH_LOGS = 1 ]; then
     logfile=`get_logfile $cluster "$cluster_cf" "$logd_cf"`
+fi
+
+if [ -z $logfile ]; then
+   fatal "Could not determine the location of your cluster logs, try specifying --logfile /some/path"
 fi
 debug "Config: $cluster $cluster_cf $logd_cf $logfile"
 
 sys_info $cluster $PACKAGES > $SYSINFO_F
 essential_files $cluster | check_perms  > $PERMISSIONS_F 2>&1
-getconfig "$REPORT_HOME/$host" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache"
-
-dlm_dump  > $DLM_DUMP_F 2>&1
-sys_stats > $SYSSTATS_F 2>&1
+getconfig $cluster "$REPORT_HOME/$host" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache" "/etc/drbd.conf" "/etc/drbd.d"
 
 getpeinputs    $LOG_START $LOG_END $REPORT_HOME/$host
 getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$host/$BT_F
+
+case $cluster in
+    cman|corosync)
+	if 
+	    ps -ef | egrep -qs '[c]orosync'
+	then
+	    corosync-blackbox > corosync-blackbox-live.txt
+	fi
+	corosync-fplay > corosync-blackbox.txt
+	;;
+esac
 
 dc=`crm_mon -1 2>/dev/null | awk '/Current DC/ {print $3}'`
 if [ "$host" = "$dc" ]; then
     echo "$host" > DC
 fi
 
-debug "Sanitizing files"
+dlm_dump  > $DLM_DUMP_F 2>&1
+sys_stats > $SYSSTATS_F 2>&1
+
+debug "Sanitizing files: $SANITIZE"
 #
 # replace sensitive info with '****'
 #
-for f in `basename $cluster_cf` $CIB_F $CIB_TXT_F $CIB_F.live pengine/*; do
+cf=""
+if [ ! -z "$cluster_cf" ]; then
+   cf=`basename $cluster_cf`
+fi
+for f in $cf $CIB_F $CIB_TXT_F $CIB_F.live pengine/*; do
     if [ -f "$f" ]; then
 	sanitize $f
     fi
@@ -625,8 +686,12 @@ for f in `ls -1`; do
     if [ -d "$f" ]; then
 	continue
     elif [ ! -s "$f" ]; then
-	debug "Removing empty file: $f"
-	rm -f $f
+        case $f in
+	    *core*) log "Detected empty core file: $f";;
+	    *)	    debug "Removing empty file: `ls -al $f`"
+		    rm -f $f
+		    ;;
+	esac
     fi
 done
 

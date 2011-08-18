@@ -20,9 +20,9 @@
 
 # Note the quotes around `$TEMP': they are essential!
 TEMP=`getopt				\
-    -o hv?xl:f:t:n:T:Lpc:dSACHu:MV	\
-    --long help,cts:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
-    -n 'pcmk_report' -- "$@"`
+    -o hv?xl:f:t:n:T:Lp:c:dSACHu:MVs	\
+    --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
+    -n 'crm_report' -- "$@"`
 eval set -- "$TEMP"
 
 
@@ -37,13 +37,13 @@ report_data=`dirname $0`
 
 
 extra_logs=""
-sanitize_patterns="passw.*"
+sanitize_patterns=""
 log_patterns="CRIT: ERROR:"
 
 usage() {
 
 cat<<EOF
-usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [optional options] [dest]
+usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [additional options] [dest]
 
   -v			increase verbosity
   -f, --from time	time to start from: YYYY-M-D H:M:S
@@ -65,14 +65,17 @@ usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [optional options
   -C, --corosync	force the cluster type to be CoroSync
   -H, --heartbeat	force the cluster type to be Heartbeat
   -u, --user user	ssh username for cluster nodes (default: root)
-  dest			a custom destination directory
+  --dest       		a custom destination directory/file
+  dest			a custom destination directory/file
+
+example:  `basename $0` -f "2011-12-14 13:05:00" unexplained-apache-failure
 EOF
 }
 
 case "$1" in
     -v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0;;
     --features)     echo "@VERSION@ - @BUILD_VERSION@: @PKG_FEATURES@"; exit 0;;
-    -h|--help) usage; exit 0;;
+    --|-h|--help) usage; exit 0;;
 esac
 
 # Prefer helpers in the same directory if they exist, to simplify development
@@ -87,9 +90,9 @@ fi
 while true; do
     case "$1" in
 	-x) set -x; shift;;
-	-v) verbose=`expr $verbose + 1`; shift;;
-	-T|--cts) tests="$tests $2"; shift; shift;;
-	--cts-log) ctslog="$2"; shift; shift;;
+	-V) verbose=`expr $verbose + 1`; shift;;
+	-T|--cts-test) tests="$tests $2"; shift; shift;;
+	   --cts-log) ctslog="$2"; shift; shift;;
 	-f|--from) start_time=`get_time "$2"`; shift; shift;;
 	-t|--to) end_time=`get_time "$2"`; shift; shift;;
 	-n|--node|--nodes) nodes="$nodes $2"; shift; shift;;
@@ -106,8 +109,12 @@ while true; do
 	-v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0; shift;;
 	--features)     echo "@VERSION@ - @BUILD_VERSION@: @CRM_FEATURES@"; exit 0; shift;;
 	-M) search_logs=0; shift;;
-	--) DESTDIR=$2; break;;
+	--dest) DESTDIR=$2; shift; shift;;
+	--) if [ ! -z $2 ]; then DESTDIR=$2; fi; break;;
 	-h|--help) usage; exit 0;;
+	# Options for compatability with hb_report
+	-s) shift;;
+
 	*) echo "Unknown argument: $1"; usage; exit 1;;
     esac
 done
@@ -120,12 +127,21 @@ collect_data() {
     masterlog=$4
 
     if [ "x$DESTDIR" != x ]; then
-	debug "Using custom scratch dir: $DESTDIR"
-	l_base=$DESTDIR
-	r_base=$DESTDIR
+	echo $DESTDIR | grep -e "^/" -qs
+	if [ $? = 0 ]; then
+	    l_base=$DESTDIR
+	else
+	    l_base="`pwd`/$DESTDIR"
+	fi
+	debug "Using custom scratch dir: $l_base"
+	r_base=`basename $l_base`
     else
 	l_base=$HOME/$label
 	r_base=$label
+    fi
+
+    if [ -e $l_base ]; then
+	fatal "Output directory $l_base already exists, specify an alternate name with --dest"
     fi
     mkdir -p $l_base
 
@@ -148,10 +164,16 @@ SEARCH_LOGS=$search_logs
 verbose=$verbose
 EOF
 
+    # local overrides
+    cp $l_base/.env $l_base/.env.local
+    cat<<EOF>>$l_base/.env.local
+REPORT_HOME="$l_base"
+EOF
+
     for node in $nodes; do
 	if [ `uname -n` = $node ]; then
-	    cat $l_base/.env $report_data/report.common $report_data/report.collector > $r_base/collector
-	    bash $r_base/collector
+	    cat $l_base/.env.local $report_data/report.common $report_data/report.collector > $l_base/collector
+	    bash $l_base/collector
 	else
 	    cat $l_base/.env $report_data/report.common $report_data/report.collector \
 		| ssh -l $ssh_user -T $node -- "mkdir -p $r_base; cat > $r_base/collector; bash $r_base/collector" | (cd $l_base && tar xf -)
@@ -269,21 +291,13 @@ analyze() {
 }
 
 do_cts() {
-    if [ x$ctslog = x ]; then
-	ctslog=`findmsg 1 "CTS: Stack:"`
-    fi
-    if [ x$ctslog = x ]; then
-	fatal "No CTS control file detected"
-    fi
-
-    if [ -z "$nodes" ]; then
-	debug "Using CTS control file: $ctslog"
-	nodes=`grep CTS: $ctslog | grep -v debug: | grep " \* " | sed s:.*\\\*::g | sort -u  | tr '\\n' ' '`
-    fi
-
     test_sets=`echo $tests | tr ',' ' '`
     for test_set in $test_sets; do
+
+	start_time=0
 	start_test=`echo $test_set | tr '-' ' ' | awk '{print $1}'`
+
+	end_time=0
 	end_test=`echo $test_set | tr '-' ' ' | awk '{print $2}'`
 	
 	if [ x$end_test = x ]; then
@@ -291,7 +305,7 @@ do_cts() {
 	    label="CTS-`date +"%a-%d-%b-%Y"`-$start_test"
 	    end_test=`expr $start_test + 1`
 	else
-	    msg="Extracting set $start_test to $end_test..."
+	    msg="Extracting tests $start_test to $end_test"
 	    label="CTS-`date +"%a-%d-%b-%Y"`-$start_test-$end_test"
 	    end_test=`expr $end_test + 1`
 	fi
@@ -301,21 +315,43 @@ do_cts() {
 	else
 	    start_pat="Running test.*\[ *$start_test\]"
 	fi
-	ctslog=`findmsg 1 "$start_pat"`
+
+	if [ x$ctslog = x ]; then
+	    ctslog=`findmsg 1 "$start_pat"`
+
+	    if [ x$ctslog = x ]; then
+		fatal "No CTS control file detected"
+	    else
+		log "Using CTS control file: $ctslog"
+	    fi
+	fi
+
 	line=`grep -n "$start_pat" $ctslog | tail -1 | sed 's/:.*//'`
-	start_time=`linetime $ctslog $line`
+	if [ ! -z "$line" ]; then
+	    start_time=`linetime $ctslog $line`
+	fi
 
-	ctslog=`findmsg 1 "Running test.*\[ *$end_test\]"`
 	line=`grep -n "Running test.*\[ *$end_test\]" $ctslog | tail -1 | sed 's/:.*//'`
-	end_time=`linetime $ctslog $line`
+	if [ ! -z "$line" ]; then
+	    end_time=`linetime $ctslog $line`
+	fi
 
+	if [ -z "$nodes" ]; then
+	    nodes=`grep CTS: $ctslog | grep -v debug: | grep " \* " | sed s:.*\\\*::g | sort -u  | tr '\\n' ' '`
+	    log "Calculated node list: $nodes"
+	fi
+	
 	if [ $end_time -lt $start_time ]; then
 	    debug "Test didn't complete, grabbing everything up to now"
 	    end_time=`date +%s`
 	fi
 
-	log "$msg (`time2str $start_time` to `time2str $end_time`)"
-	collect_data $label $start_time $end_time $ctslog
+	if [ $start_time != 0 ];then
+	    log "$msg (`time2str $start_time` to `time2str $end_time`)"
+	    collect_data $label $start_time $end_time $ctslog
+	else
+	    fatal "$msg failed: not found"
+	fi
     done 
 }
 
@@ -342,7 +378,7 @@ getnodes() {
 				next;
 			}
 	  }
-	'
+	' | tr '\n' ' '
 
     # 2. hostcache
     elif [ -f $HA_STATE_DIR/hostcache ]; then
@@ -369,6 +405,21 @@ if [ "x$tests" != "x" ]; then
 
 elif [ "x$start_time" != "x" ]; then
     masterlog=""
+
+    if [ -z "$sanitize_patterns" ]; then
+	log "WARNING: The tarball produced by this program may contain"
+	log "         sensitive information such as passwords."
+	log ""
+	log "We will attempt to remove such information if you use the"
+	log "-p option. For example: -p \"pass.*\" -p \"user.*\""
+	log ""
+	log "However, doing this may reduce the ability for the recipients"
+	log "to diagnose issues and generally provide assistance."
+	log ""
+	log "IT IS YOUR RESPONSIBILITY TO PROTECT SENSITIVE DATA FROM EXPOSURE"
+	log ""
+    fi
+
     if [ -z "$nodes" ]; then
 	nodes=`getnodes $cluster`
 	log "Calculated node list: $nodes"
@@ -395,6 +446,6 @@ elif [ "x$start_time" != "x" ]; then
     log "Collecting data from $nodes (`time2str $start_time` to `time2str $end_time`)"
     collect_data $label $start_time $end_time $masterlog
 else
-    fatal "Not sure what to do, no tests or times to extract"
+    fatal "Not sure what to do, no tests or time ranges to extract"
 fi
 

@@ -86,6 +86,9 @@ static int max_schemas = DIMOF(known_schemas) - 2; /* skip back past 'none' */
 static filter_t filter[] = {
     { 0, XML_ATTR_ORIGIN },
     { 0, XML_CIB_ATTR_WRITTEN },		
+    { 0, XML_ATTR_UPDATE_ORIG },
+    { 0, XML_ATTR_UPDATE_CLIENT },
+    { 0, XML_ATTR_UPDATE_USER },
 };
 
 static void add_ha_nocopy(HA_Message *parent, HA_Message *child, const char *field) 

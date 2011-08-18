@@ -28,9 +28,12 @@
 #include <sys/wait.h>
 
 #include <glib.h>
+#include <dirent.h>
+#include <libgen.h>  /* Add it for compiling on OSX */
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
+#include <crm/stonith-ng-internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <stonith/stonith.h>
@@ -42,11 +45,12 @@ CRM_TRACE_INIT_DATA(stonith);
 
 typedef struct stonith_private_s 
 {
-	char *token;
+	char 		*token;
 	IPC_Channel	*command_channel;
 	IPC_Channel	*callback_channel;
 	GCHSource	*callback_source;
 	GHashTable      *stonith_op_callback_table;
+	GList		*notify_list;
 
 	void (*op_callback)(
 	    stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata);
@@ -113,7 +117,8 @@ static const char META_TEMPLATE[] =
 "  </special>\n"
 "</resource-agent>\n";
 
-gboolean stonith_dispatch(IPC_Channel *channel, gpointer user_data);
+bool stonith_dispatch(stonith_t *st);
+gboolean stonith_dispatch_internal(IPC_Channel *channel, gpointer user_data);
 void stonith_perform_callback(stonith_t *stonith, xmlNode *msg, int call_id, int rc);
 xmlNode *stonith_create_op(
     int call_id, const char *token, const char *op, xmlNode *data, int call_options);
@@ -131,7 +136,7 @@ static void stonith_connection_destroy(gpointer user_data)
     struct notify_blob_s blob;
 
     blob.stonith = stonith;
-    blob.xml = create_xml_node(NULL, "notify");;
+    blob.xml = create_xml_node(NULL, "notify");
 
     native = stonith->private;
     native->callback_source = NULL;
@@ -140,13 +145,14 @@ static void stonith_connection_destroy(gpointer user_data)
     crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(blob.xml, F_SUBTYPE, T_STONITH_NOTIFY_DISCONNECT);
 
-    g_list_foreach(stonith->notify_list, stonith_send_notification, &blob);
+    g_list_foreach(native->notify_list, stonith_send_notification, &blob);
     free_xml(blob.xml);
 }
 
 static int stonith_api_register_device(
     stonith_t *stonith, int call_options,
-    const char *id, const char *namespace, const char *agent, GHashTable *params)
+    const char *id, const char *namespace, const char *agent,
+    stonith_key_value_t *params)
 {
     int rc = 0;
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
@@ -157,8 +163,10 @@ static int stonith_api_register_device(
     crm_xml_add(data, "agent", agent);
     crm_xml_add(data, "namespace", namespace);
 
-    g_hash_table_foreach(params, hash2field, args);
-    
+    for( ; params; params = params->next ) { 
+        hash2field( (gpointer)params->key, (gpointer)params->value, args );
+        }
+
     rc = stonith_send_command(stonith, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
     free_xml(data);
     
@@ -289,27 +297,28 @@ static void append_host_specific_args(const char *victim, const char *map, GHash
     crm_free(name);    
 }
 
-static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *action, const char *victim)
+
+static char *make_args(const char *action, const char *victim, GHashTable *device_args, GHashTable *port_map)
 {
     char buffer[512];
     char *arg_list = NULL;
-    const char *map = NULL;
     const char *value = NULL;
     CRM_CHECK(action != NULL, return NULL);
 
-    if(dev_hash) {
-	map = g_hash_table_lookup(dev_hash, STONITH_ATTR_ARGMAP);
-	g_hash_table_foreach(dev_hash, append_arg, &arg_list);
+    if(device_args) {
+	g_hash_table_foreach(device_args, append_arg, &arg_list);
     }
 
     buffer[511] = 0;
     snprintf(buffer, 511, "pcmk_%s_action", action);
-    value = g_hash_table_lookup(dev_hash, buffer);
-
-    if(value == NULL) {
+    if(device_args) {
+	value = g_hash_table_lookup(device_args, buffer);
+    }
+    
+    if(value == NULL && device_args) {
 	/* Legacy support for early 1.1 releases - Remove for 1.2 */
 	snprintf(buffer, 511, "pcmk_%s_cmd", action);
-	value = g_hash_table_lookup(dev_hash, buffer);
+	value = g_hash_table_lookup(device_args, buffer);
     }
 
     if(value) {
@@ -318,9 +327,44 @@ static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *
     }
     
     append_const_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
-    if(victim && safe_str_neq("none", map)) {
-	append_const_arg("nodename", victim, &arg_list);
-	append_host_specific_args(victim, map, node_hash, &arg_list);
+    if(victim && device_args) {
+	const char *alias = victim;
+	const char *param = g_hash_table_lookup(device_args, STONITH_ATTR_HOSTARG);
+
+	if(port_map && g_hash_table_lookup(port_map, victim)) {
+	    alias = g_hash_table_lookup(port_map, victim);
+	}
+	
+	/* Always supply the node's name too:
+	 *    https://fedorahosted.org/cluster/wiki/FenceAgentAPI
+	 */
+    	append_const_arg("nodename", victim, &arg_list);
+
+	/* Check if we need to supply the victim in any other form */
+	if(param == NULL) {
+	    const char *map = g_hash_table_lookup(device_args, STONITH_ATTR_ARGMAP);
+	    if(map == NULL) {
+		param = "port";
+		value = g_hash_table_lookup(device_args, param);
+
+	    } else {
+		/* Legacy handling */
+		append_host_specific_args(alias, map, device_args, &arg_list);
+		value = map; /* Nothing more to do */
+	    }
+	    
+	} else if(safe_str_eq(param, "none")) {
+	    value = param; /* Nothing more to do */
+
+	} else {
+	    value = g_hash_table_lookup(device_args, param);
+	}
+
+	/* Don't overwrite explictly set values for $param */
+	if(value == NULL || safe_str_eq(value, "dynamic")) {
+	    crm_info("%s-ing node '%s' as '%s=%s'", action, victim, param, alias);
+	    append_const_arg(param, alias, &arg_list);
+	}	
     }
     
     crm_debug_3("Calculated: %s", arg_list);
@@ -329,10 +373,10 @@ static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *
 
 /* Borrowed from libfence and extended */
 int run_stonith_agent(
-    const char *agent, GHashTable *dev_hash, GHashTable *node_hash, const char *action, const char *victim,
+    const char *agent, const char *action, const char *victim, GHashTable *device_args, GHashTable *port_map, 
     int *agent_result, char **output, async_command_t *track)
 {
-    char *args = make_args(dev_hash, node_hash, action, victim);
+    char *args = make_args(action, victim, device_args, port_map);
     int pid, status, len, rc = -1;
     int p_read_fd, p_write_fd;  /* parent read/write file descriptors */
     int c_read_fd, c_write_fd;  /* child read/write file descriptors */
@@ -365,16 +409,21 @@ int run_stonith_agent(
     if (pid) {
 	/* parent */
 	int ret;
+	int total = 0;
 
 	fcntl(p_read_fd, F_SETFL, fcntl(p_read_fd, F_GETFL, 0) | O_NONBLOCK);
 
 	do {
 	    crm_debug("sending args");
-	    ret = write(p_write_fd, args, len);
+	    ret = write(p_write_fd, args+total, len-total);
+	    if(ret > 0) {
+		total += ret;
+	    }
+	    
+	} while (errno == EINTR && total < len);
 
-	} while (ret < 0 && errno == EINTR);
-
-	if (ret != len) {
+	if (total != len) {
+	    crm_perror(LOG_ERR, "Sent %d not %d bytes", total, len);
 	    if(ret >= 0) {
 		rc = st_err_generic;
 	    }
@@ -432,9 +481,6 @@ int run_stonith_agent(
 		*agent_result = -WEXITSTATUS(status);
 		rc = 0;
 	    }
-	    if(node_hash) {
-		g_hash_table_destroy(node_hash);
-	    }
 	}
 
     } else {
@@ -471,6 +517,65 @@ int run_stonith_agent(
     return rc;
 }
 
+static int stonith_api_device_list(
+    stonith_t *stonith, int call_options, const char *namespace,
+    stonith_key_value_t **devices, int timeout)
+{
+    int count = 0;
+    if ( devices == NULL ) {
+	crm_err("Parameter error: stonith_api_device_list");
+	return -2;
+    }
+    
+    /* Include Heartbeat agents */
+    if(namespace == NULL || safe_str_eq("heartbeat", namespace)) {
+	char **entry = NULL;
+	char **type_list = stonith_types();
+	for(entry = type_list; entry != NULL && *entry; ++entry) {
+	    crm_trace("Added: %s", *entry);
+	    *devices = stonith_key_value_add(*devices, NULL, *entry);
+	    count++;
+	}
+	if(type_list) {
+	    stonith_free_hostlist(type_list);
+	}
+    }
+
+    /* Include Red Hat agents, basically: ls -1 @sbin_dir@/fence_* */
+    if(namespace == NULL || safe_str_eq("redhat", namespace)) {
+	struct dirent **namelist;
+	int file_num = scandir(RH_STONITH_DIR, &namelist, 0, alphasort);
+	if (file_num > 0) {
+	    struct stat prop;
+	    char buffer[FILENAME_MAX+1];
+	    
+	    while (file_num--) {
+		if ('.' == namelist[file_num]->d_name[0]) {
+		    free(namelist[file_num]);
+		    continue;
+		    
+		} else if(0 != strncmp(RH_STONITH_PREFIX,
+				       namelist[file_num]->d_name,
+				       strlen(RH_STONITH_PREFIX))) {
+		    free(namelist[file_num]);
+		    continue;
+		}
+		
+		snprintf(buffer,FILENAME_MAX,"%s/%s", RH_STONITH_DIR, namelist[file_num]->d_name);
+		if(stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
+		    *devices = stonith_key_value_add(*devices, NULL, namelist[file_num]->d_name);
+		    count++;
+		}
+		
+		free(namelist[file_num]);
+	    }
+	    free(namelist);
+	}
+    }
+
+    return count;
+}
+
 static int stonith_api_device_metadata(
     stonith_t *stonith, int call_options, const char *agent, const char *namespace,
     char **output, int timeout)
@@ -500,7 +605,7 @@ static int stonith_api_device_metadata(
     if(safe_str_eq(provider, "redhat")) {
 	
 	int exec_rc = run_stonith_agent(
-	    agent, NULL, NULL, "metadata", NULL, &rc, &buffer, NULL);
+	    agent, "metadata", NULL, NULL, NULL, &rc, &buffer, NULL);
 
 	if(exec_rc < 0 || rc != 0 || buffer == NULL) {
 	    /* failed */
@@ -591,7 +696,8 @@ static int stonith_api_confirm(
 }
 
 static int stonith_api_query(
-    stonith_t *stonith, int call_options, const char *target, GListPtr *devices, int timeout)
+    stonith_t *stonith, int call_options, const char *target,
+    stonith_key_value_t **devices, int timeout)
 {
     int rc = 0, lpc = 0, max = 0;
 
@@ -619,7 +725,7 @@ static int stonith_api_query(
 	    CRM_CHECK(match != NULL, continue);
 	    
 	    crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
-	    *devices = g_list_append(*devices, crm_element_value_copy(match, XML_ATTR_ID));
+	    *devices = stonith_key_value_add(*devices, NULL, crm_element_value(match, XML_ATTR_ID));
 	}
     }
     
@@ -647,23 +753,65 @@ static int stonith_api_call(
 }
 
 static int stonith_api_fence(
-    stonith_t *stonith, int call_options, const char *node, GHashTable *parameters,
-    const char *action, int timeout)
+    stonith_t *stonith, int call_options, const char *node, const char *action, int timeout)
 {
     int rc = 0;
     xmlNode *data = NULL;
-    xmlNode *params = NULL;
 
     data = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
-    params = create_xml_node(data, XML_TAG_ATTRS);
-    g_hash_table_foreach(parameters, hash2nvpair, params);
 
     rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, timeout);
     free_xml(data);
     
+    return rc;
+}
+
+static int stonith_api_history(
+     stonith_t *stonith, int call_options, const char *node,
+     stonith_history_t **history, int timeout)
+{
+    int rc = 0;
+    xmlNode *data = NULL;
+    xmlNode *output = NULL;
+    stonith_history_t *last = NULL;
+
+    *history = NULL;
+
+    if(node) {
+	data = create_xml_node(NULL, __FUNCTION__);
+	crm_xml_add(data, F_STONITH_TARGET, node);
+    }
+    
+    rc = stonith_send_command(stonith, STONITH_OP_FENCE_HISTORY, data, &output,
+			      call_options | st_opt_sync_call, timeout);
+    free_xml(data);
+    
+    if (rc == 0) {
+	xmlNode *op = NULL;
+        xmlNode *reply = get_xpath_object("//"F_STONITH_HISTORY_LIST, output, LOG_ERR);
+	
+	for(op = __xml_first_child(reply); op != NULL; op = __xml_next(op)) {	
+	    stonith_history_t *kvp;
+
+	    crm_malloc0(kvp, sizeof(stonith_history_t));
+	    kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
+	    kvp->action = crm_element_value_copy(op, F_STONITH_ACTION);
+	    kvp->origin = crm_element_value_copy(op, F_STONITH_ORIGIN);
+	    kvp->delegate = crm_element_value_copy(op, F_STONITH_DELEGATE);
+	    crm_element_value_int(op, F_STONITH_DATE, &kvp->completed);
+	    crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
+	    
+	    if (last) {
+		last->next = kvp;
+	    } else {
+		*history = kvp;
+	    }
+	    last = kvp;
+        }
+    }
     return rc;
 }
 
@@ -907,7 +1055,7 @@ static int stonith_api_signoff(stonith_t* stonith)
 }
 
 static int stonith_api_signon(
-    stonith_t* stonith, const char *name, int *async_fd, int *sync_fd)
+    stonith_t* stonith, const char *name, int *stonith_fd)
 {
     int rc = stonith_ok;
     xmlNode *hello = NULL;
@@ -977,21 +1125,15 @@ static int stonith_api_signon(
     }
 	
     if(rc == stonith_ok) {
-	gboolean do_mainloop = TRUE;
-	if(async_fd != NULL) {
-	    do_mainloop = FALSE;
-	    *async_fd = native->callback_channel->ops->get_recv_select_fd(native->callback_channel);
-	}
+	if(stonith_fd != NULL) {
+	    *stonith_fd = native->callback_channel->ops->get_recv_select_fd(
+                 native->callback_channel);
 
-	if(sync_fd != NULL) {
-	    do_mainloop = FALSE;
-	    *sync_fd = native->callback_channel->ops->get_send_select_fd(native->callback_channel);
-	}
+	} else {                                   /* do mainloop */
 
-	if(do_mainloop) {
 	    crm_debug_4("Connecting callback channel");
 	    native->callback_source = G_main_add_IPC_Channel(
-		G_PRIORITY_HIGH, native->callback_channel, FALSE, stonith_dispatch,
+		G_PRIORITY_HIGH, native->callback_channel, FALSE, stonith_dispatch_internal,
 		stonith, default_ipc_connection_destroy);
 		
 	    if(native->callback_source == NULL) {
@@ -1043,16 +1185,18 @@ static int stonith_api_add_notification(
 {
     GList *list_item = NULL;
     stonith_notify_client_t *new_client = NULL;
+    stonith_private_t *private = NULL;
 
+    private = stonith->private;
     crm_debug_2("Adding callback for %s events (%d)",
-		event, g_list_length(stonith->notify_list));
+		event, g_list_length(private->notify_list));
 
     crm_malloc0(new_client, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = callback;
 
     list_item = g_list_find_custom(
-	stonith->notify_list, new_client, stonithlib_GCompareFunc);
+	private->notify_list, new_client, stonithlib_GCompareFunc);
 	
     if(list_item != NULL) {
 	crm_warn("Callback already present");
@@ -1060,12 +1204,11 @@ static int stonith_api_add_notification(
 	return st_err_exists;
 		
     } else {
-	stonith->notify_list = g_list_append(
-	    stonith->notify_list, new_client);
+	private->notify_list = g_list_append(private->notify_list, new_client);
 
 	stonith_set_notification(stonith, event, 1);
 		
-	crm_debug_3("Callback added (%d)", g_list_length(stonith->notify_list));
+	crm_debug_3("Callback added (%d)", g_list_length(private->notify_list));
     }
     return stonith_ok;
 }
@@ -1075,22 +1218,24 @@ static int stonith_api_del_notification(stonith_t *stonith, const char *event)
 {
     GList *list_item = NULL;
     stonith_notify_client_t *new_client = NULL;
+    stonith_private_t *private = NULL;
 
     crm_debug("Removing callback for %s events", event);
 
+    private = stonith->private;
     crm_malloc0(new_client, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = NULL;
 
     list_item = g_list_find_custom(
-	stonith->notify_list, new_client, stonithlib_GCompareFunc);
+	private->notify_list, new_client, stonithlib_GCompareFunc);
 	
     stonith_set_notification(stonith, event, 0);
 
     if(list_item != NULL) {
 	stonith_notify_client_t *list_client = list_item->data;
-	stonith->notify_list =
-	    g_list_remove(stonith->notify_list, list_client);
+	private->notify_list =
+	    g_list_remove(private->notify_list, list_client);
 	crm_free(list_client);
 
 	crm_debug_3("Removed callback");
@@ -1115,7 +1260,7 @@ static gboolean stonith_async_timeout_handler(gpointer data)
 }
 
 static int stonith_api_add_callback(
-    stonith_t *stonith, int call_id, int timeout, gboolean only_success,
+    stonith_t *stonith, int call_id, int timeout, bool only_success,
     void *user_data, const char *callback_name,
     void (*callback)(
 	stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata))
@@ -1162,7 +1307,7 @@ static int stonith_api_add_callback(
     return TRUE;
 }
 
-static int stonith_api_del_callback(stonith_t *stonith, int call_id, gboolean all_callbacks) 
+static int stonith_api_del_callback(stonith_t *stonith, int call_id, bool all_callbacks) 
 {
     stonith_private_t *private = stonith->private;
     
@@ -1386,7 +1531,7 @@ int stonith_send_command(
 		op_reply = NULL;
 	    }
 
-	    break;
+	    goto done;
 			
 	} else if(reply_id < msg_id) {
 	    crm_debug("Recieved old reply: %d (wanted %d)", reply_id, msg_id);
@@ -1403,12 +1548,7 @@ int stonith_send_command(
 	}
 	free_xml(op_reply);
 	op_reply = NULL;
-    }
-	
-    if(IPC_ISRCONN(native->command_channel) == FALSE) {
-	crm_err("STONITH disconnected: %d", native->command_channel->ch_status);
-	stonith->state = stonith_disconnected;
-    }
+    }	
 
     if(op_reply == NULL && stonith->state == stonith_disconnected) {
 	rc = st_err_connection;
@@ -1417,6 +1557,12 @@ int stonith_send_command(
 	rc = st_err_peer;
     }
 	
+  done:
+    if(IPC_ISRCONN(native->command_channel) == FALSE) {
+	crm_err("STONITH disconnected: %d", native->command_channel->ch_status);
+	stonith->state = stonith_disconnected;
+    }
+
     free_xml(op_reply);
     return rc;
 }
@@ -1502,7 +1648,7 @@ static int stonith_rcvmsg(stonith_t* stonith)
 	stonith_perform_callback(stonith, blob.xml, 0, 0);
 		
     } else if(safe_str_eq(type, T_STONITH_NOTIFY)) {
-	g_list_foreach(stonith->notify_list, stonith_send_notification, &blob);
+	g_list_foreach(private->notify_list, stonith_send_notification, &blob);
 
     } else {
 	crm_err("Unknown message type: %s", type);
@@ -1514,7 +1660,21 @@ static int stonith_rcvmsg(stonith_t* stonith)
     return 1;
 }
 
-gboolean stonith_dispatch(IPC_Channel *channel, gpointer user_data)
+bool stonith_dispatch(stonith_t *st)
+{
+    stonith_private_t *private = NULL;
+    bool stay_connected = TRUE;
+    
+    CRM_CHECK(st != NULL, return FALSE);
+    
+    private = st->private;
+    
+    stay_connected = stonith_dispatch_internal(private->callback_channel,
+                                      (gpointer *)st);
+    return stay_connected;
+}
+
+gboolean stonith_dispatch_internal(IPC_Channel *channel, gpointer user_data)
 {
     stonith_t *stonith = user_data;
     stonith_private_t *private = NULL;
@@ -1578,7 +1738,8 @@ static int stonith_api_free (stonith_t* stonith)
 
 void stonith_api_delete(stonith_t *stonith)
 {
-    GList *list = stonith->notify_list;
+    stonith_private_t* private = stonith->private;
+    GList *list = private->notify_list;
     while(list != NULL) {
 	stonith_notify_client_t *client = g_list_nth_data(list, 0);
 	list = g_list_remove(list, client);
@@ -1600,9 +1761,9 @@ stonith_t *stonith_api_new(void)
     private->stonith_op_callback_table = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal,
 	NULL, stonith_destroy_op_callback);
+    private->notify_list = NULL;
 
     new_stonith->call_id = 1;
-    new_stonith->notify_list = NULL;
     new_stonith->state = stonith_disconnected;
     
     crm_malloc0(new_stonith->cmds, sizeof(stonith_api_operations_t));
@@ -1614,6 +1775,9 @@ stonith_t *stonith_api_new(void)
     new_stonith->cmds->call       = stonith_api_call;
     new_stonith->cmds->fence      = stonith_api_fence;
     new_stonith->cmds->confirm    = stonith_api_confirm;
+    new_stonith->cmds->history    = stonith_api_history;
+
+    new_stonith->cmds->list       = stonith_api_device_list;
     new_stonith->cmds->metadata   = stonith_api_device_metadata;
 
     new_stonith->cmds->query           = stonith_api_query;
@@ -1628,3 +1792,28 @@ stonith_t *stonith_api_new(void)
     return new_stonith;
 }
 
+stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp, const char *key, const char *value) {
+    stonith_key_value_t *p;
+
+    crm_malloc(p, sizeof(stonith_key_value_t));
+    p->next = kvp;
+    p->key = crm_strdup(key);
+    p->value = crm_strdup(value);
+    return( p );
+}
+
+void stonith_key_value_freeall(stonith_key_value_t *kvp, int keys, int values) {
+    stonith_key_value_t *p;
+
+    while(kvp) {
+        p = kvp->next;
+	if(keys) {
+	    free(kvp->key);
+	}
+	if(values) {
+	    free(kvp->value);
+	}	
+        free(kvp);
+        kvp = p;
+    }
+}

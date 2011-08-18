@@ -77,6 +77,15 @@
     <optional>
       <attribute name="no-quorum-panic"><data type="boolean"/></attribute>
     </optional>
+    <optional>
+      <attribute name="update-origin"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="update-client"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="update-user"><text/></attribute>
+    </optional>
   </define>
 
   <define name="element-nodes">

@@ -96,7 +96,8 @@ def check_args(args,argsdim):
 #   list is empty then the function will parse arguments itself
 # required minimum skill level: operator, administrator, expert
 #   (encoded as a small integer from 0 to 2)
-# list of completer functions (optional)
+# can the command cause transition to start (0 or 1)
+#   used to check whether to wait4dc to end the transition
 # 
 
 def show_usage(cmd):
@@ -145,6 +146,10 @@ def parse_line(lvl,s):
         args = s[i:]
         d = lambda: cmd[0](*args)
         rv = d() # execute the command
+        # should we wait till the command takes effect?
+        if user_prefs.get_wait() and rv != False and cmd[3] == 1:
+            if not wait4dc(token, not options.batch):
+                rv = False
         lvl.release()
         return rv != False
     return True
@@ -221,7 +226,7 @@ def run():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], \
-            'hdf:FRD:', ("version","help","debug","file=",\
+            'whdf:FRD:', ("wait","version","help","debug","file=",\
             "force","regression-tests","display="))
         for o,p in opts:
             if o in ("-h","--help"):
@@ -245,6 +250,8 @@ Written by Dejan Muhamedagic
                 options.interactive = False
                 err_buf.reset_lineno()
                 inp_file = p
+            elif o in ("-w","--wait"):
+                user_prefs.wait = "yes"
     except getopt.GetoptError,msg:
         print msg
         usage(1)

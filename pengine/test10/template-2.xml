@@ -1,0 +1,50 @@
+<cib epoch="1" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.1" cib-last-written="Thu Mar 24 16:15:36 2011" have-quorum="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+	<nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+	<nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="utilization"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" type="normal" uname="node1">
+        <utilization id="nodes1-utilization">
+          <nvpair id="nodes1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+      <node id="node2" type="normal" uname="node2">
+        <utilization id="nodes2-utilization">
+          <nvpair id="nodes2-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <template class="ocf" id="template1" provider="pacemaker" type="Dummy">
+        <meta_attributes id="template1-meta_attributes">
+          <nvpair id="template1-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <utilization id="template1-utilization">
+          <nvpair id="template1-utilization-cpu" name="cpu" value="2"/>
+        </utilization>
+        <operations>
+          <op id="template1-monitor-10" interval="10" name="monitor"/>
+        </operations>
+      </template>
+      <primitive id="rsc1" template="template1"/>
+      <primitive id="rsc2" template="template1">
+        <utilization id="rsc2-utilization">
+          <nvpair id="rsc2-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+        <operations>
+          <op id="rsc2-monitor-20" interval="20" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node2" uname="node2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+  </status>
+</cib>

@@ -85,6 +85,8 @@ gboolean print_failcount = FALSE;
 gboolean print_operations = FALSE;
 gboolean print_timing = FALSE;
 gboolean print_nodes_attr = FALSE;
+gboolean print_last_updated = TRUE;
+gboolean print_last_change = TRUE;
 #define FILTER_STR {"shutdown", "terminate", "standby", "fail-count",	\
 	    "last-failure", "probe_complete", "#id", "#uname",		\
 	    "#is_dc", NULL}
@@ -270,6 +272,7 @@ static struct crm_option long_options[] = {
     {"help",           0, 0, '?', "\tThis text"},
     {"version",        0, 0, '$', "\tVersion information"  },
     {"verbose",        0, 0, 'V', "\tIncrease debug output"},
+    {"quiet",          0, 0, 'Q', "\tDisplay only essential output" },
 
     {"-spacer-",	1, 0, '-', "\nModes:"},
     {"as-html",        1, 0, 'h', "Write cluster status to the named file"},
@@ -330,7 +333,7 @@ main(int argc, char **argv)
 
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
     crm_log_init_quiet(NULL, LOG_CRIT, FALSE, FALSE, argc, argv);
-    crm_set_options("V?$i:nrh:dp:s1wx:oftANS:T:F:H:P:E:e:C:", "mode [options]", long_options,
+    crm_set_options(NULL, "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
@@ -353,6 +356,10 @@ main(int argc, char **argv)
 	    case 'V':
 		cl_log_enable_stderr(TRUE);
 		alter_debug(DEBUG_INC);
+		break;
+	    case 'Q':
+		print_last_updated = FALSE;
+		print_last_change = FALSE;
 		break;
 	    case 'i':
 		reconnect_msec = crm_get_msec(optarg);
@@ -960,8 +967,27 @@ print_status(pe_working_set_t *data_set)
     }
 	
     since_epoch = ctime(&a_time);
-    if(since_epoch != NULL) {
+    if(since_epoch != NULL && print_last_updated) {
 	print_as("Last updated: %s", since_epoch);
+    }
+
+    if(print_last_change) {
+	const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
+	const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
+	const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
+	const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
+
+	print_as("Last change: %s", last_written?last_written:"");
+	if(user) {
+	    print_as(" by %s", user);
+	}
+	if(client) {
+	    print_as(" via %s", client);
+	}
+	if(origin) {
+	    print_as(" on %s", origin);
+	}
+	print_as("\n");
     }
 
     stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']", data_set->input, LOG_DEBUG);
@@ -1119,6 +1145,7 @@ print_status(pe_working_set_t *data_set)
 	for(xml_op = __xml_first_child(data_set->failed); xml_op != NULL; xml_op = __xml_next(xml_op)) {
 	    int val = 0;
 	    const char *id = ID(xml_op);
+	    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
 	    const char *last = crm_element_value(xml_op, "last_run");
 	    const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
 	    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
@@ -1127,7 +1154,7 @@ print_status(pe_working_set_t *data_set)
 			       
 	    val = crm_parse_int(status, "0");
 	    print_as("    %s (node=%s, call=%s, rc=%s, status=%s",
-		     id, node, call, rc, op_status2text(val));
+		     op_key?op_key:id, node, call, rc, op_status2text(val));
 
 	    if(last) {
 		time_t run_at = crm_parse_int(last, "0");
@@ -1752,10 +1779,15 @@ static void handle_rsc_op(xmlNode *rsc_op)
     const char *desc = NULL;
     const char *node = NULL;			     
     const char *magic = NULL;			     
-    const char *id = ID(rsc_op);
+    const char *id  = crm_element_value(rsc_op, XML_LRM_ATTR_TASK_KEY);
     char *update_te_uuid = NULL;
 
     xmlNode *n = rsc_op;
+
+    if(id == NULL) {
+	/* Compatability with <= 1.1.5 */
+	id = ID(rsc_op);
+    }
     
     magic = crm_element_value(rsc_op, XML_ATTR_TRANSITION_MAGIC);
     if(magic == NULL) {

@@ -86,8 +86,12 @@ static void shadow_setup(char *name, gboolean do_switch)
 	setenv("PS1", new_prompt, 1);
 	setenv("CIB_shadow", name, 1);
 	printf("Type Ctrl-D to exit the crm_shadow shell\n");
-	
-	execl(shell, "--norc", "--noprofile", NULL);
+
+	if(strstr(shell, "bash")) {
+	    execl(shell, "--norc", "--noprofile", NULL);
+	} else {
+	    execl(shell, "--noprofile", NULL);
+	}
 	
     } else if (do_switch) {
 	printf("To switch to the named shadow instance, paste the following into your shell:\n");
@@ -172,7 +176,7 @@ main(int argc, char **argv)
     int option_index = 0;
 
     crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
-    crm_set_options("V$?bfwc:dr:C:D:ps:Ee:Fa", "(query|command) [modifiers]", long_options,
+    crm_set_options(NULL, "(query|command) [modifiers]", long_options,
 		    "Perform configuration changes in a sandbox before updating the live cluster."
 		    "\n\nSets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
 		    " offline instead of against a live cluster, allowing changes to be previewed and tested"
@@ -188,6 +192,9 @@ main(int argc, char **argv)
 	    break;
 
 	switch(flag) {
+	    case 'a':
+		full_upload = TRUE;
+		break;
 	    case 'd':
 	    case 'E':
 	    case 'p':

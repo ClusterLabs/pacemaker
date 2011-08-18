@@ -57,7 +57,8 @@ find_nvpair_attr_delegate(
     char *xpath_string = NULL;
     xmlNode *xml_search = NULL;
     const char *set_type = NULL;
-   
+    const char *node_type = NULL;
+
     if (attr_set_type) {
 	set_type = attr_set_type;
     } else {
@@ -76,6 +77,11 @@ find_nvpair_attr_delegate(
 	node_uuid = NULL;
 	set_type = XML_TAG_META_SETS;
 
+    } else if(safe_str_eq(section, XML_CIB_TAG_TICKETS)) {
+	node_uuid = NULL;
+	section = XML_CIB_TAG_STATUS;
+	node_type = XML_CIB_TAG_TICKETS;
+
     } else if(node_uuid == NULL) {
 	return cib_missing_data;
     }
@@ -83,7 +89,10 @@ find_nvpair_attr_delegate(
     crm_malloc0(xpath_string, xpath_max);
     offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path(section));
 
-    if(node_uuid) {
+    if(safe_str_eq(node_type, XML_CIB_TAG_TICKETS)) {
+	    offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", node_type);
+
+    } else if(node_uuid) {
 	const char *node_type = XML_CIB_TAG_NODE;
 	if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
 	    node_type = XML_CIB_TAG_STATE;
@@ -179,6 +188,7 @@ update_attr_delegate(cib_t *the_cib, int call_options,
 
     } else {
 	const char *value = NULL;
+	const char *node_type = NULL;
 	xmlNode *cib_top = NULL;
 	rc = the_cib->cmds->delegated_variant_op(
 	    the_cib, CIB_OP_QUERY, NULL, "/cib", NULL, &cib_top, cib_sync_call|cib_scope_local|cib_xpath|cib_no_children, user_name);
@@ -195,7 +205,19 @@ update_attr_delegate(cib_t *the_cib, int call_options,
 	}
 	free_xml(cib_top);
 	    
-	if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
+	if(safe_str_eq(section, XML_CIB_TAG_TICKETS)) {
+	    node_uuid = NULL;
+	    section = XML_CIB_TAG_STATUS;
+	    node_type = XML_CIB_TAG_TICKETS;
+
+	    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_STATUS);
+	    if(xml_top == NULL) {
+		xml_top = xml_obj;
+	    }
+
+	    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_TICKETS);
+
+	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 	    tag = XML_CIB_TAG_NODE;
 	    if(node_uuid == NULL) {
 		return cib_missing;
@@ -222,6 +244,9 @@ update_attr_delegate(cib_t *the_cib, int call_options,
 	    if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
 		local_set_name = crm_strdup(CIB_OPTIONS_FIRST);
 
+	    } else if(safe_str_eq(node_type, XML_CIB_TAG_TICKETS)) {
+		local_set_name = crm_concat(section, XML_CIB_TAG_TICKETS, '-');
+
 	    } else if(node_uuid) {
 		local_set_name = crm_concat(section, node_uuid, '-');
 
@@ -237,8 +262,18 @@ update_attr_delegate(cib_t *the_cib, int call_options,
 	}
 
 	if(attr_id == NULL) {
+	    int lpc = 0;
+	    
 	    local_attr_id = crm_concat(set_name, attr_name, '-');
 	    attr_id = local_attr_id;
+
+	    /* Minimal attempt at sanitizing automatic IDs */
+	    for(lpc = 0; local_attr_id[lpc] != 0; lpc++) {
+		switch(local_attr_id[lpc]) {
+		    case ':':
+			local_attr_id[lpc] = '.';
+		}
+	    }
 
 	} else if(attr_name == NULL) {
 	    attr_name = attr_id;
@@ -253,7 +288,7 @@ update_attr_delegate(cib_t *the_cib, int call_options,
 	    }
 	}
 	    
-	if(node_uuid == NULL) {
+	if(node_uuid == NULL && safe_str_neq(node_type, XML_CIB_TAG_TICKETS)) {
 	    if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
 		xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
 	    } else {

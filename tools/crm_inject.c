@@ -364,7 +364,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
     for(gIter = op_fail; gIter != NULL; gIter = gIter->next) {
 	char *spec = (char*)gIter->data;
 	char *key = NULL;	       
-	crm_malloc0(key, strlen(spec));
+	crm_malloc0(key, 1+strlen(spec));
 	snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
 
 	if(strncasecmp(key, spec, strlen(key)) == 0) {
@@ -376,6 +376,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 	    update_failcounts(cib_node, resource, op->interval, op->rc);
 	    break;
 	}
+	crm_free(key);
     }
 	
     inject_op(cib_resource, op, target_outcome);
@@ -613,10 +614,9 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
     fprintf(dot_strm, " digraph \"g\" {\n");
     for(gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
 	action_t *action = (action_t*)gIter->data;
-	const char *style = "filled";
+	const char *style = "dashed";
 	const char *font  = "black";
 	const char *color = "black";
-	const char *fill  = NULL;
 	char *action_name = create_action_name(action);
 	crm_debug_3("Action %d: %p", action->id, action);
 
@@ -624,7 +624,6 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 	    font = "orange";
 	}
 		
-	style = "dashed";
 	if(is_set(action->flags, pe_action_dumped)) {
 	    style = "bold";
 	    color = "green";
@@ -649,8 +648,8 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 	}
 
 	set_bit_inplace(action->flags, pe_action_dumped);
-	fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\" %s%s]\n",
-		action_name, style, color, font, fill?"fillcolor=":"", fill?fill:"");
+	fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
+		action_name, style, color, font);
       dont_write:
 	crm_free(action_name);
     }
@@ -793,7 +792,7 @@ static void modify_configuration(
 	    cib_node = inject_node_state(global_cib, node);
 	    CRM_ASSERT(cib_node != NULL);
 	    
-	    update_failcounts(cib_node, resource, interval, rc);
+	    update_failcounts(cib_node, resource, interval, outcome);
 	    
 	    cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
 	    CRM_ASSERT(cib_resource != NULL);
@@ -950,7 +949,7 @@ main(int argc, char ** argv)
     xmlNode *input = NULL;
 
     crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
-    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:sUaF:t:q:", "datasource operation [additional options]",
+    crm_set_options(NULL, "datasource operation [additional options]",
 		    long_options, "Tool for simulating the cluster's response to events");
 
     if(argc < 2) {
@@ -966,6 +965,11 @@ main(int argc, char ** argv)
 	    case 'V':
 		verbose = TRUE;
 		alter_debug(DEBUG_INC);
+
+		/* Redirect stderr to stdout so we can grep the output */ 
+		close(STDERR_FILENO);
+		dup2(STDOUT_FILENO, STDERR_FILENO);
+
 		cl_log_enable_stderr(TRUE);
 		break;
 	    case '?':
@@ -1147,7 +1151,7 @@ main(int argc, char ** argv)
 	    create_dotfile(&data_set, dot_file, all_actions);
 	}
 
-	if(quiet == FALSE && (verbose == FALSE || simulate == FALSE)) {
+	if(quiet == FALSE && verbose == FALSE) {
 	    GListPtr gIter = NULL;
 	    quiet_log("%sTransition Summary:\n", show_scores||show_utilization||modified?"\n":"");
 	    fflush(stdout);

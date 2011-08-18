@@ -29,17 +29,21 @@ if BUILD_HELP
 man8_MANS =	$(sbin_PROGRAMS:%=%.8)
 endif
 
+if HAVE_SYSTEMD
+systemdunit_DATA = pacemaker.service
+endif
+
 ## SOURCES
 
 noinst_HEADERS		= 
 
 pacemakerd_SOURCES	= pacemaker.c corosync.c
-pacemakerd_LDADD	= $(CLUSTERLIBS) $(top_builddir)/lib/common/libcrmcommon.la -lcfg -lconfdb
+pacemakerd_LDADD	= $(top_builddir)/lib/common/libcrmcluster.la $(top_builddir)/lib/common/libcrmcommon.la $(CLUSTERLIBS) -lcfg -lconfdb
 
 %.8:	%
 	echo Creating $@
 	chmod a+x $(top_builddir)/mcp/$<
-	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/mcp/$<
+	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/mcp/$<
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

@@ -6,8 +6,6 @@ clone_color: drbd1:1 allocation score on dktest2: INFINITY
 clone_color: ms-drbd1 allocation score on dktest1: INFINITY
 clone_color: ms-drbd1 allocation score on dktest2: 0
 drbd1:0 promotion score on dktest1: INFINITY
-drbd1:0 promotion score on dktest1: INFINITY
-drbd1:1 promotion score on dktest2: -1
 drbd1:1 promotion score on dktest2: -INFINITY
 group_color: apache allocation score on dktest1: 500
 group_color: apache allocation score on dktest2: 0

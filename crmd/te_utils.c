@@ -150,11 +150,11 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
     }
 
 #ifdef SUPPORT_CMAN
-     if(rc == stonith_ok && is_cman_cluster()) {
+    if(rc == stonith_ok && is_cman_cluster()) {
 	int local_rc = 0;
 	FILE *confirm = NULL;
 	char *target_copy = crm_strdup(target);
-
+	
 	/* In case fenced hasn't noticed yet */
         local_rc = fenced_external(target_copy);
         if(local_rc != 0) {
@@ -162,7 +162,7 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
         } else {
 	    crm_notice("Notified CMAN that '%s' is now fenced", target);
 	}
-
+	
 	/* In case fenced is already trying to shoot it */
 	confirm = fopen("/var/run/cluster/fenced_override", "w");
 	if(confirm) {
@@ -175,7 +175,7 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 	    fflush(confirm);
 	    fclose(confirm);
 	}
-     }
+    }
 #endif
     
     if(rc == stonith_ok && safe_str_eq(target, origin)) {
@@ -214,7 +214,7 @@ te_connect_stonith(gpointer user_data)
 	    crm_info("Attempting connection to fencing daemon...");
 	    
 	    sleep(1);
-	    rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL, NULL);
+	    rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
 	    
 	    if(rc == stonith_ok) {
 		break;
@@ -351,10 +351,17 @@ abort_transition_graph(
 		    diff,
 		    &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
 		    &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
-		do_crm_log(log_level,
-			   "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s, cib=%d.%d.%d) : %s",
-			   fn, line, transition_graph->complete, TYPE(reason), ID(reason), magic?magic:"NA",
-			   diff_add_admin_epoch,diff_add_epoch,diff_add_updates, abort_text);
+		if(crm_str_eq(TYPE(reason), XML_CIB_TAG_NVPAIR , TRUE)) {
+		    do_crm_log(log_level,
+		        "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, name=%s, value=%s, magic=%s, cib=%d.%d.%d) : %s",
+		        fn, line, transition_graph->complete, TYPE(reason), ID(reason), NAME(reason), VALUE(reason), magic?magic:"NA",
+		        diff_add_admin_epoch,diff_add_epoch,diff_add_updates, abort_text);
+		} else {
+		    do_crm_log(log_level,
+		        "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s, cib=%d.%d.%d) : %s",
+		        fn, line, transition_graph->complete, TYPE(reason), ID(reason), magic?magic:"NA",
+		        diff_add_admin_epoch,diff_add_epoch,diff_add_updates, abort_text);
+		}
 		
 	    } else {
 		do_crm_log(log_level,
@@ -393,7 +400,11 @@ abort_transition_graph(
 	fsa_pe_ref = NULL;
 	
 	if(transition_graph->complete) {
-	    register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+	    if(transition_timer->period_ms > 0) {
+		crm_timer_start(transition_timer);
+	    } else {
+		register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+	    }
 	    return;
 	}
 

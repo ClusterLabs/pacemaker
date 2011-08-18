@@ -38,7 +38,7 @@ man8_MANS =	$(sbin_PROGRAMS:%=%.8)
 %.8:	%
 	echo Creating $@
 	chmod a+x $<
-	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/cib/$<
+	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/cib/$<
 endif
 
 ## SOURCES
@@ -47,8 +47,8 @@ noinst_HEADERS          = callbacks.h cibio.h cibmessages.h common.h notify.h
 cib_SOURCES		= io.c messages.c notify.c	\
 			callbacks.c main.c remote.c common.c
 
-cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)	\
-			$(top_builddir)/lib/common/libcrmcluster.la
+cib_LDADD		= $(top_builddir)/lib/common/libcrmcluster.la \
+			  $(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)
 
 cibmon_SOURCES		= cibmon.c
 cibmon_LDADD		= $(COMMONLIBS) 

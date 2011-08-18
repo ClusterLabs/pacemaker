@@ -17,6 +17,7 @@
  */
 
 #include <crm_internal.h>
+#include <dlfcn.h>
 
 #ifndef _GNU_SOURCE
 #  define _GNU_SOURCE
@@ -45,7 +46,6 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601.h>
 #include <libxml2/libxml/relaxng.h>
-
 
 #if HAVE_HB_CONFIG_H
 #include <heartbeat/hb_config.h> /* for HB_COREDIR */
@@ -1534,6 +1534,10 @@ crm_abort(const char *file, const char *function, int line,
 		       function, file, line, assert_condition);
 	    return;
 
+	case 0:		/* Child */
+	    abort();
+	    break;
+
 	default:	/* Parent */
 	    do_crm_log(LOG_ERR, 
 		       "%s: Forked child %d to record non-fatal assert at %s:%d : %s",
@@ -1547,10 +1551,6 @@ crm_abort(const char *file, const char *function, int line,
 	    } while(rc < 0 && errno == EINTR);
 			    
 	    return;
-
-	case 0:	/* Child */
-	    abort();
-	    break;
     }
 }
 
@@ -1684,10 +1684,6 @@ write_last_sequence(
 
 int crm_pid_active(long pid)
 {
-    int rc = 0;
-    int running = 0;
-    char proc_path[PATH_MAX], exe_path[PATH_MAX], myexe_path[PATH_MAX];
-
     if(pid <= 0) {
 	return -1;
 
@@ -1697,7 +1693,11 @@ int crm_pid_active(long pid)
 
 #ifndef HAVE_PROC_PID
     return 1;
-#endif
+#else
+    {
+    int rc = 0;
+    int running = 0;
+    char proc_path[PATH_MAX], exe_path[PATH_MAX], myexe_path[PATH_MAX];
 	
     /* check to make sure pid hasn't been reused by another process */
     snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", pid);
@@ -1720,9 +1720,11 @@ int crm_pid_active(long pid)
     if(strcmp(exe_path, myexe_path) == 0) {
 	running = 1;
     }
-
+    }
+    
   bail:
     return running;
+#endif
 }
 
 
@@ -1972,130 +1974,6 @@ crm_set_bit(const char *function, long long word, long long bit)
     return word;
 }
 
-const char *
-name_for_cluster_type(enum cluster_type_e type)
-{
-    switch(type) {
-	case pcmk_cluster_classic_ais:
-	    return "classic openais (with plugin)";
-	case pcmk_cluster_cman:
-	    return "cman";
-	case pcmk_cluster_corosync:
-	    return "corosync";
-	case pcmk_cluster_heartbeat:
-	    return "heartbeat";
-	case pcmk_cluster_unknown:
-	    return "unknown";
-	case pcmk_cluster_invalid:
-	    return "invalid";
-    }
-    crm_err("Invalid cluster type: %d", type);
-    return "invalid";
-}
-
-/* Do not expose these two */
-int set_cluster_type(enum cluster_type_e type);
-static enum cluster_type_e cluster_type = pcmk_cluster_unknown;
-
-int set_cluster_type(enum cluster_type_e type) 
-{
-    if(cluster_type == pcmk_cluster_unknown) {
-	crm_info("Cluster type set to: %s", name_for_cluster_type(cluster_type));
-	cluster_type = type;
-	return 0;
-    } else if(cluster_type == type) {
-	return 0;
-
-    } else if(pcmk_cluster_unknown == type) {
-	cluster_type = type;
-	return 0;
-    }
-    crm_err("Cluster type already set to %s", name_for_cluster_type(cluster_type));
-    return -1;
-}
-
-enum cluster_type_e
-get_cluster_type(void) 
-{
-    if(cluster_type == pcmk_cluster_unknown) {
-	const char *cluster = getenv("HA_cluster_type");
-	cluster_type = pcmk_cluster_invalid;
-	if(cluster) {
-	    crm_info("Cluster type is: '%s'.", cluster);
-	}
-	if(cluster == NULL || safe_str_eq(cluster, "heartbeat")) {
-#if SUPPORT_HEARTBEAT
-	    cluster_type = pcmk_cluster_heartbeat;
-#else
-	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
-		     cluster);
-	    exit(100);
-#endif
-	} else if(safe_str_eq(cluster, "openais")) {
-#if SUPPORT_COROSYNC
-	    cluster_type = pcmk_cluster_classic_ais;
-#else
-	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
-		     cluster);
-	    exit(100);
-#endif
-	} else if(safe_str_eq(cluster, "corosync")) {
-#if SUPPORT_COROSYNC
-	    cluster_type = pcmk_cluster_corosync;
-#else
-	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
-		     cluster);
-	    exit(100);
-#endif
-	} else if(safe_str_eq(cluster, "cman")) {
-#if SUPPORT_CMAN
-	    cluster_type = pcmk_cluster_cman;
-#else
-	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
-		     cluster);
-	    exit(100);
-#endif
-	} else {
-	    crm_crit("Unknown cluster type: '%s'.  Terminating.", cluster);
-	    exit(100);
-	}
-    }
-    return cluster_type;
-}
-
-gboolean is_cman_cluster(void)
-{
-    return get_cluster_type() == pcmk_cluster_cman;
-}
-
-gboolean is_corosync_cluster(void)
-{
-    return get_cluster_type() == pcmk_cluster_corosync;
-}
-
-gboolean is_classic_ais_cluster(void)
-{
-    return get_cluster_type() == pcmk_cluster_classic_ais;
-}
-
-gboolean is_openais_cluster(void)
-{
-    enum cluster_type_e type = get_cluster_type();
-    if(type == pcmk_cluster_classic_ais) {
-	return TRUE;
-    } else if(type == pcmk_cluster_corosync) {
-	return TRUE;
-    } else if(type == pcmk_cluster_cman) {
-	return TRUE;
-    }
-    return FALSE;
-}
-
-gboolean is_heartbeat_cluster(void)
-{
-    return get_cluster_type() == pcmk_cluster_heartbeat;
-}
-
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case) 
 {
     if(a == b) {
@@ -2205,7 +2083,26 @@ void crm_set_options(const char *short_options, const char *app_usage, struct cr
 {
     if(short_options) {
 	crm_short_options = short_options;
+
+    } else if(long_options) {
+	int lpc = 0;
+	int opt_string_len = 0;
+	char *local_short_options = NULL;
+	
+	for(lpc = 0; long_options[lpc].name != NULL; lpc++) {
+	    if(long_options[lpc].val) {
+		crm_realloc(local_short_options, opt_string_len + 3);
+		local_short_options[opt_string_len++] = long_options[lpc].val;
+		if(long_options[lpc].has_arg == required_argument) {
+		    local_short_options[opt_string_len++] = ':';
+		}
+		local_short_options[opt_string_len] = 0;
+	    }
+	}
+	crm_short_options = local_short_options;
+	crm_trace("Generated short option string: '%s'", local_short_options);
     }
+    
     if(long_options) {
 	crm_long_options = long_options;
     }
@@ -2281,7 +2178,13 @@ void crm_help(char cmd, int exit_code)
 		fprintf(stream, "%s\n", crm_long_options[i].desc);
 		
 	    } else {
-		fprintf(stream, " -%c, --%s%c%s\t%s\n", crm_long_options[i].val, crm_long_options[i].name,
+                /* is val printable as char ? */
+                if(crm_long_options[i].val <= UCHAR_MAX) {
+                    fprintf(stream, " -%c,", crm_long_options[i].val);
+                } else {
+                    fputs("    ", stream);
+                }
+		fprintf(stream, " --%s%c%s\t%s\n", crm_long_options[i].name,
 			crm_long_options[i].has_arg?'=':' ',crm_long_options[i].has_arg?"value":"",
 			crm_long_options[i].desc?crm_long_options[i].desc:"");
 	    }
@@ -2396,6 +2299,8 @@ gboolean attrd_lazy_update(char command, const char *host, const char *name, con
 	    cluster = NULL;
 	    sleep(2);
 	    max--;
+	} else {
+	    crm_info("Updated %s=%s for %s", name, value, host);
 	}
     }
 
@@ -2435,6 +2340,8 @@ gboolean attrd_update_no_mainloop(int *connection, char command, const char *hos
 	    cluster = NULL;
 	    sleep(2);
 	    max--;
+	} else {
+	    crm_info("Updated %s=%s for %s", name, value, host);
 	}
     }
     return updated;
@@ -2476,15 +2383,55 @@ append_digest(lrm_op_t *op, xmlNode *update, const char *version, const char *ma
     crm_free(digest);
 }
 
+int
+rsc_op_expected_rc(lrm_op_t *op) 
+{
+    int rc = 0;
+    if(op && op->user_data) {
+	int dummy = 0;
+	char *uuid = NULL;
+	decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &rc);
+	crm_free(uuid);
+    }
+    return rc;
+}
+
+
+gboolean
+did_rsc_op_fail(lrm_op_t *op, int target_rc)
+{
+    switch(op->op_status) {
+	case LRM_OP_CANCELLED:
+	case LRM_OP_PENDING:
+	    return FALSE;
+	    break;
+
+	case LRM_OP_NOTSUPPORTED:
+	case LRM_OP_TIMEOUT:
+	case LRM_OP_ERROR:
+	    return TRUE;
+	    break;
+
+	default:
+	    if(target_rc != op->rc) {
+		return TRUE;
+	    }
+    }
+
+    return FALSE;
+}
+
 xmlNode *
 create_operation_update(
     xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin, int level)
 {
+    char *key = NULL;
     char *magic = NULL;
-    const char *task = NULL;
-    xmlNode *xml_op = NULL;
     char *op_id = NULL;
     char *local_user_data = NULL;
+
+    xmlNode *xml_op = NULL;
+    const char *task = NULL;
     gboolean dc_munges_migrate_ops = (compare_version(caller_version, "3.0.3") < 0);
 
     CRM_CHECK(op != NULL, return NULL);
@@ -2522,7 +2469,12 @@ create_operation_update(
 	      && op->op_status == LRM_OP_DONE
 	      && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
 	task = CRMD_ACTION_START;
+    }
 
+    key = generate_op_key(op->rsc_id, task, op->interval);
+    if(op->interval > 0) {
+	op_id = crm_strdup(key);
+	
     } else if(crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
 	const char *n_type = crm_meta_value(op->params, "notify_type");
 	const char *n_task = crm_meta_value(op->params, "notify_operation");
@@ -2533,17 +2485,16 @@ create_operation_update(
 	/* these are not yet allowed to fail */
 	op->op_status = LRM_OP_DONE;
 	op->rc = 0;
-    }
 
-    if (op_id == NULL) {
-	op_id = generate_op_key(op->rsc_id, task, op->interval);
+    } else if (did_rsc_op_fail(op, target_rc)) {
+	op_id = generate_op_key(op->rsc_id, "last_failure", 0);
+
+    } else {
+	op_id = generate_op_key(op->rsc_id, "last", 0);
     }
 
     xml_op = find_entity(parent, XML_LRM_TAG_RSC_OP, op_id);
-    if(xml_op != NULL) {
-	crm_log_xml(LOG_DEBUG, "Replacing existing entry", xml_op);
-		
-    } else {
+    if(xml_op == NULL) {
 	xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
     }
 	
@@ -2557,8 +2508,9 @@ create_operation_update(
     }
 	
     magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
-	
+
     crm_xml_add(xml_op, XML_ATTR_ID,			op_id);
+    crm_xml_add(xml_op, XML_LRM_ATTR_TASK_KEY,		key);
     crm_xml_add(xml_op, XML_LRM_ATTR_TASK,		task);
     crm_xml_add(xml_op, XML_ATTR_ORIGIN,		origin);
     crm_xml_add(xml_op, XML_ATTR_CRM_VERSION,		caller_version);
@@ -2605,12 +2557,16 @@ create_operation_update(
     }
     crm_free(magic);	
     crm_free(op_id);
+    crm_free(key);
     return xml_op;
 }
 
 void
 free_lrm_op(lrm_op_t *op) 
 {
+    if(op == NULL) {
+	return;
+    }
     g_hash_table_destroy(op->params);
     crm_free(op->user_data);
     crm_free(op->output);
@@ -2678,3 +2634,31 @@ g_str_hash_traditional(gconstpointer v)
     return h;
 }
 
+void *find_library_function(void **handle, const char *lib, const char *fn)
+{
+    char *error;
+    void *a_function;
+    
+    if(*handle == NULL) {
+	*handle = dlopen (lib, RTLD_LAZY);
+    }
+    
+    if (!(*handle)) {
+	crm_err("Could not open %s: %s", lib, dlerror());
+	exit(100);
+    }
+    
+    a_function = dlsym(*handle, fn);
+    if ((error = dlerror()) != NULL)  {
+	crm_err("Could not find %s in %s: %s", fn, lib, error);
+	exit(100);
+    }
+    
+    return a_function;
+}
+
+void *convert_const_pointer(const void *ptr) 
+{
+    /* Worst function ever */
+    return (void*)ptr;
+}

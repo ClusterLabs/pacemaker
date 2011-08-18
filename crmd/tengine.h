@@ -65,7 +65,6 @@ extern GCHSource *stonith_src;
 
 extern crm_trigger_t *transition_trigger;
 extern crm_trigger_t *stonith_reconnect;
-extern crm_action_timer_t *transition_timer;
 
 extern char *failed_stop_offset;
 extern char *failed_start_offset;

@@ -4,7 +4,6 @@ clone_color: drbd_float:0 allocation score on sambuca.linbit: 51
 clone_color: ms_drbd_float allocation score on raki.linbit: 0
 clone_color: ms_drbd_float allocation score on sambuca.linbit: 0
 drbd_float:0 promotion score on sambuca.linbit: 1
-drbd_float:0 promotion score on sambuca.linbit: INFINITY
 group_color: fs_float allocation score on raki.linbit: 0
 group_color: fs_float allocation score on sambuca.linbit: -INFINITY
 group_color: ip_nfs allocation score on raki.linbit: 0

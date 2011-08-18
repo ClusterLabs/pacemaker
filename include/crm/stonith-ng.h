@@ -25,7 +25,7 @@
 enum stonith_state {
     stonith_connected_command,
     stonith_connected_query,
-    stonith_disconnected
+    stonith_disconnected,
 };
 
 enum stonith_call_options {
@@ -76,6 +76,9 @@ enum stonith_errors {
 #define F_STONITH_NOTIFY_DEACTIVATE	"st_notify_deactivate"
 #define F_STONITH_DELEGATE		"st_delegate"
 #define F_STONITH_ORIGIN		"st_origin"
+#define F_STONITH_HISTORY_LIST		"st_history"
+#define F_STONITH_DATE			"st_date"
+#define F_STONITH_STATE			"st_state"
 
 #define T_STONITH_NG		"stonith-ng"
 #define T_STONITH_REPLY		"st-reply"
@@ -88,6 +91,7 @@ enum stonith_errors {
 #define T_STONITH_NOTIFY_DISCONNECT	"st_notify_disconnect"
 
 #define STONITH_ATTR_ARGMAP	"pcmk_arg_map"
+#define STONITH_ATTR_HOSTARG	"pcmk_host_argument"
 #define STONITH_ATTR_HOSTMAP	"pcmk_host_map"
 #define STONITH_ATTR_HOSTLIST	"pcmk_host_list"
 #define STONITH_ATTR_HOSTCHECK	"pcmk_host_check"
@@ -101,32 +105,64 @@ enum stonith_errors {
 #define STONITH_OP_DEVICE_ADD	"st_device_register"
 #define STONITH_OP_DEVICE_DEL	"st_device_remove"
 #define STONITH_OP_DEVICE_METADATA "st_device_metadata"
+#define STONITH_OP_FENCE_HISTORY   "st_fence_history"
 
 #define stonith_channel			"st_command"
 #define stonith_channel_callback	"st_callback"
+
+enum op_state 
+{
+    st_query,
+    st_exec,
+    st_done,
+    st_failed,
+};
+
+typedef struct stonith_key_value_s {
+	char *key;
+	char *value;
+        struct stonith_key_value_s *next;
+} stonith_key_value_t;
+
+typedef struct stonith_history_s {
+	char *target;
+	char *action;
+	char *origin;
+	char *delegate;
+	int completed;
+	int state;
+	
+        struct stonith_history_s *next;
+} stonith_history_t;
 
 typedef struct stonith_s stonith_t;
 
 typedef struct stonith_api_operations_s
 {
 	int (*free) (stonith_t *st);
-	int (*connect) (stonith_t *st, const char *name, int *async_fd, int *sync_fd);
+	int (*connect) (stonith_t *st, const char *name, int *stonith_fd);
 	int (*disconnect)(stonith_t *st);
 
 	int (*remove_device)(
 	    stonith_t *st, int options, const char *name);
 	int (*register_device)(
 	    stonith_t *st, int options, const char *id,
-	    const char *namespace, const char *agent, GHashTable *parameters);
+	    const char *namespace, const char *agent, stonith_key_value_t *params);
 
 	int (*metadata)(stonith_t *st, int options,
 			const char *device, const char *namespace, char **output, int timeout);
+	int (*list)(stonith_t *stonith, int call_options, const char *namespace,
+		    stonith_key_value_t **devices, int timeout);
+
 	int (*call)(stonith_t *st, int options, const char *id,
 		    const char *action, const char *port, int timeout);
 
-	int (*query)(stonith_t *st, int options, const char *node, GListPtr *devices, int timeout);
-	int (*fence)(stonith_t *st, int options, const char *node, GHashTable *parameters, const char *action, int timeout);
+	int (*query)(stonith_t *st, int options, const char *node,
+            stonith_key_value_t **devices, int timeout);
+	int (*fence)(stonith_t *st, int options, const char *node, const char *action,
+            int timeout);
 	int (*confirm)(stonith_t *st, int options, const char *node);
+	int (*history)(stonith_t *st, int options, const char *node, stonith_history_t **output, int timeout);
 		
 	int (*register_notification)(
 	    stonith_t *st, const char *event,
@@ -134,10 +170,10 @@ typedef struct stonith_api_operations_s
 	int (*remove_notification)(stonith_t *st, const char *event);
 
 	int (*register_callback)(
-	    stonith_t *st, int call_id, int timeout, gboolean only_success,
+	    stonith_t *st, int call_id, int timeout, bool only_success,
 	    void *userdata, const char *callback_name,
 	    void (*callback)(stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata));
-	int (*remove_callback)(stonith_t *st, int call_id, gboolean all_callbacks);
+	int (*remove_callback)(stonith_t *st, int call_id, bool all_callbacks);
 	
 } stonith_api_operations_t;
 
@@ -149,8 +185,6 @@ struct stonith_s
 	int   call_timeout;
 	void  *private;
 	
-	GList *notify_list;
-
 	stonith_api_operations_t *cmds;
 };
 
@@ -161,40 +195,11 @@ extern void stonith_api_delete(stonith_t *st);
 extern const char *stonith_error2string(enum stonith_errors return_code);
 extern void stonith_dump_pending_callbacks(stonith_t *st);
 
-/* internal details - move elsewhere */
-
-typedef struct async_command_s 
-{
-
-	int id;
-	int stdout;
-	int options;
-	int timeout;
-
-	char *op;
-	char *origin;
-	char *client;
-	char *remote;
-
-	char *victim;
-	char *action;
-	char *device;
-	
-	GListPtr device_list;
-	GListPtr device_next;
-
-	ProcTrack_ops *pt_ops;
-	GHashTable *node_attrs;
-	ProcTrackKillInfo killseq[3];
-
-} async_command_t;
-
-extern int run_stonith_agent(
-    const char *agent, GHashTable *dev_hash, GHashTable *node_hash, const char *action, const char *victim,
-    int *agent_result, char **output, async_command_t *track);
-
-extern gboolean is_redhat_agent(const char *agent);
 extern const char *get_stonith_provider(const char *agent, const char *provider);
 
-#endif
+extern bool stonith_dispatch(stonith_t *st);
 
+extern stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp, const char *key, const char *value);
+extern void stonith_key_value_freeall(stonith_key_value_t *kvp, int keys, int values);
+
+#endif

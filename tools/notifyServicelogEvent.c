@@ -94,7 +94,7 @@ main (int argc, char *argv[])
     uint64_t         event_id = 0;
 	
     crm_log_init_quiet("notifyServicelogEvent", LOG_INFO, FALSE, TRUE, argc, argv);
-    crm_set_options("?$", "event_id ", long_options, "Gets called upon events written to servicelog database");
+    crm_set_options(NULL, "event_id ", long_options, "Gets called upon events written to servicelog database");
 	
     if (argc < 2) {
 	argerr++;

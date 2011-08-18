@@ -17,7 +17,7 @@
       </para>
       <section id="s-resource-ocf">
 	<title>Open Cluster Framework</title>
-	<para>The OCF Spec (as it relates to resource agents can be found at: <ulink url="http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD"/>) 
+	<para>The OCF Spec (as it relates to resource agents) can be found at: <ulink url="http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD"/> 
 	  <footnote><para>Note: The Pacemaker implementation has been somewhat extended from the OCF Specs, but none of those changes are incompatible with the original OCF specification</para></footnote> and is basically an extension of the Linux Standard Base conventions for init scripts to</para>
 	<itemizedlist>
 	  <listitem><para>support parameters</para></listitem>
@@ -37,7 +37,7 @@
 	  So, if you need to be given a parameter which the user thinks of as ip it will be passed to the script as <envar>OCF_RESKEY_ip</envar>.
 	  The number and purpose of the parameters is completely arbitrary, however your script should advertise any that it supports using the meta-data command.
 	</para>
-	<para>For more information, see <ulink url="http://wiki.linux-ha.org/OCFResourceAgent"/> and <xref linkend="ap-ocf"/>.</para>
+	<para>For more information, see <ulink url="http://www.linux-ha.org/wiki/OCF_Resource_Agents"/> and <xref linkend="ap-ocf"/>.</para>
       </section>
       <section id="s-resource-lsb">
 	<title>Linux Standard Base</title>
@@ -172,7 +172,7 @@
               <entry>
 		<para>What state should the cluster attempt to keep this resource in? Allowed values: </para>
 		<itemizedlist>
-                  <listitem><para>Stopped - Force the resource to </para></listitem>
+                  <listitem><para>Stopped - Force the resource to be stopped</para></listitem>
                   <listitem><para>Started - Allow the resource to be started (In the case of <link linkend="s-resource-multistate">multi-state</link> resources, they will not promoted to master)</para></listitem>
                   <listitem><para>Master - Allow the resource to be started and, if appropriate, promoted</para></listitem>
 		</itemizedlist>
@@ -196,7 +196,7 @@
             </row>
             <row>
               <entry>migration-threshold</entry>
-              <entry>0 (disabled)</entry>
+              <entry>INFINITY (disabled)</entry>
               <entry>How many failures should occur for this resource on a node before making the node ineligible to host this resource. </entry>
             </row>
             <row>

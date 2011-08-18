@@ -93,6 +93,10 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t *data_set)
 			      crm_element_name(xml_obj))) {
 	    unpack_rsc_location(xml_obj, data_set);
 
+	} else if(safe_str_eq(XML_CONS_TAG_RSC_TICKET,
+			      crm_element_name(xml_obj))) {
+	    unpack_rsc_ticket(xml_obj, data_set);
+
 	} else {
 	    pe_err("Unsupported constraint type: %s",
 		   crm_element_name(xml_obj));
@@ -738,7 +742,23 @@ custom_action_order(
     order->rh_action      = rh_action;
     order->lh_action_task = lh_action_task;
     order->rh_action_task = rh_action_task;
-	
+
+    if(order->lh_action_task == NULL && lh_action) {
+	order->lh_action_task = crm_strdup(lh_action->uuid);
+    }
+    
+    if(order->rh_action_task == NULL && rh_action) {
+	order->rh_action_task = crm_strdup(rh_action->uuid);
+    }
+    
+    if(order->lh_rsc == NULL && lh_action) {
+	order->lh_rsc = lh_action->rsc;
+    }
+
+    if(order->rh_rsc == NULL && rh_action) {
+	order->rh_rsc = rh_action->rsc;
+    }
+    
     data_set->ordering_constraints = g_list_prepend(
 	data_set->ordering_constraints, order);
 	
@@ -1394,6 +1414,234 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
 	
     if(any_sets == FALSE) {
 	return unpack_simple_colocation(xml_obj, data_set);
+    }
+
+    return TRUE;
+}
+
+gboolean
+rsc_ticket_new(const char *id, resource_t *rsc_lh, ticket_t *ticket,
+		   const char *state_lh, const char *loss_policy, pe_working_set_t *data_set)
+{
+    rsc_ticket_t *new_rsc_ticket = NULL;
+
+
+    if(rsc_lh == NULL){
+	crm_config_err("No resource found for LHS %s", id);
+	return FALSE;
+    }
+
+    crm_malloc0(new_rsc_ticket, sizeof(rsc_ticket_t));
+    if(new_rsc_ticket == NULL) {
+	return FALSE;
+    }
+
+    if(state_lh == NULL
+       || safe_str_eq(state_lh, RSC_ROLE_STARTED_S)) {
+	state_lh = RSC_ROLE_UNKNOWN_S;
+    }
+
+    new_rsc_ticket->id       = id;
+    new_rsc_ticket->ticket = ticket;
+    new_rsc_ticket->rsc_lh   = rsc_lh;
+    new_rsc_ticket->role_lh = text2role(state_lh);
+
+    if(safe_str_eq(loss_policy, "fence")) {
+	crm_debug("On loss of ticket '%s': Fence the nodes running %s (%s)",
+		   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id, role2text(new_rsc_ticket->role_lh));
+	new_rsc_ticket->loss_policy = loss_ticket_fence;
+
+    } else if(safe_str_eq(loss_policy, "freeze")) {
+	crm_debug("On loss of ticket '%s': Freeze %s (%s)",
+		   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id, role2text(new_rsc_ticket->role_lh));
+	new_rsc_ticket->loss_policy = loss_ticket_freeze;
+
+    } else if(safe_str_eq(loss_policy, "demote")) {
+	crm_debug("On loss of ticket '%s': Demote %s (%s)",
+		   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id, role2text(new_rsc_ticket->role_lh));
+	new_rsc_ticket->loss_policy = loss_ticket_demote;
+
+    } else if(safe_str_eq(loss_policy, "stop")) {
+	crm_debug("On loss of ticket '%s': Stop %s (%s)",
+		   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id, role2text(new_rsc_ticket->role_lh));
+	new_rsc_ticket->loss_policy = loss_ticket_stop;
+
+    } else {
+	if(new_rsc_ticket->role_lh == RSC_ROLE_MASTER) {
+	    crm_debug("On loss of ticket '%s': Default to demote %s (%s)",
+		       new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id, role2text(new_rsc_ticket->role_lh));
+	    new_rsc_ticket->loss_policy = loss_ticket_demote; 
+
+	} else {
+	    crm_debug("On loss of ticket '%s': Default to stop %s (%s)",
+		       new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id, role2text(new_rsc_ticket->role_lh));
+	    new_rsc_ticket->loss_policy = loss_ticket_stop; 
+	}
+    }
+
+    crm_debug_3("%s (%s) ==> %s", rsc_lh->id, role2text(new_rsc_ticket->role_lh), ticket->id);
+	
+    rsc_lh->rsc_tickets = g_list_append(rsc_lh->rsc_tickets, new_rsc_ticket);
+
+    data_set->ticket_constraints = g_list_append(data_set->ticket_constraints, new_rsc_ticket);
+	
+    return TRUE;
+}
+
+static gboolean
+unpack_rsc_ticket_set(xmlNode *set, ticket_t *ticket, const char *loss_policy, pe_working_set_t *data_set) 
+{
+    xmlNode *xml_rsc = NULL;
+    resource_t *resource = NULL;
+    const char *set_id = ID(set);
+    const char *role = crm_element_value(set, "role");
+
+    if(set == NULL) {
+	crm_config_err("No resource_set object to process.");
+	return FALSE;
+    }
+
+    if(set_id == NULL) {
+	crm_config_err("resource_set must have an id");
+	return FALSE;
+    }
+
+    if(ticket == NULL) {
+	crm_config_err("No dependented ticket specified for '%s'", set_id);
+	return FALSE;
+    }
+
+    for(xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
+	if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+	    EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+	    crm_debug_2("Resource '%s' depends on ticket '%s'", resource->id, ticket->id);
+	    rsc_ticket_new(set_id, resource, ticket, role, loss_policy, data_set);
+	}
+    }
+	
+    return TRUE;
+}	    
+
+static gboolean
+unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
+{
+    const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
+    const char *loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
+
+    ticket_t *ticket = NULL;
+    
+    const char *id_lh    = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
+    const char *instance_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_INSTANCE);
+
+    resource_t *rsc_lh = NULL;
+
+    if(xml_obj == NULL) {
+	crm_config_err("No rsc_ticket constraint object to process.");
+	return FALSE;
+    }
+   
+    if(id == NULL) {
+	crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+	return FALSE;
+    }
+    
+    if(ticket_str == NULL) {
+	crm_config_err("Invalid constraint '%s': No ticket specified", id);
+	return FALSE;
+    } else {
+	ticket = g_hash_table_lookup(data_set->tickets, ticket_str);
+    }
+
+    if(ticket == NULL) {
+	crm_config_err("Invalid constraint '%s': No ticket named '%s'", id, ticket_str);
+	return FALSE;
+    }
+
+    if(id_lh == NULL) {
+	crm_config_err("Invalid constraint '%s': No resource specified", id);
+	return FALSE;
+    } else {
+	rsc_lh = pe_find_resource(data_set->resources, id_lh);
+    }
+
+    if(rsc_lh == NULL) {
+	crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_lh);
+	return FALSE;
+	
+    } else if(instance_lh && rsc_lh->variant < pe_clone) {
+	crm_config_err("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested", id, id_lh, instance_lh);
+	return FALSE;
+    }
+
+    if(instance_lh) {
+	rsc_lh = find_clone_instance(rsc_lh, instance_lh, data_set);
+	if(rsc_lh == NULL) {
+	    crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_lh, id_lh);
+	    return FALSE;
+	}
+    }
+
+    rsc_ticket_new(id, rsc_lh, ticket, state_lh, loss_policy, data_set);
+    return TRUE;
+}
+
+gboolean
+unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
+{
+    xmlNode *set = NULL;
+    gboolean any_sets = FALSE;
+
+    const char *id    = crm_element_value(xml_obj, XML_ATTR_ID); 
+    const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
+    const char *loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
+
+    ticket_t *ticket = NULL;
+
+    if(xml_obj == NULL) {
+	crm_config_err("No rsc_ticket constraint object to process.");
+	return FALSE;
+    }
+   
+    if(id == NULL) {
+	crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+	return FALSE;
+    }
+    
+    if(ticket_str == NULL) {
+	crm_config_err("Invalid constraint '%s': No ticket specified", id);
+	return FALSE;
+    } else {
+	ticket = g_hash_table_lookup(data_set->tickets, ticket_str);
+    }
+
+    if(ticket == NULL) {
+	crm_malloc0(ticket, sizeof(ticket_t));
+	if(ticket == NULL) {
+	    crm_config_err("Cannot allocate ticket '%s'", ticket_str);
+	    return FALSE;
+	}
+
+	ticket->id = crm_strdup(ticket_str);
+	ticket->granted = FALSE;
+	ticket->last_granted = -1;
+
+	g_hash_table_insert(data_set->tickets, crm_strdup(ticket->id), ticket);
+    }
+
+    for(set = __xml_first_child(xml_obj); set != NULL; set = __xml_next(set)) {
+	if(crm_str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, TRUE)) {
+	    any_sets = TRUE;
+	    set = expand_idref(set, data_set->input);
+	    if(unpack_rsc_ticket_set(set, ticket, loss_policy, data_set) == FALSE) {
+		return FALSE;
+	    }
+	}
+    }
+	
+    if(any_sets == FALSE) {
+	return unpack_simple_rsc_ticket(xml_obj, data_set);
     }
 
     return TRUE;

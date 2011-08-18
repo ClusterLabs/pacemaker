@@ -393,12 +393,28 @@ calculate_utilization(node_t *node, resource_t *rsc, gboolean allocate)
     }
 }
 
+void
+native_deallocate(resource_t *rsc)
+{
+    if(rsc->allocated_to) {
+	node_t *old = rsc->allocated_to;
+
+	crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
+	set_bit_inplace(rsc->flags, pe_rsc_provisional);
+	rsc->allocated_to = NULL;
+
+	old->details->allocated_rsc = g_list_remove(
+	    old->details->allocated_rsc, rsc);
+	old->details->num_resources--;
+	old->count--;
+	calculate_utilization(old, rsc, FALSE);
+    }
+}
+
 gboolean
 native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean force)
 {
     CRM_ASSERT(rsc->variant == pe_native);
-
-    clear_bit(rsc->flags, pe_rsc_provisional);
 	
     if(force == FALSE
        && chosen != NULL
@@ -414,15 +430,8 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
      * new resource count
      */
 
-    if(rsc->allocated_to) {
-	node_t *old = rsc->allocated_to;
-	crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
-	old->details->allocated_rsc = g_list_remove(
-	    old->details->allocated_rsc, rsc);
-	old->details->num_resources--;
-	old->count--;
-	calculate_utilization(old, rsc, FALSE);
-    }
+    native_deallocate(rsc);
+    clear_bit(rsc->flags, pe_rsc_provisional);
 	
     if(chosen == NULL) {
 	char *key = NULL;
@@ -432,7 +441,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 	crm_debug("Could not allocate a node for %s", rsc->id);
 	rsc->next_role = RSC_ROLE_STOPPED;
 	    
-	key = generate_op_key(rsc->id, CRMD_ACTION_STOP, 0);
+	key = generate_op_key(rsc->id, RSC_STOP, 0);
 	possible_matches = find_actions(rsc->actions, key, NULL);
 
 	for(gIter = possible_matches; gIter != NULL; gIter = gIter->next) {
@@ -443,7 +452,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 	g_list_free(possible_matches);
 	crm_free(key);
 
-	key = generate_op_key(rsc->id, CRMD_ACTION_START, 0);
+	key = generate_op_key(rsc->id, RSC_START, 0);
 	possible_matches = find_actions(rsc->actions, key, NULL);
 
 	for(gIter = possible_matches; gIter != NULL; gIter = gIter->next) {
@@ -469,82 +478,6 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
     return TRUE;
 }
 
-char *
-convert_non_atomic_uuid(char *old_uuid, resource_t *rsc, gboolean allow_notify, gboolean free_original)
-{
-    int interval = 0;
-    char *uuid = NULL;
-    char *rid = NULL;
-    char *raw_task = NULL;
-    int task = no_action;
-
-    crm_debug_3("Processing %s", old_uuid);
-    if(old_uuid == NULL) {
-	return NULL;
-
-    } else if(strstr(old_uuid, "notify") != NULL) {
-	goto done; /* no conversion */
-
-    } else if(rsc->variant < pe_group) {
-	goto done; /* no conversion */
-    }
-
-    CRM_ASSERT(parse_op_key(old_uuid, &rid, &raw_task, &interval));
-    if(interval > 0) {
-	goto done; /* no conversion */
-    } 
-	
-    task = text2task(raw_task);
-    switch(task) {
-	case stop_rsc:
-	case start_rsc:
-	case action_notify:
-	case action_promote:
-	case action_demote:
-	    break;
-	case stopped_rsc:
-	case started_rsc:
-	case action_notified:
-	case action_promoted:
-	case action_demoted:
-	    task--;
-	    break;
-	case monitor_rsc:
-	case shutdown_crm:
-	case stonith_node:
-	    task = no_action;
-	    break;
-	default:
-	    crm_err("Unknown action: %s", raw_task);
-	    task = no_action;
-	    break;
-    }
-	
-    if(task != no_action) {
-	if(is_set(rsc->flags, pe_rsc_notify) && allow_notify) {
-	    uuid = generate_notify_key(rid, "confirmed-post", task2text(task+1));
-	    
-	} else {
-	    uuid = generate_op_key(rid, task2text(task+1), 0);
-	}
-	crm_debug_2("Converted %s -> %s", old_uuid, uuid);
-    }
-	
-  done:
-    if(uuid == NULL) {
-	uuid = crm_strdup(old_uuid);
-    }
-
-    if(free_original) {
-	crm_free(old_uuid);
-    }
-    
-    crm_free(raw_task);
-    crm_free(rid);
-    return uuid;
-}
-
-
 gboolean
 order_actions(
     action_t *lh_action, action_t *rh_action, enum pe_ordering order) 
@@ -557,6 +490,10 @@ order_actions(
     if(order == pe_order_none) {
 	return FALSE;
     }
+
+    if(lh_action == NULL || rh_action == NULL) {
+	return FALSE;
+    }
 	
     if (!load_stopped_strlen) {
 	load_stopped_strlen = strlen(LOAD_STOPPED);
@@ -564,7 +501,18 @@ order_actions(
 
     if (strncmp(lh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0
 	|| strncmp(rh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0) {
-	if (lh_action->node == NULL || rh_action->node == NULL
+	
+	if(safe_str_eq(rh_action->task, RSC_MIGRATE)) {
+	    /* A live migration: rh_action is a migrate_to */
+
+	    if(lh_action->node == NULL || rh_action->rsc->allocated_to == NULL 
+	       /* Ignore the order: The load_stopped is not on the node where the resource will be migrated to. */
+	       || lh_action->node->details != rh_action->rsc->allocated_to->details){
+		return FALSE;
+	    }
+
+	} else if (lh_action->node == NULL || rh_action->node == NULL
+	    /* Ignore the order: The load_stopped is not on the node where the other action will be executed. */
 	    || lh_action->node->details != rh_action->node->details) {
 	    return FALSE;
 	}

@@ -77,7 +77,6 @@ te_update_diff(const char *event, xmlNode *msg)
 	const char *op = NULL;
 
 	xmlNode *diff = NULL;
-	xmlNode *cib_top = NULL;
 	xmlXPathObject *xpathObj = NULL;
 
 	int diff_add_updates     = 0;
@@ -121,15 +120,31 @@ te_update_diff(const char *event, xmlNode *msg)
 		  fsa_state2string(fsa_state));
 	log_cib_diff(LOG_DEBUG_2, diff, op);
 
-	/* Process crm_config updates */ 
-	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_CRMCONFIG, diff, LOG_DEBUG);
-	if(cib_top != NULL) {
-	    mainloop_set_trigger(config_read);	    
-	}
-
 	if(cib_config_changed(NULL, NULL, &diff)) {
 	    abort_transition(INFINITY, tg_restart, "Non-status change", diff);
 	    goto bail; /* configuration changed */
+	}
+
+	/* Tickets Attributes - Added/Updated */
+	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_TICKETS);
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	    xmlNode *aborted = getXpathResult(xpathObj, 0);
+	    abort_transition(INFINITY, tg_restart, "Ticket attribute: update", aborted);
+	    goto bail;
+
+	} else if(xpathObj) {
+	    xmlXPathFreeObject(xpathObj);
+	}
+	
+	/* Tickets Attributes - Removed */
+	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_CIB_TAG_TICKETS);
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	    xmlNode *aborted = getXpathResult(xpathObj, 0);
+	    abort_transition(INFINITY, tg_restart, "Ticket attribute: removal", aborted);
+	    goto bail;
+
+	} else if(xpathObj) {
+	    xmlXPathFreeObject(xpathObj);
 	}
 
 	/* Transient Attributes - Added/Updated */

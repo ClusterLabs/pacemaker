@@ -42,29 +42,17 @@ clone_color: pingd:1 allocation score on cl-virt-2: 1
 clone_color: pingdclone allocation score on cl-virt-1: 0
 clone_color: pingdclone allocation score on cl-virt-2: 0
 drbd-bugtrack:0 promotion score on cl-virt-1: -1
-drbd-bugtrack:0 promotion score on cl-virt-1: -INFINITY
 drbd-bugtrack:1 promotion score on cl-virt-2: 275
-drbd-bugtrack:1 promotion score on cl-virt-2: INFINITY
 drbd-infotos:0 promotion score on cl-virt-1: -1
-drbd-infotos:0 promotion score on cl-virt-1: -INFINITY
 drbd-infotos:1 promotion score on cl-virt-2: 375
-drbd-infotos:1 promotion score on cl-virt-2: INFINITY
 drbd-itwiki:0 promotion score on cl-virt-1: -1
-drbd-itwiki:0 promotion score on cl-virt-1: -INFINITY
 drbd-itwiki:1 promotion score on cl-virt-2: 275
-drbd-itwiki:1 promotion score on cl-virt-2: INFINITY
 drbd-medomus-cvs:0 promotion score on cl-virt-1: -1
-drbd-medomus-cvs:0 promotion score on cl-virt-1: -INFINITY
 drbd-medomus-cvs:1 promotion score on cl-virt-2: 375
-drbd-medomus-cvs:1 promotion score on cl-virt-2: INFINITY
 drbd-servsyslog:0 promotion score on cl-virt-1: -1
-drbd-servsyslog:0 promotion score on cl-virt-1: -INFINITY
 drbd-servsyslog:1 promotion score on cl-virt-2: 275
-drbd-servsyslog:1 promotion score on cl-virt-2: INFINITY
 drbd-smsprod2:0 promotion score on cl-virt-1: -1
-drbd-smsprod2:0 promotion score on cl-virt-1: -INFINITY
 drbd-smsprod2:1 promotion score on cl-virt-2: 375
-drbd-smsprod2:1 promotion score on cl-virt-2: INFINITY
 group_color: ssh allocation score on cl-virt-1: 0
 group_color: ssh allocation score on cl-virt-2: 0
 group_color: ssh-bin allocation score on cl-virt-1: 0

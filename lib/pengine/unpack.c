@@ -367,6 +367,11 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
     xmlNode *xml_obj = NULL;
     for(xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
 	resource_t *new_rsc = NULL;
+
+	if(crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, TRUE)) {
+	    continue;
+	}
+
 	crm_debug_3("Beginning unpack... <%s id=%s... >",
 		    crm_element_name(xml_obj), ID(xml_obj));
 	if(common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
@@ -397,7 +402,83 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
     return TRUE;
 }
 
+static void
+get_ticket_state(gpointer key, gpointer value, gpointer user_data)
+{
+    const char *attr_key = key;
 
+    const char *granted_prefix = "granted-ticket-";
+    const char *last_granted_prefix = "last-granted-ticket-";
+    static int granted_prefix_strlen = 0;
+    static int last_granted_prefix_strlen = 0;
+    
+    const char *ticket_id = NULL; 
+    const char *is_granted = NULL;
+    const char *last_granted = NULL;
+
+    ticket_t *ticket = NULL;
+    GHashTable *tickets = user_data;
+
+    if(granted_prefix_strlen == 0) {
+	granted_prefix_strlen = strlen(granted_prefix);
+    }
+
+    if(last_granted_prefix_strlen == 0) {
+	last_granted_prefix_strlen = strlen(last_granted_prefix);
+    }
+
+    if (strstr(attr_key, granted_prefix) == attr_key) {
+	ticket_id = attr_key + granted_prefix_strlen;
+	if(strlen(ticket_id)) {
+	    is_granted = value;
+	}
+    } else if (strstr(attr_key, last_granted_prefix) == attr_key) {
+	ticket_id = attr_key + last_granted_prefix_strlen;
+	if(strlen(ticket_id)) {
+	    last_granted = value;
+	}
+    }
+
+    if(ticket_id == NULL || strlen(ticket_id) == 0) {
+	return;
+    }
+
+    ticket = g_hash_table_lookup(tickets, ticket_id);
+    if(ticket == NULL) {
+	crm_malloc0(ticket, sizeof(ticket_t));
+	if(ticket == NULL) {
+	    crm_config_err("Cannot allocate ticket '%s'", ticket_id);
+	    return;
+	}
+
+	ticket->id = crm_strdup(ticket_id);
+	ticket->granted = FALSE;
+	ticket->last_granted = -1;
+
+	g_hash_table_insert(tickets, crm_strdup(ticket->id), ticket);
+    }
+
+    if(is_granted) {
+	if(crm_is_true(is_granted)) {
+	    ticket->granted = TRUE;
+	    crm_info("We have ticket '%s'", ticket->id);
+	} else {
+	    ticket->granted = FALSE;
+	    crm_info("We do not have ticket '%s'", ticket->id);
+    	}
+
+    } else if(last_granted) {
+	ticket->last_granted = crm_parse_int(last_granted, 0);
+    }
+}
+
+static void destroy_ticket(gpointer data)
+{
+    ticket_t *ticket = data;
+
+    crm_free(ticket->id);
+    crm_free(ticket);
+}
 /* remove nodes that are down, stopping */
 /* create +ve rsc_to_node constraints between resources and the nodes they are running on */
 /* anything else? */
@@ -409,12 +490,35 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 
     xmlNode * lrm_rsc    = NULL;
     xmlNode * attrs      = NULL;
+    xmlNode * state      = NULL;
     xmlNode * node_state = NULL;
     node_t  *this_node   = NULL;
 	
     crm_debug_3("Beginning unpack");
-    for(node_state = __xml_first_child(status); node_state != NULL; node_state = __xml_next(node_state)) {
-	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+
+    data_set->tickets = g_hash_table_new_full(
+	    crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+
+    for(state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
+	if(crm_str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, TRUE)) {
+    	    xmlNode *tickets = state;
+	    GHashTable *attrs_hash = g_hash_table_new_full(
+			    crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+	    unpack_instance_attributes(
+			data_set->input, tickets, XML_TAG_ATTR_SETS, NULL,
+			attrs_hash, NULL, TRUE, data_set->now);
+
+	    g_hash_table_foreach(attrs_hash, get_ticket_state, data_set->tickets);
+
+	    if(attrs_hash) {
+		g_hash_table_destroy(attrs_hash);
+	    }
+	}
+
+	if(crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
+    	    node_state = state;
+
 	    id    = crm_element_value(node_state, XML_ATTR_ID);
 	    uname = crm_element_value(node_state, XML_ATTR_UNAME);
 	    attrs = find_xml_node(node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
@@ -1228,14 +1332,15 @@ process_recurring(node_t *node, resource_t *rsc,
 			rsc->id, node->details->uname);
 	    break;
 			   
-	} else if(start_index < stop_index) {
-	    crm_debug_4("Skipping %s/%s: not active",
-			rsc->id, node->details->uname);
-	    break;
-			   
-	} else if(counter <= start_index) {
-	    crm_debug_4("Skipping %s/%s: old",
+	/* Need to check if there's a monitor for role="Stopped" */
+	} else if(start_index < stop_index && counter <= stop_index) {
+	    crm_debug_4("Skipping %s/%s: resource is not active",
 			id, node->details->uname);
+	    continue;
+			   
+	} else if(counter < start_index) {
+	    crm_debug_4("Skipping %s/%s: old %d",
+			id, node->details->uname, counter);
 	    continue;
 	}
 		   	
@@ -1431,7 +1536,7 @@ static xmlNode *find_lrm_op(const char *resource, const char *op, const char *no
     int offset = 0;
     char xpath[STATUS_PATH_MAX];
 
-    offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "//node_state[@id='%s']", node);
+    offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "//node_state[@uname='%s']", node);
     offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "//"XML_LRM_TAG_RESOURCE"[@id='%s']", resource);
 
     /* Need to check against transition_magic too? */
@@ -1474,6 +1579,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 
     gboolean expired = FALSE;
     gboolean is_probe = FALSE;
+    gboolean clear_past_failure = FALSE;
 	
     CRM_CHECK(rsc    != NULL, return FALSE);
     CRM_CHECK(node   != NULL, return FALSE);
@@ -1740,36 +1846,27 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 			rsc->id, task, node->details->uname);
 
 	    if(actual_rc_i == EXECRA_NOT_RUNNING) {
-		/* nothing to do */
-			    
-	    } else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
-		rsc->role = RSC_ROLE_STOPPED;
+		clear_past_failure = TRUE;
+		
+	    } else if(safe_str_eq(task, CRMD_ACTION_START)) {
+		rsc->role = RSC_ROLE_STARTED;
+		clear_past_failure = TRUE;
 				
-		/* clear any previous failure actions */
-		switch(*on_fail) {
-		    case action_fail_block:
-		    case action_fail_stop:
-		    case action_fail_fence:
-		    case action_fail_migrate:
-		    case action_fail_standby:
-			crm_debug_2("%s.%s is not cleared by a completed stop",
-				    rsc->id, fail2text(*on_fail));
-			break;
-
-		    case action_fail_ignore:
-		    case action_fail_recover:
-			*on_fail = action_fail_ignore;
-			rsc->next_role = RSC_ROLE_UNKNOWN;
-		}
+	    } else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
+		rsc->role = RSC_ROLE_STOPPED;				
+		clear_past_failure = TRUE;
 
 	    } else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 		rsc->role = RSC_ROLE_MASTER;
+		clear_past_failure = TRUE;
 
 	    } else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
 		rsc->role = RSC_ROLE_SLAVE;
+		clear_past_failure = TRUE;
 
 	    } else if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
 		rsc->role = RSC_ROLE_STARTED;
+		clear_past_failure = TRUE;
 			    
 	    } else if(safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
 		/*
@@ -1797,7 +1894,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 		    const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
 		    const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
-		    node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
+		    node_t *target = pe_find_node(data_set->nodes, migrate_target);
 		    xmlNode *migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source, data_set);
 
 		    rsc->role = RSC_ROLE_STARTED; /* can be master? */
@@ -1847,6 +1944,25 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 			    rsc->id, node->details->uname);
 		set_active(rsc);
 	    }
+
+	    /* clear any previous failure actions */
+	    if(clear_past_failure) {
+		switch(*on_fail) {
+		    case action_fail_block:
+		    case action_fail_stop:
+		    case action_fail_fence:
+		    case action_fail_migrate:
+		    case action_fail_standby:
+			crm_debug_2("%s.%s is not cleared by a completed stop",
+				    rsc->id, fail2text(*on_fail));
+			break;
+			
+		    case action_fail_ignore:
+		    case action_fail_recover:
+			*on_fail = action_fail_ignore;
+			rsc->next_role = RSC_ROLE_UNKNOWN;
+		}
+	    }
 	    break;
 
 	case LRM_OP_ERROR:
@@ -1888,7 +2004,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 		rsc->role = RSC_ROLE_STARTED; /* can be master? */
 
 		if(stop_op == NULL || stop_id < migrate_id) {
-		    node_t *source = pe_find_node_id(data_set->nodes, migrate_source);
+		    node_t *source = pe_find_node(data_set->nodes, migrate_source);
 				
 		    if(source && source->details->online) {
 			native_add_running(rsc, source, data_set);
@@ -1915,7 +2031,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 		rsc->role = RSC_ROLE_STARTED; /* can be master? */
 
 		if(stop_op == NULL || stop_id < migrate_id) {
-		    node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
+		    node_t *target = pe_find_node(data_set->nodes, migrate_target);
 
 		    crm_trace("Stop: %p %d, Migrated: %p %d", stop_op, stop_id, migrate_op, migrate_id);
 		    if(target && target->details->online) {

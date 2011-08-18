@@ -72,6 +72,9 @@
 #define XML_ATTR_OP			"op"
 #define XML_ATTR_DC			"is_dc"
 #define XML_ATTR_DC_UUID		"dc-uuid"
+#define XML_ATTR_UPDATE_ORIG		"update-origin"
+#define XML_ATTR_UPDATE_CLIENT		"update-client"
+#define XML_ATTR_UPDATE_USER		"update-user"
 
 #define XML_BOOLEAN_TRUE		"true"
 #define XML_BOOLEAN_FALSE		"false"
@@ -143,6 +146,8 @@
 #define XML_CIB_TAG_GROUP	  	"group"
 #define XML_CIB_TAG_INCARNATION		"clone"
 #define XML_CIB_TAG_MASTER		"master"
+
+#define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
 #define XML_RSC_ATTR_RESTART	  	"restart-type"
 #define XML_RSC_ATTR_ORDERED		"ordered"
@@ -234,6 +239,7 @@
 #define XML_CONS_TAG_RSC_DEPEND		"rsc_colocation"
 #define XML_CONS_TAG_RSC_ORDER		"rsc_order"
 #define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
+#define XML_CONS_TAG_RSC_TICKET		"rsc_ticket"
 #define XML_CONS_TAG_RSC_SET		"resource_set"
 #define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
@@ -252,6 +258,9 @@
 #define XML_ORDER_ATTR_FIRST_INSTANCE	"first-instance"
 #define XML_ORDER_ATTR_THEN_INSTANCE	"then-instance"
 #define XML_ORDER_ATTR_KIND		"kind"
+
+#define XML_TICKET_ATTR_TICKET		"ticket"
+#define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
 #define XML_NVPAIR_ATTR_VALUE        	"value"
@@ -288,11 +297,15 @@
 #define XML_ACL_ATTR_XPATH		"xpath"
 #define XML_ACL_ATTR_ATTRIBUTE		"attribute"
 
+#define XML_CIB_TAG_TICKETS   		"tickets"
+
 #include <crm/common/xml.h> 
 
 #define ID(x) crm_element_value(x, XML_ATTR_ID)
 #define INSTANCE(x) crm_element_value(x, XML_CIB_ATTR_INSTANCE)
 #define TSTAMP(x) crm_element_value(x, XML_ATTR_TSTAMP)
 #define TYPE(x) crm_element_name(x) 
+#define NAME(x) crm_element_value(x, XML_NVPAIR_ATTR_NAME)
+#define VALUE(x) crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
 
 #endif

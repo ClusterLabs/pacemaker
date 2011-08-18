@@ -132,7 +132,8 @@ def pipe_string(cmd,s):
         p.wait()
         rc = p.returncode
     except IOError, msg:
-        common_err(msg)
+        if not ("Broken pipe" in msg):
+            common_err(msg)
     return rc
 def filter_string(cmd,s,stderr_on = True):
     rc = -1 # command failed
@@ -275,11 +276,11 @@ def wait4dc(what = "", show_progress = True):
             return True
         time.sleep(0.1)
         if show_progress:
+            if not output_started:
+                output_started = 1
+                sys.stderr.write("waiting for %s to finish ." % what)
             cnt += 1
-            if cnt % 10 == 0:
-                if not output_started:
-                    output_started = 1
-                    sys.stderr.write("waiting for %s to finish " % what)
+            if cnt % 5 == 0:
                 sys.stderr.write(".")
 
 def is_id_valid(id):
@@ -323,9 +324,9 @@ def page_string(s):
     if not s:
         return
     w,h = get_winsize()
-    if s.count('\n') <= h:
+    if s.count('\n') < h:
         print s
-    elif not user_prefs.pager or not options.interactive:
+    elif not user_prefs.pager or not sys.stdout.isatty() or options.batch:
         print s
     else:
         opts = ""

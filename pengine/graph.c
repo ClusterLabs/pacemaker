@@ -34,11 +34,118 @@
 gboolean update_action(action_t *action);
 gboolean rsc_update_action(action_t *first, action_t *then, enum pe_ordering type);
 
+static enum pe_action_flags get_action_flags(action_t *action, node_t *node) 
+{
+    enum pe_action_flags flags = action->flags;
+    if(action->rsc) {
+	flags = action->rsc->cmds->action_flags(action, NULL);
+
+	if(action->rsc->variant >= pe_clone && node) {
+
+	    /* We only care about activity on $node */ 
+	    enum pe_action_flags clone_flags = action->rsc->cmds->action_flags(action, node);
+
+	    /* Go to great lengths to ensure the correct value for pe_action_runnable...
+	     *
+	     * If we are a clone, then for _ordering_ constraints, its only relevant
+	     * if we are runnable _anywhere_.
+	     *
+	     * This only applies to _runnable_ though, and only for ordering constraints.
+	     * If this function is ever used during colocation, then we'll need additional logic
+	     *
+	     * Not very satisfying, but its logical and appears to work well.
+	     */
+	    if(is_not_set(clone_flags, pe_action_runnable)
+	       && is_set(flags, pe_action_runnable)) {
+		crm_trace("Fixing up runnable flag for %s", action->uuid);
+		set_bit_inplace(clone_flags, pe_action_runnable);
+	    }
+	    flags = clone_flags;
+	}
+    }
+    return flags;
+}
+
+static char *
+convert_non_atomic_uuid(char *old_uuid, resource_t *rsc, gboolean allow_notify, gboolean free_original)
+{
+    int interval = 0;
+    char *uuid = NULL;
+    char *rid = NULL;
+    char *raw_task = NULL;
+    int task = no_action;
+
+    crm_debug_3("Processing %s", old_uuid);
+    if(old_uuid == NULL) {
+	return NULL;
+
+    } else if(strstr(old_uuid, "notify") != NULL) {
+	goto done; /* no conversion */
+
+    } else if(rsc->variant < pe_group) {
+	goto done; /* no conversion */
+    }
+
+    CRM_ASSERT(parse_op_key(old_uuid, &rid, &raw_task, &interval));
+    if(interval > 0) {
+	goto done; /* no conversion */
+    } 
+	
+    task = text2task(raw_task);
+    switch(task) {
+	case stop_rsc:
+	case start_rsc:
+	case action_notify:
+	case action_promote:
+	case action_demote:
+	    break;
+	case stopped_rsc:
+	case started_rsc:
+	case action_notified:
+	case action_promoted:
+	case action_demoted:
+	    task--;
+	    break;
+	case monitor_rsc:
+	case shutdown_crm:
+	case stonith_node:
+	    task = no_action;
+	    break;
+	default:
+	    crm_err("Unknown action: %s", raw_task);
+	    task = no_action;
+	    break;
+    }
+	
+    if(task != no_action) {
+	if(is_set(rsc->flags, pe_rsc_notify) && allow_notify) {
+	    uuid = generate_notify_key(rid, "confirmed-post", task2text(task+1));
+	    
+	} else {
+	    uuid = generate_op_key(rid, task2text(task+1), 0);
+	}
+	crm_debug_2("Converted %s -> %s", old_uuid, uuid);
+    }
+	
+  done:
+    if(uuid == NULL) {
+	uuid = crm_strdup(old_uuid);
+    }
+
+    if(free_original) {
+	crm_free(old_uuid);
+    }
+    
+    crm_free(raw_task);
+    crm_free(rid);
+    return uuid;
+}
+
 static action_t *rsc_expand_action(action_t *action) 
 {
     action_t *result = action;
     if(action->rsc && action->rsc->variant >= pe_group) {
-	/* Expand 'first' */
+	/* Expand 'start' -> 'started' */
 	char *uuid = NULL;
 	gboolean notify = FALSE;
 	if(action->rsc->parent == NULL) {
@@ -47,10 +154,15 @@ static action_t *rsc_expand_action(action_t *action)
 	}
 
 	uuid = convert_non_atomic_uuid(action->uuid, action->rsc, notify, FALSE);
-	crm_trace("Converted %s to %s %d", action->uuid, uuid, is_set(action->rsc->flags, pe_rsc_notify));
-	result = find_first_action(action->rsc->actions, uuid, NULL, NULL);
-	CRM_CHECK(result != NULL, crm_err("Couldn't expand %s", action->uuid); result = action);
-	crm_free(uuid);
+	if(uuid) {
+	    crm_trace("Converting %s to %s %d", action->uuid, uuid, is_set(action->rsc->flags, pe_rsc_notify));
+	    result = find_first_action(action->rsc->actions, uuid, NULL, NULL);
+	    if(result == NULL) {
+		crm_err("Couldn't expand %s", action->uuid);
+		result = action;
+	    }
+	    crm_free(uuid);
+	}
     }
     return result;
 }
@@ -63,7 +175,7 @@ static enum pe_graph_flags graph_update_action(action_t *first, action_t *then, 
     /* TODO: Do as many of these in parallel as possible */
     
     if(type & pe_order_implies_then) {
-	crm_trace("implies right");
+	crm_trace("implies right: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
 	if(then->rsc) {
 	    changed |= then->rsc->cmds->update_actions(
@@ -78,14 +190,14 @@ static enum pe_graph_flags graph_update_action(action_t *first, action_t *then, 
 
     if(type & pe_order_restart) {
 	enum pe_action_flags restart = (pe_action_optional|pe_action_runnable);
-	crm_trace("restart");
+	crm_trace("restart: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
 	changed |= then->rsc->cmds->update_actions(
 	    first, then, node, flags & restart, restart, pe_order_restart);
     }
     
     if(type & pe_order_implies_first) {
-	crm_trace("implies left");
+	crm_trace("implies left: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
 	if(first->rsc) {
 	    changed |= first->rsc->cmds->update_actions(
@@ -99,7 +211,7 @@ static enum pe_graph_flags graph_update_action(action_t *first, action_t *then, 
     }
 
     if(type & pe_order_runnable_left) {
-	crm_trace("runnable");
+	crm_trace("runnable: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
 	if(then->rsc) {
 	    changed |= then->rsc->cmds->update_actions(
@@ -113,7 +225,7 @@ static enum pe_graph_flags graph_update_action(action_t *first, action_t *then, 
     }
 
     if(type & pe_order_optional) {
-	crm_trace("optional");
+	crm_trace("optional: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
 	if(then->rsc) {
 	    changed |= then->rsc->cmds->update_actions(
@@ -155,8 +267,45 @@ update_action(action_t *then)
 	action_wrapper_t *other = (action_wrapper_t*)lpc->data;
 	action_t *first = other->action;
 
-	enum pe_action_flags first_flags = get_action_flags(first, then->node);
-	enum pe_action_flags then_flags  = get_action_flags(then, first->node);
+	node_t *then_node  = then->node;
+	node_t *first_node = first->node;
+
+	enum pe_action_flags then_flags  = 0;
+	enum pe_action_flags first_flags = 0;
+
+	if(first->rsc
+	   && first->rsc->variant == pe_group
+	   && safe_str_eq(first->task, RSC_START)) {
+	    first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
+	    if(first_node) {
+		crm_trace("First: Found node %s for %s", first_node->details->uname, first->uuid);
+	    }
+	}
+
+	if(then->rsc
+	   && then->rsc->variant == pe_group
+	   && safe_str_eq(then->task, RSC_START)) {
+	    then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
+	    if(then_node) {
+		crm_trace("Then: Found node %s for %s", then_node->details->uname, then->uuid);
+	    }
+	}
+	
+	clear_bit_inplace(changed, pe_graph_updated_first);
+
+	if(first->rsc != then->rsc
+	   && first->rsc != NULL
+	   && then->rsc != NULL
+	   && first->rsc != then->rsc->parent) {
+	    first = rsc_expand_action(first);
+	}
+	if(first != other->action) {
+	    crm_trace("Ordering %s afer %s instead of %s", then->uuid, first->uuid, other->action->uuid);
+	}
+
+	first_flags = get_action_flags(first, then_node);
+	then_flags  = get_action_flags(then, first_node);
+
 	crm_trace("Checking %s (%s %s %s) against %s (%s %s %s) 0x%.6x",
 		  then->uuid,
 		  is_set(then_flags, pe_action_optional)?"optional":"required",
@@ -168,24 +317,17 @@ update_action(action_t *then)
 		  is_set(first_flags, pe_action_pseudo)?"pseudo":first->node?first->node->details->uname:"",
 		  other->type);
 
-	clear_bit_inplace(changed, pe_graph_updated_first);
-	if(first->rsc != then->rsc
-	   && (then->rsc == NULL || first->rsc != then->rsc->parent)) {
-	    first = rsc_expand_action(first);
-	}
-
 	if(first == other->action) {
 	    clear_bit_inplace(first_flags, pe_action_pseudo);
 	    changed |= graph_update_action(first, then, then->node, first_flags, other->type);
 	    
 	} else if(order_actions(first, then, other->type)) {
-	    crm_trace("Ordering %s afer %s instead of %s", then->uuid, first->uuid, other->action->uuid);
 	    /* Start again to get the new actions_before list */
 	    changed |= (pe_graph_updated_then|pe_graph_disable);
 	}
 
 	if(changed & pe_graph_disable) {
-	    crm_trace("Disabled constraint %s -> %s", then->uuid, first->uuid);
+	    crm_trace("Disabled constraint %s -> %s", other->action->uuid, then->uuid);
 	    clear_bit_inplace(changed, pe_graph_disable);
 	    other->type = pe_order_none;	    
 	}
@@ -539,7 +681,7 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 	      && is_set(wrapper->action->rsc->flags, pe_rsc_failed)
 	      && is_not_set(wrapper->action->rsc->flags, pe_rsc_managed)
 	      && strstr(wrapper->action->uuid, "_stop_0")
-	      && action->rsc->variant >= pe_clone) {
+	      && action->rsc && action->rsc->variant >= pe_clone) {
 	crm_warn("Ignoring requirement that %s comeplete before %s:"
 		 " unmanaged failed resources cannot prevent clone shutdown",
 		 wrapper->action->uuid, action->uuid);

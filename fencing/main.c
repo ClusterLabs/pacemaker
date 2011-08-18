@@ -35,6 +35,7 @@
 #include <crm/common/cluster.h>
 
 #include <crm/stonith-ng.h>
+#include <crm/stonith-ng-internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 
@@ -513,7 +514,7 @@ main(int argc, char ** argv)
 
     set_crm_log_level(LOG_INFO);
     crm_system_name = "stonith-ng";    
-    crm_set_options("V?s$", "mode [options]", long_options,
+    crm_set_options(NULL, "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
@@ -560,15 +561,18 @@ main(int argc, char ** argv)
 	printf("    <content type=\"integer\" default=\"0\"/>\n");
 	printf("  </parameter>\n");
 
-	printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_ARGMAP);
-	printf("    <shortdesc lang=\"en\">A mapping of host attributes to device arguments.</shortdesc>\n");
-	printf("    <longdesc lang=\"en\">Eg. uname:domain would tell the cluster to pass the machines name as the domain argument to the device.  Useful for devices that have non-standard interfaces</longdesc>\n");
-	printf("    <content type=\"string\" default=\"\"/>\n");
+	printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTARG);
+	printf("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
+	printf("    <longdesc lang=\"en\">Some devices do not support the standard 'port' parameter or may provide additional ones.\n"
+	       "Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
+	       "A value of 'none' can be used to tell the cluster not to supply any additional parameters.\n"
+	       "     </longdesc>\n");
+	printf("    <content type=\"string\" default=\"port\"/>\n");
 	printf("  </parameter>\n");
 
 	printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTMAP);
-	printf("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support names.</shortdesc>\n");
-	printf("    <longdesc lang=\"en\">Eg. node1:1,node2:3 would tell the cluster to use port 1 for node1 and port 3 for node2</longdesc>\n");
+	printf("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n");
+	printf("    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n");
 	printf("    <content type=\"string\" default=\"\"/>\n");
 	printf("  </parameter>\n");
 
@@ -586,8 +590,8 @@ main(int argc, char ** argv)
 	for(lpc = 0; lpc < DIMOF(actions); lpc++) {
 	    printf("  <parameter name=\"pcmk_%s_action\" unique=\"0\">\n", actions[lpc]);
 	    printf("    <shortdesc lang=\"en\">Advanced use only: An alternate command to run instead of '%s'</shortdesc>\n", actions[lpc]);
-	    printf("    <longdesc lang=\"en\">Some devices do not support the standard commands or may provide additional ones."
-		   "  Use this to specify an alternate, device-specific, command that implements the '%s' action.</longdesc>\n", actions[lpc]);
+	    printf("    <longdesc lang=\"en\">Some devices do not support the standard commands or may provide additional ones.\n"
+		   "Use this to specify an alternate, device-specific, command that implements the '%s' action.</longdesc>\n", actions[lpc]);
 	    printf("    <content type=\"string\" default=\"%s\"/>\n", actions[lpc]);
 	    printf("  </parameter>\n");
 	}

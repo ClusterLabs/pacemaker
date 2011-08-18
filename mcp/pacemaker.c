@@ -408,10 +408,12 @@ pcmk_shutdown_worker(gpointer user_data)
     return TRUE;	
 }
 
-static void
+void
 pcmk_shutdown(int nsig)
 {
-    shutdown_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, pcmk_shutdown_worker, NULL);
+    if(shutdown_trigger == NULL) {
+	shutdown_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, pcmk_shutdown_worker, NULL);
+    }
     mainloop_set_trigger(shutdown_trigger);
 }
 
@@ -628,14 +630,13 @@ main(int argc, char **argv)
     /* =::=::= Default Environment =::=::= */
     setenv("HA_mcp",		"true",    1);
     setenv("HA_COMPRESSION",	"bz2",     1);
-    setenv("HA_cluster_type",	"corosync",1);
     setenv("HA_debug",		"0",       1);
     setenv("HA_logfacility",	"daemon",  1);
     setenv("HA_LOGFACILITY",	"daemon",  1);
     setenv("HA_use_logd",       "off",     1);
     
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
-    crm_set_options("V?$fp:F", "mode [options]", long_options,
+    crm_set_options(NULL, "mode [options]", long_options,
 		    "Start/Stop Pacemaker\n");
 
 #ifndef ON_DARWIN
@@ -692,7 +693,7 @@ main(int argc, char **argv)
 	crm_make_daemon(crm_system_name, TRUE, pid_file);
 
 	/* Only Re-init if we're running daemonized */
-	crm_log_init_quiet(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
+	crm_log_init(NULL, LOG_INFO, TRUE, FALSE, 0, NULL);
     }
 
     crm_info("Starting Pacemaker %s (Build: %s): %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);    

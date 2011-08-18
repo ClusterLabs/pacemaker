@@ -46,11 +46,11 @@ CIB_TXT_F=cib.txt
 EVENT_PATTERNS="
 state		do_state_transition
 membership	pcmk_peer_update.*(lost|memb):
-quorum		crmd.*ais.disp.*quorum.(lost|ac?quir)
+quorum		crmd.*crm_update_quorum|crmd.*ais.disp.*quorum.(lost|ac?quir)
 pause		Process.pause.detected
 resources	lrmd.*rsc:(start|stop)
-stonith		stonithd.*(requests|(Succeeded|Failed).to.STONITH|result=)
-start_stop	Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
+stonith		te_fence_node|stonith-ng.*log_oper.*report|stonithd.*(requests|(Succeeded|Failed).to.STONITH|result=)
+start_stop	sutdown.decision|Starting.heartbeat|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
 "
 
 PACKAGES="pacemaker pacemaker-libs libpacemaker3 
@@ -101,6 +101,7 @@ detect_host() {
     if [ -d $local_state_dir/run/crm ]; then
 	CRM_STATE_DIR=$local_state_dir/run/crm
     else
+        info "Detecting where Pacemaker keeps state information... this may take a while"
 	for d in `find / -type d -name run`; do
 	    if [ -d $d/crm ]; then
 		CRM_STATE_DIR=$d/crm
@@ -118,6 +119,7 @@ detect_host() {
     if [ -d $local_state_dir/lib/pengine ]; then
 	PE_STATE_DIR=$local_state_dir/lib/pengine
     else
+        info "Detecting where Pacemaker keeps Policy Engine inputs... this may take a while"
 	for d in `find / -type d -name pengine`; do
 	    PE_STATE_DIR=$d
 	    break
@@ -151,6 +153,7 @@ detect_host() {
 	fi
     done
     if [ ! -d $CRM_DAEMON_DIR ]; then
+        info "Detecting where Pacemaker daemons live... this may take a while"
 	for d in `find / -type d -name heartbeat`; do
 	    if [ -f $d/crmd ]; then
 		CRM_DAEMON_DIR=$d
@@ -252,11 +255,13 @@ findmsg() {
 }
 
 node_events() {
+  if [ -e $1 ]; then
     Epatt=`echo "$EVENT_PATTERNS" |
       while read title p; do [ -n "$p" ] && echo -n "|$p"; done |
       sed 's/.//'
       `
     grep -E "$Epatt" $1
+  fi
 }
 
 pickfirst() {
@@ -270,9 +275,12 @@ pickfirst() {
 }
 
 shrink() {
-    src=$*
+    olddir=$PWD
+    dir=`dirname $1`
+    base=`basename $1`
+    
     target=$1.tar
-    tar_options=cf
+    tar_options="cf"
 
     variant=`pickfirst bzip2 gzip false`
     case $variant in
@@ -289,7 +297,14 @@ shrink() {
 	    ;;
     esac
 
-    tar $tar_options $target $src >/dev/null 2>&1
+    if [ -e $target ]; then
+	fatal "Destination $target already exists, specify an alternate name with --dest"
+    fi
+
+    cd $dir  >/dev/null 2>&1
+    tar $tar_options $target $base >/dev/null 2>&1
+    cd $olddir  >/dev/null 2>&1
+
     echo $target
 }
 
@@ -457,9 +472,16 @@ print_logseg() {
 			warning "couldn't find line for time $to_time; corrupt log file?"
 			return
 		fi
+		if [ $FROM_LINE -lt $TO_LINE ]; then
+		    dumplog $sourcef $FROM_LINE $TO_LINE
+		    log "Including segment [$FROM_LINE-$TO_LINE] from $logf"
+		else
+		    log "Segment from $logf finished before it started, line: $FROM_LINE to $TO_LINE"
+		fi
+	else
+	    dumplog $sourcef $FROM_LINE $TO_LINE
+	    log "Including all logs after line $FROM_LINE from $logf"
 	fi
-	dumplog $sourcef $FROM_LINE $TO_LINE
-	log "Including segment [$FROM_LINE-$TO_LINE] from $logf"
 	drop_tmp_file
 	trap "" 0
 }
@@ -518,6 +540,9 @@ getcfvar() {
 
     [ -f "$cf_file" ] || return
     case $cf_type in
+	cman)
+	    grep $cf_var $cf_file | sed s/.*$cf_var=\"// | sed s/\".*//
+	    ;;
 	corosync|openais)
 	    sed 's/#.*//' < $cf_file |
 	        if [ $# -eq 2 ]; then
@@ -553,17 +578,26 @@ get_cluster_type() {
     if 
 	ps -ef | egrep -qs '[c]orosync'
     then
-	stack="corosync"
+	quorum=`corosync-objctl -a | grep quorum.provider | sed s/.*=//`
+	if [ x"$quorum" = x"quorum_cman" ]; then
+	    stack="cman"
+	else
+	    stack="corosync"
+	fi
+
     elif
 	ps -ef | egrep -qs '[a]isexec'
     then
 	stack="openais"
     elif
-	ps -ef | egrep -qs '[h]eartbeat'
+	ps -ef | grep -v -e grep -e "eartbeat/[clasp]" | egrep -qs '[h]eartbeat'
     then
 	stack="heartbeat"
 
     # Now we're guessing...
+
+    elif [ -f /etc/cluster/cluster.conf ]; then
+	stack="cman"
 
     # TODO: Technically these could be anywhere :-/
     elif [ -f /etc/corosync/corosync.conf ]; then
@@ -576,12 +610,13 @@ get_cluster_type() {
 	stack="heartbeat"
     fi
 
-    debug "Detected the $stack cluster stack"
+    debug "Detected the '$stack' cluster stack"
     echo $stack
 }
 
 find_cluster_cf() {
     case $1 in
+	cman) echo "/etc/cluster/cluster.conf";;
 	corosync)
 	    best_size=0
 	    best_file=""

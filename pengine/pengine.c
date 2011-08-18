@@ -63,6 +63,9 @@ series_t series[] = {
 gboolean
 process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 {
+	static char *filename = NULL;
+	static char *last_digest = NULL;
+
 	gboolean send_via_disk = FALSE;
 	const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
 	const char *op = crm_element_value(msg, F_CRM_TASK);
@@ -88,12 +91,13 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		int seq = -1;
 		int series_id = 0;
 		int series_wrap = 0;
-		char *filename = NULL;
+		char *digest = NULL;
 		char *graph_file = NULL;
 		const char *value = NULL;
 		pe_working_set_t data_set;
 		xmlNode *converted = NULL;
 		xmlNode *reply = NULL;
+		gboolean is_repoke = FALSE;
 		gboolean process = TRUE;
 #if HAVE_BZLIB_H
 		gboolean compress = TRUE;
@@ -112,12 +116,21 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 
 		set_working_set_defaults(&data_set);
 
+		digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE, CRM_FEATURE_SET);
 		converted = copy_xml(xml_data);
 		if(cli_config_update(&converted, NULL, TRUE) == FALSE) {
 		    data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
 		    crm_xml_add_int(data_set.graph, "transition_id", 0);
 		    crm_xml_add_int(data_set.graph, "cluster-delay", 0);
 		    process = FALSE;
+
+		} else if(safe_str_eq(digest, last_digest)) {
+		    crm_trace("Input has not changed since last time, not saving to disk");
+		    is_repoke = TRUE;
+
+		} else {
+		    crm_free(last_digest);
+		    last_digest = digest;
 		}
 
 		if(process) {
@@ -146,8 +159,12 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		reply = create_reply(msg, data_set.graph);
 		CRM_ASSERT(reply != NULL);
 
-		filename = generate_series_filename(
+		if(is_repoke == FALSE) {
+		    crm_free(filename);
+		    filename = generate_series_filename(
 			PE_STATE_DIR, series[series_id].name, seq, compress);
+		}
+		
 		crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
 		crm_xml_add_int(reply, "graph-errors", was_processing_error);
 		crm_xml_add_int(reply, "graph-warnings", was_processing_warning);
@@ -158,9 +175,9 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		    if(sender && sender->ops->get_chan_status(sender) == IPC_CONNECT) {
 			send_via_disk = TRUE;
 			crm_err("Answer could not be sent via IPC, send via the disk instead");	           
-			crm_info("Writing the TE graph to %s", graph_file);
+			crm_notice("Writing the TE graph to %s", graph_file);
 			if(write_xml_file(data_set.graph, graph_file, FALSE) < 0) {
-				crm_err("TE graph could not be written to disk");
+			    crm_err("TE graph could not be written to disk");
 			}
 		    } else {
 			crm_info("Peer disconnected, discarding transition graph");
@@ -170,10 +187,10 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		free_xml(reply);
 		cleanup_alloc_calculations(&data_set);
 
-		if(series_wrap != 0) {
+		if(is_repoke == FALSE && series_wrap != 0) {
 		    write_xml_file(xml_data, filename, compress);
-		    write_last_sequence(PE_STATE_DIR, series[series_id].name,
-					seq+1, series_wrap);
+		    write_last_sequence(
+			PE_STATE_DIR, series[series_id].name, seq+1, series_wrap);
 		}
 		
 		if(was_processing_error) {
@@ -189,17 +206,17 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 				 transition_id, filename);
 
 		} else {
-			crm_info("Transition %d: PEngine Input stored in: %s",
-				 transition_id, filename);
+			crm_notice("Transition %d: PEngine Input stored in: %s",
+				   transition_id, filename);
 		}
 
 		if(crm_config_error) {
-			crm_info("Configuration ERRORs found during PE processing."
-			       "  Please run \"crm_verify -L\" to identify issues.");
+			crm_notice("Configuration ERRORs found during PE processing."
+				   "  Please run \"crm_verify -L\" to identify issues.");
 
 		} else if(crm_config_warning) {
-			crm_info("Configuration WARNINGs found during PE processing."
-				 "  Please run \"crm_verify -L\" to identify issues.");
+			crm_notice("Configuration WARNINGs found during PE processing."
+				   "  Please run \"crm_verify -L\" to identify issues.");
 		}
 
 		if(send_via_disk) {
@@ -215,7 +232,6 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 
 		free_xml(converted);
 		crm_free(graph_file);
-		crm_free(filename);
 		
 	} else if(strcasecmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");
@@ -229,7 +245,7 @@ xmlNode *
 do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 {
 	GListPtr gIter = NULL;
-	int rsc_log_level = LOG_NOTICE;
+	int rsc_log_level = LOG_INFO;
 /*	pe_debug_on(); */
 
 	CRM_ASSERT(xml_input || is_set(data_set->flags, pe_flag_have_status));

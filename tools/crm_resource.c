@@ -330,7 +330,7 @@ static resource_t *find_rsc_or_clone(const char *rsc, pe_working_set_t *data_set
 }
 
 static int
-dump_resource(const char *rsc, pe_working_set_t *data_set)
+dump_resource(const char *rsc, pe_working_set_t *data_set, gboolean expanded)
 {
     char *rsc_xml = NULL;
     resource_t *the_rsc = find_rsc_or_clone(rsc, data_set);
@@ -340,9 +340,17 @@ dump_resource(const char *rsc, pe_working_set_t *data_set)
     }
     the_rsc->fns->print(the_rsc, NULL, pe_print_printf, stdout);
 
-    rsc_xml = dump_xml_formatted(the_rsc->xml);
+    if(expanded) {
+	rsc_xml = dump_xml_formatted(the_rsc->xml);
+    } else {
+	if(the_rsc->orig_xml) {
+	    rsc_xml = dump_xml_formatted(the_rsc->orig_xml);
+	} else {
+	    rsc_xml = dump_xml_formatted(the_rsc->xml);
+	}
+    }
 
-    fprintf(stdout, "raw xml:\n%s\n", rsc_xml);
+    fprintf(stdout, "%sxml:\n%s\n", expanded?"":"raw ", rsc_xml);
 	
     crm_free(rsc_xml);
 	
@@ -416,7 +424,7 @@ static int find_resource_attr(
     offset += snprintf(xpath_string + offset, xpath_max - offset, "//*[@id=\"%s\"]", rsc);
 
     if(set_type) {
-	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", set_type);
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s", set_type);
 	if(set_name) {
 	    offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
 	}
@@ -988,13 +996,14 @@ list_resource_operations(
 	const char *op_rsc = crm_element_value(xml_op, "resource");
 	const char *last = crm_element_value(xml_op, "last_run");
 	const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+	const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
 	int status = crm_parse_int(status_s, "0");
 
 	rsc = pe_find_resource(data_set->resources, op_rsc);
 	rsc->fns->print(rsc, "", opts, stdout);
 	       
 	fprintf(stdout, ": %s (node=%s, call=%s, rc=%s",
-		ID(xml_op),
+		op_key?op_key:ID(xml_op),
 		crm_element_value(xml_op, XML_ATTR_UNAME),
 		crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
 		crm_element_value(xml_op, XML_LRM_ATTR_RC));
@@ -1050,6 +1059,7 @@ static void show_colocation(resource_t *rsc, gboolean dependants, gboolean recur
     if(is_set(rsc->flags, pe_rsc_allocating)) {
 	/* Break colocation loops */
 	printf("loop %s\n", rsc->id);
+	crm_free(prefix);
 	return;
     }
 	       
@@ -1108,7 +1118,8 @@ static struct crm_option long_options[] = {
     {"list-cts",   0, 0, 'c', NULL, 1},
     {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
     {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},    
-    {"query-xml",  0, 0, 'q', "\tQuery the definition of a resource"},
+    {"query-xml",  0, 0, 'q', "\tQuery the definition of a resource (template expanded)"},
+    {"query-xml-raw",  0, 0, 'w', "\tQuery the definition of a resource (raw xml)"},
     {"locate",     0, 0, 'W', "\t\tDisplay the current location(s) of a resource"},
     {"stack",      0, 0, 'A', "\t\tDisplay the prerequisites and dependents of a resource"},
     {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
@@ -1195,7 +1206,7 @@ main(int argc, char **argv)
     int flag;
 
     crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
-    crm_set_options("V?$LRQDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmzu:FOocqN:aA", "(query|command) [options]", long_options,
+    crm_set_options(NULL, "(query|command) [options]", long_options,
 		    "Perform tasks related to cluster resources.\n  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
     if(argc < 2) {
@@ -1258,6 +1269,7 @@ main(int argc, char **argv)
 	    case 'c':
 	    case 'l':
 	    case 'q':
+	    case 'w':
 	    case 'D':
 	    case 'F':
 	    case 'C':
@@ -1474,7 +1486,15 @@ main(int argc, char **argv)
 	    rc = cib_NOTEXISTS;	
 	    goto bail;
 	} 
-	rc = dump_resource(rsc_id, &data_set);
+	rc = dump_resource(rsc_id, &data_set, TRUE);
+
+    } else if(rsc_cmd == 'w') {
+	if(rsc_id == NULL) {
+	    CMD_ERR("Must supply a resource id with -r\n");
+	    rc = cib_NOTEXISTS;	
+	    goto bail;
+	} 
+	rc = dump_resource(rsc_id, &data_set, FALSE);
 
     } else if(rsc_cmd == 'U') {
 	if(rsc_id == NULL) {

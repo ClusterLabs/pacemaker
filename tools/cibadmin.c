@@ -99,6 +99,7 @@ static struct crm_option long_options[] = {
     {"make-master", 0, 0, 'w', NULL, 1},
     {"is-master",   0, 0, 'm', NULL, 1},
     {"empty",       0, 0, 'a', "\tOutput an empty CIB", 1},
+    {"blank",       0, 0, 'a', NULL, 1},
 
     {"-spacer-",1, 0, '-', "\nAdditional options:"},
     {"force",	    0, 0, 'f'},
@@ -192,7 +193,7 @@ main(int argc, char **argv)
 	
     int option_index = 0;
     crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv);
-    crm_set_options("!V?$o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:uncda", "command [options] [data]", long_options,
+    crm_set_options(NULL, "command [options] [data]", long_options,
 		    "Provides direct access to the cluster configuration."
 		    "\n\n Allows the configuration, or sections of it, to be queried, modified, replaced and deleted."
 		    "\n\n Where necessary, XML data will be obtained using the -X, -x, or -p options\n");

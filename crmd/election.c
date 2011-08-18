@@ -350,7 +350,8 @@ do_election_count_vote(long long action,
 	    
 	} else if(crm_compare_age(your_age) > 0) {
 	    reason = "Uptime";
-	    
+
+	    /* TODO: Check for y(our) born < 0 */
 	} else if(use_born_on && your_node->born < our_node->born) {
 	    reason = "Born";
 	    we_loose = TRUE;

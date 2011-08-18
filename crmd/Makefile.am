@@ -41,14 +41,13 @@ crmd_SOURCES	= main.c crmd.c corosync.c					\
 		cib.c pengine.c tengine.c lrm.c 			\
 		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
 
-crmd_LDADD	= $(CLUSTERLIBS) -llrm					\
-		$(top_builddir)/lib/fencing/libstonithd.la		\
+crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/transition/libtransitioner.la	\
 		$(top_builddir)/lib/pengine/libpe_rules.la		\
 		$(top_builddir)/lib/cib/libcib.la			\
 		$(top_builddir)/lib/common/libcrmcluster.la		\
-		$(top_builddir)/lib/common/libcrmcommon.la
-
+		$(top_builddir)/lib/common/libcrmcommon.la		\
+		$(CLUSTERLIBS) -llrm
 if BUILD_XML_HELP
 man8_MANS =	crmd.8
 

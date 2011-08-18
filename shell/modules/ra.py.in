@@ -643,7 +643,7 @@ def disambiguate_ra_type(s):
     '''
     l = s.split(':')
     if not l or len(l) > 3:
-        return None
+        return ["","",""]
     if len(l) == 3:
         return l
     elif len(l) == 2:

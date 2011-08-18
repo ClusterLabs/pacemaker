@@ -22,6 +22,7 @@
 #if SUPPORT_HEARTBEAT
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>
+static void *ccm_library = NULL;
 #endif
 
 #include <string.h>
@@ -35,6 +36,7 @@
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
 #include <crmd_callbacks.h>
+#include <tengine.h>
 
 gboolean membership_flux_hack = FALSE;
 void post_cache_update(int instance);
@@ -73,6 +75,7 @@ void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data)
     crm_node_t *node = value;
     if(crm_is_member_active(node) == FALSE) {
 	check_dead_member(node->uname, NULL);
+	fail_incompletable_actions(transition_graph, node->uuid);
     }
 }
 
@@ -114,9 +117,26 @@ do_ccm_control(long long action,
 {	
 #if SUPPORT_HEARTBEAT
     if(is_heartbeat_cluster()) {
+	int (*ccm_api_register)(oc_ev_t **token) = find_library_function(
+	    &ccm_library, CCM_LIBRARY, "oc_ev_register");
+	
+	int (*ccm_api_set_callback)(const oc_ev_t *token,
+				    oc_ev_class_t class,
+				    oc_ev_callback_t *fn,
+				    oc_ev_callback_t **prev_fn) = find_library_function(
+					&ccm_library, CCM_LIBRARY, "oc_ev_set_callback");
+	
+	
+	void (*ccm_api_special)(const oc_ev_t *, oc_ev_class_t , int ) = find_library_function(
+	    &ccm_library, CCM_LIBRARY, "oc_ev_special");
+	int (*ccm_api_activate)(const oc_ev_t *token, int *fd) = find_library_function(
+	    &ccm_library, CCM_LIBRARY, "oc_ev_activate");
+	int (*ccm_api_unregister)(oc_ev_t *token) = find_library_function(
+	    &ccm_library, CCM_LIBRARY, "oc_ev_unregister");
+	
 	if(action & A_CCM_DISCONNECT){
 		set_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
-		oc_ev_unregister(fsa_ev_token);
+		(*ccm_api_unregister)(fsa_ev_token);
 	}
 
 	if(action & A_CCM_CONNECT) {
@@ -125,7 +145,7 @@ do_ccm_control(long long action,
 		gboolean did_fail = FALSE;
 		crm_debug_3("Registering with CCM");
 		clear_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
-		ret = oc_ev_register(&fsa_ev_token);
+		ret = (*ccm_api_register)(&fsa_ev_token);
 		if (ret != 0) {
 			crm_warn("CCM registration failed");
 			did_fail = TRUE;
@@ -133,7 +153,7 @@ do_ccm_control(long long action,
 
 		if(did_fail == FALSE) {
 			crm_debug_3("Setting up CCM callbacks");
-			ret = oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
+			ret = (*ccm_api_set_callback)(fsa_ev_token, OC_EV_MEMB_CLASS,
 						 crmd_ccm_msg_callback, NULL);
 			if (ret != 0) {
 				crm_warn("CCM callback not set");
@@ -141,10 +161,10 @@ do_ccm_control(long long action,
 			}
 		}
 		if(did_fail == FALSE) {
-			oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
+		    (*ccm_api_special)(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
 			
 			crm_debug_3("Activating CCM token");
-			ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
+			 ret = (*ccm_api_activate)(fsa_ev_token, &fsa_ev_fd);
 			if (ret != 0){
 				crm_warn("CCM Activation failed");
 				did_fail = TRUE;
@@ -153,7 +173,7 @@ do_ccm_control(long long action,
 
 		if(did_fail) {
 			num_ccm_register_fails++;
-			oc_ev_unregister(fsa_ev_token);
+			(*ccm_api_unregister)(fsa_ev_token);
 			
 			if(num_ccm_register_fails < max_ccm_register_fails) {
 				crm_warn("CCM Connection failed"

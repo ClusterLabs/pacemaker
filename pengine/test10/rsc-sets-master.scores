@@ -16,10 +16,4 @@ native_color: rsc:0 allocation score on node2: -INFINITY
 native_color: rsc:1 allocation score on node1: -INFINITY
 native_color: rsc:1 allocation score on node2: 1
 rsc:0 promotion score on none: 0
-rsc:0 promotion score on none: 0
-rsc:0 promotion score on none: 0
-rsc:0 promotion score on none: 0
 rsc:1 promotion score on node2: 299
-rsc:1 promotion score on node2: INFINITY
-rsc:1 promotion score on node2: INFINITY
-rsc:1 promotion score on node2: INFINITY

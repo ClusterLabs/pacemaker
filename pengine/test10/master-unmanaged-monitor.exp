@@ -1,0 +1,117 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="10" transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="46" operation="monitor" operation_key="lsb-dummy_monitor_5000" on_node="pcmk-3" on_node_uuid="pcmk-3">
+        <primitive id="lsb-dummy" long-id="lsb-dummy" class="lsb" type="/usr/share/pacemaker/tests/cts/LSBDummy"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.5"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="49" operation="monitor" operation_key="migrator_monitor_10000" on_node="pcmk-4" on_node_uuid="pcmk-4">
+        <primitive id="migrator" long-id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.5"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="52" operation="monitor" operation_key="ping-1:0_monitor_60000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+        <primitive id="ping-1:0" long-id="Connectivity:ping-1:0" class="ocf" provider="pacemaker" type="ping"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" debug="true" host_list="192.168.9.109" name="connected"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="55" operation="monitor" operation_key="ping-1:0_monitor_60000" internal_operation_key="ping-1:1_monitor_60000" on_node="pcmk-3" on_node_uuid="pcmk-3">
+        <primitive id="ping-1:0" long-id="ping-1:1" class="ocf" provider="pacemaker" type="ping"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" debug="true" host_list="192.168.9.109" name="connected"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="58" operation="monitor" operation_key="ping-1:0_monitor_60000" internal_operation_key="ping-1:2_monitor_60000" on_node="pcmk-4" on_node_uuid="pcmk-4">
+        <primitive id="ping-1:0" long-id="ping-1:2" class="ocf" provider="pacemaker" type="ping"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" debug="true" host_list="192.168.9.109" name="connected"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="61" operation="monitor" operation_key="ping-1:0_monitor_60000" internal_operation_key="ping-1:3_monitor_60000" on_node="pcmk-1" on_node_uuid="pcmk-1">
+        <primitive id="ping-1:0" long-id="ping-1:3" class="ocf" provider="pacemaker" type="ping"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" debug="true" host_list="192.168.9.109" name="connected"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="69" operation="monitor" operation_key="stateful-1:0_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+        <primitive id="stateful-1:0" long-id="master-1:stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="10" operation="monitor" operation_key="stateful-1:0_monitor_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
+        <primitive id="stateful-1:0" long-id="master-1:stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="60000" crm_feature_set="3.0.5"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="74" operation="monitor" operation_key="stateful-1:0_monitor_16000" internal_operation_key="stateful-1:1_monitor_16000" on_node="pcmk-3" on_node_uuid="pcmk-3">
+        <primitive id="stateful-1:0" long-id="stateful-1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="16000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" crm_feature_set="3.0.5"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="78" operation="monitor" operation_key="stateful-1:0_monitor_15000" internal_operation_key="stateful-1:2_monitor_15000" on_node="pcmk-4" on_node_uuid="pcmk-4">
+        <primitive id="stateful-1:0" long-id="stateful-1:2" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="10" priority="1000000">
+    <action_set>
+      <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="pcmk-1" on_node_uuid="pcmk-1">
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.5"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="stateful-1:0_monitor_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete">
+        <attributes crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
+

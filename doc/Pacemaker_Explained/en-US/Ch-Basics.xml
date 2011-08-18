@@ -113,7 +113,7 @@
 	The most powerful tool for modifying the configuration is the cibadmin command which talks to a running cluster.
 	With cibadmin, the user can query, add, remove, update or replace any part of the configuration and all changes take effect immediately so there is no need to perform a reload-like operation.
       </para>
-      <para>The simplest way of using cibadmin is to us it to save the current configuration to a temporary file, edit that file with your favorite text or XML editor and then upload the revised configuration.</para>
+      <para>The simplest way of using cibadmin is to use it to save the current configuration to a temporary file, edit that file with your favorite text or XML editor and then upload the revised configuration.</para>
       <figure id="fig-config-editor">
 	<title>Safely using an editor to modify the cluster configuration</title>
 	<programlisting>

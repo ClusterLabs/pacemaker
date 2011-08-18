@@ -97,13 +97,13 @@ dnl ===============================================
 cc_supports_flag() {
          local CFLAGS="$@"
          AC_MSG_CHECKING(whether $CC supports "$@")
-         AC_COMPILE_IFELSE([int main(){return 0;}] ,[RC=0; AC_MSG_RESULT(yes)],[RC=1; AC_MSG_RESULT(no)])
+         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])], [RC=0; AC_MSG_RESULT(yes)],[RC=1; AC_MSG_RESULT(no)])
          return $RC
 }
 
 extract_header_define() {
 	  AC_MSG_CHECKING(for $2 in $1)
-	  Cfile=/tmp/extract_define.$2.${$}
+	  Cfile=$srcdir/extract_define.$2.${$}
 	  printf "#include <stdio.h>\n" > ${Cfile}.c
 	  printf "#include <%s>\n" $1 >> ${Cfile}.c
 	  printf "int main(int argc, char **argv) { printf(\"%%s\", %s); return 0; }\n" $2 >> ${Cfile}.c
@@ -146,6 +146,10 @@ AC_ARG_ENABLE([thread-safe],
 AC_ARG_ENABLE([bundled-ltdl],
 [  --enable-bundled-ltdl  Configure, build and install the standalone ltdl library bundled with ${PACKAGE} [default=no]]) 
 LTDL_LIBS=""
+
+AC_ARG_ENABLE([no-stack],
+    [  --enable-no-stack
+       Only build the Policy Engine and pieces needed to support it [default=no]])
 
 AC_ARG_WITH(ais,
     [  --with-ais     
@@ -558,6 +562,7 @@ AC_PATH_PROGS(HELP2MAN, help2man)
 AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
 AC_PATH_PROGS(ASCIIDOC, asciidoc)
 AC_PATH_PROGS(PUBLICAN, publican)
+AC_PATH_PROGS(INKSCAPE, inkscape)
 AC_PATH_PROGS(XSLTPROC, xsltproc)
 AC_PATH_PROGS(FOP, fop)
 AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
@@ -580,7 +585,7 @@ fi
 
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
 if test x"${HELP2MAN}" != x""; then
-   PKG_FEATURES="$PKG_FEATURES manpages"
+   PKG_FEATURES="$PKG_FEATURES generated-manpages"
 fi
 
 MANPAGE_XSLT=""
@@ -601,17 +606,18 @@ AC_SUBST(MANPAGE_XSLT)
 
 AM_CONDITIONAL(BUILD_XML_HELP, test x"${MANPAGE_XSLT}" != x"")
 if test x"${MANPAGE_XSLT}" != x""; then
-   PKG_FEATURES="$PKG_FEATURES docbook-manpages"
+   PKG_FEATURES="$PKG_FEATURES agent-manpages"
 fi
 
 AM_CONDITIONAL(BUILD_ASCIIDOC, test x"${ASCIIDOC}" != x"")
 if test x"${ASCIIDOC}" != x""; then
-   PKG_FEATURES="$PKG_FEATURES asciidoc"
+   PKG_FEATURES="$PKG_FEATURES ascii-docs"
 fi
 
-AM_CONDITIONAL(BUILD_DOCBOOK, test ${PUBLICAN} != x"")
-if test ${PUBLICAN} != x""; then
-   PKG_FEATURES="$PKG_FEATURES publican"
+AM_CONDITIONAL(BUILD_DOCBOOK, test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x"")
+if test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x""; then
+   AC_MSG_NOTICE(Enabling publican)
+   PKG_FEATURES="$PKG_FEATURES publican-docs"
 fi
 
 dnl ===============================================
@@ -667,6 +673,15 @@ if test "x$ac_cv_lib_glib_2_0_g_hash_table_get_values" != x""yes; then
 fi
 AC_DEFINE_UNQUOTED(USE_GHASH_COMPAT, $USE_GHASH_COMPAT, Use g_hash_table compatibility functions)
 AC_SUBST(USE_GHASH_COMPAT)
+
+
+if 
+    $PKGCONFIG --exists systemd
+then
+    systemdunitdir=`$PKGCONFIG --variable=systemdsystemunitdir systemd`
+    AC_SUBST(systemdunitdir)
+fi
+AM_CONDITIONAL(HAVE_SYSTEMD, test -n "$systemdunitdir" -a "x$systemdunitdir" != xno)
 
 #
 #	Where is dlopen?
@@ -1004,6 +1019,12 @@ dnl Compatability checks
 AC_CHECK_FUNCS(msgfromIPC_timeout)
 AC_CHECK_MEMBERS([struct lrm_ops.fail_rsc],,,[[#include <lrm/lrm_api.h>]])
 
+
+if test x${enable_no_stack} = xyes; then
+    SUPPORT_HEARTBEAT=no
+    SUPPORT_CS=no
+fi
+
 dnl ========================================================================
 dnl    Cluster stack - Heartbeat
 dnl ========================================================================
@@ -1165,7 +1186,7 @@ if test $SUPPORT_CS_QUORUM != no; then
 	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libquorum --cflags`"
 	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libquorum --libs`"
 	
-	PKG_FEATURES="$PKG_FEATURES cs-quorum"
+	PKG_FEATURES="$PKG_FEATURES corosync-quorum"
 	AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
     fi
 fi
@@ -1178,7 +1199,8 @@ STACKS=""
 CLUSTERLIBS=""
 if test $SUPPORT_HEARTBEAT = 1; then
    STACKS="$STACKS heartbeat"
-   CLUSTERLIBS="$CLUSTERLIBS -lhbclient -lccmclient"
+   AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
+   AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
 fi
 
 if test $SUPPORT_CS = 1; then
@@ -1191,11 +1213,16 @@ fi
 
 PKG_FEATURES="$PKG_FEATURES$STACKS"
 
-AC_MSG_CHECKING(for supported stacks)
-if test x"$STACKS" = x; then
-   AC_MSG_FAILURE(You must choose at least one cluster stack to support)
+if test x${enable_no_stack} = xyes; then
+    AC_MSG_NOTICE(No cluster stack supported.  Just building the Policy Engine)
+    PKG_FEATURES="$PKG_FEATURES no-cluster-stack"
+else
+    AC_MSG_CHECKING(for supported stacks)
+    if test x"$STACKS" = x; then
+      AC_MSG_FAILURE(You must choose at least one cluster stack to support)
+    fi
+    AC_MSG_RESULT($STACKS)
 fi
-AC_MSG_RESULT($STACKS)
 
 AC_SUBST(CLUSTERLIBS)
 AC_SUBST(LCRSODIR)
@@ -1367,7 +1394,7 @@ else
 fi
 
 if test $SUPPORT_ACL = 1; then
-   PKG_FEATURES="$PKG_FEATURES acl"
+   PKG_FEATURES="$PKG_FEATURES acls"
 fi
 
 AM_CONDITIONAL(ENABLE_ACL, test "$SUPPORT_ACL" = "1")
@@ -1394,6 +1421,9 @@ if test -n "$LIBGNUTLS_CONFIG"; then
 else
 	AC_CHECK_LIB(gnutls, gnutls_init)
 fi
+
+AC_CHECK_FUNCS(gnutls_priority_set_direct)
+
 AC_SUBST(GNUTLSHEAD)
 AC_SUBST(GNUTLSLIBS)
 
@@ -1409,6 +1439,7 @@ AC_MSG_CHECKING(for $SERVICELOG packages)
 if
     $PKGCONFIG --exists $SERVICELOG
 then
+    PKG_CHECK_MODULES([SERVICELOG], [servicelog-1])
     SERVICELOG_EXISTS="yes"
 fi
 AC_MSG_RESULT($SERVICELOG_EXISTS)
@@ -1421,6 +1452,7 @@ AC_MSG_CHECKING(for $SERVICELOG $OPENIPMI packages)
 if
     $PKGCONFIG --exists $OPENIPMI $SERVICELOG
 then
+    PKG_CHECK_MODULES([OPENIPMI_SERVICELOG],[OpenIPMI OpenIPMIposix])
     OPENIPMI_SERVICELOG_EXISTS="yes"
 fi
 AC_MSG_RESULT($OPENIPMI_SERVICELOG_EXISTS)
@@ -1509,6 +1541,7 @@ else
 		-Wnested-externs
 		-Wno-long-long
 		-Wno-strict-aliasing
+		-Wno-unused-but-set-variable
 		-Wpointer-arith 
 		-Wstrict-prototypes
     		-Wunsigned-char
@@ -1638,6 +1671,7 @@ lib/Makefile							\
 		lib/plugins/lrm/Makefile			\
 mcp/Makefile							\
 	mcp/pacemaker						\
+	mcp/pacemaker.service					\
 fencing/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\

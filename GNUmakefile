@@ -32,6 +32,8 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 		  --define "_specdir   $(RPM_ROOT)" 	\
 		  --define "_srcrpmdir $(RPM_ROOT)" 	\
 
+MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
+
 # Default to fedora compliant spec files
 # SLES:     /etc/SuSE-release
 # openSUSE: /etc/SuSE-release
@@ -42,6 +44,9 @@ PROFILE ?= $(shell rpm --eval fedora-%{fedora}-%{_arch})
 DISTRO  ?= $(call getdistro)
 TAG     ?= $(firstword $(shell hg id -i | tr '+' ' '))
 WITH    ?= 
+
+BUILD_COUNTER	?= build.counter
+COUNT           = $(shell test ! -e $(BUILD_COUNTER) || echo $(shell expr 1 + $(shell cat $(BUILD_COUNTER))))
 
 initialize:
 	./autogen.sh
@@ -69,7 +74,8 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in
 	cp $(PACKAGE).spec.in $@
 	sed -i.sed s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
 	sed -i.sed s:corosynclib:libcorosync:g $@
-	sed -i.sed s:pacemaker-libs:libpacemaker3:g $@
+	sed -i.sed s:pacemaker-libs:lib%{name}3:g $@
+	sed -i.sed 's:%{name}-libs:lib%{name}3:g' $@
 	sed -i.sed s:heartbeat-libs:heartbeat:g $@
 	sed -i.sed s:cluster-glue-libs:libglue:g $@
 	sed -i.sed s:libselinux-devel:automake:g $@
@@ -80,9 +86,8 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in
 	sed -i.sed s:bcond_without\ publican:bcond_with\ publican:g $@
 	sed -i.sed s:\#global\ py_sitedir:\%global\ py_sitedir:g $@
 	sed -i.sed s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
+	sed -i.sed s:libtool-ltdl-devel::g $@
 	@echo Rebuilt $@
-
-#sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(PACKAGE)-$(DISTRO).spec
 
 # Works for all fedora based distros
 $(PACKAGE)-%.spec: $(PACKAGE).spec.in
@@ -93,14 +98,19 @@ $(PACKAGE)-%.spec: $(PACKAGE).spec.in
 srpm-%:	export $(PACKAGE)-%.spec
 	rm -f *.src.rpm $(PACKAGE).spec
 	cp $(PACKAGE)-$*.spec $(PACKAGE).spec
+	if [ -e $(BUILD_COUNTER) ]; then								\
+		echo $(COUNT) > $(BUILD_COUNTER);							\
+		sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(PACKAGE).spec;	\
+	fi
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE).spec
-	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(PACKAGE).spec
+	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(WITH)  $(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
 mock-%: 
 	make srpm-$(firstword $(shell echo $(@:mock-%=%) | tr '-' ' '))
 	-rm -rf $(RPM_ROOT)/mock
-	mock --root=$* --resultdir=$(RPM_ROOT)/mock --rebuild $(WITH) $(RPM_ROOT)/*.src.rpm
+	@echo "mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm"
+	mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
 
 srpm:	srpm-$(DISTRO)
 
@@ -113,6 +123,26 @@ rpm:	srpm
 scratch:
 	make TAG=scratch mock
 
+COVERITY_DIR	 = $(shell pwd)/coverity-$(TAG)
+COVHOST		?= coverity.example.com
+COVPASS		?= password
+
+coverity:
+	test -e configure || ./autogen.sh
+	test -e Makefile || ./configure
+	make clean
+	rm -rf $(COVERITY_DIR)
+	cov-build --dir $(COVERITY_DIR) make core
+	@echo "Waiting for a Coverity license..."
+	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
+	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
+	cov-format-errors --dir $(COVERITY_DIR)
+	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ root@www.clusterlabs.org:/var/www/html/coverity/$(PACKAGE)/$(TAG)
+	make clean
+#	rm -rf $(COVERITY_DIR)
+
+#cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
+
 deb:	
 	echo To make create custom builds, edit the configure flags in debian/rules first
 	dpkg-buildpackage -rfakeroot -us -uc 
@@ -124,7 +154,7 @@ global-html: global
 	htags -sanhIT
 
 global-www: global-html
-	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/lib/global/$(PACKAGE)
+	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/www/html/global/$(PACKAGE)
 
 changes:
 	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(VERSION)-1"

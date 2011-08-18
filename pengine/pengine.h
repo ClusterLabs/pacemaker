@@ -20,6 +20,7 @@
 
 typedef struct rsc_to_node_s rsc_to_node_t;
 typedef struct rsc_colocation_s rsc_colocation_t;
+typedef struct rsc_ticket_s rsc_ticket_t;
 typedef struct lrm_agent_s lrm_agent_t;
 typedef struct order_constraint_s order_constraint_t;
 
@@ -37,6 +38,14 @@ enum pe_stop_fail {
 	pesf_block,
 	pesf_stonith,
 	pesf_ignore
+};
+
+enum pe_weights {
+    pe_weights_none	= 0x0,
+    pe_weights_init	= 0x1,
+    pe_weights_forward	= 0x4,
+    pe_weights_positive	= 0x8,
+    pe_weights_rollback	= 0x10,
 };
 
 enum pe_ordering {
@@ -68,6 +77,22 @@ struct rsc_colocation_s {
 		int role_rh;
 		
 		int score;
+};
+
+enum loss_ticket_policy_e {
+	loss_ticket_stop,
+	loss_ticket_demote,
+	loss_ticket_fence,
+	loss_ticket_freeze
+};
+
+struct rsc_ticket_s { 
+		const char	*id;
+		resource_t	*rsc_lh;
+		ticket_t	*ticket;
+		enum loss_ticket_policy_e loss_policy;
+
+		int role_lh;
 };
 
 struct rsc_to_node_s { 

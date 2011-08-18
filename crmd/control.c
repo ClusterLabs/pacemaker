@@ -66,7 +66,9 @@ do_ha_control(long long action,
 	if(action & A_HA_DISCONNECT) {
 	    if(is_openais_cluster()) {
 		crm_peer_destroy();
+#if SUPPORT_COROSYNC
 		terminate_ais_connection();
+#endif
 		crm_info("Disconnected from OpenAIS");
 
 #if SUPPORT_HEARTBEAT
@@ -202,7 +204,7 @@ do_shutdown_req(long long action,
 
 extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
-extern GHashTable *resources;
+extern GHashTable *resource_history;
 extern GHashTable *voted;
 extern GHashTable *reload_hash;
 
@@ -280,8 +282,8 @@ static void free_mem(fsa_data_t *msg_data)
 	if(reload_hash) {
 		g_hash_table_destroy(reload_hash);
 	}
-	if(resources) {
-		g_hash_table_destroy(resources);
+	if(resource_history) {
+		g_hash_table_destroy(resource_history);
 	}
 	if(voted) {
 		g_hash_table_destroy(voted);
@@ -294,6 +296,7 @@ static void free_mem(fsa_data_t *msg_data)
 		fsa_lrm_conn->lrm_ops->delete(fsa_lrm_conn);
 	}
 	
+	crm_free(transition_timer);
 	crm_free(integration_timer);
 	crm_free(finalization_timer);
 	crm_free(election_trigger);
@@ -376,6 +379,7 @@ do_startup(long long action,
 	fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 	
 	/* set up the timers */
+	crm_malloc0(transition_timer, sizeof(fsa_timer_t));
 	crm_malloc0(integration_timer, sizeof(fsa_timer_t));
 	crm_malloc0(finalization_timer, sizeof(fsa_timer_t));
 	crm_malloc0(election_trigger, sizeof(fsa_timer_t));
@@ -402,6 +406,16 @@ do_startup(long long action,
 		election_timeout->fsa_input = I_ELECTION_DC;
 		election_timeout->callback = crm_timer_popped;
 		election_timeout->repeat = FALSE;
+	} else {
+		was_error = TRUE;
+	}
+	
+	if(transition_timer != NULL) {
+		transition_timer->source_id = 0;
+		transition_timer->period_ms = -1;
+		transition_timer->fsa_input = I_PE_CALC;
+		transition_timer->callback = crm_timer_popped;
+		transition_timer->repeat = FALSE;
 	} else {
 		was_error = TRUE;
 	}
@@ -644,7 +658,7 @@ pe_cluster_option crmd_opts[] = {
 	/* name, old-name, validate, default, description */
 	{ "dc-version", NULL, "string", NULL, "none", NULL, "Version of Pacemaker on the cluster's DC.", "Includes the hash which identifies the exact Mercurial changeset it was built from.  Used for diagnostic purposes." },
 	{ "cluster-infrastructure", NULL, "string", NULL, "heartbeat", NULL, "The messaging stack on which Pacemaker is currently running.", "Used for informational and diagnostic purposes." },
-	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "60s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed/load of your network and the type of switches used." },
+	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "20s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed/load of your network and the type of switches used." },
 	{ XML_CONFIG_ATTR_RECHECK, "cluster_recheck_interval", "time",
 	  "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)", "15min", &check_timer,
 	  "Polling interval for time based changes to options, resource parameters and constraints.",
@@ -654,6 +668,7 @@ pe_cluster_option crmd_opts[] = {
 	{ XML_CONFIG_ATTR_FORCE_QUIT, "shutdown_escalation", "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-finalization-timeout", NULL, "time", NULL, "30min", &check_timer, "*** Advanced Use Only ***.", "If you need to adjust this value, it probably indicates the presence of a bug." },
+	{ "crmd-transition-delay", NULL, "time", NULL, "0s", &check_timer, "*** Advanced Use Only ***\nEnabling this option will slow down cluster recovery under all conditions", "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\nUseful if your configuration is sensitive to the order in which ping updates arrive." },
 	{ XML_ATTR_EXPECTED_VOTES, NULL, "integer", NULL, "2", &check_number, "The number of nodes expected to be in the cluster", "Used to calculate quorum in openais based clusters." },
 };
 
@@ -726,6 +741,9 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	recheck_timer->period_ms = crm_get_msec(value);
 	crm_info("Checking for expired actions every %dms", recheck_timer->period_ms);
 
+	value = crmd_pref(config_hash, "crmd-transition-delay");
+	transition_timer->period_ms  = crm_get_msec(value);
+	
 	value = crmd_pref(config_hash, "crmd-integration-timeout");
 	integration_timer->period_ms  = crm_get_msec(value);
 

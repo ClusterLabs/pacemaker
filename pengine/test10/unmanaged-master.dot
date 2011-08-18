@@ -1,0 +1,5 @@
+digraph "g" {
+"do_shutdown pcmk-1" [ style=bold color="green" fontcolor="black"]
+"do_shutdown pcmk-2" -> "do_shutdown pcmk-1" [ style = bold]
+"do_shutdown pcmk-2" [ style=bold color="green" fontcolor="black"]
+}

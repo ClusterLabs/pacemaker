@@ -24,13 +24,3 @@ sbin_SCRIPTS		= crm
 EXTRA_DIST		= crm
 
 SUBDIRS = templates regression modules
-
-if BUILD_HELP
-man8_MANS =	crm.8
-%.8:	%
-	echo Creating $@
-	chmod a+x $<
-	mkdir $(top_builddir)/shell/local
-	cd $(top_builddir)/shell/local && ln -s ../modules crm
-	PATH=$$PATH:$(top_builddir)/tools PYTHONPATH=$(top_builddir)/shell/local help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/shell/$<
-endif

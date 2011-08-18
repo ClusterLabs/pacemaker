@@ -26,39 +26,44 @@ halib_PROGRAMS	= stonithd stonith-test
 sbin_PROGRAMS  = stonith_admin
 sbin_SCRIPTS   = fence_legacy
 
-if BUILD_HELP
-man8_MANS =	$(sbin_PROGRAMS:%=%.8) fence_legacy.8 stonithd.8
+man8_MANS      = 
+
+if BUILD_XML_HELP
+man8_MANS +=	stonithd.8
 stonithd.xml:	stonithd
-	$(top_builddir)/fencing/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/crmd/$@
+	$(top_builddir)/fencing/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/fencing/$@
 
 stonithd.8:	stonithd.xml
-	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/crmd/$<
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/fencing/$<
+endif
 
+if BUILD_HELP
+man8_MANS +=	$(sbin_PROGRAMS:%=%.8) fence_legacy.8
 %.8:	%
 	echo Creating $@
 	chmod a+x $<
-	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/fencing/$<
+	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/fencing/$<
 endif
 
 stonith_test_SOURCES	= test.c
 
-stonith_test_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\
-			$(top_builddir)/lib/common/libcrmcommon.la	\
+stonith_test_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/common/libcrmcluster.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la
+			$(top_builddir)/lib/fencing/libstonithd.la	\
+			$(CRYPTOLIB) $(CLUSTERLIBS)
 
 stonith_admin_SOURCES	= admin.c
 
-stonith_admin_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\
+stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/cib/libcib.la		\
 			$(top_builddir)/lib/pengine/libpe_status.la	\
-			$(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/common/libcrmcluster.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la
+			$(top_builddir)/lib/fencing/libstonithd.la	\
+			$(CRYPTOLIB) $(CLUSTERLIBS)
 
 stonithd_SOURCES	= main.c commands.c remote.c
 
-stonithd_LDADD		= $(CRYPTOLIB) $(CLUSTERLIBS)			\
-			$(top_builddir)/lib/common/libcrmcommon.la	\
+stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/common/libcrmcluster.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la
+			$(top_builddir)/lib/fencing/libstonithd.la	\
+			$(CRYPTOLIB) $(CLUSTERLIBS)

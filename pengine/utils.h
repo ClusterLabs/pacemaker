@@ -44,6 +44,9 @@ extern gboolean rsc_colocation_new(
 	const char *state_lh, const char *state_rh,
 	pe_working_set_t *data_set);
 
+extern gboolean rsc_ticket_new(const char *id, resource_t *rsc_lh, ticket_t *ticket,
+	const char *state_lh, const char *loss_policy, pe_working_set_t *data_set);
+
 extern rsc_to_node_t *generate_location_rule(
 	resource_t *rsc, xmlNode *location_rule, pe_working_set_t *data_set);
 
@@ -51,8 +54,8 @@ extern gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data_set
 
 extern gboolean can_run_resources(const node_t *node);
 extern gboolean native_assign_node(resource_t *rsc, GListPtr candidates, node_t *chosen, gboolean force);
+void native_deallocate(resource_t *rsc);
 
-extern char *convert_non_atomic_uuid(char *old_uuid, resource_t *rsc, gboolean allow_notify, gboolean free_original);
 extern gboolean order_actions(action_t *lh_action, action_t *rh_action, enum pe_ordering order);
 
 extern void log_action(unsigned int log_level, const char *pre_text,

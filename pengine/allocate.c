@@ -42,7 +42,7 @@ void migrate_reload_madness(pe_working_set_t *data_set);
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
-	rsc_merge_weights,
+	native_merge_weights,
 	native_color,
 	native_create_actions,
 	native_create_probe,
@@ -70,7 +70,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 	group_append_meta,
     },
     {
-	rsc_merge_weights,
+	native_merge_weights,
 	clone_color,
 	clone_create_actions,
 	clone_create_probe,
@@ -84,7 +84,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 	clone_append_meta,
     },
     {
-	rsc_merge_weights,
+	native_merge_weights,
 	master_color,
 	master_create_actions,
 	clone_create_probe,
@@ -187,7 +187,6 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
     const char *interval_s = NULL;
 	
     gboolean did_change = FALSE;
-    gboolean start_op = FALSE;
 
     xmlNode *params_all = NULL;
     xmlNode *params_restart = NULL;
@@ -205,7 +204,10 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
     const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
     CRM_CHECK(active_node != NULL, return FALSE);
-
+    if(safe_str_eq(task, RSC_STOP)) {
+	return FALSE;
+    }
+    
     interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
     interval = crm_parse_int(interval_s, "0");
     /* we need to reconstruct the key because of the way we used to construct resource IDs */
@@ -250,11 +252,13 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
     restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
 
-    if(crm_str_eq(task, RSC_START, TRUE)) {
-	start_op = TRUE;
+    if(interval == 0 && safe_str_eq(task, RSC_STATUS)) {
+	/* Reload based on the start action not a probe */
+	task = RSC_START;
     }
-	
-    if(start_op && digest_restart) {
+    
+    if(digest_restart) {
+	/* Changes that force a restart */
 	params_restart = copy_xml(params_all);
 	if(restart_list) {
 	    filter_reload_parameters(params_restart, restart_list);
@@ -264,7 +268,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 	if(safe_str_neq(digest_restart_calc, digest_restart)) {
 	    did_change = TRUE;
 	    crm_log_xml_info(params_restart, "params:restart");
-	    crm_warn("Parameters to %s on %s changed: recorded %s vs. %s (restart:%s) %s",
+	    crm_info("Parameters to %s on %s changed: recorded %s vs. %s (restart:%s) %s",
 		     key, active_node->details->uname,
 		     crm_str(digest_restart), digest_restart_calc,
 		     op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
@@ -276,32 +280,50 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
     }
 
     if(safe_str_neq(digest_all_calc, digest_all)) {
+	/* Changes that can potentially be handled by a reload */
 	action_t *op = NULL;
 	did_change = TRUE;
-	crm_log_xml_info(params_all, "params:all");
-	crm_warn("Parameters to %s on %s changed: recorded %s vs. %s (all:%s) %s",
+	crm_log_xml_info(params_all, "params:reload");
+	crm_crit("Parameters to %s on %s changed: recorded %s vs. %s (reload:%s) %s",
 		 key, active_node->details->uname,
 		 crm_str(digest_all), digest_all_calc, op_version,
 		 crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 
-	if(interval == 0 && safe_str_neq(task, RSC_STOP)) {
-	    /* Anything except stop actions should result in a restart,
-	     * never a re-probe
+	if(interval > 0) {
+#if 0
+	    /* Always reload/restart the entire resource */
+	    op = custom_action(rsc, start_key(rsc), RSC_START, NULL, FALSE, TRUE, data_set);
+	    update_action_flags(op, pe_action_allow_reload_conversion);
+#else
+	    /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
+	    key = generate_op_key(rsc->id, task, interval);
+	    op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
+	    custom_action_order(rsc, start_key(rsc), NULL,
+				NULL, NULL, op, pe_order_runnable_left, data_set);
+#endif
+	    
+	} else if(digest_restart) {
+	    crm_trace("Reloading '%s' action for resource %s", task, rsc->id);
+
+	    /* Allow this resource to reload */
+
+	    /* TODO: Set for the resource itself
+	     *  - thus avoiding causing depedant resources to restart
 	     */
-	    task = RSC_START;
-	}
-		
-	key = generate_op_key(rsc->id, task, interval);
-	op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
-	if(start_op && digest_restart) {
+	    key = generate_op_key(rsc->id, task, interval);
+	    op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
+
 	    update_action_flags(op, pe_action_allow_reload_conversion);
 
-	} else if(interval > 0) {
-	    custom_action_order(rsc, start_key(rsc), NULL,
-				NULL, crm_strdup(op->task), op,
-				pe_order_runnable_left, data_set);
+	} else {
+	    crm_trace("Resource %s doesn't know how to reload", rsc->id);
+
+	    /* Re-send the start/demote/promote op
+	     * Recurring ops will be detected independantly
+	     */
+	    key = generate_op_key(rsc->id, task, interval);
+	    custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
 	}
-		
     }
 
   cleanup:
@@ -829,7 +851,7 @@ probe_resources(pe_working_set_t *data_set)
 		update_action_flags(probe_complete, pe_action_optional|pe_action_clear);
 		update_action_flags(probe_node_complete, pe_action_optional|pe_action_clear);
 
-		wait_for_probe(rsc, CRMD_ACTION_START, probe_complete, data_set);
+		wait_for_probe(rsc, RSC_START, probe_complete, data_set);
 	    }
 	}
     }
@@ -838,7 +860,7 @@ probe_resources(pe_working_set_t *data_set)
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *rsc = (resource_t*)gIter->data;
 
-	wait_for_probe(rsc, CRMD_ACTION_STOP, probe_complete, data_set);
+	wait_for_probe(rsc, RSC_STOP, probe_complete, data_set);
     }
 
     return TRUE;
@@ -915,10 +937,139 @@ stage4(pe_working_set_t *data_set)
     return TRUE;
 }
 
+
+static gint
+sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
+{
+    int rc = 0;
+    int level = LOG_TRACE;
+    int r1_weight = -INFINITY;
+    int r2_weight = -INFINITY;
+
+    const char *reason = "existance";
+
+    const GListPtr nodes = (GListPtr)data;
+    resource_t *resource1 = (resource_t*)convert_const_pointer(a);
+    resource_t *resource2 = (resource_t*)convert_const_pointer(b);
+
+    node_t *node = NULL;
+    GListPtr gIter = NULL;
+    GHashTable *r1_nodes = NULL;
+    GHashTable *r2_nodes = NULL;
+
+    if(a == NULL && b == NULL) { goto done; }
+    if(a == NULL) { return 1; }
+    if(b == NULL) { return -1; }
+
+
+    reason = "priority";
+    r1_weight = resource1->priority;
+    r2_weight = resource2->priority;
+
+    if(r1_weight > r2_weight) {
+	rc = -1; goto done;
+    }
+    
+    if(r1_weight < r2_weight) {
+	rc = 1; goto done;
+    }
+    
+    reason = "no node list";
+    if (nodes == NULL) {
+	goto done;
+    }
+
+    r1_nodes = rsc_merge_weights(resource1, resource1->id, NULL, NULL, 1, pe_weights_forward|pe_weights_init);
+    dump_node_scores(LOG_TRACE, NULL, resource1->id, r1_nodes);
+    r2_nodes = rsc_merge_weights(resource2, resource2->id, NULL, NULL, 1, pe_weights_forward|pe_weights_init);
+    dump_node_scores(LOG_TRACE, NULL, resource2->id, r2_nodes);
+
+
+    /* Current location score */
+    reason = "current location";
+    r1_weight = -INFINITY;
+    r2_weight = -INFINITY;
+
+    if(resource1->running_on) {
+	node = g_list_nth_data(resource1->running_on, 0);
+	node = g_hash_table_lookup(r1_nodes, node->details->id);
+	r1_weight = node->weight;
+    }
+    if(resource2->running_on) {
+	node = g_list_nth_data(resource2->running_on, 0);
+	node = g_hash_table_lookup(r2_nodes, node->details->id);
+	r2_weight = node->weight;
+    }
+    
+    if(r1_weight > r2_weight) {
+	rc = -1; goto done;
+    }
+    
+    if(r1_weight < r2_weight) {
+	rc = 1; goto done;
+    }
+    
+    reason = "score";
+    for(gIter = nodes; gIter != NULL; gIter = gIter->next) {
+	node_t *r1_node = NULL;
+	node_t *r2_node = NULL;
+
+	node = (node_t*)gIter->data;
+
+	r1_weight = -INFINITY;
+	if(r1_nodes) {
+	    r1_node = g_hash_table_lookup(r1_nodes, node->details->id);
+	}
+	if (r1_node) {
+	    r1_weight = r1_node->weight;
+	}
+
+	r2_weight = -INFINITY;
+	if(r2_nodes) {
+	    r2_node = g_hash_table_lookup(r2_nodes, node->details->id);
+	}
+	if (r2_node) {
+	    r2_weight = r2_node->weight;
+	}
+
+	if(r1_weight > r2_weight) {
+	    rc = -1; goto done;
+	}
+
+	if(r1_weight < r2_weight) {
+	    rc = 1; goto done;
+	}
+    }
+
+  done:
+    if(r1_nodes) {
+	g_hash_table_destroy(r1_nodes);
+    }
+    if(r2_nodes) {
+	g_hash_table_destroy(r2_nodes);
+    }
+
+    do_crm_log_unlikely(level, "%s (%d) %c %s (%d) on %s: %s",
+			resource1->id, r1_weight, rc<0?'>':rc>0?'<':'=',
+			resource2->id, r2_weight, node?node->details->id:"n/a", reason);
+    return rc;
+}
+
 gboolean
 stage5(pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
+
+    if (safe_str_neq(data_set->placement_strategy, "default")) {
+	GListPtr nodes = g_list_copy(data_set->nodes);
+
+	nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);
+
+	data_set->resources = g_list_sort_with_data(
+	    data_set->resources, sort_rsc_process_order, nodes);
+
+	g_list_free(nodes);
+    }
 
     gIter = data_set->nodes;
     for(; gIter != NULL; gIter = gIter->next) {
@@ -932,6 +1083,7 @@ stage5(pe_working_set_t *data_set)
     gIter = data_set->resources;
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *rsc = (resource_t*)gIter->data;
+	crm_trace("Allocating: %s", rsc->id);
 	rsc->cmds->allocate(rsc, NULL, data_set);
     }
 
@@ -2024,6 +2176,11 @@ cleanup_alloc_calculations(pe_working_set_t *data_set)
 		g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
     slist_basic_destroy(data_set->colocation_constraints);
     data_set->colocation_constraints = NULL;
+
+    crm_debug_3("deleting %d ticket deps: %p",
+		g_list_length(data_set->ticket_constraints), data_set->ticket_constraints);
+    slist_basic_destroy(data_set->ticket_constraints);
+    data_set->ticket_constraints = NULL;
 	
     cleanup_calculations(data_set);
 }

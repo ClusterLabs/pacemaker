@@ -8,21 +8,21 @@
   <section>
     <title>Requirements</title>
     <para>
-      The primary requirement for an Active/Active cluster is that the data required for your services are available, simultaneously, on both machines.
+      The primary requirement for an Active/Active cluster is that the data required for your services is available, simultaneously, on both machines.
       Pacemaker makes no requirement on how this is achieved, you could use a SAN if you had one available, however since DRBD supports multiple Primaries, we can also use that.
     </para>
     <para>
-      The only hitch is that we need to use a cluster-aware filesystem (and the one we used earlier with DRBD, ext4, is not one of those).
+      The only hitch is that we need to use a cluster-aware filesystem. The one we used earlier with DRBD, ext4, is not one of those.
       Both OCFS2 and GFS2 are supported, however here we will use GFS2 which comes with &DISTRO; &DISTRO_VERSION; .
     </para>
   </section>
   <section>
     <title>Install a Cluster Filesystem - GFS2</title>
     <para>
-      The first thing to do is install gfs2-utils on each machine.
+      The first thing to do is install gfs2-utils and gfs-pcmk on each machine. Since December 2010, the gfs-pcmk package in Fedora was replaced with the gfs2-cluster package and that will be installed automatically in place of the gfs-pcmk. If that package shows up on the line "installed" at the end of the yum output, please refer to the Appendix on "Using CMAN"
     </para>
     <screen>
-[root@pcmk-1 ~]# <userinput>yum install -y gfs2-utils gfs-pcmk</userinput>
+[root@pcmk-1 ~]# <userinput>yum install -y gfs2-utils gfs2-cluster gfs-pcmk</userinput>
 Setting up Install Process
 Resolving Dependencies
 --&gt; Running transaction check
@@ -97,7 +97,7 @@ Complete!
 	If you cannot locate an installation source for these files, you will need to install a package called <literal>cman</literal> and reconfigure Corosync to use it as outlined in <xref linkend="ap-cman"/>.
       </para>
       <para>
-	When using CMAN, you can skip <xref linkend="gfs-integration"/> where <literal>dlm-clone</literal> and <literal>gfs-clone</literal> are created, and proceed directly to <xref linkend="gfs-create-filesystem"/>.
+	When using CMAN, you can skip <xref linkend="gfs-integration"/> where <literal>dlm-clone</literal> and <literal>gfs-clone</literal> are created, and proceed directly to <xref linkend="gfs-create-filesystem"/> after ensuring that <literal>gfs2-utils</literal> and <literal>gfs2-cluster</literal> were installed.
       </para>
     </warning>
   </section>

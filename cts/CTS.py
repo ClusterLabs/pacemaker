@@ -77,9 +77,8 @@ class CtsLab(UserDict):
         self["LogWatcher"] = "any"
         self["LogFileName"] = "/var/log/messages"
         self["OutputFile"] = None
-        self["SyslogFacility"] = None
+        self["SyslogFacility"] = "daemon"
         self["CMclass"] = None
-        self["syslogd"] = "syslog-ng"
         self["logger"] = ([StdErrLog(self)])
 
         self.SeedRandom()
@@ -944,6 +943,78 @@ class ClusterManager(UserDict):
                 else:
                     self.debug("NOT Removing cache file on: "+node)
 
+    def prepare_fencing_watcher(self, node):
+        # If we don't have quorum now but get it as a result of starting this node,
+        # then a bunch of nodes might get fenced
+        if self.HasQuorum(None):
+            return None
+
+        if not self.has_key("Pat:They_fenced"):
+            return None
+
+        if not self.has_key("Pat:They_fenced_offset"):
+            return None
+
+        stonith = None
+        stonithPats = []
+        for peer in self.Env["nodes"]:
+            if peer != node and self.ShouldBeStatus[peer] != "up":
+                stonithPats.append(self["Pat:They_fenced"] % peer)
+
+
+        # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
+        stonith = LogWatcher(self.Env, self["LogFileName"], stonithPats, "StartaCM", 0)
+        stonith.setwatch()
+        return stonith
+
+    def fencing_cleanup(self, node, stonith):
+        peer_list = []
+
+        # If we just started a node, we may now have quorum (and permission to fence)
+        # Make sure everyone is online before continuing
+        self.ns.WaitForAllNodesToComeUp(self.Env["nodes"])
+
+        if not stonith:
+            return peer_list
+
+        if not self.HasQuorum(None):
+            # We didn't gain quorum - we shouldn't have shot anyone
+            return peer_list
+
+        # Now see if any states need to be updated
+        self.debug("looking for: " + repr(stonith.regexes))
+        shot = stonith.look(60)
+        while shot:
+            line = repr(shot)
+            self.debug("Found: "+ line)
+
+            # Extract node name
+            start = line.find(self["Pat:They_fenced_offset"]) + len(self["Pat:They_fenced_offset"])
+            peer = line[start:].split("' ")[0]
+
+            self.debug("Found peer: "+ peer)
+
+            peer_list.append(peer)
+            self.ShouldBeStatus[peer]="down"
+            self.log("   Peer %s was fenced as a result of %s starting" % (peer, node)) 
+                
+            # Get the next one
+            shot = stonith.look(60)
+
+            # Poll until it comes up
+            if self.Env["at-boot"]:
+                if not self.StataCM(peer):
+                    time.sleep(self["StartTime"])
+
+                if not self.StataCM(peer):
+                    self.log("ERROR: Peer %s failed to restart after being fenced" % peer) 
+                    return None
+
+                self.ShouldBeStatus[peer]="up"
+
+        return peer_list
+
+
     def StartaCM(self, node, verbose=False):
 
         '''Start up the cluster manager on a given node'''
@@ -993,23 +1064,27 @@ class ClusterManager(UserDict):
             startCmd = """G_SLICE=always-malloc HA_VALGRIND_ENABLED='%s' VALGRIND_OPTS='%s --log-file=/tmp/%s-%s.valgrind' %s""" % (
                 self.Env["valgrind-procs"], self.Env["valgrind-opts"], prefix, """%p""", self["StartCmd"])
 
+        stonith = self.prepare_fencing_watcher(node)
+
         if self.rsh(node, startCmd) != 0:
             self.log ("Warn: Start command failed on node %s" %(node))
             return None
 
         self.ShouldBeStatus[node]="up"
-
         watch_result = watch.lookforall()
+
+        self.fencing_cleanup(node, stonith)
+
         if watch.unmatched:
             for regex in watch.unmatched:
                 self.log ("Warn: Startup pattern not found: %s" %(regex))
 
-        if watch_result:  
+
+        if watch_result and self.cluster_stable(self["DeadTime"]):
             #self.debug("Found match: "+ repr(watch_result))
-            self.cluster_stable(self["DeadTime"])
             return 1
 
-        if self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
+        elif self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
             return 1
 
         self.log ("Warn: Start failed for node %s" %(node))

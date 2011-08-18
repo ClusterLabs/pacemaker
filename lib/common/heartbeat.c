@@ -17,6 +17,7 @@
  */
 
 #include <crm_internal.h>
+#include <dlfcn.h>
 
 #include <sys/param.h>
 #include <stdio.h>
@@ -152,9 +153,18 @@ register_heartbeat_conn(
 		hb_cluster->llc_ops->errmsg(hb_cluster));
 	return FALSE;
     }
-    
-    G_main_add_ll_cluster(G_PRIORITY_HIGH, hb_cluster,
+    {
+        void *handle = NULL;
+	GLLclusterSource* (*g_main_add_cluster)(
+	    int priority, ll_cluster_t* api, gboolean can_recurse,
+	    gboolean (*dispatch)(ll_cluster_t* source_data,gpointer user_data),
+	    gpointer userdata, GDestroyNotify notify) = find_library_function(
+		&handle, HEARTBEAT_LIBRARY, "G_main_add_ll_cluster");
+
+	(*g_main_add_cluster)(G_PRIORITY_HIGH, hb_cluster,
 			  FALSE, ha_msg_dispatch, hb_cluster, hb_destroy);
+        dlclose(handle);
+    }
     
     const_uname = hb_cluster->llc_ops->get_mynodeid(hb_cluster);
     CRM_CHECK(const_uname != NULL, return FALSE);

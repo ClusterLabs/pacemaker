@@ -44,6 +44,10 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
     GListPtr gIter = NULL;
     GListPtr gIter2 = NULL;
 
+    if(graph == NULL || graph->complete) {
+	return FALSE;
+    }
+    
     gIter = graph->synapses;
     for(; gIter != NULL; gIter = gIter->next) {
 	synapse_t *synapse = (synapse_t*)gIter->data;
@@ -67,11 +71,19 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
 			
 	    target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 	    if(safe_str_eq(target, down_node)) {
-		action->failed = TRUE;
+		action->failed = TRUE;		
+		synapse->failed = TRUE;
 		last_action = action->xml;
+		stop_te_timer(action->timer);
 		update_graph(graph, action);
-		crm_notice("Action %d (%s) is scheduled for %s (offline)",
-			   action->id, ID(action->xml), down_node);
+
+		if(synapse->executed) {
+		    crm_notice("Action %d (%s) was pending on %s (offline)",
+			       action->id, ID(action->xml), down_node);
+		} else {
+		    crm_notice("Action %d (%s) is scheduled for %s (offline)",
+			       action->id, ID(action->xml), down_node);
+		}
 	    }
 	}
     }
@@ -95,7 +107,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc, 
     char *attr_name = NULL;
 
     const char *value = NULL;
-    const char *id  = ID(event);
+    const char *id  = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     const char *on_uname  = get_uname(event_node);
 
     if(rc == 99) {
@@ -265,7 +277,7 @@ match_graph_event(int action_id, xmlNode *event, const char *event_node,
 			 tg_restart, "Event failed", event);
     }
 
-    this_event = ID(event);
+    this_event = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     te_log_action(LOG_INFO, "Action %s (%d) confirmed on %s (rc=%d)",
 		  crm_str(this_event), action->id, crm_str(target),
@@ -436,7 +448,7 @@ process_graph_event(xmlNode *event, const char *event_node)
 	
     CRM_ASSERT(event != NULL);
 
-    id = ID(event);
+    id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     magic = crm_element_value(event, XML_ATTR_TRANSITION_MAGIC);
 
     if(magic == NULL) {

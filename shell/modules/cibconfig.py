@@ -201,6 +201,9 @@ class CibObjectSet(object):
     def import_file(self,method,fname):
         if not cib_factory.is_cib_sane():
             return False
+        if method not in ("replace", "update"):
+            common_err("unknown method %s" % method)
+            return False
         if method == "replace":
             if options.interactive and cib_factory.has_cib_changed():
                 if not ask("This operation will erase all changes. Do you want to proceed?"):
@@ -230,10 +233,8 @@ class CibObjectSet(object):
         See below for specific implementations.
         '''
         pass
-
     def __check_unique_clash(self, set_obj_all):
         'Check whether resource parameters with attribute "unique" clash'
-
         def process_primitive(prim, clash_dict):
             '''
             Update dict clash_dict with
@@ -244,29 +245,29 @@ class CibObjectSet(object):
             ra_provider = prim.getAttribute("provider")
             ra_type = prim.getAttribute("type")
             ra_id = prim.getAttribute("id")
-
             ra = RAInfo(ra_class, ra_type, ra_provider)
             if ra == None:
                 return
             ra_params = ra.params()
-
             for a in prim.getElementsByTagName("instance_attributes"):
                 # params are in instance_attributes just below the parent
                 # operations may have some as well, e.g. OCF_CHECK_LEVEL
                 if a.parentNode != prim:
                     continue
-
                 for p in a.getElementsByTagName("nvpair"):
                     name = p.getAttribute("name")
-                    if ra_params[ name ].get("unique") == "1":
-                        value = p.getAttribute("value")
-                        k = (ra_class, ra_provider, ra_type, name, value)
-                        try:
-                            clash_dict[k].append(ra_id)
-                        except:
-                            clash_dict[k] = [ra_id]
+                    # don't fail if the meta-data doesn't contain the
+                    # expected attributes
+                    try:
+                        if ra_params[ name ].get("unique") == "1":
+                            value = p.getAttribute("value")
+                            k = (ra_class, ra_provider, ra_type, name, value)
+                            try:
+                                clash_dict[k].append(ra_id)
+                            except:
+                                clash_dict[k] = [ra_id]
+                    except: pass
             return
-
         # we check the whole CIB for clashes as a clash may originate between
         # an object already committed and a new one
         clash_dict = {}
@@ -274,10 +275,8 @@ class CibObjectSet(object):
             node = obj.node
             if is_primitive(node):
                 process_primitive(node, clash_dict)
-
         # but we only warn if a 'new' object is involved 
         check_set = set([o.node.getAttribute("id") for o in self.obj_list if is_primitive(o.node)])
-
         rc = 0
         for param, resources in clash_dict.items():
             # at least one new object must be involved
@@ -286,9 +285,7 @@ class CibObjectSet(object):
                     msg = 'Resources %s violate uniqueness for parameter "%s": "%s"' %\
                             (",".join(sorted(resources)), param[3], param[4])
                     common_warning(msg)
-
         return rc
-
     def semantic_check(self, set_obj_all):
         '''
         Test objects for sanity. This is about semantics.
@@ -1601,28 +1598,29 @@ class CibFactory(Singleton):
             print "Remove queue:"
             for obj in self.remove_queue:
                 obj.dump_state()
-    def commit(self):
+    def commit(self,force = False):
         'Commit the configuration to the CIB.'
         if not self.doc:
             empty_cib_err()
             return False
         # all_committed is updated in the invoked object methods
         self.all_committed = True
-        cnt = self.commit_doc()
+        cnt = self.commit_doc(force)
         if cnt:
             # reload the cib!
             self.reset()
             self.initialize()
         return self.all_committed
-    def commit_doc(self):
+    def commit_doc(self,force):
         try:
             conf_node = self.doc.getElementsByTagName("configuration")[0]
         except:
             common_error("cannot find the configuration node")
             return False
-        rc = pipe_string("%s -R" % cib_piped, conf_node.toxml())
+        cibadmin_opts = force and "-R --force" or "-R"
+        rc = pipe_string("%s %s" % (cib_piped,cibadmin_opts), conf_node.toxml())
         if rc != 0:
-            update_err("cib",'-R',conf_node.toprettyxml(), rc)
+            update_err("cib",cibadmin_opts,conf_node.toprettyxml(), rc)
             return False
         return True
     def mk_shadow(self):
@@ -2326,7 +2324,8 @@ class CibFactory(Singleton):
                 rc = False
                 continue
             if is_rsc_running(obj_id):
-                common_warn("resource %s is running, can't delete it" % obj_id)
+                common_err("resource %s is running, can't delete it" % obj_id)
+                rc = False
             else:
                 l.append(obj)
         if l:

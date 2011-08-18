@@ -54,7 +54,7 @@ main(int argc, char **argv)
 	char *mutable_s = NULL;
 	
 	crm_log_init_quiet(NULL, LOG_INFO, FALSE, TRUE, argc, argv);
-	crm_set_options("V?d:p:D:WOLn", "command [output modifier] ", long_options, "Display and parse ISO8601 dates and times");
+	crm_set_options(NULL, "command [output modifier] ", long_options, "Display and parse ISO8601 dates and times");
 	
 	if(argc < 2) {
 		argerr++;

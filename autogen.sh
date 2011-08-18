@@ -189,5 +189,13 @@ $autoconf
 test -f libtool.m4 || touch libtool.m4 
 test -f ltdl.m4 || touch ltdl.m4
 
-echo Now run ./configure
+if [ -f config.log ]; then
+    echo Now re-running ./configure with the previous arguments
+    last=`grep --color=never "$.*configure" config.log | tail -n 1 | sed s:.*configure:./configure:`
+    echo "  $last"
+    eval $last
+else
+    echo Now run ./configure
+fi
+
 trap '' 0

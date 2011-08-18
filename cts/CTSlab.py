@@ -41,6 +41,14 @@ except ImportError:
     sys.stderr.write("abort: couldn't find cts libraries in [%s]\n" %
                      ' '.join(sys.path))
     sys.stderr.write("(check your install and PYTHONPATH)\n")
+
+    # Now do it again to get more details 
+    from cts.CTSvars    import *
+    from cts.CM_ais     import *
+    from cts.CM_lha     import crm_lha
+    from cts.CTSaudits  import AuditList
+    from cts.CTStests   import TestList
+    from cts.CTSscenarios import *
     sys.exit(-1)
 
 cm = None
@@ -62,13 +70,10 @@ class LabEnvironment(CtsLab):
         CtsLab.__init__(self)
 
         #  Get a random seed for the random number generator.
-        self["DoStonith"] = 1
         self["DoStandby"] = 1
         self["DoFencing"] = 1
         self["XmitLoss"] = "0.0"
         self["RecvLoss"] = "0.0"
-        self["IPBase"] = "127.0.0.10"
-        self["ConnectivityHost"] = socket.gethostname()
         self["ClobberCIB"] = 0
         self["CIBfilename"] = None
         self["CIBResource"] = 0
@@ -82,7 +87,6 @@ class LabEnvironment(CtsLab):
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
         self["stonith-params"] = "hostlist=all,livedangerously=yes"
-        self["at-boot"] = 1  # Does the cluster software start automatically when the node boots 
         self["logger"] = ([StdErrLog(self)])
         self["loop-minutes"] = 60
         self["valgrind-prefix"] = None
@@ -95,6 +99,15 @@ class LabEnvironment(CtsLab):
         self["unsafe-tests"] = 1
         self["loop-tests"] = 1
         self["scenario"] = "random"
+
+        master = socket.gethostname()
+
+        # Use the IP where possible to avoid name lookup failures  
+        for ip in socket.gethostbyname_ex(master)[2]:
+            if ip != "127.0.0.1":
+                master = ip
+                break;
+        self["cts-master"] = master
 
 def usage(arg, status=1):
     print "Illegal argument " + arg
@@ -122,7 +135,7 @@ def usage(arg, status=1):
     print "\t [--recv-loss lost-rate(0.0-1.0)]" 
     print "\t [--standby (1 | 0 | yes | no)]" 
     print "\t [--fencing (1 | 0 | yes | no)]" 
-    print "\t [--stonith (1 | 0 | yes | no)]" 
+    print "\t [--stonith (1 | 0 | yes | no | rhcs | lha)]" 
     print "\t [--stonith-type type]" 
     print "\t [--stonith-args name=value]" 
     print "\t [--bsc]" 
@@ -144,6 +157,7 @@ def usage(arg, status=1):
 if __name__ == '__main__': 
 
     Environment = LabEnvironment()
+    rsh = RemoteExec(None, silent=True)
 
     NumIter = 0
     Version = 1
@@ -172,6 +186,7 @@ if __name__ == '__main__':
 
        elif args[i] == "-r" or args[i] == "--populate-resources":
            Environment["CIBResource"] = 1
+           Environment["ClobberCIB"] = 1
 
        elif args[i] == "-L" or args[i] == "--logfile":
            skipthis=1
@@ -184,6 +199,8 @@ if __name__ == '__main__':
        elif args[i] == "--test-ip-base":
            skipthis=1
            Environment["IPBase"] = args[i+1]
+           Environment["CIBResource"] = 1
+           Environment["ClobberCIB"] = 1
 
        elif args[i] == "--oprofile":
            skipthis=1
@@ -217,9 +234,17 @@ if __name__ == '__main__':
        elif args[i] == "--stonith":
            skipthis=1
            if args[i+1] == "1" or args[i+1] == "yes":
-               Environment["DoStonith"]=1
+               Environment["DoFencing"]=1
            elif args[i+1] == "0" or args[i+1] == "no":
-               Environment["DoStonith"]=0
+               Environment["DoFencing"]=0
+           elif args[i+1] == "rhcs":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_xvm"
+               Environment["stonith-params"] = "pcmk_arg_map=domain:uname"
+           elif args[i+1] == "lha":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "external/ssh"
+               Environment["stonith-params"] = "hostlist=all,livedangerously=yes"
            else:
                usage(args[i+1])
 
@@ -400,6 +425,43 @@ if __name__ == '__main__':
 
     Environment["nodes"] = node_list
 
+    discover = random.Random().choice(Environment["nodes"])
+
+    # Detect syslog variant
+    if not Environment.has_key("syslogd") or not Environment["syslogd"]:
+        if not Environment.has_key("syslogd") or not Environment["syslogd"]:
+            # SYS-V
+            Environment["syslogd"] = rsh(discover, "chkconfig | grep log.*on | awk '{print $1}' | head -n 1", stdout=1)
+        if not Environment.has_key("syslogd") or not Environment["syslogd"]:
+            # Systemd
+            Environment["syslogd"] = rsh(discover, "systemctl list-units | grep log.*\.service.*active.*running | sed 's:.service.*::'", stdout=1)
+
+        if not Environment.has_key("syslogd") or not Environment["syslogd"]:
+            Environment["syslogd"] = "rsyslogd"
+
+    # Detect if the cluster starts at boot
+    if not Environment.has_key("at-boot"):
+        atboot = 0
+
+        # SYS-V
+        atboot = atboot or not rsh(discover, "chkconfig | grep -e corosync.*on -e heartbeat.*on -e pacemaker.*on")
+
+        # Systemd
+        atboot = atboot or not rsh(discover, "systemctl is-enabled heartbeat.service")
+        atboot = atboot or not rsh(discover, "systemctl is-enabled corosync.service")
+        atboot = atboot or not rsh(discover, "systemctl is-enabled pacemaker.service")
+
+        Environment["at-boot"] = atboot
+
+    # Try to determinw an offset for IPaddr resources
+    if Environment["CIBResource"] and not Environment.has_key("IPBase"):
+        network=rsh(discover, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", stdout=1).strip()
+        Environment["IPBase"] = rsh(discover, "nmap -sn %s | grep 'scan report' | sort -u | tail -n 1 | awk '{print $5}'" % network, stdout=1).strip()
+        if not Environment["IPBase"]:
+            Environment["IPBase"] = "127.0.0.10"
+            Environment.log("Could not determine an offset for IPaddr resources.  Perhaps nmap is not installed on the nodes.")
+            Environment.log("Defaulting to '%s', use --test-ip-base to override" % Environment["IPBase"])
+
     # Create the Cluster Manager object
     cm = Environment['CMclass'](Environment)
     if TruncateLog:
@@ -450,11 +512,18 @@ if __name__ == '__main__':
             cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
 
     Environment.log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
-    Environment.log("Stack:            %s" % Environment["Stack"])
-    Environment.log("Schema:           %s" % Environment["Schema"])
-    Environment.log("Scenario:         %s" % scenario.__doc__)
-    Environment.log("Random Seed:      %s" % Environment["RandSeed"])
-    Environment.log("System log files: %s" % Environment["LogFileName"])
+    Environment.log("Stack:                  %s" % Environment["Stack"])
+    Environment.log("Schema:                 %s" % Environment["Schema"])
+    Environment.log("Scenario:               %s" % scenario.__doc__)
+    Environment.log("CTS Master:             %s" % Environment["cts-master"])
+    Environment.log("Random Seed:            %s" % Environment["RandSeed"])
+    Environment.log("Syslog variant:         %s" % Environment["syslogd"].strip())
+    Environment.log("System log files:       %s" % Environment["LogFileName"])
+#    Environment.log(" ")
+    if Environment.has_key("IPBase"):
+        Environment.log("Base IP for resources:  %s" % Environment["IPBase"])
+    Environment.log("Cluster starts at boot: %d" % Environment["at-boot"])
+        
 
     Environment.dump()
     rc = Environment.run(scenario, NumIter)

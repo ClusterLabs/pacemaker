@@ -130,7 +130,9 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
        const char *op_type, const int timeout, GHashTable *params)
 {
     int rc = 0;
+    stonith_key_value_t *device_params = NULL;
     stonith_t *stonith_api = NULL;
+
     provider = get_stonith_provider(rsc_type, provider);
     crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL);
     
@@ -142,7 +144,7 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
     }
 
     stonith_api = stonith_api_new();
-    rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL, NULL);
+    rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL);
     if(provider == NULL) {
 	crm_err("No such legacy stonith device: %s", rsc_type);
 	rc = st_err_unknown_device;
@@ -152,15 +154,23 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 	    stonith_api, st_opt_sync_call, rsc_id, op_type, NULL, timeout);
 	
     } else if ( 0 == STRNCMP_CONST(op_type, "start") ) {
+	char *key = NULL;
+	char *value = NULL;
+	GHashTableIter iter;
 	const char *agent = rsc_type;
 
 	if(0 == STRNCMP_CONST(provider, "heartbeat")) {
 	    agent = "fence_legacy";
 	    g_hash_table_replace(params, strdup("plugin"), strdup(rsc_type));
 	}
-	
+
+        g_hash_table_iter_init( &iter, params );
+	while (g_hash_table_iter_next (&iter, (gpointer *)&key, (gpointer *)&value)) {
+	    device_params = stonith_key_value_add(device_params, key, value);
+	}
+
 	rc = stonith_api->cmds->register_device(
-	    stonith_api, st_opt_sync_call, rsc_id, provider, agent, params);
+	    stonith_api, st_opt_sync_call, rsc_id, provider, agent, device_params);
 
     } else if ( 0 == STRNCMP_CONST(op_type, "stop") ) {
 	rc = stonith_api->cmds->remove_device(
@@ -199,52 +209,24 @@ map_ra_retvalue(int rc, const char * op_type, const char * std_output)
 static int
 get_resource_list(GList ** rsc_info)
 {
-    int file_num;
-    char **entry = NULL;
-    char **type_list = NULL;
-    struct dirent **namelist;
-
+    stonith_t *stonith_api = NULL;
+    stonith_key_value_t *devices = NULL;
+    stonith_key_value_t *dIter = NULL;
+    
     if ( rsc_info == NULL ) {
 	crm_err("Parameter error: get_resource_list");
 	return -2;
     }
 
-    /* Include Heartbeat agents */
-    type_list = stonith_types();
-    for(entry = type_list; *entry; ++entry) {
-	crm_debug("Added: %s", *entry);
-	*rsc_info = g_list_append(*rsc_info, *entry);
+    stonith_api = stonith_api_new();
+    stonith_api->cmds->list(stonith_api, st_opt_sync_call, NULL, &devices, 0);
+    stonith_api_delete(stonith_api);
+
+    for(dIter = devices; dIter; dIter = dIter->next) {
+	*rsc_info = g_list_append(*rsc_info, dIter->value);
     }
-
-    /* Include Red Hat agents, basically: ls -1 @sbin_dir@/fence_* */
-    file_num = scandir(RH_STONITH_DIR, &namelist, 0, alphasort);
-    if (file_num > 0) {
-	struct stat prop;
-	char buffer[FILENAME_MAX+1];
-
-	while (file_num--) {
-	    if ('.' == namelist[file_num]->d_name[0]) {
-		free(namelist[file_num]);
-		continue;
-
-	    } else if(0 != strncmp(RH_STONITH_PREFIX,
-				   namelist[file_num]->d_name,
-				   strlen(RH_STONITH_PREFIX))) {
-		free(namelist[file_num]);
-		continue;
-	    }
-	    
-	    snprintf(buffer,FILENAME_MAX,"%s/%s",
-		     RH_STONITH_DIR, namelist[file_num]->d_name);
-	    if(stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-		*rsc_info = g_list_append(*rsc_info, g_strdup(namelist[file_num]->d_name));
-	    }
-
-	    free(namelist[file_num]);
-	}
-	free(namelist);
-    }
-
+    
+    stonith_key_value_freeall(devices, 1, 0);
     return 0;
 }
 

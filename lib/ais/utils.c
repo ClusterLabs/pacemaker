@@ -543,7 +543,6 @@ int send_client_msg(
     if(rc != 0) {
 	ais_warn("Sending message to %s failed: %d", msg_type2text(type), rc);
 	log_ais_message(LOG_DEBUG, ais_msg);
-	return FALSE;
     }
 
     ais_free(ais_msg);

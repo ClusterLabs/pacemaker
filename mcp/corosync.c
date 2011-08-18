@@ -19,10 +19,17 @@
 #include <pacemaker.h>
 
 #include <sys/utsname.h>
+#include <sys/stat.h>	/* for calls to stat() */
+#include <libgen.h>     /* For basename() and dirname() */
+
+#include <sys/types.h>
+#include <pwd.h>        /* For getpwname() */
 
 #include <corosync/cfg.h>
 #include <corosync/cpg.h>
 #include <corosync/confdb.h>
+
+#include <crm/common/cluster.h>
 
 #ifdef SUPPORT_CMAN
 #include <libcman.h>
@@ -37,95 +44,6 @@ gboolean use_cman = FALSE;
 static cpg_handle_t cpg_handle;
 static corosync_cfg_handle_t cfg_handle;
 static corosync_cfg_state_notification_t cfg_buffer;
-
-static inline const char *ais_error2text(int error) 
-{
-	const char *text = "unknown";
-	switch(error) {
-	    case CS_OK:
-		text = "None";
-		break;
-	    case CS_ERR_LIBRARY:
-		text = "Library error";
-		break;
-	    case CS_ERR_VERSION:
-		text = "Version error";
-		break;
-	    case CS_ERR_INIT:
-		text = "Initialization error";
-		break;
-	    case CS_ERR_TIMEOUT:
-		text = "Timeout";
-		break;
-	    case CS_ERR_TRY_AGAIN:
-		text = "Try again";
-		break;
-	    case CS_ERR_INVALID_PARAM:
-		text = "Invalid parameter";
-		break;
-	    case CS_ERR_NO_MEMORY:
-		text = "No memory";
-		break;
-	    case CS_ERR_BAD_HANDLE:
-		text = "Bad handle";
-		break;
-	    case CS_ERR_BUSY:
-		text = "Busy";
-		break;
-	    case CS_ERR_ACCESS:
-		text = "Access error";
-		break;
-	    case CS_ERR_NOT_EXIST:
-		text = "Doesn't exist";
-		break;
-	    case CS_ERR_NAME_TOO_LONG:
-		text = "Name too long";
-		break;
-	    case CS_ERR_EXIST:
-		text = "Exists";
-		break;
-	    case CS_ERR_NO_SPACE:
-		text = "No space";
-		break;
-	    case CS_ERR_INTERRUPT:
-		text = "Interrupt";
-		break;
-	    case CS_ERR_NAME_NOT_FOUND:
-		text = "Name not found";
-		break;
-	    case CS_ERR_NO_RESOURCES:
-		text = "No resources";
-		break;
-	    case CS_ERR_NOT_SUPPORTED:
-		text = "Not supported";
-		break;
-	    case CS_ERR_BAD_OPERATION:
-		text = "Bad operation";
-		break;
-	    case CS_ERR_FAILED_OPERATION:
-		text = "Failed operation";
-		break;
-	    case CS_ERR_MESSAGE_ERROR:
-		text = "Message error";
-		break;
-	    case CS_ERR_QUEUE_FULL:
-		text = "Queue full";
-		break;
-	    case CS_ERR_QUEUE_NOT_AVAILABLE:
-		text = "Queue not available";
-		break;
-	    case CS_ERR_BAD_FLAGS:
-		text = "Bad flags";
-		break;
-	    case CS_ERR_TOO_BIG:
-		text = "To big";
-		break;
-	    case CS_ERR_NO_SECTIONS:
-		text = "No sections";
-		break;
-	}
-	return text;
-}
 
 /* =::=::=::= CFG - Shutdown stuff =::=::=::= */
 
@@ -162,6 +80,8 @@ cfg_connection_destroy(gpointer user_data)
 {
     crm_err("Connection destroyed");
     cfg_handle = 0;
+
+    pcmk_shutdown(SIGTERM);
     return;
 }
 
@@ -171,6 +91,8 @@ gboolean cluster_disconnect_cfg(void)
 	corosync_cfg_finalize(cfg_handle);
 	cfg_handle = 0;
     }
+
+    pcmk_shutdown(SIGTERM);
     return TRUE;
 }
 
@@ -516,11 +438,12 @@ gboolean read_config(void)
     int rc;
     char *value = NULL;
     gboolean have_log = FALSE;
-    gboolean have_quorum = FALSE;
     confdb_handle_t top_handle = 0;
     hdb_handle_t local_handle = 0;
     static confdb_callbacks_t callbacks = {};
+    enum cluster_type_e stack = get_cluster_type();
 
+    crm_info("Reading configure for stack: %s", name_for_cluster_type(stack));
 
     rc = confdb_initialize (&config, &callbacks);
     if (rc != CS_OK) {
@@ -528,43 +451,55 @@ gboolean read_config(void)
 	return FALSE;
     }
 
-    crm_info("Reading configure");
-
     /* =::=::= Should we be here =::=::= */
-    
-    top_handle = config_find_init(config);
-    local_handle = config_find_next(config, "service", top_handle);
-    while(local_handle && have_quorum == FALSE) {
-	crm_free(value);
-	get_config_opt(config, local_handle, "name", &value, NULL);
-	if(safe_str_eq("pacemaker", value)) {
-	    have_quorum = TRUE;
-	    setenv("HA_cluster_type", "openais",  1);
+    if(stack == pcmk_cluster_corosync) {
+	setenv("HA_cluster_type", "corosync",  1);
 
-	    crm_free(value);
-	    get_config_opt(config, local_handle, "ver", &value, "0");
-	    if(safe_str_eq(value, "1")) {
-		crm_free(value);
-		get_config_opt(config, local_handle, "use_logd", &value, "no");
-		setenv("HA_use_logd", value, 1);
-		
-		crm_free(value);
-		get_config_opt(config, local_handle, "use_mgmtd", &value, "no");
-		enable_mgmtd(crm_is_true(value));
+    } else if(stack == pcmk_cluster_cman) {
+	setenv("HA_cluster_type", "cman",  1);
+	enable_crmd_as_root(TRUE);
+	use_cman = TRUE;
 
-	    } else {
-		crm_err("We can only start Pacemaker from init if using version 1"
-			" of the Pacemaker plugin for Corosync.  Terminating.");
-		exit(100);
-	    }
+    } else if(stack == pcmk_cluster_classic_ais) {
+	setenv("HA_cluster_type", "openais",  1);
 
-	}
+	/* Look for a service block to indicate our plugin is loaded */
+	top_handle = config_find_init(config);
 	local_handle = config_find_next(config, "service", top_handle);
+
+	while(local_handle) {
+	    crm_free(value);
+	    get_config_opt(config, local_handle, "name", &value, NULL);
+	    if(safe_str_eq("pacemaker", value)) {
+		crm_free(value);
+		get_config_opt(config, local_handle, "ver", &value, "0");
+		if(safe_str_eq(value, "1")) {
+		    crm_free(value);
+		    get_config_opt(config, local_handle, "use_logd", &value, "no");
+		    setenv("HA_use_logd", value, 1);
+		    
+		    crm_free(value);
+		    get_config_opt(config, local_handle, "use_mgmtd", &value, "no");
+		    enable_mgmtd(crm_is_true(value));
+		    
+		} else {
+		    crm_err("We can only start Pacemaker from init if using version 1"
+			    " of the Pacemaker plugin for Corosync.  Terminating.");
+		    exit(100);
+		}
+		break;
+	    }
+	    local_handle = config_find_next(config, "service", top_handle);
+	}
+	crm_free(value);
+
+    } else {
+	crm_err("Unsupported stack type: %s", name_for_cluster_type(stack));
+	return FALSE;
     }
     
     /* =::=::= Logging =::=::= */
 
-    crm_free(value);
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "logging", top_handle);
     
@@ -587,10 +522,31 @@ gboolean read_config(void)
 	    crm_err("Logging to a file requested but no log file specified");
 
 	} else {
-	    uid_t pcmk_uid = geteuid();
+	    struct stat parent;
+	    FILE *logfile = NULL;
+	    char *parent_dir = dirname(strdup(value));
+	    struct passwd *pcmk_user = getpwnam(CRM_DAEMON_USER);
+	    uid_t pcmk_uid = pcmk_user->pw_uid;
 	    uid_t pcmk_gid = getegid();
+	    
+	    rc = stat(parent_dir, &parent);
 
-	    FILE *logfile = fopen(value, "a");
+	    if(rc != 0) {
+		crm_err("Directory '%s' does not exist for logfile '%s'", parent_dir, value);
+
+	    } else if(parent.st_uid == pcmk_uid && (parent.st_mode & (S_IRUSR|S_IWUSR))) {
+		/* all good - user */
+		logfile = fopen(value, "a");
+
+	    } else if(parent.st_gid == pcmk_gid && (parent.st_mode & S_IXGRP)) {
+		/* all good - group */
+		logfile = fopen(value, "a");
+
+	    } else {
+		crm_err("Daemons running as %s do not have permission to access '%s'. Logging to '%s' is disabled",
+			CRM_DAEMON_USER, parent_dir, value);
+	    }
+	
 	    if(logfile) {
 		int logfd = fileno(logfile);
 
@@ -610,12 +566,14 @@ gboolean read_config(void)
 	    } else {
 		crm_err("Couldn't create logfile: %s", value);
 	    }
+	    crm_free(parent_dir);
 	}
     }
 
     get_config_opt(config, local_handle, "to_syslog", &value, "on");
     if(have_log && crm_is_true(value) == FALSE) {
 	crm_info("User configured file based logging and explicitly disabled syslog.");
+	crm_free(value);
 	value = NULL;
 
     } else {
@@ -628,28 +586,6 @@ gboolean read_config(void)
     
     setenv("HA_logfacility", value?value:"none", 1);
     setenv("HA_LOGFACILITY", value?value:"none", 1);
-
-    /* =::=::= Quorum =::=::= */
-
-    if(have_quorum == FALSE) {
-	top_handle = config_find_init(config);
-	local_handle = config_find_next(config, "quorum", top_handle);
-	get_config_opt(config, local_handle, "provider", &value, NULL);
-
-	if(value) {
-	    have_quorum = TRUE;
-	    if(safe_str_eq("quorum_cman", value)) {
-#ifdef SUPPORT_CMAN
-		setenv("HA_cluster_type", "cman",  1);
-		enable_crmd_as_root(TRUE);
-		use_cman = TRUE;
-#else
-		crm_err("Corosync configured for CMAN but this build of Pacemaker doesn't support it");
-		exit(100);
-#endif
-	    }
-	}
-    }
     
     confdb_finalize (config);
     crm_free(value);

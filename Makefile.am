@@ -23,12 +23,17 @@ EXTRA_DIST              = autogen.sh ConfigureMe README.in libltdl.tar
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-SUBDIRS	= $(LIBLTDL_DIR) replace include lib mcp pengine cib crmd fencing tools shell xml cts extra doc
+CORE	= $(LIBLTDL_DIR) replace include lib mcp pengine cib crmd fencing tools shell xml
+SUBDIRS	= $(CORE) cts extra doc
 
 doc_DATA = AUTHORS COPYING COPYING.LIB
 
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
+
+core:
+	@echo "Building only core components: $(CORE)"
+	list='$(CORE)'; for subdir in $$list; do make -C $$subdir all; done
 
 install-exec-local:
 	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)
@@ -42,8 +47,11 @@ if BUILD_CS_SUPPORT
 endif
 # Use chown because the user/group may not exist
 
+clean-generic:
+	rm -f $(TARFILE) *.tar.bz2 *.sed
+
 dist-clean-local:
-	rm -f autoconf automake autoheader $(TARFILE) *.tar.bz2 *.sed
+	rm -f autoconf automake autoheader
 
 maintainer-clean-local:
 	rm -f libltdl.tar

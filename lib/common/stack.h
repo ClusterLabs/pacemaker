@@ -19,6 +19,8 @@
 #ifndef CRM_STACK__H
 #define CRM_STACK__H
 
+#include <crm/common/cluster.h>
+
 #if SUPPORT_HEARTBEAT
 extern ll_cluster_t *heartbeat_cluster;
 extern gboolean send_ha_message(ll_cluster_t *hb_conn, xmlNode *msg,
@@ -38,12 +40,14 @@ extern gboolean send_ais_message(
     xmlNode *msg, gboolean local,
     const char *node, enum crm_ais_msg_types dest);
 
+extern enum cluster_type_e find_corosync_variant(void);
+
 extern void terminate_ais_connection(void);
 extern gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname, int *nodeid);
 extern gboolean init_ais_connection_once(
-    enum cluster_type_e type, gboolean (*dispatch)(AIS_Message*,char*,int),
+    gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname, int *nodeid);
 
 #endif

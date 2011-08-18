@@ -102,6 +102,7 @@ extern GListPtr   fsa_message_queue;
 extern fsa_timer_t *election_trigger;		/*  */
 extern fsa_timer_t *election_timeout;		/*  */
 extern fsa_timer_t *shutdown_escalation_timer;	/*  */
+extern fsa_timer_t *transition_timer;
 extern fsa_timer_t *integration_timer;
 extern fsa_timer_t *finalization_timer;
 extern fsa_timer_t *wait_timer;

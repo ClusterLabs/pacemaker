@@ -165,10 +165,111 @@ get_rsc_attributes(GHashTable *meta_hash, resource_t *rsc,
     }
 }
 
+static gboolean
+unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t *data_set)
+{
+    xmlNode *cib_resources = NULL;
+    xmlNode *template = NULL;
+    xmlNode *new_xml = NULL;
+    xmlNode *child_xml = NULL;
+    xmlNode *rsc_ops = NULL;
+    xmlNode *template_ops = NULL;
+    const char *template_ref = NULL;
+    const char *id = NULL;
+    
+    if(xml_obj == NULL) {
+	pe_err("No resource object for template unpacking");
+	return FALSE;
+    }
+
+    template_ref = crm_element_value(xml_obj, XML_CIB_TAG_RSC_TEMPLATE);
+    if(template_ref == NULL) {
+	return TRUE;
+    }
+
+    id = ID(xml_obj);
+    if(id == NULL) {
+	pe_err("'%s' object must have a id", crm_element_name(xml_obj));
+	return FALSE;
+    }
+
+    if(crm_str_eq(template_ref, id, TRUE)) {
+	pe_err("The resource object '%s' should not reference itself", id);
+	return FALSE;
+    }
+
+    cib_resources = get_object_root(XML_CIB_TAG_RESOURCES, data_set->input);
+    if(cib_resources == NULL) {
+	pe_err("Cannot get the root of object '%s'", XML_CIB_TAG_RESOURCES);
+	return FALSE;
+    }
+    
+    template = find_entity(cib_resources, XML_CIB_TAG_RSC_TEMPLATE, template_ref);
+    if(template == NULL) {
+	pe_err("No template named '%s'", template_ref);
+	return FALSE;
+    }
+
+    new_xml = copy_xml(template);
+    new_xml->name = (xmlChar *)crm_strdup((const char*)xml_obj->name);
+    crm_xml_replace(new_xml, XML_ATTR_ID, id);
+    template_ops = find_xml_node(new_xml, "operations", FALSE);
+
+    for(child_xml = __xml_first_child(xml_obj); child_xml != NULL; child_xml = __xml_next(child_xml)) {
+	xmlNode *new_child = NULL;
+
+	new_child = add_node_copy(new_xml, child_xml);
+
+	if(crm_str_eq((const char *)new_child->name, "operations", TRUE)) {
+	    rsc_ops = new_child;
+	}
+    }
+
+    if(template_ops && rsc_ops) {
+	xmlNode * op = NULL;
+	GHashTable *rsc_ops_hash = g_hash_table_new_full(
+				crm_str_hash, g_str_equal, g_hash_destroy_str, NULL);
+
+	for(op = __xml_first_child(rsc_ops); op != NULL; op = __xml_next(op)) {
+	    const char *name = crm_element_value(op, "name");
+	    g_hash_table_insert(rsc_ops_hash, crm_strdup(name), op);
+	}
+
+	for(op = __xml_first_child(template_ops); op != NULL; op = __xml_next(op)) {
+	    const char *name = crm_element_value(op, "name");
+	    if(g_hash_table_lookup(rsc_ops_hash, name)) {
+		continue;
+	    }
+		
+	    add_node_copy(rsc_ops, op);
+	}
+
+	if(rsc_ops_hash) {
+	    g_hash_table_destroy(rsc_ops_hash);
+	}
+
+	free_xml_from_parent(NULL, template_ops);
+    }
+    
+    /*free_xml(*expanded_xml);*/
+    *expanded_xml = new_xml;
+
+    /* Disable multi-level templates for now */
+    /*if(unpack_template(new_xml, expanded_xml, data_set) == FALSE) {
+	free_xml(*expanded_xml);
+	*expanded_xml = NULL;
+
+	return FALSE;
+    }*/
+
+    return TRUE;
+}
+
 gboolean	
 common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	      resource_t *parent, pe_working_set_t *data_set)
 {
+    xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
     resource_t *top = NULL;
     const char *value = NULL;
@@ -186,11 +287,25 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	return FALSE;
 		
     }
-    crm_malloc0(*rsc, sizeof(resource_t));
-    ops = find_xml_node(xml_obj, "operations", FALSE);
 	
-    (*rsc)->xml  = xml_obj;
+    if(unpack_template(xml_obj, &expanded_xml, data_set) == FALSE) {
+	return FALSE;
+    }
+
+    crm_malloc0(*rsc, sizeof(resource_t));
+
+    if(expanded_xml) {
+	(*rsc)->xml = expanded_xml;
+	(*rsc)->orig_xml = xml_obj;
+
+    } else {
+	(*rsc)->xml = xml_obj;
+	(*rsc)->orig_xml = NULL;
+    }
+
     (*rsc)->parent  = parent;
+
+    ops = find_xml_node((*rsc)->xml, "operations", FALSE);
     (*rsc)->ops_xml = expand_idref(ops, data_set->input);
 
     (*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
@@ -241,6 +356,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
     }
 
     (*rsc)->rsc_cons	   = NULL; 
+    (*rsc)->rsc_tickets    = NULL; 
     (*rsc)->actions            = NULL;
     (*rsc)->role		   = RSC_ROLE_STOPPED;
     (*rsc)->next_role	   = RSC_ROLE_UNKNOWN;
@@ -430,6 +546,7 @@ void common_free(resource_t *rsc)
 
     g_list_free(rsc->rsc_cons);
     g_list_free(rsc->rsc_cons_lhs);
+    g_list_free(rsc->rsc_tickets);
     g_list_free(rsc->dangling_migrations);
 
     if(rsc->parameters != NULL) {
@@ -441,8 +558,15 @@ void common_free(resource_t *rsc)
     if(rsc->utilization != NULL) {
 	g_hash_table_destroy(rsc->utilization);
     }
-    if(rsc->parent == NULL && is_set(rsc->flags, pe_rsc_orphan)) {
+    if(rsc->orig_xml) {
 	free_xml(rsc->xml);
+    }
+    if(rsc->parent == NULL && is_set(rsc->flags, pe_rsc_orphan)) {
+	if(rsc->orig_xml) {
+	    free_xml(rsc->orig_xml);
+	} else {
+	    free_xml(rsc->xml);
+	}
     }
     if(rsc->running_on) {
 	g_list_free(rsc->running_on);

@@ -24,19 +24,9 @@ clone_color: pingd_node:0 allocation score on cxb1: 0
 clone_color: pingd_node:1 allocation score on cxa1: 0
 clone_color: pingd_node:1 allocation score on cxb1: 1
 cyrus_drbd_node:0 promotion score on cxa1: 1
-cyrus_drbd_node:0 promotion score on cxa1: INFINITY
-cyrus_drbd_node:0 promotion score on cxa1: INFINITY
-cyrus_drbd_node:1 promotion score on cxb1: -INFINITY
-cyrus_drbd_node:1 promotion score on cxb1: -INFINITY
 cyrus_drbd_node:1 promotion score on cxb1: 1
 named_drbd_node:0 promotion score on cxb1: 76
-named_drbd_node:0 promotion score on cxb1: INFINITY
-named_drbd_node:0 promotion score on cxb1: INFINITY
-named_drbd_node:1 promotion score on cxa1: -INFINITY
-named_drbd_node:1 promotion score on cxa1: -INFINITY
 named_drbd_node:1 promotion score on cxa1: 76
-named_drbd_node:2 promotion score on none: 0
-named_drbd_node:2 promotion score on none: 0
 named_drbd_node:2 promotion score on none: 0
 native_color: cyrus_address allocation score on cxa1: 210
 native_color: cyrus_address allocation score on cxb1: 200

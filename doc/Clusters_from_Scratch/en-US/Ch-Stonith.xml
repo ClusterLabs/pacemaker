@@ -8,43 +8,49 @@
 	<section>
 		<title>Why You Need STONITH</title>
 		<para>
-			STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rouge nodes or concurrent access.
+			STONITH is an acronym for Shoot-The-Other-Node-In-The-Head. It protects your data from being corrupted by rougue nodes performing concurrent or uncontrolled accesses to your data. An unresponsive node may still be accessing your data or may resume doing so without warning. Pacemaker will use STONITH to ensure the safety of your data by making sure the node is truly offline before allowing the data to be accessed from another node.
 		</para>
 		<para>
-			Just because a node is unresponsive, this doesn’t mean it isn’t accessing your data. The only way to be 100% sure that your data is safe, is to use STONITH so we can be certain that the node is truly offline, before allowing the data to be accessed from another node.
-		</para>
-		<para>
-			STONITH also has a role to play in the event that a clustered service cannot be stopped. In this case, the cluster uses STONITH to force the whole node offline, thereby making it safe to start the service elsewhere.
+			Pacemaker will also resort to STONITH in the event that a clustered service cannot be stopped. The whole node must be forced offline to make it safe to to start the service elsewhere.
 		</para>
 	</section>
 	
 	<section>
-		<title>What STONITH Device Should You Use</title>
+		<title>Selecting a STONITH Device</title>
 		<para>
-			It is crucial that the STONITH device can allow the cluster to differentiate between a node failure and a network one.
+			It is crucial that the STONITH device can allow the cluster to differentiate between a node failure and a network failure.
 		</para>
 		<para>
-			The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many onboard IMPI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault.
+		  A common mistake people make in choosing a STONITH device is to use an onboard power controller that shares power and/or network with the node it controls.
+		  In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault.
+		  Unfortunately many IPMI and iLO boards fall into this category. 
 		</para>
 		<para>
-			Likewise, any device that relies on the machine being active (such as SSH-based “devices” used during testing) are inappropriate.
+			Likewise, any device that relies on the machine being active (such as an SSH-based “device” used during testing) is inappropriate.
 		</para>
 	</section>
 	
 	<section>
 		<title>Configuring STONITH</title>
-		<orderedlist>
-			<listitem>
-				<para>
-					Find the correct driver: stonith -L
-				</para>
-			</listitem>
-			<listitem>
-				<para>
-					Since every device is different, the parameters needed to configure it will vary. To find out the parameters required by the device: stonith -t {type} -n
-				</para>
-			</listitem>
-		</orderedlist>
+		<para>
+                Configuration consists of identifying the proper driver for your desired device and supplying it's required parameters. The installed cluster software can provide this information. The crm tool is used to describe this configuration and then creates and uploads the required XML to the cluster. If your STONITH device can control multiple nodes <emphasis>and supports multiple simultaneous connections,</emphasis> a clone can be created to ptentially speed up recovery.
+		</para>
+		<para>
+	        Use the command stonith -L to produce a list of the drivers available with your software. When you identify the driver your interested in, use the stonith -t {type} -n command to produce a list of the required parameters for that driver.
+		</para>
+		<screen>
+[beekhof@pcmk-1 ~]$ <userinput>stonith -L</userinput>
+apcmaster
+apcmastersmart
+.
+.
+.
+external/ibmrsa
+.
+.
+[beekhof@pcmk-1 ~]$ <userinput>stonith -t external/ibmrsa -n</userinput>
+hostname  ipaddr  userid  passwd  type
+		</screen>
 		<para>
 			Hopefully the developers chose names that make sense, if not you can query for some additional information by finding an active cluster node and running:
 		</para>
@@ -54,35 +60,10 @@
 		<para>
 			The output should be XML formatted text containing additional parameter descriptions
 		</para>
-		<orderedlist>
-			<listitem>
-				<para>
-					Create a file called stonith.xml containing a primitive resource with a class of stonith, a type of {type} and a parameter for each of the values returned in step 2
-				</para>
-			</listitem>
-			<listitem>
-				<para>
-					Create a clone from the primitive resource if the device can shoot more than one node<emphasis> and supports multiple simultaneous connections</emphasis>.
-				</para>
-			</listitem>
-			<listitem>
-				<para>
-					Upload it into the CIB using cibadmin: cibadmin -C -o resources --xml-file stonith.xml
-				</para>
-			</listitem>
-		</orderedlist>
 		<section>
 			<title>Example</title>
 			<para>
-				Assuming we have an IBM BladeCenter containing our two nodes and the management interface is active on 192.168.122.31, then we would chose the external/ibmrsa driver in step 2 and obtain the following list of parameters
-			</para>
-			
-<screen>
-[root@pcmk-1 ~]# <userinput>stonith -t external/ibmrsa -n</userinput>
-hostname  ipaddr  userid  passwd  type
-</screen>
-			<para>
-				Assuming we know the username and password for the management interface, we would create a STONITH resource with the shell
+				Assuming we have an IBM BladeCenter containing our two nodes and the management interface is active on 192.168.122.31, then we would use crm and issue the following commands to create a STONITH resource.
 			</para>
 			
 <screen>
@@ -90,14 +71,15 @@ hostname  ipaddr  userid  passwd  type
 crm(live)# <userinput>cib new stonith</userinput>
 INFO: stonith shadow CIB created
 crm(stonith)# <userinput>configure primitive rsa-fencing stonith::external/ibmrsa \</userinput>
-<userinput>        params hostname=”pcmk-1 pcmk-2" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \</userinput>
-<userinput>        op monitor interval="60s"</userinput>
+<userinput>        params hostname=”pcmk-1 pcmk-2" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 \</userinput>
+<userinput>        type=ibm op monitor interval="60s"</userinput>
 crm(stonith)# <userinput>configure clone Fencing rsa-fencing</userinput>
 </screen>
+
 			<para>
-				And finally, since we disabled it earlier, we need to re-enable STONITH
+                          And finally, since we disabled it earlier, we need to re-enable STONITH.
+			  At this point we should have the following configuration..
 			</para>
-			
 <screen>
 crm(stonith)# <userinput>configure property stonith-enabled="true"</userinput>
 crm(stonith)# <userinput>configure show</userinput>
@@ -151,6 +133,10 @@ property $id="cib-bootstrap-options" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
         resource-stickiness=”100”
+crm(stonith)# <userinput>cib commit stonith</userinput>
+INFO: commited 'stonith' shadow CIB to the cluster
+crm(stonith)# quit
+bye
 </screen>
 		</section>
 

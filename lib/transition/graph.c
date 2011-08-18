@@ -112,7 +112,7 @@ update_graph(crm_graph_t *graph, crm_action_t *action)
     for(lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
 	synapse_t *synapse = (synapse_t*)lpc->data;
 	
-	if (synapse->confirmed) {
+	if (synapse->confirmed || synapse->failed) {
 	    crm_debug_2("Synapse complete");
 			
 	} else if (synapse->executed) {
@@ -260,7 +260,7 @@ run_graph(crm_graph_t *graph)
 	    crm_debug_3("Synapse %d complete", synapse->id);
 	    graph->completed++;
 		    
-	} else if(synapse->executed) {
+	} else if(synapse->failed == FALSE && synapse->executed) {
 	    crm_debug_2("Synapse %d: confirmation pending", synapse->id);
 	    graph->pending++;
 	}
@@ -274,6 +274,10 @@ run_graph(crm_graph_t *graph)
 	    crm_debug("Throttling output: batch limit (%d) reached",
 		      graph->batch_limit);
 	    break;
+
+	} else if (synapse->failed) {
+	    graph->skipped++;
+	    continue;    
 
 	} else if (synapse->confirmed || synapse->executed) {
 	    /* Already handled */

@@ -45,15 +45,19 @@ static struct crm_option long_options[] = {
     {"help",        0, 0, '?', "\tThis text"},
     {"version",     0, 0, '$', "\tVersion information"  },
     {"verbose",     0, 0, 'V', "\tIncrease debug output"},
+    {"quiet",       0, 0, 'q', "\tPrint only essential output"},
 
-    {"list",        1, 0, 'l', "List devices that can terminate the specified host"},
-    {"list-all",    0, 0, 'L', "List all registered devices"},
+    {"list",            1, 0, 'l', "List devices that can terminate the specified host"},
+    {"list-registered", 0, 0, 'L', "List all registered devices"},
+    {"list-installed",  0, 0, 'I', "List all installed devices"},
 
     {"metadata",    0, 0, 'M', "Check the device's metadata"},
     {"query",       1, 0, 'Q', "Check the device's status"},
     {"fence",       1, 0, 'F', "Fence the named host"},
     {"unfence",     1, 0, 'U', "Unfence the named host"},
+    {"reboot",      1, 0, 'B', "Reboot the named host"},
     {"confirm",     1, 0, 'C', "Confirm the named host is now safely down"},
+    {"history",     1, 0, 'H', "Retrieve last fencing operation"},
 
     {"register",    1, 0, 'R', "Register a stonith device"},
     {"deregister",  1, 0, 'D', "De-register a stonith device"},
@@ -61,72 +65,21 @@ static struct crm_option long_options[] = {
     {"env-option",  1, 0, 'e'},
     {"option",      1, 0, 'o'},
     {"agent",       1, 0, 'a'},
-    
+
+    {"list-all",    0, 0, 'L', "legacy alias for --list-registered"},
+
     {0, 0, 0, 0}
 };
 
 int st_opts = st_opt_sync_call;
-
-static void st_callback(stonith_t *st, const char *event, xmlNode *msg)
-{
-    crm_log_xml_notice(msg, event);
-}
-
-static void
-hash_copy(gpointer key, gpointer value, gpointer user_data) 
-{
-    const char *name    = key;
-    const char *s_value = value;
-    GHashTable *hash    = user_data;
-
-    if(g_hash_table_lookup(hash, name) == NULL) {
-	crm_trace("Copying in %s=%s", name, s_value);
-	g_hash_table_insert(hash, strdup(name), strdup(value));
-    }
-}
-
-extern void cleanup_calculations(pe_working_set_t *data_set);
-extern gboolean unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set);
-
-static void st_get_node_attributes(const char *target, GHashTable *attrs) 
-{
-    int rc = 0;
-    node_t *node = NULL;
-    cib_t *global_cib = NULL;
-    pe_working_set_t data_set;
-
-    set_working_set_defaults(&data_set);
-
-    global_cib = cib_new();
-    global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
-
-    rc = global_cib->cmds->query(global_cib, NULL, &(data_set.input), cib_sync_call|cib_scope_local);
-    if(rc == cib_ok) {
-	crm_trace("Looking up current node attributes for %s", target);
-	unpack_nodes(get_object_root(XML_CIB_TAG_NODES, data_set.input), &data_set);
-    }
-
-    /* Assume uname and fall back to uuid if there is no match */
-    node = pe_find_node(data_set.nodes, target);
-    if(node) {
-	node = pe_find_node_id(data_set.nodes, target);
-    }
-    
-    if(node) {
-	/* Copy in any parameters not explicitly set from the command line */
-	g_hash_table_foreach(node->details->attrs, hash_copy, attrs);	
-    }
-    
-    cleanup_calculations(&data_set);
-    global_cib->cmds->signoff(global_cib);
-    cib_delete(global_cib);
-}
 
 int
 main(int argc, char ** argv)
 {
     int flag;
     int rc = 0;
+    int quiet = 0;
+    int verbose = 0;
     int argerr = 0;
     int option_index = 0;
 
@@ -138,10 +91,12 @@ main(int argc, char ** argv)
     
     char action = 0;
     stonith_t *st = NULL;
-    GHashTable *hash = g_hash_table_new(crm_str_hash, g_str_equal);
+    stonith_key_value_t *params = NULL;
+    stonith_key_value_t *devices = NULL;
+    stonith_key_value_t *dIter = NULL;
     
-    crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv);
-    crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:M", "mode [options]", long_options,
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
+    crm_set_options(NULL, "mode [options]", long_options,
 		    "Provides access to the stonith-ng API.\n");
 
     while (1) {
@@ -151,6 +106,7 @@ main(int argc, char ** argv)
 		
 	switch(flag) {
 	    case 'V':
+		verbose = 1;
 		alter_debug(DEBUG_INC);
 		cl_log_enable_stderr(1);
 		break;
@@ -159,7 +115,11 @@ main(int argc, char ** argv)
 		crm_help(flag, LSB_EXIT_OK);
 		break;
 	    case 'L':
+	    case 'I':
 		action = flag;
+		break;
+	    case 'q':
+		quiet = 1;
 		break;
 	    case 'Q':
 	    case 'R':
@@ -177,9 +137,12 @@ main(int argc, char ** argv)
 	    case 'M':
 		action = flag;
 		break;
+	    case 'B':
 	    case 'F':
 	    case 'U':
 	    case 'C':
+	    case 'H':
+		cl_log_enable_stderr(1);
 		target = optarg;
 		action = flag;
 		break;
@@ -191,7 +154,7 @@ main(int argc, char ** argv)
 		    ++argerr;
 		} else {
 		    crm_info("Got: '%s'='%s'", name, value);
-		    g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
+		    stonith_key_value_add(params, name, value);
 		}
 		break;
 	    case 'e':
@@ -204,7 +167,7 @@ main(int argc, char ** argv)
 			++argerr;
 		    } else {
 			crm_info("Got: '%s'='%s'", optarg, env);
-			g_hash_table_insert(hash, crm_strdup(optarg), crm_strdup(env));
+                        stonith_key_value_add( params, optarg, env);
 		    }
 		}
 		break;
@@ -222,42 +185,49 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
-#if 0
-    g_hash_table_insert(hash, crm_strdup("ipaddr"), crm_strdup("localhost"));
-    g_hash_table_insert(hash, crm_strdup("pcmk-portmap"), crm_strdup("some-host=pcmk-1 pcmk-3=3,4"));
-    g_hash_table_insert(hash, crm_strdup("login"), crm_strdup("root"));
-    g_hash_table_insert(hash, crm_strdup("identity_file"), crm_strdup("/root/.ssh/id_dsa"));
-#endif
-
     crm_debug("Create");
     st = stonith_api_new();
 
-    if(action != 'M') {
-	rc = st->cmds->connect(st, crm_system_name, NULL, NULL);
+    if(action != 'M' && action != 'I') {
+	rc = st->cmds->connect(st, crm_system_name, NULL);
 	crm_debug("Connect: %d", rc);
-	
-	rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
+
+	if(rc < 0) {
+	    goto done;
+	}
     }
     
     switch(action)
     {
-	case 'L':
-	    {
-		GListPtr devices = NULL;
-		rc = st->cmds->query(st, st_opts, target, &devices, 10);
-		if(rc == 0) {
-		    fprintf(stderr, "No devices found\n");
-
-		} else if(rc > 0) {
-		    GListPtr lpc = NULL;
-		    fprintf(stderr, "%d devices found\n", rc);
-		    for(lpc = devices; lpc != NULL; lpc = lpc->next) {
-			char *device = (char*)lpc->data;
-			fprintf(stdout, " %s\n", device);
-		    }
-		    rc = 0;
-		}
+	case 'I':
+	    rc = st->cmds->list(st, st_opt_sync_call, NULL, &devices, 0);
+	    for(dIter = devices; dIter; dIter = dIter->next ) {
+		fprintf( stdout, " %s\n", dIter->value );
 	    }
+	    if(rc == 0) {
+		fprintf(stderr, "No devices found\n");
+
+	    } else if(rc > 0) {
+		fprintf(stderr, "%d devices found\n", rc);
+		rc = 0;
+	    }
+	    stonith_key_value_freeall(devices, 1, 1);
+	    break;
+	    
+	case 'L':
+	    rc = st->cmds->query(st, st_opts, target, &devices, 10);
+	    for(dIter = devices; dIter; dIter = dIter->next ) {
+		fprintf( stdout, " %s\n", dIter->value );
+		crm_free(dIter->value);
+	    }
+	    if(rc == 0) {
+		fprintf(stderr, "No devices found\n");
+
+	    } else if(rc > 0) {
+		fprintf(stderr, "%d devices found\n", rc);
+		rc = 0;
+	    }
+	    stonith_key_value_freeall(devices, 1, 1);
 	    break;
 	case 'Q':
 	    rc = st->cmds->call(st, st_opts, device, "monitor", NULL, 10);
@@ -266,7 +236,8 @@ main(int argc, char ** argv)
 	    }
 	    break;
 	case 'R':
-	    rc = st->cmds->register_device(st, st_opts, device, "stonith-ng", agent, hash);
+	    rc = st->cmds->register_device(st, st_opts, device, "stonith-ng",
+                agent, params);
 	    break;
 	case 'D':
 	    rc = st->cmds->remove_device(st, st_opts, device);
@@ -281,19 +252,87 @@ main(int argc, char ** argv)
 	    break;
 	    
 	case 'C':
-	    st_get_node_attributes(target, hash);
 	    rc = st->cmds->confirm(st, st_opts, target);
 	    break;
+	case 'B':
+	    rc = st->cmds->fence(st, st_opts, target, "reboot", 120);
+	    break;
 	case 'F':
-	    st_get_node_attributes(target, hash);
-	    rc = st->cmds->fence(st, st_opts, target, hash, "off", 120);
+	    rc = st->cmds->fence(st, st_opts, target, "off", 120);
 	    break;
 	case 'U':
-	    st_get_node_attributes(target, hash);
-	    rc = st->cmds->fence(st, st_opts, target, hash, "on", 120);
+	    rc = st->cmds->fence(st, st_opts, target, "on", 120);
+	    break;
+	case 'H':
+	    {
+		stonith_history_t *history, *hp, *latest = NULL;
+		rc = st->cmds->history(st, st_opts, target, &history, 120);
+		for(hp = history; hp; hp = hp->next) {
+		    char *action_s = NULL;
+		    time_t complete = hp->completed;
+
+		    if(hp->state == st_done) {
+			latest = hp;
+		    }
+
+		    if(quiet || !verbose) {
+			continue;
+		    } else if(hp->action == NULL) {
+			action_s = crm_strdup("unknown");
+		    } else if(hp->action[0] != 'r') {
+			action_s = crm_concat("turn", hp->action, ' ');
+		    } else {
+			action_s = crm_strdup(hp->action);
+		    }
+			
+		    if(hp->state == st_failed) {
+			printf("%s failed to %s node %s on behalf of %s at %s\n",
+			       hp->delegate?hp->delegate:"We", action_s, hp->target, hp->origin,
+			       ctime(&complete));
+
+		    } else if(hp->state == st_done) {
+			printf("%s was able to %s node %s on behalf of %s at %s\n",
+			       hp->delegate?hp->delegate:"We", action_s, hp->target, hp->origin,
+			       ctime(&complete));
+		    } else {
+			printf("%s wishes to %s node %s - %d %d\n",
+			       hp->origin, action_s, hp->target, hp->state, hp->completed);
+		    }
+		    
+		    crm_free(action_s);
+	        }
+
+		if(latest) {
+		    if(quiet) {
+			printf("%d\n", latest->completed);
+		    } else {
+			char *action_s = NULL;
+			time_t complete = latest->completed;
+			if(latest->action == NULL) {
+			    action_s = crm_strdup("unknown");
+			} else if(latest->action[0] != 'r') {
+			    action_s = crm_concat("turn", latest->action, ' ');
+			} else {
+			    action_s = crm_strdup(latest->action);
+			}
+			
+			printf("%s was able to %s node %s on behalf of %s at %s\n",
+			       latest->delegate?latest->delegate:"We", action_s, latest->target,
+			       latest->origin, ctime(&complete));
+			
+			crm_free(action_s);
+		    }
+		}
+	    }
 	    break;
     }    
+
+  done:
+    if(rc < 0) {
+	printf("Command failed: %s\n", stonith_error2string(rc));
+    }
     
+    stonith_key_value_freeall(params, 1, 1);
     st->cmds->disconnect(st);
     crm_debug("Disconnect: %d", rc);
 

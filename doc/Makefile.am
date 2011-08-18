@@ -21,19 +21,23 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 helpdir		= $(datadir)/$(PACKAGE)
 
-ascii		= crm_cli.txt crm_fencing.txt acls.txt
-help_DATA	= crm_cli.txt
+ascii		= crm_fencing.txt acls.txt
+asciiman	= crm.8.txt
+help_DATA	= crm.8.txt
 docbook		= Pacemaker_Explained Clusters_from_Scratch
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 
 publican_docs   =
 generated_docs	= 
+generated_mans	= 
 
 DOCBOOK_FORMATS := html-desktop,txt
 
-SVG := $(wildcard */en-US/images/pcmk-*.svg)
+SVG = $(wildcard */en-US/images/pcmk-*.svg)
 
-PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png)
+PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 	\
+	Pacemaker_Explained/en-US/images/Policy-Engine-big.png
+	Pacemaker_Explained/en-US/images/Policy-Engine-small.png
 
 BRAND_PNGS = publican-clusterlabs/en-US/images/title_logo.png			\
 	publican-clusterlabs/en-US/images/image_left.png			\
@@ -43,19 +47,19 @@ BRAND_PNGS = publican-clusterlabs/en-US/images/title_logo.png			\
 graphics: $(PNGS)
 
 %.png: %.svg
-	inkscape --file=$< --export-dpi=90 -C --export-png=$@
+	$(INKSCAPE) --file=$< --export-dpi=90 -C --export-png=$@
 
 %-small.png: %.svg
-	inkscape --file=$< --export-dpi=45 -C --export-png=$@
+	$(INKSCAPE) --file=$< --export-dpi=45 -C --export-png=$@
 
 %-large.png: %.svg
-	inkscape --file=$< --export-dpi=180 -C --export-png=$@
-
-XML_FILES := $(wildcard *.xml)
-PNG_FILES := $(wildcard images/*.png)
+	$(INKSCAPE) --file=$< --export-dpi=180 -C --export-png=$@
 
 if BUILD_ASCIIDOC
-generated_docs	+= $(ascii:%.txt=%.html)
+generated_docs	+= $(ascii:%.txt=%.html) $(asciiman:%.txt=%.html)
+generated_mans	+= $(asciiman:%.8.txt=%.8)
+$(generated_mans): $(asciiman)
+man8_MANS	= $(generated_mans)
 endif
 
 if BUILD_DOCBOOK
@@ -66,22 +70,24 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 
 %.html: %.txt
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
+%.8: %.8.txt
+	a2x -f manpage $<
 
 Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails 
-Clusters_from_Scratch.txt:  $(wildcard Clusters_from_Scratch/en-US/*.xml)
+Clusters_from_Scratch.txt: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
-	cd $(@:%.txt=%) && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
 	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
-Pacemaker_Explained.txt:  $(wildcard Pacemaker_Explained/en-US/*.xml)
+Pacemaker_Explained.txt: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
-	cd $(@:%.txt=%) && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
 	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
@@ -115,12 +121,12 @@ brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
 #	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
 www:    $(generated_docs)
-	echo rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
-	rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
+	echo rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
+	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
 	rm -f $(docbook_txt)
 	make DOCBOOK_FORMATS="pdf,html,html-single,txt,epub" all-local $(generated_docs) $(ascii)
 	echo Uploading current documentation set to clusterlabs.org
-	rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
+	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
 if BUILD_DOCBOOK
 	for book in $(docbook); do 									\
 		echo Uploading $$book...;								\
@@ -130,5 +136,5 @@ if BUILD_DOCBOOK
 endif
 
 clean-local:
-	-rm -rf $(generated_docs) $(docbook_txt)
+	-rm -rf $(generated_docs) $(generated_mans) $(docbook_txt)
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done

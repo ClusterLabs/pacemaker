@@ -88,6 +88,7 @@ int local_id = 0;
 #  define UUID_LEN 16
 
 oc_ev_t *ccm_token = NULL;
+static void *ccm_library = NULL;
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 static gboolean read_local_hb_uuid(void) 
@@ -119,6 +120,8 @@ static gboolean read_local_hb_uuid(void)
 
     buffer = malloc(50);
     read_len = fread(uuid.uuid, 1, UUID_LEN, input);
+    fclose(input);
+
     if(read_len != UUID_LEN) {
 	fprintf(stderr, "Expected and read bytes differ: %d vs. %ld\n",
 		UUID_LEN, read_len);
@@ -135,8 +138,6 @@ static gboolean read_local_hb_uuid(void)
     }
 
     free(buffer);
-    fclose(input);
-
     return FALSE;
 }
 
@@ -146,6 +147,9 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
     int lpc;
     int node_list_size;
     const oc_ev_membership_t *oc = (const oc_ev_membership_t *)data;
+
+    int (*ccm_api_callback_done)(void *cookie) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_callback_done");
 
     node_list_size = oc->m_n_member;
     if(command == 'q') {
@@ -170,7 +174,9 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 		    oc->m_array[oc->m_memb_idx+lpc].node_uname);
 
 	} else if(command == 'e') {
-	    if(oc_ev_is_my_nodeid(ccm_token, &(oc->m_array[lpc]))){
+	    int (*ccm_api_is_my_nodeid)(const oc_ev_t *token, const oc_node_t *node) = find_library_function(
+		&ccm_library, CCM_LIBRARY, "oc_ev_is_my_nodeid");
+	    if((*ccm_api_is_my_nodeid)(ccm_token, &(oc->m_array[lpc]))){
 		crm_debug("MATCH: nodeid=%d, uname=%s, born=%d",
 			  oc->m_array[oc->m_memb_idx+lpc].node_id,
 			  oc->m_array[oc->m_memb_idx+lpc].node_uname,
@@ -181,7 +187,7 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 	}
     }
 
-    oc_ev_callback_done(cookie);
+    (*ccm_api_callback_done)(cookie);
 
     if(command == 'p') {
 	fprintf(stdout, "\n");
@@ -195,9 +201,24 @@ ccm_age_connect(int *ccm_fd)
 {
     gboolean did_fail = FALSE;
     int ret = 0;
+
+    int (*ccm_api_register)(oc_ev_t **token) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_register");
+	
+    int (*ccm_api_set_callback)(const oc_ev_t *token,
+				oc_ev_class_t class,
+				oc_ev_callback_t *fn,
+				oc_ev_callback_t **prev_fn) = find_library_function(
+				    &ccm_library, CCM_LIBRARY, "oc_ev_set_callback");
+    
+	
+    void (*ccm_api_special)(const oc_ev_t *, oc_ev_class_t , int ) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_special");
+    int (*ccm_api_activate)(const oc_ev_t *token, int *fd) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_activate");
 	
     crm_debug("Registering with CCM");
-    ret = oc_ev_register(&ccm_token);
+    ret = (*ccm_api_register)(&ccm_token);
     if (ret != 0) {
 	crm_info("CCM registration failed: %d", ret);
 	did_fail = TRUE;
@@ -205,18 +226,18 @@ ccm_age_connect(int *ccm_fd)
 	
     if(did_fail == FALSE) {
 	crm_debug("Setting up CCM callbacks");
-	ret = oc_ev_set_callback(ccm_token, OC_EV_MEMB_CLASS,
-				 ccm_age_callback, NULL);
+	ret = (*ccm_api_set_callback)(ccm_token, OC_EV_MEMB_CLASS,
+				      ccm_age_callback, NULL);
 	if (ret != 0) {
 	    crm_warn("CCM callback not set: %d", ret);
 	    did_fail = TRUE;
 	}
     }
     if(did_fail == FALSE) {
-	oc_ev_special(ccm_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
+	(*ccm_api_special)(ccm_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
 		
 	crm_debug("Activating CCM token");
-	ret = oc_ev_activate(ccm_token, ccm_fd);
+	 ret = (*ccm_api_activate)(ccm_token, ccm_fd);
 	if (ret != 0){
 	    crm_warn("CCM Activation failed: %d", ret);
 	    did_fail = TRUE;
@@ -226,7 +247,7 @@ ccm_age_connect(int *ccm_fd)
     return !did_fail;
 }
 
-static gboolean try_heartbeat(int command)
+static gboolean try_heartbeat(int command, enum cluster_type_e stack)
 {
     crm_debug("Attempting to process %c command", command);
     
@@ -238,6 +259,9 @@ static gboolean try_heartbeat(int command)
     } else if(ccm_age_connect(&ccm_fd)) {
 	int rc = 0;
 	fd_set rset;	
+	int (*ccm_api_handle_event)(const oc_ev_t *token) = find_library_function(
+	    &ccm_library, CCM_LIBRARY, "oc_ev_handle_event");
+
 	while (1) {
 	    
 	    sleep(1);
@@ -247,7 +271,7 @@ static gboolean try_heartbeat(int command)
 	    errno = 0;
 	    rc = select(ccm_fd + 1, &rset, NULL,NULL,NULL);
 	    
-	    if(rc > 0 && oc_ev_handle_event(ccm_token) != 0) {
+	    if(rc > 0 && (*ccm_api_handle_event)(ccm_token) != 0) {
 		crm_err("oc_ev_handle_event failed");
 		return FALSE;
 		
@@ -264,7 +288,7 @@ static gboolean try_heartbeat(int command)
 #if SUPPORT_CMAN
 #  include <libcman.h>
 #  define MAX_NODES 256
-static gboolean try_cman(int command)
+static gboolean try_cman(int command, enum cluster_type_e stack)
 {
 
     int rc = -1, lpc = 0, node_count = 0;
@@ -274,7 +298,6 @@ static gboolean try_cman(int command)
     cman_node_t cman_nodes[MAX_NODES];
 
     memset(&cluster, 0, sizeof(cluster));
-    crm_debug("Attempting to process %c command", command);
 
     cman_handle = cman_init(NULL);
     if(cman_handle == NULL || cman_is_active(cman_handle) == FALSE) {
@@ -414,12 +437,9 @@ ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender)
     return TRUE;
 }
 
-static gboolean try_corosync(int command)
+static gboolean try_corosync(int command, enum cluster_type_e stack)
 {
-    crm_debug("Attempting to process %c command", command);
-
     if(init_ais_connection_once(
-	   pcmk_cluster_classic_ais,
 	   ais_membership_dispatch, ais_membership_destroy, NULL, NULL, &local_id)) {
 
 	GMainLoop*  amainloop = NULL;
@@ -444,7 +464,7 @@ static gboolean try_corosync(int command)
 		break;
 
 	    case 'i':
-		printf("%d\n", local_id);
+		printf("%u\n", local_id);
 		exit(0);
 
 	    default:
@@ -458,6 +478,7 @@ static gboolean try_corosync(int command)
 }
 #endif
 
+int set_cluster_type(enum cluster_type_e type);
 
 int
 main(int argc, char ** argv)
@@ -466,14 +487,14 @@ main(int argc, char ** argv)
     int argerr = 0;
     gboolean force_flag = FALSE;
     gboolean dangerous_cmd = FALSE;
-    unsigned long long try_stack = pcmk_cluster_heartbeat|pcmk_cluster_classic_ais|pcmk_cluster_corosync|pcmk_cluster_cman;
+    enum cluster_type_e try_stack = pcmk_cluster_unknown;
 
     int option_index = 0;
 
     
     crm_peer_init();
-    crm_log_init(NULL, LOG_WARNING, FALSE, FALSE, argc, argv);
-    crm_set_options("?V$qepHAR:iflCc", "command [options]", long_options,
+    crm_log_init(NULL, LOG_INFO, FALSE, FALSE, argc, argv);
+    crm_set_options(NULL, "command [options]", long_options,
 		    "Tool for displaying low-level node information");
 	
     while (flag >= 0) {
@@ -493,16 +514,16 @@ main(int argc, char ** argv)
 		do_quiet = TRUE;
 		break;	
 	    case 'H':
-		try_stack = pcmk_cluster_heartbeat;
+		set_cluster_type(pcmk_cluster_heartbeat);
 		break;
 	    case 'A':
-		try_stack = pcmk_cluster_classic_ais;
+		set_cluster_type(pcmk_cluster_classic_ais);
 		break;
 	    case 'C':
-		try_stack = pcmk_cluster_corosync;
+		set_cluster_type(pcmk_cluster_corosync);
 		break;
 	    case 'c':
-		try_stack = pcmk_cluster_cman;
+		set_cluster_type(pcmk_cluster_cman);
 		break;
 	    case 'f':
 		force_flag = TRUE;
@@ -541,21 +562,25 @@ main(int argc, char ** argv)
 	exit(LSB_EXIT_GENERIC);
     }
 
-#if SUPPORT_COROSYNC
-    if(try_stack & pcmk_cluster_classic_ais) {
-	try_corosync(command);
-    }
-#endif
+    try_stack = get_cluster_type();
+    crm_debug("Attempting to process -%c command for cluster type: %s", command, name_for_cluster_type(try_stack));
 
 #if SUPPORT_CMAN
-    if(try_stack & pcmk_cluster_cman) {
-	try_cman(command);
+    if(try_stack == pcmk_cluster_cman) {
+	try_cman(command, try_stack);	
     }
 #endif
     
-#if SUPPORT_HEARTBEAT
-    if(try_stack & pcmk_cluster_heartbeat) {
-	try_heartbeat(command);
+#if SUPPORT_COROSYNC
+    if(try_stack == pcmk_cluster_corosync
+       || try_stack == pcmk_cluster_classic_ais) {
+	try_corosync(command, try_stack);
+    }
+#endif    
+
+#if SUPPORT_HEARTBEAT    
+    if(try_stack == pcmk_cluster_heartbeat) {
+	try_heartbeat(command, try_stack);
     }
 #endif
     

@@ -51,6 +51,7 @@ fsa_timer_t *wait_timer = NULL;
 fsa_timer_t *recheck_timer = NULL;
 fsa_timer_t *election_trigger = NULL;
 fsa_timer_t *election_timeout = NULL;
+fsa_timer_t *transition_timer = NULL;
 fsa_timer_t *integration_timer = NULL;
 fsa_timer_t *finalization_timer = NULL;
 fsa_timer_t *shutdown_escalation_timer = NULL;

@@ -62,9 +62,9 @@ class UserInterface(object):
     def __init__(self):
         self.help_table = odict()
         self.cmd_table = odict()
-        self.cmd_table["help"] = (self.help,(0,1),0)
-        self.cmd_table["quit"] = (self.exit,(0,0),0)
-        self.cmd_table["end"] = (self.end,(0,1),0)
+        self.cmd_table["help"] = (self.help,(0,1),0,0)
+        self.cmd_table["quit"] = (self.exit,(0,0),0,0)
+        self.cmd_table["end"] = (self.end,(0,1),0,0)
         self.cmd_aliases = self.global_cmd_aliases.copy()
         if options.interactive:
             self.help_table = help_sys.load_level(self.lvl_name)
@@ -97,17 +97,18 @@ to save the preferences to a startup file.
 """
     def __init__(self):
         UserInterface.__init__(self)
-        self.cmd_table["skill-level"] = (self.set_skill_level,(1,1),0)
-        self.cmd_table["editor"] = (self.set_editor,(1,1),0)
-        self.cmd_table["pager"] = (self.set_pager,(1,1),0)
-        self.cmd_table["user"] = (self.set_crm_user,(0,1),0)
-        self.cmd_table["output"] = (self.set_output,(1,1),0)
-        self.cmd_table["colorscheme"] = (self.set_colors,(1,1),0)
-        self.cmd_table["check-frequency"] = (self.set_check_frequency,(1,1),0)
-        self.cmd_table["check-mode"] = (self.set_check_mode,(1,1),0)
-        self.cmd_table["sort-elements"] = (self.set_sort_elements,(1,1),0)
-        self.cmd_table["save"] = (self.save_options,(0,0),0)
-        self.cmd_table["show"] = (self.show_options,(0,0),0)
+        self.cmd_table["skill-level"] = (self.set_skill_level,(1,1),0,0)
+        self.cmd_table["editor"] = (self.set_editor,(1,1),0,0)
+        self.cmd_table["pager"] = (self.set_pager,(1,1),0,0)
+        self.cmd_table["user"] = (self.set_crm_user,(0,1),0,0)
+        self.cmd_table["output"] = (self.set_output,(1,1),0,0)
+        self.cmd_table["colorscheme"] = (self.set_colors,(1,1),0,0)
+        self.cmd_table["check-frequency"] = (self.set_check_frequency,(1,1),0,0)
+        self.cmd_table["check-mode"] = (self.set_check_mode,(1,1),0,0)
+        self.cmd_table["sort-elements"] = (self.set_sort_elements,(1,1),0,0)
+        self.cmd_table["wait"] = (self.set_wait,(1,1),0,0)
+        self.cmd_table["save"] = (self.save_options,(0,0),0,0)
+        self.cmd_table["show"] = (self.show_options,(0,0),0,0)
         setup_aliases(self)
     def set_skill_level(self,cmd,skill_level):
         """usage: skill-level <level>
@@ -140,6 +141,12 @@ to save the preferences to a startup file.
             common_err("%s: bad boolean option"%opt)
             return True
         return user_prefs.set_sort_elems(opt)
+    def set_wait(self,cmd,opt):
+        "usage: wait {yes|no}"
+        if not verify_boolean(opt):
+            common_err("%s: bad boolean option"%opt)
+            return True
+        return user_prefs.set_wait(opt)
     def show_options(self,cmd):
         "usage: show"
         return user_prefs.write_rc(sys.stdout)
@@ -166,14 +173,14 @@ A shadow CIB may be applied to the cluster in one step.
     extcmd_stdout = "</dev/null crm_shadow"
     def __init__(self):
         UserInterface.__init__(self)
-        self.cmd_table["new"] = (self.new,(1,3),1)
-        self.cmd_table["delete"] = (self.delete,(1,1),1)
-        self.cmd_table["reset"] = (self.reset,(1,1),1)
-        self.cmd_table["commit"] = (self.commit,(1,1),1)
-        self.cmd_table["use"] = (self.use,(0,2),1)
-        self.cmd_table["diff"] = (self.diff,(0,0),1)
-        self.cmd_table["list"] = (self.list,(0,0),1)
-        self.cmd_table["import"] = (self.pe_import,(1,2),1)
+        self.cmd_table["new"] = (self.new,(1,3),1,0)
+        self.cmd_table["delete"] = (self.delete,(1,1),1,0)
+        self.cmd_table["reset"] = (self.reset,(1,1),1,0)
+        self.cmd_table["commit"] = (self.commit,(1,1),1,1)
+        self.cmd_table["use"] = (self.use,(0,2),1,0)
+        self.cmd_table["diff"] = (self.diff,(0,0),1,0)
+        self.cmd_table["list"] = (self.list,(0,0),1,0)
+        self.cmd_table["import"] = (self.pe_import,(1,2),1,0)
         self.cmd_table["cibstatus"] = StatusMgmt
         self.chkcmd()
         setup_aliases(self)
@@ -360,13 +367,13 @@ class Template(UserInterface):
     lvl_name = "template"
     def __init__(self):
         UserInterface.__init__(self)
-        self.cmd_table["new"] = (self.new,(2,),1)
-        self.cmd_table["load"] = (self.load,(0,1),1)
-        self.cmd_table["edit"] = (self.edit,(0,1),1)
-        self.cmd_table["delete"] = (self.delete,(1,2),1)
-        self.cmd_table["show"] = (self.show,(0,1),0)
-        self.cmd_table["apply"] = (self.apply,(0,2),1)
-        self.cmd_table["list"] = (self.list,(0,1),0)
+        self.cmd_table["new"] = (self.new,(2,),1,0)
+        self.cmd_table["load"] = (self.load,(0,1),1,0)
+        self.cmd_table["edit"] = (self.edit,(0,1),1,0)
+        self.cmd_table["delete"] = (self.delete,(1,2),1,0)
+        self.cmd_table["show"] = (self.show,(0,1),0,0)
+        self.cmd_table["apply"] = (self.apply,(0,2),1,0)
+        self.cmd_table["list"] = (self.list,(0,1),0,0)
         setup_aliases(self)
         self.init_dir()
         self.curr_conf = ''
@@ -768,23 +775,23 @@ program.
     rsc_reprobe_node = "crm_resource -P -H '%s'"
     def __init__(self):
         UserInterface.__init__(self)
-        self.cmd_table["status"] = (self.status,(0,1),0)
-        self.cmd_table["start"] = (self.start,(1,1),0)
-        self.cmd_table["stop"] = (self.stop,(1,1),0)
-        self.cmd_table["restart"] = (self.restart,(1,1),0)
-        self.cmd_table["promote"] = (self.promote,(1,1),0)
-        self.cmd_table["demote"] = (self.demote,(1,1),0)
-        self.cmd_table["manage"] = (self.manage,(1,1),0)
-        self.cmd_table["unmanage"] = (self.unmanage,(1,1),0)
-        self.cmd_table["migrate"] = (self.migrate,(1,4),0)
-        self.cmd_table["unmigrate"] = (self.unmigrate,(1,1),0)
-        self.cmd_table["param"] = (self.param,(3,4),1)
-        self.cmd_table["meta"] = (self.meta,(3,4),1)
-        self.cmd_table["utilization"] = (self.utilization,(3,4),1)
-        self.cmd_table["failcount"] = (self.failcount,(3,4),0)
-        self.cmd_table["cleanup"] = (self.cleanup,(1,2),1)
-        self.cmd_table["refresh"] = (self.refresh,(0,1),0)
-        self.cmd_table["reprobe"] = (self.reprobe,(0,1),0)
+        self.cmd_table["status"] = (self.status,(0,1),0,0)
+        self.cmd_table["start"] = (self.start,(1,1),0,1)
+        self.cmd_table["stop"] = (self.stop,(1,1),0,1)
+        self.cmd_table["restart"] = (self.restart,(1,1),0,1)
+        self.cmd_table["promote"] = (self.promote,(1,1),0,1)
+        self.cmd_table["demote"] = (self.demote,(1,1),0,1)
+        self.cmd_table["manage"] = (self.manage,(1,1),0,0)
+        self.cmd_table["unmanage"] = (self.unmanage,(1,1),0,0)
+        self.cmd_table["migrate"] = (self.migrate,(1,4),0,1)
+        self.cmd_table["unmigrate"] = (self.unmigrate,(1,1),0,1)
+        self.cmd_table["param"] = (self.param,(3,4),1,1)
+        self.cmd_table["meta"] = (self.meta,(3,4),1,1)
+        self.cmd_table["utilization"] = (self.utilization,(3,4),1,1)
+        self.cmd_table["failcount"] = (self.failcount,(3,4),0,0)
+        self.cmd_table["cleanup"] = (self.cleanup,(1,2),1,1)
+        self.cmd_table["refresh"] = (self.refresh,(0,1),0,0)
+        self.cmd_table["reprobe"] = (self.reprobe,(0,1),0,1)
         self.cmd_aliases.update({
             "status": ("show","list",),
             "migrate": ("move",),
@@ -999,16 +1006,16 @@ here.
     }
     def __init__(self):
         UserInterface.__init__(self)
-        self.cmd_table["status"] = (self.status,(0,1),0)
-        self.cmd_table["show"] = (self.show,(0,1),0)
-        self.cmd_table["standby"] = (self.standby,(0,2),0)
-        self.cmd_table["online"] = (self.online,(0,1),0)
-        self.cmd_table["fence"] = (self.fence,(1,1),0)
-        self.cmd_table["delete"] = (self.delete,(1,1),0)
-        self.cmd_table["clearstate"] = (self.clearstate,(1,1),0)
-        self.cmd_table["attribute"] = (self.attribute,(3,4),0)
-        self.cmd_table["utilization"] = (self.utilization,(3,4),0)
-        self.cmd_table["status-attr"] = (self.status_attr,(3,4),0)
+        self.cmd_table["status"] = (self.status,(0,1),0,0)
+        self.cmd_table["show"] = (self.show,(0,1),0,0)
+        self.cmd_table["standby"] = (self.standby,(0,2),0,1)
+        self.cmd_table["online"] = (self.online,(0,1),0,1)
+        self.cmd_table["fence"] = (self.fence,(1,1),0,1)
+        self.cmd_table["delete"] = (self.delete,(1,1),0,0)
+        self.cmd_table["clearstate"] = (self.clearstate,(1,1),0,1)
+        self.cmd_table["attribute"] = (self.attribute,(3,4),0,1)
+        self.cmd_table["utilization"] = (self.utilization,(3,4),0,1)
+        self.cmd_table["status-attr"] = (self.status_attr,(3,4),0,1)
         self.cmd_aliases.update({
             "show": ("list",),
         })
@@ -1187,10 +1194,10 @@ level and at the `configure` level.
     provider_classes = ["ocf"]
     def __init__(self):
         UserInterface.__init__(self)
-        self.cmd_table["classes"] = (self.classes,(0,0),0)
-        self.cmd_table["list"] = (self.list,(1,2),1)
-        self.cmd_table["providers"] = (self.providers,(1,2),1)
-        self.cmd_table["meta"] = (self.meta,(1,3),1)
+        self.cmd_table["classes"] = (self.classes,(0,0),0,0)
+        self.cmd_table["list"] = (self.list,(1,2),1,0)
+        self.cmd_table["providers"] = (self.providers,(1,2),1,0)
+        self.cmd_table["meta"] = (self.meta,(1,3),1,0)
         self.cmd_aliases.update({
             "meta": ("info",),
         })
@@ -1270,15 +1277,15 @@ class StatusMgmt(UserInterface):
     lvl_name = "cibstatus"
     def __init__(self):
         UserInterface.__init__(self)
-        self.cmd_table["show"] = (self.show,(0,1),1)
-        self.cmd_table["save"] = (self.save,(0,1),2)
-        self.cmd_table["load"] = (self.load,(1,1),2)
-        self.cmd_table["origin"] = (self.origin,(0,0),1)
-        self.cmd_table["node"] = (self.edit_node,(2,2),2)
-        self.cmd_table["op"] = (self.edit_op,(3,5),2)
-        self.cmd_table["run"] = (self.run,(0,3),1)
-        self.cmd_table["simulate"] = (self.simulate,(0,3),1)
-        self.cmd_table["quorum"] = (self.quorum,(1,1),1)
+        self.cmd_table["show"] = (self.show,(0,1),1,0)
+        self.cmd_table["save"] = (self.save,(0,1),2,0)
+        self.cmd_table["load"] = (self.load,(1,1),2,0)
+        self.cmd_table["origin"] = (self.origin,(0,0),1,0)
+        self.cmd_table["node"] = (self.edit_node,(2,2),2,0)
+        self.cmd_table["op"] = (self.edit_op,(3,5),2,0)
+        self.cmd_table["run"] = (self.run,(0,3),1,0)
+        self.cmd_table["simulate"] = (self.simulate,(0,3),1,0)
+        self.cmd_table["quorum"] = (self.quorum,(1,1),1,0)
         setup_aliases(self)
     def myname(self):
         '''Just return some id.'''
@@ -1350,42 +1357,42 @@ cluster.
 """
     def __init__(self):
         UserInterface.__init__(self)
-        self.cmd_table["erase"] = (self.erase,(0,1),1)
-        self.cmd_table["verify"] = (self.verify,(0,0),1)
-        self.cmd_table["refresh"] = (self.refresh,(0,0),1)
-        self.cmd_table["ptest"] = (self.ptest,(0,3),1)
-        self.cmd_table["commit"] = (self.commit,(0,1),1)
-        self.cmd_table["upgrade"] = (self.upgrade,(0,1),1)
-        self.cmd_table["show"] = (self.show,(0,),1)
-        self.cmd_table["edit"] = (self.edit,(0,),1)
-        self.cmd_table["filter"] = (self.filter,(1,),1)
-        self.cmd_table["delete"] = (self.delete,(1,),1)
-        self.cmd_table["default-timeouts"] = (self.default_timeouts,(1,),1)
-        self.cmd_table["rename"] = (self.rename,(2,2),1)
-        self.cmd_table["save"] = (self.save,(1,2),1)
-        self.cmd_table["load"] = (self.load,(2,3),1)
-        self.cmd_table["node"] = (self.conf_node,(1,),1)
-        self.cmd_table["primitive"] = (self.conf_primitive,(2,),1)
-        self.cmd_table["group"] = (self.conf_group,(2,),1)
-        self.cmd_table["clone"] = (self.conf_clone,(2,),1)
-        self.cmd_table["ms"] = (self.conf_ms,(2,),1)
-        self.cmd_table["location"] = (self.conf_location,(2,),1)
-        self.cmd_table["colocation"] = (self.conf_colocation,(2,),1)
-        self.cmd_table["order"] = (self.conf_order,(2,),1)
-        self.cmd_table["property"] = (self.conf_property,(1,),1)
-        self.cmd_table["rsc_defaults"] = (self.conf_rsc_defaults,(1,),1)
-        self.cmd_table["op_defaults"] = (self.conf_op_defaults,(1,),1)
-        self.cmd_table["xml"] = (self.conf_xml,(1,),1)
-        self.cmd_table["monitor"] = (self.conf_monitor,(2,2),1)
-        self.cmd_table["role"] = (self.conf_role,(2,),2)
-        self.cmd_table["user"] = (self.conf_user,(2,),2)
+        self.cmd_table["erase"] = (self.erase,(0,1),1,0)
+        self.cmd_table["verify"] = (self.verify,(0,0),1,0)
+        self.cmd_table["refresh"] = (self.refresh,(0,0),1,0)
+        self.cmd_table["ptest"] = (self.ptest,(0,3),1,0)
+        self.cmd_table["commit"] = (self.commit,(0,1),1,1)
+        self.cmd_table["upgrade"] = (self.upgrade,(0,1),1,0)
+        self.cmd_table["show"] = (self.show,(0,),1,0)
+        self.cmd_table["edit"] = (self.edit,(0,),1,0)
+        self.cmd_table["filter"] = (self.filter,(1,),1,0)
+        self.cmd_table["delete"] = (self.delete,(1,),1,0)
+        self.cmd_table["default-timeouts"] = (self.default_timeouts,(1,),1,0)
+        self.cmd_table["rename"] = (self.rename,(2,2),1,0)
+        self.cmd_table["save"] = (self.save,(1,2),1,0)
+        self.cmd_table["load"] = (self.load,(2,3),1,0)
+        self.cmd_table["node"] = (self.conf_node,(1,),1,0)
+        self.cmd_table["primitive"] = (self.conf_primitive,(2,),1,0)
+        self.cmd_table["group"] = (self.conf_group,(2,),1,0)
+        self.cmd_table["clone"] = (self.conf_clone,(2,),1,0)
+        self.cmd_table["ms"] = (self.conf_ms,(2,),1,0)
+        self.cmd_table["location"] = (self.conf_location,(2,),1,0)
+        self.cmd_table["colocation"] = (self.conf_colocation,(2,),1,0)
+        self.cmd_table["order"] = (self.conf_order,(2,),1,0)
+        self.cmd_table["property"] = (self.conf_property,(1,),1,0)
+        self.cmd_table["rsc_defaults"] = (self.conf_rsc_defaults,(1,),1,0)
+        self.cmd_table["op_defaults"] = (self.conf_op_defaults,(1,),1,0)
+        self.cmd_table["xml"] = (self.conf_xml,(1,),1,0)
+        self.cmd_table["monitor"] = (self.conf_monitor,(2,2),1,0)
+        self.cmd_table["role"] = (self.conf_role,(2,),2,0)
+        self.cmd_table["user"] = (self.conf_user,(2,),2,0)
         self.cmd_table["ra"] = RA
         self.cmd_table["cib"] = CibShadow
         self.cmd_table["cibstatus"] = StatusMgmt
         self.cmd_table["template"] = Template
-        self.cmd_table["_test"] = (self.check_structure,(0,0),1)
-        self.cmd_table["_regtest"] = (self.regression_testing,(1,1),1)
-        self.cmd_table["_objects"] = (self.showobjects,(0,0),1)
+        self.cmd_table["_test"] = (self.check_structure,(0,0),1,0)
+        self.cmd_table["_regtest"] = (self.regression_testing,(1,1),1,0)
+        self.cmd_table["_objects"] = (self.showobjects,(0,0),1,0)
         self.cmd_aliases.update({
             "colocation": ("collocation",),
             "ms": ("master",),
@@ -1526,9 +1533,9 @@ cluster.
             return cib_factory.commit()
         if force or user_prefs.get_force():
             common_info("commit forced")
-            return cib_factory.commit()
+            return cib_factory.commit(True)
         if ask("Do you still want to commit?"):
-            return cib_factory.commit()
+            return cib_factory.commit(True)
         return False
     def upgrade(self,cmd,force = None):
         "usage: upgrade [force]"
@@ -1674,7 +1681,7 @@ class TopLevel(UserInterface):
         self.cmd_table['configure'] = CibConfig
         self.cmd_table['node'] = NodeMgmt
         self.cmd_table['options'] = CliOptions
-        self.cmd_table['status'] = (self.status,(0,5),0)
+        self.cmd_table['status'] = (self.status,(0,5),0,0)
         self.cmd_table['ra'] = RA
         setup_aliases(self)
         self.help_table["."] = ("","""This is the CRM command line interface program.""")

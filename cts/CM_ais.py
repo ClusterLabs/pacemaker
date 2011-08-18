@@ -44,7 +44,6 @@ class crm_ais(crm_lha):
         self.update({
             "Name"           : "crm-ais",
 
-            "UUIDQueryCmd"   : "crmadmin -N --openais",
             "EpocheCmd"      : "crm_node -e --openais",
             "QuorumCmd"      : "crm_node -q --openais",
             "ParitionCmd"    : "crm_node -p --openais",
@@ -81,6 +80,7 @@ class crm_ais(crm_lha):
                 r"Parameters to .* changed",
                 r"Child process .* terminated with signal 11",
                 r"Executing .* fencing operation",
+                r"LogActions: Recover",
 
                 # Not inherently bad, but worth tracking
                 r"No need to invoke the TE",
@@ -182,7 +182,7 @@ class crm_ais(crm_lha):
         stonith_ignore.extend(self.common_ignore)
         
         fullcomplist["stonith-ng"] = Process(self, "stonith-ng", process="stonithd", pats = [
-                "CRIT: stonith_dispatch: Lost connection to the STONITH service",
+                "CRIT: stonith_dispatch.* Lost connection to the STONITH service",
                 "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                 "Attempting connection to fencing daemon",
                 "te_connect_stonith: Connected",
@@ -336,10 +336,9 @@ class crm_cman(crm_flatiron):
 
         self.update({
             "Name"           : "crm-cman",
-            "StartCmd"       : "service corosync start; service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; cman_tool leave",
+            "StartCmd"       : "service cman start; service pacemaker start",
+            "StopCmd"        : "service pacemaker stop; service cman stop;",
 
-            "UUIDQueryCmd"   : "crmadmin -N --cman",
             "EpocheCmd"      : "crm_node -e --cman",
             "QuorumCmd"      : "crm_node -q --cman",
             "ParitionCmd"    : "crm_node -p --cman",
