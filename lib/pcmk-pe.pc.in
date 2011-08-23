@@ -10,8 +10,8 @@ ghash_compat=@USE_GHASH_COMPAT@
 
 Name:         pacemaker-pengine
 URL:	      http://www.clusterlabs.org
-Version:      @PACEMAKER_VERSION@
-Description:  Pacemaker Policy Engine
+Version:      @PACKAGE_VERSION@
+Description:  Pacemaker Policy Engine v@PACKAGE_SERIES@
 Requires:  
 Conflicts:   
 Cflags:       -I${includedir}

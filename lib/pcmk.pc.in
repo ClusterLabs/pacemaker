@@ -3,7 +3,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 build=@BUILD_VERSION@
-features=@CRM_FEATURES@
+features=@PKG_FEATURES@
 configdir=@CRM_CONFIG_DIR@
 daemondir=@CRM_DAEMON_DIR@
 daemon_group=@CRM_DAEMON_GROUP@
@@ -12,12 +12,12 @@ statedir=@CRM_STATE_DIR@
 
 ghash_compat=@USE_GHASH_COMPAT@
 with_heartbeat=@SUPPORT_HEARTBEAT@
-with_corosync=@SUPPORT_COROSYNC@
+with_corosync=@SUPPORT_CS@
 
 Name:         pacemaker
 URL:	      http://www.clusterlabs.org
-Version:      @PACEMAKER_VERSION@
-Description:  Pacemaker cluster manager
+Version:      @PACKAGE_VERSION@
+Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
 Requires:     
 Conflicts:    
 Cflags:       -I${includedir}

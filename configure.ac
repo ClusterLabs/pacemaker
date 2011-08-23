@@ -58,6 +58,7 @@ AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION", Current pacemaker vers
 
 PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
 AC_SUBST(PACKAGE_SERIES)
+AC_SUBST(PACKAGE_VERSION)
 
 dnl automake >= 1.11 offers --enable-silent-rules for suppressing the output from
 dnl normal compilation.  When a failure occurs, it will then display the full 
@@ -1041,7 +1042,7 @@ esac
 
 AM_CONDITIONAL(BUILD_HEARTBEAT_SUPPORT, test $SUPPORT_HEARTBEAT = 1)
 AC_DEFINE_UNQUOTED(SUPPORT_HEARTBEAT, $SUPPORT_HEARTBEAT, Support the Heartbeat messaging and membership layer)
-
+AC_SUBST(SUPPORT_HEARTBEAT)
 
 dnl ========================================================================
 dnl    Cluster stack - Corosync
@@ -1126,6 +1127,7 @@ esac
 AC_DEFINE_UNQUOTED(AIS_COROSYNC, $SUPPORT_CS, Compatability alias for SUPPORT_COROSYNC)
 AC_DEFINE_UNQUOTED(SUPPORT_AIS, $SUPPORT_CS, Compatability alias for SUPPORT_COROSYNC)
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
+AC_SUBST(SUPPORT_CS)
 
 PCMK_SERVICE_ID=9
 if test $SUPPORT_CMAN != no; then
@@ -1159,10 +1161,14 @@ if test $SUPPORT_CMAN != no; then
 	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libcman libfenced --libs`"
 	
 	PKG_FEATURES="$PKG_FEATURES cman"
+	SUPPORT_CMAN=1
 	AC_DEFINE_UNQUOTED(SUPPORT_CMAN, 1, Support the consumption of membership and quorum from cman)
+    else
+	SUPPORT_CMAN=0
     fi
 fi
 AC_DEFINE_UNQUOTED(PCMK_SERVICE_ID, $PCMK_SERVICE_ID, Corosync service number)
+AC_SUBST(SUPPORT_CMAN)
 
 if test $SUPPORT_CS_QUORUM != no; then
     AC_MSG_CHECKING(for cpg)
