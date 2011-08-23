@@ -117,7 +117,7 @@ class CIB10(CibBase):
         no_quorum = "stop"
         if self.num_nodes < 3:
             no_quorum = "ignore"
-            self.CM.debug("Cluster only has %d nodes, ignoring quorum" % self.num_nodes) 
+            self.CM.log("Cluster only has %d nodes, configuring: no-quroum-policy=ignore" % self.num_nodes) 
 
 
         # The shell no longer functions when the lrmd isn't running, how wonderful
@@ -148,9 +148,8 @@ class CIB10(CibBase):
             else:
                 params = ""
 
-            self._create('''primitive FencingChild stonith::%s %s op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["stonith-type"], params))
             # Set a threshold for unreliable stonith devices such as the vmware one
-            self._create('''clone Fencing FencingChild meta globally-unique=false migration-threshold=5''')
+            self._create('''primitive Fencing stonith::%s %s meta migration-threshold=5 op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["stonith-type"], params))
 
         self._create('''property stonith-enabled=%s''' % (self.CM.Env["DoFencing"]))
         self._create('''property start-failure-is-fatal=false pe-input-series-max=5000 default-action-timeout=60s''')
