@@ -61,3 +61,4 @@ extern void *create_remote_stonith_op(const char *client, xmlNode *request, gboo
 extern int stonith_fence_history(xmlNode *msg, xmlNode **output);
 
 extern char *stonith_our_uname;
+extern gboolean stand_alone;

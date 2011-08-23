@@ -74,9 +74,12 @@ static void free_async_command(async_command_t *cmd)
     crm_free(cmd);    
 }
 
-static async_command_t *create_async_command(xmlNode *msg, const char *action) 
+static async_command_t *create_async_command(xmlNode *msg) 
 {
     async_command_t *cmd = NULL;
+    xmlNode *op = get_xpath_object("//@"F_STONITH_ACTION, msg, LOG_ERR);
+    const char *action = crm_element_value(op, F_STONITH_ACTION);
+
     CRM_CHECK(action != NULL, crm_log_xml_warn(msg, "NoAction"); return NULL);
 
     crm_malloc0(cmd, sizeof(async_command_t));
@@ -84,12 +87,13 @@ static async_command_t *create_async_command(xmlNode *msg, const char *action)
     crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
     crm_element_value_int(msg, F_STONITH_TIMEOUT,  &(cmd->timeout));
 
+    cmd->timeout *= 1000;
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
     cmd->remote = crm_element_value_copy(msg, F_STONITH_REMOTE);
     cmd->client = crm_element_value_copy(msg, F_STONITH_CLIENTID);
     cmd->op     = crm_element_value_copy(msg, F_STONITH_OPERATION);
     cmd->action = crm_strdup(action);
-    cmd->victim = crm_element_value_copy(msg, F_STONITH_TARGET);
+    cmd->victim = crm_element_value_copy(op, F_STONITH_TARGET);
     cmd->pt_ops = &StonithdProcessTrackOps;
 
     CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
@@ -399,7 +403,6 @@ static int stonith_device_action(xmlNode *msg, char **output)
     int rc = stonith_ok;
     xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
     const char *id = crm_element_value(dev, F_STONITH_DEVICE);
-    const char *action = crm_element_value(dev, F_STONITH_ACTION);
 
     async_command_t *cmd = NULL;
     stonith_device_t *device = NULL;
@@ -410,7 +413,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
     }
 
     if(device) {
-	cmd = create_async_command(msg, action);
+	cmd = create_async_command(msg);
 	if(cmd == NULL) {
 	    free_device(device);
 	    return st_err_internal;
@@ -732,7 +735,7 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     log_operation(cmd, rc, pid, NULL, output);
     crm_log_xml_debug_3(reply, "Reply");
     
-    if(bcast) {
+    if(bcast && !stand_alone) {
 	/* Send reply as T_STONITH_NOTIFY so everyone does notifications
 	 * Potentially limit to unsucessful operations to the originator?
 	 */
@@ -771,7 +774,7 @@ static int stonith_fence(xmlNode *msg)
 {
     struct device_search_s search;
     stonith_device_t *device = NULL;
-    async_command_t *cmd = create_async_command(msg, crm_element_value(msg, F_STONITH_ACTION));
+    async_command_t *cmd = create_async_command(msg);
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
     
     if(cmd == NULL) {
@@ -910,7 +913,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	
 
     } else if(crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
-	async_command_t *cmd = create_async_command(request, crm_element_value(request, F_STONITH_ACTION));
+	async_command_t *cmd = create_async_command(request);
 	xmlNode *reply = stonith_construct_async_reply(cmd, NULL, NULL, 0);
 
 	crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
@@ -960,19 +963,20 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 
     } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
 
-	if(remote) {
+	if(remote || stand_alone) {
 	    rc = stonith_fence(request);
 
 	} else if(call_options & st_opt_local_first) {
 	    rc = stonith_fence(request);
 	    if(rc < 0) {
 		initiate_remote_stonith_op(client, request);
+		return;
 	    }
 
 	} else {
 	    initiate_remote_stonith_op(client, request);
+	    return;
 	}
-	return;
 
     } else if (crm_str_eq(op, STONITH_OP_FENCE_HISTORY, TRUE)) {
 	rc = stonith_fence_history(request, &data);

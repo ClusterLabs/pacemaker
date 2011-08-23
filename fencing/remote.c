@@ -312,7 +312,7 @@ void initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request)
     crm_log_xml_debug(request, "RemoteOp");
     
     op = create_remote_stonith_op(client->id, request, FALSE);
-    op->op_timer = g_timeout_add(1000*op->base_timeout, remote_op_timeout, op);
+    op->op_timer = g_timeout_add(1200*op->base_timeout, remote_op_timeout, op);
     op->query_timer = g_timeout_add(100*op->base_timeout, remote_op_query_timeout, op);
 
     query = stonith_create_op(0, op->id, STONITH_OP_QUERY, NULL, 0);
@@ -320,7 +320,7 @@ void initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request)
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op->action);    
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);    
-    crm_xml_add_int(query, F_STONITH_TIMEOUT, 100*op->base_timeout);
+    crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
     
     crm_info("Initiating remote operation %s for %s: %s", op->action, op->target, op->id);
     CRM_CHECK(op->action, return);
