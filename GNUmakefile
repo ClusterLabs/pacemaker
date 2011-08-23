@@ -68,12 +68,15 @@ export:
 	fi
 
 $(PACKAGE)-opensuse.spec: $(PACKAGE)-suse.spec
+	cp $^ $@
+	@echo Rebuilt $@
 
-$(PACKAGE)-suse.spec: $(PACKAGE).spec.in
+$(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	rm -f $@
 	cp $(PACKAGE).spec.in $@
 	sed -i.sed s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
 	sed -i.sed s:corosynclib:libcorosync:g $@
+	sed -i.sed s:libexecdir:libdir:g $@
 	sed -i.sed 's:%{name}-libs:lib%{name}3:g' $@
 	sed -i.sed s:heartbeat-libs:heartbeat:g $@
 	sed -i.sed s:cluster-glue-libs:libglue:g $@
@@ -109,7 +112,7 @@ mock-%:
 	make srpm-$(firstword $(shell echo $(@:mock-%=%) | tr '-' ' '))
 	-rm -rf $(RPM_ROOT)/mock
 	@echo "mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm"
-	mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
+	mock -q --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
 
 srpm:	srpm-$(DISTRO)
 
