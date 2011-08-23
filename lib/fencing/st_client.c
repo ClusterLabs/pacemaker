@@ -38,9 +38,6 @@
 #include <crm/common/xml.h>
 #include <stonith/stonith.h>
 
-#define FE_AGENT_FORK		-2
-#define FE_AGENT_ERROR		-3
-
 CRM_TRACE_INIT_DATA(stonith);
 
 typedef struct stonith_private_s 
@@ -377,7 +374,7 @@ int run_stonith_agent(
     int *agent_result, char **output, async_command_t *track)
 {
     char *args = make_args(action, victim, device_args, port_map);
-    int pid, status, len, rc = -1;
+    int pid, status, len, rc = st_err_internal;
     int p_read_fd, p_write_fd;  /* parent read/write file descriptors */
     int c_read_fd, c_write_fd;  /* child read/write file descriptors */
     int fd1[2];
@@ -402,7 +399,7 @@ int run_stonith_agent(
     crm_debug("forking");
     pid = fork();
     if (pid < 0) {
-	*agent_result = FE_AGENT_FORK;
+	rc = st_err_agent_fork;
 	goto fail;
     }
 
@@ -425,7 +422,7 @@ int run_stonith_agent(
 	if (total != len) {
 	    crm_perror(LOG_ERR, "Sent %d not %d bytes", total, len);
 	    if(ret >= 0) {
-		rc = st_err_generic;
+		rc = st_err_agent_args;
 	    }
 	    goto fail;
 	}
@@ -474,8 +471,9 @@ int run_stonith_agent(
 		    
 		} while (ret == 500 || (ret < 0 && errno == EINTR));
 	    }
-	    
-	    *agent_result = FE_AGENT_ERROR;
+
+	    rc = st_err_agent;
+	    *agent_result = st_err_agent;
 	    if (WIFEXITED(status)) {
 		crm_debug("result = %d", WEXITSTATUS(status));
 		*agent_result = -WEXITSTATUS(status);
@@ -513,7 +511,7 @@ int run_stonith_agent(
 
     if(c_read_fd >= 0) { close(c_read_fd); }
     if(c_write_fd >= 0) { close(c_write_fd); }
-	
+
     return rc;
 }
 

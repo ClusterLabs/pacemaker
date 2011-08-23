@@ -48,6 +48,7 @@ char *stonith_our_uname = NULL;
 GMainLoop *mainloop = NULL;
 GHashTable *client_list = NULL;
 
+gboolean stand_alone = FALSE;
 gboolean stonith_shutdown_flag = FALSE;
 
 #if SUPPORT_HEARTBEAT
@@ -509,7 +510,6 @@ main(int argc, char ** argv)
     int lpc = 0;
     int argerr = 0;
     int option_index = 0;
-    gboolean stand_alone = FALSE;
     const char *actions[] = { "reboot", "poweroff", "list", "monitor", "status" };
 
     set_crm_log_level(LOG_INFO);

@@ -74,7 +74,6 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in
 	cp $(PACKAGE).spec.in $@
 	sed -i.sed s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
 	sed -i.sed s:corosynclib:libcorosync:g $@
-	sed -i.sed s:pacemaker-libs:lib%{name}3:g $@
 	sed -i.sed 's:%{name}-libs:lib%{name}3:g' $@
 	sed -i.sed s:heartbeat-libs:heartbeat:g $@
 	sed -i.sed s:cluster-glue-libs:libglue:g $@

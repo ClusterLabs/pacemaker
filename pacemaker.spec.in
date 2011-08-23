@@ -8,17 +8,17 @@
 
 # Compatibility macros for distros (fedora) that don't provide Python macros by default
 # Do this instead of trying to conditionally include {_rpmconfigdir}/macros.python
-%{!?py_ver:     %{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
-%{!?py_prefix:  %{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
-%{!?py_libdir:  %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/%%%%{_lib}/python%%%%{py_ver}}}}
-%{!?py_sitedir: %{expand: %%global py_sitedir  %%{expand:%%%%{py_libdir}/site-packages}}}
+%{!?py_ver:	%{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
+%{!?py_prefix:	%{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
+%{!?py_libdir:	%{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/%%%%{_lib}/python%%%%{py_ver}}}}
+%{!?py_sitedir:	%{expand: %%global py_sitedir  %%{expand:%%%%{py_libdir}/site-packages}}}
 
 # Compatibility macro wrappers for legacy RPM versions that do not
 # support conditional builds
-%{!?bcond_without: %{expand: %%global bcond_without() %%{expand:%%%%{!?_without_%%{1}:%%%%global with_%%{1} 1}}}}
-%{!?bcond_with:    %{expand: %%global bcond_with()    %%{expand:%%%%{?_with_%%{1}:%%%%global with_%%{1} 1}}}}
-%{!?with:          %{expand: %%global with()          %%{expand:%%%%{?with_%%{1}:1}%%%%{!?with_%%{1}:0}}}}
-%{!?without:       %{expand: %%global without()       %%{expand:%%%%{?with_%%{1}:0}%%%%{!?with_%%{1}:1}}}}
+%{!?bcond_without:	%{expand: %%global bcond_without() %%{expand:%%%%{!?_without_%%{1}:%%%%global with_%%{1} 1}}}}
+%{!?bcond_with:		%{expand: %%global bcond_with()	%%{expand:%%%%{?_with_%%{1}:%%%%global with_%%{1} 1}}}}
+%{!?with:		%{expand: %%global with()	%%{expand:%%%%{?with_%%{1}:1}%%%%{!?with_%%{1}:0}}}}
+%{!?without:		%{expand: %%global without()	%%{expand:%%%%{?with_%%{1}:0}%%%%{!?with_%%{1}:1}}}}
 
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
@@ -73,23 +73,23 @@ AutoReqProv:	on
 Requires(pre):	cluster-glue
 Requires:	resource-agents
 Requires:	python >= 2.4
-Conflicts:      heartbeat < 2.99
+Conflicts:	heartbeat < 2.99
 
 %if 0%{?fedora} || 0%{?centos} > 4 || 0%{?rhel} > 4
-Requires:       perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
-BuildRequires:  help2man libtool-ltdl-devel
+Requires:	perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
+BuildRequires:	help2man libtool-ltdl-devel
 %endif
 
 %if 0%{?suse_version}
 # net-snmp-devel on SLES10 does not suck in tcpd-devel automatically
-BuildRequires:  help2man tcpd-devel
+BuildRequires:	help2man tcpd-devel
 # Suse splits this off into a separate package
-Requires:       python-curses python-xml
-BuildRequires:  python-curses python-xml
+Requires:	python-curses python-xml
+BuildRequires:	python-curses python-xml
 %endif
 
 # Required for core functionality
-BuildRequires:  automake autoconf libtool pkgconfig python
+BuildRequires:	automake autoconf libtool pkgconfig python
 BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel 
 BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
@@ -98,7 +98,7 @@ BuildRequires:	ncurses-devel openssl-devel libselinux-devel docbook-style-xsl re
 
 
 %ifarch alpha %{ix86} x86_64
-BuildRequires:  lm_sensors-devel
+BuildRequires:	lm_sensors-devel
 %endif
 
 %if %{with cman}
@@ -252,15 +252,15 @@ eval `objdump --headers --private-headers /usr/bin/perl | grep RPATH | awk '{pri
 
 # RHEL <= 5 does not support --docdir
 docdir=%{pcmk_docdir} %{configure}			\
-	%{!?with_heartbeat: --without-heartbeat}	\
-	%{!?with_ais:       --without-ais}		\
-	%{!?with_esmtp:     --without-esmtp}		\
-	%{!?with_snmp:      --without-snmp}		\
-	%{?with_cman:       --with-cman}		\
-	%{?with_profiling:  --with-profiling}		\
-	%{?with_gcov:       --with-gcov}		\
-	%{?with_tracedata:  --with-tracedata}		\
-        --with-initdir=%{_initrddir}			\
+	%{!?with_heartbeat:	--without-heartbeat}	\
+	%{!?with_ais:		--without-ais}		\
+	%{!?with_esmtp:		--without-esmtp}	\
+	%{!?with_snmp:		--without-snmp}		\
+	%{?with_cman:		--with-cman}		\
+	%{?with_profiling:	--with-profiling}	\
+	%{?with_gcov:		--with-gcov}		\
+	%{?with_tracedata:	--with-tracedata}	\
+	--with-initdir=%{_initrddir}			\
 	--localstatedir=%{_var}				\
 	--with-version=%{version}-%{release}		\
 	--enable-fatal-warnings=no
@@ -298,9 +298,9 @@ rm -f %{buildroot}/%{_libdir}/service_crm.so
 GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
 mkdir -p $GCOV_BASE
 find . -name '*.gcno' -type f | while read F ; do
-        D=`dirname $F`
-        mkdir -p ${GCOV_BASE}/$D
-        cp $F ${GCOV_BASE}/$D
+	D=`dirname $F`
+	mkdir -p ${GCOV_BASE}/$D
+	cp $F ${GCOV_BASE}/$D
 done
 %endif
 
@@ -312,8 +312,8 @@ rm -rf %{buildroot}
 
 %preun
 if [ $1 -eq 0 ]; then
-        /sbin/service pacemaker stop &>/dev/null || :
-        /sbin/chkconfig --del pacemaker || :
+	/sbin/service pacemaker stop &>/dev/null || :
+	/sbin/chkconfig --del pacemaker || :
 fi
 
 %post -n %{name}-libs -p /sbin/ldconfig
@@ -420,7 +420,6 @@ fi
 %{_includedir}/pacemaker
 %{_libdir}/*.so
 %if %{with gcov}
-%dir %{_var}/lib/pacemaker
 %{_var}/lib/pacemaker
 %endif
 %{_libdir}/pkgconfig/*.pc

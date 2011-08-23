@@ -8,9 +8,12 @@ typedef struct stonith_device_s
 	time_t targets_age;
 	gboolean has_attr_map;
 	guint priority;
+	guint active_pid;
 	
 	GHashTable *params;
 	GHashTable *aliases;
+	GList      *pending_ops;
+	crm_trigger_t *work;
 	
 } stonith_device_t;
 
@@ -58,3 +61,4 @@ extern void *create_remote_stonith_op(const char *client, xmlNode *request, gboo
 extern int stonith_fence_history(xmlNode *msg, xmlNode **output);
 
 extern char *stonith_our_uname;
+extern gboolean stand_alone;
