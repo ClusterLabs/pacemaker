@@ -987,7 +987,7 @@ class ClusterManager(UserDict):
         if not stonith:
             return peer_list
 
-        if not self.HasQuorum(None):
+        if not self.HasQuorum(None) and len(self.Env["nodes"]) > 2:
             # We didn't gain quorum - we shouldn't have shot anyone
             return peer_list
 
