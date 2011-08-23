@@ -866,6 +866,18 @@ stonith_error2string(enum stonith_errors return_code)
 	case st_err_peer:
 	    error_msg = "Error from peer";
 	    break;
+	case stonith_pending:
+	    error_msg = "Stonith operation is in progress";
+	    break;
+	case st_err_agent_fork:
+	    error_msg = "Call to fork() failed";
+	    break;
+	case st_err_agent_args:
+	    error_msg = "Could not send arguments to the stonith device";
+	    break;
+	case st_err_agent:
+	    error_msg = "Execution of the stonith agent failed";
+	    break;
     }
 			
     if(error_msg == NULL) {
