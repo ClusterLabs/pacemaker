@@ -243,7 +243,11 @@ main(int argc, char ** argv)
 	    rc = st->cmds->remove_device(st, st_opts, device);
 	    break;
 	case 'M':
-	    {
+	    if (agent == NULL) {
+		printf("Please specify an agent to query using -a,--agent [value]\n");
+		return -1;
+		
+	    } else {
 	        char *buffer = NULL;
 		st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 0);
 		printf("%s\n", buffer);
