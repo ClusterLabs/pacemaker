@@ -228,7 +228,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t *data
     }
 
     new_xml = copy_xml(template);
-    new_xml->name = (xmlChar *)crm_strdup((const char*)xml_obj->name);
+    xmlNodeSetName(new_xml, xml_obj->name);
     crm_xml_replace(new_xml, XML_ATTR_ID, id);
     template_ops = find_xml_node(new_xml, "operations", FALSE);
 
