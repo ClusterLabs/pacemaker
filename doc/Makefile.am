@@ -32,6 +32,7 @@ generated_docs	=
 generated_mans	= 
 
 DOCBOOK_FORMATS := html-desktop,txt
+DOCBOOK_LANGS   := en-US
 
 SVG = $(wildcard */en-US/images/pcmk-*.svg)
 
@@ -80,14 +81,14 @@ Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
 Clusters_from_Scratch.txt: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
-	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
 	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
 Pacemaker_Explained.txt: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
-	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
 	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
@@ -124,7 +125,7 @@ www:    $(generated_docs)
 	echo rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
 	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
 	rm -f $(docbook_txt)
-	make DOCBOOK_FORMATS="pdf,html,html-single,txt,epub" all-local $(generated_docs) $(ascii)
+	make DOCBOOK_FORMATS="pdf,html,html-single,txt,epub" DOCBOOK_LANGS="all" all-local $(generated_docs) $(ascii)
 	echo Uploading current documentation set to clusterlabs.org
 	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
 if BUILD_DOCBOOK
