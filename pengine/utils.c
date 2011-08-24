@@ -406,8 +406,9 @@ native_deallocate(resource_t *rsc)
 	old->details->allocated_rsc = g_list_remove(
 	    old->details->allocated_rsc, rsc);
 	old->details->num_resources--;
-	old->count--;
+	/* old->count--; */
 	calculate_utilization(old, rsc, FALSE);
+	crm_free(old);
     }
 }
 
@@ -468,7 +469,6 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
     }
 
     crm_debug("Assigning %s to %s", chosen->details->uname, rsc->id);
-    crm_free(rsc->allocated_to);
     rsc->allocated_to = node_copy(chosen);
 
     chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc, rsc);
