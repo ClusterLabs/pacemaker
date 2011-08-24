@@ -267,15 +267,16 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	if(node1->weight < node2->weight) {
 	    if(node1->weight < 0) {
 		do_crm_log_unlikely(level, "%s > %s: current score", resource1->id, resource2->id);
-		return -1;
+		rc=-1; goto out;
+		
 	    } else {
 		do_crm_log_unlikely(level, "%s < %s: current score", resource1->id, resource2->id);
-		return 1;
+		rc=1; goto out;
 	    }
 	    
 	} else if(node1->weight > node2->weight) {
 	    do_crm_log_unlikely(level, "%s > %s: current score", resource1->id, resource2->id);
-	    return -1;
+	    rc=-1; goto out;
 	}
 
 	/* All location scores */
@@ -316,7 +317,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	}
 
 	/* Order by reverse uname - same as sort_node_weight() does? */
-
+      out:
 	g_hash_table_destroy(hash1); /* Free mem */
 	g_hash_table_destroy(hash2); /* Free mem */
 	g_list_free(list1);
