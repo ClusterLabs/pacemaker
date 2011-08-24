@@ -21,7 +21,7 @@ Licensed under the GNU GPL.
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
 import types, string, select, sys, time, re, os, struct, signal
 import time, syslog, random, traceback, base64, pickle, binascii, fcntl

@@ -77,12 +77,12 @@ Conflicts:	heartbeat < 2.99
 
 %if 0%{?fedora} || 0%{?centos} > 4 || 0%{?rhel} > 4
 Requires:	perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
-BuildRequires:	help2man libtool-ltdl-devel
+BuildRequires:	libtool-ltdl-devel
 %endif
 
 %if 0%{?suse_version}
 # net-snmp-devel on SLES10 does not suck in tcpd-devel automatically
-BuildRequires:	help2man tcpd-devel
+BuildRequires:	tcpd-devel
 # Suse splits this off into a separate package
 Requires:	python-curses python-xml
 BuildRequires:	python-curses python-xml
@@ -359,6 +359,7 @@ fi
 %endif
 
 %files cli
+%defattr(-,root,root)
 %{_sbindir}/cibadmin
 %{_sbindir}/crm_diff
 %{_sbindir}/crm_failcount
@@ -377,7 +378,10 @@ fi
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
 %{py_sitedir}/crm
-%doc %{_mandir}
+%if %{with doc}
+%doc %{_mandir}/man7/*
+%doc %{_mandir}/man8/*
+%endif
 
 %if %{with heartbeat}
 %{_sbindir}/crm_uuid
@@ -427,6 +431,9 @@ fi
 %doc AUTHORS
 
 %changelog
+* Wed Aug 24 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.6-1
+- Pre-release
+
 * Fri Feb 11 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.5-1
 - Update source tarball to revision: baad6636a053
 - Statistics:

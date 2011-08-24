@@ -19,7 +19,7 @@ Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
 import os, sys, warnings
 from cts.CTSvars import *
@@ -83,9 +83,9 @@ class crm_ais(crm_lha):
                 r"LogActions: Recover",
 
                 # Not inherently bad, but worth tracking
-                r"No need to invoke the TE",
-                r"ping.*: DEBUG: Updated connected = 0",
-                r"Digest mis-match:",
+                #r"No need to invoke the TE",
+                #r"ping.*: DEBUG: Updated connected = 0",
+                #r"Digest mis-match:",
             ),
         })
 
