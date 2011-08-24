@@ -2,6 +2,8 @@
 
 if [ x$1 = xinstall ]; then
     mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./mock/*.rpm
+elif [ x$1 = xdownloads ]; then
+    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./downloads/*.rpm
 elif [ x$1 = xlint ]; then
     rpmlint -i -f rpmlintrc ./mock/*.rpm
 else
