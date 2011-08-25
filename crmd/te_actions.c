@@ -110,6 +110,7 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	const char *target = NULL;
 	const char *type = NULL;
 	gboolean invalid_action = FALSE;
+	enum stonith_call_options options = st_opt_none;
 	
 	id = ID(action->xml);
 	target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -133,8 +134,12 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	/* Passing NULL means block until we can connect... */
 	te_connect_stonith(NULL);
 
+	if(finalized_nodes && g_hash_table_size(finalized_nodes) == 1) {
+	    options |= st_opt_allow_suicide;
+	}
+	
 	rc = stonith_api->cmds->fence(
-	    stonith_api, 0, target, type, transition_graph->stonith_timeout/1000);
+	    stonith_api, options, target, type, transition_graph->stonith_timeout/1000);
 
 	stonith_api->cmds->register_callback(
 	    stonith_api, rc, transition_graph->stonith_timeout/1000, FALSE,
