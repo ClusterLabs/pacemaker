@@ -4,6 +4,11 @@ if [ x$1 = xinstall ]; then
     mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./mock/*.rpm
 elif [ x$1 = xdownloads ]; then
     mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./downloads/*.rpm
+
+    # Now get the SRPM installed for gcov runs
+    mock --configdir=$PWD --root=mock --resultdir=./mock -v --copyin ./downloads/*src.rpm /root
+    mock --configdir=$PWD --root=mock --resultdir=./mock -v --shell -- rpm -Uvh /root/*.src.rpm
+    
 elif [ x$1 = xlint ]; then
     rpmlint -i -f rpmlintrc ./mock/*.rpm
 else
