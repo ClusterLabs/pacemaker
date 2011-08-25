@@ -11,4 +11,4 @@ lcov -d $GCOV_PREFIX -z
 lcov -d $GCOV_PREFIX -c -o pacemaker.info
 
 mkdir html
-genhtml --src-prefix-remove $GCOV_PREFIX --src-prefix-add /usr/src/debug/pacemaker/ -o html pacemaker.info
+genhtml -o html pacemaker.info
