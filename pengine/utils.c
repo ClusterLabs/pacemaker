@@ -23,59 +23,6 @@
 #include <lib/pengine/utils.h>
 
 void
-print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
-{ 
-    if(cons == NULL) {
-	crm_debug_4("%s%s: <NULL>",
-		    pre_text==NULL?"":pre_text,
-		    pre_text==NULL?"":": ");
-	return;
-    }
-    crm_debug_4("%s%s%s Constraint %s (%p) - %d nodes:",
-		pre_text==NULL?"":pre_text,
-		pre_text==NULL?"":": ",
-		"rsc_to_node",
-		cons->id, cons,
-		g_list_length(cons->node_list_rh));
-
-    if(details == FALSE) {
-	GListPtr gIter = NULL;
-	crm_debug_4("\t%s (node placement rule)",
-		    safe_val3(NULL, cons, rsc_lh, id));
-
-	gIter = cons->node_list_rh;
-	for(; gIter != NULL; gIter = gIter->next) {
-	    node_t *node = (node_t*)gIter->data;
-		    
-	    print_node("\t\t-->", node, FALSE);
-	}
-    }
-}
-
-void
-print_rsc_colocation(const char *pre_text, rsc_colocation_t *cons, gboolean details)
-{ 
-	if(cons == NULL) {
-		crm_debug_4("%s%s: <NULL>",
-		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ");
-		return;
-	}
-	crm_debug_4("%s%s%s Constraint %s (%p):",
-	       pre_text==NULL?"":pre_text,
-	       pre_text==NULL?"":": ",
-	       XML_CONS_TAG_RSC_DEPEND, cons->id, cons);
-
-	if(details == FALSE) {
-
-		crm_debug_4("\t%s --> %s, %d",
-			  safe_val3(NULL, cons, rsc_lh, id), 
-			  safe_val3(NULL, cons, rsc_rh, id), 
-			  cons->score);
-	}
-} 
-
-void
 pe_free_ordering(GListPtr constraints) 
 {
 	GListPtr iterator = constraints;
@@ -144,34 +91,6 @@ rsc2node_new(const char *id, resource_t *rsc,
 	
     return new_con;
 }
-
-
-const char *
-ordering_type2text(enum pe_ordering type)
-{
-    const char *result = "<unknown>";
-    if(type & pe_order_optional) {
-	/* was: mandatory */
-	result = "right_implies_left";
-
-    } else if(type & pe_order_implies_then) {
-	/* was: recover  */
-	result = "left_implies_right";
-
-    } else if(type & pe_order_optional) {
-	/* pure ordering, nothing implied */
-	result = "optional";
-		
-    } else if(type & pe_order_runnable_left) {
-	result = "runnable";
-		
-	/* } else { */
-	/* 	crm_err("Unknown ordering type: %.3x", type); */
-    }
-	
-    return result;
-}
-
 
 gboolean
 can_run_resources(const node_t *node)

@@ -23,20 +23,12 @@ extern rsc_colocation_t *invert_constraint(rsc_colocation_t *constraint);
 
 extern rsc_to_node_t *copy_constraint(rsc_to_node_t *constraint);
 
-extern void print_rsc_to_node(
-	const char *pre_text, rsc_to_node_t *cons, gboolean details);
-
-extern void print_rsc_colocation(
-	const char *pre_text, rsc_colocation_t *cons, gboolean details);
-
 extern rsc_to_node_t *rsc2node_new(
 	const char *id, resource_t *rsc, int weight, node_t *node,
 	pe_working_set_t *data_set);
 
 extern void pe_free_rsc_to_node(GListPtr constraints);
 extern void pe_free_ordering(GListPtr constraints);
-
-extern const char *ordering_type2text(enum pe_ordering type);
 
 extern gboolean rsc_colocation_new(
 	const char *id, const char *node_attr, int score,
