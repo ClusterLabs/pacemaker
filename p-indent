@@ -1,0 +1,192 @@
+#!/bin/sh
+#
+# This is a copy of the linux kernel's Lindent because
+# we use the same formatting. No point re-inventing that
+# wheel.
+#
+# Differences to kernel style:
+# --dont-break-procedure-type -> --break-procedure-type
+#
+
+OPTS=""
+OPTS="$OPTS --linux-style"
+
+#OPTS="$OPTS --blank-lines-after-commas"
+OPTS="$OPTS --blank-lines-after-declarations"
+#OPTS="$OPTS --blank-lines-after-procedures"
+#OPTS="$OPTS --blank-lines-before-block-comments"
+#OPTS="$OPTS --braces-after-if-line"
+#OPTS="$OPTS --braces-after-func-def-line"
+#OPTS="$OPTS --brace-indent"
+#OPTS="$OPTS --braces-after-struct-decl-line"
+#OPTS="$OPTS --braces-on-if-line"
+#OPTS="$OPTS --braces-on-func-def-line"
+#OPTS="$OPTS --braces-on-struct-decl-line"
+#OPTS="$OPTS --break-after-boolean-operator"
+OPTS="$OPTS --break-before-boolean-operator"
+#OPTS="$OPTS --break-function-decl-args"
+#OPTS="$OPTS --break-function-decl-args-end"
+OPTS="$OPTS --case-indentation4"
+OPTS="$OPTS --case-brace-indentation4"
+#OPTS="$OPTS --comment-delimiters-on-blank-lines"
+#OPTS="$OPTS --comment-indentation33"
+OPTS="$OPTS --continuation-indentation4"
+#OPTS="$OPTS --continue-at-parentheses"
+#OPTS="$OPTS --cuddle-do-while"
+#OPTS="$OPTS --cuddle-else"
+#OPTS="$OPTS --declaration-comment-column33"
+#OPTS="$OPTS --declaration-indentation16"
+#OPTS="$OPTS --dont-break-function-decl-args"
+#OPTS="$OPTS --dont-break-function-decl-args-end"
+#OPTS="$OPTS --dont-break-procedure-type"
+#OPTS="$OPTS --dont-cuddle-do-while"
+#OPTS="$OPTS --dont-cuddle-else"
+#OPTS="$OPTS --dont-format-comments"
+#OPTS="$OPTS --dont-format-first-column-comments"
+#OPTS="$OPTS --dont-line-up-parentheses"
+#OPTS="$OPTS --dont-left-justify-declarations"
+#OPTS="$OPTS --dont-space-special-semicolon"
+#OPTS="$OPTS --dont-star-comments"
+#OPTS="$OPTS --else-endif-column1"
+#OPTS="$OPTS --format-all-comments"
+#OPTS="$OPTS --format-first-column-comments"
+#OPTS="$OPTS --gnu-style"
+#OPTS="$OPTS --honour-newlines"
+#OPTS="$OPTS --ignore-newlines"
+#OPTS="$OPTS --ignore-profile"
+#OPTS="$OPTS --indent-label"
+OPTS="$OPTS --indent-level4"
+#OPTS="$OPTS --k-and-r-style"
+#OPTS="$OPTS --leave-optional-blank-lines"
+#OPTS="$OPTS --leave-preprocessor-space"
+#OPTS="$OPTS --left-justify-declarations"
+#OPTS="$OPTS --line-comments-indentation0"
+OPTS="$OPTS --line-length100"
+#OPTS="$OPTS --linux-style"
+#OPTS="$OPTS --no-blank-lines-after-commas"
+#OPTS="$OPTS --no-blank-lines-after-declarations"
+#OPTS="$OPTS --no-blank-lines-after-procedures"
+#OPTS="$OPTS --no-blank-lines-before-block-comments"
+#OPTS="$OPTS --no-comment-delimiters-on-blank-lines"
+#OPTS="$OPTS --no-space-after-casts"
+#OPTS="$OPTS --no-parameter-indentation"
+#OPTS="$OPTS --no-space-after-for"
+#OPTS="$OPTS --no-space-after-function-call-names"
+#OPTS="$OPTS --no-space-after-if"
+#OPTS="$OPTS --no-space-after-parentheses"
+#OPTS="$OPTS --no-space-after-while"
+#OPTS="$OPTS --no-tabs"
+#OPTS="$OPTS --no-verbosity"
+#OPTS="$OPTS --original"
+#OPTS="$OPTS --parameter-indentation0"
+#OPTS="$OPTS --paren-indentation"
+#OPTS="$OPTS --preserve-mtime"
+#OPTS="$OPTS --preprocessor-indentation"
+#OPTS="$OPTS --procnames-start-lines"
+#OPTS="$OPTS --remove-preprocessor-space"
+#OPTS="$OPTS --space-after-cast"
+#OPTS="$OPTS --space-after-for"
+#OPTS="$OPTS --space-after-if"
+#OPTS="$OPTS --space-after-parentheses"
+#OPTS="$OPTS --space-after-procedure-calls"
+#OPTS="$OPTS --space-after-while"
+#OPTS="$OPTS --space-special-semicolon"
+#OPTS="$OPTS --standard-output"
+#OPTS="$OPTS --start-left-side-of-comments"
+#OPTS="$OPTS --struct-brace-indentation"
+#OPTS="$OPTS --swallow-optional-blank-lines"
+OPTS="$OPTS --tab-size8"
+#OPTS="$OPTS --use-tabs"
+#OPTS="$OPTS --verbose"
+
+indent $OPTS "$@"
+
+# Lookup table
+#            --blank-lines-after-commas                      -bc
+#            --blank-lines-after-declarations                -bad
+#            --blank-lines-after-procedures                  -bap
+#            --blank-lines-before-block-comments             -bbb
+#            --braces-after-if-line                          -bl
+#            --braces-after-func-def-line                    -blf
+#            --brace-indent                                  -bli
+#            --braces-after-struct-decl-line                 -bls
+#            --braces-on-if-line                             -br
+#            --braces-on-func-def-line                       -brf
+#            --braces-on-struct-decl-line                    -brs
+#            --break-after-boolean-operator                  -nbbo
+#            --break-before-boolean-operator                 -bbo
+#            --break-function-decl-args                      -bfda
+#            --break-function-decl-args-end                  -bfde
+#            --case-indentation                              -clin
+#            --case-brace-indentation                        -cbin
+#            --comment-delimiters-on-blank-lines             -cdb
+#            --comment-indentation                           -cn
+#            --continuation-indentation                      -cin
+#            --continue-at-parentheses                       -lp
+#            --cuddle-do-while                               -cdw
+#            --cuddle-else                                   -ce
+#            --declaration-comment-column                    -cdn
+#            --declaration-indentation                       -din
+#            --dont-break-function-decl-args                 -nbfda
+#            --dont-break-function-decl-args-end             -nbfde
+#            --dont-break-procedure-type                     -npsl
+#            --dont-cuddle-do-while                          -ncdw
+#            --dont-cuddle-else                              -nce
+#            --dont-format-comments                          -nfca
+#            --dont-format-first-column-comments             -nfc1
+#            --dont-line-up-parentheses                      -nlp
+#            --dont-left-justify-declarations                -ndj
+#            --dont-space-special-semicolon                  -nss
+#            --dont-star-comments                            -nsc
+#            --else-endif-column                             -cpn
+#            --format-all-comments                           -fca
+#            --format-first-column-comments                  -fc1
+#            --gnu-style                                     -gnu
+#            --honour-newlines                               -hnl
+#            --ignore-newlines                               -nhnl
+#            --ignore-profile                                -npro
+#            --indent-label                                  -iln
+#            --indent-level                                  -in
+#            --k-and-r-style                                 -kr
+#            --leave-optional-blank-lines                    -nsob
+#            --leave-preprocessor-space                      -lps
+#            --left-justify-declarations                     -dj
+#            --line-comments-indentation                     -dn
+#            --line-length                                   -ln
+#            --linux-style                                   -linux
+#            --no-blank-lines-after-commas                   -nbc
+#            --no-blank-lines-after-declarations             -nbad
+#            --no-blank-lines-after-procedures               -nbap
+#            --no-blank-lines-before-block-comments          -nbbb
+#            --no-comment-delimiters-on-blank-lines          -ncdb
+#            --no-space-after-casts                          -ncs
+#            --no-parameter-indentation                      -nip
+#            --no-space-after-for                    -nsaf
+#            --no-space-after-function-call-names            -npcs
+#            --no-space-after-if                -nsai
+#            --no-space-after-parentheses                    -nprs
+#            --no-space-after-while                  -nsaw
+#            --no-tabs                                       -nut
+#            --no-verbosity                                  -nv
+#            --original                                      -orig
+#            --parameter-indentation                         -ipn
+#            --paren-indentation                             -pin
+#            --preserve-mtime                   -pmt
+#            --preprocessor-indentation                      -ppin
+#            --procnames-start-lines                         -psl
+#            --remove-preprocessor-space                     -nlps
+#            --space-after-cast                              -cs
+#            --space-after-for                  -saf
+#            --space-after-if                   -sai
+#            --space-after-parentheses                       -prs
+#            --space-after-procedure-calls                   -pcs
+#            --space-after-while                -saw
+#            --space-special-semicolon                       -ss
+#            --standard-output                               -st
+#            --start-left-side-of-comments                   -sc
+#            --struct-brace-indentation                      -sbin
+#            --swallow-optional-blank-lines                  -sob
+#            --tab-size                                      -tsn
+#            --use-tabs                                      -ut
+#            --verbose                                       -v
+

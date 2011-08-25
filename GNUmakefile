@@ -169,5 +169,8 @@ changes:
 	@hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v -e Dev: -e Low: -e Hg: -e "Added tag.*for changeset" | sort -uf 
 	@printf "\n"
 
+indent:
+	find . -name "*.c" -exec ./p-indent \{\} \;
+
 rel-tags: tags
 	find . -name TAGS -exec sed -i.sed 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
