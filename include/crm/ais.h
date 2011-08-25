@@ -56,6 +56,7 @@ typedef struct {
 #define MAX_NAME	256
 #define AIS_IPC_NAME  "ais-crm-ipc"
 
+/* *INDENT-OFF* */
 #define CRM_NODE_LOST      "lost"
 #define CRM_NODE_MEMBER    "member"
 #define CRM_NODE_ACTIVE    CRM_NODE_MEMBER
@@ -101,6 +102,7 @@ enum crm_proc_flag {
     crm_proc_mgmtd   = 0x00040000,
     crm_proc_stonith_ng = 0x00100000,
 };
+/* *INDENT-ON* */
 
 typedef struct crm_peer_node_s 
 {

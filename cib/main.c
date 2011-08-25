@@ -127,6 +127,7 @@ main(int argc, char ** argv)
 	int argerr = 0;
 #ifdef HAVE_GETOPT_H
 	int option_index = 0;
+/* *INDENT-OFF* */
 	static struct option long_options[] = {
 		{"per-action-cib", 0, 0, 'a'},
 		{"stand-alone",    0, 0, 's'},
@@ -140,6 +141,7 @@ main(int argc, char ** argv)
 
 		{0, 0, 0, 0}
 	};
+/* *INDENT-ON* */
 #endif
 
 	struct passwd *pwentry = NULL;	

@@ -654,6 +654,7 @@ do_recover(long long action,
 	register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
+/* *INDENT-OFF* */
 pe_cluster_option crmd_opts[] = {
 	/* name, old-name, validate, default, description */
 	{ "dc-version", NULL, "string", NULL, "none", NULL, "Version of Pacemaker on the cluster's DC.", "Includes the hash which identifies the exact Mercurial changeset it was built from.  Used for diagnostic purposes." },
@@ -671,6 +672,7 @@ pe_cluster_option crmd_opts[] = {
 	{ "crmd-transition-delay", NULL, "time", NULL, "0s", &check_timer, "*** Advanced Use Only ***\nEnabling this option will slow down cluster recovery under all conditions", "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\nUseful if your configuration is sensitive to the order in which ping updates arrive." },
 	{ XML_ATTR_EXPECTED_VOTES, NULL, "integer", NULL, "2", &check_number, "The number of nodes expected to be in the cluster", "Used to calculate quorum in openais based clusters." },
 };
+/* *INDENT-ON* */
 
 void
 crmd_metadata(void)

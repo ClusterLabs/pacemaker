@@ -54,6 +54,7 @@ const char *attr_value = NULL;
 const char *attr_default = NULL;
 const char *set_type = NULL;
 
+/* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",    0, 0, '?', "\tThis text"},
@@ -107,6 +108,7 @@ static struct crm_option long_options[] = {
     
     {0, 0, 0, 0}
 };
+/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)

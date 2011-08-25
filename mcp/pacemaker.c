@@ -35,6 +35,7 @@ uint32_t local_nodeid = 0;
 crm_trigger_t  *shutdown_trigger = NULL;
 const char *pid_file = "/var/run/pacemaker.pid";
 
+/* *INDENT-OFF* */
 enum crm_proc_flag {
     crm_proc_none       = 0x00000001,
     crm_proc_ais        = 0x00000002,
@@ -48,6 +49,7 @@ enum crm_proc_flag {
     crm_proc_mgmtd      = 0x00040000,
     crm_proc_stonith_ng = 0x00100000,
 };
+/* *INDENT-ON* */
 
 typedef struct pcmk_child_s {
 	int pid;
@@ -64,6 +66,7 @@ typedef struct pcmk_child_s {
 /* Index into the array below */
 #define pcmk_child_crmd  4
 #define pcmk_child_mgmtd 8
+/* *INDENT-OFF* */
 static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,		  NULL },
     { 0, crm_proc_ais,        0, 0, FALSE, "ais",        NULL,		  NULL },
@@ -76,6 +79,7 @@ static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_mgmtd,      0, 0, TRUE,  "mgmtd",      NULL,		  HB_DAEMON_DIR"/mgmtd" },
     { 0, crm_proc_stonith_ng, 1, 0, TRUE,  "stonith-ng", NULL,		  CRM_DAEMON_DIR"/stonithd" },
 };
+/* *INDENT-ON* */
 
 static gboolean start_child(pcmk_child_t *child);
 

@@ -39,6 +39,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 
+/* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     {"verbose",     0, 0, 'V'},
     {"version",     0, 0, '$'},
@@ -47,6 +48,7 @@ static struct crm_option long_options[] = {
     
     {0, 0, 0, 0}
 };
+/* *INDENT-ON* */
 
 int st_opts = st_opt_sync_call;
 

@@ -45,6 +45,7 @@ const char *standby_scope = NULL;
 
 #include <../lib/common/stack.h>
 
+/* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",       0, 0, '?', "\tThis text"},
@@ -76,6 +77,7 @@ static struct crm_option long_options[] = {
 
     {0, 0, 0, 0}
 };
+/* *INDENT-ON* */
 
 int local_id = 0;
 

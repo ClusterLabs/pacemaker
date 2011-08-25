@@ -76,6 +76,7 @@ int operation_status = 0;
 cib_t *the_cib = NULL;
 gboolean force_flag = FALSE;
 
+/* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     {"help",    0, 0, '?', "\tThis text"},
     {"version", 0, 0, '$', "\tVersion information"  },
@@ -177,6 +178,7 @@ static struct crm_option long_options[] = {
     
     {0, 0, 0, 0}
 };
+/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)

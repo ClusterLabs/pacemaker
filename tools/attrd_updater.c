@@ -38,6 +38,7 @@ const char *attr_section = NULL;
 const char *attr_dampen = NULL;
 char command = 'q';
 
+/* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",    0, 0, '?', "\tThis text"},
@@ -63,6 +64,7 @@ static struct crm_option long_options[] = {
     {"section", 1, 0, 'S', NULL, 1},
     {0, 0, 0, 0}
 };
+/* *INDENT-ON* */
 
 int
 main(int argc, char ** argv)

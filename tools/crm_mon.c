@@ -267,6 +267,7 @@ int cib_connect(gboolean full)
     return rc;
 }
 
+/* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",           0, 0, '?', "\tThis text"},
@@ -321,6 +322,7 @@ static struct crm_option long_options[] = {
     
     {NULL, 0, 0, 0}
 };
+/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)

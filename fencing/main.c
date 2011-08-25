@@ -493,6 +493,7 @@ stonith_cleanup(void)
     crm_free(channel1);
 }
 
+/* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     {"stand-alone", 0, 0, 's'},
     {"verbose",     0, 0, 'V'},
@@ -501,6 +502,7 @@ static struct crm_option long_options[] = {
     
     {0, 0, 0, 0}
 };
+/* *INDENT-ON* */
 
 int
 main(int argc, char ** argv)

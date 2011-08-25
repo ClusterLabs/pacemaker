@@ -22,6 +22,7 @@
 #include <crm/common/xml.h>
 #include <clplumbing/proctrack.h>
 
+/* *INDENT-OFF* */
 enum stonith_state {
     stonith_connected_command,
     stonith_connected_query,
@@ -191,6 +192,7 @@ struct stonith_s
 	
 	stonith_api_operations_t *cmds;
 };
+/* *INDENT-ON* */
 
 /* Core functions */
 extern stonith_t *stonith_api_new(void);

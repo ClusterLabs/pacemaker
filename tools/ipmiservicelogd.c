@@ -293,6 +293,7 @@ ipmi2servicelog (struct sl_data_bmc *bmc_data)
 
     memset (&sl_event, 0, sizeof (sl_event));
 
+/* *INDENT-OFF* */
     sl_event.next             = NULL;                 /* only used if in a linked list */
     sl_event.id               = 0;                    /* unique identifier - filled in by API call */
     sl_event.time_logged      = time (NULL);
@@ -317,6 +318,7 @@ ipmi2servicelog (struct sl_data_bmc *bmc_data)
     sl_event.raw_data_len     = 0;
     sl_event.raw_data         = NULL;
     sl_event.addl_data        = &bmc_data;            /* pointer to an sl_data_* struct */
+/* *INDENT-ON* */
 
     rc = servicelog_event_log (slog, &sl_event, &new_id);
 

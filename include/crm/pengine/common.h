@@ -81,19 +81,21 @@ enum rsc_role_e {
 #define	RSC_ROLE_SLAVE_S   "Slave"
 #define	RSC_ROLE_MASTER_S  "Master"
 
+/* *INDENT-OFF* */
 enum pe_print_options {
 
-	pe_print_log     = 0x0001,
-	pe_print_html    = 0x0002,
-	pe_print_ncurses = 0x0004,
-	pe_print_printf  = 0x0008,
-	pe_print_dev     = 0x0010,
-	pe_print_details = 0x0020,
-	pe_print_max_details = 0x0040,
-	pe_print_rsconly = 0x0080,
-	pe_print_ops     = 0x0100,
-	pe_print_suppres_nl = 0x0200,
+	pe_print_log		= 0x0001,
+	pe_print_html		= 0x0002,
+	pe_print_ncurses	= 0x0004,
+	pe_print_printf		= 0x0008,
+	pe_print_dev		= 0x0010,
+	pe_print_details	= 0x0020,
+	pe_print_max_details	= 0x0040,
+	pe_print_rsconly	= 0x0080,
+	pe_print_ops		= 0x0100,
+	pe_print_suppres_nl	= 0x0200,
 };
+/* *INDENT-ON* */
 
 extern int merge_weights(int w1, int w2);
 

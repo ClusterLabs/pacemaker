@@ -46,6 +46,7 @@ struct config_root_s
   * The / prefix means find starting from the root, whereas the // prefix means
   * find anywhere and risks multiple matches
   */
+/* *INDENT-OFF* */
 struct config_root_s known_paths[] = {
     { NULL,			NULL,                 "//cib" },
     { XML_TAG_CIB,		NULL,                 "//cib" },
@@ -61,6 +62,7 @@ struct config_root_s known_paths[] = {
     { XML_CIB_TAG_ACLS,		"/cib/configuration", "//cib/configuration/acls" },
     { XML_CIB_TAG_SECTION_ALL,  NULL,                 "//cib" },
 };
+/* *INDENT-ON* */
 
 const char *
 cib_error2string(enum cib_errors return_code)

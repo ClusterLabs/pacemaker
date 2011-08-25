@@ -93,6 +93,7 @@ struct crm_identify_msg_s
 	uint64_t		born_on;
 } __attribute__((packed));
 
+/* *INDENT-OFF* */
 static crm_child_t pcmk_children[] = {
     { 0, crm_proc_none,     crm_flag_none,    0, 0, FALSE, "none",     NULL,		NULL,			   NULL, NULL },
     { 0, crm_proc_ais,      crm_flag_none,    0, 0, FALSE, "ais",      NULL,		NULL,			   NULL, NULL },
@@ -105,6 +106,7 @@ static crm_child_t pcmk_children[] = {
     { 0, crm_proc_mgmtd,    crm_flag_none,    7, 0, TRUE,  "mgmtd",    NULL,		HB_DAEMON_DIR"/mgmtd",     NULL, NULL },
     { 0, crm_proc_stonith_ng, crm_flag_none,  1, 0, TRUE,  "stonith-ng", NULL,		CRM_DAEMON_DIR"/stonithd", NULL, NULL },
 };
+/* *INDENT-ON* */
 
 void send_cluster_id(void);
 int send_cluster_msg_raw(const AIS_Message *ais_msg);

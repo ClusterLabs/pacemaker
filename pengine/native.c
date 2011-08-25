@@ -57,6 +57,7 @@ gboolean PromoteRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working
 gboolean RoleError (resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set);
 gboolean NullOp    (resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set);
 
+/* *INDENT-OFF* */
 enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 /* Current State */	
 /*    Next State:  Unknown 	    Stopped	      Started	        Slave	          Master */
@@ -76,6 +77,7 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
     /* Slave */	{ RoleError,	StopRsc,	RoleError,	NullOp,		PromoteRsc, },
     /* Master */	{ RoleError,	RoleError,	RoleError,	DemoteRsc,	NullOp,     },
 };
+/* *INDENT-ON* */
 
 struct capacity_data
 {

@@ -111,6 +111,7 @@ enum crm_ais_msg_types text2msg_type(const char *text);
 extern void crm_set_status_callback(
     void (*dispatch)(enum crm_status_type, crm_node_t*, const void*));
 
+/* *INDENT-OFF* */
 enum cluster_type_e 
 {
     pcmk_cluster_unknown     = 0x0001,
@@ -120,6 +121,7 @@ enum cluster_type_e
     pcmk_cluster_corosync    = 0x0020,
     pcmk_cluster_cman        = 0x0040,
 };
+/* *INDENT-ON* */
 
 extern enum cluster_type_e get_cluster_type(void);
 extern const char *name_for_cluster_type(enum cluster_type_e type);

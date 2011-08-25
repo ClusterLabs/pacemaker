@@ -47,6 +47,7 @@ struct cib_func_entry
 	cib_op_t    fn;
 };
 
+/* *INDENT-OFF* */
 static struct cib_func_entry cib_pipe_ops[] = {
     {CIB_OP_QUERY,      TRUE,  cib_process_query},
     {CIB_OP_MODIFY,     FALSE, cib_process_modify},
@@ -57,6 +58,7 @@ static struct cib_func_entry cib_pipe_ops[] = {
     {CIB_OP_DELETE,     FALSE, cib_process_delete},
     {CIB_OP_ERASE,      FALSE, cib_process_erase},
 };
+/* *INDENT-ON* */
 
 #define OPTARGS	"V?o:QDUCEX:t:MBfRx:P5S$"
 

@@ -1778,6 +1778,7 @@ stonith_t *stonith_api_new(void)
     
     crm_malloc0(new_stonith->cmds, sizeof(stonith_api_operations_t));
 
+/* *INDENT-OFF* */
     new_stonith->cmds->free       = stonith_api_free;
     new_stonith->cmds->connect    = stonith_api_signon;
     new_stonith->cmds->disconnect = stonith_api_signoff;
@@ -1798,6 +1799,7 @@ stonith_t *stonith_api_new(void)
     new_stonith->cmds->register_callback     = stonith_api_add_callback;	
     new_stonith->cmds->remove_notification   = stonith_api_del_notification;
     new_stonith->cmds->register_notification = stonith_api_add_notification;
+/* *INDENT-ON* */
 
     return new_stonith;
 }

@@ -98,6 +98,7 @@ check_placement_strategy(const char *value)
 	return FALSE;
 }
 
+/* *INDENT-OFF* */
 pe_cluster_option pe_opts[] = {
 	/* name, old-name, validate, default, description */
 	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum,
@@ -172,6 +173,7 @@ pe_cluster_option pe_opts[] = {
 	{ "placement-strategy", NULL, "enum", "default, utilization, minimal, balanced", "default", &check_placement_strategy,
 	  "The strategy to determine resource placement", NULL},
 };
+/* *INDENT-ON* */
 
 void
 pe_metadata(void)

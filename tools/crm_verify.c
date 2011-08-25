@@ -44,6 +44,7 @@ extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 extern xmlNode * do_calculations(
     pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 
+/* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",           0, 0, '?', "\tThis text"},
@@ -68,6 +69,7 @@ static struct crm_option long_options[] = {
     {F_CRM_DATA,    1, 0, 'X', NULL, 1}, /* legacy */
     {0, 0, 0, 0}
 };
+/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)

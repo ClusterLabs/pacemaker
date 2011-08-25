@@ -47,6 +47,7 @@ enum cib_conn_type {
 	cib_no_connection
 };
 
+/* *INDENT-OFF* */
 enum cib_call_options {
 	cib_none            = 0x00000000,
 	cib_verbose         = 0x00000001,
@@ -123,6 +124,7 @@ enum cib_errors {
 	cib_transform_failed    = -53,
 	cib_permission_denied	= -54,
 };
+/* *INDENT-ON* */
 
 enum cib_update_op {
 	CIB_UPDATE_OP_NONE = 0,

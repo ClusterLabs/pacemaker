@@ -1180,6 +1180,7 @@ static gboolean stand_alone_ping(gpointer data)
     return TRUE;
 }
 
+/* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",            0, 0, '?', "This text"},
@@ -1205,6 +1206,7 @@ static struct crm_option long_options[] = {
     
     {0, 0, 0, 0}
 };
+/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
