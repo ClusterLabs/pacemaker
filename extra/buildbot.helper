@@ -1,13 +1,20 @@
 #!/bin/bash
 
+set -x
+self=`basename $0`
+
 if [ x$1 = xinstall ]; then
     mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./mock/*.rpm
 elif [ x$1 = xdownloads ]; then
     mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./downloads/*.rpm
+    mock --configdir=$PWD --root=mock --resultdir=./mock -v --copyin $0 /
+    mock --configdir=$PWD --root=mock --resultdir=./mock -v --shell -- bash /$self gcov
 
-    # Now get the SRPM installed for gcov runs
-    mock --configdir=$PWD --root=mock --resultdir=./mock -v --copyin ./downloads/*src.rpm /root
-    mock --configdir=$PWD --root=mock --resultdir=./mock -v --shell -- rpm -Uvh /root/*.src.rpm
+elif [ x$1 = xgcov ]; then
+    # Magic to make the source code available to gcov
+    include=`rpm -ql pacemaker-debuginfo | grep include | head -n 1`
+    cd $include/..
+    find . -type f -exec ln -s $PWD/\{\} /var/lib/pacemaker/gcov/\{\} \;
     
 elif [ x$1 = xlint ]; then
     rpmlint -i -f rpmlintrc ./mock/*.rpm
