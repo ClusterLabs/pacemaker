@@ -119,10 +119,10 @@ validate_cib_digest(xmlNode *local_cib, const char *sigfile)
 	CRM_ASSERT(length >= 0);
 	CRM_ASSERT(start == ftell(expected_strm));
 
-	if(length) {
+	if(length > 0) {
 	    crm_debug_3("Reading %d bytes from file", length);
 	    crm_malloc0(expected, (length+1));
-	    read_len = fread(expected, 1, length, expected_strm);
+	    read_len = fread(expected, 1, length, expected_strm); /* Coverity: False positive */
 	    CRM_ASSERT(read_len == length);
 	}
 	fclose(expected_strm);

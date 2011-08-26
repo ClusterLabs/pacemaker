@@ -1006,9 +1006,12 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 		crm_err("Decompression of %s (%d bytes) into %d failed: %d",
 			name, (int)orig_len, size, rc);
 		
-	    } else {
+	    } else if(used >= size) {
 		CRM_ASSERT(used < size);
-		CRM_CHECK(uncompressed[used] == 0, uncompressed[used] = 0); /* Coverity: False positive */
+
+	    } else {
+		CRM_LOG_ASSERT(uncompressed[used] == 0);
+		uncompressed[used] = 0;
 		xml = string2xml(uncompressed);
 	    }
 

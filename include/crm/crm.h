@@ -68,12 +68,6 @@ extern int log_data_element(
 	}								\
     } while(0)
 
-#define CRM_LOG_ASSERT(expr) do {					\
-	if(__unlikely((expr) == FALSE)) {				\
-	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, FALSE, TRUE); \
-	}								\
-    } while(0)
-
 extern const char *crm_system_name;
 
 /* Clean these up at some point, some probably should be runtime options */
@@ -249,6 +243,17 @@ extern struct _pcmk_ddebug __stop___verbose[];
     void name(void) { CRM_ASSERT(__start___verbose != __stop___verbose); } \
     void __attribute__ ((constructor)) name(void);
 
+#define CRM_LOG_ASSERT(expr) do {					\
+	static struct _pcmk_ddebug descriptor				\
+	    __attribute__((section("__verbose"), aligned(8))) =		\
+	    { __func__, __FILE__, #expr, __LINE__, LOG_TRACE};		\
+									\
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
+		      descriptor.bump != LOG_TRACE, TRUE);		\
+	}								\
+    } while(0)
+
 #define CRM_CHECK(expr, failure_action) do {				\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
@@ -317,6 +322,12 @@ extern struct _pcmk_ddebug __stop___verbose[];
 #else
 
 #  define CRM_TRACE_INIT_DATA(name)
+
+#define CRM_LOG_ASSERT(expr) do {					\
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, FALSE, TRUE); \
+	}								\
+    } while(0)
 
 #define CRM_CHECK(expr, failure_action) do {				\
 	if(__unlikely((expr) == FALSE)) {				\

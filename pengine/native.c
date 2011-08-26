@@ -2695,7 +2695,7 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
     start = action_list->data;
     g_list_free(action_list);
 
-    if(is_not_set(rsc->flags, pe_rsc_can_migrate)
+    if(is_not_set(rsc->flags, pe_rsc_can_migrate) /* Coverity: False positive */
        && is_set(start->flags, pe_action_allow_reload_conversion) == FALSE) {
 	do_crm_log_unlikely(level+1, "%s: no need to continue", rsc->id);
 	return;
@@ -2742,7 +2742,7 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	}
     }
 
-    if(is_set(rsc->flags, pe_rsc_can_migrate)) {
+    if(is_set(rsc->flags, pe_rsc_can_migrate) && start->node && stop->node) {
 	action_t *to = NULL;
 	action_t *from = NULL;
 	action_t *done = get_pseudo_op(STONITH_DONE, data_set);
@@ -2880,7 +2880,8 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	    order_actions(other, to, other_w->type);
 	}
 
-    } else if(start && stop
+    } else if(start->node
+	      && stop->node
 	      && is_set(start->flags, pe_action_allow_reload_conversion)
 	      && stop->node->details == start->node->details) {
 	action_t *rewrite = NULL;
