@@ -242,7 +242,7 @@ main(int argc, char **argv)
 	    crm_info("Error during setup of %s=%s update", attr_name, command=='D'?"<none>":attr_value);
 	    
 	} else if( (command=='v' || command=='D')
-		   && (safe_str_eq(type, XML_CIB_TAG_STATUS) || safe_str_eq(type, XML_CIB_TAG_TICKETS))
+		   && safe_str_eq(type, XML_CIB_TAG_STATUS)
 		   && attrd_lazy_update(command, dest_uname, attr_name, attr_value, type, set_name, NULL)) {
 	    crm_info("Update %s=%s sent via attrd", attr_name, command=='D'?"<none>":attr_value);
 	    
