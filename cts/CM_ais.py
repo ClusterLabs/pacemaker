@@ -175,7 +175,8 @@ class crm_ais(crm_lha):
                     ], badnews_ignore = self.common_ignore)
 
         stonith_ignore = [
-            "update_failcount: Updating failcount for child_DoFencing",
+            "LogActions: Recover Fencing",
+            "update_failcount: Updating failcount for Fencing",
             "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
             ]
         

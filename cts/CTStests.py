@@ -704,6 +704,12 @@ class PartialStart(CTSTest):
 
         return self.success()
 
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+
+        # We might do some fencing in the 2-node case if we make it up far enough
+        return [ """Executing reboot fencing operation""" ]
+
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(PartialStart)
 
