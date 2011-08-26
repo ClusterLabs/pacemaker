@@ -374,6 +374,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 	    graph->abort_priority = INFINITY;
 	    printf("\tPretending action %d failed with rc=%d\n", action->id, op->rc);
 	    update_failcounts(cib_node, resource, op->interval, op->rc);
+	    crm_free(key);
 	    break;
 	}
 	crm_free(key);
@@ -807,6 +808,8 @@ static void modify_configuration(
 	    rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
 	    CRM_ASSERT(rc == cib_ok);
 	}
+	crm_free(node);
+	crm_free(key);
     }
 }
     

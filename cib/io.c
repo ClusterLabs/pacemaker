@@ -285,6 +285,7 @@ xmlNode*
 readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 {
 	int seq = 0;
+	char *backup_file = NULL;
 	char *filename = NULL, *sigfile = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
@@ -312,7 +313,6 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	
 	while(root == NULL) {
 	    struct stat buf;
-	    char *backup_file = NULL;
 	    crm_free(sigfile);
 
 	    if(seq == 0) {
@@ -330,6 +330,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	    root = retrieveCib(backup_file, sigfile, FALSE);
 	    seq--;
 	}
+	crm_free(backup_file);
 
 	if(root == NULL) {
 	    root = createEmptyCib();
