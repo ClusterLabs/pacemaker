@@ -347,7 +347,7 @@ native_print(
 		
 #if CURSES_ENABLED
 		if(options & pe_print_ncurses) {
-			move(-1, 0);
+		    move(-1, 0); /* Coverity: False positive */
 		}
 #endif
 	}

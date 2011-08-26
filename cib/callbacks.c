@@ -1217,6 +1217,7 @@ cib_client_status_callback(const char * node, const char * client,
 	    /* Make sure it gets created */
 	    const char *uuid = get_uuid(node);
 	    member = crm_update_peer(0, 0, 0, -1, 0, uuid, node, NULL, NULL);
+	    CRM_ASSERT(member);
 	}
 	
 	crm_update_peer_proc(node, crm_proc_cib, status);

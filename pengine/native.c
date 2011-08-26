@@ -1178,7 +1178,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	    }
 
 	    custom_action_order(
-		NULL, load_stopped_task, load_stopped,
+		NULL, crm_strdup(load_stopped_task), load_stopped,
 		rsc, start_key(rsc), NULL,
 		pe_order_optional, data_set);
 
@@ -1186,6 +1186,8 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		NULL, crm_strdup(load_stopped_task), load_stopped,
 		rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL,
 		pe_order_optional, data_set);
+
+	    crm_free(load_stopped_task);
 	}
     }
 }
@@ -2685,7 +2687,7 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
     action_list = find_actions(rsc->actions, key, NULL);
     crm_free(key);
 	
-    if(action_list == NULL) {
+    if(action_list == NULL || action_list->data == NULL) {
 	do_crm_log_unlikely(level, "%s: no start action", rsc->id);
 	return;
     }
@@ -2703,7 +2705,7 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
     action_list = find_actions(rsc->actions, key, NULL);
     crm_free(key);
 	
-    if(action_list == NULL) {
+    if(action_list == NULL || action_list->data == NULL) {
 	do_crm_log_unlikely(level, "%s: no stop action", rsc->id);
 	return;
     }
@@ -2746,8 +2748,8 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	action_t *done = get_pseudo_op(STONITH_DONE, data_set);
 	    
 	crm_info("Migrating %s from %s to %s", rsc->id,
-		 stop->node->details->uname,
-		 start->node->details->uname);
+		 stop->node?stop->node->details->uname:"unknown",
+		 start->node?start->node->details->uname:"unknown");
 
 	/* Preserve the stop to ensure the end state is sane on that node,
 	 * Make the start a pseudo op

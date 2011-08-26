@@ -384,7 +384,7 @@ master_score(resource_t *rsc, node_t *node, int not_set_value)
 {
     char *attr_name;
     char *name = rsc->id;
-    const char *attr_value;
+    const char *attr_value = NULL;
     int score = not_set_value, len = 0;
 
     if(rsc->children) {
@@ -415,9 +415,12 @@ master_score(resource_t *rsc, node_t *node, int not_set_value)
 	}
 	    
 	match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-	if(match == NULL || match->weight < 0) {
-	    crm_debug_2("%s on %s has score: %d - ignoring",
-			rsc->id, match->details->uname, match->weight);
+	if(match == NULL) {
+	    return score;
+
+	} else if(match->weight < 0) {
+	    crm_trace("%s on %s has score: %d - ignoring",
+		      rsc->id, match->details->uname, match->weight);
 	    return score;
 	}
     }
@@ -432,11 +435,13 @@ master_score(resource_t *rsc, node_t *node, int not_set_value)
     len = 8 + strlen(name);
     crm_malloc0(attr_name, len);
     sprintf(attr_name, "master-%s", name);
-	
-    attr_value = g_hash_table_lookup(node->details->attrs, attr_name);
-    crm_trace("%s: %s[%s] = %s",
-	      rsc->id, attr_name, node->details->uname, crm_str(attr_value));
-	
+
+    if(node) {
+	attr_value = g_hash_table_lookup(node->details->attrs, attr_name);
+	crm_trace("%s: %s[%s] = %s",
+		  rsc->id, attr_name, node->details->uname, crm_str(attr_value));
+    }
+    
     if(attr_value != NULL) {
 	score = char2score(attr_value);
     }

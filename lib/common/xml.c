@@ -1008,7 +1008,7 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 		
 	    } else {
 		CRM_ASSERT(used < size);
-		CRM_CHECK(uncompressed[used] == 0, uncompressed[used] = 0);
+		CRM_CHECK(uncompressed[used] == 0, uncompressed[used] = 0); /* Coverity: False positive */
 		xml = string2xml(uncompressed);
 	    }
 

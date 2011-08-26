@@ -322,6 +322,7 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 	crm_debug_3("Updating CIB with \"%s\" (%s): %s %s on %s",
 		  status<0?"new action":XML_ATTR_TIMEOUT,
 		  crm_element_name(action->xml), crm_str(task), rsc_id, target);
+	crm_log_xml_trace(xml_op, "Op");
 	
 	rc = fsa_cib_conn->cmds->update(
 		fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);

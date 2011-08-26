@@ -651,7 +651,6 @@ static void
 attrd_cib_callback(xmlNode *msg, int call_id, int rc,
 		   xmlNode *output, void *user_data)
 {
-	int err_level = LOG_ERR;
 	attr_hash_entry_t *hash_entry = NULL;
 	struct attrd_callback_s *data = user_data;
 	if(data->value == NULL && rc == cib_NOTEXISTS) {
@@ -676,10 +675,12 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc,
 	    case cib_NOTEXISTS: /* When an attr changes while the CIB is syncing a
 				 *   newer config from a node that just came up
 				 */
-		err_level = LOG_WARNING;
+		crm_warn("Update %d for %s=%s failed: %s",
+			 call_id, data->attr, data->value, cib_error2string(rc));
+		break;
 	    default:
-		do_crm_log(err_level, "Update %d for %s=%s failed: %s",
-			   call_id, data->attr, data->value, cib_error2string(rc));
+		crm_err("Update %d for %s=%s failed: %s",
+			call_id, data->attr, data->value, cib_error2string(rc));
 	}
 
 	crm_free(data->value);

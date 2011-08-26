@@ -1613,20 +1613,21 @@ get_last_sequence(const char *directory, const char *series)
     CRM_ASSERT(length >= 0);
     CRM_ASSERT(start == ftell(file_strm));
 
-    crm_debug_3("Reading %d bytes from file", length);
-    crm_malloc0(buffer, (length+1));
-    read_len = fread(buffer, 1, length, file_strm);
-
-    if(read_len != length) {
-	crm_err("Calculated and read bytes differ: %d vs. %d",
-		length, read_len);
-	crm_free(buffer);
-	buffer = NULL;
-		
-    } else  if(length <= 0) {
+    if(length <= 0) {
 	crm_info("%s was not valid", series_file);
 	crm_free(buffer);
 	buffer = NULL;
+
+    } else {
+	crm_debug_3("Reading %d bytes from file", length);
+	crm_malloc0(buffer, (length+1));
+	read_len = fread(buffer, 1, length, file_strm);
+	if(read_len != length) {
+	    crm_err("Calculated and read bytes differ: %d vs. %d",
+		    length, read_len);
+	    crm_free(buffer);
+	    buffer = NULL;		
+	}
     }
 	
     crm_free(series_file);

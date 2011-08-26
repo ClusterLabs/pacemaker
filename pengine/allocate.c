@@ -1386,7 +1386,8 @@ static void rsc_order_then(
 	return;
     }
 
-    if(lh_action->rsc == rsc
+    if(lh_action
+       && lh_action->rsc == rsc
        && is_set(lh_action->flags, pe_action_dangle)) {
 	crm_trace("Detected dangling operation %s -> %s",
 		  lh_action->uuid, order->rh_action_task);
@@ -1575,15 +1576,20 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
     const char *rsc_id = NULL;
     const char *last_rsc_id = NULL;
 
+    if(rsc_list) {
+        *rsc_list = NULL;
+    }
+	
     if(list == NULL) {
-	*rsc_list = crm_strdup(" ");
+	if(rsc_list) {
+	    *rsc_list = crm_strdup(" ");
+	}
 	if(node_list) {
 	    *node_list = crm_strdup(" ");
 	}
 	return;
     }
 	
-    *rsc_list = NULL;
     if(node_list) {
 	*node_list = NULL;
     }

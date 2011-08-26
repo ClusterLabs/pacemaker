@@ -369,6 +369,7 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
 	    /* Make sure it is created so crm_update_peer_proc() succeeds */
 	    const char *uuid = get_uuid(node);
 	    member = crm_update_peer(0, 0, 0, -1, 0, uuid, node, NULL, NULL);
+	    CRM_ASSERT(member);
 	}
 
 	if(safe_str_eq(status, PINGSTATUS)) {
@@ -442,6 +443,7 @@ crmd_client_status_callback(const char * node, const char * client,
 	    /* Make sure it is created so crm_update_peer_proc() succeeds */
 	    const char *uuid = get_uuid(node);
 	    member = crm_update_peer(0, 0, 0, -1, 0, uuid, node, NULL, NULL);
+	    CRM_ASSERT(member);
 	}
 
 	if(AM_I_DC) {

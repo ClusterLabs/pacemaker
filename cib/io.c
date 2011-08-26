@@ -119,12 +119,14 @@ validate_cib_digest(xmlNode *local_cib, const char *sigfile)
 	CRM_ASSERT(length >= 0);
 	CRM_ASSERT(start == ftell(expected_strm));
 
-	crm_debug_3("Reading %d bytes from file", length);
-	crm_malloc0(expected, (length+1));
-	read_len = fread(expected, 1, length, expected_strm);
-	CRM_ASSERT(read_len == length);
+	if(length) {
+	    crm_debug_3("Reading %d bytes from file", length);
+	    crm_malloc0(expected, (length+1));
+	    read_len = fread(expected, 1, length, expected_strm);
+	    CRM_ASSERT(read_len == length);
+	}
 	fclose(expected_strm);
-
+	
   bail:
 	if(expected == NULL) {
 		crm_err("On-disk digest is empty");

@@ -172,7 +172,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	return 1;
     }
 	
-    if(node1 == NULL) {
+    if(node1 == NULL || node2 == NULL) {
 	do_crm_log_unlikely(level, "%s == %s: not allowed", resource1->id, resource2->id);
 	return 0;
     }
@@ -1245,7 +1245,7 @@ enum pe_graph_flags clone_update_actions(
     if(interleave) {
 	changed = clone_update_actions_interleave(first, then, node, flags, filter, type);
 	
-    } else {
+    } else if(then->rsc) {
 	GListPtr gIter = then->rsc->children;
 	changed |= native_update_actions(first, then, node, flags, filter, type);
 	

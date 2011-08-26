@@ -157,8 +157,12 @@ const char *
 feature_set(xmlNode *xml_obj)
 {
     int set = internal_update_feature_set(xml_obj, 0);
-    CRM_ASSERT(set >= 0);
-    CRM_ASSERT(set < DIMOF(feature_sets));
-    return feature_sets[set];
+
+    if(set >= 0 && set < DIMOF(feature_sets)) {
+	return feature_sets[set];
+    }
+    crm_err("Unknown feature set: %d", set);
+    CRM_ASSERT(set >= 0 && set < DIMOF(feature_sets));
+    return "0.0";
 }
 

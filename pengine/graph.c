@@ -188,7 +188,7 @@ static enum pe_graph_flags graph_update_action(action_t *first, action_t *then, 
 	}
     }
 
-    if(type & pe_order_restart) {
+    if((type & pe_order_restart) && then->rsc) {
 	enum pe_action_flags restart = (pe_action_optional|pe_action_runnable);
 	crm_trace("restart: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
