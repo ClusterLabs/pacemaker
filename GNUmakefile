@@ -55,6 +55,7 @@ initialize:
 export: 
 	rm -f $(PACKAGE)-scratch.tar.* $(PACKAGE)-tip.tar.*
 	if [ ! -f $(TARFILE) ]; then						\
+	    rm -f $(PACKAGE).tar.*;						\
 	    if [ $(TAG) = scratch ]; then 					\
 		hg commit -m "DO-NOT-PUSH";					\
 		hg archive --prefix $(distdir) -t tbz2 -r tip $(TARFILE);	\
@@ -141,22 +142,17 @@ coverity:
 	cov-format-errors --dir $(COVERITY_DIR)
 	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ root@www.clusterlabs.org:/var/www/html/coverity/$(PACKAGE)/$(TAG)
 	make clean
+#	cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
 #	rm -rf $(COVERITY_DIR)
-
-#cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
-
-deb:	
-	echo To make create custom builds, edit the configure flags in debian/rules first
-	dpkg-buildpackage -rfakeroot -us -uc 
 
 global: clean-generic
 	gtags -q
 
-global-html: global
+www:	global
 	htags -sanhIT
-
-global-www: global-html
 	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/www/html/global/$(PACKAGE)/$(TAG)
+	make coverity
+	make -C docs www
 
 changes:
 	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(VERSION)-1"
