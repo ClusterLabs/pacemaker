@@ -163,6 +163,12 @@ cib_tls_close(cib_t *cib)
     close(private->callback.socket);
 #ifdef HAVE_GNUTLS_GNUTLS_H
     if(private->command.encrypted) {
+	gnutls_deinit(*(private->command.session));
+	gnutls_free(private->command.session);
+
+	gnutls_deinit(*(private->callback.session));
+	gnutls_free(private->callback.session);
+
 	gnutls_anon_free_client_credentials (anon_cred_c);
 	gnutls_global_deinit();
     }

@@ -169,7 +169,7 @@ cib_recv_tls(gnutls_session *session)
 		crm_debug_2("Retry");
 
 	    } else if(rc < 0) {
-		crm_perror(LOG_ERR,"Error receiving message: %d", (int)rc);
+		crm_err("Error receiving message: %s (%d)", gnutls_strerror(rc), rc);
 		goto bail;
 		
 	    } else if(rc == chunk_size) {
