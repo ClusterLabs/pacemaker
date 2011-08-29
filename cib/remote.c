@@ -62,7 +62,11 @@
 #endif
 
 extern int remote_tls_fd;
+extern gboolean cib_shutdown_flag;
+extern void initiate_exit(void);
+
 int init_remote_listener(int port, gboolean encrypted);
+void cib_remote_connection_destroy(gpointer user_data);
 
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -332,7 +336,7 @@ cib_remote_listen(int ssock, gpointer data)
 
 	new_client->source = (void*)G_main_add_fd(
 		G_PRIORITY_DEFAULT, csock, FALSE, cib_remote_msg, new_client,
-		default_ipc_connection_destroy);
+		cib_remote_connection_destroy);
 
 	g_hash_table_insert(client_list, new_client->id, new_client);
 
@@ -351,13 +355,56 @@ cib_remote_listen(int ssock, gpointer data)
 	return TRUE;
 }
 
+void
+cib_remote_connection_destroy(gpointer user_data)
+{
+    cib_client_t *client = user_data;
+
+    if(client == NULL) {
+	return;
+    }
+
+    crm_trace("Cleaning up after client disconnect: %s/%s/%s",
+	      crm_str(client->name), client->channel_name, client->id);
+	    
+    if(client->id != NULL) {
+	if(!g_hash_table_remove(client_list, client->id)) {
+	    crm_err("Client %s not found in the hashtable", client->name);
+	}
+    }
+
+    if(client->source != NULL) {
+	/* Should this even be necessary? */
+	crm_trace("Deleting %s (%p) from mainloop", client->name, client->source);
+	G_main_del_fd((GFDSource *)client->source); 
+	client->source = NULL;
+    }
+    
+    crm_trace("Destroying %s (%p)", client->name, user_data);
+    num_clients--;
+    crm_trace("Num unfree'd clients: %d", num_clients);
+    crm_free(client->name);
+    crm_free(client->callback_id);
+    crm_free(client->id);
+    crm_free(client->user);
+    crm_free(client);
+    crm_trace("Freed the cib client");
+
+    if(cib_shutdown_flag && g_hash_table_size(client_list) == 0) {
+	crm_info("All clients disconnected...");
+	initiate_exit();
+    }
+    
+    return;
+}
+
 gboolean
 cib_remote_msg(int csock, gpointer data)
 {
 	const char *value = NULL;
 	xmlNode *command = NULL;
 	cib_client_t *client = data;
-	crm_debug_2("%s callback", client->encrypted?"secure":"clear-text");
+	crm_trace("%s callback", client->encrypted?"secure":"clear-text");
 
 	command = cib_recv_remote_msg(client->channel, client->encrypted);
 	if(command == NULL) {
