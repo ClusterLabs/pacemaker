@@ -362,8 +362,8 @@ class RemoteExec:
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
         self.log("Using QARSH for connections to cluster nodes")
         
-        self.Command = "qarsh -l root"
-        self.CpCommand = "qacp"
+        self.Command = "qarsh -t 300 -l root"
+        self.CpCommand = "qacp -q"
         
     def _fixcmd(self, cmd):
         return re.sub("\'", "'\\''", cmd)
@@ -525,7 +525,7 @@ fcntl.fcntl(logfile.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
 count = 0
 while True: 
-    if logfile.tell() > newsize:   break
+    if logfile.tell() >= newsize:   break
     elif limit and count >= limit: break
 
     line = logfile.readline()
