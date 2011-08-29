@@ -325,6 +325,7 @@ do_test bug-lf-2358 "Master-Master anti-colocation"
 do_test master-promotion-constraint "Mandatory master colocation constraints"
 do_test unmanaged-master "Ensure role is preserved for unmanaged resources"
 do_test master-unmanaged-monitor "Start the correct monitor operation for unmanaged masters"
+do_test master-demote-2 "Demote does not clear past failure"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"
