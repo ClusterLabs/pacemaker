@@ -401,18 +401,22 @@ tengine_stonith_callback(
 	}
 
 	/* this will mark the event complete if a match is found */
-	action = get_action(stonith_id, TRUE);	
+	action = get_action(stonith_id, FALSE);	
 	if(action == NULL) {
 		crm_err("Stonith action not matched");
 		goto bail;
 	}
 	
+	stop_te_timer(action->timer);	
 	if(rc == stonith_ok) {
 	    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	    const char *uuid   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 	    crm_info("Stonith of %s passed", target);
-	    send_stonith_update(action, target, uuid);
-
+	    if(action->confirmed == FALSE) {
+		action->confirmed = TRUE;
+		send_stonith_update(action, target, uuid);
+	    }
+	    
 	} else {
 	    const char *target = crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET);
 	    const char *allow_fail = crm_meta_value(action->params, XML_ATTR_TE_ALLOWFAIL);

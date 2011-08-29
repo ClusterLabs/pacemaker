@@ -351,8 +351,18 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
 
     /* Can this be removed now that do_cl_join_finalize_respond() does the same thing? */
     if(AM_I_DC && reset_status_entry && safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
+	crm_action_t *down = match_down_event(0, node->uname, NULL);
+
 	erase_status_tag(node->uname, XML_CIB_TAG_LRM, cib_scope_local);
 	erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+	if(down) {
+	    const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);
+	    if(safe_str_eq(task, CRM_OP_FENCE)) {
+		crm_info("Node return implies stonith of %s (action %d) completed", node->uname, down->id);
+		down->confirmed = TRUE;
+	    }
+	}
+
 	/* TODO: potentially we also want to set XML_CIB_ATTR_JOINSTATE and XML_CIB_ATTR_EXPSTATE here */
     }
 }
