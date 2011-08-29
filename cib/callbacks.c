@@ -104,7 +104,8 @@ cib_ipc_connection_destroy(gpointer user_data)
 	}
 
 	if(cib_client->source != NULL) {
-		crm_debug_4("Deleting %s (%p) from mainloop",
+		/* Should this even be necessary? */
+		crm_trace("Deleting %s (%p) from mainloop",
 			    cib_client->name, cib_client->source);
 		G_main_del_IPC_Channel(cib_client->source); 
 		cib_client->source = NULL;
@@ -1121,6 +1122,7 @@ gint cib_GCompareFunc(gconstpointer a, gconstpointer b)
 gboolean
 cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 {
+    /* TODO: Move all this into cib_ipc_connection_destroy() and re-use with cib_remote_connection_destroy() */
 	if (channel == NULL) {
 		CRM_LOG_ASSERT(cib_client == NULL);
 		
