@@ -168,6 +168,10 @@ cib_recv_tls(gnutls_session *session)
 	    if(rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN) {
 		crm_debug_2("Retry");
 
+	    } else if(rc == GNUTLS_E_UNEXPECTED_PACKET_LENGTH) {
+		crm_trace("Session disconnected");
+		goto bail;
+		
 	    } else if(rc < 0) {
 		crm_err("Error receiving message: %s (%d)", gnutls_strerror(rc), rc);
 		goto bail;
@@ -317,7 +321,7 @@ cib_recv_remote_msg(void *session, gboolean encrypted)
 	reply = cib_recv_plaintext(GPOINTER_TO_INT(session));
     }
     if(reply == NULL || strlen(reply) == 0) {
-	crm_err("Empty reply");
+	crm_trace("Empty reply");
 
     } else {
 	xml = string2xml(reply);
