@@ -1076,6 +1076,7 @@ class ResourceRecover(CTSTest):
             return self.skipped()
 
         self.rid = self.CM.Env.RandomGen.choice(resourcelist)
+        self.rid_alt = self.rid
 
         rsc = None
         (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
@@ -1137,6 +1138,7 @@ class ResourceRecover(CTSTest):
         '''Return list of errors which should be ignored'''
         return [ """Updating failcount for %s""" % self.rid,
                  """LogActions: Recover %s""" % self.rid,
+                 """LogActions: Recover %s""" % self.rid_alt,
                  """Unknown operation: fail""",
                  """ERROR: sending stonithRA op to stonithd failed.""",
                  """ERROR: process_lrm_event: LRM operation %s_%s_%d""" % (self.rid, self.action, self.interval),
