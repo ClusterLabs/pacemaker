@@ -28,6 +28,7 @@
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
+#include <tengine.h>
 
 GHashTable *voted = NULL;
 uint highest_born_on = -1;
@@ -484,6 +485,7 @@ do_dc_takeover(long long action,
 {
 	int rc = cib_ok;
 	xmlNode *cib = NULL;
+	GListPtr gIter = NULL;
 	static const char *cluster_type = NULL;
 	
 	if(cluster_type == NULL) {
@@ -496,6 +498,15 @@ do_dc_takeover(long long action,
 	crm_info("Taking over DC status for this partition");
 	set_bit_inplace(fsa_input_register, R_THE_DC);
 
+	for(gIter = stonith_cleanup_list; gIter != NULL; gIter = gIter->next) {
+	    char *target = gIter->data;
+	    const char *uuid = get_uuid(target);
+	    send_stonith_update(NULL, target, uuid);
+	    crm_free(target);
+	}
+	g_list_free(stonith_cleanup_list);
+	stonith_cleanup_list = NULL;
+	
 #if SUPPORT_COROSYNC
 	if(is_classic_ais_cluster()) {
 	    send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);

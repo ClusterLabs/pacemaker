@@ -22,6 +22,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/stonith-ng.h>
 extern stonith_t *stonith_api;
+extern GListPtr stonith_cleanup_list;
 extern void send_stonith_update(crm_action_t *stonith_action, const char *target, const char *uuid);
 
 /* tengine */

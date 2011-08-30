@@ -30,6 +30,7 @@
 
 GCHSource *stonith_src = NULL;
 crm_trigger_t *stonith_reconnect = NULL;
+GListPtr stonith_cleanup_list = NULL;
 
 static gboolean
 fail_incompletable_stonith(crm_graph_t *graph) 
@@ -180,16 +181,17 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
     
     if(rc == stonith_ok && safe_str_eq(target, origin)) {
 	if(fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, target)) {
-	    const char *uuid = get_uuid(target);
-	    crm_notice("Target was our leader %s/%s (recorded leader: %s)",
-		       target, uuid, fsa_our_dc?fsa_our_dc:"<unset>");
-	    /* There's no need for everyone to update the cib.
-	     * Have the node that performed the op do the update too.
-	     * In the unlikely event that both die, the DC would be
-	     *   shot a second time which is not ideal but safe.
+	    crm_notice("Target was our leader %s (recorded: %s)",
+		       target, fsa_our_dc?fsa_our_dc:"<unset>");
+	    /* Given the CIB resyncing that occurs around elections,
+	     * have one node update the CIB now and, if the new DC is different,
+	     * have them do so too after the election
 	     */
 	    if(safe_str_eq(executioner, fsa_our_uname)) {
+		const char *uuid = get_uuid(target);
 		send_stonith_update(NULL, target, uuid);
+	    } else {
+		stonith_cleanup_list = g_list_append(stonith_cleanup_list, crm_strdup(target));
 	    }
 	}
     }
