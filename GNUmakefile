@@ -148,9 +148,23 @@ coverity:
 global: clean-generic
 	gtags -q
 
+%.8.html: %.8
+	echo groff -mandoc `man -w ./$<` -T html > $@
+	groff -mandoc `man -w ./$<` -T html > $@
+	rsync -azxlSD --progress $@ root@www.clusterlabs.org:/var/www/html/man/
+
+%.7.html: %.7
+	echo groff -mandoc `man -w ./$<` -T html > $@
+	groff -mandoc `man -w ./$<` -T html > $@
+	rsync -azxlSD --progress $@ root@www.clusterlabs.org:/var/www/html/man/
+
+
 www:	global
 	htags -sanhIT
 	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/www/html/global/$(PACKAGE)/$(TAG)
+	make all
+	find . -name "*.8" -exec make \{\}.html  \;
+	find . -name "*.7" -exec make \{\}.html  \;
 	make coverity
 	make -C docs www
 
