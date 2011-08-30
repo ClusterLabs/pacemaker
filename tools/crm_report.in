@@ -43,8 +43,12 @@ log_patterns="CRIT: ERROR:"
 usage() {
 
 cat<<EOF
-usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [additional options] [dest]
+crm_report - Create a tarball containing everything needed when reporting cluster problems
+ 
 
+Usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [additional options] [dest]
+
+Options:
   -v			increase verbosity
   -f, --from time	time to start from: YYYY-M-D H:M:S
   -t, --to time		time to finish at (default: now)
@@ -68,7 +72,7 @@ usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [additional optio
   --dest       		a custom destination directory/file
   dest			a custom destination directory/file
 
-example:  `basename $0` -f "2011-12-14 13:05:00" unexplained-apache-failure
+Examples:  `basename $0` -f "2011-12-14 13:05:00" unexplained-apache-failure
 EOF
 }
 
