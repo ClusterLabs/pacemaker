@@ -13,7 +13,7 @@
  <xsl:param name="man.name">NA</xsl:param>
 
  <!--  -->
- <xsl:param name="man.vol">8</xsl:param>
+ <xsl:param name="man.vol">7</xsl:param>
 
  <!--  -->
  <xsl:param name="variable.prefix"> </xsl:param>

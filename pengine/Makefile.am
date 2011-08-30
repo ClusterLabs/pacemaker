@@ -44,6 +44,7 @@ lib_LTLIBRARIES	= libpengine.la
 halib_PROGRAMS	= pengine
 sbin_PROGRAMS	= ptest
 
+man7_MANS =
 man8_MANS =
 
 if BUILD_HELP
@@ -53,12 +54,12 @@ ptest.8:	ptest
 endif
 
 if BUILD_XML_HELP
-man8_MANS +=	pengine.8
+man7_MANS +=	pengine.7
 
 pengine.xml:	pengine
 	$(top_builddir)/pengine/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/pengine/$@
 
-pengine.8:	pengine.xml
+pengine.7:	pengine.xml
 	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/pengine/$<
 endif
 

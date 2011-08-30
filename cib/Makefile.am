@@ -34,7 +34,7 @@ halib_PROGRAMS	= cib cibmon
 sbin_PROGRAMS   = cibpipe
 
 if BUILD_HELP
-man8_MANS =	$(sbin_PROGRAMS:%=%.8)
+man8_MANS =	
 %.8:	%
 	echo Creating $@
 	chmod a+x $<
