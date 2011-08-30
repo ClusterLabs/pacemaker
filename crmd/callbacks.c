@@ -112,7 +112,7 @@ crmd_ha_msg_filter(xmlNode *msg)
 		/* make sure the election happens NOW */
 		if(fsa_state != S_ELECTION) {
 		    ha_msg_input_t new_input;
-		    level = LOG_ERR;
+		    level = LOG_WARNING;
 		    new_input.msg = msg;
 		    register_fsa_error_adv(
 			C_FSA_INTERNAL, I_ELECTION, NULL, &new_input, __FUNCTION__);
