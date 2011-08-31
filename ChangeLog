@@ -1,3 +1,86 @@
+* Wed Aug 31 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.6-1
+- Update source tarball to revision: 676e5f25aa46 tip
+- Statistics:
+  Changesets: 376
+  Diff:       1761 files changed, 36259 insertions(+), 140578 deletions(-)
+
+- Changes since Pacemaker-1.1.5
+  + High: ais: check for retryable errors when dispatching AIS messages
+  + High: ais: Correctly disconnect from Corosync and Cman based clusters
+  + High: ais: Followup to previous patch - Ensure we drain the corosync queue of messages when Glib tells us there is input
+  + High: ais: Handle IPC error before checking for NULL data (bnc#702907)
+  + High: cib: Check the validation version before adding the originator details of a CIB change
+  + High: cib: Remove disconnected remote connections from mainloop
+  + High: cman: Correctly override existing fenced operations
+  + High: cman: Dequeue all the cman emitted events and not only the first one leaving the others in the event's queue.
+  + High: cman: Don't call fenced_join and fenced_leave when notifying cman of a fencing event.
+  + High: cman: We need to run the crmd as root for CMAN so that we can ACK fencing operations
+  + High: Core: Cancelled and pending operations do not count as failed
+  + High: Core: Ensure there is sufficient space for EOS when building short-form option strings
+  + High: Core: Fix variable expansion in pkg-config files
+  + High: Core: Partial revert of accidental commit in previous patch
+  + High: Core: Use dlopen to load heartbeat libraries on-demand
+  + High: crmd: Bug lf#2509 - Watch for config option changes from the CIB even if we're not the DC
+  + High: crmd: Bug lf#2528 - Introduce a slight delay when creating a transition to allow attrd time to perform its updates
+  + High: crmd: Bug lf#2559 - Fail actions that were scheduled for a failed/fenced node
+  + High: crmd: Bug lf#2584 - Allow nodes to fence themselves if they're the last one standing
+  + High: crmd: Bug lf#2632 - Correctly handle nodes that return faster than stonith
+  + High: crmd: Cancel timers for actions that were pending on dead nodes
+  + High: crmd: Catch fence operations that claim to succeed but did not really
+  + High: crmd: Do not wait for actions that were pending on dead nodes
+  + High: crmd: Ensure we do not attempt to perform action on failed nodes
+  + High: crmd: Prevent use-of-NULL by g_hash_table_iter_next()
+  + High: crmd: Recurring actions shouldn't cause the last non-recurring action to be forgotten
+  + High: crmd: Store only the last and last failed operation in the CIB
+  + High: mcp: dirname() modifies the input path - pass in a copy of the logfile path
+  + High: mcp: Enable stack detection logic instead of forcing 'corosync'
+  + High: mcp: Fix spelling mistake in systemd service script that prevents shutdown
+  + High: mcp: Shut down if corosync becomes unavailable
+  + High: mcp: systemd control file is now functional
+  + High: PE: Before migrating an utilization-using resource to a node, take off the load which will no longer run there (lf#2599, bnc#695440)
+  + High: PE: Before migrating an utilization-using resource to a node, take off the load which will no longer run there (regression tests) (lf#2599, bnc#695440)
+  + High: PE: Bug lf#2574 - Prevent shuffling by choosing the correct clone instance to stop
+  + High: PE: Bug lf#2575 - Use uname for migration variables, id is a UUID on heartbeat
+  + High: PE: Bug lf#2581 - Avoid group restart when clone (re)starts on an unrelated node
+  + High: PE: Bug lf#2613, lf#2619 - Group migration after failures and non-default utilization policies
+  + High: PE: Bug suse#707150 - Prevent services being active if dependancies on clones are not satisfied
+  + High: PE: Correctly recognise which recurring operations are currently active
+  + High: PE: Demote from Master does not clear previous errors
+  + High: PE: Ensure restarts due to definition changes cause the start action to be re-issued not probes
+  + High: PE: Ensure role is preserved for unmanaged resources
+  + High: PE: Ensure unmanaged resources have the correct role set so the correct monitor operation is chosen
+  + High: PE: Fix memory leak for re-allocated resources reported by valgrind
+  + High: PE: Implement cluster ticket and deadman
+  + High: PE: Implement resource template
+  + High: pengine: Correctly determine the state of multi-state resources with a partial operation history
+  + High: PE: Only allocate master/slave resources once
+  + High: PE: Partial revert of 'Minor code cleanup CS: cf6bca32376c On: 2011-08-15'
+  + High: PE: Resolve memory leak reported by valgrind
+  + High: PE: Restore the ability to save inputs to disk
+  + High: Shell: implement -w,--wait option to wait for the transition to finish
+  + High: Shell: repair template list command
+  + High: Shell: set of commands to examine logs, reports, etc
+  + High: Stonith: Consolidate pcmk_host_map into run_stonith_agent so that it is applied consistently
+  + High: Stonith: Deprecate pcmk_arg_map for the saner pcmk_host_argument
+  + High: Stonith: Fix use-of-NULL by g_hash_table_lookup
+  + High: Stonith: Improved pcmk_host_map parsing
+  + High: Stonith: Prevent use-of-NULL by g_hash_table_lookup
+  + High: Stonith: Prevent use-of-NULL when no Linux-HA stonith agents are present
+  + High: stonith: Add missing entries to stonith_error2string()
+  + High: Stonith: Correctly finish sending agent options if the initial write is interrupted
+  + High: stonith: Correctly handle synchronous calls
+  + High: stonith: Coverity - Correctly construct result list for the query API call
+  + High: stonith: Coverity - Remove badly constructed memory allocation from the query API call
+  + High: stonith: Ensure completed operations are recorded as such in the history
+  + High: Stonith: Ensure device parameters are passed to the daemon during registration
+  + High: stonith: Fix use-of-NULL in stonith_api_device_list()
+  + High: stonith: stonith_admin - Prevent use of uninitialized pointer by --history command
+  + High: Tools: Bug lf#2528 - Make progress when attrd_updater is called repeatedly within the dampen interval but with the same value
+  + High: Tools: crm_report - Correctly extract data from the local node
+  + High: Tools: crm_report - Remove newlines when detecting the node list
+  + High: Tools: crm_report - Repair the ability to extract data from the local machine
+  + High: Tools: crm_report - Report on all detected backtraces
+
 * Fri Feb 11 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.5-1
 - Update source tarball to revision: baad6636a053
 - Statistics:
