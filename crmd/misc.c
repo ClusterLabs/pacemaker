@@ -29,45 +29,44 @@
 void
 do_log(long long action,
        enum crmd_fsa_cause cause,
-       enum crmd_fsa_state cur_state,
-       enum crmd_fsa_input current_input,
-       fsa_data_t *msg_data)
+       enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-	unsigned log_type = LOG_DEBUG_3;	
+    unsigned log_type = LOG_DEBUG_3;
 
-	if(action & A_LOG) {
-		log_type = LOG_DEBUG_2;
-	} else if(action & A_WARN) {
-		log_type = LOG_WARNING;
-	} else if(action & A_ERROR) {
-		log_type = LOG_ERR;
-	}
-	
-	do_crm_log(log_type,
-		   "FSA: Input %s from %s() received in state %s",
-		   fsa_input2string(msg_data->fsa_input),
-		   msg_data->origin,
-		   fsa_state2string(cur_state));
-	
-	if(msg_data->data_type == fsa_dt_ha_msg) {
-		ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
-		if(log_type > LOG_DEBUG) {
-		    crm_log_xml(log_type, "input", input->msg);
-		}
-		
-	} else if(msg_data->data_type == fsa_dt_xml) {
-		xmlNode *input = fsa_typed_data(msg_data->data_type);
-		if(crm_log_level >= log_type) {
-			do_crm_log_xml(log_type,  __FUNCTION__, input);
-		}
+    if (action & A_LOG) {
+        log_type = LOG_DEBUG_2;
+    } else if (action & A_WARN) {
+        log_type = LOG_WARNING;
+    } else if (action & A_ERROR) {
+        log_type = LOG_ERR;
+    }
 
-	} else if(msg_data->data_type == fsa_dt_lrm) {
-		lrm_op_t *input = fsa_typed_data(msg_data->data_type);
-		do_crm_log(log_type, 
-			   "Resource %s: Call ID %d returned %d (%d)."
-			   "  New status if rc=0: %s",
-			   input->rsc_id, input->call_id, input->rc,
-			   input->op_status, (char*)input->user_data);
-	}
+    do_crm_log(log_type,
+               "FSA: Input %s from %s() received in state %s",
+               fsa_input2string(msg_data->fsa_input),
+               msg_data->origin, fsa_state2string(cur_state));
+
+    if (msg_data->data_type == fsa_dt_ha_msg) {
+        ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
+
+        if (log_type > LOG_DEBUG) {
+            crm_log_xml(log_type, "input", input->msg);
+        }
+
+    } else if (msg_data->data_type == fsa_dt_xml) {
+        xmlNode *input = fsa_typed_data(msg_data->data_type);
+
+        if (crm_log_level >= log_type) {
+            do_crm_log_xml(log_type, __FUNCTION__, input);
+        }
+
+    } else if (msg_data->data_type == fsa_dt_lrm) {
+        lrm_op_t *input = fsa_typed_data(msg_data->data_type);
+
+        do_crm_log(log_type,
+                   "Resource %s: Call ID %d returned %d (%d)."
+                   "  New status if rc=0: %s",
+                   input->rsc_id, input->call_id, input->rc,
+                   input->op_status, (char *)input->user_data);
+    }
 }
-

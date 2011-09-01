@@ -34,50 +34,50 @@
 #define OPTARGS	"V?X:I:"
 
 int
-main(int argc, char ** argv)
+main(int argc, char **argv)
 {
     int flag;
     xmlNode *top = NULL;
     xmlNode *xml = NULL;
     const char *xml_file = NULL;
     const char *xpath = NULL;
-    
+
     crm_log_init(NULL, LOG_DEBUG, FALSE, TRUE, argc, argv);
     while (1) {
-	flag = getopt(argc, argv, OPTARGS);
-	if (flag == -1)
-	    break;
-	
-	switch(flag) {
-	    case 'X':
-		xml_file = optarg;
-		break;
-	    case 'I':
-		xpath = optarg;
-		break;
-	    case '?':
-		/* usage("ptest", 0); */
-		break;
-	    default:
-		printf("?? getopt returned character code 0%o ??\n", flag);
-		break;
-	}
+        flag = getopt(argc, argv, OPTARGS);
+        if (flag == -1)
+            break;
+
+        switch (flag) {
+            case 'X':
+                xml_file = optarg;
+                break;
+            case 'I':
+                xpath = optarg;
+                break;
+            case '?':
+                /* usage("ptest", 0); */
+                break;
+            default:
+                printf("?? getopt returned character code 0%o ??\n", flag);
+                break;
+        }
     }
 
     top = filename2xml(xml_file);
     validate_xml(top, NULL, FALSE);
 
-    if(xpath) {
-	xml = get_xpath_object(xpath, top, LOG_ERR);	
+    if (xpath) {
+        xml = get_xpath_object(xpath, top, LOG_ERR);
     }
-    
-    if(xml) {
-	char *buf = dump_xml_formatted(xml);
-	printf("%s\n", buf);
-	crm_free(buf);
+
+    if (xml) {
+        char *buf = dump_xml_formatted(xml);
+
+        printf("%s\n", buf);
+        crm_free(buf);
     }
 
     free_xml(top);
     return 0;
 }
-
