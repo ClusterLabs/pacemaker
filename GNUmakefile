@@ -42,7 +42,7 @@ MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
 getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-release && echo suse)
 PROFILE ?= $(shell rpm --eval fedora-%{fedora}-%{_arch})
 DISTRO  ?= $(call getdistro)
-TAG     ?= $(shell git show --pretty="format:%h" | head -n 1)
+TAG     ?= $(shell git log --pretty="format:%h" -n 1)
 WITH    ?= 
 
 BUILD_COUNTER	?= build.counter
@@ -57,9 +57,9 @@ export:
 	if [ ! -f $(TARFILE) ]; then						\
 	    rm -f $(PACKAGE).tar.*;						\
 	    if [ $(TAG) = scratch ]; then 					\
-		hg commit -m "DO-NOT-PUSH";					\
-		hg archive --prefix $(distdir) -t tbz2 -r tip $(TARFILE);	\
-		hg rollback; 							\
+		git commit -m "DO-NOT-PUSH" -a;					\
+		git archive --prefix=$(distdir)/ HEAD | bzip2 > $(TARFILE);	\
+		git reset --mixed HEAD^; 					\
 	    else								\
 		git archive --prefix=$(distdir)/ $(TAG) | bzip2 > $(TARFILE);	\
 	    fi;									\
