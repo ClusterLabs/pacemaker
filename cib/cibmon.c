@@ -31,8 +31,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-
-
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
@@ -57,7 +55,7 @@ void usage(const char *cmd, int exit_status);
 void cib_connection_destroy(gpointer user_data);
 
 void cibmon_shutdown(int nsig);
-void cibmon_diff(const char *event, xmlNode *msg);
+void cibmon_diff(const char *event, xmlNode * msg);
 
 cib_t *cib = NULL;
 xmlNode *cib_copy = NULL;
@@ -67,144 +65,136 @@ xmlNode *cib_copy = NULL;
 int
 main(int argc, char **argv)
 {
-	int argerr = 0;
-	int flag;
-	int level = 0;
-	int attempts = 0;
-	
+    int argerr = 0;
+    int flag;
+    int level = 0;
+    int attempts = 0;
+
 #ifdef HAVE_GETOPT_H
-	int option_index = 0;
-	static struct option long_options[] = {
-		/* Top-level Options */
-		{"verbose",      0, 0, 'V'},
-		{"help",         0, 0, '?'},
-		{"log-diffs",    0, 0, 'd'},
-		{"log-updates",  0, 0, 'u'},
-		{"max-conn-fail",1, 0, 'm'},
-		{0, 0, 0, 0}
-	};
+    int option_index = 0;
+
+    static struct option long_options[] = {
+        /* Top-level Options */
+        {"verbose", 0, 0, 'V'},
+        {"help", 0, 0, '?'},
+        {"log-diffs", 0, 0, 'd'},
+        {"log-updates", 0, 0, 'u'},
+        {"max-conn-fail", 1, 0, 'm'},
+        {0, 0, 0, 0}
+    };
 #endif
 
-	crm_log_init_quiet(NULL, LOG_INFO, FALSE, FALSE, argc, argv);
+    crm_log_init_quiet(NULL, LOG_INFO, FALSE, FALSE, argc, argv);
 
-	crm_signal(SIGTERM, cibmon_shutdown);
-	
-	while (1) {
+    crm_signal(SIGTERM, cibmon_shutdown);
+
+    while (1) {
 #ifdef HAVE_GETOPT_H
-		flag = getopt_long(argc, argv, OPTARGS,
-				   long_options, &option_index);
+        flag = getopt_long(argc, argv, OPTARGS, long_options, &option_index);
 #else
-		flag = getopt(argc, argv, OPTARGS);
+        flag = getopt(argc, argv, OPTARGS);
 #endif
-		if (flag == -1)
-			break;
+        if (flag == -1)
+            break;
 
-		switch(flag) {
-			case 'V':
-				level = get_crm_log_level();
-				cl_log_enable_stderr(TRUE);
-				set_crm_log_level(level+1);
-				break;
-			case '?':
-				usage(crm_system_name, LSB_EXIT_OK);
-				break;
-			case 'd':
-				log_diffs = TRUE;
-				break;
-			case 'u':
-				log_updates = TRUE;
-				break;
-			case 'm':
-				max_failures = crm_parse_int(optarg, "30");
-				break;
-			default:
-				printf("Argument code 0%o (%c)"
-				       " is not (?yet?) supported\n",
-				       flag, flag);
-				++argerr;
-				break;
-		}
-	}
+        switch (flag) {
+            case 'V':
+                level = get_crm_log_level();
+                cl_log_enable_stderr(TRUE);
+                set_crm_log_level(level + 1);
+                break;
+            case '?':
+                usage(crm_system_name, LSB_EXIT_OK);
+                break;
+            case 'd':
+                log_diffs = TRUE;
+                break;
+            case 'u':
+                log_updates = TRUE;
+                break;
+            case 'm':
+                max_failures = crm_parse_int(optarg, "30");
+                break;
+            default:
+                printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
+                ++argerr;
+                break;
+        }
+    }
 
-	if (optind < argc) {
-		printf("non-option ARGV-elements: ");
-		while (optind < argc)
-			printf("%s ", argv[optind++]);
-		printf("\n");
-	}
+    if (optind < argc) {
+        printf("non-option ARGV-elements: ");
+        while (optind < argc)
+            printf("%s ", argv[optind++]);
+        printf("\n");
+    }
 
-	if (optind > argc) {
-		++argerr;
-	}
+    if (optind > argc) {
+        ++argerr;
+    }
 
-	if (argerr) {
-		usage(crm_system_name, LSB_EXIT_GENERIC);
-	}
+    if (argerr) {
+        usage(crm_system_name, LSB_EXIT_GENERIC);
+    }
 
-	cib = cib_new();
+    cib = cib_new();
 
-	do {
-		sleep(1);
-		exit_code = cib->cmds->signon(
-			cib, crm_system_name, cib_query);
+    do {
+        sleep(1);
+        exit_code = cib->cmds->signon(cib, crm_system_name, cib_query);
 
-	} while(exit_code == cib_connection && attempts++ < max_failures);
-		
-	if(exit_code != cib_ok) {
-		crm_err("Signon to CIB failed: %s",
-			cib_error2string(exit_code));
-	} 
+    } while (exit_code == cib_connection && attempts++ < max_failures);
 
-	if(exit_code == cib_ok) {
-		crm_debug("Setting dnotify");
-		exit_code = cib->cmds->set_connection_dnotify(
-			cib, cib_connection_destroy);
-	}
-	
-	crm_debug("Setting diff callback");
-	exit_code = cib->cmds->add_notify_callback(
-	    cib, T_CIB_DIFF_NOTIFY, cibmon_diff);
-	
-	if(exit_code != cib_ok) {
-	    crm_err("Failed to set %s callback: %s",
-		    T_CIB_DIFF_NOTIFY, cib_error2string(exit_code));
-	}
-	
-	if(exit_code != cib_ok) {
-		crm_err("Setup failed, could not monitor CIB actions");
-		return -exit_code;
-	}
+    if (exit_code != cib_ok) {
+        crm_err("Signon to CIB failed: %s", cib_error2string(exit_code));
+    }
 
-	mainloop = g_main_new(FALSE);
-	crm_info("Starting mainloop");
-	g_main_run(mainloop);
-	crm_debug_3("%s exiting normally", crm_system_name);
-	fflush(stderr);
-	return -exit_code;
+    if (exit_code == cib_ok) {
+        crm_debug("Setting dnotify");
+        exit_code = cib->cmds->set_connection_dnotify(cib, cib_connection_destroy);
+    }
+
+    crm_debug("Setting diff callback");
+    exit_code = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, cibmon_diff);
+
+    if (exit_code != cib_ok) {
+        crm_err("Failed to set %s callback: %s", T_CIB_DIFF_NOTIFY, cib_error2string(exit_code));
+    }
+
+    if (exit_code != cib_ok) {
+        crm_err("Setup failed, could not monitor CIB actions");
+        return -exit_code;
+    }
+
+    mainloop = g_main_new(FALSE);
+    crm_info("Starting mainloop");
+    g_main_run(mainloop);
+    crm_debug_3("%s exiting normally", crm_system_name);
+    fflush(stderr);
+    return -exit_code;
 }
-
 
 void
 usage(const char *cmd, int exit_status)
 {
-	FILE *stream;
+    FILE *stream;
 
-	stream = exit_status != 0 ? stderr : stdout;
-	fflush(stream);
+    stream = exit_status != 0 ? stderr : stdout;
+    fflush(stream);
 
-	exit(exit_status);
+    exit(exit_status);
 }
 
 void
 cib_connection_destroy(gpointer user_data)
 {
-	crm_err("Connection to the CIB terminated... exiting");
-	g_main_quit(mainloop);
-	return;
+    crm_err("Connection to the CIB terminated... exiting");
+    g_main_quit(mainloop);
+    return;
 }
 
 void
-cibmon_diff(const char *event, xmlNode *msg)
+cibmon_diff(const char *event, xmlNode * msg)
 {
     int rc = -1;
     const char *op = NULL;
@@ -212,45 +202,45 @@ cibmon_diff(const char *event, xmlNode *msg)
 
     xmlNode *diff = NULL;
     xmlNode *cib_last = NULL;
-    xmlNode *update = get_message_xml(msg, F_CIB_UPDATE);    
-	
-    if(msg == NULL) {
-	crm_err("NULL update");
-	return;
+    xmlNode *update = get_message_xml(msg, F_CIB_UPDATE);
+
+    if (msg == NULL) {
+        crm_err("NULL update");
+        return;
     }
-    
-    crm_element_value_int(msg, F_CIB_RC, &rc);	
+
+    crm_element_value_int(msg, F_CIB_RC, &rc);
     op = crm_element_value(msg, F_CIB_OPERATION);
     diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    if(rc < cib_ok) {
-	log_level = LOG_WARNING;
-	do_crm_log(log_level, "[%s] %s ABORTED: %s",
-		   event, op, cib_error2string(rc));
-	return;	
-    } 
+    if (rc < cib_ok) {
+        log_level = LOG_WARNING;
+        do_crm_log(log_level, "[%s] %s ABORTED: %s", event, op, cib_error2string(rc));
+        return;
+    }
 
-    if(log_diffs) {
-	log_cib_diff(log_level, diff, op);
+    if (log_diffs) {
+        log_cib_diff(log_level, diff, op);
     }
-    
-    if(log_updates && update != NULL) {
-	do_crm_log_xml(log_level+2, "raw_update", update);
+
+    if (log_updates && update != NULL) {
+        do_crm_log_xml(log_level + 2, "raw_update", update);
     }
-    
-    if(cib_copy != NULL) {
-	cib_last = cib_copy; cib_copy = NULL;
-	rc = cib_process_diff(op, cib_force_diff, NULL, NULL, diff, cib_last, &cib_copy, NULL);
-	
-	if(rc != cib_ok) {
-	    crm_debug("Update didn't apply, requesting full copy: %s", cib_error2string(rc));
-	    free_xml(cib_copy);
-	    cib_copy = NULL;
-	}
+
+    if (cib_copy != NULL) {
+        cib_last = cib_copy;
+        cib_copy = NULL;
+        rc = cib_process_diff(op, cib_force_diff, NULL, NULL, diff, cib_last, &cib_copy, NULL);
+
+        if (rc != cib_ok) {
+            crm_debug("Update didn't apply, requesting full copy: %s", cib_error2string(rc));
+            free_xml(cib_copy);
+            cib_copy = NULL;
+        }
     }
-    
-    if(cib_copy == NULL) {
-	cib_copy = get_cib_copy(cib);
+
+    if (cib_copy == NULL) {
+        cib_copy = get_cib_copy(cib);
     }
 
     free_xml(cib_last);
