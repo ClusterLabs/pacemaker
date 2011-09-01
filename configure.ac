@@ -528,16 +528,23 @@ AC_DEFINE_UNQUOTED(RH_STONITH_DIR,"$RH_STONITH_DIR", Location for Red Hat Stonit
 RH_STONITH_PREFIX="fence_"
 AC_DEFINE_UNQUOTED(RH_STONITH_PREFIX,"$RH_STONITH_PREFIX", Prefix for Red Hat Stonith agents)
 
-AC_PATH_PROGS(HG, hg false)
+AC_PATH_PROGS(GIT, git false)
 AC_MSG_CHECKING(build version)
-BUILD_VERSION=unknown
-if test -f $srcdir/.hg_archival.txt; then
-   BUILD_VERSION=`cat $srcdir/.hg_archival.txt | awk '/node:/ { print $2 }'`
-elif test -x $HG -a -d .hg; then
-   BUILD_VERSION=`$HG id -i`
-   if test $? != 0; then
-       BUILD_VERSION=unknown
-   fi
+
+BUILD_VERSION=$Format:%H$
+if [ $BUILD_VERSION != ":%H$" ]; then
+   AC_MSG_RESULT(Using archive hash: $BUILD_VERSION)
+
+elif test -x $GIT -a -d .git; then
+   BUILD_VERSION=`$GIT log --pretty="format:%h" -n 1`
+   AC_MSG_RESULT(Using git hash: $BUILD_VERSION)
+
+else
+   # The current directory name make a reasonable default
+   # Most generated archives will include the hash or tag 
+   BASE=`basename $PWD`
+   BUILD_VERSION=`echo $BASE | sed s:.*[Pp]acemaker-::`
+   AC_MSG_RESULT(Using directory based hash: $BUILD_VERSION)
 fi
 
 AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
@@ -568,7 +575,6 @@ AC_PATH_PROGS(XSLTPROC, xsltproc)
 AC_PATH_PROGS(FOP, fop)
 AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
 AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
-AC_PATH_PROGS(HG, hg, /bin/false)
 AC_PATH_PROGS(TAR, tar)
 AC_PATH_PROGS(MD5, md5)
 AC_PATH_PROGS(TEST, test)
