@@ -532,7 +532,7 @@ AC_PATH_PROGS(GIT, git false)
 AC_MSG_CHECKING(build version)
 
 BUILD_VERSION=$Format:%H$
-if [ $BUILD_VERSION != ":%H$" ]; then
+if test $BUILD_VERSION != ":%H$"; then
    AC_MSG_RESULT(Using archive hash: $BUILD_VERSION)
 
 elif test -x $GIT -a -d .git; then
