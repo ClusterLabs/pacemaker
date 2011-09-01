@@ -42,7 +42,7 @@ MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
 getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-release && echo suse)
 PROFILE ?= $(shell rpm --eval fedora-%{fedora}-%{_arch})
 DISTRO  ?= $(call getdistro)
-TAG     ?= $(firstword $(shell hg id -i | tr '+' ' '))
+TAG     ?= $(shell git show --pretty="format:%h" | head -n 1)
 WITH    ?= 
 
 BUILD_COUNTER	?= build.counter
@@ -61,7 +61,7 @@ export:
 		hg archive --prefix $(distdir) -t tbz2 -r tip $(TARFILE);	\
 		hg rollback; 							\
 	    else								\
-		hg archive --prefix $(distdir) -t tbz2 -r $(TAG) $(TARFILE);	\
+		git archive --prefix=$(distdir)/ $(TAG) | bzip2 > $(TARFILE);	\
 	    fi;									\
 	    echo `date`: Rebuilt $(TARFILE);					\
 	else									\
