@@ -131,7 +131,7 @@ www:    $(generated_docs)
 if BUILD_DOCBOOK
 	for book in $(docbook); do 									\
 		echo Uploading $$book...;								\
-		echo "Generated on `date` from version: $(shell hg id -i -t)" > $$book/publish/build-$(PACKAGE_SERIES).txt;	\
+		echo "Generated on `date` from version: $(shell git log --pretty="format:%h %d" -n 1)" > $$book/publish/build-$(PACKAGE_SERIES).txt;	\
 		rsync -rtz --progress $$book/publish/* root@www.clusterlabs.org:/var/www/html/doc/;	\
 	done
 endif

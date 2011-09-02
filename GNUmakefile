@@ -165,7 +165,7 @@ www:	global
 	find . -name "[a-z]*.7" -exec make \{\}.html  \;
 	htags -sanhIT
 	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/www/html/global/$(PACKAGE)/$(TAG)
-	make -C docs www
+	make -C doc www
 	make coverity
 
 changes:
