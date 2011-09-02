@@ -523,11 +523,14 @@ unpack_operation(
     unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS, NULL,
 			       action->meta, NULL, FALSE, data_set->now);
 
-    xml_prop_iter(xml_obj, name, value,
-		  if (value != NULL) {
-		      g_hash_table_replace(action->meta, crm_strdup(name), crm_strdup(value));
-		  }
-	);
+    if(xml_obj) {
+        xmlAttrPtr xIter = NULL;
+        for(xIter = xml_obj->properties; xIter; xIter = xIter->next) {
+            const char *prop_name = (const char *)xIter->name;
+            const char *prop_value = crm_element_value(xml_obj, prop_name);
+            g_hash_table_replace(action->meta, crm_strdup(prop_name), crm_strdup(prop_value));
+        }
+    }
 	
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
 			       NULL, action->meta, NULL, FALSE, data_set->now);

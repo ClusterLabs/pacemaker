@@ -118,10 +118,15 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
     if(node) {
 	node_hash = node->details->attrs;
     }
-	
-    xml_prop_iter(rsc->xml, prop_name, prop_value,
-		  add_hash_param(meta_hash, prop_name, prop_value);
-	);
+
+    if(rsc->xml) {
+        xmlAttrPtr xIter = NULL;
+        for(xIter = rsc->xml->properties; xIter; xIter = xIter->next) {
+            const char *prop_name = (const char *)xIter->name;
+            const char *prop_value = crm_element_value(rsc->xml, prop_name);
+            add_hash_param(meta_hash, prop_name, prop_value);
+        }
+    }
 
     unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_META_SETS, node_hash,
 			       meta_hash, NULL, FALSE, data_set->now);

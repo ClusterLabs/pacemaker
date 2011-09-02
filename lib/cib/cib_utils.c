@@ -712,9 +712,15 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	if(cib == NULL) {
 	    cib = create_xml_node(diff_child, tag);
 	}
-		    
-	xml_prop_iter(scratch, p_name, p_value,
-		      xmlSetProp(cib, (const xmlChar*)p_name, (const xmlChar*)p_value));
+
+        if(scratch) {
+            xmlAttrPtr xIter = NULL;
+            for(xIter = scratch->properties; xIter; xIter = xIter->next) {
+                const char *p_name = (const char *)xIter->name;
+                const char *p_value = crm_element_value(scratch, p_name);
+                xmlSetProp(cib, (const xmlChar*)p_name, (const xmlChar*)p_value);
+            }
+        }
 
 	crm_log_xml_trace(local_diff, "Repaired-diff");
 	*diff = local_diff;

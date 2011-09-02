@@ -1454,8 +1454,12 @@ filter_action_parameters(xmlNode *param_set, const char *version)
 
     key = crm_meta_name(XML_ATTR_TIMEOUT);
     timeout = crm_element_value_copy(param_set, key);
-	
-    xml_prop_name_iter(param_set, prop_name,      
+
+    if(param_set) {
+        xmlAttrPtr xIter = param_set->properties;
+        while(xIter) {
+            const char *prop_name = (const char *)xIter->name;
+            xIter = xIter->next;
 		       do_delete = FALSE;
 		       if(strncasecmp(prop_name, CRM_META, meta_len) == 0) {
 			   do_delete = TRUE;
@@ -1464,7 +1468,8 @@ filter_action_parameters(xmlNode *param_set, const char *version)
 		       if(do_delete) {
 			   xml_remove_prop(param_set, prop_name);
 		       }
-	);
+        }
+    }
 
     if(crm_get_msec(interval) > 0 && compare_version(version, "1.0.8") > 0) {
 	/* Re-instate the operation's timeout value */
@@ -1489,7 +1494,11 @@ filter_reload_parameters(xmlNode *param_set, const char *restart_string)
 	return;
     }
 
-    xml_prop_name_iter(param_set, prop_name,
+    if(param_set) {
+        xmlAttrPtr xIter = param_set->properties;
+        while(xIter) {
+            const char *prop_name = (const char *)xIter->name;
+            xIter = xIter->next;
 		       name = NULL;
 		       len = strlen(prop_name) + 3;
 
@@ -1504,7 +1513,8 @@ filter_reload_parameters(xmlNode *param_set, const char *restart_string)
 			   xml_remove_prop(param_set, prop_name);
 		       }
 		       crm_free(name);
-	);
+        }
+    }
 }
 
 void

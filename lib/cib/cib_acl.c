@@ -681,9 +681,14 @@ acl_filter_xml(xmlNode *xml, GHashTable *xml_perms)
 		}
 	}
 
-	xml_prop_iter(xml, prop_name, prop_value,
-		gpointer mode = NULL;
+        if(xml) {
+            xmlAttrPtr xIter = param_set->properties;
+            while(xIter) {
+                const char *prop_name = (const char *)xIter->name;
+                const char *prop_value = crm_element_value(xml, prop_name);
+                gpointer mode = NULL;
 
+                xIter = xIter->next;
 		if (g_hash_table_lookup_extended(perm->attribute_perms, prop_name, NULL, &mode)) {
 			if (can_read(mode)) {
 				allow_counter++;
@@ -701,7 +706,8 @@ acl_filter_xml(xmlNode *xml, GHashTable *xml_perms)
 						 perm->mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID), prop_name);
 			}
 		}
-		);
+            }
+        }
 
 	if (allow_counter) {
 		return FALSE;
@@ -738,7 +744,11 @@ acl_check_diff_xml(xmlNode *xml, GHashTable *xml_perms)
 
 	g_hash_table_lookup_extended(xml_perms, xml, NULL, (gpointer)&perm);
 
-	xml_prop_iter(xml, prop_name, prop_value,
+        if(xml) {
+            xmlAttrPtr xIter = NULL;
+            for(xIter = xml->properties; xIter; xIter = xIter->next) {
+                const char *prop_name = (const char *)xIter->name;
+                const char *prop_value = crm_element_value(xml, prop_name);
 		gpointer mode = NULL;
 
 		if (crm_str_eq(crm_element_name(xml), XML_TAG_CIB, TRUE)) {
@@ -784,8 +794,8 @@ acl_check_diff_xml(xmlNode *xml, GHashTable *xml_perms)
 					 perm->mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID), prop_name);
 			return FALSE;
 		}
-
-		);
+            }
+        }
 
 	return TRUE;
 }

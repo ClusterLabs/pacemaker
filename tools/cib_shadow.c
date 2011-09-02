@@ -516,12 +516,17 @@ dump_data_element(int depth, char **buffer, int *max, int *offset, const char *p
     printed = snprintf(bhead(buffer, offset), bremain(max, offset), "<%s", name);
     update_buffer_head(printed);
 
-    xml_prop_iter(data, prop_name, prop_value,
-                  crm_debug_5("Dumping <%s %s=\"%s\"...",
-                              name, prop_name, prop_value);
-                  printed =
-                  snprintf(bhead(buffer, offset), bremain(max, offset), " %s=\"%s\"", prop_name,
-                           prop_value); update_buffer_head(printed););
+    if(data) {
+        xmlAttrPtr xIter = NULL;
+        for(xIter = data->properties; xIter; xIter = xIter->next) {
+            const char *prop_name = (const char *)xIter->name;
+            const char *prop_value = crm_element_value(data, prop_name);
+            crm_debug_5("Dumping <%s %s=\"%s\"...",
+                        name, prop_name, prop_value);
+            printed = snprintf(bhead(buffer, offset), bremain(max, offset), " %s=\"%s\"", prop_name, prop_value);
+            update_buffer_head(printed);
+        }
+    }
 
     has_children = xml_has_children(data);
     printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s>%s",
