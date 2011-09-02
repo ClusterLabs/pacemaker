@@ -67,7 +67,7 @@ static struct crm_option long_options[] = {
 /* *INDENT-ON* */
 
 int
-main(int argc, char ** argv)
+main(int argc, char **argv)
 {
     int index = 0;
     int argerr = 0;
@@ -75,79 +75,82 @@ main(int argc, char ** argv)
     int BE_QUIET = FALSE;
 
     crm_log_init_quiet(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
-    crm_set_options(NULL, "command -n attribute [options]", long_options, "Tool for updating cluster node attributes");
+    crm_set_options(NULL, "command -n attribute [options]", long_options,
+                    "Tool for updating cluster node attributes");
 
-    if(argc < 2) {
-	crm_help('?', LSB_EXIT_EINVAL);
+    if (argc < 2) {
+        crm_help('?', LSB_EXIT_EINVAL);
     }
 
     while (1) {
-	flag = crm_get_option(argc, argv,  &index);
-	if (flag == -1)
-	    break;
+        flag = crm_get_option(argc, argv, &index);
+        if (flag == -1)
+            break;
 
-	switch(flag) {
-	    case 'V':
-		alter_debug(DEBUG_INC);
-		break;
-	    case '?':
-	    case '$':
-		crm_help(flag, LSB_EXIT_OK);
-	    break;
-	    case 'n':
-		attr_name = crm_strdup(optarg);
-		break;
-	    case 's':
-		attr_set = crm_strdup(optarg);
-		break;
-	    case 'd':
-		attr_dampen = crm_strdup(optarg);
-		break;
-	    case 'l':
-	    case 'S':
-		attr_section = crm_strdup(optarg);
-		break;
-	    case 'q':
-		BE_QUIET = TRUE;
-		break;
-	    case 'Q':
-	    case 'R':
-	    case 'D':
-	    case 'U':
-	    case 'v':
-		command = flag;
-		attr_value = optarg;
-		break;
-	    default:
-		++argerr;
-		break;
-	}
+        switch (flag) {
+            case 'V':
+                alter_debug(DEBUG_INC);
+                break;
+            case '?':
+            case '$':
+                crm_help(flag, LSB_EXIT_OK);
+                break;
+            case 'n':
+                attr_name = crm_strdup(optarg);
+                break;
+            case 's':
+                attr_set = crm_strdup(optarg);
+                break;
+            case 'd':
+                attr_dampen = crm_strdup(optarg);
+                break;
+            case 'l':
+            case 'S':
+                attr_section = crm_strdup(optarg);
+                break;
+            case 'q':
+                BE_QUIET = TRUE;
+                break;
+            case 'Q':
+            case 'R':
+            case 'D':
+            case 'U':
+            case 'v':
+                command = flag;
+                attr_value = optarg;
+                break;
+            default:
+                ++argerr;
+                break;
+        }
     }
 
-    if(BE_QUIET == FALSE) {
-	cl_log_args(argc, argv);
+    if (BE_QUIET == FALSE) {
+        cl_log_args(argc, argv);
     }
-    
+
     if (optind > argc) {
-	++argerr;
+        ++argerr;
     }
 
-    if(command != 'R' && attr_name == NULL) {
-	++argerr;
+    if (command != 'R' && attr_name == NULL) {
+        ++argerr;
     }
-	
+
     if (argerr) {
-	crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', LSB_EXIT_GENERIC);
     }
-    
-    if(command == 'Q') {
-	fprintf(stderr, "-Q,--query is not yet implemented, use -D to delete existing values\n\n");
-	crm_help('?', LSB_EXIT_GENERIC);
 
-    } else if(attrd_lazy_update(command, NULL, attr_name, attr_value, attr_section, attr_set, attr_dampen) == FALSE) {
-	fprintf(stderr, "Could not update %s=%s\n", attr_name, attr_value);
-	return 1;
+    if (command == 'Q') {
+        fprintf(stderr, "-Q,--query is not yet implemented, use -D to delete existing values\n\n");
+        crm_help('?', LSB_EXIT_GENERIC);
+
+    } else
+        if (attrd_lazy_update
+            (command, NULL, attr_name, attr_value, attr_section, attr_set, attr_dampen) == FALSE) {
+        fprintf(stderr, "Could not update %s=%s\n", attr_name, attr_value);
+        return 1;
     }
-    
+
     return 0;
 }

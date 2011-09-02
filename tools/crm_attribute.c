@@ -45,11 +45,11 @@ char command = 'G';
 
 char *dest_uname = NULL;
 char *dest_node = NULL;
-char *set_name  = NULL;
-char *attr_id   = NULL;
+char *set_name = NULL;
+char *attr_id = NULL;
 char *attr_name = NULL;
-const char *type       = NULL;
-const char *rsc_id     = NULL;
+const char *type = NULL;
+const char *rsc_id = NULL;
 const char *attr_value = NULL;
 const char *attr_default = NULL;
 const char *set_type = NULL;
@@ -113,206 +113,208 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char **argv)
 {
-	cib_t *	the_cib = NULL;
-	enum cib_errors rc = cib_ok;
-	
-	int cib_opts = cib_sync_call;
-	int argerr = 0;
-	int flag;
+    cib_t *the_cib = NULL;
+    enum cib_errors rc = cib_ok;
 
-	int option_index = 0;
+    int cib_opts = cib_sync_call;
+    int argerr = 0;
+    int flag;
 
-	crm_log_init_quiet(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options(NULL, "command -n attribute [options]", long_options,
-			"Manage node's attributes and cluster options."
-			"\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
+    int option_index = 0;
 
-	if(argc < 2) {
-		crm_help('?', LSB_EXIT_EINVAL);
-	}
-	
-	while (1) {
-		flag = crm_get_option(argc, argv, &option_index);
-		if (flag == -1)
-			break;
+    crm_log_init_quiet(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_set_options(NULL, "command -n attribute [options]", long_options,
+                    "Manage node's attributes and cluster options."
+                    "\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
 
-		switch(flag) {
-			case 'V':
-				cl_log_enable_stderr(TRUE);
-				alter_debug(DEBUG_INC);
-				break;
-			case '$':
-			case '?':
-			    crm_help(flag, LSB_EXIT_OK);
-			    break;
-			case 'D':
-			case 'G':
-			case 'v':
-				command = flag;
-				attr_value = optarg;
-				break;
-			case 'q':
-			case 'Q':
-				BE_QUIET = TRUE;
-				break;
-			case 'U':
-			case 'N':
-				dest_uname = crm_strdup(optarg);
-				break;
-			case 'u':
-				dest_node = crm_strdup(optarg);
-				break;
-			case 's':
-				set_name = crm_strdup(optarg);
-				break;
-			case 'l':
-			case 't':
-				type = optarg;
-				break;
-			case 'z':
-				type = XML_CIB_TAG_NODES;
-				set_type = XML_TAG_UTILIZATION;
-				break;
-			case 'n':
-				attr_name = crm_strdup(optarg);
-				break;
-			case 'i':
-				attr_id = crm_strdup(optarg);
-				break;
-			case 'r':
-				rsc_id = optarg;
-				break;
-			case 'd':
-				attr_default = optarg;
-				break;
-			case '!':
-				crm_warn("Inhibiting notifications for this update");
-				cib_opts |= cib_inhibit_notify;
-				break;
-			default:
-				printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
-				++argerr;
-				break;
-		}
-	}
+    if (argc < 2) {
+        crm_help('?', LSB_EXIT_EINVAL);
+    }
 
-	if(BE_QUIET == FALSE) {
-	    cl_log_args(argc, argv);
-	}
-	
-	if (optind < argc) {
-		printf("non-option ARGV-elements: ");
-		while (optind < argc)
-			printf("%s ", argv[optind++]);
-		printf("\n");
-	}
+    while (1) {
+        flag = crm_get_option(argc, argv, &option_index);
+        if (flag == -1)
+            break;
 
-	if (optind > argc) {
-		++argerr;
-	}
+        switch (flag) {
+            case 'V':
+                cl_log_enable_stderr(TRUE);
+                alter_debug(DEBUG_INC);
+                break;
+            case '$':
+            case '?':
+                crm_help(flag, LSB_EXIT_OK);
+                break;
+            case 'D':
+            case 'G':
+            case 'v':
+                command = flag;
+                attr_value = optarg;
+                break;
+            case 'q':
+            case 'Q':
+                BE_QUIET = TRUE;
+                break;
+            case 'U':
+            case 'N':
+                dest_uname = crm_strdup(optarg);
+                break;
+            case 'u':
+                dest_node = crm_strdup(optarg);
+                break;
+            case 's':
+                set_name = crm_strdup(optarg);
+                break;
+            case 'l':
+            case 't':
+                type = optarg;
+                break;
+            case 'z':
+                type = XML_CIB_TAG_NODES;
+                set_type = XML_TAG_UTILIZATION;
+                break;
+            case 'n':
+                attr_name = crm_strdup(optarg);
+                break;
+            case 'i':
+                attr_id = crm_strdup(optarg);
+                break;
+            case 'r':
+                rsc_id = optarg;
+                break;
+            case 'd':
+                attr_default = optarg;
+                break;
+            case '!':
+                crm_warn("Inhibiting notifications for this update");
+                cib_opts |= cib_inhibit_notify;
+                break;
+            default:
+                printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
+                ++argerr;
+                break;
+        }
+    }
 
-	if (argerr) {
-		crm_help('?', LSB_EXIT_GENERIC);
-	}
+    if (BE_QUIET == FALSE) {
+        cl_log_args(argc, argv);
+    }
 
-	the_cib = cib_new();
-	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+    if (optind < argc) {
+        printf("non-option ARGV-elements: ");
+        while (optind < argc)
+            printf("%s ", argv[optind++]);
+        printf("\n");
+    }
 
-	if(rc != cib_ok) {
-	    fprintf(stderr, "Error signing on to the CIB service: %s\n", cib_error2string(rc));
-	    return rc;
-	}	
+    if (optind > argc) {
+        ++argerr;
+    }
 
-	if(safe_str_eq(type, "reboot")) {
-	    type = XML_CIB_TAG_STATUS;
+    if (argerr) {
+        crm_help('?', LSB_EXIT_GENERIC);
+    }
 
-	} else if(safe_str_eq(type, "forever")) {
-	    type = XML_CIB_TAG_NODES;
-	}
+    the_cib = cib_new();
+    rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
-	if(type == NULL && dest_uname == NULL) {
-	    /* we're updating cluster options - dont populate dest_node */
-	    type = XML_CIB_TAG_CRMCONFIG;
-	    
-	} else if(safe_str_neq(type, XML_CIB_TAG_TICKETS)){
-	    determine_host(the_cib, &dest_uname, &dest_node);
-	}
-	
-	if(rc != cib_ok) {
-	    crm_info("Error during setup of %s=%s update", attr_name, command=='D'?"<none>":attr_value);
-	    
-	} else if( (command=='v' || command=='D')
-		   && safe_str_eq(type, XML_CIB_TAG_STATUS)
-		   && attrd_lazy_update(command, dest_uname, attr_name, attr_value, type, set_name, NULL)) {
-	    crm_info("Update %s=%s sent via attrd", attr_name, command=='D'?"<none>":attr_value);
-	    
-	} else if(command=='D') {
-		rc = delete_attr(the_cib, cib_opts, type, dest_node, set_type, set_name,
-				 attr_id, attr_name, attr_value, TRUE);
+    if (rc != cib_ok) {
+        fprintf(stderr, "Error signing on to the CIB service: %s\n", cib_error2string(rc));
+        return rc;
+    }
 
-		if(rc == cib_NOTEXISTS) {
-		    /* Nothing to delete...
-		     * which means its not there...
-		     * which is what the admin wanted
-		     */
-		    rc = cib_ok;
-		} else if(rc != cib_missing_data
-			  && safe_str_eq(crm_system_name, "crm_failcount")) {
-			char *now_s = NULL;
-			time_t now = time(NULL);
-			now_s = crm_itoa(now);
-			update_attr(the_cib, cib_sync_call,
-				    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-				    "last-lrm-refresh", now_s, TRUE);
-			crm_free(now_s);
-		}
-			
-	} else if(command=='v') {
-		CRM_LOG_ASSERT(type != NULL);
-		CRM_LOG_ASSERT(attr_name != NULL);
-		CRM_LOG_ASSERT(attr_value != NULL);
+    if (safe_str_eq(type, "reboot")) {
+        type = XML_CIB_TAG_STATUS;
 
-		rc = update_attr(the_cib, cib_opts, type, dest_node, set_type, set_name,
-				 attr_id, attr_name, attr_value, TRUE);
+    } else if (safe_str_eq(type, "forever")) {
+        type = XML_CIB_TAG_NODES;
+    }
 
-	} else /* query */ {
-		char *read_value = NULL;
-		rc = read_attr(the_cib, type, dest_node, set_type, set_name,
-			       attr_id, attr_name, &read_value, TRUE);
+    if (type == NULL && dest_uname == NULL) {
+        /* we're updating cluster options - dont populate dest_node */
+        type = XML_CIB_TAG_CRMCONFIG;
 
-		if(rc == cib_NOTEXISTS && attr_default) {
-			read_value = crm_strdup(attr_default);
-			rc = cib_ok;
-		}
-		
-		crm_info("Read %s=%s %s%s",
-			 attr_name, crm_str(read_value),
-			 set_name?"in ":"", set_name?set_name:"");
+    } else if (safe_str_neq(type, XML_CIB_TAG_TICKETS)) {
+        determine_host(the_cib, &dest_uname, &dest_node);
+    }
 
-		if(rc == cib_missing_data) {
-		    rc = cib_ok;
-		    
-		} else if(BE_QUIET == FALSE) {
-			fprintf(stdout, "%s%s %s%s %s%s value=%s\n",
-				type?"scope=":"", type?type:"",
-				attr_id?"id=":"", attr_id?attr_id:"",
-				attr_name?"name=":"", attr_name?attr_name:"",
-				read_value?read_value:"(null)");
+    if (rc != cib_ok) {
+        crm_info("Error during setup of %s=%s update", attr_name,
+                 command == 'D' ? "<none>" : attr_value);
 
-		} else if(read_value != NULL) {
-			fprintf(stdout, "%s\n", read_value);
-		}
-	}
+    } else if ((command == 'v' || command == 'D')
+               && safe_str_eq(type, XML_CIB_TAG_STATUS)
+               && attrd_lazy_update(command, dest_uname, attr_name, attr_value, type, set_name,
+                                    NULL)) {
+        crm_info("Update %s=%s sent via attrd", attr_name, command == 'D' ? "<none>" : attr_value);
 
-	if(rc == cib_missing_data) {
-		    printf("Please choose from one of the matches above and suppy the 'id' with --attr-id\n");
-	} else if(rc != cib_ok) {
-		fprintf(stderr, "Error performing operation: %s\n",
-			cib_error2string(rc));
-	}
-	
-	the_cib->cmds->signoff(the_cib);
-	cib_delete(the_cib);
-	crm_xml_cleanup();
-	return rc;
+    } else if (command == 'D') {
+        rc = delete_attr(the_cib, cib_opts, type, dest_node, set_type, set_name,
+                         attr_id, attr_name, attr_value, TRUE);
+
+        if (rc == cib_NOTEXISTS) {
+            /* Nothing to delete...
+             * which means its not there...
+             * which is what the admin wanted
+             */
+            rc = cib_ok;
+        } else if (rc != cib_missing_data && safe_str_eq(crm_system_name, "crm_failcount")) {
+            char *now_s = NULL;
+            time_t now = time(NULL);
+
+            now_s = crm_itoa(now);
+            update_attr(the_cib, cib_sync_call,
+                        XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                        "last-lrm-refresh", now_s, TRUE);
+            crm_free(now_s);
+        }
+
+    } else if (command == 'v') {
+        CRM_LOG_ASSERT(type != NULL);
+        CRM_LOG_ASSERT(attr_name != NULL);
+        CRM_LOG_ASSERT(attr_value != NULL);
+
+        rc = update_attr(the_cib, cib_opts, type, dest_node, set_type, set_name,
+                         attr_id, attr_name, attr_value, TRUE);
+
+    } else {                    /* query */
+
+        char *read_value = NULL;
+
+        rc = read_attr(the_cib, type, dest_node, set_type, set_name,
+                       attr_id, attr_name, &read_value, TRUE);
+
+        if (rc == cib_NOTEXISTS && attr_default) {
+            read_value = crm_strdup(attr_default);
+            rc = cib_ok;
+        }
+
+        crm_info("Read %s=%s %s%s",
+                 attr_name, crm_str(read_value), set_name ? "in " : "", set_name ? set_name : "");
+
+        if (rc == cib_missing_data) {
+            rc = cib_ok;
+
+        } else if (BE_QUIET == FALSE) {
+            fprintf(stdout, "%s%s %s%s %s%s value=%s\n",
+                    type ? "scope=" : "", type ? type : "",
+                    attr_id ? "id=" : "", attr_id ? attr_id : "",
+                    attr_name ? "name=" : "", attr_name ? attr_name : "",
+                    read_value ? read_value : "(null)");
+
+        } else if (read_value != NULL) {
+            fprintf(stdout, "%s\n", read_value);
+        }
+    }
+
+    if (rc == cib_missing_data) {
+        printf("Please choose from one of the matches above and suppy the 'id' with --attr-id\n");
+    } else if (rc != cib_ok) {
+        fprintf(stderr, "Error performing operation: %s\n", cib_error2string(rc));
+    }
+
+    the_cib->cmds->signoff(the_cib);
+    cib_delete(the_cib);
+    crm_xml_cleanup();
+    return rc;
 }

@@ -71,162 +71,161 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char **argv)
 {
-	gboolean apply = FALSE;
-	gboolean raw_1  = FALSE;
-	gboolean raw_2  = FALSE;
-	gboolean filter = FALSE;
-	gboolean use_stdin = FALSE;
-	gboolean as_cib = FALSE;
-	int argerr = 0;
-	int flag;
-	xmlNode *object_1 = NULL;
-	xmlNode *object_2 = NULL;
-	xmlNode *output = NULL;
-	const char *xml_file_1 = NULL;
-	const char *xml_file_2 = NULL;
+    gboolean apply = FALSE;
+    gboolean raw_1 = FALSE;
+    gboolean raw_2 = FALSE;
+    gboolean filter = FALSE;
+    gboolean use_stdin = FALSE;
+    gboolean as_cib = FALSE;
+    int argerr = 0;
+    int flag;
+    xmlNode *object_1 = NULL;
+    xmlNode *object_2 = NULL;
+    xmlNode *output = NULL;
+    const char *xml_file_1 = NULL;
+    const char *xml_file_2 = NULL;
 
-	int option_index = 0;
+    int option_index = 0;
 
-	crm_log_init_quiet(NULL, LOG_CRIT-1, FALSE, FALSE, argc, argv);
-	crm_set_options(NULL, "original_xml operation [options]", long_options,
-			"A tool for determining the differences between two xml files and/or applying the differences like a patch\n");
+    crm_log_init_quiet(NULL, LOG_CRIT - 1, FALSE, FALSE, argc, argv);
+    crm_set_options(NULL, "original_xml operation [options]", long_options,
+                    "A tool for determining the differences between two xml files and/or applying the differences like a patch\n");
 
-	if(argc < 2) {
-		crm_help('?', LSB_EXIT_EINVAL);
-	}
+    if (argc < 2) {
+        crm_help('?', LSB_EXIT_EINVAL);
+    }
 
-	while (1) {
-		flag = crm_get_option(argc, argv, &option_index);
-		if (flag == -1)
-			break;
+    while (1) {
+        flag = crm_get_option(argc, argv, &option_index);
+        if (flag == -1)
+            break;
 
-		switch(flag) {
-			case 'o':
-				xml_file_1 = optarg;
-				break;
-			case 'O':
-				xml_file_1 = optarg;
-				raw_1 = TRUE;
-				break;
-			case 'n':
-				xml_file_2 = optarg;
-				break;
-			case 'N':
-				xml_file_2 = optarg;
-				raw_2 = TRUE;
-				break;
-			case 'p':
-				xml_file_2 = optarg;
-				apply = TRUE;
-				break;
-			case 'f':
-				filter = TRUE;
-				break;
-			case 's':
-				use_stdin = TRUE;
-				break;
-			case 'c':
-				as_cib = TRUE;
-				break;
-			case 'V':
-				cl_log_enable_stderr(TRUE);
-				alter_debug(DEBUG_INC);
-				break;				
-			case '?':
-			case '$':
-				crm_help(flag, LSB_EXIT_OK);
-				break;
-			default:
-				printf("Argument code 0%o (%c)"
-				       " is not (?yet?) supported\n",
-				       flag, flag);
-				++argerr;
-				break;
-		}
-	}
+        switch (flag) {
+            case 'o':
+                xml_file_1 = optarg;
+                break;
+            case 'O':
+                xml_file_1 = optarg;
+                raw_1 = TRUE;
+                break;
+            case 'n':
+                xml_file_2 = optarg;
+                break;
+            case 'N':
+                xml_file_2 = optarg;
+                raw_2 = TRUE;
+                break;
+            case 'p':
+                xml_file_2 = optarg;
+                apply = TRUE;
+                break;
+            case 'f':
+                filter = TRUE;
+                break;
+            case 's':
+                use_stdin = TRUE;
+                break;
+            case 'c':
+                as_cib = TRUE;
+                break;
+            case 'V':
+                cl_log_enable_stderr(TRUE);
+                alter_debug(DEBUG_INC);
+                break;
+            case '?':
+            case '$':
+                crm_help(flag, LSB_EXIT_OK);
+                break;
+            default:
+                printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
+                ++argerr;
+                break;
+        }
+    }
 
-	if (optind < argc) {
-		printf("non-option ARGV-elements: ");
-		while (optind < argc)
-			printf("%s ", argv[optind++]);
-		printf("\n");
-	}
+    if (optind < argc) {
+        printf("non-option ARGV-elements: ");
+        while (optind < argc)
+            printf("%s ", argv[optind++]);
+        printf("\n");
+    }
 
-	if (optind > argc) {
-		++argerr;
-	}
+    if (optind > argc) {
+        ++argerr;
+    }
 
-	if (argerr) {
-		crm_help('?', LSB_EXIT_GENERIC);
-	}
+    if (argerr) {
+        crm_help('?', LSB_EXIT_GENERIC);
+    }
 
-	if(raw_1) {
-	    object_1 = string2xml(xml_file_1);
+    if (raw_1) {
+        object_1 = string2xml(xml_file_1);
 
-	} else if(use_stdin) {
-	    fprintf(stderr, "Input first XML fragment:");
-	    object_1 = stdin2xml();
+    } else if (use_stdin) {
+        fprintf(stderr, "Input first XML fragment:");
+        object_1 = stdin2xml();
 
-	} else if(xml_file_1 != NULL) {
-	    object_1 = filename2xml(xml_file_1);
-	}
-	
-	if(raw_2) {
-	    object_2 = string2xml(xml_file_2);
-	    
-	} else if(use_stdin) {
-	    fprintf(stderr, "Input second XML fragment:");
-	    object_2 = stdin2xml();
+    } else if (xml_file_1 != NULL) {
+        object_1 = filename2xml(xml_file_1);
+    }
 
-	} else if(xml_file_2 != NULL) {
-	    object_2 = filename2xml(xml_file_2);
-	}
-	
-	if(object_1 == NULL) {
-	    fprintf(stderr, "Could not parse the first XML fragment");
-	    return 1;
-	}
-	if(object_2 == NULL) {
-	    fprintf(stderr, "Could not parse the second XML fragment");
-	    return 1;
-	}
+    if (raw_2) {
+        object_2 = string2xml(xml_file_2);
 
-	if(apply) {
-		if(as_cib == FALSE) {
-			apply_xml_diff(object_1, object_2, &output);
-		} else {
-			apply_cib_diff(object_1, object_2, &output);
-		}
-		
-	} else {
-		if(as_cib == FALSE) {
-			output = diff_xml_object(object_1, object_2, filter);
-		} else {
-			output = diff_cib_object(object_1, object_2, filter);
-		}
-	}
-	
-	if(output != NULL) {
-		char *buffer = dump_xml_formatted(output);
-		fprintf(stdout, "%s\n", crm_str(buffer));
-		crm_free(buffer);
+    } else if (use_stdin) {
+        fprintf(stderr, "Input second XML fragment:");
+        object_2 = stdin2xml();
 
-		fflush(stdout);
+    } else if (xml_file_2 != NULL) {
+        object_2 = filename2xml(xml_file_2);
+    }
 
-		if(apply) {
-		    buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, CRM_FEATURE_SET);
-		    crm_trace("Digest: %s\n", crm_str(buffer));
-		    crm_free(buffer);
-		}
-	}
+    if (object_1 == NULL) {
+        fprintf(stderr, "Could not parse the first XML fragment");
+        return 1;
+    }
+    if (object_2 == NULL) {
+        fprintf(stderr, "Could not parse the second XML fragment");
+        return 1;
+    }
 
-	free_xml(object_1);
-	free_xml(object_2);
-	free_xml(output);
-	
-	if(apply == FALSE && output != NULL) {
-		return 1;
-	}
-	
-	return 0;	
+    if (apply) {
+        if (as_cib == FALSE) {
+            apply_xml_diff(object_1, object_2, &output);
+        } else {
+            apply_cib_diff(object_1, object_2, &output);
+        }
+
+    } else {
+        if (as_cib == FALSE) {
+            output = diff_xml_object(object_1, object_2, filter);
+        } else {
+            output = diff_cib_object(object_1, object_2, filter);
+        }
+    }
+
+    if (output != NULL) {
+        char *buffer = dump_xml_formatted(output);
+
+        fprintf(stdout, "%s\n", crm_str(buffer));
+        crm_free(buffer);
+
+        fflush(stdout);
+
+        if (apply) {
+            buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, CRM_FEATURE_SET);
+            crm_trace("Digest: %s\n", crm_str(buffer));
+            crm_free(buffer);
+        }
+    }
+
+    free_xml(object_1);
+    free_xml(object_2);
+    free_xml(output);
+
+    if (apply == FALSE && output != NULL) {
+        return 1;
+    }
+
+    return 0;
 }

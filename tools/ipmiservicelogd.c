@@ -68,177 +68,187 @@
 
 static os_handler_t *os_hnd;
 
-char *getStringExecOutput (char *args[]);
-char *getSerialNumber (void);
-char *getProductName (void);
-static void con_usage (const char *name, const char *help, void *cb_data);
-static void usage (const char *progname);
-void ipmi2servicelog (struct sl_data_bmc *bmc_data);
-static int sensor_threshold_event_handler (ipmi_sensor_t *sensor, enum ipmi_event_dir_e dir, enum ipmi_thresh_e threshold, enum ipmi_event_value_dir_e high_low, enum ipmi_value_present_e value_present, unsigned int raw_value, double value, void *cb_data, ipmi_event_t *event);
-static int sensor_discrete_event_handler (ipmi_sensor_t *sensor, enum ipmi_event_dir_e dir, int offset, int severity, int prev_severity, void *cb_data, ipmi_event_t *event);
-static void sensor_change (enum ipmi_update_e op, ipmi_entity_t *ent, ipmi_sensor_t *sensor, void *cb_data);
-static void entity_change (enum ipmi_update_e op, ipmi_domain_t *domain, ipmi_entity_t *entity, void *cb_data);
-void setup_done (ipmi_domain_t *domain, int err, unsigned int conn_num, unsigned int port_num, int still_connected, void *user_data);
+char *getStringExecOutput(char *args[]);
+char *getSerialNumber(void);
+char *getProductName(void);
+static void con_usage(const char *name, const char *help, void *cb_data);
+static void usage(const char *progname);
+void ipmi2servicelog(struct sl_data_bmc *bmc_data);
+static int sensor_threshold_event_handler(ipmi_sensor_t * sensor, enum ipmi_event_dir_e dir,
+                                          enum ipmi_thresh_e threshold,
+                                          enum ipmi_event_value_dir_e high_low,
+                                          enum ipmi_value_present_e value_present,
+                                          unsigned int raw_value, double value, void *cb_data,
+                                          ipmi_event_t * event);
+static int sensor_discrete_event_handler(ipmi_sensor_t * sensor, enum ipmi_event_dir_e dir,
+                                         int offset, int severity, int prev_severity, void *cb_data,
+                                         ipmi_event_t * event);
+static void sensor_change(enum ipmi_update_e op, ipmi_entity_t * ent, ipmi_sensor_t * sensor,
+                          void *cb_data);
+static void entity_change(enum ipmi_update_e op, ipmi_domain_t * domain, ipmi_entity_t * entity,
+                          void *cb_data);
+void setup_done(ipmi_domain_t * domain, int err, unsigned int conn_num, unsigned int port_num,
+                int still_connected, void *user_data);
 
 char *
-getStringExecOutput (char *args[])
+getStringExecOutput(char *args[])
 {
-	int   rc;
-	pid_t pid;
-	int   pipefd[2];
+    int rc;
+    pid_t pid;
+    int pipefd[2];
 
-	rc = pipe2 (pipefd, 0);
+    rc = pipe2(pipefd, 0);
 
-	if (rc == -1) {
+    if (rc == -1) {
 
-		crm_err ("Error: pipe errno = %d", errno);
+        crm_err("Error: pipe errno = %d", errno);
 
-		return NULL;
-	}
+        return NULL;
+    }
 
-	pid = fork ();
+    pid = fork();
 
-	if (0 < pid) {
+    if (0 < pid) {
 
-		/* Parent */
-		int     childExitStatus;
-		char    serialNumber[256];
-		ssize_t sizeRead;
+        /* Parent */
+        int childExitStatus;
+        char serialNumber[256];
+        ssize_t sizeRead;
 
-		/* close write end of pipe */
-		rc = close (pipefd[1]);
-		if (rc == -1) {
-			crm_err ("Error: parent close (pipefd[1]) = %d", errno);
-		}
+        /* close write end of pipe */
+        rc = close(pipefd[1]);
+        if (rc == -1) {
+            crm_err("Error: parent close (pipefd[1]) = %d", errno);
+        }
 
-		/* make 0 same as read-from end of pipe */
-		rc = dup2 (pipefd[0], 0);
-		if (rc == -1) {
-			crm_err ("Error: parent dup2 (pipefd[0]) = %d", errno);
-		}
+        /* make 0 same as read-from end of pipe */
+        rc = dup2(pipefd[0], 0);
+        if (rc == -1) {
+            crm_err("Error: parent dup2 (pipefd[0]) = %d", errno);
+        }
 
-		/* close excess fildes */
-		rc = close (pipefd[0]);
-		if (rc == -1) {
-			crm_err ("Error: parent close (pipefd[0]) = %d", errno);
-		}
+        /* close excess fildes */
+        rc = close(pipefd[0]);
+        if (rc == -1) {
+            crm_err("Error: parent close (pipefd[0]) = %d", errno);
+        }
 
-		waitpid (pid, &childExitStatus, 0);
+        waitpid(pid, &childExitStatus, 0);
 
-		if (!WIFEXITED(childExitStatus)) {
+        if (!WIFEXITED(childExitStatus)) {
 
-			crm_err ("waitpid() exited with an error: status = %d", WEXITSTATUS(childExitStatus));
+            crm_err("waitpid() exited with an error: status = %d", WEXITSTATUS(childExitStatus));
 
-			return NULL;
+            return NULL;
 
-		} else if (WIFSIGNALED(childExitStatus)) {
+        } else if (WIFSIGNALED(childExitStatus)) {
 
-			crm_err ("waitpid() exited due to a signal = %d", WTERMSIG(childExitStatus));
+            crm_err("waitpid() exited due to a signal = %d", WTERMSIG(childExitStatus));
 
-			return NULL;
+            return NULL;
 
-		}
+        }
 
-		memset (serialNumber, 0, sizeof (serialNumber));
+        memset(serialNumber, 0, sizeof(serialNumber));
 
-		sizeRead = read (0, serialNumber, sizeof (serialNumber) - 1);
+        sizeRead = read(0, serialNumber, sizeof(serialNumber) - 1);
 
-		if (sizeRead > 0) {
+        if (sizeRead > 0) {
 
-			char *end             = serialNumber + strlen (serialNumber) - 1;
-			char *retSerialNumber = NULL;
+            char *end = serialNumber + strlen(serialNumber) - 1;
+            char *retSerialNumber = NULL;
 
-			while (  end > serialNumber
-			      && (*end == '\n' || *end == '\r' || *end == '\t' || *end == ' ')
-			      ) {
-				*end = '\0';
-				end--;
-			}
+            while (end > serialNumber
+                   && (*end == '\n' || *end == '\r' || *end == '\t' || *end == ' ')
+                ) {
+                *end = '\0';
+                end--;
+            }
 
-			retSerialNumber = malloc (strlen (serialNumber) + 1);
+            retSerialNumber = malloc(strlen(serialNumber) + 1);
 
-			if (retSerialNumber) {
+            if (retSerialNumber) {
 
-				strcpy (retSerialNumber, serialNumber);
+                strcpy(retSerialNumber, serialNumber);
 
-			}
+            }
 
-			return retSerialNumber;
+            return retSerialNumber;
 
-		}
+        }
 
-		return NULL;
+        return NULL;
 
-	} else if (pid == 0) {
+    } else if (pid == 0) {
 
-		/* Child */
+        /* Child */
 
-		/* close read end of pipe */
-		rc = close (pipefd[0]);
-		if (rc == -1) {
-			crm_err ("Error: child close (pipefd[0]) = %d", errno);
-		}
+        /* close read end of pipe */
+        rc = close(pipefd[0]);
+        if (rc == -1) {
+            crm_err("Error: child close (pipefd[0]) = %d", errno);
+        }
 
-		/* make 1 same as write-to end of pipe */
-		rc = dup2 (pipefd[1], 1);
-		if (rc == -1) {
-			crm_err ("Error: child dup2 (pipefd[1]) = %d", errno);
-		}
+        /* make 1 same as write-to end of pipe */
+        rc = dup2(pipefd[1], 1);
+        if (rc == -1) {
+            crm_err("Error: child dup2 (pipefd[1]) = %d", errno);
+        }
 
-		/* close excess fildes */
-		rc = close (pipefd[1]);
-		if (rc == -1) {
-			crm_err ("Error: child close (pipefd[1]) = %d", errno);
-		}
+        /* close excess fildes */
+        rc = close(pipefd[1]);
+        if (rc == -1) {
+            crm_err("Error: child close (pipefd[1]) = %d", errno);
+        }
 
-		rc = execvp (args[0], args);
+        rc = execvp(args[0], args);
 
-		if (rc == -1) {
-			crm_err ("Error: child execvp = %d", errno);
-		}
+        if (rc == -1) {
+            crm_err("Error: child execvp = %d", errno);
+        }
 
-		/* In case of error */
-		return NULL;
+        /* In case of error */
+        return NULL;
 
-	} else {
+    } else {
 
-		/* Error */
-		crm_err ("fork errno = %d", errno);
+        /* Error */
+        crm_err("fork errno = %d", errno);
 
-		return NULL;
-	}
+        return NULL;
+    }
 
-	return NULL;
+    return NULL;
 }
 
 char *
-getSerialNumber (void)
+getSerialNumber(void)
 {
-	char *dmiArgs[] = {
-		"dmidecode",
-		"--string",
-		"system-serial-number",
-		NULL
-	};
+    char *dmiArgs[] = {
+        "dmidecode",
+        "--string",
+        "system-serial-number",
+        NULL
+    };
 
-	return getStringExecOutput (dmiArgs);
+    return getStringExecOutput(dmiArgs);
 }
 
 char *
-getProductName (void)
+getProductName(void)
 {
-	char *dmiArgs[] = {
-		"dmidecode",
-		"--string",
-		"system-product-name",
-		NULL
-	};
+    char *dmiArgs[] = {
+        "dmidecode",
+        "--string",
+        "system-product-name",
+        NULL
+    };
 
-	return getStringExecOutput (dmiArgs);
+    return getStringExecOutput(dmiArgs);
 }
 
 static void
-con_usage (const char *name, const char *help, void *cb_data)
+con_usage(const char *name, const char *help, void *cb_data)
 {
     printf("\n%s%s", name, help);
 }
@@ -253,45 +263,43 @@ usage(const char *progname)
 }
 
 void
-ipmi2servicelog (struct sl_data_bmc *bmc_data)
+ipmi2servicelog(struct sl_data_bmc *bmc_data)
 {
-    servicelog          *slog          = NULL;
-    struct sl_event      sl_event;
-    uint64_t             new_id        = 0;
-    struct utsname       name;
-    char                *serial_number = NULL;
-    char                *product_name  = NULL;
-    int                  rc;
+    servicelog *slog = NULL;
+    struct sl_event sl_event;
+    uint64_t new_id = 0;
+    struct utsname name;
+    char *serial_number = NULL;
+    char *product_name = NULL;
+    int rc;
 
-    if (uname (&name) == -1)
-    {
-	crm_err ("Error: uname failed");
-	return;
+    if (uname(&name) == -1) {
+        crm_err("Error: uname failed");
+        return;
     }
 
-    rc = servicelog_open (&slog, 0); /* flags is one of SL_FLAG_xxx */
+    rc = servicelog_open(&slog, 0);     /* flags is one of SL_FLAG_xxx */
 
-    if (!slog)
-    {
-	crm_err ("Error: servicelog_open failed, rc = %d", rc);
-	return;
+    if (!slog) {
+        crm_err("Error: servicelog_open failed, rc = %d", rc);
+        return;
     }
 
-    serial_number = getSerialNumber ();
+    serial_number = getSerialNumber();
     if (serial_number) {
-	if (strlen (serial_number) > 20) {
-	    serial_number[20] = '\0';
-	}
+        if (strlen(serial_number) > 20) {
+            serial_number[20] = '\0';
+        }
     }
 
-    product_name = getProductName ();
+    product_name = getProductName();
     if (product_name) {
-	if (strlen (product_name) > 20) {
-	    product_name[20] = '\0';
-	}
+        if (strlen(product_name) > 20) {
+            product_name[20] = '\0';
+        }
     }
 
-    memset (&sl_event, 0, sizeof (sl_event));
+    memset(&sl_event, 0, sizeof(sl_event));
 
 /* *INDENT-OFF* */
     sl_event.next             = NULL;                 /* only used if in a linked list */
@@ -320,89 +328,81 @@ ipmi2servicelog (struct sl_data_bmc *bmc_data)
     sl_event.addl_data        = &bmc_data;            /* pointer to an sl_data_* struct */
 /* *INDENT-ON* */
 
-    rc = servicelog_event_log (slog, &sl_event, &new_id);
+    rc = servicelog_event_log(slog, &sl_event, &new_id);
 
-    if (rc != 0)
-    {
-	crm_err ("Error: servicelog_event_log, rc = %d (\"%s\")", rc, servicelog_error (slog));
-    }
-    else
-    {
-	crm_debug ("Sending to servicelog database");
+    if (rc != 0) {
+        crm_err("Error: servicelog_event_log, rc = %d (\"%s\")", rc, servicelog_error(slog));
+    } else {
+        crm_debug("Sending to servicelog database");
     }
 
-    free (serial_number);
-    free (product_name);
+    free(serial_number);
+    free(product_name);
 
-    servicelog_close (slog);
+    servicelog_close(slog);
 }
 
 static int
-sensor_threshold_event_handler(ipmi_sensor_t              *sensor,
-			       enum ipmi_event_dir_e       dir,
-			       enum ipmi_thresh_e          threshold,
-			       enum ipmi_event_value_dir_e high_low,
-			       enum ipmi_value_present_e   value_present,
-			       unsigned int                raw_value,
-			       double                      value,
-			       void                       *cb_data,
-			       ipmi_event_t               *event)
+sensor_threshold_event_handler(ipmi_sensor_t * sensor,
+                               enum ipmi_event_dir_e dir,
+                               enum ipmi_thresh_e threshold,
+                               enum ipmi_event_value_dir_e high_low,
+                               enum ipmi_value_present_e value_present,
+                               unsigned int raw_value,
+                               double value, void *cb_data, ipmi_event_t * event)
 {
-    ipmi_entity_t      *ent       = ipmi_sensor_get_entity(sensor);
-    int                 id,
-                        instance;
-    char                name[IPMI_ENTITY_NAME_LEN];
-    struct sl_data_bmc  bmc_data;
-    uint32_t            sel_id;
-    uint32_t            sel_type;
-    uint16_t            generator;
-    uint8_t             version;
-    uint8_t             sensor_type;
-    int                 sensor_lun;
-    int                 sensor_number;
-    uint8_t             event_class;
-    uint8_t             event_type;
-    int                 direction;
+    ipmi_entity_t *ent = ipmi_sensor_get_entity(sensor);
+    int id, instance;
+    char name[IPMI_ENTITY_NAME_LEN];
+    struct sl_data_bmc bmc_data;
+    uint32_t sel_id;
+    uint32_t sel_type;
+    uint16_t generator;
+    uint8_t version;
+    uint8_t sensor_type;
+    int sensor_lun;
+    int sensor_number;
+    uint8_t event_class;
+    uint8_t event_type;
+    int direction;
 
     id = ipmi_entity_get_entity_id(ent);
     instance = ipmi_entity_get_entity_instance(ent);
-    ipmi_sensor_get_id(sensor, name, sizeof (name));
+    ipmi_sensor_get_id(sensor, name, sizeof(name));
 
-    ipmi_sensor_get_num (sensor, &sensor_lun, &sensor_number);
+    ipmi_sensor_get_num(sensor, &sensor_lun, &sensor_number);
 
-    sel_id        = ipmi_entity_get_entity_id (ent);
-    sel_type      = ipmi_entity_get_type (ent);
-    generator     = ipmi_entity_get_slave_address (ent) | (sensor_lun << 5); /* LUN (2 bits) | SLAVE ADDRESS (5 bits) */
-    version       = 0x04;
-    sensor_type   = ipmi_sensor_get_sensor_type (sensor);
-    event_class   = 0; /* @TBD - where does this come from? */
-    event_type    = ipmi_event_get_type (event);
-    direction     = dir;
+    sel_id = ipmi_entity_get_entity_id(ent);
+    sel_type = ipmi_entity_get_type(ent);
+    generator = ipmi_entity_get_slave_address(ent) | (sensor_lun << 5); /* LUN (2 bits) | SLAVE ADDRESS (5 bits) */
+    version = 0x04;
+    sensor_type = ipmi_sensor_get_sensor_type(sensor);
+    event_class = 0;            /* @TBD - where does this come from? */
+    event_type = ipmi_event_get_type(event);
+    direction = dir;
 
-    memset (&bmc_data, 0, sizeof (bmc_data));
+    memset(&bmc_data, 0, sizeof(bmc_data));
 
-    bmc_data.sel_id           = sel_id;
-    bmc_data.sel_type         = sel_type;
-    bmc_data.generator        = generator;
-    bmc_data.version          = version;
-    bmc_data.sensor_type      = sensor_type;
-    bmc_data.sensor_number    = sensor_number;
-    bmc_data.event_class      = event_class;
-    bmc_data.event_type       = event_type;
-    bmc_data.direction        = direction;
+    bmc_data.sel_id = sel_id;
+    bmc_data.sel_type = sel_type;
+    bmc_data.generator = generator;
+    bmc_data.version = version;
+    bmc_data.sensor_type = sensor_type;
+    bmc_data.sensor_number = sensor_number;
+    bmc_data.event_class = event_class;
+    bmc_data.event_type = event_type;
+    bmc_data.direction = direction;
 
-    crm_debug ("Writing bmc_data (%08x, %08x, %04x, %02x, %02x, %02x, %02x, %02x, %d)\n",
-               bmc_data.sel_id,
-               bmc_data.sel_type,
-               bmc_data.generator,
-               bmc_data.version,
-               bmc_data.sensor_type,
-               bmc_data.sensor_number,
-               bmc_data.event_class,
-               bmc_data.event_type,
-               bmc_data.direction);
+    crm_debug("Writing bmc_data (%08x, %08x, %04x, %02x, %02x, %02x, %02x, %02x, %d)\n",
+              bmc_data.sel_id,
+              bmc_data.sel_type,
+              bmc_data.generator,
+              bmc_data.version,
+              bmc_data.sensor_type,
+              bmc_data.sensor_number,
+              bmc_data.event_class, bmc_data.event_type, bmc_data.direction);
 
-    ipmi2servicelog (&bmc_data);
+    ipmi2servicelog(&bmc_data);
 
     /* This passes the event on to the main event handler, which does
        not exist in this program. */
@@ -410,70 +410,64 @@ sensor_threshold_event_handler(ipmi_sensor_t              *sensor,
 }
 
 static int
-sensor_discrete_event_handler(ipmi_sensor_t         *sensor,
-			      enum ipmi_event_dir_e  dir,
-			      int                    offset,
-			      int                    severity,
-			      int                    prev_severity,
-			      void                  *cb_data,
-			      ipmi_event_t          *event)
+sensor_discrete_event_handler(ipmi_sensor_t * sensor,
+                              enum ipmi_event_dir_e dir,
+                              int offset,
+                              int severity, int prev_severity, void *cb_data, ipmi_event_t * event)
 {
-    ipmi_entity_t      *ent       = ipmi_sensor_get_entity(sensor);
-    int                 id,
-                        instance;
-    char                name[IPMI_ENTITY_NAME_LEN];
-    struct sl_data_bmc  bmc_data;
-    uint32_t            sel_id;
-    uint32_t            sel_type;
-    uint16_t            generator;
-    uint8_t             version;
-    uint8_t             sensor_type;
-    int                 sensor_lun;
-    int                 sensor_number;
-    uint8_t             event_class;
-    uint8_t             event_type;
-    int                 direction;
+    ipmi_entity_t *ent = ipmi_sensor_get_entity(sensor);
+    int id, instance;
+    char name[IPMI_ENTITY_NAME_LEN];
+    struct sl_data_bmc bmc_data;
+    uint32_t sel_id;
+    uint32_t sel_type;
+    uint16_t generator;
+    uint8_t version;
+    uint8_t sensor_type;
+    int sensor_lun;
+    int sensor_number;
+    uint8_t event_class;
+    uint8_t event_type;
+    int direction;
 
     id = ipmi_entity_get_entity_id(ent);
     instance = ipmi_entity_get_entity_instance(ent);
-    ipmi_sensor_get_id(sensor, name, sizeof (name));
+    ipmi_sensor_get_id(sensor, name, sizeof(name));
 
-    sel_id        = ipmi_entity_get_entity_id (ent);
-    sel_type      = ipmi_entity_get_type (ent);
-    generator     = ipmi_entity_get_slave_address (ent) | (sensor_lun << 5); /* LUN (2 bits) | SLAVE ADDRESS (5 bits) */
-    version       = 0x04;
-    sensor_type   = ipmi_sensor_get_sensor_type (sensor);
+    sel_id = ipmi_entity_get_entity_id(ent);
+    sel_type = ipmi_entity_get_type(ent);
+    generator = ipmi_entity_get_slave_address(ent) | (sensor_lun << 5); /* LUN (2 bits) | SLAVE ADDRESS (5 bits) */
+    version = 0x04;
+    sensor_type = ipmi_sensor_get_sensor_type(sensor);
 
-    ipmi_sensor_get_num (sensor, &sensor_lun, &sensor_number);
+    ipmi_sensor_get_num(sensor, &sensor_lun, &sensor_number);
 
-    event_class   = 0; /* @TBD - where does this come from? */
-    event_type    = ipmi_event_get_type (event);
-    direction     = dir;
+    event_class = 0;            /* @TBD - where does this come from? */
+    event_type = ipmi_event_get_type(event);
+    direction = dir;
 
-    memset (&bmc_data, 0, sizeof (bmc_data));
+    memset(&bmc_data, 0, sizeof(bmc_data));
 
-    bmc_data.sel_id        = sel_id;
-    bmc_data.sel_type      = sel_type;
-    bmc_data.generator     = generator;
-    bmc_data.version       = version;
-    bmc_data.sensor_type   = sensor_type;
+    bmc_data.sel_id = sel_id;
+    bmc_data.sel_type = sel_type;
+    bmc_data.generator = generator;
+    bmc_data.version = version;
+    bmc_data.sensor_type = sensor_type;
     bmc_data.sensor_number = sensor_number;
-    bmc_data.event_class   = event_class;
-    bmc_data.event_type    = event_type;
-    bmc_data.direction     = direction;
+    bmc_data.event_class = event_class;
+    bmc_data.event_type = event_type;
+    bmc_data.direction = direction;
 
-    crm_debug ("Writing bmc_data (%08x, %08x, %04x, %02x, %02x, %02x, %02x, %02x, %d)\n",
-               bmc_data.sel_id,
-               bmc_data.sel_type,
-               bmc_data.generator,
-               bmc_data.version,
-               bmc_data.sensor_type,
-               bmc_data.sensor_number,
-               bmc_data.event_class,
-               bmc_data.event_type,
-               bmc_data.direction);
+    crm_debug("Writing bmc_data (%08x, %08x, %04x, %02x, %02x, %02x, %02x, %02x, %d)\n",
+              bmc_data.sel_id,
+              bmc_data.sel_type,
+              bmc_data.generator,
+              bmc_data.version,
+              bmc_data.sensor_type,
+              bmc_data.sensor_number,
+              bmc_data.event_class, bmc_data.event_type, bmc_data.direction);
 
-    ipmi2servicelog (&bmc_data);
+    ipmi2servicelog(&bmc_data);
 
     /* This passes the event on to the main event handler, which does
        not exist in this program. */
@@ -484,24 +478,19 @@ sensor_discrete_event_handler(ipmi_sensor_t         *sensor,
    We display the information of the sensor if we find a new sensor
 */
 static void
-sensor_change(enum ipmi_update_e  op,
-	      ipmi_entity_t      *ent,
-	      ipmi_sensor_t      *sensor,
-	      void               *cb_data)
+sensor_change(enum ipmi_update_e op, ipmi_entity_t * ent, ipmi_sensor_t * sensor, void *cb_data)
 {
     int rv;
 
     if (op == IPMI_ADDED) {
-	if (ipmi_sensor_get_event_reading_type(sensor) == IPMI_EVENT_READING_TYPE_THRESHOLD)
-	    rv = ipmi_sensor_add_threshold_event_handler (sensor,
-		 sensor_threshold_event_handler,
-		 NULL);
-	else
-	    rv = ipmi_sensor_add_discrete_event_handler (sensor,
-		 sensor_discrete_event_handler,
-		 NULL);
-	if (rv)
-	    crm_err ("Unable to add the sensor event handler: %x", rv);
+        if (ipmi_sensor_get_event_reading_type(sensor) == IPMI_EVENT_READING_TYPE_THRESHOLD)
+            rv = ipmi_sensor_add_threshold_event_handler(sensor,
+                                                         sensor_threshold_event_handler, NULL);
+        else
+            rv = ipmi_sensor_add_discrete_event_handler(sensor,
+                                                        sensor_discrete_event_handler, NULL);
+        if (rv)
+            crm_err("Unable to add the sensor event handler: %x", rv);
     }
 }
 
@@ -509,10 +498,7 @@ sensor_change(enum ipmi_update_e  op,
    When a new entity is created, we search all sensors that belong 
    to the entity */
 static void
-entity_change(enum ipmi_update_e  op,
-	      ipmi_domain_t      *domain,
-	      ipmi_entity_t      *entity,
-	      void               *cb_data)
+entity_change(enum ipmi_update_e op, ipmi_domain_t * domain, ipmi_entity_t * entity, void *cb_data)
 {
     int rv;
     int id, instance;
@@ -520,37 +506,32 @@ entity_change(enum ipmi_update_e  op,
     id = ipmi_entity_get_entity_id(entity);
     instance = ipmi_entity_get_entity_instance(entity);
     if (op == IPMI_ADDED) {
-	    /* Register callback so that when the status of a
-	       sensor changes, sensor_change is called */
-	    rv = ipmi_entity_add_sensor_update_handler(entity,
-						       sensor_change,
-						       entity);
-	    if (rv) {
-		crm_err ("ipmi_entity_set_sensor_update_handler: 0x%x", rv);
-		exit(1);
-	    }
+        /* Register callback so that when the status of a
+           sensor changes, sensor_change is called */
+        rv = ipmi_entity_add_sensor_update_handler(entity, sensor_change, entity);
+        if (rv) {
+            crm_err("ipmi_entity_set_sensor_update_handler: 0x%x", rv);
+            exit(1);
+        }
     }
 }
 
 /* After we have established connection to domain, this function get called
    At this time, we can do whatever things we want to do. Herr we want to
-   search all entities in the system */ 
+   search all entities in the system */
 void
-setup_done(ipmi_domain_t *domain,
-	   int            err,
-	   unsigned int   conn_num,
-	   unsigned int   port_num,
-	   int            still_connected,
-	   void          *user_data)
+setup_done(ipmi_domain_t * domain,
+           int err,
+           unsigned int conn_num, unsigned int port_num, int still_connected, void *user_data)
 {
     int rv;
 
     /* Register a callback functin entity_change. When a new entities 
        is created, entity_change is called */
     rv = ipmi_domain_add_entity_update_handler(domain, entity_change, domain);
-    if (rv) {      
-	crm_err ("ipmi_domain_add_entity_update_handler return error: %d", rv);
-	return;
+    if (rv) {
+        crm_err("ipmi_domain_add_entity_update_handler return error: %d", rv);
+        return;
     }
 
 }
@@ -558,16 +539,16 @@ setup_done(ipmi_domain_t *domain,
 int
 main(int argc, char *argv[])
 {
-    int         rv;
-    int         curr_arg = 1;
+    int rv;
+    int curr_arg = 1;
     ipmi_args_t *args;
-    ipmi_con_t  *con;
+    ipmi_con_t *con;
 
     /* OS handler allocated first. */
     os_hnd = ipmi_posix_setup_os_handler();
     if (!os_hnd) {
-	crm_err ("ipmi_smi_setup_con: Unable to allocate os handler");
-	exit(1);
+        crm_err("ipmi_smi_setup_con: Unable to allocate os handler");
+        exit(1);
     }
 
     /* Initialize the OpenIPMI library. */
@@ -576,23 +557,22 @@ main(int argc, char *argv[])
 #ifdef COMPLEX
     rv = ipmi_parse_args2(&curr_arg, argc, argv, &args);
     if (rv) {
-	crm_err ("Error parsing command arguments, argument %d: %s",
-		 curr_arg, strerror(rv));
-	usage(argv[0]);
-	exit(1);
+        crm_err("Error parsing command arguments, argument %d: %s", curr_arg, strerror(rv));
+        usage(argv[0]);
+        exit(1);
     }
 #endif
 
-    crm_make_daemon ("ipmiservicelogd", TRUE, "/var/run/ipmiservicelogd.pid0");
+    crm_make_daemon("ipmiservicelogd", TRUE, "/var/run/ipmiservicelogd.pid0");
 
-    crm_log_init ("ipmiservicelogd", LOG_INFO, FALSE, TRUE, argc, argv);
+    crm_log_init("ipmiservicelogd", LOG_INFO, FALSE, TRUE, argc, argv);
 
 #ifdef COMPLEX
     rv = ipmi_args_setup_con(args, os_hnd, NULL, &con);
     if (rv) {
-        crm_err ("ipmi_ip_setup_con: %s", strerror(rv));
-        crm_err ("Error: Is IPMI configured correctly?");
-	exit(1);
+        crm_err("ipmi_ip_setup_con: %s", strerror(rv));
+        crm_err("Error: Is IPMI configured correctly?");
+        exit(1);
     }
 #else
     /* If all you need is an SMI connection, this is all the code you
@@ -605,21 +585,20 @@ main(int argc, char *argv[])
        called. */
     rv = ipmi_smi_setup_con(0, os_hnd, NULL, &con);
     if (rv) {
-	crm_err ("ipmi_smi_setup_con: %s", strerror(rv));
-        crm_err ("Error: Is IPMI configured correctly?");
-	exit(1);
+        crm_err("ipmi_smi_setup_con: %s", strerror(rv));
+        crm_err("Error: Is IPMI configured correctly?");
+        exit(1);
     }
 #endif
 
-    rv = ipmi_open_domain("", &con, 1, setup_done, NULL, NULL, NULL,
-			  NULL, 0, NULL);
+    rv = ipmi_open_domain("", &con, 1, setup_done, NULL, NULL, NULL, NULL, 0, NULL);
     if (rv) {
-	crm_err ("ipmi_init_domain: %s", strerror(rv));
-	exit(1);
+        crm_err("ipmi_init_domain: %s", strerror(rv));
+        exit(1);
     }
 
     /* This is the main loop of the event-driven program. 
-       Try <CTRL-C> to exit the program */ 
+       Try <CTRL-C> to exit the program */
     /* Let the selector code run the select loop. */
     os_hnd->operation_loop(os_hnd);
 

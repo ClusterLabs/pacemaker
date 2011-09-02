@@ -49,55 +49,59 @@ const char *cib_action = NULL;
 
 cib_t *real_cib = NULL;
 
-int dump_data_element(
-    int depth, char **buffer, int *max, int *offset, const char *prefix, xmlNode *data, gboolean formatted);
+int dump_data_element(int depth, char **buffer, int *max, int *offset, const char *prefix,
+                      xmlNode * data, gboolean formatted);
 
-void print_xml_diff(FILE *where, xmlNode *diff);
+void print_xml_diff(FILE * where, xmlNode * diff);
 
 static int force_flag = 0;
 static int batch_flag = 0;
 
-static char *get_shadow_prompt(const char *name)
+static char *
+get_shadow_prompt(const char *name)
 {
     int len = 16;
     char *prompt = NULL;
+
     CRM_ASSERT(name != NULL);
-    
+
     len += strlen(name);
     crm_malloc0(prompt, len);
-    
+
     snprintf(prompt, len, "shadow[%s] # ", name);
     return prompt;
 }
 
-
-static void shadow_setup(char *name, gboolean do_switch)
+static void
+shadow_setup(char *name, gboolean do_switch)
 {
     const char *prompt = getenv("PS1");
     const char *shell = getenv("SHELL");
     char *new_prompt = get_shadow_prompt(name);
+
     printf("Setting up shadow instance\n");
 
-    if(safe_str_eq(new_prompt, prompt)) {
-	/* nothing to do */
-	goto done;
-	
-    } else if(batch_flag == FALSE && shell != NULL) {
-	setenv("PS1", new_prompt, 1);
-	setenv("CIB_shadow", name, 1);
-	printf("Type Ctrl-D to exit the crm_shadow shell\n");
+    if (safe_str_eq(new_prompt, prompt)) {
+        /* nothing to do */
+        goto done;
 
-	if(strstr(shell, "bash")) {
-	    execl(shell, "--norc", "--noprofile", NULL);
-	} else {
-	    execl(shell, "--noprofile", NULL);
-	}
-	
+    } else if (batch_flag == FALSE && shell != NULL) {
+        setenv("PS1", new_prompt, 1);
+        setenv("CIB_shadow", name, 1);
+        printf("Type Ctrl-D to exit the crm_shadow shell\n");
+
+        if (strstr(shell, "bash")) {
+            execl(shell, "--norc", "--noprofile", NULL);
+        } else {
+            execl(shell, "--noprofile", NULL);
+        }
+
     } else if (do_switch) {
-	printf("To switch to the named shadow instance, paste the following into your shell:\n");
+        printf("To switch to the named shadow instance, paste the following into your shell:\n");
 
     } else {
-	printf("A new shadow instance was created.  To begin using it paste the following into your shell:\n");
+        printf
+            ("A new shadow instance was created.  To begin using it paste the following into your shell:\n");
     }
     printf("  CIB_shadow=%s ; export CIB_shadow\n", name);
 
@@ -105,17 +109,19 @@ static void shadow_setup(char *name, gboolean do_switch)
     crm_free(new_prompt);
 }
 
-static void shadow_teardown(char *name)
+static void
+shadow_teardown(char *name)
 {
     const char *prompt = getenv("PS1");
     char *our_prompt = get_shadow_prompt(name);
-    
-    if(prompt != NULL && strstr(prompt, our_prompt)) {
-	printf("Now type Ctrl-D to exit the crm_shadow shell\n");
-	
+
+    if (prompt != NULL && strstr(prompt, our_prompt)) {
+        printf("Now type Ctrl-D to exit the crm_shadow shell\n");
+
     } else {
-	printf("Please remember to unset the CIB_shadow variable by pasting the following into your shell:\n");
-	printf("  unset CIB_shadow\n");
+        printf
+            ("Please remember to unset the CIB_shadow variable by pasting the following into your shell:\n");
+        printf("  unset CIB_shadow\n");
     }
     crm_free(our_prompt);
 }
@@ -179,277 +185,283 @@ main(int argc, char **argv)
 
     crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
     crm_set_options(NULL, "(query|command) [modifiers]", long_options,
-		    "Perform configuration changes in a sandbox before updating the live cluster."
-		    "\n\nSets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
-		    " offline instead of against a live cluster, allowing changes to be previewed and tested"
-		    " for side-effects.\n");
-    
-    if(argc < 2) {
-	crm_help('?', LSB_EXIT_EINVAL);
+                    "Perform configuration changes in a sandbox before updating the live cluster."
+                    "\n\nSets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
+                    " offline instead of against a live cluster, allowing changes to be previewed and tested"
+                    " for side-effects.\n");
+
+    if (argc < 2) {
+        crm_help('?', LSB_EXIT_EINVAL);
     }
 
     while (1) {
-	flag = crm_get_option(argc, argv, &option_index);
-	if (flag == -1 || flag == 0)
-	    break;
+        flag = crm_get_option(argc, argv, &option_index);
+        if (flag == -1 || flag == 0)
+            break;
 
-	switch(flag) {
-	    case 'a':
-		full_upload = TRUE;
-		break;
-	    case 'd':
-	    case 'E':
-	    case 'p':
-	    case 'w':
-	    case 'F':
-		command = flag;
-		crm_free(shadow);
-		shadow = crm_strdup(getenv("CIB_shadow"));
-		break;
-	    case 'e':
-	    case 'c':
-	    case 's':
-	    case 'r':
-		command = flag;
-		crm_free(shadow);
-		shadow = crm_strdup(optarg);
-		break;
-	    case 'C':
-	    case 'D':
-		command = flag;
-		dangerous_cmd = TRUE;
-		crm_free(shadow);
-		shadow = crm_strdup(optarg);
-		break;
-	    case 'V':
-		command_options = command_options | cib_verbose;
-		cl_log_enable_stderr(TRUE);
-		alter_debug(DEBUG_INC);
-		break;
-	    case '$':
-	    case '?':
-		crm_help(flag, LSB_EXIT_OK);
-		break;
-	    case 'f':
-		command_options |= cib_quorum_override;
-		force_flag = 1;
-		break;
-	    case 'b':
-		batch_flag = 1;
-		break;
-	    default:
-		printf("Argument code 0%o (%c)"
-		       " is not (?yet?) supported\n",
-		       flag, flag);
-		++argerr;
-		break;
-	}
+        switch (flag) {
+            case 'a':
+                full_upload = TRUE;
+                break;
+            case 'd':
+            case 'E':
+            case 'p':
+            case 'w':
+            case 'F':
+                command = flag;
+                crm_free(shadow);
+                shadow = crm_strdup(getenv("CIB_shadow"));
+                break;
+            case 'e':
+            case 'c':
+            case 's':
+            case 'r':
+                command = flag;
+                crm_free(shadow);
+                shadow = crm_strdup(optarg);
+                break;
+            case 'C':
+            case 'D':
+                command = flag;
+                dangerous_cmd = TRUE;
+                crm_free(shadow);
+                shadow = crm_strdup(optarg);
+                break;
+            case 'V':
+                command_options = command_options | cib_verbose;
+                cl_log_enable_stderr(TRUE);
+                alter_debug(DEBUG_INC);
+                break;
+            case '$':
+            case '?':
+                crm_help(flag, LSB_EXIT_OK);
+                break;
+            case 'f':
+                command_options |= cib_quorum_override;
+                force_flag = 1;
+                break;
+            case 'b':
+                batch_flag = 1;
+                break;
+            default:
+                printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
+                ++argerr;
+                break;
+        }
     }
 
     if (optind < argc) {
-	printf("non-option ARGV-elements: ");
-	while (optind < argc)
-	    printf("%s ", argv[optind++]);
-	printf("\n");
-	crm_help('?', LSB_EXIT_EINVAL);
+        printf("non-option ARGV-elements: ");
+        while (optind < argc)
+            printf("%s ", argv[optind++]);
+        printf("\n");
+        crm_help('?', LSB_EXIT_EINVAL);
     }
 
     if (optind > argc) {
-	++argerr;
+        ++argerr;
     }
-	
+
     if (argerr) {
-	crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    if(command == 'w') {
-	/* which shadow instance is active? */
-	const char *local = getenv("CIB_shadow");
-	if(local == NULL) {
-	    fprintf(stderr, "No shadow instance provided\n");
-	    rc = cib_NOTEXISTS;
-	    goto done;
-	}
-	fprintf(stdout, "%s\n", local);
-	rc = 0;
-	goto done;
-    }
-    
-    if(shadow == NULL) {
-	fprintf(stderr, "No shadow instance provided\n");
-	fflush(stderr);
-	rc = CIBRES_MISSING_FIELD;
-	goto done;
+    if (command == 'w') {
+        /* which shadow instance is active? */
+        const char *local = getenv("CIB_shadow");
 
-    } else if(command != 's' && command != 'c') {
-	const char *local = getenv("CIB_shadow");
-	if(local != NULL && safe_str_neq(local, shadow) && force_flag == FALSE) {
-	    fprintf(stderr, "The supplied shadow instance (%s) is not the same as the active one (%s).\n"
-		    "  To prevent accidental destruction of the cluster,"
-		    " the --force flag is required in order to proceed.\n", shadow, local);
-	    fflush(stderr);
-	    rc = LSB_EXIT_GENERIC;
-	    goto done;
-	}
+        if (local == NULL) {
+            fprintf(stderr, "No shadow instance provided\n");
+            rc = cib_NOTEXISTS;
+            goto done;
+        }
+        fprintf(stdout, "%s\n", local);
+        rc = 0;
+        goto done;
     }
 
-    if(dangerous_cmd && force_flag == FALSE) {
-	fprintf(stderr, "The supplied command is considered dangerous."
-		"  To prevent accidental destruction of the cluster,"
-		" the --force flag is required in order to proceed.\n");
-	fflush(stderr);
-	rc = LSB_EXIT_GENERIC;
-	goto done;
+    if (shadow == NULL) {
+        fprintf(stderr, "No shadow instance provided\n");
+        fflush(stderr);
+        rc = CIBRES_MISSING_FIELD;
+        goto done;
+
+    } else if (command != 's' && command != 'c') {
+        const char *local = getenv("CIB_shadow");
+
+        if (local != NULL && safe_str_neq(local, shadow) && force_flag == FALSE) {
+            fprintf(stderr,
+                    "The supplied shadow instance (%s) is not the same as the active one (%s).\n"
+                    "  To prevent accidental destruction of the cluster,"
+                    " the --force flag is required in order to proceed.\n", shadow, local);
+            fflush(stderr);
+            rc = LSB_EXIT_GENERIC;
+            goto done;
+        }
+    }
+
+    if (dangerous_cmd && force_flag == FALSE) {
+        fprintf(stderr, "The supplied command is considered dangerous."
+                "  To prevent accidental destruction of the cluster,"
+                " the --force flag is required in order to proceed.\n");
+        fflush(stderr);
+        rc = LSB_EXIT_GENERIC;
+        goto done;
     }
 
     shadow_file = get_shadow_file(shadow);
-    if(command == 'D') {
-	/* delete the file */
-	rc = stat(shadow_file, &buf);
-	if(rc == 0) {
-	    rc = unlink(shadow_file);
-	    if(rc != 0) {
-		fprintf(stderr, "Could not remove shadow instance '%s': %s\n", shadow, strerror(errno));
-		goto done;
-	    }
-	}
+    if (command == 'D') {
+        /* delete the file */
+        rc = stat(shadow_file, &buf);
+        if (rc == 0) {
+            rc = unlink(shadow_file);
+            if (rc != 0) {
+                fprintf(stderr, "Could not remove shadow instance '%s': %s\n", shadow,
+                        strerror(errno));
+                goto done;
+            }
+        }
 
-	shadow_teardown(shadow);
-	goto done;
+        shadow_teardown(shadow);
+        goto done;
 
-    } else if(command == 'F') {
-	printf("%s\n", shadow_file);
-	rc = 0;
-	goto done;
+    } else if (command == 'F') {
+        printf("%s\n", shadow_file);
+        rc = 0;
+        goto done;
     }
 
-    if(command == 'd' || command == 'r' || command == 'c' || command == 'C') {
-	real_cib = cib_new_no_shadow();
-	rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
-	if(rc != cib_ok) {
-	    fprintf(stderr, "Signon to CIB failed: %s\n", cib_error2string(rc));
-	    goto done;
-	}
+    if (command == 'd' || command == 'r' || command == 'c' || command == 'C') {
+        real_cib = cib_new_no_shadow();
+        rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
+        if (rc != cib_ok) {
+            fprintf(stderr, "Signon to CIB failed: %s\n", cib_error2string(rc));
+            goto done;
+        }
     }
-    
+
     rc = stat(shadow_file, &buf);
 
-    if(command == 'e' || command == 'c') {
-	if (rc == 0 && force_flag == FALSE) {
-	    fprintf(stderr, "A shadow instance '%s' already exists.\n"
-		    "  To prevent accidental destruction of the cluster,"
-		    " the --force flag is required in order to proceed.\n", shadow);
-	    rc = cib_EXISTS;
-	    goto done;
-	}
+    if (command == 'e' || command == 'c') {
+        if (rc == 0 && force_flag == FALSE) {
+            fprintf(stderr, "A shadow instance '%s' already exists.\n"
+                    "  To prevent accidental destruction of the cluster,"
+                    " the --force flag is required in order to proceed.\n", shadow);
+            rc = cib_EXISTS;
+            goto done;
+        }
 
-    } else if(rc != 0) {
-	fprintf(stderr, "Could not access shadow instance '%s': %s\n", shadow, strerror(errno));
-	rc = cib_NOTEXISTS;
-	goto done;
+    } else if (rc != 0) {
+        fprintf(stderr, "Could not access shadow instance '%s': %s\n", shadow, strerror(errno));
+        rc = cib_NOTEXISTS;
+        goto done;
     }
 
     rc = cib_ok;
-    if(command == 'c' || command == 'e') {
-	xmlNode *output = NULL;
+    if (command == 'c' || command == 'e') {
+        xmlNode *output = NULL;
 
-	/* create a shadow instance based on the current cluster config */
-	if(command == 'c') {
-	    rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
-	    if(rc != cib_ok) {
-		fprintf(stderr, "Could not connect to the CIB: %s\n", cib_error2string(rc));
-		goto done;
-	    }
+        /* create a shadow instance based on the current cluster config */
+        if (command == 'c') {
+            rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
+            if (rc != cib_ok) {
+                fprintf(stderr, "Could not connect to the CIB: %s\n", cib_error2string(rc));
+                goto done;
+            }
 
-	} else {
-	    output = createEmptyCib();
-	    crm_xml_add(output, XML_ATTR_GENERATION, "0");
-	    crm_xml_add(output, XML_ATTR_NUMUPDATES, "0");
-	    crm_xml_add(output, XML_ATTR_GENERATION_ADMIN, "0");
-	    crm_xml_add(output, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
-	}
-	
-	rc = write_xml_file(output, shadow_file, FALSE);
-	free_xml(output);
-	
-	if(rc < 0) {
-	    fprintf(stderr, "Could not create the shadow instance '%s': %s\n",
-		    shadow, strerror(errno));
-	    goto done;
-	}
-	shadow_setup(shadow, FALSE);
-	rc = cib_ok;
-	
-    } else if(command == 'E') {
-	const char *err = NULL;
-	char *editor = getenv("EDITOR");
-	if(editor == NULL) {
-	    fprintf(stderr, "No value for $EDITOR defined\n");
-	    rc = cib_missing;
-	    goto done;
-	}
+        } else {
+            output = createEmptyCib();
+            crm_xml_add(output, XML_ATTR_GENERATION, "0");
+            crm_xml_add(output, XML_ATTR_NUMUPDATES, "0");
+            crm_xml_add(output, XML_ATTR_GENERATION_ADMIN, "0");
+            crm_xml_add(output, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
+        }
 
-	execlp(editor, "--", shadow_file, NULL);
-	err = strerror(errno);
-	fprintf(stderr, "Could not invoke $EDITOR (%s %s): %s\n", editor, shadow_file, err);
-	rc = cib_missing;
-	goto done;
-	
-    } else if(command == 's') {
-	shadow_setup(shadow, TRUE);
-	rc = 0;
-	goto done;
-    
-    } else if(command == 'P') {
-	/* display the current contents */
-	char *output_s = NULL;
-	xmlNode *output = filename2xml(shadow_file);
-	
-	output_s = dump_xml_formatted(output);
-	printf("%s", output_s);
-	
-	crm_free(output_s);
-	free_xml(output);
-	
-    } else if(command == 'd') {
-	/* diff against cluster */
-	xmlNode *diff = NULL;
-	xmlNode *old_config = NULL;
-	xmlNode *new_config = filename2xml(shadow_file);
-	
-	rc = real_cib->cmds->query(real_cib, NULL, &old_config, command_options);
-	
-	if(rc != cib_ok) {
-	    fprintf(stderr, "Could not query the CIB: %s\n", cib_error2string(rc));
-	    goto done;
-	}
+        rc = write_xml_file(output, shadow_file, FALSE);
+        free_xml(output);
 
-	diff = diff_xml_object(old_config, new_config, FALSE);
-	if(diff != NULL) {
-	    print_xml_diff(stdout, diff);
-	    rc = 1;
-	    goto done;
-	}
-	rc = 0;
-	goto done;
-	
-    } else if(command == 'C') {
-	/* commit to the cluster */
-	xmlNode *input = filename2xml(shadow_file);
-	if(full_upload) {
-	    rc = real_cib->cmds->replace(real_cib, NULL, input, command_options);
-	} else {
-	    xmlNode *config = first_named_child(input, XML_CIB_TAG_CONFIGURATION);
-	    rc = real_cib->cmds->replace(real_cib, XML_CIB_TAG_CONFIGURATION, config, command_options);
-	}
-	
-	if(rc != cib_ok) {
-	    fprintf(stderr, "Could not commit shadow instance '%s' to the CIB: %s\n",
-		    shadow, cib_error2string(rc));
-	    return rc;
-	}	
-	shadow_teardown(shadow);
-	free_xml(input);
+        if (rc < 0) {
+            fprintf(stderr, "Could not create the shadow instance '%s': %s\n",
+                    shadow, strerror(errno));
+            goto done;
+        }
+        shadow_setup(shadow, FALSE);
+        rc = cib_ok;
+
+    } else if (command == 'E') {
+        const char *err = NULL;
+        char *editor = getenv("EDITOR");
+
+        if (editor == NULL) {
+            fprintf(stderr, "No value for $EDITOR defined\n");
+            rc = cib_missing;
+            goto done;
+        }
+
+        execlp(editor, "--", shadow_file, NULL);
+        err = strerror(errno);
+        fprintf(stderr, "Could not invoke $EDITOR (%s %s): %s\n", editor, shadow_file, err);
+        rc = cib_missing;
+        goto done;
+
+    } else if (command == 's') {
+        shadow_setup(shadow, TRUE);
+        rc = 0;
+        goto done;
+
+    } else if (command == 'P') {
+        /* display the current contents */
+        char *output_s = NULL;
+        xmlNode *output = filename2xml(shadow_file);
+
+        output_s = dump_xml_formatted(output);
+        printf("%s", output_s);
+
+        crm_free(output_s);
+        free_xml(output);
+
+    } else if (command == 'd') {
+        /* diff against cluster */
+        xmlNode *diff = NULL;
+        xmlNode *old_config = NULL;
+        xmlNode *new_config = filename2xml(shadow_file);
+
+        rc = real_cib->cmds->query(real_cib, NULL, &old_config, command_options);
+
+        if (rc != cib_ok) {
+            fprintf(stderr, "Could not query the CIB: %s\n", cib_error2string(rc));
+            goto done;
+        }
+
+        diff = diff_xml_object(old_config, new_config, FALSE);
+        if (diff != NULL) {
+            print_xml_diff(stdout, diff);
+            rc = 1;
+            goto done;
+        }
+        rc = 0;
+        goto done;
+
+    } else if (command == 'C') {
+        /* commit to the cluster */
+        xmlNode *input = filename2xml(shadow_file);
+
+        if (full_upload) {
+            rc = real_cib->cmds->replace(real_cib, NULL, input, command_options);
+        } else {
+            xmlNode *config = first_named_child(input, XML_CIB_TAG_CONFIGURATION);
+
+            rc = real_cib->cmds->replace(real_cib, XML_CIB_TAG_CONFIGURATION, config,
+                                         command_options);
+        }
+
+        if (rc != cib_ok) {
+            fprintf(stderr, "Could not commit shadow instance '%s' to the CIB: %s\n",
+                    shadow, cib_error2string(rc));
+            return rc;
+        }
+        shadow_teardown(shadow);
+        free_xml(input);
     }
   done:
     crm_xml_cleanup();
@@ -458,8 +470,8 @@ main(int argc, char **argv)
     return rc;
 }
 
-#define bhead(buffer, offset) ((*buffer) + (*offset)) 
-#define bremain(max, offset) ((*max) - (*offset)) 
+#define bhead(buffer, offset) ((*buffer) + (*offset))
+#define bremain(max, offset) ((*max) - (*offset))
 #define update_buffer_head(len) do {		\
 	int total = (*offset) + len + 1;	\
 	if(total >= (*max)) { /* too late */	\
@@ -474,77 +486,79 @@ main(int argc, char **argv)
 extern int print_spaces(char *buffer, int depth, int max);
 
 int
-dump_data_element(
-    int depth, char **buffer, int *max, int *offset, const char *prefix, xmlNode *data, gboolean formatted) 
+dump_data_element(int depth, char **buffer, int *max, int *offset, const char *prefix,
+                  xmlNode * data, gboolean formatted)
 {
     int printed = 0;
     int has_children = 0;
     xmlNode *child = NULL;
     const char *name = NULL;
-    
+
     CRM_CHECK(data != NULL, return 0);
-    
+
     name = crm_element_name(data);
-    
+
     CRM_CHECK(name != NULL, return 0);
     CRM_CHECK(buffer != NULL && *buffer != NULL, return 0);
-    
+
     crm_debug_5("Dumping %s...", name);
 
-    if(prefix) {
-	printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s", prefix);
-	update_buffer_head(printed);
+    if (prefix) {
+        printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s", prefix);
+        update_buffer_head(printed);
     }
 
-    if(formatted) {
-	printed = print_spaces(bhead(buffer, offset), depth, bremain(max, offset));
-	update_buffer_head(printed);
+    if (formatted) {
+        printed = print_spaces(bhead(buffer, offset), depth, bremain(max, offset));
+        update_buffer_head(printed);
     }
-    
+
     printed = snprintf(bhead(buffer, offset), bremain(max, offset), "<%s", name);
     update_buffer_head(printed);
-    
+
     xml_prop_iter(data, prop_name, prop_value,
-		  crm_debug_5("Dumping <%s %s=\"%s\"...",
-			      name, prop_name, prop_value);
-		  printed = snprintf(bhead(buffer, offset), bremain(max, offset),  " %s=\"%s\"", prop_name, prop_value);
-		  update_buffer_head(printed);
-	);
-    
+                  crm_debug_5("Dumping <%s %s=\"%s\"...",
+                              name, prop_name, prop_value);
+                  printed =
+                  snprintf(bhead(buffer, offset), bremain(max, offset), " %s=\"%s\"", prop_name,
+                           prop_value); update_buffer_head(printed););
+
     has_children = xml_has_children(data);
-    printed = snprintf(bhead(buffer, offset), bremain(max, offset),  "%s>%s",
-		       has_children==0?"/":"", formatted?"\n":"");
+    printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s>%s",
+                       has_children == 0 ? "/" : "", formatted ? "\n" : "");
     update_buffer_head(printed);
-    
-    if(has_children == 0) {
-	return 0;
-    }
-    
-    for(child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
-	if(dump_data_element(depth+1, buffer, max, offset, prefix, child, formatted) < 0) {
-	    return -1;
-	}
-    }
-    
-    if(prefix) {
-	printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s", prefix);
-	update_buffer_head(printed);
+
+    if (has_children == 0) {
+        return 0;
     }
 
-    if(formatted) {
-	printed = print_spaces(bhead(buffer, offset), depth, bremain(max, offset));
-	update_buffer_head(printed);
+    for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
+        if (dump_data_element(depth + 1, buffer, max, offset, prefix, child, formatted) < 0) {
+            return -1;
+        }
     }
-    
-    printed = snprintf(bhead(buffer, offset), bremain(max, offset),  "</%s>%s", name, formatted?"\n":"");
+
+    if (prefix) {
+        printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s", prefix);
+        update_buffer_head(printed);
+    }
+
+    if (formatted) {
+        printed = print_spaces(bhead(buffer, offset), depth, bremain(max, offset));
+        update_buffer_head(printed);
+    }
+
+    printed =
+        snprintf(bhead(buffer, offset), bremain(max, offset), "</%s>%s", name,
+                 formatted ? "\n" : "");
     update_buffer_head(printed);
     crm_debug_5("Dumped %s...", name);
-    
+
     return has_children;
 }
 
 void
-print_xml_diff(FILE *where, xmlNode *diff)
+print_xml_diff(FILE * where, xmlNode * diff)
 {
     char *buffer = NULL;
     xmlNode *child = NULL;
@@ -554,42 +568,36 @@ print_xml_diff(FILE *where, xmlNode *diff)
     xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
 
     is_first = TRUE;
-    for(child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
-	len = 0;
-	max = 1024;
-	crm_free(buffer);
-	crm_malloc0(buffer, max);
+    for (child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
+        len = 0;
+        max = 1024;
+        crm_free(buffer);
+        crm_malloc0(buffer, max);
 
-	if(is_first) {
-	    is_first = FALSE;
-	} else {
-	    fprintf(where, " --- \n");
-	}
+        if (is_first) {
+            is_first = FALSE;
+        } else {
+            fprintf(where, " --- \n");
+        }
 
-	CRM_CHECK(dump_data_element(
-		      0, &buffer, &max, &len, "-", child, TRUE) >= 0,
-		  continue);
-	fprintf(where, "%s", buffer);
+        CRM_CHECK(dump_data_element(0, &buffer, &max, &len, "-", child, TRUE) >= 0, continue);
+        fprintf(where, "%s", buffer);
     }
-	
 
     is_first = TRUE;
-    for(child = __xml_first_child(added); child != NULL; child = __xml_next(child)) {
-	len = 0;
-	max = 1024;
-	crm_free(buffer);
-	crm_malloc0(buffer, max);
+    for (child = __xml_first_child(added); child != NULL; child = __xml_next(child)) {
+        len = 0;
+        max = 1024;
+        crm_free(buffer);
+        crm_malloc0(buffer, max);
 
-	if(is_first) {
-	    is_first = FALSE;
-	} else {
-	    fprintf(where, " +++ \n");
-	}
+        if (is_first) {
+            is_first = FALSE;
+        } else {
+            fprintf(where, " +++ \n");
+        }
 
-	CRM_CHECK(dump_data_element(
-		      0, &buffer, &max, &len, "+", child, TRUE) >= 0,
-		  continue);
-	fprintf(where, "%s", buffer);
+        CRM_CHECK(dump_data_element(0, &buffer, &max, &len, "+", child, TRUE) >= 0, continue);
+        fprintf(where, "%s", buffer);
     }
 }
-

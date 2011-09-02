@@ -48,97 +48,99 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char **argv)
 {
-	int argerr = 0;
-	int flag;
-	int index = 0;
-	int print_options = 0;
-	char *input_s = NULL;
-	char *mutable_s = NULL;
-	
-	crm_log_init_quiet(NULL, LOG_INFO, FALSE, TRUE, argc, argv);
-	crm_set_options(NULL, "command [output modifier] ", long_options, "Display and parse ISO8601 dates and times");
-	
-	if(argc < 2) {
-		argerr++;
-	}
+    int argerr = 0;
+    int flag;
+    int index = 0;
+    int print_options = 0;
+    char *input_s = NULL;
+    char *mutable_s = NULL;
 
-	while (1) {
-		flag = crm_get_option(argc, argv, &index);
-		if (flag == -1)
-			break;
+    crm_log_init_quiet(NULL, LOG_INFO, FALSE, TRUE, argc, argv);
+    crm_set_options(NULL, "command [output modifier] ", long_options,
+                    "Display and parse ISO8601 dates and times");
 
-		switch(flag) {
-			case 'V':
-				cl_log_enable_stderr(TRUE);
-				alter_debug(DEBUG_INC);
-				break;
-			case '?':
-			case '$':
-				crm_help(flag, 0);
-				break;
-			case 'n':
-				command = flag;
-				break;
-			case 'd':
-			case 'p':
-			case 'D':
-				command = flag;
-				input_s = crm_strdup(optarg);
-				break;
-			case 'W':
-				print_options |= ha_date_weeks;
-				break;
-			case 'O':
-				print_options |= ha_date_ordinal;
-				break;
-			case 'L':
-				print_options |= ha_log_local;
-				break;
-		}
-	}
+    if (argc < 2) {
+        argerr++;
+    }
 
-	if(input_s == NULL && command != 'n') {
-		crm_help('?', 1);
-	}
-	
-	mutable_s = input_s;
+    while (1) {
+        flag = crm_get_option(argc, argv, &index);
+        if (flag == -1)
+            break;
 
-	if(command == 'd') {
-		ha_time_t *date_time = parse_date(&mutable_s);
-		if(date_time == NULL) {
-			fprintf(stderr, "Invalid date/time specified: %s\n", input_s);
-			crm_help('?',1);
-		}
-		log_date(LOG_INFO, "parsed", date_time,
-			 print_options|ha_log_date|ha_log_time);
-		
-	} else if(command == 'p') {
-		ha_time_period_t *interval = parse_time_period(&mutable_s);
-		if(interval == NULL) {
-			fprintf(stderr, "Invalid interval specified: %s\n", input_s);
-			crm_help('?',1);
-		}
-		log_time_period(LOG_INFO, interval,
-				print_options|ha_log_date|ha_log_time);
-		
-	} else if(command == 'D') {
-		ha_time_t *duration = parse_time_duration(&mutable_s);
-		if(duration == NULL) {
-			fprintf(stderr, "Invalid duration specified: %s\n", input_s);
-			crm_help('?',1);
-		}
-		log_date(LOG_INFO, "Duration", duration,
-			 print_options|ha_log_date|ha_log_time|ha_log_local);
+        switch (flag) {
+            case 'V':
+                cl_log_enable_stderr(TRUE);
+                alter_debug(DEBUG_INC);
+                break;
+            case '?':
+            case '$':
+                crm_help(flag, 0);
+                break;
+            case 'n':
+                command = flag;
+                break;
+            case 'd':
+            case 'p':
+            case 'D':
+                command = flag;
+                input_s = crm_strdup(optarg);
+                break;
+            case 'W':
+                print_options |= ha_date_weeks;
+                break;
+            case 'O':
+                print_options |= ha_date_ordinal;
+                break;
+            case 'L':
+                print_options |= ha_log_local;
+                break;
+        }
+    }
 
-	} else if(command == 'n') {
-		ha_time_t *now = new_ha_date(TRUE);
-		if(now == NULL) {
-			fprintf(stderr, "Internal error: couldnt determin 'now' !\n");
-			crm_help('?',1);
-		}
-		log_date(LOG_INFO, "Current date/time", now,
-			 print_options|ha_log_date|ha_log_time);
-	}
-	
-	return 0;
+    if (input_s == NULL && command != 'n') {
+        crm_help('?', 1);
+    }
+
+    mutable_s = input_s;
+
+    if (command == 'd') {
+        ha_time_t *date_time = parse_date(&mutable_s);
+
+        if (date_time == NULL) {
+            fprintf(stderr, "Invalid date/time specified: %s\n", input_s);
+            crm_help('?', 1);
+        }
+        log_date(LOG_INFO, "parsed", date_time, print_options | ha_log_date | ha_log_time);
+
+    } else if (command == 'p') {
+        ha_time_period_t *interval = parse_time_period(&mutable_s);
+
+        if (interval == NULL) {
+            fprintf(stderr, "Invalid interval specified: %s\n", input_s);
+            crm_help('?', 1);
+        }
+        log_time_period(LOG_INFO, interval, print_options | ha_log_date | ha_log_time);
+
+    } else if (command == 'D') {
+        ha_time_t *duration = parse_time_duration(&mutable_s);
+
+        if (duration == NULL) {
+            fprintf(stderr, "Invalid duration specified: %s\n", input_s);
+            crm_help('?', 1);
+        }
+        log_date(LOG_INFO, "Duration", duration,
+                 print_options | ha_log_date | ha_log_time | ha_log_local);
+
+    } else if (command == 'n') {
+        ha_time_t *now = new_ha_date(TRUE);
+
+        if (now == NULL) {
+            fprintf(stderr, "Internal error: couldnt determin 'now' !\n");
+            crm_help('?', 1);
+        }
+        log_date(LOG_INFO, "Current date/time", now, print_options | ha_log_date | ha_log_time);
+    }
+
+    return 0;
 }
