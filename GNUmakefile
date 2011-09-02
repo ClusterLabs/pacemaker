@@ -160,13 +160,13 @@ global: clean-generic
 
 
 www:	global
+	make all
+	find . -name "[a-z]*.8" -exec make \{\}.html  \;
+	find . -name "[a-z]*.7" -exec make \{\}.html  \;
 	htags -sanhIT
 	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/www/html/global/$(PACKAGE)/$(TAG)
-	make all
-	find . -name "*.8" -exec make \{\}.html  \;
-	find . -name "*.7" -exec make \{\}.html  \;
-	make coverity
 	make -C docs www
+	make coverity
 
 changes:
 	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(VERSION)-1"
