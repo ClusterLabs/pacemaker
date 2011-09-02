@@ -191,7 +191,7 @@ test -f ltdl.m4 || touch ltdl.m4
 
 if [ -f config.log ]; then
     echo Now re-running ./configure with the previous arguments
-    last=`grep --color=never "$.*configure" config.log | tail -n 1 | sed s:.*configure:./configure:`
+    last=`grep --color=never "$.*configure" config.log | tail -n 1 | sed s:.*configure:./configure: | sed s:--no-create::`
     echo "  $last"
     eval $last
 else
