@@ -149,7 +149,7 @@ cluster_connect_cfg(uint32_t * nodeid)
 
     return TRUE;
 
- bail:
+  bail:
     corosync_cfg_finalize(cfg_handle);
     return FALSE;
 }
@@ -267,7 +267,7 @@ cluster_connect_cpg(void)
 
     return TRUE;
 
- bail:
+  bail:
     cpg_finalize(cpg_handle);
     return FALSE;
 }
@@ -305,7 +305,7 @@ send_cpg_message(struct iovec * iov)
         /* 5 retires is plenty, we'll resend once the membership reforms anyway */
     } while (rc == CS_ERR_TRY_AGAIN && retries < 5);
 
- bail:
+  bail:
     if (rc != CS_OK) {
         crm_err("Sending message via cpg FAILED: (rc=%d) %s", rc, ais_error2text(rc));
     }

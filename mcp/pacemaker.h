@@ -35,16 +35,15 @@
 
 extern uint32_t local_nodeid;
 
-typedef struct pcmk_peer_s 
-{
-	uint32_t id;
-	uint32_t processes;
-	char *uname;
+typedef struct pcmk_peer_s {
+    uint32_t id;
+    uint32_t processes;
+    char *uname;
 } pcmk_peer_t;
 
 extern gboolean read_config(void);
 
-extern gboolean cluster_connect_cfg(uint32_t *nodeid);
+extern gboolean cluster_connect_cfg(uint32_t * nodeid);
 extern gboolean cluster_disconnect_cfg(void);
 
 extern gboolean cluster_connect_cpg(void);

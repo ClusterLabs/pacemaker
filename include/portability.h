@@ -21,84 +21,87 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define	EOS			'\0'
-#define	DIMOF(a)		((int) (sizeof(a)/sizeof(a[0])) )
-#define	STRLEN_CONST(conststr)  ((size_t)((sizeof(conststr)/sizeof(char))-1))
-#define	STRNCMP_CONST(varstr, conststr) strncmp((varstr), conststr, STRLEN_CONST(conststr)+1)
-#define	STRLEN(c)		STRLEN_CONST(c)
+#  define	EOS			'\0'
+#  define	DIMOF(a)		((int) (sizeof(a)/sizeof(a[0])) )
+#  define	STRLEN_CONST(conststr)  ((size_t)((sizeof(conststr)/sizeof(char))-1))
+#  define	STRNCMP_CONST(varstr, conststr) strncmp((varstr), conststr, STRLEN_CONST(conststr)+1)
+#  define	STRLEN(c)		STRLEN_CONST(c)
 
 /* Needs to be defined before any other includes, otherwise some system
  * headers do not behave as expected! Major black magic... */
-#undef _GNU_SOURCE  /* in case it was defined on the command line */
-#define _GNU_SOURCE
+#  undef _GNU_SOURCE            /* in case it was defined on the command line */
+#  define _GNU_SOURCE
 
 /* Please leave this as the first #include - Solaris needs it there */
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#  ifdef HAVE_CONFIG_H
+#    include <config.h>
+#  endif
 
-#include <sys/param.h>
-#ifdef BSD
-#	define SCANSEL_CAST	(void *)
-#else
-#	define SCANSEL_CAST	/* Nothing */
-#endif
+#  include <sys/param.h>
+#  ifdef BSD
+#    	define SCANSEL_CAST	(void *)
+#  else
+#    	define SCANSEL_CAST     /* Nothing */
+#  endif
 
-#if defined(ANSI_ONLY) && !defined(inline)
-#	define inline	/* nothing */
-#	undef	NETSNMP_ENABLE_INLINE
-#	define	NETSNMP_NO_INLINE 1
-#endif
+#  if defined(ANSI_ONLY) && !defined(inline)
+#    	define inline           /* nothing */
+#    	undef	NETSNMP_ENABLE_INLINE
+#    	define	NETSNMP_NO_INLINE 1
+#  endif
 
-#ifndef HAVE_DAEMON
+#  ifndef HAVE_DAEMON
   /* We supply a replacement function, but need a prototype */
 int daemon(int nochdir, int noclose);
-#endif /* HAVE_DAEMON */
+#  endif                        /* HAVE_DAEMON */
 
-#ifndef HAVE_SETENV
+#  ifndef HAVE_SETENV
   /* We supply a replacement function, but need a prototype */
-int setenv(const char *name, const char * value, int why);
-#endif /* HAVE_SETENV */
+int setenv(const char *name, const char *value, int why);
+#  endif                        /* HAVE_SETENV */
 
-#ifndef HAVE_STRERROR
+#  ifndef HAVE_STRERROR
   /* We supply a replacement function, but need a prototype */
-char * strerror(int errnum);
-#endif /* HAVE_STRERROR */
+char *strerror(int errnum);
+#  endif                        /* HAVE_STRERROR */
 
-#ifndef HAVE_ALPHASORT
-#  include <dirent.h>
+#  ifndef HAVE_ALPHASORT
+#    include <dirent.h>
 int
-alphasort(const void *dirent1, const void *dirent2);
-#endif /* HAVE_ALPHASORT */
+ alphasort(const void *dirent1, const void *dirent2);
+#  endif                        /* HAVE_ALPHASORT */
 
-#ifndef HAVE_INET_PTON
+#  ifndef HAVE_INET_PTON
   /* We supply a replacement function, but need a prototype */
 int
-inet_pton(int af, const char *src, void *dst);
+ inet_pton(int af, const char *src, void *dst);
 
-#endif /* HAVE_INET_PTON */
+#  endif                        /* HAVE_INET_PTON */
 
-#ifndef HAVE_STRNLEN
-	size_t strnlen(const char *s, size_t maxlen);
-#else
-#	define USE_GNU
-#endif
+#  ifndef HAVE_STRNLEN
+size_t strnlen(const char *s, size_t maxlen);
+#  else
+#    	define USE_GNU
+#  endif
 
-#ifndef HAVE_STRNDUP
-	char *strndup(const char *str, size_t len);
-#else
-#	define USE_GNU
-#endif
+#  ifndef HAVE_STRNDUP
+char *strndup(const char *str, size_t len);
+#  else
+#    	define USE_GNU
+#  endif
 
-#ifdef HAVE_STRUCT_UCRED_DARWIN
-#	include <sys/utsname.h>
-#	ifndef SYS_NMLN
-#		define SYS_NMLN _SYS_NAMELEN
-#	endif /* SYS_NMLN */
-#endif
+#  ifdef HAVE_STRUCT_UCRED_DARWIN
+#    	include <sys/utsname.h>
+#    	ifndef SYS_NMLN
+#    		define SYS_NMLN _SYS_NAMELEN
+#    	endif                   /* SYS_NMLN */
+#  endif
 
-#define	POINTER_TO_SIZE_T(p)	((size_t)(p)) /*pointer cast as size_t*/
-#define	POINTER_TO_SSIZE_T(p)	((ssize_t)(p)) /*pointer cast as ssize_t*/
-#define	POINTER_TO_ULONG(p)	((unsigned long)(p)) /*pointer cast as unsigned long*/
+#  define	POINTER_TO_SIZE_T(p)	((size_t)(p))
+                                                /*pointer cast as size_t */
+#  define	POINTER_TO_SSIZE_T(p)	((ssize_t)(p))
+                                                /*pointer cast as ssize_t */
+#  define	POINTER_TO_ULONG(p)	((unsigned long)(p))
+                                                        /*pointer cast as unsigned long */
 
-#endif /* PORTABILITY_H */
+#endif                          /* PORTABILITY_H */

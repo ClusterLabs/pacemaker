@@ -19,12 +19,10 @@
 #include <crm/common/cluster.h>
 
 #if SUPPORT_HEARTBEAT
-extern void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
+extern void ccm_event_detail(const oc_ev_membership_t * oc, oc_ed_t event);
 extern gboolean ccm_dispatch(int fd, gpointer user_data);
-extern void crmd_ccm_msg_callback(
-	oc_ed_t event, void *cookie, size_t size, const void *data);
-extern gboolean crmd_ha_msg_dispatch(
-	ll_cluster_t *cluster_conn, gpointer user_data);
+extern void crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
+extern gboolean crmd_ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data);
 #endif
 /*
  * Apparently returning TRUE means "stay connected, keep doing stuff".
@@ -32,33 +30,28 @@ extern gboolean crmd_ha_msg_dispatch(
  */
 
 extern void crmd_ipc_connection_destroy(gpointer user_data);
- 
-extern void crmd_ha_msg_callback(
-	HA_Message *hamsg, void* private_data);
 
-extern gboolean crmd_ipc_msg_callback(
-	IPC_Channel *client, gpointer user_data);
+extern void crmd_ha_msg_callback(HA_Message * hamsg, void *private_data);
 
-extern gboolean crmd_ipc_msg_callback(
-	IPC_Channel *client, gpointer user_data);
+extern gboolean crmd_ipc_msg_callback(IPC_Channel * client, gpointer user_data);
 
-extern gboolean lrm_dispatch(IPC_Channel*src, gpointer user_data);
+extern gboolean crmd_ipc_msg_callback(IPC_Channel * client, gpointer user_data);
 
-extern void lrm_op_callback (lrm_op_t* op);
+extern gboolean lrm_dispatch(IPC_Channel * src, gpointer user_data);
 
-extern void crmd_ha_status_callback(
-	const char *node, const char * status,	void* private_data);
+extern void lrm_op_callback(lrm_op_t * op);
 
-extern void crmd_client_status_callback(
-	const char * node, const char * client, const char * status, void * private);
+extern void crmd_ha_status_callback(const char *node, const char *status, void *private_data);
 
-extern void msg_ccm_join(const xmlNode *msg, void *foo);
+extern void crmd_client_status_callback(const char *node, const char *client, const char *status,
+                                        void *private);
 
-extern gboolean crmd_client_connect(
-	IPC_Channel *newclient, gpointer user_data);
+extern void msg_ccm_join(const xmlNode * msg, void *foo);
+
+extern gboolean crmd_client_connect(IPC_Channel * newclient, gpointer user_data);
 
 extern void crmd_cib_connection_destroy(gpointer user_data);
 
 extern gboolean crm_fsa_trigger(gpointer user_data);
 
-extern void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void *data);
+extern void ais_status_callback(enum crm_status_type type, crm_node_t * node, const void *data);

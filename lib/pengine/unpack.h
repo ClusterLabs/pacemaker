@@ -16,32 +16,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef PENGINE_UNPACK__H
-#define PENGINE_UNPACK__H
+#  define PENGINE_UNPACK__H
 
-extern gboolean unpack_resources(
-	xmlNode *xml_resources, pe_working_set_t *data_set);
+extern gboolean unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set);
 
-extern gboolean unpack_config(xmlNode *config, pe_working_set_t *data_set);
+extern gboolean unpack_config(xmlNode * config, pe_working_set_t * data_set);
 
-extern gboolean unpack_nodes(xmlNode *xml_nodes, pe_working_set_t *data_set);
+extern gboolean unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set);
 
-extern gboolean unpack_domains(xmlNode *xml_domains, pe_working_set_t *data_set);
+extern gboolean unpack_domains(xmlNode * xml_domains, pe_working_set_t * data_set);
 
-extern gboolean unpack_status(xmlNode *status, pe_working_set_t *data_set);
+extern gboolean unpack_status(xmlNode * status, pe_working_set_t * data_set);
 
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
-extern gboolean unpack_lrm_resources(
-	node_t *node, xmlNode * lrm_state, pe_working_set_t *data_set);
+extern gboolean unpack_lrm_resources(node_t * node, xmlNode * lrm_state,
+                                     pe_working_set_t * data_set);
 
-extern gboolean add_node_attrs(
-    xmlNode * attrs, node_t *node, gboolean overwrite, pe_working_set_t *data_set);
+extern gboolean add_node_attrs(xmlNode * attrs, node_t * node, gboolean overwrite,
+                               pe_working_set_t * data_set);
 
-extern gboolean determine_online_status(
-	xmlNode * node_state, node_t *this_node, pe_working_set_t *data_set);
+extern gboolean determine_online_status(xmlNode * node_state, node_t * this_node,
+                                        pe_working_set_t * data_set);
 
-extern const char *param_value(
-	GHashTable *hash, xmlNode * parent, const char *name);
+extern const char *param_value(GHashTable * hash, xmlNode * parent, const char *name);
 
 extern char *clone_zero(const char *last_rsc_id);
 extern char *increment_clone(char *last_rsc_id);
@@ -51,35 +49,35 @@ extern char *increment_clone(char *last_rsc_id);
  * We believe the following to be acceptable and portable.
  */
 
-#if defined(HAVE_LIBNCURSES) || defined(HAVE_LIBCURSES)
-#  if defined(HAVE_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#    include <ncurses.h>
-#    define CURSES_ENABLED 1
-#  elif defined(HAVE_NCURSES_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#    include <ncurses/ncurses.h>
-#    define CURSES_ENABLED 1
-#  elif defined(HAVE_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#    include <curses.h>
-#    define CURSES_ENABLED 1
-#  elif defined(HAVE_CURSES_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#    include <curses/curses.h>
-#    define CURSES_ENABLED 1
+#  if defined(HAVE_LIBNCURSES) || defined(HAVE_LIBCURSES)
+#    if defined(HAVE_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
+#      include <ncurses.h>
+#      define CURSES_ENABLED 1
+#    elif defined(HAVE_NCURSES_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
+#      include <ncurses/ncurses.h>
+#      define CURSES_ENABLED 1
+#    elif defined(HAVE_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
+#      include <curses.h>
+#      define CURSES_ENABLED 1
+#    elif defined(HAVE_CURSES_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
+#      include <curses/curses.h>
+#      define CURSES_ENABLED 1
+#    else
+#      define CURSES_ENABLED 0
+#    endif
 #  else
 #    define CURSES_ENABLED 0
 #  endif
-#else
-#  define CURSES_ENABLED 0
-#endif
 
-#if CURSES_ENABLED
-#  define status_printw(fmt, args...) printw(fmt, ##args)
-#else
-#  define status_printw(fmt, args...) \
+#  if CURSES_ENABLED
+#    define status_printw(fmt, args...) printw(fmt, ##args)
+#  else
+#    define status_printw(fmt, args...) \
 	crm_err("printw support requires ncurses to be available during configure"); \
 	do_crm_log(LOG_WARNING, fmt, ##args);
-#endif
+#  endif
 
-#define status_print(fmt, args...)			\
+#  define status_print(fmt, args...)			\
 	if(options & pe_print_html) {			\
 		FILE *stream = print_data;		\
 		fprintf(stream, fmt, ##args);		\

@@ -16,20 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef CRM_COMMON_MSG__H
-#define CRM_COMMON_MSG__H
+#  define CRM_COMMON_MSG__H
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/common/util.h>
+#  include <crm/crm.h>
+#  include <crm/common/xml.h>
+#  include <crm/common/util.h>
 
-extern xmlNode *createPingAnswerFragment(const char *from,
-					   const char *status);
+extern xmlNode *createPingAnswerFragment(const char *from, const char *status);
 
-
-extern gboolean process_hello_message(xmlNode *hello,
-				      char **uuid,
-				      char **client_name,
-				      char **major_version,
-				      char **minor_version);
+extern gboolean process_hello_message(xmlNode * hello,
+                                      char **uuid,
+                                      char **client_name,
+                                      char **major_version, char **minor_version);
 
 #endif

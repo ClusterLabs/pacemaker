@@ -17,17 +17,17 @@
  */
 
 #ifndef CIB_IO__H
-#define CIB_IO__H
+#  define CIB_IO__H
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
+#  include <stdio.h>
+#  include <sys/types.h>
+#  include <unistd.h>
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
+#  include <stdlib.h>
+#  include <errno.h>
+#  include <fcntl.h>
 
-#include <crm/common/xml.h>
+#  include <crm/common/xml.h>
 
 extern gboolean initialized;
 extern xmlNode *the_cib;
@@ -35,18 +35,17 @@ extern xmlNode *node_search;
 extern xmlNode *resource_search;
 extern xmlNode *constraint_search;
 extern xmlNode *status_search;
-    
+
 extern xmlNode *get_the_CIB(void);
 
-extern int initializeCib(xmlNode *cib);
+extern int initializeCib(xmlNode * cib);
 extern gboolean uninitializeCib(void);
 extern xmlNode *createEmptyCib(void);
-extern gboolean verifyCibXml(xmlNode *cib);
+extern gboolean verifyCibXml(xmlNode * cib);
 extern xmlNode *readCibXml(char *buffer);
-extern xmlNode *readCibXmlFile(
-	const char *dir, const char *file, gboolean discard_status);
+extern xmlNode *readCibXmlFile(const char *dir, const char *file, gboolean discard_status);
 extern int activateCibBuffer(char *buffer, const char *filename);
-extern int activateCibXml(xmlNode *doc, gboolean to_disk, const char *op);
+extern int activateCibXml(xmlNode * doc, gboolean to_disk, const char *op);
 
 /* extern xmlNode *server_get_cib_copy(void); */
 

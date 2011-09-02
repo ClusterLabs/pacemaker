@@ -16,29 +16,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef CRM_COMMON_MAINLOOP__H
-#define CRM_COMMON_MAINLOOP__H
+#  define CRM_COMMON_MAINLOOP__H
 
-#include <glib.h>
+#  include <glib.h>
 
-typedef struct trigger_s 
-{
-	GSource source;
-	gboolean trigger;
-	void *user_data;
-	guint id;
+typedef struct trigger_s {
+    GSource source;
+    gboolean trigger;
+    void *user_data;
+    guint id;
 
 } crm_trigger_t;
 
-extern crm_trigger_t *mainloop_add_trigger(
-    int priority, gboolean (*dispatch)(gpointer user_data), gpointer userdata);
+extern crm_trigger_t *mainloop_add_trigger(int priority, gboolean(*dispatch) (gpointer user_data),
+                                           gpointer userdata);
 
-extern void mainloop_set_trigger(crm_trigger_t* source);
+extern void mainloop_set_trigger(crm_trigger_t * source);
 
-extern gboolean mainloop_destroy_trigger(crm_trigger_t* source);
+extern gboolean mainloop_destroy_trigger(crm_trigger_t * source);
 
-extern gboolean crm_signal(int sig, void (*dispatch)(int sig));
+extern gboolean crm_signal(int sig, void (*dispatch) (int sig));
 
-extern gboolean mainloop_add_signal(int sig, void (*dispatch)(int sig));
+extern gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
 extern gboolean mainloop_destroy_signal(int sig);
 

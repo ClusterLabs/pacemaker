@@ -16,38 +16,35 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef STONITH_NG_INTERNAL__H
-#define STONITH_NG_INTERNAL__H
+#  define STONITH_NG_INTERNAL__H
 
+typedef struct async_command_s {
 
-typedef struct async_command_s 
-{
+    int id;
+    int stdout;
+    int options;
+    int timeout;
 
-	int id;
-	int stdout;
-	int options;
-	int timeout;
+    char *op;
+    char *origin;
+    char *client;
+    char *remote;
 
-	char *op;
-	char *origin;
-	char *client;
-	char *remote;
+    char *victim;
+    char *action;
+    char *device;
 
-	char *victim;
-	char *action;
-	char *device;
-	
-	GListPtr device_list;
-	GListPtr device_next;
+    GListPtr device_list;
+    GListPtr device_next;
 
-	ProcTrack_ops *pt_ops;
-	ProcTrackKillInfo killseq[3];
+    ProcTrack_ops *pt_ops;
+    ProcTrackKillInfo killseq[3];
 
 } async_command_t;
 
-
-extern int run_stonith_agent(
-    const char *agent, const char *action, const char *victim, GHashTable *dev_hash, GHashTable *port_map,
-    int *agent_result, char **output, async_command_t *track);
+extern int run_stonith_agent(const char *agent, const char *action, const char *victim,
+                             GHashTable * dev_hash, GHashTable * port_map, int *agent_result,
+                             char **output, async_command_t * track);
 
 extern gboolean is_redhat_agent(const char *agent);
 

@@ -16,81 +16,81 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef PE_VARIANT__H
-#define PE_VARIANT__H
+#  define PE_VARIANT__H
 
-#if VARIANT_CLONE
+#  if VARIANT_CLONE
 
 typedef struct clone_variant_data_s {
-		resource_t *self;
+    resource_t *self;
 
-		int clone_max;
-		int clone_node_max;
+    int clone_max;
+    int clone_node_max;
 
-		int master_max;
-		int master_node_max;
+    int master_max;
+    int master_node_max;
 
-		int total_clones;
-		int active_clones;
-		int max_nodes;
+    int total_clones;
+    int active_clones;
+    int max_nodes;
 
-		int masters_active;
-		int masters_allocated;
-	
-		gboolean interleave;
-		gboolean ordered;
-		gboolean applied_master_prefs;
-		gboolean merged_master_weights;
+    int masters_active;
+    int masters_allocated;
 
-		notify_data_t *stop_notify;
-		notify_data_t *start_notify;
-		notify_data_t *demote_notify;
-		notify_data_t *promote_notify;
+    gboolean interleave;
+    gboolean ordered;
+    gboolean applied_master_prefs;
+    gboolean merged_master_weights;
 
-		xmlNode *xml_obj_child;
-		
-		gboolean notify_confirm;		
-		
+    notify_data_t *stop_notify;
+    notify_data_t *start_notify;
+    notify_data_t *demote_notify;
+    notify_data_t *promote_notify;
+
+    xmlNode *xml_obj_child;
+
+    gboolean notify_confirm;
+
 } clone_variant_data_t;
 
-#  define get_clone_variant_data(data, rsc)				\
+#    define get_clone_variant_data(data, rsc)				\
 	CRM_ASSERT(rsc != NULL);					\
 	CRM_ASSERT(rsc->variant == pe_clone || rsc->variant == pe_master); \
 	data = (clone_variant_data_t *)rsc->variant_opaque;
 
-#elif VARIANT_GROUP
+#  elif VARIANT_GROUP
 
 typedef struct group_variant_data_s {
-		int num_children;
-		resource_t *self;
-		resource_t *first_child;
-		resource_t *last_child;
+    int num_children;
+    resource_t *self;
+    resource_t *first_child;
+    resource_t *last_child;
 
-		gboolean colocated;
-		gboolean ordered;
-		
-		gboolean child_starting;
-		gboolean child_stopping;
-		
+    gboolean colocated;
+    gboolean ordered;
+
+    gboolean child_starting;
+    gboolean child_stopping;
+
 } group_variant_data_t;
 
-#  define get_group_variant_data(data, rsc)				\
+#    define get_group_variant_data(data, rsc)				\
 	CRM_ASSERT(rsc != NULL);					\
 	CRM_ASSERT(rsc->variant == pe_group);				\
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (group_variant_data_t *)rsc->variant_opaque;		\
 
-#elif VARIANT_NATIVE
+#  elif VARIANT_NATIVE
 
 typedef struct native_variant_data_s {
-		int dummy;
+    int dummy;
 } native_variant_data_t;
 
-#  define get_native_variant_data(data, rsc)				\
+#    define get_native_variant_data(data, rsc)				\
 	CRM_ASSERT(rsc != NULL);					\
 	CRM_ASSERT(rsc->variant == pe_native);				\
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (native_variant_data_t *)rsc->variant_opaque;
 
-#endif
+#  endif
 
 #endif

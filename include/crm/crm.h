@@ -16,53 +16,52 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef CRM__H
-#define CRM__H
+#  define CRM__H
 
-#include <crm_config.h>
-#include <stdlib.h>
-#include <glib.h>
-#include <stdbool.h>
+#  include <crm_config.h>
+#  include <stdlib.h>
+#  include <glib.h>
+#  include <stdbool.h>
 
-#undef MIN
-#undef MAX
-#include <string.h>
+#  undef MIN
+#  undef MAX
+#  include <string.h>
 
-#include <clplumbing/cl_log.h>
+#  include <clplumbing/cl_log.h>
 
-#include <libxml/tree.h> 
+#  include <libxml/tree.h>
 
-extern int log_data_element(
-    int log_level, const char *file, const char *function, int line,
-    const char *prefix, xmlNode *data, int depth, gboolean formatted);
+extern int log_data_element(int log_level, const char *file, const char *function, int line,
+                            const char *prefix, xmlNode * data, int depth, gboolean formatted);
 
-#define CRM_FEATURE_SET		"3.0.5"
-#define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
-#define LATEST_SCHEMA_VERSION	"pacemaker-"CRM_DTD_VERSION
+#  define CRM_FEATURE_SET		"3.0.5"
+#  define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
+#  define LATEST_SCHEMA_VERSION	"pacemaker-"CRM_DTD_VERSION
 
-#define EOS		'\0'
-#define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
+#  define EOS		'\0'
+#  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
 
-#ifndef __GNUC__
+#  ifndef __GNUC__
 #    define __builtin_expect(expr, result) (expr)
-#endif
+#  endif
 
 /* Some handy macros used by the Linux kernel */
-#define __likely(expr) __builtin_expect(expr, 1)
-#define __unlikely(expr) __builtin_expect(expr, 0)
+#  define __likely(expr) __builtin_expect(expr, 1)
+#  define __unlikely(expr) __builtin_expect(expr, 0)
 
-#define CRM_DEPRECATED_SINCE_2_0_1 0
-#define CRM_DEPRECATED_SINCE_2_0_2 0
-#define CRM_DEPRECATED_SINCE_2_0_3 0
-#define CRM_DEPRECATED_SINCE_2_0_4 0
-#define CRM_DEPRECATED_SINCE_2_0_5 0
-#define CRM_DEPRECATED_SINCE_2_0_6 1
-#define CRM_DEPRECATED_SINCE_2_0_7 1
-#define CRM_DEPRECATED_SINCE_2_0_8 1
-#define CRM_DEPRECATED_SINCE_2_1_0 1
+#  define CRM_DEPRECATED_SINCE_2_0_1 0
+#  define CRM_DEPRECATED_SINCE_2_0_2 0
+#  define CRM_DEPRECATED_SINCE_2_0_3 0
+#  define CRM_DEPRECATED_SINCE_2_0_4 0
+#  define CRM_DEPRECATED_SINCE_2_0_5 0
+#  define CRM_DEPRECATED_SINCE_2_0_6 1
+#  define CRM_DEPRECATED_SINCE_2_0_7 1
+#  define CRM_DEPRECATED_SINCE_2_0_8 1
+#  define CRM_DEPRECATED_SINCE_2_1_0 1
 
-#define CRM_META			"CRM_meta"
+#  define CRM_META			"CRM_meta"
 
-#define CRM_ASSERT(expr) do {						\
+#  define CRM_ASSERT(expr) do {						\
 	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
 	}								\
@@ -71,145 +70,146 @@ extern int log_data_element(
 extern const char *crm_system_name;
 
 /* Clean these up at some point, some probably should be runtime options */
-#define SOCKET_LEN	1024
-#define APPNAME_LEN	256
-#define MAX_IPC_FAIL	5
-#define MAX_IPC_DELAY   120
+#  define SOCKET_LEN	1024
+#  define APPNAME_LEN	256
+#  define MAX_IPC_FAIL	5
+#  define MAX_IPC_DELAY   120
 
-#define MSG_LOG			1
-#define DOT_FSA_ACTIONS		1
-#define DOT_ALL_FSA_INPUTS	1
+#  define MSG_LOG			1
+#  define DOT_FSA_ACTIONS		1
+#  define DOT_ALL_FSA_INPUTS	1
 /* #define FSA_TRACE		1 */
 
-#define INFINITY_S        "INFINITY"
-#define MINUS_INFINITY_S "-INFINITY"
+#  define INFINITY_S        "INFINITY"
+#  define MINUS_INFINITY_S "-INFINITY"
 
-#define INFINITY        1000000
+#  define INFINITY        1000000
 
 /* Sub-systems */
-#define CRM_SYSTEM_DC		"dc"
-#define CRM_SYSTEM_DCIB		"dcib" /*  The master CIB */
-#define CRM_SYSTEM_CIB		"cib"
-#define CRM_SYSTEM_CRMD		"crmd"
-#define CRM_SYSTEM_LRMD		"lrmd"
-#define CRM_SYSTEM_PENGINE	"pengine"
-#define CRM_SYSTEM_TENGINE	"tengine"
-#define CRM_SYSTEM_STONITHD	"stonithd"
+#  define CRM_SYSTEM_DC		"dc"
+#  define CRM_SYSTEM_DCIB		"dcib"
+                                        /*  The master CIB */
+#  define CRM_SYSTEM_CIB		"cib"
+#  define CRM_SYSTEM_CRMD		"crmd"
+#  define CRM_SYSTEM_LRMD		"lrmd"
+#  define CRM_SYSTEM_PENGINE	"pengine"
+#  define CRM_SYSTEM_TENGINE	"tengine"
+#  define CRM_SYSTEM_STONITHD	"stonithd"
 
 /* Valid operations */
-#define CRM_OP_NOOP		"noop"
+#  define CRM_OP_NOOP		"noop"
 
-#define CRM_OP_JOIN_ANNOUNCE	"join_announce"
-#define CRM_OP_JOIN_OFFER	"join_offer"
-#define CRM_OP_JOIN_REQUEST	"join_request"
-#define CRM_OP_JOIN_ACKNAK	"join_ack_nack"
-#define CRM_OP_JOIN_CONFIRM	"join_confirm"
+#  define CRM_OP_JOIN_ANNOUNCE	"join_announce"
+#  define CRM_OP_JOIN_OFFER	"join_offer"
+#  define CRM_OP_JOIN_REQUEST	"join_request"
+#  define CRM_OP_JOIN_ACKNAK	"join_ack_nack"
+#  define CRM_OP_JOIN_CONFIRM	"join_confirm"
 
-#define CRM_OP_DIE		"die_no_respawn"
-#define CRM_OP_RETRIVE_CIB	"retrieve_cib"
-#define CRM_OP_PING		"ping"
-#define CRM_OP_VOTE		"vote"
-#define CRM_OP_NOVOTE		"no-vote"
-#define CRM_OP_HELLO		"hello"
-#define CRM_OP_HBEAT		"dc_beat"
-#define CRM_OP_PECALC		"pe_calc"
-#define CRM_OP_ABORT		"abort"
-#define CRM_OP_QUIT		"quit"
-#define CRM_OP_LOCAL_SHUTDOWN 	"start_shutdown"
-#define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
-#define CRM_OP_SHUTDOWN 	"do_shutdown"
-#define CRM_OP_FENCE	 	"stonith"
-#define CRM_OP_EVENTCC		"event_cc"
-#define CRM_OP_TEABORT		"te_abort"
-#define CRM_OP_TEABORTED	"te_abort_confirmed" /* we asked */
-#define CRM_OP_TE_HALT		"te_halt"
-#define CRM_OP_TECOMPLETE	"te_complete"
-#define CRM_OP_TETIMEOUT	"te_timeout"
-#define CRM_OP_TRANSITION	"transition"
-#define CRM_OP_REGISTER		"register"
-#define CRM_OP_DEBUG_UP		"debug_inc"
-#define CRM_OP_DEBUG_DOWN	"debug_dec"
-#define CRM_OP_INVOKE_LRM	"lrm_invoke"
-#define CRM_OP_LRM_REFRESH	"lrm_refresh"
-#define CRM_OP_LRM_QUERY	"lrm_query"
-#define CRM_OP_LRM_DELETE	"lrm_delete"
-#define CRM_OP_LRM_FAIL		"lrm_fail"
-#define CRM_OP_PROBED		"probe_complete"
-#define CRM_OP_REPROBE		"probe_again"
-#define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
+#  define CRM_OP_DIE		"die_no_respawn"
+#  define CRM_OP_RETRIVE_CIB	"retrieve_cib"
+#  define CRM_OP_PING		"ping"
+#  define CRM_OP_VOTE		"vote"
+#  define CRM_OP_NOVOTE		"no-vote"
+#  define CRM_OP_HELLO		"hello"
+#  define CRM_OP_HBEAT		"dc_beat"
+#  define CRM_OP_PECALC		"pe_calc"
+#  define CRM_OP_ABORT		"abort"
+#  define CRM_OP_QUIT		"quit"
+#  define CRM_OP_LOCAL_SHUTDOWN 	"start_shutdown"
+#  define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
+#  define CRM_OP_SHUTDOWN 	"do_shutdown"
+#  define CRM_OP_FENCE	 	"stonith"
+#  define CRM_OP_EVENTCC		"event_cc"
+#  define CRM_OP_TEABORT		"te_abort"
+#  define CRM_OP_TEABORTED	"te_abort_confirmed"    /* we asked */
+#  define CRM_OP_TE_HALT		"te_halt"
+#  define CRM_OP_TECOMPLETE	"te_complete"
+#  define CRM_OP_TETIMEOUT	"te_timeout"
+#  define CRM_OP_TRANSITION	"transition"
+#  define CRM_OP_REGISTER		"register"
+#  define CRM_OP_DEBUG_UP		"debug_inc"
+#  define CRM_OP_DEBUG_DOWN	"debug_dec"
+#  define CRM_OP_INVOKE_LRM	"lrm_invoke"
+#  define CRM_OP_LRM_REFRESH	"lrm_refresh"
+#  define CRM_OP_LRM_QUERY	"lrm_query"
+#  define CRM_OP_LRM_DELETE	"lrm_delete"
+#  define CRM_OP_LRM_FAIL		"lrm_fail"
+#  define CRM_OP_PROBED		"probe_complete"
+#  define CRM_OP_REPROBE		"probe_again"
+#  define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
 
-#define CRMD_STATE_ACTIVE	"member"
-#define CRMD_STATE_INACTIVE	"down"
+#  define CRMD_STATE_ACTIVE	"member"
+#  define CRMD_STATE_INACTIVE	"down"
 
-#define CRMD_JOINSTATE_DOWN	CRMD_STATE_INACTIVE
-#define CRMD_JOINSTATE_PENDING	"pending"
-#define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
-#define CRMD_JOINSTATE_NACK	"banned"
+#  define CRMD_JOINSTATE_DOWN	CRMD_STATE_INACTIVE
+#  define CRMD_JOINSTATE_PENDING	"pending"
+#  define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
+#  define CRMD_JOINSTATE_NACK	"banned"
 
-#define CRMD_ACTION_DELETE		"delete"
-#define CRMD_ACTION_CANCEL		"cancel"
+#  define CRMD_ACTION_DELETE		"delete"
+#  define CRMD_ACTION_CANCEL		"cancel"
 
-#define CRMD_ACTION_MIGRATE		"migrate_to"
-#define CRMD_ACTION_MIGRATED		"migrate_from"
+#  define CRMD_ACTION_MIGRATE		"migrate_to"
+#  define CRMD_ACTION_MIGRATED		"migrate_from"
 
-#define CRMD_ACTION_START		"start"
-#define CRMD_ACTION_STARTED		"running"
+#  define CRMD_ACTION_START		"start"
+#  define CRMD_ACTION_STARTED		"running"
 
-#define CRMD_ACTION_STOP		"stop"
-#define CRMD_ACTION_STOPPED		"stopped"
+#  define CRMD_ACTION_STOP		"stop"
+#  define CRMD_ACTION_STOPPED		"stopped"
 
-#define CRMD_ACTION_PROMOTE		"promote"
-#define CRMD_ACTION_PROMOTED		"promoted"
-#define CRMD_ACTION_DEMOTE		"demote"
-#define CRMD_ACTION_DEMOTED		"demoted"
+#  define CRMD_ACTION_PROMOTE		"promote"
+#  define CRMD_ACTION_PROMOTED		"promoted"
+#  define CRMD_ACTION_DEMOTE		"demote"
+#  define CRMD_ACTION_DEMOTED		"demoted"
 
-#define CRMD_ACTION_NOTIFY		"notify"
-#define CRMD_ACTION_NOTIFIED		"notified"
+#  define CRMD_ACTION_NOTIFY		"notify"
+#  define CRMD_ACTION_NOTIFIED		"notified"
 
-#define CRMD_ACTION_STATUS		"monitor"
+#  define CRMD_ACTION_STATUS		"monitor"
 
 /* short names */
-#define RSC_DELETE	CRMD_ACTION_DELETE
-#define RSC_CANCEL	CRMD_ACTION_CANCEL
+#  define RSC_DELETE	CRMD_ACTION_DELETE
+#  define RSC_CANCEL	CRMD_ACTION_CANCEL
 
-#define RSC_MIGRATE	CRMD_ACTION_MIGRATE
-#define RSC_MIGRATED	CRMD_ACTION_MIGRATED
+#  define RSC_MIGRATE	CRMD_ACTION_MIGRATE
+#  define RSC_MIGRATED	CRMD_ACTION_MIGRATED
 
-#define RSC_START	CRMD_ACTION_START
-#define RSC_STARTED	CRMD_ACTION_STARTED
+#  define RSC_START	CRMD_ACTION_START
+#  define RSC_STARTED	CRMD_ACTION_STARTED
 
-#define RSC_STOP	CRMD_ACTION_STOP
-#define RSC_STOPPED	CRMD_ACTION_STOPPED
+#  define RSC_STOP	CRMD_ACTION_STOP
+#  define RSC_STOPPED	CRMD_ACTION_STOPPED
 
-#define RSC_PROMOTE	CRMD_ACTION_PROMOTE
-#define RSC_PROMOTED	CRMD_ACTION_PROMOTED
-#define RSC_DEMOTE	CRMD_ACTION_DEMOTE
-#define RSC_DEMOTED	CRMD_ACTION_DEMOTED
+#  define RSC_PROMOTE	CRMD_ACTION_PROMOTE
+#  define RSC_PROMOTED	CRMD_ACTION_PROMOTED
+#  define RSC_DEMOTE	CRMD_ACTION_DEMOTE
+#  define RSC_DEMOTED	CRMD_ACTION_DEMOTED
 
-#define RSC_NOTIFY	CRMD_ACTION_NOTIFY
-#define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
+#  define RSC_NOTIFY	CRMD_ACTION_NOTIFY
+#  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
 
-#define RSC_STATUS	CRMD_ACTION_STATUS
+#  define RSC_STATUS	CRMD_ACTION_STATUS
 
-typedef GList* GListPtr;
+typedef GList *GListPtr;
 
 /* LOG_DEBUG = 7, make LOG_TRACE ::= -VVVVV */
-#define LOG_TRACE    12
-#define LOG_DEBUG_2  LOG_TRACE
-#define LOG_DEBUG_3  LOG_TRACE
-#define LOG_DEBUG_4  LOG_TRACE
-#define LOG_DEBUG_5  LOG_TRACE
-#define LOG_DEBUG_6  LOG_TRACE
+#  define LOG_TRACE    12
+#  define LOG_DEBUG_2  LOG_TRACE
+#  define LOG_DEBUG_3  LOG_TRACE
+#  define LOG_DEBUG_4  LOG_TRACE
+#  define LOG_DEBUG_5  LOG_TRACE
+#  define LOG_DEBUG_6  LOG_TRACE
 
-#define LOG_MSG  LOG_TRACE
+#  define LOG_MSG  LOG_TRACE
 
-#if SUPPORT_TRACING
+#  if SUPPORT_TRACING
 struct _pcmk_ddebug_query {
-	const char *files;
-	const char *formats;
-	const char *functions;
-	unsigned long long total;
-	unsigned long long matches;
+    const char *files;
+    const char *formats;
+    const char *functions;
+    unsigned long long total;
+    unsigned long long matches;
 };
 
 /*
@@ -218,32 +218,32 @@ struct _pcmk_ddebug_query {
  * the special section is treated as an array of these.
  */
 struct _pcmk_ddebug {
-        /*
-         * These fields are used to drive the user interface
-         * for selecting and displaying debug callsites.
-         */
-        const char *function;
-        const char *filename;
-        const char *format;
-        unsigned int lineno:24;
-        /*
-         * The bump field will add to the level at the callsite.
-         * The value here are changed dynamically when the user
-         * writes commands to FIXME ;-)
-         */
-        int bump;
-} __attribute__((aligned(8)));
+    /*
+     * These fields are used to drive the user interface
+     * for selecting and displaying debug callsites.
+     */
+    const char *function;
+    const char *filename;
+    const char *format;
+    unsigned int lineno:24;
+    /*
+     * The bump field will add to the level at the callsite.
+     * The value here are changed dynamically when the user
+     * writes commands to FIXME ;-)
+     */
+    int bump;
+} __attribute__ ((aligned(8)));
 
 /* will be assigned by ld linker magic */
 extern struct _pcmk_ddebug __start___verbose[];
 extern struct _pcmk_ddebug __stop___verbose[];
 
-#  define CRM_TRACE_INIT_DATA(name)					\
+#    define CRM_TRACE_INIT_DATA(name)					\
     void name(void);							\
     void name(void) { CRM_ASSERT(__start___verbose != __stop___verbose); } \
     void __attribute__ ((constructor)) name(void);
 
-#define CRM_LOG_ASSERT(expr) do {					\
+#    define CRM_LOG_ASSERT(expr) do {					\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, #expr, __LINE__, LOG_TRACE};		\
@@ -254,7 +254,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	}								\
     } while(0)
 
-#define CRM_CHECK(expr, failure_action) do {				\
+#    define CRM_CHECK(expr, failure_action) do {				\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, #expr, __LINE__, LOG_TRACE};		\
@@ -271,7 +271,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
-#  define do_crm_log(level, fmt, args...) do {				\
+#    define do_crm_log(level, fmt, args...) do {				\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, fmt, __LINE__, LOG_TRACE};		\
@@ -284,7 +284,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	}								\
     } while(0)
 
-#  define do_crm_log_unlikely(level, fmt, args...) do {			\
+#    define do_crm_log_unlikely(level, fmt, args...) do {			\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, fmt, __LINE__, LOG_TRACE };		\
@@ -297,7 +297,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	}								\
     } while(0)
 
-#  define do_crm_log_xml(level, text, xml) do {				\
+#    define do_crm_log_xml(level, text, xml) do {				\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, __PRETTY_FUNCTION__, __LINE__, LOG_TRACE }; \
@@ -311,7 +311,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	}								\
     } while(0)
 
-#  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
+#    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
 	if(line) {							\
 	    cl_log(level, "TRACE: %s: %s:%d "fmt, function, file, line, ##args);	\
 	} else {							\
@@ -319,88 +319,88 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	}								\
     } while(0)
 
-#else
+#  else
 
-#  define CRM_TRACE_INIT_DATA(name)
+#    define CRM_TRACE_INIT_DATA(name)
 
-#define CRM_LOG_ASSERT(expr) do {					\
+#    define CRM_LOG_ASSERT(expr) do {					\
 	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, FALSE, TRUE); \
 	}								\
     } while(0)
 
-#define CRM_CHECK(expr, failure_action) do {				\
+#    define CRM_CHECK(expr, failure_action) do {				\
 	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
 	    failure_action;						\
 	}								\
     } while(0)
 
-#  define do_crm_log(level, fmt, args...) do {				\
+#    define do_crm_log(level, fmt, args...) do {				\
 	if(__likely((level) <= crm_log_level)) {			\
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	}								\
     } while(0)
 
-#  define do_crm_log_unlikely(level, fmt, args...) do {			\
+#    define do_crm_log_unlikely(level, fmt, args...) do {			\
 	if(__unlikely((level) <= crm_log_level)) {			\
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	}								\
     } while(0)
 
-#  define do_crm_log_xml(level, text, xml) do {				\
+#    define do_crm_log_xml(level, text, xml) do {				\
 	if(xml == NULL) {						\
 	} else if(__unlikely((level) <= crm_log_level)) {		\
 	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
 	}								\
     } while(0)
 
-#  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
+#    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
 	cl_log(level, "%s: "fmt, function, ##args);			\
     } while(0)
 
-#endif
+#  endif
 
-#define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
+#  define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
 
-#define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
-#define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
-#define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
-#define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
-#define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
-#define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
-#define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
-#define crm_debug_2 crm_trace
-#define crm_debug_3 crm_trace
-#define crm_debug_4 crm_trace
-#define crm_debug_5 crm_trace
-#define crm_debug_6 crm_trace
+#  define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
+#  define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
+#  define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
+#  define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
+#  define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
+#  define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
+#  define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
+#  define crm_debug_2 crm_trace
+#  define crm_debug_3 crm_trace
+#  define crm_debug_4 crm_trace
+#  define crm_debug_5 crm_trace
+#  define crm_debug_6 crm_trace
 
-#define crm_perror(level, fmt, args...) do {				\
+#  define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\
 	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
 	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
     } while(0)
 
-#include <crm/common/util.h>
+#  include <crm/common/util.h>
 
-#define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)
-#define crm_log_xml_err(xml, text)     do_crm_log_xml(LOG_ERR,     text, xml)
-#define crm_log_xml_warn(xml, text)    do_crm_log_xml(LOG_WARNING, text, xml)
-#define crm_log_xml_notice(xml, text)  do_crm_log_xml(LOG_NOTICE,  text, xml)
-#define crm_log_xml_info(xml, text)    do_crm_log_xml(LOG_INFO,    text, xml)
-#define crm_log_xml_debug(xml, text)   do_crm_log_xml(LOG_DEBUG,   text, xml)
-#define crm_log_xml_trace(xml, text)   do_crm_log_xml(LOG_TRACE,   text, xml)
+#  define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)
+#  define crm_log_xml_err(xml, text)     do_crm_log_xml(LOG_ERR,     text, xml)
+#  define crm_log_xml_warn(xml, text)    do_crm_log_xml(LOG_WARNING, text, xml)
+#  define crm_log_xml_notice(xml, text)  do_crm_log_xml(LOG_NOTICE,  text, xml)
+#  define crm_log_xml_info(xml, text)    do_crm_log_xml(LOG_INFO,    text, xml)
+#  define crm_log_xml_debug(xml, text)   do_crm_log_xml(LOG_DEBUG,   text, xml)
+#  define crm_log_xml_trace(xml, text)   do_crm_log_xml(LOG_TRACE,   text, xml)
 
-#define crm_log_xml do_crm_log_xml
-#define crm_log_xml_debug_2 crm_log_xml_trace
-#define crm_log_xml_debug_3 crm_log_xml_trace
-#define crm_log_xml_debug_4 crm_log_xml_trace
-#define crm_log_xml_debug_5 crm_log_xml_trace
+#  define crm_log_xml do_crm_log_xml
+#  define crm_log_xml_debug_2 crm_log_xml_trace
+#  define crm_log_xml_debug_3 crm_log_xml_trace
+#  define crm_log_xml_debug_4 crm_log_xml_trace
+#  define crm_log_xml_debug_5 crm_log_xml_trace
 
-#define crm_str(x)    (const char*)(x?x:"<null>")
+#  define crm_str(x)    (const char*)(x?x:"<null>")
 
-#define crm_malloc0(malloc_obj, length) do {				\
+#  define crm_malloc0(malloc_obj, length) do {				\
 	malloc_obj = malloc(length);					\
 	if(malloc_obj == NULL) {					\
 	    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
@@ -409,7 +409,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	memset(malloc_obj, 0, length);					\
     } while(0)
 
-#define crm_malloc(malloc_obj, length) do {				\
+#  define crm_malloc(malloc_obj, length) do {				\
 	malloc_obj = malloc(length);					\
 	if(malloc_obj == NULL) {					\
 	    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
@@ -417,26 +417,28 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	}								\
     } while(0)
 
-#define crm_realloc(realloc_obj, length) do {				\
+#  define crm_realloc(realloc_obj, length) do {				\
 	realloc_obj = realloc(realloc_obj, length);			\
 	CRM_ASSERT(realloc_obj != NULL);				\
     } while(0)
-	
-#define crm_free(free_obj) do { free(free_obj); free_obj=NULL; } while(0)
-#define crm_msg_del(msg) do { if(msg != NULL) { ha_msg_del(msg); msg = NULL; } } while(0)
 
-#define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
+#  define crm_free(free_obj) do { free(free_obj); free_obj=NULL; } while(0)
+#  define crm_msg_del(msg) do { if(msg != NULL) { ha_msg_del(msg); msg = NULL; } } while(0)
 
-#define crm_str_hash g_str_hash_traditional
+#  define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
+
+#  define crm_str_hash g_str_hash_traditional
 extern guint g_str_hash_traditional(gconstpointer v);
 
 extern void update_all_trace_data(void);
 
-static inline void slist_basic_destroy(GListPtr list)
+static inline void
+slist_basic_destroy(GListPtr list)
 {
     GListPtr gIter = NULL;
-    for(gIter = list; gIter != NULL; gIter = gIter->next) {
-	free(gIter->data);
+
+    for (gIter = list; gIter != NULL; gIter = gIter->next) {
+        free(gIter->data);
     }
     g_list_free(list);
 }
@@ -453,7 +455,7 @@ static inline void slist_basic_destroy(GListPtr list)
     }
  *
  */
-#define slist_destroy(child_type, child, parent, a) do {		\
+#  define slist_destroy(child_type, child, parent, a) do {		\
 	GListPtr __crm_iter_head = parent;				\
 	child_type *child = NULL;					\
 	while(__crm_iter_head != NULL) {				\
@@ -464,7 +466,7 @@ static inline void slist_basic_destroy(GListPtr list)
 	g_list_free(parent);						\
     } while(0)
 
-#define slist_iter(child, child_type, parent, counter, a) do {		\
+#  define slist_iter(child, child_type, parent, counter, a) do {		\
 	GListPtr __crm_iter_head = parent;				\
 	child_type *child = NULL;					\
 	int counter = 0;						\

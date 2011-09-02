@@ -26,15 +26,13 @@
 
 extern FILE *msg_cib_strm;
 
-extern void cib_pre_notify(
-	int options, const char *op, xmlNode *existing, xmlNode *update);
+extern void cib_pre_notify(int options, const char *op, xmlNode * existing, xmlNode * update);
 
-extern void cib_post_notify(int options, const char *op, xmlNode *update,
-			    enum cib_errors result, xmlNode *new_obj);
+extern void cib_post_notify(int options, const char *op, xmlNode * update,
+                            enum cib_errors result, xmlNode * new_obj);
 
+extern void cib_diff_notify(int options, const char *client, const char *call_id, const char *op,
+                            xmlNode * update, enum cib_errors result, xmlNode * old_cib);
 
-extern void cib_diff_notify(
-	int options, const char *client, const char *call_id, const char *op,
-	xmlNode *update, enum cib_errors result, xmlNode *old_cib);
-
-extern void cib_replace_notify(const char *origin, xmlNode *update, enum cib_errors result, xmlNode *diff);
+extern void cib_replace_notify(const char *origin, xmlNode * update, enum cib_errors result,
+                               xmlNode * diff);

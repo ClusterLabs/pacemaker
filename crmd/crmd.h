@@ -16,14 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef CRMD__H
-#define CRMD__H
+#  define CRMD__H
 
-#define SYS_NAME     CRM_SYSTEM_CRMD
-#define PID_FILE     WORKING_DIR "/"SYS_NAME".pid"
-#define DAEMON_LOG   DEVEL_DIR"/"SYS_NAME".log"
-#define DAEMON_DEBUG DEVEL_DIR"/"SYS_NAME".debug"
+#  define SYS_NAME     CRM_SYSTEM_CRMD
+#  define PID_FILE     WORKING_DIR "/"SYS_NAME".pid"
+#  define DAEMON_LOG   DEVEL_DIR"/"SYS_NAME".log"
+#  define DAEMON_DEBUG DEVEL_DIR"/"SYS_NAME".debug"
 
-extern GMainLoop  *crmd_mainloop;
+extern GMainLoop *crmd_mainloop;
 extern GHashTable *ipc_clients;
 
 extern void crmd_metadata(void);

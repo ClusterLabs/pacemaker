@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef PE_COMMON__H
-#define PE_COMMON__H
-#include <glib.h>
+#  define PE_COMMON__H
+#  include <glib.h>
 
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
@@ -27,59 +27,60 @@ extern gboolean was_processing_warning;
  * more severe actions take precedent over lower ones
  */
 enum action_fail_response {
-	action_fail_ignore,
-	action_fail_recover,
-	action_fail_migrate,    /* recover by moving it somewhere else */
-	action_fail_block,
-	action_fail_stop,
-	action_fail_standby,
-	action_fail_fence
+    action_fail_ignore,
+    action_fail_recover,
+    action_fail_migrate,        /* recover by moving it somewhere else */
+    action_fail_block,
+    action_fail_stop,
+    action_fail_standby,
+    action_fail_fence
 };
 
-/* the "done" action must be the "pre" action +1 */  
+/* the "done" action must be the "pre" action +1 */
 enum action_tasks {
-	no_action,
-	monitor_rsc,
-	stop_rsc,
-	stopped_rsc,
-	start_rsc,
-	started_rsc,
-	action_notify,
-	action_notified,
-	action_promote,
-	action_promoted,
-	action_demote,
-	action_demoted,
-	shutdown_crm,
-	stonith_node
+    no_action,
+    monitor_rsc,
+    stop_rsc,
+    stopped_rsc,
+    start_rsc,
+    started_rsc,
+    action_notify,
+    action_notified,
+    action_promote,
+    action_promoted,
+    action_demote,
+    action_demoted,
+    shutdown_crm,
+    stonith_node
 };
 
 enum rsc_recovery_type {
-	recovery_stop_start,
-	recovery_stop_only,
-	recovery_block
+    recovery_stop_start,
+    recovery_stop_only,
+    recovery_block
 };
 
 enum rsc_start_requirement {
-	rsc_req_nothing,
-	rsc_req_quorum,
-	rsc_req_stonith
+    rsc_req_nothing,
+    rsc_req_quorum,
+    rsc_req_stonith
 };
 
 enum rsc_role_e {
-	RSC_ROLE_UNKNOWN,
-	RSC_ROLE_STOPPED,
-	RSC_ROLE_STARTED,
-	RSC_ROLE_SLAVE,
-	RSC_ROLE_MASTER,
+    RSC_ROLE_UNKNOWN,
+    RSC_ROLE_STOPPED,
+    RSC_ROLE_STARTED,
+    RSC_ROLE_SLAVE,
+    RSC_ROLE_MASTER,
 };
-#define RSC_ROLE_MAX  RSC_ROLE_MASTER+1
 
-#define	RSC_ROLE_UNKNOWN_S "Unknown"
-#define	RSC_ROLE_STOPPED_S "Stopped"
-#define	RSC_ROLE_STARTED_S "Started"
-#define	RSC_ROLE_SLAVE_S   "Slave"
-#define	RSC_ROLE_MASTER_S  "Master"
+#  define RSC_ROLE_MAX  RSC_ROLE_MASTER+1
+
+#  define	RSC_ROLE_UNKNOWN_S "Unknown"
+#  define	RSC_ROLE_STOPPED_S "Stopped"
+#  define	RSC_ROLE_STARTED_S "Started"
+#  define	RSC_ROLE_SLAVE_S   "Slave"
+#  define	RSC_ROLE_MASTER_S  "Master"
 
 /* *INDENT-OFF* */
 enum pe_print_options {
@@ -107,34 +108,34 @@ extern const char *role2text(enum rsc_role_e role);
 
 extern const char *fail2text(enum action_fail_response fail);
 
-extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
+extern void add_hash_param(GHashTable * hash, const char *name, const char *value);
 extern void append_hashtable(gpointer key, gpointer value, gpointer user_data);
 extern void pe_metadata(void);
-extern void verify_pe_options(GHashTable *options);
-extern const char *pe_pref(GHashTable *options, const char *name);
-extern void calculate_active_ops(GList* sorted_op_list, int *start_index, int *stop_index);
+extern void verify_pe_options(GHashTable * options);
+extern const char *pe_pref(GHashTable * options, const char *name);
+extern void calculate_active_ops(GList * sorted_op_list, int *start_index, int *stop_index);
 
 /* Helper macros to avoid NULL pointers */
-#define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
-#define safe_val5(def, t,u,v,w,x)   (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x:def:def:def:def)
+#  define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
+#  define safe_val5(def, t,u,v,w,x)   (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x:def:def:def:def)
 
-#define pe_err(fmt...) { was_processing_error = TRUE; crm_config_error = TRUE; crm_err(fmt); }
-#define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }
-#define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
-#define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
+#  define pe_err(fmt...) { was_processing_error = TRUE; crm_config_error = TRUE; crm_err(fmt); }
+#  define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }
+#  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
+#  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
 
-static inline const char *recovery2text(enum rsc_recovery_type type) 
+static inline const char *
+recovery2text(enum rsc_recovery_type type)
 {
-    switch(type) {
-	case recovery_stop_only:
-	    return "shutting it down";
-	case recovery_stop_start:
-	    return "attempting recovery";
-	case recovery_block:
-	    return "waiting for an administrator";
+    switch (type) {
+        case recovery_stop_only:
+            return "shutting it down";
+        case recovery_stop_start:
+            return "attempting recovery";
+        case recovery_block:
+            return "waiting for an administrator";
     }
     return "Unknown";
 }
-
 
 #endif

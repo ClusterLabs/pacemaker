@@ -25,60 +25,56 @@
 #include <crm/common/xml.h>
 #include <crm/common/cluster.h>
 
-extern gboolean   cib_is_master;
+extern gboolean cib_is_master;
 extern GHashTable *client_list;
 extern GHashTable *peer_hash;
 extern GHashTable *config_hash;
 
-typedef struct cib_client_s 
-{
-		char  *id;
-		char  *name;
-		char  *callback_id;
-		char  *user;
+typedef struct cib_client_s {
+    char *id;
+    char *name;
+    char *callback_id;
+    char *user;
 
-		const char  *channel_name;
+    const char *channel_name;
 
-		IPC_Channel *channel;
-		GCHSource   *source;
-		gboolean     encrypted;
-		unsigned long num_calls;
+    IPC_Channel *channel;
+    GCHSource *source;
+    gboolean encrypted;
+    unsigned long num_calls;
 
-		int pre_notify;
-		int post_notify;
-		int confirmations;
-		int replace;
-		int diffs;
-		
-		GList *delegated_calls;
+    int pre_notify;
+    int post_notify;
+    int confirmations;
+    int replace;
+    int diffs;
+
+    GList *delegated_calls;
 } cib_client_t;
 
-typedef struct cib_operation_s
-{
-		const char* 	operation;
-		gboolean	modifies_cib;
-		gboolean	needs_privileges;
-		gboolean	needs_quorum;
-		enum cib_errors (*prepare)(xmlNode *, xmlNode**, const char **);
-		enum cib_errors (*cleanup)(int, xmlNode**, xmlNode**);
-		enum cib_errors (*fn)(
-			const char *, int, const char *, xmlNode *,
-			xmlNode*, xmlNode*, xmlNode**, xmlNode**);
+typedef struct cib_operation_s {
+    const char *operation;
+    gboolean modifies_cib;
+    gboolean needs_privileges;
+    gboolean needs_quorum;
+    enum cib_errors (*prepare) (xmlNode *, xmlNode **, const char **);
+    enum cib_errors (*cleanup) (int, xmlNode **, xmlNode **);
+    enum cib_errors (*fn) (const char *, int, const char *, xmlNode *,
+                           xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 } cib_operation_t;
 
-extern gboolean cib_client_connect(IPC_Channel *channel, gpointer user_data);
-extern gboolean cib_null_callback (IPC_Channel *channel, gpointer user_data);
-extern gboolean cib_rw_callback   (IPC_Channel *channel, gpointer user_data);
-extern gboolean cib_ro_callback   (IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_client_connect(IPC_Channel * channel, gpointer user_data);
+extern gboolean cib_null_callback(IPC_Channel * channel, gpointer user_data);
+extern gboolean cib_rw_callback(IPC_Channel * channel, gpointer user_data);
+extern gboolean cib_ro_callback(IPC_Channel * channel, gpointer user_data);
 
-extern void cib_ha_peer_callback(HA_Message * msg, void* private_data);
-extern void cib_peer_callback(xmlNode * msg, void* private_data);
-extern void cib_client_status_callback(const char * node, const char * client,
-				       const char * status, void * private);
+extern void cib_ha_peer_callback(HA_Message * msg, void *private_data);
+extern void cib_peer_callback(xmlNode * msg, void *private_data);
+extern void cib_client_status_callback(const char *node, const char *client,
+                                       const char *status, void *private);
 
 #if SUPPORT_HEARTBEAT
 extern gboolean cib_ccm_dispatch(int fd, gpointer user_data);
 
-extern void cib_ccm_msg_callback(
-	oc_ed_t event, void *cookie, size_t size, const void *data);
+extern void cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
 #endif

@@ -16,11 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef STONITH_NG__H
-#define STONITH_NG__H
+#  define STONITH_NG__H
 
-#include <crm/common/ipc.h>
-#include <crm/common/xml.h>
-#include <clplumbing/proctrack.h>
+#  include <crm/common/ipc.h>
+#  include <crm/common/xml.h>
+#  include <clplumbing/proctrack.h>
 
 /* *INDENT-OFF* */
 enum stonith_state {
@@ -196,16 +196,17 @@ struct stonith_s
 
 /* Core functions */
 extern stonith_t *stonith_api_new(void);
-extern void stonith_api_delete(stonith_t *st);
+extern void stonith_api_delete(stonith_t * st);
 
 extern const char *stonith_error2string(enum stonith_errors return_code);
-extern void stonith_dump_pending_callbacks(stonith_t *st);
+extern void stonith_dump_pending_callbacks(stonith_t * st);
 
 extern const char *get_stonith_provider(const char *agent, const char *provider);
 
-extern bool stonith_dispatch(stonith_t *st);
+extern bool stonith_dispatch(stonith_t * st);
 
-extern stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp, const char *key, const char *value);
-extern void stonith_key_value_freeall(stonith_key_value_t *kvp, int keys, int values);
+extern stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
+                                                  const char *value);
+extern void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
 
 #endif
