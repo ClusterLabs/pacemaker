@@ -134,6 +134,7 @@ acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlN
 	xmlNode *xml_acls = NULL;
 	GListPtr user_acl = NULL;
 	xmlNode *orig_diff = NULL;
+	xmlNode *diff_child = NULL;
 	int rc = FALSE;
 
 	if (req_by_privileged(request)) {
@@ -162,6 +163,7 @@ acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlN
 	for (diff_child = __xml_first_child(orig_diff); diff_child; diff_child = __xml_next(diff_child)) {
 		const char *tag = crm_element_name(diff_child);
 		GListPtr parsed_acl = NULL;
+		xmlNode *diff_cib = NULL;
 
 		crm_debug("Preparing ACL checking on '%s'", tag);
 
@@ -175,7 +177,7 @@ acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlN
 			continue;
 		}
 
-		for (diff_cib = __xml_first_child(diff_child); diff_cib; diff_child = __xml_next(diff_cib)) {
+		for (diff_cib = __xml_first_child(diff_child); diff_cib; diff_cib = __xml_next(diff_cib)) {
 			GHashTable *xml_perms = NULL;
 
 			gen_xml_perms(diff_cib, parsed_acl, &xml_perms);
@@ -258,6 +260,8 @@ diff_xml_object_orig(xmlNode *old, xmlNode *new, gboolean suppress, xmlNode *new
 static gboolean
 unpack_user_acl(xmlNode *xml_acls, const char *user, GListPtr *user_acl)
 {
+	xmlNode *xml_acl = NULL;
+
 	if (xml_acls == NULL) {
 		return FALSE;
 	}
@@ -293,6 +297,8 @@ user_match(const char *user, const char *uid)
 static gboolean
 unpack_acl(xmlNode *xml_acls, xmlNode *xml_acl, GListPtr *acl)
 {
+	xmlNode *acl_child = NULL;
+
 	for (acl_child = __xml_first_child(xml_acl); acl_child; acl_child = __xml_next(acl_child)) {
 		const char *tag = crm_element_name(acl_child);
 
@@ -303,17 +309,21 @@ unpack_acl(xmlNode *xml_acls, xmlNode *xml_acl, GListPtr *acl)
 			}
 		} else if (crm_str_eq(XML_ACL_TAG_READ, tag, TRUE)
 			|| crm_str_eq(XML_ACL_TAG_WRITE, tag, TRUE)
-			|| crm_str_eq(XML_ACL_TAG_DENY, tag, TRUE))
+			|| crm_str_eq(XML_ACL_TAG_DENY, tag, TRUE)) {
 				acl_append(acl_child, acl);
-		);
+		}
+	}
+
 	return TRUE;
 }
 
 static gboolean
 unpack_role_acl(xmlNode *xml_acls, const char *role, GListPtr *acl)
 {
+	xmlNode *xml_acl = NULL;
+
 	for (xml_acl = __xml_first_child(xml_acls); xml_acl; xml_acl = __xml_next(xml_acl)) {
-	    if(crm_str_eq(XML_ACL_TAG_ROLE, (const char *)child->name, TRUE)) {
+	    if(crm_str_eq(XML_ACL_TAG_ROLE, (const char *)xml_acl->name, TRUE)) {
 		const char *role_id = crm_element_value(xml_acl, XML_ATTR_ID);
 
 		if (role_id && crm_str_eq(role, role_id, TRUE)) {
@@ -492,11 +502,13 @@ search_xml_children(GListPtr *children, xmlNode *root,
 	}
 
 	if(search_matches || match_found == 0) {
-	    for (child = __xml_first_child(root); child; child = __xml_next(child)) {
+		xmlNode *child = NULL;
+
+		for (child = __xml_first_child(root); child; child = __xml_next(child)) {
 			match_found += search_xml_children(
 				children, child, tag, field, value,
 				search_matches);
-	    }
+		}
 	}
 	
 	return match_found;
@@ -555,11 +567,13 @@ update_xml_perms(xmlNode *xml, acl_obj_t *acl_obj, GHashTable *xml_perms)
 	}
 
 	if (acl_obj->attribute == NULL) {
+		xmlNode *child = NULL;
+
 		perm->mode = acl_obj->mode;
 		crm_debug_3("Permission for element: element_mode=%s, tag=%s, id=%s",
                                 perm->mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
 
-		for (child = __xml_first_child(root); child; child = __xml_next(child)) {
+		for (child = __xml_first_child(xml); child; child = __xml_next(child)) {
 			update_xml_children_perms(child, perm->mode, xml_perms);
 		}
 
@@ -588,6 +602,7 @@ static gboolean
 update_xml_children_perms(xmlNode *xml, const char *mode, GHashTable *xml_perms)
 {
 	xml_perm_t *perm = NULL;
+	xmlNode *child = NULL;
 
 	if (g_hash_table_lookup_extended(xml_perms, xml, NULL, (gpointer)&perm)) {
 		if (perm->mode != NULL) {
@@ -605,7 +620,7 @@ update_xml_children_perms(xmlNode *xml, const char *mode, GHashTable *xml_perms)
 	crm_debug_4("Permission for child element: element_mode=%s, tag=%s, id=%s",
 			mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
 
-	for (child = __xml_first_child(root); child; child = __xml_next(child)) {
+	for (child = __xml_first_child(xml); child; child = __xml_next(child)) {
 		update_xml_children_perms(child, mode, xml_perms);
 	}
 
@@ -640,6 +655,7 @@ acl_filter_xml(xmlNode *xml, GHashTable *xml_perms)
 	int children_counter = 0;
 	xml_perm_t *perm = NULL;
 	int allow_counter = 0;
+	xmlNode *child = NULL;
 
 	for (child = __xml_first_child(xml); child; child = __xml_next(child)) {
 		if (acl_filter_xml(child, xml_perms) == FALSE) {
@@ -712,6 +728,7 @@ static gboolean
 acl_check_diff_xml(xmlNode *xml, GHashTable *xml_perms)
 {
 	xml_perm_t *perm = NULL;
+	xmlNode *child = NULL;
 
 	for (child = __xml_first_child(xml); child; child = __xml_next(child)) {
 		if (acl_check_diff_xml(child, xml_perms) == FALSE) {
