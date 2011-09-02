@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <pwd.h>                /* For getpwname() */
 
+#include <corosync/hdb.h>
 #include <corosync/cfg.h>
 #include <corosync/cpg.h>
 #include <corosync/confdb.h>

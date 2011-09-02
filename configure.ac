@@ -1063,10 +1063,12 @@ case $SUPPORT_CS in
      *) SUPPORT_CS=no;;
 esac
 
+AC_CHECK_HEADERS(qb/qbipcc.h)
 AC_MSG_CHECKING(for native corosync)
 AISMSGLIB=""
 CS_VERSION="none"
-COROSYNC_PKG="$PKGCONFIG libcoroipcc"
+CS_USES_LIBQB=0
+COROSYNC_PKG="false"
 
 if test $SUPPORT_CS = no; then
    AC_MSG_RESULT(no... not requested.)
@@ -1076,6 +1078,33 @@ else
 
    AC_CHECK_HEADERS(openais/saAis.h)
    AC_CHECK_HEADERS(corosync/coroipcc.h)
+
+   saveLIBS="$LIBS"
+   if test "$ac_cv_header_corosync_coroipcc_h" = "yes"; then
+        COROSYNC_PKG="$PKGCONFIG libcoroipcc"
+   	LIBS="$LIBS `$COROSYNC_PKG --libs-only-L`"
+   	AC_CHECK_LIB(coroipcc, coroipcc_msg_send_reply_receive, [])
+
+   	if test $ac_cv_lib_coroipcc_coroipcc_msg_send_reply_receive != yes; then
+	    aisreason="requred Corosync messaging libraries not found"
+            CS_VERSION="none"
+        fi
+
+   elif test "$ac_cv_header_qb_qbipcc_h" = "yes"; then
+        CS_USES_LIBQB=1
+   	COROSYNC_PKG="$PKGCONFIG libqb"
+   	LIBS="$LIBS `$COROSYNC_PKG --libs-only-L`"
+        AC_CHECK_LIB(qb, qb_ipcc_send, [])
+
+        if test $ac_cv_lib_qb_qb_ipcc_send != yes; then
+	    aisreason="requred libqb libraries not found"
+	    CS_VERSION="none"
+	fi
+   
+   else
+       aisreason="corosync/libqb headers not found"
+   fi
+   LIBS="$saveLIBS"
 
    $COROSYNC_PKG --exists
    if test $? = 0; then
@@ -1088,25 +1117,6 @@ fi
 if test $CS_VERSION != "none"; then
    AC_MSG_CHECKING(for Corosync branch)
    AC_MSG_RESULT($CS_VERSION)
-fi
-
-if test $CS_VERSION = "corosync"; then
-   if test "$ac_cv_header_corosync_coroipcc_h" != "yes"; then
-       CS_VERSION="none"
-       aisreason="Corosync headers not found"
-   fi
-
-   saveLIBS="$LIBS"
-   LIBS="$LIBS `$COROSYNC_PKG --libs-only-L`"
-   AC_CHECK_LIB(coroipcc, coroipcc_msg_send_reply_receive, [])
-   LIBS="$saveLIBS"
-
-   if test $ac_cv_lib_coroipcc_coroipcc_msg_send_reply_receive != yes; then
-        AC_MSG_RESULT(Cannot locate corosync messaging library)
-	aisreason="requred Corosync libraries not found"
-        CS_VERSION="none"
-   fi
-
 fi
 
 SUPPORT_CS=1
@@ -1130,6 +1140,8 @@ case $CS_VERSION in
     *) AC_MSG_FAILURE(Unknown Corosync branch: $CS_VERSION);;
 esac
 
+
+AC_DEFINE_UNQUOTED(CS_USES_LIBQB, $CS_USES_LIBQB, Does corosync use libqb for its ipc)
 AC_DEFINE_UNQUOTED(AIS_COROSYNC, $SUPPORT_CS, Compatability alias for SUPPORT_COROSYNC)
 AC_DEFINE_UNQUOTED(SUPPORT_AIS, $SUPPORT_CS, Compatability alias for SUPPORT_COROSYNC)
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)

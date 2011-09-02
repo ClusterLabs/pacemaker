@@ -82,7 +82,7 @@ GHashTable *membership_notify_list = NULL;
 #define crm_flag_members	0x00000001
 
 struct crm_identify_msg_s {
-    coroipc_request_header_t header __attribute__ ((aligned(8)));
+    struct qb_ipc_request_header	header __attribute__((aligned(8)));
     uint32_t id;
     uint32_t pid;
     int32_t votes;
@@ -851,8 +851,13 @@ pcmk_ipc_exit(void *conn)
     g_hash_table_remove(membership_notify_list, async_conn);
     g_hash_table_remove(ipc_client_list, async_conn);
 
-    do_ais_log(client ? LOG_INFO : (LOG_DEBUG + 1), "Client %s (conn=%p, async-conn=%p) left",
-               client ? client : "unknown-transient", conn, async_conn);
+    if (client) {
+	    do_ais_log(LOG_INFO, "Client %s (conn=%p, async-conn=%p) left",
+		       client, conn, async_conn);
+    } else {
+	    do_ais_log((LOG_DEBUG+1), "Client %s (conn=%p, async-conn=%p) left",
+		       "unknown-transient", conn, async_conn);
+    }
 
     return (0);
 }
@@ -956,7 +961,7 @@ pcmk_cluster_id_callback(ais_void_ptr * message, unsigned int nodeid)
 }
 
 struct res_overlay {
-    coroipc_response_header_t header __attribute((aligned(8)));
+    struct qb_ipc_response_header header __attribute((aligned(8)));
     char buf[4096];
 };
 
@@ -970,7 +975,7 @@ send_ipc_ack(void *conn)
     }
 
     res_overlay->header.id = CRM_MESSAGE_IPC_ACK;
-    res_overlay->header.size = sizeof(coroipc_response_header_t);
+    res_overlay->header.size = sizeof (struct qb_ipc_response_header);
     res_overlay->header.error = CS_OK;
     pcmk_api->ipc_response_send(conn, res_overlay, res_overlay->header.size);
 }

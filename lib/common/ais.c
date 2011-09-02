@@ -24,8 +24,17 @@
 #include <sys/utsname.h>
 #include "stack.h"
 #ifdef SUPPORT_COROSYNC
-#  include <corosync/confdb.h>
-#  include <corosync/corodefs.h>
+#  if CS_USES_LIBQB
+#    include <qb/qbipcc.h>
+#    include <qb/qbutil.h>
+#    include <corosync/corodefs.h>
+#    include <corosync/corotypes.h>
+#    include <corosync/hdb.h>
+#    include <corosync/confdb.h>
+#  else
+#    include <corosync/confdb.h>
+#    include <corosync/corodefs.h>
+#  endif
 #endif
 
 #ifdef SUPPORT_CMAN
@@ -135,7 +144,11 @@ get_ais_data(const AIS_Message * msg)
 int ais_fd_sync = -1;
 int ais_fd_async = -1;          /* never send messages via this channel */
 void *ais_ipc_ctx = NULL;
+#if CS_USES_LIBQB
+qb_ipcc_connection_t *ais_ipc_handle = NULL;
+#else
 hdb_handle_t ais_ipc_handle = 0;
+#endif
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
 GFDSource *cman_source = NULL;
@@ -149,12 +162,12 @@ get_ais_nodeid(uint32_t * id, char **uname)
     struct iovec iov;
     int retries = 0;
     int rc = CS_OK;
-    coroipc_response_header_t header;
+    struct qb_ipc_response_header header;
     struct crm_ais_nodeid_resp_s answer;
 
     header.error = CS_OK;
     header.id = crm_class_nodeid;
-    header.size = sizeof(coroipc_response_header_t);
+    header.size = sizeof(struct qb_ipc_response_header);
 
     CRM_CHECK(id != NULL, return FALSE);
     CRM_CHECK(uname != NULL, return FALSE);
@@ -164,7 +177,11 @@ get_ais_nodeid(uint32_t * id, char **uname)
 
   retry:
     errno = 0;
+#if CS_USES_LIBQB
+    rc = qb_to_cs_error(qb_ipcc_sendv_recv(ais_ipc_handle, &iov, 1, &answer, sizeof (answer), -1));
+#else
     rc = coroipcc_msg_send_reply_receive(ais_ipc_handle, &iov, 1, &answer, sizeof(answer));
+#endif
     if (rc == CS_OK) {
         CRM_CHECK(answer.header.size == sizeof(struct crm_ais_nodeid_resp_s),
                   crm_err("Odd message: id=%d, size=%d, error=%d",
@@ -219,12 +236,12 @@ send_ais_text(int class, const char *data,
 
     int retries = 0;
     int rc = CS_OK;
-    int buf_len = sizeof(coroipc_response_header_t);
+    int buf_len = sizeof(struct qb_ipc_response_header);
 
     char *buf = NULL;
     struct iovec iov;
     const char *transport = "pcmk";
-    coroipc_response_header_t *header = NULL;
+    struct qb_ipc_response_header *header = NULL;
     AIS_Message *ais_msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
@@ -330,10 +347,14 @@ send_ais_text(int class, const char *data,
         errno = 0;
         switch (cluster_type) {
             case pcmk_cluster_classic_ais:
+#if CS_USES_LIBQB
+                rc = qb_to_cs_error(qb_ipcc_sendv_recv(ais_ipc_handle, &iov, 1, buf, buf_len, -1));
+#else
                 rc = coroipcc_msg_send_reply_receive(ais_ipc_handle, &iov, 1, buf, buf_len);
-                header = (coroipc_response_header_t *) buf;
+#endif
+                header = (struct qb_ipc_response_header *)buf;
                 if (rc == CS_OK) {
-                    CRM_CHECK(header->size == sizeof(coroipc_response_header_t),
+                    CRM_CHECK(header->size == sizeof (struct qb_ipc_response_header),
                               crm_err("Odd message: id=%d, size=%d, class=%d, error=%d",
                                       header->id, header->size, class, header->error));
 
@@ -418,7 +439,11 @@ terminate_ais_connection(void)
 /*     G_main_del_fd(ais_source_sync);     */
 
     if (is_classic_ais_cluster() == FALSE) {
+#if CS_USES_LIBQB
+        qb_ipcc_disconnect(ais_ipc_handle);
+#else
         coroipcc_service_disconnect(ais_ipc_handle);
+#endif
 
     } else {
         cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group);
@@ -568,13 +593,19 @@ gboolean
 ais_dispatch(int sender, gpointer user_data)
 {
     int rc = CS_OK;
-    char *buffer = NULL;
     gboolean good = TRUE;
 
     gboolean(*dispatch) (AIS_Message *, char *, int) = user_data;
 
     do {
+#if CS_USES_LIBQB
+        char buffer[AIS_IPC_MESSAGE_SIZE];
+        rc = qb_to_cs_error(qb_ipcc_event_recv(ais_ipc_handle, (void*)buffer,
+                            AIS_IPC_MESSAGE_SIZE, 100));
+#else
+        char *buffer = NULL;
         rc = coroipcc_dispatch_get(ais_ipc_handle, (void **)&buffer, 0);
+#endif
 
         if (rc == CS_ERR_TRY_AGAIN) {
             return TRUE;
@@ -589,7 +620,9 @@ ais_dispatch(int sender, gpointer user_data)
         }
 
         good = ais_dispatch_message((AIS_Message *) buffer, dispatch);
+#if !CS_USES_LIBQB
         coroipcc_dispatch_put(ais_ipc_handle);
+#endif
 
     } while (good);
 
@@ -1003,11 +1036,24 @@ init_ais_connection_classic(gboolean(*dispatch) (AIS_Message *, char *, int),
     struct utsname name;
 
     crm_info("Creating connection to our Corosync plugin");
+#if CS_USES_LIBQB
+    rc = CS_OK;
+    ais_ipc_handle = qb_ipcc_connect("pacemaker.engine", AIS_IPC_MESSAGE_SIZE);
+#else
     rc = coroipcc_service_connect(COROSYNC_SOCKET_NAME, PCMK_SERVICE_ID,
                                   AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE,
                                   &ais_ipc_handle);
+#endif
     if (ais_ipc_handle) {
+#if CS_USES_LIBQB
+        qb_ipcc_fd_get(ais_ipc_handle, &ais_fd_async);
+#else
         coroipcc_fd_get(ais_ipc_handle, &ais_fd_async);
+#endif
+    } else {
+        crm_info("Connection to our AIS plugin (%d) failed: %s (%d)",
+                 PCMK_SERVICE_ID, strerror(errno), errno);
+        return FALSE;
     }
     if (ais_fd_async <= 0 && rc == CS_OK) {
         crm_err("No context created, but connection reported 'ok'");
@@ -1121,6 +1167,16 @@ get_local_node_name(void)
     return name;
 }
 
+#if CS_USES_LIBQB
+static void libqb_log_fn(const char *file_name,
+        int32_t file_line,
+        int32_t severity,
+        const char *msg)
+{
+        syslog(LOG_INFO, "libqb> %s:%d %s", file_name, file_line, msg);
+}
+#endif
+
 extern int set_cluster_type(enum cluster_type_e type);
 
 gboolean
@@ -1131,6 +1187,10 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
 
     crm_peer_init();
 
+#if CS_USES_LIBQB
+    qb_util_set_log_function (libqb_log_fn);
+#endif
+    
     /* Here we just initialize comms */
     switch (stack) {
         case pcmk_cluster_classic_ais:
