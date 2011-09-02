@@ -1022,6 +1022,8 @@ if test x"$ac_cv_lib_plumb_G_main_add_IPC_Channel" != x"yes"; then
    AC_MSG_FAILURE(Core Heartbeat utility libraries not found: $ac_cv_lib_plumb_G_main_add_IPC_Channel)
 fi
 
+AC_CHECK_LIB(qb, qb_log_from_external_source)
+
 dnl Compatability checks
 AC_CHECK_FUNCS(msgfromIPC_timeout)
 AC_CHECK_MEMBERS([struct lrm_ops.fail_rsc],,,[[#include <lrm/lrm_api.h>]])
@@ -1063,7 +1065,15 @@ case $SUPPORT_CS in
      *) SUPPORT_CS=no;;
 esac
 
+HAVE_LIBQB=0
 AC_CHECK_HEADERS(qb/qbipcc.h)
+if test "$ac_cv_header_qb_qbipcc_h" = "yes"; then
+   HAVE_LIBQB=1
+fi
+
+AC_DEFINE_UNQUOTED(LIBQB_LOGGING, $HAVE_LIBQB, Use libqb for logging)
+AC_DEFINE_UNQUOTED(LIBQB_IPC, $HAVE_LIBQB, Use libqb for IPC)
+
 AC_MSG_CHECKING(for native corosync)
 AISMSGLIB=""
 CS_VERSION="none"

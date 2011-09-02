@@ -289,7 +289,7 @@ main(int argc, char **argv)
         return -rc;
     }
 
-    cl_log_args(argc, argv);
+    crm_log_args(argc, argv);
 
     if (output) {
         buffer = dump_xml_formatted(output);

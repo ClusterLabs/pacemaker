@@ -36,7 +36,6 @@
 #include <crm/crm.h>
 #include <crm/common/util.h>
 #include <clplumbing/lsb_exitcodes.h>
-#include <clplumbing/cl_log.h>
 #include <clplumbing/cl_uuid.h>
 
 #ifdef HAVE_GETOPT_H

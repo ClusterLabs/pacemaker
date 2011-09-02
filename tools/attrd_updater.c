@@ -126,7 +126,7 @@ main(int argc, char **argv)
     }
 
     if (BE_QUIET == FALSE) {
-        cl_log_args(argc, argv);
+        crm_log_args(argc, argv);
     }
 
     if (optind > argc) {
