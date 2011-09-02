@@ -1430,10 +1430,8 @@ if test -n "$LIBGNUTLS_CONFIG"; then
 	AC_MSG_CHECKING(for gnutls library flags)
 	GNUTLSLIBS="`$LIBGNUTLS_CONFIG --libs`";
 	AC_MSG_RESULT($GNUTLSLIBS)
-else
-	AC_CHECK_LIB(gnutls, gnutls_init)
 fi
-
+AC_CHECK_LIB(gnutls, gnutls_init)
 AC_CHECK_FUNCS(gnutls_priority_set_direct)
 
 AC_SUBST(GNUTLSHEAD)
