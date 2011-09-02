@@ -1,4 +1,8 @@
 # Common
+GPATH
+GRTAGS
+GTAGS
+TAGS
 Makefile
 Makefile.in
 .deps
@@ -6,6 +10,9 @@ Makefile.in
 *.pc
 *.bz2
 *.rpm
+*.la
+*.lo
+*.o
 *~
 
 
@@ -33,7 +40,7 @@ ltmain.sh
 missing
 py-compile
 
-# Build targets
+# Configure targets
 cts/CTSvars.py
 cts/LSBDummy
 cts/benchmark/clubench
@@ -53,6 +60,52 @@ tools/crm_primitive.py
 tools/crm_report
 tools/hb2openais.sh
 
+# Build targets
+*.7
+*.7.xml
+*.7.html
+*.8
+*.8.xml
+*.8.html
+doc/*/en-US/images/*.png
+doc/*/publish
+cib/cib
+cib/cibmon
+cib/cibpipe
+crmd/atest
+crmd/crmd
+doc/Clusters_from_Scratch.txt
+doc/Pacemaker_Explained.txt
+doc/acls.html
+doc/crm_fencing.html
+fencing/stonith-test
+fencing/stonith_admin
+fencing/stonithd
+fencing/stonithd.xml
+mcp/pacemakerd
+pengine/pengine
+pengine/pengine.xml
+pengine/ptest
+shell/regression/testcases/confbasic-xml.filter
+tools/attrd
+tools/attrd_updater
+tools/cibadmin
+tools/crm_attribute
+tools/crm_diff
+tools/crm_mon
+tools/crm_node
+tools/crm_resource
+tools/crm_shadow
+tools/crm_simulate
+tools/crm_uuid
+tools/crm_verify
+tools/crmadmin
+tools/iso8601
+xml/crm.dtd
+xml/pacemaker.rng
+
 #Other 
 mock
+HTML
 pacemaker.spec
+pengine/.regression.failed.diff
