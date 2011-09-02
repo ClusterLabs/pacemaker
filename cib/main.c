@@ -420,7 +420,7 @@ cib_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
     free_xml(xml);
     return TRUE;
 
- bail:
+  bail:
     crm_err("Invalid XML: '%.120s'", data);
     return TRUE;
 

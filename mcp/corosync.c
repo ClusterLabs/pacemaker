@@ -32,7 +32,7 @@
 #include <crm/common/cluster.h>
 
 #ifdef SUPPORT_CMAN
-#include <libcman.h>
+#  include <libcman.h>
 #endif
 
 static struct cpg_name cpg_group = {

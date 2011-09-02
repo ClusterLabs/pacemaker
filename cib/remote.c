@@ -341,7 +341,7 @@ cib_remote_listen(int ssock, gpointer data)
 
     return TRUE;
 
- bail:
+  bail:
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
         gnutls_bye(*session, GNUTLS_SHUT_RDWR);
@@ -465,7 +465,7 @@ cib_remote_msg(int csock, gpointer data)
 
     crm_log_xml(LOG_MSG, "Remote command: ", command);
     cib_common_callback_worker(command, client, FALSE, TRUE);
- bail:
+  bail:
     free_xml(command);
     command = NULL;
     return TRUE;
@@ -517,7 +517,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
 
     return PAM_SUCCESS;
 
- bail:
+  bail:
     for (count = 0; count < num_msg; ++count) {
         if (reply[count].resp != NULL) {
             switch (msg[count]->msg_style) {
@@ -602,7 +602,7 @@ authenticate_user(const char *user, const char *passwd)
     }
     pass = TRUE;
 
- bail:
+  bail:
     rc = pam_end(pam_h, rc);
 #endif
     return pass;

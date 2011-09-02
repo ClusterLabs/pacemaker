@@ -267,10 +267,8 @@ cib_common_callback(IPC_Channel * channel, cib_client_t * cib_client,
     xmlNode *op_request = NULL;
     gboolean keep_channel = TRUE;
 
-    CRM_CHECK(cib_client != NULL, crm_err("Invalid client");
-              return FALSE);
-    CRM_CHECK(cib_client->id != NULL, crm_err("Invalid client: %p", cib_client);
-              return FALSE);
+    CRM_CHECK(cib_client != NULL, crm_err("Invalid client"); return FALSE);
+    CRM_CHECK(cib_client->id != NULL, crm_err("Invalid client: %p", cib_client); return FALSE);
 
     /*
      * Do enough work to make entering worthwhile
@@ -857,8 +855,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         manage_counters = FALSE;
         call_options |= cib_force_diff;
 
-        CRM_CHECK(call_type == 3 || call_type == 4,
-                  crm_err("Call type: %d", call_type); crm_log_xml(LOG_ERR, "bad op", request));
+        CRM_CHECK(call_type == 3 || call_type == 4, crm_err("Call type: %d", call_type);
+                  crm_log_xml(LOG_ERR, "bad op", request));
     }
 #ifdef SUPPORT_PRENOTIFY
     if ((call_options & cib_inhibit_notify) == 0) {
@@ -1015,7 +1013,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     log_xml_diff(log_level, *cib_diff, "cib:diff");
 
- done:
+  done:
     if ((call_options & cib_discard_reply) == 0) {
         *reply = cib_construct_reply(request, output, rc);
         /* crm_log_xml_info(*reply, "cib:reply"); */
@@ -1175,7 +1173,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     cib_process_request(msg, FALSE, TRUE, TRUE, NULL);
     return;
 
- bail:
+  bail:
     if (reason) {
         const char *seq = crm_element_value(msg, F_SEQ);
         const char *op = crm_element_value(msg, F_CIB_OPERATION);

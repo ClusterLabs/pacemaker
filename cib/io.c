@@ -121,7 +121,7 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
     }
     fclose(expected_strm);
 
- bail:
+  bail:
     if (expected == NULL) {
         crm_err("On-disk digest is empty");
 
@@ -654,7 +654,7 @@ write_cib_contents(gpointer p)
     cib_rename(tmp2, digest_file);
     sync_directory(cib_root);
 
- cleanup:
+  cleanup:
     crm_free(primary_file);
     crm_free(digest_file);
     crm_free(digest);
