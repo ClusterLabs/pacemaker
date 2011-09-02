@@ -180,7 +180,12 @@ changes:
 	@printf "\n"
 
 indent:
-	find . -name "*.c" -exec ./p-indent \{\} \;
+	find . -name "*.h" -exec ./p-indent \{\} \;
+	find mcp -name "*.c" -exec ./p-indent \{\} \;
+	find cib -name "*.c" -exec ./p-indent \{\} \;
+	find crmd -name "*.c" -exec ./p-indent \{\} \;
+	find fencing -name "*.c" -exec ./p-indent \{\} \;
+	find pengine -name "*.c" -exec ./p-indent \{\} \;
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i.sed 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
