@@ -181,11 +181,8 @@ changes:
 
 indent:
 	find . -name "*.h" -exec ./p-indent \{\} \;
-	find mcp -name "*.c" -exec ./p-indent \{\} \;
-	find cib -name "*.c" -exec ./p-indent \{\} \;
-	find crmd -name "*.c" -exec ./p-indent \{\} \;
-	find fencing -name "*.c" -exec ./p-indent \{\} \;
-	find pengine -name "*.c" -exec ./p-indent \{\} \;
+	find lib -name "*.c" -exec ./p-indent \{\} \;
+	git diff lib/common/xml.c | patch -p1 -R
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i.sed 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
