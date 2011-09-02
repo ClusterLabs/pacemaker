@@ -89,7 +89,8 @@ main(int argc, char **argv)
 
     crm_log_init_quiet(NULL, LOG_CRIT - 1, FALSE, FALSE, argc, argv);
     crm_set_options(NULL, "original_xml operation [options]", long_options,
-                    "A tool for determining the differences between two xml files and/or applying the differences like a patch\n");
+                    "A utility for comparing Pacemaker configurations (XML format)\n\n"
+                    "The tool produces a custom (diff-like) output which it can also apply like a patch\n");
 
     if (argc < 2) {
         crm_help('?', LSB_EXIT_EINVAL);

@@ -17,8 +17,8 @@ while true ; do
 	    --help) 
 		echo "crm_master - A convenience wrapper for crm_attribute"; 
 		echo ""; 
-		echo ""; 
 		echo "Set, update or delete a resource's promotion score"; 
+		echo "";
 		echo "This program should normally only be invoked from inside an OCF resource agent"
 		echo ""; 
 		echo "Usage: crm_master command [options]"; 

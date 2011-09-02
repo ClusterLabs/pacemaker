@@ -21,6 +21,7 @@ while true ; do
 	--version) crm_attribute --version; exit 0;;
 	--help) 
 	    echo "crm_failcount - A convenience wrapper for crm_attribute"; 
+	    echo "";
 	    echo "Set, update or remove the failcount for the specified resource on the named node"; 
 	    echo ""; 
 	    echo "Usage: crm_failcount -r resource_name command [options]"; 

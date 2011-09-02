@@ -99,7 +99,8 @@ main(int argc, char ** argv)
     
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
-		    "Provides access to the stonith-ng API.\n");
+		    "Provides access to the stonith-ng API.\n"
+                    "\nAllows the administrator to add/remove/list devices, check device and host status and fence hosts\n");
 
     while (1) {
 	flag = crm_get_option(argc, argv, &option_index);

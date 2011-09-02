@@ -1217,7 +1217,7 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
     crm_set_options(NULL, "(query|command) [options]", long_options,
-                    "Perform tasks related to cluster resources.\n  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n");
+                    "Perform tasks related to cluster resources.\nAllows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
     if (argc < 2) {
         crm_help('?', LSB_EXIT_EINVAL);

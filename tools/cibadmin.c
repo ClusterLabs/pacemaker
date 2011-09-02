@@ -196,8 +196,8 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv);
     crm_set_options(NULL, "command [options] [data]", long_options,
                     "Provides direct access to the cluster configuration."
-                    "\n\n Allows the configuration, or sections of it, to be queried, modified, replaced and deleted."
-                    "\n\n Where necessary, XML data will be obtained using the -X, -x, or -p options\n");
+                    "\n\nAllows the configuration, or sections of it, to be queried, modified, replaced and deleted."
+                    "\n\nWhere necessary, XML data will be obtained using the -X, -x, or -p options\n");
 
     if (argc < 2) {
         crm_help('?', LSB_EXIT_EINVAL);

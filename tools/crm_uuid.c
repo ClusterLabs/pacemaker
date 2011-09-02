@@ -33,6 +33,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <crm/crm.h>
+#include <crm/common/util.h>
 #include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_uuid.h>
@@ -48,20 +50,23 @@
 int read_local_hb_uuid(void);
 int write_local_hb_uuid(const char *buffer);
 
-static void
-usage(int rc)
-{
-    FILE *stream = rc != 0 ? stderr : stdout;
-
-    fprintf(stream, "crm_uuid [-r|-w new_ascii_value]\n");
-    exit(rc);
-}
+/* *INDENT-OFF* */
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",    0, 0, '?', "\tThis text"},
+    {"version", 0, 0, '$', "\tRead the machine's Heartbeat UUID"  },
+    {"read",    0, 0, 'r', "\tChange the machine's Heartbeat UUID to a new value"  },
+    
+    {0, 0, 0, 0}
+};
+/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
 {
     int flag;
     int rc = 0;
+    int index = 0;
 
     if (argc == 1) {
         /* no arguments specified, default to read */
@@ -69,25 +74,28 @@ main(int argc, char **argv)
         return rc;
     }
 
-    cl_log_args(argc, argv);
+    crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_set_options(NULL, " [-r|-w new_ascii_value]",
+                    long_options, "A tool for manipulating Heartbeat's UUID file");
 
     while (1) {
-        flag = getopt(argc, argv, OPTARGS);
-        if (flag == -1) {
+        flag = crm_get_option(argc, argv, &index);
+        if (flag == -1)
             break;
-        }
+
         switch (flag) {
+            case '?':
+            case '$':
+                crm_help(flag, LSB_EXIT_OK);
+                break;
             case 'r':
                 rc = read_local_hb_uuid();
                 break;
             case 'w':
                 rc = write_local_hb_uuid(optarg);
                 break;
-            case '?':
-                usage(LSB_EXIT_OK);
-                break;
             default:
-                usage(LSB_EXIT_GENERIC);
+                crm_help('?', LSB_EXIT_GENERIC);
                 break;
         }
     }

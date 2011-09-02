@@ -23,7 +23,8 @@ while true ; do
 	--version) crm_attribute --version; exit 0;;
 	-h|--help) 
 	    echo "crm_ticket - A convenience wrapper for crm_attribute"; 
-	    echo "Grant or revoke the specified ticket for the cluster"; 
+	    echo ""; 
+	    echo "Grants or revokes the specified ticket for the cluster"; 
 	    echo ""; 
 	    echo "Usage: crm_ticket -t ticket_name command [options]"; 
 	    echo "Options:"
