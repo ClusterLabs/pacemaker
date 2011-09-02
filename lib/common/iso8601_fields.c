@@ -27,7 +27,6 @@
 #include <ctype.h>
 #include <crm/common/iso8601.h>
 
-
 #define do_add_field(atime, field, extra, limit, overflow)		\
 	{								\
 		crm_debug_6("Adding %d to %d (limit=%d)",		\
@@ -87,318 +86,309 @@
 	}
 
 void
-add_seconds(ha_time_t *a_time, int extra) 
+add_seconds(ha_time_t * a_time, int extra)
 {
-	if(extra < 0) {
-		sub_seconds(a_time, -extra);
-	} else {
-		do_add_time_field(a_time, seconds, extra, 60, add_minutes);
-	}
-}
-
-
-void
-add_minutes(ha_time_t *a_time, int extra) 
-{
-	if(extra < 0) {
-		sub_minutes(a_time, -extra);
-	} else {
-		do_add_time_field(a_time, minutes, extra, 60, add_hours);
-	}
-}
-
-
-void
-add_hours(ha_time_t *a_time, int extra) 
-{
-	if(extra < 0) {
-		sub_hours(a_time, -extra);
-	} else {
-		do_add_time_field(a_time, hours, extra, 24, add_days);
-	}
+    if (extra < 0) {
+        sub_seconds(a_time, -extra);
+    } else {
+        do_add_time_field(a_time, seconds, extra, 60, add_minutes);
+    }
 }
 
 void
-add_days(ha_time_t *a_time, int extra) 
+add_minutes(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->days == FALSE) {
-		crm_debug_4("has->days == FALSE");
-		return;
-	}
-	if(extra < 0) {
-		sub_days(a_time, -extra);
-	} else {
-		do_add_field(a_time, days, extra,
-			     days_per_month(a_time->months, a_time->years),
-			     add_months);
-	}
-	
-	convert_from_gregorian(a_time);
+    if (extra < 0) {
+        sub_minutes(a_time, -extra);
+    } else {
+        do_add_time_field(a_time, minutes, extra, 60, add_hours);
+    }
 }
 
 void
-add_weekdays(ha_time_t *a_time, int extra) 
+add_hours(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->weekdays == FALSE) {
-		crm_debug_4("has->weekdays == FALSE");
-		return;
-	}
-	if(extra < 0) {
-		sub_weekdays(a_time, -extra);
-	} else {
-		do_add_field(a_time, weekdays, extra, 7, add_weeks);
-	}
-	
-	convert_from_weekdays(a_time);
+    if (extra < 0) {
+        sub_hours(a_time, -extra);
+    } else {
+        do_add_time_field(a_time, hours, extra, 24, add_days);
+    }
 }
 
 void
-add_yeardays(ha_time_t *a_time, int extra) 
+add_days(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->yeardays == FALSE) {
-		crm_debug_4("has->yeardays == FALSE");
-		return;
-	}
-	if(extra < 0) {
-		sub_yeardays(a_time, -extra);
-	} else {
-		do_add_field(a_time, yeardays, extra,
-			     (is_leap_year(a_time->years)?366:365),
-			     add_ordinalyears);
-	}
-	
-	convert_from_ordinal(a_time);
+    if (a_time->has->days == FALSE) {
+        crm_debug_4("has->days == FALSE");
+        return;
+    }
+    if (extra < 0) {
+        sub_days(a_time, -extra);
+    } else {
+        do_add_field(a_time, days, extra,
+                     days_per_month(a_time->months, a_time->years), add_months);
+    }
+
+    convert_from_gregorian(a_time);
 }
 
 void
-add_weeks(ha_time_t *a_time, int extra) 
+add_weekdays(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->weeks== FALSE) {
-		crm_debug_4("has->weeks == FALSE");
-		return;
-	}
-	if(extra < 0) {
-		sub_weeks(a_time, -extra);
-	} else {
-		do_add_field(a_time, weeks, extra,
-			     weeks_in_year(a_time->years), add_weekyears);
-	}
-	
-	convert_from_weekdays(a_time);
+    if (a_time->has->weekdays == FALSE) {
+        crm_debug_4("has->weekdays == FALSE");
+        return;
+    }
+    if (extra < 0) {
+        sub_weekdays(a_time, -extra);
+    } else {
+        do_add_field(a_time, weekdays, extra, 7, add_weeks);
+    }
+
+    convert_from_weekdays(a_time);
 }
 
 void
-add_months(ha_time_t *a_time, int extra) 
+add_yeardays(ha_time_t * a_time, int extra)
 {
-	int max = 0;
-	if(a_time->has->months == FALSE) {
-		crm_debug_4("has->months == FALSE");
-		return;
-	}
-	if(extra < 0) {
-		sub_months(a_time, -extra);
-	} else {
-		do_add_field(a_time, months, extra, 12, add_years);
-	}
-	
-	
-	max = days_per_month(a_time->months, a_time->years);
-	if(a_time->days > max) {
-		a_time->days = max;
-	}
-	convert_from_gregorian(a_time);
+    if (a_time->has->yeardays == FALSE) {
+        crm_debug_4("has->yeardays == FALSE");
+        return;
+    }
+    if (extra < 0) {
+        sub_yeardays(a_time, -extra);
+    } else {
+        do_add_field(a_time, yeardays, extra,
+                     (is_leap_year(a_time->years) ? 366 : 365), add_ordinalyears);
+    }
+
+    convert_from_ordinal(a_time);
 }
 
 void
-add_years(ha_time_t *a_time, int extra) 
+add_weeks(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->years == FALSE) {
-		crm_debug_4("has->years == FALSE");
-		return;
-	}
-	a_time->years += extra;
-	convert_from_gregorian(a_time);
+    if (a_time->has->weeks == FALSE) {
+        crm_debug_4("has->weeks == FALSE");
+        return;
+    }
+    if (extra < 0) {
+        sub_weeks(a_time, -extra);
+    } else {
+        do_add_field(a_time, weeks, extra, weeks_in_year(a_time->years), add_weekyears);
+    }
+
+    convert_from_weekdays(a_time);
 }
 
 void
-add_ordinalyears(ha_time_t *a_time, int extra) 
+add_months(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->years == FALSE) {
-		crm_debug_4("has->years == FALSE");
-		return;
-	}
-	a_time->years += extra;
-	convert_from_ordinal(a_time);
+    int max = 0;
+
+    if (a_time->has->months == FALSE) {
+        crm_debug_4("has->months == FALSE");
+        return;
+    }
+    if (extra < 0) {
+        sub_months(a_time, -extra);
+    } else {
+        do_add_field(a_time, months, extra, 12, add_years);
+    }
+
+    max = days_per_month(a_time->months, a_time->years);
+    if (a_time->days > max) {
+        a_time->days = max;
+    }
+    convert_from_gregorian(a_time);
 }
 
 void
-add_weekyears(ha_time_t *a_time, int extra) 
+add_years(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->weekyears == FALSE) {
-		crm_debug_4("has->weekyears == FALSE");
-		return;
-	}
-	a_time->weekyears += extra;
-	convert_from_weekdays(a_time);
+    if (a_time->has->years == FALSE) {
+        crm_debug_4("has->years == FALSE");
+        return;
+    }
+    a_time->years += extra;
+    convert_from_gregorian(a_time);
 }
 
 void
-sub_seconds(ha_time_t *a_time, int extra) 
+add_ordinalyears(ha_time_t * a_time, int extra)
 {
-	if(extra < 0) {
-		add_seconds(a_time, -extra);
-	} else {
-		do_sub_time_field(a_time, seconds, extra, 60, sub_minutes);
-	}
+    if (a_time->has->years == FALSE) {
+        crm_debug_4("has->years == FALSE");
+        return;
+    }
+    a_time->years += extra;
+    convert_from_ordinal(a_time);
 }
 
 void
-sub_minutes(ha_time_t *a_time, int extra) 
+add_weekyears(ha_time_t * a_time, int extra)
 {
-	if(extra < 0) {
-		add_minutes(a_time, -extra);
-	} else {
-		do_sub_time_field(a_time, minutes, extra, 60, sub_hours);
-	}
+    if (a_time->has->weekyears == FALSE) {
+        crm_debug_4("has->weekyears == FALSE");
+        return;
+    }
+    a_time->weekyears += extra;
+    convert_from_weekdays(a_time);
 }
 
 void
-sub_hours(ha_time_t *a_time, int extra) 
+sub_seconds(ha_time_t * a_time, int extra)
 {
-	if(extra < 0) {
-		add_hours(a_time, -extra);
-	} else {
-		do_sub_time_field(a_time, hours, extra, 24, sub_days);
-	}
+    if (extra < 0) {
+        add_seconds(a_time, -extra);
+    } else {
+        do_sub_time_field(a_time, seconds, extra, 60, sub_minutes);
+    }
 }
 
 void
-sub_days(ha_time_t *a_time, int extra) 
+sub_minutes(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->days == FALSE) {
-		crm_debug_4("has->days == FALSE");
-		return;
-	}
-
-	crm_debug_5("Subtracting %d days from %.4d-%.2d-%.2d",
-		    extra, a_time->years, a_time->months, a_time->days);
-	
-	if(extra < 0) {
-		add_days(a_time, -extra);
-	} else {
-		do_sub_field(a_time, days, extra,
-			     days_per_month(a_time->months, a_time->years),
-			     sub_months);
-	}
-
-	convert_from_gregorian(a_time);
+    if (extra < 0) {
+        add_minutes(a_time, -extra);
+    } else {
+        do_sub_time_field(a_time, minutes, extra, 60, sub_hours);
+    }
 }
 
 void
-sub_weekdays(ha_time_t *a_time, int extra) 
+sub_hours(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->weekdays == FALSE) {
-		crm_debug_4("has->weekdays == FALSE");
-		return;
-	}
-
-	crm_debug_5("Subtracting %d days from %.4d-%.2d-%.2d",
-		    extra, a_time->years, a_time->months, a_time->days);
-	
-	if(extra < 0) {
-		add_weekdays(a_time, -extra);
-	} else {
-		do_sub_field(a_time, weekdays, extra, 7, sub_weeks);
-	}
-
-	convert_from_weekdays(a_time);
+    if (extra < 0) {
+        add_hours(a_time, -extra);
+    } else {
+        do_sub_time_field(a_time, hours, extra, 24, sub_days);
+    }
 }
 
 void
-sub_yeardays(ha_time_t *a_time, int extra) 
+sub_days(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->yeardays == FALSE) {
-		crm_debug_4("has->yeardays == FALSE");
-		return;
-	}
+    if (a_time->has->days == FALSE) {
+        crm_debug_4("has->days == FALSE");
+        return;
+    }
 
-	crm_debug_5("Subtracting %d days from %.4d-%.3d",
-		    extra, a_time->years, a_time->yeardays);
-	
-	if(extra < 0) {
-		add_yeardays(a_time, -extra);
-	} else {
-		do_sub_field(a_time, yeardays, extra,
-			     is_leap_year(a_time->years)?366:365, sub_ordinalyears);
-	}
+    crm_debug_5("Subtracting %d days from %.4d-%.2d-%.2d",
+                extra, a_time->years, a_time->months, a_time->days);
 
-	convert_from_ordinal(a_time);
-}
+    if (extra < 0) {
+        add_days(a_time, -extra);
+    } else {
+        do_sub_field(a_time, days, extra,
+                     days_per_month(a_time->months, a_time->years), sub_months);
+    }
 
-
-void
-sub_weeks(ha_time_t *a_time, int extra) 
-{
-	if(a_time->has->weeks == FALSE) {
-		crm_debug_4("has->weeks == FALSE");
-		return;
-	}
-	if(extra < 0) {
-		add_weeks(a_time, -extra);
-	} else {
-		do_sub_field(a_time, weeks, extra,
-			     weeks_in_year(a_time->years), sub_weekyears);
-	}
-
-	convert_from_weekdays(a_time);
+    convert_from_gregorian(a_time);
 }
 
 void
-sub_months(ha_time_t *a_time, int extra) 
+sub_weekdays(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->months == FALSE) {
-		crm_debug_4("has->months == FALSE");
-		return;
-	}
-	if(extra < 0) {
-		add_months(a_time, -extra);
-	} else {
-		do_sub_field(a_time, months, extra, 12, sub_years);
-	}
-	convert_from_gregorian(a_time);
+    if (a_time->has->weekdays == FALSE) {
+        crm_debug_4("has->weekdays == FALSE");
+        return;
+    }
+
+    crm_debug_5("Subtracting %d days from %.4d-%.2d-%.2d",
+                extra, a_time->years, a_time->months, a_time->days);
+
+    if (extra < 0) {
+        add_weekdays(a_time, -extra);
+    } else {
+        do_sub_field(a_time, weekdays, extra, 7, sub_weeks);
+    }
+
+    convert_from_weekdays(a_time);
 }
 
 void
-sub_years(ha_time_t *a_time, int extra) 
+sub_yeardays(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->years == FALSE) {
-		crm_debug_4("has->years == FALSE");
-		return;
-	}
-	a_time->years -= extra;
-	convert_from_gregorian(a_time);
+    if (a_time->has->yeardays == FALSE) {
+        crm_debug_4("has->yeardays == FALSE");
+        return;
+    }
+
+    crm_debug_5("Subtracting %d days from %.4d-%.3d", extra, a_time->years, a_time->yeardays);
+
+    if (extra < 0) {
+        add_yeardays(a_time, -extra);
+    } else {
+        do_sub_field(a_time, yeardays, extra,
+                     is_leap_year(a_time->years) ? 366 : 365, sub_ordinalyears);
+    }
+
+    convert_from_ordinal(a_time);
 }
 
 void
-sub_weekyears(ha_time_t *a_time, int extra) 
+sub_weeks(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->weekyears == FALSE) {
-		crm_debug_4("has->weekyears == FALSE");
-		return;
-	}
-	a_time->weekyears -= extra;
+    if (a_time->has->weeks == FALSE) {
+        crm_debug_4("has->weeks == FALSE");
+        return;
+    }
+    if (extra < 0) {
+        add_weeks(a_time, -extra);
+    } else {
+        do_sub_field(a_time, weeks, extra, weeks_in_year(a_time->years), sub_weekyears);
+    }
 
-	convert_from_weekdays(a_time);
+    convert_from_weekdays(a_time);
 }
 
 void
-sub_ordinalyears(ha_time_t *a_time, int extra) 
+sub_months(ha_time_t * a_time, int extra)
 {
-	if(a_time->has->years == FALSE) {
-		crm_debug_4("has->years == FALSE");
-		return;
-	}
-	a_time->years -= extra;
+    if (a_time->has->months == FALSE) {
+        crm_debug_4("has->months == FALSE");
+        return;
+    }
+    if (extra < 0) {
+        add_months(a_time, -extra);
+    } else {
+        do_sub_field(a_time, months, extra, 12, sub_years);
+    }
+    convert_from_gregorian(a_time);
+}
 
-	convert_from_ordinal(a_time);
+void
+sub_years(ha_time_t * a_time, int extra)
+{
+    if (a_time->has->years == FALSE) {
+        crm_debug_4("has->years == FALSE");
+        return;
+    }
+    a_time->years -= extra;
+    convert_from_gregorian(a_time);
+}
+
+void
+sub_weekyears(ha_time_t * a_time, int extra)
+{
+    if (a_time->has->weekyears == FALSE) {
+        crm_debug_4("has->weekyears == FALSE");
+        return;
+    }
+    a_time->weekyears -= extra;
+
+    convert_from_weekdays(a_time);
+}
+
+void
+sub_ordinalyears(ha_time_t * a_time, int extra)
+{
+    if (a_time->has->years == FALSE) {
+        crm_debug_4("has->years == FALSE");
+        return;
+    }
+    a_time->years -= extra;
+
+    convert_from_ordinal(a_time);
 }

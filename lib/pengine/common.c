@@ -30,72 +30,72 @@ gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
 
 static gboolean
-check_quorum(const char *value) 
+check_quorum(const char *value)
 {
-	if(safe_str_eq(value, "stop")) {
-		return TRUE;
+    if (safe_str_eq(value, "stop")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "freeze")) {
-		return TRUE;
+    } else if (safe_str_eq(value, "freeze")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "ignore")) {
-		return TRUE;
+    } else if (safe_str_eq(value, "ignore")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "suicide")) {
-		return TRUE;
-	}
-	return FALSE;
+    } else if (safe_str_eq(value, "suicide")) {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 static gboolean
-check_health(const char *value) 
+check_health(const char *value)
 {
-	if(safe_str_eq(value, "none")) {
-		return TRUE;
+    if (safe_str_eq(value, "none")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "custom")) {
-		return TRUE;
+    } else if (safe_str_eq(value, "custom")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "only-green")) {
-		return TRUE;
+    } else if (safe_str_eq(value, "only-green")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "progressive")) {
-		return TRUE;
+    } else if (safe_str_eq(value, "progressive")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "migrate-on-red")) {
-		return TRUE;
-	}
-	return FALSE;
+    } else if (safe_str_eq(value, "migrate-on-red")) {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 static gboolean
-check_stonith_action(const char *value) 
+check_stonith_action(const char *value)
 {
-	if(safe_str_eq(value, "reboot")) {
-		return TRUE;
+    if (safe_str_eq(value, "reboot")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "poweroff")) {
-		return TRUE;
-	}
-	return FALSE;
+    } else if (safe_str_eq(value, "poweroff")) {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 static gboolean
 check_placement_strategy(const char *value)
 {
-	if(safe_str_eq(value, "default")) {
-		return TRUE;
+    if (safe_str_eq(value, "default")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "utilization")) {
-		return TRUE;
+    } else if (safe_str_eq(value, "utilization")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "minimal")) {
-		return TRUE;
+    } else if (safe_str_eq(value, "minimal")) {
+        return TRUE;
 
-	} else if(safe_str_eq(value, "balanced")) {
-		return TRUE;
-	}
-	return FALSE;
+    } else if (safe_str_eq(value, "balanced")) {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /* *INDENT-OFF* */
@@ -178,262 +178,257 @@ pe_cluster_option pe_opts[] = {
 void
 pe_metadata(void)
 {
-	config_metadata("Policy Engine", "1.0",
-			"Policy Engine Options",
-			"This is a fake resource that details the options that can be configured for the Policy Engine.",
-			pe_opts, DIMOF(pe_opts));
+    config_metadata("Policy Engine", "1.0",
+                    "Policy Engine Options",
+                    "This is a fake resource that details the options that can be configured for the Policy Engine.",
+                    pe_opts, DIMOF(pe_opts));
 }
 
 void
-verify_pe_options(GHashTable *options)
+verify_pe_options(GHashTable * options)
 {
-	verify_all_options(options, pe_opts, DIMOF(pe_opts));
+    verify_all_options(options, pe_opts, DIMOF(pe_opts));
 }
 
 const char *
-pe_pref(GHashTable *options, const char *name)
+pe_pref(GHashTable * options, const char *name)
 {
-	return get_cluster_pref(options, pe_opts, DIMOF(pe_opts), name);
+    return get_cluster_pref(options, pe_opts, DIMOF(pe_opts), name);
 }
 
 const char *
 fail2text(enum action_fail_response fail)
 {
-	const char *result = "<unknown>";
-	switch(fail)
-	{
-		case action_fail_ignore:
-			result = "ignore";
-			break;
-		case action_fail_block:
-			result = "block";
-			break;
-		case action_fail_recover:
-			result = "recover";
-			break;
-		case action_fail_migrate:
-			result = "migrate";
-			break;
-		case action_fail_stop:
-			result = "stop";
-			break;
-		case action_fail_fence:
-			result = "fence";
-			break;
-		case action_fail_standby:
-			result = "standby";
-			break;
-	}
-	return result;
+    const char *result = "<unknown>";
+
+    switch (fail) {
+        case action_fail_ignore:
+            result = "ignore";
+            break;
+        case action_fail_block:
+            result = "block";
+            break;
+        case action_fail_recover:
+            result = "recover";
+            break;
+        case action_fail_migrate:
+            result = "migrate";
+            break;
+        case action_fail_stop:
+            result = "stop";
+            break;
+        case action_fail_fence:
+            result = "fence";
+            break;
+        case action_fail_standby:
+            result = "standby";
+            break;
+    }
+    return result;
 }
-
-
 
 enum action_tasks
-text2task(const char *task) 
+text2task(const char *task)
 {
-	if(safe_str_eq(task, CRMD_ACTION_STOP)) {
-		return stop_rsc;
-	} else if(safe_str_eq(task, CRMD_ACTION_STOPPED)) {
-		return stopped_rsc;
-	} else if(safe_str_eq(task, CRMD_ACTION_START)) {
-		return start_rsc;
-	} else if(safe_str_eq(task, CRMD_ACTION_STARTED)) {
-		return started_rsc;
-	} else if(safe_str_eq(task, CRM_OP_SHUTDOWN)) {
-		return shutdown_crm;
-	} else if(safe_str_eq(task, CRM_OP_FENCE)) {
-		return stonith_node;
-	} else if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
-		return monitor_rsc;
-	} else if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
-		return action_notify;
-	} else if(safe_str_eq(task, CRMD_ACTION_NOTIFIED)) {
-		return action_notified;
-	} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
-		return action_promote;
-	} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-		return action_demote;
-	} else if(safe_str_eq(task, CRMD_ACTION_PROMOTED)) {
-		return action_promoted;
-	} else if(safe_str_eq(task, CRMD_ACTION_DEMOTED)) {
-		return action_demoted;
-	}
-
+    if (safe_str_eq(task, CRMD_ACTION_STOP)) {
+        return stop_rsc;
+    } else if (safe_str_eq(task, CRMD_ACTION_STOPPED)) {
+        return stopped_rsc;
+    } else if (safe_str_eq(task, CRMD_ACTION_START)) {
+        return start_rsc;
+    } else if (safe_str_eq(task, CRMD_ACTION_STARTED)) {
+        return started_rsc;
+    } else if (safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+        return shutdown_crm;
+    } else if (safe_str_eq(task, CRM_OP_FENCE)) {
+        return stonith_node;
+    } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        return monitor_rsc;
+    } else if (safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+        return action_notify;
+    } else if (safe_str_eq(task, CRMD_ACTION_NOTIFIED)) {
+        return action_notified;
+    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+        return action_promote;
+    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+        return action_demote;
+    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTED)) {
+        return action_promoted;
+    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTED)) {
+        return action_demoted;
+    }
 #if SUPPORT_TRACING
-	if(safe_str_eq(task, CRMD_ACTION_CANCEL)) {
-		return no_action;
-	} else if(safe_str_eq(task, CRMD_ACTION_DELETE)) {
-		return no_action;
-	} else if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
-		return no_action;
-	} else if(safe_str_eq(task, CRM_OP_PROBED)) {
-		return no_action;
-	} else if(safe_str_eq(task, CRM_OP_LRM_REFRESH)) {
-		return no_action;	
-	} else if(safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
-		return no_action;    
-	} else if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
-		return no_action;	
-	} else if(safe_str_eq(task, "fail")) {
-		return no_action;	
-	} else if(safe_str_eq(task, "stonith_up")) {
-		return no_action;	
-	} else if(safe_str_eq(task, "stonith_complete")) {
-		return no_action;	
-	} else if(safe_str_eq(task, "all_stopped")) {
-		return no_action;	
-	}
-	crm_trace("Unsupported action: %s", task);
+    if (safe_str_eq(task, CRMD_ACTION_CANCEL)) {
+        return no_action;
+    } else if (safe_str_eq(task, CRMD_ACTION_DELETE)) {
+        return no_action;
+    } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        return no_action;
+    } else if (safe_str_eq(task, CRM_OP_PROBED)) {
+        return no_action;
+    } else if (safe_str_eq(task, CRM_OP_LRM_REFRESH)) {
+        return no_action;
+    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+        return no_action;
+    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        return no_action;
+    } else if (safe_str_eq(task, "fail")) {
+        return no_action;
+    } else if (safe_str_eq(task, "stonith_up")) {
+        return no_action;
+    } else if (safe_str_eq(task, "stonith_complete")) {
+        return no_action;
+    } else if (safe_str_eq(task, "all_stopped")) {
+        return no_action;
+    }
+    crm_trace("Unsupported action: %s", task);
 #endif
 
-	return no_action;
+    return no_action;
 }
-
 
 const char *
 task2text(enum action_tasks task)
 {
-	const char *result = "<unknown>";
-	switch(task)
-	{
-		case no_action:
-			result = "no_action";
-			break;
-		case stop_rsc:
-			result = CRMD_ACTION_STOP;
-			break;
-		case stopped_rsc:
-			result = CRMD_ACTION_STOPPED;
-			break;
-		case start_rsc:
-			result = CRMD_ACTION_START;
-			break;
-		case started_rsc:
-			result = CRMD_ACTION_STARTED;
-			break;
-		case shutdown_crm:
-			result = CRM_OP_SHUTDOWN;
-			break;
-		case stonith_node:
-			result = CRM_OP_FENCE;
-			break;
-		case monitor_rsc:
-			result = CRMD_ACTION_STATUS;
-			break;
-		case action_notify:
-			result = CRMD_ACTION_NOTIFY;
-			break;
-		case action_notified:
-			result = CRMD_ACTION_NOTIFIED;
-			break;
-		case action_promote:
-			result = CRMD_ACTION_PROMOTE;
-			break;
-		case action_promoted:
-			result = CRMD_ACTION_PROMOTED;
-			break;
-		case action_demote:
-			result = CRMD_ACTION_DEMOTE;
-			break;
-		case action_demoted:
-			result = CRMD_ACTION_DEMOTED;
-			break;
-	}
-	
-	return result;
+    const char *result = "<unknown>";
+
+    switch (task) {
+        case no_action:
+            result = "no_action";
+            break;
+        case stop_rsc:
+            result = CRMD_ACTION_STOP;
+            break;
+        case stopped_rsc:
+            result = CRMD_ACTION_STOPPED;
+            break;
+        case start_rsc:
+            result = CRMD_ACTION_START;
+            break;
+        case started_rsc:
+            result = CRMD_ACTION_STARTED;
+            break;
+        case shutdown_crm:
+            result = CRM_OP_SHUTDOWN;
+            break;
+        case stonith_node:
+            result = CRM_OP_FENCE;
+            break;
+        case monitor_rsc:
+            result = CRMD_ACTION_STATUS;
+            break;
+        case action_notify:
+            result = CRMD_ACTION_NOTIFY;
+            break;
+        case action_notified:
+            result = CRMD_ACTION_NOTIFIED;
+            break;
+        case action_promote:
+            result = CRMD_ACTION_PROMOTE;
+            break;
+        case action_promoted:
+            result = CRMD_ACTION_PROMOTED;
+            break;
+        case action_demote:
+            result = CRMD_ACTION_DEMOTE;
+            break;
+        case action_demoted:
+            result = CRMD_ACTION_DEMOTED;
+            break;
+    }
+
+    return result;
 }
 
 const char *
-role2text(enum rsc_role_e role) 
+role2text(enum rsc_role_e role)
 {
-	CRM_CHECK(role >= RSC_ROLE_UNKNOWN, return RSC_ROLE_UNKNOWN_S);
-	CRM_CHECK(role < RSC_ROLE_MAX, return RSC_ROLE_UNKNOWN_S);
-	switch(role) {
-		case RSC_ROLE_UNKNOWN:
-			return RSC_ROLE_UNKNOWN_S;
-		case RSC_ROLE_STOPPED:
-			return RSC_ROLE_STOPPED_S;
-		case RSC_ROLE_STARTED:
-			return RSC_ROLE_STARTED_S;
-		case RSC_ROLE_SLAVE:
-			return RSC_ROLE_SLAVE_S;
-		case RSC_ROLE_MASTER:
-			return RSC_ROLE_MASTER_S;
-	}
-	return RSC_ROLE_UNKNOWN_S;
+    CRM_CHECK(role >= RSC_ROLE_UNKNOWN, return RSC_ROLE_UNKNOWN_S);
+    CRM_CHECK(role < RSC_ROLE_MAX, return RSC_ROLE_UNKNOWN_S);
+    switch (role) {
+        case RSC_ROLE_UNKNOWN:
+            return RSC_ROLE_UNKNOWN_S;
+        case RSC_ROLE_STOPPED:
+            return RSC_ROLE_STOPPED_S;
+        case RSC_ROLE_STARTED:
+            return RSC_ROLE_STARTED_S;
+        case RSC_ROLE_SLAVE:
+            return RSC_ROLE_SLAVE_S;
+        case RSC_ROLE_MASTER:
+            return RSC_ROLE_MASTER_S;
+    }
+    return RSC_ROLE_UNKNOWN_S;
 }
 
 enum rsc_role_e
-text2role(const char *role) 
+text2role(const char *role)
 {
-	CRM_ASSERT(role != NULL);
-	if(safe_str_eq(role, RSC_ROLE_STOPPED_S)) {
-		return RSC_ROLE_STOPPED;
-	} else if(safe_str_eq(role, RSC_ROLE_STARTED_S)) {
-		return RSC_ROLE_STARTED;
-	} else if(safe_str_eq(role, RSC_ROLE_SLAVE_S)) {
-		return RSC_ROLE_SLAVE;
-	} else if(safe_str_eq(role, RSC_ROLE_MASTER_S)) {
-		return RSC_ROLE_MASTER;
-	} else if(safe_str_eq(role, RSC_ROLE_UNKNOWN_S)) {
-		return RSC_ROLE_UNKNOWN;
-	}
-	crm_err("Unknown role: %s", role);
-	return RSC_ROLE_UNKNOWN;
+    CRM_ASSERT(role != NULL);
+    if (safe_str_eq(role, RSC_ROLE_STOPPED_S)) {
+        return RSC_ROLE_STOPPED;
+    } else if (safe_str_eq(role, RSC_ROLE_STARTED_S)) {
+        return RSC_ROLE_STARTED;
+    } else if (safe_str_eq(role, RSC_ROLE_SLAVE_S)) {
+        return RSC_ROLE_SLAVE;
+    } else if (safe_str_eq(role, RSC_ROLE_MASTER_S)) {
+        return RSC_ROLE_MASTER;
+    } else if (safe_str_eq(role, RSC_ROLE_UNKNOWN_S)) {
+        return RSC_ROLE_UNKNOWN;
+    }
+    crm_err("Unknown role: %s", role);
+    return RSC_ROLE_UNKNOWN;
 }
 
 int
-merge_weights(int w1, int w2) 
+merge_weights(int w1, int w2)
 {
-	int result = w1 + w2;
+    int result = w1 + w2;
 
-	if(w1 <= -INFINITY || w2 <= -INFINITY) {
-		if(w1 >= INFINITY || w2 >= INFINITY) {
-			crm_debug_2("-INFINITY + INFINITY == -INFINITY");
-		}
-		return -INFINITY;
+    if (w1 <= -INFINITY || w2 <= -INFINITY) {
+        if (w1 >= INFINITY || w2 >= INFINITY) {
+            crm_debug_2("-INFINITY + INFINITY == -INFINITY");
+        }
+        return -INFINITY;
 
-	} else if(w1 >= INFINITY || w2 >= INFINITY) {
-		return INFINITY;
-	}
+    } else if (w1 >= INFINITY || w2 >= INFINITY) {
+        return INFINITY;
+    }
 
-	/* detect wrap-around */
-	if(result > 0) {
-		if(w1 <= 0 && w2 < 0) {
-			result = -INFINITY;
-		}
-		
-	} else if(w1 > 0 && w2 > 0) {
-		result = INFINITY;
-	}
+    /* detect wrap-around */
+    if (result > 0) {
+        if (w1 <= 0 && w2 < 0) {
+            result = -INFINITY;
+        }
 
-	/* detect +/- INFINITY */
-	if(result >= INFINITY) {
-		result = INFINITY;
-		
-	} else if(result <= -INFINITY) {
-		result = -INFINITY;
-	}
+    } else if (w1 > 0 && w2 > 0) {
+        result = INFINITY;
+    }
 
-	crm_debug_5("%d + %d = %d", w1, w2, result);
-	return result;
+    /* detect +/- INFINITY */
+    if (result >= INFINITY) {
+        result = INFINITY;
+
+    } else if (result <= -INFINITY) {
+        result = -INFINITY;
+    }
+
+    crm_debug_5("%d + %d = %d", w1, w2, result);
+    return result;
 }
 
 void
-add_hash_param(GHashTable *hash, const char *name, const char *value)
+add_hash_param(GHashTable * hash, const char *name, const char *value)
 {
-	CRM_CHECK(hash != NULL, return);
+    CRM_CHECK(hash != NULL, return);
 
-	crm_debug_3("adding: name=%s value=%s", crm_str(name), crm_str(value));
-	if(name == NULL || value == NULL) {
-		return;
+    crm_debug_3("adding: name=%s value=%s", crm_str(name), crm_str(value));
+    if (name == NULL || value == NULL) {
+        return;
 
-	} else if(safe_str_eq(value, "#default")) {
-		return;
-		
-	} else if(g_hash_table_lookup(hash, name) == NULL) {
-		g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
-	}
+    } else if (safe_str_eq(value, "#default")) {
+        return;
+
+    } else if (g_hash_table_lookup(hash, name) == NULL) {
+        g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
+    }
 }
-

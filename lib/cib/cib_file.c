@@ -31,42 +31,43 @@
 #include <crm/common/ipc.h>
 #include <cib_private.h>
 
+typedef struct cib_file_opaque_s {
+    int flags;
+    char *filename;
 
-typedef struct cib_file_opaque_s 
-{
-	int flags;
-	char *filename;
-	
 } cib_file_opaque_t;
 
-int cib_file_perform_op(
-    cib_t *cib, const char *op, const char *host, const char *section,
-    xmlNode *data, xmlNode **output_data, int call_options);
+int cib_file_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
+                        xmlNode * data, xmlNode ** output_data, int call_options);
 
-int cib_file_perform_op_delegate(
-    cib_t *cib, const char *op, const char *host, const char *section,
-    xmlNode *data, xmlNode **output_data, int call_options, const char *user_name);
+int cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, const char *section,
+                                 xmlNode * data, xmlNode ** output_data, int call_options,
+                                 const char *user_name);
 
-int cib_file_signon(cib_t* cib, const char *name, enum cib_conn_type type);
-int cib_file_signoff(cib_t* cib);
-int cib_file_free(cib_t* cib);
+int cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type);
+int cib_file_signoff(cib_t * cib);
+int cib_file_free(cib_t * cib);
 
-static int cib_file_inputfd(cib_t* cib) { return cib_NOTSUPPORTED; }
-
-static int cib_file_set_connection_dnotify(
-    cib_t *cib, void (*dnotify)(gpointer user_data))
+static int
+cib_file_inputfd(cib_t * cib)
 {
     return cib_NOTSUPPORTED;
 }
 
-
-static int cib_file_register_notification(cib_t* cib, const char *callback, int enabled) 
+static int
+cib_file_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
 {
     return cib_NOTSUPPORTED;
 }
 
-cib_t*
-cib_file_new (const char *cib_location)
+static int
+cib_file_register_notification(cib_t * cib, const char *callback, int enabled)
+{
+    return cib_NOTSUPPORTED;
+}
+
+cib_t *
+cib_file_new(const char *cib_location)
 {
     cib_file_opaque_t *private = NULL;
     cib_t *cib = cib_new_variant();
@@ -76,18 +77,18 @@ cib_file_new (const char *cib_location)
     cib->variant = cib_file;
     cib->variant_opaque = private;
 
-    if(cib_location == NULL) {
-	cib_location = getenv("CIB_file");
+    if (cib_location == NULL) {
+        cib_location = getenv("CIB_file");
     }
     private->filename = crm_strdup(cib_location);
 
-    /* assign variant specific ops*/
+    /* assign variant specific ops */
     cib->cmds->variant_op = cib_file_perform_op;
     cib->cmds->delegated_variant_op = cib_file_perform_op_delegate;
-    cib->cmds->signon     = cib_file_signon;
-    cib->cmds->signoff    = cib_file_signoff;
-    cib->cmds->free       = cib_file_free;
-    cib->cmds->inputfd    = cib_file_inputfd;
+    cib->cmds->signon = cib_file_signon;
+    cib->cmds->signoff = cib_file_signoff;
+    cib->cmds->free = cib_file_free;
+    cib->cmds->inputfd = cib_file_inputfd;
 
     cib->cmds->register_notification = cib_file_register_notification;
     cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
@@ -96,7 +97,8 @@ cib_file_new (const char *cib_location)
 }
 
 static xmlNode *in_mem_cib = NULL;
-static int load_file_cib(const char *filename) 
+static int
+load_file_cib(const char *filename)
 {
     int rc = cib_ok;
     struct stat buf;
@@ -104,33 +106,33 @@ static int load_file_cib(const char *filename)
     gboolean dtd_ok = TRUE;
     const char *ignore_dtd = NULL;
     xmlNode *status = NULL;
-    
+
     rc = stat(filename, &buf);
     if (rc == 0) {
-	root = filename2xml(filename);
-	if(root == NULL) {
-	    return cib_dtd_validation;
-	}
+        root = filename2xml(filename);
+        if (root == NULL) {
+            return cib_dtd_validation;
+        }
 
     } else {
-	return cib_NOTEXISTS;
+        return cib_NOTEXISTS;
     }
 
     rc = 0;
-    
+
     status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
-    if(status == NULL) {
-	create_xml_node(root, XML_CIB_TAG_STATUS);		
+    if (status == NULL) {
+        create_xml_node(root, XML_CIB_TAG_STATUS);
     }
 
     ignore_dtd = crm_element_value(root, XML_ATTR_VALIDATION);
     dtd_ok = validate_xml(root, NULL, TRUE);
-    if(dtd_ok == FALSE) {
-	crm_err("CIB does not validate against %s", ignore_dtd);
-	rc = cib_dtd_validation;
-	goto bail;
-    }	
-    
+    if (dtd_ok == FALSE) {
+        crm_err("CIB does not validate against %s", ignore_dtd);
+        rc = cib_dtd_validation;
+        goto bail;
+    }
+
     in_mem_cib = root;
     return rc;
 
@@ -141,88 +143,88 @@ static int load_file_cib(const char *filename)
 }
 
 int
-cib_file_signon(cib_t* cib, const char *name, enum cib_conn_type type)
+cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type)
 {
     int rc = cib_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    if(private->filename == FALSE) {
-	rc = cib_missing;
+    if (private->filename == FALSE) {
+        rc = cib_missing;
     } else {
-	rc = load_file_cib(private->filename);
+        rc = load_file_cib(private->filename);
     }
-    
-    if(rc == cib_ok) {
-	crm_debug("%s: Opened connection to local file '%s'", name, private->filename);
-	cib->state = cib_connected_command;
-	cib->type  = cib_command;
+
+    if (rc == cib_ok) {
+        crm_debug("%s: Opened connection to local file '%s'", name, private->filename);
+        cib->state = cib_connected_command;
+        cib->type = cib_command;
 
     } else {
-	fprintf(stderr, "%s: Connection to local file '%s' failed: %s\n",
-		name, private->filename, cib_error2string(rc));
+        fprintf(stderr, "%s: Connection to local file '%s' failed: %s\n",
+                name, private->filename, cib_error2string(rc));
     }
-    
+
     return rc;
 }
-	
+
 int
-cib_file_signoff(cib_t* cib)
+cib_file_signoff(cib_t * cib)
 {
     int rc = cib_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
 
     crm_debug("Signing out of the CIB Service");
-    
-    if(strstr(private->filename, ".bz2") != NULL) {
-	rc = write_xml_file(in_mem_cib, private->filename, TRUE);
-	
+
+    if (strstr(private->filename, ".bz2") != NULL) {
+        rc = write_xml_file(in_mem_cib, private->filename, TRUE);
+
     } else {
-	rc = write_xml_file(in_mem_cib, private->filename, FALSE);
+        rc = write_xml_file(in_mem_cib, private->filename, FALSE);
     }
 
-    if(rc > 0) {
-	crm_info("Wrote CIB to %s", private->filename);
-	rc = cib_ok;
-	
+    if (rc > 0) {
+        crm_info("Wrote CIB to %s", private->filename);
+        rc = cib_ok;
+
     } else {
-	crm_err("Could not write CIB to %s", private->filename);
+        crm_err("Could not write CIB to %s", private->filename);
     }
     free_xml(in_mem_cib);
-    
+
     cib->state = cib_disconnected;
-    cib->type  = cib_none;
-    
+    cib->type = cib_none;
+
     return rc;
 }
 
 int
-cib_file_free (cib_t* cib)
+cib_file_free(cib_t * cib)
 {
     int rc = cib_ok;
 
-    if(cib->state != cib_disconnected) {
-	rc = cib_file_signoff(cib);
+    if (cib->state != cib_disconnected) {
+        rc = cib_file_signoff(cib);
     }
-    
-    if(rc == cib_ok) {
-	cib_file_opaque_t *private = cib->variant_opaque;
-	crm_free(private->filename);
-	crm_free(cib->cmds);
-	crm_free(private);
-	crm_free(cib);
+
+    if (rc == cib_ok) {
+        cib_file_opaque_t *private = cib->variant_opaque;
+
+        crm_free(private->filename);
+        crm_free(cib->cmds);
+        crm_free(private);
+        crm_free(cib);
 
     } else {
-	fprintf(stderr, "Couldn't sign off: %d\n", rc);
+        fprintf(stderr, "Couldn't sign off: %d\n", rc);
     }
-	
+
     return rc;
 }
 
-struct cib_func_entry 
-{
-	const char *op;
-	gboolean    read_only;
-	cib_op_t    fn;
+struct cib_func_entry {
+    const char *op;
+    gboolean read_only;
+    cib_op_t fn;
 };
 
 /* *INDENT-OFF* */
@@ -239,20 +241,18 @@ static struct cib_func_entry cib_file_ops[] = {
 };
 /* *INDENT-ON* */
 
-
 int
-cib_file_perform_op(
-    cib_t *cib, const char *op, const char *host, const char *section,
-    xmlNode *data, xmlNode **output_data, int call_options) 
+cib_file_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
+                    xmlNode * data, xmlNode ** output_data, int call_options)
 {
-    return cib_file_perform_op_delegate(
-	cib, op, host, section, data, output_data, call_options, NULL); 
+    return cib_file_perform_op_delegate(cib, op, host, section, data, output_data, call_options,
+                                        NULL);
 }
 
 int
-cib_file_perform_op_delegate(
-    cib_t *cib, const char *op, const char *host, const char *section,
-    xmlNode *data, xmlNode **output_data, int call_options, const char *user_name) 
+cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, const char *section,
+                             xmlNode * data, xmlNode ** output_data, int call_options,
+                             const char *user_name)
 {
     int rc = cib_ok;
     gboolean query = FALSE;
@@ -265,65 +265,64 @@ cib_file_perform_op_delegate(
     static int max_msg_types = DIMOF(cib_file_ops);
 
     crm_info("%s on %s", op, section);
-    
-    if(cib->state == cib_disconnected) {
-	return cib_not_connected;
+
+    if (cib->state == cib_disconnected) {
+        return cib_not_connected;
     }
 
-    if(output_data != NULL) {
-	*output_data = NULL;
+    if (output_data != NULL) {
+        *output_data = NULL;
     }
-	
-    if(op == NULL) {
-	return cib_operation;
+
+    if (op == NULL) {
+        return cib_operation;
     }
 
     for (lpc = 0; lpc < max_msg_types; lpc++) {
-	if (safe_str_eq(op, cib_file_ops[lpc].op)) {
-	    fn = &(cib_file_ops[lpc].fn);
-	    query = cib_file_ops[lpc].read_only;
-	    break;
-	}
+        if (safe_str_eq(op, cib_file_ops[lpc].op)) {
+            fn = &(cib_file_ops[lpc].fn);
+            query = cib_file_ops[lpc].read_only;
+            break;
+        }
     }
-    
-    if(fn == NULL) {
-	return cib_NOTSUPPORTED;
+
+    if (fn == NULL) {
+        return cib_NOTSUPPORTED;
     }
 
     cib->call_id++;
-    rc = cib_perform_op(op, call_options|cib_inhibit_bcast, fn, query,
-    			section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff, &output);
+    rc = cib_perform_op(op, call_options | cib_inhibit_bcast, fn, query,
+                        section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
+                        &output);
 
-    if(rc == cib_dtd_validation) {
-	validate_xml_verbose(result_cib);
+    if (rc == cib_dtd_validation) {
+        validate_xml_verbose(result_cib);
     }
-    
-    if(rc != cib_ok) {
-	free_xml(result_cib);
-	    
-    } else if(query == FALSE) {
-	log_xml_diff(LOG_DEBUG, cib_diff, "cib:diff");	
-	free_xml(in_mem_cib);
-	in_mem_cib = result_cib;
+
+    if (rc != cib_ok) {
+        free_xml(result_cib);
+
+    } else if (query == FALSE) {
+        log_xml_diff(LOG_DEBUG, cib_diff, "cib:diff");
+        free_xml(in_mem_cib);
+        in_mem_cib = result_cib;
     }
 
     free_xml(cib_diff);
 
-    if(cib->op_callback != NULL) {
-	cib->op_callback(NULL, cib->call_id, rc, output);
-    }
-	
-    if(output_data && output) {
-	*output_data = copy_xml(output);
+    if (cib->op_callback != NULL) {
+        cib->op_callback(NULL, cib->call_id, rc, output);
     }
 
-    if(query == FALSE || (call_options & cib_no_children)) {
-	free_xml(output);
-    } else if(safe_str_eq(crm_element_name(output), "xpath-query")) {
-	free_xml(output);
+    if (output_data && output) {
+        *output_data = copy_xml(output);
     }
-    
+
+    if (query == FALSE || (call_options & cib_no_children)) {
+        free_xml(output);
+    } else if (safe_str_eq(crm_element_name(output), "xpath-query")) {
+        free_xml(output);
+    }
+
     return rc;
 }
-
-

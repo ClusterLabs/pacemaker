@@ -40,186 +40,175 @@ int num_clients = 0;
 GHashTable *ipc_client_list = NULL;
 gboolean ais_shutdown_flag = FALSE;
 
-typedef struct ais_client_s 
-{
-		char  *id;
-		char  *name;
-		char  *callback_id;
+typedef struct ais_client_s {
+    char *id;
+    char *name;
+    char *callback_id;
 
-		const char  *channel_name;
+    const char *channel_name;
 
-		IPC_Channel *channel;
-		GCHSource   *source;
-		unsigned long num_calls;
+    IPC_Channel *channel;
+    GCHSource *source;
+    unsigned long num_calls;
 } ais_client_t;
-
 
 static void
 ais_ipc_connection_destroy(gpointer user_data)
 {
-	ais_client_t *ais_client = user_data;
-	
-	if(ais_client == NULL) {
-		return;
-	}
+    ais_client_t *ais_client = user_data;
 
-	if(ais_client->source != NULL) {
-		crm_debug_4("Deleting %s (%p) from mainloop",
-			    ais_client->name, ais_client->source);
-		G_main_del_IPC_Channel(ais_client->source); 
-		ais_client->source = NULL;
-	}
-	
-	crm_debug_3("Destroying %s (%p)", ais_client->name, user_data);
-	num_clients--;
-	crm_debug("Num unfree'd clients: %d", num_clients);
-	crm_free(ais_client->name);
-	crm_free(ais_client->callback_id);
-	crm_free(ais_client->id);
-	crm_free(ais_client);
-	crm_debug_4("Freed the cib client");
+    if (ais_client == NULL) {
+        return;
+    }
 
-	return;
+    if (ais_client->source != NULL) {
+        crm_debug_4("Deleting %s (%p) from mainloop", ais_client->name, ais_client->source);
+        G_main_del_IPC_Channel(ais_client->source);
+        ais_client->source = NULL;
+    }
+
+    crm_debug_3("Destroying %s (%p)", ais_client->name, user_data);
+    num_clients--;
+    crm_debug("Num unfree'd clients: %d", num_clients);
+    crm_free(ais_client->name);
+    crm_free(ais_client->callback_id);
+    crm_free(ais_client->id);
+    crm_free(ais_client);
+    crm_debug_4("Freed the cib client");
+
+    return;
 }
 
 static gboolean
-ais_process_disconnect(IPC_Channel *channel, ais_client_t *ais_client)
+ais_process_disconnect(IPC_Channel * channel, ais_client_t * ais_client)
 {
-	if (channel == NULL) {
-		CRM_LOG_ASSERT(ais_client == NULL);
-		
-	} else if (ais_client == NULL) {
-		crm_err("No client");
-		
-	} else {
-		CRM_LOG_ASSERT(channel->ch_status != IPC_CONNECT);
-		crm_debug_2("Cleaning up after client disconnect: %s/%s/%s",
-			    crm_str(ais_client->name),
-			    ais_client->channel_name,
-			    ais_client->id);
-		
-		if(ais_client->id != NULL) {
-			if(!g_hash_table_remove(ipc_client_list, ais_client->id)) {
-				crm_err("Client %s not found in the hashtable",
-					ais_client->name);
-			}
-		}		
-	}
+    if (channel == NULL) {
+        CRM_LOG_ASSERT(ais_client == NULL);
 
-	if(ais_shutdown_flag && g_hash_table_size(ipc_client_list) == 0) {
-		crm_info("All clients disconnected...");
-		exit(0);
-	}
-	
-	return FALSE;
+    } else if (ais_client == NULL) {
+        crm_err("No client");
+
+    } else {
+        CRM_LOG_ASSERT(channel->ch_status != IPC_CONNECT);
+        crm_debug_2("Cleaning up after client disconnect: %s/%s/%s",
+                    crm_str(ais_client->name), ais_client->channel_name, ais_client->id);
+
+        if (ais_client->id != NULL) {
+            if (!g_hash_table_remove(ipc_client_list, ais_client->id)) {
+                crm_err("Client %s not found in the hashtable", ais_client->name);
+            }
+        }
+    }
+
+    if (ais_shutdown_flag && g_hash_table_size(ipc_client_list) == 0) {
+        crm_info("All clients disconnected...");
+        exit(0);
+    }
+
+    return FALSE;
 }
 
 static gboolean
-ais_ipc_callback(IPC_Channel *channel, gpointer user_data)
+ais_ipc_callback(IPC_Channel * channel, gpointer user_data)
 {
-	int lpc = 0;
-	xmlNode *op_request = NULL;
-	gboolean keep_channel = TRUE;
-	ais_client_t *ais_client = user_data;
-	
-	if(ais_client == NULL) {
-		crm_err("Receieved call from unknown source. Discarding.");
-		return FALSE;
-	}
+    int lpc = 0;
+    xmlNode *op_request = NULL;
+    gboolean keep_channel = TRUE;
+    ais_client_t *ais_client = user_data;
 
-	if(ais_client->name == NULL) {
-		ais_client->name = crm_itoa(channel->farside_pid);
-	}
-	if(ais_client->id == NULL) {
-		ais_client->id = crm_strdup(ais_client->name);
-		g_hash_table_insert(ipc_client_list, ais_client->id, ais_client);
-	}
-	
-	crm_err("Callback for %s on %s channel",
-		    ais_client->id, ais_client->channel_name);
+    if (ais_client == NULL) {
+        crm_err("Receieved call from unknown source. Discarding.");
+        return FALSE;
+    }
 
-	while(IPC_ISRCONN(channel)) {
-		if(channel->ops->is_message_pending(channel) == 0) {
-			break;
-		}
+    if (ais_client->name == NULL) {
+        ais_client->name = crm_itoa(channel->farside_pid);
+    }
+    if (ais_client->id == NULL) {
+        ais_client->id = crm_strdup(ais_client->name);
+        g_hash_table_insert(ipc_client_list, ais_client->id, ais_client);
+    }
 
-		op_request = msgfromIPC_noauth(channel);
-		if (op_request == NULL) {
-			perror("Receive failure:");
-			break;
-		}
+    crm_err("Callback for %s on %s channel", ais_client->id, ais_client->channel_name);
 
-		lpc++;
-		crm_assert_failed = FALSE;
+    while (IPC_ISRCONN(channel)) {
+        if (channel->ops->is_message_pending(channel) == 0) {
+            break;
+        }
 
-		ha_msg_add(op_request, "client-id", ais_client->id);
-		ha_msg_add(op_request, "client-name", ais_client->name);
-		crm_log_xml(LOG_ERR, "Client[inbound]", op_request);
-		
+        op_request = msgfromIPC_noauth(channel);
+        if (op_request == NULL) {
+            perror("Receive failure:");
+            break;
+        }
+
+        lpc++;
+        crm_assert_failed = FALSE;
+
+        ha_msg_add(op_request, "client-id", ais_client->id);
+        ha_msg_add(op_request, "client-name", ais_client->name);
+        crm_log_xml(LOG_ERR, "Client[inbound]", op_request);
+
 /* 		cib_common_callback_worker( */
 /* 			op_request, cib_client, force_synchronous, privileged); */
 
-		crm_msg_del(op_request);
+        crm_msg_del(op_request);
 
-		if(channel->ch_status == IPC_CONNECT) {
-			break;
-		}
-	}
+        if (channel->ch_status == IPC_CONNECT) {
+            break;
+        }
+    }
 
-	crm_debug_2("Processed %d messages", lpc);
+    crm_debug_2("Processed %d messages", lpc);
 
-	if(channel->ch_status != IPC_CONNECT) {
-		crm_debug_2("Client disconnected");
-		keep_channel = ais_process_disconnect(channel, ais_client);	
-	}
+    if (channel->ch_status != IPC_CONNECT) {
+        crm_debug_2("Client disconnected");
+        keep_channel = ais_process_disconnect(channel, ais_client);
+    }
 
-	return keep_channel;
+    return keep_channel;
 }
 
 gboolean
-ais_client_connect(IPC_Channel *channel, gpointer user_data)
+ais_client_connect(IPC_Channel * channel, gpointer user_data)
 {
-	const char *channel_name = user_data;
-	ais_client_t *new_client = NULL;
-	crm_debug_3("Connecting channel");
+    const char *channel_name = user_data;
+    ais_client_t *new_client = NULL;
 
-	if (channel == NULL) {
-		crm_err("Channel was NULL");
+    crm_debug_3("Connecting channel");
 
-	} else if (channel->ch_status != IPC_CONNECT) {
-		crm_err("Channel was disconnected");
-		
-	} else if(channel_name == NULL) {
-		crm_err("user_data must contain channel name");
-		
-	} else if(ais_shutdown_flag) {
-		crm_info("Ignoring new client [%d] during shutdown",
-			channel->farside_pid);
-		
-	} else {
-		crm_malloc0(new_client, sizeof(ais_client_t));
-		num_clients++;
-		new_client->channel = channel;
-		new_client->channel_name = channel_name;
+    if (channel == NULL) {
+        crm_err("Channel was NULL");
 
-		crm_debug_3("Created channel %p for channel %s",
-			  new_client, new_client->channel_name);
+    } else if (channel->ch_status != IPC_CONNECT) {
+        crm_err("Channel was disconnected");
 
-		channel->ops->set_recv_qlen(channel, 500);
-		channel->ops->set_send_qlen(channel, 500);
+    } else if (channel_name == NULL) {
+        crm_err("user_data must contain channel name");
 
-		new_client->source = G_main_add_IPC_Channel(
-			G_PRIORITY_DEFAULT, channel, FALSE, ais_ipc_callback,
-			new_client, ais_ipc_connection_destroy);
+    } else if (ais_shutdown_flag) {
+        crm_info("Ignoring new client [%d] during shutdown", channel->farside_pid);
 
-		crm_debug_3("Channel %s connected for client %s",
-			    new_client->channel_name, new_client->id);
-	}
+    } else {
+        crm_malloc0(new_client, sizeof(ais_client_t));
+        num_clients++;
+        new_client->channel = channel;
+        new_client->channel_name = channel_name;
 
-	if(new_client == NULL) {
-		return FALSE;
-	}
-	return TRUE;
+        crm_debug_3("Created channel %p for channel %s", new_client, new_client->channel_name);
+
+        channel->ops->set_recv_qlen(channel, 500);
+        channel->ops->set_send_qlen(channel, 500);
+
+        new_client->source =
+            G_main_add_IPC_Channel(G_PRIORITY_DEFAULT, channel, FALSE, ais_ipc_callback, new_client,
+                                   ais_ipc_connection_destroy);
+
+        crm_debug_3("Channel %s connected for client %s", new_client->channel_name, new_client->id);
+    }
+
+    if (new_client == NULL) {
+        return FALSE;
+    }
+    return TRUE;
 }
-
-

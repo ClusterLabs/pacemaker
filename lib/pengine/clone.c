@@ -27,57 +27,64 @@
 #define VARIANT_CLONE 1
 #include "./variant.h"
 
-void clone_create_notifications(
-	resource_t *rsc, action_t *action, action_t *action_complete,
-	pe_working_set_t *data_set);
-void force_non_unique_clone(resource_t *rsc, const char *rid, pe_working_set_t *data_set);
-resource_t *create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set);
+void clone_create_notifications(resource_t * rsc, action_t * action, action_t * action_complete,
+                                pe_working_set_t * data_set);
+void force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set);
+resource_t *create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set);
 
-static void mark_as_orphan(resource_t *rsc) 
+static void
+mark_as_orphan(resource_t * rsc)
 {
     GListPtr gIter = rsc->children;
+
     set_bit(rsc->flags, pe_rsc_orphan);
 
-    for(; gIter != NULL; gIter = gIter->next) {
-	resource_t *child = (resource_t*)gIter->data;
-	mark_as_orphan(child);
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child = (resource_t *) gIter->data;
+
+        mark_as_orphan(child);
     }
 }
 
-static void clear_bit_recursive(resource_t *rsc, unsigned long long flag) 
+static void
+clear_bit_recursive(resource_t * rsc, unsigned long long flag)
 {
     GListPtr gIter = rsc->children;
+
     clear_bit_inplace(rsc->flags, flag);
-    for(; gIter != NULL; gIter = gIter->next) {
-	resource_t *child_rsc = (resource_t*)gIter->data;
-	clear_bit_recursive(child_rsc, flag);
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+
+        clear_bit_recursive(child_rsc, flag);
     }
 }
 
-void force_non_unique_clone(resource_t *rsc, const char *rid, pe_working_set_t *data_set) 
+void
+force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set)
 {
-    if(rsc->variant == pe_clone || rsc->variant == pe_master) {
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-	
-	crm_config_warn("Clones %s contains non-OCF resource %s and so "
-			"can only be used as an anonymous clone. "
-			"Set the "XML_RSC_ATTR_UNIQUE" meta attribute to false",
-			rsc->id, rid);
-	
-	clone_data->clone_node_max = 1;
-	clone_data->clone_max = g_list_length(data_set->nodes);
-	clear_bit_recursive(rsc, pe_rsc_unique);
+    if (rsc->variant == pe_clone || rsc->variant == pe_master) {
+        clone_variant_data_t *clone_data = NULL;
+
+        get_clone_variant_data(clone_data, rsc);
+
+        crm_config_warn("Clones %s contains non-OCF resource %s and so "
+                        "can only be used as an anonymous clone. "
+                        "Set the " XML_RSC_ATTR_UNIQUE " meta attribute to false", rsc->id, rid);
+
+        clone_data->clone_node_max = 1;
+        clone_data->clone_max = g_list_length(data_set->nodes);
+        clear_bit_recursive(rsc, pe_rsc_unique);
     }
 }
 
 resource_t *
-find_clone_instance(resource_t *rsc, const char *sub_id, pe_working_set_t *data_set) 
+find_clone_instance(resource_t * rsc, const char *sub_id, pe_working_set_t * data_set)
 {
     char *child_id = NULL;
     resource_t *child = NULL;
     const char *child_base = NULL;
     clone_variant_data_t *clone_data = NULL;
+
     get_clone_variant_data(clone_data, rsc);
 
     child_base = ID(clone_data->xml_obj_child);
@@ -89,243 +96,239 @@ find_clone_instance(resource_t *rsc, const char *sub_id, pe_working_set_t *data_
 }
 
 resource_t *
-create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set) 
+create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set)
 {
-	gboolean as_orphan = FALSE;
-	char *inc_num = NULL;
-	char *inc_max = NULL;
-	resource_t *child_rsc = NULL;
-	xmlNode * child_copy = NULL;
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
+    gboolean as_orphan = FALSE;
+    char *inc_num = NULL;
+    char *inc_max = NULL;
+    resource_t *child_rsc = NULL;
+    xmlNode *child_copy = NULL;
+    clone_variant_data_t *clone_data = NULL;
 
-	CRM_CHECK(clone_data->xml_obj_child != NULL, return FALSE);
+    get_clone_variant_data(clone_data, rsc);
 
-	if(sub_id < 0) {
-	    as_orphan = TRUE;
-	    sub_id = clone_data->total_clones;
-	}
-	inc_num = crm_itoa(sub_id);
-	inc_max = crm_itoa(clone_data->clone_max);	
+    CRM_CHECK(clone_data->xml_obj_child != NULL, return FALSE);
 
-	child_copy = copy_xml(clone_data->xml_obj_child);
+    if (sub_id < 0) {
+        as_orphan = TRUE;
+        sub_id = clone_data->total_clones;
+    }
+    inc_num = crm_itoa(sub_id);
+    inc_max = crm_itoa(clone_data->clone_max);
 
-	crm_xml_add(child_copy, XML_RSC_ATTR_INCARNATION, inc_num);
+    child_copy = copy_xml(clone_data->xml_obj_child);
 
-	if(common_unpack(child_copy, &child_rsc,
-			 rsc, data_set) == FALSE) {
-		pe_err("Failed unpacking resource %s",
-		       crm_element_value(child_copy, XML_ATTR_ID));
-		child_rsc = NULL;
-		goto bail;
-	}
+    crm_xml_add(child_copy, XML_RSC_ATTR_INCARNATION, inc_num);
+
+    if (common_unpack(child_copy, &child_rsc, rsc, data_set) == FALSE) {
+        pe_err("Failed unpacking resource %s", crm_element_value(child_copy, XML_ATTR_ID));
+        child_rsc = NULL;
+        goto bail;
+    }
 /* 	child_rsc->globally_unique = rsc->globally_unique; */
 
-	clone_data->total_clones += 1;
-	crm_debug_2("Setting clone attributes for: %s", child_rsc->id);
-	rsc->children = g_list_append(rsc->children, child_rsc);
-	if(as_orphan) {
-	    mark_as_orphan(child_rsc);
-	}
-	
-	add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
-	
-	print_resource(LOG_DEBUG_3, "Added", child_rsc, FALSE);
+    clone_data->total_clones += 1;
+    crm_debug_2("Setting clone attributes for: %s", child_rsc->id);
+    rsc->children = g_list_append(rsc->children, child_rsc);
+    if (as_orphan) {
+        mark_as_orphan(child_rsc);
+    }
+
+    add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
+
+    print_resource(LOG_DEBUG_3, "Added", child_rsc, FALSE);
 
   bail:
-	crm_free(inc_num);
-	crm_free(inc_max);
-	
-	return child_rsc;
+    crm_free(inc_num);
+    crm_free(inc_max);
+
+    return child_rsc;
 }
 
-gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set)
+gboolean
+master_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
-	const char *master_max = g_hash_table_lookup(
-		rsc->meta, XML_RSC_ATTR_MASTER_MAX);
-	const char *master_node_max = g_hash_table_lookup(
-		rsc->meta, XML_RSC_ATTR_MASTER_NODEMAX);
+    const char *master_max = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_MASTER_MAX);
+    const char *master_node_max = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_MASTER_NODEMAX);
 
-	g_hash_table_replace(rsc->meta, crm_strdup("stateful"), crm_strdup(XML_BOOLEAN_TRUE));
-	if(clone_unpack(rsc, data_set)) {
-		clone_variant_data_t *clone_data = NULL;
-		get_clone_variant_data(clone_data, rsc);
-		clone_data->master_max = crm_parse_int(master_max, "1");
-		clone_data->master_node_max = crm_parse_int(master_node_max, "1");
-		return TRUE;
-	}
-	return FALSE;
-}
+    g_hash_table_replace(rsc->meta, crm_strdup("stateful"), crm_strdup(XML_BOOLEAN_TRUE));
+    if (clone_unpack(rsc, data_set)) {
+        clone_variant_data_t *clone_data = NULL;
 
-gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
-{
-	int lpc = 0;
-	const char *type = NULL;
-	resource_t *self = NULL;
-	int num_xml_children = 0;	
-	xmlNode *a_child = NULL;
-	xmlNode *xml_tmp = NULL;
-	xmlNode *xml_self = NULL;
-	xmlNode *xml_obj = rsc->xml;
-	clone_variant_data_t *clone_data = NULL;
-
-	const char *ordered = g_hash_table_lookup(
-		rsc->meta, XML_RSC_ATTR_ORDERED);
-	const char *interleave = g_hash_table_lookup(
-		rsc->meta, XML_RSC_ATTR_INTERLEAVE);
-	const char *max_clones = g_hash_table_lookup(
-		rsc->meta, XML_RSC_ATTR_INCARNATION_MAX);
-	const char *max_clones_node = g_hash_table_lookup(
-		rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
-
-	crm_debug_3("Processing resource %s...", rsc->id);
-	
-	crm_malloc0(clone_data, sizeof(clone_variant_data_t));
-	rsc->variant_opaque = clone_data;
-	clone_data->interleave  = FALSE;
-	clone_data->ordered     = FALSE;
-	
-	clone_data->active_clones  = 0;
-	clone_data->xml_obj_child  = NULL;
-	clone_data->clone_node_max = crm_parse_int(max_clones_node, "1");
-
-	if(max_clones) {
-	    clone_data->clone_max = crm_parse_int(max_clones, "1");
-
-	} else if(g_list_length(data_set->nodes) > 0) {
-	    clone_data->clone_max = g_list_length(data_set->nodes);
-
-	} else {
-	    clone_data->clone_max = 1; /* Handy during crm_verify */
-	}
-	
-	if(crm_is_true(interleave)) {
-		clone_data->interleave = TRUE;
-	}
-	if(crm_is_true(ordered)) {
-		clone_data->ordered = TRUE;
-	}
-	if((rsc->flags & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {
-	    crm_config_err("Anonymous clones (%s) may only support one copy"
-			   " per node", rsc->id);
-	    clone_data->clone_node_max = 1;
-	}
-
-	crm_debug_2("Options for %s", rsc->id);
-	crm_debug_2("\tClone max: %d", clone_data->clone_max);
-	crm_debug_2("\tClone node max: %d", clone_data->clone_node_max);
-	crm_debug_2("\tClone is unique: %s", is_set(rsc->flags, pe_rsc_unique)?"true":"false");
-
-	clone_data->xml_obj_child = find_xml_node(
-		xml_obj, XML_CIB_TAG_GROUP, FALSE);
-
-	if(clone_data->xml_obj_child == NULL) {
-	    clone_data->xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
-	    for(a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
-		if(crm_str_eq((const char *)a_child->name, XML_CIB_TAG_RESOURCE, TRUE)) {
-				  num_xml_children++;
-		}
-	    }
-	}
-
-	if(clone_data->xml_obj_child == NULL) {
-		crm_config_err("%s has nothing to clone", rsc->id);
-		return FALSE;
-	}
-
-	for(a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
-	    if(crm_str_eq((const char *)a_child->name, type, TRUE)) {
-		num_xml_children++;
-	    }
-	}
-
-	if(num_xml_children > 1) {
-	    crm_config_err("%s has too many children.  Only the first (%s) will be cloned.",
-			   rsc->id, ID(clone_data->xml_obj_child));
-	}
-	
-	xml_self = copy_xml(rsc->xml);
-	/* this is a bit of a hack - but simplifies everything else */
-	xmlNodeSetName(xml_self, ((const xmlChar*)XML_CIB_TAG_RESOURCE));
-	xml_tmp = find_xml_node(xml_obj, "operations", FALSE);
-	if(xml_tmp != NULL) {
-		add_node_copy(xml_self, xml_tmp);
-	}
-
-	/*
-	 * Make clones ever so slightly sticky by default
-	 *
-	 * This helps ensure clone instances are not shuffled around the cluster
-	 * for no benefit in situations when pre-allocation is not appropriate
-	 */
-	if(g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_STICKINESS) == NULL) {
-	    add_hash_param(rsc->meta, XML_RSC_ATTR_STICKINESS, "1");
-	}
-	
-	if(common_unpack(xml_self, &self, rsc, data_set)) {
-		clone_data->self = self;
-
-	} else {
-		crm_log_xml_err(xml_self, "Couldnt unpack dummy child");
-		clone_data->self = self;
-		return FALSE;
-	}
-	
-	crm_debug_2("\tClone is unique (fixed): %s", is_set(rsc->flags, pe_rsc_unique)?"true":"false");
-	clone_data->notify_confirm = is_set(rsc->flags, pe_rsc_notify);
-	add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
-		       is_set(rsc->flags, pe_rsc_unique)?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
-
-	for(lpc = 0; lpc < clone_data->clone_max; lpc++) {
-		create_child_clone(rsc, lpc, data_set);
-	}
-
-	if(clone_data->clone_max == 0) {
-	    /* create one so that unpack_find_resource() will hook up
-	     * any orphans up to the parent correctly
-	     */
-	    create_child_clone(rsc, -1, data_set);
-	}
-	
-	crm_debug_3("Added %d children to resource %s...",
-		    clone_data->clone_max, rsc->id);
-	return TRUE;
-}
-
-gboolean clone_active(resource_t *rsc, gboolean all)
-{
-    GListPtr gIter = rsc->children;	
-    for(; gIter != NULL; gIter = gIter->next) {
-	resource_t *child_rsc = (resource_t*)gIter->data;
-	gboolean child_active = child_rsc->fns->active(child_rsc, all);
-		
-	if(all == FALSE && child_active) {
-	    return TRUE;
-	} else if(all && child_active == FALSE) {
-	    return FALSE;
-	}
+        get_clone_variant_data(clone_data, rsc);
+        clone_data->master_max = crm_parse_int(master_max, "1");
+        clone_data->master_node_max = crm_parse_int(master_node_max, "1");
+        return TRUE;
     }
-    
-    if(all) {
-	return TRUE;
+    return FALSE;
+}
+
+gboolean
+clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
+{
+    int lpc = 0;
+    const char *type = NULL;
+    resource_t *self = NULL;
+    int num_xml_children = 0;
+    xmlNode *a_child = NULL;
+    xmlNode *xml_tmp = NULL;
+    xmlNode *xml_self = NULL;
+    xmlNode *xml_obj = rsc->xml;
+    clone_variant_data_t *clone_data = NULL;
+
+    const char *ordered = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ORDERED);
+    const char *interleave = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERLEAVE);
+    const char *max_clones = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_MAX);
+    const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
+
+    crm_debug_3("Processing resource %s...", rsc->id);
+
+    crm_malloc0(clone_data, sizeof(clone_variant_data_t));
+    rsc->variant_opaque = clone_data;
+    clone_data->interleave = FALSE;
+    clone_data->ordered = FALSE;
+
+    clone_data->active_clones = 0;
+    clone_data->xml_obj_child = NULL;
+    clone_data->clone_node_max = crm_parse_int(max_clones_node, "1");
+
+    if (max_clones) {
+        clone_data->clone_max = crm_parse_int(max_clones, "1");
+
+    } else if (g_list_length(data_set->nodes) > 0) {
+        clone_data->clone_max = g_list_length(data_set->nodes);
+
     } else {
-	return FALSE;
+        clone_data->clone_max = 1;      /* Handy during crm_verify */
+    }
+
+    if (crm_is_true(interleave)) {
+        clone_data->interleave = TRUE;
+    }
+    if (crm_is_true(ordered)) {
+        clone_data->ordered = TRUE;
+    }
+    if ((rsc->flags & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {
+        crm_config_err("Anonymous clones (%s) may only support one copy" " per node", rsc->id);
+        clone_data->clone_node_max = 1;
+    }
+
+    crm_debug_2("Options for %s", rsc->id);
+    crm_debug_2("\tClone max: %d", clone_data->clone_max);
+    crm_debug_2("\tClone node max: %d", clone_data->clone_node_max);
+    crm_debug_2("\tClone is unique: %s", is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
+
+    clone_data->xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_GROUP, FALSE);
+
+    if (clone_data->xml_obj_child == NULL) {
+        clone_data->xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
+        for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
+            if (crm_str_eq((const char *)a_child->name, XML_CIB_TAG_RESOURCE, TRUE)) {
+                num_xml_children++;
+            }
+        }
+    }
+
+    if (clone_data->xml_obj_child == NULL) {
+        crm_config_err("%s has nothing to clone", rsc->id);
+        return FALSE;
+    }
+
+    for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
+        if (crm_str_eq((const char *)a_child->name, type, TRUE)) {
+            num_xml_children++;
+        }
+    }
+
+    if (num_xml_children > 1) {
+        crm_config_err("%s has too many children.  Only the first (%s) will be cloned.",
+                       rsc->id, ID(clone_data->xml_obj_child));
+    }
+
+    xml_self = copy_xml(rsc->xml);
+    /* this is a bit of a hack - but simplifies everything else */
+    xmlNodeSetName(xml_self, ((const xmlChar *)XML_CIB_TAG_RESOURCE));
+    xml_tmp = find_xml_node(xml_obj, "operations", FALSE);
+    if (xml_tmp != NULL) {
+        add_node_copy(xml_self, xml_tmp);
+    }
+
+    /*
+     * Make clones ever so slightly sticky by default
+     *
+     * This helps ensure clone instances are not shuffled around the cluster
+     * for no benefit in situations when pre-allocation is not appropriate
+     */
+    if (g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_STICKINESS) == NULL) {
+        add_hash_param(rsc->meta, XML_RSC_ATTR_STICKINESS, "1");
+    }
+
+    if (common_unpack(xml_self, &self, rsc, data_set)) {
+        clone_data->self = self;
+
+    } else {
+        crm_log_xml_err(xml_self, "Couldnt unpack dummy child");
+        clone_data->self = self;
+        return FALSE;
+    }
+
+    crm_debug_2("\tClone is unique (fixed): %s",
+                is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
+    clone_data->notify_confirm = is_set(rsc->flags, pe_rsc_notify);
+    add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
+                   is_set(rsc->flags, pe_rsc_unique) ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
+
+    for (lpc = 0; lpc < clone_data->clone_max; lpc++) {
+        create_child_clone(rsc, lpc, data_set);
+    }
+
+    if (clone_data->clone_max == 0) {
+        /* create one so that unpack_find_resource() will hook up
+         * any orphans up to the parent correctly
+         */
+        create_child_clone(rsc, -1, data_set);
+    }
+
+    crm_debug_3("Added %d children to resource %s...", clone_data->clone_max, rsc->id);
+    return TRUE;
+}
+
+gboolean
+clone_active(resource_t * rsc, gboolean all)
+{
+    GListPtr gIter = rsc->children;
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+        gboolean child_active = child_rsc->fns->active(child_rsc, all);
+
+        if (all == FALSE && child_active) {
+            return TRUE;
+        } else if (all && child_active == FALSE) {
+            return FALSE;
+        }
+    }
+
+    if (all) {
+        return TRUE;
+    } else {
+        return FALSE;
     }
 }
 
 static char *
-add_list_element(char *list, const char *value) 
+add_list_element(char *list, const char *value)
 {
     int len = 0;
     int last = 0;
 
-    if(value == NULL) {
-	return list;
+    if (value == NULL) {
+        return list;
     }
-    if(list) {
-	last = strlen(list);
+    if (list) {
+        last = strlen(list);
     }
-    len = last + 2;  /* +1 space, +1 EOS */
+    len = last + 2;             /* +1 space, +1 EOS */
     len += strlen(value);
     crm_realloc(list, len);
     sprintf(list + last, " %s", value);
@@ -333,28 +336,28 @@ add_list_element(char *list, const char *value)
 }
 
 static void
-short_print(char *list, const char *prefix, const char *type, long options, void *print_data) 
+short_print(char *list, const char *prefix, const char *type, long options, void *print_data)
 {
-    if(list) {
-	if(options & pe_print_html) {
-	    status_print("<li>");
-	}
-	status_print("%s%s: [%s ]", prefix, type, list);
+    if (list) {
+        if (options & pe_print_html) {
+            status_print("<li>");
+        }
+        status_print("%s%s: [%s ]", prefix, type, list);
 
-	if(options & pe_print_html) {
-	    status_print("</li>\n");
+        if (options & pe_print_html) {
+            status_print("</li>\n");
 
-	} else if(options & pe_print_suppres_nl) {
-	    /* nothing */
-	} else if((options & pe_print_printf) || (options & pe_print_ncurses)) {
-		status_print("\n");
-	}
+        } else if (options & pe_print_suppres_nl) {
+            /* nothing */
+        } else if ((options & pe_print_printf) || (options & pe_print_ncurses)) {
+            status_print("\n");
+        }
 
     }
 }
 
-void clone_print(
-	resource_t *rsc, const char *pre_text, long options, void *print_data)
+void
+clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     char *child_text = NULL;
     char *master_list = NULL;
@@ -362,152 +365,157 @@ void clone_print(
     char *stopped_list = NULL;
     const char *type = "Clone";
     GListPtr gIter = rsc->children;
-    
+
     clone_variant_data_t *clone_data = NULL;
+
     get_clone_variant_data(clone_data, rsc);
 
-    if(pre_text == NULL) { pre_text = " "; }
+    if (pre_text == NULL) {
+        pre_text = " ";
+    }
     child_text = crm_concat(pre_text, "   ", ' ');
 
-    if(rsc->variant == pe_master) {
-	type = "Master/Slave";
+    if (rsc->variant == pe_master) {
+        type = "Master/Slave";
     }
 
     status_print("%s%s Set: %s [%s]%s%s",
-		 pre_text?pre_text:"", type, rsc->id, ID(clone_data->xml_obj_child),
-		 is_set(rsc->flags, pe_rsc_unique)?" (unique)":"",
-		 is_set(rsc->flags, pe_rsc_managed)?"":" (unmanaged)");
-	
-    if(options & pe_print_html) {
-	status_print("\n<ul>\n");
+                 pre_text ? pre_text : "", type, rsc->id, ID(clone_data->xml_obj_child),
+                 is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                 is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
-    } else if((options & pe_print_log) == 0) {
-	status_print("\n");
+    if (options & pe_print_html) {
+        status_print("\n<ul>\n");
+
+    } else if ((options & pe_print_log) == 0) {
+        status_print("\n");
     }
 
-    for(; gIter != NULL; gIter = gIter->next) {
-	gboolean print_full = FALSE;
-	resource_t *child_rsc = (resource_t*)gIter->data;
-	
-	if(child_rsc->fns->active(child_rsc, FALSE) == FALSE) {
-	    /* Inactive clone */
-	    if(is_set(child_rsc->flags, pe_rsc_orphan)) {
-		continue;
+    for (; gIter != NULL; gIter = gIter->next) {
+        gboolean print_full = FALSE;
+        resource_t *child_rsc = (resource_t *) gIter->data;
 
-	    } else if(is_set(rsc->flags, pe_rsc_unique)) {
-		print_full = TRUE;
-	    } else {
-		stopped_list = add_list_element(stopped_list, child_rsc->id);
-	    }
-		
-	} else if(is_set(child_rsc->flags, pe_rsc_unique)
-		  || is_set(child_rsc->flags, pe_rsc_orphan)
-		  || is_set(child_rsc->flags, pe_rsc_managed) == FALSE
-		  || is_set(child_rsc->flags, pe_rsc_failed)) {
+        if (child_rsc->fns->active(child_rsc, FALSE) == FALSE) {
+            /* Inactive clone */
+            if (is_set(child_rsc->flags, pe_rsc_orphan)) {
+                continue;
 
-	    /* Unique, unmanaged or failed clone */
-	    print_full = TRUE;
-		
-	} else if(child_rsc->fns->active(child_rsc, TRUE)) {
-	    /* Fully active anonymous clone */
-	    node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
+            } else if (is_set(rsc->flags, pe_rsc_unique)) {
+                print_full = TRUE;
+            } else {
+                stopped_list = add_list_element(stopped_list, child_rsc->id);
+            }
 
-	    if(location) {
-		const char *host = location->details->uname;
-		enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, TRUE);
+        } else if (is_set(child_rsc->flags, pe_rsc_unique)
+                   || is_set(child_rsc->flags, pe_rsc_orphan)
+                   || is_set(child_rsc->flags, pe_rsc_managed) == FALSE
+                   || is_set(child_rsc->flags, pe_rsc_failed)) {
 
-		if(a_role > RSC_ROLE_SLAVE) {
-		    /* And active on a single node as master */
-		    master_list = add_list_element(master_list, host);
-		    
-		} else {
-		    /* And active on a single node as started/slave */
-		    started_list = add_list_element(started_list, host);
-		}
-	    
-	    } else {
-		/* uncolocated group - bleh */
-		print_full = TRUE;
-	    }
-		
-	} else {
-	    /* Partially active anonymous clone */
-	    print_full = TRUE;
-	}
-	    
-	if(print_full) {
-	    if(options & pe_print_html) {
-		status_print("<li>\n");
-	    }
-	    child_rsc->fns->print(
-		child_rsc, child_text, options, print_data);
-	    if(options & pe_print_html) {
-		status_print("</li>\n");
-	    }
-	}	    
+            /* Unique, unmanaged or failed clone */
+            print_full = TRUE;
+
+        } else if (child_rsc->fns->active(child_rsc, TRUE)) {
+            /* Fully active anonymous clone */
+            node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
+
+            if (location) {
+                const char *host = location->details->uname;
+                enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, TRUE);
+
+                if (a_role > RSC_ROLE_SLAVE) {
+                    /* And active on a single node as master */
+                    master_list = add_list_element(master_list, host);
+
+                } else {
+                    /* And active on a single node as started/slave */
+                    started_list = add_list_element(started_list, host);
+                }
+
+            } else {
+                /* uncolocated group - bleh */
+                print_full = TRUE;
+            }
+
+        } else {
+            /* Partially active anonymous clone */
+            print_full = TRUE;
+        }
+
+        if (print_full) {
+            if (options & pe_print_html) {
+                status_print("<li>\n");
+            }
+            child_rsc->fns->print(child_rsc, child_text, options, print_data);
+            if (options & pe_print_html) {
+                status_print("</li>\n");
+            }
+        }
     }
-	
+
     short_print(master_list, child_text, "Masters", options, print_data);
-    short_print(started_list, child_text, rsc->variant==pe_master?"Slaves":"Started", options, print_data);
+    short_print(started_list, child_text, rsc->variant == pe_master ? "Slaves" : "Started", options,
+                print_data);
     short_print(stopped_list, child_text, "Stopped", options, print_data);
 
     crm_free(master_list);
     crm_free(started_list);
-    crm_free(stopped_list);    
-    
-    if(options & pe_print_html) {
-	status_print("</ul>\n");
+    crm_free(stopped_list);
+
+    if (options & pe_print_html) {
+        status_print("</ul>\n");
     }
 
     crm_free(child_text);
 }
 
-void clone_free(resource_t *rsc)
+void
+clone_free(resource_t * rsc)
 {
     GListPtr gIter = rsc->children;
     clone_variant_data_t *clone_data = NULL;
+
     get_clone_variant_data(clone_data, rsc);
 
     crm_debug_3("Freeing %s", rsc->id);
 
-    for(; gIter != NULL; gIter = gIter->next) {
-	resource_t *child_rsc = (resource_t*)gIter->data;
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
 
-	crm_debug_3("Freeing child %s", child_rsc->id);
-	free_xml(child_rsc->xml);
-	child_rsc->fns->free(child_rsc);
+        crm_debug_3("Freeing child %s", child_rsc->id);
+        free_xml(child_rsc->xml);
+        child_rsc->fns->free(child_rsc);
     }
 
     g_list_free(rsc->children);
 
-    if(clone_data->self) {
-	free_xml(clone_data->self->xml);
-	clone_data->self->fns->free(clone_data->self);
+    if (clone_data->self) {
+        free_xml(clone_data->self->xml);
+        clone_data->self->fns->free(clone_data->self);
     }
 
     CRM_ASSERT(clone_data->demote_notify == NULL);
     CRM_ASSERT(clone_data->stop_notify == NULL);
     CRM_ASSERT(clone_data->start_notify == NULL);
     CRM_ASSERT(clone_data->promote_notify == NULL);
-	
+
     common_free(rsc);
 }
 
 enum rsc_role_e
-clone_resource_state(const resource_t *rsc, gboolean current)
+clone_resource_state(const resource_t * rsc, gboolean current)
 {
     enum rsc_role_e clone_role = RSC_ROLE_UNKNOWN;
     GListPtr gIter = rsc->children;
-    
-    for(; gIter != NULL; gIter = gIter->next) {
-	resource_t *child_rsc = (resource_t*)gIter->data;
-	enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, current);
 
-	if(a_role > clone_role) {
-	    clone_role = a_role;
-	}
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+        enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, current);
+
+        if (a_role > clone_role) {
+            clone_role = a_role;
+        }
     }
-	
+
     crm_debug_3("%s role: %s", rsc->id, role2text(clone_role));
     return clone_role;
 }
