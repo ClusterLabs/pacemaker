@@ -684,11 +684,10 @@ acl_filter_xml(xmlNode * xml, GHashTable * xml_perms)
     }
 
     if (xml) {
-        xmlAttrPtr xIter = param_set->properties;
+        xmlAttrPtr xIter = xml->properties;
 
         while (xIter) {
             const char *prop_name = (const char *)xIter->name;
-            const char *prop_value = crm_element_value(xml, prop_name);
             gpointer mode = NULL;
 
             xIter = xIter->next;
@@ -757,7 +756,6 @@ acl_check_diff_xml(xmlNode * xml, GHashTable * xml_perms)
 
         for (xIter = xml->properties; xIter; xIter = xIter->next) {
             const char *prop_name = (const char *)xIter->name;
-            const char *prop_value = crm_element_value(xml, prop_name);
             gpointer mode = NULL;
 
             if (crm_str_eq(crm_element_name(xml), XML_TAG_CIB, TRUE)) {
