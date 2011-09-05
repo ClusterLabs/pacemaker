@@ -161,7 +161,7 @@ elif [ $command = run ]; then
     else
 	hosts=`expand oneline`
 	for n in $hosts; do
-	    $ssh -l $user $n -- $*
+	    $ssh -l $user $n -- $* < /dev/null
 	done
 	if [ x"$hosts" = x ]; then
 	    echo "No hosts specified"
