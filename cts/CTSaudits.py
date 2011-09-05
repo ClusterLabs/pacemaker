@@ -76,7 +76,12 @@ class LogAudit(ClusterAudit):
         for node in self.CM.Env["nodes"]:
             # Look for the node name in two places to make sure 
             # that syslog is logging with the correct hostname
-            patterns.append("%s.*%s %s" % (node, prefix, node))
+            m = re.search("^([^.]+).*", node)
+            if m:
+                simple = m.group(1)
+            else:
+                simple = node
+            patterns.append("%s.*%s %s" % (simple, prefix, node))
 
         watch_pref = self.CM.Env["LogWatcher"]
         if watch_pref == "any" or watch_pref == "syslog":
