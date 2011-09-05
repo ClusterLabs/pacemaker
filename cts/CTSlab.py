@@ -221,6 +221,7 @@ if __name__ == '__main__':
 
        elif args[i] == "--qarsh":
            Environment.rsh.enable_qarsh()
+           rsh.enable_qarsh()
 
        elif args[i] == "--fencing":
            skipthis=1
@@ -245,6 +246,22 @@ if __name__ == '__main__':
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "external/ssh"
                Environment["stonith-params"] = "hostlist=all,livedangerously=yes"
+           elif args[i+1] == "north":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_apc"
+               Environment["stonith-params"] = "ipaddr=north-apc,login=apc,passwd=apc,pcmk_host_map=north-01:2;north-02:3;north-03:4;north-04:5;north-05:6;north-06:7;north-07:9;north-08:10;north-09:11;north-10:12;north-11:13;north-12:14;north-13:15;north-14:18;north-15:17;north-16:19;"
+           elif args[i+1] == "south":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_apc"
+               Environment["stonith-params"] = "ipaddr=south-apc,login=apc,passwd=apc,pcmk_host_map=south-01:2;south-02:3;south-03:4;south-04:5;south-05:6;south-06:7;south-07:9;south-08:10;south-09:11;south-10:12;south-11:13;south-12:14;south-13:15;south-14:18;south-15:17;south-16:19;"
+           elif args[i+1] == "east":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_apc"
+               Environment["stonith-params"] = "ipaddr=east-apc,login=apc,passwd=apc,pcmk_host_map=east-01:2;east-02:3;east-03:4;east-04:5;east-05:6;east-06:7;east-07:9;east-08:10;east-09:11;east-10:12;east-11:13;east-12:14;east-13:15;east-14:18;east-15:17;east-16:19;"
+           elif args[i+1] == "west":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_apc"
+               Environment["stonith-params"] = "ipaddr=west-apc,login=apc,passwd=apc,pcmk_host_map=west-01:2;west-02:3;west-03:4;west-04:5;west-05:6;west-06:7;west-07:9;west-08:10;west-09:11;west-10:12;west-11:13;west-12:14;west-13:15;west-14:18;west-15:17;west-16:19;"
            else:
                usage(args[i+1])
 
