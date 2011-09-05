@@ -1,0 +1,45 @@
+#!/bin/bash
+
+hosts=
+group=
+kill=0
+while true; do
+    case "$1" in
+	-x) set -x; shift;;
+	-w) for h in $2; do
+		hosts="$hosts -w $h";
+	    done
+	    shift; shift;;
+	-g) group=$2; shift; shift;;
+	--kill) kill=1; shift;;
+	"") break;;
+	*) echo "unknown option: $1"; exit 1;;
+    esac
+done
+
+if [ x"$hosts" != x ]; then
+    echo `date` ": Cleaning up hosts:"
+    target=$hosts
+else
+    echo `date` ": Cleaning up group: $group"
+    target="-g $group"
+fi
+cluster-helper --list bullet $target
+    
+if [ $kill = 1 ]; then
+    echo "Cleaning processes"
+    cluster-helper $target -- "killall -q -9 corosync aisexec heartbeat pacemakerd ccm stonithd ha_logd lrmd crmd pengine attrd pingd mgmtd cib fenced dlm_controld gfs_controld" &> /dev/null
+    cluster-helper $target -- "rm -rf /var/lib/heartbeat/crm/cib*"
+fi
+
+#logrotate -f $cluster_rotate
+echo "Cleaning files"
+cluster-helper $target -- "rm -rf /var/lib/heartbeat/crm/cib-*  /var/lib/heartbeat/cores/*/core.* /var/lib/heartbeat/hostcache /var/lib/openais/core.* /var/lib/corosync/core.* var/lib/oprofile/samples/cts.*"
+cluster-helper $target -- "find /var/lib/pengine -name '*.bz2' -exec rm -f \{\} \;"
+cluster-helper $target -- "find /tmp -name 'cts-*.valgrind' -exec rm -f \{\} \;"
+cluster-helper $target -- "rm -f /var/log/messages* /var/log/localmessages* /var/log/cluster*.log /var/log/corosync.log"
+cluster-helper $target -- service rsyslog restart  2>&1 > /dev/null
+cluster-helper $target -- logger -i -p daemon.info __clean_logs__
+
+#touch $cluster_log
+echo `date` ": Clean complete"

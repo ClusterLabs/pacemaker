@@ -1,0 +1,521 @@
+#!/bin/bash
+
+do_raw=0
+CMAN=0
+do_heartbeat=0
+plugin_ver=-1
+pcmk_ver=11
+
+install=0
+cs_conf=/etc/corosync/corosync.conf
+rpm_repo=
+distro=fedora-15
+
+dsh_group=0
+cluster=dummy0
+
+#  Corosync/OpenAIS Settings 
+cs_port=666
+
+# Settings that work great on nXX
+join=60
+#token=3000
+consensus=1500
+
+# Official settings
+join=2000
+token=5000
+consensus=2500
+
+# Testing
+join=1000
+consensus=7500
+do_debug=off
+
+function ip_for_node() {
+    if [ $do_raw = 1 ]; then
+	echo $1
+    else
+	host $1  | awk '{print $4}' | head -n 1
+    fi    
+}
+function id_for_node() {
+    ip_for_node $* | tr '.' ' ' | awk '{print $4}'
+}
+function name_for_node() {
+    echo $1 | awk -F. '{print $1}'
+}
+
+function helptext() {
+    echo "cluster-init - Configure cluster communication for the different infrastructures supported by Pacemaker"
+    echo ""
+    echo "-g, --group         Specify the group to operate on/with"
+    echo "-w, --host          Specify a host to operate on/with.  May be specified multiple times"
+    echo "-r, --raw-ip        Supplied nodes were listed as their IP addresses"
+    echo ""
+    echo "-h, --heartbeat     configure for heartbeat"
+    echo "-c, --corosync      configure for corosync"
+    echo "-o, --openais       configure for openais"
+    echo "--cman              configure for cman"
+    echo "-p, --plugin version"
+    echo ""
+    echo "-I, --install       Install packages"
+    echo "-R, --repo name     Setup and update/install Pacemaker from the named clusterlabs.org repo"
+    echo "                    Known values: rpm, rpm-test, rpm-next, rpm-test-next, rpm-test-rhel"
+    echo "-D, --distro        The distro within the --repo.  Defaults to fedora-15"
+    echo ""
+    echo "-d, --debug         Enable debug logging for the cluster"
+    echo "-10                 install stable-1.0 packages, implies: -p 0 -R rpm-test -I"
+    exit $1
+}
+
+host_input=""
+while true; do
+    case "$1" in
+	-g) cluster=$2;   
+	    dsh_group=`echo $cluster | sed s/[a-zA-Z]*//`
+	    host_input="-g $cluster"
+	    shift; shift;;
+	-w||--host) for h in $2; do
+		host_input="$host_input -w $h";
+	    done
+	    shift; shift;;
+	-w) host_input="$host_input -w $2"
+	    shift; shift;;
+	-r|--raw-ip) do_raw=1;       shift;;
+
+	-D) distro=$2; shift; shift;;
+	-d|--debug) do_debug=on; shift;;
+
+	-R|--repo) rpm_repo=$2; shift; shift;;
+	-I|--install) install=1; shift;;
+
+	cman|--cman) CMAN=1; shift;;
+	-h|--heartbeat) do_heartbeat=1; shift;;
+	-c|--corosync) cs_conf=/etc/corosync/corosync.conf; shift;;
+	-o|--openais) cs_conf=/etc/ais/openais.conf; shift;;
+	--plugin|-p) plugin_ver=$2; shift; shift;;
+
+	rhel) CMAN=1; rpm_repo=rpm-test-rhel; distro=rhel-6; shift;;
+	-10) pcmk_ver=10; plugin_ver=0; rpm_repo="rpm-test"; install=1; shift;;
+
+	-x) set -x; shift;;
+	-\?|--help) helptext 0; shift;;
+	"") break;;
+	*) echo "unknown option: $1"; exit 1;;
+    esac
+done
+
+host_list=`cluster-helper --list short $host_input`
+num_hosts=`echo $host_list | wc -w`
+if [ -z $dsh_group ]; then
+    dsh_group=1
+fi
+
+echo ""
+read -p "Shall I install an ssh key to cluster nodes? [No] " -t 60
+case $REPLY in
+    [Yy][Ee][Ss]|[Yy]) 
+	for host in $host_list; do
+	    echo "Installing our ssh key on ${host}"
+	    ssh-copy-id root@${host} >/dev/null 2>&1 
+	done
+	;;
+esac
+
+echo ""
+echo "SELinux prevent many things, including password-less ssh logins"
+read -p "Shall I disable selinux? [Yes] " -t 60 SELINUX
+if [ -z $SELINUX ]; then
+    SELINUX="Yes"
+fi
+
+echo ""
+echo "Incorrectly configured firewalls will prevent corosync from starting up"
+read -p "Shall I disable iptables? [Yes] "  -t 60 IPTABLES
+if [ -z $IPTABLES ]; then
+    IPTABLES="Yes"
+fi
+
+DOMAIN=No
+if [ $CMAN = 1 ]; then
+    echo ""
+    echo "Without a default domain, cman probably wont start because it can't look up the IP for hosts"
+    read -p "Shall I set one? [No]" -t 60 DOMAIN
+fi
+if [ -z $DOMAIN ]; then
+    DOMAIN="Yes"
+fi
+
+echo ""
+read -p "Shall I install/update the relevant packages? [Yes] "  -t 60 INSTALL
+if [ -z $INSTALL ]; then
+    INSTALL="Yes"
+fi
+
+REPO=
+if [ ! -z $rpm_repo ]; then
+    REPO=$rpm_repo/$distro
+fi
+
+init=`mktemp`
+cat<<-END>$init
+verbose=0
+
+lhost=\`uname -n\`
+lshort=\`echo \$lhost | awk -F. '{print \$1}'\`
+
+log() {
+    printf "%-10s  \$*\n" "\$lshort:" 1>&2
+}
+
+debug() {
+    if [ \$verbose -gt 0 ]; then
+	log "Debug: \$*"
+    fi
+}
+
+info() {
+    log "\$*"
+}
+
+warning() {
+    log "WARN: \$*"
+}
+
+fatal() {
+    log "ERROR: \$*"
+    exit 1
+}
+
+case \$SELINUX in
+    [Yy][Ee][Ss]|[Yy]|"") 
+	sed -i.sed "s/enforcing/disabled/g" /etc/selinux/config
+	;;
+esac
+
+case \$IPTABLES in
+    [Yy][Ee][Ss]|[Yy]|"") 
+	service iptables stop
+	chkconfig iptables off
+	;;
+esac
+
+case \$DOMAIN in
+    [Nn][Oo]|"") 
+	;;
+    *)
+	for host in $host_list; do
+	    grep -q "domain" /etc/resolv.conf
+	    if [ $? = 1 ]; then
+		sed -i.sed "s/nameserver/domain\ $DOMAIN\\\nnameserver/g" /etc/resolv.conf
+	    fi
+	done
+	;;
+esac
+
+case $INSTALL in
+    [Yy][Ee][Ss]|[Yy]|"") 
+
+	if [ ! -z $REPO ]; then
+	    info Configuring Clusterlabs repo: $REPO
+	    for host in $host_list; do
+		wget -O /etc/yum.repos.d/clusterlabs.repo http://www.clusterlabs.org/$REPO/clusterlabs.repo &>/dev/null
+	    done
+	fi
+
+	info Installing software on ${host}
+	pkgs="corosync fence-virt qarsh-server xinetd nmap"
+	if [ $do_heartbeat = 1 ]; then
+	    pkgs="$pkgs heartbeat"
+	fi
+	if [ $CMAN = 1 ]; then
+	    pkgs="$pkgs cman"
+	fi
+	
+	if [ $pcmk_ver = 10 ]; then
+	    yum update -y $pkgs at
+	    service atd start
+	    yum update -y --disablerepo=* --enablerepo=clusterlabs* pacemaker
+	else
+	    yum update -y $pkgs pacemaker
+	fi
+	;;
+esac
+
+info "Configuring services"
+chkconfig xinetd on
+service xinetd start &>/dev/null
+
+chkconfig corosync off &> /dev/null
+chkconfig heartbeat off &> /dev/null
+mkdir -p /etc/cluster
+
+info "Turning on core files"
+grep -q "unlimited" /etc/bashrc
+if [ $? = 1 ]; then
+    sed -i.sed "s/bashrc/bashrc\\\nulimit\ -c\ unlimited/g" /etc/bashrc
+fi
+
+if [ $CMAN = 1 ]; then
+    grep -q "logger" /etc/init.d/cman
+    if [ $? = 1 ]; then
+	info "Turning on CMAN init-script logging"
+	sed -i.sed "s/function=/logger\ -p\ daemon.info\ cman\ init\ \\\$1\\\nfunction=/g" /etc/init.d/cman
+    fi
+    
+    sed -i.sed "s/.*CMAN_QUORUM_TIMEOUT=.*/CMAN_QUORUM_TIMEOUT=0/g" /etc/sysconfig/cman
+fi
+END
+
+function create_hb_config() {
+    cat <<-END >/tmp/lha.$$
+auth 1
+1 crc
+END
+    printf "%-10s  Installing authkeys\n" ${host}
+    scp -q /tmp/lha.$$ root@${host}:/etc/ha.d/authkeys
+    ssh -l root ${host} -- chmod 600 /etc/ha.d/authkeys
+
+    cat <<-END >/tmp/lha.$$
+traditional_compression off
+compression		bz2
+
+realtime	yes
+conn_logd_time	120
+coredumps	true
+udpport		$cs_port$dsh_group
+
+bcast		eth0
+autojoin	any
+
+logfacility	daemon
+crm		respawn
+
+# 8-node version
+debug		0
+keepalive	1
+warntime	6
+deadtime	10
+initdead	15
+END
+    printf "%-10s  Installing ha.cf\n" ${host}
+    scp -q /tmp/lha.$$ root@${host}:/etc/ha.d/ha.cf
+}
+
+function patch_cs_config() {
+    ssh -l root ${host} -- sed -i.sed "s/.*mcastaddr:.*/mcastaddr:\ 226.94.1.1/g" $cs_conf
+    ssh -l root ${host} -- sed -i.sed "s/.*mcastport:.*/mcastport:\ $cs_port$dsh_group/g" $cs_conf
+    ssh -l root ${host} -- sed -i.sed "s/.*bindnetaddr:.*/bindnetaddr:\ $ip/g" $cs_conf
+    ssh -l root ${host} -- sed -i.sed "s/.*syslog_facility:.*/syslog_facility:\ daemon/g" $cs_conf
+    ssh -l root ${host} -- sed -i.sed "s/.*debug:.*/debug:\ $do_debug/g" $cs_conf
+    ssh -l root ${host} -- sed -i.sed "s/.*ver:.*/ver:\ $plugin_ver/g" $cs_conf
+    
+    if [ ! -z $token ]; then
+	ssh -l root ${host} -- sed -i.sed "s/.*token:.*/token:\ $token/g" $cs_conf
+    fi
+    if [ ! -z $consensus ]; then
+	ssh -l root ${host} -- sed -i.sed "s/.*consensus:.*/consensus:\ $consensus/g" $cs_conf
+    fi
+    if [ ! -z $join ]; then
+	ssh -l root ${host} -- sed -i.sed "s/^join:.*/join:\ $join/g" $cs_conf
+	ssh -l root ${host} -- sed -i.sed "s/\\\Wjoin:.*/join:\ $join/g" $cs_conf
+    fi
+}
+
+function create_cs_config() {
+    cs_tmp=/tmp/cs_conf.$$
+    cat <<-END >$cs_tmp
+totem {
+
+        version: 2
+
+        # How long before declaring a token lost (ms)
+        token:          $token
+
+        # How many token retransmits before forming a new configuration
+        token_retransmits_before_loss_const: 10
+
+        # How long to wait for join messages in the membership protocol (ms)
+        join:           $join
+
+        # How long to wait for consensus to be achieved before starting a new round of membership configuration (ms)
+        consensus:      $consensus
+
+        # Turn off the virtual synchrony filter
+        vsftype:        none
+
+        # Number of messages that may be sent by one processor on receipt of the token
+        max_messages:   20
+
+        # Stagger sending the node join messages by 1..send_join ms
+        send_join:      45
+
+        # Disable encryption
+        secauth:	off
+
+        # How many threads to use for encryption/decryption
+        threads:   	0
+
+        # Assign a fixed node id
+        nodeid:         $id
+
+        interface {
+                ringnumber: 0
+                bindnetaddr: $ip
+                mcastaddr: 226.94.1.1
+                mcastport: $cs_port$dsh_group
+        }
+}
+
+logging {
+        debug: $do_debug
+        fileline: off
+        to_syslog: yes
+        to_stderr: no
+        syslog_facility: daemon
+        timestamp: on
+        to_logfile: yes
+        logfile: /var/log/corosync.log
+}
+
+amf {
+        mode: disabled
+}
+END
+    if [ $plugin_ver -ge 0 ]; then
+	cat <<-END >>$cs_tmp
+service {
+        name: pacemaker
+        ver:  $plugin_ver
+}
+END
+    fi
+    if [ $CMAN = 1 ]; then
+	test $num_hosts != 2
+	two_node=$?
+	cat <<-END >>$cs_tmp
+cluster {
+        name: $cluster
+
+        clusternodes {
+END
+
+	for peer in $host_list; do
+	    p_name=`name_for_node $peer`
+	    p_id=`id_for_node $peer`
+	    
+	    cat <<-END >>$cs_tmp
+                clusternode {
+                        votes: 1
+                        nodeid: $p_id
+                        name: $p_name
+                }
+END
+	done
+	cat <<-END >>$cs_tmp
+        }
+        cman {
+                expected_votes: $num_hosts
+                cluster_id: $dsh_group
+                nodename: $cs_short_host
+                two_node: $two_node
+                max_queued: 10
+        }
+}
+
+service {
+        name: corosync_cman
+        ver: 0
+}
+
+quorum {
+        provider: quorum_cman
+}
+END
+    fi
+    scp -q $cs_tmp root@${host}:$cs_conf
+    rm -f $cs_tmp
+}
+
+function create_cman_config() {
+    cs_conf=/etc/cluster/cluster.conf
+    cs_tmp=/tmp/cs_conf.$$
+    cat <<-END >$cs_tmp
+<?xml version="1.0"?>
+<cluster config_version="1" name="$cluster">
+  <logging debug="$do_debug"/>
+  <clusternodes>
+END
+
+    lpc=1
+    for h in $host_list; do
+	short_h=`name_for_node $h`
+	cat <<-END >>$cs_tmp
+    <clusternode name="$short_h" nodeid="$lpc"/>
+END
+	lpc=`expr $lpc + 1`
+    done
+    
+    test $num_hosts != 2
+    two_node=$?
+    extra=""
+    
+    if [ $two_node = 1 ]; then
+	extra="\n  <cman two_node=\"1\" expected_votes=\"1\"/>"
+    fi
+    cat <<-END >>$cs_tmp
+  </clusternodes>$extra
+</cluster>
+END
+    scp -q $cs_tmp root@${host}:$cs_conf
+    rm -f $cs_tmp
+}
+
+for host in $host_list; do
+    echo ""
+    echo ""
+    echo "* Configuring $host"
+    
+    cs_short_host=`name_for_node $host`
+    ip=`ip_for_node $host`
+    id=`id_for_node $host`
+
+    if [ `uname -n` = $host ]; then
+	bash $init
+    else
+	cat $init | ssh -l root -T $host -- "cat > $init; bash $init"
+    fi
+
+    if [ -e /etc/cluster/fence_xvm.key ]; then
+	scp /etc/cluster/fence_xvm.key root@${host}:/etc/cluster/fence_xvm.key
+    fi
+
+    if [ $pcmk_ver = 10 ]; then
+	scp /etc/hosts root@${host}:/etc/hosts
+	scp ~/.ssh/id_dsa.suse root@${host}:.ssh/id_dsa
+	scp ~/.ssh/known_hosts root@${host}:.ssh/known_hosts
+    fi
+
+    if [ $do_heartbeat = 1 ]; then
+	create_hb_config ${host}
+
+    elif [ $CMAN = 1 ]; then
+        printf "%-10s  Installing $cs_conf\n" ${host}:
+	create_cman_config
+
+    else
+	ssh -l root ${host} -- grep -q "token:" $cs_conf 2>&1 > /dev/null
+	new_config=$?
+	
+	if [ $new_config = 0 ]; then
+            printf "%-10s  Updating $cs_conf\n" ${host}:
+	    patch_cs_config
+	    
+	else
+            printf "%-10s  Installing $cs_conf\n" ${host}:
+	    create_cs_config
+	fi
+    fi
+done    
+
