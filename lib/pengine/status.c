@@ -185,6 +185,10 @@ cleanup_calculations(pe_working_set_t * data_set)
         g_hash_table_destroy(data_set->tickets);
     }
 
+    if(data_set->template_rsc_sets) {
+        g_hash_table_destroy(data_set->template_rsc_sets);
+    }
+
     crm_free(data_set->dc_uuid);
 
     crm_debug_3("deleting resources");
