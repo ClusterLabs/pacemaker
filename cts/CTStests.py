@@ -1054,6 +1054,7 @@ class ResourceRecover(CTSTest):
         self.startall = SimulStartLite(cm)
         self.max=30
         self.rid=None
+        self.rid_alt=None
         #self.is_unsafe = 1
         self.benchmark = 1
 
