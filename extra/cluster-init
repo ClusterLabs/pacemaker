@@ -1,12 +1,13 @@
 #!/bin/bash
 
+accept_defaults=0
 do_raw=0
 CMAN=0
 do_heartbeat=0
 plugin_ver=-1
 pcmk_ver=11
 
-install=0
+INSTALL=No
 cs_conf=/etc/corosync/corosync.conf
 rpm_repo=
 distro=fedora-15
@@ -76,7 +77,8 @@ while true; do
 	    dsh_group=`echo $cluster | sed s/[a-zA-Z]*//`
 	    host_input="-g $cluster"
 	    shift; shift;;
-	-w||--host) for h in $2; do
+	-w|--host) 
+	    for h in $2; do
 		host_input="$host_input -w $h";
 	    done
 	    shift; shift;;
@@ -88,7 +90,7 @@ while true; do
 	-d|--debug) do_debug=on; shift;;
 
 	-R|--repo) rpm_repo=$2; shift; shift;;
-	-I|--install) install=1; shift;;
+	-I|--install) INSTALL=Yes; shift;;
 
 	cman|--cman) CMAN=1; shift;;
 	-h|--heartbeat) do_heartbeat=1; shift;;
@@ -99,6 +101,7 @@ while true; do
 	rhel) CMAN=1; rpm_repo=rpm-test-rhel; distro=rhel-6; shift;;
 	-10) pcmk_ver=10; plugin_ver=0; rpm_repo="rpm-test"; install=1; shift;;
 
+	-y|--yes|--defaults) accept_defaults=1; shift;;
 	-x) set -x; shift;;
 	-\?|--help) helptext 0; shift;;
 	"") break;;
@@ -112,9 +115,44 @@ if [ -z $dsh_group ]; then
     dsh_group=1
 fi
 
-echo ""
-read -p "Shall I install an ssh key to cluster nodes? [No] " -t 60
-case $REPLY in
+if [ $accept_defaults = 0 ]; then
+    echo ""
+    read -p "Shall I install an ssh key to cluster nodes? [No] " -t 60 SSH
+    echo ""
+    echo "SELinux prevent many things, including password-less ssh logins"
+    read -p "Shall I disable selinux? [Yes] " -t 60 SELINUX
+    echo ""
+    echo "Incorrectly configured firewalls will prevent corosync from starting up"
+    read -p "Shall I disable iptables? [Yes] " -t 60 IPTABLES
+    if [ $CMAN = 1 ]; then
+	echo ""
+	echo "Without a default domain, cman probably wont start because it can't look up the IP for hosts"
+	read -p "Shall I set one? [No]" -t 60 DOMAIN
+    fi
+    echo ""
+    read -p "Shall I install/update the relevant packages? [Yes] "  -t 60 INSTALL
+fi
+
+if [ -z $SSH ]; then
+    SSH="No"
+fi
+
+if [ -z $SELINUX ]; then
+    SELINUX="Yes"
+fi
+
+if [ -z $IPTABLES ]; then
+    IPTABLES="Yes"
+fi
+
+if [ -z $DOMAIN ]; then
+    DOMAIN="No"
+fi
+if [ -z $INSTALL ]; then
+    INSTALL="Yes"
+fi
+
+case $SSH in
     [Yy][Ee][Ss]|[Yy]) 
 	for host in $host_list; do
 	    echo "Installing our ssh key on ${host}"
@@ -122,36 +160,6 @@ case $REPLY in
 	done
 	;;
 esac
-
-echo ""
-echo "SELinux prevent many things, including password-less ssh logins"
-read -p "Shall I disable selinux? [Yes] " -t 60 SELINUX
-if [ -z $SELINUX ]; then
-    SELINUX="Yes"
-fi
-
-echo ""
-echo "Incorrectly configured firewalls will prevent corosync from starting up"
-read -p "Shall I disable iptables? [Yes] "  -t 60 IPTABLES
-if [ -z $IPTABLES ]; then
-    IPTABLES="Yes"
-fi
-
-DOMAIN=No
-if [ $CMAN = 1 ]; then
-    echo ""
-    echo "Without a default domain, cman probably wont start because it can't look up the IP for hosts"
-    read -p "Shall I set one? [No]" -t 60 DOMAIN
-fi
-if [ -z $DOMAIN ]; then
-    DOMAIN="Yes"
-fi
-
-echo ""
-read -p "Shall I install/update the relevant packages? [Yes] "  -t 60 INSTALL
-if [ -z $INSTALL ]; then
-    INSTALL="Yes"
-fi
 
 REPO=
 if [ ! -z $rpm_repo ]; then
@@ -518,4 +526,3 @@ for host in $host_list; do
 	fi
     fi
 done    
-
