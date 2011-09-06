@@ -661,4 +661,3 @@ if [ "$t" = "" ]; then
 	fatal "please install the perl Date::Parse module"
 fi
 
-detect_host

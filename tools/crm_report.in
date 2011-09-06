@@ -366,6 +366,10 @@ getnodes() {
 	cluster=$1
     fi
 
+    if [ -z $HA_STATE_DIR ]; then
+	HA_STATE_DIR=/var/lib/heartbeat
+    fi
+
     cluster_cf=`find_cluster_cf $cluster`
     # 1. Live
     if 

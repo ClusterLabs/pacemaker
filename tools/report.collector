@@ -27,6 +27,8 @@ else
     debug "Canonicalizing working directory path: $REPORT_HOME"
 fi
 
+detect_host
+
 findlogdcf() {
     for f in \
 	`test -x $CRM_DAEMON_DIR/ha_logd &&
