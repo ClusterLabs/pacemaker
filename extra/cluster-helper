@@ -55,7 +55,7 @@ while true ; do
 	-x)  set -x; shift;;
 	--ssh) ssh="ssh"; scp="scp"; shift;;
 	-g|--group) group="$2"; shift; shift;;
-	-w||--host) for h in $2; do
+	-w|--host) for h in $2; do
 		hosts="$hosts -w $h";
 	    done
 	    shift; shift;;
