@@ -771,10 +771,12 @@ main(int argc, char **argv)
     }
 
     if (cluster_connect_cfg(&local_nodeid) == FALSE) {
+        crm_err("Couldn't connect to Corosync's CFG service");
         return 1;
     }
 
     if (cluster_connect_cpg() == FALSE) {
+        crm_err("Couldn't connect to Corosync's CPG service");
         return 1;
     }
 
