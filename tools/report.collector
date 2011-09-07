@@ -586,16 +586,16 @@ EOF
     esac
 }
 
-debug "Initializing $host subdir"
-if [ "$REPORT_MASTER" != "$host" ]; then
-  if [ -e $REPORT_HOME/$host ]; then
-    warning "Directory $REPORT_HOME/$host already exists, using /tmp/$$/$host instead"
+debug "Initializing $REPORT_TARGET subdir"
+if [ "$REPORT_MASTER" != "$REPORT_TARGET" ]; then
+  if [ -e $REPORT_HOME/$REPORT_TARGET ]; then
+    warning "Directory $REPORT_HOME/$REPORT_TARGET already exists, using /tmp/$$/$REPORT_TARGET instead"
     REPORT_HOME=/tmp/$$
   fi
 fi
 
-mkdir -p $REPORT_HOME/$host
-cd $REPORT_HOME/$host
+mkdir -p $REPORT_HOME/$REPORT_TARGET
+cd $REPORT_HOME/$REPORT_TARGET
 
 case $CLUSTER in
     any) cluster=`get_cluster_type`;;
@@ -619,10 +619,10 @@ debug "Config: $cluster $cluster_cf $logd_cf $logfile"
 
 sys_info $cluster $PACKAGES > $SYSINFO_F
 essential_files $cluster | check_perms  > $PERMISSIONS_F 2>&1
-getconfig $cluster "$REPORT_HOME/$host" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache" "/etc/drbd.conf" "/etc/drbd.d"
+getconfig $cluster "$REPORT_HOME/$REPORT_TARGET" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache" "/etc/drbd.conf" "/etc/drbd.d"
 
-getpeinputs    $LOG_START $LOG_END $REPORT_HOME/$host
-getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$host/$BT_F
+getpeinputs    $LOG_START $LOG_END $REPORT_HOME/$REPORT_TARGET
+getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$REPORT_TARGET/$BT_F
 
 case $cluster in
     cman|corosync)
@@ -636,8 +636,8 @@ case $cluster in
 esac
 
 dc=`crm_mon -1 2>/dev/null | awk '/Current DC/ {print $3}'`
-if [ "$host" = "$dc" ]; then
-    echo "$host" > DC
+if [ "$REPORT_TARGET" = "$dc" ]; then
+    echo "$REPORT_TARGET" > DC
 fi
 
 dlm_dump  > $DLM_DUMP_F 2>&1
@@ -676,7 +676,7 @@ for l in $logfile $EXTRA_LOGS; do
 	continue
     fi
     dumplogset "$l" $LOG_START $LOG_END > "$b"
-    echo "Log patterns $host:"  > $ANALYSIS_F
+    echo "Log patterns $REPORT_TARGET:"  > $ANALYSIS_F
     cat $b | grep -f $pattfile >> $ANALYSIS_F
 done
 
@@ -707,9 +707,9 @@ for l in $logfile $EXTRA_LOGS; do
     fi
 done
 
-if [ "$REPORT_MASTER" != "$host" ]; then
+if [ "$REPORT_MASTER" != "$REPORT_TARGET" ]; then
     debug "Streaming report back to $REPORT_MASTER"
-    (cd $REPORT_HOME && tar cf - $host)
+    (cd $REPORT_HOME && tar cf - $REPORT_TARGET)
     if [ "$REMOVE" = "1" ]; then
 	cd
 	rm -rf $REPORT_HOME

@@ -153,10 +153,12 @@ collect_data() {
 	dumplogset "$masterlog" $start $end > "$l_base/$HALOG_F"
     fi
 
-    cat<<EOF>$l_base/.env
+    for node in $nodes; do
+	cat<<EOF>$l_base/.env
 LABEL="$label"
 REPORT_HOME="$r_base"
 REPORT_MASTER="$host"
+REPORT_TARGET="$node"
 LOG_START=$start
 LOG_END=$end
 REMOVE=1
@@ -168,15 +170,11 @@ SEARCH_LOGS=$search_logs
 verbose=$verbose
 EOF
 
-    # local overrides
-    cp $l_base/.env $l_base/.env.local
-    cat<<EOF>>$l_base/.env.local
+	if [ $host = $node ]; then
+	    cat<<EOF>>$l_base/.env
 REPORT_HOME="$l_base"
 EOF
-
-    for node in $nodes; do
-	if [ `uname -n` = $node ]; then
-	    cat $l_base/.env.local $report_data/report.common $report_data/report.collector > $l_base/collector
+	    cat $l_base/.env $report_data/report.common $report_data/report.collector > $l_base/collector
 	    bash $l_base/collector
 	else
 	    cat $l_base/.env $report_data/report.common $report_data/report.collector \
