@@ -565,6 +565,7 @@ get_logfile() {
 	fi
 	msg="Mark:pcmk:`perl -e 'print time()'`"
 	logger -p $facility.info $msg >/dev/null 2>&1
+	sleep 2 # Give syslog time to catch up in case its busy
 	findmsg 1 "$msg"
     fi
 }
