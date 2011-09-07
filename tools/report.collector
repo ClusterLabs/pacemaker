@@ -367,7 +367,7 @@ pkg_ver() {
 		if rpm -q $pkg >/dev/null 2>&1 ; then
 		    debug "Verifying installation of: $pkg"
 		    echo "Verifying installation of: $pkg"
-		    rpm --verify $pkg
+		    rpm --verify $pkg 2>&1
 		fi
 	    done
 	    ;;
