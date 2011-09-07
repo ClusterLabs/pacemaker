@@ -440,7 +440,10 @@ if __name__ == '__main__':
             while len(node_list) > LimitNodes:
                 node_list.pop(len(node_list)-1)
 
-    Environment["nodes"] = node_list
+    Environment["nodes"] = []
+    for n in node_list:
+       if len(n.strip()):
+           Environment["nodes"].append(n.strip())
 
     discover = random.Random().choice(Environment["nodes"])
 
