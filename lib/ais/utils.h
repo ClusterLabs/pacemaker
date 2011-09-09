@@ -152,8 +152,8 @@ level2char(int level)
 	    log_printf(LOG_DEBUG, "debug%d: %s: " fmt,			\
 		       level-LOG_INFO, __PRETTY_FUNCTION__ , ##args);	\
 	} else {							\
-	    log_printf(level, "%s: %s: " fmt, level2char(level),	\
-		       __PRETTY_FUNCTION__ , ##args);			\
+            qb_log_from_external_source(__func__, __FILE__,             \
+               fmt, level, __LINE__, 0, ##args);			\
 	}								\
     } while(0)
 
