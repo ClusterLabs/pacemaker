@@ -38,7 +38,7 @@ endif
 noinst_HEADERS		= 
 
 pacemakerd_SOURCES	= pacemaker.c corosync.c
-pacemakerd_LDADD	= $(top_builddir)/lib/common/libcrmcluster.la $(top_builddir)/lib/common/libcrmcommon.la $(CLUSTERLIBS) -lcfg -lconfdb
+pacemakerd_LDADD	= $(CLUSTERLIBS) $(top_builddir)/lib/common/libcrmcluster.la $(top_builddir)/lib/common/libcrmcommon.la -lcfg -lconfdb
 
 %.8:	%
 	echo Creating $@
