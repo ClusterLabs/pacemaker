@@ -508,12 +508,12 @@ read_config(void)
     local_handle = config_find_next(config, "logging", top_handle);
 
     get_config_opt(config, local_handle, "debug", &value, "on");
-    if (crm_is_true(value) && crm_log_level < LOG_DEBUG) {
-        crm_log_level = LOG_DEBUG;
+    if (crm_is_true(value) && get_crm_log_level() < LOG_DEBUG) {
+        set_crm_log_level(LOG_DEBUG);
     }
 
-    if (crm_log_level >= LOG_DEBUG) {
-        char *level = crm_itoa(crm_log_level - LOG_INFO);
+    if (get_crm_log_level() >= LOG_DEBUG) {
+        char *level = crm_itoa(get_crm_log_level() - LOG_INFO);
 
         setenv("HA_debug", level, 1);
         crm_free(level);

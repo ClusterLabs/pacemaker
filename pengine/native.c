@@ -1045,8 +1045,8 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         pe_proc_err("Resource %s (%s::%s) is active on %d nodes %s",
                     rsc->id, class, type, g_list_length(rsc->running_on),
                     recovery2text(rsc->recovery_type));
-        cl_log(LOG_WARNING, "See %s for more information.",
-               "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
+        crm_warn("See %s for more information.",
+                 "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
 
         if (rsc->recovery_type == recovery_stop_start) {
             if (rsc->role == RSC_ROLE_MASTER) {

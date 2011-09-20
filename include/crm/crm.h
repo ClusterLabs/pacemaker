@@ -199,6 +199,9 @@ extern const char *crm_system_name;
 typedef GList *GListPtr;
 
 /* LOG_DEBUG = 7, make LOG_TRACE ::= -VVVVV */
+#ifdef LOG_TRACE
+#undef LOG_TRACE
+#endif
 #  ifndef LOG_TRACE
 #    define LOG_TRACE    12
 #  endif
@@ -230,19 +233,19 @@ typedef GList *GListPtr;
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
-#  ifdef QB_LOG_H_DEFINED
+#  ifdef LIBQB_LOGGING
 
 #    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
 
-#    define do_crm_log(level, fmt, args...) do {                               \
-	qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args); \
-    } while(0)
-
-#    define do_crm_log_unlikely(level, fmt, args...) do {                      \
+#    define do_crm_log(level, fmt, args...) do {                        \
         qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args); \
     } while(0)
 
-#    define do_crm_log_xml(level, text, xml) do {                              \
+#    define do_crm_log_unlikely(level, fmt, args...) do {               \
+        qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args); \
+    } while(0)
+
+#    define do_crm_log_xml(level, text, xml) do {                       \
 	if(xml == NULL) {						\
 	} else if(__likely((level) <= crm_log_level)) {			\
 	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
@@ -250,19 +253,20 @@ typedef GList *GListPtr;
     } while(0)
 
 #    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
-	char _log_buf_[QB_LOG_MAX_LEN]; \
-	if (line) {							\
-	    snprintf(_log_buf_, QB_LOG_MAX_LEN, "TRACE: %s: %s:%d "fmt, function, file, line, ##args);	\
-	} else {							\
-	    snprintf(_log_buf_, QB_LOG_MAX_LEN, "%s: "fmt, function, ##args); \
-	}								\
-	qb_log_from_external_source(function, file, fmt, level, line, 0,  _log_buf_); \
+	qb_log_from_external_source(function, file, fmt, level, line, 0,  ##args); \
     } while(0)
 
 #    define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
 
-#  else
+#    define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
+#    define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
+#    define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
+#    define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
+#    define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
+#    define crm_debug(fmt, args...)   qb_logt(LOG_DEBUG,   0, fmt , ##args)
+#    define crm_trace(fmt, args...)   qb_logt(LOG_TRACE,   0, fmt , ##args)
 
+#  else
 #    define CRM_TRACE_INIT_DATA(name)
 
 #    define CRM_LOG_ASSERT(expr) do {					\
@@ -302,15 +306,16 @@ typedef GList *GListPtr;
     } while(0)
 
 #    define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
+
+#    define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
+#    define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
+#    define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
+#    define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
+#    define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
+#    define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
+#    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
 #  endif
 
-#  define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
-#  define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
-#  define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
-#  define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
-#  define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
-#  define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
-#  define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
 #  define crm_debug_2 crm_trace
 #  define crm_debug_3 crm_trace
 #  define crm_debug_4 crm_trace

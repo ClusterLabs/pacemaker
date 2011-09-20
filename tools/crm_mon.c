@@ -365,8 +365,7 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 'V':
-                cl_log_enable_stderr(TRUE);
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case 'Q':
                 print_last_updated = FALSE;
@@ -472,7 +471,7 @@ main(int argc, char **argv)
 
     } else if (daemonize) {
         as_console = FALSE;
-        cl_log_enable_stderr(FALSE);
+        crm_enable_stderr(FALSE);
 
         if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent) {
             printf
@@ -487,7 +486,7 @@ main(int argc, char **argv)
         initscr();
         cbreak();
         noecho();
-        cl_log_enable_stderr(FALSE);
+        crm_enable_stderr(FALSE);
 #else
         one_shot = TRUE;
         as_console = FALSE;
@@ -1437,7 +1436,7 @@ crm_snmp_init(const char *target, char *community)
         return NULL;
     }
 
-    if (crm_log_level > LOG_INFO) {
+    if (get_crm_log_level() > LOG_INFO) {
         char *debug_tokens = crm_strdup("run:shell,snmptrap,tdomain");
 
         debug_register_tokens(debug_tokens);

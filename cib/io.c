@@ -561,7 +561,7 @@ write_cib_contents(gpointer p)
         crm_set_env_options();
 
         /* Don't log anything unless strictly necessary */
-        crm_log_level = LOG_ERR;
+        set_crm_log_level(LOG_ERR);
 
         /* In theory we can scribble on "the_cib" here and not affect the parent
          * But lets be safe anyway

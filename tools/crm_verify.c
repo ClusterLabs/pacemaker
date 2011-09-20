@@ -136,7 +136,7 @@ main(int argc, char **argv)
                 cib_save = crm_strdup(optarg);
                 break;
             case 'V':
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case 'L':
                 USE_LIVE_CIB = TRUE;
@@ -265,14 +265,14 @@ main(int argc, char **argv)
 
     if (crm_config_error) {
         fprintf(stderr, "Errors found during check: config not valid\n");
-        if (crm_log_level < LOG_WARNING) {
+        if (get_crm_log_level() < LOG_WARNING) {
             fprintf(stderr, "  -V may provide more details\n");
         }
         rc = 2;
 
     } else if (crm_config_warning) {
         fprintf(stderr, "Warnings found during check: config may not be valid\n");
-        if (crm_log_level < LOG_WARNING) {
+        if (get_crm_log_level() < LOG_WARNING) {
             fprintf(stderr, "  Use -V for more details\n");
         }
         rc = 1;

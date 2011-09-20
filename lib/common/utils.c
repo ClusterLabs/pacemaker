@@ -69,7 +69,6 @@
 CRM_TRACE_INIT_DATA(common);
 
 static uint ref_counter = 0;
-unsigned int crm_log_level = LOG_INFO;
 gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
 const char *crm_system_name = "unknown";
@@ -531,7 +530,13 @@ update_all_trace_data(void)
 
     env_value = getenv("PCMK_trace_functions");
     if (env_value) {
+        crm_info("Looking for %s", env_value);
         qb_log_filter_ctl(QB_LOG_SYSLOG,
+                          QB_LOG_FILTER_ADD,
+                          QB_LOG_FILTER_FUNCTION,
+                          env_value,
+                          LOG_TRACE);
+        qb_log_filter_ctl(QB_LOG_STDERR,
                           QB_LOG_FILTER_ADD,
                           QB_LOG_FILTER_FUNCTION,
                           env_value,
@@ -569,9 +574,9 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     setenv("PCMK_service", crm_system_name, 1);
 #if !LIBQB_LOGGING
     cl_log_set_entity(crm_system_name);
-#endif
     set_crm_log_level(level);
     crm_set_env_options();
+#endif
 
     if (quiet) {
         /* Nuke any syslog activity */
@@ -592,24 +597,11 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
 #endif
 
         } else {
-            qb_log_init(crm_system_name,
-#if 0
-                        LOG_DAEMON,
-#else
-                        qb_log_facility2int(getenv("HA_logfacility")),
-#endif
-                        level);
+            qb_log_init(crm_system_name, qb_log_facility2int(getenv("HA_logfacility")), level);
         }
     }
 
-#if LIBQB_LOGGING
-    if (to_stderr) {
- 	qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
-	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_TRUE);
-    }
-#else
-    cl_log_enable_stderr(to_stderr);
-#endif
+    crm_enable_stderr(to_stderr);
 
     if (coredir) {
         const char *user = getenv("USER");
@@ -661,14 +653,83 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     return TRUE;
 }
 
+unsigned int crm_log_level = LOG_INFO;
+
 /* returns the old value */
 unsigned int
 set_crm_log_level(unsigned int level)
 {
+    int rc = 0;
     unsigned int old = crm_log_level;
+#if LIBQB_LOGGING
+    if(old > level) {
+        qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_REMOVE, QB_LOG_FILTER_FILE, "*", old);
+    }
 
+    if(old != level) {
+        if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
+            rc = qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
+            crm_info("New log level: %d %d", level, rc);            
+        }
+        if (qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
+            qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
+        }
+
+        /* qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_PRIORITY_BUMP, LOG_INFO - LOG_DEBUG); Needed? */
+        if(level > LOG_DEBUG) {
+            qb_log_format_set(QB_LOG_SYSLOG, "(%-12f:%5l %g) %-7p: %n: %b");
+            qb_log_format_set(QB_LOG_STDERR, "(%-12f:%5l %g) %-7p: %n: \t%b");
+
+        } else if(level > LOG_INFO) {
+            qb_log_format_set(QB_LOG_STDERR, "(%-12f:%5l %g) %-7p: %n: \t%b");
+
+        } else {
+            qb_log_format_set(QB_LOG_STDERR, "%g %-7p: %n: \t%b");
+            qb_log_format_set(QB_LOG_SYSLOG, "%g %-7p: %n: %b");
+        }
+    }
+#endif
     crm_log_level = level;
     return old;
+}
+
+void
+crm_enable_stderr(int enable)
+{
+#if LIBQB_LOGGING
+    if (enable && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
+ 	qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", crm_log_level);
+	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_TRUE);
+        qb_log_format_set(QB_LOG_STDERR, "%g %-7p: %n: \t%b");
+
+    } else if(enable == FALSE) {
+	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_FALSE);
+    }
+#else
+    cl_log_enable_stderr(to_stderr);
+#endif
+}
+
+void
+crm_bump_log_level(void)
+{
+#if LIBQB_LOGGING
+    if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
+        set_crm_log_level(crm_log_level + 1);
+    }
+#else
+    set_crm_log_level(crm_log_level + 1);
+#endif
+    crm_enable_stderr(TRUE);
+}
+
+int
+crm_should_log(int level) 
+{
+    if(level <= crm_log_level) {
+        return 1;
+    }
+    return 0;
 }
 
 unsigned int
@@ -815,23 +876,18 @@ gboolean do_stderr = FALSE;
 void
 alter_debug(int nsig)
 {
+    int level = get_crm_log_level();
     crm_signal(DEBUG_INC, alter_debug);
     crm_signal(DEBUG_DEC, alter_debug);
-#if LIBQB_LOGGING
-//TODO	
-    qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_PRIORITY_BUMP, LOG_INFO - LOG_DEBUG);
-#endif
     
     switch (nsig) {
         case DEBUG_INC:
-            if (crm_log_level < 100) {
-                crm_log_level++;
-            }
+            crm_bump_log_level();
             break;
 
         case DEBUG_DEC:
-            if (crm_log_level > 0) {
-                crm_log_level--;
+            if (level > 0) {
+                set_crm_log_level(level-1);
             }
             break;
 
@@ -956,7 +1012,7 @@ crm_set_env_options(void)
     cl_inherit_logging_environment(500);
     cl_log_set_logd_channel_source(NULL, NULL);
 
-    if (debug_level > 0 && (debug_level + LOG_INFO) > (int)crm_log_level) {
+    if (debug_level > 0 && (debug_level + LOG_INFO) > (int)get_crm_log_level()) {
         set_crm_log_level(LOG_INFO + debug_level);
     }
 }
@@ -2342,7 +2398,7 @@ append_digest(lrm_op_t * op, xmlNode * update, const char *version, const char *
     digest = calculate_operation_digest(args_xml, version);
 
 #if 0
-    if (level < crm_log_level
+    if (level < get_crm_log_level()
         && op->interval == 0 && crm_str_eq(op->op_type, CRMD_ACTION_START, TRUE)) {
         char *digest_source = dump_xml_unformatted(args_xml);
 

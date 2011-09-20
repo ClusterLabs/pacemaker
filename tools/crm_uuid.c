@@ -112,7 +112,7 @@ read_local_hb_uuid(void)
     FILE *input = fopen(UUID_FILE, "r");
 
     if (input == NULL) {
-        cl_perror("Could not open UUID file %s\n", UUID_FILE);
+        crm_perror(LOG_ERR, "Could not open UUID file %s\n", UUID_FILE);
         return 1;
     }
 
@@ -174,17 +174,17 @@ write_local_hb_uuid(const char *new_value)
     }
 
     if ((fd = open(UUID_FILE, O_WRONLY | O_SYNC | O_CREAT, 0644)) < 0) {
-        cl_perror("Could not open %s", UUID_FILE);
+        crm_perror(LOG_ERR, "Could not open %s", UUID_FILE);
         return 6;
     }
 
     if (write(fd, uuid.uuid, UUID_LEN) != UUID_LEN) {
-        cl_perror("Could not write UUID to %s", UUID_FILE);
+        crm_perror(LOG_ERR, "Could not write UUID to %s", UUID_FILE);
         rc = 7;
     }
 
     if (close(fd) < 0) {
-        cl_perror("Could not close %s", UUID_FILE);
+        crm_perror(LOG_ERR, "Could not close %s", UUID_FILE);
         rc = 8;
     }
     return rc;

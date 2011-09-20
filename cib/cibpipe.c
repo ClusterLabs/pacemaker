@@ -186,8 +186,7 @@ main(int argc, char **argv)
                 command_options |= cib_quorum_override;
                 break;
             case 'V':
-                alter_debug(DEBUG_INC);
-                cl_log_enable_stderr(1);
+                crm_bump_log_level();
                 break;
             case '?':          /* Help message */
                 usage(crm_system_name, LSB_EXIT_OK);

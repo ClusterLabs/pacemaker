@@ -986,6 +986,7 @@ main(int argc, char **argv)
     gboolean verbose = FALSE;
     gboolean simulate = FALSE;
     gboolean all_actions = FALSE;
+    gboolean have_stdout = FALSE;
 
     pe_working_set_t data_set;
 
@@ -1023,13 +1024,15 @@ main(int argc, char **argv)
         switch (flag) {
             case 'V':
                 verbose = TRUE;
-                alter_debug(DEBUG_INC);
 
-                /* Redirect stderr to stdout so we can grep the output */
-                close(STDERR_FILENO);
-                dup2(STDOUT_FILENO, STDERR_FILENO);
-
-                cl_log_enable_stderr(TRUE);
+                if(have_stdout == FALSE) {
+                    /* Redirect stderr to stdout so we can grep the output */
+                    have_stdout = TRUE;
+                    close(STDERR_FILENO);
+                    dup2(STDOUT_FILENO, STDERR_FILENO);
+                }
+                
+                crm_bump_log_level();
                 break;
             case '?':
             case '$':
@@ -1127,7 +1130,7 @@ main(int argc, char **argv)
         crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    update_all_trace_data();    /* again, so we see which trace points got updated */
+    /* update_all_trace_data();    /\* again, so we see which trace points got updated *\/ */
 
     setup_input(xml_file, store ? xml_file : output_file);
 
@@ -1219,15 +1222,15 @@ main(int argc, char **argv)
                       || modified ? "\n" : "");
             fflush(stdout);
 
-            crm_log_level = LOG_NOTICE;
-            cl_log_enable_stderr(TRUE);
+            set_crm_log_level(LOG_NOTICE);
+            crm_enable_stderr(TRUE);
             for (gIter = data_set.resources; gIter != NULL; gIter = gIter->next) {
                 resource_t *rsc = (resource_t *) gIter->data;
 
                 LogActions(rsc, &data_set);
             }
 
-            cl_log_enable_stderr(FALSE);
+            crm_enable_stderr(FALSE);
         }
     }
 

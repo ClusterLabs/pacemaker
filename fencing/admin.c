@@ -110,8 +110,7 @@ main(int argc, char ** argv)
 	switch(flag) {
 	    case 'V':
 		verbose = 1;
-		alter_debug(DEBUG_INC);
-		cl_log_enable_stderr(1);
+		crm_bump_log_level();
 		break;
 	    case '$':
 	    case '?':
@@ -145,7 +144,6 @@ main(int argc, char ** argv)
 	    case 'U':
 	    case 'C':
 	    case 'H':
-		cl_log_enable_stderr(1);
 		target = optarg;
 		action = flag;
 		break;

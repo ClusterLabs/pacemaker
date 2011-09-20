@@ -89,7 +89,7 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 'V':
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case '?':
             case '$':

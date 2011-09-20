@@ -110,7 +110,7 @@ main(int argc, char **argv)
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
         switch (flag) {
             case 'V':
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case 'h':          /* Help message */
                 usage(crm_system_name, LSB_EXIT_OK);
