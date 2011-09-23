@@ -152,7 +152,6 @@ License:	GPLv2+ and LGPLv2+
 Summary:	Command line tools for controlling Pacemaker clusters
 Group:		System Environment/Daemons
 Requires:	%{name}-libs = %{version}-%{release}
-#Requires:	%{name}-cluster-libs = %{version}-%{release}
 
 %description cli
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -342,9 +341,16 @@ fi
 
 %{_sbindir}/crm_attribute
 %{_sbindir}/crm_master
+%{_sbindir}/crm_node
 %{_sbindir}/attrd_updater
 %{_sbindir}/fence_legacy
 %{_sbindir}/stonith_admin
+
+%if %{with heartbeat}
+%{_sbindir}/crm_uuid
+%else
+%exclude %{_sbindir}/crm_uuid
+%endif
 
 %doc COPYING
 %doc AUTHORS
@@ -375,7 +381,6 @@ fi
 %{_sbindir}/ptest
 %{_sbindir}/crm_shadow
 %{_sbindir}/cibpipe
-%{_sbindir}/crm_node
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
@@ -383,12 +388,6 @@ fi
 %if %{with doc}
 %doc %{_mandir}/man7/*
 %doc %{_mandir}/man8/*
-%endif
-
-%if %{with heartbeat}
-%{_sbindir}/crm_uuid
-%else
-%exclude %{_sbindir}/crm_uuid
 %endif
 
 %doc COPYING
