@@ -135,7 +135,7 @@ BuildRequires:	publican inkscape
 
 %description
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Linux-HA (Heartbeat) and/or OpenAIS.
+manager for Linux-HA (Heartbeat) and/or Corosync.
 
 It supports "n-node" clusters with significant capabilities for
 managing resources and dependencies.
@@ -149,37 +149,43 @@ Available rpmbuild rebuild options:
 
 %package cli
 License:	GPLv2+ and LGPLv2+
-Summary:	Command line tools for controlling the Pacemaker cluster resource manager
+Summary:	Command line tools for controlling Pacemaker clusters
 Group:		System Environment/Daemons
 Requires:	%{name}-libs = %{version}-%{release}
-Requires:	%{name}-cluster-libs = %{version}-%{release}
+#Requires:	%{name}-cluster-libs = %{version}-%{release}
 
 %description cli
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Linux-HA (Heartbeat) and/or OpenAIS.
+manager for Linux-HA (Heartbeat) and/or Corosync.
 
-It supports "n-node" clusters with significant capabilities for
-managing resources and dependencies.
-
-It will run scripts at initialization, when machines go up or down,
-when related resources fail and can be configured to periodically check
-resource health.
+The %{name}-cli package contains command line tools that can be used
+to query and control the cluster from machines that may, or may not,
+be part of the cluster.
 
 %package -n %{name}-libs
 License:	GPLv2+ and LGPLv2+
-Summary:	Non-cluster aware libraries used by the Pacemaker cluster resource manager and its clients
+Summary:	Core Pacemaker libraries
 Group:		System Environment/Daemons
 
 %description -n %{name}-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Linux-HA (Heartbeat) and/or OpenAIS.
+manager for Linux-HA (Heartbeat) and/or Corosync.
 
-It supports "n-node" clusters with significant capabilities for
-managing resources and dependencies.
+The %{name}-libs package contains shared libraries needed for cluster
+nodes and those just running the CLI tools.
 
-It will run scripts at initialization, when machines go up or down,
-when related resources fail and can be configured to periodically check
-resource health.
+%package -n %{name}-cluster-libs
+License:	GPLv2+ and LGPLv2+
+Summary:	Cluster Libraries used by Pacemaker
+Group:		System Environment/Daemons
+Requires:	%{name}-libs = %{version}-%{release}
+
+%description -n %{name}-cluster-libs
+Pacemaker is an advanced, scalable High-Availability cluster resource
+manager for Linux-HA (Heartbeat) and/or Corosync.
+
+The %{name}-cluster-libs package contains cluster-aware shared
+libraries needed for nodes that will form part of the cluster nodes.
 
 %package -n %{name}-libs-devel 
 License:	GPLv2+ and LGPLv2+
@@ -196,34 +202,12 @@ Requires:	heartbeat-devel
 %endif
 
 %description -n %{name}-libs-devel
-Headers and shared libraries for developing tools for Pacemaker.
-
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Linux-HA (Heartbeat) and/or OpenAIS.
+manager for Linux-HA (Heartbeat) and/or Corosync.
 
-It supports "n-node" clusters with significant capabilities for
-managing resources and dependencies.
+The %{name}-libs-devel package contains headers and shared libraries
+for developing tools for Pacemaker.
 
-It will run scripts at initialization, when machines go up or down,
-when related resources fail and can be configured to periodically check
-resource health.
-
-%package -n %{name}-cluster-libs
-License:	GPLv2+ and LGPLv2+
-Summary:	Cluster Libraries used by the Pacemaker cluster resource manager and its clients
-Group:		System Environment/Daemons
-Requires:	%{name}-libs = %{version}-%{release}
-
-%description -n %{name}-cluster-libs
-Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Linux-HA (Heartbeat) and/or OpenAIS.
-
-It supports "n-node" clusters with significant capabilities for
-managing resources and dependencies.
-
-It will run scripts at initialization, when machines go up or down,
-when related resources fail and can be configured to periodically check
-resource health.
 
 %package	cts
 License:	GPLv2+ and LGPLv2+
@@ -243,14 +227,8 @@ Group:		Documentation
 Documentation for Pacemaker.
 
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Linux-HA (Heartbeat) and/or OpenAIS.
+manager for Linux-HA (Heartbeat) and/or Corosync.
 
-It supports "n-node" clusters with significant capabilities for
-managing resources and dependencies.
-
-It will run scripts at initialization, when machines go up or down,
-when related resources fail and can be configured to periodically check
-resource health.
 
 %prep
 %setup -q -n %{upstream_prefix}-%{upstream_version}
