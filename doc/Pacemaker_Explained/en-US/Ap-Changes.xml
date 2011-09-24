@@ -46,14 +46,14 @@
 	      <para>
 		Some fields (such as those in constraints that refer to resources) are IDREFs.
 		This means that they must reference existing resources or objects in order for the configuration to be valid.
-		Removing an object which is referenced elsewhere will therefor fail.
+		Removing an object which is referenced elsewhere will therefore fail.
 	      </para>
 	    </listitem>
 	    <listitem>
 	      <para>
 		The CIB representation from which the MD5 digest used to verify CIBs has changed.
 		This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0.
-		This will result in significant performance degradation and it is therefor highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary.
+		This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary.
 	      </para>
 	    </listitem>
 	  </itemizedlist>
