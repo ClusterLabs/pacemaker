@@ -30,7 +30,7 @@
 	<listitem><para>The cluster will refuse to start resources if <literal>stonith-enabled</literal> is true (or unset) and no STONITH resources have been defined</para></listitem>
 	<listitem><para>The attributes of colocation and ordering constraints were renamed for clarity. See <xref linkend="s-resource-ordering"/> and <xref linkend="s-resource-colocation"/></para></listitem>
 	<listitem><para><literal>resource-failure-stickiness</literal> has been replaced by <literal>migration-threshold</literal>. See <xref linkend="s-failure-migration"/></para></listitem>
-	<listitem><para>The arguments for command-line tools has been made consistent</para></listitem>
+	<listitem><para>The arguments for command-line tools have been made consistent</para></listitem>
 	<listitem>
           <para>Switched to RelaxNG schema validation and libxml2 parser.</para>
 	  <itemizedlist>
