@@ -77,7 +77,7 @@
             </row>
             <row>
               <entry>notify</entry>
-              <entry>Used by the cluster to send the agent pre and post notification events telling the resource what is or did just take place</entry>
+              <entry>Used by the cluster to send the agent pre and post notification events telling the resource what is or has just taken place</entry>
               <entry>Must not fail. Must exit 0</entry>
         </row></tbody></tgroup>
       </table>
