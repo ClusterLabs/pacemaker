@@ -27,13 +27,13 @@
 # Supported cluster stacks, must support at least one
 %bcond_with cman
 %bcond_without doc
-%bcond_without ais
+%bcond_without corosync
 %bcond_without heartbeat
 
 # ESMTP is not available in RHEL, only in EPEL. Allow people to build
 # the RPM without ESMTP in case they choose not to use EPEL packages
-%bcond_without esmtp
-%bcond_without snmp
+%bcond_with esmtp
+%bcond_with snmp
 
 # Build with/without support for profiling tools
 %bcond_with profiling
@@ -78,7 +78,7 @@ Requires:	%{name}-cli = %{version}-%{release}
 Requires:	python >= 2.4
 Conflicts:	heartbeat < 2.99
 
-%if 0%{?fedora} || 0%{?centos} > 4 || 0%{?rhel} > 4
+%if %{with snmp}
 Requires:	perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 %endif
 
@@ -115,7 +115,7 @@ BuildRequires:	libesmtp-devel
 BuildRequires:	net-snmp-devel
 %endif
 
-%if %{with ais}
+%if %{with corosync}
 # Do not require corosync, the admin should select which stack to use and install it
 BuildRequires:	corosynclib-devel
 %endif
@@ -129,7 +129,9 @@ BuildRequires:	heartbeat-devel heartbeat-libs >= 3.0.0
 BuildRequires:	asciidoc help2man
 
 %if %{with publican}
+%ifarch %{ix86} x86_64
 BuildRequires:	publican inkscape
+%endif
 %endif
 %endif
 
@@ -145,7 +147,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --without : heartbeat ais snmp esmtp publican
+  --with(out) : heartbeat cman corosync doc publican snmp esmtp pre_release
 
 %package cli
 License:	GPLv2+ and LGPLv2+
@@ -193,7 +195,7 @@ Group:		Development/Libraries
 Requires:	%{name}-libs = %{version}-%{release}
 Requires:	cluster-glue-libs-devel libtool-ltdl-devel
 Requires:	libxml2-devel libxslt-devel bzip2-devel glib2-devel 
-%if %{with ais}
+%if %{with corosync}
 Requires:	corosynclib-devel
 %endif
 %if %{with heartbeat}
@@ -250,7 +252,7 @@ eval `objdump --headers --private-headers /usr/bin/perl | grep RPATH | awk '{pri
 # RHEL <= 5 does not support --docdir
 docdir=%{pcmk_docdir} %{configure}			\
 	%{!?with_heartbeat:	--without-heartbeat}	\
-	%{!?with_ais:		--without-ais}		\
+	%{!?with_corosync:	--without-ais}		\
 	%{!?with_esmtp:		--without-esmtp}	\
 	%{!?with_snmp:		--without-snmp}		\
 	%{?with_cman:		--with-cman}		\
@@ -271,7 +273,7 @@ make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} install
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
 
-# Scripts that need should be executable
+# Scripts that should be executable
 chmod a+x %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/extracttests.py
@@ -287,6 +289,7 @@ find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
 # Do not package these either
+rm -f %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.*
 rm -f %{buildroot}/%{_libdir}/heartbeat/crm_primitive.*
 rm -f %{buildroot}/%{_libdir}/heartbeat/atest
 rm -f %{buildroot}/%{_libdir}/service_crm.so
@@ -362,7 +365,7 @@ fi
 %dir /usr/lib/ocf
 %dir /usr/lib/ocf/resource.d
 /usr/lib/ocf/resource.d/pacemaker
-%if %{with ais}
+%if %{with corosync}
 %{_libexecdir}/lcrso/pacemaker.lcrso
 %endif
 
