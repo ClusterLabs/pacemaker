@@ -185,6 +185,9 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
     new_graph->stonith_timeout = -1;
     new_graph->completion_action = tg_done;
 
+    new_graph->migrating = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                                 g_hash_destroy_str, g_hash_destroy_str);
+
     if (reference) {
         new_graph->source = crm_strdup(reference);
     } else {
@@ -211,6 +214,9 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
 
         t_id = crm_element_value(xml_graph, "batch-limit");
         new_graph->batch_limit = crm_parse_int(t_id, "0");
+
+        t_id = crm_element_value(xml_graph, "migration-limit");
+        new_graph->migration_limit = crm_parse_int(t_id, "-1");
     }
 
     for (synapse = __xml_first_child(xml_graph); synapse != NULL; synapse = __xml_next(synapse)) {
@@ -275,6 +281,8 @@ destroy_graph(crm_graph_t * graph)
         graph->synapses = g_list_remove(graph->synapses, synapse);
         destroy_synapse(synapse);
     }
+
+    g_hash_table_destroy(graph->migrating);
     crm_free(graph->source);
     crm_free(graph);
 }

@@ -224,6 +224,78 @@ fire_synapse(crm_graph_t * graph, synapse_t * synapse)
     return TRUE;
 }
 
+static gboolean
+count_migrating(crm_graph_t * graph, synapse_t * synapse)
+{
+    GListPtr lpc = NULL;
+
+    CRM_CHECK(synapse != NULL, return FALSE);
+
+    for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
+        crm_action_t *action = (crm_action_t *) lpc->data;
+
+        const char *task = NULL;
+
+        if (action->type != action_type_rsc) {
+            continue;
+        }
+
+        task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+
+        if (crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)
+            || crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
+            const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+
+            int *counter = g_hash_table_lookup(graph->migrating, node);
+
+            if (counter == NULL) {
+                crm_malloc0(counter, sizeof(int));
+                g_hash_table_insert(graph->migrating, crm_strdup(node), counter);
+            }
+
+            (*counter)++;
+        }
+    }
+    return TRUE;
+}
+
+static gboolean
+migration_overrun(crm_graph_t * graph, synapse_t * synapse)
+{
+    GListPtr lpc = NULL;
+
+    CRM_CHECK(synapse != NULL, return FALSE);
+
+    if (graph->migration_limit < 0) {
+        return FALSE;
+    }
+
+    for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
+        crm_action_t *action = (crm_action_t *) lpc->data;
+
+        const char *task = NULL;
+
+        if (action->type != action_type_rsc) {
+            continue;
+        }
+
+        task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+
+        if (crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)
+            || crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
+            const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+
+            int *counter = g_hash_table_lookup(graph->migrating, node);
+
+            if (counter && *counter >= graph->migration_limit) {
+                return TRUE;
+            }
+
+        }
+    }
+    return FALSE;
+}
+
 int
 run_graph(crm_graph_t * graph)
 {
@@ -245,6 +317,7 @@ run_graph(crm_graph_t * graph)
     graph->skipped = 0;
     graph->completed = 0;
     graph->incomplete = 0;
+    g_hash_table_remove_all(graph->migrating);
     crm_debug_2("Entering graph %d callback", graph->id);
 
     /* Pre-calculate the number of completed and in-flight operations */
@@ -258,6 +331,10 @@ run_graph(crm_graph_t * graph)
         } else if (synapse->failed == FALSE && synapse->executed) {
             crm_debug_2("Synapse %d: confirmation pending", synapse->id);
             graph->pending++;
+
+            if (graph->migration_limit >= 0) {
+                count_migrating(graph, synapse);
+            }
         }
     }
 
@@ -267,6 +344,9 @@ run_graph(crm_graph_t * graph)
 
         if (graph->batch_limit > 0 && graph->pending >= graph->batch_limit) {
             crm_debug("Throttling output: batch limit (%d) reached", graph->batch_limit);
+            break;
+        } else if (graph->migration_limit >= 0 && migration_overrun(graph, synapse)) {
+            crm_debug("Throttling output: migration limit (%d) reached", graph->migration_limit);
             break;
 
         } else if (synapse->failed) {
@@ -290,6 +370,10 @@ run_graph(crm_graph_t * graph)
 
             if (synapse->confirmed == FALSE) {
                 graph->pending++;
+
+                if (graph->migration_limit >= 0) {
+                    count_migrating(graph, synapse);
+                }
             }
 
         } else {

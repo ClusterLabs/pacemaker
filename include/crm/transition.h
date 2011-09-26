@@ -96,6 +96,7 @@ typedef struct crm_graph_s {
     int num_synapses;
 
     int batch_limit;
+    int migration_limit;
     int network_delay;
     int stonith_timeout;
     int transition_timeout;
@@ -107,6 +108,7 @@ typedef struct crm_graph_s {
     int incomplete;
 
     GListPtr synapses;          /* synpase_t* */
+    GHashTable *migrating;
 
 } crm_graph_t;
 
