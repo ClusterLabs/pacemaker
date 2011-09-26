@@ -1547,7 +1547,6 @@ else
 		-Wformat=2
 		-Wformat-security
 		-Wformat-nonliteral
-		-Winline
 		-Wmissing-prototypes 
 		-Wmissing-declarations 
 		-Wnested-externs
