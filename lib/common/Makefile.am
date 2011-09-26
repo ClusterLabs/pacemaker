@@ -25,12 +25,12 @@ headerdir=$(pkgincludedir)/crm/common
 header_HEADERS = stack.h
 
 ## libraries
-lib_LTLIBRARIES	= libcrmcommon.la libcrmcluster.la
+lib_LTLIBRARIES	= libcrmcommon.la libcrmcluster.la 
 
 libcrmcluster_la_SOURCES = cluster.c membership.c stack.h
 libcrmcluster_la_LDFLAGS = -version-info 1:0:0
-libcrmcluster_la_LIBADD  = libcrmcommon.la $(CLUSTERLIBS)
-libcrmcluster_la_DEPENDENCIES = libcrmcommon.la
+libcrmcluster_la_LIBADD  = libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la $(CLUSTERLIBS) 
+libcrmcluster_la_DEPENDENCIES = libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la 
 
 if BUILD_CS_SUPPORT
 libcrmcluster_la_SOURCES += ais.c

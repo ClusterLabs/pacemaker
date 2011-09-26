@@ -31,6 +31,7 @@
 #include <crm/common/cluster.h>
 #include <crm/ais.h>
 #include <crm/msg_xml.h>
+#include <crm/stonith-ng.h>
 
 GHashTable *crm_peer_id_cache = NULL;
 GHashTable *crm_peer_cache = NULL;
@@ -470,49 +471,46 @@ crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
 static int
 crm_terminate_member_common(int nodeid, const char *uname, IPC_Channel * cluster, int *connection)
 {
-    crm_node_t *node = NULL;
-    gboolean success = FALSE;
-    const char *reason = "Cluster connection failed";
+    int rc = stonith_ok;
+    stonith_t *st = NULL;
 
-    node = crm_get_peer(nodeid, uname);
-    if (cluster == NULL) {
-        reason = "No connection to the cluster";
-
-    } else if (node == NULL) {
-        if (uname) {
-            crm_err("Nothing known about node uname=%s", uname);
-
-        } else if (nodeid > 0) {
-            crm_err("Nothing known about node id=%d", nodeid);
-
-        } else {
-            crm_err("A node id or uname is required, got %d/%p", nodeid, uname);
+    if(uname == NULL) {
+        crm_node_t *node = crm_get_peer(nodeid, uname);
+        if (node) {
+            uname = node->uname;
         }
+    }
+    
+    if(uname == NULL) {
+        crm_err("Nothing known about node id=%d", nodeid);
         return -1;
+        
+    } else {
+        st = stonith_api_new();
+    }
+    
+    if(st) {
+	rc = st->cmds->connect(st, crm_system_name, NULL);
+    }
+
+    if(rc == stonith_ok) {
+        crm_info("Requesting that node %d/%s be terminated", nodeid, uname);
+        rc = st->cmds->fence(st, st_opt_allow_suicide, uname, "off", 120);
+    }    
+
+    if(st) {
+        st->cmds->disconnect(st);
+        stonith_api_delete(st);
+    }
+        
+    if(rc < stonith_ok) {
+        crm_err("Could not terminate node %d/%s: %s", nodeid, crm_str(uname), stonith_error2string(rc));
+        rc = 1;
 
     } else {
-        time_t now = time(NULL);
-        char *now_s = crm_itoa(now);
-
-        if (cluster) {
-            success =
-                attrd_update(cluster, 'U', node->uname, "terminate", now_s, XML_CIB_TAG_STATUS,
-                             NULL, NULL);
-        } else {
-            success =
-                attrd_update_no_mainloop(connection, 'U', node->uname, "terminate", now_s,
-                                         XML_CIB_TAG_STATUS, NULL, NULL);
-        }
-        crm_free(now_s);
+        rc = 0;
     }
-
-    if (success) {
-        crm_info("Requested that node %d/%s be terminated", nodeid, node->uname);
-        return 1;
-    }
-
-    crm_err("Could not terminate node %d/%s: %s", nodeid, node->uname, reason);
-    return 0;
+    return rc;
 }
 
 int
