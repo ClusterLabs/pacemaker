@@ -43,7 +43,7 @@ char *target_uname = NULL;
 const char *standby_value = NULL;
 const char *standby_scope = NULL;
 
-#include <../lib/common/stack.h>
+#include <../lib/cluster/stack.h>
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {

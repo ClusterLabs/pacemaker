@@ -47,7 +47,7 @@ noinst_HEADERS          = callbacks.h cibio.h cibmessages.h common.h notify.h
 cib_SOURCES		= io.c messages.c notify.c	\
 			callbacks.c main.c remote.c common.c
 
-cib_LDADD		= $(top_builddir)/lib/common/libcrmcluster.la \
+cib_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la \
 			  $(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)
 
 cibmon_SOURCES		= cibmon.c

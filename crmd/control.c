@@ -26,7 +26,7 @@
 
 #include <crm/pengine/rules.h>
 #include <crm/common/cluster.h>
-#include "../lib/common/stack.h"
+#include "../lib/cluster/stack.h"
 
 #include <crmd.h>
 #include <crmd_fsa.h>

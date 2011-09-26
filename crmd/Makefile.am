@@ -45,7 +45,7 @@ crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/transition/libtransitioner.la	\
 		$(top_builddir)/lib/pengine/libpe_rules.la		\
 		$(top_builddir)/lib/cib/libcib.la			\
-		$(top_builddir)/lib/common/libcrmcluster.la		\
+		$(top_builddir)/lib/cluster/libcrmcluster.la		\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(CLUSTERLIBS) -llrm
 if BUILD_XML_HELP

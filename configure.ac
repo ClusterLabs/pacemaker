@@ -1674,6 +1674,7 @@ lib/Makefile							\
 	lib/pcmk-cib.pc						\
 	lib/ais/Makefile					\
 	lib/common/Makefile					\
+	lib/cluster/Makefile					\
 	lib/cib/Makefile					\
 	lib/pengine/Makefile					\
 	lib/transition/Makefile					\
