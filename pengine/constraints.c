@@ -1586,6 +1586,9 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
     resource_t *rsc_lh = NULL;
     resource_t *rsc_rh = NULL;
 
+    xmlNode *template_rsc_set_lh = NULL;
+    xmlNode *template_rsc_set_rh = NULL;
+
     xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
     xmlNode *rsc_set_rh = NULL;
@@ -1616,8 +1619,13 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 	return TRUE;
     }
 
-    if(g_hash_table_lookup(data_set->template_rsc_sets, id_lh) == NULL
-       && g_hash_table_lookup(data_set->template_rsc_sets, id_rh) == NULL) {
+    template_rsc_set_lh = g_hash_table_lookup(data_set->template_rsc_sets, id_lh);
+    template_rsc_set_rh = g_hash_table_lookup(data_set->template_rsc_sets, id_rh);
+    if(template_rsc_set_lh == NULL &&  template_rsc_set_rh == NULL) {
+	return FALSE;
+    }
+    if(template_rsc_set_lh && template_rsc_set_rh) {
+	crm_config_err("Either LHS or RHS of %s should be a normal resource instead of a template",  id);
 	return FALSE;
     }
 
