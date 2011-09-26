@@ -990,9 +990,11 @@ case $SUPPORT_GCOV in
 
 	dnl Disable various compiler optimizations
 	CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage -fno-inline -fno-default-inline"
+
 	dnl Turn off optimization so code coverage tool
 	dnl can get accurate line numbers
 	CFLAGS=`echo "$CFLAGS" | sed -e 's/-O[0-9]*//g'`
+	CFLAGS="$CFLAGS -O0"
 
 	dnl Update features
 	PKG_FEATURES="$PKG_FEATURES gcov"
@@ -1530,7 +1532,7 @@ if test "$GCC" != yes; then
         CFLAGS="$CFLAGS -g"
 	enable_fatal_warnings=no
 else
-        CFLAGS="$CFLAGS -ggdb3 -O0"
+        CFLAGS="$CFLAGS -ggdb"
 
 	# We had to eliminate -Wnested-externs because of libtool changes
         EXTRA_FLAGS="-fgnu89-inline
