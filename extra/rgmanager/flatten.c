@@ -36,214 +36,205 @@ const char *agentpath = RESOURCE_ROOTDIR;
 static xmlNode *
 get_rm_node(xmlDocPtr doc)
 {
-	xmlNodePtr n, o;
+    xmlNodePtr n, o;
 
-	if (!doc)
-		return NULL;
-	n = xmlDocGetRootElement(doc);
-	if (!n)
-		return NULL;
-	if (strcmp((char *)n->name, "cluster")) {
-	fprintf(stderr,"Expected cluster tag, got %s\n",
-			(char *)n->name);
-		return NULL;
-	}
+    if (!doc)
+        return NULL;
+    n = xmlDocGetRootElement(doc);
+    if (!n)
+        return NULL;
+    if (strcmp((char *)n->name, "cluster")) {
+        fprintf(stderr, "Expected cluster tag, got %s\n", (char *)n->name);
+        return NULL;
+    }
 
-	for (o = n->xmlChildrenNode; o; o = o->next) {
-		if (o->type != XML_ELEMENT_NODE)
-			continue;
-		if (!strcmp((char *)o->name, "rm"))
-			return o;
-	}
+    for (o = n->xmlChildrenNode; o; o = o->next) {
+        if (o->type != XML_ELEMENT_NODE)
+            continue;
+        if (!strcmp((char *)o->name, "rm"))
+            return o;
+    }
 
-	return NULL;
+    return NULL;
 }
-
 
 static void
 remove_resources_block(xmlNodePtr rm)
 {
-	xmlNodePtr o, r = NULL;
+    xmlNodePtr o, r = NULL;
 
-	for (o = rm->xmlChildrenNode; o; o = o->next) {
-		if (o->type != XML_ELEMENT_NODE)
-			continue;
-		if (!strcmp((char *)o->name, "resources")) {
-			r = o;
-			break;
-		}
-	}
+    for (o = rm->xmlChildrenNode; o; o = o->next) {
+        if (o->type != XML_ELEMENT_NODE)
+            continue;
+        if (!strcmp((char *)o->name, "resources")) {
+            r = o;
+            break;
+        }
+    }
 
-	if (!r)
-		return;
+    if (!r)
+        return;
 
-	xmlUnlinkNode(r);
-	xmlFreeNode(r);
+    xmlUnlinkNode(r);
+    xmlFreeNode(r);
 }
-
 
 static int
-replace_resource(xmlNodePtr rm, char *restype, char *primattr,
-		 char *ident, xmlNodePtr n)
+replace_resource(xmlNodePtr rm, char *restype, char *primattr, char *ident, xmlNodePtr n)
 {
-	xmlNodePtr o, r = NULL;
-	char *p;
+    xmlNodePtr o, r = NULL;
+    char *p;
 
-	for (o = rm->xmlChildrenNode; o; o = o->next) {
-		if (o->type != XML_ELEMENT_NODE)
-			continue;
-		if (!strcmp((char *)o->name, restype)) {
-			p = (char *)xmlGetProp(o, (xmlChar *)primattr);
-			if (!strcmp(p, ident)) {
-				r = o;
-				break;
-			}
-		}
-	}
+    for (o = rm->xmlChildrenNode; o; o = o->next) {
+        if (o->type != XML_ELEMENT_NODE)
+            continue;
+        if (!strcmp((char *)o->name, restype)) {
+            p = (char *)xmlGetProp(o, (xmlChar *) primattr);
+            if (!strcmp(p, ident)) {
+                r = o;
+                break;
+            }
+        }
+    }
 
-	if (!r)
-		return -1;
+    if (!r)
+        return -1;
 
-	xmlUnlinkNode(r);
-	xmlFreeNode(r);
+    xmlUnlinkNode(r);
+    xmlFreeNode(r);
 
-	xmlAddChild(rm, n);
+    xmlAddChild(rm, n);
 
-	return 0;
+    return 0;
 }
-
 
 static int
-flatten(int argc, char **argv, xmlDocPtr *doc)
+flatten(int argc, char **argv, xmlDocPtr * doc)
 {
-	xmlDocPtr d = NULL;
-	xmlNode *n = NULL, *rm = NULL, *new_rb = NULL;
-	resource_rule_t *rulelist = NULL;
-	resource_t *reslist = NULL, *curres;
-	resource_node_t *tree = NULL, *rn;
-	FILE *f = stdout;
-	int ret = 0;
+    xmlDocPtr d = NULL;
+    xmlNode *n = NULL, *rm = NULL, *new_rb = NULL;
+    resource_rule_t *rulelist = NULL;
+    resource_t *reslist = NULL, *curres;
+    resource_node_t *tree = NULL, *rn;
+    FILE *f = stdout;
+    int ret = 0;
 
-	conf_setconfig(argv[0]);
-	if (conf_open() < 0) {
-		xmlFree(new_rb);
-		goto out;
-	}
+    conf_setconfig(argv[0]);
+    if (conf_open() < 0) {
+        xmlFree(new_rb);
+        goto out;
+    }
 
-	while (argc >= 2) {
-		shift();
-		if (!strcmp(argv[0], "-r")) {
-			if (!new_rb) 
-				new_rb = xmlNewNode(NULL, (xmlChar *)"rm");
-		} else {
-			if (f == stdout)
-				f = fopen(argv[0], "w+");
-		}
-	}
+    while (argc >= 2) {
+        shift();
+        if (!strcmp(argv[0], "-r")) {
+            if (!new_rb)
+                new_rb = xmlNewNode(NULL, (xmlChar *) "rm");
+        } else {
+            if (f == stdout)
+                f = fopen(argv[0], "w+");
+        }
+    }
 
-	d = conf_get_doc();
-	rm = get_rm_node(d);
+    d = conf_get_doc();
+    rm = get_rm_node(d);
 
-	load_resource_rules(agentpath, &rulelist);
-	if (!rulelist) {
-		fprintf(stderr, "No resource rules available\n");
-		goto out;
-	}
-	load_resources(&reslist, &rulelist);
-	build_resource_tree(&tree, &rulelist, &reslist);
-	if (!tree) {
-		fprintf(stderr, "No resource trees defined; nothing to do\n");
-		goto out;
-	}
-
+    load_resource_rules(agentpath, &rulelist);
+    if (!rulelist) {
+        fprintf(stderr, "No resource rules available\n");
+        goto out;
+    }
+    load_resources(&reslist, &rulelist);
+    build_resource_tree(&tree, &rulelist, &reslist);
+    if (!tree) {
+        fprintf(stderr, "No resource trees defined; nothing to do\n");
+        goto out;
+    }
 #ifdef DEBUG
-	fprintf(stderr, "Resources %p tree %p\n", reslist, tree);
+    fprintf(stderr, "Resources %p tree %p\n", reslist, tree);
 #endif
 
-	shift();
+    shift();
 
-	list_do(&tree, rn) {
-		n = NULL;
-	
-		curres = rn->rn_resource;
+    list_do(&tree, rn) {
+        n = NULL;
+
+        curres = rn->rn_resource;
 
 #ifdef DEBUG
-		fprintf(stderr, "Flatten %s:%s ... \n", curres->r_rule->rr_type,
-				curres->r_attrs[0].ra_value);
+        fprintf(stderr, "Flatten %s:%s ... \n", curres->r_rule->rr_type,
+                curres->r_attrs[0].ra_value);
 #endif
-		if (res_flatten(&n, new_rb, &tree, curres)) {
-			fprintf(stderr, "FAIL 1\n");
-			ret = -1;
-			goto out;
-		}
+        if (res_flatten(&n, new_rb, &tree, curres)) {
+            fprintf(stderr, "FAIL 1\n");
+            ret = -1;
+            goto out;
+        }
 
-		if ( replace_resource(rm, curres->r_rule->rr_type,
-					curres->r_attrs[0].ra_name,
-					curres->r_attrs[0].ra_value, n) != 0) {
-			fprintf(stderr, "FAIL 2\n");
-			ret = -1;
-			goto out;
-		}
+        if (replace_resource(rm, curres->r_rule->rr_type,
+                             curres->r_attrs[0].ra_name, curres->r_attrs[0].ra_value, n) != 0) {
+            fprintf(stderr, "FAIL 2\n");
+            ret = -1;
+            goto out;
+        }
 
-	} while (!list_done(&tree, rn));
+    }
+    while (!list_done(&tree, rn)) ;
 
-	remove_resources_block(rm);
-	if (new_rb) {
-		xmlAddChild(rm, new_rb);
-	}
+    remove_resources_block(rm);
+    if (new_rb) {
+        xmlAddChild(rm, new_rb);
+    }
 
-	xmlDocFormatDump(f, d, 1);
-	if (f != stdout)
-		fclose(f);
+    xmlDocFormatDump(f, d, 1);
+    if (f != stdout)
+        fclose(f);
 
-out:
-	if (ret < 0) {
-		xmlFreeDoc(d);
-	} else {
-		*doc = d;
-	}
-	conf_close();
-	destroy_resource_tree(&tree);
-	destroy_resources(&reslist);
-	destroy_resource_rules(&rulelist);
+  out:
+    if (ret < 0) {
+        xmlFreeDoc(d);
+    } else {
+        *doc = d;
+    }
+    conf_close();
+    destroy_resource_tree(&tree);
+    destroy_resources(&reslist);
+    destroy_resource_rules(&rulelist);
 
-	return ret;
+    return ret;
 }
-
 
 static void
 usage(const char *arg0, int ret)
 {
-	fprintf(stderr,"usage: %s <input.conf> [output.conf] [-r]\n", arg0);
-	exit(ret);
+    fprintf(stderr, "usage: %s <input.conf> [output.conf] [-r]\n", arg0);
+    exit(ret);
 }
-
 
 int
 main(int argc, char **argv)
 {
-	char *arg0 = basename(argv[0]);
-	int ret = 0;
-	xmlDocPtr doc = NULL;
+    char *arg0 = basename(argv[0]);
+    int ret = 0;
+    xmlDocPtr doc = NULL;
 
-	if (argc < 2) {
-		usage(arg0, 1);
-	}
+    if (argc < 2) {
+        usage(arg0, 1);
+    }
 
-	if (!strcasecmp(argv[1], "-h") ||
-	    !strcasecmp(argv[1], "-?")) {
-		usage(arg0, 0);
-	}
+    if (!strcasecmp(argv[1], "-h") || !strcasecmp(argv[1], "-?")) {
+        usage(arg0, 0);
+    }
 
-	xmlInitParser();
-	xmlIndentTreeOutput = 1;
-	xmlKeepBlanksDefault(0);
+    xmlInitParser();
+    xmlIndentTreeOutput = 1;
+    xmlKeepBlanksDefault(0);
 
-	shift();
-	ret = flatten(argc, argv, &doc);
+    shift();
+    ret = flatten(argc, argv, &doc);
 
-	//if (doc) 
-		//xmlFreeDoc(doc);
-	xmlCleanupParser();
-	return ret;
+    //if (doc) 
+    //xmlFreeDoc(doc);
+    xmlCleanupParser();
+    return ret;
 }

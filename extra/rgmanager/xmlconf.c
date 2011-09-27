@@ -37,112 +37,104 @@ static const char *conffile = "/etc/cluster/cluster.conf";
    @return		newly allocated pointer to value or NULL if not found.
  */
 char *
-xpath_get_one(xmlDocPtr __attribute__ ((unused)) doc,
-	      xmlXPathContextPtr ctx, char *query)
+xpath_get_one(xmlDocPtr __attribute__ ((unused)) doc, xmlXPathContextPtr ctx, char *query)
 {
-	char *val = NULL, *ret = NULL;
-	xmlXPathObjectPtr obj;
-	xmlNodePtr node;
-	size_t size = 0;
-	int nnv = 0;
+    char *val = NULL, *ret = NULL;
+    xmlXPathObjectPtr obj;
+    xmlNodePtr node;
+    size_t size = 0;
+    int nnv = 0;
 
-	obj = xmlXPathEvalExpression((unsigned char *)query, ctx);
-	if (!obj)
-		return NULL;
-	if (!obj->nodesetval)
-		goto out;
-	if (obj->nodesetval->nodeNr <= 0)
-		goto out;
+    obj = xmlXPathEvalExpression((unsigned char *)query, ctx);
+    if (!obj)
+        return NULL;
+    if (!obj->nodesetval)
+        goto out;
+    if (obj->nodesetval->nodeNr <= 0)
+        goto out;
 
-	node = obj->nodesetval->nodeTab[0];
-	if(!node)
-		goto out;
+    node = obj->nodesetval->nodeTab[0];
+    if (!node)
+        goto out;
 
-	if (((node->type == XML_ATTRIBUTE_NODE) && strstr(query, "@*")) ||
-	    ((node->type == XML_ELEMENT_NODE) && strstr(query, "child::*"))){
-		if (node->children && node->children->content)
-	  		size = strlen((char *)node->children->content)+
-				      strlen((char *)node->name)+2;
-		else 
-			size = strlen((char *)node->name)+2;
-		nnv = 1;
-	} else {
-		if (node->children && node->children->content) {
-			size = strlen((char *)node->children->content)+1;
-		} else {
-			goto out;
-		}
-	}
+    if (((node->type == XML_ATTRIBUTE_NODE) && strstr(query, "@*")) ||
+        ((node->type == XML_ELEMENT_NODE) && strstr(query, "child::*"))) {
+        if (node->children && node->children->content)
+            size = strlen((char *)node->children->content) + strlen((char *)node->name) + 2;
+        else
+            size = strlen((char *)node->name) + 2;
+        nnv = 1;
+    } else {
+        if (node->children && node->children->content) {
+            size = strlen((char *)node->children->content) + 1;
+        } else {
+            goto out;
+        }
+    }
 
-	val = (char *)malloc(size);
-	if(!val)
-		goto out;
-	memset(val, 0, size);
-	if (nnv) {
-		sprintf(val, "%s=%s", node->name, (node->children && node->children->content) ?
-			(char *)node->children->content:"");
-	} else {
-		sprintf(val, "%s", (node->children && node->children->content) ? node->children->content :
-			node->name);
-	}
+    val = (char *)malloc(size);
+    if (!val)
+        goto out;
+    memset(val, 0, size);
+    if (nnv) {
+        sprintf(val, "%s=%s", node->name, (node->children && node->children->content) ?
+                (char *)node->children->content : "");
+    } else {
+        sprintf(val, "%s", (node->children && node->children->content) ? node->children->content :
+                node->name);
+    }
 
-	ret = val;
-out:
-	xmlXPathFreeObject(obj);
+    ret = val;
+  out:
+    xmlXPathFreeObject(obj);
 
-	return ret;
+    return ret;
 }
-
-
 
 int
 conf_open(void)
 {
-	xmlInitParser();
-       	conf_doc = xmlParseFile(conffile);
-	xmlCleanupParser();
-	if (!conf_doc)
-		return -1;
-	return 0;
+    xmlInitParser();
+    conf_doc = xmlParseFile(conffile);
+    xmlCleanupParser();
+    if (!conf_doc)
+        return -1;
+    return 0;
 }
-
 
 xmlDocPtr
 conf_get_doc(void)
 {
-	return conf_doc;
+    return conf_doc;
 }
-
 
 int
 conf_close(void)
 {
-	xmlFreeDoc(conf_doc);
-	conf_doc = NULL;
-	return 0;
+    xmlFreeDoc(conf_doc);
+    conf_doc = NULL;
+    return 0;
 }
-
 
 void
 conf_setconfig(char *path)
 {
-	conffile = path;
+    conffile = path;
 }
-
 
 int
 conf_get(char *path, char **value)
 {
-	char *foo;
-	xmlXPathContextPtr ctx;
+    char *foo;
+    xmlXPathContextPtr ctx;
 
-	ctx = xmlXPathNewContext(conf_doc);
-	foo = xpath_get_one(conf_doc, ctx, path);
-	xmlXPathFreeContext(ctx);
+    ctx = xmlXPathNewContext(conf_doc);
+    foo = xpath_get_one(conf_doc, ctx, path);
+    xmlXPathFreeContext(ctx);
 
-	if (foo) {
-		*value = foo;
-		return 0;	
-	}
-	return 1;
+    if (foo) {
+        *value = foo;
+        return 0;
+    }
+    return 1;
 }

@@ -29,12 +29,10 @@
 #include <reslist.h>
 #include <xmlconf.h>
 
-
 void
-res_build_name(char *buf, size_t buflen, resource_t *res)
+res_build_name(char *buf, size_t buflen, resource_t * res)
 {
-	snprintf(buf, buflen, "%s:%s", res->r_rule->rr_type,
-		 res->r_attrs[0].ra_value);
+    snprintf(buf, buflen, "%s:%s", res->r_rule->rr_type, res->r_attrs[0].ra_value);
 }
 
 /**
@@ -45,27 +43,26 @@ res_build_name(char *buf, size_t buflen, resource_t *res)
    @return 		value of attribute or NULL if not found
  */
 char *
-res_attr_value(resource_t *res, const char *attrname)
+res_attr_value(resource_t * res, const char *attrname)
 {
-	resource_attr_t *ra;
-	int x;
+    resource_attr_t *ra;
+    int x;
 
-	for (x = 0; res->r_attrs && res->r_attrs[x].ra_name; x++) {
-		if (strcmp(attrname, res->r_attrs[x].ra_name))
-			continue;
+    for (x = 0; res->r_attrs && res->r_attrs[x].ra_name; x++) {
+        if (strcmp(attrname, res->r_attrs[x].ra_name))
+            continue;
 
-		ra = &res->r_attrs[x];
+        ra = &res->r_attrs[x];
 
-		if (ra->ra_flags & RA_INHERIT)
-			/* Can't check inherited resources */
-			return NULL;
+        if (ra->ra_flags & RA_INHERIT)
+            /* Can't check inherited resources */
+            return NULL;
 
-		return ra->ra_value;
-	}
+        return ra->ra_value;
+    }
 
-	return NULL;
+    return NULL;
 }
-
 
 /**
    Find and determine an attribute's value.  Takes into account inherited
@@ -77,82 +74,78 @@ res_attr_value(resource_t *res, const char *attrname)
    @return 		value of attribute or NULL if not found
  */
 static char *
-_attr_value(resource_node_t *node, const char *attrname, const char *ptype)
+_attr_value(resource_node_t * node, const char *attrname, const char *ptype)
 {
-	resource_t *res;
-	resource_attr_t *ra;
-	char *c, p_type[32];
-	ssize_t len;
-	int x;
+    resource_t *res;
+    resource_attr_t *ra;
+    char *c, p_type[32];
+    ssize_t len;
+    int x;
 
-	if (!node)
-		return NULL;
+    if (!node)
+        return NULL;
 
-	res = node->rn_resource;
+    res = node->rn_resource;
 
-	/* Go up the tree if it's not the right parent type */
-	if (ptype && strcmp(res->r_rule->rr_type, ptype))
-		return _attr_value(node->rn_parent, attrname, ptype);
+    /* Go up the tree if it's not the right parent type */
+    if (ptype && strcmp(res->r_rule->rr_type, ptype))
+        return _attr_value(node->rn_parent, attrname, ptype);
 
-	for (x = 0; res->r_attrs && res->r_attrs[x].ra_name; x++) {
-		if (strcmp(attrname, res->r_attrs[x].ra_name))
-			continue;
+    for (x = 0; res->r_attrs && res->r_attrs[x].ra_name; x++) {
+        if (strcmp(attrname, res->r_attrs[x].ra_name))
+            continue;
 
-		ra = &res->r_attrs[x];
+        ra = &res->r_attrs[x];
 
-		if (!(ra->ra_flags & RA_INHERIT))
-			return ra->ra_value;
-		/* 
-		   Handle resource_type%field to be more precise, so we
-		   don't have to worry about this being a child
-		   of an unexpected type.  E.g. lots of things have the
-		   "name" attribute.
-		 */
-		c = strchr(ra->ra_value, '%');
-		if (!c) {
-			/* Someone doesn't care or uses older
-			   semantics on inheritance */
-			return _attr_value(node->rn_parent, ra->ra_value,
-					   NULL);
-		}
-		
-		len = (c - ra->ra_value);
-		memset(p_type, 0, sizeof(p_type));
-		memcpy(p_type, ra->ra_value, len);
-		
-		/* Skip the "%" and recurse */
-		return _attr_value(node->rn_parent, ++c, p_type);
-	}
+        if (!(ra->ra_flags & RA_INHERIT))
+            return ra->ra_value;
+        /* 
+           Handle resource_type%field to be more precise, so we
+           don't have to worry about this being a child
+           of an unexpected type.  E.g. lots of things have the
+           "name" attribute.
+         */
+        c = strchr(ra->ra_value, '%');
+        if (!c) {
+            /* Someone doesn't care or uses older
+               semantics on inheritance */
+            return _attr_value(node->rn_parent, ra->ra_value, NULL);
+        }
 
-	return NULL;
+        len = (c - ra->ra_value);
+        memset(p_type, 0, sizeof(p_type));
+        memcpy(p_type, ra->ra_value, len);
+
+        /* Skip the "%" and recurse */
+        return _attr_value(node->rn_parent, ++c, p_type);
+    }
+
+    return NULL;
 }
-
 
 char *
-attr_value(resource_node_t *node, const char *attrname)
+attr_value(resource_node_t * node, const char *attrname)
 {
-	return _attr_value(node, attrname, NULL);
+    return _attr_value(node, attrname, NULL);
 }
-
 
 char *
-primary_attr_value(resource_t *res)
+primary_attr_value(resource_t * res)
 {
-	int x;
-	resource_attr_t *ra;
+    int x;
+    resource_attr_t *ra;
 
-	for (x = 0; res->r_attrs && res->r_attrs[x].ra_name; x++) {
-		ra = &res->r_attrs[x];
+    for (x = 0; res->r_attrs && res->r_attrs[x].ra_name; x++) {
+        ra = &res->r_attrs[x];
 
-		if (!(ra->ra_flags & RA_PRIMARY))
-			continue;
+        if (!(ra->ra_flags & RA_PRIMARY))
+            continue;
 
-		return ra->ra_value;
-	}
+        return ra->ra_value;
+    }
 
-	return NULL;
+    return NULL;
 }
-
 
 /**
    Find a resource given its reference.  A reference is the value of the
@@ -162,35 +155,34 @@ primary_attr_value(resource_t *res)
    @param type		Type of resource to look for.
    @param ref		Reference
    @return		Resource matching type/ref or NULL if none.
- */   
+ */
 resource_t *
-find_resource_by_ref(resource_t **reslist, char *type, char *ref)
+find_resource_by_ref(resource_t ** reslist, char *type, char *ref)
 {
-	resource_t *curr;
-	int x;
+    resource_t *curr;
+    int x;
 
-	list_do(reslist, curr) {
-		if (strcmp(curr->r_rule->rr_type, type))
-			continue;
+    list_do(reslist, curr) {
+        if (strcmp(curr->r_rule->rr_type, type))
+            continue;
 
-		/*
-		   This should be one operation - the primary attr
-		   is generally at the head of the array.
-		 */
-		for (x = 0; curr->r_attrs && curr->r_attrs[x].ra_name;
-		     x++) {
-			if (!(curr->r_attrs[x].ra_flags & RA_PRIMARY))
-				continue;
-			if (strcmp(ref, curr->r_attrs[x].ra_value))
-				continue;
+        /*
+           This should be one operation - the primary attr
+           is generally at the head of the array.
+         */
+        for (x = 0; curr->r_attrs && curr->r_attrs[x].ra_name; x++) {
+            if (!(curr->r_attrs[x].ra_flags & RA_PRIMARY))
+                continue;
+            if (strcmp(ref, curr->r_attrs[x].ra_value))
+                continue;
 
-			return curr;
-		}
-	} while (!list_done(reslist, curr));
+            return curr;
+        }
+    }
+    while (!list_done(reslist, curr)) ;
 
-	return NULL;
+    return NULL;
 }
-
 
 /**
    Store a resource in the resource list if it's legal to do so.
@@ -203,64 +195,58 @@ find_resource_by_ref(resource_t **reslist, char *type, char *ref)
    @return 		0 on succes; nonzero on failure.
  */
 int
-store_resource(resource_t **reslist, resource_t *newres)
+store_resource(resource_t ** reslist, resource_t * newres)
 {
-	resource_t *curr;
-	int x, y;
+    resource_t *curr;
+    int x, y;
 
-	if (!*reslist) {
-		/* first resource */
-		list_insert(reslist, newres);
-		return 0;
-	}
+    if (!*reslist) {
+        /* first resource */
+        list_insert(reslist, newres);
+        return 0;
+    }
 
-	list_do(reslist, curr) {
+    list_do(reslist, curr) {
 
-		if (strcmp(curr->r_rule->rr_type, newres->r_rule->rr_type))
-		    	continue;
+        if (strcmp(curr->r_rule->rr_type, newres->r_rule->rr_type))
+            continue;
 
-		for (x = 0; newres->r_attrs && newres->r_attrs[x].ra_name;
-		     x++) {
-			/*
-			   Look for conflicting primary/unique keys
-			 */
-			if (!(newres->r_attrs[x].ra_flags &
-			    (RA_PRIMARY | RA_UNIQUE)))
-				continue;
+        for (x = 0; newres->r_attrs && newres->r_attrs[x].ra_name; x++) {
+            /*
+               Look for conflicting primary/unique keys
+             */
+            if (!(newres->r_attrs[x].ra_flags & (RA_PRIMARY | RA_UNIQUE)))
+                continue;
 
-			for (y = 0; curr->r_attrs[y].ra_name; y++) {
-				if (curr->r_attrs[y].ra_flags & RA_INHERIT)
-					continue;
+            for (y = 0; curr->r_attrs[y].ra_name; y++) {
+                if (curr->r_attrs[y].ra_flags & RA_INHERIT)
+                    continue;
 
-				if (strcmp(curr->r_attrs[y].ra_name,
-					   newres->r_attrs[x].ra_name))
-					continue;
-				if (!strcmp(curr->r_attrs[y].ra_value,
-					    newres->r_attrs[x].ra_value)) {
-					/*
-					   Unique/primary is not unique
-					 */
-				fprintf(stderr,
-                                               "%s attribute collision. "
-                                               "type=%s attr=%s value=%s\n",
-					       (newres->r_attrs[x].ra_flags&
-                                                RA_PRIMARY)?"Primary":
-                                               "Unique",
-					       newres->r_rule->rr_type,
-					       newres->r_attrs[x].ra_name,
-					       newres->r_attrs[x].ra_value
-					       );
-					return -1;
-				}
-				break;
-			}
-		}
-	} while (!list_done(reslist, curr));
+                if (strcmp(curr->r_attrs[y].ra_name, newres->r_attrs[x].ra_name))
+                    continue;
+                if (!strcmp(curr->r_attrs[y].ra_value, newres->r_attrs[x].ra_value)) {
+                    /*
+                       Unique/primary is not unique
+                     */
+                    fprintf(stderr,
+                            "%s attribute collision. "
+                            "type=%s attr=%s value=%s\n",
+                            (newres->r_attrs[x].ra_flags &
+                             RA_PRIMARY) ? "Primary" :
+                            "Unique",
+                            newres->r_rule->rr_type,
+                            newres->r_attrs[x].ra_name, newres->r_attrs[x].ra_value);
+                    return -1;
+                }
+                break;
+            }
+        }
+    }
+    while (!list_done(reslist, curr)) ;
 
-	list_insert(reslist, newres);
-	return 0;
+    list_insert(reslist, newres);
+    return 0;
 }
-
 
 /**
    Obliterate a resource_t structure.
@@ -268,31 +254,29 @@ store_resource(resource_t **reslist, resource_t *newres)
    @param res		Resource to free.
  */
 void
-destroy_resource(resource_t *res)
+destroy_resource(resource_t * res)
 {
-	int x;
+    int x;
 
-	if (res->r_name)
-		free(res->r_name);
+    if (res->r_name)
+        free(res->r_name);
 
-	if (res->r_attrs) {
-		for (x = 0; res->r_attrs && res->r_attrs[x].ra_name; x++) {
-			free(res->r_attrs[x].ra_name);
-			free(res->r_attrs[x].ra_value);
-		}
+    if (res->r_attrs) {
+        for (x = 0; res->r_attrs && res->r_attrs[x].ra_name; x++) {
+            free(res->r_attrs[x].ra_name);
+            free(res->r_attrs[x].ra_value);
+        }
 
-		free(res->r_attrs);
-	}
+        free(res->r_attrs);
+    }
 
-	if (res->r_actions) {
-		/* Don't free the strings; they're part of the rule */
-		free(res->r_actions);
-	}
+    if (res->r_actions) {
+        /* Don't free the strings; they're part of the rule */
+        free(res->r_actions);
+    }
 
-	free(res);
+    free(res);
 }
-
-
 
 /**
    Obliterate a resource_t list.
@@ -300,99 +284,91 @@ destroy_resource(resource_t *res)
    @param list		Resource list to free.
  */
 void
-destroy_resources(resource_t **list)
+destroy_resources(resource_t ** list)
 {
-	resource_t *res;
+    resource_t *res;
 
-	while ((res = *list)) {
-		list_remove(list, res);
-		destroy_resource(res);
-	}
+    while ((res = *list)) {
+        list_remove(list, res);
+        destroy_resource(res);
+    }
 }
-
 
 void *
-act_dup(resource_act_t *acts)
+act_dup(resource_act_t * acts)
 {
-	int x;
-	resource_act_t *newacts;
+    int x;
+    resource_act_t *newacts;
 
-	for (x = 0; acts[x].ra_name; x++);
+    for (x = 0; acts[x].ra_name; x++) ;
 
-	++x;
-	x *= sizeof(resource_act_t);
+    ++x;
+    x *= sizeof(resource_act_t);
 
-	newacts = malloc(x);
-	if (!newacts)
-		return NULL;
+    newacts = malloc(x);
+    if (!newacts)
+        return NULL;
 
-	memcpy(newacts, acts, x);
+    memcpy(newacts, acts, x);
 
-	return newacts;
+    return newacts;
 }
-
 
 /* Copied from resrules.c -- _get_actions */
 static void
-_get_actions_ccs(const char *base, resource_t *res)
+_get_actions_ccs(const char *base, resource_t * res)
 {
-	char xpath[256];
-	int idx = 0;
-	char *act, *ret;
-	int interval, timeout, depth;
+    char xpath[256];
+    int idx = 0;
+    char *act, *ret;
+    int interval, timeout, depth;
 
-	do {
-		/* setting these to -1 prevents overwriting with 0 */
-		interval = -1;
-		depth = -1;
-		act = NULL;
-		timeout = -1;
+    do {
+        /* setting these to -1 prevents overwriting with 0 */
+        interval = -1;
+        depth = -1;
+        act = NULL;
+        timeout = -1;
 
-		snprintf(xpath, sizeof(xpath),
-			 "%s/action[%d]/@name", base, ++idx);
+        snprintf(xpath, sizeof(xpath), "%s/action[%d]/@name", base, ++idx);
 
-		if (conf_get(xpath, &act) != 0)
-			break;
+        if (conf_get(xpath, &act) != 0)
+            break;
 
-		snprintf(xpath, sizeof(xpath),
-			 "%s/action[%d]/@timeout", base, idx);
-		if (conf_get(xpath, &ret) == 0 && ret) {
-			timeout = expand_time(ret);
-			if (timeout < 0)
-				timeout = 0;
-			free(ret);
-		}
+        snprintf(xpath, sizeof(xpath), "%s/action[%d]/@timeout", base, idx);
+        if (conf_get(xpath, &ret) == 0 && ret) {
+            timeout = expand_time(ret);
+            if (timeout < 0)
+                timeout = 0;
+            free(ret);
+        }
 
-		snprintf(xpath, sizeof(xpath),
-			 "%s/action[%d]/@interval", base, idx);
-		if (conf_get(xpath, &ret) == 0 && ret) {
-			interval = expand_time(ret);
-			if (interval < 0)
-				interval = 0;
-			free(ret);
-		}
+        snprintf(xpath, sizeof(xpath), "%s/action[%d]/@interval", base, idx);
+        if (conf_get(xpath, &ret) == 0 && ret) {
+            interval = expand_time(ret);
+            if (interval < 0)
+                interval = 0;
+            free(ret);
+        }
 
-		if (!strcmp(act, "status") || !strcmp(act, "monitor")) {
-			snprintf(xpath, sizeof(xpath),
-				 "%s/action[%d]/@depth", base, idx);
-			if (conf_get(xpath, &ret) == 0 && ret) {
-				depth = atoi(ret);
-				if (depth < 0)
-					depth = 0;
-				
-				/* */
-				if (ret[0] == '*')
-					depth = -1;
-				free(ret);
-			}
-		}
+        if (!strcmp(act, "status") || !strcmp(act, "monitor")) {
+            snprintf(xpath, sizeof(xpath), "%s/action[%d]/@depth", base, idx);
+            if (conf_get(xpath, &ret) == 0 && ret) {
+                depth = atoi(ret);
+                if (depth < 0)
+                    depth = 0;
 
-		if (store_action(&res->r_actions, act, depth, timeout,
-				 interval) != 0)
-			free(act);
-	} while (1);
+                /* */
+                if (ret[0] == '*')
+                    depth = -1;
+                free(ret);
+            }
+        }
+
+        if (store_action(&res->r_actions, act, depth, timeout, interval) != 0)
+            free(act);
+    } while (1);
 }
-
 
 /**
    Try to load all the attributes in our rule set.  If none are found,
@@ -403,106 +379,104 @@ _get_actions_ccs(const char *base, resource_t *res)
    @return		New resource if legal or NULL on failure/error
  */
 resource_t *
-load_resource(resource_rule_t *rule, const char *base)
+load_resource(resource_rule_t * rule, const char *base)
 {
-	resource_t *res;
-	char ccspath[1024];
-	char *attrname, *attr;
-	int x, found = 0, flags;
+    resource_t *res;
+    char ccspath[1024];
+    char *attrname, *attr;
+    int x, found = 0, flags;
 
-	res = malloc(sizeof(*res));
-	if (!res) {
-		fprintf(stderr,"Out of memory\n");
-			return NULL;
-	}
+    res = malloc(sizeof(*res));
+    if (!res) {
+        fprintf(stderr, "Out of memory\n");
+        return NULL;
+    }
 
-	memset(res, 0, sizeof(*res));
-	res->r_rule = rule;
+    memset(res, 0, sizeof(*res));
+    res->r_rule = rule;
 
-	for (x = 0; res->r_rule->rr_attrs &&
-	     res->r_rule->rr_attrs[x].ra_name; x++) {
+    for (x = 0; res->r_rule->rr_attrs && res->r_rule->rr_attrs[x].ra_name; x++) {
 
-		flags = rule->rr_attrs[x].ra_flags;
-		attrname = strdup(rule->rr_attrs[x].ra_name);
-		if (!attrname) {
-			destroy_resource(res);
-			return NULL;
-		}
+        flags = rule->rr_attrs[x].ra_flags;
+        attrname = strdup(rule->rr_attrs[x].ra_name);
+        if (!attrname) {
+            destroy_resource(res);
+            return NULL;
+        }
 
-		/*
-		   Ask CCS for the respective attribute
-		 */
-		attr = NULL;
-		snprintf(ccspath, sizeof(ccspath), "%s/@%s", base, attrname);
+        /*
+           Ask CCS for the respective attribute
+         */
+        attr = NULL;
+        snprintf(ccspath, sizeof(ccspath), "%s/@%s", base, attrname);
 
-		if (conf_get(ccspath, &attr) != 0) {
+        if (conf_get(ccspath, &attr) != 0) {
 
-			if (flags & (RA_REQUIRED | RA_PRIMARY)) {
-				/* Missing required attribute.  We're done. */
-				free(attrname);
-				destroy_resource(res);
-				return NULL;
-			}
+            if (flags & (RA_REQUIRED | RA_PRIMARY)) {
+                /* Missing required attribute.  We're done. */
+                free(attrname);
+                destroy_resource(res);
+                return NULL;
+            }
 
-			if (!(flags & RA_INHERIT)) {
-				/*
-				   If we don't have the inherit flag, see if
-				   we have a value anyway.  If we do,
-				   this value is the default value, and
-				   should be used.
-				 */
-				if (!rule->rr_attrs[x].ra_value) {
-					free(attrname);
-					continue;
-				}
+            if (!(flags & RA_INHERIT)) {
+                /*
+                   If we don't have the inherit flag, see if
+                   we have a value anyway.  If we do,
+                   this value is the default value, and
+                   should be used.
+                 */
+                if (!rule->rr_attrs[x].ra_value) {
+                    free(attrname);
+                    continue;
+                }
 
-				/* Copy default value from resource rule */
-				attr = strdup(rule->rr_attrs[x].ra_value);
-			}
-		}
+                /* Copy default value from resource rule */
+                attr = strdup(rule->rr_attrs[x].ra_value);
+            }
+        }
 
-		found = 1;
+        found = 1;
 
-		/*
-		   If we are supposed to inherit and we don't have an
-		   instance of the specified attribute in CCS, then we
-		   keep the inherit flag and use it as the attribute.
+        /*
+           If we are supposed to inherit and we don't have an
+           instance of the specified attribute in CCS, then we
+           keep the inherit flag and use it as the attribute.
 
-		   However, if we _do_ have the attribute for this instance,
-		   we drop the inherit flag and use the attribute.
-		 */
-		if (flags & RA_INHERIT) {
-		       	if (attr) {
-				flags &= ~RA_INHERIT;
-			} else {
-				attr = strdup(rule->rr_attrs[x].ra_value);
-				if (!attr) {
-					destroy_resource(res);
-					free(attrname);
-					return NULL;
-				}
-			}
-		}
+           However, if we _do_ have the attribute for this instance,
+           we drop the inherit flag and use the attribute.
+         */
+        if (flags & RA_INHERIT) {
+            if (attr) {
+                flags &= ~RA_INHERIT;
+            } else {
+                attr = strdup(rule->rr_attrs[x].ra_value);
+                if (!attr) {
+                    destroy_resource(res);
+                    free(attrname);
+                    return NULL;
+                }
+            }
+        }
 
-		/*
-		   Store the attribute.  We'll ensure all required
-		   attributes are present soon.
-		 */
-		if (attrname && attr)
-			store_attribute(&res->r_attrs, attrname, attr, flags);
-	}
+        /*
+           Store the attribute.  We'll ensure all required
+           attributes are present soon.
+         */
+        if (attrname && attr)
+            store_attribute(&res->r_attrs, attrname, attr, flags);
+    }
 
-	if (!found) {
-		destroy_resource(res);
-		return NULL;
-	}
+    if (!found) {
+        destroy_resource(res);
+        return NULL;
+    }
 
-	res->r_actions = act_dup(rule->rr_actions);
-	_get_actions_ccs(base, res);
+    res->r_actions = act_dup(rule->rr_actions);
+    _get_actions_ccs(base, res);
 
-	return res;
+    return res;
 }
-
 
 /**
    Read all resources in the resource manager block in CCS.
@@ -512,36 +486,33 @@ load_resource(resource_rule_t *rule, const char *base)
    @return		0 on success, nonzero on failure.
  */
 int
-load_resources(resource_t **reslist, resource_rule_t **rulelist)
+load_resources(resource_t ** reslist, resource_rule_t ** rulelist)
 {
-	int resID = 0;
-	resource_t *newres;
-	resource_rule_t *currule;
-	char tok[256];
+    int resID = 0;
+    resource_t *newres;
+    resource_rule_t *currule;
+    char tok[256];
 
-	list_do(rulelist, currule) {
+    list_do(rulelist, currule) {
 
-		for (resID = 1; ; resID++) {
-			snprintf(tok, sizeof(tok), RESOURCE_BASE "/%s[%d]",
-				 currule->rr_type, resID);
-			
-			newres = load_resource(currule, tok);
-			if (!newres)
-				break;
+        for (resID = 1;; resID++) {
+            snprintf(tok, sizeof(tok), RESOURCE_BASE "/%s[%d]", currule->rr_type, resID);
 
-		       if (store_resource(reslist, newres) != 0) {
-	       		      fprintf(stderr,
-				      "Error storing %s resource\n",
-				      newres->r_rule->rr_type);
+            newres = load_resource(currule, tok);
+            if (!newres)
+                break;
 
-			       destroy_resource(newres);
-		       }
+            if (store_resource(reslist, newres) != 0) {
+                fprintf(stderr, "Error storing %s resource\n", newres->r_rule->rr_type);
 
-		       /* Just information */
-		       newres->r_flags = RF_DEFINED;
-		}
-	} while (!list_done(rulelist, currule));
+                destroy_resource(newres);
+            }
 
-	return 0;
+            /* Just information */
+            newres->r_flags = RF_DEFINED;
+        }
+    }
+    while (!list_done(rulelist, currule)) ;
+
+    return 0;
 }
-

@@ -1,6 +1,6 @@
 #ifndef _RG_LOCKS_H
-#define _RG_LOCKS_H
-	
+#  define _RG_LOCKS_H
+
 int conf_open(void);
 int conf_close(void);
 void conf_setconfig(char *path);
