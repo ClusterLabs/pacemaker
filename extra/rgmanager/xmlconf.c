@@ -25,7 +25,7 @@
 #include <xmlconf.h>
 
 static xmlDocPtr conf_doc = NULL;
-static char *conffile = "/etc/cluster/cluster.conf";
+static const char *conffile = "/etc/cluster/cluster.conf";
 
 /**
    Execute an XPath query, returning the first match.  Multiple matches are

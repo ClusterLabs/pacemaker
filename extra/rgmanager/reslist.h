@@ -200,12 +200,13 @@ void res_build_name(char *, size_t, resource_t *);
 int store_attribute(resource_attr_t **attrsp, char *name, char *value,
 		    int flags);
 
-resource_t *load_resource(resource_rule_t *rule, char *base);
+resource_t *load_resource(resource_rule_t *rule, const char *base);
 int store_resource(resource_t **reslist, resource_t *newres);
 void destroy_resource(resource_t *res);
 
-char *attr_value(resource_node_t *node, char *attrname);
-char *res_attr_value(resource_t *res, char *attrname);
+char *attr_value(resource_node_t *node, const char *attrname);
+char *res_attr_value(resource_t *res, const char *attrname);
 char *primary_attr_value(resource_t *);
+void *act_dup(resource_act_t *acts);
 
 #endif /* _RESLIST_H */

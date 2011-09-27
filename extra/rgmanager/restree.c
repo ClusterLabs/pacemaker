@@ -58,7 +58,7 @@ void * act_dup(resource_act_t *acts);
    @return		Return value of script.
    @see			build_env
  */
-int
+static int
 res_do_flatten(xmlNode **xpp, xmlNode *rmp, resource_node_t *node, const char *arg,
 	       int depth)
 {
@@ -663,7 +663,7 @@ _do_child_default_level(xmlNode **xpp, xmlNode *rmp, resource_node_t **tree, res
 			in the subtree).
    @see			_res_op res_exec
  */
-int
+static int
 _res_op_by_level(xmlNode **xpp, xmlNode *rmp, resource_node_t **tree, resource_t *first)
 {
 	resource_node_t *node = *tree;

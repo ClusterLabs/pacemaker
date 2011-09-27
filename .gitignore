@@ -103,6 +103,9 @@ tools/crmadmin
 tools/iso8601
 xml/crm.dtd
 xml/pacemaker.rng
+extra/rgmanager/ccs2cib
+extra/rgmanager/ccs_flatten
+extra/rgmanager/disable_rgmanager
 
 #Other 
 mock

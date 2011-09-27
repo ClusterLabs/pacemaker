@@ -45,7 +45,7 @@ res_build_name(char *buf, size_t buflen, resource_t *res)
    @return 		value of attribute or NULL if not found
  */
 char *
-res_attr_value(resource_t *res, char *attrname)
+res_attr_value(resource_t *res, const char *attrname)
 {
 	resource_attr_t *ra;
 	int x;
@@ -77,7 +77,7 @@ res_attr_value(resource_t *res, char *attrname)
    @return 		value of attribute or NULL if not found
  */
 static char *
-_attr_value(resource_node_t *node, char *attrname, char *ptype)
+_attr_value(resource_node_t *node, const char *attrname, const char *ptype)
 {
 	resource_t *res;
 	resource_attr_t *ra;
@@ -129,7 +129,7 @@ _attr_value(resource_node_t *node, char *attrname, char *ptype)
 
 
 char *
-attr_value(resource_node_t *node, char *attrname)
+attr_value(resource_node_t *node, const char *attrname)
 {
 	return _attr_value(node, attrname, NULL);
 }
@@ -333,8 +333,8 @@ act_dup(resource_act_t *acts)
 
 
 /* Copied from resrules.c -- _get_actions */
-void
-_get_actions_ccs(char *base, resource_t *res)
+static void
+_get_actions_ccs(const char *base, resource_t *res)
 {
 	char xpath[256];
 	int idx = 0;
@@ -403,7 +403,7 @@ _get_actions_ccs(char *base, resource_t *res)
    @return		New resource if legal or NULL on failure/error
  */
 resource_t *
-load_resource(resource_rule_t *rule, char *base)
+load_resource(resource_rule_t *rule, const char *base)
 {
 	resource_t *res;
 	char ccspath[1024];

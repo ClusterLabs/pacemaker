@@ -26,7 +26,7 @@
 
 #define shift() {++argv; --argc;}
 
-int
+static int
 disable_rgmanager(xmlDocPtr doc)
 {
 	char buf[32];
@@ -83,7 +83,7 @@ disable_rgmanager(xmlDocPtr doc)
 }
 
 
-void
+static void
 usage(const char *arg0, int ret)
 {
 	fprintf(stderr,"usage: %s <input.conf> [output.conf]\n", arg0);

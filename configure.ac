@@ -1687,6 +1687,7 @@ mcp/Makefile							\
 fencing/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\
+	extra/rgmanager/Makefile				\
 tools/Makefile							\
 	tools/crm_report					\
 	tools/coverage.sh					\

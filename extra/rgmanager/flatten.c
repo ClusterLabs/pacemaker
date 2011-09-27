@@ -31,9 +31,9 @@
 
 #define shift() {++argv; --argc;}
 
-char *agentpath = RESOURCE_ROOTDIR;
+const char *agentpath = RESOURCE_ROOTDIR;
 
-xmlNode *
+static xmlNode *
 get_rm_node(xmlDocPtr doc)
 {
 	xmlNodePtr n, o;
@@ -60,7 +60,7 @@ get_rm_node(xmlDocPtr doc)
 }
 
 
-void
+static void
 remove_resources_block(xmlNodePtr rm)
 {
 	xmlNodePtr o, r = NULL;
@@ -82,7 +82,7 @@ remove_resources_block(xmlNodePtr rm)
 }
 
 
-int
+static int
 replace_resource(xmlNodePtr rm, char *restype, char *primattr,
 		 char *ident, xmlNodePtr n)
 {
@@ -113,7 +113,7 @@ replace_resource(xmlNodePtr rm, char *restype, char *primattr,
 }
 
 
-int
+static int
 flatten(int argc, char **argv, xmlDocPtr *doc)
 {
 	xmlDocPtr d = NULL;
@@ -211,7 +211,7 @@ out:
 }
 
 
-void
+static void
 usage(const char *arg0, int ret)
 {
 	fprintf(stderr,"usage: %s <input.conf> [output.conf] [-r]\n", arg0);

@@ -42,7 +42,7 @@
    @return		0 on success or -1 if rule with same name
 			already exists in rulelist
  */
-int
+static int
 store_rule(resource_rule_t **rulelist, resource_rule_t *newrule)
 {
 	resource_rule_t *curr;
@@ -66,7 +66,7 @@ store_rule(resource_rule_t **rulelist, resource_rule_t *newrule)
 
    @param rr		Resource rule to free.
  */
-void
+static void
 destroy_resource_rule(resource_rule_t *rr)
 {
 	int x;
@@ -135,7 +135,7 @@ destroy_resource_rules(resource_rule_t **rules)
    @param base		XPath prefix to search
    @param rr		Resource rule to store new information in.
  */
-void
+static void
 _get_maxparents(xmlDocPtr doc, xmlXPathContextPtr ctx, char *base,
 	       	resource_rule_t *rr)
 {
@@ -163,9 +163,9 @@ _get_maxparents(xmlDocPtr doc, xmlXPathContextPtr ctx, char *base,
    @param base		XPath prefix to search
    @param rr		Resource rule to store new information in.
  */
-void
-_get_rule_flag(xmlDocPtr doc, xmlXPathContextPtr ctx, char *base,
-	       resource_rule_t *rr, char *flag, int bit)
+static void
+_get_rule_flag(xmlDocPtr doc, xmlXPathContextPtr ctx, const char *base,
+	       resource_rule_t *rr, const char *flag, int bit)
 {
 	char xpath[256];
 	char *ret = NULL;
@@ -193,7 +193,7 @@ _get_rule_flag(xmlDocPtr doc, xmlXPathContextPtr ctx, char *base,
    @param base		XPath prefix to search
    @param rr		Resource rule to store new information in.
  */
-void
+static void
 _get_version(xmlDocPtr doc, xmlXPathContextPtr ctx, char *base,
 	     resource_rule_t *rr)
 {
@@ -367,7 +367,7 @@ store_action(resource_act_t **actsp, char *name, int depth,
 
 
 
-void
+static void
 _get_actions(xmlDocPtr doc, xmlXPathContextPtr ctx, char *base,
 		 resource_rule_t *rr)
 {
@@ -504,7 +504,7 @@ store_attribute(resource_attr_t **attrsp, char *name, char *value, int flags)
    @param flags		set to 1 to note that it was defined inline
    @return		0 on success, nonzero on failure
  */
-int
+static int
 store_childtype(resource_child_t **childp, char *name, int start, int stop,
 		int forbid, int flags)
 {
@@ -556,8 +556,8 @@ store_childtype(resource_child_t **childp, char *name, int start, int stop,
    @param rr		Resource rule to store new information in.
    @return		0
  */
-int
-_get_rule_attrs(xmlDocPtr doc, xmlXPathContextPtr ctx, char *base,
+static int
+_get_rule_attrs(xmlDocPtr doc, xmlXPathContextPtr ctx, const char *base,
 		resource_rule_t *rr)
 {
 	char *ret, *attrname, *dflt = NULL, xpath[256];
@@ -684,7 +684,7 @@ _get_rule_attrs(xmlDocPtr doc, xmlXPathContextPtr ctx, char *base,
    @param rr		Resource rule to store new information in.
    @return		0
  */
-int
+static int
 _get_childtypes(xmlDocPtr doc, xmlXPathContextPtr ctx, char *base,
 		resource_rule_t *rr)
 {
@@ -749,7 +749,7 @@ _get_childtypes(xmlDocPtr doc, xmlXPathContextPtr ctx, char *base,
 /**
   Read a file from a stdout pipe.
  */
-int
+static int
 read_pipe(int fd, char **file, size_t *length)
 {
 	char buf[4096];
@@ -797,7 +797,7 @@ read_pipe(int fd, char **file, size_t *length)
 }
 
 
-xmlDocPtr
+static xmlDocPtr
 read_resource_agent_metadata(char *filename)
 {
 	int pid;
@@ -857,7 +857,7 @@ read_resource_agent_metadata(char *filename)
    @param rules		Rule list to add new rules to
    @return		0
  */
-int
+static int
 load_resource_rulefile(char *filename, resource_rule_t **rules)
 {
 	resource_rule_t *rr = NULL;
