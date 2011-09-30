@@ -169,7 +169,7 @@ If the result does not match the expected value, then the operation is considere
             <row>
               <entry>6</entry>
               <entry>OCF_ERR_CONFIGURED</entry>
-              <entry>The resource's configuration is invalid. Eg. A required parameters are missing.</entry>
+              <entry>The resource's configuration is invalid. Eg. A required parameter is missing.</entry>
               <entry>fatal</entry>
             </row>
             <row>
