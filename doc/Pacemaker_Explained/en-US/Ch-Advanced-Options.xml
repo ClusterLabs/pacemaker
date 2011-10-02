@@ -392,7 +392,7 @@
     <section id="s-reusing-config-elements">
       <title>Reusing Rules, Options and Sets of Operations</title>
       <para>
-	Sometimes a number of constraints need to use the same set of rules and resources need to set the same options an parameters.
+	Sometimes a number of constraints need to use the same set of rules and resources need to set the same options and parameters.
 	To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id.
       </para>
       <para>So if for one resource you have</para>
