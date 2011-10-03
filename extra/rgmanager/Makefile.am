@@ -19,7 +19,8 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 # Foo
-bin_PROGRAMS = ccs_flatten disable_rgmanager ccs2cib
+bin_PROGRAMS = ccs_flatten disable_rgmanager
+bin_SCRIPTS = ccs2cib
 ccs_flatten_SOURCES = reslist.c resrules.c restree.c flatten.c xmlconf.c
 disable_rgmanager_SOURCES = disable_rgmanager.c
 
