@@ -1,0 +1,177 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+
+my $ME = $0;
+
+END {
+  defined fileno STDOUT or return;
+  close STDOUT and return;
+  warn "$ME: failed to close standard output: $!\n";
+  $? ||= 1;
+}
+
+# Get the program name from $0 and strip directory names
+$_=$0;
+s/.*\///;
+my $pname = $_;
+
+$opt_o = 'reset';       # Default fence action
+$opt_t = '300';         # Default fence timeout (seconds)
+$extra_args = '-E';
+
+sub usage
+{
+    print "Helper that presents a RHCS-style interface for Linux-HA stonith plugins\n\n";
+    print "Should never need to use invoked by the user directly\n\n";
+    print "\n";
+    print "Usage: $pname [options]\n";
+    print "\n";
+    print "Options:\n";
+    print "  -h               usage\n";
+    print "  -n <name>        nodename\n";
+    print "  -o <string>      Action:  on | off | reset (default) | stat | hostlist\n";
+    print "  -q               quiet mode\n";
+    print "  -V               version\n";
+
+    exit 0;
+}
+
+sub fail
+{
+  ($msg) = @_;
+  print $msg."\n" unless defined $opt_q;
+  $t->close if defined $t;
+  exit 1;
+}
+
+sub fail_usage
+{
+  ($msg)=@_;
+  print STDERR $msg."\n" if $msg;
+  print STDERR "Please use '-h' for usage.\n";
+  exit 1;
+}
+
+sub version
+{
+  print "1.0.0\n";
+
+  exit 0;
+}
+
+sub get_options_stdin
+{
+    my $opt;
+    my $line = 0;
+    while( defined($in = <>) )
+    {
+        $_ = $in;
+        chomp;
+
+	# strip leading and trailing whitespace
+        s/^\s*//;
+        s/\s*$//;
+
+	# skip comments
+        next if /^#/;
+
+        $line+=1;
+        $opt=$_;
+        next unless $opt;
+
+        ($name,$val)=split /\s*=\s*/, $opt;
+
+        if ( $name eq "" )
+        {  
+           print STDERR "parse error: illegal name in option $line\n";
+           exit 2;
+	}
+	
+        # DO NOTHING -- this field is used by fenced
+	elsif ($name eq "agent" ) {} 
+
+	elsif ($name eq "timeout" ) 
+	{ 
+	    $opt_t = $val;
+	} 
+        elsif ($name eq "option" || $name eq "action" )
+        {
+            $opt_o = $val;
+        }
+	elsif ($name eq "port" ) 
+	{
+            $opt_n = $val;
+        } 
+	else 
+	{
+	    $ENV{$name} = $val;
+	}
+
+    }
+}
+
+######################################################################33
+# MAIN
+
+if (@ARGV > 0) {
+    GetOptions("n=s"=>\$opt_n,
+	       "o=s"=>\$opt_o,
+	       "t=s"=>\$opt_t,
+	       "q"  =>\$opt_q,
+	       "V"  =>\$opt_V,
+	       "version"  =>\$opt_V,
+	       "help"  =>\$opt_h,
+	       "h"  =>\$opt_h) || fail_usage;
+    foreach (@ARGV) {
+	print "$_\n";
+    }
+#   getopts("ht:n:o:s:qV") || fail_usage ;
+    
+   usage if defined $opt_h;
+   version if defined $opt_V;
+
+   fail_usage "Unknown parameter." if (@ARGV > 0);
+}
+
+get_options_stdin();
+
+$opt_o=lc($opt_o);
+fail "failed: unrecognised action: $opt_o"
+    unless $opt_o =~ /^(on|off|reset|reboot|stat|status|monitor|list|hostlist|poweroff|poweron)$/;
+
+sub term_handler {
+    local $SIG{TERM} = 'IGNORE';
+    kill(TERM,-getpgrp($$));
+}
+
+setpgrp($$,0);
+
+if ( $pid=fork() == 0 )
+{
+    $cmd="--help $opt_o";
+    if ( $opt_o eq "monitor" || $opt_o eq "stat" || $opt_o eq "status" || $opt_o eq "list" ) {
+       $cmd="--list";
+       $cmd="--list-registered" unless defined $opt_n;
+   } else {
+       fail "failed: no plug number" unless defined $opt_n;
+       if ( $opt_o eq "reboot" || $opt_o eq "reset" ) {
+	   $cmd="--reboot";
+       } elsif ( $opt_o eq "on" || $opt_o eq "poweron" ) {
+	   $cmd="--unfence";
+       } elsif ( $opt_o eq "off" || $opt_o eq "poweroff" ) {
+	   $cmd="--fence";
+       }
+       exec "logger -t fence_pcmk -p daemon.notice \"Requesting Pacemaker fence $opt_n ($opt_o)\"";
+   }
+   exec "stonith_admin $cmd $opt_n" or die "failed to exec \"stonith_admin $cmd $opt_n\"\n";
+}
+
+$SIG{TERM} = \&term_handler;
+wait;
+$status=$?/256;
+
+print (($status == 0 ? "success":"failed") . ": $opt_n $status\n")
+   unless defined $opt_q;
+
+exit ($status == 0 ? 0 : 1 );

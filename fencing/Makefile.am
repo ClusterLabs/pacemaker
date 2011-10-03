@@ -24,7 +24,7 @@ halibdir	= $(CRM_DAEMON_DIR)
 halib_PROGRAMS	= stonithd stonith-test
 
 sbin_PROGRAMS  = stonith_admin
-sbin_SCRIPTS   = fence_legacy
+sbin_SCRIPTS   = fence_legacy fence_pcmk
 
 man7_MANS      = 
 man8_MANS      = 
@@ -39,7 +39,7 @@ stonithd.7:	stonithd.xml
 endif
 
 if BUILD_HELP
-man8_MANS +=	$(sbin_PROGRAMS:%=%.8) fence_legacy.8
+man8_MANS +=	$(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8) 
 %.8:	%
 	echo Creating $@
 	chmod a+x $<
