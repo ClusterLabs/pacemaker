@@ -772,6 +772,7 @@ static gint sort_device_priority(gconstpointer a, gconstpointer b)
 
 static int stonith_fence(xmlNode *msg) 
 {
+    int options = 0;
     struct device_search_s search;
     stonith_device_t *device = NULL;
     async_command_t *cmd = create_async_command(msg);
@@ -783,6 +784,15 @@ static int stonith_fence(xmlNode *msg)
     
     search.capable = NULL;
     search.host = crm_element_value(dev, F_STONITH_TARGET);
+
+    crm_element_value_int(msg, F_STONITH_CALLOPTS, &options);
+    if(options & st_opt_cs_nodeid) {
+        int nodeid = crm_atoi(search.host, NULL);
+        crm_node_t *node = crm_get_peer(nodeid, NULL);
+        if(node) {
+            search.host = node->uname;
+        }
+    }
 
     crm_log_xml_info(msg, "Exec");
     

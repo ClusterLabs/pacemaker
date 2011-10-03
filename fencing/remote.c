@@ -300,6 +300,19 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     op->request = copy_xml(request); /* TODO: Figure out how to avoid this */
     crm_element_value_int(request, F_STONITH_CALLOPTS, (int*)&(op->call_options));
 
+    if(op->call_options & st_opt_cs_nodeid) {
+        int nodeid = crm_atoi(op->target, NULL);
+        crm_node_t *node = crm_get_peer(nodeid, NULL);
+
+        /* Ensure the conversion only happens once */
+        op->call_options &= ~st_opt_cs_nodeid;
+
+        if(node) {
+            crm_free(op->target);
+            op->target = crm_strdup(node->uname);
+        }
+    }
+
     return op;
 }
 
@@ -522,7 +535,17 @@ int stonith_fence_history(xmlNode *msg, xmlNode **output)
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_TRACE);
 
     if(dev) {
+        int options = 0;
+
 	target = crm_element_value(dev, F_STONITH_TARGET);
+        crm_element_value_int(msg, F_STONITH_CALLOPTS, &options);
+        if(options & st_opt_cs_nodeid) {
+            int nodeid = crm_atoi(target, NULL);
+            crm_node_t *node = crm_get_peer(nodeid, NULL);
+            if(node) {
+                target = node->uname;
+            }
+        }
     }
     *output = create_xml_node(NULL, F_STONITH_HISTORY_LIST);
 
