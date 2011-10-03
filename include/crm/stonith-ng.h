@@ -265,7 +265,7 @@ stonith_api_time_cs_helper(int nodeid, bool in_progress)
         st_time_fn = dlsym(&st_library, "stonith_api_cs_time");
     }
     if(st_time_fn == NULL) {
-        return st_err_not_supported;
+        return 0;
     }
 
     return (*st_time_fn)(nodeid, in_progress);
