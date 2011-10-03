@@ -22,6 +22,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/crm.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>

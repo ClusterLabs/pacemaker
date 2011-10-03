@@ -18,6 +18,10 @@
 #ifndef STONITH_NG_INTERNAL__H
 #  define STONITH_NG_INTERNAL__H
 
+#  include <crm/common/ipc.h>
+#  include <crm/common/xml.h>
+#  include <clplumbing/proctrack.h>
+
 typedef struct async_command_s {
 
     int id;

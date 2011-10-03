@@ -1859,3 +1859,89 @@ stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values)
         kvp = p;
     }
 }
+
+
+int
+stonith_api_cs_kick(int nodeid, int timeout, bool off)
+{
+    int rc = stonith_ok;
+    stonith_t *st = NULL;
+    enum stonith_call_options opts = st_opt_sync_call|st_opt_allow_suicide|st_opt_cs_nodeid;
+
+    crm_log_init("st-client", LOG_INFO, FALSE, FALSE, 0, NULL);
+
+    st = stonith_api_new();
+    if(st) {
+	rc = st->cmds->connect(st, crm_system_name, NULL);
+    }
+
+    if(st && rc == stonith_ok) {
+        char *name = crm_itoa(nodeid);
+        crm_info("Requesting that node %d be terminated", nodeid);
+        rc = st->cmds->fence(st, opts, name, "off", 120);
+        crm_free(name);
+    }
+
+    if(st) {
+        st->cmds->disconnect(st);
+        stonith_api_delete(st);
+    }
+
+    if(rc < stonith_ok) {
+        crm_err("Could not terminate node %d: %s", nodeid, stonith_error2string(rc));
+        rc = 1;
+
+    } else {
+        rc = 0;
+    }
+    return rc;
+}
+
+time_t
+stonith_api_cs_time(int nodeid, bool in_progress)
+{
+    int rc = 0;
+    time_t when = 0;
+    time_t progress = 0;
+    stonith_t *st = NULL;
+    stonith_history_t *history, *hp = NULL;
+
+    crm_log_init("st-client", LOG_INFO, FALSE, FALSE, 0, NULL);
+
+    st = stonith_api_new();
+    if(st) {
+	rc = st->cmds->connect(st, crm_system_name, NULL);
+    }
+
+    if(st && rc == stonith_ok) {
+        char *name = crm_itoa(nodeid);
+        st->cmds->history(st, st_opt_sync_call|st_opt_cs_nodeid, name, &history, 120);
+        crm_free(name);
+
+        for(hp = history; hp; hp = hp->next) {
+            if(in_progress && hp->state != st_failed) {
+                progress = time(NULL);
+
+            } else if(hp->state == st_done) {
+                when = hp->completed;
+            }
+        }
+    }
+
+    if(progress) {
+        crm_debug("Node %d is in the process of being shot", nodeid);
+        when = progress;
+
+    } else if(when != 0) {
+        crm_debug("Node %d was last shot at: %s", nodeid, ctime(&when));
+
+    } else {
+        crm_debug("It does not appear node %d has been shot", nodeid);
+    }
+
+    if(st) {
+        st->cmds->disconnect(st);
+        stonith_api_delete(st);
+    }
+    return when;
+}

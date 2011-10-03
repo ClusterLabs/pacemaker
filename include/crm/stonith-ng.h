@@ -18,9 +18,8 @@
 #ifndef STONITH_NG__H
 #  define STONITH_NG__H
 
-#  include <crm/common/ipc.h>
-#  include <crm/common/xml.h>
-#  include <clplumbing/proctrack.h>
+#  include <dlfcn.h>
+#  include <stdbool.h>
 
 /* *INDENT-OFF* */
 enum stonith_state {
@@ -37,6 +36,7 @@ enum stonith_call_options {
     st_opt_discard_reply   = 0x00000010,
     st_opt_all_replies	   = 0x00000020,
     st_opt_scope_local     = 0x00000100,
+    st_opt_cs_nodeid       = 0x00000200,
     st_opt_sync_call       = 0x00001000,
 };
 
@@ -208,5 +208,67 @@ extern bool stonith_dispatch(stonith_t * st);
 extern stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
                                                   const char *value);
 extern void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
+
+
+/*
+ * Helpers for initiating fencing from CPG based controld's
+ * that avoid the need for install-time dependancies
+ *
+ * Usage:
+ *  #include <crm/stonith-ng.h>
+ *
+ * To turn a node off:
+ *  stonith_api_kick_cs_helper(nodeid, 120, 1);
+ *
+ * To check the last fence date/time:
+ *  last = stonith_api_time_cs_helper(nodeid, 0);
+ *
+ * To check if fencing is in progress:
+ *  if(stonith_api_time_cs_helper(nodeid, 1) > 0) { ... }
+ *
+ */
+
+#  define STONITH_LIBRARY "libstonithd.so.1"
+
+int stonith_api_cs_kick(int nodeid, int timeout, bool off);
+time_t stonith_api_cs_time(int nodeid, bool in_progress);
+
+static inline int
+stonith_api_kick_cs_helper(int nodeid, int timeout, bool off)
+{
+    static void *st_library = NULL;
+    static int(*st_kick_fn)(int nodeid, int timeout, bool off) = NULL;
+
+    if(st_library == NULL) {
+        st_library = dlopen(STONITH_LIBRARY, RTLD_LAZY);
+    }
+    if(st_library && st_kick_fn == NULL) {
+        st_kick_fn = dlsym(&st_library, "stonith_api_cs_kick");
+    }
+    if(st_kick_fn == NULL) {
+        return st_err_not_supported;
+    }
+
+    return (*st_kick_fn)(nodeid, timeout, off);
+}
+
+static inline time_t
+stonith_api_time_cs_helper(int nodeid, bool in_progress)
+{
+    static void *st_library = NULL;
+    static time_t(*st_time_fn)(int nodeid, bool in_progress) = NULL;
+
+    if(st_library == NULL) {
+        st_library = dlopen(STONITH_LIBRARY, RTLD_LAZY);
+    }
+    if(st_library && st_time_fn == NULL) {
+        st_time_fn = dlsym(&st_library, "stonith_api_cs_time");
+    }
+    if(st_time_fn == NULL) {
+        return st_err_not_supported;
+    }
+
+    return (*st_time_fn)(nodeid, in_progress);
+}
 
 #endif
