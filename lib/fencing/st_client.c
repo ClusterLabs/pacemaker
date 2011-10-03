@@ -1914,14 +1914,19 @@ stonith_api_cs_time(int nodeid, bool in_progress)
     }
 
     if(st && rc == stonith_ok) {
-        char *name = crm_itoa(nodeid);
+        char *name = NULL;
+        if(nodeid > 0) {
+            name = crm_itoa(nodeid);
+        }
         st->cmds->history(st, st_opt_sync_call|st_opt_cs_nodeid, name, &history, 120);
         crm_free(name);
 
         for(hp = history; hp; hp = hp->next) {
-            if(in_progress && hp->state != st_failed) {
-                progress = time(NULL);
-
+            if(in_progress) {
+                if(hp->state != st_done && hp->state != st_failed) {
+                    progress = time(NULL);
+                }
+                
             } else if(hp->state == st_done) {
                 when = hp->completed;
             }

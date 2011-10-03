@@ -539,7 +539,7 @@ int stonith_fence_history(xmlNode *msg, xmlNode **output)
 
 	target = crm_element_value(dev, F_STONITH_TARGET);
         crm_element_value_int(msg, F_STONITH_CALLOPTS, &options);
-        if(options & st_opt_cs_nodeid) {
+        if(target && (options & st_opt_cs_nodeid)) {
             int nodeid = crm_atoi(target, NULL);
             crm_node_t *node = crm_get_peer(nodeid, NULL);
             if(node) {
