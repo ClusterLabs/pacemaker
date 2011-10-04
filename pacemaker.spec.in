@@ -193,6 +193,7 @@ License:	GPLv2+ and LGPLv2+
 Summary:	Pacemaker development package
 Group:		Development/Libraries
 Requires:	%{name}-libs = %{version}-%{release}
+Requires:	%{name}-cluster-libs = %{version}-%{release}
 Requires:	cluster-glue-libs-devel libtool-ltdl-devel
 Requires:	libxml2-devel libxslt-devel bzip2-devel glib2-devel 
 %if %{with corosync}
@@ -347,6 +348,10 @@ fi
 %{_sbindir}/crm_node
 %{_sbindir}/attrd_updater
 %{_sbindir}/fence_legacy
+%{_sbindir}/fence_pcmk
+%{_bindir}/ccs2cib
+%{_bindir}/ccs_flatten
+%{_bindir}/disable_rgmanager
 %{_sbindir}/stonith_admin
 
 %if %{with heartbeat}
