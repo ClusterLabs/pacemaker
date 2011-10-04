@@ -460,7 +460,13 @@ END
     for h in $host_list; do
 	short_h=`name_for_node $h`
 	cat <<-END >>$cs_tmp
-    <clusternode name="$short_h" nodeid="$lpc"/>
+    <clusternode name="$short_h" nodeid="$lpc">
+      <fence>
+        <method name="pcmk-redirect">
+          <device name="pcmk" port="$short_h"/>
+        </method>
+      </fence>
+    </clusternode>
 END
 	lpc=`expr $lpc + 1`
     done
@@ -473,7 +479,10 @@ END
 	extra="\n  <cman two_node=\"1\" expected_votes=\"1\"/>"
     fi
     cat <<-END >>$cs_tmp
-  </clusternodes>$extra
+  </clusternodes>
+  <fencedevices>
+    <fencedevice name="pcmk" agent="fence_pcmk"/>
+  </fencedevices>$extra
 </cluster>
 END
     scp -q $cs_tmp root@${host}:$cs_conf
