@@ -67,6 +67,8 @@ static struct crm_option long_options[] = {
     {"option",      1, 0, 'o'},
     {"agent",       1, 0, 'a'},
 
+    {"timeout",     1, 0, 't'},
+
     {"list-all",    0, 0, 'L', "legacy alias for --list-registered"},
 
     {0, 0, 0, 0}
@@ -83,6 +85,7 @@ main(int argc, char ** argv)
     int quiet = 0;
     int verbose = 0;
     int argerr = 0;
+    int timeout = 120;
     int option_index = 0;
 
     char name[512];
@@ -140,6 +143,9 @@ main(int argc, char ** argv)
 	    case 'M':
 		action = flag;
 		break;
+            case 't':
+                timeout = crm_atoi(optarg, NULL);
+                break;
 	    case 'B':
 	    case 'F':
 	    case 'U':
@@ -203,7 +209,7 @@ main(int argc, char ** argv)
     switch(action)
     {
 	case 'I':
-	    rc = st->cmds->list(st, st_opt_sync_call, NULL, &devices, 0);
+	    rc = st->cmds->list(st, st_opt_sync_call, NULL, &devices, timeout);
 	    for(dIter = devices; dIter; dIter = dIter->next ) {
 		fprintf( stdout, " %s\n", dIter->value );
 	    }
@@ -218,7 +224,7 @@ main(int argc, char ** argv)
 	    break;
 	    
 	case 'L':
-	    rc = st->cmds->query(st, st_opts, target, &devices, 10);
+	    rc = st->cmds->query(st, st_opts, target, &devices, timeout);
 	    for(dIter = devices; dIter; dIter = dIter->next ) {
 		fprintf( stdout, " %s\n", dIter->value );
 		crm_free(dIter->value);
@@ -233,9 +239,9 @@ main(int argc, char ** argv)
 	    stonith_key_value_freeall(devices, 1, 1);
 	    break;
 	case 'Q':
-	    rc = st->cmds->call(st, st_opts, device, "monitor", NULL, 10);
+	    rc = st->cmds->call(st, st_opts, device, "monitor", NULL, timeout);
 	    if(rc < 0) {
-		rc = st->cmds->call(st, st_opts, device, "list", NULL, 10);
+		rc = st->cmds->call(st, st_opts, device, "list", NULL, timeout);
 	    }
 	    break;
 	case 'R':
@@ -252,7 +258,7 @@ main(int argc, char ** argv)
 		
 	    } else {
 	        char *buffer = NULL;
-		st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 0);
+		st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, timeout);
 		printf("%s\n", buffer);
 		crm_free(buffer);
 	    }
@@ -262,18 +268,18 @@ main(int argc, char ** argv)
 	    rc = st->cmds->confirm(st, st_opts, target);
 	    break;
 	case 'B':
-	    rc = st->cmds->fence(st, st_opts, target, "reboot", 120);
+	    rc = st->cmds->fence(st, st_opts, target, "reboot", timeout);
 	    break;
 	case 'F':
-	    rc = st->cmds->fence(st, st_opts, target, "off", 120);
+	    rc = st->cmds->fence(st, st_opts, target, "off", timeout);
 	    break;
 	case 'U':
-	    rc = st->cmds->fence(st, st_opts, target, "on", 120);
+	    rc = st->cmds->fence(st, st_opts, target, "on", timeout);
 	    break;
 	case 'H':
 	    {
 		stonith_history_t *history, *hp, *latest = NULL;
-		rc = st->cmds->history(st, st_opts, target, &history, 120);
+		rc = st->cmds->history(st, st_opts, target, &history, timeout);
 		for(hp = history; hp; hp = hp->next) {
 		    char *action_s = NULL;
 		    time_t complete = hp->completed;
