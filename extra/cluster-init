@@ -109,6 +109,16 @@ while true; do
     esac
 done
 
+if [ -z $host_input ]; then
+    if [ ! -z $CTS_GROUP ]; then
+	host_input="-g $CTS_GROUP"
+	dsh_group=`echo $CTS_GROUP | sed s/[a-zA-Z]*//`
+    else
+	echo "You didn't specify any nodes to configure"
+	exit 1
+    fi
+fi
+
 host_list=`cluster-helper --list short $host_input`
 num_hosts=`echo $host_list | wc -w`
 if [ -z $dsh_group ]; then

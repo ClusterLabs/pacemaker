@@ -73,6 +73,10 @@ while true ; do
     esac
 done	
 
+if [ x"$group" = x -a x"$hosts" = x ]; then
+    group=$CTS_GROUP
+fi
+
 function expand() {
     fmt=$1
     if [ x$group != x -a -f ~/.dsh/group/$group ]; then

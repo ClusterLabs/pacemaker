@@ -17,15 +17,22 @@ while true; do
     esac
 done
 
+if [ x"$group" = x -a x"$hosts" = x ]; then
+    group=$CTS_GROUP
+fi
+
 if [ x"$hosts" != x ]; then
     echo `date` ": Cleaning up hosts:"
     target=$hosts
-else
+elif [ x"$group" != x ]; then
     echo `date` ": Cleaning up group: $group"
     target="-g $group"
+else
+    echo "You didn't specify any nodes to clean up"
+    exit 1
 fi
 cluster-helper --list bullet $target
-    
+
 if [ $kill = 1 ]; then
     echo "Cleaning processes"
     cluster-helper $target -- "killall -q -9 corosync aisexec heartbeat pacemakerd ccm stonithd ha_logd lrmd crmd pengine attrd pingd mgmtd cib fenced dlm_controld gfs_controld" &> /dev/null
