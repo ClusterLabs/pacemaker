@@ -35,8 +35,8 @@
 	</footnote>
       </para>
       <para>
-	CMAN has been around longer than Pacemaker and is part of the Red Hat cluster stack, so it is available and supported by many distributions and other pieces of software (such as OCFS2 and GFS2).
-	For this reason it makes sense to support it.
+	In the case of GFS2, the key pieces are the <filename>dlm_controld</filename> and <filename>gfs_controld</filename> helpers which act as the glue between the filesystem and the cluster software.
+	Supporting CMAN enables us to use the versions already being shipped by most distributions (since CMAN has been around longer than Pacemaker and is part of the Red Hat cluster stack).
       </para>
       <warning>
 	<para>
