@@ -322,8 +322,8 @@ Complete!
 
       <para>
 	Next we create a basic configuration file and place is in <filename>/etc/cluster/cluster.conf</filename>.
-	The <literal>name</literal> used for each <literal>clusternode</literal> should correspond to that node's <command>uname -n</command>, just as Pacemaker expects.
-	The <literal>nodeid</literal> can be any positive mumber but nust be unique.
+	The <constant>name</constant> used for each <constant>clusternode</constant> should correspond to that node's <command>uname -n</command>, just as Pacemaker expects.
+	The <constant>nodeid</constant> can be any positive mumber but nust be unique.
 	<example>
 	  <title>Basic cluster.conf for a two-node cluster</title>
 	  <programlisting>
@@ -353,13 +353,13 @@ Complete!
 	</warning>
       </para>
       <para>
-	The definition should be placed in the <literal>fencedevices</literal> section and contain:
+	The definition should be placed in the <constant>fencedevices</constant> section and contain:
 	<programlisting>
 	<![CDATA[
  <fencedevice name="pcmk" agent="fence_pcmk"/>
 	]]>
 	</programlisting>
-	Each <literal>clusternode</literal> must be configured to use this <quote>device</quote> by adding a <literal>fence method</literal> block that lists the node's <literal>name</literal> as the <literal>port</literal>.
+	Each <constant>clusternode</constant> must be configured to use this <quote>device</quote> by adding a <constant>fence method</constant> block that lists the node's <constant>name</constant> as the <constant>port</constant>.
 	<programlisting>
 	<![CDATA[
  <fence>
@@ -512,7 +512,7 @@ ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-1
 				Lastly, we use -t to specify the lock table name. The format for this field is clustername:fsname. For the fsname, we just need to pick something unique and descriptive and since we haven’t specified a clustername yet, we will use the default (pcmk).
 			</para>
 			<para>
-				To specify an alternate name for the cluster, locate the service section containing “name: pacemaker” in corosync.conf and insert the following line anywhere inside the block:
+				To specify an alternate name for the cluster, locate the service section containing "name: pacemaker" in corosync.conf and insert the following line anywhere inside the block:
 			</para>
 			<para>
 				clustername: myname
@@ -567,7 +567,7 @@ END
 crm(live)# <userinput>cib new GFS2</userinput>
 INFO: GFS2 shadow CIB created
 crm(GFS2)# <userinput>configure delete WebFS</userinput>
-crm(GFS2)# <userinput>configure primitive WebFS ocf:heartbeat:Filesystem params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype=”gfs2”</userinput>
+crm(GFS2)# <userinput>configure primitive WebFS ocf:heartbeat:Filesystem params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"</userinput>
 </screen>
 		<para>
 			Now that we’ve recreated the resource, we also need to recreate all the constraints that used it. This is because the shell will automatically remove any constraints that referenced WebFS.
@@ -585,7 +585,7 @@ primitive WebData ocf:linbit:drbd \
         params drbd_resource="wwwdata" \
         op monitor interval="60s"
 <emphasis>primitive WebFS ocf:heartbeat:Filesystem \</emphasis>
-<emphasis> params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype=”gfs2”</emphasis>
+<emphasis> params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"</emphasis>
 primitive WebSite ocf:heartbeat:apache \
         params configfile="/etc/httpd/conf/httpd.conf" \
         op monitor interval="1min"
@@ -603,11 +603,11 @@ order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
-        expected-quorum-votes=”2” \
+        expected-quorum-votes="2" \
         stonith-enabled="false" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
-        resource-stickiness=”100”
+        resource-stickiness="100"
 </screen>
 		<para>
 			Review the configuration before uploading it to the cluster, quitting the shell and watching the cluster’s response
@@ -656,12 +656,12 @@ ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2
     <para>
       There’s no point making the services active on both locations if we can’t reach them, so lets first clone the IP address.
       Cloned IPaddr2 resources use an iptables rule to ensure that each request only processed by one of the two clone instances.
-      The additional meta options tell the cluster how many instances of the clone we want (one “request bucket” for each node) and that if all other nodes fail, then the remaining node should hold all of them.
+      The additional meta options tell the cluster how many instances of the clone we want (one "request bucket" for each node) and that if all other nodes fail, then the remaining node should hold all of them.
       Otherwise the requests would be simply discarded.
     </para>
     <screen>
 [root@pcmk-1 ~]# <userinput>configure clone WebIP ClusterIP  \</userinput>
-<userinput>        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”</userinput>
+<userinput>        meta globally-unique="true" clone-max="2" clone-node-max="2"</userinput>
     </screen>
     <para>
       Now we must tell the ClusterIP how to decide which requests are processed by which hosts.
@@ -691,7 +691,7 @@ primitive ClusterIP ocf:heartbeat:IPaddr2 \
 crm(live)# <userinput>cib new active</userinput>
 INFO: active shadow CIB created
 crm(active)# <userinput>configure clone WebIP ClusterIP  \</userinput>
-        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”
+        meta globally-unique="true" clone-max="2" clone-node-max="2"
 crm(active)# <userinput>configure show</userinput>
 node pcmk-1
 node pcmk-2
@@ -699,17 +699,17 @@ primitive WebData ocf:linbit:drbd \
         params drbd_resource="wwwdata" \
         op monitor interval="60s"
 primitive WebFS ocf:heartbeat:Filesystem \
-        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype=”gfs2”
+        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
 primitive WebSite ocf:heartbeat:apache \
         params configfile="/etc/httpd/conf/httpd.conf" \
         op monitor interval="1min"
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \
+        params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
         op monitor interval="30s"
 ms WebDataClone WebData \
         meta master-max="1" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
 <emphasis>clone WebIP ClusterIP \</emphasis>
-<emphasis> meta globally-unique=”true” clone-max=”2” clone-node-max=”2”</emphasis>
+<emphasis> meta globally-unique="true" clone-max="2" clone-node-max="2"</emphasis>
 colocation WebSite-with-WebFS inf: WebSite WebFS
 colocation fs_on_drbd inf: WebFS WebDataClone:Master
 <emphasis>colocation website-with-ip inf: WebSite WebIP</emphasis>
@@ -719,11 +719,11 @@ order WebSite-after-WebFS inf: WebFS WebSite
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
-        expected-quorum-votes=”2” \
+        expected-quorum-votes="2" \
         stonith-enabled="false" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
-        resource-stickiness=”100”
+        resource-stickiness="100"
     </screen>
     <para>
       Notice how any constraints that referenced ClusterIP have been updated to use WebIP instead.
@@ -754,18 +754,18 @@ primitive WebData ocf:linbit:drbd \
         params drbd_resource="wwwdata" \
         op monitor interval="60s"
 primitive WebFS ocf:heartbeat:Filesystem \
-        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype=”gfs2”
+        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
 primitive WebSite ocf:heartbeat:apache \
         params configfile="/etc/httpd/conf/httpd.conf" \
         op monitor interval="1min"
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \
+        params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
         op monitor interval="30s"
 ms WebDataClone WebData \
         meta master-max="2" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
 <emphasis>clone WebFSClone WebFS</emphasis>
 clone WebIP ClusterIP  \
-        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”
+        meta globally-unique="true" clone-max="2" clone-node-max="2"
 <emphasis>clone WebSiteClone WebSite</emphasis>
 <emphasis>colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone</emphasis>
 <emphasis>colocation fs_on_drbd inf: WebFSClone WebDataClone:Master</emphasis>
@@ -776,11 +776,11 @@ clone WebIP ClusterIP  \
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
-        expected-quorum-votes=”2” \
+        expected-quorum-votes="2" \
         stonith-enabled="false" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
-        resource-stickiness=”100”
+        resource-stickiness="100"
     </screen>
     <para>
       Review the configuration before uploading it to the cluster, quitting the shell and watching the cluster’s response

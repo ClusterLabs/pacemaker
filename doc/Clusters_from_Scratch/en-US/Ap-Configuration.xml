@@ -16,22 +16,21 @@ primitive WebData ocf:linbit:drbd \
         params drbd_resource="wwwdata" \
         op monitor interval="60s"
 primitive WebFS ocf:heartbeat:Filesystem \
-        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype=”gfs2”
+        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
 primitive WebSite ocf:heartbeat:apache \
         params configfile="/etc/httpd/conf/httpd.conf" \
         op monitor interval="1min"
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \
+        params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
         op monitor interval="30s"
-primitive rsa-fencing stonith::external/ibmrsa \
-        params hostname=”pcmk-1 pcmk-2" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \
+primitive ipmi-fencing stonith::fence_ipmilan \
+        params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \
         op monitor interval="60s"
 ms WebDataClone WebData \
         meta master-max="2" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
-clone Fencing rsa-fencing 
 clone WebFSClone WebFS
 clone WebIP ClusterIP  \
-        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”
+        meta globally-unique="true" clone-max="2" clone-node-max="2"
 clone WebSiteClone WebSite
 colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone
 colocation fs_on_drbd inf: WebFSClone WebDataClone:Master
@@ -42,11 +41,11 @@ order apache-after-ip inf: WebIP WebSiteClone
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
-        expected-quorum-votes=”2” \
-        stonith-enabled=”true” \
+        expected-quorum-votes="2" \
+        stonith-enabled="true" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
-        resource-stickiness=”100”
+        resource-stickiness="100"
 </screen>
 	</section>
 	
@@ -104,8 +103,8 @@ node pcmk-2
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
-        expected-quorum-votes=”2” \
-        stonith-enabled=”true” \
+        expected-quorum-votes="2" \
+        stonith-enabled="true" \
         no-quorum-policy="ignore"
 </screen>
 	</section>
@@ -127,7 +126,7 @@ property $id="cib-bootstrap-options" \
 			
 <screen>
 rsc_defaults $id="rsc-options" \
-        resource-stickiness=”100”
+        resource-stickiness="100"
 </screen>
 		</section>
 		
@@ -142,8 +141,8 @@ rsc_defaults $id="rsc-options" \
 			</para>
 			
 <screen>
-primitive rsa-fencing stonith::external/ibmrsa \
-        params hostname=”pcmk-1 pcmk-2" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \
+primitive ipmi-fencing stonith::fence_ipmilan \
+        params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \
         op monitor interval="60s"
 clone Fencing rsa-fencing
 </screen>
@@ -152,15 +151,15 @@ clone Fencing rsa-fencing
 		<section>
 			<title>Service Address</title>
 			<para>
-				Users of the services provided by the cluster require an unchanging address with which to access it. Additionally, we cloned the address so it will be active on both nodes. An iptables rule (created as part of the resource agent) is used to ensure that each request only processed by one of the two clone instances. The additional meta options tell the cluster that we want two instances of the clone (one “request bucket” for each node) and that if one node fails, then the remaining node should hold both.
+				Users of the services provided by the cluster require an unchanging address with which to access it. Additionally, we cloned the address so it will be active on both nodes. An iptables rule (created as part of the resource agent) is used to ensure that each request only processed by one of the two clone instances. The additional meta options tell the cluster that we want two instances of the clone (one "request bucket" for each node) and that if one node fails, then the remaining node should hold both.
 			</para>
 			
 <screen>
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \
+        params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
         op monitor interval="30s"
 clone WebIP ClusterIP  
-        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”
+        meta globally-unique="true" clone-max="2" clone-node-max="2"
 </screen>
 			<note>
 				<para>
@@ -192,7 +191,7 @@ ms WebDataClone WebData \
 			
 <screen>
 primitive WebFS ocf:heartbeat:Filesystem \
-        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype=”gfs2”
+        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
 clone WebFSClone WebFS
 colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone
 colocation fs_on_drbd inf: WebFSClone WebDataClone:Master

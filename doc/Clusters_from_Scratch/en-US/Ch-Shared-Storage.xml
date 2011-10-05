@@ -338,11 +338,11 @@ order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
-        expected-quorum-votes=”2” \
+        expected-quorum-votes="2" \
         stonith-enabled="false" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
-        resource-stickiness=”100”
+        resource-stickiness="100"
     </screen>
     <para>
       Once we’re happy with the changes, we can tell the cluster to start using them and use crm_mon to check everything is functioning.
@@ -428,11 +428,11 @@ order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
-        expected-quorum-votes=”2” \
+        expected-quorum-votes="2" \
         stonith-enabled="false" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
-        resource-stickiness=”100”
+        resource-stickiness="100"
     </screen>
     <para>
       After reviewing the new configuration, we again upload it and watch the cluster put it into effect.
@@ -464,7 +464,7 @@ Master/Slave Set: WebDataClone
     <section>
       <title>Testing Migration</title>
       <para>
-	We could shut down the active node again, but another way to safely simulate recovery is to put the node into what is called “standby mode”.
+	We could shut down the active node again, but another way to safely simulate recovery is to put the node into what is called "standby mode".
 	Nodes in this state tell the cluster that they are not allowed to run resources.
 	Any resources found active there will be moved elsewhere.
 	This feature can be particularly useful when updating the resources’ packages.

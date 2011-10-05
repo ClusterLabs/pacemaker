@@ -24,7 +24,7 @@ property $id="cib-bootstrap-options" \
         expected-quorum-votes="2"
 </screen>
 		<para>
-			For those that are not of afraid of XML, you can see the raw configuration by appending “xml” to the previous command.
+			For those that are not of afraid of XML, you can see the raw configuration by appending "xml" to the previous command.
 		</para>
 		
 <screen>
@@ -76,7 +76,7 @@ crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: NOTE: Clusters wi
 			</para>
 			</footnote> , Pacemaker ships with STONITH <footnote>
 			<para>
-				A common node fencing mechanism. Used to ensure data integrity by powering off “bad” nodes.
+				A common node fencing mechanism. Used to ensure data integrity by powering off "bad" nodes.
 			</para>
 			</footnote> enabled. However it also knows when no STONITH configuration has been supplied and reports this as a problem (since the cluster would not be able to make progress if a situation requiring node fencing arose).
 		</para>
@@ -244,7 +244,7 @@ Online: [ pcmk-2 ]
 		<section>
 			<title>Quorum and Two-Node Clusters</title>
 			<para>
-				This is because the cluster no longer has quorum, as can be seen by the text “partition WITHOUT quorum” (emphasised green) in the output above. In order to reduce the possibility of data corruption, Pacemaker’s default behavior is to stop all resources if the cluster does not have quorum.
+				This is because the cluster no longer has quorum, as can be seen by the text "partition WITHOUT quorum" (emphasised green) in the output above. In order to reduce the possibility of data corruption, Pacemaker’s default behavior is to stop all resources if the cluster does not have quorum.
 			</para>
 			<para>
 				A cluster is said to have quorum when more than half the known or expected nodes are online, or for the mathematically inclined, whenever the following equation is true:
@@ -327,11 +327,11 @@ ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-
 				In some circumstances, it is highly desirable to prevent healthy resources from being moved around the cluster. Moving resources almost always requires a period of downtime. For complex services like Oracle databases, this period can be quite long.
 			</para>
 			<para>
-				To address this, Pacemaker has the concept of resource stickiness which controls how much a service prefers to stay running where it is. You may like to think of it as the “cost” of any downtime. By default, Pacemaker assumes there is zero cost associated with moving resources and will do so to achieve “optimal<footnote>
+				To address this, Pacemaker has the concept of resource stickiness which controls how much a service prefers to stay running where it is. You may like to think of it as the "cost" of any downtime. By default, Pacemaker assumes there is zero cost associated with moving resources and will do so to achieve "optimal<footnote>
 				<para>
 					It should be noted that Pacemaker’s definition of optimal may not always agree with that of a human’s. The order in which Pacemaker processes lists of resources and nodes creates implicit preferences in situations where the administrator has not explicitly specified them.
 				</para>
-				</footnote>” resource placement. We can specify a different stickiness for every resource, but it is often sufficient to change the default.
+				</footnote>" resource placement. We can specify a different stickiness for every resource, but it is often sufficient to change the default.
 			</para>
 			
 <screen>
