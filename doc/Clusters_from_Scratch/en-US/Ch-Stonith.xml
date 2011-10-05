@@ -96,11 +96,6 @@ primitive WebSite ocf:heartbeat:apache \
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
         params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \
         op monitor interval="30s"
-primitive dlm ocf:pacemaker:controld \
-        op monitor interval="120s"
-primitive gfs-control ocf:pacemaker:controld \
-   params daemon=”gfs_controld.pcmk” args=”-g 0” \
-        op monitor interval="120s"
 <emphasis>primitive rsa-fencing stonith::external/ibmrsa \</emphasis>
 <emphasis> params hostname=”pcmk-1 pcmk-2" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \</emphasis>
 <emphasis> op monitor interval="60s"</emphasis>
@@ -111,20 +106,12 @@ clone WebFSClone WebFS
 clone WebIP ClusterIP  \
         meta globally-unique=”true” clone-max=”2” clone-node-max=”2”
 clone WebSiteClone WebSite
-clone dlm-clone dlm \
-        meta interleave="true"
-clone gfs-clone gfs-control \
-        meta interleave="true"
-colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone
 colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone
 colocation fs_on_drbd inf: WebFSClone WebDataClone:Master
-colocation gfs-with-dlm inf: gfs-clone dlm-clone
 colocation website-with-ip inf: WebSiteClone WebIP
 order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start
 order WebSite-after-WebFS inf: WebFSClone WebSiteClone
 order apache-after-ip inf: WebIP WebSiteClone
-order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone
-order start-gfs-after-dlm inf: dlm-clone gfs-clone
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \

@@ -23,11 +23,6 @@ primitive WebSite ocf:heartbeat:apache \
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
         params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \
         op monitor interval="30s"
-primitive dlm ocf:pacemaker:controld \
-        op monitor interval="120s"
-primitive gfs-control ocf:pacemaker:controld \
-   params daemon=”gfs_controld.pcmk” args=”-g 0” \
-        op monitor interval="120s"
 primitive rsa-fencing stonith::external/ibmrsa \
         params hostname=”pcmk-1 pcmk-2" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \
         op monitor interval="60s"
@@ -38,20 +33,12 @@ clone WebFSClone WebFS
 clone WebIP ClusterIP  \
         meta globally-unique=”true” clone-max=”2” clone-node-max=”2”
 clone WebSiteClone WebSite
-clone dlm-clone dlm \
-        meta interleave="true"
-clone gfs-clone gfs-control \
-        meta interleave="true"
-colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone
 colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone
 colocation fs_on_drbd inf: WebFSClone WebDataClone:Master
-colocation gfs-with-dlm inf: gfs-clone dlm-clone
 colocation website-with-ip inf: WebSiteClone WebIP
 order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start
 order WebSite-after-WebFS inf: WebFSClone WebSiteClone
 order apache-after-ip inf: WebIP WebSiteClone
-order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone
-order start-gfs-after-dlm inf: dlm-clone gfs-clone
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
@@ -180,42 +167,6 @@ clone WebIP ClusterIP  
 					TODO: The RA should check for globally-unique=true when cloned
 				</para>
 			</note>
-		</section>
-		
-		<section>
-			<title>Distributed lock manager</title>
-			<para>
-				Cluster filesystems like GFS2 require a lock manager. This service starts the daemon that provides user-space applications (such as the GFS2 daemon) with access to the in-kernel lock manager. Since we need it to be available on all nodes in the cluster, we have it cloned.
-			</para>
-			
-<screen>
-primitive dlm ocf:pacemaker:controld \
-        op monitor interval="120s"
-clone dlm-clone dlm \
-        meta interleave="true
-</screen>
-			<note>
-				<para>
-					TODO: Confirm <literal>interleave</literal> is no longer needed
-				</para>
-			</note>
-		</section>
-		
-		<section>
-			<title>GFS control daemon</title>
-			<para>
-				GFS2 also needs a user-space/kernel bridge that runs on every node. So here we have another clone, however this time we must also specify that it can only run on machines that are also running the DLM (colocation constraint) and that it can only be started after the DLM is running (order constraint). Additionally, the gfs-control clone should only care about the DLM instances it is paired with, so we need to set the interleave option.
-			</para>
-			
-<screen>
-primitive gfs-control ocf:pacemaker:controld \
-   params daemon=”gfs_controld.pcmk” args=”-g 0” \
-        op monitor interval="120s"
-clone gfs-clone gfs-control \
-        meta interleave="true"
-colocation gfs-with-dlm inf: gfs-clone dlm-clone
-order start-gfs-after-dlm inf: dlm-clone gfs-clone
-</screen>
 		</section>
 		
 		<section>

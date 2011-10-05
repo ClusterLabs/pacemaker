@@ -51,13 +51,27 @@
 	<programlisting>
 	<![CDATA[
 <?xml version="1.0"?>
-<cluster config_version="1" name="beekhof">
-  <logging debug="true"/>
+<cluster config_version="1" name="east8">
+  <logging debug="off"/>
   <clusternodes>
-    <clusternode name="pcmk-1" nodeid="1"/>
-    <clusternode name="pcmk-2" nodeid="2"/>
+    <clusternode name="pcmk-1" nodeid="1">
+      <fence>
+        <method name="pcmk-redirect">
+          <device name="pcmk" port="pcmk-1"/>
+        </method>
+      </fence>
+    </clusternode>
+    <clusternode name="pcmk-3" nodeid="2">
+      <fence>
+        <method name="pcmk-redirect">
+          <device name="pcmk" port="pcmk-3"/>
+        </method>
+      </fence>
+    </clusternode>
   </clusternodes>
-  <cman two_node="1" expected_votes="1"/>
+  <fencedevices>
+    <fencedevice name="pcmk" agent="fence_pcmk"/>
+  </fencedevices>
 </cluster>
 	]]>
 	</programlisting>

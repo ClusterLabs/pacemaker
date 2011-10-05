@@ -15,292 +15,449 @@
       The only hitch is that we need to use a cluster-aware filesystem. The one we used earlier with DRBD, ext4, is not one of those.
       Both OCFS2 and GFS2 are supported, however here we will use GFS2 which comes with &DISTRO; &DISTRO_VERSION; .
     </para>
-  </section>
-  <section>
-    <title>Install a Cluster Filesystem - GFS2</title>
     <para>
-      The first thing to do is install gfs2-utils and gfs-pcmk on each machine. Since December 2010, the gfs-pcmk package in Fedora was replaced with the gfs2-cluster package and that will be installed automatically in place of the gfs-pcmk. If that package shows up on the line "installed" at the end of the yum output, please refer to the Appendix on "Using CMAN"
+      We'll also need to use CMAN for Cluster Membership and Quorum instead of our Corosync plugin.
     </para>
-    <screen>
-[root@pcmk-1 ~]# <userinput>yum install -y gfs2-utils gfs2-cluster gfs-pcmk</userinput>
+  </section>
+	
+  <section>
+    <title>Adding CMAN Support</title>
+      <para>
+	<ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Suite_Overview/index.html#s2-clumembership-overview-CSO">CMAN v3</ulink> is a Corsync plugin that monitors the names and number of active cluster nodes in order to deliver membership and quorum information to clients (such as the Pacemaker daemons).
+      </para>
+      <para>
+	In a traditional Corosync-Pacemaker cluster, a Pacemaker plugin is loaded to provide membership and quorum information. 
+	The motivation for wanting to use CMAN for this instead, is to ensure all elements of the cluster stack are making decisions based on the same membership and quorum data.
+	<footnote>
+	  <para>
+	    A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecssary down-time and/or data corruption.
+	  </para>
+	</footnote>
+      </para>
+      <para>
+	CMAN has been around longer than Pacemaker and is part of the Red Hat cluster stack, so it is available and supported by many distributions and other pieces of software (such as OCFS2 and GFS2).
+	For this reason it makes sense to support it.
+      </para>
+      <warning>
+	<para>
+	  Ensure Corosync and Pacemaker are stopped <emphasis>on all nodes</emphasis> before continuing
+	</para>
+      </warning>
+      <warning>
+	<para>
+	  Be sure to disable the Pacemaker plugin before continuing with this section.
+	  In most cases, this can be achieved by removing <filename>/etc/corosync/service.d/pcmk</filename> and stopping Corosync.
+	</para>
+      </warning>
+      <section>
+	<title>Installing the required Software</title>
+	<screen>
+[root@pcmk-1 ~]# <userinput>yum install -y cman gfs2-utils gfs2-cluster</userinput>
+Loaded plugins: auto-update-debuginfo
 Setting up Install Process
 Resolving Dependencies
 --&gt; Running transaction check
----&gt; Package gfs-pcmk.x86_64 0:3.0.5-2.fc12 set to be updated
---&gt; Processing Dependency: libSaCkpt.so.3(OPENAIS_CKPT_B.01.01)(64bit) for package: gfs-pcmk-3.0.5-2.fc12.x86_64
---&gt; Processing Dependency: dlm-pcmk for package: gfs-pcmk-3.0.5-2.fc12.x86_64
---&gt; Processing Dependency: libccs.so.3()(64bit) for package: gfs-pcmk-3.0.5-2.fc12.x86_64
---&gt; Processing Dependency: libdlmcontrol.so.3()(64bit) for package: gfs-pcmk-3.0.5-2.fc12.x86_64
---&gt; Processing Dependency: liblogthread.so.3()(64bit) for package: gfs-pcmk-3.0.5-2.fc12.x86_64
---&gt; Processing Dependency: libSaCkpt.so.3()(64bit) for package: gfs-pcmk-3.0.5-2.fc12.x86_64
----&gt; Package gfs2-utils.x86_64 0:3.0.5-2.fc12 set to be updated
+---&gt; Package cman.x86_64 0:3.1.7-1.fc15 will be installed
+--&gt; Processing Dependency: modcluster >= 0.18.1-1 for package: cman-3.1.7-1.fc15.x86_64
+--&gt; Processing Dependency: fence-agents >= 3.1.5-1 for package: cman-3.1.7-1.fc15.x86_64
+--&gt; Processing Dependency: openais >= 1.1.4-1 for package: cman-3.1.7-1.fc15.x86_64
+--&gt; Processing Dependency: ricci >= 0.18.1-1 for package: cman-3.1.7-1.fc15.x86_64
+--&gt; Processing Dependency: libSaCkpt.so.3(OPENAIS_CKPT_B.01.01)(64bit) for package: cman-3.1.7-1.fc15.x86_64
+--&gt; Processing Dependency: libSaCkpt.so.3()(64bit) for package: cman-3.1.7-1.fc15.x86_64
+---&gt; Package gfs2-cluster.x86_64 0:3.1.1-2.fc15 will be installed
+---&gt; Package gfs2-utils.x86_64 0:3.1.1-2.fc15 will be installed
 --&gt; Running transaction check
----&gt; Package clusterlib.x86_64 0:3.0.5-2.fc12 set to be updated
----&gt; Package dlm-pcmk.x86_64 0:3.0.5-2.fc12 set to be updated
----&gt; Package openaislib.x86_64 0:1.1.0-1.fc12 set to be updated
+---&gt; Package fence-agents.x86_64 0:3.1.5-1.fc15 will be installed
+--&gt; Processing Dependency: /usr/bin/virsh for package: fence-agents-3.1.5-1.fc15.x86_64
+--&gt; Processing Dependency: net-snmp-utils for package: fence-agents-3.1.5-1.fc15.x86_64
+--&gt; Processing Dependency: sg3_utils for package: fence-agents-3.1.5-1.fc15.x86_64
+--&gt; Processing Dependency: perl(Net::Telnet) for package: fence-agents-3.1.5-1.fc15.x86_64
+--&gt; Processing Dependency: /usr/bin/ipmitool for package: fence-agents-3.1.5-1.fc15.x86_64
+--&gt; Processing Dependency: perl-Net-Telnet for package: fence-agents-3.1.5-1.fc15.x86_64
+--&gt; Processing Dependency: pexpect for package: fence-agents-3.1.5-1.fc15.x86_64
+--&gt; Processing Dependency: pyOpenSSL for package: fence-agents-3.1.5-1.fc15.x86_64
+--&gt; Processing Dependency: python-suds for package: fence-agents-3.1.5-1.fc15.x86_64
+---&gt; Package modcluster.x86_64 0:0.18.7-1.fc15 will be installed
+--&gt; Processing Dependency: oddjob for package: modcluster-0.18.7-1.fc15.x86_64
+---&gt; Package openais.x86_64 0:1.1.4-2.fc15 will be installed
+---&gt; Package openaislib.x86_64 0:1.1.4-2.fc15 will be installed
+---&gt; Package ricci.x86_64 0:0.18.7-1.fc15 will be installed
+--&gt; Processing Dependency: parted for package: ricci-0.18.7-1.fc15.x86_64
+--&gt; Processing Dependency: nss-tools for package: ricci-0.18.7-1.fc15.x86_64
+--&gt; Running transaction check
+---&gt; Package ipmitool.x86_64 0:1.8.11-6.fc15 will be installed
+---&gt; Package libvirt-client.x86_64 0:0.8.8-7.fc15 will be installed
+--&gt; Processing Dependency: libnetcf.so.1(NETCF_1.3.0)(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: cyrus-sasl-md5 for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: gettext for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: nc for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: libnuma.so.1(libnuma_1.1)(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: libnuma.so.1(libnuma_1.2)(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: libnetcf.so.1(NETCF_1.2.0)(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: gnutls-utils for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: libnetcf.so.1(NETCF_1.0.0)(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: libxenstore.so.3.0()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: libyajl.so.1()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: libnl.so.1()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: libnuma.so.1()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: libaugeas.so.0()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+--&gt; Processing Dependency: libnetcf.so.1()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
+---&gt; Package net-snmp-utils.x86_64 1:5.6.1-7.fc15 will be installed
+---&gt; Package nss-tools.x86_64 0:3.12.10-6.fc15 will be installed
+---&gt; Package oddjob.x86_64 0:0.31-2.fc15 will be installed
+---&gt; Package parted.x86_64 0:2.3-10.fc15 will be installed
+---&gt; Package perl-Net-Telnet.noarch 0:3.03-12.fc15 will be installed
+---&gt; Package pexpect.noarch 0:2.3-6.fc15 will be installed
+---&gt; Package pyOpenSSL.x86_64 0:0.10-3.fc15 will be installed
+---&gt; Package python-suds.noarch 0:0.3.9-3.fc15 will be installed
+---&gt; Package sg3_utils.x86_64 0:1.29-3.fc15 will be installed
+--&gt; Processing Dependency: sg3_utils-libs = 1.29-3.fc15 for package: sg3_utils-1.29-3.fc15.x86_64
+--&gt; Processing Dependency: libsgutils2.so.2()(64bit) for package: sg3_utils-1.29-3.fc15.x86_64
+--&gt; Running transaction check
+---&gt; Package augeas-libs.x86_64 0:0.9.0-1.fc15 will be installed
+---&gt; Package cyrus-sasl-md5.x86_64 0:2.1.23-18.fc15 will be installed
+---&gt; Package gettext.x86_64 0:0.18.1.1-7.fc15 will be installed
+--&gt; Processing Dependency: libgomp.so.1(GOMP_1.0)(64bit) for package: gettext-0.18.1.1-7.fc15.x86_64
+--&gt; Processing Dependency: libgettextlib-0.18.1.so()(64bit) for package: gettext-0.18.1.1-7.fc15.x86_64
+--&gt; Processing Dependency: libgettextsrc-0.18.1.so()(64bit) for package: gettext-0.18.1.1-7.fc15.x86_64
+--&gt; Processing Dependency: libgomp.so.1()(64bit) for package: gettext-0.18.1.1-7.fc15.x86_64
+---&gt; Package gnutls-utils.x86_64 0:2.10.5-1.fc15 will be installed
+---&gt; Package libnl.x86_64 0:1.1-14.fc15 will be installed
+---&gt; Package nc.x86_64 0:1.100-3.fc15 will be installed
+--&gt; Processing Dependency: libbsd.so.0(LIBBSD_0.0)(64bit) for package: nc-1.100-3.fc15.x86_64
+--&gt; Processing Dependency: libbsd.so.0(LIBBSD_0.2)(64bit) for package: nc-1.100-3.fc15.x86_64
+--&gt; Processing Dependency: libbsd.so.0()(64bit) for package: nc-1.100-3.fc15.x86_64
+---&gt; Package netcf-libs.x86_64 0:0.1.9-1.fc15 will be installed
+---&gt; Package numactl.x86_64 0:2.0.7-1.fc15 will be installed
+---&gt; Package sg3_utils-libs.x86_64 0:1.29-3.fc15 will be installed
+---&gt; Package xen-libs.x86_64 0:4.1.1-3.fc15 will be installed
+--&gt; Processing Dependency: xen-licenses for package: xen-libs-4.1.1-3.fc15.x86_64
+---&gt; Package yajl.x86_64 0:1.0.11-1.fc15 will be installed
+--&gt; Running transaction check
+---&gt; Package gettext-libs.x86_64 0:0.18.1.1-7.fc15 will be installed
+---&gt; Package libbsd.x86_64 0:0.2.0-4.fc15 will be installed
+---&gt; Package libgomp.x86_64 0:4.6.1-9.fc15 will be installed
+---&gt; Package xen-licenses.x86_64 0:4.1.1-3.fc15 will be installed
 --&gt; Finished Dependency Resolution
 
 Dependencies Resolved
 
-===========================================================================================
- Package                Arch               Version                   Repository        Size
-===========================================================================================
+=============================================================================
+ Package              Arch        Version                 Repository    Size
+=============================================================================
 Installing:
- gfs-pcmk               x86_64             3.0.5-2.fc12              custom           101 k
- gfs2-utils             x86_64             3.0.5-2.fc12              custom           208 k
+ cman                 x86_64      3.1.7-1.fc15            updates      366 k
+ gfs2-cluster         x86_64      3.1.1-2.fc15            fedora        69 k
+ gfs2-utils           x86_64      3.1.1-2.fc15            fedora       222 k
 Installing for dependencies:
- clusterlib             x86_64             3.0.5-2.fc12              custom            65 k
- dlm-pcmk               x86_64             3.0.5-2.fc12              custom            93 k
- openaislib             x86_64             1.1.0-1.fc12              fedora            76 k
+ augeas-libs          x86_64      0.9.0-1.fc15            updates      311 k
+ cyrus-sasl-md5       x86_64      2.1.23-18.fc15          updates       46 k
+ fence-agents         x86_64      3.1.5-1.fc15            updates      186 k
+ gettext              x86_64      0.18.1.1-7.fc15         fedora       1.0 M
+ gettext-libs         x86_64      0.18.1.1-7.fc15         fedora       610 k
+ gnutls-utils         x86_64      2.10.5-1.fc15           fedora       101 k
+ ipmitool             x86_64      1.8.11-6.fc15           fedora       273 k
+ libbsd               x86_64      0.2.0-4.fc15            fedora        37 k
+ libgomp              x86_64      4.6.1-9.fc15            updates       95 k
+ libnl                x86_64      1.1-14.fc15             fedora       118 k
+ libvirt-client       x86_64      0.8.8-7.fc15            updates      2.4 M
+ modcluster           x86_64      0.18.7-1.fc15           fedora       187 k
+ nc                   x86_64      1.100-3.fc15            updates       24 k
+ net-snmp-utils       x86_64      1:5.6.1-7.fc15          fedora       180 k
+ netcf-libs           x86_64      0.1.9-1.fc15            updates       50 k
+ nss-tools            x86_64      3.12.10-6.fc15          updates      723 k
+ numactl              x86_64      2.0.7-1.fc15            updates       54 k
+ oddjob               x86_64      0.31-2.fc15             fedora        61 k
+ openais              x86_64      1.1.4-2.fc15            fedora       190 k
+ openaislib           x86_64      1.1.4-2.fc15            fedora        88 k
+ parted               x86_64      2.3-10.fc15             updates      618 k
+ perl-Net-Telnet      noarch      3.03-12.fc15            fedora        55 k
+ pexpect              noarch      2.3-6.fc15              fedora       141 k
+ pyOpenSSL            x86_64      0.10-3.fc15             fedora       198 k
+ python-suds          noarch      0.3.9-3.fc15            fedora       195 k
+ ricci                x86_64      0.18.7-1.fc15           fedora       584 k
+ sg3_utils            x86_64      1.29-3.fc15             fedora       465 k
+ sg3_utils-libs       x86_64      1.29-3.fc15             fedora        54 k
+ xen-libs             x86_64      4.1.1-3.fc15            updates      310 k
+ xen-licenses         x86_64      4.1.1-3.fc15            updates       64 k
+ yajl                 x86_64      1.0.11-1.fc15           fedora        27 k
 
 Transaction Summary
-===========================================================================================
-Install       5 Package(s)
-Upgrade       0 Package(s)
+=============================================================================
+Install      34 Package(s)
 
-Total download size: 541 k
+Total download size: 10 M
+Installed size: 38 M
 Downloading Packages:
-(1/5): clusterlib-3.0.5-2.fc12.x86_64.rpm                                |  65 kB     00:00
-(2/5): dlm-pcmk-3.0.5-2.fc12.x86_64.rpm                                  |  93 kB     00:00
-(3/5): gfs-pcmk-3.0.5-2.fc12.x86_64.rpm                                  | 101 kB     00:00
-(4/5): gfs2-utils-3.0.5-2.fc12.x86_64.rpm                                | 208 kB     00:00
-(5/5): openaislib-1.1.0-1.fc12.x86_64.rpm                                |  76 kB     00:00
--------------------------------------------------------------------------------------------
-Total                                                           992 kB/s | 541 kB     00:00
+(1/34): augeas-libs-0.9.0-1.fc15.x86_64.rpm           | 311 kB     00:00     
+(2/34): cman-3.1.7-1.fc15.x86_64.rpm                  | 366 kB     00:00     
+(3/34): cyrus-sasl-md5-2.1.23-18.fc15.x86_64.rpm      |  46 kB     00:00     
+(4/34): fence-agents-3.1.5-1.fc15.x86_64.rpm          | 186 kB     00:00     
+(5/34): gettext-0.18.1.1-7.fc15.x86_64.rpm            | 1.0 MB     00:01     
+(6/34): gettext-libs-0.18.1.1-7.fc15.x86_64.rpm       | 610 kB     00:00     
+(7/34): gfs2-cluster-3.1.1-2.fc15.x86_64.rpm          |  69 kB     00:00     
+(8/34): gfs2-utils-3.1.1-2.fc15.x86_64.rpm            | 222 kB     00:00     
+(9/34): gnutls-utils-2.10.5-1.fc15.x86_64.rpm         | 101 kB     00:00     
+(10/34): ipmitool-1.8.11-6.fc15.x86_64.rpm            | 273 kB     00:00     
+(11/34): libbsd-0.2.0-4.fc15.x86_64.rpm               |  37 kB     00:00     
+(12/34): libgomp-4.6.1-9.fc15.x86_64.rpm              |  95 kB     00:00     
+(13/34): libnl-1.1-14.fc15.x86_64.rpm                 | 118 kB     00:00     
+(14/34): libvirt-client-0.8.8-7.fc15.x86_64.rpm       | 2.4 MB     00:01     
+(15/34): modcluster-0.18.7-1.fc15.x86_64.rpm          | 187 kB     00:00     
+(16/34): nc-1.100-3.fc15.x86_64.rpm                   |  24 kB     00:00     
+(17/34): net-snmp-utils-5.6.1-7.fc15.x86_64.rpm       | 180 kB     00:00     
+(18/34): netcf-libs-0.1.9-1.fc15.x86_64.rpm           |  50 kB     00:00     
+(19/34): nss-tools-3.12.10-6.fc15.x86_64.rpm          | 723 kB     00:00     
+(20/34): numactl-2.0.7-1.fc15.x86_64.rpm              |  54 kB     00:00     
+(21/34): oddjob-0.31-2.fc15.x86_64.rpm                |  61 kB     00:00     
+(22/34): openais-1.1.4-2.fc15.x86_64.rpm              | 190 kB     00:00     
+(23/34): openaislib-1.1.4-2.fc15.x86_64.rpm           |  88 kB     00:00     
+(24/34): parted-2.3-10.fc15.x86_64.rpm                | 618 kB     00:00     
+(25/34): perl-Net-Telnet-3.03-12.fc15.noarch.rpm      |  55 kB     00:00     
+(26/34): pexpect-2.3-6.fc15.noarch.rpm                | 141 kB     00:00     
+(27/34): pyOpenSSL-0.10-3.fc15.x86_64.rpm             | 198 kB     00:00     
+(28/34): python-suds-0.3.9-3.fc15.noarch.rpm          | 195 kB     00:00     
+(29/34): ricci-0.18.7-1.fc15.x86_64.rpm               | 584 kB     00:00     
+(30/34): sg3_utils-1.29-3.fc15.x86_64.rpm             | 465 kB     00:00     
+(31/34): sg3_utils-libs-1.29-3.fc15.x86_64.rpm        |  54 kB     00:00     
+(32/34): xen-libs-4.1.1-3.fc15.x86_64.rpm             | 310 kB     00:00     
+(33/34): xen-licenses-4.1.1-3.fc15.x86_64.rpm         |  64 kB     00:00     
+(34/34): yajl-1.0.11-1.fc15.x86_64.rpm                |  27 kB     00:00     
+-----------------------------------------------------------------------------
+Total                                        803 kB/s |  10 MB     00:12     
 Running rpm_check_debug
 Running Transaction Test
-Finished Transaction Test
 Transaction Test Succeeded
 Running Transaction
-  Installing     : clusterlib-3.0.5-2.fc12.x86_64                                       1/5 
-  Installing     : openaislib-1.1.0-1.fc12.x86_64                                       2/5 
-  Installing     : dlm-pcmk-3.0.5-2.fc12.x86_64                                         3/5 
-  Installing     : gfs-pcmk-3.0.5-2.fc12.x86_64                                         4/5 
-  Installing     : gfs2-utils-3.0.5-2.fc12.x86_64                                       5/5 
+  Installing : openais-1.1.4-2.fc15.x86_64                              1/34 
+  Installing : openaislib-1.1.4-2.fc15.x86_64                           2/34 
+  Installing : libnl-1.1-14.fc15.x86_64                                 3/34 
+  Installing : augeas-libs-0.9.0-1.fc15.x86_64                          4/34 
+  Installing : oddjob-0.31-2.fc15.x86_64                                5/34 
+  Installing : modcluster-0.18.7-1.fc15.x86_64                          6/34 
+  Installing : netcf-libs-0.1.9-1.fc15.x86_64                           7/34 
+  Installing : 1:net-snmp-utils-5.6.1-7.fc15.x86_64                     8/34 
+  Installing : sg3_utils-libs-1.29-3.fc15.x86_64                        9/34 
+  Installing : sg3_utils-1.29-3.fc15.x86_64                            10/34 
+  Installing : libgomp-4.6.1-9.fc15.x86_64                             11/34 
+  Installing : gnutls-utils-2.10.5-1.fc15.x86_64                       12/34 
+  Installing : pyOpenSSL-0.10-3.fc15.x86_64                            13/34 
+  Installing : parted-2.3-10.fc15.x86_64                               14/34 
+  Installing : cyrus-sasl-md5-2.1.23-18.fc15.x86_64                    15/34 
+  Installing : python-suds-0.3.9-3.fc15.noarch                         16/34 
+  Installing : ipmitool-1.8.11-6.fc15.x86_64                           17/34 
+  Installing : perl-Net-Telnet-3.03-12.fc15.noarch                     18/34 
+  Installing : numactl-2.0.7-1.fc15.x86_64                             19/34 
+  Installing : yajl-1.0.11-1.fc15.x86_64                               20/34 
+  Installing : gettext-libs-0.18.1.1-7.fc15.x86_64                     21/34 
+  Installing : gettext-0.18.1.1-7.fc15.x86_64                          22/34 
+  Installing : libbsd-0.2.0-4.fc15.x86_64                              23/34 
+  Installing : nc-1.100-3.fc15.x86_64                                  24/34 
+  Installing : xen-licenses-4.1.1-3.fc15.x86_64                        25/34 
+  Installing : xen-libs-4.1.1-3.fc15.x86_64                            26/34 
+  Installing : libvirt-client-0.8.8-7.fc15.x86_64                      27/34 
+
+Note: This output shows SysV services only and does not include native
+      systemd services. SysV configuration data might be overridden by native
+      systemd configuration.
+
+  Installing : nss-tools-3.12.10-6.fc15.x86_64                         28/34 
+  Installing : ricci-0.18.7-1.fc15.x86_64                              29/34 
+  Installing : pexpect-2.3-6.fc15.noarch                               30/34 
+  Installing : fence-agents-3.1.5-1.fc15.x86_64                        31/34 
+  Installing : cman-3.1.7-1.fc15.x86_64                                32/34 
+  Installing : gfs2-cluster-3.1.1-2.fc15.x86_64                        33/34 
+  Installing : gfs2-utils-3.1.1-2.fc15.x86_64                          34/34 
 
 Installed:
-  gfs-pcmk.x86_64 0:3.0.5-2.fc12                    gfs2-utils.x86_64 0:3.0.5-2.fc12
+  cman.x86_64 0:3.1.7-1.fc15           gfs2-cluster.x86_64 0:3.1.1-2.fc15    
+  gfs2-utils.x86_64 0:3.1.1-2.fc15    
 
 Dependency Installed:
-  clusterlib.x86_64 0:3.0.5-2.fc12   dlm-pcmk.x86_64 0:3.0.5-2.fc12 
-  openaislib.x86_64 0:1.1.0-1.fc12  
+  augeas-libs.x86_64 0:0.9.0-1.fc15                                          
+  cyrus-sasl-md5.x86_64 0:2.1.23-18.fc15                                     
+  fence-agents.x86_64 0:3.1.5-1.fc15                                         
+  gettext.x86_64 0:0.18.1.1-7.fc15                                           
+  gettext-libs.x86_64 0:0.18.1.1-7.fc15                                      
+  gnutls-utils.x86_64 0:2.10.5-1.fc15                                        
+  ipmitool.x86_64 0:1.8.11-6.fc15                                            
+  libbsd.x86_64 0:0.2.0-4.fc15                                               
+  libgomp.x86_64 0:4.6.1-9.fc15                                              
+  libnl.x86_64 0:1.1-14.fc15                                                 
+  libvirt-client.x86_64 0:0.8.8-7.fc15                                       
+  modcluster.x86_64 0:0.18.7-1.fc15                                          
+  nc.x86_64 0:1.100-3.fc15                                                   
+  net-snmp-utils.x86_64 1:5.6.1-7.fc15                                       
+  netcf-libs.x86_64 0:0.1.9-1.fc15                                           
+  nss-tools.x86_64 0:3.12.10-6.fc15                                          
+  numactl.x86_64 0:2.0.7-1.fc15                                              
+  oddjob.x86_64 0:0.31-2.fc15                                                
+  openais.x86_64 0:1.1.4-2.fc15                                              
+  openaislib.x86_64 0:1.1.4-2.fc15                                           
+  parted.x86_64 0:2.3-10.fc15                                                
+  perl-Net-Telnet.noarch 0:3.03-12.fc15                                      
+  pexpect.noarch 0:2.3-6.fc15                                                
+  pyOpenSSL.x86_64 0:0.10-3.fc15                                             
+  python-suds.noarch 0:0.3.9-3.fc15                                          
+  ricci.x86_64 0:0.18.7-1.fc15                                               
+  sg3_utils.x86_64 0:1.29-3.fc15                                             
+  sg3_utils-libs.x86_64 0:1.29-3.fc15                                        
+  xen-libs.x86_64 0:4.1.1-3.fc15                                             
+  xen-licenses.x86_64 0:4.1.1-3.fc15                                         
+  yajl.x86_64 0:1.0.11-1.fc15                                                
 
 Complete!
-[root@pcmk-1 x86_64]#
-    </screen>
-    <warning>
+[root@pcmk-1 ~]#     
+      </screen>    
+    </section>
+    <section>
+      <title>Configuring CMAN</title>
       <para>
-	If this step fails, it is likely that your version/distribution does not ship the "Pacemaker" versions of dlm_controld and/or gfs_controld.
-	Normally these files would be called <filename>dlm_controld.pcmk</filename> and <filename>gfs_controld.pcmk</filename> and live in the <filename>/usr/sbin</filename> directory.
-      </para>			  
+	The first thing we need to do, is tell CMAN complete starting up even without quorum.
+	We can do this by changing the quorum timeout setting:
+      </para>
+      <screen>
+[root@pcmk-1 ~]# <userinput>sed -i.sed "s/.*CMAN_QUORUM_TIMEOUT=.*/CMAN_QUORUM_TIMEOUT=0/g" /etc/sysconfig/cman</userinput>
+      </screen>
+
       <para>
-	If you cannot locate an installation source for these files, you will need to install a package called <literal>cman</literal> and reconfigure Corosync to use it as outlined in <xref linkend="ap-cman"/>.
+	Next we create a basic configuration file and place is in <filename>/etc/cluster/cluster.conf</filename>.
+	The <literal>name</literal> used for each <literal>clusternode</literal> should correspond to that node's <command>uname -n</command>, just as Pacemaker expects.
+	The <literal>nodeid</literal> can be any positive mumber but nust be unique.
+	<example>
+	  <title>Basic cluster.conf for a two-node cluster</title>
+	  <programlisting>
+	<![CDATA[
+<?xml version="1.0"?>
+<cluster config_version="1" name="my_cluster_name">
+  <logging debug="off"/>
+  <clusternodes>
+    <clusternode name="pcmk-1" nodeid="1"/>
+    <clusternode name="pcmk-2" nodeid="2"/>
+  </clusternodes>
+</cluster>
+	]]>
+	  </programlisting>
+	</example>
+      </para>
+    </section>
+    <section>
+      <title>Configuring CMAN Fencing</title>
+      <para>
+	We configure the <filename>fence_pcmk</filename> agent (supplied with Pacemaker) to redirect any fencing requests from CMAN components (such as dlm_controld) to Pacemaker.
+	Pacemaker's fencing subsystem lets other parts of the stack know that a node has been successfully fenced, thus avoiding the need for it to be fenced again when other subsystems notice the node is gone.
+	<warning>
+	  <para>
+	    Configuring real fencing devices in CMAN will result in nodes being fenced multiple times as different parts of the stack notice the node is missing or failed.
+	  </para>
+	</warning>
       </para>
       <para>
-	When using CMAN, you can skip <xref linkend="gfs-integration"/> where <literal>dlm-clone</literal> and <literal>gfs-clone</literal> are created, and proceed directly to <xref linkend="gfs-create-filesystem"/> after ensuring that <literal>gfs2-utils</literal> and <literal>gfs2-cluster</literal> were installed.
+	The definition should be placed in the <literal>fencedevices</literal> section and contain:
+	<programlisting>
+	<![CDATA[
+ <fencedevice name="pcmk" agent="fence_pcmk"/>
+	]]>
+	</programlisting>
+	Each <literal>clusternode</literal> must be configured to use this <quote>device</quote> by adding a <literal>fence method</literal> block that lists the node's <literal>name</literal> as the <literal>port</literal>.
+	<programlisting>
+	<![CDATA[
+ <fence>
+   <method name="pcmk-redirect">
+     <device name="pcmk" port="node_name_here"/>
+   </method>
+ </fence>
+	]]>
+	</programlisting>
       </para>
-    </warning>
-  </section>
-	
-	<section id="gfs-integration">
-		<title>Setup Pacemaker-GFS2 Integration</title>
-		<para>
-			GFS2 needs two services to be running, the first is the user-space interface to the kernel’s distributed lock manager (DLM). The DLM is used to co-ordinate which node(s) can access a given file (and when) and integrates with Pacemaker to obtain node membership <footnote>
-			<para>
-				The list of nodes the cluster considers to be available
-			</para>
-			</footnote> information and fencing capabilities.
-		</para>
-		<para>
-			The second service is GFS2’s own control daemon which also integrates with Pacemaker to obtain node membership data.
-		</para>
-		<section>
-			<title>Add the DLM service</title>
-			<para>
-				The DLM control daemon needs to run on all active cluster nodes, so we will use the shells interactive mode to create a cloned resource.
-			</para>
-			
-<screen>
-[root@pcmk-1 ~]# <userinput>crm</userinput>
-crm(live)# <userinput>cib new stack-glue</userinput>
-INFO: stack-glue shadow CIB created
-crm(stack-glue)# <userinput>configure primitive dlm ocf:pacemaker:controld op monitor interval=120s</userinput>
-crm(stack-glue)# <userinput>configure clone dlm-clone dlm meta interleave=true</userinput>
-crm(stack-glue)# <userinput>configure show xml</userinput>
-crm(stack-glue)# <userinput>configure show</userinput>
-node pcmk-1
-node pcmk-2
-primitive WebData ocf:linbit:drbd \
-        params drbd_resource="wwwdata" \
-        op monitor interval="60s"
-primitive WebFS ocf:heartbeat:Filesystem \
-        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="ext4"
-primitive WebSite ocf:heartbeat:apache \
-        params configfile="/etc/httpd/conf/httpd.conf" \
-        op monitor interval="1min"
-primitive ClusterIP ocf:heartbeat:IPaddr2 \
-        params ip="192.168.122.101" cidr_netmask="32" \
-        op monitor interval="30s"
-<emphasis>primitive dlm ocf:pacemaker:controld \</emphasis>
-<emphasis> op monitor interval="120s"</emphasis>
-ms WebDataClone WebData \
-        meta master-max="1" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
-<emphasis>clone dlm-clone dlm \</emphasis>
-<emphasis> meta interleave="true"</emphasis>
-location prefer-pcmk-1 WebSite 50: pcmk-1
-colocation WebSite-with-WebFS inf: WebSite WebFS
-colocation fs_on_drbd inf: WebFS WebDataClone:Master
-colocation website-with-ip inf: WebSite ClusterIP
-order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
-order WebSite-after-WebFS inf: WebFS WebSite
-order apache-after-ip inf: ClusterIP WebSite
-property $id="cib-bootstrap-options" \
-        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-        cluster-infrastructure="openais" \
-        expected-quorum-votes=”2” \
-        stonith-enabled="false" \
-        no-quorum-policy="ignore"
-rsc_defaults $id="rsc-options" \
-        resource-stickiness=”100”
-</screen>
-			<note>
-			  <para>
-			    TODO: Explain the meaning of the interleave option
-			  </para>
-			</note>
-			<para>
-			  Review the configuration before uploading it to the cluster, quitting the shell and watching the cluster’s response
-			</para>
-			<screen>
-crm(stack-glue)# <userinput>cib commit stack-glue</userinput>
-INFO: commited 'stack-glue' shadow CIB to the cluster
-crm(stack-glue)# <userinput>quit</userinput>
-bye
-[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
-============
-Last updated: Thu Sep  3 20:49:54 2009
-Stack: openais
-Current DC: pcmk-2 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
-5 Resources configured.
-============
-
-Online: [ pcmk-1 pcmk-2 ]
-
-WebSite (ocf::heartbeat:apache):        Started pcmk-2
-Master/Slave Set: WebDataClone
-        Masters: [ pcmk-1 ]
-        Slaves: [ pcmk-2 ]
-ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2
-<emphasis>Clone Set: dlm-clone</emphasis>
-<emphasis> Started: [ pcmk-2 pcmk-1 ]</emphasis>
-WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2
-			</screen>
-		</section>
-		
-		<section>
-			<title>Add the GFS2 service</title>
-			<para>
-				Once the DLM is active, we can add the GFS2 control daemon.
-			</para>
-			<para>
-				Use the crm shell to create the gfs-control cluster resource:
-			</para>
-			
-<screen>
-[root@pcmk-1 ~]# <userinput>crm</userinput>
-crm(live)# <userinput>cib new gfs-glue --force</userinput>
-INFO: gfs-glue shadow CIB created
-crm(gfs-glue)# <userinput>configure primitive gfs-control ocf:pacemaker:controld params daemon=gfs_controld.pcmk args="-g 0" op monitor interval=120s</userinput>
-crm(gfs-glue)# <userinput>configure clone gfs-clone gfs-control meta interleave=true</userinput>
-</screen>
-			<para>
-				Now ensure Pacemaker only starts the gfs-control service on nodes that also have a copy of the dlm service (created above) already running
-			</para>
-			
-<screen>
-crm(gfs-glue)# <userinput>configure colocation gfs-with-dlm INFINITY: gfs-clone dlm-clone</userinput>
-crm(gfs-glue)# <userinput>configure order start-gfs-after-dlm mandatory: dlm-clone gfs-clone</userinput>
-</screen>
-			<para>
-				Review the configuration before uploading it to the cluster, quitting the shell and watching the cluster’s response
-			</para>
-			
-<screen>
-crm(gfs-glue)# <userinput>configure show</userinput>
-node pcmk-1
-node pcmk-2
-primitive WebData ocf:linbit:drbd \
-        params drbd_resource="wwwdata" \
-        op monitor interval="60s"
-primitive WebFS ocf:heartbeat:Filesystem \
-        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="ext4"
-primitive WebSite ocf:heartbeat:apache \
-        params configfile="/etc/httpd/conf/httpd.conf" \
-        op monitor interval="1min"
-primitive ClusterIP ocf:heartbeat:IPaddr2 \
-        params ip="192.168.122.101" cidr_netmask="32" \
-        op monitor interval="30s"
-primitive dlm ocf:pacemaker:controld \
-        op monitor interval="120s"
-<emphasis>primitive gfs-control ocf:pacemaker:controld \</emphasis>
-<emphasis> params daemon=”gfs_controld.pcmk” args=”-g 0” \</emphasis>
-<emphasis> op monitor interval="120s"</emphasis>
-ms WebDataClone WebData \
-        meta master-max="1" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
-clone dlm-clone dlm \
-        meta interleave="true"
-<emphasis>clone gfs-clone gfs-control \</emphasis>
-<emphasis> meta interleave="true"</emphasis>
-location prefer-pcmk-1 WebSite 50: pcmk-1
-colocation WebSite-with-WebFS inf: WebSite WebFS
-colocation fs_on_drbd inf: WebFS WebDataClone:Master
-<emphasis>colocation gfs-with-dlm inf: gfs-clone dlm-clone</emphasis>
-colocation website-with-ip inf: WebSite ClusterIP
-order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
-order WebSite-after-WebFS inf: WebFS WebSite
-order apache-after-ip inf: ClusterIP WebSite
-<emphasis>order start-gfs-after-dlm inf: dlm-clone gfs-clone</emphasis>
-property $id="cib-bootstrap-options" \
-        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-        cluster-infrastructure="openais" \
-        expected-quorum-votes=”2” \
-        stonith-enabled="false" \
-        no-quorum-policy="ignore"
-rsc_defaults $id="rsc-options" \
-        resource-stickiness=”100”
-crm(gfs-glue)# <userinput>cib commit gfs-glue</userinput>
-INFO: commited 'gfs-glue' shadow CIB to the cluster
-crm(gfs-glue)# <userinput>quit</userinput>
-bye
-[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
-============
-Last updated: Thu Sep  3 20:49:54 2009
-Stack: openais
-Current DC: pcmk-2 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
-6 Resources configured.
-============
-
-Online: [ pcmk-1 pcmk-2 ]
-
-WebSite (ocf::heartbeat:apache):        Started pcmk-2
-Master/Slave Set: WebDataClone
-        Masters: [ pcmk-1 ]
-        Slaves: [ pcmk-2 ]
-ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2
-Clone Set: dlm-clone
-        Started: [ pcmk-2 pcmk-1 ]
-<emphasis>Clone Set: gfs-clone</emphasis>
-<emphasis> Started: [ pcmk-2 pcmk-1 ]</emphasis>
-WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-1
-</screen>
-		</section>
-
-	</section>
-	
+      <para>
+	Putting everything together, we have:
+	<example>
+	  <title>cluster.conf for a two-node cluster with fencing</title>
+	  <programlisting>
+	<![CDATA[
+<?xml version="1.0"?>
+<cluster config_version="1" name="mycluster">
+  <logging debug="off"/>
+  <clusternodes>
+    <clusternode name="pcmk-1" nodeid="1">
+      <fence>
+        <method name="pcmk-redirect">
+          <device name="pcmk" port="pcmk-1"/>
+        </method>
+      </fence>
+    </clusternode>
+    <clusternode name="pcmk-2" nodeid="2">
+      <fence>
+        <method name="pcmk-redirect">
+          <device name="pcmk" port="pcmk-2"/>
+        </method>
+      </fence>
+    </clusternode>
+  </clusternodes>
+  <fencedevices>
+    <fencedevice name="pcmk" agent="fence_pcmk"/>
+  </fencedevices>
+</cluster>
+	]]>
+	  </programlisting>
+	</example>
+      </para>
+    </section>
+    <section>
+      <title>Bringing the Cluster Online with CMAN</title>
+      <para>
+	The first thing to do is check that the configuration is valid
+	<screen>
+[root@pcmk-1 ~]# <userinput>ccs_config_validate</userinput>
+Configuration validates
+	</screen>
+      </para>
+      <para>
+	Now start CMAN
+	<screen>
+[root@pcmk-1 ~]# <userinput>service cman start</userinput>
+Starting cluster: 
+   Checking Network Manager...                             [  OK  ]
+   Global setup...                                         [  OK  ]
+   Loading kernel modules...                               [  OK  ]
+   Mounting configfs...                                    [  OK  ]
+   Starting cman...                                        [  OK  ]
+   Waiting for quorum...                                   [  OK  ]
+   Starting fenced...                                      [  OK  ]
+   Starting dlm_controld...                                [  OK  ]
+   Starting gfs_controld...                                [  OK  ]
+   Unfencing self...                                       [  OK  ]
+   Joining fence domain...                                 [  OK  ]
+[root@pcmk-1 ~]# <userinput>crm_mon -1</userinput>
+	</screen>
+      </para>
+      <para>
+	Once you have confirmed that the first node is happily online, start the second node.
+	<screen>
+[root@pcmk-2 ~]# <userinput>service cman start</userinput>
+Starting cluster: 
+   Checking Network Manager...                             [  OK  ]
+   Global setup...                                         [  OK  ]
+   Loading kernel modules...                               [  OK  ]
+   Mounting configfs...                                    [  OK  ]
+   Starting cman...                                        [  OK  ]
+   Waiting for quorum...                                   [  OK  ]
+   Starting fenced...                                      [  OK  ]
+   Starting dlm_controld...                                [  OK  ]
+   Starting gfs_controld...                                [  OK  ]
+   Unfencing self...                                       [  OK  ]
+   Joining fence domain...                                 [  OK  ]
+[root@pcmk-1 ~]# <userinput>cman_tool nodes</userinput>
+Node  Sts   Inc   Joined               Name
+   1   M    548   2011-09-28 10:52:21  pcmk-1
+   2   M    548   2011-09-28 10:52:21  pcmk-2
+[root@pcmk-1 ~]# <userinput>crm_mon -1</userinput>
+	</screen>
+	You should now see both nodes online and services started.
+      </para>
+    </section>
+  </section>    
 	<section id="gfs-create-filesystem">
 		<title>Create a GFS2 Filesystem</title>
 		<section>
@@ -327,10 +484,6 @@ Master/Slave Set: WebDataClone
         Masters: [ pcmk-1 ]
         Slaves: [ pcmk-2 ]
 ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-1
-Clone Set: dlm-clone
-        Started: [ pcmk-2 pcmk-1 ]
-Clone Set: gfs-clone
-        Started: [ pcmk-2 pcmk-1 ]
 </screen>
 			<note>
 				<para>
@@ -425,8 +578,6 @@ crm(GFS2)# <userinput>configure colocation WebSite-with-WebFS inf: WebSite WebFS
 crm(GFS2)# <userinput>configure colocation fs_on_drbd inf: WebFS WebDataClone:Master</userinput>
 crm(GFS2)# <userinput>configure order WebFS-after-WebData inf: WebDataClone:promote WebFS:start</userinput>
 crm(GFS2)# <userinput>configure order WebSite-after-WebFS inf: WebFS WebSite</userinput>
-crm(GFS2)# <userinput>configure colocation WebFS-with-gfs-control INFINITY: WebFS gfs-clone</userinput>
-crm(GFS2)# <userinput>configure order start-WebFS-after-gfs-control mandatory: gfs-clone WebFS</userinput>
 crm(GFS2)# <userinput>configure show</userinput>
 node pcmk-1
 node pcmk-2
@@ -441,27 +592,14 @@ primitive WebSite ocf:heartbeat:apache \
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
         params ip="192.168.122.101" cidr_netmask="32" \
         op monitor interval="30s"
-primitive dlm ocf:pacemaker:controld \
-        op monitor interval="120s"
-primitive gfs-control ocf:pacemaker:controld \
-   params daemon=”gfs_controld.pcmk” args=”-g 0” \
-        op monitor interval="120s"
 ms WebDataClone WebData \
         meta master-max="1" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
-clone dlm-clone dlm \
-        meta interleave="true"
-clone gfs-clone gfs-control \
-        meta interleave="true"
-colocation WebFS-with-gfs-control inf: WebFS gfs-clone
 colocation WebSite-with-WebFS inf: WebSite WebFS
 colocation fs_on_drbd inf: WebFS WebDataClone:Master
-colocation gfs-with-dlm inf: gfs-clone dlm-clone
 colocation website-with-ip inf: WebSite ClusterIP
 order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
 order WebSite-after-WebFS inf: WebFS WebSite
 order apache-after-ip inf: ClusterIP WebSite
-order start-WebFS-after-gfs-control inf: gfs-clone WebFS
-order start-gfs-after-dlm inf: dlm-clone gfs-clone
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
@@ -497,10 +635,6 @@ Master/Slave Set: WebDataClone
         Masters: [ pcmk-1 ]
         Slaves: [ pcmk-2 ]
 ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2
-Clone Set: dlm-clone
-        Started: [ pcmk-2 pcmk-1 ]
-Clone Set: gfs-clone
-        Started: [ pcmk-2 pcmk-1 ]
 <emphasis>WebFS (ocf::heartbeat:Filesystem): Started pcmk-1</emphasis>
 </screen>
 	</section>
@@ -572,29 +706,16 @@ primitive WebSite ocf:heartbeat:apache \
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
         params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \
         op monitor interval="30s"
-primitive dlm ocf:pacemaker:controld \
-        op monitor interval="120s"
-primitive gfs-control ocf:pacemaker:controld \
-   params daemon=”gfs_controld.pcmk” args=”-g 0” \
-        op monitor interval="120s"
 ms WebDataClone WebData \
         meta master-max="1" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
 <emphasis>clone WebIP ClusterIP \</emphasis>
 <emphasis> meta globally-unique=”true” clone-max=”2” clone-node-max=”2”</emphasis>
-clone dlm-clone dlm \
-        meta interleave="true"
-clone gfs-clone gfs-control \
-        meta interleave="true"
-colocation WebFS-with-gfs-control inf: WebFS gfs-clone
 colocation WebSite-with-WebFS inf: WebSite WebFS
 colocation fs_on_drbd inf: WebFS WebDataClone:Master
-colocation gfs-with-dlm inf: gfs-clone dlm-clone
 <emphasis>colocation website-with-ip inf: WebSite WebIP</emphasis>
 order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
 order WebSite-after-WebFS inf: WebFS WebSite
 <emphasis>order apache-after-ip inf: WebIP WebSite</emphasis>
-order start-WebFS-after-gfs-control inf: gfs-clone WebFS
-order start-gfs-after-dlm inf: dlm-clone gfs-clone
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
@@ -640,31 +761,18 @@ primitive WebSite ocf:heartbeat:apache \
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
         params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \
         op monitor interval="30s"
-primitive dlm ocf:pacemaker:controld \
-        op monitor interval="120s"
-primitive gfs-control ocf:pacemaker:controld \
-   params daemon=”gfs_controld.pcmk” args=”-g 0” \
-        op monitor interval="120s"
 ms WebDataClone WebData \
         meta master-max="2" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
 <emphasis>clone WebFSClone WebFS</emphasis>
 clone WebIP ClusterIP  \
         meta globally-unique=”true” clone-max=”2” clone-node-max=”2”
 <emphasis>clone WebSiteClone WebSite</emphasis>
-clone dlm-clone dlm \
-        meta interleave="true"
-clone gfs-clone gfs-control \
-        meta interleave="true"
-<emphasis>colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone</emphasis>
 <emphasis>colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone</emphasis>
 <emphasis>colocation fs_on_drbd inf: WebFSClone WebDataClone:Master</emphasis>
-colocation gfs-with-dlm inf: gfs-clone dlm-clone
 <emphasis>colocation website-with-ip inf: WebSiteClone WebIP</emphasis>
 <emphasis>order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start</emphasis>
 <emphasis>order WebSite-after-WebFS inf: WebFSClone WebSiteClone</emphasis>
 <emphasis>order apache-after-ip inf: WebIP WebSiteClone</emphasis>
-order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone
-order start-gfs-after-dlm inf: dlm-clone gfs-clone
 property $id="cib-bootstrap-options" \
         dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
@@ -696,10 +804,6 @@ Online: [ pcmk-1 pcmk-2 ]
 
 Master/Slave Set: WebDataClone
         Masters: [ pcmk-1 pcmk-2 ]
-Clone Set: dlm-clone
-        Started: [ pcmk-2 pcmk-1 ]
-Clone Set: gfs-clone
-        Started: [ pcmk-2 pcmk-1 ]
 <emphasis>Clone Set: WebIP</emphasis>
 <emphasis> Started: [ pcmk-1 pcmk-2 ]</emphasis>
 <emphasis>Clone Set: WebFSClone</emphasis>
@@ -716,6 +820,5 @@ Clone Set: gfs-clone
       </note>
     </section>
   </section>
-    
 </chapter>
 
