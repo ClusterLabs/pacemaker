@@ -3,22 +3,22 @@
 %global pcmk_docdir %{_docdir}/%{name}
 
 %global specversion 1
-%global upstream_version tip
+%global upstream_version HEAD
 %global upstream_prefix pacemaker
 
 # Compatibility macros for distros (fedora) that don't provide Python macros by default
 # Do this instead of trying to conditionally include {_rpmconfigdir}/macros.python
-%{!?py_ver:	%{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
-%{!?py_prefix:	%{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
-%{!?py_libdir:	%{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/%%%%{_lib}/python%%%%{py_ver}}}}
-%{!?py_sitedir:	%{expand: %%global py_sitedir  %%{expand:%%%%{py_libdir}/site-packages}}}
+%{!?py_ver:     %{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
+%{!?py_prefix:  %{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
+%{!?py_libdir:  %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/%%%%{_lib}/python%%%%{py_ver}}}}
+%{!?py_sitedir: %{expand: %%global py_sitedir  %%{expand:%%%%{py_libdir}/site-packages}}}
 
 # Compatibility macro wrappers for legacy RPM versions that do not
 # support conditional builds
-%{!?bcond_without:	%{expand: %%global bcond_without() %%{expand:%%%%{!?_without_%%{1}:%%%%global with_%%{1} 1}}}}
-%{!?bcond_with:		%{expand: %%global bcond_with()	%%{expand:%%%%{?_with_%%{1}:%%%%global with_%%{1} 1}}}}
-%{!?with:		%{expand: %%global with()	%%{expand:%%%%{?with_%%{1}:1}%%%%{!?with_%%{1}:0}}}}
-%{!?without:		%{expand: %%global without()	%%{expand:%%%%{?with_%%{1}:0}%%%%{!?with_%%{1}:1}}}}
+%{!?bcond_without: %{expand: %%global bcond_without() %%{expand:%%%%{!?_without_%%{1}:%%%%global with_%%{1} 1}}}}
+%{!?bcond_with:    %{expand: %%global bcond_with()    %%{expand:%%%%{?_with_%%{1}:%%%%global with_%%{1} 1}}}}
+%{!?with:          %{expand: %%global with()          %%{expand:%%%%{?with_%%{1}:1}%%%%{!?with_%%{1}:0}}}}
+%{!?without:       %{expand: %%global without()       %%{expand:%%%%{?with_%%{1}:0}%%%%{!?with_%%{1}:1}}}}
 
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
@@ -55,82 +55,85 @@
 %endif
 
 %if %{with pre_release}
-%global pcmk_release 0.%{specversion}.%{upstream_version}.hg
+%global pcmk_release 0.%{specversion}.%{upstream_version}.git
 %else
 %global pcmk_release %{specversion}
 %endif
 
-Name:		pacemaker
-Summary:	Scalable High-Availability cluster resource manager
-Version:	1.1.6
-Release:	%{pcmk_release}%{?dist}
-License:	GPLv2+ and LGPLv2+
-Url:		http://www.clusterlabs.org
-Group:		System Environment/Daemons
-Source0:	pacemaker-%{upstream_version}.tar.bz2
-BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-AutoReqProv:	on
-Requires(pre):	cluster-glue
-Requires:	resource-agents
-Requires:	%{name}-libs = %{version}-%{release}
-Requires:	%{name}-cluster-libs = %{version}-%{release}
-Requires:	%{name}-cli = %{version}-%{release}
-Requires:	python >= 2.4
-Conflicts:	heartbeat < 2.99
+Name:          pacemaker
+Summary:       Scalable High-Availability cluster resource manager
+Version:       1.1.6
+Release:       %{pcmk_release}%{?dist}
+License:       GPLv2+ and LGPLv2+
+Url:           http://www.clusterlabs.org
+Group:         System Environment/Daemons
+
+# export VER={upstream_version}
+# wget --no-check-certificate -O ClusterLabs-pacemaker-${VER}.tar.gz https://github.com/ClusterLabs/pacemaker/tarball/${VER}
+Source0:       %{upstream_prefix}-%{upstream_version}.tar.gz
+BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+AutoReqProv:   on
+Requires(pre): cluster-glue
+Requires:      resource-agents
+Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-cluster-libs = %{version}-%{release}
+Requires:      %{name}-cli = %{version}-%{release}
+Requires:      python >= 2.4
+Conflicts:     heartbeat < 2.99
 
 %if %{with snmp}
-Requires:	perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
+Requires:      perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 %endif
 
 %if 0%{?suse_version}
 # net-snmp-devel on SLES10 does not suck in tcpd-devel automatically
-BuildRequires:	tcpd-devel
+BuildRequires: tcpd-devel
 # Suse splits this off into a separate package
-Requires:	python-curses python-xml
-BuildRequires:	python-curses python-xml
+Requires:      python-curses python-xml
+BuildRequires: python-curses python-xml
 %endif
 
 # Required for core functionality
-BuildRequires:	automake autoconf libtool pkgconfig python libtool-ltdl-devel
-BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel 
-BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
+BuildRequires: automake autoconf libtool pkgconfig python libtool-ltdl-devel
+BuildRequires: glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel 
+BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
 # Enables optional functionality
-BuildRequires:	ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents
+BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents
 
-
-%ifarch alpha %{ix86} x86_64
-BuildRequires:	lm_sensors-devel
-%endif
 
 %if %{with cman}
-BuildRequires:	clusterlib-devel
+BuildRequires: clusterlib-devel
 %endif
 
 %if %{with esmtp}
-BuildRequires:	libesmtp-devel
+BuildRequires: libesmtp-devel
 %endif
 
 %if %{with snmp}
-BuildRequires:	net-snmp-devel
+%ifarch alpha %{ix86} x86_64
+BuildRequires: lm_sensors-devel
+%endif
+
+BuildRequires: net-snmp-devel
 %endif
 
 %if %{with corosync}
 # Do not require corosync, the admin should select which stack to use and install it
-BuildRequires:	corosynclib-devel
+BuildRequires: corosynclib-devel
 %endif
 
 %if %{with heartbeat}
 # Do not require heartbeat, the admin should select which stack to use and install it
-BuildRequires:	heartbeat-devel heartbeat-libs >= 3.0.0
+BuildRequires: heartbeat-devel heartbeat-libs >= 3.0.0
 %endif
 
 %if %{with doc}
-BuildRequires:	asciidoc help2man
+BuildRequires: asciidoc help2man
 
 %if %{with publican}
 %ifarch %{ix86} x86_64
-BuildRequires:	publican inkscape
+BuildRequires: publican inkscape
 %endif
 %endif
 %endif
@@ -150,10 +153,10 @@ Available rpmbuild rebuild options:
   --with(out) : heartbeat cman corosync doc publican snmp esmtp pre_release
 
 %package cli
-License:	GPLv2+ and LGPLv2+
-Summary:	Command line tools for controlling Pacemaker clusters
-Group:		System Environment/Daemons
-Requires:	%{name}-libs = %{version}-%{release}
+License:      GPLv2+ and LGPLv2+
+Summary:      Command line tools for controlling Pacemaker clusters
+Group:        System Environment/Daemons
+Requires:     %{name}-libs = %{version}-%{release}
 
 %description cli
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -164,9 +167,9 @@ to query and control the cluster from machines that may, or may not,
 be part of the cluster.
 
 %package -n %{name}-libs
-License:	GPLv2+ and LGPLv2+
-Summary:	Core Pacemaker libraries
-Group:		System Environment/Daemons
+License:      GPLv2+ and LGPLv2+
+Summary:      Core Pacemaker libraries
+Group:        System Environment/Daemons
 
 %description -n %{name}-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -176,10 +179,10 @@ The %{name}-libs package contains shared libraries needed for cluster
 nodes and those just running the CLI tools.
 
 %package -n %{name}-cluster-libs
-License:	GPLv2+ and LGPLv2+
-Summary:	Cluster Libraries used by Pacemaker
-Group:		System Environment/Daemons
-Requires:	%{name}-libs = %{version}-%{release}
+License:      GPLv2+ and LGPLv2+
+Summary:      Cluster Libraries used by Pacemaker
+Group:        System Environment/Daemons
+Requires:     %{name}-libs = %{version}-%{release}
 
 %description -n %{name}-cluster-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -189,18 +192,18 @@ The %{name}-cluster-libs package contains cluster-aware shared
 libraries needed for nodes that will form part of the cluster nodes.
 
 %package -n %{name}-libs-devel 
-License:	GPLv2+ and LGPLv2+
-Summary:	Pacemaker development package
-Group:		Development/Libraries
-Requires:	%{name}-libs = %{version}-%{release}
-Requires:	%{name}-cluster-libs = %{version}-%{release}
-Requires:	cluster-glue-libs-devel libtool-ltdl-devel
-Requires:	libxml2-devel libxslt-devel bzip2-devel glib2-devel 
+License:      GPLv2+ and LGPLv2+
+Summary:      Pacemaker development package
+Group:        Development/Libraries
+Requires:     %{name}-libs = %{version}-%{release}
+Requires:     %{name}-cluster-libs = %{version}-%{release}
+Requires:     cluster-glue-libs-devel libtool-ltdl-devel
+Requires:     libxml2-devel libxslt-devel bzip2-devel glib2-devel 
 %if %{with corosync}
-Requires:	corosynclib-devel
+Requires:     corosynclib-devel
 %endif
 %if %{with heartbeat}
-Requires:	heartbeat-devel
+Requires:     heartbeat-devel
 %endif
 
 %description -n %{name}-libs-devel
@@ -211,21 +214,21 @@ The %{name}-libs-devel package contains headers and shared libraries
 for developing tools for Pacemaker.
 
 
-%package	cts
-License:	GPLv2+ and LGPLv2+
-Summary:	Test framework for cluster-related technologies like Pacemaker
-Group:		System Environment/Daemons
-Requires:	python
+%package      cts
+License:      GPLv2+ and LGPLv2+
+Summary:      Test framework for cluster-related technologies like Pacemaker
+Group:        System Environment/Daemons
+Requires:     python
 
-%description	cts
+%description  cts
 Test framework for cluster-related technologies like Pacemaker
 
-%package	doc
-License:	GPLv2+ and LGPLv2+
-Summary:	Documentation for Pacemaker
-Group:		Documentation
+%package      doc
+License:      GPLv2+ and LGPLv2+
+Summary:      Documentation for Pacemaker
+Group:        Documentation
 
-%description	doc
+%description  doc
 Documentation for Pacemaker.
 
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -251,19 +254,19 @@ eval `objdump --headers --private-headers /usr/bin/perl | grep RPATH | awk '{pri
 %endif
 
 # RHEL <= 5 does not support --docdir
-docdir=%{pcmk_docdir} %{configure}			\
-	%{!?with_heartbeat:	--without-heartbeat}	\
-	%{!?with_corosync:	--without-ais}		\
-	%{!?with_esmtp:		--without-esmtp}	\
-	%{!?with_snmp:		--without-snmp}		\
-	%{?with_cman:		--with-cman}		\
-	%{?with_profiling:	--with-profiling}	\
-	%{?with_gcov:		--with-gcov}		\
-	%{?with_tracedata:	--with-tracedata}	\
-	--with-initdir=%{_initrddir}			\
-	--localstatedir=%{_var}				\
-	--with-version=%{version}-%{release}		\
-	--enable-fatal-warnings=no
+docdir=%{pcmk_docdir} %{configure}                 \
+        %{!?with_heartbeat:  --without-heartbeat}  \
+        %{!?with_corosync:   --without-ais}        \
+        %{!?with_esmtp:      --without-esmtp}      \
+        %{!?with_snmp:       --without-snmp}       \
+        %{?with_cman:        --with-cman}          \
+        %{?with_profiling:   --with-profiling}     \
+        %{?with_gcov:        --with-gcov}          \
+        %{?with_tracedata:   --with-tracedata}     \
+        --with-initdir=%{_initrddir}               \
+        --localstatedir=%{_var}                    \
+        --with-version=%{version}-%{release}       \
+        --enable-fatal-warnings=no
 
 make %{_smp_mflags} docdir=%{pcmk_docdir}
 
@@ -299,9 +302,9 @@ rm -f %{buildroot}/%{_libdir}/service_crm.so
 GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
 mkdir -p $GCOV_BASE
 find . -name '*.gcno' -type f | while read F ; do
-	D=`dirname $F`
-	mkdir -p ${GCOV_BASE}/$D
-	cp $F ${GCOV_BASE}/$D
+        D=`dirname $F`
+        mkdir -p ${GCOV_BASE}/$D
+        cp $F ${GCOV_BASE}/$D
 done
 %endif
 
@@ -313,8 +316,8 @@ rm -rf %{buildroot}
 
 %preun
 if [ $1 -eq 0 ]; then
-	/sbin/service pacemaker stop &>/dev/null || :
-	/sbin/chkconfig --del pacemaker || :
+        /sbin/service pacemaker stop &>/dev/null || :
+        /sbin/chkconfig --del pacemaker || :
 fi
 
 %post -n %{name}-libs -p /sbin/ldconfig
