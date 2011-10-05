@@ -13,8 +13,8 @@
 
   You should have received a copy of the GNU General Public License
   along with this program; see the file COPYING.  If not, write to the
-  Free Software Foundation, Inc.,  675 Mass Ave, Cambridge, 
-  MA 02139, USA.
+  Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA 02110-1301 USA
 
   Fix for #193859 - relocation of a service w/o umounting file-systems
     by Navid Sheikhol-Eslami [ navid at redhat dot com ]
