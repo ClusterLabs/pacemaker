@@ -21,8 +21,9 @@
 PACKAGE		?= pacemaker
 
 # Force 'make dist' to be consistent with 'make export' 
-distdir			= $(PACKAGE)-$(TAG)
-TARFILE			= $(distdir).tar.bz2
+distprefix		= ClusterLabs-$(PACKAGE)
+distdir			= $(distprefix)-$(TAG)
+TARFILE			= $(distdir).tar.gz
 DIST_ARCHIVES		= $(TARFILE)
 
 LAST_RELEASE		= $(firstword $(shell hg tags| grep Pacemaker | head -n 1))
@@ -58,10 +59,10 @@ export:
 	    rm -f $(PACKAGE).tar.*;						\
 	    if [ $(TAG) = scratch ]; then 					\
 		git commit -m "DO-NOT-PUSH" -a;					\
-		git archive --prefix=$(distdir)/ HEAD | bzip2 > $(TARFILE);	\
+		git archive --prefix=$(distdir)/ HEAD | gzip > $(TARFILE);	\
 		git reset --mixed HEAD^; 					\
 	    else								\
-		git archive --prefix=$(distdir)/ $(TAG) | bzip2 > $(TARFILE);	\
+		git archive --prefix=$(distdir)/ $(TAG) | gzip > $(TARFILE);	\
 	    fi;									\
 	    echo `date`: Rebuilt $(TARFILE);					\
 	else									\
@@ -106,6 +107,7 @@ srpm-%:	export $(PACKAGE)-%.spec
 		sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(PACKAGE).spec;	\
 	fi
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE).spec
+	sed -i.sed 's/global\ upstream_prefix.*/global\ upstream_prefix\ $(distprefix)/' $(PACKAGE).spec
 	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(WITH)  $(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
