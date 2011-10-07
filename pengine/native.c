@@ -26,6 +26,7 @@
 #include <utils.h>
 
 #define DELETE_THEN_REFRESH 1   /* The crmd will remove the resource from the CIB itself, making this redundant */
+#define INFINITY_HACK   (INFINITY * -100)
 
 #define VARIANT_NATIVE 1
 #include <lib/pengine/variant.h>
@@ -287,8 +288,12 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, int f
             crm_trace("%s: Filtering %d + %d*%d (factor * score)",
                       node->details->uname, node->weight, factor, score);
 
+        } else if (node->weight == INFINITY_HACK) {
+            crm_trace("%s: Filtering %d + %d*%d (node < 0)",
+                      node->details->uname, node->weight, factor, score);
+
         } else if (only_positive && new_score < 0 && node->weight > 0) {
-            node->weight = 1;
+            node->weight = INFINITY_HACK;
             crm_trace("%s: Filtering %d + %d*%d (score > 0)",
                       node->details->uname, node->weight, factor, score);
 
@@ -300,7 +305,6 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, int f
             crm_trace("%s: %d + %d*%d", node->details->uname, node->weight, factor, score);
             node->weight = new_score;
         }
-
     }
 }
 
@@ -403,6 +407,17 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
             dump_node_scores(LOG_TRACE, NULL, rhs, work);
         }
 
+    }
+
+    if(is_set(flags, pe_weights_positive)) {
+        node_t *node = NULL;
+        GHashTableIter iter;
+        g_hash_table_iter_init(&iter, work);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+            if (node->weight == INFINITY_HACK) {
+                node->weight = 1;
+            }
+        }
     }
 
     if (nodes) {
