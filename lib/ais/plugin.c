@@ -384,6 +384,8 @@ process_ais_conf(void)
     get_config_opt(pcmk_api, local_handle, "provider", &value, NULL);
     if (value && ais_str_eq("quorum_cman", value)) {
         pcmk_env.quorum = "cman";
+    } else {
+        pcmk_env.quorum = "pcmk";
     }
 
     top_handle = config_find_init(pcmk_api, "service");

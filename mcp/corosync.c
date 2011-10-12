@@ -457,14 +457,17 @@ read_config(void)
     /* =::=::= Should we be here =::=::= */
     if (stack == pcmk_cluster_corosync) {
         setenv("HA_cluster_type", "corosync", 1);
+        setenv("HA_quorum_type",  "corosync", 1);
 
     } else if (stack == pcmk_cluster_cman) {
         setenv("HA_cluster_type", "cman", 1);
+        setenv("HA_quorum_type",  "cman", 1);
         enable_crmd_as_root(TRUE);
         use_cman = TRUE;
 
     } else if (stack == pcmk_cluster_classic_ais) {
         setenv("HA_cluster_type", "openais", 1);
+        setenv("HA_quorum_type",  "pcmk", 1);
 
         /* Look for a service block to indicate our plugin is loaded */
         top_handle = config_find_init(config);
