@@ -1080,74 +1080,74 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
 }
 
 static gboolean
-template_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-		gboolean convert_rsc, pe_working_set_t *data_set)
+template_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char *attr,
+                gboolean convert_rsc, pe_working_set_t * data_set)
 {
     const char *cons_id = NULL;
     const char *id = NULL;
 
     resource_t *rsc = NULL;
-    
+
     *rsc_set = NULL;
 
-    if(xml_obj == NULL) {
-	crm_config_err("No constraint object to process.");
-	return FALSE;
+    if (xml_obj == NULL) {
+        crm_config_err("No constraint object to process.");
+        return FALSE;
     }
 
-    if(attr == NULL) {
-	crm_config_err("No attribute name to process.");
-	return FALSE;
+    if (attr == NULL) {
+        crm_config_err("No attribute name to process.");
+        return FALSE;
     }
-    
+
     cons_id = crm_element_value(xml_obj, XML_ATTR_ID);
-    if(cons_id == NULL) {
-	crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
-	return FALSE;
+    if (cons_id == NULL) {
+        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        return FALSE;
     }
 
     id = crm_element_value(xml_obj, attr);
-    if(id == NULL) {
-	return TRUE;
+    if (id == NULL) {
+        return TRUE;
     }
 
     rsc = pe_find_resource(data_set->resources, id);
-    if(rsc == NULL) {
-	xmlNode *template_rsc_set = g_hash_table_lookup(data_set->template_rsc_sets, id);
+    if (rsc == NULL) {
+        xmlNode *template_rsc_set = g_hash_table_lookup(data_set->template_rsc_sets, id);
 
-	if(template_rsc_set == NULL) {
-	    crm_config_err("Invalid constraint '%s': No template named '%s'", cons_id, id);
-	    return FALSE;
-	}
-	*rsc_set = add_node_copy(xml_obj, template_rsc_set);
-	crm_xml_add(*rsc_set, "sequential", XML_BOOLEAN_FALSE);
+        if (template_rsc_set == NULL) {
+            crm_config_err("Invalid constraint '%s': No template named '%s'", cons_id, id);
+            return FALSE;
+        }
+        *rsc_set = add_node_copy(xml_obj, template_rsc_set);
+        crm_xml_add(*rsc_set, "sequential", XML_BOOLEAN_FALSE);
 
-    } else if(convert_rsc) {
-	xmlNode *rsc_ref = NULL;
+    } else if (convert_rsc) {
+        xmlNode *rsc_ref = NULL;
 
-	*rsc_set = create_xml_node(xml_obj, XML_CONS_TAG_RSC_SET);
-	crm_xml_add(*rsc_set, XML_ATTR_ID, id);
+        *rsc_set = create_xml_node(xml_obj, XML_CONS_TAG_RSC_SET);
+        crm_xml_add(*rsc_set, XML_ATTR_ID, id);
 
-	rsc_ref = create_xml_node(*rsc_set, XML_TAG_RESOURCE_REF);
-	crm_xml_add(rsc_ref, XML_ATTR_ID, id);
+        rsc_ref = create_xml_node(*rsc_set, XML_TAG_RESOURCE_REF);
+        crm_xml_add(rsc_ref, XML_ATTR_ID, id);
 
     } else {
-	return TRUE;
+        return TRUE;
     }
 
-    if(*rsc_set) {
-	xml_remove_prop(xml_obj, attr);
+    if (*rsc_set) {
+        xml_remove_prop(xml_obj, attr);
     }
 
     return TRUE;
 }
 
 static gboolean
-unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t *data_set)
+unpack_order_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * data_set)
 {
     const char *id = NULL;
-    const char *id_first  = NULL;
-    const char *id_then  = NULL;
+    const char *id_first = NULL;
+    const char *id_then = NULL;
     const char *action_first = NULL;
     const char *action_then = NULL;
 
@@ -1161,72 +1161,70 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
 
     *expanded_xml = NULL;
 
-    if(xml_obj == NULL) {
-	crm_config_err("No constraint object to process.");
-	return FALSE;
+    if (xml_obj == NULL) {
+        crm_config_err("No constraint object to process.");
+        return FALSE;
     }
 
     id = crm_element_value(xml_obj, XML_ATTR_ID);
-    if(id == NULL) {
-	crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
-	return FALSE;
+    if (id == NULL) {
+        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        return FALSE;
     }
 
     id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
-    id_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
-    if(id_first == NULL || id_then == NULL) {
-	return TRUE;
+    id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
+    if (id_first == NULL || id_then == NULL) {
+        return TRUE;
     }
 
     rsc_first = pe_find_resource(data_set->resources, id_first);
     rsc_then = pe_find_resource(data_set->resources, id_then);
-    if(rsc_first && rsc_then) {
-	return TRUE;
+    if (rsc_first && rsc_then) {
+        return TRUE;
     }
 
-    if(g_hash_table_lookup(data_set->template_rsc_sets, id_first) == NULL
-       && g_hash_table_lookup(data_set->template_rsc_sets, id_then) == NULL) {
-	return FALSE;
+    if (g_hash_table_lookup(data_set->template_rsc_sets, id_first) == NULL
+        && g_hash_table_lookup(data_set->template_rsc_sets, id_then) == NULL) {
+        return FALSE;
     }
 
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
-    action_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
+    action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
 
     new_xml = copy_xml(xml_obj);
 
-    if(template_to_set(new_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST,
-			    TRUE, data_set) == FALSE) {
-	free_xml(new_xml);
-	return FALSE;
+    if (template_to_set(new_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST, TRUE, data_set) == FALSE) {
+        free_xml(new_xml);
+        return FALSE;
     }
 
-    if(rsc_set_first) {
-	if(action_first) {
-	    crm_xml_add(rsc_set_first, "action", action_first);
-	    xml_remove_prop(new_xml, XML_ORDER_ATTR_FIRST_ACTION);
-	}
-	any_sets = TRUE;
+    if (rsc_set_first) {
+        if (action_first) {
+            crm_xml_add(rsc_set_first, "action", action_first);
+            xml_remove_prop(new_xml, XML_ORDER_ATTR_FIRST_ACTION);
+        }
+        any_sets = TRUE;
     }
 
-    if(template_to_set(new_xml, &rsc_set_then, XML_ORDER_ATTR_THEN,
-			    TRUE, data_set) == FALSE) {
-	free_xml(new_xml);
-	return FALSE;
+    if (template_to_set(new_xml, &rsc_set_then, XML_ORDER_ATTR_THEN, TRUE, data_set) == FALSE) {
+        free_xml(new_xml);
+        return FALSE;
     }
 
-    if(rsc_set_then) {
-	if(action_then) {
-	    crm_xml_add(rsc_set_then, "action", action_then);
-	    xml_remove_prop(new_xml, XML_ORDER_ATTR_THEN_ACTION);
-	}
-	any_sets = TRUE;
+    if (rsc_set_then) {
+        if (action_then) {
+            crm_xml_add(rsc_set_then, "action", action_then);
+            xml_remove_prop(new_xml, XML_ORDER_ATTR_THEN_ACTION);
+        }
+        any_sets = TRUE;
     }
 
-    if(any_sets) {
-	crm_log_xml_debug_3(new_xml, "Expanded rsc_order...");
-	*expanded_xml = new_xml;
+    if (any_sets) {
+        crm_log_xml_debug_3(new_xml, "Expanded rsc_order...");
+        *expanded_xml = new_xml;
     } else {
-	free_xml(new_xml);
+        free_xml(new_xml);
     }
 
     return TRUE;
@@ -1271,9 +1269,9 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     unpack_order_template(xml_obj, &expanded_xml, data_set);
-    if(expanded_xml) {
-	orig_xml = xml_obj;
-	xml_obj = expanded_xml;
+    if (expanded_xml) {
+        orig_xml = xml_obj;
+        xml_obj = expanded_xml;
     }
 
     for (set = __xml_first_child(xml_obj); set != NULL; set = __xml_next(set)) {
@@ -1320,8 +1318,8 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
                    }
                  */
 
-            } else if ( /* never called -- Now call it for supporting clones in resource sets */
-                       last) {
+            } else if (         /* never called -- Now call it for supporting clones in resource sets */
+                          last) {
                 if (order_rsc_sets(id, last, set, kind, data_set, FALSE) == FALSE) {
                     return FALSE;
                 }
@@ -1343,9 +1341,9 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
     }
 
-    if(expanded_xml) {
-	free_xml(expanded_xml);
-	xml_obj = orig_xml;
+    if (expanded_xml) {
+        free_xml(expanded_xml);
+        xml_obj = orig_xml;
     }
 
     if (any_sets == FALSE) {
@@ -1575,7 +1573,7 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static gboolean
-unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t *data_set)
+unpack_colocation_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * data_set)
 {
     const char *id = NULL;
     const char *id_lh = NULL;
@@ -1596,37 +1594,38 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 
     *expanded_xml = NULL;
 
-    if(xml_obj == NULL) {
-	crm_config_err("No constraint object to process.");
-	return FALSE;
+    if (xml_obj == NULL) {
+        crm_config_err("No constraint object to process.");
+        return FALSE;
     }
 
     id = crm_element_value(xml_obj, XML_ATTR_ID);
-    if(id == NULL) {
-	crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
-	return FALSE;
+    if (id == NULL) {
+        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        return FALSE;
     }
 
     id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     id_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
-    if(id_lh == NULL || id_rh == NULL) {
-	return TRUE;
+    if (id_lh == NULL || id_rh == NULL) {
+        return TRUE;
     }
 
     rsc_lh = pe_find_resource(data_set->resources, id_lh);
     rsc_rh = pe_find_resource(data_set->resources, id_rh);
-    if(rsc_lh && rsc_rh) {
-	return TRUE;
+    if (rsc_lh && rsc_rh) {
+        return TRUE;
     }
 
     template_rsc_set_lh = g_hash_table_lookup(data_set->template_rsc_sets, id_lh);
     template_rsc_set_rh = g_hash_table_lookup(data_set->template_rsc_sets, id_rh);
-    if(template_rsc_set_lh == NULL &&  template_rsc_set_rh == NULL) {
-	return FALSE;
+    if (template_rsc_set_lh == NULL && template_rsc_set_rh == NULL) {
+        return FALSE;
     }
-    if(template_rsc_set_lh && template_rsc_set_rh) {
-	crm_config_err("Either LHS or RHS of %s should be a normal resource instead of a template",  id);
-	return FALSE;
+    if (template_rsc_set_lh && template_rsc_set_rh) {
+        crm_config_err("Either LHS or RHS of %s should be a normal resource instead of a template",
+                       id);
+        return FALSE;
     }
 
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
@@ -1634,39 +1633,37 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 
     new_xml = copy_xml(xml_obj);
 
-    if(template_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE,
-			    TRUE, data_set) == FALSE) {
-	free_xml(new_xml);
-	return FALSE;
+    if (template_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, TRUE, data_set) == FALSE) {
+        free_xml(new_xml);
+        return FALSE;
     }
 
-    if(rsc_set_lh) {
-	if(state_lh) {
-	    crm_xml_add(rsc_set_lh, "role", state_lh);
-	    xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
-	}
-	any_sets = TRUE;
+    if (rsc_set_lh) {
+        if (state_lh) {
+            crm_xml_add(rsc_set_lh, "role", state_lh);
+            xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
+        }
+        any_sets = TRUE;
     }
 
-    if(template_to_set(new_xml, &rsc_set_rh, XML_COLOC_ATTR_TARGET,
-			    TRUE, data_set) == FALSE) {
-	free_xml(new_xml);
-	return FALSE;
+    if (template_to_set(new_xml, &rsc_set_rh, XML_COLOC_ATTR_TARGET, TRUE, data_set) == FALSE) {
+        free_xml(new_xml);
+        return FALSE;
     }
 
-    if(rsc_set_rh) {
-	if(state_rh) {
-	    crm_xml_add(rsc_set_rh, "role", state_rh);
-	    xml_remove_prop(new_xml, XML_COLOC_ATTR_TARGET_ROLE);
-	}
-	any_sets = TRUE;
+    if (rsc_set_rh) {
+        if (state_rh) {
+            crm_xml_add(rsc_set_rh, "role", state_rh);
+            xml_remove_prop(new_xml, XML_COLOC_ATTR_TARGET_ROLE);
+        }
+        any_sets = TRUE;
     }
 
-    if(any_sets) {
-	crm_log_xml_debug_3(new_xml, "Expanded rsc_colocation...");
-	*expanded_xml = new_xml;
+    if (any_sets) {
+        crm_log_xml_debug_3(new_xml, "Expanded rsc_colocation...");
+        *expanded_xml = new_xml;
     } else {
-	free_xml(new_xml);
+        free_xml(new_xml);
     }
 
     return TRUE;
@@ -1691,11 +1688,11 @@ unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     unpack_colocation_template(xml_obj, &expanded_xml, data_set);
-    if(expanded_xml) {
-	orig_xml = xml_obj;
-	xml_obj = expanded_xml;
+    if (expanded_xml) {
+        orig_xml = xml_obj;
+        xml_obj = expanded_xml;
     }
- 
+
     for (set = __xml_first_child(xml_obj); set != NULL; set = __xml_next(set)) {
         if (crm_str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, TRUE)) {
             any_sets = TRUE;
@@ -1710,9 +1707,9 @@ unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
     }
 
-    if(expanded_xml) {
-	free_xml(expanded_xml);
-	xml_obj = orig_xml;
+    if (expanded_xml) {
+        free_xml(expanded_xml);
+        xml_obj = orig_xml;
     }
 
     if (any_sets == FALSE) {
@@ -1899,7 +1896,7 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static gboolean
-unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t *data_set)
+unpack_rsc_ticket_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * data_set)
 {
     const char *id = NULL;
     const char *id_lh = NULL;
@@ -1913,55 +1910,54 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 
     *expanded_xml = NULL;
 
-    if(xml_obj == NULL) {
-	crm_config_err("No constraint object to process.");
-	return FALSE;
+    if (xml_obj == NULL) {
+        crm_config_err("No constraint object to process.");
+        return FALSE;
     }
 
     id = crm_element_value(xml_obj, XML_ATTR_ID);
-    if(id == NULL) {
-	crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
-	return FALSE;
+    if (id == NULL) {
+        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        return FALSE;
     }
 
     id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
-    if(id_lh == NULL) {
-	return TRUE;
+    if (id_lh == NULL) {
+        return TRUE;
     }
 
     rsc_lh = pe_find_resource(data_set->resources, id_lh);
-    if(rsc_lh) {
-	return TRUE;
+    if (rsc_lh) {
+        return TRUE;
     }
 
-    if(g_hash_table_lookup(data_set->template_rsc_sets, id_lh) == NULL) {
-	crm_config_err("Invalid constraint '%s': No template named '%s'", id, id_lh);
-	return FALSE;
+    if (g_hash_table_lookup(data_set->template_rsc_sets, id_lh) == NULL) {
+        crm_config_err("Invalid constraint '%s': No template named '%s'", id, id_lh);
+        return FALSE;
     }
 
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
 
     new_xml = copy_xml(xml_obj);
 
-    if(template_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE,
-			    FALSE, data_set) == FALSE) {
-	free_xml(new_xml);
-	return FALSE;
+    if (template_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, FALSE, data_set) == FALSE) {
+        free_xml(new_xml);
+        return FALSE;
     }
 
-    if(rsc_set_lh) {
-	if(state_lh) {
-	    crm_xml_add(rsc_set_lh, "role", state_lh);
-	    xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
-	}
-	any_sets = TRUE;
+    if (rsc_set_lh) {
+        if (state_lh) {
+            crm_xml_add(rsc_set_lh, "role", state_lh);
+            xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
+        }
+        any_sets = TRUE;
     }
 
-    if(any_sets) {
-	crm_log_xml_debug_3(new_xml, "Expanded rsc_ticket...");
-	*expanded_xml = new_xml;
+    if (any_sets) {
+        crm_log_xml_debug_3(new_xml, "Expanded rsc_ticket...");
+        *expanded_xml = new_xml;
     } else {
-	free_xml(new_xml);
+        free_xml(new_xml);
     }
 
     return TRUE;
@@ -2014,9 +2010,9 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     unpack_rsc_ticket_template(xml_obj, &expanded_xml, data_set);
-    if(expanded_xml) {
-	orig_xml = xml_obj;
-	xml_obj = expanded_xml;
+    if (expanded_xml) {
+        orig_xml = xml_obj;
+        xml_obj = expanded_xml;
     }
 
     for (set = __xml_first_child(xml_obj); set != NULL; set = __xml_next(set)) {
@@ -2029,9 +2025,9 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
     }
 
-    if(expanded_xml) {
-	free_xml(expanded_xml);
-	xml_obj = orig_xml;
+    if (expanded_xml) {
+        free_xml(expanded_xml);
+        xml_obj = orig_xml;
     }
 
     if (any_sets == FALSE) {

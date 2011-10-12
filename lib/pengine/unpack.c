@@ -376,7 +376,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
     xmlNode *xml_obj = NULL;
 
     data_set->template_rsc_sets = g_hash_table_new_full(
-	crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_template_rsc_set);
+        crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_template_rsc_set);
 
     for (xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
         resource_t *new_rsc = NULL;
