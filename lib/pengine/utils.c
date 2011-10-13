@@ -1328,8 +1328,10 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
     }
 
     if (search.count != 0) {
+	char *score = score2char(search.count);
         crm_info("%s has failed %s times on %s",
-                 search.rsc->id, score2char(search.count), node->details->uname);
+                 search.rsc->id, score, node->details->uname);
+	crm_free(score);
     }
 
     crm_free(search.key);
