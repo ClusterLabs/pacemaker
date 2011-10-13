@@ -689,20 +689,6 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 }
 
 static int
-stonith_api_confirm(stonith_t * stonith, int call_options, const char *target)
-{
-    int rc = 0;
-    xmlNode *data = NULL;
-
-    data = create_xml_node(NULL, __FUNCTION__);
-    crm_xml_add(data, F_STONITH_TARGET, target);
-    rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, 0);
-    free_xml(data);
-
-    return rc;
-}
-
-static int
 stonith_api_query(stonith_t * stonith, int call_options, const char *target,
                   stonith_key_value_t ** devices, int timeout)
 {
@@ -777,6 +763,12 @@ stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const
     free_xml(data);
 
     return rc;
+}
+
+static int
+stonith_api_confirm(stonith_t * stonith, int call_options, const char *target)
+{
+    return stonith_api_fence(stonith, call_options|st_opt_manual_ack, target, "off", 0);
 }
 
 static int

@@ -33,6 +33,7 @@ enum stonith_call_options {
     st_opt_verbose         = 0x00000001,
     st_opt_allow_suicide   = 0x00000002,
     st_opt_local_first     = 0x00000004,
+    st_opt_manual_ack	   = 0x00000008,
     st_opt_discard_reply   = 0x00000010,
     st_opt_all_replies	   = 0x00000020,
     st_opt_scope_local     = 0x00000100,

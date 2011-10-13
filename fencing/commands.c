@@ -101,6 +101,27 @@ static async_command_t *create_async_command(xmlNode *msg)
     return cmd;
 }
 
+static int stonith_manual_ack(xmlNode *msg) 
+{
+    struct _ProcTrack p;
+    async_command_t *cmd = create_async_command(msg);
+    xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
+    
+    if(cmd == NULL) {
+	return st_err_missing;
+    }
+
+    cmd->device = crm_strdup("manual_ack");
+    crm_notice("Injecting manual confirmation that %s is safely down/off",
+               crm_element_value(dev, F_STONITH_TARGET));
+
+    memset(&p, 0, sizeof(struct _ProcTrack));
+    p.privatedata = cmd;
+    
+    exec_child_done(&p, 0, 0, 0, FALSE);
+    return stonith_ok;
+}
+
 static gboolean stonith_device_execute(stonith_device_t *device)
 {
     int rc = 0;
@@ -973,7 +994,10 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 
     } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
 
-	if(remote || stand_alone) {
+        if(call_options & st_opt_manual_ack) {
+            rc = stonith_manual_ack(request);
+            
+        } else if(remote || stand_alone) {
 	    rc = stonith_fence(request);
 
 	} else if(call_options & st_opt_local_first) {
