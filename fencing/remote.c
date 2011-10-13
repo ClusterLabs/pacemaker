@@ -320,7 +320,7 @@ remote_fencing_op_t * initiate_remote_stonith_op(stonith_client_t *client, xmlNo
     crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
     
     crm_info("Initiating remote operation %s for %s: %s", op->action, op->target, op->id);
-    CRM_CHECK(op->action, return);
+    CRM_CHECK(op->action, return NULL);
     
     send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
 
