@@ -30,6 +30,29 @@ typedef struct stonith_client_s {
 
 } stonith_client_t;
 
+typedef struct remote_fencing_op_s
+{
+	char *id;
+	char *target;
+	char *action;
+	guint replies;
+
+	guint op_timer;	
+	guint query_timer;
+	guint base_timeout;
+
+	char *delegate;
+	time_t completed;	
+	long long call_options;
+
+	enum op_state state;
+	char *client_id;
+	char *originator;
+	GListPtr query_results;
+	xmlNode *request;
+	
+} remote_fencing_op_t;
+
 extern long long get_stonith_flag(const char *name);
 
 extern void stonith_command(stonith_client_t * client, xmlNode * op_request, const char *remote);
@@ -45,7 +68,7 @@ extern xmlNode *stonith_construct_async_reply(async_command_t * cmd, char *outpu
 extern void do_stonith_notify(int options, const char *type, enum stonith_errors result,
                               xmlNode * data, const char *remote);
 
-extern void initiate_remote_stonith_op(stonith_client_t * client, xmlNode * request);
+extern remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t * client, xmlNode * request, gboolean manual_ack);
 
 extern int process_remote_stonith_exec(xmlNode * msg);
 

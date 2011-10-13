@@ -303,10 +303,13 @@ main(int argc, char ** argv)
 			       hp->delegate?hp->delegate:"We", action_s, hp->target, hp->origin,
 			       ctime(&complete));
 
-		    } else if(hp->state == st_done) {
+		    } else if(hp->state == st_done && hp->delegate) {
 			printf("%s was able to %s node %s on behalf of %s at %s\n",
-			       hp->delegate?hp->delegate:"We", action_s, hp->target, hp->origin,
-			       ctime(&complete));
+			       hp->delegate, action_s, hp->target, hp->origin, ctime(&complete));
+
+		    } else if(hp->state == st_done) {
+			printf("We were able to %s node %s on behalf of %s at %s\n",
+			       action_s, hp->target, hp->origin, ctime(&complete));
 		    } else {
 			printf("%s wishes to %s node %s - %d %d\n",
 			       hp->origin, action_s, hp->target, hp->state, hp->completed);

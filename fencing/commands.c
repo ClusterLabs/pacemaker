@@ -101,7 +101,7 @@ static async_command_t *create_async_command(xmlNode *msg)
     return cmd;
 }
 
-static int stonith_manual_ack(xmlNode *msg) 
+static int stonith_manual_ack(xmlNode *msg, remote_fencing_op_t *op) 
 {
     struct _ProcTrack p;
     async_command_t *cmd = create_async_command(msg);
@@ -112,12 +112,14 @@ static int stonith_manual_ack(xmlNode *msg)
     }
 
     cmd->device = crm_strdup("manual_ack");
-    crm_notice("Injecting manual confirmation that %s is safely down/off",
+    cmd->remote = crm_strdup(op->id);
+    
+    crm_notice("Injecting manual confirmation that %s is safely off/down",
                crm_element_value(dev, F_STONITH_TARGET));
 
     memset(&p, 0, sizeof(struct _ProcTrack));
     p.privatedata = cmd;
-    
+
     exec_child_done(&p, 0, 0, 0, FALSE);
     return stonith_ok;
 }
@@ -596,7 +598,15 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     search.capable = NULL;
 
     if(dev) {
+        const char *device = crm_element_value(dev, F_STONITH_DEVICE);
 	search.host = crm_element_value(dev, F_STONITH_TARGET);
+        if(device && safe_str_eq(device, "manual_ack")) {
+            /* No query necessary */
+            if(list) {
+                *list = NULL;
+            }
+            return stonith_ok;
+        }
     }
     
     crm_log_xml_debug(msg, "Query");
@@ -928,8 +938,8 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	    crm_str_hash, g_str_equal, NULL, free_device);
     }
     
-    crm_debug("Processing %s%s from %s", op, is_reply?" reply":"",
-	      client?client->name:remote);
+    crm_debug("Processing %s%s from %s (%16x)", op, is_reply?" reply":"",
+	      client?client->name:remote, call_options);
 
     if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
 	return;
@@ -964,8 +974,11 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     } else if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
 	create_remote_stonith_op(client_id, request, TRUE); /* Record it for the future notification */
 	rc = stonith_query(request, &data);
-	always_reply = TRUE;
-
+        always_reply = TRUE;
+        if(!data) {
+            return;
+        }
+        
     } else if(is_reply && crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
 	process_remote_stonith_exec(request);
 	return;
@@ -994,21 +1007,22 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 
     } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
 
-        if(call_options & st_opt_manual_ack) {
-            rc = stonith_manual_ack(request);
+        if(remote || stand_alone) {
+            rc = stonith_fence(request);
             
-        } else if(remote || stand_alone) {
-	    rc = stonith_fence(request);
-
-	} else if(call_options & st_opt_local_first) {
+        } else if(call_options & st_opt_manual_ack) {
+	    remote_fencing_op_t *rop = initiate_remote_stonith_op(client, request, TRUE);
+            rc = stonith_manual_ack(request, rop);
+            
+        } else if(call_options & st_opt_local_first) {
 	    rc = stonith_fence(request);
 	    if(rc < 0) {
-		initiate_remote_stonith_op(client, request);
+		initiate_remote_stonith_op(client, request, FALSE);
 		return;
 	    }
 
 	} else {
-	    initiate_remote_stonith_op(client, request);
+	    initiate_remote_stonith_op(client, request, FALSE);
 	    return;
 	}
 
