@@ -482,7 +482,7 @@
       </example>
       <para>
 	This notation can also be used in this context to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other.
-	In this scenario, unlike the previous on, B would be allowed to remain active even if A or C (or both) were inactive.
+	In this scenario, unlike the previous one, B would be allowed to remain active even if A or C (or both) were inactive.
       </para>
       <example>
 	<title>Using colocation sets to specify a common peer. </title>
