@@ -49,13 +49,13 @@
       <title>Adding a New Cluster Node</title>
       <section id="s-add-ais">
 	<title>Corosync</title>
-	<para>Adding a new is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node.
+	<para>Adding a new node is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node.
 You may need to modify the mcastaddr option to match the new node's IP address.</para>
 	<para>If a log message containing "Invalid digest" appears from Corosync, the keys are not consistent between the machines.</para>
       </section>
       <section id="s-add-heartbeat">
 	<title>Heartbeat</title>
-	<para>Provided you specified autojoin any in <filename>ha.cf</filename>, adding a new is as simple as installing heartbeat and copying <filename>ha.cf</filename> and <filename>authkeys</filename> from an existing node.</para>
+	<para>Provided you specified autojoin any in <filename>ha.cf</filename>, adding a new node is as simple as installing heartbeat and copying <filename>ha.cf</filename> and <filename>authkeys</filename> from an existing node.</para>
 	<para>If not, then after setting up <filename>ha.cf</filename> and <filename>authkeys</filename>, you must use the hb_addnode command before starting the new node. </para>
       </section>
     </section>
