@@ -72,7 +72,7 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 %.html: %.txt
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
 %.8: %.8.txt
-	a2x -f manpage $<
+	a2x -L -f manpage $<
 
 Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
 
