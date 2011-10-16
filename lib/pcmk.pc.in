@@ -3,7 +3,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 build=@BUILD_VERSION@
-features=@PKG_FEATURES@
+features=@PCMK_FEATURES@
 configdir=@CRM_CONFIG_DIR@
 daemondir=@CRM_DAEMON_DIR@
 daemon_group=@CRM_DAEMON_GROUP@
