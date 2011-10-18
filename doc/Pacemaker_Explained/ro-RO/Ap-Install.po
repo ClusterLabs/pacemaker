@@ -1,0 +1,228 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2011-09-24 23:25+0300\n"
+"PO-Revision-Date: 2011-09-25 18:43+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Ap-Install.xml:2(title)
+msgid "Installation"
+msgstr "Instalare"
+
+#: Ap-Install.xml:4(title)
+msgid "Choosing a Cluster Stack"
+msgstr "Alegerea unei stive de cluster"
+
+#: Ap-Install.xml:5(para)
+msgid "Ultimately the choice of cluster stack is a personal decision that must be made in the context of you or your company's needs and strategic direction. Pacemaker currently functions equally well with both stacks."
+msgstr "În ultimă instanţă alegerea unei stive de cluster este o decizie personală care trebuie realizată în contextul nevoilor şi a direcţiei strategice ale individului sau ale companiei. În momentul de faţă Pacemaker funcţionează la fel de bine cu ambele stive."
+
+#: Ap-Install.xml:6(para)
+msgid "Here are some factors that may influence the decision"
+msgstr "Aceştia sunt câţiva factori care vă pot influenţa decizia"
+
+#: Ap-Install.xml:9(para)
+msgid "SUSE/Novell, Red Hat and Oracle are all putting their collective weight behind the Corosync cluster stack."
+msgstr "SUSE/Novell, Red Hat şi Oracle îşi pun la contribuţie greutatea colectivă în spatele stivei de cluster Corosync."
+
+#: Ap-Install.xml:12(para)
+msgid "Corosync is an OSI Certified implementation of an industry standard (the Service Availability Forum Application Interface Specification)."
+msgstr "Corosync este o implementare certificată OSI a unui standard al industriei (Service Availability Forum Application Interface Specification)."
+
+#: Ap-Install.xml:15(para)
+msgid "Using Corosync gives your applications access to the following additional cluster services"
+msgstr "Folosirea Corosync oferă aplicaţiilor dvs. acces la următoarele servicii de cluster adiţionale"
+
+#: Ap-Install.xml:17(para)
+msgid "checkpoint service"
+msgstr "serviciu punct de control"
+
+#: Ap-Install.xml:20(para)
+msgid "distributed locking service"
+msgstr "serviciu de blocare distribuit"
+
+#: Ap-Install.xml:23(para)
+msgid "extended virtual synchrony service"
+msgstr "serviciu de sincronie virtuală extinsă"
+
+#: Ap-Install.xml:26(para)
+msgid "cluster closed process group service"
+msgstr "serviciu de grup de procese închis pe cluster"
+
+#: Ap-Install.xml:32(para)
+msgid "It is likely that Pacemaker, at some point in the future, will make use of some of these additional services not provided by Heartbeat"
+msgstr "Este probabil ca Pacemaker, la un moment dat în viitor, să utilizeze o parte din aceste servicii adiţionale care nu sunt furnizate de Heartbeat"
+
+#: Ap-Install.xml:35(para)
+msgid "To date, Pacemaker has received less real-world testing on Corosync than it has on Heartbeat."
+msgstr "Până în acest moment, Pacemaker a avut parte de mai puţină testare în \"real-world\" pe Corosync faţă de Heartbeat"
+
+#: Ap-Install.xml:40(title)
+msgid "Enabling Pacemaker"
+msgstr "Activarea Pacemaker"
+
+#: Ap-Install.xml:42(title)
+msgid "For Corosync"
+msgstr "Pentru Corosync"
+
+#: Ap-Install.xml:43(para)
+msgid "The Corosync configuration is normally located in <filename>/etc/corosync/corosync.conf</filename> and an example for a machine with an address of 1.2.3.4 in a cluster communicating on port 1234 (without peer authentication and message encryption) is shown below."
+msgstr "Fişierul de configurare al Corosync se găseşte în mod normal în <filename>/etc/corosync/corosync.conf</filename> şi un exemplu pentru o maşină cu adresa 1.2.3.4 într-un cluster care comunică pe portul 1234 (fără autentificarea a partenerului sau criptarea mesajelor) este prezentat mai jos."
+
+#: Ap-Install.xml:45(title)
+msgid "An example Corosync configuration file"
+msgstr "Un exemplu de fişier de configurare al Corosync"
+
+#: Ap-Install.xml:46(programlisting)
+#, no-wrap
+msgid ""
+"\n"
+"  totem {\n"
+"      version: 2\n"
+"      secauth: off\n"
+"      threads: 0\n"
+"      interface {\n"
+"          ringnumber: 0\n"
+"          bindnetaddr: 1.2.3.4\n"
+"          mcastaddr: 226.94.1.1\n"
+"          mcastport: 1234\n"
+"      }\n"
+"  }\n"
+"  logging {\n"
+"      fileline: off\n"
+"      to_syslog: yes\n"
+"      syslog_facility: daemon\n"
+"  }\n"
+"  amf {\n"
+"      mode: disabled\n"
+"  }\n"
+"\t"
+msgstr ""
+"\n"
+"  totem {\n"
+"      version: 2\n"
+"      secauth: off\n"
+"      threads: 0\n"
+"      interface {\n"
+"          ringnumber: 0\n"
+"          bindnetaddr: 1.2.3.4\n"
+"          mcastaddr: 226.94.1.1\n"
+"          mcastport: 1234\n"
+"      }\n"
+"  }\n"
+"  logging {\n"
+"      fileline: off\n"
+"      to_syslog: yes\n"
+"      syslog_facility: daemon\n"
+"  }\n"
+"  amf {\n"
+"      mode: disabled\n"
+"  }\n"
+"\t"
+
+#: Ap-Install.xml:68(para)
+msgid "The logging should be mostly obvious and the amf section refers to the Availability Management Framework and is not covered in this document."
+msgstr "Logarea ar trebui să fie în cea mai mare parte evidentă şi secţiunea amf se referă la Framework-ul pentru Gestiunea Disponibilităţii şi nu este acoperit în acest document."
+
+#: Ap-Install.xml:70(para)
+msgid "Please consult the <ulink url=\"http://www.corosync.org/\">Corosync website</ulink> and documentation for details on enabling encryption and peer authentication for the cluster."
+msgstr "Vă rugăm să consultaţi <ulink url=\"http://www.corosync.org/\">website-ul Corosync</ulink> şi documentaţia pentru detalii despre activarea criptării şi a autentificării partenerului pentru cluster."
+
+#: Ap-Install.xml:69(para)
+msgid "The interesting part of the configuration is the totem section. This is where we define the how the node can communicate with the rest of the cluster and what protocol version and options (including encryption<placeholder-1/>) it should use. Beginners are encouraged to use the values shown and modify the interface section based on their network."
+msgstr "Partea interesantă a configuraţiei o reprezintă secţiunea totem. Aici definim cum poate comunica un nod cu restul clusterului şi ce versiune de protocol şi opţiuni (incluzând criptarea<placeholder-1/>) ar trebui să folosească. Începătorii sunt încurajaţi să folosească valorile prezentate şi să modifice secţiunea referitoare la interfaţă pe baza reţelei acestora."
+
+#: Ap-Install.xml:72(para)
+msgid "It is also possible to configure Corosync for an IPv6 based environment. Simply configure bindnetaddr and mcastaddr with their IPv6 equivalents. Eg"
+msgstr "Este totodată posibilă configurarea Corosync pentru un mediu bazat pe IPV6. Pur şi simplu se configurează bindnetaddr şi mcastaddr cu echivalentele IPV6 ale acestora. Ex"
+
+#: Ap-Install.xml:74(title)
+msgid "Example options for an IPv6 environment"
+msgstr "Exemple de opţiuni pentru un mediu IPV6"
+
+#: Ap-Install.xml:75(programlisting)
+#, no-wrap
+msgid ""
+"\n"
+"  bindnetaddr: fec0::1:a800:4ff:fe00:20 \n"
+"  mcastaddr: ff05::1\n"
+"\t  "
+msgstr ""
+"\n"
+"  bindnetaddr: fec0::1:a800:4ff:fe00:20 \n"
+"  mcastaddr: ff05::1\n"
+"\t  "
+
+#: Ap-Install.xml:80(para)
+msgid "To tell Corosync to use the Pacemaker cluster manager, add the following fragment to a functional Corosync configuration and restart the cluster."
+msgstr "Pentru a îi spune Corosync-ului să folosească Pacemaker ca şi manager al clusterului, adăugaţi următorul fragment la o configuraţie funcţională de Corosync şi reporniţi clusterul."
+
+#: Ap-Install.xml:82(title)
+msgid "Configuration fragment for enabling Pacemaker under Corosync"
+msgstr "Fragment de configurare pentru a activa Pacemaker sub Corosync"
+
+#: Ap-Install.xml:83(programlisting)
+#, no-wrap
+msgid ""
+"\n"
+"  aisexec {\n"
+"    user:  root\n"
+"    group: root\n"
+"  }\n"
+"  service {\n"
+"    name: pacemaker\n"
+"    ver: 0\n"
+"  }\n"
+"\t  "
+msgstr ""
+"\n"
+"  aisexec {\n"
+"    user:  root\n"
+"    group: root\n"
+"  }\n"
+"  service {\n"
+"    name: pacemaker\n"
+"    ver: 0\n"
+"  }\n"
+"\t  "
+
+#: Ap-Install.xml:94(para)
+msgid "The cluster needs to be run as root so that its child processes (the lrmd in particular) have sufficient privileges to perform the actions requested of it. After-all, a cluster manager that can't add an IP address or start apache is of little use."
+msgstr "Clusterul trebuie sa ruleze ca root pentru ca şi procesele copil ale acestuia (lrmd în particular) să aibe suficiente privilegii pentru a îndeplini acţiunile care i s-au cerut. La urma urmei, un manager de cluster care nu poate să adauge o adresă IP sau să pornească un apache este de puţin folos."
+
+#: Ap-Install.xml:95(para)
+msgid "The second directive is the one that actually instructs the cluster to run Pacemaker."
+msgstr "A doua directivă este cea care instruieşte de fapt clusterul să ruleze Pacemaker."
+
+#: Ap-Install.xml:98(title)
+msgid "For Heartbeat"
+msgstr "Pentru Heartbeat"
+
+#: Ap-Install.xml:99(para)
+msgid "Add the following to a functional <filename>ha.cf</filename> configuration file and restart Heartbeat"
+msgstr "Adăugaţi următoarele la fişierul de configurare <filename>ha.cf</filename> funcţional şi reporniţi Heartbeat"
+
+#: Ap-Install.xml:101(title)
+msgid "Configuration fragment for enabling Pacemaker under Heartbeat"
+msgstr "Fragment de configurare pentru a activa Pacemaker sub Heartbeat"
+
+#: Ap-Install.xml:102(programlisting)
+#, no-wrap
+msgid ""
+"\n"
+"  crm respawn\n"
+"\t  "
+msgstr ""
+"\n"
+"  crm respawn\n"
+"\t  "
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: Ap-Install.xml:0(None)
+msgid "translator-credits"
+msgstr "meritele traducătorului"
+
