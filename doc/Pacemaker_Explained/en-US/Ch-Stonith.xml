@@ -33,7 +33,7 @@
 	  <para><command>stonith_admin --metadata --agent <replaceable>type</replaceable></command>
         </para>
 	  <para>The output should be XML formatted text containing additional parameter descriptions. We
-          will endevor to make the output more friendly in a later version.</para>
+          will endeavour to make the output more friendly in a later version.</para>
 	</listitem>
 	<listitem>
         <para>Create a file called stonith.xml containing a primitive resource with a class of
