@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-09-25 09:33+0200\n"
+"PO-Revision-Date: 2011-10-19 01:54+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -12,46 +12,46 @@ msgstr ""
 
 #: Ap-Changes.xml:2(title)
 msgid "What Changed in 1.0"
-msgstr "Care sunt schimbările din 1.0"
+msgstr "Ce S-a Schimbat în 1.0"
 
 # Plural is Noi
 #: Ap-Changes.xml:4(title)
 msgid "New"
 msgstr "Nou"
 
-# Failure has several meanings in RO, either eşec, as in "he is such a failure, could not get his life toghether" or defecţiune, as in "there is a hardware malfunction". 
+# Failure has several meanings in RO, either eşec, as in "he is such a failure, could not get his life toghether" or defecţiune, as in "there is a hardware malfunction".
 # Timeout can be expirare, as in "expiry date" and temporizator, as in "something that keeps track of time, similar to stopwatch"
 #: Ap-Changes.xml:6(para)
 msgid "Failure timeouts. See <xref linkend=\"s-failure-migration\"/>"
-msgstr "Temporizatori de eşec. Perioada de expirare în caz de defecţiune. Vezi  <xref linkend=\"s-failure-migration\"/>"
+msgstr "Intervalele de expirare în caz de defecţiune. Vedeţi  <xref linkend=\"s-failure-migration\"/>"
 
 #: Ap-Changes.xml:7(para)
 msgid "New section for resource and operation defaults. See <xref linkend=\"s-resource-defaults\"/> and <xref linkend=\"s-operation-defaults\"/>"
-msgstr "O nouă secţiune cu setările implicite pentru resurse şi operaţiuni. Vezi <xref linkend=\"s-resource-defaults\"/> şi <xref linkend=\"s-operation-defaults\"/>"
+msgstr "O nouă secţiune pentru valorile implicite ale resurselor şi operaţiunilor. Vedeţi <xref linkend=\"s-resource-defaults\"/> şi <xref linkend=\"s-operation-defaults\"/>"
 
 #: Ap-Changes.xml:8(para)
 msgid "Tool for making offline configuration changes. See <xref linkend=\"s-config-sandboxes\"/>"
-msgstr "Utilitar pentru realizarea de modificări ale configuraţiei în mod deconectat. Vezi <xref linkend=\"s-config-sandboxes\"/>"
+msgstr "Utilitar pentru realizarea de modificări ale configuraţiei offline. Vedeţi <xref linkend=\"s-config-sandboxes\"/>"
 
 #: Ap-Changes.xml:9(para)
 msgid "<literal>Rules, instance_attributes, meta_attributes</literal> and sets of operations can be defined once and referenced in multiple places. See <xref linkend=\"s-reusing-config-elements\"/>"
-msgstr "<literal>Regulile, atributele_instanţei, meta_atributele</literal> şi seturile de operaţiuni pot fi definite odată iar apoi pot fi referenţiate în mai multe locuri. Vezi <xref linkend=\"s-reusing-config-elements\"/>"
+msgstr "<literal>Regulile, atributele_instanţei, meta_atributele</literal> şi seturile de operaţiuni pot fi definite o dată iar apoi pot fi referenţiate în mai multe locuri. Vedeţi <xref linkend=\"s-reusing-config-elements\"/>"
 
 #: Ap-Changes.xml:10(para)
 msgid "The CIB now accepts XPath-based create/modify/delete operations. See the <command>cibadmin</command> help text."
-msgstr "În CIB acum se acceptă operaţiuni de creare/modificare/ştergere bazate pe tipul XPath. Vezi ajutorul contextual pentru <command>cibadmin</command>."
+msgstr "CIB-ul acum acceptă operaţiuni de creare/modificare/ştergere bazate pe tipul XPath. Vedeţi ajutorul textual pentru <command>cibadmin</command>."
 
 #: Ap-Changes.xml:11(para)
 msgid "Multi-dimensional colocation and ordering constraints. See <xref linkend=\"s-resource-sets-ordering\"/> and <xref linkend=\"s-resource-sets-collocation\"/>"
-msgstr "Constrângeri de colocare si ordonare multi-dimensională. Vezi <xref linkend=\"s-resource-sets-ordering\"/> şi <xref linkend=\"s-resource-sets-collocation\"/>"
+msgstr "Restricţii de ordonare şi colocare multi-dimensională. Vedeţi <xref linkend=\"s-resource-sets-ordering\"/> şi <xref linkend=\"s-resource-sets-collocation\"/>"
 
 #: Ap-Changes.xml:12(para)
 msgid "The ability to connect to the CIB from non-cluster machines. See <xref linkend=\"s-remote-connection\"/>"
-msgstr "Posibilitatea de conectare la CIB de pe maşini care nu fac parte din cluster. Vezi <xref linkend=\"s-remote-connection\"/>"
+msgstr "Posibilitatea de conectare la CIB de pe maşini care nu fac parte din cluster. Vedeţi <xref linkend=\"s-remote-connection\"/>"
 
 #: Ap-Changes.xml:13(para)
 msgid "Allow recurring actions to be triggered at known times. See <xref linkend=\"s-recurring-start\"/>"
-msgstr "Permite declanşarea de acţiuni recurente la intervale cunoscute de timp. Vezi <xref linkend=\"s-recurring-start\"/>"
+msgstr "Permite declanşarea de acţiuni recurente la intervale cunoscute de timp. Vedeţi <xref linkend=\"s-recurring-start\"/>"
 
 #: Ap-Changes.xml:17(title)
 msgid "Changed"
@@ -64,19 +64,19 @@ msgstr "Sintaxă"
 
 #: Ap-Changes.xml:22(para)
 msgid "All resource and cluster options now use dashes (-) instead of underscores (_)"
-msgstr "Toate resursele şi opţiunile cluster-ului folosesc acum cratime (-) în loc de sublinii (_)"
+msgstr "Toate opţiunile şi resursele cluster-ului folosesc acum cratime (-) în loc de underscore (_)"
 
 #: Ap-Changes.xml:23(para)
 msgid "<literal>master_slave</literal> was renamed to <literal>master</literal>"
-msgstr "<literal>master_slave</literal> a fost redenumit ca <literal>master</literal>"
+msgstr "<literal>master_slave</literal> a fost redenumit în <literal>master</literal>"
 
 #: Ap-Changes.xml:24(para)
 msgid "The <literal>attributes</literal> container tag was removed"
-msgstr "Tag-ul <literal>attributes</literal> a fost îndepărtat"
+msgstr "Tag-ul <literal>attributes</literal> a fost scos"
 
 #: Ap-Changes.xml:25(para)
 msgid "The operation field <literal>pre-req</literal> has been renamed <literal>requires</literal>"
-msgstr "Câmpul <literal>pre-req</literal> din operaţiuni a fost redenumit în <literal>requires</literal>"
+msgstr "Câmpul operaţiunii <literal>pre-req</literal> fost redenumit în <literal>requires</literal>"
 
 #: Ap-Changes.xml:26(para)
 msgid "All operations must have an <literal>interval</literal>, start/stop must have it set to zero"
@@ -88,15 +88,15 @@ msgstr "Opţiunea <literal>stonith-enabled</literal> are acum valoarea implicit�
 
 #: Ap-Changes.xml:30(para)
 msgid "The cluster will refuse to start resources if <literal>stonith-enabled</literal> is true (or unset) and no STONITH resources have been defined"
-msgstr "Clusterul va refuza să pornească resurse dacă <literal>stonith-enabled</literal> este true (sau nu este setat) şi nici nu au fost definite resurse STONITH"
+msgstr "Clusterul va refuza să pornească resurse dacă <literal>stonith-enabled</literal> este true (sau nu este setat) şi nici o resursă STONITH nu a fost definită"
 
 #: Ap-Changes.xml:31(para)
 msgid "The attributes of colocation and ordering constraints were renamed for clarity. See <xref linkend=\"s-resource-ordering\"/> and <xref linkend=\"s-resource-colocation\"/>"
-msgstr "Atributele de constrângere a colocării şi ordonării au fost redenumite pentru o mai bună claritate. Vezi <xref linkend=\"s-resource-ordering\"/> şi <xref linkend=\"s-resource-colocation\"/>"
+msgstr "Atributele restricţiilor de colocare şi ordonare au fost redenumite pentru o mai bună claritate. Vedeţi <xref linkend=\"s-resource-ordering\"/> şi <xref linkend=\"s-resource-colocation\"/>"
 
 #: Ap-Changes.xml:32(para)
 msgid "<literal>resource-failure-stickiness</literal> has been replaced by <literal>migration-threshold</literal>. See <xref linkend=\"s-failure-migration\"/>"
-msgstr "<literal>resource-failure-stickiness</literal> a fost înlocuită de <literal>migration-threshold</literal>. Vezi <xref linkend=\"s-failure-migration\"/>"
+msgstr "<literal>resource-failure-stickiness</literal> a fost înlocuită de <literal>migration-threshold</literal>. Vedeţi <xref linkend=\"s-failure-migration\"/>"
 
 #: Ap-Changes.xml:33(para)
 msgid "The arguments for command-line tools have been made consistent"
@@ -124,7 +124,7 @@ msgstr "id-urile trebuie să fie unice la nivel global (nu unice doar pentru ace
 
 #: Ap-Changes.xml:46(para)
 msgid "Some fields (such as those in constraints that refer to resources) are IDREFs. This means that they must reference existing resources or objects in order for the configuration to be valid. Removing an object which is referenced elsewhere will therefore fail."
-msgstr "Unele câmpuri (cum ar fi acelea care fac parte din constrângeri care fac referinţă la resurse) sunt IDREF-uri. Acest lucru înseamnă că ele trebuie să facă referinţă către resurse sau obiecte existente pentru a fi validă configurarea. Eliminarea unui obiect care este referenţiat altundeva va eşua prin urmare."
+msgstr "Unele câmpuri (cum ar fi acelea care fac parte din restricţii care fac referinţă la resurse) sunt IDREF-uri. Acest lucru înseamnă că ele trebuie să facă referinţă către resurse sau obiecte existente pentru a fi validă configurarea. Eliminarea unui obiect care este referenţiat altundeva prin urmare va eşua."
 
 #: Ap-Changes.xml:53(para)
 msgid "The CIB representation from which the MD5 digest used to verify CIBs has changed. This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0. This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary."
@@ -136,18 +136,18 @@ msgstr "Informaţii despre noduri către care se pot efectua verificări de tip 
 
 #: Ap-Changes.xml:67(title)
 msgid "Removed"
-msgstr "Eliminate"
+msgstr "Scoase"
 
 #: Ap-Changes.xml:73(para)
 msgid "It is no longer possible to set resource meta options as top-level attributes. Use meta attributes instead."
-msgstr "Nu mai este posibil să fie setate meta opţiunile resursei ca attribute de nivel înalt. A se folosi meta atributele în schimb."
+msgstr "Nu mai este posibil să fie setate meta opţiunile resursei ca attribute de nivel înalt. Folosiţi meta atributele în schimb."
 
 #: Ap-Changes.xml:78(para)
 msgid "Resource and operation defaults are no longer read from <literal>crm_config</literal>. See <xref linkend=\"s-resource-defaults\"/> and <xref linkend=\"s-operation-defaults\"/> instead."
-msgstr "Valorile implicite ale resurselor si operaţiunilor nu mai sunt citite din <literal>crm_config</literal>. Vezi <xref linkend=\"s-resource-defaults\"/> şi <xref linkend=\"s-operation-defaults\"/> în schimb."
+msgstr "Valorile implicite ale resurselor si operaţiunilor nu mai sunt citite din <literal>crm_config</literal>. Vedeţi <xref linkend=\"s-resource-defaults\"/> şi <xref linkend=\"s-operation-defaults\"/> în schimb."
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ap-Changes.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele traducătorului"
+msgstr "meritele-traducătorului"
 
