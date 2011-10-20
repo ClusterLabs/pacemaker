@@ -171,7 +171,7 @@ msgid "Locate the <filename>upgrade06.xsl</filename> conversion script or downlo
 msgstr "Localizaţi scriptul de conversie <filename>upgrade06.xsl</filename> sau descărcaţi cea mai recentă versiune de <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/xml/upgrade06.xsl\">controlul versiunii</ulink>"
 
 #: Ap-Upgrade-Config.xml:80(filename)
-msgid "/path/tp/upgrade06.xsl"
+msgid "/path/to/upgrade06.xsl"
 msgstr "/calea/către/upgrade06.xsl"
 
 #: Ap-Upgrade-Config.xml:80(filename)
@@ -192,7 +192,7 @@ msgid "Locate the <filename>pacemaker.rng</filename> script."
 msgstr "Localizaţi scriptul <filename>pacemaker.rng</filename>."
 
 #: Ap-Upgrade-Config.xml:86(filename)
-msgid "/path/tp/pacemaker.rng"
+msgid "/path/to/pacemaker.rng"
 msgstr "/calea/către/pacemaker.rng"
 
 #: Ap-Upgrade-Config.xml:86(command)

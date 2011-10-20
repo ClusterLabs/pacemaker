@@ -161,7 +161,7 @@ msgid "notify"
 msgstr "notifică"
 
 #: Ap-OCF.xml:80(entry)
-msgid "Used by the cluster to send the agent pre and post notification events telling the resource what is or did just take place"
+msgid "Used by the cluster to send the agent pre and post notification events telling the resource what is or has just taken place"
 msgstr "Folosit de către cluster pentru a trimite agentului notificări pre şi post eveniment spunându-i resursei ceea ce se întâmplă sau ce tocmai s-a întâmplat"
 
 #: Ap-OCF.xml:81(entry)
@@ -349,7 +349,7 @@ msgid "OCF_ERR_CONFIGURED"
 msgstr "OCF_ERR_CONFIGURED"
 
 #: Ap-OCF.xml:172(entry)
-msgid "The resource's configuration is invalid. Eg. A required parameters are missing."
+msgid "The resource's configuration is invalid. Eg. A required parameter is missing."
 msgstr "Configuraţia resursei este invalidă. Ex. Un parametru necesar lipseşte."
 
 #: Ap-OCF.xml:176(entry)

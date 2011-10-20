@@ -463,7 +463,7 @@ msgid "Controlling cluster options is achieved in much the same manner as specif
 msgstr "Controlarea opţiunilor clusterului este reuşită în mare parte prin aceeaşi manieră ca şi specificarea diverselor opţiuni pentru resurse pe noduri diferite."
 
 #: Ch-Rules.xml:413(para)
-msgid "The difference is that because they are cluster options, one cannot (or should not because they wont work) use attribute based expressions. The following example illustrates how to set a different <literal>resource-stickiness</literal> value during and outside of work hours. This allows resources to automatically move back to their most preferred hosts, but at a time that (in theory) does not interfere with business activities."
+msgid "The difference is that because they are cluster options, one cannot (or should not because they won't work) use attribute based expressions. The following example illustrates how to set a different <literal>resource-stickiness</literal> value during and outside of work hours. This allows resources to automatically move back to their most preferred hosts, but at a time that (in theory) does not interfere with business activities."
 msgstr "Diferenţa este că din cauza că sunt opţiuni de cluster, nu ar trebui să puteţi (sau ar trebui să nu vreţi pentru că ele nu funcţionează) să folosiţi expresii bazate pe atribute. Următorul exemplu ilustrează cum să setaţi un set de valori <literal>instance_attributes</literal> diferite în timpul şi în afara orelor de lucru. Acest lucru permite resurselor să se mute înapoi în mod automat la host-urile cele mai preferate, dar la un moment în care (teoretic) nu interferează cu activităţile de business."
 
 #: Ch-Rules.xml:419(title)
@@ -476,7 +476,7 @@ msgstr "Asigurarea că Regulile Bazate pe Timp Iau Efect"
 
 #: Ch-Rules.xml:441(para)
 #, fuzzy
-msgid "A Pacemaker cluster is an event driven system. As such, it wont recalculate the best place for resources to run in unless something (like a resource failure or configuration change) happens. This can mean that a location constraint that only allows resource X to run between 9am and 5pm is not enforced."
+msgid "A Pacemaker cluster is an event driven system. As such, it won't recalculate the best place for resources to run in unless something (like a resource failure or configuration change) happens. This can mean that a location constraint that only allows resource X to run between 9am and 5pm is not enforced."
 msgstr "Un cluster Pacemaker este un sistem condus de evenimente. Drept pentru care, nu va recalcula cel mai bun loc pentru a rula resursele decât dacă ceva (cum ar fi eşecul unei resurse sau modificarea configuraţiei) se întâmplă. Asta poate însemna că o restricţie a locaţiei care permite resursei X să ruleze numai între 9am şi 5pm nu este aplicată."
 
 #: Ch-Rules.xml:446(para)

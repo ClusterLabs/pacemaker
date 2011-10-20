@@ -77,7 +77,7 @@ msgid "Corosync"
 msgstr "Corosync"
 
 #: Ch-Nodes.xml:52(para)
-msgid "Adding a new is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node. You may need to modify the mcastaddr option to match the new node's IP address."
+msgid "Adding a new node is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node. You may need to modify the mcastaddr option to match the new node's IP address."
 msgstr "Adăugarea unui nou nod este la fel de simplă ca instalarea Corosync şi Pacemaker şi copierea <filename>/etc/corosync/corosync.conf</filename> şi a <filename>/etc/ais/authkey</filename> (dacă există) de pe un nod existent. Ar putea fi necesar să modificaţi opţiunea mcastaddr pentru a se potrivi cu adresa IP a noului nod."
 
 #: Ch-Nodes.xml:54(para)
@@ -92,7 +92,7 @@ msgid "Heartbeat"
 msgstr "Heartbeat"
 
 #: Ch-Nodes.xml:58(para)
-msgid "Provided you specified autojoin any in <filename>ha.cf</filename>, adding a new is as simple as installing heartbeat and copying <filename>ha.cf</filename> and <filename>authkeys</filename> from an existing node."
+msgid "Provided you specified autojoin any in <filename>ha.cf</filename>, adding a new node is as simple as installing heartbeat and copying <filename>ha.cf</filename> and <filename>authkeys</filename> from an existing node."
 msgstr "Dacă aţi specificat autojoin any în <filename>ha.cf</filename>, adăugarea unui nod nou este la fel de simpla ca şi instalarea Heartbeat şi copierea <filename>ha.cf</filename> şi a  <filename>authkeys</filename> de pe un nod existent."
 
 #: Ch-Nodes.xml:59(para)

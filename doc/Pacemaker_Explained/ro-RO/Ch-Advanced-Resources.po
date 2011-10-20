@@ -741,7 +741,7 @@ msgid "Allowed values: start, stop, promote, demote. Defaults to the value (spec
 msgstr "Valori permise: start, stop, promote, demote. Valoarea implicită (specificată sau subînţeleasă) este cea dată de first-action"
 
 #: Ch-Advanced-Resources.xml:570(para)
-msgid "In the example below, myApp will wait until one of database copies has been started and promoted to master before being started itself. Only if no copies can be promoted will apache-stats be prevented from being active. Additionally, the database will wait for myApp to be stopped before it is demoted."
+msgid "In the example below, myApp will wait until one of the database copies has been started and promoted to master before being started itself. Only if no copies can be promoted will apache-stats be prevented from being active. Additionally, the database will wait for myApp to be stopped before it is demoted."
 msgstr "În exemplul de mai jos, myApp va aştepta până când una din copiile bazei de date a fost pornită şi promovată la master înainte de a fi ea însăşi pornită. Doar dacă nici o copie nu poate fi promovată va fi împiedicată apache-stats de a fi activă. În mod adiţional, baza de date va aştepta ca myApp să fie oprită înainte să fie degradată."
 
 #: Ch-Advanced-Resources.xml:575(para)

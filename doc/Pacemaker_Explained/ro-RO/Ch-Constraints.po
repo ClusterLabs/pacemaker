@@ -481,7 +481,7 @@ msgid "Collocating Sets of Resources"
 msgstr "Colocarea Seturilor de Resurse"
 
 #: Ch-Constraints.xml:431(para)
-msgid "Another common situation is for an administrator to create a set of collocated resources. Previously this possible either by defining a resource group (See <xref linkend=\"group-resources\"/>) which could not always accurately express the design; or by defining each relationship as an individual constraint, causing a constraint explosion as the number of resources and combinations grew."
+msgid "Another common situation is for an administrator to create a set of collocated resources. Previously this was possible either by defining a resource group (See <xref linkend=\"group-resources\"/>) which could not always accurately express the design; or by defining each relationship as an individual constraint, causing a constraint explosion as the number of resources and combinations grew."
 msgstr "O altă situaţie comună este ca un administrator să creeze un set de resurse colocate. Anterior acest lucru era posibil fie prin definirea unui grup de resurse (Vezi <xref linkend=\"group-resources\"/>) care nu putea întotdeauna să exprime design-ul în mod corect, sau prin definirea fiecărei relaţii ca o restricţie individuală, cauzând o explozie de restricţii pe măsură ce numărul resurselor şi al combinaţiilor creştea."
 
 #: Ch-Constraints.xml:436(title)
@@ -505,7 +505,7 @@ msgid "A group resource with the equivalent colocation rules"
 msgstr "O resursă de grup cu regulile echivalente de colocare"
 
 #: Ch-Constraints.xml:483(para)
-msgid "This notation can also be used in this context to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other. In this scenario, unlike the previous on, B would be allowed to remain active even if A or C (or both) were inactive."
+msgid "This notation can also be used in this context to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other. In this scenario, unlike the previous one, B would be allowed to remain active even if A or C (or both) were inactive."
 msgstr "Această notaţie poate fi folosită de asemenea în acest context pentru a spune clusterului că un set de resurse trebuie să fie toate amplasate pe un nod comun, dar că nu au dependinţe unele de altele. În acest scenariu, contrar faţă de cel anterior, lui B i-ar fi permis să rămână activă chiar dacă A sau C (sau ambele) ar fi fost inactive."
 
 #: Ch-Constraints.xml:488(title)

@@ -467,7 +467,7 @@ msgid "Some resources, such as Xen virtual guests, are able to move to another l
 msgstr "Unele resurse, precum oaspeţii virtuali de Xen, sunt capabili să se mute în altă locaţie fără pierderea stării. Numim acest lucru migrarea resurselor şi este diferit de practica normală a opririi resurselor pe prima maşină şi apoi pornirea acestora în altă parte."
 
 #: Ch-Advanced-Options.xml:360(para)
-msgid "Not all resources are able to migrate, see the Migration Checklist below, and those that can wont do so in all situations. Conceptually there are two requirements from which the other prerequisites follow:"
+msgid "Not all resources are able to migrate, see the Migration Checklist below, and those that can won't do so in all situations. Conceptually there are two requirements from which the other prerequisites follow:"
 msgstr "Nu toate resursele sunt capabile de migrare, vedeţi Lista de Migrare de mai jos, şi mai sunt cele care nu vor să facă acest lucru în toate situaţiile. În mod conceptual sunt două cerinţe din care celelalte necesităţi urmează:"
 
 #: Ch-Advanced-Options.xml:365(para)
@@ -531,7 +531,7 @@ msgid "Reusing Rules, Options and Sets of Operations"
 msgstr "Refolosirea Regulilor, Opţiunilor şi a Setului de Operaţiuni"
 
 #: Ch-Advanced-Options.xml:394(para)
-msgid "Sometimes a number of constraints need to use the same set of rules and resources need to set the same options an parameters. To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id."
+msgid "Sometimes a number of constraints need to use the same set of rules and resources need to set the same options and parameters. To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id."
 msgstr "Câteodată acelaşi număr de restricţii trebuie să folosească acelaşi set de reguli şi resursele trebuie sa seteze aceleaşi opţiuni şi parametri. Pentru a simplifica această situaţie, puteţi face referinţă la un obiect existent folosind un <literal>id-ref</literal> în loc de un id."
 
 #: Ch-Advanced-Options.xml:398(para)

@@ -1,13 +1,15 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-09-25 18:43+0200\n"
+"PO-Revision-Date: 2011-10-19 07:49+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Romanian\n"
+"X-Poedit-Country: ROMANIA\n"
 
 #: Ap-Install.xml:2(title)
 msgid "Installation"
@@ -15,7 +17,7 @@ msgstr "Instalare"
 
 #: Ap-Install.xml:4(title)
 msgid "Choosing a Cluster Stack"
-msgstr "Alegerea unei stive de cluster"
+msgstr "Alegerea unei Stive de Cluster"
 
 #: Ap-Install.xml:5(para)
 msgid "Ultimately the choice of cluster stack is a personal decision that must be made in the context of you or your company's needs and strategic direction. Pacemaker currently functions equally well with both stacks."
@@ -23,7 +25,7 @@ msgstr "În ultimă instanţă alegerea unei stive de cluster este o decizie per
 
 #: Ap-Install.xml:6(para)
 msgid "Here are some factors that may influence the decision"
-msgstr "Aceştia sunt câţiva factori care vă pot influenţa decizia"
+msgstr "Aici sunt câţiva factori care ar putea influenţa decizia"
 
 #: Ap-Install.xml:9(para)
 msgid "SUSE/Novell, Red Hat and Oracle are all putting their collective weight behind the Corosync cluster stack."
@@ -31,11 +33,11 @@ msgstr "SUSE/Novell, Red Hat şi Oracle îşi pun la contribuţie greutatea cole
 
 #: Ap-Install.xml:12(para)
 msgid "Corosync is an OSI Certified implementation of an industry standard (the Service Availability Forum Application Interface Specification)."
-msgstr "Corosync este o implementare certificată OSI a unui standard al industriei (Service Availability Forum Application Interface Specification)."
+msgstr "Corosync este o implementare Certificată OSI a unui standard al industriei (Service Availability Forum Application Interface Specification)."
 
 #: Ap-Install.xml:15(para)
 msgid "Using Corosync gives your applications access to the following additional cluster services"
-msgstr "Folosirea Corosync oferă aplicaţiilor dvs. acces la următoarele servicii de cluster adiţionale"
+msgstr "Folosirea Corosync oferă aplicaţiilor dvs. acces la următoarele servicii adiţionale de cluster"
 
 #: Ap-Install.xml:17(para)
 msgid "checkpoint service"
@@ -51,7 +53,7 @@ msgstr "serviciu de sincronie virtuală extinsă"
 
 #: Ap-Install.xml:26(para)
 msgid "cluster closed process group service"
-msgstr "serviciu de grup de procese închis pe cluster"
+msgstr "serviciu de grup de procese închise în cluster"
 
 #: Ap-Install.xml:32(para)
 msgid "It is likely that Pacemaker, at some point in the future, will make use of some of these additional services not provided by Heartbeat"
@@ -59,7 +61,7 @@ msgstr "Este probabil ca Pacemaker, la un moment dat în viitor, să utilizeze o
 
 #: Ap-Install.xml:35(para)
 msgid "To date, Pacemaker has received less real-world testing on Corosync than it has on Heartbeat."
-msgstr "Până în acest moment, Pacemaker a avut parte de mai puţină testare în \"real-world\" pe Corosync faţă de Heartbeat"
+msgstr "Până în acest moment, Pacemaker a avut parte de mai puţină testare \"real-world\" pe Corosync faţă de Heartbeat"
 
 #: Ap-Install.xml:40(title)
 msgid "Enabling Pacemaker"
@@ -133,7 +135,7 @@ msgid "Please consult the <ulink url=\"http://www.corosync.org/\">Corosync websi
 msgstr "Vă rugăm să consultaţi <ulink url=\"http://www.corosync.org/\">website-ul Corosync</ulink> şi documentaţia pentru detalii despre activarea criptării şi a autentificării partenerului pentru cluster."
 
 #: Ap-Install.xml:69(para)
-msgid "The interesting part of the configuration is the totem section. This is where we define the how the node can communicate with the rest of the cluster and what protocol version and options (including encryption<placeholder-1/>) it should use. Beginners are encouraged to use the values shown and modify the interface section based on their network."
+msgid "The interesting part of the configuration is the totem section. This is where we define how the node can communicate with the rest of the cluster and what protocol version and options (including encryption<placeholder-1/>) it should use. Beginners are encouraged to use the values shown and modify the interface section based on their network."
 msgstr "Partea interesantă a configuraţiei o reprezintă secţiunea totem. Aici definim cum poate comunica un nod cu restul clusterului şi ce versiune de protocol şi opţiuni (incluzând criptarea<placeholder-1/>) ar trebui să folosească. Începătorii sunt încurajaţi să folosească valorile prezentate şi să modifice secţiunea referitoare la interfaţă pe baza reţelei acestora."
 
 #: Ap-Install.xml:72(para)

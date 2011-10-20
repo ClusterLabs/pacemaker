@@ -148,7 +148,7 @@ msgid "Shutdown the cluster stack (Heartbeat or Corosync)"
 msgstr "Închiderea stivei de cluster (Heartbeat sau Corosync)"
 
 #: Ap-Upgrade.xml:76(para)
-msgid "Upgrade the Pacemaker software. This may also include upgrading the cluster stack and/or the underlying operating system.."
+msgid "Upgrade the Pacemaker software. This may also include upgrading the cluster stack and/or the underlying operating system."
 msgstr "Actualizaţi soft-ul Pacemaker. Acest lucru poate include actualizarea stivei de cluster şi/sau a sistemului de operare de bază."
 
 #: Ap-Upgrade.xml:84(para)
