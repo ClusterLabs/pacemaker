@@ -162,7 +162,7 @@ if ( $pid=fork() == 0 )
        } elsif ( $opt_o eq "off" || $opt_o eq "poweroff" ) {
 	   $cmd="--fence";
        }
-       exec "logger -t fence_pcmk -p daemon.notice \"Requesting Pacemaker fence $opt_n ($opt_o)\"";
+       system "logger -t fence_pcmk -p daemon.notice \"Requesting Pacemaker fence $opt_n ($opt_o)\"";
    }
    exec "stonith_admin $cmd $opt_n" or die "failed to exec \"stonith_admin $cmd $opt_n\"\n";
 }

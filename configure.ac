@@ -22,7 +22,7 @@ dnl     checks for system services
 AC_INIT(pacemaker, 1.1.6, pacemaker@oss.clusterlabs.org)
 CRM_DTD_VERSION="1.2"
 
-PKG_FEATURES=""
+PCMK_FEATURES=""
 HB_PKG=heartbeat
 
 AC_CONFIG_AUX_DIR(.)
@@ -592,7 +592,7 @@ fi
 
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
 if test x"${HELP2MAN}" != x""; then
-   PKG_FEATURES="$PKG_FEATURES generated-manpages"
+   PCMK_FEATURES="$PCMK_FEATURES generated-manpages"
 fi
 
 MANPAGE_XSLT=""
@@ -613,18 +613,18 @@ AC_SUBST(MANPAGE_XSLT)
 
 AM_CONDITIONAL(BUILD_XML_HELP, test x"${MANPAGE_XSLT}" != x"")
 if test x"${MANPAGE_XSLT}" != x""; then
-   PKG_FEATURES="$PKG_FEATURES agent-manpages"
+   PCMK_FEATURES="$PCMK_FEATURES agent-manpages"
 fi
 
 AM_CONDITIONAL(BUILD_ASCIIDOC, test x"${ASCIIDOC}" != x"")
 if test x"${ASCIIDOC}" != x""; then
-   PKG_FEATURES="$PKG_FEATURES ascii-docs"
+   PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
 fi
 
 AM_CONDITIONAL(BUILD_DOCBOOK, test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x"")
 if test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x""; then
    AC_MSG_NOTICE(Enabling publican)
-   PKG_FEATURES="$PKG_FEATURES publican-docs"
+   PCMK_FEATURES="$PCMK_FEATURES publican-docs"
 fi
 
 dnl ===============================================
@@ -920,7 +920,7 @@ if test X"$CURSESLIBS" = X"" -a "$ac_cv_header_curses_curses_h" = "yes"; then
 fi
 
 if test "x$CURSESLIBS" != "x"; then
-   PKG_FEATURES="$PKG_FEATURES ncurses"
+   PCMK_FEATURES="$PCMK_FEATURES ncurses"
 fi
 
 dnl Check for printw() prototype compatibility
@@ -974,7 +974,7 @@ case $SUPPORT_PROFILING in
 	dnl CFLAGS="$CFLAGS -fno-default-inline -fno-inline"
 
 	dnl Update features
-	PKG_FEATURES="$PKG_FEATURES gprof"
+	PCMK_FEATURES="$PCMK_FEATURES gprof"
 	;;
      *) SUPPORT_PROFILING=0;;
 esac
@@ -997,14 +997,14 @@ case $SUPPORT_GCOV in
 	CFLAGS="$CFLAGS -O0"
 
 	dnl Update features
-	PKG_FEATURES="$PKG_FEATURES gcov"
+	PCMK_FEATURES="$PCMK_FEATURES gcov"
 	;;
      *) SUPPORT_PROFILING=0;;
 esac
 AC_DEFINE_UNQUOTED(SUPPORT_GCOV, $SUPPORT_GCOV, Support for gcov coverage testing)
 
 case $SUPPORT_TRACING in
-     1|yes|true) SUPPORT_TRACING=1; PKG_FEATURES="$PKG_FEATURES trace-logging";;
+     1|yes|true) SUPPORT_TRACING=1; PCMK_FEATURES="$PCMK_FEATURES trace-logging";;
      *) SUPPORT_TRACING=0;;
 esac
 AC_DEFINE_UNQUOTED(SUPPORT_TRACING, $SUPPORT_TRACING, Support the dynamic enablement of addition trace logging)
@@ -1168,7 +1168,7 @@ if test $SUPPORT_CMAN != no; then
 	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libcman libfenced --cflags`"
 	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libcman libfenced --libs`"
 	
-	PKG_FEATURES="$PKG_FEATURES cman"
+	PCMK_FEATURES="$PCMK_FEATURES cman"
 	SUPPORT_CMAN=1
 	AC_DEFINE_UNQUOTED(SUPPORT_CMAN, 1, Support the consumption of membership and quorum from cman)
     else
@@ -1200,7 +1200,7 @@ if test $SUPPORT_CS_QUORUM != no; then
 	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libquorum --cflags`"
 	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libquorum --libs`"
 	
-	PKG_FEATURES="$PKG_FEATURES corosync-quorum"
+	PCMK_FEATURES="$PCMK_FEATURES corosync-quorum"
 	AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
     fi
 fi
@@ -1225,11 +1225,11 @@ else
    LCRSODIR="$libdir"
 fi
 
-PKG_FEATURES="$PKG_FEATURES$STACKS"
+PCMK_FEATURES="$PCMK_FEATURES$STACKS"
 
 if test x${enable_no_stack} = xyes; then
     AC_MSG_NOTICE(No cluster stack supported.  Just building the Policy Engine)
-    PKG_FEATURES="$PKG_FEATURES no-cluster-stack"
+    PCMK_FEATURES="$PCMK_FEATURES no-cluster-stack"
 else
     AC_MSG_CHECKING(for supported stacks)
     if test x"$STACKS" = x; then
@@ -1309,7 +1309,7 @@ else
 fi
 
 if test $SUPPORT_SNMP = 1; then
-   PKG_FEATURES="$PKG_FEATURES snmp"
+   PCMK_FEATURES="$PCMK_FEATURES snmp"
 fi
 
 AC_SUBST(SNMPLIBS)
@@ -1368,7 +1368,7 @@ else
 fi
 
 if test $SUPPORT_ESMTP = 1; then
-   PKG_FEATURES="$PKG_FEATURES libesmtp"
+   PCMK_FEATURES="$PCMK_FEATURES libesmtp"
 fi
 
 AC_SUBST(ESMTPLIBS)
@@ -1408,7 +1408,7 @@ else
 fi
 
 if test $SUPPORT_ACL = 1; then
-   PKG_FEATURES="$PKG_FEATURES acls"
+   PCMK_FEATURES="$PCMK_FEATURES acls"
 fi
 
 AM_CONDITIONAL(ENABLE_ACL, test "$SUPPORT_ACL" = "1")
@@ -1646,8 +1646,8 @@ AC_SUBST(MAKE)
 AC_SUBST(LIBTOOL)
 AC_SUBST(QUIET_MAKE_OPTS)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
-AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PKG_FEATURES", Set of enabled features)
-AC_SUBST(PKG_FEATURES)
+AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
+AC_SUBST(PCMK_FEATURES)
 
 dnl The Makefiles and shell scripts we output
 AC_CONFIG_FILES(Makefile				        \
@@ -1716,7 +1716,7 @@ dnl *****************
 AC_MSG_RESULT([])
 AC_MSG_RESULT([$PACKAGE configuration:])
 AC_MSG_RESULT([  Version                  = ${VERSION} (Build: $BUILD_VERSION)])
-AC_MSG_RESULT([  Features                 =${PKG_FEATURES}])
+AC_MSG_RESULT([  Features                 =${PCMK_FEATURES}])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  Prefix                   = ${prefix}])
 AC_MSG_RESULT([  Executables              = ${sbindir}])

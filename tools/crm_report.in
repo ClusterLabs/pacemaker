@@ -78,7 +78,7 @@ EOF
 
 case "$1" in
     -v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0;;
-    --features)     echo "@VERSION@ - @BUILD_VERSION@: @PKG_FEATURES@"; exit 0;;
+    --features)     echo "@VERSION@ - @BUILD_VERSION@: @PCMK_FEATURES@"; exit 0;;
     --|-h|--help) usage; exit 0;;
 esac
 
