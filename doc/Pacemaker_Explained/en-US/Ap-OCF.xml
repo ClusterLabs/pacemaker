@@ -133,7 +133,7 @@ If the result does not match the expected value, then the operation is considere
           </thead><tbody><row>
               <entry>0</entry>
               <entry>OCF_SUCCESS</entry>
-              <entry>Success. The command complete successfully. This is the expected result for all start, stop, promote and demote commands.</entry>
+              <entry>Success. The command completed successfully. This is the expected result for all start, stop, promote and demote commands.</entry>
               <entry>soft</entry>
             </row>
             <row>
@@ -198,7 +198,7 @@ If the result does not match the expected value, then the operation is considere
         </row></tbody></tgroup>
       </table>
       <para>Although counter intuitive, even actions that return 0 (aka. <envar>OCF_SUCCESS</envar>) can be considered to have failed.
-This can happen when a resource that is expected to be in the Master state is found running as a Slave, or when a resource is found active on multiple machines..</para><section><title>Exceptions</title>
+This can happen when a resource that is expected to be in the Master state is found running as a Slave, or when a resource is found active on multiple machines.</para><section><title>Exceptions</title>
 	<itemizedlist>
 	  <listitem><para>Non-recurring monitor actions (probes) that find a resource active (or in Master mode) will not result in recovery action unless it is also found active elsewhere</para></listitem>
 	  <listitem><para>The recovery action taken when a resource is found active more than once is determined by the <literal>multiple-active</literal> property of the resource</para></listitem>
