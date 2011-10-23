@@ -1,29 +1,31 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-09-30 09:34+0200\n"
+"PO-Revision-Date: 2011-10-23 12:37+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Romanian\n"
+"X-Poedit-Country: ROMANIA\n"
 
 #: Ap-OCF.xml:2(title)
 msgid "More About OCF Resource Agents"
-msgstr "Mai multe despre Agenţi de Resurse OCF"
+msgstr "Mai Multe Despre Agenţii de Resursă OCF"
 
 #: Ap-OCF.xml:4(title)
 msgid "Location of Custom Scripts"
-msgstr "Locaţia Scripturilor Customizate"
+msgstr "Locaţia Scripturilor Personalizate"
 
 #: Ap-OCF.xml:5(para)
 msgid "OCF Resource Agents are found in <filename>/usr/lib/ocf/resource.d/<replaceable>provider</replaceable></filename>."
-msgstr "Agenţii de Resurse OCF se pot găsi în <filename>/usr/lib/ocf/resource.d/<replaceable>provider</replaceable></filename>."
+msgstr "Agenţii de Resursă OCF se găsesc în <filename>/usr/lib/ocf/resource.d/<replaceable>furnizor</replaceable></filename>."
 
 #: Ap-OCF.xml:6(para)
 msgid "When creating your own agents, you are encouraged to create a new directory under <filename>/usr/lib/ocf/resource.d/</filename> so that they are not confused with (or overwritten by) the agents shipped with Heartbeat. So, for example, if you chose the provider name of bigCorp and wanted a new resource named bigApp, you would create a script called <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> and define a resource:"
-msgstr "Când creaţi proprii agenţi, sunteţi încurajaţi să creaţi un nou director sub <filename>/usr/lib/ocf/resource.d/</filename> astfel încât aceştia să nu fie încurcaţi cu (sau suprascrişi de) agenţii livraţi împreună cu Heartbeat. Deci, de exemplu, dacă ai fi ales numele de furnizor bigCorp şi ai fi dorit o nouă resursă numită bigApp, ai crea un script numit <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> şi ai defini o resursă:"
+msgstr "Când vă creaţi proprii agenţi, sunteţi încurajaţi să creaţi un nou director sub <filename>/usr/lib/ocf/resource.d/</filename> astfel încât aceştia să nu fie încurcaţi cu (sau suprascrişi de) agenţii livraţi împreună cu Heartbeat. Deci, de exemplu, dacă aţi fi ales numele de furnizor bigCorp şi aţi fi dorit o nouă resursă numită bigApp, aţi crea un script numit <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> şi aţi defini o resursă:"
 
 #: Ap-OCF.xml:10(programlisting)
 #, no-wrap
@@ -36,11 +38,11 @@ msgstr "Acţiuni"
 
 #: Ap-OCF.xml:14(para)
 msgid "All OCF Resource Agents are required to implement the following actions"
-msgstr "Toţi Agenţii de Resurse OCF este necesar să implementeze următoarele acţiuni"
+msgstr "Toţi Agenţii de Resursă OCF sunt obligaţi să implementeze următoarele acţiuni"
 
 #: Ap-OCF.xml:16(title)
 msgid "Required Actions for OCF Agents"
-msgstr "Acţiuni Necesare pentru Agenţi OCF"
+msgstr "Acţiuni Necesare pentru Agenţii OCF"
 
 #: Ap-OCF.xml:20(entry)
 #: Ap-OCF.xml:64(entry)
@@ -61,7 +63,7 @@ msgstr "Instrucţiuni"
 
 #: Ap-OCF.xml:27(entry)
 msgid "start"
-msgstr "porneşte"
+msgstr "start"
 
 #: Ap-OCF.xml:28(entry)
 msgid "Start the resource"
@@ -69,11 +71,11 @@ msgstr "Porneşte resursa"
 
 #: Ap-OCF.xml:29(entry)
 msgid "Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully active."
-msgstr "Returnează 0 la succes şi un cod de eroare potrivit în caz contrar. Nu trebuie să raporteze succes până ce resursa nu este complet activă."
+msgstr "Returnează 0 în caz de succes şi un cod de eroare potrivit în caz contrar. Nu trebuie să raporteze succes până ce resursa nu este complet activă."
 
 #: Ap-OCF.xml:32(entry)
 msgid "stop"
-msgstr "opreşte"
+msgstr "stop"
 
 #: Ap-OCF.xml:33(entry)
 msgid "Stop the resource"
@@ -81,11 +83,11 @@ msgstr "Opreşte resursa"
 
 #: Ap-OCF.xml:34(entry)
 msgid "Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully stopped."
-msgstr "Returnează 0 la succes şi un cod de eroare potrivit în caz contrar. Nu trebuie să raporteze succes până ce resursa nu este complet activă."
+msgstr "Returnează 0 în caz de succes şi un cod de eroare potrivit în caz contrar. Nu trebuie să raporteze succes până ce resursa nu este complet oprită."
 
 #: Ap-OCF.xml:37(entry)
 msgid "monitor"
-msgstr "monitorizează"
+msgstr "monitor"
 
 #: Ap-OCF.xml:38(entry)
 msgid "Check the resource's state"
@@ -93,7 +95,7 @@ msgstr "Verifică starea resursei"
 
 #: Ap-OCF.xml:40(para)
 msgid "Exit 0 if the resource is running, 7 if it is stopped and anything else if it is failed."
-msgstr "Iese cu 0 dacă resursa este funcţională, 7 dacă este oprită şi orice altceva dacă este nefuncţională."
+msgstr "Iese cu 0 dacă resursa rulează, 7 dacă este oprită şi orice altceva dacă a eşuat."
 
 #: Ap-OCF.xml:41(para)
 msgid "NOTE: The monitor script should test the state of the resource on the local machine only."
@@ -101,7 +103,7 @@ msgstr "NOTĂ: Scriptul de monitorizare ar trebui să testeze starea resursei nu
 
 #: Ap-OCF.xml:45(entry)
 msgid "meta-data"
-msgstr "meta-informaţii"
+msgstr "meta-data"
 
 #: Ap-OCF.xml:46(entry)
 msgid "Describe the resource"
@@ -117,7 +119,7 @@ msgstr "NOTĂ: Acest aspect <emphasis>nu este</emphasis> efectuat ca root."
 
 #: Ap-OCF.xml:53(entry)
 msgid "validate-all"
-msgstr "validează-tot"
+msgstr "validate-all"
 
 #: Ap-OCF.xml:54(entry)
 msgid "Verify the supplied parameters are correct"
@@ -129,7 +131,7 @@ msgstr "Iese cu 0 dacă parametrii sunt valizi, 2 dacă nu sunt valizi, 6 dacă 
 
 #: Ap-OCF.xml:58(para)
 msgid "Additional requirements (not part of the OCF specs) are placed on agents that will be used for advanced concepts like <link linkend=\"s-resource-clone\">clones</link> and <link linkend=\"s-resource-multistate\">multi-state</link> resources."
-msgstr "Cerinţe adiţionale (care nu sunt parte din specificaţia OCF) sunt plasate pe agenţii care vor fi folosiţi pentru concepte avansate cum ar fi <link linkend=\"s-resource-clone\">clone</link> şi resurse <link linkend=\"s-resource-multistate\">multi-stare</link>."
+msgstr "Cerinţe suplimentare (care nu sunt parte din specificaţia OCF) sunt plasate pe agenţi care vor fi folosiţi pentru concepte avansate cum ar fi <link linkend=\"s-resource-clone\">clone</link> şi resurse <link linkend=\"s-resource-multistate\">multi-state</link>."
 
 #: Ap-OCF.xml:60(title)
 msgid "Optional Actions for OCF Agents"
@@ -137,11 +139,11 @@ msgstr "Acţiuni Opţionale pentru Agenţi OCF"
 
 #: Ap-OCF.xml:69(entry)
 msgid "promote"
-msgstr "promovează"
+msgstr "promote"
 
 #: Ap-OCF.xml:70(entry)
 msgid "Promote the local instance of a multi-state resource to the master/primary state"
-msgstr "Promovează instanţa locală a unei resurse multi-stare la starea master/primară"
+msgstr "Promovează instanţa locală a unei resurse multi-state la starea master/primară"
 
 #: Ap-OCF.xml:71(entry)
 #: Ap-OCF.xml:76(entry)
@@ -150,15 +152,15 @@ msgstr "Returnează 0 în caz de succes"
 
 #: Ap-OCF.xml:74(entry)
 msgid "demote"
-msgstr "retrogradează"
+msgstr "demote"
 
 #: Ap-OCF.xml:75(entry)
 msgid "Demote the local instance of a multi-state resource to the slave/secondary state"
-msgstr "Retrogradează instanţa locală a unei resurse multi-stare la starea slave/secundară"
+msgstr "Retrogradează instanţa locală a unei resurse multi-state la starea slave/secundară"
 
 #: Ap-OCF.xml:79(entry)
 msgid "notify"
-msgstr "notifică"
+msgstr "notify"
 
 #: Ap-OCF.xml:80(entry)
 msgid "Used by the cluster to send the agent pre and post notification events telling the resource what is or has just taken place"
@@ -166,11 +168,11 @@ msgstr "Folosit de către cluster pentru a trimite agentului notificări pre şi
 
 #: Ap-OCF.xml:81(entry)
 msgid "Must not fail. Must exit 0"
-msgstr "Nu trebuie să fie nefuncţional. Trebuie să iasă cu 0"
+msgstr "Nu trebuie să fie eşueze. Trebuie să iasă cu 0"
 
 #: Ap-OCF.xml:84(para)
 msgid "One action specified in the OCF specs is not currently used by the cluster"
-msgstr "O acţiune specificată în spec-ul OCF nu este în mod curent folosită de către cluster"
+msgstr "O acţiune specificată în specificaţiile OCF nu este folosită de către cluster în mod curent"
 
 #: Ap-OCF.xml:86(para)
 msgid "recover - a variant of the start action, this should try to recover a resource locally."
@@ -182,15 +184,15 @@ msgstr "Nu uitaţi să folosiţi ocf-tester pentru a verifica dacă noul vostru 
 
 #: Ap-OCF.xml:92(title)
 msgid "How Does the Cluster Interpret the OCF Return Codes?"
-msgstr "Cum Interpretează Clusterul Codurile de Ieşire?"
+msgstr "Cum Interpretează Clusterul Codurile de Ieşire OCF?"
 
 #: Ap-OCF.xml:93(para)
 msgid "The first thing the cluster does is check the return code against the expected result. If the result does not match the expected value, then the operation is considered to have failed and recovery action is initiated."
-msgstr "Primul lucru pe care îl face clusterul este să verifice codul de ieşire cu rezultatul aşteptat. Dacă rezultatul nu se potriveşte cu valoarea aşteptată, atunci operaţiunea este considerată ca fiind nefuncţională şi acţiunea de recuperare este iniţiată."
+msgstr "Primul lucru pe care îl face clusterul este să verifice codul de ieşire faţă de rezultatul aşteptat. Dacă rezultatul nu se potriveşte cu valoarea aşteptată, atunci este considerat că operaţiunea a eşuat şi acţiunea de recuperare este iniţiată."
 
 #: Ap-OCF.xml:96(para)
 msgid "There are three types of failure recovery:"
-msgstr "Sunt trei tipuri de recuperare în caz de nefuncţionare:"
+msgstr "Sunt trei tipuri de recuperare în caz de eşec:"
 
 #: Ap-OCF.xml:98(title)
 msgid "Types of recovery performed by the cluster"
@@ -203,7 +205,7 @@ msgstr "Tip de Recuperare"
 
 #: Ap-OCF.xml:104(entry)
 msgid "Action Taken by the Cluster"
-msgstr "Acţiune Luată de către Cluster"
+msgstr "Acţiunea Luată de către Cluster"
 
 #: Ap-OCF.xml:107(entry)
 #: Ap-OCF.xml:137(entry)
@@ -212,15 +214,15 @@ msgstr "Acţiune Luată de către Cluster"
 #: Ap-OCF.xml:191(entry)
 #: Ap-OCF.xml:197(entry)
 msgid "soft"
-msgstr "minoră"
+msgstr "soft"
 
 #: Ap-OCF.xml:108(entry)
 msgid "A transient error occurred"
-msgstr "O eroare transientă s-a întâmplat"
+msgstr "O eroare tranzientă a avut loc"
 
 #: Ap-OCF.xml:109(entry)
 msgid "Restart the resource or move it to a new location"
-msgstr "Reporneşte resursa sau mut-o într-o nouă locaţie"
+msgstr "Reporneşte resursa sau mut-o într-o locaţie nouă"
 
 #: Ap-OCF.xml:112(entry)
 #: Ap-OCF.xml:149(entry)
@@ -228,11 +230,11 @@ msgstr "Reporneşte resursa sau mut-o într-o nouă locaţie"
 #: Ap-OCF.xml:161(entry)
 #: Ap-OCF.xml:167(entry)
 msgid "hard"
-msgstr "majoră"
+msgstr "hard"
 
 #: Ap-OCF.xml:113(entry)
 msgid "A non-transient error that may be specific to the current node occurred"
-msgstr "O eroare non-transientă care ar putea fi specifică nodului curent s-a produs"
+msgstr "O eroare non-tranzientă s-a produs care ar putea fi specifică nodului curent"
 
 #: Ap-OCF.xml:114(entry)
 msgid "Move the resource elsewhere and prevent it from being retried on the current node"
@@ -245,7 +247,7 @@ msgstr "fatal"
 
 #: Ap-OCF.xml:118(entry)
 msgid "A non-transient error that will be common to all cluster nodes (I.e. a bad configuration was specified)"
-msgstr "O eroare non-transientă care va fi comună pe toate nodurile clusterului (ex.: o configuraţie greşită a fost specificată)"
+msgstr "O eroare non-tranzientă care va fi comună pe toate nodurile clusterului (ex.: o configuraţie greşită a fost specificată)"
 
 #: Ap-OCF.xml:119(entry)
 msgid "Stop the resource and prevent it from being started on any cluster node"
@@ -253,7 +255,7 @@ msgstr "Opreşte resursa si împiedică pornirea acesteia pe oricare nod al clus
 
 #: Ap-OCF.xml:122(para)
 msgid "Assuming an action is considered to have failed, the following table outlines the different OCF return codes and the type of recovery the cluster will initiate when it is received."
-msgstr "Plecând de la presupunerea că o acţiune este considerată a fi fost nefuncţională, următorul tabel evidenţiază diferitele coduri de ieşire OCF şi tipul de recuperare pe care o va iniţia clusterul când acest cod este primit."
+msgstr "Plecând de la presupunerea că o acţiune este considerată că ar fi eşuat, următorul tabel evidenţiază diferitele coduri de ieşire OCF şi tipul de recuperare pe care o va iniţia clusterul când acest cod este primit."
 
 #: Ap-OCF.xml:124(title)
 msgid "OCF Return Codes and How They are Handled"
@@ -276,8 +278,8 @@ msgid "OCF_SUCCESS"
 msgstr "OCF_SUCCESS"
 
 #: Ap-OCF.xml:136(entry)
-msgid "Success. The command complete successfully. This is the expected result for all start, stop, promote and demote commands."
-msgstr "Succes. Comanda a fost rulată cu succes. Acesta este rezultatul aşteptat pentru toate comenzile de pornire, oprire, promovare şi retrogradare."
+msgid "Success. The command completed successfully. This is the expected result for all start, stop, promote and demote commands."
+msgstr "Succes. Comanda a fost rulată cu succes. Acesta este rezultatul aşteptat pentru toate comenzile start, stop, promote şi demote."
 
 #: Ap-OCF.xml:140(entry)
 msgid "1"
@@ -289,7 +291,7 @@ msgstr "OCF_ERR_GENERIC"
 
 #: Ap-OCF.xml:142(entry)
 msgid "Generic \"there was a problem\" error code."
-msgstr "Cod generic de eroare \"a fost o problemă\""
+msgstr "Cod de eroare generic \"a fost o problemă\""
 
 #: Ap-OCF.xml:146(entry)
 msgid "2"
@@ -301,7 +303,7 @@ msgstr "OCF_ERR_ARGS"
 
 #: Ap-OCF.xml:148(entry)
 msgid "The resource's configuration is not valid on this machine. Eg. Refers to a location/tool not found on the node."
-msgstr "Configuraţia resursei nu este validă pe această maşină. Ex. Face referinţă la o/un locaţie/utilitar care nu a fost găsit pe acest nod."
+msgstr "Configuraţia resursei nu este validă pe această maşină. Ex. Face referinţă la o/un locaţie/utilitar care nu a fost găsit/ă pe acest nod."
 
 #: Ap-OCF.xml:152(entry)
 msgid "3"
@@ -324,9 +326,8 @@ msgid "OCF_ERR_PERM"
 msgstr "OCF_ERR_PERM"
 
 #: Ap-OCF.xml:160(entry)
-#, fuzzy
 msgid "The resource agent does not have sufficient privileges to complete the task."
-msgstr "Agentul de resursă nu are suficiente privilegii pentru a îndeplini task-ul."
+msgstr "Agentul de resursă nu are suficiente privilegii pentru a îndeplini sarcina."
 
 #: Ap-OCF.xml:164(entry)
 msgid "5"
@@ -378,43 +379,43 @@ msgstr "OCF_RUNNING_MASTER"
 
 #: Ap-OCF.xml:184(entry)
 msgid "The resource is running in Master mode."
-msgstr "Resursa rulează în mod Master."
+msgstr "Resursa rulează în modul Master."
 
 #: Ap-OCF.xml:188(entry)
 msgid "9"
-msgstr ""
+msgstr "9"
 
 #: Ap-OCF.xml:189(entry)
 msgid "OCF_FAILED_MASTER"
-msgstr ""
+msgstr "OCF_FAILED_MASTER"
 
 #: Ap-OCF.xml:190(entry)
 msgid "The resource is in Master mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again."
-msgstr ""
+msgstr "Resursa este în modul Master dar a eşuat. Resursa va fi retrogradată, oprită şi apoi pornită (şi posibil promovată) din nou."
 
 #: Ap-OCF.xml:194(entry)
 msgid "other"
-msgstr ""
+msgstr "other"
 
 #: Ap-OCF.xml:195(entry)
 msgid "NA"
-msgstr ""
+msgstr "NA"
 
 #: Ap-OCF.xml:196(entry)
 msgid "Custom error code."
-msgstr ""
+msgstr "Cod de eroare personalizat."
 
 #: Ap-OCF.xml:200(para)
 msgid "Although counter intuitive, even actions that return 0 (aka. <envar>OCF_SUCCESS</envar>) can be considered to have failed. This can happen when a resource that is expected to be in the Master state is found running as a Slave, or when a resource is found active on multiple machines.."
-msgstr ""
+msgstr "Deşi contra intuitiv, chiar şi acţiunile care returnează 0 (aka. <envar>OCF_SUCCESS</envar>) pot fi considerate că ar fi eşuat. Acest lucru se poate întâmpla când o resursă care este de aşteptat să fie în starea Master este găsită rulând ca Slave sau când o resursă este găsită activă pe mai multe maşini."
 
 #: Ap-OCF.xml:201(title)
 msgid "Exceptions"
-msgstr ""
+msgstr "Excepţii"
 
 #: Ap-OCF.xml:203(para)
 msgid "Non-recurring monitor actions (probes) that find a resource active (or in Master mode) will not result in recovery action unless it is also found active elsewhere"
-msgstr ""
+msgstr "Acţiunile de monitorizare nerecurente (probele) care găsesc o resursă activă (sau în starea Master) nu vor rezulta într-o acţiune de recuperare decât dacă este găsită activă în altă parte"
 
 #: Ap-OCF.xml:204(para)
 msgid "The recovery action taken when a resource is found active more than once is determined by the <literal>multiple-active</literal> property of the resource"
@@ -422,10 +423,10 @@ msgstr "Acţiunea de recuperare luată când o resursă este găsită activă ma
 
 #: Ap-OCF.xml:205(para)
 msgid "Recurring actions that return <envar>OCF_ERR_UNIMPLEMENTED</envar> do not cause any type of recovery"
-msgstr "Acţiunilede recuperare care returnează <envar>OCF_ERR_UNIMPLEMENTED</envar> nu cauzează nici un fel de recuperare"
+msgstr "Acţiunile recurente care returnează <envar>OCF_ERR_UNIMPLEMENTED</envar> nu cauzează nici un fel de recuperare"
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ap-OCF.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele traducătorului"
+msgstr "meritele-traducătorului"
 
