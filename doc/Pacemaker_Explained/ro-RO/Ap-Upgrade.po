@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-02 13:35+0200\n"
+"PO-Revision-Date: 2011-10-23 19:24+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #: Ap-Upgrade.xml:2(title)
@@ -22,11 +22,11 @@ msgstr "Compatibilitatea Versiunii"
 
 #: Ap-Upgrade.xml:5(para)
 msgid "When releasing newer versions we take care to make sure we are backwardly compatible with older versions. While you will always be able to upgrade from version x to x+1, in order to continue to produce high quality software it may occasionally be necessary to drop compatibility with older versions."
-msgstr "Când lansăm versiuni noi avem grijă că suntem compatibili cu versiunile anterioare. În timp ce veţi putea oricând să actualizaţi de la versiunea x la x+1, pentru a putea să continuăm producţia de soft de înaltă calitate ar putea fi necesar în mod ocazional să renunţăm la compatibilitatea cu versiunile mai vechi."
+msgstr "Când lansăm versiuni noi avem grijă că suntem compatibili invers cu versiunile anterioare. În timp ce veţi putea oricând să actualizaţi de la versiunea x la x+1, pentru a putea să continuăm producţia de soft de înaltă calitate ar putea fi necesar în mod ocazional să renunţăm la compatibilitatea cu versiunile mai vechi."
 
 #: Ap-Upgrade.xml:6(para)
 msgid "There will always be an upgrade path from any series-2 release to any other series-2 release."
-msgstr "Întotdeauna va exista o cale de actuallizare de la oricare produs lansat în seria 2 la oricare alt produs lansat în aceeaşi serie 2."
+msgstr "Întotdeauna va exista o cale de actualizare de la oricare produs lansat în seria-2 la oricare alt produs lansat în aceeaşi serie-2."
 
 #: Ap-Upgrade.xml:7(para)
 msgid "There are three approaches to upgrading your cluster software"
@@ -49,7 +49,7 @@ msgstr "Deconectează şi Reataşează"
 
 #: Ap-Upgrade.xml:13(para)
 msgid "Each method has advantages and disadvantages, some of which are listed in the table below, and you should chose the one most appropriate to your needs."
-msgstr "Fiecare metodă are avantaje şi dezavantaje, unele dintre acestea sunt listate în tabelul de mai jos şi ar trebui să alegeţi pe aceea cel mai apropiată de nevoile voastre"
+msgstr "Fiecare metodă are avantaje şi dezavantaje, unele dintre acestea sunt listate în tabelul de mai jos şi ar trebui să o alegeţi pe aceea cel mai apropiată de nevoile voastre."
 
 #: Ap-Upgrade.xml:15(title)
 msgid "Summary of Upgrade Methodologies"
@@ -127,7 +127,7 @@ msgstr "doar din cauza eşecului"
 
 #: Ap-Upgrade.xml:66(para)
 msgid "In this scenario one shuts down all cluster nodes and resources and upgrades all the nodes before restarting the cluster."
-msgstr "În acest scenariu se închid toate nodurile şi resursele clusterului şi actualizează toate nodurile înainte de a reporni clusterul."
+msgstr "În acest scenariu se închid toate nodurile şi resursele clusterului şi se actualizează toate nodurile înainte de a reporni clusterul."
 
 #: Ap-Upgrade.xml:67(title)
 #: Ap-Upgrade.xml:115(title)
@@ -147,7 +147,7 @@ msgstr "Pe fiecare nod:"
 #: Ap-Upgrade.xml:119(para)
 #: Ap-Upgrade.xml:206(para)
 msgid "Shutdown the cluster stack (Heartbeat or Corosync)"
-msgstr "Închiderea stivei de cluster (Heartbeat sau Corosync)"
+msgstr "Închideţi stiva de cluster (Heartbeat sau Corosync)"
 
 #: Ap-Upgrade.xml:76(para)
 msgid "Upgrade the Pacemaker software. This may also include upgrading the cluster stack and/or the underlying operating system."
@@ -291,7 +291,7 @@ msgstr "crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false"
 
 #: Ap-Upgrade.xml:209(para)
 msgid "Upgrade the cluster stack program - This may also include upgrading the underlying operating system."
-msgstr "Actualizează stiva de cluster - Acest lucru poate include actualizarea sistemului de operare de bază."
+msgstr "Actualizaţi stiva de cluster - Acest lucru poate include actualizarea sistemului de operare de bază."
 
 #: Ap-Upgrade.xml:226(para)
 msgid "Verify the cluster re-detected all resources correctly"
