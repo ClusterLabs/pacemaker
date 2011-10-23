@@ -2,22 +2,22 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-01 09:27+0200\n"
+"PO-Revision-Date: 2011-10-23 13:05+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #: Ap-Upgrade-Config.xml:2(title)
 msgid "Upgrading the Configuration from 0.6"
-msgstr "Upgrade-ul Configuraţiei de la 0.6"
+msgstr "Actualizarea Configuraţiei de la 0.6"
 
 #: Ap-Upgrade-Config.xml:4(title)
 msgid "Preparation"
-msgstr "Preparare"
+msgstr "Pregătire"
 
 #: Ap-Upgrade-Config.xml:5(para)
 msgid "Download the latest DTD from <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\"/> and ensure your configuration validates."
@@ -26,19 +26,19 @@ msgstr "Descărcaţi cel mai recent DTD de la <ulink url=\"http://hg.clusterlabs
 #: Ap-Upgrade-Config.xml:8(title)
 #: Ap-Upgrade-Config.xml:32(para)
 msgid "Perform the upgrade"
-msgstr "Efectuează upgrade-ul"
+msgstr "Realizaţi actualizarea"
 
 #: Ap-Upgrade-Config.xml:10(title)
 msgid "Upgrade the software"
-msgstr "Upgradeează software-ul"
+msgstr "Actualizaţi software-ul"
 
 #: Ap-Upgrade-Config.xml:11(para)
 msgid "Refer to the appendix: <xref linkend=\"ap-upgrade\"/>"
-msgstr "Faceţi referire la appendix: <xref linkend=\"ap-upgrade\"/>"
+msgstr "Consultaţi anexa: <xref linkend=\"ap-upgrade\"/>"
 
 #: Ap-Upgrade-Config.xml:14(title)
 msgid "Upgrade the Configuration"
-msgstr "Upgradează Configuraţia"
+msgstr "Actualizaţi Configuraţia"
 
 #: Ap-Upgrade-Config.xml:15(para)
 msgid "As XML is not the friendliest of languages, it is common for cluster administrators to have scripted some of their activities. In such cases, it is likely that those scripts will not work with the new 1.0 syntax."
@@ -46,15 +46,15 @@ msgstr "Cum XML-ul nu este cel mai prietenos dintre limbaje, este obişnuit pent
 
 #: Ap-Upgrade-Config.xml:16(para)
 msgid "In order to support such environments, it is actually possible to continue using the old 0.6 syntax."
-msgstr "Prin urmare pentru a suporta astfel de medii, este chiar posibil să continue folosirea sintaxei vechi 0.6."
+msgstr "Pentru a suporta astfel de medii, este chiar posibilă continuarea folosirii sintaxei vechi de 0.6."
 
 #: Ap-Upgrade-Config.xml:17(para)
 msgid "The downside however, is that not all the new features will be available and there is a performance impact since the cluster must do a non-persistent configuration upgrade before each transition. So while using the old syntax is possible, it is not advisable to continue using it indefinitely."
-msgstr "Partea nefastă însă, este că nu toate funcţionalităţile noi vor fi disponibile şi este un impact de performanţă din moment ce clusterul trebuie să execute un upgrade non-persistent de configuraţie înainte de fiecare tranziţie. Deci în timp ce folosirea sintaxei vechi este posibilă, nu este recomandată folosirea acesteia pe termen nelimitat."
+msgstr "Partea nefastă însă, este că nu toate funcţionalităţile noi vor fi disponibile şi este un impact de performanţă din moment ce clusterul trebuie să execute o actualizare non-persistentă a configuraţiei înainte de fiecare tranziţie. Deci în timp ce folosirea sintaxei vechi este posibilă, nu este recomandată folosirea acesteia pe termen nelimitat."
 
 #: Ap-Upgrade-Config.xml:18(para)
 msgid "Even if you wish to continue using the old syntax, it is advisable to follow the upgrade procedure to ensure that the cluster is able to use your existing configuration (since it will perform much the same task internally)."
-msgstr "Chiar dacă doriţi să continuaţi folosirea sintaxei vechi, este recomandat să urmaţi procedura de upgrade pentru a vă asigura că clusterul este capabil să  folosească configuraţia existentă (din moment ce va efectua mult acelaşi task intern)."
+msgstr "Chiar dacă doriţi să continuaţi folosirea sintaxei vechi, este recomandat să urmaţi procedura de actualizare pentru a vă asigura că clusterul este capabil să  folosească configuraţia existentă (din moment ce va efectua în mare parte aceeaşi sarcină intern)."
 
 #: Ap-Upgrade-Config.xml:21(para)
 msgid "Create a shadow copy to work with"
@@ -102,7 +102,7 @@ msgstr "Transformarea a reuşit dar a produs un rezultat invalid <placeholder-1/
 
 #: Ap-Upgrade-Config.xml:44(para)
 msgid "If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\"/> and/or try the following procedure described below under <xref linkend=\"s-upgrade-config-manual\"/>."
-msgstr "Dacă rezultatul transformării este invalid, se pot observa un număr de erori de la librăria de validare. Dacă acestea nu sunt folositoare, vizitaţi <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\"/> şi/sau încercaţi următoarea procedură descrisă mai jos sub <xref linkend=\"s-upgrade-config-manual\"/>."
+msgstr "Dacă rezultatul transformării este invalid, se pot observa un număr de erori de la biblioteca de validare. Dacă acestea nu sunt folositoare, vizitaţi <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\"/> şi/sau încercaţi următoarea procedură descrisă mai jos sub <xref linkend=\"s-upgrade-config-manual\"/>."
 
 #: Ap-Upgrade-Config.xml:47(para)
 msgid "Check the changes"
@@ -114,7 +114,7 @@ msgstr "crm_shadow --diff"
 
 #: Ap-Upgrade-Config.xml:49(para)
 msgid "If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:"
-msgstr "Dacă la acest punct există orice legat de upgrade ce doriţi să reglaţi fin (de exemplu, să shimbaţi unele din ID-urile automate) acum este momentul să realizaţi acest lucru. Din moment ce configuraţia ascunsă nu este folosită de către cluster, este neprimejdios să editaţi fişierul manual:"
+msgstr "Dacă la acest punct există orice legat de actualizare ce doriţi să reglaţi fin (de exemplu, să schimbaţi unele din ID-urile automate) acum este momentul să realizaţi acest lucru. Din moment ce configuraţia ascunsă nu este folosită de către cluster, este neprimejdios să editaţi fişierul manual:"
 
 #: Ap-Upgrade-Config.xml:50(command)
 msgid "crm_shadow --edit"
@@ -146,7 +146,7 @@ msgstr "graphviz upgrade06.dot"
 
 #: Ap-Upgrade-Config.xml:58(para)
 msgid "Verify that either no resource actions will occur or that you are happy with any that are scheduled. If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes. See <xref linkend=\"s-config-testing-changes\"/> for further details on how to interpret the output of ptest."
-msgstr "Verificaţi că fie nu vor avea loc acţiuni ale resurelor sau că sunteţi mulţumiţi cu cele care sunt programate. Dacă rezultatul conţine acţiuni pe care nu le aşteptaţi (posibil datorită modificărilor în calculul scorurilor), este probabil să realizaţi modificări adiţionale manual. Vezi <xref linkend=\"s-config-testing-changes\"/> pentru detalii suplimentare despre cum să interpretaţi rezultatul ptest."
+msgstr "Verificaţi că fie nu vor avea loc acţiuni ale resurelor sau că sunteţi mulţumiţi cu cele care sunt programate. Dacă rezultatul conţine acţiuni pe care nu le aşteptaţi (posibil datorită modificărilor în calculul scorurilor), ar putea fi necesar să realizaţi modificări suplimentare manual. Vedeţi <xref linkend=\"s-config-testing-changes\"/> pentru detalii suplimentare despre cum să interpretaţi rezultatul de ieşire al ptest."
 
 #: Ap-Upgrade-Config.xml:65(para)
 msgid "Upload the changes"
@@ -203,7 +203,7 @@ msgstr "xmllint --relaxng <placeholder-1/><placeholder-2/>"
 
 #: Ap-Upgrade-Config.xml:90(para)
 msgid "The advantage of this method is that it can be performed without the cluster running and any validation errors should be more informative (despite being generated by the same library!) since they include line numbers."
-msgstr "Avantajul acestei metode este acela că poate fi efectuată fară ca şi clusterul să funcţioneze şi orice erori de validare ar trebui să fie cu caracter mai informativ (în ciuda faptului că sunt generate de aceeaşi librărie) din moment ce includ numerele liniilor."
+msgstr "Avantajul acestei metode este acela că poate fi efectuată fară ca şi clusterul să funcţioneze şi orice erori de validare ar trebui să fie cu caracter mai informativ (în ciuda faptului că sunt generate de aceeaşi bibliotecă!) din moment ce includ numerele liniilor."
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ap-Upgrade-Config.xml:0(None)
