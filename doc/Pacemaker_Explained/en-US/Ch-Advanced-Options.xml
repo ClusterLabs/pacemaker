@@ -354,7 +354,7 @@
       <section>
 	<title>Resource Migration</title>
 	<para>
-	  Some resources, such as Xen virtual guests, are able to move to another location without lose of state.
+	  Some resources, such as Xen virtual guests, are able to move to another location without loss of state.
 	  We call this resource migration and is different from the normal practice of stopping the resource on the first machine and starting it elsewhere.
 	</para>
 	<para>

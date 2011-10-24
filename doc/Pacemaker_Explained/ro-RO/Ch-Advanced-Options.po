@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-02 16:23+0200\n"
+"PO-Revision-Date: 2011-10-24 06:46+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #: Ch-Advanced-Options.xml:1(title)
@@ -21,11 +21,11 @@ msgstr "Conectarea la Configuraţia Clusterului de pe o Maşină la Distanţă"
 
 #: Ch-Advanced-Options.xml:4(para)
 msgid "Provided Pacemaker is installed on a machine, it is possible to connect to the cluster even if the machine itself is not a part of it. To do this, one simply sets up a number of environment variables and runs the same commands as you would when working on a cluster node."
-msgstr "Cu condiţia că Pacemaker este instalat pe o maşină, este posibilă conectarea la cluster chiar dacă maşina în sine nu este parte din el. Pentru a realiza acest lucru, nu trebuie decât să setaţi un număr de variabile de mediu şi să rulaţi aceleaşi comenzi ca şi când aţi lucra pe un nod din cluster."
+msgstr "Cu condiţia ca Pacemaker să fie instalat pe o maşină, este posibilă conectarea la cluster chiar dacă maşina în sine nu este parte din el. Pentru a realiza acest lucru, nu trebuie decât să setaţi un număr de variabile de mediu şi să rulaţi aceleaşi comenzi ca şi când aţi lucra pe un nod din cluster."
 
 #: Ch-Advanced-Options.xml:9(title)
 msgid "Environment Variables Used to Connect to Remote Instances of the CIB"
-msgstr "Variabile de Mediu Folosite pentru a Conecta Instanţe la Distanţă ale CIB-ului"
+msgstr "Variabile de Mediu Folosite pentru Conectare la Instanţe la Distanţă ale CIB-ului"
 
 #: Ch-Advanced-Options.xml:13(entry)
 msgid "Environment Variable"
@@ -47,7 +47,7 @@ msgstr "$USER"
 
 #: Ch-Advanced-Options.xml:18(entry)
 msgid "The user to connect as. Needs to be part of the hacluster group on the target host. Defaults to <placeholder-1/>"
-msgstr "Userul sub care se va realiza conectarea. Trebuie să facă parte din grupul hacluster pe host-ul destinaţie. Valoarea implicită este <placeholder-1/>"
+msgstr "Userul sub care se va realiza conectarea. Trebuie să facă parte din grupul hacluster pe gazda destinaţie. Valoarea implicită este <placeholder-1/>"
 
 #: Ch-Advanced-Options.xml:22(entry)
 msgid "CIB_passwd"
@@ -67,7 +67,7 @@ msgstr "localhost"
 
 #: Ch-Advanced-Options.xml:27(entry)
 msgid "The host to contact. Defaults to <placeholder-1/>."
-msgstr "Host-ul care să fie contactat. Valoarea implicită este <placeholder-1/>."
+msgstr "Gazda care să fie contactată. Valoarea implicită este <placeholder-1/>."
 
 #: Ch-Advanced-Options.xml:30(entry)
 msgid "CIB_port"
@@ -91,7 +91,7 @@ msgstr "Criptează traficul de reţea. Valoarea implicită este <placeholder-1/>
 
 #: Ch-Advanced-Options.xml:40(para)
 msgid "So if c001n01 is an active cluster node and is listening on 1234 for connections, and someguy is a member of the hacluster group. Then the following would prompt for someguy's password and return the cluster's current configuration:"
-msgstr "Deci dacă c001n01 este un nod activ de cluster şi ascultă pentru conexiuni pe 1234, iar untipoarecare este un membru al grupului hacluster. Atunci următoarele ar cere parola lui untipoarecare şi ar returna configuraţia curentă a clusterului:"
+msgstr "Deci dacă c001n01 este un nod activ de cluster şi ascultă pentru conexiuni pe 1234, iar vreun_tip este un membru al grupului hacluster. Atunci următoarele ar cere parola lui vreun_tip şi ar returna configuraţia curentă a clusterului:"
 
 #: Ch-Advanced-Options.xml:45(userinput)
 #, no-wrap
@@ -102,7 +102,7 @@ msgid ""
 "\t"
 msgstr ""
 "\n"
-"  export CIB_port=1234; export CIB_server=c001n01; export CIB_user=untipoarecare;\n"
+"  export CIB_port=1234; export CIB_server=c001n01; export CIB_user=vreun_tip;\n"
 "  cibadmin -Q\n"
 "\t"
 
@@ -154,7 +154,7 @@ msgstr "Pentru a specifica un/o timp/dată faţă de care ar trebui să fie rela
 
 #: Ch-Advanced-Options.xml:84(para)
 msgid "So if the operation's interval is 24h, it's interval-origin is set to 02:00 and it is currently 14:32, then the cluster would initiate the operation with a start delay of 11 hours and 28 minutes. If the resource is moved to another node before 2am, then the operation is of course cancelled."
-msgstr "Deci dacă intervalul operaţiunii este de 24 de ore, parametrul interval-origin este setat la 02:00 şi acum este 14:32, atunci clusterul va iniţia operaţiunea cu un delay de 11 ore şi 28 de minute. Dacă resursa este mutată pe un alt nod înainte de ora 2 dimineaţa, atunci operaţiunea este desigur anulată."
+msgstr "Deci dacă intervalul operaţiunii este de 24 de ore, parametrul interval-origin este setat la 02:00 şi acum este 14:32, atunci clusterul va iniţia operaţiunea cu un start-delay de 11 ore şi 28 de minute. Dacă resursa este mutată pe un alt nod înainte de ora 2 dimineaţa, atunci operaţiunea este desigur anulată."
 
 #: Ch-Advanced-Options.xml:88(para)
 msgid "The value specified for interval and <literal>interval-origin</literal> can be any date/time conforming to the <ulink url=\"http://en.wikipedia.org/wiki/ISO_8601\">ISO8601 standard</ulink>. By way of example, to specify an operation that would run on the first Monday of 2009 and every Monday after that you would add:"
@@ -217,7 +217,7 @@ msgstr "crm_standby --attr-value"
 
 #: Ch-Advanced-Options.xml:121(para)
 msgid "Again, you can change another host's value by supplying a host name with <parameter>--node-uname</parameter>."
-msgstr "Din nou, puteţi schimba valoarea altui host prin furnizarea unui hostname cu <parameter>--node-uname</parameter>."
+msgstr "Din nou, puteţi schimba valoarea altei gazde prin furnizarea unui hostname cu <parameter>--node-uname</parameter>."
 
 #: Ch-Advanced-Options.xml:122(para)
 msgid "When only one resource is required to move, we do this by creating location constraints. However once again we provide a user friendly shortcut as part of the <command>crm_resource</command> command which creates and modifies the extra constraints for you. If Email was running on sles-1 and you wanted it moved to a specific location, the command would look something like:"
@@ -302,7 +302,7 @@ msgstr "Email preferă sles-1 cu un scor de <literal>-INFINITY</literal>"
 
 #: Ch-Advanced-Options.xml:161(para)
 msgid "Email prefers sles-2 with a score of <literal>INFINITY</literal>"
-msgstr "Email preferă sles-2 cu un score de <literal>-INFINITY</literal>"
+msgstr "Email preferă sles-2 cu un scor de <literal>-INFINITY</literal>"
 
 #: Ch-Advanced-Options.xml:162(para)
 msgid "which has the same long-term consequences as discussed earlier."
@@ -350,11 +350,11 @@ msgstr "Setarea clusterului pentru a muta resursele când conectivitatea extern�
 
 #: Ch-Advanced-Options.xml:197(title)
 msgid "Tell Pacemaker to monitor connectivity"
-msgstr "Spunei Pacemaker-ului să monitorizeze conectivitatea"
+msgstr "Spuneţi Pacemaker-ului să monitorizeze conectivitatea"
 
 #: Ch-Advanced-Options.xml:202(para)
 msgid "The attribute name is customizable which allows multiple ping groups to be defined"
-msgstr "Numele atributului este customizabil ceea ce vă permite definirea de grupuri multiple de ping"
+msgstr "Numele atributului este personalizabil ceea ce vă permite definirea de grupuri multiple de ping"
 
 #: Ch-Advanced-Options.xml:198(para)
 msgid "To do this, you need to add a ping resource to the cluster. The ping resource uses the system utility of the same name to a test if list of machines (specified by DNS hostname or IPv4/ IPv6 address) are reachable and uses the results to maintain a node attribute normally called pingd. <placeholder-1/>"
@@ -362,7 +362,7 @@ msgstr "Pentru a realiza acest lucru, trebuie să adăugaţi o resursă ping la 
 
 #: Ch-Advanced-Options.xml:205(para)
 msgid "Older versions of Heartbeat required users to add ping nodes to ha.cf - this is no longer required."
-msgstr "Versiuni mai vechi de Heartbeat necesitau ca utilizatorii să adauge ping noduri în ha.cf - acest lucru nu mai este necesar."
+msgstr "Versiuni mai vechi de Heartbeat necesitau ca utilizatorii să adauge noduri de ping în ha.cf - acest lucru nu mai este necesar."
 
 #: Ch-Advanced-Options.xml:208(para)
 msgid "Older versions of Pacemaker used a custom binary called pingd for this functionality, this is now deprecated in favor of ping. If your version of Pacemaker does not contain the ping agent, you can download the latest version from: <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping\"/>"
@@ -370,7 +370,7 @@ msgstr "Versiuni mai vechi de Pacemaker foloseau un binar special numit pingd pe
 
 #: Ch-Advanced-Options.xml:213(para)
 msgid "Normally the resource will run on all cluster nodes, which means that you'll need to create a clone. A template for this can be found below along with a description of the most interesting parameters."
-msgstr "În mod normal resursa va rula pe toate nodurile clusterului, ceea ce înseamnă că va trebui să creaţi o clonă. Un template pentru aceasta poate fi găsit mai jos împreună cu o descriere ale parametrilor cei mai interesaţi."
+msgstr "În mod normal resursa va rula pe toate nodurile clusterului, ceea ce înseamnă că va trebui să creaţi o clonă. Un template pentru aceasta poate fi găsit mai jos împreună cu o descriere ale parametrilor cei mai interesanţi."
 
 #: Ch-Advanced-Options.xml:218(title)
 msgid "Common Options for a 'ping' Resource"
@@ -378,15 +378,15 @@ msgstr "Opţiuni Obişnuite pentru o Resursă 'ping'"
 
 #: Ch-Advanced-Options.xml:228(entry)
 msgid "dampen"
-msgstr "atenuare"
+msgstr "dampen"
 
 #: Ch-Advanced-Options.xml:229(entry)
 msgid "The time to wait (dampening) for further changes occur. Use this to prevent a resource from bouncing around the cluster when cluster nodes notice the loss of connectivity at slightly different times."
-msgstr "Timpul pe care să îl aştepte (atenuarea) pentru alte modificări să se întâmple. Folosiţi acesta pentru a preveni o resursă de a ricoşa de colo-colo prin cluster atunci când nodurile observă pierderea conectivităţii a intervale uşor diferite de timp."
+msgstr "Timpul pe care să îl aştepte (atenuarea) pentru alte modificări să se întâmple. Folosiţi acesta pentru a preveni o resursă de a ricoşa de colo-colo prin cluster atunci când nodurile observă pierderea conectivităţii la intervale uşor diferite de timp."
 
 #: Ch-Advanced-Options.xml:232(entry)
 msgid "multiplier"
-msgstr "multiplicator"
+msgstr "multiplier"
 
 #: Ch-Advanced-Options.xml:233(entry)
 msgid "The number by which to multiply the number of connected ping nodes by. Useful when there are multiple ping nodes configured."
@@ -410,7 +410,7 @@ msgstr "Aţi terminat doar jumătate. Secţiunea următoare se ocupă cu informa
 
 #: Ch-Advanced-Options.xml:269(title)
 msgid "Tell Pacemaker how to interpret the connectivity data"
-msgstr "Spune-i Pacemaker-ului cum să interpreteze datele de conectivitate"
+msgstr "Spuneţi Pacemaker-ului cum să interpreteze datele de conectivitate"
 
 #: Ch-Advanced-Options.xml:270(para)
 msgid "NOTE: Before reading the following, please make sure you have read and understood <xref linkend=\"ch-rules\"/> above."
@@ -442,7 +442,7 @@ msgstr "Preferă nodul cu cele mai multe noduri de ping conectate"
 
 #: Ch-Advanced-Options.xml:319(para)
 msgid "It is perhaps easier to think of this in terms of the simple constraints that the cluster translates it into. For example, if sles-1 is connected to all 5 ping nodes but sles-2 is only connected to 2, then it would be as if you instead had the following constraints in your configuration:"
-msgstr "Este probabil mai simplu să vă gândiţi la acest lucru în termenii simplei restricţii în care clusterul traduce acest lucru. De exemplu, dacă sles-1 este conectat la toate cele 5 noduri de ping dar sles-2 este conectat doar la 2, atunci ar fi la fel ca şi când aţi avea următoarele restricţii în configuraţia voastră:"
+msgstr "Este probabil mai simplu să vă gândiţi la acest lucru în termenii simplelor restricţii în care clusterul traduce acest lucru. De exemplu, dacă sles-1 este conectat la toate cele 5 noduri de ping dar sles-2 este conectat doar la 2, atunci ar fi la fel ca şi când aţi avea următoarele restricţii în configuraţia voastră:"
 
 #: Ch-Advanced-Options.xml:324(title)
 msgid "How the cluster translates the pingd constraint"
@@ -470,7 +470,7 @@ msgstr "Unele resurse, precum oaspeţii virtuali de Xen, sunt capabili să se mu
 
 #: Ch-Advanced-Options.xml:360(para)
 msgid "Not all resources are able to migrate, see the Migration Checklist below, and those that can won't do so in all situations. Conceptually there are two requirements from which the other prerequisites follow:"
-msgstr "Nu toate resursele sunt capabile de migrare, vedeţi Lista de Migrare de mai jos, şi mai sunt cele care nu vor să facă acest lucru în toate situaţiile. În mod conceptual sunt două cerinţe din care celelalte necesităţi urmează:"
+msgstr "Nu toate resursele sunt capabile de migrare, vedeţi Lista de Migrare de mai jos, şi mai sunt cele care nu pot să facă acest lucru în toate situaţiile. În mod conceptual sunt două cerinţe din care celelalte necesităţi urmează:"
 
 #: Ch-Advanced-Options.xml:365(para)
 msgid "the resource must be active and healthy at the old location"
@@ -482,11 +482,11 @@ msgstr "tot ce este necesar pentru ca resursa să funcţioneze trebuie să fie d
 
 #: Ch-Advanced-Options.xml:368(para)
 msgid "The cluster is able to accommodate both push and pull migration models by requiring the resource agent to support two new actions: <literal>migrate_to</literal> (performed on the current location) and <literal>migrate_from</literal> (performed on the destination)."
-msgstr "Clusterul este capabil să acomodeze atat modele de migrare de tip push cât şi pull prin solicitarea ca agentul de resursă să suporte două noi acţiuni: <literal>migrate_to</literal> (efectuată pe locaţia curentă) şi <literal>migrate_from</literal> (efectuată pe destinaţie)."
+msgstr "Clusterul este capabil să acomodeze atât modele de migrare de tip push cât şi pull prin solicitarea ca agentul de resursă să suporte două noi acţiuni: <literal>migrate_to</literal> (efectuată pe locaţia curentă) şi <literal>migrate_from</literal> (efectuată pe destinaţie)."
 
 #: Ch-Advanced-Options.xml:369(para)
 msgid "In push migration, the process on the current location transfers the to the new location where is it later activated. In this scenario, most of the work would be done in the <literal>migrate_to</literal> action and, if anything, the activation would occur during <literal>migrate_from</literal>."
-msgstr "În migrarea de tip push, procesul de pe locaţia curentă se transferă pe locaţia nouă unde este activat mai târziu. În acest scenariu, majoritatea muncii ar fi realizată în acţiunea <literal>migrate_to</literal> şi activarea ar lua loc în timpul <literal>migrate_from</literal>."
+msgstr "În migrarea de tip push, procesul de pe locaţia curentă se transferă pe locaţia nouă unde este activat mai târziu. În acest scenariu, majoritatea muncii ar fi realizată în acţiunea <literal>migrate_to</literal> şi activarea ar avea loc în timpul <literal>migrate_from</literal>."
 
 #: Ch-Advanced-Options.xml:373(para)
 msgid "Conversely for pull, the <literal>migrate_to</literal> action is practically empty and <literal>migrate_from</literal> does most of the work, extracting the relevant resource state from the old location and activating it."
@@ -526,7 +526,7 @@ msgstr "Resursa trebuie să aibe meta-atributul allow-migrate setat pe true (nu 
 
 #: Ch-Advanced-Options.xml:385(para)
 msgid "If the resource depends on a clone, and at the time the resource needs to be move, the clone has instances that are stopping and instances that are starting, then the resource will be moved in the traditional manner. The Policy Engine is not yet able to model this situation correctly and so takes the safe (yet less optimal) path."
-msgstr "Dacă resursa depinde de o clonă, iar la momentul când resursa trebuie să se mute, clona are instanţe care se opresc şi instanţe care pornesc, atunci resursa va fi mutată în modul tradiţional. Policy Engine-ul nu este capabil încă să modeleze această situaţie în mod corect aşa că ia calea (mai puţin optimă) dar mai sigură."
+msgstr "Dacă resursa depinde de o clonă, iar la momentul când resursa trebuie să fie mutată, clona are instanţe care se opresc şi instanţe care pornesc, atunci resursa va fi mutată în modul tradiţional. Policy Engine-ul nu este capabil încă să modeleze această situaţie în mod corect aşa că ia calea (mai puţin optimă) dar mai sigură."
 
 #: Ch-Advanced-Options.xml:393(title)
 msgid "Reusing Rules, Options and Sets of Operations"
@@ -534,7 +534,7 @@ msgstr "Refolosirea Regulilor, Opţiunilor şi a Setului de Operaţiuni"
 
 #: Ch-Advanced-Options.xml:394(para)
 msgid "Sometimes a number of constraints need to use the same set of rules and resources need to set the same options and parameters. To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id."
-msgstr "Câteodată acelaşi număr de restricţii trebuie să folosească acelaşi set de reguli şi resursele trebuie sa seteze aceleaşi opţiuni şi parametri. Pentru a simplifica această situaţie, puteţi face referinţă la un obiect existent folosind un <literal>id-ref</literal> în loc de un id."
+msgstr "Câteodată un număr de restricţii trebuie să folosească acelaşi set de reguli şi resursele trebuie sa seteze aceleaşi opţiuni şi parametri. Pentru a simplifica această situaţie, puteţi face referinţă la un obiect existent folosind un <literal>id-ref</literal> în loc de un id."
 
 #: Ch-Advanced-Options.xml:398(para)
 msgid "So if for one resource you have"
@@ -558,7 +558,7 @@ msgstr "Acelaşi principiu se aplică pentru <literal>meta_attributes</literal> 
 
 #: Ch-Advanced-Options.xml:427(title)
 msgid "Referencing attributes, options and operations from other resources"
-msgstr "Referenţierea atributelor, opţiuni şi operaţiuni din alte resurse"
+msgstr "Referenţierea atributelor, opţiunilor şi operaţiunilor din alte resurse"
 
 #: Ch-Advanced-Options.xml:456(title)
 msgid "Reloading Services After a Definition Change"
@@ -586,7 +586,7 @@ msgstr "Anunţă operaţiunea <literal>reload</literal> în secţiunea de <liter
 
 #: Ch-Advanced-Options.xml:498(title)
 msgid "The DRBD Agent Advertising Support for the <literal>reload</literal> Operation"
-msgstr "Suportul Promovării Operaţiunii de <literal>reload</literal> a Agentului DRBD"
+msgstr "Anunţarea Suportului Operaţiunii de <literal>reload</literal> a Agentului DRBD"
 
 #: Ch-Advanced-Options.xml:546(para)
 msgid "Advertise one or more parameters that can take effect using <literal>reload</literal>."
@@ -594,11 +594,11 @@ msgstr "Promovaţi unul sau mai mulţi parametri care pot intra în vigoare folo
 
 #: Ch-Advanced-Options.xml:547(para)
 msgid "Any parameter with the <literal>unique</literal> set to 0 is eligable to be used in this way."
-msgstr "Orice parametru cu <literal>unique</literal> setat pe 0 este ligibil să fie folosit în acest fel."
+msgstr "Orice parametru cu <literal>unique</literal> setat pe 0 este eligibil să fie folosit în acest fel."
 
 #: Ch-Advanced-Options.xml:549(title)
 msgid "Parameter that can be changed using reload"
-msgstr "Parametri care pot fi schimbaţi folosind reload"
+msgstr "Parametru care poate fi schimbat folosind reload"
 
 #: Ch-Advanced-Options.xml:462(para)
 msgid "To take advantage of this capability, your resource agent must: <placeholder-1/>"
@@ -614,7 +614,7 @@ msgstr "Meta-informaţiile sunt recitite când resursa este pornită. Acest lucr
 
 #: Ch-Advanced-Options.xml:573(para)
 msgid "If both a unique and non-unique field is changed simultaneously, the resource will still be restarted."
-msgstr "Dacă atât un câmp unic si non-unic sunt schimbate simultan, resursa va fi restartată."
+msgstr "Dacă atât un câmp unic si non-unic sunt schimbate simultan, resursa tot va fi restartată."
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ch-Advanced-Options.xml:0(None)
