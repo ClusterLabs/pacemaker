@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-05 07:09+0200\n"
+"PO-Revision-Date: 2011-10-24 07:42+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Bookmarks: 5,-1,-1,-1,-1,-1,-1,-1,-1,-1\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #: Ch-Advanced-Resources.xml:1(title)
@@ -22,7 +22,7 @@ msgstr "Grupuri - O Scurtătură Sintactică"
 
 #: Ch-Advanced-Resources.xml:4(para)
 msgid "One of the most common elements of a cluster is a set of resources that need to be located together, start sequentially and stop in the reverse order. To simplify this configuration we support the concept of groups."
-msgstr "Unul dintre cele mai comune elemente ale unui cluster este un set de resurse care trebuie plasate împreună, pornite secvenţial şi oprite în ordine inversă. Pentru a simplifica această configuraţie suportăm conceptul de grupuri."
+msgstr "Unul dintre cele mai comune elemente ale unui cluster este un set de resurse care trebuie plasate împreună, pornesc secvenţial şi se opres în ordine inversă. Pentru a simplifica această configuraţie suportăm conceptul de grupuri."
 
 #: Ch-Advanced-Resources.xml:9(title)
 msgid "An example group"
@@ -30,7 +30,7 @@ msgstr "Un exemplu de grup"
 
 #: Ch-Advanced-Resources.xml:23(para)
 msgid "Although the example above contains only two resources, there is no limit to the number of resources a group can contain. The example is also sufficient to explain the fundamental properties of a group:"
-msgstr "Deşi exemplul de mai sus conţine doar două resurse, nu este nici o limită a numărului de resurse pe care le poate conţine un grup. Exemplul este de asemenea suficient pentru a explica proprietăţile fundamentale ale unui grup:"
+msgstr "Deşi exemplul de mai sus conţine doar două resurse, nu este nici o limită asupra numărului de resurse pe care le poate conţine un grup. Exemplul este de asemenea suficient pentru a explica proprietăţile fundamentale ale unui grup:"
 
 #: Ch-Advanced-Resources.xml:28(para)
 msgid "Resources are started in the order they appear in (Public-IP first, then Email)"
@@ -42,7 +42,7 @@ msgstr "Resursele sunt oprite în ordine inversă faţă de cea în care apar (�
 
 #: Ch-Advanced-Resources.xml:31(para)
 msgid "If a resource in the group can't run anywhere, then nothing after that is allowed to run"
-msgstr "Dacă o resursă din grup nu poate rula nicăieri, atunci nimic din ce urmează dupa aceasta nu îi este permis să ruleze"
+msgstr "Dacă o resursă din grup nu poate rula nicăieri, atunci nimic din ce urmează după aceasta nu îi este permis să ruleze"
 
 #: Ch-Advanced-Resources.xml:33(para)
 msgid "If Public-IP can’t run anywhere, neither can Email"
@@ -50,7 +50,7 @@ msgstr "Dacă Public-IP nu poate rula nicăieri, nici Email nu va putea"
 
 #: Ch-Advanced-Resources.xml:34(para)
 msgid "If Email can’t run anywhere, this does not affect Public-IP in any way"
-msgstr "Dacă Email nu poate rula nicăieri, acest luru nu afectează Public-IP în nici un fel"
+msgstr "Dacă Email nu poate rula nicăieri, acest lucru nu afectează Public-IP în nici un fel"
 
 #: Ch-Advanced-Resources.xml:38(para)
 msgid "The group above is logically equivalent to writing:"
@@ -127,7 +127,7 @@ msgstr "Atributele Instanţelor"
 
 #: Ch-Advanced-Resources.xml:89(para)
 msgid "Groups have no instance attributes, however any that are set here will be inherited by the group's children."
-msgstr "Grupurile nu au atribute de instanţă, totuşi oricare ar fi setat aici va fi moştenit de către copiii grupului."
+msgstr "Grupurile nu au atribute de instanţă, totuşi oricare ar fi setate aici vor fi moştenite de către copiii grupului."
 
 #: Ch-Advanced-Resources.xml:92(title)
 #: Ch-Advanced-Resources.xml:228(title)
@@ -147,7 +147,7 @@ msgstr "Restricţii"
 
 #: Ch-Advanced-Resources.xml:100(para)
 msgid "Although it is possible to reference the group's children in constraints, it is usually preferable to use the group's name instead."
-msgstr "Deşi este posibil să referenţiezi copiii grupului în restricţii, este de obişnuit preferabil să folosiţi numele grupului în schimb."
+msgstr "Deşi este posibil să referenţiezi copiii grupului în restricţii, este în mod uzual preferabil să folosiţi numele grupului în schimb."
 
 #: Ch-Advanced-Resources.xml:102(title)
 msgid "Example constraints involving groups"
@@ -165,7 +165,7 @@ msgstr "Adezivitatea, măsura a cât de mult vrea o resursă să rămână acolo
 
 #: Ch-Advanced-Resources.xml:123(title)
 msgid "Clones - Resources That Should be Active on Multiple Hosts"
-msgstr "Clone - Resurse Care Trebuie să fie Active pe Host-uri Multiple"
+msgstr "Clone - Resurse Care Trebuie să fie Active pe Gazde Multiple"
 
 #: Ch-Advanced-Resources.xml:124(para)
 msgid "Clones were initially conceived as a convenient way to start N instances of an IP resource and have them distributed throughout the cluster for load balancing. They have turned out to quite useful for a number of purposes including integrating with Red Hat's DLM, the fencing subsystem and OCFS2."
@@ -177,7 +177,7 @@ msgstr "Puteţi clona orice resursă atâta timp cât agentul de resursă suport
 
 #: Ch-Advanced-Resources.xml:129(para)
 msgid "Three types of cloned resources exist."
-msgstr "Trei tipuri de resurse clonate există."
+msgstr "Există trei tipuri de resurse clonate."
 
 #: Ch-Advanced-Resources.xml:131(para)
 msgid "Anonymous"
@@ -188,7 +188,6 @@ msgid "Globally Unique"
 msgstr "Unice la nivel global"
 
 #: Ch-Advanced-Resources.xml:133(para)
-#, fuzzy
 msgid "Stateful"
 msgstr "Stateful"
 
@@ -243,14 +242,14 @@ msgstr "Câte copii ale resursei pot fi pornite pe un singur nod. Valoarea impli
 
 #: Ch-Advanced-Resources.xml:199(entry)
 msgid "notify"
-msgstr "notifică"
+msgstr "notify"
 
 #: Ch-Advanced-Resources.xml:200(emphasis)
 #: Ch-Advanced-Resources.xml:205(emphasis)
 #: Ch-Advanced-Resources.xml:209(emphasis)
 #: Ch-Advanced-Resources.xml:214(emphasis)
 msgid "false"
-msgstr "fals"
+msgstr "false"
 
 #: Ch-Advanced-Resources.xml:200(entry)
 msgid "When stopping or starting a copy of the clone, tell all the other copies beforehand and when the action was successful. Allowed values: true, <placeholder-1/>"
@@ -266,7 +265,7 @@ msgstr "Efectuează fiecare copie a unei clone o funcţie diferită? Valori perm
 
 #: Ch-Advanced-Resources.xml:208(entry)
 msgid "ordered"
-msgstr "ordonate"
+msgstr "ordered"
 
 #: Ch-Advanced-Resources.xml:209(entry)
 msgid "Should the copies be started in series (instead of in parallel). Allowed values: true, <placeholder-1/>"
@@ -274,11 +273,11 @@ msgstr "Ar trebui copiile să fie pornite secvenţial (în loc de în paralel). 
 
 #: Ch-Advanced-Resources.xml:213(entry)
 msgid "interleave"
-msgstr "întrepătrundere"
+msgstr "interleave"
 
 #: Ch-Advanced-Resources.xml:214(entry)
 msgid "Changes the behavior of ordering constraints (between clones/masters) so that instances can start/stop as soon as their peer instance has (rather than waiting for every instance of the other clone has). Allowed values: true, <placeholder-1/>"
-msgstr "Schimbă comportamentul de ordonare a restricţiilor (între clone/masters) astfel încât instanţele să se poată opri/porni de îndată ce şi instanţa vecină a făcut-o (decât să aştepte pentru fiecare instanţă pe care o are clona cealaltă). Valori permise: true, <placeholder-1/>"
+msgstr "Schimbă comportamentul de ordonare al restricţiilor (între clone/masters) astfel încât instanţele să se poată porni/opri de îndată ce şi instanţa vecină a făcut-o (decât să aştepte pentru fiecare instanţă pe care o are clona cealaltă). Valori permise: true, <placeholder-1/>"
 
 #: Ch-Advanced-Resources.xml:222(title)
 msgid "Using Clones"
@@ -294,7 +293,7 @@ msgstr "Clonele trebuie să conţină fix un grup sau o resursă obişnuită."
 
 #: Ch-Advanced-Resources.xml:231(para)
 msgid "You should never reference the name of a clone's child. If you think you need to do this, you probably need to re-evaluate your design."
-msgstr "Nu ar trebui să referenţiaţi niciodată numele copilului unei clone. Dacă se consideră că este necesar acest lucru, probabil trebuie sa reevaluaţi design-ul vostru."
+msgstr "Nu ar trebui să referenţiaţi niciodată numele copilului unei clone. Dacă se consideră că este necesar acest lucru, probabil trebuie sa re-evaluaţi design-ul vostru."
 
 #: Ch-Advanced-Resources.xml:239(para)
 msgid "In most cases, a clone will have a single copy on each active cluster node. However if this is not the case, you can indicate which nodes the cluster should to preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the clone's id is used."
@@ -302,7 +301,7 @@ msgstr "În majoritatea cazurilor, o clonă va avea o singură copie pe fiecare 
 
 #: Ch-Advanced-Resources.xml:244(para)
 msgid "Ordering constraints behave slightly differently for clones. In the example below, apache-stats will wait until all copies of the clone that need to be started have done so before being started itself. Only if no copies can be started will apache-stats be prevented from being active. Additionally, the clone will wait for apache-stats to be stopped before stopping the clone."
-msgstr "Restricţiile de ordonare se comportă uşor diferit în cazul clonelor. În exemplele de mai jos, apache-stats va dori să aştepte până ce toate copiile clonelor care trebuie să fie pornite au făcut acest lucru înainte ca aceasta să fie pornită la rândul ei. Doar dacă nici o copie nu poate fi pornită va fi împiedicată apache-stats din a fi activă. În plus, clona va aştepta ca apache-stats să fie oprită înainte de a opri clona."
+msgstr "Restricţiile de ordonare se comportă uşor diferit în cazul clonelor. În exemplele de mai jos, apache-stats va aştepta până ce toate copiile clonelor care trebuie să fie pornite au făcut acest lucru înainte ca aceasta să fie pornită la rândul ei. Doar dacă nici o copie nu poate fi pornită va fi împiedicată apache-stats din a fi activă. În plus, clona va aştepta ca apache-stats să fie oprită înainte de a opri clona."
 
 #: Ch-Advanced-Resources.xml:250(para)
 msgid "Colocation of a regular (or group) resource with a clone means that the resource can run on any machine with an active copy of the clone. The cluster will choose a copy based on where the clone is running and the rsc resource's own location preferences."
@@ -314,7 +313,7 @@ msgstr "Colocarea între clone este posibilă de asemenea. În astfel de cazuri,
 
 #: Ch-Advanced-Resources.xml:260(title)
 msgid "Example constraints involving clones"
-msgstr "Exemple de restricţii care implicând clone"
+msgstr "Exemple de restricţii implicând clone"
 
 #: Ch-Advanced-Resources.xml:274(para)
 #: Ch-Advanced-Resources.xml:601(para)
@@ -332,11 +331,11 @@ msgstr "Orice resursă poate fi utilizată ca o clonă anonimă deoarece nu nece
 
 #: Ch-Advanced-Resources.xml:286(para)
 msgid "Globally unique clones do require some additional support in the resource agent. In particular, it must only respond with <envar>${OCF_SUCCESS}</envar> if the node has that exact instance active. All other probes for instances of the clone should result in <envar>${OCF_NOT_RUNNING}</envar>. Unless of course they are failed, in which case they should return one of the other OCF error codes."
-msgstr "Clonele unice la nivel global necesită suport adiţional în agentul de resursă. În special, trebuie să răspundă cu <envar>${OCF_SUCCESS}</envar> dacă nodul are exact acea instanţă activă. Tot restul de probe pentru instanţe ale clonei ar trebui să rezulte în <envar>${OCF_NOT_RUNNING}</envar>. Cu excepţia cazului în care au eşuat, caz în care ar trebui să returneze unul din celelalte coduri de eroare OCF."
+msgstr "Clonele unice la nivel global necesită suport adiţional în agentul de resursă. În special, trebuie să răspundă doar cu <envar>${OCF_SUCCESS}</envar> dacă nodul are exact acea instanţă activă. Tot restul de probe pentru instanţe ale clonei ar trebui să rezulte în <envar>${OCF_NOT_RUNNING}</envar>. Cu excepţia cazului în care au eşuat, caz în care ar trebui să returneze unul din celelalte coduri de eroare OCF."
 
 #: Ch-Advanced-Resources.xml:292(para)
 msgid "Copies of a clone are identified by appending a colon and a numerical offset. Eg. apache:2"
-msgstr "Copiile unei clone sunt identificate prin apendarea a două puncte şi a unui delimitator numeric. Ex. apache:2"
+msgstr "Copiile unei clone sunt identificate prin sufixarea a două puncte şi a unui delimitator numeric. Ex. apache:2"
 
 #: Ch-Advanced-Resources.xml:293(para)
 msgid "Resource agents can find out how many copies there are by examining the <envar>OCF_RESKEY_CRM_meta_clone_max</envar> environment variable and which copy it is by examining <envar>OCF_RESKEY_CRM_meta_clone</envar>."
@@ -470,7 +469,7 @@ msgstr "Variabilele vin în perechi, cum ar fi <envar>OCF_RESKEY_CRM_meta_notify
 
 #: Ch-Advanced-Resources.xml:359(para)
 msgid "Thus in order to indicate that clone:0 will be started on sles-1, clone:2 will be started on sles-3, and clone:3 will be started on sles-2, the cluster would set"
-msgstr "Drept urmare pentru a indica faptul că clone:0 va fi pornită pe sles-1, clone:2 va fi pornită pe sles-3 şi clone:3 va fi pornită pe sles-2, clusterul va seta"
+msgstr "Drept urmare pentru a indica faptul că, clone:0 va fi pornită pe sles-1, clone:2 va fi pornită pe sles-3 şi clone:3 va fi pornită pe sles-2, clusterul va seta"
 
 #: Ch-Advanced-Resources.xml:360(para)
 msgid "<envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar>=\"clone:0 clone:2 clone:3\""
@@ -618,7 +617,7 @@ msgstr "Resurse cu stări multiple - Resurse Care Au Mai Multe Moduri"
 
 #: Ch-Advanced-Resources.xml:436(para)
 msgid "Multi-state resources are a specialization of Clones (please ensure you understand the section on clones before continuing) that allow the instances to be in one of two operating modes. These modes are called Master and Slave but can mean whatever you wish them to mean. The only limitation is that when an instance is started, it must come up in the Slave state."
-msgstr "Resursele cu stări multiple sunt o specializare a Clonelor (vă rugăm să vă asiguraţi că secţiunea referitoare la clone înainte de a continua) care permite instanţelor să se afle în unul din două moduri operaţionale. Aceste moduri sunt numite Master şi Slave dar pot însemna orice doriţi să însemne. Singura limitare este că atunci când o instanţă este pornită, trebuie să o facă în starea Slave."
+msgstr "Resursele cu stări multiple sunt o specializare a Clonelor (vă rugăm să vă asiguraţi că înţelegeţi secţiunea referitoare la clone înainte de a continua) care permite instanţelor să se afle în unul din două moduri operaţionale. Aceste moduri sunt numite Master şi Slave dar pot însemna orice doriţi să însemne. Singura limitare este că atunci când o instanţă este pornită, trebuie să o facă în starea Slave."
 
 #: Ch-Advanced-Resources.xml:444(title)
 msgid "Properties of a Multi-State Resource"
@@ -661,9 +660,8 @@ msgid "Multi-state resources have no instance attributes, however any that are s
 msgstr "Resursele cu stări multiple nu au atribute de instanţă, însă oricare ar fi setate aici vor fi moştenite de către copiii master-ului."
 
 #: Ch-Advanced-Resources.xml:489(para)
-#, fuzzy
 msgid "Masters must contain exactly one group or one regular resource."
-msgstr "Master-ii trebuie să conţină exact un grup sau o resursă obişnuită."
+msgstr "Resursele Master trebuie să conţină exact un grup sau o resursă obişnuită."
 
 #: Ch-Advanced-Resources.xml:491(para)
 msgid "You should never reference the name of a master's child. If you think you need to do this, you probably need to re-evaluate your design."
@@ -724,7 +722,7 @@ msgstr "first-action"
 
 #: Ch-Advanced-Resources.xml:556(para)
 msgid "An additional attribute of ordering constraints that specifies the action that the first resource must complete before executing the specified action for the then resource."
-msgstr "Un atribut adiţional al restricţiilor de ordonare care specifică acţiunea pe care resursa trebuie să o termine înaintea executării acţiunii specificate pentru resursa then."
+msgstr "Un atribut adiţional al restricţiilor de ordonare care specifică acţiunea pe care resursa first trebuie să o termine înaintea executării acţiunii specificate pentru resursa then."
 
 #: Ch-Advanced-Resources.xml:557(para)
 msgid "Allowed values: <emphasis>start</emphasis>, stop, promote, demote"
@@ -764,7 +762,7 @@ msgstr "Care Instanţă a Resursei este Promovată"
 
 #: Ch-Advanced-Resources.xml:609(para)
 msgid "During the start operation, most Resource Agent scripts should call the <command>crm_master</command> utility. This tool automatically detects both the resource and host and should be used to set a preference for being promoted. Based on this, <literal>master-max</literal>, and <literal>master-node-max</literal>, the instance(s) with the highest preference will be promoted."
-msgstr "În timpul operaţiunii de pornire, majoritatea scripturilor Agenţilor de Resursă ar trebui să apeleze utilitarul <command>crm_master</command>. Acesta detectează în mod automat atât resursa cât şi host-ul şi ar trebui să fie folosit pentru a seta o preferinţă pentru a fi promovat. În funcţie de asta, de <literal>master-max</literal> şi de <literal>master-node-max</literal>, instanţa(ele) cu cea mai mare preferinţă va fi promovată."
+msgstr "În timpul operaţiunii de pornire, majoritatea scripturilor Agenţilor de Resursă ar trebui să apeleze utilitarul <command>crm_master</command>. Acesta detectează în mod automat atât resursa cât şi gazda şi ar trebui să fie folosit pentru a seta o preferinţă pentru a fi promovat. În funcţie de asta, de <literal>master-max</literal> şi de <literal>master-node-max</literal>, instanţa(ele) cu cea mai mare preferinţă va fi promovată."
 
 #: Ch-Advanced-Resources.xml:614(para)
 msgid "The other alternative is to create a location constraint that indicates which nodes are most preferred as masters."
@@ -776,39 +774,39 @@ msgstr "Specificând manual care nod ar trebui să fie promovat"
 
 #: Ch-Advanced-Resources.xml:630(para)
 msgid "Since multi-state resources are an extension of cloned resources, all the requirements of Clones are also requirements of multi-state resources. Additionally, multi-state resources require two extra actions demote and promote. These actions are responsible for changing the state of the resource. Like start and stop, they should return <envar>OCF_SUCCESS</envar> if they completed successfully or a relevant error code if they did not."
-msgstr ""
+msgstr "Din moment ce resursele multi-state sunt o extensie a resurselor clonate, toate cerinţele Clonelor sunt de asemenea cerinţe ale resurselor multi-state. Adiţional, resursele multi-state necesită două acţiuni suplimentare promote şi demote. Aceste acţiuni sunt responsabile pentru schimbarea stării resursei. Precum start şi stop, acestea ar trebui să returneze <envar>OCF_SUCCESS</envar> dacă au terminat cu succes sau un cod de eroare relevant în caz contrar."
 
 #: Ch-Advanced-Resources.xml:636(para)
 msgid "The states can mean whatever you wish, but when the resource is started, it must come up in the mode called Slave. From there the cluster will then decide which instances to promote into a Master."
-msgstr ""
+msgstr "Stările pot însemna orice doriţi, dar atunci când resursa este pornită, trebuie să ajungă în modul numit Slave. De acolo clusterul va decide mai apoi care instanţe să promoveze într-un Master."
 
 #: Ch-Advanced-Resources.xml:640(para)
 msgid "In addition to the Clone requirements for monitor actions, agents must also <emphasis>accurately</emphasis> report which state they are in. The cluster relies on the agent to report its status (including role) accurately and does not indicate to the agent what role it currently believes it to be in."
-msgstr ""
+msgstr "În plus faţă de cerinţele Clonelor pentru acţiunile de monitorizare, agenţii trebuie să raporteze <emphasis>corespunzător</emphasis> starea în care sunt. Clusterul se bazează pe agent să-şi raporteze statusul (incluzând rolul) în mod corespunzător şi nu indică agentului în care rol crede acesta în mod curent că ar trebui să se afle."
 
 #: Ch-Advanced-Resources.xml:645(title)
 msgid "Role implications of OCF return codes"
-msgstr ""
+msgstr "Implicaţiile rolurilor codurilor returnate de OCF"
 
 #: Ch-Advanced-Resources.xml:649(entry)
 msgid "Monitor Return Code"
-msgstr ""
+msgstr "Cod de Monitorizare Returnat"
 
 #: Ch-Advanced-Resources.xml:653(entry)
 msgid "OCF_NOT_RUNNING"
-msgstr ""
+msgstr "OCF_NOT_RUNNING"
 
 #: Ch-Advanced-Resources.xml:654(entry)
 msgid "Stopped"
-msgstr ""
+msgstr "Oprit"
 
 #: Ch-Advanced-Resources.xml:657(entry)
 msgid "OCF_SUCCESS"
-msgstr ""
+msgstr "OCF_SUCCESS"
 
 #: Ch-Advanced-Resources.xml:658(entry)
 msgid "Running (Slave)"
-msgstr ""
+msgstr "Rulând (Slave)"
 
 #: Ch-Advanced-Resources.xml:661(entry)
 msgid "OCF_RUNNING_MASTER"
@@ -828,7 +826,7 @@ msgstr "Eşuat (Master)"
 
 #: Ch-Advanced-Resources.xml:669(entry)
 msgid "Other"
-msgstr "Alt"
+msgstr "Altul"
 
 #: Ch-Advanced-Resources.xml:670(entry)
 msgid "Failed (Slave)"
@@ -836,7 +834,7 @@ msgstr "Eşuat (Slave)"
 
 #: Ch-Advanced-Resources.xml:676(para)
 msgid "Like with clones, supporting notifications requires the <literal>notify</literal> action to be implemented. Once supported, the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it."
-msgstr "Ca şi în cazul clonelor, suportarea notificărilor necesită acţiunea <literal>notify</literal> să fie implementată. Odată ce este suportată, acţiunii notify îi vor fi pasate un număr de variabile suplimentare care, când sunt combinate cu un context suplimentar, pot fi folosite pentru a calcula starea curentă a clusterului şi ceea ce urmează să i se întâmple."
+msgstr "Ca şi în cazul clonelor, suportarea notificărilor necesită acţiunea <literal>notify</literal> să fie implementată. Odată ce este suportată, acţiunii notify îi vor fi trimise un număr de variabile suplimentare care, când sunt combinate cu un context suplimentar, pot fi folosite pentru a calcula starea curentă a clusterului şi ceea ce urmează să i se întâmple."
 
 #: Ch-Advanced-Resources.xml:682(para)
 msgid "Variables in bold are specific to Master resources and all behave in the same manner as described for Clone resources."
