@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-15 01:11+0200\n"
+"PO-Revision-Date: 2011-10-25 09:02+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #: Ch-Nodes.xml:2(title)
@@ -29,7 +29,7 @@ msgstr "Exemplu de intrare de nod de cluster"
 
 #: Ch-Nodes.xml:12(para)
 msgid "In normal circumstances, the admin should let the cluster populate this information automatically from the communications and membership data. However one can use the crm_uuid tool to read an existing UUID or define a value before the cluster starts."
-msgstr "În circumstanţe normale, admin-ul ar trebui să lase clusterul să populeze această informaţie în mod automat din datele de comunicare şi apartenenţă. Totuşi cineva poate folosi utilitarul crm_uuid pentru a citi un UUID existent sau pentru a defini o valoare înainte ca şi clusterul să pornească."
+msgstr "În circumstanţe normale, admin-ul ar trebui să lase clusterul să populeze această informaţie în mod automat din datele de comunicare şi apartenenţă. Totuşi cineva poate folosi utilitarul crm_uuid pentru a citi un UUID existent sau pentru a defini o valoare înainte să pornească clusterul."
 
 #: Ch-Nodes.xml:18(title)
 msgid "Describing a Cluster Node"
@@ -37,7 +37,7 @@ msgstr "Descrierea unui Nod de Cluster"
 
 #: Ch-Nodes.xml:19(para)
 msgid "Beyond the basic definition of a node, the administrator can also describe the node's attributes, such as how much RAM, disk, what OS or kernel version it has, perhaps even its physical location. This information can then be used by the cluster when deciding where to place resources. For more information on the use of node attributes, see the section on <xref linkend=\"ch-rules\"/>."
-msgstr "Dincolo de definiţia de bază a unui nod, administratorul poate descrie de asemenea şi atributele nodului, cum ar fi cât RAM, disc are, care OS sau versiune de kernel are, poate chiar şi locaţia fizică. Această informaţie poate fi utilizată mai apoi de către cluster când va decide unde să plaseze resursele. Pentru mai multe informaţii referitoare la folosirea atributelor nodului, vedeţi secţiunea despre <xref linkend=\"ch-rules\"/>."
+msgstr "Dincolo de definiţia de bază a unui nod, administratorul poate descrie de asemenea şi atributele nodului, cum ar fi cât de mult RAM, disc are, care OS sau versiune de kernel are, poate chiar şi locaţia fizică. Această informaţie poate fi utilizată mai apoi de către cluster când va decide unde să plaseze resursele. Pentru mai multe informaţii referitoare la folosirea atributelor nodului, vedeţi secţiunea despre <xref linkend=\"ch-rules\"/>."
 
 #: Ch-Nodes.xml:24(para)
 msgid "Node attributes can be specified ahead of time or populated later, when the cluster is running, using <command>crm_attribute</command>."
@@ -66,7 +66,7 @@ msgstr "crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-
 
 #: Ch-Nodes.xml:42(para)
 msgid "By specifying <parameter>--type</parameter> nodes the admin tells the cluster that this attribute is persistent. There are also transient attributes which are kept in the status section which are \"forgotten\" whenever the node rejoins the cluster. The cluster uses this area to store a record of how many times a resource has failed on that node but administrators can also read and write to this section by specifying <parameter>--type status</parameter>."
-msgstr "Prin specificarea <parameter>--type</parameter> noduri administratorul îi spune clusterului că acest atribut este persistent. Există de asemenea atribute tranzitive care sunt păstrate în secţiunea de status şi care sunt \"uitate\" oricând nodul reintră în cluster. Clusterul foloseşte această zonă pentru a stoca o înregistrare despre de câte ori a eşuat o resursă pe acel nod însâ administratorii pot citi şi scrie în această secţiune prin specificarea a <parameter>--type status</parameter>."
+msgstr "Prin specificarea <parameter>--type</parameter> noduri administratorul îi spune clusterului că acest atribut este persistent. Există de asemenea atribute tranzitive care sunt păstrate în secţiunea de status şi care sunt \"uitate\" oricând nodul se realătură clusterului. Clusterul foloseşte această zonă pentru a stoca o înregistrare despre de câte ori a eşuat o resursă pe acel nod însâ administratorii pot citi şi scrie în această secţiune prin specificarea a <parameter>--type status</parameter>."
 
 #: Ch-Nodes.xml:49(title)
 msgid "Adding a New Cluster Node"
@@ -106,13 +106,12 @@ msgid "Removing a Cluster Node"
 msgstr "Înlăturarea unui Nod din Cluster"
 
 #: Ch-Nodes.xml:66(para)
-#, fuzzy
 msgid "Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution. First one must arrange for heartbeat to forget about the node (<replaceable>pcmk-1</replaceable> in the example below)."
-msgstr "Datorită faptului că straturile de mesagerie şi apartenenţă sunt surse autoritative pentru nodurile clusterului, ştergerea acestoa din CIB nu este o soluţie de încredere. Întâi cineva trebuie să facă astfel încât heartbeat să uite de node (<replaceable>pcmk-1</replaceable> în exemplul de mai jos)."
+msgstr "Datorită faptului că straturile de mesagerie şi apartenenţă sunt surse autoritative pentru nodurile clusterului, ştergerea acestoa din CIB nu este o soluţie de încredere. Întâi cineva trebuie să facă astfel încât heartbeat să uite de nod (<replaceable>pcmk-1</replaceable> în exemplul de mai jos)."
 
 #: Ch-Nodes.xml:70(para)
 msgid "On the host to be removed:"
-msgstr "Pe host-ul care va fi înlăturat:"
+msgstr "Pe gazda care va fi înlăturată:"
 
 #: Ch-Nodes.xml:73(para)
 msgid "Find and record the node's Corosync id: <command>crm_node -i</command>"
@@ -128,7 +127,7 @@ msgstr "Ulterior, de pe unul din nodurile rămase active ale clusterului:"
 
 #: Ch-Nodes.xml:82(para)
 msgid "Tell the cluster to forget about the removed host: <command>crm_node -R <replaceable>COROSYNC_ID</replaceable></command>"
-msgstr "Comunicaţi clusterului să uite despre host-ul înlăturat: <command>crm_node -R <replaceable>COROSYNC_ID</replaceable></command>"
+msgstr "Comunicaţi clusterului să uite despre gazda înlăturată: <command>crm_node -R <replaceable>COROSYNC_ID</replaceable></command>"
 
 #: Ch-Nodes.xml:85(para)
 msgid "Only now is it safe to delete the node from the CIB with:"
@@ -149,7 +148,7 @@ msgstr "cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"<p
 
 #: Ch-Nodes.xml:93(para)
 msgid "Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution. First one must arrange for heartbeat to forget about the node (pcmk-1 in the example below). To do this, shut down heartbeat on the node and then, from one of the remaining active cluster nodes, run:"
-msgstr "Datorită faptului că straturile de mesagerie şi apartenenţă sunt surse autoritative pentru nodurile clusterului, ştergerea acestoa din CIB nu este o soluţie de încredere. Întâi cineva trebuie să facă astfel încât heartbeat să uite de node (<replaceable>pcmk-1</replaceable> în exemplul de mai jos). Pentru a realiza acest lucru, opriţi heartbeat pe nod şi apoi, de pe unul din nodurile rămase active în cluster, rulaţi:"
+msgstr "Datorită faptului că straturile de mesagerie şi apartenenţă sunt surse autoritative pentru nodurile clusterului, ştergerea acestoa din CIB nu este o soluţie de încredere. Întâi cineva trebuie să facă astfel încât heartbeat să uite de nod (<replaceable>pcmk-1</replaceable> în exemplul de mai jos). Pentru a realiza acest lucru, opriţi heartbeat pe nod şi apoi, de pe unul din nodurile rămase active în cluster, rulaţi:"
 
 #: Ch-Nodes.xml:98(command)
 msgid "hb_delnode pcmk-1"
