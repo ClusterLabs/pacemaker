@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-15 02:10+0200\n"
+"PO-Revision-Date: 2011-10-25 04:54+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #. When image changes, this message will be marked fuzzy or untranslated for you.
@@ -45,12 +45,11 @@ msgstr "Scoruri"
 
 #: Ch-Constraints.xml:4(para)
 msgid "Scores of all kinds are integral to how the cluster works. Practically everything from moving a resource to deciding which resource to stop in a degraded cluster is achieved by manipulating scores in some way."
-msgstr "Scorurile de toate tipurile sunt parte din cum funcţionează clusterul. Practic orice de la mutarea unei resurse la a decide care resursă să fie oprită într-un cluster degradat este atinsă prin manipularea scorurilor în vreun fel."
+msgstr "Scorurile de toate tipurile sunt parte integrală din cum funcţionează clusterul. Practic orice de la mutarea unei resurse la a decide care resursă să fie oprită într-un cluster degradat este atinsă prin manipularea scorurilor în vreun fel."
 
 #: Ch-Constraints.xml:8(para)
-#, fuzzy
 msgid "Scores are calculated on a per-resource basis and any node with a negative score for a resource can't run that resource. After calculating the scores for a resource, the cluster then chooses the node with the highest one."
-msgstr "Scorurile sunt calculate la nivel de resursă şi orice nod cu un scor negativ pentru o resursă nu poate rula acea resursă. După calcularea scorurilor pentru o resursă, clusterul alege apoi nodul cu scorul cel mai mare."
+msgstr "Scorurile sunt calculate la nivel de resursă şi orice nod cu un scor negativ pentru o resursă nu poate rula acea resursă. După calcularea scorurilor pentru o resursă, clusterul alege mai apoi nodul cu scorul cel mai mare."
 
 #: Ch-Constraints.xml:13(title)
 msgid "Infinity Math"
@@ -78,7 +77,7 @@ msgstr "Decizând pe Care Noduri Poate Rula o Resursă"
 
 #: Ch-Constraints.xml:24(para)
 msgid "There are two alternative strategies for specifying which nodes a resources can run on. One way is to say that by default they can run anywhere and then create location constraints for nodes that are not allowed. The other option is to have nodes \"opt-in\"... to start with nothing able to run anywhere and selectively enable allowed nodes."
-msgstr "Sunt două strategii pe alternative pentru specificarea nodurilor pe care poate rula o resursă. Un mod este acela de a spune că în mod implicit acestea pot rula oriunde şi apoi să se creeze restricţii de locaţie pentru nodurile pe care acestea nu sunt permise. Cealaltă opţiune este cea de \"opt-in\" ... a porni cu a nu permite la nimic de a rula nicăieri şi de a activa în mod selectiv nodurile permise."
+msgstr "Sunt două strategii pe alternative pentru specificarea nodurilor pe care poate rula o resursă. Un mod este acela de a spune că în mod implicit acestea pot rula oriunde şi apoi să se creeze restricţii de locaţie pentru nodurile pe care acestea nu sunt permise. Cealaltă opţiune este cea de \"opt-in\" ... de a porni cu nimic fiind permis de a rula nicăieri şi de a activa în mod selectiv nodurile permise."
 
 #: Ch-Constraints.xml:31(title)
 #: Ch-Constraints.xml:224(title)
@@ -152,7 +151,7 @@ msgstr "Clustere Asimetrice \"Opt-In\""
 
 #: Ch-Constraints.xml:62(para)
 msgid "To create an opt-in cluster, start by preventing resources from running anywhere by default"
-msgstr "Pentru a crea un cluster opt-in, porniţi de la a împiedica resursele din a rula oriunde cum fac în mod implicit"
+msgstr "Pentru a crea un cluster opt-in, porniţi prin a împiedica resursele din a rula oriunde în mod implicit"
 
 #: Ch-Constraints.xml:63(command)
 msgid "crm_attribute --attr-name symmetric-cluster --attr-value false"
@@ -172,7 +171,7 @@ msgstr "Clustere Simetrice \"Opt-Out\""
 
 #: Ch-Constraints.xml:84(para)
 msgid "To create an opt-out cluster, start by allowing resources to run anywhere by default"
-msgstr "Pentru a crea un cluster opt-out, începem prin a permite resurselor să ruleze oriunde în mod implicit"
+msgstr "Pentru a crea un cluster opt-out, începeţi prin a permite resurselor să ruleze oriunde în mod implicit"
 
 #: Ch-Constraints.xml:85(command)
 msgid "crm_attribute --attr-name symmetric-cluster --attr-value true"
@@ -180,7 +179,7 @@ msgstr "crm_attribute --attr-name symmetric-cluster --attr-value true"
 
 #: Ch-Constraints.xml:86(para)
 msgid "Then start disabling nodes. The following fragment is the equivalent of the above opt-in configuration."
-msgstr "Apoi Începeţi să dezactivaţi noduri. Următorul fragment este echivalentul configuraţiei opt-in de mai sus."
+msgstr "Apoi începeţi să dezactivaţi noduri. Următorul fragment este echivalentul configuraţiei opt-in de mai sus."
 
 #: Ch-Constraints.xml:91(title)
 msgid "Example set of opt-out location constraints"
@@ -188,7 +187,7 @@ msgstr "Exemplu de restricţii de locaţie opt-out"
 
 #: Ch-Constraints.xml:103(para)
 msgid "Whether you should choose opt-in or opt-out depends both on your personal preference and the make-up of your cluster. If most of your resources can run on most of the nodes, then an opt-out arrangement is likely to result in a simpler configuration. On the other-hand, if most resources can only run on a small subset of nodes an opt-in configuration might be simpler."
-msgstr "Fie că ar trebui să alegeţi opt-in sau opt-out depinde atât de preferinţele personale cât şi de structura clusterului. Dacă majoritatea resurselor pot rula pe majoritatea nodurilor, atunci un aranjament opt-out va rezulta într-o configuraţie mai simplă. Pe partea cealaltă, dacă majoritatea resurselor pot rula doar pe un subset mic de noduri o configuraţie opt-in ar putea fi mai simplă."
+msgstr "Fie că ar trebui să alegeţi opt-in sau opt-out depinde atât de preferinţele voastre personale cât şi de structura clusterului vostru. Dacă majoritatea resurselor pot rula pe majoritatea nodurilor, atunci un aranjament opt-out va rezulta într-o configuraţie mai simplă. Pe partea cealaltă, dacă majoritatea resurselor pot rula doar pe un subset mic de noduri o configuraţie opt-in ar putea fi mai simplă."
 
 #: Ch-Constraints.xml:110(title)
 msgid "What if Two Nodes Have the Same Score"
@@ -288,7 +287,7 @@ msgstr "Informaţii adiţionale despre restricţiile de ordonare pot fi găsite 
 
 #: Ch-Constraints.xml:208(title)
 msgid "Placing Resources Relative to other Resources"
-msgstr "Plasarea Resurselor Relativ la alte Resurse"
+msgstr "Plasarea Resurselor Relativă la alte Resurse"
 
 #: Ch-Constraints.xml:209(para)
 msgid "When the location of one resource depends on the location of another one, we call this colocation."
@@ -336,7 +335,7 @@ msgstr "Plasamentul obligatoriu se întâmplă oricând scorul restricţiei este
 
 #: Ch-Constraints.xml:262(para)
 msgid "If you need resource1 to always run on the same machine as resource2, you would add the following constraint:"
-msgstr "Dacă aveţi nevoie ca resursa1 să ruleze întotdeauna pe aceeaşi maşină ca şi resursa2, aţi adăuga următoarea restricţie:"
+msgstr "Dacă aveţi nevoie ca resource1 să ruleze întotdeauna pe aceeaşi maşină ca şi resource2, aţi adăuga următoarea restricţie:"
 
 #: Ch-Constraints.xml:264(title)
 msgid "An example colocation constraint"
@@ -355,11 +354,11 @@ msgstr ""
 
 #: Ch-Constraints.xml:269(para)
 msgid "Remember, because <literal>INFINITY</literal> was used, if resource2 can't run on any of the cluster nodes (for whatever reason) then resource1 will not be allowed to run."
-msgstr "Ţineţi minte, datorită faptului că <literal>INFINITY</literal> a fost folosit, dacă resursa2 nu poate rula pe nici unul din nodurile clusterului (indiferent de motiv) atunci resursei1 nu îi va fi permis să ruleze."
+msgstr "Ţineţi minte, datorită faptului că <literal>INFINITY</literal> a fost folosit, dacă resursa2 nu poate rula pe nici unul din nodurile clusterului (indiferent de motiv) atunci resource1 nu îi va fi permis să ruleze."
 
 #: Ch-Constraints.xml:270(para)
 msgid "Alternatively, you may want the opposite... that resource1 cannot run on the same machine as resource2. In this case use <literal>score=\"-INFINITY\"</literal>"
-msgstr "Alternativ, aţi putea dori opusul... ca resursa1 să nu poată rula pe aceeaşi maşină ca resursa2. În acest caz folosiţi <literal>scor=\"-INFINITY\"</literal>"
+msgstr "Alternativ, aţi putea dori opusul... ca resource1 să nu poată rula pe aceeaşi maşină ca resource2. În acest caz folosiţi <literal>scor=\"-INFINITY\"</literal>"
 
 #: Ch-Constraints.xml:276(title)
 msgid "An example anti-colocation constraint"
@@ -377,17 +376,14 @@ msgstr ""
 "\t  "
 
 #: Ch-Constraints.xml:281(para)
-#, fuzzy
 msgid "Again, by specifying <literal>-INFINTY</literal>, the constraint is binding. So if the only place left to run is where resource2 already is, then resource1 may not run anywhere."
-msgstr "Din nou, specificând <literal>-INFINTY</literal>, restricţia este binding. Deci singurul loc rămas pentru a rula este cel unde resursa2 este deja, atunci resursa1 nu poate rula nicăieri."
+msgstr "Din nou, specificând <literal>-INFINTY</literal>, restricţia este imutabilă. Deci singurul loc rămas pentru a rula este cel unde resource2 este deja, atunci resource1 nu poate rula nicăieri."
 
 #: Ch-Constraints.xml:287(title)
-#, fuzzy
 msgid "Advisory Placement"
 msgstr "Plasament Recomandat"
 
 #: Ch-Constraints.xml:288(para)
-#, fuzzy
 msgid "If mandatory placement is about \"must\" and \"must not\", then advisory placement is the \"I'd prefer if\" alternative. For constraints with scores greater than <literal>-INFINITY</literal> and less than <literal>INFINITY</literal>, the cluster will try and accommodate your wishes but may ignore them if the alternative is to stop some of the cluster resources."
 msgstr "Dacă plasamentul obligatoriu se referă la \"trebuie\" şi \"nu trebuie\", atunci plasamentul recomandat este alternativa \"aş prefera dacă\". Pentru restricţii cu scoruri mai mari decât <literal>-INFINITY</literal> şi mai mici decât <literal>INFINITY</literal>, clusterul va încerca să acomodeze dorinţele voastre dar le-ar putea ignora dacă alternativa este să oprească unele din resursele clusterului."
 
@@ -484,7 +480,7 @@ msgstr "Colocarea Seturilor de Resurse"
 
 #: Ch-Constraints.xml:431(para)
 msgid "Another common situation is for an administrator to create a set of collocated resources. Previously this was possible either by defining a resource group (See <xref linkend=\"group-resources\"/>) which could not always accurately express the design; or by defining each relationship as an individual constraint, causing a constraint explosion as the number of resources and combinations grew."
-msgstr "O altă situaţie comună este ca un administrator să creeze un set de resurse colocate. Anterior acest lucru era posibil fie prin definirea unui grup de resurse (Vezi <xref linkend=\"group-resources\"/>) care nu putea întotdeauna să exprime design-ul în mod corect, sau prin definirea fiecărei relaţii ca o restricţie individuală, cauzând o explozie de restricţii pe măsură ce numărul resurselor şi al combinaţiilor creştea."
+msgstr "O altă situaţie comună este ca un administrator să creeze un set de resurse colocate. Anterior acest lucru era posibil fie prin definirea unui grup de resurse (Vedeţi <xref linkend=\"group-resources\"/>) care nu putea întotdeauna să exprime design-ul în mod corect; sau prin definirea fiecărei relaţii ca o restricţie individuală, cauzând o explozie de restricţii pe măsură ce numărul resurselor şi al combinaţiilor creştea."
 
 #: Ch-Constraints.xml:436(title)
 msgid "A chain of collocated resources"
@@ -492,11 +488,11 @@ msgstr "Un lanţ de resurse colocate"
 
 #: Ch-Constraints.xml:447(para)
 msgid "To make things easier, we allow an alternate form of colocation constraints using resource_sets. Just like the expanded version, a resource that can't be active also prevents any resource that must be collocated with it from being active. For example if B was not able to run, then both C (and by inference D) must also remain stopped."
-msgstr "Pentru a face lucrurile mai uşoare, permitem o altă formă de restricţii de colocare folosind seturi_de_resurse. La fel ca şi versiunea extinsă, o resursă care nu poate fi activă împiedică de asemenea orice resursă care trebuie colocată cu aceasta de a fi activă. De exemplu dacă B nu era capabil să ruleze, atât C (şi prin inferenţă D) trebuie să rămână oprite."
+msgstr "Pentru a face lucrurile mai uşoare, permitem o altă formă de restricţii de colocare folosind resource_sets (seturi de resurse). La fel ca şi versiunea extinsă, o resursă care nu poate fi activă împiedică de asemenea orice resursă care trebuie colocată cu aceasta de a fi activă. De exemplu dacă B nu era capabil să ruleze, atunci atât C (şi prin alianţă D) trebuie să rămână oprite."
 
 #: Ch-Constraints.xml:453(title)
 msgid "The equivalent colocation chain expressed using resource_sets"
-msgstr "Lanţul echivalent de restricţii de colocare exprimat folosind seturi_de_resurse"
+msgstr "Lanţul echivalent de restricţii de colocare exprimat folosind resource_sets"
 
 #: Ch-Constraints.xml:469(para)
 msgid "Resource sets have the same colocation semantics as groups."
@@ -516,7 +512,7 @@ msgstr "Folosirea seturilor de colocare pentru a specifica un nod comun."
 
 #: Ch-Constraints.xml:506(para)
 msgid "Of course there is no limit to the number and size of the sets used. The only thing that matters is that in order for any member of set N to be active, all the members of set N+1 must also be active (and naturally on the same node), and that if a set has <literal>sequential=\"true\"</literal>, then in order for member M to be active, member M+1 must also be active. You can even specify the role in which the members of a set must be in using the set's role attribute."
-msgstr "Desigur nu există nici o limită asupra numărului şi mărimii seturilor folosite. Singurul lucru care contează este ca pentru orice membru al setului N să fie activ, toţi membrii setului N+1 trebuie să fie activi de asemenea (şi evident pe acelaşi nod), şi dacă un set are <literal>sequential=\"true\"</literal>, atunci pentru ca membrul M să fie activ, membrul M+1 trebuie să fie activ de asemenea. Puteţi specifica chiar rolul în care membrii unui set trebuie să fie foloind atributele de rol ale setului."
+msgstr "Desigur nu există nici o limită asupra numărului şi mărimii seturilor folosite. Singurul lucru care contează este ca pentru orice membru al setului N să fie activ, toţi membrii setului N+1 trebuie să fie activi de asemenea (şi evident pe acelaşi nod) şi dacă un set are <literal>sequential=\"true\"</literal>, atunci pentru ca membrul M să fie activ, membrul M+1 trebuie să fie activ de asemenea. Puteţi specifica chiar rolul în care membrii unui set trebuie să fie folosind atributele de rol ale setului."
 
 #: Ch-Constraints.xml:512(title)
 msgid "A colocation chain where the members of the middle set have no inter-dependencies and the last has master status."
