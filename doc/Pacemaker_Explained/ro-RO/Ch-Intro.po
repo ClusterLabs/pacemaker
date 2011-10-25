@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-18 23:16+0200\n"
+"PO-Revision-Date: 2011-10-25 08:09+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #. When image changes, this message will be marked fuzzy or untranslated for you.
@@ -77,7 +77,7 @@ msgstr "Ce este Pacemaker?"
 
 #: Ch-Intro.xml:22(para)
 msgid "Pacemaker is a cluster resource manager. It achieves maximum availability for your cluster services (aka. resources) by detecting and recovering from node and resource-level failures by making use of the messaging and membership capabilities provided by your preferred cluster infrastructure (either <ulink url=\"http://www.corosync.org/\">Corosync</ulink> or Heartbeat)."
-msgstr "Pacemaker este un manager de resurse de custer. Atinge disponibilitatea maximă pentru serviciile voastre de cluster (a.k.a. resursele) prin detectarea şi recuperarea din eşecuri la nivel de nod sau de resursă prin folosirea capabilităţilor de mesagerie şi apartenenţă furnizate de infrastructura de cluster preferată (fie <ulink url=\"http://www.corosync.org/\">Corosync</ulink> sau Heartbeat)."
+msgstr "Pacemaker este un gestionar de resurse de cluster. Atinge disponibilitatea maximă pentru serviciile voastre de cluster (resursele) prin detectarea şi recuperarea din eşecuri la nivel de nod sau de resursă prin folosirea capabilităţilor de mesagerie şi apartenenţă furnizate de infrastructura de cluster preferată (fie <ulink url=\"http://www.corosync.org/\">Corosync</ulink> sau Heartbeat)."
 
 #: Ch-Intro.xml:26(para)
 msgid "Pacemaker's key features include:"
@@ -121,7 +121,7 @@ msgstr "Abilitatea de a specifica ordonare, colocare şi anti-colocare la nivelu
 
 #: Ch-Intro.xml:39(para)
 msgid "Clones: for services which need to be active on multiple nodes"
-msgstr "Clone: pentru servicii care trebuie să fie activ pe mai multe noduri"
+msgstr "Clone: pentru servicii care trebuie să fie active pe mai multe noduri"
 
 #: Ch-Intro.xml:40(para)
 msgid "Multi-state: for services with multiple modes (eg. master/slave, primary/secondary)"
@@ -177,16 +177,15 @@ msgstr "La cel mai înalt nivel, clusterul este compus din trei părţi:"
 
 #: Ch-Intro.xml:91(para)
 msgid "Core cluster infrastructure providing messaging and membership functionality (illustrated in red)"
-msgstr "Nucleul infrastructurii de cluster care furnizează funcţionalitatea de mesagerie şi apartenenţă (ilustrată cu roşu="
+msgstr "Nucleul infrastructurii de cluster care furnizează funcţionalitatea de mesagerie şi apartenenţă (ilustrată cu roşu)"
 
 #: Ch-Intro.xml:94(para)
 msgid "Non-cluster aware components (illustrated in blue). In a Pacemaker cluster, these pieces include not only the scripts that knows how to start, stop and monitor resources, but also a local daemon that masks the differences between the different standards these scripts implement."
-msgstr "Componente fără apartenenţă la cluster (ilustrate în albastru). Într-un cluster Pacemaker, aceste părţi includ nu numai scripturile care ştiu să pornească, oprească şi să monitorizeze resurse, dar şi daemonii locali care maschează diferenţele între standardele diferite pe care aceste scripturi le implementează."
+msgstr "Componente fără apartenenţă la cluster (ilustrate în albastru). Într-un cluster Pacemaker, aceste părţi includ nu numai scripturile care ştiu să pornească, oprească şi să monitorizeze resurse, dar şi un daemon local care maschează diferenţele între standardele diferite pe care aceste scripturi le implementează."
 
 #: Ch-Intro.xml:98(para)
-#, fuzzy
 msgid "A brain (illustrated in green) that processes and reacts to events from the cluster (nodes leaving or joining) and resources (eg. monitor failures) as well as configuration changes from the administrator. In response to all of these events, Pacemaker will compute the ideal state of the cluster and plot a path to achieve it. This may include moving resources, stopping nodes and even forcing them offline with remote power switches."
-msgstr "Un creier (ilustrat cu verde) care procesează şi reacţionează la evenimente din partea clusterului (noduri care pleacă sau vin) şi resursele (ex. eşecuri de monitorizare) la fel ca şi schimbări de configuraţie din partea administratorului. Ca răspuns la aceste evenimente, Pacemaker va calcula starea ideală a clusterului şi va urma o cale de a atinge ţelul. Acest lucru ar putea include mutarea resurselor, oprirea nodurilor sau chiar oprirea acestora forţat cu switch-uri de curent la distanţă."
+msgstr "Un creier (ilustrat cu verde) care procesează şi reacţionează la evenimente din partea clusterului (noduri care pleacă sau se alătură) şi resursele (ex. eşecuri de monitorizare) la fel ca şi schimbări de configuraţie din partea administratorului. Ca răspuns la aceste evenimente, Pacemaker va calcula starea ideală a clusterului şi va cartografia o cale de a atinge ţelul. Acest lucru ar putea include mutarea resurselor, oprirea nodurilor sau chiar oprirea acestora forţat cu switch-uri de curent la distanţă."
 
 #: Ch-Intro.xml:106(title)
 msgid "Conceptual Stack Overview"
@@ -202,7 +201,7 @@ msgstr "Deşi Pacemaker suportă şi Heartbeat, sistemele de fişiere care trebu
 
 #: Ch-Intro.xml:115(para)
 msgid "When combined with Corosync, Pacemaker also supports popular open source cluster filesystems <placeholder-1/> Due to recent standardization within the cluster filesystem community, they make use of a common distributed lock manager which makes use of Corosync for its messaging capabilities and Pacemaker for its membership (which nodes are up/down) and fencing services."
-msgstr "În combinaţie cu Corosync, Pacemaker suportă de asemenea sistemele de fişiere de cluster populare open source <placeholder-1/> Datorită standardizării recente dinăuntrul comunităţii de sisteme de fişiere de cluster, acestea folosesc un manager de blocare distribuit care foloseşte la rândul său Corosyn pentru capabilităţile acestuia de mesagerie şi Pacemaker pentru apartenenţă (care noduri sunt funcţionale şi care nu) şi servicii de evacuare."
+msgstr "În combinaţie cu Corosync, Pacemaker suportă de asemenea sistemele de fişiere de cluster populare open source <placeholder-1/> Datorită standardizării recente dinăuntrul comunităţii de sisteme de fişiere de cluster, acestea folosesc un manager de blocare distribuit care foloseşte la rândul său Corosync pentru capabilităţile acestuia de mesagerie şi Pacemaker pentru apartenenţă (care noduri sunt funcţionale şi care nu) şi pentru servicii de evacuare."
 
 #: Ch-Intro.xml:126(title)
 msgid "The Pacemaker Stack"
@@ -219,7 +218,7 @@ msgstr "Componente Interne"
 
 #: Ch-Intro.xml:137(para)
 msgid "Pacemaker itself is composed of four key components (illustrated below in the same color scheme as the previous diagram):"
-msgstr "Pacemaker însuşi este compus din patru componente (ilustrate mai jos cu aceeaşi schemă de culori ca şi în diagrama anterioară):"
+msgstr "Pacemaker însuşi este compus din patru componente cheie (ilustrate mai jos cu aceeaşi schemă de culori ca şi în diagrama anterioară):"
 
 #: Ch-Intro.xml:139(para)
 msgid "CIB (aka. Cluster Information Base)"
@@ -231,7 +230,7 @@ msgstr "CRMd (aka. Cluster Resource Management daemon)"
 
 #: Ch-Intro.xml:141(para)
 msgid "PEngine (aka. PE or Policy Engine)"
-msgstr "PEngine (aka. PE or Policy Engine)"
+msgstr "PEngine (aka. PE sau Policy Engine)"
 
 #: Ch-Intro.xml:142(para)
 msgid "STONITHd"
@@ -246,18 +245,16 @@ msgid "The CIB uses XML to represent both the cluster's configuration and curren
 msgstr "CIB-ul foloseşte XML pentru a reprezenta atât configuraţia clusterului cât şi starea curentă a tuturor resurselor din cluster. Conţinutul CIB-ului este ţinut sincronizat în mod automat pe tot clusterul şi este folosit de către PEngine pentru a calcula starea ideală a clusterului şi de a arăta cum poate fi atinsă."
 
 #: Ch-Intro.xml:159(para)
-#, fuzzy
 msgid "This list of instructions is then fed to the DC (Designated Co-ordinator). Pacemaker centralizes all cluster decision making by electing one of the CRMd instances to act as a master. Should the elected CRMd process, or the node it is on, fail... a new one is quickly established."
-msgstr "Lista de instrucţiuni este apoi dată către DC (Coordonatorul Desemnat). Pacemaker centralizează toate deciziile clusterului prin alegerea uneia dintre instanţele de CRMd de a se comporta ca master. Dacă procesul ales de CRMd sau nodul pe care acesta există eşuează ... unul nou este stabilit repede."
+msgstr "Lista de instrucţiuni este apoi furnizată către DC (Coordonatorul Desemnat). Pacemaker centralizează toate deciziile clusterului prin alegerea uneia dintre instanţele de CRMd de a se comporta ca master. Dacă procesul ales de CRMd sau nodul pe care acesta există eşuează ... unul nou este stabilit repede."
 
 #: Ch-Intro.xml:165(para)
 msgid "The DC carries out the PEngine's instructions in the required order by passing them to either the LRMd (Local Resource Management daemon) or CRMd peers on other nodes via the cluster messaging infrastructure (which in turn passes them on to their LRMd process)."
-msgstr "DC-ul îndeplineşte instrucţiunile PEngine-ului în ordinea necesară prin pasarea acestora către fie LRMd (Local Resource Managemen daemon) fie altor noduri pe care rulează CRMd prin infrastructura de mesagerie (care la rândul ei le pasează către procesul lor LRMd)."
+msgstr "DC-ul îndeplineşte instrucţiunile PEngine-ului în ordinea necesară prin pasarea acestora fie către LRMd (Local Resource Managemen daemon) fie altor noduri pe care rulează CRMd prin infrastructura de mesagerie a clusterului (care la rândul ei le pasează către procesul lor LRMd)."
 
 #: Ch-Intro.xml:166(para)
-#, fuzzy
 msgid "The peer nodes all report the results of their operations back to the DC and based on the expected and actual results, will either execute any actions that needed to wait for the previous one to complete, or abort processing and ask the PEngine to recalculate the ideal cluster state based on the unexpected results."
-msgstr "Nodurile peer toate raportează resultatele operaţiunilor înapoi către DC şi pe baza rezultatelor aşteptate şi a rezultatelor actuale, fie va executa acţiuni care necesitau să aştepte ca şi cele anterioare să termine, sau va anula procesarea şi va ruga PEngine-ul să recalculeze starea ideală a clusterului pe baza rezultatelor neaşteptate."
+msgstr "Nodurile vecine raportează toate rezultatele operaţiunilor înapoi către DC şi pe baza rezultatelor aşteptate şi a rezultatelor actuale, fie va executa acţiuni care necesitau să aştepte ca şi cele anterioare să termine, sau va anula procesarea şi va ruga PEngine-ul să recalculeze starea ideală a clusterului pe baza rezultatelor neaşteptate."
 
 #: Ch-Intro.xml:167(para)
 msgid "In some cases, it may be necessary to power off nodes in order to protect shared data or complete resource recovery. For this Pacemaker comes with STONITHd. STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and is usually implemented with a remote power switch. In Pacemaker, STONITH devices are modeled as resources (and configured in the CIB) to enable them to be easily monitored for failure, however STONITHd takes care of understanding the STONITH topology such that its clients simply request a node be fenced and it does the rest."
