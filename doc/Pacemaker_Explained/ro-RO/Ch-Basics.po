@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-11 10:15+0200\n"
+"PO-Revision-Date: 2011-10-25 03:36+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #. When image changes, this message will be marked fuzzy or untranslated for you.
@@ -28,21 +28,20 @@ msgid "Configuration Basics"
 msgstr "Bazele Configurării"
 
 #: Ch-Basics.xml:3(title)
-#, fuzzy
 msgid "Configuration Layout"
 msgstr "Aşezarea Configuraţiei"
 
 #: Ch-Basics.xml:4(para)
-msgid "The cluster is written using XML notation and divided into two main sections; configuration and status."
-msgstr "Clusterul este scris folosind notaţie XML şi este împărţit în două secţiuni principale; configurare şi status."
+msgid "The cluster is written using XML notation and divided into two main sections: configuration and status."
+msgstr "Clusterul este scris folosind notaţie XML şi este împărţit în două secţiuni principale: configurare şi status."
 
 #: Ch-Basics.xml:5(para)
 msgid "The status section contains the history of each resource on each node and based on this data, the cluster can construct the complete current state of the cluster. The authoritative source for the status section is the local resource manager (lrmd) process on each cluster node and the cluster will occasionally repopulate the entire section. For this reason it is never written to disk and admin's are advised against modifying it in any way."
-msgstr "Secţiunea de status conţine istoricul fiecărei resurse de pe fiecare nod şi pe baza acestor date, clusterul poate construi starea completă a clusterului. Sursa autoritativă pentru secţiunea de status este procesul managerului de resurse local (lrmd) pe fiecare nod iar clusterul va repopula în mod ocazional întreaga secţiune. Din acest motiv nu este scris niciodată pe disc iar administratorii sunt sfătuiţi împotriva modificării în orice fel a acestuia."
+msgstr "Secţiunea de status conţine istoricul fiecărei resurse de pe fiecare nod şi pe baza acestor date, clusterul poate construi starea curentă completă a clusterului. Sursa autoritativă pentru secţiunea de status este procesul managerului de resurse local (lrmd) pe fiecare nod din cluster iar clusterul va repopula în mod ocazional întreaga secţiune. Din acest motiv nu este scris niciodată pe disc iar administratorii sunt sfătuiţi împotriva modificării în orice fel a acestuia."
 
 #: Ch-Basics.xml:10(para)
 msgid "The configuration section contains the more traditional information like cluster options, lists of resources and indications of where they should be placed. The configuration section is the primary focus of this document."
-msgstr "Secţiunea de configurare conţine informaţii mai tradiţionale precum opţiuni ale clusterului, liste de resurse şi indicări despre unde ar trebui acestea plasate. Secţiunea de configurare este scopul primar al acestui document."
+msgstr "Secţiunea de configurare conţine informaţiile mai tradiţionale precum opţiuni ale clusterului, liste de resurse şi indicaţii despre unde ar trebui acestea plasate. Secţiunea de configurare este scopul primar al acestui document."
 
 #: Ch-Basics.xml:14(para)
 msgid "The configuration section itself is divided into four parts:"
@@ -70,12 +69,11 @@ msgstr "O configuraţie goală"
 
 #: Ch-Basics.xml:39(title)
 msgid "The Current State of the Cluster"
-msgstr "Starea Cuirentă a Clusterului"
+msgstr "Starea Curentă a Clusterului"
 
 #: Ch-Basics.xml:40(para)
-#, fuzzy
 msgid "Before one starts to configure a cluster, it is worth explaining how to view the finished product. For this purpose we have created the <command>crm_mon</command> utility that will display the current state of an active cluster. It can show the cluster status by node or by resource and can be used in either single-shot or dynamically-updating mode. There are also modes for displaying a list of the operations performed (grouped by node and resource) as well as information about failures."
-msgstr "Înainte de a începe să configurăm clusterul, merită explicat cum să vizualizăm produsul finit. Pentru acest scop am creat utilitarul <command>crm_mon</command> care va arăta starea curentă a unui cluster activ. Poate arăta status-ul clusterului după nod sau după resurse şi poate fi folosit fie în mod single-shot sau dynamically-updating. Sunt moduri pentru prezentarea unei liste de operaţiuni efectuate (grupată după nod si resursă) şi informaţii despre eşecuri de asemenea."
+msgstr "Înainte de a începe să configurăm clusterul, merită explicat cum să vizualizăm produsul finit. Pentru acest scop am creat utilitarul <command>crm_mon</command> care va arăta starea curentă a unui cluster activ. Poate arăta status-ul clusterului după nod sau după resurse şi poate fi folosit fie în mod single-shot sau dynamically-updating. Sunt moduri pentru prezentarea unei liste de operaţiuni efectuate (grupată după nod si resursă) precum şi informaţii despre eşecuri."
 
 #: Ch-Basics.xml:46(para)
 msgid "Using this tool, you can examine the state of the cluster for irregularities and see how it responds when you cause or simulate failures."
@@ -87,7 +85,7 @@ msgstr "Detalii despre toate opţiunile disponibile pot fi obţinute folosind co
 
 #: Ch-Basics.xml:49(title)
 msgid "Sample output from crm_mon"
-msgstr "Mostră de rezultat obţinut din crm_mon"
+msgstr "Exemplu de rezultat obţinut din crm_mon"
 
 #: Ch-Basics.xml:51(command)
 msgid "# crm_mon"
@@ -140,7 +138,7 @@ msgstr ""
 
 #: Ch-Basics.xml:72(title)
 msgid "Sample output from crm_mon -n"
-msgstr "Mostră de rezultat obţinut din crm_mon -n"
+msgstr "Exemplu de rezultat obţinut din crm_mon -n"
 
 #: Ch-Basics.xml:74(command)
 msgid "# crm_mon -n"
@@ -201,7 +199,7 @@ msgstr ""
 
 #: Ch-Basics.xml:98(para)
 msgid "The DC (Designated Controller) node is where all the decisions are made and if the current DC fails a new one is elected from the remaining cluster nodes. The choice of DC is of no significance to an administrator beyond the fact that its logs will generally be more interesting."
-msgstr "Nodul CD (Controller Desemnat) este locul unde toate deciziile sunt luate şi dacă DC-ul eşuează unul nou este ales din nodurile rămase în cluster. Alegerea unui DC nu are nici o semnificaţie pentru administrator dincolo de faptul că logurile acestuia vor fi în general mai interesante."
+msgstr "Nodul DC (Desemnat Controlor) este locul unde toate deciziile sunt luate şi dacă DC-ul curent eşuează unul nou este ales din nodurile rămase în cluster. Alegerea unui DC nu are nici o semnificaţie pentru administrator dincolo de faptul că logurile acestuia vor fi în general mai interesante."
 
 #: Ch-Basics.xml:104(title)
 msgid "How Should the Configuration be Updated?"
@@ -220,7 +218,6 @@ msgid "Rule 2 - Read Rule 1 again."
 msgstr "Regula 2 - Citiţi Regula 1 din nou."
 
 #: Ch-Basics.xml:109(para)
-#, fuzzy
 msgid "Rule 3 - The cluster will notice if you ignored rules 1 &amp; 2 and refuse to use the configuration."
 msgstr "Regula 3 - Clusterul va detecta că aţi ignorat regulile 1 &amp; 2 şi va refuza să folosească configuraţia."
 
@@ -230,7 +227,7 @@ msgstr "Acum că este clar cum să NU actualizăm configuraţia, putem începe s
 
 #: Ch-Basics.xml:112(para)
 msgid "The most powerful tool for modifying the configuration is the cibadmin command which talks to a running cluster. With cibadmin, the user can query, add, remove, update or replace any part of the configuration and all changes take effect immediately so there is no need to perform a reload-like operation."
-msgstr "Cea mai puternică uneaktă pentru modificarea configuraţiei este comanda cibadmin care comunică cu un cluster funcţional. Cu cibadmin, utilizatorul poate interoga, adăuga, înlătura, actualiza sau înlocui orice parte a configuraţiei şi toate modificările au efect imediat aşa că nu este necesar să executaţi operaţiuni de tip reload."
+msgstr "Cea mai puternică unealtă pentru modificarea configuraţiei este comanda cibadmin care comunică cu un cluster funcţional. Cu cibadmin, utilizatorul poate interoga, adăuga, înlătura, actualiza sau înlocui orice parte a configuraţiei şi toate modificările iau efect imediat aşa că nu este necesar să executaţi operaţiuni de tip reîncărcare."
 
 #: Ch-Basics.xml:116(para)
 msgid "The simplest way of using cibadmin is to use it to save the current configuration to a temporary file, edit that file with your favorite text or XML editor and then upload the revised configuration."
@@ -238,7 +235,7 @@ msgstr "Cel  mai simplu mod de a folosi cibadmin este de a-l folosi pentru a sal
 
 #: Ch-Basics.xml:118(title)
 msgid "Safely using an editor to modify the cluster configuration"
-msgstr "Folosind cu siguranţă un editor pentru a modifica configuraţia clusterlui"
+msgstr "Folosind cu siguranţă un editor pentru a modifica configuraţia clusterului"
 
 #: Ch-Basics.xml:120(command)
 msgid "cibadmin --query &gt; tmp.xml"
@@ -259,11 +256,11 @@ msgstr "Unele dintre editoarele mai bune de XML pot folosi schema Relax NG pentr
 
 #: Ch-Basics.xml:129(para)
 msgid "If you only wanted to modify the resources section, you could instead do"
-msgstr "Dacă aţi dorit doar să modificaţi secţiunea de resurse, aţi putea alternativ să executaţi"
+msgstr "Dacă aţi dorit să modificaţi doar secţiunea de resurse, aţi putea alternativ să executaţi"
 
 #: Ch-Basics.xml:131(title)
 msgid "Safely using an editor to modify a subsection of the cluster configuration"
-msgstr "Folosind cu siguranţă un editor pentru a modifica configuraţia clusterlui"
+msgstr "Folosind cu siguranţă un editor pentru a modifica o subsecţiune din configuraţia clusterlui"
 
 #: Ch-Basics.xml:133(command)
 msgid "cibadmin --query --obj_type resources &gt; tmp.xml"
@@ -294,7 +291,7 @@ msgid "# cibadmin -Q | grep stonith"
 msgstr "# cibadmin -Q | grep stonith"
 
 #: Ch-Basics.xml:160(para)
-msgid "Next identify the resource's tag name and id (in this case we'll chose <literal>primitive</literal> and <literal>child_DoFencing</literal>). Then simply execute:"
+msgid "Next identify the resource's tag name and id (in this case we'll choose <literal>primitive</literal> and <literal>child_DoFencing</literal>). Then simply execute:"
 msgstr "Apoi identificaţi numele tag-ului resursei şi id-ul (în acest caz vom alege <literal>primitive</literal> şi <literal>child_DoFencing</literal>). Apoi executaţi:"
 
 #: Ch-Basics.xml:164(command)
@@ -339,7 +336,7 @@ msgstr "Realizând Modificări de Configurare într-un Sandbox"
 
 #: Ch-Basics.xml:178(para)
 msgid "Often it is desirable to preview the effects of a series of changes before updating the configuration atomically. For this purpose we have created <command>crm_shadow</command> which creates a \"shadow\" copy of the configuration and arranges for all the command line tools to use it."
-msgstr "Deseori este de dorit să previzualizaţi efectele unei serii de modificări înainte să actualizaţi configuraţia în mod atomic. Pentru acest scop am creat <command>crm_shadow</command> care creează o copie \"ascunsă\" a configuraţiei şi face astfel încât toate utilitarele din linia de comandă să o folosească."
+msgstr "Deseori este de dorit să previzualizaţi efectele unei serii de modificări înainte să actualizaţi configuraţia în mod atomic. Pentru acest scop am creat <command>crm_shadow</command> care creează o copie \"ascunsă\" a configuraţiei şi aranjează astfel încât toate utilitarele din linia de comandă să o folosească."
 
 #: Ch-Basics.xml:185(para)
 msgid "Shadow copies are identified with a name, making it possible to have more than one"
@@ -351,7 +348,7 @@ msgstr "Citiţi cele de mai sus cu atenţie, nerespectarea acestora poate rezult
 
 #: Ch-Basics.xml:182(para)
 msgid "To begin, simply invoke <command>crm_shadow</command> and give it the name of a configuration to create <placeholder-1/> and be sure to follow the simple on-screen instructions. <placeholder-2/>"
-msgstr "Pentru a începe, invocaţi pur şi simplu <command>crm_shadow</command> şi daţi-i numele unei configuraţii pe care să o creeze <placeholder-1/> şi asiguraţi-vă că urmaţi simplele instrucţiuni de pe ecran . <placeholder-2/>"
+msgstr "Pentru a începe, invocaţi pur şi simplu <command>crm_shadow</command> şi daţi-i numele unei configuraţii pe care să o creeze <placeholder-1/> şi asiguraţi-vă că urmaţi simplele instrucţiuni de pe ecran. <placeholder-2/>"
 
 #: Ch-Basics.xml:190(title)
 msgid "Creating and displaying the active sandbox"
@@ -378,7 +375,7 @@ msgstr ""
 
 #: Ch-Basics.xml:199(para)
 msgid "From this point on, all cluster commands will automatically use the shadow copy instead of talking to the cluster's active configuration. Once you have finished experimenting, you can either commit the changes, or discard them as shown below. Again, be sure to follow the on-screen instructions carefully."
-msgstr "Din acest punct înainte, toate comenzile clusterului vor folosi copia ascunsă în loc să comunice cu copia activă a configuraţiei clusterului. Odată ce aţi terminat de experimentat, puteţi fie să "
+msgstr "Din acest punct înainte, toate comenzile clusterului vor folosi copia ascunsă în loc să comunice cu copia activă a configuraţiei clusterului. Odată ce aţi terminat de experimentat, puteţi fie să aplicaţi modificările sau să le înlăturaţi după cum este prezentat mai jos. Din nou, asiguraţi-vă că urmaţi instrucţiunile de pe ecran cu grijă."
 
 #: Ch-Basics.xml:204(para)
 msgid "For a full list of <command>crm_shadow</command> options and commands, invoke it with the <parameter>--help</parameter> option."
@@ -467,7 +464,7 @@ msgstr ""
 
 #: Ch-Basics.xml:243(para)
 msgid "Making changes in a sandbox and verifying the real configuration is untouched"
-msgstr "Realizarea de modificări într-un sandbox şi apoi verificarea că configuraţia reală nu este atinsă."
+msgstr "Realizarea de modificări într-un sandbox şi apoi verificarea că, configuraţia reală nu este atinsă."
 
 #: Ch-Basics.xml:247(title)
 msgid "Testing Your Configuration Changes"
@@ -487,7 +484,7 @@ msgstr "ptest --live-check -VVVVV --save-graph tmp.graph --save-dotfile <placeho
 
 #: Ch-Basics.xml:253(para)
 msgid "The tool uses the same library as the live cluster to show what it would have done given the supplied input. It's output, in addition to a significant amount of logging, is stored in two files <filename>tmp.graph</filename> and <filename>tmp.dot</filename>, both are representations of the same thing -- the cluster's response to your changes. In the graph file is stored the complete transition, containing a list of all the actions, their parameters and their pre-requisites. Because the transition graph is not terribly easy to read, the tool also generates a Graphviz dot-file representing the same information."
-msgstr "Utilitarul foloseşte aceeaşi librărie ca şi clusterul live pentru a arăta ce ar fi realizat cu informaţiile primite. Rezultatul de ieşire, împreună cu o cantitate semnificativă de loguri, este stocat în două fişiere <filename>tmp.graph</filename> şi <filename>tmp.dot</filename>, ambele sunt reprezentări ale aceluiaşi lucru -- răspunsul clusterului la modificările voastre. În fişierul graph este stocată tranziţia completă, conţinând o listă cu toate acţiunile, parametrii acestora şi cerinţele premergătoare ale acestora. Pentru că graph-ul de tranziţie nu este foarte uşor de citit, utilitarul generează un fişier Graphviz dot de asemenea reprezentând aceleaşi informaţii."
+msgstr "Utilitarul foloseşte aceeaşi bibliotecă precum clusterul activ pentru a arăta ce ar fi realizat cu informaţiile primite. Rezultatul de ieşire, suplimentar la o cantitate semnificativă de loguri, este stocat în două fişiere <filename>tmp.graph</filename> şi <filename>tmp.dot</filename>, ambele sunt reprezentări ale aceluiaşi lucru -- răspunsul clusterului la modificările voastre. În fişierul graf este stocată tranziţia completă, conţinând o listă cu toate acţiunile, parametrii acestora şi cerinţele premergătoare ale acestora. Pentru că graful de tranziţie nu este foarte uşor de citit, utilitarul generează un fişier Graphviz dot de asemenea reprezentând aceleaşi informaţii."
 
 #: Ch-Basics.xml:261(title)
 msgid "Small Cluster Transition"
@@ -507,11 +504,11 @@ msgstr "Săgeţile indică dependinţele de ordonare"
 
 #: Ch-Basics.xml:273(para)
 msgid "Dashed-arrows indicate dependencies that are not present in the transition graph"
-msgstr "Săgeţile întrerupte de spaţii indică dependinţe care nu sunt prezente în graful de tranziţie"
+msgstr "Săgeţile întrerupte de cratime indică dependinţe care nu sunt prezente în graful de tranziţie"
 
 #: Ch-Basics.xml:274(para)
 msgid "Actions with a dashed border of any color do not form part of the transition graph"
-msgstr "Acţiunile cu o margine întreruptă cu spaţii de orice culoare nu se formează ca parte a grafului de tranziţie"
+msgstr "Acţiunile cu o margine întreruptă cu cratime de orice culoare nu se formează ca parte a grafului de tranziţie"
 
 #: Ch-Basics.xml:275(para)
 msgid "Actions with a green border form part of the transition graph"
@@ -535,7 +532,7 @@ msgstr "Acţiunile cu text negru sunt trimise la LRM"
 
 #: Ch-Basics.xml:280(para)
 msgid "Resource actions have text of the form <replaceable>rsc</replaceable>_<replaceable>action</replaceable>_<replaceable>interval</replaceable><replaceable>node</replaceable>"
-msgstr "Acţiunile resurselor au text de forma <replaceable>rsc</replaceable>_<replaceable>action</replaceable>_<replaceable>interval</replaceable><replaceable>node</replaceable>"
+msgstr "Acţiunile resurselor au textul de forma <replaceable>rsc</replaceable>_<replaceable>action</replaceable>_<replaceable>interval</replaceable><replaceable>node</replaceable>"
 
 #: Ch-Basics.xml:281(para)
 msgid "Any action depending on an action with a red border will not be able to execute."
@@ -547,7 +544,7 @@ msgstr "Buclele de execuţie sunt <emphasis>foarte</emphasis> rele. Vă rugăm s
 
 #: Ch-Basics.xml:284(para)
 msgid "In the above example, it appears that a new node, <literal>node2</literal>, has come online and that the cluster is checking to make sure <literal>rsc1</literal>, <literal>rsc2</literal> and <literal>rsc3</literal> are not already running there (Indicated by the <literal>*_monitor_0</literal> entries). Once it did that, and assuming the resources were not active there, it would have liked to stop <literal>rsc1</literal> and <literal>rsc2</literal> on <literal>node1</literal> and move them to <literal>node2</literal>. However, there appears to be some problem and the cluster cannot or is not permitted to perform the stop actions which implies it also cannot perform the start actions. For some reason the cluster does not want to start <literal>rsc3</literal> anywhere."
-msgstr "În exemplul de mai sus, este aparent faptul că un nod nou, <literal>node2</literal>, a venit online şi clusterul verifică să se asigure că <literal>rsc1</literal>, <literal>rsc2</literal> şi <literal>rsc3</literal> nu rulează deja acolo (aspect indicat de intrările <literal>*_monitor_0</literal>). Odată ce a realizat acest lucru şi, mergând pe presupunerea că resursele nu erau active acolo, ar fi preferat să oprească <literal>rsc1</literal> şi <literal>rsc2</literal> pe <literal>node1</literal> şi să le mute pe <literal>node2</literal>. Totuşi se pare că există o problemă şi clusterul nu poate sau nu îi este permis să execute operaţiunile de oprire, fapt care implică neputinţa de a efectua acţiunile de pornire de asemenea. Pentru un motiv necunoscut încâ clusterul nu vrea să pornească <literal>rsc3</literal> nicăieri."
+msgstr "În exemplul de mai sus, se pare că un nod nou, <literal>node2</literal>, a ajuns online şi clusterul verifică să se asigure că <literal>rsc1</literal>, <literal>rsc2</literal> şi <literal>rsc3</literal>, nu rulează deja acolo (aspect indicat de intrările <literal>*_monitor_0</literal>). Odată ce a realizat acest lucru şi mergând pe presupunerea că resursele nu erau active acolo, ar fi preferat să oprească <literal>rsc1</literal> şi <literal>rsc2</literal> pe <literal>node1</literal> şi să le mute pe <literal>node2</literal>. Totuşi se pare că există o problemă şi clusterul nu poate sau nu îi este permis să execute operaţiunile de oprire, fapt care implică neputinţa de a efectua acţiunile de pornire de asemenea. Pentru un motiv anume clusterul nu vrea să pornească <literal>rsc3</literal> nicăieri."
 
 #: Ch-Basics.xml:290(para)
 msgid "For information on the options supported by ptest, use <command>ptest --help</command>"
@@ -559,7 +556,7 @@ msgstr "Tranziţii Complexe ale Clusterului"
 
 #: Ch-Basics.xml:298(caption)
 msgid "Another, slightly more complex, transition graph that you're not expected to be able to read"
-msgstr "Un alt graf de tranziţie, ceva mai complex, pe care nu se aşteaptă să îl puteţi citi"
+msgstr "Un alt graf de tranziţie, ceva mai complex, pe care nu sunteţi aşteaptaţi să îl puteţi citi"
 
 #: Ch-Basics.xml:304(title)
 msgid "Do I Need to Update the Configuration on all Cluster Nodes?"
@@ -571,7 +568,7 @@ msgstr "Nu. Orice modificări sunt sincronizate imediat către ceilalţi membri 
 
 #: Ch-Basics.xml:306(para)
 msgid "To reduce bandwidth, the cluster only broadcasts the incremental updates that result from your changes and uses MD5 sums to ensure that each copy is completely consistent."
-msgstr "Pentru a reduce consumul de lăţime de bandă, clusterul transmite numai actualizările incrementale care rezultă din modificările realizate voastre şi foloseşte hash-uri MD5 pentru a se asigura că fiecare copie este complet consistentă."
+msgstr "Pentru a reduce consumul de lăţime de bandă, clusterul transmite numai actualizările incrementale care rezultă din modificările realizate de voi şi foloseşte hash-uri MD5 pentru a se asigura că fiecare copie este complet consistentă."
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ch-Basics.xml:0(None)

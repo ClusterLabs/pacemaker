@@ -1,7 +1,7 @@
   <chapter id="ch-basics"><title>Configuration Basics</title>
     <section id="s-config-layout">
       <title>Configuration Layout</title>
-      <para>The cluster is written using XML notation and divided into two main sections; configuration and status.</para>
+      <para>The cluster is written using XML notation and divided into two main sections: configuration and status.</para>
       <para>
 	The status section contains the history of each resource on each node and based on this data, the cluster can construct the complete current state of the cluster.
 	The authoritative source for the status section is the local resource manager (lrmd) process on each cluster node and the cluster will occasionally repopulate the entire section.
@@ -158,7 +158,7 @@
 ]]></screen>
       </figure>
       <para>
-	Next identify the resource's tag name and id (in this case we'll chose <literal>primitive</literal> and <literal>child_DoFencing</literal>).
+	Next identify the resource's tag name and id (in this case we'll choose <literal>primitive</literal> and <literal>child_DoFencing</literal>).
 	Then simply execute: 
       </para>
       <para><command>cibadmin --delete --crm_xml ‘&lt;primitive id="child_DoFencing"/>'</command></para>
