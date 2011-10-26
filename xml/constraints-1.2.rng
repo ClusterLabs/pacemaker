@@ -11,6 +11,7 @@
 	  <ref name="element-location"/>
 	  <ref name="element-colocation"/>
 	  <ref name="element-order"/>
+	  <ref name="element-rsc_ticket"/>
 	</choice>
       </zeroOrMore>
   </define>
@@ -143,6 +144,36 @@
     </element>
   </define>
  
+  <define name="element-rsc_ticket">
+    <element name="rsc_ticket">
+      <attribute name="id"><data type="ID"/></attribute>
+      <choice>
+	<oneOrMore>
+	  <ref name="element-resource-set"/>
+	</oneOrMore>
+	<group>
+	  <attribute name="rsc"><data type="IDREF"/></attribute>
+	  <optional>
+	    <attribute name="rsc-role">
+	      <ref name="attribute-roles"/>
+	    </attribute>
+	  </optional>
+	</group>
+      </choice>
+      <attribute name="ticket"><text/></attribute>
+      <optional>
+	<attribute name="loss-policy">
+	  <choice>
+	    <value>stop</value>
+	    <value>demote</value>
+	    <value>fence</value>
+	    <value>freeze</value>
+	  </choice>
+	</attribute>
+      </optional>
+    </element>
+  </define>
+
   <define name="attribute-actions">
     <choice>
       <value>start</value>
