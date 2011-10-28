@@ -82,7 +82,7 @@ The device type(s) to assume for the drive(s) being tested as a SPACE separated 
 Lower limit of the temperature in deg C of the drive(s). Below this limit the status will be red.
 </longdesc>
 <shortdesc lang="en">Lower limit for the red smart attribute</shortdesc>
-content type="string" default="0"/>
+<content type="string" default="0"/>
 </parameter>
 
 <parameter name="temp_upper_limit" unique="1">
