@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-16 07:11+0200\n"
+"PO-Revision-Date: 2011-10-29 22:35+0100\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #: Ch-Resources.xml:2(title)
@@ -21,7 +21,7 @@ msgstr "Ce este o Resursă de Cluster"
 
 #: Ch-Resources.xml:5(para)
 msgid "The role of a resource agent is to abstract the service it provides and present a consistent view to the cluster, which allows the cluster to be agnostic about the resources it manages. The cluster doesn't need to understand how the resource works because it relies on the resource agent to do the right thing when given a start, stop or monitor command."
-msgstr "Rolul agentului de resursă este de a abstractiza serviciul pe care îl furnizează şi de a prezenta o viziune consistentă clusterului, care îi permite clusterului să fie agnostic cu resursele pe care le gestionează. Clusterul nu trebuie să înţeleagă cum funcţionează resursa pentru că se bazează pe agentul de resursă să efectueze ceea ce trebuie atunci când îi este dată o comandă de start, stop sau monitor."
+msgstr "Rolul agentului de resursă este de a abstractiza serviciul pe care îl furnizează şi de a prezenta o viziune consistentă clusterului, care îi permite clusterului să fie agnostic cu resursele pe care le gestionează. Clusterul nu trebuie să înţeleagă cum funcţionează resursa pentru că se bazează pe agentul de resursă să efectueze ceea ce trebuie atunci când îi este trimisă o comandă de start, stop sau monitor."
 
 #: Ch-Resources.xml:9(para)
 msgid "For this reason it is crucial that resource agents are well tested."
@@ -29,7 +29,7 @@ msgstr "Din acest motiv este imperativ ca agenţii de resursă să fie testaţi 
 
 #: Ch-Resources.xml:10(para)
 msgid "Typically resource agents come in the form of shell scripts, however they can be written using any technology (such as C, Python or Perl) that the author is comfortable with."
-msgstr "În mod normal agenţii de resursă vin sub forma de scripturi de shell, însă aceştia pot fi scrişi folosind orice limbaj de programare (cum ar fi C, Python sau Perl) cu care este comfortabil autorul."
+msgstr "În mod normal agenţii de resursă vin sub forma de scripturi de shell, însă aceştia pot fi scrişi folosind orice limbaj de programare (cum ar fi C, Python sau Perl) cu care este confortabil autorul."
 
 #: Ch-Resources.xml:13(title)
 msgid "Supported Resource Classes"
@@ -45,7 +45,7 @@ msgstr "Open Cluster Framework"
 
 #: Ch-Resources.xml:21(para)
 msgid "Note: The Pacemaker implementation has been somewhat extended from the OCF Specs, but none of those changes are incompatible with the original OCF specification"
-msgstr "Notă: Implementarea Pacemaker-ului a fost oarecum extinsă din Specificaţiile OCF, dar nici una din modificări nu este incompatibilă cu specificaţia OCF originală."
+msgstr "Notă: Implementarea Pacemaker a fost oarecum extinsă din Specificaţiile OCF, dar nici una dintre modificările acelea sunt incompatibile cu specificaţia OCF originală."
 
 #: Ch-Resources.xml:20(para)
 msgid "The OCF Spec (as it relates to resource agents) can be found at: <ulink url=\"http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD\"/><placeholder-1/> and is basically an extension of the Linux Standard Base conventions for init scripts to"
@@ -73,7 +73,7 @@ msgstr "Specificaţiile OCF au definiţii stricte asupra căror coduri de ieşir
 
 #: Ch-Resources.xml:35(para)
 msgid "Parameters are passed to the script as environment variables, with the special prefix <envar>OCF_RESKEY_</envar>. So, if you need to be given a parameter which the user thinks of as ip it will be passed to the script as <envar>OCF_RESKEY_ip</envar>. The number and purpose of the parameters is completely arbitrary, however your script should advertise any that it supports using the meta-data command."
-msgstr "Parametrii sunt pasaţi scriptului ca variabile de mediu, cu prefixul special <envar>OCF_RESKEY_</envar>. Deci, dacă trebuie să primiţi un parametru pe care utilizatorul îl consideră ca fiind ip, acesta va fi pasat către script ca <envar>OCF_RESKEY_ip</envar>. Numărul şi scopul parametrilor este complet arbitrar, însă scriptul vostru ar trebui să îi anunţe pe toţi pe care îi suportă folosind comanda meta-data."
+msgstr "Parametrii sunt pasaţi scriptului ca variabile de mediu, cu prefixul special <envar>OCF_RESKEY_</envar>. Deci, dacă trebuie să vi se dea un parametru pe care utilizatorul îl consideră ca fiind ip, acesta va fi pasat către script ca <envar>OCF_RESKEY_ip</envar>. Numărul şi scopul parametrilor este complet arbitrar, însă scriptul vostru ar trebui să îi anunţe pe toţi pe care îi suportă folosind comanda meta-data."
 
 #: Ch-Resources.xml:40(para)
 msgid "For more information, see <ulink url=\"http://www.linux-ha.org/wiki/OCF_Resource_Agents\"/> and <xref linkend=\"ap-ocf\"/>."
@@ -85,7 +85,7 @@ msgstr "Linux Standard Base"
 
 #: Ch-Resources.xml:44(para)
 msgid "LSB resource agents are those found in <filename>/etc/init.d</filename>. Generally they are provided by the OS/distribution and in order to be used with the cluster, must conform to the LSB Spec."
-msgstr "Agenţii de resursă LSB sunt cei găsiţi în <filename>/etc/init.d</filename>. În mod normal aceştia sunt furnizaţi de către OS/distribuţie şi pentru a putea fi folosiţi în conjunctură cu clusterul, trebuie să conforme la Specificaţiile LSB."
+msgstr "Agenţii de resursă LSB sunt cei găsiţi în <filename>/etc/init.d</filename>. În mod normal aceştia sunt furnizaţi de către OS/distribuţie şi pentru a putea fi folosiţi împreună cu clusterul, trebuie să se conforme Specificaţiilor LSB."
 
 #: Ch-Resources.xml:48(para)
 msgid "The LSB Spec (as it relates to init scripts) can be found at: <ulink url=\"http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\"/>"
@@ -93,7 +93,7 @@ msgstr "Specificaţiile LSB (în conjunctura scripturilor de init) pot fi găsit
 
 #: Ch-Resources.xml:50(para)
 msgid "Many distributions claim LSB compliance but ship with broken init scripts. To see if your init script is LSB-compatible, see the FAQ entry <xref linkend=\"ap-lsb\"/>. The most common problems are:"
-msgstr "Multe distribuţii afirmă compatibilitatea LSB dar livrează scripturi de init nefuncţionale din acest punct de vedere. Pentru a observa dacă scriptul vostru de init este compatibil LSB, vedeţi intrarea din FAQ referitoare la <xref linkend=\"ap-lsb\"/>. Cele mai comune probleme sunt:"
+msgstr "Multe distribuţii afirmă compatibilitatea LSB dar livrează scripturi de init nefuncţionale din acest punct de vedere. Pentru a vedea dacă scriptul vostru de init este compatibil LSB, vedeţi intrarea din FAQ referitoare la <xref linkend=\"ap-lsb\"/>. Cele mai comune probleme sunt:"
 
 #: Ch-Resources.xml:56(para)
 msgid "Not implementing the status operation at all"
@@ -101,24 +101,23 @@ msgstr "Neimplementarea în vreun fel a operaţiunii status"
 
 #: Ch-Resources.xml:57(para)
 msgid "Not observing the correct exit status codes for start/stop/status actions"
-msgstr "Nereturnarea status-urilor corecte de ieşire pentru acţiuni start/stop/status"
+msgstr "Neobservarea status-urilor corecte de ieşire pentru acţiuni start/stop/status"
 
 #: Ch-Resources.xml:58(para)
 msgid "Starting a started resource returns an error (this violates the LSB spec)"
-msgstr "Pornirea unei resurse deja funcţionale returnează o eroare (acest aspect încalcă specificaţia LSB)"
+msgstr "Pornirea unei resurse deja pornite returnează o eroare (acest aspect încalcă specificaţia LSB)"
 
 #: Ch-Resources.xml:59(para)
 msgid "Stopping a stopped resource returns an error (this violates the LSB spec)"
 msgstr "Oprirea unei resurse deja oprită returnează o eroare (acest aspect încalcă specificaţia LSB)"
 
 #: Ch-Resources.xml:63(title)
-#, fuzzy
 msgid "Legacy Heartbeat"
-msgstr "Legacy Heartbeat"
+msgstr "Moştenirea Heartbeat"
 
 #: Ch-Resources.xml:64(para)
 msgid "Version 1 of Heartbeat came with its own style of resource agents and it is highly likely that many people have written their own agents based on its conventions. To enable administrators to continue to use these agents, they are supported by the new cluster manager."
-msgstr "Versiunea 1 de Heartbeat venea cu propriul stil de agenţi de resursă şi este foarte probabil ca mulţi oameni să-şi fi scris proprii agenţi de resursă pe baza convenţiilor acestuia. Pentru a permite administratorilor să continue folosirea acestor agenţi, aceştia sunt suportaţi de către noul cluster manager."
+msgstr "Versiunea 1 de Heartbeat venea cu propriul stil de agenţi de resursă şi este foarte probabil că mulţi oameni şi-au scris proprii agenţi de resursă pe baza convenţiilor acestuia. Pentru a permite administratorilor să continue folosirea acestor agenţi, aceştia sunt suportaţi de către noul manager de cluster."
 
 #: Ch-Resources.xml:68(para)
 msgid "For more information, see: <ulink url=\"http://wiki.linux-ha.org/HeartbeatResourceAgent\"/>"
@@ -138,7 +137,7 @@ msgstr "Proprietăţi"
 
 #: Ch-Resources.xml:78(para)
 msgid "These values tell the cluster which script to use for the resource, where to find that script and what standards it conforms to."
-msgstr "Aceste valori îi spun clusterului care script să folosească pentru resursă, unde să găsească acel script şi care sunt standardele sub care acesta aderă."
+msgstr "Aceste valori îi spun clusterului care script să îl folosească pentru resursă, unde să găsească acel script şi care sunt standardele sub care acesta aderă."
 
 #: Ch-Resources.xml:80(title)
 msgid "Properties of a Primitive Resource"
@@ -175,7 +174,7 @@ msgstr "Standardul la care aderă scriptul. Valori permise: heartbeat, lsb, ocf,
 
 #: Ch-Resources.xml:98(entry)
 msgid "type"
-msgstr "tip"
+msgstr "tipul"
 
 #: Ch-Resources.xml:99(entry)
 msgid "The name of the Resource Agent you wish to use. eg. IPaddr or Filesystem"
@@ -186,7 +185,7 @@ msgid "provider"
 msgstr "furnizor"
 
 #: Ch-Resources.xml:103(entry)
-msgid "The OCF spec allows multiple vendors to supply the same ResourceAgent. To use the OCF resource agents supplied with Heartbeat, you should specify heartbeat here."
+msgid "The OCF spec allows multiple vendors to supply the same Resource Agent. To use the OCF resource agents supplied with Heartbeat, you should specify heartbeat here."
 msgstr "Specificaţia OCF permite mai multor entităţi să furnizeze acelaşi Agent de Resursă. Pentru a folosi agenţii de resursă OCF furnizaţi împreună cu Heartbeat, ar trebui să specificaţi heartbeat aici."
 
 #: Ch-Resources.xml:108(para)
@@ -218,17 +217,16 @@ msgid "An example OCF resource"
 msgstr "Un exemplu de resursă OCF"
 
 #: Ch-Resources.xml:131(para)
-#, fuzzy
 msgid "or, finally for the equivalent legacy Heartbeat resource:"
-msgstr "sau în sfârşit pentru echivalentul unei resurse Heartbeat legacy: "
+msgstr "sau în sfârşit pentru echivalentul unei resurse din moştenirea Heartbeat: "
 
 #: Ch-Resources.xml:133(title)
 msgid "An example Heartbeat resource"
 msgstr "Un exemplu de resursă Heartbeat"
 
 #: Ch-Resources.xml:145(para)
-msgid "Heartbeat resources take only ordered and unnamed parameters. The supplied name therefor indicates the order in which they are passed to the script. Only single digit values are allowed."
-msgstr "Resursele Heartbeat pot lua doar parametrii ordonaţi şi fără denumire. Numele furnizat indică prin urmare ordinea în care sunt pasaţi către script. Doar valori formate dintr-o singură cifră sunt permise."
+msgid "Heartbeat resources take only ordered and unnamed parameters. The supplied name therefore indicates the order in which they are passed to the script. Only single digit values are allowed."
+msgstr "Resursele Heartbeat primesc doar parametri ordonaţi şi fără denumire. Numele furnizat indică prin urmare ordinea în care sunt pasaţi către script. Doar valori formate dintr-o singură cifră sunt permise."
 
 #: Ch-Resources.xml:153(title)
 msgid "Resource Options"
@@ -236,7 +234,7 @@ msgstr "Opţiuni ale Resurselor"
 
 #: Ch-Resources.xml:154(para)
 msgid "Options are used by the cluster to decide how your resource should behave and can be easily set using the <parameter>--meta</parameter> option of the <command>crm_resource</command> command."
-msgstr "Opţiunile sunt folosite de către cluster pentru a decide cum ar trebui să se comporte resursa voastră şi poate fi setat facil folosind opţiunea <parameter>--meta</parameter> a comenzii <command>crm_resource</command>."
+msgstr "Opţiunile sunt folosite de către cluster pentru a decide cum ar trebui să se comporte resursa voastră şi pot fi setate facil folosind opţiunea <parameter>--meta</parameter> a comenzii <command>crm_resource</command>."
 
 #: Ch-Resources.xml:156(title)
 msgid "Options for a Primitive Resource"
@@ -256,7 +254,7 @@ msgstr "0"
 
 #: Ch-Resources.xml:167(entry)
 msgid "If not all resources can be active, the cluster will stop lower priority resources in order to keep higher priority ones active."
-msgstr "Dacă nu toate resursele pot fi active, clusterul va opri resursele cu prioritate mai mică pentru a păstra resursele cu o prioritate mai mare active."
+msgstr "Dacă nu pot fi active toate resursele , clusterul va opri resursele cu prioritate mai mică pentru a păstra resursele cu o prioritate mai mare active."
 
 #: Ch-Resources.xml:170(entry)
 msgid "target-role"
@@ -276,7 +274,7 @@ msgstr "Oprită - Forţează resursa să fie oprită"
 
 #: Ch-Resources.xml:176(para)
 msgid "Started - Allow the resource to be started (In the case of <link linkend=\"s-resource-multistate\">multi-state</link> resources, they will not promoted to master)"
-msgstr "Pornită - Permite resursei să fie pornită (În cazul resurselor cu <link linkend=\"s-resource-multistate\">stări multiple</link>, acestea nu vor fi promovate la master)"
+msgstr "Pornită - Permite resursei să fie pornită (În cazul resurselor cu <link linkend=\"s-resource-multistate\">multi-state</link>, acestea nu vor fi promovate la master)"
 
 #: Ch-Resources.xml:177(para)
 msgid "Master - Allow the resource to be started and, if appropriate, promoted"
@@ -316,7 +314,7 @@ msgstr "INFINIT (dezactivat)"
 
 #: Ch-Resources.xml:200(entry)
 msgid "How many failures should occur for this resource on a node before making the node ineligible to host this resource."
-msgstr "Câte eşecuri trebuie să se întâmple acestei resurse pe un nod înainte de face nodul neeligibil de a mai găzdui această resursă."
+msgstr "Câte eşecuri ar trebui să se întâmple acestei resurse pe un nod înainte de face nodul ineligibil de a mai găzdui această resursă."
 
 #: Ch-Resources.xml:203(entry)
 msgid "failure-timeout"
@@ -327,7 +325,7 @@ msgid "0 (disabled)"
 msgstr "0 (dezactivat)"
 
 #: Ch-Resources.xml:205(entry)
-msgid "How many seconds to wait before acting as if the failure had not occurred (and potentially allowing the resource back to the node on which it failed."
+msgid "How many seconds to wait before acting as if the failure had not occurred (and potentially allowing the resource back to the node on which it failed)."
 msgstr "Câte secunde să aştepte înainte să se comporte ca şi cum eşecul nu s-ar fi întâmplat (şi potenţial să permită resursei să revină pe nodul pe care a eşuat)."
 
 #: Ch-Resources.xml:208(entry)
@@ -368,7 +366,7 @@ msgstr "crm_resource --meta --resource Email --set-parameter multiple-active --p
 
 #: Ch-Resources.xml:227(para)
 msgid "the resulting resource definition would be"
-msgstr "definiţiile rezultante ale resursei ar fi"
+msgstr "definiţia rezultantă a resursei ar fi"
 
 #: Ch-Resources.xml:229(title)
 msgid "An LSB resource with cluster options"
@@ -396,7 +394,7 @@ msgstr "Atributele Instanţelor"
 
 #: Ch-Resources.xml:250(para)
 msgid "The scripts of some resource classes (LSB not being one of them) can be given parameters which determine how they behave and which instance of a service they control."
-msgstr "Scripturile unor clase de resurse (LSB nefiind una dintre acestea) pot primi parametrii care determină cum se comportă şi care instanţe ale unui serviciu controlează acestea."
+msgstr "Scripturile unor clase de resurse (LSB nefiind una dintre acestea) pot primi parametri care determină cum se comportă şi care instanţe ale unui serviciu controlează acestea."
 
 #: Ch-Resources.xml:251(para)
 msgid "If your resource agent supports parameters, you can add them with the <command>crm_resource</command> command. For instance"
@@ -496,9 +494,8 @@ msgid "quorum - The cluster can only start this resource if a majority of the co
 msgstr "quorum - Clusterul poate porni această resursă dacă o majoritate a nodurilor configurate este activă"
 
 #: Ch-Resources.xml:375(para)
-#, fuzzy
 msgid "fencing - The cluster can only start this resource if a majority of the configured nodes are active <emphasis>and</emphasis> any failed or unknown nodes have been powered off."
-msgstr "evacuare - Clusterul poate porni această resursă doar dacă o majoritate a nodurilor configurate este activă <emphasis>şi</emphasis> orice noduri necunoscute sau defectate au fost deconectate de la reţeaua de alimentare."
+msgstr "fencing - Clusterul poate porni această resursă doar dacă o majoritate a nodurilor configurate este activă <emphasis>şi</emphasis> orice noduri necunoscute sau defectate au fost deconectate de la reţeaua de alimentare."
 
 #: Ch-Resources.xml:377(para)
 msgid "STONITH resources default to nothing, and all others default to fencing if STONITH is enabled and quorum otherwise."
@@ -538,7 +535,7 @@ msgstr "standby - Mută <emphasis>toate</emphasis> resursele de pe nodul pe care
 
 #: Ch-Resources.xml:392(para)
 msgid "The default for the stop operation is fence when STONITH is enabled and block otherwise. All other operations default to stop."
-msgstr "Valoarea implicită pentru operaţiunea stop este fence atunci când STONITH este activat şi block în caz contrar. Toate celelalte operaţiuni au valoarea implicită stop."
+msgstr "Valoarea implicită pentru operaţiunea stop este evacuarea din cluster atunci când STONITH este activat şi block în caz contrar. Toate celelalte operaţiuni au valoarea implicită stop."
 
 #: Ch-Resources.xml:396(entry)
 msgid "enabled"
@@ -573,7 +570,6 @@ msgid "When Resources Take a Long Time to Start/Stop"
 msgstr "Când Resursele Durează Mult Timp să Pornească/Oprească"
 
 #: Ch-Resources.xml:414(para)
-#, fuzzy
 msgid "There are a number of implicit operations that the cluster will always perform - start, stop and a non-recurring monitor operation (used at startup to check the resource isn't already active). If one of these is taking too long, then you can create an entry for them and simply specify a new value."
 msgstr "Sunt un număr de operaţiuni implicite pe care clusterul pe va efectua întotdeauna - start, stop şi o operaţiune monitor nerecurentă (folosită la pornire pentru a verifica dacă resursa nu este deja activă). Dacă una din aceste operaţiuni durează prea mult, atunci puteţi crea o intrare pentru acestea şi să specificaţi o valoarea nouă."
 
