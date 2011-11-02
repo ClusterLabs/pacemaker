@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-18 18:49+0200\n"
+"PO-Revision-Date: 2011-11-02 18:46+0100\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #: Ch-Rules.xml:2(title)
@@ -17,7 +17,7 @@ msgstr "Reguli"
 
 #: Ch-Rules.xml:3(para)
 msgid "Rules can be used to make your configuration more dynamic. One common example is to set one value for resource-stickiness during working hours, to prevent resources from being moved back to their most preferred location, and another on weekends when no-one is around to notice an outage."
-msgstr "Regulile pot fi folosite pentru a face configuraţia voastră mai dinamică. Un exemplu comun este să se seteze o valoare pentru resource-stickiness în timpul orelor de program, pentru a împiedica resursele de a fi mutate înapoi la locaţia cea mai preferată a acestora, iar altă valoare în weekend-uri când nu este nimeni în preajmă să detecteze o întrerupere a serviciului."
+msgstr "Regulile pot fi folosite pentru a face configuraţia voastră mai dinamică. Un exemplu comun este de a seta o valoare pentru resource-stickiness în timpul orelor de program, pentru a împiedica resursele de a fi mutate înapoi la locaţia cea mai preferată a acestora, iar altă valoare în weekend-uri când nu este nimeni în preajmă să detecteze o întrerupere a serviciului."
 
 #: Ch-Rules.xml:7(para)
 msgid "Another use of rules might be to assign machines to different processing groups (using a node attribute) based on time and to then use that attribute when creating location constraints."
@@ -25,7 +25,7 @@ msgstr "O altă utilizare a regulilor ar putea fi pentru a asigna maşini la gru
 
 #: Ch-Rules.xml:8(para)
 msgid "Each rule can contain a number of expressions, date-expressions and even other rules. The results of the expressions are combined based on the rule's boolean-op field to determine if the rule ultimately evaluates to true or false. What happens next depends on the context in which the rule is being used."
-msgstr "Fiecare regulă poate conţine un număr de expresii, expresii de dată şi chiar si alte reguli. Rezultatele expresiilor sunt combinate pe baza câmpului boolean op al regulii pentru a determina dacă regula în mod finit este evaluată ca adevărat sau fals. Ce se întâmplă mai departe depinde de contextul în care regula este folosită"
+msgstr "Fiecare regulă poate conţine un număr de expresii, expresii de dată şi chiar si alte reguli. Rezultatele expresiilor sunt combinate pe baza câmpului boolean op al regulii pentru a determina dacă regula în ultimă instanţă este evaluată ca adevărat sau fals. Ce se întâmplă mai departe depinde de contextul în care regula este folosită."
 
 #: Ch-Rules.xml:14(title)
 msgid "Properties of a Rule"
@@ -55,7 +55,7 @@ msgstr "Pornită"
 
 #: Ch-Rules.xml:25(entry)
 msgid "Limits the rule to only apply when the resource is in that role. Allowed values: <placeholder-1/>, Slave, Master. NOTE: A rule with role=\"Master\" can not determine the initial location of a clone instance. It will only affect which of the active instances will be promoted."
-msgstr "Limitează regula pentru a se aplica numai când resursa se află în acel rol. Valori permise: <placeholder-1/>, Slave, Master. NOTĂ: O regula cu rolul=\"Master\" nu poate determina locaţia iniţială a unei instanţe ale unei clone. Va afecta numai care dintre instanţele active va fi promovată."
+msgstr "Limitează regula pentru a se aplica numai când resursa se află în acel rol. Valori permise: <placeholder-1/>, Slave, Master. NOTĂ: O regulă cu rolul=\"Master\" nu poate determina locaţia iniţială a unei instanţe ale unei clone. Va afecta numai care dintre instanţele active va fi promovată."
 
 #: Ch-Rules.xml:28(entry)
 msgid "score"
@@ -71,7 +71,7 @@ msgstr "score-attribute"
 
 #: Ch-Rules.xml:33(entry)
 msgid "The node attribute to look up and use as a score if the rule evaluates to \"true\". Limited to use in rules that are part of location constraints."
-msgstr "Atributul nodului pe care să îl caute şi pe care să îl folosească drept scor dacă regula este evaluată la \"true\". Limitată la folosirea în reguli are sunt parte din restricţii de locaţie."
+msgstr "Atributul nodului pe care să îl caute şi pe care să îl folosească drept scor dacă regula se evaluează la \"true\". Limitată la folosirea în reguli care sunt parte din restricţii de locaţie."
 
 #: Ch-Rules.xml:36(entry)
 msgid "boolean-op"
@@ -87,7 +87,7 @@ msgstr "Cum să combinaţi rezultatul mai multor obiecte de expresii. Valori per
 
 #: Ch-Rules.xml:43(title)
 msgid "Node Attribute Expressions"
-msgstr "Expresii de Atribute de Nod"
+msgstr "Expresiile Atributelor de Nod"
 
 #: Ch-Rules.xml:44(para)
 msgid "Expression objects are used to control a resource based on the attributes defined by a node or nodes. In addition to any attributes added by the administrator, each node has a built-in node attribute called <literal>#uname</literal> that can also be used."
@@ -99,7 +99,7 @@ msgstr "Proprietăţile unei Expresii"
 
 #: Ch-Rules.xml:55(entry)
 msgid "value"
-msgstr "valoare"
+msgstr "valoarea"
 
 #: Ch-Rules.xml:56(entry)
 msgid "User supplied value for comparison"
@@ -107,7 +107,7 @@ msgstr "Valorea furnizată de utilizator pentru comparaţie"
 
 #: Ch-Rules.xml:59(entry)
 msgid "attribute"
-msgstr "atribut"
+msgstr "atributul"
 
 #: Ch-Rules.xml:60(entry)
 msgid "The node attribute to test"
@@ -115,7 +115,7 @@ msgstr "Atributul nodului care să fie testat"
 
 #: Ch-Rules.xml:63(entry)
 msgid "type"
-msgstr "tip"
+msgstr "tipul"
 
 #: Ch-Rules.xml:64(emphasis)
 msgid "string"
@@ -135,23 +135,23 @@ msgid "The comparison to perform. Allowed values:"
 msgstr "Comparaţia pe care să o efectueze. Valori permise:"
 
 #: Ch-Rules.xml:71(para)
-msgid "lt,- True if the node attribute's value is less than value"
-msgstr "lt, - Adevărat dacă valoarea atributului nodului este mai mică decât valoare"
+msgid "lt - True if the node attribute's value is less than value"
+msgstr "lt - Adevărat dacă valoarea atributului nodului este mai mică decât valoare"
 
 #: Ch-Rules.xml:72(para)
 msgid "gt - True if the node attribute's value is greater than value"
 msgstr "gt - Adevărat dacă valoarea atributului nodului este mai mare decât valoare"
 
 #: Ch-Rules.xml:73(para)
-msgid "lte- True if the node attribute's value is less than or equal to value"
+msgid "lte - True if the node attribute's value is less than or equal to value"
 msgstr "lte - Adevărat dacă valoarea atributului nodului este mai mică sau egală cu valoare"
 
 #: Ch-Rules.xml:74(para)
-msgid "gte- True if the node attribute's value is greater than or equal to value"
+msgid "gte - True if the node attribute's value is greater than or equal to value"
 msgstr "gte - Adevărat dacă valoarea atributului nodului este mai mare sau egală cu valoare"
 
 #: Ch-Rules.xml:75(para)
-msgid "eq- True if the node attribute's value is equal to value"
+msgid "eq - True if the node attribute's value is equal to value"
 msgstr "eq - Adevărat dacă valoarea atributului nodului este egală cu valoare"
 
 #: Ch-Rules.xml:76(para)
@@ -159,11 +159,11 @@ msgid "ne - True if the node attribute's value is not equal to value"
 msgstr "ne - Adevărat dacă valoarea atributului nodului nu este egală cu valoare"
 
 #: Ch-Rules.xml:77(para)
-msgid "defined- True if the node has an the named attribute"
+msgid "defined - True if the node has an the named attribute"
 msgstr "defined - Adevărat dacă nodul are un atribut numit"
 
 #: Ch-Rules.xml:78(para)
-msgid "not_defined- True if the node does not have the named attribute"
+msgid "not_defined - True if the node does not have the named attribute"
 msgstr "not_defined - Adevărat dacă nodul nu are un atribut numit"
 
 #: Ch-Rules.xml:87(title)
@@ -171,7 +171,6 @@ msgid "Time/Date Based Expressions"
 msgstr "Expresii Bazate pe Timp/Dată"
 
 #: Ch-Rules.xml:88(para)
-#, fuzzy
 msgid "As the name suggests, date_expressions are used to control a resource or cluster option based on the current date/time. They can contain an optional <literal>date_spec</literal> and/or <literal>duration</literal> object depending on the context."
 msgstr "După cum sugerează numele, date_expressions sunt folosite pentru a controla o resursă sau opţiune a clusterului pe baza timpului/dăţii curente. Acestea pot conţine opţional obiecte <literal>date_spec</literal> şi/sau <literal>duration</literal> în funcţie de context."
 
@@ -217,21 +216,19 @@ msgstr "date-spec - efectuează o comparaţie similară cron-ului între conţin
 
 #: Ch-Rules.xml:123(para)
 msgid "Because the comparisons (except for <literal>date_spec</literal>) include the time, the <literal>eq, neq, gte</literal> and <literal>lte</literal> operators have not been implemented."
-msgstr "Deoarece comparaţiile (cu excepţia <literal>date_spec</literal>) include timpul, operaţiunile <literal>eq, neq, gte</literal> şi <literal>lte</literal> nu au fost implementate."
+msgstr "Deoarece comparaţiile (cu excepţia <literal>date_spec</literal>) includ timpul, operatorii <literal>eq, neq, gte</literal> şi <literal>lte</literal> nu au fost implementaţi."
 
 #: Ch-Rules.xml:125(title)
 msgid "Date Specifications"
 msgstr "Specificaţiile Datei"
 
 #: Ch-Rules.xml:126(para)
-#, fuzzy
 msgid "<literal>date_spec</literal> objects are used to create cron-like expressions relating to time. Each field can contain a single number or a single range. Instead of defaulting to zero, any field not supplied is ignored."
-msgstr "Obiectele <literal>date_spec</literal> sunt folosite pentru a crea expresii similare cu cele create de cron în relaţie cu timpul. Fiecare câmp poate conţine un singur număr sau un singur range. În loc să aibe valoarea implicită zero, orice câmp a cărui valoare nu este furnizată este ignorat."
+msgstr "Obiectele <literal>date_spec</literal> sunt folosite pentru a crea expresii similare cu cele create de cron în relaţie cu timpul. Fiecare câmp poate conţine un singur număr sau un singur şir. În loc să aibe valoarea implicită zero, orice câmp a cărui valoare nu este furnizată este ignorat."
 
 #: Ch-Rules.xml:131(para)
-#, fuzzy
-msgid "For example, <literal>monthdays=\"1\"</literal> matches the first day of every month and <literal>hours=\"09-17\"</literal> matches the hours between 9am and 5pm inclusive). However at this time one cannot specify <literal>weekdays=\"1,2\"</literal> or <literal>weekdays=\"1-2,5-6\"</literal> since they contain multiple ranges. Depending on demand, this may be implemented in a future release."
-msgstr "De exemplu, <literal>monthdays=\"1\"</literal> se potriveşte pentru prima zi din fiecare lună şi <literal>hours=\"09-17\"</literal> se potriveşte orelor între 9am şi 5pm inclusiv. Însă la acest moment nu se poate specifica <literal>weekdays=\"1,2\"</literal> sau <literal>weekdays=\"1-2,5-6\"</literal> din moment ce conţin range-uri multiple. În funcţie de cerere, acest aspect ar putea fi implementat într-un release viitor."
+msgid "For example, <literal>monthdays=\"1\"</literal> matches the first day of every month and <literal>hours=\"09-17\"</literal> matches the hours between 9am and 5pm inclusive. However at this time one cannot specify <literal>weekdays=\"1,2\"</literal> or <literal>weekdays=\"1-2,5-6\"</literal> since they contain multiple ranges. Depending on demand, this may be implemented in a future release."
+msgstr "De exemplu, <literal>monthdays=\"1\"</literal> se potriveşte pentru prima zi din fiecare lună şi <literal>hours=\"09-17\"</literal> se potriveşte orelor între 9am şi 5pm inclusiv. Însă la acest moment nu se poate specifica <literal>weekdays=\"1,2\"</literal> sau <literal>weekdays=\"1-2,5-6\"</literal> din moment ce conţin şiruri multiple. În funcţie de cerere, acest aspect ar putea fi implementat într-un release viitor."
 
 #: Ch-Rules.xml:137(title)
 msgid "Properties of a Date Spec"
@@ -310,7 +307,7 @@ msgid "May differ from Gregorian years."
 msgstr "Ar putea fi diferit de anii Gregorieni."
 
 #: Ch-Rules.xml:182(para)
-msgid "Eg. \"2005-001 Ordinal\" is also \"2005-01-01 Gregorian\" is also \"2004-W53-6 Weekly\""
+msgid "Eg. \"2005-001 Ordinal\" is also \"2005-01-01 Gregorian\" and is also \"2004-W53-6 Weekly\""
 msgstr "Ex. \"2005-001 Ordinal\" este de asemenea \"2005-01-01 Gregorian\" şi de asemenea \"2004-W53-6 Weekly\""
 
 #: Ch-Rules.xml:186(entry)
@@ -343,15 +340,15 @@ msgstr "Expresie echivalentă."
 
 #: Ch-Rules.xml:227(title)
 msgid "9am-5pm, Mon-Friday"
-msgstr "9am-5pm, Lun-Vin"
+msgstr "9am-5pm, Lun-Vineri"
 
 #: Ch-Rules.xml:239(title)
 msgid "9am-6pm, Mon-Friday, or all day saturday"
-msgstr "9am-6pm,Lun-Vin, sau toată ziua sâmbătă"
+msgstr "9am-6pm, Lun-Vineri sau toată ziua sâmbătă"
 
 #: Ch-Rules.xml:254(title)
 msgid "9am-5pm or 9pm-12pm, Mon-Friday"
-msgstr "9am-5pm sau 9pm-12pm, Lun-Vin"
+msgstr "9am-5pm sau 9pm-12pm, Lun-Vineri"
 
 #: Ch-Rules.xml:274(title)
 msgid "Mondays in March 2005"
@@ -367,7 +364,7 @@ msgstr "Acest lucru înseamnă că şirul include tot din 2005-03-01 dar nimic d
 
 #: Ch-Rules.xml:288(para)
 msgid "You may wish to write end=\"2005-03-31T23:59:59\" to avoid confusion."
-msgstr "Aţi vrea să scrieţi end=\"2005-03-31T23:59:59\" pentru a evita confuzia."
+msgstr "Aţi dori să scrieţi end=\"2005-03-31T23:59:59\" pentru a evita confuzia."
 
 #: Ch-Rules.xml:290(title)
 msgid "A full moon on Friday the 13th"
@@ -379,11 +376,11 @@ msgstr "Folosind Reguli pentru a Determina Locaţia Resurselor"
 
 #: Ch-Rules.xml:306(para)
 msgid "If the constraint's outer-most rule evaluates to false, the cluster treats the constraint as if it was not there. When the rule evaluates to true, the node's preference for running the resource is updated with the score associated with the rule."
-msgstr "Dacă regula cea mai exterioară a unei restricţii este evaluată la fals, clusterul se poartă ca şi cum restricţia nu ar fi fost acolo. Când regula este evaluată ca adevăr, preferinţa nodului pentru rularea resursei este actualizată cu scorul asociat cu această regulă."
+msgstr "Dacă regula cea mai exterioară a unei restricţii este evaluată la fals, clusterul se poartă cu restricţia ca şi cum nu ar fi fost acolo. Când regula este evaluată ca adevărat, preferinţa nodului pentru rularea resursei este actualizată cu scorul asociat cu această regulă."
 
 #: Ch-Rules.xml:310(para)
 msgid "If this sounds familiar, its because you have been using a simplified syntax for location constraint rules already. Consider the following location constraint:"
-msgstr "Dacă sună cunoscut, este datorită faptului că până acum aţi folosit deja o sintaxă simplificată pentru regulile de restricţia locaţiei. Consideraţi următoarea restricţie de locaţie:"
+msgstr "Dacă acest lucru sună cunoscut, este datorită faptului că deja folosiţi o sintaxă simplificată pentru regulile de restricţie a locaţiei. Consideraţi următoarea restricţie de locaţie:"
 
 #: Ch-Rules.xml:315(title)
 msgid "Prevent myApacheRsc from running on c001n03"
@@ -410,7 +407,7 @@ msgstr "Împiedică myApacheRsc de a rula pe c001n03 - versiunea extinsă"
 
 #: Ch-Rules.xml:333(para)
 msgid "The advantage of using the expanded form is that one can then add extra clauses to the rule, such as limiting the rule such that it only applies during certain times of the day or days of the week (this is discussed in subsequent sections)."
-msgstr "Avantajul folosirii formei extinse este că se pot adăuga clauze suplimentare la regulă, cum ar fi limitarea regulii astfel încât să se aplice doar în momente specifice ale zilei sau zilelor săptămânii (acest lucru este discutat în secţiuni următoare)."
+msgstr "Avantajul folosirii formei extinse este că se pot adăuga clauze suplimentare la regulă, cum ar fi limitarea regulii astfel încât să se aplice doar în momente specifice ale zilei sau zilelor săptămânii (acest lucru este discutat în secţiunile următoare)."
 
 #: Ch-Rules.xml:334(para)
 msgid "It also allows us to match on node properties other than its name. If we rated each machine's CPU power such that the cluster had the following nodes section:"
@@ -418,7 +415,7 @@ msgstr "Este folosit de asemenea pentru a realiza potriviri pe proprietăţi ale
 
 #: Ch-Rules.xml:339(title)
 msgid "A sample nodes section for use with score-attribute"
-msgstr "Un exemplu de secţiune de noduri pentru uz cu atributul de scor"
+msgstr "Un exemplu de secţiune de noduri pentru utilizarea cu score-attribute"
 
 #: Ch-Rules.xml:357(para)
 msgid "then we could prevent resources from running on underpowered machines with the rule"
@@ -438,7 +435,7 @@ msgstr "Folosind Reguli pentru a Controla Opţiunile Resurselor"
 
 #: Ch-Rules.xml:375(para)
 msgid "Often some cluster nodes will be different from their peers, sometimes these differences (the location of a binary or the names of network interfaces) require resources be configured differently depending on the machine they're hosted on."
-msgstr "Adeseori unele noduri din cluster vor fi diferite de altele, câteodată aceste diferenţe (locaţia unui binar sau a numelor interfeţelor de reţea) necesită ca şi resursele să fie configurate diferit în funcţie de maşina pe care sunt găzduite."
+msgstr "Adeseori unele noduri din cluster vor fi diferite de altele, câteodată aceste diferenţe (locaţia unui binar sau numele interfeţelor de reţea) necesită ca şi resursele să fie configurate diferit în funcţie de maşina pe care sunt găzduite."
 
 #: Ch-Rules.xml:376(para)
 msgid "By defining multiple <literal>instance_attributes</literal> objects for the resource and adding a rule to each, we can easily handle these special cases."
@@ -454,7 +451,7 @@ msgstr "Definirea de opţiuni de resursă diferite pe baza numelui nodului"
 
 #: Ch-Rules.xml:404(para)
 msgid "The order in which <literal>instance_attributes</literal> objects are evaluated is determined by their score (highest to lowest). If not supplied, score defaults to zero and objects with an equal score are processed in listed order. If the <literal>instance_attributes</literal> object does not have a <literal>rule</literal> or has a <literal>rule</literal> that evaluates to <literal>true</literal>, then for any parameter the resource does not yet have a value for, the resource will use the parameter values defined by the <literal>instance_attributes</literal> object."
-msgstr "Ordinea în care obiectele <literal>instance_attributes</literal> sunt evaluate este determinată de către scorul acestora (cel mai mare la cel mai mic). Dacă nu este furnizat, scorul va avea valoarea implicită zero şi obiectele cu un scor egal sunt procesate în ordinea listei. Dacă obiectul <literal>instance_attributes</literal> nu are o <literal>rule</literal> sau are o <literal>rule</literal> care este evaluată la <literal>true</literal>, atunci pentru orice parametru pentru care resursa nu are înca o valoare, resursa va folosi valorile parametrilor definite de obiectul <literal>instance_attributes</literal>."
+msgstr "Ordinea în care obiectele <literal>instance_attributes</literal> sunt evaluate este determinată de către scorul acestora (cel mai mare la cel mai mic). Dacă nu este furnizat, scorul va avea valoarea implicită zero şi obiectele cu un scor egal sunt procesate în ordinea listată. Dacă obiectul <literal>instance_attributes</literal> nu are o <literal>rule</literal> sau are o <literal>rule</literal> care este evaluată la <literal>true</literal>, atunci pentru orice parametru pentru care resursa nu are înca o valoare, resursa va folosi valorile parametrilor definite de obiectul <literal>instance_attributes</literal>."
 
 #: Ch-Rules.xml:411(title)
 msgid "Using Rules to Control Cluster Options"
@@ -466,7 +463,7 @@ msgstr "Controlarea opţiunilor clusterului este reuşită în mare parte prin a
 
 #: Ch-Rules.xml:413(para)
 msgid "The difference is that because they are cluster options, one cannot (or should not because they won't work) use attribute based expressions. The following example illustrates how to set a different <literal>resource-stickiness</literal> value during and outside of work hours. This allows resources to automatically move back to their most preferred hosts, but at a time that (in theory) does not interfere with business activities."
-msgstr "Diferenţa este că din cauza că sunt opţiuni de cluster, nu ar trebui să puteţi (sau ar trebui să nu vreţi pentru că ele nu funcţionează) să folosiţi expresii bazate pe atribute. Următorul exemplu ilustrează cum să setaţi un set de valori <literal>instance_attributes</literal> diferite în timpul şi în afara orelor de lucru. Acest lucru permite resurselor să se mute înapoi în mod automat la host-urile cele mai preferate, dar la un moment în care (teoretic) nu interferează cu activităţile de business."
+msgstr "Diferenţa este că din cauza că sunt opţiuni de cluster, nu ar trebui să puteţi (sau nu ar trebui să pentru că acestea nu funcţionează) să folosiţi expresii bazate pe atribute. Următorul exemplu ilustrează cum să setaţi o valoare <literal>instance_attributes</literal> diferită în timpul şi în afara orelor de lucru. Acest lucru permite resurselor să se mute înapoi în mod automat la gazdele cele mai preferate, dar la un moment în care (teoretic) nu interferează cu activităţile de business."
 
 #: Ch-Rules.xml:419(title)
 msgid "Set resource-stickiness=INFINITY Mon-Fri between 9am and 6pm, and resource-stickiness=0 all other times"
@@ -477,9 +474,8 @@ msgid "Ensuring Time Based Rules Take Effect"
 msgstr "Asigurarea că Regulile Bazate pe Timp Iau Efect"
 
 #: Ch-Rules.xml:441(para)
-#, fuzzy
 msgid "A Pacemaker cluster is an event driven system. As such, it won't recalculate the best place for resources to run in unless something (like a resource failure or configuration change) happens. This can mean that a location constraint that only allows resource X to run between 9am and 5pm is not enforced."
-msgstr "Un cluster Pacemaker este un sistem condus de evenimente. Drept pentru care, nu va recalcula cel mai bun loc pentru a rula resursele decât dacă ceva (cum ar fi eşecul unei resurse sau modificarea configuraţiei) se întâmplă. Asta poate însemna că o restricţie a locaţiei care permite resursei X să ruleze numai între 9am şi 5pm nu este aplicată."
+msgstr "Un cluster Pacemaker este un sistem condus de evenimente. Prin urmare, nu va recalcula cel mai bun loc pentru a rula resursele decât dacă ceva (cum ar fi eşecul unei resurse sau modificarea configuraţiei) se întâmplă. Asta poate însemna că o restricţie a locaţiei care permite resursei X să ruleze numai între 9am şi 5pm nu este aplicată în mod obligatoriu."
 
 #: Ch-Rules.xml:446(para)
 msgid "If you rely on time based rules, it is essential that you set the <literal>cluster-recheck-interval</literal> option. This tells the cluster to periodically recalculate the ideal state of the cluster. For example, if you set <literal>cluster-recheck-interval=5m</literal>, then sometime between 9:00 and 9:05 the cluster would notice that it needs to start resource X, and between 17:00 and 17:05 it would realize it needed to be stopped."
