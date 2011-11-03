@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
 "POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-18 23:10+0200\n"
+"PO-Revision-Date: 2011-11-03 01:16+0100\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
+"X-Poedit-Language: Romanian\n"
 "X-Poedit-Country: ROMANIA\n"
 
 #: Ch-Stonith.xml:2(title)
@@ -21,7 +21,7 @@ msgstr "De Ce Aveţi Nevoie De STONITH"
 
 #: Ch-Stonith.xml:5(para)
 msgid "<ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rogue nodes or concurrent access."
-msgstr "<ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> este un acronym de la Shoot-The-Other-Node-In-The-Head şi protejează datele voastre de la a fi corupte de către noduri pribege sau de la acces simultan."
+msgstr "<ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> este un acronim pentru Shoot-The-Other-Node-In-The-Head şi protejează datele voastre de la a fi corupte de către noduri pribege sau de la acces simultan."
 
 #: Ch-Stonith.xml:6(para)
 msgid "Just because a node is unresponsive, this doesn't mean it isn't accessing your data. The only way to be 100% sure that your data is safe, is to use STONITH so we can be certain that the node is truly offline, before allowing the data to be accessed from another node."
@@ -41,7 +41,7 @@ msgstr "Este imperativ ca dispozitivul STONITH să permită clusterului să fac�
 
 #: Ch-Stonith.xml:18(para)
 msgid "The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many on-board IMPI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault."
-msgstr "Cea mai mare greşeală pe care o fac oamenii în alegerea unui dispozitiv STONITH este să folosească un switch de curent cu acces la distanţă (cum ar fi multe controlere IPMI integrate) care partajează curentul cu nodul pe care îl controlează. În astfel de cazuri, clusterul nu poate fi sigur dacă nodul este cu adevărat offline sau inactiv şi suferind din cauza unei probleme de reţea."
+msgstr "Cea mai mare greşeală pe care o fac oamenii în alegerea unui dispozitiv STONITH este să folosească un switch de curent cu acces la distanţă (cum ar fi multe controlere IPMI integrate) care partajează curentul cu nodul pe care îl controlează. În astfel de cazuri, clusterul nu poate fi sigur dacă nodul este cu adevărat offline sau inactiv şi suferă din cauza unei probleme de reţea."
 
 #: Ch-Stonith.xml:22(para)
 msgid "Likewise, any device that relies on the machine being active (such as SSH-based \"devices\" used during testing) are inappropriate."
@@ -69,11 +69,11 @@ msgstr "stonith_admin --metadata --agent <placeholder-1/>"
 
 #: Ch-Stonith.xml:35(para)
 msgid "The output should be XML formatted text containing additional parameter descriptions. We will endeavour to make the output more friendly in a later version."
-msgstr "Rezultatul de ieşire ar trebui să fie text formatat XML conţinând descrierile parametrilor adiţionali. Ne vom aventura să facem rezultatul de ieşire mai prietenos într-o versiune ulterioară."
+msgstr "Rezultatul de ieşire ar trebui să fie un text formatat XML conţinând descrierile parametrilor adiţionali. Ne vom aventura să facem rezultatul de ieşire mai prietenos într-o versiune ulterioară."
 
 #: Ch-Stonith.xml:39(para)
 msgid "Create a file called stonith.xml containing a primitive resource with a class of stonith, a type of <replaceable>type</replaceable> and a parameter for each of the values returned in step 2"
-msgstr "Creaţi un fişier numit stonith.xml conţinând o resursă primitivă cu o clasă stonith, un tip de <replaceable>type</replaceable> şi un parametru pentru fiecare dintre valorile returnate la pasul 2"
+msgstr "Creaţi un fişier numit stonith.xml conţinând o resursă primitivă cu o clasă de stonith, un tip de <replaceable>type</replaceable> şi un parametru pentru fiecare dintre valorile returnate la pasul 2"
 
 #: Ch-Stonith.xml:44(para)
 msgid "If the device does not know how to fence nodes based on their uname, you may also need to set the special <constant>pcmk_host_map</constant> parameter. See <command>man stonithd</command> for details."
@@ -81,7 +81,7 @@ msgstr "Dacă dispozitivul nu ştie să evacueze noduri pe baza uname-ului acest
 
 #: Ch-Stonith.xml:49(para)
 msgid "If the device does not support the <constant>list</constant> command, you may also need to set the special <constant>pcmk_host_list</constant> and/or <constant>pcmk_host_check</constant> parameters. See <command>man stonithd</command> for details."
-msgstr "Dacă dispozitivul nu suportă comanda <command>list</command>, ar putea fi nevoie să setaţi parametrul special <constant>pcmk_host_list</constant> şi/sau <constant>pcmk_host_check</constant>. Vedeţi <command>man stonithd</command> pentru detalii."
+msgstr "Dacă dispozitivul nu suportă comanda <command>list</command>, ar putea fi nevoie să setaţi parametrii speciali <constant>pcmk_host_list</constant> şi/sau <constant>pcmk_host_check</constant>. Vedeţi <command>man stonithd</command> pentru detalii."
 
 #: Ch-Stonith.xml:55(para)
 msgid "If the device does not expect the victim to be specified with the <constant>port</constant> parameter, you may also need to set the special <constant>pcmk_host_argument</constant> parameter. See <command>man stonithd</command> for details."
