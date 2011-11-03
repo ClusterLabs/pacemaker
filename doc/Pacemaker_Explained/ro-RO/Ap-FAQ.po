@@ -131,5 +131,5 @@ msgstr "Când căutaţi asistenţă, vă rugăm să vă asiguraţi că aveţi un
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ap-FAQ.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

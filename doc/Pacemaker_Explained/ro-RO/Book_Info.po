@@ -60,5 +60,5 @@ msgstr "Pe deasupra, acest document NU este un ghid pas-cu-pas pentru configurar
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Book_Info.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

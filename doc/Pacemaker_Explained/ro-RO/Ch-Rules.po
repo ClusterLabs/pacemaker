@@ -488,5 +488,5 @@ msgstr "Ţineţi cont că momentul efectiv de pornire şi oprire al acţiunilor 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ch-Rules.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

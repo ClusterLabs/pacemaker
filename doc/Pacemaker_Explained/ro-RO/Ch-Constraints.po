@@ -529,5 +529,5 @@ msgstr "Reprezentarea vizuală a unui lanţ de colocare unde membrii setului mij
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ch-Constraints.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

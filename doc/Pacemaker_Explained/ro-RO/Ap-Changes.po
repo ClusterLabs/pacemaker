@@ -151,5 +151,5 @@ msgstr "Valorile implicite ale resurselor si operaţiunilor nu mai sunt citite d
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ap-Changes.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

@@ -30,5 +30,5 @@ msgstr "df.cluster@gmail.com"
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Author_Group.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

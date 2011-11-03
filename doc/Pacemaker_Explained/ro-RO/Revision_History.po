@@ -80,5 +80,5 @@ msgstr "Reorganizarea cărţii pentru folosirea cu <placeholder-1/>"
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Revision_History.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

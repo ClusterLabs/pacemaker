@@ -252,5 +252,5 @@ msgstr "Pe sistemele pe 32 de biţi calea exactă poate fi diferită, dar toate 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ap-Debug.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

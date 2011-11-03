@@ -573,5 +573,5 @@ msgstr "Pentru a reduce consumul de lăţime de bandă, clusterul transmite numa
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ch-Basics.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

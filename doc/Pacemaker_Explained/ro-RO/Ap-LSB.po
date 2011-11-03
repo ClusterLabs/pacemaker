@@ -130,5 +130,5 @@ msgstr "Dacă răspunsul la oricare din întrebările de mai sus este nu, atunci
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ap-LSB.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

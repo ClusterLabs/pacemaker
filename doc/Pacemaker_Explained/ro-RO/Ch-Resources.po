@@ -628,5 +628,5 @@ msgstr "cibadmin -M -X ‘&lt;op id=\"public-ip-check\" disabled=\"false\"/&gt;'
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ch-Resources.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

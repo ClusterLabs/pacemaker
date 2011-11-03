@@ -223,5 +223,5 @@ msgstr "Pe nodul nou, populaţi UUID-ul acestuia folosind crm_uuid -w şi UUID-u
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ch-Nodes.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

@@ -619,5 +619,5 @@ msgstr "Dacă atât un câmp unic si non-unic sunt schimbate simultan, resursa t
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ch-Advanced-Options.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

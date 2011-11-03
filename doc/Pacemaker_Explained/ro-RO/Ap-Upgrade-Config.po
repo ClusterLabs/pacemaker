@@ -208,5 +208,5 @@ msgstr "Avantajul acestei metode este acela că poate fi efectuată fară ca şi
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ap-Upgrade-Config.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

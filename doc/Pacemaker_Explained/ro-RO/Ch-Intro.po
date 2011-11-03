@@ -263,5 +263,5 @@ msgstr "În anumite cazuri, ar putea fi necesar să oprească alimentarea noduri
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ch-Intro.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 

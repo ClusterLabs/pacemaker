@@ -50,5 +50,5 @@ msgstr "Configuraţia Corosync: <ulink url=\"http://www.corosync.org/\"/>"
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Pacemaker_Explained.xml:0(None)
 msgid "translator-credits"
-msgstr "meritele-traducătorului"
+msgstr "genericul-traducătorului"
 
