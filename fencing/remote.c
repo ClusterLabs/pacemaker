@@ -310,6 +310,8 @@ remote_fencing_op_t * initiate_remote_stonith_op(stonith_client_t *client, xmlNo
     if(!manual_ack) {
         op->op_timer = g_timeout_add(1200*op->base_timeout, remote_op_timeout, op);
         op->query_timer = g_timeout_add(100*op->base_timeout, remote_op_query_timeout, op);
+
+    } else {
         crm_xml_add(query, F_STONITH_DEVICE, "manual_ack");    
     }
     
