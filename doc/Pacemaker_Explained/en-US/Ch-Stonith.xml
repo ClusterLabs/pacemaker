@@ -2,10 +2,10 @@
     <title>Protecting Your Data - STONITH</title>
     <section id="s-stonith-why">
       <title>Why You Need STONITH</title>
-      <para><ulink url="http://en.wikipedia.org/wiki/STONITH">STONITH</ulink> is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rogue nodes or concurrent access.</para>
+      <para><ulink url="http://en.wikipedia.org/wiki/STONITH">STONITH</ulink> is an acronym for Shoot-The-Other-Node-In-The-Head; its purpose is to protect your data from being corrupted by rogue nodes or concurrent access.</para>
       <para>
-	Just because a node is unresponsive, this doesn't mean it isn't accessing your data.
-	The only way to be 100% sure that your data is safe, is to use STONITH so we can be certain that the node is truly offline, before allowing the data to be accessed from another node.
+	When a node is unresponsive it might still access your data.
+	The only way to be 100% sure that your data is safe, is to use STONITH, so we can be certain that the node is truly offline, before allowing the data to be accessed from another node.
       </para>
       <para>
 	STONITH also has a role to play in the event that a clustered service cannot be stopped.
@@ -14,31 +14,31 @@
     </section>
     <section id="s-stonith-choose">
       <title>What STONITH Device Should You Use</title>
-      <para>It is crucial that the STONITH device can allow the cluster to differentiate between a node failure and a network one.</para>
+      <para>It is crucial that the STONITH device can allow the cluster to differentiate between a node and a network failure.</para>
       <para>
-	The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many on-board IMPI controllers) that shares power with the node it controls.
+	The biggest mistake people make in choosing a STONITH device is to use a remote power switch (such as many on-board IPMI controllers) that shares power with the node it controls.
 	In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault.
       </para>
       <para>Likewise, any device that relies on the machine being active (such as SSH-based "devices" used during testing) are inappropriate.</para>
     </section>
     <section id="s-stonith-configure">
       <title>Configuring STONITH</title>
-      <orderedlist>
+      <orderedlist spacing="compact">
 	<listitem>
           <para>Find the correct driver: <command>stonith_admin --list-installed</command></para>
 	</listitem>
 	<listitem>
           <para> Since every device is different, the parameters needed to configure it will vary.
-          To find out the parameters associated with the device, run:</para>
-	  <para><command>stonith_admin --metadata --agent <replaceable>type</replaceable></command>
-        </para>
+          To find out which parameters the device supports resp. needs, run:
+        <programlisting><command>stonith_admin --metadata --agent <replaceable>type</replaceable></command>
+        </programlisting></para>
 	  <para>The output should be XML formatted text containing additional parameter descriptions. We
           will endeavour to make the output more friendly in a later version.</para>
 	</listitem>
 	<listitem>
-        <para>Create a file called stonith.xml containing a primitive resource with a class of
-          stonith, a type of <replaceable>type</replaceable> and a parameter for each of the values
-          returned in step 2</para>
+        <para>Create a file called <filename>stonith.xml</filename> containing a primitive resource with a class of
+          <literal>stonith</literal>, a type of <replaceable>type</replaceable> and a parameter for each of the values
+          returned in step 2.</para>
       </listitem>
       <listitem>
         <para>If the device does not know how to fence nodes based on their uname, you may also need
@@ -71,106 +71,75 @@
 	<title>Example</title>
 	<para>Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then
         we would chose the <literal>fence_ipmilan</literal> driver in step 2 and obtain the
-        following list of parameters</para>
+        following list of parameters:</para>
 	<figure>
 	  <title>Obtaining a list of STONITH Parameters</title>
-	  <programlisting>
-# stonith_admin --metadata -a fence_ipmilan
+      <programlisting># <command>stonith_admin --metadata -a fence_ipmilan</command><![CDATA[
+<?xml version="1.0" ?>
+<resource-agent name="fence_ipmilan" shortdesc="Fence agent for IPMI over LAN">
+<longdesc>
+fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI.
+This agent calls support software using ipmitool (http://ipmitool.sf.net/).
 
-&lt;?xml version="1.0" ?&gt;
-&lt;resource-agent name="fence_ipmilan" shortdesc="Fence agent for IPMI over LAN"&gt;
-&lt;longdesc&gt;
-fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).
-
-To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)&lt;/longdesc&gt;
-&lt;parameters&gt;
-	&lt;parameter name="auth" unique="1"&gt;
-		&lt;getopt mixed="-A" /&gt;
-		&lt;content type="string" /&gt;
-		&lt;shortdesc lang="en"&gt;IPMI Lan Auth type (md5, password, or none)&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="ipaddr" unique="1"&gt;
-		&lt;getopt mixed="-a" /&gt;
-		&lt;content type="string" /&gt;
-		&lt;shortdesc lang="en"&gt;IPMI Lan IP to talk to&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="passwd" unique="1"&gt;
-		&lt;getopt mixed="-p" /&gt;
-		&lt;content type="string" /&gt;
-		&lt;shortdesc lang="en"&gt;Password (if required) to control power on IPMI device&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="passwd_script" unique="1"&gt;
-		&lt;getopt mixed="-S" /&gt;
-		&lt;content type="string" /&gt;
-		&lt;shortdesc lang="en"&gt;Script to retrieve password (if required)&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="lanplus" unique="1"&gt;
-		&lt;getopt mixed="-P" /&gt;
-		&lt;content type="boolean" /&gt;
-		&lt;shortdesc lang="en"&gt;Use Lanplus&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="login" unique="1"&gt;
-		&lt;getopt mixed="-l" /&gt;
-		&lt;content type="string" /&gt;
-		&lt;shortdesc lang="en"&gt;Username/Login (if required) to control power on IPMI device&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="action" unique="1"&gt;
-		&lt;getopt mixed="-o" /&gt;
-		&lt;content type="string" default="reboot"/&gt;
-		&lt;shortdesc lang="en"&gt;Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="timeout" unique="1"&gt;
-		&lt;getopt mixed="-t" /&gt;
-		&lt;content type="string" /&gt;
-		&lt;shortdesc lang="en"&gt;Timeout (sec) for IPMI operation&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="cipher" unique="1"&gt;
-		&lt;getopt mixed="-C" /&gt;
-		&lt;content type="string" /&gt;
-		&lt;shortdesc lang="en"&gt;Ciphersuite to use (same as ipmitool -C parameter)&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="method" unique="1"&gt;
-		&lt;getopt mixed="-M" /&gt;
-		&lt;content type="string" default="onoff"/&gt;
-		&lt;shortdesc lang="en"&gt;Method to fence (onoff or cycle)&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="power_wait" unique="1"&gt;
-		&lt;getopt mixed="-T" /&gt;
-		&lt;content type="string" default="2"/&gt;
-		&lt;shortdesc lang="en"&gt;Wait X seconds after on/off operation&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="delay" unique="1"&gt;
-		&lt;getopt mixed="-f" /&gt;
-		&lt;content type="string" /&gt;
-		&lt;shortdesc lang="en"&gt;Wait X seconds before fencing is started&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-	&lt;parameter name="verbose" unique="1"&gt;
-		&lt;getopt mixed="-v" /&gt;
-		&lt;content type="boolean" /&gt;
-		&lt;shortdesc lang="en"&gt;Verbose mode&lt;/shortdesc&gt;
-	&lt;/parameter&gt;
-&lt;/parameters&gt;
-&lt;actions&gt;
-	&lt;action name="on" /&gt;
-	&lt;action name="off" /&gt;
-	&lt;action name="reboot" /&gt;
-	&lt;action name="status" /&gt;
-	&lt;action name="diag" /&gt;
-	&lt;action name="list" /&gt;
-	&lt;action name="monitor" /&gt;
-	&lt;action name="metadata" /&gt;
-&lt;/actions&gt;
-&lt;/resource-agent&gt;
-</programlisting>
+To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and
+increase wait after operation to 4 seconds (power_wait=4 / -T 4)</longdesc>
+<parameters>
+   <parameter name="auth" unique="1">
+      <shortdesc lang="en">IPMI Lan Auth type (md5, password, or none)</shortdesc>
+      <getopt mixed="-A" />         <content type="string" /> </parameter>
+   <parameter name="ipaddr" unique="1">
+      <shortdesc lang="en">IPMI Lan IP to talk to</shortdesc>
+      <getopt mixed="-a" />         <content type="string" /> </parameter>
+   <parameter name="passwd" unique="1">
+      <shortdesc lang="en">Password  to control power on IPMI device</shortdesc>
+      <getopt mixed="-p" />         <content type="string" /> </parameter>
+   <parameter name="passwd_script" unique="1">
+      <shortdesc lang="en">Script to retrieve password (if required)</shortdesc>
+      <getopt mixed="-S" />         <content type="string" /> </parameter>
+   <parameter name="lanplus" unique="1">
+      <shortdesc lang="en">Use Lanplus</shortdesc>
+      <getopt mixed="-P" />         <content type="boolean" /> </parameter>
+   <parameter name="login" unique="1">
+      <shortdesc lang="en">Username/Login to control IPMI device</shortdesc>
+      <getopt mixed="-l" />         <content type="string" /> </parameter>
+   <parameter name="action" unique="1">
+      <shortdesc lang="en">Operation to perform. Valid operations:
+         on, off, reboot, status, list, diag, monitor or metadata</shortdesc>
+      <getopt mixed="-o" />         <content type="string" default="reboot"/> </parameter>
+   <parameter name="timeout" unique="1">
+      <shortdesc lang="en">Timeout (sec) for IPMI operation</shortdesc>
+      <getopt mixed="-t" />         <content type="string" /> </parameter>
+   <parameter name="cipher" unique="1">
+      <shortdesc lang="en">Ciphersuite to use (same as ipmitool -C parameter)</shortdesc>
+      <getopt mixed="-C" />         <content type="string" /> </parameter>
+   <parameter name="method" unique="1">
+      <shortdesc lang="en">Method to fence (onoff or cycle)</shortdesc>
+      <getopt mixed="-M" />         <content type="string" default="onoff"/> </parameter>
+   <parameter name="power_wait" unique="1">
+      <shortdesc lang="en">Wait X seconds after on/off operation</shortdesc>
+      <getopt mixed="-T" />         <content type="string" default="2"/> </parameter>
+   <parameter name="delay" unique="1">
+      <shortdesc lang="en">Wait X seconds before fencing is started</shortdesc>
+      <getopt mixed="-f" />         <content type="string" /> </parameter>
+   <parameter name="verbose" unique="1">
+      <shortdesc lang="en">Verbose mode</shortdesc>
+      <getopt mixed="-v" />         <content type="boolean" /> </parameter>
+</parameters>
+<actions>
+   <action name="on"      />        <action name="off"      /> 
+   <action name="reboot"  />        <action name="status"   /> 
+   <action name="diag"    />        <action name="list"     /> 
+   <action name="monitor" />        <action name="metadata" />
+</actions>
+</resource-agent>
+]]> </programlisting>
 	</figure>
-	<para>from which we would create a STONITH resource fragment that might look like this</para>
+	<para>From this list we would create a STONITH resource fragment that might look like this:
 	<example>
 	  <title>Sample STONITH Resource</title>
-	  <programlisting>
-<![CDATA[
-       <primitive id="ipmi" class="stonith" type="fence_ipmilan">
+	  <programlisting><![CDATA[ <primitive id="ipmi" class="stonith" type="fence_ipmilan">
         <operations>
-         <op id="ipmi-mon-1" name="monitor" interval="120s"/>
+         <op id="ipmi-mon-1" name="monitor" interval="2h"/>
         </operations>
         <instance_attributes id="ipmi-parameters">
           <nvpair id="ipmi-attr-1" name="pcmk_host_list" value="node1 node2 node3 node4"/>
@@ -178,10 +147,9 @@ To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / 
           <nvpair id="ipmi-attr-1" name="login" value="testuser"/>
           <nvpair id="ipmi-attr-1" name="passwd" value="abc123"/>
         </instance_attributes>
-       </primitive>
-]]>
-	  </programlisting>
+       </primitive> ]]> </programlisting>
 	</example>
+ The monitor interval of two hours is explained by bugs in some IPMI implementations; see <emphasis>Monitoring the fencing devices</emphasis><footnote><para><ulink url="http://www.clusterlabs.org/doc/crm_fencing.html" /></para></footnote>.</para>
       </section>
     </section>
   </chapter>

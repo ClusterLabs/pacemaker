@@ -12,7 +12,7 @@
   <xi:include href="Ch-Resources.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Constraints.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <chapter id="ch-notification">
-    <title>Receiving Notification of Cluster Events</title>
+    <title>Receiving Notification for Cluster Events</title>
     <section id="s-notify-email"><title>Configuring Email Notifications</title><para/></section>
     <section id="s-notify-snmp"><title>Configuring SNMP Notifications</title><para/></section>
   </chapter>
@@ -32,11 +32,11 @@
   <xi:include href="Ap-Samples.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <appendix id="ap-further-reading">
     <title>Further Reading</title>
-    <itemizedlist>
-      <listitem><para>Project Website: <ulink url="http://www.clusterlabs.org/"/> and Documentation <ulink url="http://www.clusterlabs.org/wiki/Documentation"/></para></listitem>
+    <itemizedlist spacing="compact">
+      <listitem><para>Project Website <ulink url="http://www.clusterlabs.org/"/></para></listitem>
+      <listitem><para>Project Documentation <ulink url="http://www.clusterlabs.org/wiki/Documentation"/></para></listitem>
       <listitem>
-	<para>Cluster Commands</para>
-	<para>A comprehensive guide to cluster commands has been written by Novell and can be found at: <ulink url="http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html"/></para>
+        <para>A comprehensive guide to cluster commands has been written by Novell<footnote><para><ulink url="http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html"/></para></footnote></para>
       </listitem>
       <listitem><para>Heartbeat configuration: <ulink url="http://www.linux-ha.org/"/></para></listitem>
       <listitem><para>Corosync Configuration: <ulink url="http://www.corosync.org/"/></para></listitem>

@@ -69,6 +69,7 @@ tools/hb2openais.sh
 *.8.xml
 *.8.html
 doc/*/en-US/images/*.png
+doc/*/tmp/**
 doc/*/publish
 cib/cib
 cib/cibmon
@@ -124,3 +125,4 @@ logs
 *.sed
 *.orig
 *.rej
+*.swp
