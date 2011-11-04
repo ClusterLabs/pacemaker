@@ -75,7 +75,7 @@
 		<listitem>
 		  <para>
 		  Upgrade the Pacemaker software.
-		  This may also include upgrading the cluster stack and/or the underlying operating system..
+		  This may also include upgrading the cluster stack and/or the underlying operating system.
 		  </para>
 		</listitem>
 	      </orderedlist>

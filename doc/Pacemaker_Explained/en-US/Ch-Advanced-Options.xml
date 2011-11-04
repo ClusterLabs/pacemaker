@@ -354,11 +354,11 @@
       <section>
 	<title>Resource Migration</title>
 	<para>
-	  Some resources, such as Xen virtual guests, are able to move to another location without lose of state.
+	  Some resources, such as Xen virtual guests, are able to move to another location without loss of state.
 	  We call this resource migration and is different from the normal practice of stopping the resource on the first machine and starting it elsewhere.
 	</para>
 	<para>
-	  Not all resources are able to migrate, see the Migration Checklist below, and those that can wont do so in all situations.
+	  Not all resources are able to migrate, see the Migration Checklist below, and those that can won't do so in all situations.
 	  Conceptually there are two requirements from which the other prerequisites follow:
 	</para>
 	<itemizedlist>
@@ -392,7 +392,7 @@
     <section id="s-reusing-config-elements">
       <title>Reusing Rules, Options and Sets of Operations</title>
       <para>
-	Sometimes a number of constraints need to use the same set of rules and resources need to set the same options an parameters.
+	Sometimes a number of constraints need to use the same set of rules and resources need to set the same options and parameters.
 	To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id.
       </para>
       <para>So if for one resource you have</para>
