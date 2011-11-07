@@ -1,0 +1,69 @@
+a:link {
+	color:#0076d6;
+}
+
+a:visited {
+	color:grey;
+}
+
+h1 {
+	color:#172969;
+}
+
+.producttitle {
+	background: #2C4081 url(../images/h1-bg.png) top left repeat;
+}
+
+.section h1.title {
+	color:#2C4081;
+}
+
+
+h2,h3,h4,h5,h6 {
+	color:#2C4081;
+}
+
+table {
+	border:1px solid #732f2f;
+}
+
+table th {
+	background-color:#2C4081;
+}
+
+table tr.even td {
+	background-color: #e3e0d6;
+}
+
+#title a {
+	height: 54px;
+}
+
+.term{
+	color:#172969;
+}
+
+.revhistory table th {
+	color: #172969;
+}
+
+.edition {
+	color: #172969;
+}
+
+span.remark{
+	background-color: #ffff00;
+}
+
+.example {
+	border: 1px solid #732f2f;
+	background-color: #e3e0d6;
+}
+
+.programlisting {
+	border: 1px solid #732f2f;
+}
+
+.screen {
+	border: 1px solid #732f2f;
+}
