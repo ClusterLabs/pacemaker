@@ -1,0 +1,291 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2011-11-18 07:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Ch-Verification.xml:7(title)
+msgid "Verify Cluster Installation"
+msgstr ""
+
+#: Ch-Verification.xml:9(title)
+msgid "Verify Corosync Installation"
+msgstr ""
+
+#: Ch-Verification.xml:10(para)
+msgid "Start Corosync on the first node"
+msgstr ""
+
+#: Ch-Verification.xml:15(userinput)
+#, no-wrap
+msgid "/etc/init.d/corosync start"
+msgstr ""
+
+#: Ch-Verification.xml:16(emphasis) Ch-Verification.xml:39(emphasis)
+msgid "Starting Corosync Cluster Engine (corosync): [ OK ]"
+msgstr ""
+
+#: Ch-Verification.xml:14(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n<placeholder-2/>\n"
+msgstr ""
+
+#: Ch-Verification.xml:18(para)
+msgid "Check the cluster started correctly and that an initial membership was able to form"
+msgstr ""
+
+#: Ch-Verification.xml:23(userinput)
+#, no-wrap
+msgid "grep -e \"corosync.*network interface\" -e \"Corosync Cluster Engine\" \\"
+msgstr ""
+
+#: Ch-Verification.xml:24(userinput)
+#, no-wrap
+msgid "-e \"Successfully read main configuration file\" /var/log/messages"
+msgstr ""
+
+#: Ch-Verification.xml:27(userinput) Ch-Verification.xml:47(userinput)
+#, no-wrap
+msgid "grep TOTEM /var/log/messages"
+msgstr ""
+
+#: Ch-Verification.xml:30(emphasis) Ch-Verification.xml:50(emphasis)
+msgid "The network interface [192.168.122.101] is now up."
+msgstr ""
+
+#: Ch-Verification.xml:31(emphasis) Ch-Verification.xml:51(emphasis)
+msgid "A processor joined or left the membership and a new membership was formed."
+msgstr ""
+
+#: Ch-Verification.xml:22(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n<placeholder-2/>\nAug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN  ] Corosync Cluster Engine ('1.1.0'): started and ready to provide service.\nAug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN  ] Successfully read main configuration file '/etc/corosync/corosync.conf'.\n[root@pcmk-1 ~]# <placeholder-3/>\nAug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transport (UDP/IP).\nAug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).\nAug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <placeholder-4/>\nAug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <placeholder-5/>\n"
+msgstr ""
+
+#: Ch-Verification.xml:33(para)
+msgid "With one node functional, its now safe to start Corosync on the second node as well."
+msgstr ""
+
+#: Ch-Verification.xml:38(userinput)
+#, no-wrap
+msgid "ssh pcmk-2 -- /etc/init.d/corosync start"
+msgstr ""
+
+#: Ch-Verification.xml:37(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n<placeholder-2/>\n[root@pcmk-1 ~]#\n"
+msgstr ""
+
+#: Ch-Verification.xml:42(para)
+msgid "Check the cluster formed correctly"
+msgstr ""
+
+#: Ch-Verification.xml:52(emphasis)
+msgid "A processor joined or left the membership and a new membership was formed"
+msgstr ""
+
+#: Ch-Verification.xml:46(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nAug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transport (UDP/IP).\nAug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).\nAug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <placeholder-2/>\nAug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <placeholder-3/>\nAug 27 09:12:11 pcmk-1 corosync[1540]: [TOTEM ] <placeholder-4/>.\n"
+msgstr ""
+
+#: Ch-Verification.xml:57(title)
+msgid "Verify Pacemaker Installation"
+msgstr ""
+
+#: Ch-Verification.xml:58(para)
+msgid "Now that we have confirmed that Corosync is functional we can check the rest of the stack."
+msgstr ""
+
+#: Ch-Verification.xml:63(userinput)
+#, no-wrap
+msgid "grep pcmk_startup /var/log/messages"
+msgstr ""
+
+#: Ch-Verification.xml:64(emphasis)
+msgid "CRM: Initialized"
+msgstr ""
+
+#: Ch-Verification.xml:67(emphasis)
+msgid "Service: 9"
+msgstr ""
+
+#: Ch-Verification.xml:68(emphasis)
+msgid "Local hostname: pcmk-1"
+msgstr ""
+
+#: Ch-Verification.xml:62(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nAug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <placeholder-2/>\nAug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] Logging: Initialized pcmk_startup\nAug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: Maximum core file size is: 18446744073709551615\nAug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <placeholder-3/>\nAug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <placeholder-4/>\n"
+msgstr ""
+
+#: Ch-Verification.xml:70(para)
+msgid "Now try starting Pacemaker and check the necessary processes have been started"
+msgstr ""
+
+#: Ch-Verification.xml:74(userinput)
+#, no-wrap
+msgid "/etc/init.d/pacemaker start"
+msgstr ""
+
+#: Ch-Verification.xml:75(emphasis) Ch-Verification.xml:126(emphasis)
+msgid "Starting Pacemaker Cluster Manager: [ OK ]"
+msgstr ""
+
+#: Ch-Verification.xml:73(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n<placeholder-2/>\n\t\t"
+msgstr ""
+
+#: Ch-Verification.xml:79(userinput)
+#, no-wrap
+msgid "grep -e pacemakerd.*get_config_opt -e pacemakerd.*start_child \\"
+msgstr ""
+
+#: Ch-Verification.xml:80(userinput)
+#, no-wrap
+msgid "-e \"Starting Pacemaker\" /var/log/messages"
+msgstr ""
+
+#: Ch-Verification.xml:82(emphasis)
+msgid "Found '1' for option: ver"
+msgstr ""
+
+#: Ch-Verification.xml:90(emphasis)
+msgid "Starting Pacemaker 1.1.5 (Build: 31f088949239+)"
+msgstr ""
+
+#: Ch-Verification.xml:91(emphasis)
+msgid "for process stonith-ng"
+msgstr ""
+
+#: Ch-Verification.xml:92(emphasis)
+msgid "for process cib"
+msgstr ""
+
+#: Ch-Verification.xml:93(emphasis)
+msgid "for process lrmd"
+msgstr ""
+
+#: Ch-Verification.xml:94(emphasis)
+msgid "for process attrd"
+msgstr ""
+
+#: Ch-Verification.xml:95(emphasis)
+msgid "for process pengine"
+msgstr ""
+
+#: Ch-Verification.xml:96(emphasis)
+msgid "for process crmd"
+msgstr ""
+
+#: Ch-Verification.xml:78(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n<placeholder-2/>\nFeb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'pacemaker' for option: name\nFeb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: <placeholder-3/>\nFeb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Defaulting to 'no' for option: use_logd\nFeb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Defaulting to 'no' for option: use_mgmtd\nFeb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'on' for option: debug\nFeb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'yes' for option: to_logfile\nFeb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found '/var/log/corosync.log' for option: logfile\nFeb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'yes' for option: to_syslog\nFeb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'daemon' for option: syslog_facility\nFeb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: main: <placeholder-4/>:  docbook-manpages publican ncurses trace-logging cman cs-quorum heartbeat corosync snmp libesmtp\nFeb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14022 <placeholder-5/>\nFeb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14023 <placeholder-6/>\nFeb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14024 <placeholder-7/>\nFeb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14025 <placeholder-8/>\nFeb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14026 <placeholder-9/>\nFeb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14027 <placeholder-10/>\n"
+msgstr ""
+
+#: Ch-Verification.xml:100(userinput)
+#, no-wrap
+msgid "ps axf"
+msgstr ""
+
+#: Ch-Verification.xml:105(emphasis)
+msgid "pacemakerd"
+msgstr ""
+
+#: Ch-Verification.xml:106(emphasis) Ch-Verification.xml:107(emphasis) Ch-Verification.xml:108(emphasis) Ch-Verification.xml:109(emphasis) Ch-Verification.xml:110(emphasis) Ch-Verification.xml:111(emphasis)
+msgid "\\_"
+msgstr ""
+
+#: Ch-Verification.xml:106(emphasis)
+msgid "stonithd"
+msgstr ""
+
+#: Ch-Verification.xml:107(emphasis)
+msgid "cib"
+msgstr ""
+
+#: Ch-Verification.xml:108(emphasis)
+msgid "lrmd"
+msgstr ""
+
+#: Ch-Verification.xml:109(emphasis)
+msgid "attrd"
+msgstr ""
+
+#: Ch-Verification.xml:110(emphasis)
+msgid "pengine"
+msgstr ""
+
+#: Ch-Verification.xml:111(emphasis)
+msgid "crmd"
+msgstr ""
+
+#: Ch-Verification.xml:99(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n  PID TTY      STAT   TIME COMMAND\n    2 ?        S&lt;     0:00 [kthreadd]\n    3 ?        S&lt;     0:00  \\_ [migration/0]\n... lots of processes ...\n 13990 ?    S       0:01 <placeholder-2/>\n 14022 ?    Sa      0:00  <placeholder-3/>/usr/lib64/heartbeat/<placeholder-4/>\n 14023 ?    Sa      0:00  <placeholder-5/>/usr/lib64/heartbeat/<placeholder-6/>\n 14024 ?    Sa      0:00  <placeholder-7/>/usr/lib64/heartbeat/<placeholder-8/>\n 14025 ?    Sa      0:00  <placeholder-9/>/usr/lib64/heartbeat/<placeholder-10/>\n 14026 ?    Sa      0:00  <placeholder-11/>/usr/lib64/heartbeat/<placeholder-12/>\n 14027 ?    Sa      0:00  <placeholder-13/>/usr/lib64/heartbeat/<placeholder-14/>\n"
+msgstr ""
+
+#: Ch-Verification.xml:113(para)
+msgid "Next, check for any ERRORs during startup - there shouldn’t be any."
+msgstr ""
+
+#: Ch-Verification.xml:117(userinput)
+#, no-wrap
+msgid "grep ERROR: /var/log/messages | grep -v unpack_resources"
+msgstr ""
+
+#: Ch-Verification.xml:116(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n[root@pcmk-1 ~]# \n"
+msgstr ""
+
+#: Ch-Verification.xml:120(para)
+msgid "Repeat on the other node and display the cluster's status."
+msgstr ""
+
+#: Ch-Verification.xml:125(userinput)
+#, no-wrap
+msgid "ssh pcmk-2 -- /etc/init.d/pacemaker start"
+msgstr ""
+
+#: Ch-Verification.xml:127(userinput)
+#, no-wrap
+msgid "crm_mon"
+msgstr ""
+
+#: Ch-Verification.xml:130(emphasis)
+msgid "Stack: openais"
+msgstr ""
+
+#: Ch-Verification.xml:131(emphasis)
+msgid "partition with quorum"
+msgstr ""
+
+#: Ch-Verification.xml:133(emphasis)
+msgid "2 Nodes configured, 2 expected votes"
+msgstr ""
+
+#: Ch-Verification.xml:134(emphasis)
+msgid "0 Resources configured"
+msgstr ""
+
+#: Ch-Verification.xml:137(emphasis)
+msgid "Online: [ pcmk-1 pcmk-2 ]"
+msgstr ""
+
+#: Ch-Verification.xml:124(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n<placeholder-2/>\n[root@pcmk-1 ~]# <placeholder-3/>\n============\nLast updated: Thu Aug 27 16:54:55 2009\n<placeholder-4/>\nCurrent DC: pcmk-1 - <placeholder-5/>\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n<placeholder-6/>\n<placeholder-7/>.\n============\n\n<placeholder-8/>\n"
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: Ch-Verification.xml:0(None)
+msgid "translator-credits"
+msgstr ""
+

@@ -1,0 +1,48 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2011-11-18 07:09+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Ap-Reading.xml:7(title)
+msgid "Further Reading"
+msgstr ""
+
+#: Ap-Reading.xml:9(emphasis)
+msgid "Project Website"
+msgstr ""
+
+#: Ap-Reading.xml:12(ulink)
+msgid "http://www.clusterlabs.org"
+msgstr ""
+
+#: Ap-Reading.xml:15(emphasis)
+msgid "Cluster Commands"
+msgstr ""
+
+#: Ap-Reading.xml:17(para)
+msgid "A comprehensive guide to cluster commands has been written by Novell and can be found at:"
+msgstr ""
+
+#: Ap-Reading.xml:21(ulink)
+msgid "http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html"
+msgstr ""
+
+#: Ap-Reading.xml:24(emphasis)
+msgid "Corosync"
+msgstr ""
+
+#: Ap-Reading.xml:27(ulink)
+msgid "http://www.corosync.org"
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: Ap-Reading.xml:0(None)
+msgid "translator-credits"
+msgstr ""
+

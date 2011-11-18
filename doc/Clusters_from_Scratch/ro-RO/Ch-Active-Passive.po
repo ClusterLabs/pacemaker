@@ -1,0 +1,460 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2011-11-18 07:09+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Ch-Active-Passive.xml:7(title)
+msgid "Creating an Active/Passive Cluster"
+msgstr ""
+
+#: Ch-Active-Passive.xml:9(title)
+msgid "Exploring the Existing Configuration"
+msgstr ""
+
+#: Ch-Active-Passive.xml:10(para)
+msgid "When Pacemaker starts up, it automatically records the number and details of the nodes in the cluster as well as which stack is being used and the version of Pacemaker being used."
+msgstr ""
+
+#: Ch-Active-Passive.xml:13(para)
+msgid "This is what the base configuration should look like."
+msgstr ""
+
+#: Ch-Active-Passive.xml:18(userinput) Ch-Active-Passive.xml:170(userinput) Ch-Active-Passive.xml:339(userinput)
+#, no-wrap
+msgid "crm configure show"
+msgstr ""
+
+#: Ch-Active-Passive.xml:17(screen)
+#, no-wrap
+msgid "\n[root@pcmk-2 ~]# <placeholder-1/>\nnode pcmk-1\nnode pcmk-2\nproperty $id=\"cib-bootstrap-options\" \\\n        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n        cluster-infrastructure=\"openais\" \\\n        expected-quorum-votes=\"2\"\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:26(para)
+msgid "For those that are not of afraid of XML, you can see the raw configuration by appending \"xml\" to the previous command."
+msgstr ""
+
+#: Ch-Active-Passive.xml:31(userinput)
+#, no-wrap
+msgid "crm configure show xml"
+msgstr ""
+
+#: Ch-Active-Passive.xml:30(screen)
+#, no-wrap
+msgid "\n[root@pcmk-2 ~]# <placeholder-1/>\n&lt;?xml version=\"1.0\" ?&gt;\n&lt;cib admin_epoch=\"0\" crm_feature_set=\"3.0.1\" dc-uuid=\"pcmk-1\" epoch=\"13\" have-quorum=\"1\" num_updates=\"7\" validate-with=\"pacemaker-1.0\"&gt;\n  &lt;configuration&gt;\n    &lt;crm_config&gt;\n      &lt;cluster_property_set id=\"cib-bootstrap-options\"&gt;\n        &lt;nvpair id=\"cib-bootstrap-options-dc-version\" name=\"dc-version\" value=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\"/&gt;\n        &lt;nvpair id=\"cib-bootstrap-options-cluster-infrastructure\" name=\"cluster-infrastructure\" value=\"openais\"/&gt;\n        &lt;nvpair id=\"cib-bootstrap-options-expected-quorum-votes\" name=\"expected-quorum-votes\" value=\"2\"/&gt;\n      &lt;/cluster_property_set&gt;\n    &lt;/crm_config&gt;\n    &lt;rsc_defaults/&gt;\n    &lt;op_defaults/&gt;\n    &lt;nodes&gt;\n      &lt;node id=\"pcmk-1\" type=\"normal\" uname=\"pcmk-1\"/&gt;\n      &lt;node id=\"pcmk-2\" type=\"normal\" uname=\"pcmk-2\"/&gt;\n    &lt;/nodes&gt;\n    &lt;resources/&gt;\n    &lt;constraints/&gt;\n  &lt;/configuration&gt;\n&lt;/cib&gt;\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:53(para)
+msgid "The last XML you’ll see in this document"
+msgstr ""
+
+#: Ch-Active-Passive.xml:56(para)
+msgid "Before we make any changes, its a good idea to check the validity of the configuration."
+msgstr ""
+
+#: Ch-Active-Passive.xml:61(userinput) Ch-Active-Passive.xml:94(userinput)
+#, no-wrap
+msgid "crm_verify -L"
+msgstr ""
+
+#: Ch-Active-Passive.xml:62(emphasis)
+msgid "Resource start-up disabled since no STONITH resources have been defined"
+msgstr ""
+
+#: Ch-Active-Passive.xml:65(emphasis)
+msgid "Errors found during check: config not valid"
+msgstr ""
+
+#: Ch-Active-Passive.xml:60(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\ncrm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: <placeholder-2/>\ncrm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option\ncrm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: NOTE: Clusters with shared data need STONITH to ensure data integrity\n<placeholder-3/>\n  -V may provide more details\n[root@pcmk-1 ~]#\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:69(para)
+msgid "As you can see, the tool has found some errors."
+msgstr ""
+
+#: Ch-Active-Passive.xml:74(para)
+msgid "If the data is corrupt, there is little point in continuing to make it available"
+msgstr ""
+
+#: Ch-Active-Passive.xml:78(para)
+msgid "A common node fencing mechanism. Used to ensure data integrity by powering off \"bad\" nodes."
+msgstr ""
+
+#: Ch-Active-Passive.xml:72(para)
+msgid "In order to guarantee the safety of your data <placeholder-1/> , Pacemaker ships with STONITH <placeholder-2/> enabled. However it also knows when no STONITH configuration has been supplied and reports this as a problem (since the cluster would not be able to make progress if a situation requiring node fencing arose)."
+msgstr ""
+
+#: Ch-Active-Passive.xml:83(para)
+msgid "For now, we will disable this feature and configure it later in the Configuring STONITH section. It is important to note that the use of STONITH is highly encouraged, turning it off tells the cluster to simply pretend that failed nodes are safely powered off. Some vendors will even refuse to support clusters that have it disabled."
+msgstr ""
+
+#: Ch-Active-Passive.xml:86(para)
+msgid "To disable STONITH, we set the stonith-enabled cluster option to false."
+msgstr ""
+
+#: Ch-Active-Passive.xml:91(userinput)
+#, no-wrap
+msgid "crm configure property stonith-enabled=false"
+msgstr ""
+
+#: Ch-Active-Passive.xml:97(para)
+msgid "With the new cluster option set, the configuration is now valid."
+msgstr ""
+
+#: Ch-Active-Passive.xml:101(para)
+msgid "The use of <literal>stonith-enabled=false</literal> is completely inappropriate for a production cluster. We use it here to defer the discussion of its configuration which can differ widely from one installation to the next. See <xref linkend=\"ch-stonith\"/> for information on why STONITH is important and details on how to configure it."
+msgstr ""
+
+#: Ch-Active-Passive.xml:110(title)
+msgid "Adding a Resource"
+msgstr ""
+
+#: Ch-Active-Passive.xml:111(para)
+msgid "The first thing we should do is configure an IP address. Regardless of where the cluster service(s) are running, we need a consistent address to contact them on. Here I will choose and add 192.168.122.101 as the floating address, give it the imaginative name ClusterIP and tell the cluster to check that its running every 30 seconds."
+msgstr ""
+
+#: Ch-Active-Passive.xml:115(para)
+msgid "The chosen address must not be one already associated with a physical node"
+msgstr ""
+
+#: Ch-Active-Passive.xml:121(userinput)
+#, no-wrap
+msgid "crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \\ "
+msgstr ""
+
+#: Ch-Active-Passive.xml:122(userinput)
+#, no-wrap
+msgid "params ip=192.168.122.101 cidr_netmask=32 \\ "
+msgstr ""
+
+#: Ch-Active-Passive.xml:123(userinput)
+#, no-wrap
+msgid "op monitor interval=30s"
+msgstr ""
+
+#: Ch-Active-Passive.xml:120(screen)
+#, no-wrap
+msgid "\n<placeholder-1/>\n        <placeholder-2/>\n        <placeholder-3/>\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:125(para)
+msgid "The other important piece of information here is ocf:heartbeat:IPaddr2. This tells Pacemaker three things about the resource you want to add. The first field, ocf, is the standard to which the resource script conforms to and where to find it. The second field is specific to OCF resources and tells the cluster which namespace to find the resource script in, in this case heartbeat. The last field indicates the name of the resource script."
+msgstr ""
+
+#: Ch-Active-Passive.xml:128(para)
+msgid "To obtain a list of the available resource classes, run"
+msgstr ""
+
+#: Ch-Active-Passive.xml:133(userinput)
+#, no-wrap
+msgid "crm ra classes"
+msgstr ""
+
+#: Ch-Active-Passive.xml:136(emphasis)
+msgid "ocf / heartbeat pacemaker"
+msgstr ""
+
+#: Ch-Active-Passive.xml:132(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nheartbeat\nlsb\n<placeholder-2/>\nstonith\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:139(para)
+msgid "To then find all the OCF resource agents provided by Pacemaker and Heartbeat, run"
+msgstr ""
+
+#: Ch-Active-Passive.xml:144(userinput)
+#, no-wrap
+msgid "crm ra list ocf pacemaker"
+msgstr ""
+
+#: Ch-Active-Passive.xml:147(userinput)
+#, no-wrap
+msgid "crm ra list ocf heartbeat"
+msgstr ""
+
+#: Ch-Active-Passive.xml:143(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nClusterMon     Dummy          Stateful       SysInfo        SystemHealth   controld\nping           pingd          \n[root@pcmk-1 ~]# <placeholder-2/>\nAoEtarget              AudibleAlarm           ClusterMon             Delay\nDummy                  EvmsSCC                Evmsd                  Filesystem\nICP                    IPaddr                 IPaddr2                IPsrcaddr\nLVM                    LinuxSCSI              MailTo                 ManageRAID\nManageVE               Pure-FTPd              Raid1                  Route\nSAPDatabase            SAPInstance            SendArp                ServeRAID\nSphinxSearchDaemon     Squid                  Stateful               SysInfo\nVIPArip                VirtualDomain          WAS                    WAS6\nWinPopup               Xen                    Xinetd                 anything\napache                 db2                    drbd                   eDir88\niSCSILogicalUnit       iSCSITarget            ids                    iscsi\nldirectord             mysql                  mysql-proxy            nfsserver\noracle                 oralsnr                pgsql                  pingd\nportblock              rsyncd                 scsi2reservation       sfex\ntomcat                 vmware                 \n[root@pcmk-1 ~]#\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:165(para)
+msgid "Now verify that the IP resource has been added and display the cluster’s status to see that it is now active."
+msgstr ""
+
+#: Ch-Active-Passive.xml:173(emphasis)
+msgid "primitive ClusterIP ocf:heartbeat:IPaddr2 \\"
+msgstr ""
+
+#: Ch-Active-Passive.xml:174(emphasis)
+msgid "params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\"
+msgstr ""
+
+#: Ch-Active-Passive.xml:175(emphasis)
+msgid "op monitor interval=\"30s\""
+msgstr ""
+
+#: Ch-Active-Passive.xml:181(userinput) Ch-Active-Passive.xml:228(userinput) Ch-Active-Passive.xml:283(userinput) Ch-Active-Passive.xml:306(userinput) Ch-Active-Passive.xml:389(userinput)
+#, no-wrap
+msgid "crm_mon"
+msgstr ""
+
+#: Ch-Active-Passive.xml:192(emphasis)
+msgid "ClusterIP (ocf::heartbeat:IPaddr): Started"
+msgstr ""
+
+#: Ch-Active-Passive.xml:169(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nnode pcmk-1\nnode pcmk-2\n<placeholder-2/>\n<placeholder-3/>\n<placeholder-4/>\nproperty $id=\"cib-bootstrap-options\" \\\n        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n        cluster-infrastructure=\"openais\" \\\n        expected-quorum-votes=\"2\" \\\n        stonith-enabled=\"false\" \\\n[root@pcmk-1 ~]# <placeholder-5/>\n============\nLast updated: Fri Aug 28 15:23:48 2009\nStack: openais\nCurrent DC: pcmk-1 - partition with quorum\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n2 Nodes configured, 2 expected votes\n1 Resources configured.\n============\n\nOnline: [ pcmk-1 pcmk-2 ]\n<placeholder-6/> pcmk-1\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:197(title)
+msgid "Perform a Failover"
+msgstr ""
+
+#: Ch-Active-Passive.xml:198(para)
+msgid "Being a high-availability cluster, we should test failover of our new resource before moving on."
+msgstr ""
+
+#: Ch-Active-Passive.xml:201(para)
+msgid "First, find the node on which the IP address is running."
+msgstr ""
+
+#: Ch-Active-Passive.xml:206(userinput)
+#, no-wrap
+msgid "crm resource status ClusterIP"
+msgstr ""
+
+#: Ch-Active-Passive.xml:205(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nresource ClusterIP is running on: pcmk-1\n[root@pcmk-1 ~]#\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:210(para)
+msgid "Shut down Pacemaker and Corosync on that machine."
+msgstr ""
+
+#: Ch-Active-Passive.xml:215(userinput) Ch-Active-Passive.xml:359(userinput)
+#, no-wrap
+msgid "ssh pcmk-1 -- /etc/init.d/pacemaker stop"
+msgstr ""
+
+#: Ch-Active-Passive.xml:216(emphasis)
+msgid "Signaling Pacemaker Cluster Manager to terminate: [ OK ]"
+msgstr ""
+
+#: Ch-Active-Passive.xml:217(emphasis)
+msgid "Waiting for cluster services to unload:. [ OK ]"
+msgstr ""
+
+#: Ch-Active-Passive.xml:218(userinput) Ch-Active-Passive.xml:362(userinput)
+#, no-wrap
+msgid "ssh pcmk-1 -- /etc/init.d/corosync stop"
+msgstr ""
+
+#: Ch-Active-Passive.xml:219(emphasis)
+msgid "Stopping Corosync Cluster Engine (corosync): [ OK ]"
+msgstr ""
+
+#: Ch-Active-Passive.xml:220(emphasis)
+msgid "Waiting for services to unload: [ OK ]"
+msgstr ""
+
+#: Ch-Active-Passive.xml:214(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n<placeholder-2/>\n<placeholder-3/>\n[root@pcmk-1 ~]# <placeholder-4/>\n<placeholder-5/>\n<placeholder-6/>\n[root@pcmk-1 ~]#\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:223(para)
+msgid "Once Corosync is no longer running, go to the other node and check the cluster status with crm_mon."
+msgstr ""
+
+#: Ch-Active-Passive.xml:232(emphasis) Ch-Active-Passive.xml:287(emphasis)
+msgid "partition WITHOUT quorum"
+msgstr ""
+
+#: Ch-Active-Passive.xml:239(emphasis) Ch-Active-Passive.xml:293(emphasis) Ch-Active-Passive.xml:376(emphasis)
+msgid "OFFLINE: [ pcmk-1 ]"
+msgstr ""
+
+#: Ch-Active-Passive.xml:227(screen)
+#, no-wrap
+msgid "\n[root@pcmk-2 ~]# <placeholder-1/>\n============\nLast updated: Fri Aug 28 15:27:35 2009\nStack: openais\nCurrent DC: pcmk-2 - <placeholder-2/>\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n2 Nodes configured, 2 expected votes\n1 Resources configured.\n============\n\nOnline: [ pcmk-2 ]\n<placeholder-3/>\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:241(para)
+msgid "There are three things to notice about the cluster’s current state. The first is that, as expected, pcmk-1 is now offline. However we can also see that ClusterIP isn’t running anywhere!"
+msgstr ""
+
+#: Ch-Active-Passive.xml:245(title)
+msgid "Quorum and Two-Node Clusters"
+msgstr ""
+
+#: Ch-Active-Passive.xml:246(para)
+msgid "This is because the cluster no longer has quorum, as can be seen by the text \"partition WITHOUT quorum\" (emphasised green) in the output above. In order to reduce the possibility of data corruption, Pacemaker’s default behavior is to stop all resources if the cluster does not have quorum."
+msgstr ""
+
+#: Ch-Active-Passive.xml:249(para)
+msgid "A cluster is said to have quorum when more than half the known or expected nodes are online, or for the mathematically inclined, whenever the following equation is true:"
+msgstr ""
+
+#: Ch-Active-Passive.xml:252(para)
+msgid "total_nodes &lt; 2 * active_nodes"
+msgstr ""
+
+#: Ch-Active-Passive.xml:257(para)
+msgid "Actually some would argue that two-node clusters are always pointless, but that is an argument for another time."
+msgstr ""
+
+#: Ch-Active-Passive.xml:255(para)
+msgid "Therefore a two-node cluster only has quorum when both nodes are running, which is no longer the case for our cluster. This would normally make the creation of a two-node cluster pointless<placeholder-1/>, however it is possible to control how Pacemaker behaves when quorum is lost. In particular, we can tell the cluster to simply ignore quorum altogether."
+msgstr ""
+
+#: Ch-Active-Passive.xml:264(userinput)
+#, no-wrap
+msgid "crm configure property no-quorum-policy=ignore"
+msgstr ""
+
+#: Ch-Active-Passive.xml:265(userinput)
+#, no-wrap
+msgid "crm configure show "
+msgstr ""
+
+#: Ch-Active-Passive.xml:276(emphasis)
+msgid "no-quorum-policy=\"ignore\""
+msgstr ""
+
+#: Ch-Active-Passive.xml:263(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n[root@pcmk-1 ~]# <placeholder-2/>\nnode pcmk-1\nnode pcmk-2\nprimitive ClusterIP ocf:heartbeat:IPaddr2 \\\n        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n        op monitor interval=\"30s\"\nproperty $id=\"cib-bootstrap-options\" \\\n        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n        cluster-infrastructure=\"openais\" \\\n        expected-quorum-votes=\"2\" \\\n        stonith-enabled=\"false\" \\\n        <placeholder-3/>\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:278(para)
+msgid "After a few moments, the cluster will start the IP address on the remaining node. Note that the cluster still does not have quorum."
+msgstr ""
+
+#: Ch-Active-Passive.xml:295(emphasis)
+msgid "ClusterIP (ocf::heartbeat:IPaddr): Started pcmk-2"
+msgstr ""
+
+#: Ch-Active-Passive.xml:282(screen)
+#, no-wrap
+msgid "\n[root@pcmk-2 ~]# <placeholder-1/>\n============\nLast updated: Fri Aug 28 15:30:18 2009\nStack: openais\nCurrent DC: pcmk-2 - <placeholder-2/>\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n2 Nodes configured, 2 expected votes\n1 Resources configured.\n============\nOnline: [ pcmk-2 ]\n<placeholder-3/>\n\n<placeholder-4/>\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:297(para)
+msgid "Now simulate node recovery by restarting the cluster stack on pcmk-1 and check the cluster’s status."
+msgstr ""
+
+#: Ch-Active-Passive.xml:302(userinput) Ch-Active-Passive.xml:385(userinput)
+#, no-wrap
+msgid "/etc/init.d/corosync start"
+msgstr ""
+
+#: Ch-Active-Passive.xml:303(emphasis) Ch-Active-Passive.xml:386(emphasis)
+msgid "Starting Corosync Cluster Engine (corosync): [ OK ]"
+msgstr ""
+
+#: Ch-Active-Passive.xml:304(userinput) Ch-Active-Passive.xml:387(userinput)
+#, no-wrap
+msgid "/etc/init.d/pacemaker start"
+msgstr ""
+
+#: Ch-Active-Passive.xml:305(emphasis) Ch-Active-Passive.xml:388(emphasis)
+msgid "Starting Pacemaker Cluster Manager: [ OK ]"
+msgstr ""
+
+#: Ch-Active-Passive.xml:315(emphasis) Ch-Active-Passive.xml:399(emphasis)
+msgid "pcmk-1"
+msgstr ""
+
+#: Ch-Active-Passive.xml:317(emphasis)
+msgid "Started pcmk-1"
+msgstr ""
+
+#: Ch-Active-Passive.xml:301(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n<placeholder-2/>      \n[root@pcmk-1 ~]# <placeholder-3/>\n<placeholder-4/>\n[root@pcmk-1 ~]# <placeholder-5/>\n============\nLast updated: Fri Aug 28 15:32:13 2009\nStack: openais\nCurrent DC: pcmk-2 - partition with quorum\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n2 Nodes configured, 2 expected votes\n1 Resources configured.\n============\nOnline: [ <placeholder-6/> pcmk-2 ]\n\nClusterIP        (ocf::heartbeat:IPaddr):        <placeholder-7/>\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:319(para)
+msgid "Here we see something that some may consider surprising, the IP is back running at its original location!"
+msgstr ""
+
+#: Ch-Active-Passive.xml:325(title)
+msgid "Prevent Resources from Moving after Recovery"
+msgstr ""
+
+#: Ch-Active-Passive.xml:326(para)
+msgid "In some circumstances, it is highly desirable to prevent healthy resources from being moved around the cluster. Moving resources almost always requires a period of downtime. For complex services like Oracle databases, this period can be quite long."
+msgstr ""
+
+#: Ch-Active-Passive.xml:331(para)
+msgid "It should be noted that Pacemaker’s definition of optimal may not always agree with that of a human’s. The order in which Pacemaker processes lists of resources and nodes creates implicit preferences in situations where the administrator has not explicitly specified them."
+msgstr ""
+
+#: Ch-Active-Passive.xml:329(para)
+msgid "To address this, Pacemaker has the concept of resource stickiness which controls how much a service prefers to stay running where it is. You may like to think of it as the \"cost\" of any downtime. By default, Pacemaker assumes there is zero cost associated with moving resources and will do so to achieve \"optimal<placeholder-1/>\" resource placement. We can specify a different stickiness for every resource, but it is often sufficient to change the default."
+msgstr ""
+
+#: Ch-Active-Passive.xml:338(userinput)
+#, no-wrap
+msgid "crm configure rsc_defaults resource-stickiness=100"
+msgstr ""
+
+#: Ch-Active-Passive.xml:351(emphasis)
+msgid "rsc_defaults $id=\"rsc-options\" \\"
+msgstr ""
+
+#: Ch-Active-Passive.xml:352(emphasis)
+msgid "resource-stickiness=\"100\""
+msgstr ""
+
+#: Ch-Active-Passive.xml:337(screen)
+#, no-wrap
+msgid "\n[root@pcmk-2 ~]# <placeholder-1/>\n[root@pcmk-2 ~]# <placeholder-2/>\nnode pcmk-1\nnode pcmk-2\nprimitive ClusterIP ocf:heartbeat:IPaddr2 \\\n        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n        op monitor interval=\"30s\"\nproperty $id=\"cib-bootstrap-options\" \\\n        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n        cluster-infrastructure=\"openais\" \\\n        expected-quorum-votes=\"2\" \\\n        stonith-enabled=\"false\" \\\n        no-quorum-policy=\"ignore\"\n<placeholder-3/>\n<placeholder-4/>\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:354(para)
+msgid "If we now retry the failover test, we see that as expected ClusterIP still moves to pcmk-2 when pcmk-1 is taken offline."
+msgstr ""
+
+#: Ch-Active-Passive.xml:365(userinput)
+#, no-wrap
+msgid "ssh pcmk-2 -- crm_mon -1"
+msgstr ""
+
+#: Ch-Active-Passive.xml:378(emphasis)
+msgid "Started pcmk-2"
+msgstr ""
+
+#: Ch-Active-Passive.xml:358(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nSignaling Pacemaker Cluster Manager to terminate:          [  OK  ]\nWaiting for cluster services to unload:.                   [  OK  ]\n[root@pcmk-1 ~]# <placeholder-2/>\nStopping Corosync Cluster Engine (corosync):               [  OK  ]\nWaiting for services to unload:                            [  OK  ]\n[root@pcmk-1 ~]# <placeholder-3/>\n============\nLast updated: Fri Aug 28 15:39:38 2009\nStack: openais\nCurrent DC: pcmk-2 - partition WITHOUT quorum\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n2 Nodes configured, 2 expected votes\n1 Resources configured.\n============\n\nOnline: [ pcmk-2 ]\n<placeholder-4/>\n\nClusterIP        (ocf::heartbeat:IPaddr):        <placeholder-5/>\n"
+msgstr ""
+
+#: Ch-Active-Passive.xml:380(para)
+msgid "However when we bring pcmk-1 back online, ClusterIP now remains running on pcmk-2."
+msgstr ""
+
+#: Ch-Active-Passive.xml:401(emphasis)
+msgid "pcmk-2"
+msgstr ""
+
+#: Ch-Active-Passive.xml:384(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n<placeholder-2/>\n[root@pcmk-1 ~]# <placeholder-3/>\n<placeholder-4/>\n[root@pcmk-1 ~]# <placeholder-5/>\n============\nLast updated: Fri Aug 28 15:41:23 2009\nStack: openais\nCurrent DC: pcmk-2 - partition with quorum\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n2 Nodes configured, 2 expected votes\n1 Resources configured.\n============\n\nOnline: [ <placeholder-6/> pcmk-2 ]\n\nClusterIP        (ocf::heartbeat:IPaddr):        Started <placeholder-7/>\n"
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: Ch-Active-Passive.xml:0(None)
+msgid "translator-credits"
+msgstr ""
+

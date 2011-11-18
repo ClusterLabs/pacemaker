@@ -1,0 +1,89 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2011-11-18 07:09+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Ap-Cman.xml:7(title)
+msgid "Using CMAN for Cluster Membership and Quorum"
+msgstr ""
+
+#: Ap-Cman.xml:10(title)
+msgid "Background"
+msgstr ""
+
+#: Ap-Cman.xml:11(para)
+msgid "<ulink url=\"http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Suite_Overview/index.html#s2-clumembership-overview-CSO\">CMAN v3</ulink> is a Corsync plugin that monitors the names and number of active cluster nodes in order to deliver membership and quorum information to clients (such as the Pacemaker daemons)."
+msgstr ""
+
+#: Ap-Cman.xml:18(para)
+msgid "A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecssary down-time and/or data corruption."
+msgstr ""
+
+#: Ap-Cman.xml:14(para)
+msgid "In a traditional Corosync-Pacemaker cluster, a Pacemaker plugin is loaded to provide membership and quorum information. The motivation for wanting to use CMAN for this instead, is to ensure all elements of the cluster stack are making decisions based on the same membership and quorum data. <placeholder-1/>"
+msgstr ""
+
+#: Ap-Cman.xml:23(para)
+msgid "CMAN has been around longer than Pacemaker and is part of the Red Hat cluster stack, so it is available and supported by many distributions and other pieces of software (such as OCFS2 and GFS2). For this reason it makes sense to support it."
+msgstr ""
+
+#: Ap-Cman.xml:29(title)
+msgid "Adding CMAN Support"
+msgstr ""
+
+#: Ap-Cman.xml:31(para)
+msgid "Be sure to disable the Pacemaker plugin before continuing with this section. In most cases, this can be achieved by removing <filename>/etc/corosync/service.d/pcmk</filename> and stopping Corosync."
+msgstr ""
+
+#: Ap-Cman.xml:37(title)
+msgid "Adding CMAN Support - cluster.conf"
+msgstr ""
+
+#: Ap-Cman.xml:38(para)
+msgid "The preferred approach for enabling CMAN is to configure <filename>cluster.conf</filename> and use the <filename>/etc/init.d/cman</filename> script to start Corosync. Its far easier to maintain and start automatically starts the necessary pieces for using GFS2."
+msgstr ""
+
+#: Ap-Cman.xml:42(para)
+msgid "You can find some documentation on <ulink url=\"http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Cluster_Administration/s1-creating-cluster-cli-CA.html\">Installing CMAN and Creating a Basic Cluster Configuration File</ulink> at the Red Hat website. However please ignore the parts about <literal>Fencing</literal>, <literal>Failover Domains</literal>, or <literal>HA Services</literal> and anything to do with <literal>rgmanager</literal> and <literal>fenced</literal>. All these continue to be handled by Pacemaker in the normal manner."
+msgstr ""
+
+#: Ap-Cman.xml:50(title)
+msgid "Sample cluster.conf for a two-node cluster"
+msgstr ""
+
+#: Ap-Cman.xml:81(title)
+msgid "Adding CMAN Support - corosync.conf"
+msgstr ""
+
+#: Ap-Cman.xml:82(para)
+msgid "The alternative is to add the necessary cman configuration elements to <filename>corosync.conf</filename>. We recommend you place these directives in <filename>/etc/corosync/service.d/cman</filename> as they will differ between machines."
+msgstr ""
+
+#: Ap-Cman.xml:86(para)
+msgid "If you choose this approach, you would continue to start and stop Corosync with it's init script as previously described in this document."
+msgstr ""
+
+#: Ap-Cman.xml:91(title)
+msgid "Sample corosync.conf extensions for a two-node cluster"
+msgstr ""
+
+#: Ap-Cman.xml:92(programlisting)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/cman</userinput>\ncluster {\n    name: beekhof\n\n    clusternodes {\n            clusternode {\n                    votes: 1\n                    nodeid: 1\n                    name: pcmk-1\n            }\n            clusternode {\n                    votes: 1\n                    nodeid: 2\n                    name: pcmk-2\n            }\n    }\n    cman {\n            expected_votes: 2\n            cluster_id: 123\n            nodename: `uname -n`\n            two_node: 1\n            max_queued: 10\n    }\n}\n\nservice {\n    name: corosync_cman\n    ver: 0\n}\n\nquorum {\n    provider: quorum_cman\n}\nEND\n\t"
+msgstr ""
+
+#: Ap-Cman.xml:131(para)
+msgid "Verify that <literal>nodename</literal> was set appropriately on each host."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: Ap-Cman.xml:0(None)
+msgid "translator-credits"
+msgstr ""
+

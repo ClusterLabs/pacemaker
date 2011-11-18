@@ -1,0 +1,44 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2011-11-18 07:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Revision_History.xml:7(title)
+msgid "Revision History"
+msgstr ""
+
+#: Revision_History.xml:11(revnumber)
+msgid "1"
+msgstr ""
+
+#: Revision_History.xml:12(date)
+msgid "Mon May 17 2010"
+msgstr ""
+
+#: Revision_History.xml:13(firstname)
+msgid "Andrew"
+msgstr ""
+
+#: Revision_History.xml:13(surname)
+msgid "Beekhof"
+msgstr ""
+
+#: Revision_History.xml:13(email)
+msgid "andrew@beekhof.net"
+msgstr ""
+
+#: Revision_History.xml:14(member)
+msgid "Import from Pages.app"
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: Revision_History.xml:0(None)
+msgid "translator-credits"
+msgstr ""
+

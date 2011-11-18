@@ -1,0 +1,82 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2011-11-18 07:09+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. When image changes, this message will be marked fuzzy or untranslated for you.
+#. It doesn't matter what you translate it to: it's not used at all.
+#: Book_Info.xml:59(None)
+msgid "@@image: 'Common_Content/images/title_logo.svg'; md5=THIS FILE DOESN'T EXIST"
+msgstr ""
+
+#: Book_Info.xml:7(title)
+msgid "Clusters from Scratch"
+msgstr ""
+
+#: Book_Info.xml:8(subtitle)
+msgid "Creating Active/Passive and Active/Active Clusters on Fedora"
+msgstr ""
+
+#: Book_Info.xml:9(productname)
+msgid "Pacemaker"
+msgstr ""
+
+#: Book_Info.xml:10(productnumber)
+msgid "1.1"
+msgstr ""
+
+#: Book_Info.xml:11(edition)
+msgid "3"
+msgstr ""
+
+#: Book_Info.xml:12(pubsnumber)
+msgid "0"
+msgstr ""
+
+#: Book_Info.xml:14(para)
+msgid "The purpose of this document is to provide a start-to-finish guide to building an example active/passive cluster with Pacemaker and show how it can be converted to an active/active one."
+msgstr ""
+
+#: Book_Info.xml:21(para)
+msgid "Fedora 13 as the host operating system"
+msgstr ""
+
+#: Book_Info.xml:26(para)
+msgid "Corosync to provide messaging and membership services,"
+msgstr ""
+
+#: Book_Info.xml:31(para)
+msgid "Pacemaker to perform resource management,"
+msgstr ""
+
+#: Book_Info.xml:36(para)
+msgid "DRBD as a cost-effective alternative to shared storage,"
+msgstr ""
+
+#: Book_Info.xml:41(para)
+msgid "GFS2 as the cluster filesystem (in active/active mode)"
+msgstr ""
+
+#: Book_Info.xml:46(para)
+msgid "The crm shell for displaying the configuration and making changes"
+msgstr ""
+
+#: Book_Info.xml:17(para)
+msgid "The example cluster will use: <placeholder-1/>"
+msgstr ""
+
+#: Book_Info.xml:52(para)
+msgid "Given the graphical nature of the Fedora install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: Book_Info.xml:0(None)
+msgid "translator-credits"
+msgstr ""
+

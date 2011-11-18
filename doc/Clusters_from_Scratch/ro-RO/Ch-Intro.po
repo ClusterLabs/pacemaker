@@ -1,0 +1,266 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2011-11-18 07:09+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. When image changes, this message will be marked fuzzy or untranslated for you.
+#. It doesn't matter what you translate it to: it's not used at all.
+#: Ch-Intro.xml:74(None)
+msgid "@@image: 'images/pcmk-overview.png'; md5=THIS FILE DOESN'T EXIST"
+msgstr ""
+
+#. When image changes, this message will be marked fuzzy or untranslated for you.
+#. It doesn't matter what you translate it to: it's not used at all.
+#: Ch-Intro.xml:94(None)
+msgid "@@image: 'images/pcmk-stack.png'; md5=THIS FILE DOESN'T EXIST"
+msgstr ""
+
+#. When image changes, this message will be marked fuzzy or untranslated for you.
+#. It doesn't matter what you translate it to: it's not used at all.
+#: Ch-Intro.xml:114(None)
+msgid "@@image: 'images/pcmk-internals.png'; md5=THIS FILE DOESN'T EXIST"
+msgstr ""
+
+#. When image changes, this message will be marked fuzzy or untranslated for you.
+#. It doesn't matter what you translate it to: it's not used at all.
+#: Ch-Intro.xml:151(None)
+msgid "@@image: 'images/pcmk-active-passive.png'; md5=THIS FILE DOESN'T EXIST"
+msgstr ""
+
+#. When image changes, this message will be marked fuzzy or untranslated for you.
+#. It doesn't matter what you translate it to: it's not used at all.
+#: Ch-Intro.xml:162(None)
+msgid "@@image: 'images/pcmk-active-active.png'; md5=THIS FILE DOESN'T EXIST"
+msgstr ""
+
+#: Ch-Intro.xml:1(title)
+msgid "Read-Me-First"
+msgstr ""
+
+#: Ch-Intro.xml:3(title)
+msgid "The Scope of this Document"
+msgstr ""
+
+#: Ch-Intro.xml:4(para)
+msgid "Computer clusters can be used to provide highly available services or resources. The redundancy of multiple machines is used to guard against failures of many types."
+msgstr ""
+
+#: Ch-Intro.xml:7(para)
+msgid "This document will walk through the installation and setup of simple clusters using the Fedora distribution, version 14. The clusters described here will use Pacemaker and Corosync to provide resource management and messaging. Required packages and modifications to their configuration files are described along with the use of the Pacemaker command line tool for generating the XML used for cluster control."
+msgstr ""
+
+#: Ch-Intro.xml:10(para)
+msgid "Pacemaker is a central component and provides the resource management required in these systems. This management includes detecting and recovering from the failure of various nodes, resources and services under its control."
+msgstr ""
+
+#: Ch-Intro.xml:13(para)
+msgid "When more in depth information is required and for real world usage, please refer to the <ulink url=\"http://www.clusterlabs.org/doc/\">Pacemaker Explained</ulink> manual."
+msgstr ""
+
+#: Ch-Intro.xml:18(title)
+msgid "What Is Pacemaker?"
+msgstr ""
+
+#: Ch-Intro.xml:19(para)
+msgid "Pacemaker is a cluster resource manager. It achieves maximum availability for your cluster services (aka. resources) by detecting and recovering from node and resource-level failures by making use of the messaging and membership capabilities provided by your preferred cluster infrastructure (either <ulink url=\"http://www.corosync.org/\">Corosync</ulink> or Heartbeat)."
+msgstr ""
+
+#: Ch-Intro.xml:22(para)
+msgid "Pacemaker's key features include:"
+msgstr ""
+
+#: Ch-Intro.xml:24(para)
+msgid "Detection and recovery of node and service-level failures"
+msgstr ""
+
+#: Ch-Intro.xml:25(para)
+msgid "Storage agnostic, no requirement for shared storage"
+msgstr ""
+
+#: Ch-Intro.xml:26(para)
+msgid "Resource agnostic, anything that can be scripted can be clustered"
+msgstr ""
+
+#: Ch-Intro.xml:27(para)
+msgid "Supports <ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> for ensuring data integrity"
+msgstr ""
+
+#: Ch-Intro.xml:28(para)
+msgid "Supports large and small clusters"
+msgstr ""
+
+#: Ch-Intro.xml:29(para)
+msgid "Supports both <ulink url=\"http://en.wikipedia.org/wiki/Quorum_(Distributed_Systems)\">quorate</ulink> and <ulink url=\"http://devresources.linux-foundation.org/dev/clusters/docs/ResourceDrivenClusters.pdf\">resource driven</ulink> clusters"
+msgstr ""
+
+#: Ch-Intro.xml:30(para)
+msgid "Supports practically any <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">redundancy configuration</ulink>"
+msgstr ""
+
+#: Ch-Intro.xml:31(para)
+msgid "Automatically replicated configuration that can be updated from any node"
+msgstr ""
+
+#: Ch-Intro.xml:32(para)
+msgid "Ability to specify cluster-wide service ordering, colocation and anti-colocation"
+msgstr ""
+
+#: Ch-Intro.xml:35(para)
+msgid "Clones: for services which need to be active on multiple nodes"
+msgstr ""
+
+#: Ch-Intro.xml:36(para)
+msgid "Multi-state: for services with multiple modes (eg. master/slave, primary/secondary)"
+msgstr ""
+
+#: Ch-Intro.xml:33(para)
+msgid "Support for advanced service types <placeholder-1/>"
+msgstr ""
+
+#: Ch-Intro.xml:39(para)
+msgid "Unified, scriptable, cluster shell"
+msgstr ""
+
+#: Ch-Intro.xml:43(title)
+msgid "Pacemaker Architecture"
+msgstr ""
+
+#: Ch-Intro.xml:44(para)
+msgid "At the highest level, the cluster is made up of three pieces:"
+msgstr ""
+
+#: Ch-Intro.xml:47(para)
+msgid "Non-cluster aware components (illustrated in green)."
+msgstr ""
+
+#: Ch-Intro.xml:50(para)
+msgid "These pieces include the resources themselves, scripts that start, stop and monitor them, and also a local daemon that masks the differences between the different standards these scripts implement."
+msgstr ""
+
+#: Ch-Intro.xml:54(para)
+msgid "Resource management"
+msgstr ""
+
+#: Ch-Intro.xml:57(para)
+msgid "Pacemaker provides the brain (illustrated in blue) that processes and reacts to events regarding the cluster. These events include nodes joining or leaving the cluster; resource events caused by failures, maintenance, scheduled activities; and other administrative actions. Pacemaker will compute the ideal state of the cluster and plot a path to achieve it after any of these events. This may include moving resources, stopping nodes and even forcing them offline with remote power switches."
+msgstr ""
+
+#: Ch-Intro.xml:61(para)
+msgid "Low level infrastructure"
+msgstr ""
+
+#: Ch-Intro.xml:64(para)
+msgid "Corosync provides reliable messaging, membership and quorum information about the cluster (illustrated in red)."
+msgstr ""
+
+#: Ch-Intro.xml:71(title)
+msgid "Conceptual Stack Overview"
+msgstr ""
+
+#: Ch-Intro.xml:76(caption)
+msgid "Conceptual overview of the cluster stack"
+msgstr ""
+
+#: Ch-Intro.xml:82(para)
+msgid "Even though Pacemaker also supports Heartbeat, the filesystems need to use the stack for messaging and membership and Corosync seems to be what they're standardizing on. Technically it would be possible for them to support Heartbeat as well, however there seems little interest in this."
+msgstr ""
+
+#: Ch-Intro.xml:80(para)
+msgid "When combined with Corosync, Pacemaker also supports popular open source cluster filesystems <placeholder-1/> Due to recent standardization within the cluster filesystem community, they make use of a common distributed lock manager which makes use of Corosync for its messaging capabilities and Pacemaker for its membership (which nodes are up/down) and fencing services."
+msgstr ""
+
+#: Ch-Intro.xml:91(title)
+msgid "The Pacemaker Stack"
+msgstr ""
+
+#: Ch-Intro.xml:96(caption)
+msgid "The Pacemaker stack when running on Corosync"
+msgstr ""
+
+#: Ch-Intro.xml:101(title) Ch-Intro.xml:111(title)
+msgid "Internal Components"
+msgstr ""
+
+#: Ch-Intro.xml:102(para)
+msgid "Pacemaker itself is composed of four key components (illustrated below in the same color scheme as the previous diagram):"
+msgstr ""
+
+#: Ch-Intro.xml:104(para)
+msgid "CIB (aka. Cluster Information Base)"
+msgstr ""
+
+#: Ch-Intro.xml:105(para)
+msgid "CRMd (aka. Cluster Resource Management daemon)"
+msgstr ""
+
+#: Ch-Intro.xml:106(para)
+msgid "PEngine (aka. PE or Policy Engine)"
+msgstr ""
+
+#: Ch-Intro.xml:107(para)
+msgid "STONITHd"
+msgstr ""
+
+#: Ch-Intro.xml:116(caption)
+msgid "Subsystems of a Pacemaker cluster running on Corosync"
+msgstr ""
+
+#: Ch-Intro.xml:120(para)
+msgid "The CIB uses XML to represent both the cluster's configuration and current state of all resources in the cluster. The contents of the CIB are automatically kept in sync across the entire cluster and are used by the PEngine to compute the ideal state of the cluster and how it should be achieved."
+msgstr ""
+
+#: Ch-Intro.xml:124(para)
+msgid "This list of instructions is then fed to the DC (Designated Co-ordinator). Pacemaker centralizes all cluster decision making by electing one of the CRMd instances to act as a master. Should the elected CRMd process, or the node it is on, fail... a new one is quickly established."
+msgstr ""
+
+#: Ch-Intro.xml:130(para)
+msgid "The DC carries out the PEngine's instructions in the required order by passing them to either the LRMd (Local Resource Management daemon) or CRMd peers on other nodes via the cluster messaging infrastructure (which in turn passes them on to their LRMd process)."
+msgstr ""
+
+#: Ch-Intro.xml:131(para)
+msgid "The peer nodes all report the results of their operations back to the DC and based on the expected and actual results, will either execute any actions that needed to wait for the previous one to complete, or abort processing and ask the PEngine to recalculate the ideal cluster state based on the unexpected results."
+msgstr ""
+
+#: Ch-Intro.xml:132(para)
+msgid "In some cases, it may be necessary to power off nodes in order to protect shared data or complete resource recovery. For this Pacemaker comes with STONITHd. STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and is usually implemented with a remote power switch. In Pacemaker, STONITH devices are modeled as resources (and configured in the CIB) to enable them to be easily monitored for failure, however STONITHd takes care of understanding the STONITH topology such that its clients simply request a node be fenced and it does the rest."
+msgstr ""
+
+#: Ch-Intro.xml:141(title)
+msgid "Types of Pacemaker Clusters"
+msgstr ""
+
+#: Ch-Intro.xml:142(para)
+msgid "Pacemaker makes no assumptions about your environment, this allows it to support practically any <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">redundancy configuration</ulink> including Active/Active, Active/Passive, N+1, N+M, N-to-1 and N-to-N."
+msgstr ""
+
+#: Ch-Intro.xml:143(para)
+msgid "In this document we will focus on the setup of a highly available Apache web server with an Active/Passive cluster using DRBD and Ext4 to store data. Then, we will upgrade this cluster to Active/Active using GFS2."
+msgstr ""
+
+#: Ch-Intro.xml:148(title)
+msgid "Active/Passive Redundancy"
+msgstr ""
+
+#: Ch-Intro.xml:153(caption)
+msgid "Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations."
+msgstr ""
+
+#: Ch-Intro.xml:159(title)
+msgid "N to N Redundancy"
+msgstr ""
+
+#: Ch-Intro.xml:164(caption)
+msgid "When shared storage is available, every node can potentially be used for failover. Pacemaker can even run multiple copies of services to spread out the workload."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: Ch-Intro.xml:0(None)
+msgid "translator-credits"
+msgstr ""
+

@@ -1,0 +1,69 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2011-11-18 07:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Ch-Tools.xml:7(title)
+msgid "Using Pacemaker Tools"
+msgstr ""
+
+#: Ch-Tools.xml:8(para)
+msgid "In the dark past, configuring Pacemaker required the administrator to read and write XML. In true UNIX style, there were also a number of different commands that specialized in different aspects of querying and updating the cluster."
+msgstr ""
+
+#: Ch-Tools.xml:11(para)
+msgid "Since Pacemaker 1.0, this has all changed and we have an integrated, scriptable, cluster shell that hides all the messy XML scaffolding. It even allows you to queue up several changes at once and commit them atomically."
+msgstr ""
+
+#: Ch-Tools.xml:14(para)
+msgid "Take some time to familiarize yourself with what it can do."
+msgstr ""
+
+#: Ch-Tools.xml:19(userinput)
+#, no-wrap
+msgid "crm --help"
+msgstr ""
+
+#: Ch-Tools.xml:18(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n\nusage:\n    crm [-D display_type]\n    crm [-D display_type] args\n    crm [-D display_type] [-f file]\n\n    Use crm without arguments for an interactive session.\n    Supply one or more arguments for a \"single-shot\" use.\n    Specify with -f a file which contains a script. Use '-' for\n    standard input or use pipe/redirection.\n\n    crm displays cli format configurations using a color scheme\n    and/or in uppercase. Pick one of \"color\" or \"uppercase\", or\n    use \"-D color,uppercase\" if you want colorful uppercase.\n    Get plain output by \"-D plain\". The default may be set in\n    user preferences (options).\n\nExamples:\n\n    # crm -f stopapp2.cli\n    # crm &lt; stopapp2.cli\n    # crm resource stop global_www\n    # crm status\n"
+msgstr ""
+
+#: Ch-Tools.xml:44(para)
+msgid "The primary tool for monitoring the status of the cluster is crm_mon (also available as crm status). It can be run in a variety of modes and has a number of output options. To find out about any of the tools that come with Pacemaker, simply invoke them with the <command>--help</command> option or consult the included man pages. Both sets of output are created from the tool, and so will always be in sync with each other and the tool itself."
+msgstr ""
+
+#: Ch-Tools.xml:47(para)
+msgid "Additionally, the Pacemaker version and supported cluster stack(s) is available via the <command>--version</command> option."
+msgstr ""
+
+#: Ch-Tools.xml:52(userinput)
+#, no-wrap
+msgid "crm_mon --version"
+msgstr ""
+
+#: Ch-Tools.xml:55(userinput)
+#, no-wrap
+msgid "crm_mon --help"
+msgstr ""
+
+#: Ch-Tools.xml:51(screen)
+#, no-wrap
+msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nPacemaker 1.1.5\nWritten by Andrew Beekhof\n[root@pcmk-1 ~]# <placeholder-2/>\ncrm_mon - Provides a summary of cluster's current state.\n\nOutputs varying levels of detail in a number of different formats.\n\nUsage: crm_mon mode [options]\nOptions:\n -?, --help                 This text\n -$, --version              Version information\n -V, --verbose              Increase debug output\n\nModes:\n -h, --as-html=value        Write cluster status to the named file\n -w, --web-cgi              Web mode with output suitable for cgi\n -s, --simple-status        Display the cluster status once as a simple one line output (suitable for nagios)\n -S, --snmp-traps=value     Send SNMP traps to this station\n -T, --mail-to=value        Send Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix\n\nDisplay Options:\n -n, --group-by-node        Group resources by node\n -r, --inactive             Display inactive resources\n -f, --failcounts           Display resource fail counts\n -o, --operations           Display resource operation history\n -t, --timing-details       Display resource operation history with timing details\n\n\nAdditional Options:\n -i, --interval=value           Update frequency in seconds\n -1, --one-shot                 Display the cluster status once on the console and exit\n -N, --disable-ncurses          Disable the use of ncurses\n -d, --daemonize                Run in the background as a daemon\n -p, --pid-file=value           (Advanced) Daemon pid file location\n -F, --mail-from=value          Mail alerts should come from the named user\n -H, --mail-host=value          Mail alerts should be sent via the named host\n -P, --mail-prefix=value        Subjects for mail alerts should start with this string\n -E, --external-agent=value     A program to run when resource operations take place.\n -e, --external-recipient=value A recipient for your program (assuming you want the program to send something to someone).\n\nExamples:\n\nDisplay the cluster´s status on the console with updates as they occur:\n        # crm_mon\n\nDisplay the cluster´s status on the console just once then exit:\n        # crm_mon -1\n\nDisplay your cluster´s status, group resources by node, and include inactive resources in the list:\n        # crm_mon --group-by-node --inactive\n\nStart crm_mon as a background daemon and have it write the cluster´s status to an HTML file:\n        # crm_mon --daemonize --as-html /path/to/docroot/filename.html\n\nStart crm_mon as a background daemon and have it send email alerts:\n        # crm_mon --daemonize --mail-to user@example.com --mail-host mail.example.com\n\nStart crm_mon as a background daemon and have it send SNMP alerts:\n        # crm_mon --daemonize --snmp-traps snmptrapd.example.com\n\nReport bugs to pacemaker@oss.clusterlabs.org\n"
+msgstr ""
+
+#: Ch-Tools.xml:116(para)
+msgid "If the SNMP and/or email options are not listed, then Pacemaker was not built to support them. This may be by the choice of your distribution or the required libraries may not have been available. Please contact whoever supplied you with the packages for more details."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: Ch-Tools.xml:0(None)
+msgid "translator-credits"
+msgstr ""
+

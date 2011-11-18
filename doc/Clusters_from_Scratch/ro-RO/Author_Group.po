@@ -1,0 +1,52 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2011-11-18 07:09+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Author_Group.xml:6(firstname)
+msgid "Andrew"
+msgstr ""
+
+#: Author_Group.xml:6(surname)
+msgid "Beekhof"
+msgstr ""
+
+#: Author_Group.xml:7(orgname)
+msgid "Red Hat"
+msgstr ""
+
+#: Author_Group.xml:8(contrib)
+msgid "Primary author"
+msgstr ""
+
+#: Author_Group.xml:9(email)
+msgid "andrew@beekhof.net"
+msgstr ""
+
+#: Author_Group.xml:12(firstname)
+msgid "Raoul"
+msgstr ""
+
+#: Author_Group.xml:12(surname)
+msgid "Scarazzini"
+msgstr ""
+
+#: Author_Group.xml:13(contrib)
+msgid "Italian translation"
+msgstr ""
+
+#: Author_Group.xml:14(email)
+msgid "rasca@miamammausalinux.org"
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: Author_Group.xml:0(None)
+msgid "translator-credits"
+msgstr ""
+
