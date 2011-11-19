@@ -1,24 +1,26 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Clusters from Scratch 1.1\n"
 "POT-Creation-Date: 2011-11-18 07:09+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2011-11-20 00:27+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: Dan Frîncu <df.cluster@gmail.com> <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Romanian\n"
+"X-Poedit-Country: ROMANIA\n"
 
 #: Ap-Corosync-Conf.xml:7(title)
 msgid "Sample Corosync Configuration"
-msgstr ""
+msgstr "Exemplu de Configurație a Corosync"
 
 #: Ap-Corosync-Conf.xml:10(title)
 msgid "Sample Corosync.conf for a two-node cluster"
-msgstr ""
+msgstr "Exemplu de corosync.conf pentru un cluster cu două noduri"
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ap-Corosync-Conf.xml:0(None)
 msgid "translator-credits"
-msgstr ""
+msgstr "genericul-traducătorului"
 
