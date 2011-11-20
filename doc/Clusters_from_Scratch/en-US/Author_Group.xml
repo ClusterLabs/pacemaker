@@ -13,4 +13,9 @@
     <contrib>Italian translation</contrib>
     <email>rasca@miamammausalinux.org</email>
   </othercredit>
+  <othercredit class="translator">
+    <firstname>Dan</firstname><surname>Frîncu</surname>
+    <contrib>Romanian translation</contrib>
+    <email>df.cluster@gmail.com</email>
+  </othercredit>
 </authorgroup>

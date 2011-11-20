@@ -1,52 +1,70 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2011-11-18 07:09+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Project-Id-Version: Clusters from Scratch 1.1\n"
+"POT-Creation-Date: 2011-11-20 10:49+0200\n"
+"PO-Revision-Date: 2011-11-20 10:53+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: Dan Frîncu <df.cluster@gmail.com> <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Romanian\n"
+"X-Poedit-Country: ROMANIA\n"
 
-#: Author_Group.xml:6(firstname)
+#: ../en-US/Author_Group.xml:6(firstname)
 msgid "Andrew"
-msgstr ""
+msgstr "Andrew"
 
-#: Author_Group.xml:6(surname)
+#: ../en-US/Author_Group.xml:6(surname)
 msgid "Beekhof"
-msgstr ""
+msgstr "Beekhof"
 
-#: Author_Group.xml:7(orgname)
+#: ../en-US/Author_Group.xml:7(orgname)
 msgid "Red Hat"
-msgstr ""
+msgstr "Red Hat"
 
-#: Author_Group.xml:8(contrib)
+#: ../en-US/Author_Group.xml:8(contrib)
 msgid "Primary author"
-msgstr ""
+msgstr "Autor principal"
 
-#: Author_Group.xml:9(email)
+#: ../en-US/Author_Group.xml:9(email)
 msgid "andrew@beekhof.net"
-msgstr ""
+msgstr "andrew@beekhof.net"
 
-#: Author_Group.xml:12(firstname)
+#: ../en-US/Author_Group.xml:12(firstname)
 msgid "Raoul"
-msgstr ""
+msgstr "Raoul"
 
-#: Author_Group.xml:12(surname)
+#: ../en-US/Author_Group.xml:12(surname)
 msgid "Scarazzini"
-msgstr ""
+msgstr "Scarazzini"
 
-#: Author_Group.xml:13(contrib)
+#: ../en-US/Author_Group.xml:13(contrib)
 msgid "Italian translation"
-msgstr ""
+msgstr "Traducerea în limba italiană"
 
-#: Author_Group.xml:14(email)
+#: ../en-US/Author_Group.xml:14(email)
 msgid "rasca@miamammausalinux.org"
-msgstr ""
+msgstr "rasca@miamammausalinux.org"
+
+#: ../en-US/Author_Group.xml:17(firstname)
+msgid "Dan"
+msgstr "Dan"
+
+#: ../en-US/Author_Group.xml:17(surname)
+msgid "Frîncu"
+msgstr "Frîncu"
+
+#: ../en-US/Author_Group.xml:18(contrib)
+msgid "Romanian translation"
+msgstr "Traducerea în limba română"
+
+#: ../en-US/Author_Group.xml:19(email)
+msgid "df.cluster@gmail.com"
+msgstr "df.cluster@gmail.com"
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Author_Group.xml:0(None)
+#: ../en-US/Author_Group.xml:0(None)
 msgid "translator-credits"
-msgstr ""
+msgstr "genericul-traducătorului"
 

@@ -1,48 +1,50 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Clusters from Scratch 1.1\n"
 "POT-Creation-Date: 2011-11-18 07:09+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2011-11-20 10:41+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: Dan Frîncu <df.cluster@gmail.com> <df.cluster@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Romanian\n"
+"X-Poedit-Country: ROMANIA\n"
 
 #: Ap-Reading.xml:7(title)
 msgid "Further Reading"
-msgstr ""
+msgstr "Documentație Suplimentară"
 
 #: Ap-Reading.xml:9(emphasis)
 msgid "Project Website"
-msgstr ""
+msgstr "Site-ul Proiectului"
 
 #: Ap-Reading.xml:12(ulink)
 msgid "http://www.clusterlabs.org"
-msgstr ""
+msgstr "http://www.clusterlabs.org"
 
 #: Ap-Reading.xml:15(emphasis)
 msgid "Cluster Commands"
-msgstr ""
+msgstr "Comenzi de Cluster"
 
 #: Ap-Reading.xml:17(para)
 msgid "A comprehensive guide to cluster commands has been written by Novell and can be found at:"
-msgstr ""
+msgstr "Un ghid comprehensiv pentru comenzile clusterului a fost scris de către Novell și poate fi găsit la:"
 
 #: Ap-Reading.xml:21(ulink)
 msgid "http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html"
-msgstr ""
+msgstr "http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html"
 
 #: Ap-Reading.xml:24(emphasis)
 msgid "Corosync"
-msgstr ""
+msgstr "Corosync"
 
 #: Ap-Reading.xml:27(ulink)
 msgid "http://www.corosync.org"
-msgstr ""
+msgstr "http://www.corosync.org"
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ap-Reading.xml:0(None)
 msgid "translator-credits"
-msgstr ""
+msgstr "genericul-traducătorului"
 
