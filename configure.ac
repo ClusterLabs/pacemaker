@@ -471,8 +471,7 @@ AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep CIB configura
 AC_SUBST(CRM_CONFIG_DIR)
 
 dnl Eventually move out of the heartbeat dir tree and create compatability code
-dnl CRM_DAEMON_DIR=$libdir/pacemaker
-CRM_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
+CRM_DAEMON_DIR="${libexecdir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
 AC_SUBST(CRM_DAEMON_DIR)
 
