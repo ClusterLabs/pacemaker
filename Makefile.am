@@ -35,6 +35,10 @@ core:
 	@echo "Building only core components: $(CORE)"
 	list='$(CORE)'; for subdir in $$list; do make -C $$subdir all; done
 
+core-install:
+	@echo "Installing only core components: $(CORE)"
+	list='$(CORE)'; for subdir in $$list; do make -C $$subdir install; done
+
 install-exec-local:
 	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CONFIG_DIR)
