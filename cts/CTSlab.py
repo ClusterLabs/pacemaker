@@ -115,6 +115,7 @@ def usage(arg, status=1):
     print "\nCommon options: "  
     print "\t [--at-boot (1|0)],         does the cluster software start at boot time" 
     print "\t [--nodes 'node list'],     list of cluster nodes separated by whitespace" 
+    print "\t [--group | -g 'name'],     use the nodes listed in the named DSH group (~/.dsh/groups/$name)" 
     print "\t [--limit-nodes max],       only use the first 'max' cluster nodes supplied with --nodes" 
     print "\t [--stack (heartbeat|ais)], which cluster stack is installed"
     print "\t [--logfile path],          where should the test software look for logs from cluster nodes" 
@@ -315,6 +316,22 @@ if __name__ == '__main__':
        elif args[i] == "--nodes":
            skipthis=1
            node_list = args[i+1].split(' ')
+
+       elif args[i] == "-g" or args[i] == "--group" or args[i] == "--dsh-group":
+           skipthis=1
+           Environment["OutputFile"] = "/var/log/cluster-%s.log" % args[i+1]
+           dsh_file = "%s/.dsh/group/%s" % (os.environ['HOME'], args[i+1])
+           if os.path.isfile(dsh_file):
+               node_list = []
+               f = open(dsh_file, 'r')
+               for line in f:
+                   l = line.strip().rstrip()
+                   if not l.startswith('#'):
+                       node_list.append(l)
+               f.close()
+
+           else:
+               print("Unknown DSH group: %s" % args[i+1])
 
        elif args[i] == "--syslog-facility" or args[i] == "--facility":
            skipthis=1
