@@ -957,6 +957,7 @@ increment_clone(char *last_rsc_id)
                 break;
             default:
                 crm_err("Unexpected char: %c (%d)", last_rsc_id[lpc], lpc);
+                return -1;
                 break;
         }
     }
