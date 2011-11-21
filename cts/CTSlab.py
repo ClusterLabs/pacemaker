@@ -325,7 +325,11 @@ if __name__ == '__main__':
 
        elif args[i] == "-g" or args[i] == "--group" or args[i] == "--dsh-group":
            skipthis=1
-           Environment["OutputFile"] = "/var/log/cluster-%s.log" % args[i+1]
+           if os.environ['USER'] == 'root':
+               Environment["OutputFile"] = "/var/log/cluster-%s.log" % args[i+1]
+           else:
+               Environment["OutputFile"] = "%s/cluster-%s.log" % (os.environ['HOME'], args[i+1])
+
            dsh_file = "%s/.dsh/group/%s" % (os.environ['HOME'], args[i+1])
            if os.path.isfile(dsh_file):
                node_list = []
@@ -559,6 +563,7 @@ if __name__ == '__main__':
     Environment.log("Schema:                 %s" % Environment["Schema"])
     Environment.log("Scenario:               %s" % scenario.__doc__)
     Environment.log("CTS Master:             %s" % Environment["cts-master"])
+    Environment.log("CTS Logfile:            %s" % Environment["OutputFile"])
     Environment.log("Random Seed:            %s" % Environment["RandSeed"])
     Environment.log("Syslog variant:         %s" % Environment["syslogd"].strip())
     Environment.log("System log files:       %s" % Environment["LogFileName"])
