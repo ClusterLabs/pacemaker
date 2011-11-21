@@ -160,7 +160,7 @@ elif [ $command = group-add ]; then
 elif [ $command = run ]; then
     if [ x$pdsh != x ]; then
 	hosts=`expand pdsh`
-	$pdsh $hosts -- $*
+	$pdsh -l $user $hosts -- $*
 
     else
 	hosts=`expand oneline`
