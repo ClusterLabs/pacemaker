@@ -321,9 +321,9 @@ Complete!
       </screen>
 
       <para>
-	Next we create a basic configuration file and place is in <filename>/etc/cluster/cluster.conf</filename>.
+	Next we create a basic configuration file and place it in <filename>/etc/cluster/cluster.conf</filename>.
 	The <constant>name</constant> used for each <constant>clusternode</constant> should correspond to that node's <command>uname -n</command>, just as Pacemaker expects.
-	The <constant>nodeid</constant> can be any positive mumber but nust be unique.
+	The <constant>nodeid</constant> can be any positive number but must be unique.
 	<example>
 	  <title>Basic cluster.conf for a two-node cluster</title>
 	  <programlisting>
@@ -463,7 +463,7 @@ Node  Sts   Inc   Joined               Name
 		<section>
 			<title>Preparation</title>
 			<para>
-				Before we do anything to the existing partition, we need to make sure it is unmounted. We do this by tell the cluster to stop the WebFS resource. This will ensure that other resources (in our case, Apache) using WebFS are not only stopped, but stopped in the correct order.
+				Before we do anything to the existing partition, we need to make sure it is unmounted. We do this by telling the cluster to stop the WebFS resource. This will ensure that other resources (in our case, Apache) using WebFS are not only stopped, but stopped in the correct order.
 			</para>
 			
 <screen>
@@ -655,7 +655,7 @@ ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2
     </screen>
     <para>
       There’s no point making the services active on both locations if we can’t reach them, so lets first clone the IP address.
-      Cloned IPaddr2 resources use an iptables rule to ensure that each request only processed by one of the two clone instances.
+      Cloned IPaddr2 resources use an iptables rule to ensure that each request only gets processed by one of the two clone instances.
       The additional meta options tell the cluster how many instances of the clone we want (one "request bucket" for each node) and that if all other nodes fail, then the remaining node should hold all of them.
       Otherwise the requests would be simply discarded.
     </para>

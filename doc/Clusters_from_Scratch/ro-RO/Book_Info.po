@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
 "POT-Creation-Date: 2011-11-18 07:09+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2011-11-21 23:38+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: ROMANIAN <RO@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -15,70 +15,70 @@ msgstr ""
 #. It doesn't matter what you translate it to: it's not used at all.
 #: Book_Info.xml:59(None)
 msgid "@@image: 'Common_Content/images/title_logo.svg'; md5=THIS FILE DOESN'T EXIST"
-msgstr ""
+msgstr "@@image: 'Common_Content/images/title_logo.svg'; md5=ACEST FIȘIER NU EXISTĂ"
 
 #: Book_Info.xml:7(title)
 msgid "Clusters from Scratch"
-msgstr ""
+msgstr "Clustere de la Zero"
 
 #: Book_Info.xml:8(subtitle)
 msgid "Creating Active/Passive and Active/Active Clusters on Fedora"
-msgstr ""
+msgstr "Crearea de Clustere Active/Pasive și Active/Active pe Fedora"
 
 #: Book_Info.xml:9(productname)
 msgid "Pacemaker"
-msgstr ""
+msgstr "Pacemaker"
 
 #: Book_Info.xml:10(productnumber)
 msgid "1.1"
-msgstr ""
+msgstr "1.1"
 
 #: Book_Info.xml:11(edition)
 msgid "3"
-msgstr ""
+msgstr "3"
 
 #: Book_Info.xml:12(pubsnumber)
 msgid "0"
-msgstr ""
+msgstr "0"
 
 #: Book_Info.xml:14(para)
 msgid "The purpose of this document is to provide a start-to-finish guide to building an example active/passive cluster with Pacemaker and show how it can be converted to an active/active one."
-msgstr ""
+msgstr "Scopul acestui document este de a furniza un ghid de la început-la-sfârșit despre cum să construiți un exemplu de cluster activ/pasiv cu Pacemaker și de a arăta cum poate fi convertit la unul de tip activ/activ."
 
 #: Book_Info.xml:21(para)
 msgid "Fedora 13 as the host operating system"
-msgstr ""
+msgstr "Fedora 13 ca sistem de operare gazdă"
 
 #: Book_Info.xml:26(para)
 msgid "Corosync to provide messaging and membership services,"
-msgstr ""
+msgstr "Corosync pentru a furniza servicii de mesagerie și apartenență,"
 
 #: Book_Info.xml:31(para)
 msgid "Pacemaker to perform resource management,"
-msgstr ""
+msgstr "Pacemaker pentru a efectua gestiunea resurselor,"
 
 #: Book_Info.xml:36(para)
 msgid "DRBD as a cost-effective alternative to shared storage,"
-msgstr ""
+msgstr "DRBD ca o alternativă eficientă ca și cost pentru spațiu de stocare partajat,"
 
 #: Book_Info.xml:41(para)
 msgid "GFS2 as the cluster filesystem (in active/active mode)"
-msgstr ""
+msgstr "GFS2 ca și sistem de fișiere de cluster (în mod activ/activ)"
 
 #: Book_Info.xml:46(para)
 msgid "The crm shell for displaying the configuration and making changes"
-msgstr ""
+msgstr "Shell-ul crm pentru vizualizarea configurației și pentru realizarea de modificări"
 
 #: Book_Info.xml:17(para)
 msgid "The example cluster will use: <placeholder-1/>"
-msgstr ""
+msgstr "Clusterul din exemplu va folosi: <placeholder-1/>"
 
 #: Book_Info.xml:52(para)
 msgid "Given the graphical nature of the Fedora install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs."
-msgstr ""
+msgstr "Dată fiind natura grafică a procesului de instalare al Fedora, un număr de capturi de ecran sunt incluse. Însă ghidul este compus în mod primar din comenzi, motivele pentru care sunt executate și rezultatele de ieșire așteptate ale acestora."
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Book_Info.xml:0(None)
 msgid "translator-credits"
-msgstr ""
+msgstr "genericul-traducătorului"
 

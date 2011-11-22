@@ -24,7 +24,7 @@ msgid "<ulink url=\"http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6
 msgstr "<ulink url=\"http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Suite_Overview/index.html#s2-clumembership-overview-CSO\">CMAN v3</ulink> este un plugin al Corosync care monitorizează numele și numărul de noduri active din cluster pentru a livra informații de apartenență și quorum clienților (cum ar fi daemonii Pacemaker)."
 
 #: Ap-Cman.xml:18(para)
-msgid "A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecssary down-time and/or data corruption."
+msgid "A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecssary downtime and/or data corruption."
 msgstr "Un eșec de a realiza acest lucru poate duce la ceea ce este numit a fi un <literal>split-brain intern</literal> - o situație în care părți diferite ale stivei nu sunt de acord dacă unele noduri sunt funcționale sau nu - fapt care conduce rapid către o nefuncționare inutilă și/sau către coruperea datelor."
 
 #: Ap-Cman.xml:14(para)
