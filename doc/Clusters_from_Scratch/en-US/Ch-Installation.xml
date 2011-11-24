@@ -771,7 +771,7 @@ GATEWAY=192.168.122.1
       </screen>
       <para>
 	However we’re not finished.
-	The machine wont normally see the shortened host name until about it reboots, but we can force it to update.
+	The machine won't normally see the shortened host name until about it reboots, but we can force it to update.
       </para>
       <screen>
 [root@pcmk-1 ~]# <userinput>source /etc/sysconfig/network</userinput>
@@ -794,7 +794,7 @@ clusterlabs.org
     <section id="s-configure-corosync">
       <title>Configuring Corosync</title>
       <para>
-	Choose a port number and multi-cast <footnote>
+	Choose a port number and multicast <footnote>
 	  <para>
 	    <ulink url="http://en.wikipedia.org/wiki/Multicast">http://en.wikipedia.org/wiki/Multicast</ulink>
 	  </para>
@@ -806,13 +806,13 @@ clusterlabs.org
       </para>
       <para>
 	Be sure that the values you chose do not conflict with any existing clusters you might have.
-	For advice on choosing a multi-cast address, see
+	For advice on choosing a multicast address, see
 	<ulink url="http://www.29west.com/docs/THPM/multicast-address-assignment.html">
 	  http://www.29west.com/docs/THPM/multicast-address-assignment.html
 	</ulink>
       </para>
       <para>
-	For this document, I have chosen port 4000 and used 226.94.1.1 as the multi-cast address.
+	For this document, I have chosen port 4000 and used 226.94.1.1 as the multicast address.
       </para>
       <important>
 	<para>
