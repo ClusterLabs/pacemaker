@@ -1449,9 +1449,9 @@ do_lrm_invoke(long long action,
 }
 
 static void
-copy_notify_keys(gpointer key, gpointer value, gpointer user_data)
+copy_meta_keys(gpointer key, gpointer value, gpointer user_data)
 {
-    if (strstr(key, CRM_META "_notify_") != NULL) {
+    if (strstr(key, CRM_META "_") != NULL) {
         g_hash_table_insert(user_data, strdup((const char *)key), strdup((const char *)value));
     }
 }
@@ -1526,7 +1526,7 @@ construct_op(xmlNode * rsc_op, const char *rsc_id, const char *operation)
             g_hash_table_insert(op->params, crm_strdup(XML_ATTR_CRM_VERSION), crm_strdup(version));
         }
 
-        g_hash_table_foreach(params, copy_notify_keys, op->params);
+        g_hash_table_foreach(params, copy_meta_keys, op->params);
         g_hash_table_destroy(params);
         params = NULL;
     }
