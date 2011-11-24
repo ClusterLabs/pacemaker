@@ -430,7 +430,7 @@
       <title>Collocating Sets of Resources</title>
       <para>
 	Another common situation is for an administrator to create a set of collocated resources.
-	Previously this possible either by defining a resource group (See <xref linkend="group-resources"/>) which could not always accurately express the design; or by defining each relationship as an individual constraint, causing a constraint explosion as the number of resources and combinations grew.
+	Previously this was possible either by defining a resource group (See <xref linkend="group-resources"/>) which could not always accurately express the design; or by defining each relationship as an individual constraint, causing a constraint explosion as the number of resources and combinations grew.
       </para>
       <example>
 	<title>A chain of collocated resources</title>
@@ -482,7 +482,7 @@
       </example>
       <para>
 	This notation can also be used in this context to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other.
-	In this scenario, unlike the previous on, B would be allowed to remain active even if A or C (or both) were inactive.
+	In this scenario, unlike the previous one, B would be allowed to remain active even if A or C (or both) were inactive.
       </para>
       <example>
 	<title>Using colocation sets to specify a common peer. </title>

@@ -66,7 +66,7 @@
 	</programlisting>
 	  </example>
 	<para>The logging should be mostly obvious and the amf section refers to the Availability Management Framework and is not covered in this document.</para>
-	<para>The interesting part of the configuration is the totem section. This is where we define the how the node can communicate with the rest of the cluster and what protocol version and options (including encryption<footnote>
+	<para>The interesting part of the configuration is the totem section. This is where we define how the node can communicate with the rest of the cluster and what protocol version and options (including encryption<footnote>
             <para>Please consult the <ulink url="http://www.corosync.org/">Corosync website</ulink> and documentation for details on enabling encryption and peer authentication for the cluster.</para>
 	  </footnote>) it should use. Beginners are encouraged to use the values shown and modify the interface section based on their network. </para>
 	<para>It is also possible to configure Corosync for an IPv6 based environment. Simply configure bindnetaddr and mcastaddr with their IPv6 equivalents. Eg </para>

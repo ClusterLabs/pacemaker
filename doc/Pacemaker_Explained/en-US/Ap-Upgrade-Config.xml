@@ -77,13 +77,13 @@
 	  </listitem>
 	  <listitem>
 	    <para>
-	      <command>xsltproc <filename>/path/tp/upgrade06.xsl</filename> <filename>config06.xml</filename> > <filename>config10.xml</filename></command>
+	      <command>xsltproc <filename>/path/to/upgrade06.xsl</filename> <filename>config06.xml</filename> > <filename>config10.xml</filename></command>
 	    </para>
 	  </listitem>
 	  <listitem><para>Locate the <filename>pacemaker.rng</filename> script.</para></listitem>
 	  <listitem>
 	    <para>
-	      <command>xmllint --relaxng <filename>/path/tp/pacemaker.rng</filename> <filename>config10.xml</filename></command>
+	      <command>xmllint --relaxng <filename>/path/to/pacemaker.rng</filename> <filename>config10.xml</filename></command>
 	    </para>
 	  </listitem>
 	</orderedlist>

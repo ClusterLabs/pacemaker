@@ -568,7 +568,7 @@ So if the default <literal>resource-stickiness</literal> is 100 a group has seve
 	    </tgroup>
 	  </table>
 	  <para>
-	    In the example below, myApp will wait until one of database copies has been started and promoted to master before being started itself.
+	    In the example below, myApp will wait until one of the database copies has been started and promoted to master before being started itself.
 	    Only if no copies can be promoted will apache-stats be prevented from being active.
 	    Additionally, the database will wait for myApp to be stopped before it is demoted.
 	  </para>
