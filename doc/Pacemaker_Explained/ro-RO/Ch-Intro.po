@@ -53,7 +53,7 @@ msgstr "Citeşte-mă-Întâi-pe-Mine"
 
 #: Ch-Intro.xml:3(title)
 msgid "The Scope of this Document"
-msgstr "Raza de Acoperire a acestui Document"
+msgstr "Domeniul de Aplicare al acestui Document"
 
 #: Ch-Intro.xml:4(para)
 msgid "The purpose of this document is to definitively explain the concepts used to configure Pacemaker. To achieve this best, it will focus exclusively on the XML syntax used to configure the CIB."

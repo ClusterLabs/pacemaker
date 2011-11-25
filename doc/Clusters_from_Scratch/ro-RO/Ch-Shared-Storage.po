@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
 "POT-Creation-Date: 2011-11-18 07:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2011-11-25 23:39+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: ROMANIAN <RO@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -13,515 +13,1303 @@ msgstr ""
 
 #: Ch-Shared-Storage.xml:7(title)
 msgid "Replicated Storage with DRBD"
-msgstr ""
+msgstr "Stocare Replicată cu DRBD"
 
 #: Ch-Shared-Storage.xml:8(para)
 msgid "Even if you’re serving up static websites, having to manually synchronize the contents of that website to all the machines in the cluster is not ideal. For dynamic websites, such as a wiki, its not even an option. Not everyone care afford network-attached storage but somehow the data needs to be kept in sync. Enter DRBD which can be thought of as network based RAID-1. See <ulink url=\"http://www.drbd.org/\">http://www.drbd.org</ulink>/ for more details."
-msgstr ""
+msgstr "Chiar și atunci când serviți site-uri statice, să trebuiască să sincronizați manual conținutul site-ului pe toate mașinile din cluster nu este ideal. Pentru site-uri dinamice, cu ar fi wiki-urile, nici măcar nu este o opțiune acest lucru. Nu toată lumea își poate permite stocare atașată la rețea dar cumva datele trebuie ținute sincronizate. Intră în scenă DRBD care poate fi considerat ca un RAID-1 la nivel de rețea. Vedeți <ulink url=\"http://www.drbd.org/\">http://www.drbd.org</ulink>/ pentru mai multe detalii."
 
 #: Ch-Shared-Storage.xml:18(title)
 msgid "Install the DRBD Packages"
-msgstr ""
+msgstr "Instalarea Pachetelor DRBD"
 
 #: Ch-Shared-Storage.xml:19(para)
 msgid "Since its inclusion in the upstream 2.6.33 kernel, everything needed to use DRBD ships with Fedora 13. All you need to do is install it:"
-msgstr ""
+msgstr "De la includerea acestuia în kernelul 2.6.33, tot ce este necesar pentru a rula DRBD este livrat cu Fedora 13. Tot ceea ce trebuie să faceți este să îl instalați:"
 
 #: Ch-Shared-Storage.xml:24(userinput)
 #, no-wrap
 msgid "yum install -y drbd-pacemaker drbd-udev"
-msgstr ""
+msgstr "yum install -y drbd-pacemaker drbd-udev"
 
 #: Ch-Shared-Storage.xml:23(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nLoaded plugins: presto, refresh-packagekit\nSetting up Install Process\nResolving Dependencies\n--&gt; Running transaction check\n---&gt; Package drbd-pacemaker.x86_64 0:8.3.7-2.fc13 set to be updated\n--&gt; Processing Dependency: drbd-utils = 8.3.7-2.fc13 for package: drbd-pacemaker-8.3.7-2.fc13.x86_64\n--&gt; Running transaction check\n---&gt; Package drbd-utils.x86_64 0:8.3.7-2.fc13 set to be updated\n--&gt; Finished Dependency Resolution\n\nDependencies Resolved\n\n=================================================================================\n Package                Arch           Version              Repository      Size\n=================================================================================\nInstalling:\n drbd-pacemaker         x86_64         8.3.7-2.fc13         fedora          19 k\nInstalling for dependencies:\n drbd-utils             x86_64         8.3.7-2.fc13         fedora         165 k\n\nTransaction Summary\n=================================================================================\nInstall       2 Package(s)\nUpgrade       0 Package(s)\n\nTotal download size: 184 k\nInstalled size: 427 k\nDownloading Packages:\nSetting up and reading Presto delta metadata\nfedora/prestodelta                                        | 1.7 kB     00:00     \nProcessing delta metadata\nPackage(s) data still to download: 184 k\n(1/2): drbd-pacemaker-8.3.7-2.fc13.x86_64.rpm             |  19 kB     00:01     \n(2/2): drbd-utils-8.3.7-2.fc13.x86_64.rpm                 | 165 kB     00:02     \n---------------------------------------------------------------------------------\nTotal                                             45 kB/s | 184 kB     00:04     \nRunning rpm_check_debug\nRunning Transaction Test\nTransaction Test Succeeded\nRunning Transaction\n  Installing     : drbd-utils-8.3.7-2.fc13.x86_64                            1/2 \n  Installing     : drbd-pacemaker-8.3.7-2.fc13.x86_64                        2/2 \n\nInstalled:\n  drbd-pacemaker.x86_64 0:8.3.7-2.fc13                                           \n\nDependency Installed:\n  drbd-utils.x86_64 0:8.3.7-2.fc13                                               \n\nComplete!\n[root@pcmk-1 ~]#\n    "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"Loaded plugins: presto, refresh-packagekit\n"
+"Setting up Install Process\n"
+"Resolving Dependencies\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package drbd-pacemaker.x86_64 0:8.3.7-2.fc13 set to be updated\n"
+"--&gt; Processing Dependency: drbd-utils = 8.3.7-2.fc13 for package: drbd-pacemaker-8.3.7-2.fc13.x86_64\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package drbd-utils.x86_64 0:8.3.7-2.fc13 set to be updated\n"
+"--&gt; Finished Dependency Resolution\n"
+"\n"
+"Dependencies Resolved\n"
+"\n"
+"=================================================================================\n"
+" Package                Arch           Version              Repository      Size\n"
+"=================================================================================\n"
+"Installing:\n"
+" drbd-pacemaker         x86_64         8.3.7-2.fc13         fedora          19 k\n"
+"Installing for dependencies:\n"
+" drbd-utils             x86_64         8.3.7-2.fc13         fedora         165 k\n"
+"\n"
+"Transaction Summary\n"
+"=================================================================================\n"
+"Install       2 Package(s)\n"
+"Upgrade       0 Package(s)\n"
+"\n"
+"Total download size: 184 k\n"
+"Installed size: 427 k\n"
+"Downloading Packages:\n"
+"Setting up and reading Presto delta metadata\n"
+"fedora/prestodelta                                        | 1.7 kB     00:00     \n"
+"Processing delta metadata\n"
+"Package(s) data still to download: 184 k\n"
+"(1/2): drbd-pacemaker-8.3.7-2.fc13.x86_64.rpm             |  19 kB     00:01     \n"
+"(2/2): drbd-utils-8.3.7-2.fc13.x86_64.rpm                 | 165 kB     00:02     \n"
+"---------------------------------------------------------------------------------\n"
+"Total                                             45 kB/s | 184 kB     00:04     \n"
+"Running rpm_check_debug\n"
+"Running Transaction Test\n"
+"Transaction Test Succeeded\n"
+"Running Transaction\n"
+"  Installing     : drbd-utils-8.3.7-2.fc13.x86_64                            1/2 \n"
+"  Installing     : drbd-pacemaker-8.3.7-2.fc13.x86_64                        2/2 \n"
+"\n"
+"Installed:\n"
+"  drbd-pacemaker.x86_64 0:8.3.7-2.fc13                                           \n"
+"\n"
+"Dependency Installed:\n"
+"  drbd-utils.x86_64 0:8.3.7-2.fc13                                               \n"
+"\n"
+"Complete!\n"
+"[root@pcmk-1 ~]#\n"
+"    "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"Loaded plugins: presto, refresh-packagekit\n"
+"Setting up Install Process\n"
+"Resolving Dependencies\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package drbd-pacemaker.x86_64 0:8.3.7-2.fc13 set to be updated\n"
+"--&gt; Processing Dependency: drbd-utils = 8.3.7-2.fc13 for package: drbd-pacemaker-8.3.7-2.fc13.x86_64\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package drbd-utils.x86_64 0:8.3.7-2.fc13 set to be updated\n"
+"--&gt; Finished Dependency Resolution\n"
+"\n"
+"Dependencies Resolved\n"
+"\n"
+"=================================================================================\n"
+" Package                Arch           Version              Repository      Size\n"
+"=================================================================================\n"
+"Installing:\n"
+" drbd-pacemaker         x86_64         8.3.7-2.fc13         fedora          19 k\n"
+"Installing for dependencies:\n"
+" drbd-utils             x86_64         8.3.7-2.fc13         fedora         165 k\n"
+"\n"
+"Transaction Summary\n"
+"=================================================================================\n"
+"Install       2 Package(s)\n"
+"Upgrade       0 Package(s)\n"
+"\n"
+"Total download size: 184 k\n"
+"Installed size: 427 k\n"
+"Downloading Packages:\n"
+"Setting up and reading Presto delta metadata\n"
+"fedora/prestodelta                                        | 1.7 kB     00:00     \n"
+"Processing delta metadata\n"
+"Package(s) data still to download: 184 k\n"
+"(1/2): drbd-pacemaker-8.3.7-2.fc13.x86_64.rpm             |  19 kB     00:01     \n"
+"(2/2): drbd-utils-8.3.7-2.fc13.x86_64.rpm                 | 165 kB     00:02     \n"
+"---------------------------------------------------------------------------------\n"
+"Total                                             45 kB/s | 184 kB     00:04     \n"
+"Running rpm_check_debug\n"
+"Running Transaction Test\n"
+"Transaction Test Succeeded\n"
+"Running Transaction\n"
+"  Installing     : drbd-utils-8.3.7-2.fc13.x86_64                            1/2 \n"
+"  Installing     : drbd-pacemaker-8.3.7-2.fc13.x86_64                        2/2 \n"
+"\n"
+"Installed:\n"
+"  drbd-pacemaker.x86_64 0:8.3.7-2.fc13                                           \n"
+"\n"
+"Dependency Installed:\n"
+"  drbd-utils.x86_64 0:8.3.7-2.fc13                                               \n"
+"\n"
+"Complete!\n"
+"[root@pcmk-1 ~]#\n"
+"    "
 
 #: Ch-Shared-Storage.xml:79(title)
 msgid "Configure DRBD"
-msgstr ""
+msgstr "Configurarea DRBD"
 
 #: Ch-Shared-Storage.xml:80(para)
 msgid "Before we configure DRBD, we need to set aside some disk for it to use."
-msgstr ""
+msgstr "Înainte să configurăm DRBD-u, trebuie să punem deoparte spațiu pe disc pentru ca acesta să îl folosească."
 
 #: Ch-Shared-Storage.xml:84(title)
 msgid "Create A Partition for DRBD"
-msgstr ""
+msgstr "Crearea Unei Partiții Pentru DRBD"
 
 #: Ch-Shared-Storage.xml:85(para)
 msgid "If you have more than 1Gb free, feel free to use it. For this guide however, 1Gb is plenty of space for a single html file and sufficient for later holding the GFS2 metadata."
-msgstr ""
+msgstr "Dacă aveți mai mult de 1Gb liber, simțiți-vă liberi să-l folosiți. Pentru acest ghid însă, 1Gb este suficient spațiu pentru un singur fișier html și suficient pentru a stoca ulterior metadata din GFS2."
 
-#: Ch-Shared-Storage.xml:90(userinput) Ch-Shared-Storage.xml:107(userinput)
+#: Ch-Shared-Storage.xml:90(userinput)
+#: Ch-Shared-Storage.xml:107(userinput)
 #, no-wrap
 msgid "lvcreate -n drbd-demo -L 1G VolGroup"
-msgstr ""
+msgstr "lvcreate -n drbd-demo -L 1G VolGroup"
 
-#: Ch-Shared-Storage.xml:92(userinput) Ch-Shared-Storage.xml:103(userinput) Ch-Shared-Storage.xml:109(userinput)
+#: Ch-Shared-Storage.xml:92(userinput)
+#: Ch-Shared-Storage.xml:103(userinput)
+#: Ch-Shared-Storage.xml:109(userinput)
 #, no-wrap
 msgid "lvs"
-msgstr ""
+msgstr "lvs"
 
-#: Ch-Shared-Storage.xml:94(emphasis) Ch-Shared-Storage.xml:111(emphasis)
+#: Ch-Shared-Storage.xml:94(emphasis)
+#: Ch-Shared-Storage.xml:111(emphasis)
 msgid "drbd-demo VolGroup -wi-a- 1.00G"
-msgstr ""
+msgstr "drbd-demo VolGroup -wi-a- 1.00G"
 
 #: Ch-Shared-Storage.xml:89(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n  Logical volume \"drbd-demo\" created\n[root@pcmk-1 ~]# <placeholder-2/>\n  LV        VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n  <placeholder-3/>                                      \n  lv_root   VolGroup -wi-ao   7.30G                                      \n  lv_swap   VolGroup -wi-ao 500.00M\n      "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"  Logical volume \"drbd-demo\" created\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"  LV        VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n"
+"  <placeholder-3/>                                      \n"
+"  lv_root   VolGroup -wi-ao   7.30G                                      \n"
+"  lv_swap   VolGroup -wi-ao 500.00M\n"
+"      "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"  Logical volume \"drbd-demo\" created\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"  LV        VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n"
+"  <placeholder-3/>                                      \n"
+"  lv_root   VolGroup -wi-ao   7.30G                                      \n"
+"  lv_swap   VolGroup -wi-ao 500.00M\n"
+"      "
 
 #: Ch-Shared-Storage.xml:98(para)
 msgid "Repeat this on the second node, be sure to use the same size partition."
-msgstr ""
+msgstr "Repetați acest lucru pe al doilea nod, asigurați-vă că folosiți o partiție de aceeași dimensiune."
 
-#: Ch-Shared-Storage.xml:106(emphasis) Ch-Shared-Storage.xml:147(emphasis) Ch-Shared-Storage.xml:152(emphasis)
+#: Ch-Shared-Storage.xml:106(emphasis)
+#: Ch-Shared-Storage.xml:147(emphasis)
+#: Ch-Shared-Storage.xml:152(emphasis)
 msgid "VolGroup"
-msgstr ""
+msgstr "VolGroup"
 
 #: Ch-Shared-Storage.xml:108(emphasis)
 msgid "Logical volume \"drbd-demo\" created"
-msgstr ""
+msgstr "Logical volume \"drbd-demo\" created"
 
 #: Ch-Shared-Storage.xml:102(screen)
 #, no-wrap
-msgid "\n[root@pcmk-2 ~]# <placeholder-1/>\n  LV      VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n  lv_root VolGroup -wi-ao   7.30G                                      \n  lv_swap <placeholder-2/> -wi-ao 500.00M                                      \n[root@pcmk-2 ~]# <placeholder-3/>\n <placeholder-4/>\n[root@pcmk-2 ~]# <placeholder-5/>\n  LV        VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n  <placeholder-6/>                                     \n  lv_root   VolGroup -wi-ao   7.30G                                      \n  lv_swap   VolGroup -wi-ao 500.00M\n      "
+msgid ""
+"\n"
+"[root@pcmk-2 ~]# <placeholder-1/>\n"
+"  LV      VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n"
+"  lv_root VolGroup -wi-ao   7.30G                                      \n"
+"  lv_swap <placeholder-2/> -wi-ao 500.00M                                      \n"
+"[root@pcmk-2 ~]# <placeholder-3/>\n"
+" <placeholder-4/>\n"
+"[root@pcmk-2 ~]# <placeholder-5/>\n"
+"  LV        VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n"
+"  <placeholder-6/>                                     \n"
+"  lv_root   VolGroup -wi-ao   7.30G                                      \n"
+"  lv_swap   VolGroup -wi-ao 500.00M\n"
+"      "
 msgstr ""
+"\n"
+"[root@pcmk-2 ~]# <placeholder-1/>\n"
+"  LV      VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n"
+"  lv_root VolGroup -wi-ao   7.30G                                      \n"
+"  lv_swap <placeholder-2/> -wi-ao 500.00M                                      \n"
+"[root@pcmk-2 ~]# <placeholder-3/>\n"
+" <placeholder-4/>\n"
+"[root@pcmk-2 ~]# <placeholder-5/>\n"
+"  LV        VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n"
+"  <placeholder-6/>                                     \n"
+"  lv_root   VolGroup -wi-ao   7.30G                                      \n"
+"  lv_swap   VolGroup -wi-ao 500.00M\n"
+"      "
 
 #: Ch-Shared-Storage.xml:118(title)
 msgid "Write the DRBD Config"
-msgstr ""
+msgstr "Scrieți Config-ul DRBD-ului"
 
 #: Ch-Shared-Storage.xml:119(para)
 msgid "There is no series of commands for build a DRBD configuration, so simply copy the configuration below to /etc/drbd.conf"
-msgstr ""
+msgstr " Nu există nici o serie de comenzi pentru a construi configurația DRBD, așa că pur și simplu copiați configurația de mai jos în /etc/drbd.conf."
 
 #: Ch-Shared-Storage.xml:122(para)
 msgid "Detailed information on the directives used in this configuration (and other alternatives) is available from <ulink url=\"http://www.drbd.org/users-guide/ch-configure.html\">http://www.drbd.org/users-guide/ch-configure.html</ulink>"
-msgstr ""
+msgstr "Informații detaliate despre directivele folosite în această configurație (precum și alte alternative) sunt disponibile pe <ulink url=\"http://www.drbd.org/users-guide/ch-configure.html\">http://www.drbd.org/users-guide/ch-configure.html</ulink>"
 
 #: Ch-Shared-Storage.xml:126(para)
 msgid "Be sure to use the names and addresses of <emphasis>your</emphasis> nodes if they differ from the ones used in this guide."
-msgstr ""
+msgstr "Asigurați-vă că folosiți numele și adresele nodurilor <emphasis>voastre</emphasis>, dacă diferă de cele folosite în acest ghid."
 
 #: Ch-Shared-Storage.xml:146(emphasis)
 msgid "on pcmk-1"
-msgstr ""
+msgstr "on pcmk-1"
 
-#: Ch-Shared-Storage.xml:148(emphasis) Ch-Shared-Storage.xml:153(emphasis)
+#: Ch-Shared-Storage.xml:148(emphasis)
+#: Ch-Shared-Storage.xml:153(emphasis)
 msgid ":7789;"
-msgstr ""
+msgstr ":7789;"
 
 #: Ch-Shared-Storage.xml:150(emphasis)
 msgid "on"
-msgstr ""
+msgstr "on"
 
 #: Ch-Shared-Storage.xml:151(emphasis)
 msgid "pcmk-2"
-msgstr ""
+msgstr "pcmk-2"
 
 #: Ch-Shared-Storage.xml:130(screen)
 #, no-wrap
-msgid "\nglobal { \n  usage-count yes; \n}\ncommon {\n  protocol C;\n}\nresource wwwdata {\n  meta-disk internal;\n  device    /dev/drbd1;\n  syncer {\n    verify-alg sha1;\n  }\n  net { \n    allow-two-primaries; \n  }\n <placeholder-1/> {\n    disk      /dev/mapper/<placeholder-2/>-drbd--demo;\n    address   192.168.122.101<placeholder-3/> \n  }\n  <placeholder-4/> \n<placeholder-5/> {\n    disk      /dev/mapper/<placeholder-6/>-drbd--demo;\n    address   192.168.122.102<placeholder-7/>      \n  }\n}\n      "
+msgid ""
+"\n"
+"global { \n"
+"  usage-count yes; \n"
+"}\n"
+"common {\n"
+"  protocol C;\n"
+"}\n"
+"resource wwwdata {\n"
+"  meta-disk internal;\n"
+"  device    /dev/drbd1;\n"
+"  syncer {\n"
+"    verify-alg sha1;\n"
+"  }\n"
+"  net { \n"
+"    allow-two-primaries; \n"
+"  }\n"
+" <placeholder-1/> {\n"
+"    disk      /dev/mapper/<placeholder-2/>-drbd--demo;\n"
+"    address   192.168.122.101<placeholder-3/> \n"
+"  }\n"
+"  <placeholder-4/> \n"
+"<placeholder-5/> {\n"
+"    disk      /dev/mapper/<placeholder-6/>-drbd--demo;\n"
+"    address   192.168.122.102<placeholder-7/>      \n"
+"  }\n"
+"}\n"
+"      "
 msgstr ""
+"\n"
+"global { \n"
+"  usage-count yes; \n"
+"}\n"
+"common {\n"
+"  protocol C;\n"
+"}\n"
+"resource wwwdata {\n"
+"  meta-disk internal;\n"
+"  device    /dev/drbd1;\n"
+"  syncer {\n"
+"    verify-alg sha1;\n"
+"  }\n"
+"  net { \n"
+"    allow-two-primaries; \n"
+"  }\n"
+" <placeholder-1/> {\n"
+"    disk      /dev/mapper/<placeholder-2/>-drbd--demo;\n"
+"    address   192.168.122.101<placeholder-3/> \n"
+"  }\n"
+"  <placeholder-4/> \n"
+"<placeholder-5/> {\n"
+"    disk      /dev/mapper/<placeholder-6/>-drbd--demo;\n"
+"    address   192.168.122.102<placeholder-7/>      \n"
+"  }\n"
+"}\n"
+"      "
 
 #: Ch-Shared-Storage.xml:158(para)
 msgid "TODO: Explain the reason for the allow-two-primaries option"
-msgstr ""
+msgstr "TODO: De explicat motivul pentru opțiunea allow-two primaries"
 
 #: Ch-Shared-Storage.xml:165(title)
 msgid "Initialize and Load DRBD"
-msgstr ""
+msgstr "Inițializarea și Încărcarea DRBD"
 
 #: Ch-Shared-Storage.xml:166(para)
 msgid "With the configuration in place, we can now perform the DRBD initialization"
-msgstr ""
+msgstr "Cu configurația pusă la locul ei, acum putem executa Inițializarea DRBD-ului."
 
 #: Ch-Shared-Storage.xml:170(userinput)
 #, no-wrap
 msgid "drbdadm create-md wwwdata"
-msgstr ""
+msgstr "drbdadm create-md wwwdata"
 
 #: Ch-Shared-Storage.xml:179(userinput)
 #, no-wrap
 msgid "yes"
-msgstr ""
+msgstr "yes"
 
 #: Ch-Shared-Storage.xml:169(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nmd_offset 12578816\nal_offset 12546048\nbm_offset 12541952\n\nFound some data \n ==&gt; This might destroy existing data! &lt;==\n\nDo you want to proceed?\n[need to type 'yes' to confirm] <placeholder-2/>\n\nWriting meta data...\ninitializing activity log\nNOT initialized bitmap\nNew drbd meta data block successfully created.\nsuccess\n      "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"md_offset 12578816\n"
+"al_offset 12546048\n"
+"bm_offset 12541952\n"
+"\n"
+"Found some data \n"
+" ==&gt; This might destroy existing data! &lt;==\n"
+"\n"
+"Do you want to proceed?\n"
+"[need to type 'yes' to confirm] <placeholder-2/>\n"
+"\n"
+"Writing meta data...\n"
+"initializing activity log\n"
+"NOT initialized bitmap\n"
+"New drbd meta data block successfully created.\n"
+"success\n"
+"      "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"md_offset 12578816\n"
+"al_offset 12546048\n"
+"bm_offset 12541952\n"
+"\n"
+"Found some data \n"
+" ==&gt; This might destroy existing data! &lt;==\n"
+"\n"
+"Do you want to proceed?\n"
+"[need to type 'yes' to confirm] <placeholder-2/>\n"
+"\n"
+"Writing meta data...\n"
+"initializing activity log\n"
+"NOT initialized bitmap\n"
+"New drbd meta data block successfully created.\n"
+"success\n"
+"      "
 
 #: Ch-Shared-Storage.xml:187(para)
 msgid "Now load the DRBD kernel module and confirm that everything is sane"
-msgstr ""
+msgstr "Acum încărcați modulul de kernel al DRBD și confirmați că totul este în regulă"
 
-#: Ch-Shared-Storage.xml:191(userinput) Ch-Shared-Storage.xml:212(userinput)
+#: Ch-Shared-Storage.xml:191(userinput)
+#: Ch-Shared-Storage.xml:212(userinput)
 #, no-wrap
 msgid "modprobe drbd"
-msgstr ""
+msgstr "modprobe drbd"
 
-#: Ch-Shared-Storage.xml:192(userinput) Ch-Shared-Storage.xml:214(userinput)
+#: Ch-Shared-Storage.xml:192(userinput)
+#: Ch-Shared-Storage.xml:214(userinput)
 #, no-wrap
 msgid "drbdadm up wwwdata"
-msgstr ""
+msgstr "drbdadm up wwwdata"
 
-#: Ch-Shared-Storage.xml:193(userinput) Ch-Shared-Storage.xml:215(userinput) Ch-Shared-Storage.xml:228(userinput) Ch-Shared-Storage.xml:235(userinput)
+#: Ch-Shared-Storage.xml:193(userinput)
+#: Ch-Shared-Storage.xml:215(userinput)
+#: Ch-Shared-Storage.xml:228(userinput)
+#: Ch-Shared-Storage.xml:235(userinput)
 #, no-wrap
 msgid "cat /proc/drbd"
-msgstr ""
+msgstr "cat /proc/drbd"
 
 #: Ch-Shared-Storage.xml:197(emphasis)
 msgid "1: cs:WFConnection ro:Secondary/Unknown ds:Inconsistent/DUnknown C r--"
-msgstr ""
+msgstr "1: cs:WFConnection ro:Secondary/Unknown ds:Inconsistent/DUnknown C r--"
 
 #: Ch-Shared-Storage.xml:206(userinput)
 #, no-wrap
 msgid "drbdadm --force create-md wwwdata"
-msgstr ""
+msgstr "drbdadm --force create-md wwwdata"
 
 #: Ch-Shared-Storage.xml:219(emphasis)
 msgid "1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r----"
-msgstr ""
+msgstr "1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r----"
 
 #: Ch-Shared-Storage.xml:190(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n[root@pcmk-1 ~]# <placeholder-2/>\n[root@pcmk-1 ~]# <placeholder-3/>\nversion: 8.3.6 (api:88/proto:86-90)\nGIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n\n<placeholder-4/>--\n    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248\n[root@pcmk-1 ~]# \n\nRepeat on the second node\ndrbdadm --force create-md wwwdata \nmodprobe drbd\ndrbdadm up wwwdata\ncat /proc/drbd\n[root@pcmk-2 ~]# <placeholder-5/>\nWriting meta data...\ninitializing activity log\nNOT initialized bitmap\nNew drbd meta data block successfully created.\nsuccess\n[root@pcmk-2 ~]# <placeholder-6/>\nWARNING: Deprecated config file /etc/modprobe.conf, all config files belong into /etc/modprobe.d/.\n[root@pcmk-2 ~]# <placeholder-7/>\n[root@pcmk-2 ~]# <placeholder-8/>\nversion: 8.3.6 (api:88/proto:86-90)\nGIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n\n<placeholder-9/>\n    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248\n      "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"version: 8.3.6 (api:88/proto:86-90)\n"
+"GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n"
+"\n"
+"<placeholder-4/>--\n"
+"    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248\n"
+"[root@pcmk-1 ~]# \n"
+"\n"
+"Repeat on the second node\n"
+"drbdadm --force create-md wwwdata \n"
+"modprobe drbd\n"
+"drbdadm up wwwdata\n"
+"cat /proc/drbd\n"
+"[root@pcmk-2 ~]# <placeholder-5/>\n"
+"Writing meta data...\n"
+"initializing activity log\n"
+"NOT initialized bitmap\n"
+"New drbd meta data block successfully created.\n"
+"success\n"
+"[root@pcmk-2 ~]# <placeholder-6/>\n"
+"WARNING: Deprecated config file /etc/modprobe.conf, all config files belong into /etc/modprobe.d/.\n"
+"[root@pcmk-2 ~]# <placeholder-7/>\n"
+"[root@pcmk-2 ~]# <placeholder-8/>\n"
+"version: 8.3.6 (api:88/proto:86-90)\n"
+"GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n"
+"\n"
+"<placeholder-9/>\n"
+"    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248\n"
+"      "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"version: 8.3.6 (api:88/proto:86-90)\n"
+"GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n"
+"\n"
+"<placeholder-4/>--\n"
+"    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248\n"
+"[root@pcmk-1 ~]# \n"
+"\n"
+"Repeat on the second node\n"
+"drbdadm --force create-md wwwdata \n"
+"modprobe drbd\n"
+"drbdadm up wwwdata\n"
+"cat /proc/drbd\n"
+"[root@pcmk-2 ~]# <placeholder-5/>\n"
+"Writing meta data...\n"
+"initializing activity log\n"
+"NOT initialized bitmap\n"
+"New drbd meta data block successfully created.\n"
+"success\n"
+"[root@pcmk-2 ~]# <placeholder-6/>\n"
+"WARNING: Deprecated config file /etc/modprobe.conf, all config files belong into /etc/modprobe.d/.\n"
+"[root@pcmk-2 ~]# <placeholder-7/>\n"
+"[root@pcmk-2 ~]# <placeholder-8/>\n"
+"version: 8.3.6 (api:88/proto:86-90)\n"
+"GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n"
+"\n"
+"<placeholder-9/>\n"
+"    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248\n"
+"      "
 
 #: Ch-Shared-Storage.xml:222(para)
 msgid "Now we need to tell DRBD which set of data to use. Since both sides contain garbage, we can run the following on pcmk-1:"
-msgstr ""
+msgstr "Acum trebuie să spunem DRBD-ului care set de date să îl folosească. Din moment ce ambele părți conțin date nefolositoare, putem rula următoarea comandă pe pcmk-1:"
 
 #: Ch-Shared-Storage.xml:227(userinput)
 #, no-wrap
 msgid "drbdadm -- --overwrite-data-of-peer primary wwwdata"
-msgstr ""
+msgstr "drbdadm -- --overwrite-data-of-peer primary wwwdata"
 
 #: Ch-Shared-Storage.xml:231(emphasis)
 msgid "Inconsistent"
-msgstr ""
+msgstr "Inconsistent"
 
 #: Ch-Shared-Storage.xml:238(emphasis)
 msgid "cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate"
-msgstr ""
+msgstr "cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate"
 
 #: Ch-Shared-Storage.xml:226(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n[root@pcmk-1 ~]# <placeholder-2/>\nversion: 8.3.6 (api:88/proto:86-90)\nGIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n 1: cs:SyncSource ro:Primary/Secondary ds:UpToDate/<placeholder-3/> C r----\n    ns:2184 nr:0 dw:0 dr:2472 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:10064\n        [=====&gt;..............] sync'ed: 33.4% (10064/12248)K\n        finish: 0:00:37 speed: 240 (240) K/sec\n[root@pcmk-1 ~]# <placeholder-4/>\nversion: 8.3.6 (api:88/proto:86-90)\nGIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n 1: <placeholder-5/> C r----\n    ns:12248 nr:0 dw:0 dr:12536 al:0 bm:1 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:0\n      "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"version: 8.3.6 (api:88/proto:86-90)\n"
+"GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n"
+" 1: cs:SyncSource ro:Primary/Secondary ds:UpToDate/<placeholder-3/> C r----\n"
+"    ns:2184 nr:0 dw:0 dr:2472 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:10064\n"
+"        [=====&gt;..............] sync'ed: 33.4% (10064/12248)K\n"
+"        finish: 0:00:37 speed: 240 (240) K/sec\n"
+"[root@pcmk-1 ~]# <placeholder-4/>\n"
+"version: 8.3.6 (api:88/proto:86-90)\n"
+"GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n"
+" 1: <placeholder-5/> C r----\n"
+"    ns:12248 nr:0 dw:0 dr:12536 al:0 bm:1 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:0\n"
+"      "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"version: 8.3.6 (api:88/proto:86-90)\n"
+"GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n"
+" 1: cs:SyncSource ro:Primary/Secondary ds:UpToDate/<placeholder-3/> C r----\n"
+"    ns:2184 nr:0 dw:0 dr:2472 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:10064\n"
+"        [=====&gt;..............] sync'ed: 33.4% (10064/12248)K\n"
+"        finish: 0:00:37 speed: 240 (240) K/sec\n"
+"[root@pcmk-1 ~]# <placeholder-4/>\n"
+"version: 8.3.6 (api:88/proto:86-90)\n"
+"GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57\n"
+" 1: <placeholder-5/> C r----\n"
+"    ns:12248 nr:0 dw:0 dr:12536 al:0 bm:1 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:0\n"
+"      "
 
 #: Ch-Shared-Storage.xml:241(para)
 msgid "pcmk-1 is now in the Primary state which allows it to be written to. Which means its a good point at which to create a filesystem and populate it with some data to serve up via our WebSite resource."
-msgstr ""
+msgstr "pcmk-1 este acum în starea Primară care îi permite să accepte scrieri pe acesta. Lucru care înseamnă că este un punct bun în care să creem un sistem de fișiere și să îl populăm cu ceva date pe care să le servim prin resursa noastră WebSite."
 
 #: Ch-Shared-Storage.xml:247(title)
 msgid "Populate DRBD with Data"
-msgstr ""
+msgstr "Popularea DRBD-ului cu Date"
 
 #: Ch-Shared-Storage.xml:249(userinput)
 #, no-wrap
 msgid "mkfs.ext4 /dev/drbd1"
-msgstr ""
+msgstr "mkfs.ext4 /dev/drbd1"
 
 #: Ch-Shared-Storage.xml:280(userinput)
 #, no-wrap
 msgid "mount /dev/drbd1 /mnt/"
-msgstr ""
+msgstr "mount /dev/drbd1 /mnt/"
 
 #: Ch-Shared-Storage.xml:281(userinput)
 #, no-wrap
 msgid "cat &lt;&lt;-END &gt;/mnt/index.html"
-msgstr ""
+msgstr "cat &lt;&lt;-END &gt;/mnt/index.html"
 
 #: Ch-Shared-Storage.xml:286(userinput)
 #, no-wrap
 msgid "umount /dev/drbd1"
-msgstr ""
+msgstr "umount /dev/drbd1"
 
 #: Ch-Shared-Storage.xml:248(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nmke2fs 1.41.4 (27-Jan-2009)\nFilesystem label=\nOS type: Linux\nBlock size=1024 (log=0)\nFragment size=1024 (log=0)\n3072 inodes, 12248 blocks\n612 blocks (5.00%) reserved for the super user\nFirst data block=1\nMaximum filesystem blocks=12582912\n2 block groups\n8192 blocks per group, 8192 fragments per group\n1536 inodes per group\nSuperblock backups stored on blocks: \n        8193\n\nWriting inode tables: done                            \nCreating journal (1024 blocks): done\nWriting superblocks and filesystem accounting information: done\n\nThis filesystem will be automatically checked every 26 mounts or\n180 days, whichever comes first.  Use tune2fs -c or -i to override.\n\nNow mount the newly created filesystem so we can create our index file\nmount /dev/drbd1 /mnt/\ncat &lt;&lt;-END &gt;/mnt/index.html\n&lt;html&gt;\n&lt;body&gt;My Test Site - drbd&lt;/body&gt;\n&lt;/html&gt;\nEND\numount /dev/drbd1\n[root@pcmk-1 ~]# <placeholder-2/>\n[root@pcmk-1 ~]# <placeholder-3/>\n&gt; &lt;html&gt;\n&gt; &lt;body&gt;My Test Site - drbd&lt;/body&gt;\n&gt; &lt;/html&gt;\n&gt; END\n[root@pcmk-1 ~]# <placeholder-4/>\n      "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"mke2fs 1.41.4 (27-Jan-2009)\n"
+"Filesystem label=\n"
+"OS type: Linux\n"
+"Block size=1024 (log=0)\n"
+"Fragment size=1024 (log=0)\n"
+"3072 inodes, 12248 blocks\n"
+"612 blocks (5.00%) reserved for the super user\n"
+"First data block=1\n"
+"Maximum filesystem blocks=12582912\n"
+"2 block groups\n"
+"8192 blocks per group, 8192 fragments per group\n"
+"1536 inodes per group\n"
+"Superblock backups stored on blocks: \n"
+"        8193\n"
+"\n"
+"Writing inode tables: done                            \n"
+"Creating journal (1024 blocks): done\n"
+"Writing superblocks and filesystem accounting information: done\n"
+"\n"
+"This filesystem will be automatically checked every 26 mounts or\n"
+"180 days, whichever comes first.  Use tune2fs -c or -i to override.\n"
+"\n"
+"Now mount the newly created filesystem so we can create our index file\n"
+"mount /dev/drbd1 /mnt/\n"
+"cat &lt;&lt;-END &gt;/mnt/index.html\n"
+"&lt;html&gt;\n"
+"&lt;body&gt;My Test Site - drbd&lt;/body&gt;\n"
+"&lt;/html&gt;\n"
+"END\n"
+"umount /dev/drbd1\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"&gt; &lt;html&gt;\n"
+"&gt; &lt;body&gt;My Test Site - drbd&lt;/body&gt;\n"
+"&gt; &lt;/html&gt;\n"
+"&gt; END\n"
+"[root@pcmk-1 ~]# <placeholder-4/>\n"
+"      "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"mke2fs 1.41.4 (27-Jan-2009)\n"
+"Filesystem label=\n"
+"OS type: Linux\n"
+"Block size=1024 (log=0)\n"
+"Fragment size=1024 (log=0)\n"
+"3072 inodes, 12248 blocks\n"
+"612 blocks (5.00%) reserved for the super user\n"
+"First data block=1\n"
+"Maximum filesystem blocks=12582912\n"
+"2 block groups\n"
+"8192 blocks per group, 8192 fragments per group\n"
+"1536 inodes per group\n"
+"Superblock backups stored on blocks: \n"
+"        8193\n"
+"\n"
+"Writing inode tables: done                            \n"
+"Creating journal (1024 blocks): done\n"
+"Writing superblocks and filesystem accounting information: done\n"
+"\n"
+"This filesystem will be automatically checked every 26 mounts or\n"
+"180 days, whichever comes first.  Use tune2fs -c or -i to override.\n"
+"\n"
+"Now mount the newly created filesystem so we can create our index file\n"
+"mount /dev/drbd1 /mnt/\n"
+"cat &lt;&lt;-END &gt;/mnt/index.html\n"
+"&lt;html&gt;\n"
+"&lt;body&gt;My Test Site - drbd&lt;/body&gt;\n"
+"&lt;/html&gt;\n"
+"END\n"
+"umount /dev/drbd1\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"&gt; &lt;html&gt;\n"
+"&gt; &lt;body&gt;My Test Site - drbd&lt;/body&gt;\n"
+"&gt; &lt;/html&gt;\n"
+"&gt; END\n"
+"[root@pcmk-1 ~]# <placeholder-4/>\n"
+"      "
 
 #: Ch-Shared-Storage.xml:291(title)
 msgid "Configure the Cluster for DRBD"
-msgstr ""
+msgstr "Configurarea Clusterului pentru DRBD"
 
 #: Ch-Shared-Storage.xml:292(para)
 msgid "One handy feature of the crm shell is that you can use it in interactive mode to make several changes atomically."
-msgstr ""
+msgstr "O funcționalitate utilă a shell-ului crm este aceea că îl puteți folosi în mod interactiv pentru a realiza mai multe modificări în mod atomic."
 
 #: Ch-Shared-Storage.xml:295(para)
 msgid "First we launch the shell. The prompt will change to indicate you’re in interactive mode."
-msgstr ""
+msgstr "Întâi lansăm shell-ul. Promptul se va schimba pentru a indica faptul că sunteți în mod interactiv."
 
-#: Ch-Shared-Storage.xml:299(userinput) Ch-Shared-Storage.xml:386(userinput)
+#: Ch-Shared-Storage.xml:299(userinput)
+#: Ch-Shared-Storage.xml:386(userinput)
 #, no-wrap
 msgid "crm"
-msgstr ""
+msgstr "crm"
 
 #: Ch-Shared-Storage.xml:298(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\ncib crm(live)#\n    "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"cib crm(live)#\n"
+"    "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"cib crm(live)#\n"
+"    "
 
 #: Ch-Shared-Storage.xml:302(para)
 msgid "Next we must create a working copy or the current configuration. This is where all our changes will go. The cluster will not see any of them until we say its ok. Notice again how the prompt changes, this time to indicate that we’re no longer looking at the live cluster."
-msgstr ""
+msgstr "În continuare trebuie să creem o copie funcțională a configurației curente. Acesta este locul în care vor merge toate modificările noastre. Clusterul nu va vedea nici una dintre ele până nu spunem noi că este ok. Vedeți cum promptul se schimbă din nou, de această dată pentru a indica faptul că nu ne mai uităm la clusterul live."
 
 #: Ch-Shared-Storage.xml:309(userinput)
 #, no-wrap
 msgid "cib new drbd"
-msgstr ""
+msgstr "cib new drbd"
 
 #: Ch-Shared-Storage.xml:308(screen)
 #, no-wrap
-msgid "\ncib crm(live)# <placeholder-1/>\nINFO: drbd shadow CIB created\ncrm(drbd)#\n    "
+msgid ""
+"\n"
+"cib crm(live)# <placeholder-1/>\n"
+"INFO: drbd shadow CIB created\n"
+"crm(drbd)#\n"
+"    "
 msgstr ""
+"\n"
+"cib crm(live)# <placeholder-1/>\n"
+"INFO: drbd shadow CIB created\n"
+"crm(drbd)#\n"
+"    "
 
 #: Ch-Shared-Storage.xml:313(para)
 msgid "Now we can create our DRBD clone and display the revised configuration."
-msgstr ""
+msgstr "Acum putem crea clona noastră de DRBD și prezentăm configurația revizuită."
 
 #: Ch-Shared-Storage.xml:317(userinput)
 #, no-wrap
 msgid "configure primitive WebData ocf:linbit:drbd params drbd_resource=wwwdata \\"
-msgstr ""
+msgstr "configure primitive WebData ocf:linbit:drbd params drbd_resource=wwwdata \\"
 
 #: Ch-Shared-Storage.xml:318(userinput)
 #, no-wrap
 msgid "        op monitor interval=60s"
-msgstr ""
+msgstr "        op monitor interval=60s"
 
 #: Ch-Shared-Storage.xml:319(userinput)
 #, no-wrap
 msgid "configure ms WebDataClone WebData meta master-max=1 master-node-max=1 \\"
-msgstr ""
+msgstr "configure ms WebDataClone WebData meta master-max=1 master-node-max=1 \\"
 
 #: Ch-Shared-Storage.xml:320(userinput)
 #, no-wrap
 msgid "        clone-max=2 clone-node-max=1 notify=true"
-msgstr ""
+msgstr "        clone-max=2 clone-node-max=1 notify=true"
 
 #: Ch-Shared-Storage.xml:321(userinput)
 #, no-wrap
 msgid "configure show"
-msgstr ""
+msgstr "configure show"
 
 #: Ch-Shared-Storage.xml:324(emphasis)
 msgid "primitive WebData ocf:linbit:drbd \\"
-msgstr ""
+msgstr "primitive WebData ocf:linbit:drbd \\"
 
 #: Ch-Shared-Storage.xml:325(emphasis)
 msgid "params drbd_resource=\"wwwdata\" \\"
-msgstr ""
+msgstr "params drbd_resource=\"wwwdata\" \\"
 
 #: Ch-Shared-Storage.xml:326(emphasis)
 msgid "op monitor interval=\"60s\""
-msgstr ""
+msgstr "op monitor interval=\"60s\""
 
 #: Ch-Shared-Storage.xml:333(emphasis)
 msgid "ms WebDataClone WebData \\"
-msgstr ""
+msgstr "ms WebDataClone WebData \\"
 
 #: Ch-Shared-Storage.xml:334(emphasis)
 msgid "meta master-max=\"1\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\""
-msgstr ""
+msgstr "meta master-max=\"1\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\""
 
 #: Ch-Shared-Storage.xml:316(screen)
 #, no-wrap
-msgid "\ncrm(drbd)# <placeholder-1/>\n<placeholder-2/>\ncrm(drbd)# <placeholder-3/>\n<placeholder-4/>\ncrm(drbd)# <placeholder-5/>\nnode pcmk-1\nnode pcmk-2\n<placeholder-6/>\n<placeholder-7/>\n<placeholder-8/>\nprimitive WebSite ocf:heartbeat:apache \\\n        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n        op monitor interval=\"1min\"\nprimitive ClusterIP ocf:heartbeat:IPaddr2 \\\n        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n        op monitor interval=\"30s\"\n<placeholder-9/>\n<placeholder-10/>\nlocation prefer-pcmk-1 WebSite 50: pcmk-1\ncolocation website-with-ip inf: WebSite ClusterIP\norder apache-after-ip inf: ClusterIP WebSite\nproperty $id=\"cib-bootstrap-options\" \\\n        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n        cluster-infrastructure=\"openais\" \\\n        expected-quorum-votes=\"2\" \\\n        stonith-enabled=\"false\" \\\n        no-quorum-policy=\"ignore\"\nrsc_defaults $id=\"rsc-options\" \\\n        resource-stickiness=\"100\"\n    "
+msgid ""
+"\n"
+"crm(drbd)# <placeholder-1/>\n"
+"<placeholder-2/>\n"
+"crm(drbd)# <placeholder-3/>\n"
+"<placeholder-4/>\n"
+"crm(drbd)# <placeholder-5/>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"<placeholder-6/>\n"
+"<placeholder-7/>\n"
+"<placeholder-8/>\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+"        op monitor interval=\"1min\"\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"<placeholder-9/>\n"
+"<placeholder-10/>\n"
+"location prefer-pcmk-1 WebSite 50: pcmk-1\n"
+"colocation website-with-ip inf: WebSite ClusterIP\n"
+"order apache-after-ip inf: ClusterIP WebSite\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"false\" \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+"rsc_defaults $id=\"rsc-options\" \\\n"
+"        resource-stickiness=\"100\"\n"
+"    "
 msgstr ""
+"\n"
+"crm(drbd)# <placeholder-1/>\n"
+"<placeholder-2/>\n"
+"crm(drbd)# <placeholder-3/>\n"
+"<placeholder-4/>\n"
+"crm(drbd)# <placeholder-5/>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"<placeholder-6/>\n"
+"<placeholder-7/>\n"
+"<placeholder-8/>\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+"        op monitor interval=\"1min\"\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"<placeholder-9/>\n"
+"<placeholder-10/>\n"
+"location prefer-pcmk-1 WebSite 50: pcmk-1\n"
+"colocation website-with-ip inf: WebSite ClusterIP\n"
+"order apache-after-ip inf: ClusterIP WebSite\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"false\" \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+"rsc_defaults $id=\"rsc-options\" \\\n"
+"        resource-stickiness=\"100\"\n"
+"    "
 
 #: Ch-Shared-Storage.xml:347(para)
 msgid "Once we’re happy with the changes, we can tell the cluster to start using them and use crm_mon to check everything is functioning."
-msgstr ""
+msgstr "Odată ce suntem multumiți cu modificările realizate, putem spune clusterului să înceapă să le folosească și vom folosi crm_mon pentru a verifica faptul că totul funcționează."
 
 #: Ch-Shared-Storage.xml:351(userinput)
 #, no-wrap
 msgid "cib commit drbd"
-msgstr ""
+msgstr "cib commit drbd"
 
-#: Ch-Shared-Storage.xml:353(userinput) Ch-Shared-Storage.xml:443(userinput)
+#: Ch-Shared-Storage.xml:353(userinput)
+#: Ch-Shared-Storage.xml:443(userinput)
 #, no-wrap
 msgid "quit"
-msgstr ""
+msgstr "quit"
 
-#: Ch-Shared-Storage.xml:355(userinput) Ch-Shared-Storage.xml:445(userinput) Ch-Shared-Storage.xml:478(userinput) Ch-Shared-Storage.xml:503(userinput)
+#: Ch-Shared-Storage.xml:355(userinput)
+#: Ch-Shared-Storage.xml:445(userinput)
+#: Ch-Shared-Storage.xml:478(userinput)
+#: Ch-Shared-Storage.xml:503(userinput)
 #, no-wrap
 msgid "crm_mon"
-msgstr ""
+msgstr "crm_mon"
 
 #: Ch-Shared-Storage.xml:369(emphasis)
 msgid "Master/Slave Set: WebDataClone"
-msgstr ""
+msgstr "Master/Slave Set: WebDataClone"
 
-#: Ch-Shared-Storage.xml:370(emphasis) Ch-Shared-Storage.xml:494(emphasis)
+#: Ch-Shared-Storage.xml:370(emphasis)
+#: Ch-Shared-Storage.xml:494(emphasis)
 msgid "Masters: [ pcmk-2 ]"
-msgstr ""
+msgstr "Masters: [ pcmk-2 ]"
 
 #: Ch-Shared-Storage.xml:371(emphasis)
 msgid "Slaves: [ pcmk-1 ]"
-msgstr ""
+msgstr "Slaves: [ pcmk-1 ]"
 
 #: Ch-Shared-Storage.xml:350(screen)
 #, no-wrap
-msgid "\ncrm(drbd)# <placeholder-1/>\nINFO: commited 'drbd' shadow CIB to the cluster\ncrm(drbd)# <placeholder-2/>\nbye\n[root@pcmk-1 ~]# <placeholder-3/>\n============\nLast updated: Tue Sep  1 09:37:13 2009\nStack: openais\nCurrent DC: pcmk-1 - partition with quorum\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n2 Nodes configured, 2 expected votes\n3 Resources configured.\n============\n\nOnline: [ pcmk-1 pcmk-2 ]\n\nClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-1\nWebSite (ocf::heartbeat:apache):        Started pcmk-1\n<placeholder-4/>\n<placeholder-5/>\n<placeholder-6/>\n    "
+msgid ""
+"\n"
+"crm(drbd)# <placeholder-1/>\n"
+"INFO: commited 'drbd' shadow CIB to the cluster\n"
+"crm(drbd)# <placeholder-2/>\n"
+"bye\n"
+"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"============\n"
+"Last updated: Tue Sep  1 09:37:13 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"3 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-1\n"
+"WebSite (ocf::heartbeat:apache):        Started pcmk-1\n"
+"<placeholder-4/>\n"
+"<placeholder-5/>\n"
+"<placeholder-6/>\n"
+"    "
 msgstr ""
+"\n"
+"crm(drbd)# <placeholder-1/>\n"
+"INFO: commited 'drbd' shadow CIB to the cluster\n"
+"crm(drbd)# <placeholder-2/>\n"
+"bye\n"
+"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"============\n"
+"Last updated: Tue Sep  1 09:37:13 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"3 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-1\n"
+"WebSite (ocf::heartbeat:apache):        Started pcmk-1\n"
+"<placeholder-4/>\n"
+"<placeholder-5/>\n"
+"<placeholder-6/>\n"
+"    "
 
 #: Ch-Shared-Storage.xml:374(para)
 msgid "Include details on adding a second DRBD resource"
-msgstr ""
+msgstr "Include detalii despre adăugarea unei resurse secundare DRBD"
 
 #: Ch-Shared-Storage.xml:378(para)
 msgid "Now that DRBD is functioning we can configure a Filesystem resource to use it. In addition to the filesystem’s definition, we also need to tell the cluster where it can be located (only on the DRBD Primary) and when it is allowed to start (after the Primary was promoted)."
-msgstr ""
+msgstr "Acum că DRBD funcționează putem configura o resursă Filesystem pentru a îl folosi. Suplimentar față de definiția sistemului de fișiere, trebuie să spunem clusterului de asemenea unde poate fi plasată (doar pe DRBD-ul Primar) și când îi este permis să pornească (după ce Primarul a fost promovat la acest rol)."
 
 #: Ch-Shared-Storage.xml:382(para)
 msgid "Once again we’ll use the shell’s interactive mode"
-msgstr ""
+msgstr "Încă o dată vom folosi modul interactiv al shell-ului"
 
 #: Ch-Shared-Storage.xml:387(userinput)
 #, no-wrap
 msgid "cib new fs"
-msgstr ""
+msgstr "cib new fs"
 
 #: Ch-Shared-Storage.xml:389(userinput)
 #, no-wrap
 msgid "configure primitive WebFS ocf:heartbeat:Filesystem \\"
-msgstr ""
+msgstr "configure primitive WebFS ocf:heartbeat:Filesystem \\"
 
 #: Ch-Shared-Storage.xml:390(userinput)
 #, no-wrap
 msgid "        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"ext4\""
-msgstr ""
+msgstr "        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"ext4\""
 
 #: Ch-Shared-Storage.xml:391(userinput)
 #, no-wrap
 msgid "configure colocation fs_on_drbd inf: WebFS WebDataClone:Master"
-msgstr ""
+msgstr "configure colocation fs_on_drbd inf: WebFS WebDataClone:Master"
 
 #: Ch-Shared-Storage.xml:392(userinput)
 #, no-wrap
 msgid "configure order WebFS-after-WebData inf: WebDataClone:promote WebFS:start"
-msgstr ""
+msgstr "configure order WebFS-after-WebData inf: WebDataClone:promote WebFS:start"
 
 #: Ch-Shared-Storage.xml:385(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\ncrm(live)# <placeholder-2/>\nINFO: fs shadow CIB created\ncrm(fs)# <placeholder-3/>\n<placeholder-4/>\ncrm(fs)# <placeholder-5/>\ncrm(fs)# <placeholder-6/>\n    "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"crm(live)# <placeholder-2/>\n"
+"INFO: fs shadow CIB created\n"
+"crm(fs)# <placeholder-3/>\n"
+"<placeholder-4/>\n"
+"crm(fs)# <placeholder-5/>\n"
+"crm(fs)# <placeholder-6/>\n"
+"    "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"crm(live)# <placeholder-2/>\n"
+"INFO: fs shadow CIB created\n"
+"crm(fs)# <placeholder-3/>\n"
+"<placeholder-4/>\n"
+"crm(fs)# <placeholder-5/>\n"
+"crm(fs)# <placeholder-6/>\n"
+"    "
 
 #: Ch-Shared-Storage.xml:394(para)
 msgid "We also need to tell the cluster that Apache needs to run on the same machine as the filesystem and that it must be active before Apache can start."
-msgstr ""
+msgstr "Trebuie să spunem clusterului de asemenea că Apache are nevoie să ruleze pe aceeași mașină ca și sistemul de fișiere și că trebuie să fie activ înainte ca Apache să pornească."
 
 #: Ch-Shared-Storage.xml:398(userinput)
 #, no-wrap
 msgid "configure colocation WebSite-with-WebFS inf: WebSite WebFS"
-msgstr ""
+msgstr "configure colocation WebSite-with-WebFS inf: WebSite WebFS"
 
 #: Ch-Shared-Storage.xml:399(userinput)
 #, no-wrap
 msgid "configure order WebSite-after-WebFS inf: WebFS WebSite"
-msgstr ""
+msgstr "configure order WebSite-after-WebFS inf: WebFS WebSite"
 
 #: Ch-Shared-Storage.xml:397(screen)
 #, no-wrap
-msgid "\ncrm(fs)# <placeholder-1/>\ncrm(fs)# <placeholder-2/>\n    "
+msgid ""
+"\n"
+"crm(fs)# <placeholder-1/>\n"
+"crm(fs)# <placeholder-2/>\n"
+"    "
 msgstr ""
+"\n"
+"crm(fs)# <placeholder-1/>\n"
+"crm(fs)# <placeholder-2/>\n"
+"    "
 
 #: Ch-Shared-Storage.xml:401(para)
 msgid "Time to review the updated configuration:"
-msgstr ""
+msgstr "E timpul să revizuim configurația actualizată:"
 
 #: Ch-Shared-Storage.xml:405(userinput)
 #, no-wrap
 msgid "crm configure show"
-msgstr ""
+msgstr "crm configure show"
 
 #: Ch-Shared-Storage.xml:404(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\nnode pcmk-1\nnode pcmk-2\nprimitive WebData ocf:linbit:drbd \\\n        params drbd_resource=\"wwwdata\" \\\n        op monitor interval=\"60s\"\nprimitive WebFS ocf:heartbeat:Filesystem \\\n        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"ext4\"\nprimitive WebSite ocf:heartbeat:apache \\\n        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n        op monitor interval=\"1min\"\nprimitive ClusterIP ocf:heartbeat:IPaddr2 \\\n        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n        op monitor interval=\"30s\"\nms WebDataClone WebData \\\n        meta master-max=\"1\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\nlocation prefer-pcmk-1 WebSite 50: pcmk-1\ncolocation WebSite-with-WebFS inf: WebSite WebFS\ncolocation fs_on_drbd inf: WebFS WebDataClone:Master\ncolocation website-with-ip inf: WebSite ClusterIP\norder WebFS-after-WebData inf: WebDataClone:promote WebFS:start\norder WebSite-after-WebFS inf: WebFS WebSite\norder apache-after-ip inf: ClusterIP WebSite\nproperty $id=\"cib-bootstrap-options\" \\\n        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n        cluster-infrastructure=\"openais\" \\\n        expected-quorum-votes=\"2\" \\\n        stonith-enabled=\"false\" \\\n        no-quorum-policy=\"ignore\"\nrsc_defaults $id=\"rsc-options\" \\\n        resource-stickiness=\"100\"\n    "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=\"wwwdata\" \\\n"
+"        op monitor interval=\"60s\"\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"ext4\"\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+"        op monitor interval=\"1min\"\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=\"1\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+"location prefer-pcmk-1 WebSite 50: pcmk-1\n"
+"colocation WebSite-with-WebFS inf: WebSite WebFS\n"
+"colocation fs_on_drbd inf: WebFS WebDataClone:Master\n"
+"colocation website-with-ip inf: WebSite ClusterIP\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFS:start\n"
+"order WebSite-after-WebFS inf: WebFS WebSite\n"
+"order apache-after-ip inf: ClusterIP WebSite\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"false\" \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+"rsc_defaults $id=\"rsc-options\" \\\n"
+"        resource-stickiness=\"100\"\n"
+"    "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=\"wwwdata\" \\\n"
+"        op monitor interval=\"60s\"\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"ext4\"\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+"        op monitor interval=\"1min\"\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=\"1\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+"location prefer-pcmk-1 WebSite 50: pcmk-1\n"
+"colocation WebSite-with-WebFS inf: WebSite WebFS\n"
+"colocation fs_on_drbd inf: WebFS WebDataClone:Master\n"
+"colocation website-with-ip inf: WebSite ClusterIP\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFS:start\n"
+"order WebSite-after-WebFS inf: WebFS WebSite\n"
+"order apache-after-ip inf: ClusterIP WebSite\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"false\" \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+"rsc_defaults $id=\"rsc-options\" \\\n"
+"        resource-stickiness=\"100\"\n"
+"    "
 
 #: Ch-Shared-Storage.xml:437(para)
 msgid "After reviewing the new configuration, we again upload it and watch the cluster put it into effect."
-msgstr ""
+msgstr "După ce am revizuit configurația nouă, o încărcăm din nou și urmărim clusterul cum o pune în folosință."
 
 #: Ch-Shared-Storage.xml:441(userinput)
 #, no-wrap
 msgid "cib commit fs"
-msgstr ""
+msgstr "cib commit fs"
 
 #: Ch-Shared-Storage.xml:458(emphasis)
 msgid "WebSite (ocf::heartbeat:apache): Started pcmk-1"
-msgstr ""
+msgstr "WebSite (ocf::heartbeat:apache): Started pcmk-1"
 
 #: Ch-Shared-Storage.xml:462(emphasis)
 msgid "WebFS (ocf::heartbeat:Filesystem): Started pcmk-1"
-msgstr ""
+msgstr "WebFS (ocf::heartbeat:Filesystem): Started pcmk-1"
 
 #: Ch-Shared-Storage.xml:440(screen)
 #, no-wrap
-msgid "\ncrm(fs)# <placeholder-1/>\nINFO: commited 'fs' shadow CIB to the cluster\ncrm(fs)# <placeholder-2/>\nbye\n[root@pcmk-1 ~]# <placeholder-3/>\n============\nLast updated: Tue Sep  1 10:08:44 2009\nStack: openais\nCurrent DC: pcmk-1 - partition with quorum\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n2 Nodes configured, 2 expected votes\n4 Resources configured.\n============\n\nOnline: [ pcmk-1 pcmk-2 ]\n\nClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-1\n<placeholder-4/>\nMaster/Slave Set: WebDataClone\n        Masters: [ pcmk-1 ]\n        Slaves: [ pcmk-2 ]\n<placeholder-5/>\n    "
+msgid ""
+"\n"
+"crm(fs)# <placeholder-1/>\n"
+"INFO: commited 'fs' shadow CIB to the cluster\n"
+"crm(fs)# <placeholder-2/>\n"
+"bye\n"
+"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"============\n"
+"Last updated: Tue Sep  1 10:08:44 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"4 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-1\n"
+"<placeholder-4/>\n"
+"Master/Slave Set: WebDataClone\n"
+"        Masters: [ pcmk-1 ]\n"
+"        Slaves: [ pcmk-2 ]\n"
+"<placeholder-5/>\n"
+"    "
 msgstr ""
+"\n"
+"crm(fs)# <placeholder-1/>\n"
+"INFO: commited 'fs' shadow CIB to the cluster\n"
+"crm(fs)# <placeholder-2/>\n"
+"bye\n"
+"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"============\n"
+"Last updated: Tue Sep  1 10:08:44 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"4 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-1\n"
+"<placeholder-4/>\n"
+"Master/Slave Set: WebDataClone\n"
+"        Masters: [ pcmk-1 ]\n"
+"        Slaves: [ pcmk-2 ]\n"
+"<placeholder-5/>\n"
+"    "
 
 #: Ch-Shared-Storage.xml:465(title)
 msgid "Testing Migration"
-msgstr ""
+msgstr "Testarea Migrării"
 
 #: Ch-Shared-Storage.xml:466(para)
 msgid "We could shut down the active node again, but another way to safely simulate recovery is to put the node into what is called \"standby mode\". Nodes in this state tell the cluster that they are not allowed to run resources. Any resources found active there will be moved elsewhere. This feature can be particularly useful when updating the resources’ packages."
-msgstr ""
+msgstr "Am putea opri nodul activ din nou, dar o altă cale sigură de a simula recuperarea este de a pune nodul în ceea ce este numit \"mod standby\". Nodurile în această stare spun clusterului că nu li se permite să ruleze resurse. Orice resursă gasită ca fiind activă acolo va fi mutată în altă parte Această funcționalitate poate fi deosebit de utilă atunci când actualizați pachetele resurselor."
 
 #: Ch-Shared-Storage.xml:472(para)
 msgid "Put the local node into standby mode and observe the cluster move all the resources to the other node. Note also that the node’s status will change to indicate that it can no longer host resources."
-msgstr ""
+msgstr "Puneți nodul local în mod standby și observați cum clusterul mută toate resursele pe nodul celălalt. Observați de asemenea că status-ul nodului se va schimba pentru a indica faptul că nu mai poate găzdui resurse."
 
 #: Ch-Shared-Storage.xml:477(userinput)
 #, no-wrap
 msgid "crm node standby"
-msgstr ""
+msgstr "crm node standby"
 
 #: Ch-Shared-Storage.xml:488(emphasis)
 msgid "Node pcmk-1: standby"
-msgstr ""
+msgstr "Node pcmk-1: standby"
 
-#: Ch-Shared-Storage.xml:491(emphasis) Ch-Shared-Storage.xml:492(emphasis) Ch-Shared-Storage.xml:496(emphasis)
+#: Ch-Shared-Storage.xml:491(emphasis)
+#: Ch-Shared-Storage.xml:492(emphasis)
+#: Ch-Shared-Storage.xml:496(emphasis)
 msgid "Started pcmk-2"
-msgstr ""
+msgstr "Started pcmk-2"
 
 #: Ch-Shared-Storage.xml:476(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n[root@pcmk-1 ~]# <placeholder-2/>\n============\nLast updated: Tue Sep  1 10:09:57 2009\nStack: openais\nCurrent DC: pcmk-1 - partition with quorum\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n2 Nodes configured, 2 expected votes\n4 Resources configured.\n============\n\n<placeholder-3/>\nOnline: [ pcmk-2 ]\n\nClusterIP        (ocf::heartbeat:IPaddr):        <placeholder-4/>\nWebSite (ocf::heartbeat:apache):        <placeholder-5/>\nMaster/Slave Set: WebDataClone\n        <placeholder-6/>\n        Stopped: [ WebData:1 ]\nWebFS   (ocf::heartbeat:Filesystem):    <placeholder-7/>\n      "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"============\n"
+"Last updated: Tue Sep  1 10:09:57 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"4 Resources configured.\n"
+"============\n"
+"\n"
+"<placeholder-3/>\n"
+"Online: [ pcmk-2 ]\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        <placeholder-4/>\n"
+"WebSite (ocf::heartbeat:apache):        <placeholder-5/>\n"
+"Master/Slave Set: WebDataClone\n"
+"        <placeholder-6/>\n"
+"        Stopped: [ WebData:1 ]\n"
+"WebFS   (ocf::heartbeat:Filesystem):    <placeholder-7/>\n"
+"      "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"============\n"
+"Last updated: Tue Sep  1 10:09:57 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"4 Resources configured.\n"
+"============\n"
+"\n"
+"<placeholder-3/>\n"
+"Online: [ pcmk-2 ]\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        <placeholder-4/>\n"
+"WebSite (ocf::heartbeat:apache):        <placeholder-5/>\n"
+"Master/Slave Set: WebDataClone\n"
+"        <placeholder-6/>\n"
+"        Stopped: [ WebData:1 ]\n"
+"WebFS   (ocf::heartbeat:Filesystem):    <placeholder-7/>\n"
+"      "
 
 #: Ch-Shared-Storage.xml:498(para)
 msgid "Once we’ve done everything we needed to on pcmk-1 (in this case nothing, we just wanted to see the resources move), we can allow the node to be a full cluster member again."
-msgstr ""
+msgstr "Odată ce am făcut tot ceea ce era nevoie să facem pe pcmk-1 (în acest caz nimic, vroiam doar să vedem resursele mutându-se), putem permite nodului să fie din nou un membru întreg al clusterului."
 
 #: Ch-Shared-Storage.xml:502(userinput)
 #, no-wrap
 msgid "crm node online"
-msgstr ""
+msgstr "crm node online"
 
 #: Ch-Shared-Storage.xml:513(emphasis)
 msgid "Online: [ pcmk-1 pcmk-2 ]"
-msgstr ""
+msgstr "Online: [ pcmk-1 pcmk-2 ]"
 
 #: Ch-Shared-Storage.xml:501(screen)
 #, no-wrap
-msgid "\n[root@pcmk-1 ~]# <placeholder-1/>\n[root@pcmk-1 ~]# <placeholder-2/>\n============\nLast updated: Tue Sep  1 10:13:25 2009\nStack: openais\nCurrent DC: pcmk-1 - partition with quorum\nVersion: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n2 Nodes configured, 2 expected votes\n4 Resources configured.\n============\n\n<placeholder-3/>\n\nClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\nWebSite (ocf::heartbeat:apache):        Started pcmk-2\nMaster/Slave Set: WebDataClone\n        Masters: [ pcmk-2 ]\n        Slaves: [ pcmk-1 ]\nWebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2\n      "
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"============\n"
+"Last updated: Tue Sep  1 10:13:25 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"4 Resources configured.\n"
+"============\n"
+"\n"
+"<placeholder-3/>\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
+"WebSite (ocf::heartbeat:apache):        Started pcmk-2\n"
+"Master/Slave Set: WebDataClone\n"
+"        Masters: [ pcmk-2 ]\n"
+"        Slaves: [ pcmk-1 ]\n"
+"WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2\n"
+"      "
 msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"============\n"
+"Last updated: Tue Sep  1 10:13:25 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"4 Resources configured.\n"
+"============\n"
+"\n"
+"<placeholder-3/>\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
+"WebSite (ocf::heartbeat:apache):        Started pcmk-2\n"
+"Master/Slave Set: WebDataClone\n"
+"        Masters: [ pcmk-2 ]\n"
+"        Slaves: [ pcmk-1 ]\n"
+"WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2\n"
+"      "
 
 #: Ch-Shared-Storage.xml:522(para)
 msgid "Notice that our resource stickiness settings prevent the services from migrating back to pcmk-1."
-msgstr ""
+msgstr "Observați că setările noastre de adezivitate a resurselor previn serviciile din a migra înapoi pe pcmk-1."
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Ch-Shared-Storage.xml:0(None)
 msgid "translator-credits"
-msgstr ""
+msgstr "genericul-traducătorului"
 
