@@ -1,0 +1,46 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Clusters from Scratch 1.1\n"
+"POT-Creation-Date: 2011-11-26 16:34+0200\n"
+"PO-Revision-Date: 2011-11-26 16:42+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: Dan Frîncu <df.cluster@gmail.com> <RO@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Romanian\n"
+"X-Poedit-Country: ROMANIA\n"
+
+#: en-US/Legal_Notice.xml:5(para)
+msgid "Copyright <trademark class=\"copyright\"/> 2009-&YEAR;&HOLDER;."
+msgstr "Copyright <trademark class=\"copyright\"/> 2009-&YEAR;&HOLDER;."
+
+#: en-US/Legal_Notice.xml:8(para)
+msgid "The text of and illustrations in this document are licensed under a Creative Commons Attribution–Share Alike 3.0 Unported license (\"CC-BY-SA\"). An explanation of CC-BY-SA is available at <ulink url=\"http://creativecommons.org/licenses/by-sa/3.0/\"/>."
+msgstr "Textul și ilustrațiile din acest document sunt licențiate sub o licență Creative Commons Attribution–Share Alike 3.0 Unported license (\"CC-BY-SA\"). O explicație a CC-BY-SA este disponibilă la <ulink url=\"http://creativecommons.org/licenses/by-sa/3.0/\" />."
+
+#: en-US/Legal_Notice.xml:11(para)
+msgid "In accordance with CC-BY-SA, if you distribute this document or an adaptation of it, you must provide the URL for the original version."
+msgstr "În acord cu CC-BY-SA, dacă distribuiți acest document sau o adaptare a acestuia, trebuie să furnizați URL-ul pentru versiunea originală."
+
+#: en-US/Legal_Notice.xml:18(para)
+msgid "If you are distributing Open Publication works on hardcopy or CD-ROM, you provide email notification to the authors of your intent to redistribute at least thirty days before your manuscript or media freeze, to give the authors time to provide updated documents. This notification should describe modifications, if any, made to the document."
+msgstr "Dacă distribuiți lucrări Open Publication ca și copie tipărită sau CD-ROM, veți furniza notificări pe email autorilor despre intenția voastră de a redistribui cu cel puțin treizeci de zile înainte de înghețarea procesului de tipărire sau copiere, pentru a da autorilor timp să furnizeze documente actualizate. Această notificare ar trebui să descrie modificările, dacă există, realizate documentului."
+
+#: en-US/Legal_Notice.xml:24(para)
+msgid "All substantive modifications (including deletions) be either clearly marked up in the document or else described in an attachment to the document."
+msgstr "Toate modificările substanțiale (inclusiv ștergerile) trebuie să fie ori marcate în mod clar în document ori descrise în atașamentul la document."
+
+#: en-US/Legal_Notice.xml:29(para)
+msgid "Finally, while it is not mandatory under this license, it is considered good form to offer a free copy of any hardcopy or CD-ROM expression of the author(s) work."
+msgstr "În cele din urmă, în timp ce nu este obligatoriu sub această licență, este considerată o formă bună de a oferi o copie gratuită a oricărei lucrări tipărite sau exprimării pe CD-ROM a muncii autorului(autorilor)."
+
+#: en-US/Legal_Notice.xml:14(para)
+msgid "In addition to the requirements of this license, the following activities are looked upon favorably: <placeholder-1/>"
+msgstr "Adițional la cerințele acestei licențe, următoarele activități sunt privite cu un aspect favorabil:"
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: en-US/Legal_Notice.xml:0(None)
+msgid "translator-credits"
+msgstr "genericul-traducătorului"
+
