@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
 "POT-Creation-Date: 2011-11-18 07:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2011-11-26 13:59+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: ROMANIAN <RO@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -13,34 +13,34 @@ msgstr ""
 
 #: Revision_History.xml:7(title)
 msgid "Revision History"
-msgstr ""
+msgstr "Istoricul Reviziilor"
 
 #: Revision_History.xml:11(revnumber)
 msgid "1"
-msgstr ""
+msgstr "1"
 
 #: Revision_History.xml:12(date)
 msgid "Mon May 17 2010"
-msgstr ""
+msgstr "Mon May 17 2010"
 
 #: Revision_History.xml:13(firstname)
 msgid "Andrew"
-msgstr ""
+msgstr "Andrew"
 
 #: Revision_History.xml:13(surname)
 msgid "Beekhof"
-msgstr ""
+msgstr "Beekhof"
 
 #: Revision_History.xml:13(email)
 msgid "andrew@beekhof.net"
-msgstr ""
+msgstr "andrew@beekhof.net"
 
 #: Revision_History.xml:14(member)
 msgid "Import from Pages.app"
-msgstr ""
+msgstr "Import din Pages.app"
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Revision_History.xml:0(None)
 msgid "translator-credits"
-msgstr ""
+msgstr "genericul-traducătorului"
 

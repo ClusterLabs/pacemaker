@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
 "POT-Creation-Date: 2011-11-18 07:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2011-11-26 13:57+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: ROMANIAN <RO@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -13,10 +13,10 @@ msgstr ""
 
 #: Preface.xml:7(title)
 msgid "Preface"
-msgstr ""
+msgstr "Prefață"
 
 #. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
 #: Preface.xml:0(None)
 msgid "translator-credits"
-msgstr ""
+msgstr "genericul-traducătorului"
 
