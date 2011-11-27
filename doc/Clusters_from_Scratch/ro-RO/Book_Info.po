@@ -19,7 +19,7 @@ msgstr "@@image: 'Common_Content/images/title_logo.svg'; md5=ACEST FIȘIER NU EX
 
 #: Book_Info.xml:7(title)
 msgid "Clusters from Scratch"
-msgstr "Clustere de la Zero"
+msgstr "Clusters from Scratch"
 
 #: Book_Info.xml:8(subtitle)
 msgid "Creating Active/Passive and Active/Active Clusters on Fedora"
