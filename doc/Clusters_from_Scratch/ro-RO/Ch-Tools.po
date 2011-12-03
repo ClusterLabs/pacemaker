@@ -93,7 +93,7 @@ msgstr "Utilitarul principal pentru monitorizarea status-ului clusterului este c
 
 #: Ch-Tools.xml:47(para)
 msgid "Additionally, the Pacemaker version and supported cluster stack(s) is available via the <command>--version</command> option."
-msgstr "Suplimentar, versiunea de Pacemaker și stiva(ele) suportate de cluster sunt disponibile prin opțiunea <command>--version</version>."
+msgstr "Suplimentar, versiunea de Pacemaker și stiva(ele) suportate de cluster sunt disponibile prin opțiunea <command>--version</command>."
 
 #: Ch-Tools.xml:52(userinput)
 #, no-wrap
