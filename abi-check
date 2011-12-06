@@ -1,0 +1,102 @@
+#!/bin/bash
+UPLOAD=0
+
+if [ $1 = "-u" ]; then
+    UPLOAD=1; shift
+fi
+
+PACKAGE=$1; shift
+
+function tag() {
+    if [[ $1 =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ]]; then
+	echo Pacemaker-$1
+    else
+	echo $1
+    fi
+}
+
+function version() {
+    echo $1 | sed s:.*-::
+}
+
+function extract() {
+
+    DUMP=1
+    TAG=$1
+    VERSION=$2
+
+    if [ $VERSION = HEAD ]; then
+	rm -rf abi_dumps/$PACKAGE/${PACKAGE}_$VERSION.abi.tar.gz
+
+    elif [ -f abi_dumps/$PACKAGE/${PACKAGE}_$VERSION.abi.tar.gz ]; then
+	return
+    fi
+    
+    echo "Building ABI dump for $*"
+    BUILD_ROOT=.ABI-build
+
+    rm -rf $BUILD_ROOT
+    git archive --prefix $BUILD_ROOT/ $TAG | tar xv
+
+    BUILD_ROOT=`pwd`/$BUILD_ROOT
+    DESC=$BUILD_ROOT/$VERSION.xml
+
+    sed -i.sed 's: doc::' $BUILD_ROOT/Makefile.am
+    sed -i.sed 's: debian::' $BUILD_ROOT/Makefile.am
+
+    cat<<EOF>$DESC
+<?xml version="1.0" encoding="utf-8"?>
+<descriptor>
+<version>
+    $VERSION
+</version>
+<headers>
+	$BUILD_ROOT/root/usr/include/pacemaker/crm
+</headers>
+<libs>
+EOF
+
+    ( cd $BUILD_ROOT && ./autogen.sh )
+    ( cd $BUILD_ROOT && ./configure  --disable-fatal-warnings )
+    make -C $BUILD_ROOT V=0 DESTDIR=${BUILD_ROOT}/root install
+    if [ $? != 0 ]; then
+	echo "Build for $TAG failed. Repair, populate <libs/> and re-run: "
+	echo "  abi-compliance-checker -l $PACKAGE -dump_abi $DESC"
+	echo ""
+	echo "To find libraries after building:"
+	echo "  find $BUILD_ROOT/root -name "*.so" -print"    
+
+    else
+	find $BUILD_ROOT/root -name "*.so" -print >> $DESC    
+    fi
+
+    cat<<EOF>>$DESC
+</libs>
+</descriptor>
+EOF
+
+    if [ $DUMP = 1 ]; then
+	abi-compliance-checker -l $PACKAGE -dump_abi $DESC
+    else
+	exit 1
+    fi
+}
+
+for arg in $*; do
+    T=`tag $arg`
+    V=`version $T`
+    extract $T $V
+done
+
+if [ $# = 2 ]; then
+    V1=`version $1`
+    V2=`version $2`
+
+    abi-compliance-checker -l ${PACKAGE} \
+	-d1 abi_dumps/${PACKAGE}/${PACKAGE}_${V1}.abi.tar.gz \
+	-d2 abi_dumps/${PACKAGE}/${PACKAGE}_${V2}.abi.tar.gz
+
+    if [ $UPLOAD = 1 -a -d compat_reports/pacemaker/${V1}_to_${V2} ]; then
+	rsync -azxlSD --progress compat_reports/pacemaker/${V1}_to_${V2} root@www.clusterlabs.org:/var/www/html/abi/
+    fi
+fi
