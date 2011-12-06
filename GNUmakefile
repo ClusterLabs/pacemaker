@@ -26,8 +26,6 @@ distdir			= $(distprefix)-$(TAG)
 TARFILE			= $(distdir).tar.gz
 DIST_ARCHIVES		= $(TARFILE)
 
-LAST_RELEASE		= $(firstword $(shell hg tags| grep Pacemaker | head -n 1))
-
 RPM_ROOT	= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 		  --define "_specdir   $(RPM_ROOT)" 	\
@@ -46,6 +44,9 @@ DISTRO  ?= $(call getdistro)
 TAG     ?= $(shell git log --pretty="format:%h" -n 1)
 WITH    ?= 
 
+LAST_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | head -n 1)
+NEXT_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | head -n 1 | awk -F. '/[0-9]+\./{$NF+=1;OFS=".";print}')
+
 BUILD_COUNTER	?= build.counter
 COUNT           = $(shell test ! -e $(BUILD_COUNTER) || echo $(shell expr 1 + $(shell cat $(BUILD_COUNTER))))
 
@@ -54,7 +55,7 @@ initialize:
 	echo "Now run configure with any arguments (eg. --prefix) specific to your system"
 
 export: 
-	rm -f $(PACKAGE)-scratch.tar.* $(PACKAGE)-tip.tar.*
+	rm -f $(PACKAGE)-scratch.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
 	if [ ! -f $(TARFILE) ]; then						\
 	    rm -f $(PACKAGE).tar.*;						\
 	    if [ $(TAG) = scratch ]; then 					\
@@ -100,14 +101,21 @@ $(PACKAGE)-%.spec: $(PACKAGE).spec.in
 	@echo Rebuilt $@
 
 srpm-%:	export $(PACKAGE)-%.spec
-	rm -f *.src.rpm $(PACKAGE).spec
+	rm -f *.src.rpm
 	cp $(PACKAGE)-$*.spec $(PACKAGE).spec
 	if [ -e $(BUILD_COUNTER) ]; then								\
 		echo $(COUNT) > $(BUILD_COUNTER);							\
 		sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(PACKAGE).spec;	\
 	fi
+	sed -i.sed 's/Source0:.*/Source0:\ $(TARFILE)/' $(PACKAGE).spec
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE).spec
 	sed -i.sed 's/global\ upstream_prefix.*/global\ upstream_prefix\ $(distprefix)/' $(PACKAGE).spec
+	case $(TAG) in 													\
+		Pacemaker*) 												\
+			sed -i.sed 's/global\ specversion.*/global\ specversion\ 1/' $(PACKAGE).spec;			\
+			sed -i.sed 's/Version:.*/Version:\ $(shell echo $(TAG) | sed s:Pacemaker-::)/' $(PACKAGE).spec;;\
+		*)      sed -i.sed 's/Version:.*/Version:\ $(NEXT_RELEASE)/' $(PACKAGE).spec;; 				\
+	esac
 	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(WITH)  $(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
@@ -160,6 +168,8 @@ global: clean-generic
 	groff -mandoc `man -w ./$<` -T html > $@
 	rsync -azxlSD --progress $@ root@www.clusterlabs.org:/var/www/html/man/
 
+abi:	abi-check $(LAST_RELEASE) $(TAG)
+abi-www:	abi-check -u $(LAST_RELEASE) $(TAG)
 
 www:	global
 	make all
@@ -188,3 +198,4 @@ indent:
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i.sed 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
+

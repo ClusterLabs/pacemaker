@@ -8,6 +8,7 @@ Makefile.in
 .deps
 .libs
 *.pc
+*.pyc
 *.bz2
 *.rpm
 *.la
@@ -112,3 +113,14 @@ mock
 HTML
 pacemaker.spec
 pengine/.regression.failed.diff
+ClusterLabs-pacemaker-*.tar.gz
+coverity-*
+
+compat_reports
+.ABI-build
+abi_dumps
+logs
+
+*.sed
+*.orig
+*.rej
