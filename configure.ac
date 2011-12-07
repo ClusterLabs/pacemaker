@@ -66,6 +66,10 @@ dnl command line
 dnl Wrap in m4_ifdef to avoid breaking on older platforms
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES])
 
+dnl Example 2.4. Silent Custom Rule to Generate a File
+dnl %-bar.pc: %.pc
+dnl	$(AM_V_GEN)$(LN_S) $(notdir $^) $@
+
 CC_IN_CONFIGURE=yes
 export CC_IN_CONFIGURE
 
