@@ -48,7 +48,8 @@ LAST_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | head -n 1)
 NEXT_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | head -n 1 | awk -F. '/[0-9]+\./{$NF+=1;OFS=".";print}')
 
 BUILD_COUNTER	?= build.counter
-COUNT           = $(shell test ! -e $(BUILD_COUNTER) || echo $(shell expr 1 + $(shell cat $(BUILD_COUNTER))))
+LAST_COUNT      = $(shell test ! -e $(BUILD_COUNTER) && echo 0; test -e $(BUILD_COUNTER) && cat $(BUILD_COUNTER))
+COUNT           = $(shell expr 1 + $(LAST_COUNT))
 
 initialize:
 	./autogen.sh
@@ -105,16 +106,14 @@ srpm-%:	export $(PACKAGE)-%.spec
 	cp $(PACKAGE)-$*.spec $(PACKAGE).spec
 	if [ -e $(BUILD_COUNTER) ]; then								\
 		echo $(COUNT) > $(BUILD_COUNTER);							\
-		sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(PACKAGE).spec;	\
 	fi
 	sed -i.sed 's/Source0:.*/Source0:\ $(TARFILE)/' $(PACKAGE).spec
+	sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(PACKAGE).spec
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE).spec
 	sed -i.sed 's/global\ upstream_prefix.*/global\ upstream_prefix\ $(distprefix)/' $(PACKAGE).spec
-	case $(TAG) in 													\
-		Pacemaker*) 												\
-			sed -i.sed 's/global\ specversion.*/global\ specversion\ 1/' $(PACKAGE).spec;			\
-			sed -i.sed 's/Version:.*/Version:\ $(shell echo $(TAG) | sed s:Pacemaker-::)/' $(PACKAGE).spec;;\
-		*)      sed -i.sed 's/Version:.*/Version:\ $(NEXT_RELEASE)/' $(PACKAGE).spec;; 				\
+	case $(TAG) in 															\
+		Pacemaker*) sed -i.sed 's/Version:.*/Version:\ $(shell echo $(TAG) | sed s:Pacemaker-::)/' $(PACKAGE).spec;;		\
+		*)          sed -i.sed 's/Version:.*/Version:\ $(shell echo $(NEXT_RELEASE) | sed s:Pacemaker-::)/' $(PACKAGE).spec;; 	\
 	esac
 	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(WITH)  $(PACKAGE).spec
 
