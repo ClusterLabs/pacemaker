@@ -285,7 +285,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
         did_change = TRUE;
         crm_log_xml_info(params_all, "params:reload");
-        crm_crit("Parameters to %s on %s changed: recorded %s vs. %s (reload:%s) %s",
+        crm_info("Parameters to %s on %s changed: recorded %s vs. %s (reload:%s) %s",
                  key, active_node->details->uname,
                  crm_str(digest_all), digest_all_calc, op_version,
                  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
