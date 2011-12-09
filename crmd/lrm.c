@@ -587,8 +587,8 @@ append_restart_list(lrm_rsc_t * rsc, lrm_op_t * op, xmlNode * update, const char
     } else if (rsc == NULL) {
         return;
 
-    } else if (crm_str_eq(CRMD_ACTION_START, op->op_type, TRUE) == FALSE) {
-        /* only starts are potentially reloadable */
+    } else if (crm_str_eq(CRMD_ACTION_STOP, op->op_type, TRUE)) {
+        /* Stopped resources don't need to be reloaded */
         return;
 
     } else if (compare_version("1.0.8", version) > 0) {
