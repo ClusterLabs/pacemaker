@@ -1778,6 +1778,9 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set)
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
             crm_notice("Stop    %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
+        } else if(is_set(rsc->flags, pe_rsc_reload)) {
+            crm_notice("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+
         } else {
             crm_notice("Restart %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
         }
@@ -1795,6 +1798,10 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set)
                 if (is_set(rsc->flags, pe_rsc_failed)) {
                     crm_notice("Recover %s\t(%s %s)",
                                rsc->id, role2text(rsc->role), next->details->uname);
+
+                } else if(is_set(rsc->flags, pe_rsc_reload)) {
+                    crm_notice("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+
                 } else {
                     crm_notice("Restart %s\t(%s %s)",
                                rsc->id, role2text(rsc->role), next->details->uname);
@@ -1833,6 +1840,10 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set)
             if (is_set(rsc->flags, pe_rsc_failed)) {
                 crm_notice("Recover %s\t(%s %s)",
                            rsc->id, role2text(rsc->role), next->details->uname);
+
+            } else if(is_set(rsc->flags, pe_rsc_reload)) {
+                crm_notice("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+
             } else {
                 crm_notice("Restart %s\t(%s %s)",
                            rsc->id, role2text(rsc->role), next->details->uname);
@@ -2701,8 +2712,8 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
     g_list_free(action_list);
 
     if (is_not_set(rsc->flags, pe_rsc_can_migrate)      /* Coverity: False positive */
-        &&is_set(start->flags, pe_action_allow_reload_conversion) == FALSE) {
-        do_crm_log_unlikely(level + 1, "%s: no need to continue", rsc->id);
+        && is_not_set(start->flags, pe_action_allow_reload_conversion)) {
+        crm_trace("%s: no need to continue", rsc->id);
         return;
     }
 
@@ -2930,6 +2941,7 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
         }
         crm_info("Rewriting %s of %s on %s as a reload",
                  rewrite->task, rsc->id, stop->node->details->uname);
+        set_bit(rsc->flags, pe_rsc_reload);
 
         crm_free(rewrite->uuid);
         crm_free(rewrite->task);
