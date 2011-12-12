@@ -1272,6 +1272,12 @@ crm_element_value_int(xmlNode *data, const char *name, int *dest)
     return -1;
 }
 
+int
+crm_element_value_const_int(const xmlNode *data, const char *name, int *dest)
+{
+    return crm_element_value_int((xmlNode*)data, name, dest);
+}
+
 const char *
 crm_element_value_const(const xmlNode *data, const char *name)
 {
