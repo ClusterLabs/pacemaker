@@ -2610,7 +2610,9 @@ free_lrm_op(lrm_op_t * op)
     if (op == NULL) {
         return;
     }
-    g_hash_table_destroy(op->params);
+    if(op->params) {
+        g_hash_table_destroy(op->params);
+    }
     crm_free(op->user_data);
     crm_free(op->output);
     crm_free(op->rsc_id);
