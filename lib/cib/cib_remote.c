@@ -382,9 +382,12 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
 
         fprintf(stderr, "Password: ");
         crm_malloc0(private->passwd, 1024);
-        scanf("%s", private->passwd);
+        rc = scanf("%s", private->passwd);
         fprintf(stdout, "\n");
         /* fprintf(stderr, "entered: '%s'\n", buffer); */
+        if(rc < 1) {
+            private->passwd = NULL;
+        }
 
         settings.c_lflag |= ECHO;
         rc = tcsetattr(0, TCSANOW, &settings);
