@@ -255,6 +255,10 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     if (interval == 0 && safe_str_eq(task, RSC_STATUS)) {
         /* Reload based on the start action not a probe */
         task = RSC_START;
+
+    } else if (interval == 0 && safe_str_eq(task, RSC_MIGRATED)) {
+        /* Reload based on the start action not a migrate */
+        task = RSC_START;
     }
 
     if (digest_restart) {
@@ -268,7 +272,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         if (safe_str_neq(digest_restart_calc, digest_restart)) {
             did_change = TRUE;
             crm_log_xml_info(params_restart, "params:restart");
-            crm_info("Parameters to %s on %s changed: recorded %s vs. %s (restart:%s) %s",
+            crm_info("Parameters to %s on %s changed: was %s vs. now %s (restart:%s) %s",
                      key, active_node->details->uname,
                      crm_str(digest_restart), digest_restart_calc,
                      op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
@@ -285,7 +289,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
         did_change = TRUE;
         crm_log_xml_info(params_all, "params:reload");
-        crm_info("Parameters to %s on %s changed: recorded %s vs. %s (reload:%s) %s",
+        crm_info("Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
                  key, active_node->details->uname,
                  crm_str(digest_all), digest_all_calc, op_version,
                  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
@@ -412,7 +416,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
         if (interval > 0 && is_set(data_set->flags, pe_flag_maintenance_mode)) {
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
-        } else if (is_probe || safe_str_eq(task, RSC_START) || interval > 0) {
+        } else if (is_probe || safe_str_eq(task, RSC_START) || interval > 0 || safe_str_eq(task, RSC_MIGRATED)) {
             check_action_definition(rsc, node, rsc_op, data_set);
         }
     }

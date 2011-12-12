@@ -1393,7 +1393,7 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
             && safe_str_eq(status, "0")) {
             *stop_index = counter;
 
-        } else if (safe_str_eq(task, CRMD_ACTION_START)) {
+        } else if (safe_str_eq(task, CRMD_ACTION_START) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
             *start_index = counter;
 
         } else if (*start_index <= *stop_index && safe_str_eq(task, CRMD_ACTION_STATUS)) {

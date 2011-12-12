@@ -1,0 +1,16 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"c5-x64-devel.vds-ok.com-vm_monitor_10000 v03-a" [ style=bold color="green" fontcolor="black"]
+"c5-x64-devel.vds-ok.com-vm_reload_0 v03-a" -> "all_stopped" [ style = bold]
+"c5-x64-devel.vds-ok.com-vm_reload_0 v03-a" -> "c5-x64-devel.vds-ok.com-vm_start_0 v03-a" [ style = bold]
+"c5-x64-devel.vds-ok.com-vm_reload_0 v03-a" -> "load_stopped_v03-a v03-a" [ style = bold]
+"c5-x64-devel.vds-ok.com-vm_reload_0 v03-a" [ style=bold color="green" fontcolor="black"]
+"c5-x64-devel.vds-ok.com-vm_start_0 v03-a" -> "c5-x64-devel.vds-ok.com-vm_monitor_10000 v03-a" [ style = bold]
+"c5-x64-devel.vds-ok.com-vm_start_0 v03-a" [ style=bold color="green" fontcolor="orange"]
+"load_stopped_mgmt01 mgmt01" [ style=bold color="green" fontcolor="orange"]
+"load_stopped_v03-a v03-a" -> "c5-x64-devel.vds-ok.com-vm_start_0 v03-a" [ style = bold]
+"load_stopped_v03-a v03-a" [ style=bold color="green" fontcolor="orange"]
+"load_stopped_v03-b v03-b" [ style=bold color="green" fontcolor="orange"]
+"vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm_monitor_10000 v03-b" [ style=bold color="green" fontcolor="black"]
+"vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm_monitor_10000 v03-b" [ style=bold color="green" fontcolor="black"]
+}
