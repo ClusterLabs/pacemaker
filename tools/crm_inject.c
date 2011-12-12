@@ -1110,7 +1110,6 @@ main(int argc, char **argv)
                 input_file = optarg;
                 break;
             case 'O':
-                simulate = TRUE;
                 output_file = optarg;
                 break;
             default:
