@@ -450,12 +450,12 @@ process_graph_event(xmlNode * event, const char *event_node)
         return FALSE;
     }
 
-    CRM_CHECK(decode_transition_magic(magic, &update_te_uuid, &transition_num, &action,
-                                      &status, &rc, &target_rc),
-              crm_err("Invalid event %s detected", id);
-              abort_transition(INFINITY, tg_restart, "Bad event", event);
-              return FALSE;
-        );
+    if(decode_transition_magic(magic, &update_te_uuid, &transition_num, &action,
+                               &status, &rc, &target_rc) == FALSE) {
+        crm_err("Invalid event %s detected: %s", id, magic);
+        abort_transition(INFINITY, tg_restart, "Bad event", event);
+        return FALSE;
+    }
 
     if (status == LRM_OP_PENDING) {
         goto bail;
