@@ -832,7 +832,6 @@ modify_configuration(pe_working_set_t * data_set,
                   continue);
 
         parse_op_key(key, &resource, &task, &interval);
-        crm_free(task);
 
         rsc = pe_find_resource(data_set->resources, resource);
         if (rsc == NULL) {
@@ -861,6 +860,7 @@ modify_configuration(pe_working_set_t * data_set,
                                           cib_sync_call | cib_scope_local);
             CRM_ASSERT(rc == cib_ok);
         }
+        crm_free(task);
         crm_free(node);
         crm_free(key);
     }
