@@ -2477,6 +2477,7 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
     xmlNode *xml_op = NULL;
     const char *task = NULL;
     gboolean dc_munges_migrate_ops = (compare_version(caller_version, "3.0.3") < 0);
+    gboolean dc_needs_unique_ops   = (compare_version(caller_version, "3.0.6") < 0);
 
     CRM_CHECK(op != NULL, return NULL);
     do_crm_log(level, "%s: Updating resouce %s after %s %s op (interval=%d)",
@@ -2514,7 +2515,7 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
     }
 
     key = generate_op_key(op->rsc_id, task, op->interval);
-    if (op->interval > 0) {
+    if(dc_needs_unique_ops && op->interval > 0) {
         op_id = crm_strdup(key);
 
     } else if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
@@ -2531,6 +2532,9 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
 
     } else if (did_rsc_op_fail(op, target_rc)) {
         op_id = generate_op_key(op->rsc_id, "last_failure", 0);
+
+    } else if (op->interval > 0) {
+        op_id = crm_strdup(key);
 
     } else {
         op_id = generate_op_key(op->rsc_id, "last", 0);

@@ -1160,8 +1160,23 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         sort_return(1, "call id");
 
     } else if (b_call_id >= 0 && a_call_id == b_call_id) {
-        /* The last op and last_failed_op are the same */
-        sort_return(0, "duplicate failure");
+        /*
+         * The op and last_failed_op are the same
+         * Order on last-rc-change
+         */
+        int last_a = -1;
+        int last_b = -1;
+
+        crm_element_value_const_int(xml_a, "last-rc-change", &last_a);
+        crm_element_value_const_int(xml_b, "last-rc-change", &last_b);
+
+        if (last_a >= 0 && last_a < last_b) {
+            sort_return(-1, "rc-change");
+
+        } else if (last_b >= 0 && last_a > last_b) {
+            sort_return(1, "rc-change");
+        }
+        sort_return(0, "rc-change");
 
     } else {
         /* One of the inputs is a pending operation
