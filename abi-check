@@ -77,6 +77,7 @@ EOF
 
     if [ $DUMP = 1 ]; then
 	abi-compliance-checker -l $PACKAGE -dump_abi $DESC
+	rm -rf $BUILD_ROOT
     else
 	exit 1
     fi
