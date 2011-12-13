@@ -936,7 +936,7 @@ delete_rsc_entry(ha_msg_input_t * input, const char *rsc_id, int rc, const char 
 #define op_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s']"
 #define op_call_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s' and @"XML_LRM_ATTR_CALLID"='%d']"
 
-static void
+void
 delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id)
 {
     xmlNode *xml_top = NULL;
