@@ -40,7 +40,7 @@
 #include "plugin.h"
 #include "utils.h"
 
-#include <glib/ghash.h>
+#include <glib.h>
 
 #include <sys/resource.h>
 #include <sys/utsname.h>
