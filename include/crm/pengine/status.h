@@ -90,7 +90,6 @@ typedef struct pe_working_set_s {
     GHashTable *config_hash;
     GHashTable *domains;
     GHashTable *tickets;
-    GHashTable *template_rsc_sets;
 
     GListPtr nodes;
     GListPtr resources;
@@ -112,6 +111,8 @@ typedef struct pe_working_set_s {
 
     /* final output */
     xmlNode *graph;
+
+    GHashTable *template_rsc_sets;
 
 } pe_working_set_t;
 
