@@ -310,15 +310,12 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         } else if (digest_restart) {
             crm_trace("Reloading '%s' action for resource %s", task, rsc->id);
 
-            /* Allow this resource to reload */
+            /* Allow this resource to reload - unless something else causes a full restart */
+            set_bit(rsc->flags, pe_rsc_try_reload);
 
-            /* TODO: Set for the resource itself
-             *  - thus avoiding causing depedant resources to restart
-             */
+            /* Create these for now, it keeps the action IDs the same in the regression outputs */
             key = generate_op_key(rsc->id, task, interval);
-            op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
-
-            update_action_flags(op, pe_action_allow_reload_conversion);
+            op = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
 
         } else {
             crm_trace("Resource %s doesn't know how to reload", rsc->id);

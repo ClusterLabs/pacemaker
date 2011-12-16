@@ -146,24 +146,25 @@ struct node_s {
 #  include <crm/pengine/complex.h>
 
 #  define pe_rsc_orphan		0x00000001ULL
-#  define pe_rsc_managed		0x00000002ULL
+#  define pe_rsc_managed	0x00000002ULL
 
 #  define pe_rsc_notify		0x00000010ULL
 #  define pe_rsc_unique		0x00000020ULL
-#  define pe_rsc_can_migrate	0x00000040ULL
 
 #  define pe_rsc_provisional	0x00000100ULL
 #  define pe_rsc_allocating	0x00000200ULL
-#  define pe_rsc_merging		0x00000400ULL
-#  define pe_rsc_reload         0x00000800ULL
+#  define pe_rsc_merging	0x00000400ULL
+
+#  define pe_rsc_try_reload     0x00001000ULL
+#  define pe_rsc_reload         0x00002000ULL
 
 #  define pe_rsc_failed		0x00010000ULL
-#  define pe_rsc_shutdown		0x00020000ULL
-#  define pe_rsc_runnable		0x00040000ULL
+#  define pe_rsc_shutdown	0x00020000ULL
+#  define pe_rsc_runnable	0x00040000ULL
 #  define pe_rsc_start_pending	0x00080000ULL
 
-#  define pe_rsc_starting		0x00100000ULL
-#  define pe_rsc_stopping		0x00200000ULL
+#  define pe_rsc_starting	0x00100000ULL
+#  define pe_rsc_stopping	0x00200000ULL
 
 #  define pe_rsc_failure_ignored  0x01000000ULL
 
@@ -183,7 +184,6 @@ enum pe_action_flags {
     pe_action_have_node_attrs = 0x00010,
     pe_action_failure_is_fatal = 0x00020,
     pe_action_implied_by_stonith = 0x00040,
-    pe_action_allow_reload_conversion = 0x00080,
 
     pe_action_dumped = 0x00100,
     pe_action_processed = 0x00200,
