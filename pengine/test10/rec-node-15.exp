@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="13" operation="start" operation_key="stonith-1_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="stonith-1" long-id="stonith-1" class="stonith" type="dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="12" operation="monitor" operation_key="stonith-1_monitor_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="stonith-1" long-id="stonith-1" class="stonith" type="dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="stonith-1_monitor_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
         <primitive id="stonith-1" long-id="stonith-1" class="stonith" type="dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -33,7 +33,7 @@
   <synapse id="3">
     <action_set>
       <pseudo_event id="36" operation="stopped" operation_key="app02_stopped_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -54,7 +54,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="35" operation="stop" operation_key="app02_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -62,7 +62,7 @@
   <synapse id="5">
     <action_set>
       <pseudo_event id="34" operation="running" operation_key="app02_running_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -83,7 +83,7 @@
   <synapse id="6">
     <action_set>
       <pseudo_event id="33" operation="start" operation_key="app02_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -96,7 +96,7 @@
     <action_set>
       <rsc_op id="26" operation="monitor" operation_key="IPaddr_192_168_1_102_monitor_5000" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="IPaddr_192_168_1_102" long-id="app02:IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="5000" crm_feature_set="3.0.5" ip="192.168.1.102"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="5000" crm_feature_set="3.0.6" ip="192.168.1.102"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -109,7 +109,7 @@
     <action_set>
       <rsc_op id="25" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="IPaddr_192_168_1_102" long-id="app02:IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" ip="192.168.1.102"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.1.102"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -128,7 +128,7 @@
     <action_set>
       <rsc_op id="24" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
         <primitive id="IPaddr_192_168_1_102" long-id="app02:IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" ip="192.168.1.102"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.1.102"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -147,7 +147,7 @@
     <action_set>
       <rsc_op id="29" operation="monitor" operation_key="LVM_12_monitor_120000" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="LVM_12" long-id="app02:LVM_12" class="ocf" provider="heartbeat" type="LVM"/>
-        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.5" volgrpname="data02vg"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.6" volgrpname="data02vg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -160,7 +160,7 @@
     <action_set>
       <rsc_op id="28" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="LVM_12" long-id="app02:LVM_12" class="ocf" provider="heartbeat" type="LVM"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" volgrpname="data02vg"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" volgrpname="data02vg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -182,7 +182,7 @@
     <action_set>
       <rsc_op id="27" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
         <primitive id="LVM_12" long-id="app02:LVM_12" class="ocf" provider="heartbeat" type="LVM"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" volgrpname="data02vg"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" volgrpname="data02vg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -201,7 +201,7 @@
     <action_set>
       <rsc_op id="32" operation="monitor" operation_key="Filesystem_13_monitor_120000" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="Filesystem_13" long-id="app02:Filesystem_13" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.5" device="/dev/data02vg/v0" directory="/data/d2" fstype="ext3"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="/dev/data02vg/v0" directory="/data/d2" fstype="ext3"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -214,7 +214,7 @@
     <action_set>
       <rsc_op id="31" operation="start" operation_key="Filesystem_13_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="Filesystem_13" long-id="app02:Filesystem_13" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" device="/dev/data02vg/v0" directory="/data/d2" fstype="ext3"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/data02vg/v0" directory="/data/d2" fstype="ext3"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -236,7 +236,7 @@
     <action_set>
       <rsc_op id="30" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
         <primitive id="Filesystem_13" long-id="app02:Filesystem_13" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" device="/dev/data02vg/v0" directory="/data/d2" fstype="ext3"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/data02vg/v0" directory="/data/d2" fstype="ext3"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -251,7 +251,7 @@
   <synapse id="16">
     <action_set>
       <pseudo_event id="48" operation="running" operation_key="oracle_running_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -278,7 +278,7 @@
   <synapse id="17">
     <action_set>
       <pseudo_event id="47" operation="start" operation_key="oracle_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -287,7 +287,7 @@
     <action_set>
       <rsc_op id="38" operation="monitor" operation_key="IPaddr_192_168_1_104_monitor_5000" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="IPaddr_192_168_1_104" long-id="oracle:IPaddr_192_168_1_104" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="5000" crm_feature_set="3.0.5" ip="192.168.1.104"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="5000" crm_feature_set="3.0.6" ip="192.168.1.104"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -300,7 +300,7 @@
     <action_set>
       <rsc_op id="37" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="IPaddr_192_168_1_104" long-id="oracle:IPaddr_192_168_1_104" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" ip="192.168.1.104"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.1.104"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -316,7 +316,7 @@
     <action_set>
       <rsc_op id="40" operation="monitor" operation_key="LVM_22_monitor_120000" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="LVM_22" long-id="oracle:LVM_22" class="ocf" provider="heartbeat" type="LVM"/>
-        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.5" volgrpname="data03vg"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.6" volgrpname="data03vg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -329,7 +329,7 @@
     <action_set>
       <rsc_op id="39" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="LVM_22" long-id="oracle:LVM_22" class="ocf" provider="heartbeat" type="LVM"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" volgrpname="data03vg"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" volgrpname="data03vg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -348,7 +348,7 @@
     <action_set>
       <rsc_op id="42" operation="monitor" operation_key="Filesystem_23_monitor_120000" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="Filesystem_23" long-id="oracle:Filesystem_23" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.5" device="/dev/data03vg/v0" directory="/data/d3" fstype="xfs"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="/dev/data03vg/v0" directory="/data/d3" fstype="xfs"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -361,7 +361,7 @@
     <action_set>
       <rsc_op id="41" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="Filesystem_23" long-id="oracle:Filesystem_23" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" device="/dev/data03vg/v0" directory="/data/d3" fstype="xfs"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/data03vg/v0" directory="/data/d3" fstype="xfs"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -380,7 +380,7 @@
     <action_set>
       <rsc_op id="44" operation="monitor" operation_key="oracle_24_monitor_120000" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="oracle_24" long-id="oracle:oracle_24" class="ocf" provider="heartbeat" type="oracle"/>
-        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.5" sid="testdb"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.6" sid="testdb"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -393,7 +393,7 @@
     <action_set>
       <rsc_op id="43" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="oracle_24" long-id="oracle:oracle_24" class="ocf" provider="heartbeat" type="oracle"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" sid="testdb"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" sid="testdb"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -412,7 +412,7 @@
     <action_set>
       <rsc_op id="46" operation="monitor" operation_key="oralsnr_25_monitor_120000" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="oralsnr_25" long-id="oracle:oralsnr_25" class="ocf" provider="heartbeat" type="oralsnr"/>
-        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.5" sid="testdb"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.6" sid="testdb"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -425,7 +425,7 @@
     <action_set>
       <rsc_op id="45" operation="start" operation_key="oralsnr_25_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
         <primitive id="oralsnr_25" long-id="oracle:oralsnr_25" class="ocf" provider="heartbeat" type="oralsnr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" sid="testdb"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" sid="testdb"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -443,7 +443,7 @@
   <synapse id="28">
     <action_set>
       <crm_event id="53" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
-        <attributes CRM_meta_on_node="sapcl03" CRM_meta_on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750" CRM_meta_op_no_wait="true" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_on_node="sapcl03" CRM_meta_on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750" CRM_meta_op_no_wait="true" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
     <inputs>
@@ -455,7 +455,7 @@
   <synapse id="29">
     <action_set>
       <pseudo_event id="52" operation="stonith_complete" operation_key="stonith_complete">
-        <attributes crm_feature_set="3.0.5"/>
+        <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -470,7 +470,7 @@
   <synapse id="30">
     <action_set>
       <pseudo_event id="51" operation="stonith_up" operation_key="stonith_up">
-        <attributes crm_feature_set="3.0.5"/>
+        <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -482,7 +482,7 @@
   <synapse id="31" priority="1000000">
     <action_set>
       <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -494,7 +494,7 @@
   <synapse id="32" priority="1000000">
     <action_set>
       <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.5"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -506,7 +506,7 @@
   <synapse id="33">
     <action_set>
       <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.5"/>
+        <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -521,7 +521,7 @@
   <synapse id="34">
     <action_set>
       <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.5"/>
+        <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
