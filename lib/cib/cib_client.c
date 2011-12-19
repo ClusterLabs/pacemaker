@@ -412,6 +412,7 @@ cib_delete(cib_t * cib)
     }
 
     g_hash_table_destroy(cib_op_callback_table);
+    cib_op_callback_table = NULL;
     cib->cmds->free(cib);
     cib = NULL;
 }
