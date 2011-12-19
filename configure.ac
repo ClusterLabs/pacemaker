@@ -1069,6 +1069,7 @@ HAVE_LIBQB=0
 AC_CHECK_HEADERS(qb/qbipcc.h)
 if test "$ac_cv_header_qb_qbipcc_h" = "yes"; then
    HAVE_LIBQB=1
+   PCMK_FEATURES="$PCMK_FEATURES libqb"
 fi
 
 AC_DEFINE_UNQUOTED(LIBQB_LOGGING, $HAVE_LIBQB, Use libqb for logging)
