@@ -116,7 +116,7 @@ extract_header_define() {
 	  value=`${Cfile}`
 	  AC_MSG_RESULT($value)
 	  printf $value
-	  rm -f ${Cfile}.c ${Cfile}
+	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM
 	}
 
 dnl ===============================================
