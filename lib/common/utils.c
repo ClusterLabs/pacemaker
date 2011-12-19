@@ -576,6 +576,8 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     cl_log_set_entity(crm_system_name);
     set_crm_log_level(level);
     crm_set_env_options();
+#else
+    crm_log_level = level;
 #endif
 
     if (quiet) {
