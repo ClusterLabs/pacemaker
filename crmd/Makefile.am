@@ -23,7 +23,8 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 halibdir	= $(CRM_DAEMON_DIR)
 
 ## binary progs
-halib_PROGRAMS	= crmd atest
+halib_PROGRAMS	= crmd
+noinst_PROGRAMS = atest
 
 ## SOURCES
 
