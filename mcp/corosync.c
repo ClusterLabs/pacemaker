@@ -525,6 +525,7 @@ if (rc != CS_OK) {
                     crm_free(value);
                     get_config_opt(config, local_handle, "use_logd", &value, "no");
                     setenv("HA_use_logd", value, 1);
+                    setenv("HA_LOGD", value, 1);
 
                     crm_free(value);
                     get_config_opt(config, local_handle, "use_mgmtd", &value, "no");
@@ -620,6 +621,8 @@ if (rc != CS_OK) {
             int logfd = fileno(logfile);
 
             setenv("HA_debugfile", logging_logfile, 1);
+            setenv("HA_DEBUGLOG", logging_logfile, 1);
+            setenv("HA_LOGFILE", logging_logfile, 1);
 
             /* Ensure the file has the correct permissions */
             rc = fchown(logfd, pcmk_uid, pcmk_gid);
