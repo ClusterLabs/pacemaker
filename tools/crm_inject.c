@@ -24,6 +24,7 @@
 
 #include <sys/param.h>
 #include <sys/types.h>
+#include <dirent.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -948,6 +949,7 @@ static struct crm_option long_options[] = {
     {"in-place",      0, 0, 'X', "Simulate the transition's execution and store the result back to the input file"},
     {"show-scores",   0, 0, 's', "Show allocation scores"},
     {"show-utilization",   0, 0, 'U', "Show utilization information"},
+    {"profile",       1, 0, 'P', "Run all tests in the named directory to create profiling data"},
 
     {"-spacer-",     0, 0, '-', "\nSynthetic Cluster Events:"},
     {"node-up",      1, 0, 'u', "\tBring a node online"},
@@ -975,6 +977,76 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+static void
+profile_one(const char *xml_file)
+{
+    xmlNode *cib_object = NULL;
+    pe_working_set_t data_set;
+
+    printf("* Testing %s\n", xml_file);
+    cib_object = filename2xml(xml_file);
+    if (get_object_root(XML_CIB_TAG_STATUS, cib_object) == NULL) {
+        create_xml_node(cib_object, XML_CIB_TAG_STATUS);
+    }
+
+    if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
+        free_xml(cib_object);
+        return;
+    }
+
+    if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
+        free_xml(cib_object);
+        return;
+    }
+
+    set_working_set_defaults(&data_set);
+
+    data_set.input = cib_object;
+    data_set.now = get_date();
+    do_calculations(&data_set, cib_object, NULL);
+
+    cleanup_alloc_calculations(&data_set);
+}
+
+#ifndef FILENAME_MAX
+#  define FILENAME_MAX 512
+#endif
+
+static int
+profile_all(const char *dir)
+{
+    struct dirent **namelist;
+
+    int lpc = 0;
+    int file_num = scandir(dir, &namelist, 0, alphasort);
+
+    if (file_num > 0) {
+	struct stat prop;
+	char buffer[FILENAME_MAX + 1];
+
+	while (file_num--) {
+	    if ('.' == namelist[file_num]->d_name[0]) {
+		free(namelist[file_num]);
+		continue;
+
+	    } else if (strstr(namelist[file_num]->d_name, ".xml") == NULL) {
+		free(namelist[file_num]);
+		continue;
+	    }
+
+	    lpc++;
+	    snprintf(buffer, FILENAME_MAX, "%s/%s", dir, namelist[file_num]->d_name);
+	    if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
+		profile_one(buffer);
+	    }
+	    free(namelist[file_num]);
+	}
+	free(namelist);
+    }
+
+    return lpc;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -991,6 +1063,7 @@ main(int argc, char **argv)
 
     const char *xml_file = "-";
     const char *quorum = NULL;
+    const char *test_dir = NULL;
     const char *dot_file = NULL;
     const char *graph_file = NULL;
     const char *input_file = NULL;
@@ -1112,6 +1185,9 @@ main(int argc, char **argv)
             case 'O':
                 output_file = optarg;
                 break;
+            case 'P':
+                test_dir = optarg;
+                break;
             default:
                 ++argerr;
                 break;
@@ -1127,6 +1203,10 @@ main(int argc, char **argv)
     }
 
     update_all_trace_data();    /* again, so we see which trace points got updated */
+
+    if(test_dir != NULL) {
+	return profile_all(test_dir);
+    }
 
     setup_input(xml_file, store ? xml_file : output_file);
 
