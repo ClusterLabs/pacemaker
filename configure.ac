@@ -64,7 +64,7 @@ dnl automake >= 1.11 offers --enable-silent-rules for suppressing the output fro
 dnl normal compilation.  When a failure occurs, it will then display the full 
 dnl command line
 dnl Wrap in m4_ifdef to avoid breaking on older platforms
-m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES])
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 dnl Example 2.4. Silent Custom Rule to Generate a File
 dnl %-bar.pc: %.pc
