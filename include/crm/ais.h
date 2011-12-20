@@ -28,24 +28,30 @@
 
 #  define AIS_IPC_MESSAGE_SIZE 8192*128
 
+#    if HAVE_QB_QBIPCC_H
+#       include <qb/qbipc_common.h>
+#    else
+struct qb_ipc_request_header {
+	int size __attribute__((aligned(8)));
+	int id __attribute__((aligned(8)));
+} __attribute__((aligned(8)));
+
+struct qb_ipc_response_header {
+	int size; __attribute__((aligned(8)));
+	int id __attribute__((aligned(8)));
+	int error __attribute__((aligned(8)));
+} __attribute__((aligned(8)));
+#endif
+
 #  if SUPPORT_COROSYNC
-
-#    include <corosync/corodefs.h>
-#    include <corosync/coroipcc.h>
-#    include <corosync/coroipc_types.h>
-
-#  else
-typedef struct {
-    int size __attribute__ ((aligned(8)));
-    int id __attribute__ ((aligned(8)));
-} coroipc_request_header_t __attribute__ ((aligned(8)));
-
-typedef struct {
-    int size;
-    __attribute__ ((aligned(8)))
-        int id __attribute__ ((aligned(8)));
-    int error __attribute__ ((aligned(8)));
-} coroipc_response_header_t __attribute__ ((aligned(8)));
+#    if CS_USES_LIBQB
+#      include <corosync/corotypes.h>
+#    else
+#      include <corosync/corodefs.h>
+#      include <corosync/coroipcc.h>
+#      include <corosync/coroipc_types.h>
+static inline int qb_to_cs_error(int a) { return a; }
+#    endif
 #  endif
 
 #  define CRM_MESSAGE_IPC_ACK	0
@@ -131,7 +137,7 @@ struct crm_ais_host_s {
 } __attribute__ ((packed));
 
 struct crm_ais_msg_s {
-    coroipc_response_header_t header __attribute__ ((aligned(8)));
+    struct qb_ipc_response_header header __attribute__ ((aligned(8)));
     uint32_t id;
     gboolean is_compressed;
 
@@ -146,7 +152,7 @@ struct crm_ais_msg_s {
 } __attribute__ ((packed));
 
 struct crm_ais_nodeid_resp_s {
-    coroipc_response_header_t header __attribute__ ((aligned(8)));
+    struct qb_ipc_response_header header __attribute__ ((aligned(8)));
     uint32_t id;
     uint32_t counter;
     char uname[MAX_NAME];
@@ -154,7 +160,7 @@ struct crm_ais_nodeid_resp_s {
 } __attribute__ ((packed));
 
 struct crm_ais_quorum_resp_s {
-    coroipc_response_header_t header __attribute__ ((aligned(8)));
+    struct qb_ipc_response_header header __attribute__ ((aligned(8)));
     uint64_t id;
     uint32_t votes;
     uint32_t expected_votes;

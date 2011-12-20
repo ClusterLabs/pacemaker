@@ -98,6 +98,14 @@ extern gboolean crm_log_init_quiet(const char *entity, int level, gboolean cored
 extern gboolean crm_log_init_worker(const char *entity, int level, gboolean coredir,
                                     gboolean to_stderr, int argc, char **argv, gboolean quiet);
 
+extern void crm_log_args(int argc, char **argv);
+
+extern int crm_should_log(int level);
+
+extern void crm_bump_log_level(void);
+
+extern void crm_enable_stderr(int enable);
+
 /* returns the old value */
 extern unsigned int set_crm_log_level(unsigned int level);
 

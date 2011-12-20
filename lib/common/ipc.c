@@ -88,14 +88,14 @@ xml2ipcchan(xmlNode * m, IPC_Channel * ch)
     IPC_Message *imsg = NULL;
 
     if (m == NULL || ch == NULL) {
-        cl_log(LOG_ERR, "Invalid msg2ipcchan argument");
+        crm_err("Invalid msg2ipcchan argument");
         errno = EINVAL;
         return HA_FAIL;
     }
 
     msg = convert_xml_message(m);
     if ((imsg = hamsg2ipcmsg(msg, ch)) == NULL) {
-        cl_log(LOG_ERR, "hamsg2ipcmsg() failure");
+        crm_err("hamsg2ipcmsg() failure");
         crm_msg_del(msg);
         return HA_FAIL;
     }

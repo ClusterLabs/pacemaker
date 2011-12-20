@@ -171,7 +171,7 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 'V':
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case 's':
                 stand_alone = TRUE;
@@ -194,7 +194,6 @@ main(int argc, char **argv)
                     crm_perror(LOG_ERR, "Could not set user to %d", pwentry->pw_uid);
                     return 100;
                 }
-                cl_log_enable_stderr(1);
                 break;
             case '?':          /* Help message */
                 usage(crm_system_name, LSB_EXIT_OK);

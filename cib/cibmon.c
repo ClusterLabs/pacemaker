@@ -67,7 +67,6 @@ main(int argc, char **argv)
 {
     int argerr = 0;
     int flag;
-    int level = 0;
     int attempts = 0;
 
 #ifdef HAVE_GETOPT_H
@@ -99,9 +98,7 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 'V':
-                level = get_crm_log_level();
-                cl_log_enable_stderr(TRUE);
-                set_crm_log_level(level + 1);
+                crm_bump_log_level();
                 break;
             case '?':
                 usage(crm_system_name, LSB_EXIT_OK);

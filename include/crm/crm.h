@@ -22,12 +22,17 @@
 #  include <stdlib.h>
 #  include <glib.h>
 #  include <stdbool.h>
+#  include <assert.h>
 
 #  undef MIN
 #  undef MAX
 #  include <string.h>
 
-#  include <clplumbing/cl_log.h>
+#  if LIBQB_LOGGING
+#    include <qb/qblog.h>
+#  else
+#    include <clplumbing/cl_log.h>
+#  endif
 
 #  include <libxml/tree.h>
 
@@ -194,7 +199,12 @@ extern const char *crm_system_name;
 typedef GList *GListPtr;
 
 /* LOG_DEBUG = 7, make LOG_TRACE ::= -VVVVV */
-#  define LOG_TRACE    12
+#ifdef LOG_TRACE
+#undef LOG_TRACE
+#endif
+#  ifndef LOG_TRACE
+#    define LOG_TRACE    12
+#  endif
 #  define LOG_DEBUG_2  LOG_TRACE
 #  define LOG_DEBUG_3  LOG_TRACE
 #  define LOG_DEBUG_4  LOG_TRACE
@@ -203,65 +213,17 @@ typedef GList *GListPtr;
 
 #  define LOG_MSG  LOG_TRACE
 
-#  if SUPPORT_TRACING
-struct _pcmk_ddebug_query {
-    const char *files;
-    const char *formats;
-    const char *functions;
-    unsigned long long total;
-    unsigned long long matches;
-};
-
-/*
- * An instance of this structure is created in a special
- * ELF section at every dynamic debug callsite.  At runtime,
- * the special section is treated as an array of these.
- */
-struct _pcmk_ddebug {
-    /*
-     * These fields are used to drive the user interface
-     * for selecting and displaying debug callsites.
-     */
-    const char *function;
-    const char *filename;
-    const char *format;
-    unsigned int lineno:24;
-    /*
-     * The bump field will add to the level at the callsite.
-     * The value here are changed dynamically when the user
-     * writes commands to FIXME ;-)
-     */
-    int bump;
-} __attribute__ ((aligned(8)));
-
-/* will be assigned by ld linker magic */
-extern struct _pcmk_ddebug __start___verbose[];
-extern struct _pcmk_ddebug __stop___verbose[];
-
-#    define CRM_TRACE_INIT_DATA(name)					\
-    void name(void);							\
-    void name(void) { CRM_ASSERT(__start___verbose != __stop___verbose); } \
-    void __attribute__ ((constructor)) name(void);
-
 #    define CRM_LOG_ASSERT(expr) do {					\
-	static struct _pcmk_ddebug descriptor				\
-	    __attribute__((section("__verbose"), aligned(8))) =		\
-	    { __func__, __FILE__, #expr, __LINE__, LOG_TRACE};		\
-									\
 	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
-		      descriptor.bump != LOG_TRACE, TRUE);		\
+		      FALSE, TRUE);                                     \
 	}								\
     } while(0)
 
 #    define CRM_CHECK(expr, failure_action) do {				\
-	static struct _pcmk_ddebug descriptor				\
-	    __attribute__((section("__verbose"), aligned(8))) =		\
-	    { __func__, __FILE__, #expr, __LINE__, LOG_TRACE};		\
-									\
 	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
-		      descriptor.bump != LOG_TRACE, TRUE);		\
+		      FALSE, TRUE);                                     \
 	    failure_action;						\
 	}								\
     } while(0)
@@ -271,56 +233,40 @@ extern struct _pcmk_ddebug __stop___verbose[];
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
-#    define do_crm_log(level, fmt, args...) do {				\
-	static struct _pcmk_ddebug descriptor				\
-	    __attribute__((section("__verbose"), aligned(8))) =		\
-	    { __func__, __FILE__, fmt, __LINE__, LOG_TRACE};		\
-	    								\
-	if(__likely((level) <= crm_log_level)) {			\
-	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
-	    								\
-	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {	\
-	    cl_log(descriptor.bump, "TRACE: %s: %s:%d " fmt, __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args); \
-	}								\
+#  ifdef LIBQB_LOGGING
+
+#    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
+
+#    define do_crm_log(level, fmt, args...) do {                        \
+        qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args); \
     } while(0)
 
-#    define do_crm_log_unlikely(level, fmt, args...) do {			\
-	static struct _pcmk_ddebug descriptor				\
-	    __attribute__((section("__verbose"), aligned(8))) =		\
-	    { __func__, __FILE__, fmt, __LINE__, LOG_TRACE };		\
-	    								\
-	if(__unlikely((level) <= crm_log_level)) {			\
-	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
-	    								\
-	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {		\
-	    cl_log(descriptor.bump, "TRACE: %s: %s:%d " fmt, __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args); \
-	}								\
+#    define do_crm_log_unlikely(level, fmt, args...) do {               \
+        qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args); \
     } while(0)
 
-#    define do_crm_log_xml(level, text, xml) do {				\
-	static struct _pcmk_ddebug descriptor				\
-	    __attribute__((section("__verbose"), aligned(8))) =		\
-	    { __func__, __FILE__, __PRETTY_FUNCTION__, __LINE__, LOG_TRACE }; \
-									\
+#    define do_crm_log_xml(level, text, xml) do {                       \
 	if(xml == NULL) {						\
 	} else if(__likely((level) <= crm_log_level)) {			\
 	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
-	    								\
-	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {		\
-	    log_data_element(descriptor.bump, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
 	}								\
     } while(0)
 
 #    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
-	if(line) {							\
-	    cl_log(level, "TRACE: %s: %s:%d "fmt, function, file, line, ##args);	\
-	} else {							\
-	    cl_log(level, "%s: "fmt, function, ##args);			\
-	}								\
+	qb_log_from_external_source(function, file, fmt, level, line, 0,  ##args); \
     } while(0)
 
-#  else
+#    define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
 
+#    define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
+#    define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
+#    define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
+#    define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
+#    define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
+#    define crm_debug(fmt, args...)   qb_logt(LOG_DEBUG,   0, fmt , ##args)
+#    define crm_trace(fmt, args...)   qb_logt(LOG_TRACE,   0, fmt , ##args)
+
+#  else
 #    define CRM_TRACE_INIT_DATA(name)
 
 #    define CRM_LOG_ASSERT(expr) do {					\
@@ -359,17 +305,17 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	cl_log(level, "%s: "fmt, function, ##args);			\
     } while(0)
 
+#    define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
+
+#    define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
+#    define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
+#    define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
+#    define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
+#    define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
+#    define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
+#    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
 #  endif
 
-#  define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
-
-#  define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
-#  define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
-#  define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
-#  define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
-#  define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
-#  define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
-#  define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
 #  define crm_debug_2 crm_trace
 #  define crm_debug_3 crm_trace
 #  define crm_debug_4 crm_trace

@@ -227,8 +227,7 @@ main(int argc, char **argv)
                 input_file = optarg;
                 break;
             case 'V':
-                cl_log_enable_stderr(TRUE);
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case 'L':
                 USE_LIVE_CIB = TRUE;

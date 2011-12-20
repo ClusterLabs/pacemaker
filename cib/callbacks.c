@@ -667,7 +667,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
             level = LOG_DEBUG_2;
         }
 
-        if (crm_log_level >= level) {
+        if (get_crm_log_level() >= level) {
             /* Avoid all the xml lookups if we're not going to print the results */
             do_crm_log(level,
                        "Operation complete: op %s for section %s (origin=%s/%s/%s, version=%s.%s.%s): %s (rc=%d)",

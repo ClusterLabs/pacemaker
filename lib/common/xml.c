@@ -43,6 +43,20 @@
 #define XML_PARSER_DEBUG 0
 #define BEST_EFFORT_STATUS 0
 
+#ifdef LIBQB_LOGGING
+void xml_log(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
+
+void xml_log(int priority, const char * fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    qb_log_from_external_source_va(__FUNCTION__, __FILE__, fmt, priority, __LINE__, 0, ap);
+    va_end(ap);
+}
+#else
+#  define xml_log cl_log
+#endif
+
 xmlDoc *getDocPtr(xmlNode *node);
 
 typedef struct 
@@ -1309,7 +1323,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
     xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
     gboolean is_first = TRUE;
 
-    if(crm_log_level < log_level) {
+    if(get_crm_log_level() < log_level) {
 	/* nothing will ever be printed */
 	return;
     }
@@ -2332,8 +2346,8 @@ validate_with_dtd(
 
     if(to_logs) {
 	cvp->userData = (void *) LOG_ERR;
-	cvp->error    = (xmlValidityErrorFunc) cl_log;
-	cvp->warning  = (xmlValidityWarningFunc) cl_log;
+	cvp->error    = (xmlValidityErrorFunc) xml_log;
+	cvp->warning  = (xmlValidityWarningFunc) xml_log;
     } else {
 	cvp->userData = (void *) stderr;
 	cvp->error    = (xmlValidityErrorFunc) fprintf;
@@ -2422,8 +2436,8 @@ validate_with_relaxng(
 
 	if(to_logs) {
 	    xmlRelaxNGSetParserErrors(ctx->parser,
-				      (xmlRelaxNGValidityErrorFunc) cl_log,
-				      (xmlRelaxNGValidityWarningFunc) cl_log,
+				      (xmlRelaxNGValidityErrorFunc) xml_log,
+				      (xmlRelaxNGValidityWarningFunc) xml_log,
 				      GUINT_TO_POINTER(LOG_ERR));
 	} else {
 	    xmlRelaxNGSetParserErrors(ctx->parser,
@@ -2440,8 +2454,8 @@ validate_with_relaxng(
 
 	if(to_logs) {
 	    xmlRelaxNGSetValidErrors(ctx->valid,
-				     (xmlRelaxNGValidityErrorFunc) cl_log,
-				     (xmlRelaxNGValidityWarningFunc) cl_log,
+				     (xmlRelaxNGValidityErrorFunc) xml_log,
+				     (xmlRelaxNGValidityWarningFunc) xml_log,
 				     GUINT_TO_POINTER(LOG_ERR));
 	} else {
 	    xmlRelaxNGSetValidErrors(ctx->valid,
