@@ -37,6 +37,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
+#include <libgen.h>
 
 #if LIBQB_LOGGING
 #  include <qb/qbdefs.h>
