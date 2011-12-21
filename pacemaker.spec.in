@@ -107,7 +107,7 @@ BuildRequires:  gnutls-devel
 
 
 # Enables optional functionality
-BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents
+BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents libqb-devel
 
 
 %if %{with cman}
