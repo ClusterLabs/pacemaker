@@ -233,7 +233,7 @@ typedef GList *GListPtr;
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
-#  ifdef LIBQB_LOGGING
+#  if LIBQB_LOGGING
 
 #    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
 

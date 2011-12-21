@@ -43,7 +43,7 @@
 #define XML_PARSER_DEBUG 0
 #define BEST_EFFORT_STATUS 0
 
-#ifdef LIBQB_LOGGING
+#if LIBQB_LOGGING
 void xml_log(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
 
 void xml_log(int priority, const char * fmt, ...)
