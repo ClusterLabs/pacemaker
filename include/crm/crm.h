@@ -199,9 +199,10 @@ extern const char *crm_system_name;
 typedef GList *GListPtr;
 
 /* LOG_DEBUG = 7, make LOG_TRACE ::= -VVVVV */
-#ifdef LOG_TRACE
-#undef LOG_TRACE
-#endif
+#  ifdef LOG_TRACE
+#  undef LOG_TRACE
+#  endif
+
 #  ifndef LOG_TRACE
 #    define LOG_TRACE    12
 #  endif
@@ -213,14 +214,14 @@ typedef GList *GListPtr;
 
 #  define LOG_MSG  LOG_TRACE
 
-#    define CRM_LOG_ASSERT(expr) do {					\
+#  define CRM_LOG_ASSERT(expr) do {					\
 	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
 		      FALSE, TRUE);                                     \
 	}								\
     } while(0)
 
-#    define CRM_CHECK(expr, failure_action) do {				\
+#  define CRM_CHECK(expr, failure_action) do {				\
 	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
 		      FALSE, TRUE);                                     \
@@ -268,19 +269,6 @@ typedef GList *GListPtr;
 
 #  else
 #    define CRM_TRACE_INIT_DATA(name)
-
-#    define CRM_LOG_ASSERT(expr) do {					\
-	if(__unlikely((expr) == FALSE)) {				\
-	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, FALSE, TRUE); \
-	}								\
-    } while(0)
-
-#    define CRM_CHECK(expr, failure_action) do {				\
-	if(__unlikely((expr) == FALSE)) {				\
-	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
-	    failure_action;						\
-	}								\
-    } while(0)
 
 #    define do_crm_log(level, fmt, args...) do {				\
 	if(__likely((level) <= crm_log_level)) {			\
