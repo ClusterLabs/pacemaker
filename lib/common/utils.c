@@ -591,17 +591,20 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
 
     } else {
         crm_log_args(argc, argv);
+#if LIBQB_LOGGING
         if (getenv("HA_logfacility") == NULL) {
             /* Set a default */
-#if LIBQB_LOGGING
             qb_log_init(crm_system_name, HA_LOG_FACILITY, level);
-#else
-            cl_log_set_facility(HA_LOG_FACILITY);
-#endif
 
         } else {
             qb_log_init(crm_system_name, qb_log_facility2int(getenv("HA_logfacility")), level);
+	}
+#else
+        if (getenv("HA_logfacility") == NULL) {
+            /* Set a default */
+            cl_log_set_facility(HA_LOG_FACILITY);
         }
+#endif
     }
 
     crm_enable_stderr(to_stderr);
@@ -662,7 +665,6 @@ unsigned int crm_log_level = LOG_INFO;
 unsigned int
 set_crm_log_level(unsigned int level)
 {
-    int rc = 0;
     unsigned int old = crm_log_level;
 #if LIBQB_LOGGING
     if(old > level) {
@@ -671,7 +673,7 @@ set_crm_log_level(unsigned int level)
 
     if(old != level) {
         if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
-            rc = qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
+	    int rc = qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
             crm_info("New log level: %d %d", level, rc);            
         }
         if (qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
@@ -709,7 +711,7 @@ crm_enable_stderr(int enable)
 	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_FALSE);
     }
 #else
-    cl_log_enable_stderr(to_stderr);
+    cl_log_enable_stderr(enable);
 #endif
 }
 
