@@ -69,7 +69,7 @@ crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
 			  $(COMMONLIBS) $(CLUSTERLIBS)
 
 crm_uuid_SOURCES	= crm_uuid.c
-crm_uuid_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la
+crm_uuid_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/cluster/libcrmcluster.la
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS) 
