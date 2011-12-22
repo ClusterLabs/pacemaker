@@ -583,6 +583,7 @@ write_cib_contents(gpointer p)
 
     need_archive = (stat(primary_file, &buf) == 0);
     if (need_archive) {
+        int rc = 0;
         char *backup_file = NULL;
         char *backup_digest = NULL;
         int seq = get_last_sequence(cib_root, CIB_SERIES);
@@ -599,8 +600,18 @@ write_cib_contents(gpointer p)
 
         unlink(backup_file);
         unlink(backup_digest);
-        link(primary_file, backup_file);
-        link(digest_file, backup_digest);
+        rc = link(primary_file, backup_file);
+        if(rc < 0) {
+            exit_rc = 4;
+            crm_err("Cannot link %s to %s", primary_file, backup_file);
+            goto cleanup;
+        }
+        rc = link(digest_file, backup_digest);
+        if(rc < 0) {
+            exit_rc = 5;
+            crm_err("Cannot link %s to %s", digest_file, backup_digest);
+            goto cleanup;
+        }
         write_last_sequence(cib_root, CIB_SERIES, seq + 1, cib_wrap);
         sync_directory(cib_root);
 

@@ -753,7 +753,11 @@ main(int argc, char **argv)
     }
 
     mkdir(CRM_STATE_DIR, 0750);
-    chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    rc = chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    if(rc < 0) {
+        crm_warn("Cannot change the ownership of %s to user %s and gid %d",
+                 CRM_STATE_DIR, CRM_DAEMON_USER, pcmk_gid);
+    }
 
     /* Used by stonithd */
     build_path(HA_STATE_DIR "/heartbeat", 0755);

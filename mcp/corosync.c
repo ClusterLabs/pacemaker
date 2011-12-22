@@ -562,8 +562,15 @@ read_config(void)
                 setenv("HA_debugfile", value, 1);
 
                 /* Ensure the file has the correct permissions */
-                fchown(logfd, pcmk_uid, pcmk_gid);
-                fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+                rc = fchown(logfd, pcmk_uid, pcmk_gid);
+                if(rc < 0) {
+                    crm_warn("Cannot change the ownership of %s to user %s and gid %d",
+                            value, CRM_DAEMON_USER, pcmk_gid);
+                }
+                rc = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+                if(rc < 0) {
+                    crm_warn("Cannot change the mode of %s to rw-rw---- %s", value);
+                }
 
                 fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
                         pcmk_uid, pcmk_gid, value);
