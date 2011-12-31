@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
-"POT-Creation-Date: 2011-12-31T15:15:50\n"
+"POT-Creation-Date: 2011-12-31T15:21:38\n"
 "PO-Revision-Date: 2011-11-24 08:21+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
@@ -918,11 +918,10 @@ msgid "Verify Connectivity by IP address"
 msgstr "Verificați Conectivitatea după Adresa IP"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "\n"
-"\t  <userinput>ping -c 3 192.168.122.102</userinput>\n"
-"[root@pcmk-1 ~]# ping -c 3 192.168.122.102\n"
+"[root@pcmk-1 ~]# <userinput>ping -c 3 192.168.122.102</userinput>\n"
 "PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.\n"
 "64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=0.343 ms\n"
 "64 bytes from 192.168.122.102: icmp_seq=2 ttl=64 time=0.402 ms\n"
@@ -957,11 +956,10 @@ msgid "Set up /etc/hosts entries"
 msgstr "Setați intrările din /etc/hosts"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "\n"
-"\t  <userinput>grep pcmk /etc/hosts</userinput>\n"
-"[root@pcmk-1 ~]# grep pcmk /etc/hosts\n"
+"[root@pcmk-1 ~]# <userinput>grep pcmk /etc/hosts</userinput>\n"
 "192.168.122.101 pcmk-1.clusterlabs.org pcmk-1\n"
 "192.168.122.102 pcmk-2.clusterlabs.org pcmk-2\n"
 "\t"
@@ -984,11 +982,10 @@ msgid "Verify Connectivity by Hostname"
 msgstr "Verificați Conectivitatea după Numele Gazdei"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "\n"
-"\t  <userinput>ping -c 3 pcmk-2</userinput>\n"
-"[root@pcmk-1 ~]# ping -c 3 pcmk-2\n"
+"[root@pcmk-1 ~]# <userinput>ping -c 3 pcmk-2</userinput>\n"
 "PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.\n"
 "64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=1 ttl=64 time=0.164 ms\n"
 "64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=2 ttl=64 time=0.475 ms\n"
