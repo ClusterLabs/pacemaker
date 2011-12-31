@@ -1,384 +1,297 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
-"POT-Creation-Date: 2011-11-18 07:09+0200\n"
+"POT-Creation-Date: 2011-12-29T20:04:52\n"
 "PO-Revision-Date: 2011-11-24 08:21+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: ROMANIAN <RO@li.org>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:46(None)
-msgid "@@image: 'images/f-13.1-welcome.png'; md5=2712df79232cb44ba3f2cd5dc570bbce"
-msgstr "@@image: 'images/f-13.1-welcome.png'; md5=2712df79232cb44ba3f2cd5dc570bbce"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:57(None)
-msgid "@@image: 'images/f-13.2-devices.png'; md5=462342e9ed7fda0e2834ed9b7c081e48"
-msgstr "@@image: 'images/f-13.2-devices.png'; md5=462342e9ed7fda0e2834ed9b7c081e48"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:77(None)
-msgid "@@image: 'images/f-13.3-hostname.png'; md5=21e37a6fd0f45699dff0c07be1da4721"
-msgstr "@@image: 'images/f-13.3-hostname.png'; md5=21e37a6fd0f45699dff0c07be1da4721"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:106(None)
-msgid "@@image: 'images/f-13.4-partition-overview.png'; md5=6e62d6cae0fa48719bed39e0da484e9c"
-msgstr "@@image: 'images/f-13.4-partition-overview.png'; md5=6e62d6cae0fa48719bed39e0da484e9c"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:119(None)
-msgid "@@image: 'images/f-13.5-partition-default.png'; md5=a65c98268b281aa96db6a019a9674b33"
-msgstr "@@image: 'images/f-13.5-partition-default.png'; md5=a65c98268b281aa96db6a019a9674b33"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:135(None)
-msgid "@@image: 'images/f-13.6-partition-custom.png'; md5=b9ae300393013b9e21ddba24acd9de68"
-msgstr "@@image: 'images/f-13.6-partition-custom.png'; md5=b9ae300393013b9e21ddba24acd9de68"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:146(None)
-msgid "@@image: 'images/f-13.7-bootloader.png'; md5=a947d52a13a37076880d62670292f9d9"
-msgstr "@@image: 'images/f-13.7-bootloader.png'; md5=a947d52a13a37076880d62670292f9d9"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:161(None)
-msgid "@@image: 'images/f-13.8-software.png'; md5=1f4e4aa6a89cd53cf99ea88b38749fa3"
-msgstr "@@image: 'images/f-13.8-software.png'; md5=1f4e4aa6a89cd53cf99ea88b38749fa3"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:172(None)
-msgid "@@image: 'images/f-13.9-installing.png'; md5=db90b33a491463686a0f5ab8dec2ae33"
-msgstr "@@image: 'images/f-13.9-installing.png'; md5=db90b33a491463686a0f5ab8dec2ae33"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:183(None)
-msgid "@@image: 'images/f-13.10-install-complete.png'; md5=d973812aacbcf5352ca479b309035c7b"
-msgstr "@@image: 'images/f-13.10-install-complete.png'; md5=d973812aacbcf5352ca479b309035c7b"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:203(None)
-msgid "@@image: 'images/f-13.11-post-welcome.png'; md5=99950df2bfdc3b2231f6a04145dad7cf"
-msgstr "@@image: 'images/f-13.11-post-welcome.png'; md5=99950df2bfdc3b2231f6a04145dad7cf"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:213(None)
-msgid "@@image: 'images/f-13.12-new-user.png'; md5=fc34a6f95b3c8c51395ce5acfea5fbe2"
-msgstr "@@image: 'images/f-13.12-new-user.png'; md5=fc34a6f95b3c8c51395ce5acfea5fbe2"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:230(None)
-msgid "@@image: 'images/f-13.13-date-time.png'; md5=e3a4cdbf54b114fb1e7b3c38238f4704"
-msgstr "@@image: 'images/f-13.13-date-time.png'; md5=e3a4cdbf54b114fb1e7b3c38238f4704"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:243(None)
-msgid "@@image: 'images/f-13.14-networking.png'; md5=4b869e03387510e5629647113b7309e5"
-msgstr "@@image: 'images/f-13.14-networking.png'; md5=4b869e03387510e5629647113b7309e5"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:261(None)
-msgid "@@image: 'images/f-13.15-manual-networking.png'; md5=af3a0a3df9948798b4a0f9b0faa9304b"
-msgstr "@@image: 'images/f-13.15-manual-networking.png'; md5=af3a0a3df9948798b4a0f9b0faa9304b"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:272(None)
-msgid "@@image: 'images/f-13.16-networking-activate.png'; md5=c3fa2ffa6ccdc2e7c1aa6376eff6afdf"
-msgstr "@@image: 'images/f-13.16-networking-activate.png'; md5=c3fa2ffa6ccdc2e7c1aa6376eff6afdf"
-
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Ch-Installation.xml:283(None)
-msgid "@@image: 'images/f-13.17-terminal.png'; md5=a382223f68fecc131888b531967f0b4d"
-msgstr "@@image: 'images/f-13.17-terminal.png'; md5=a382223f68fecc131888b531967f0b4d"
-
-#: Ch-Installation.xml:7(title)
+#. Tag: title
+#, no-c-format
 msgid "Installation"
 msgstr "Instalare"
 
-#: Ch-Installation.xml:9(title)
+#. Tag: title
+#, no-c-format
 msgid "OS Installation"
 msgstr "Instalarea Sistemului de Operare"
 
-#: Ch-Installation.xml:10(para)
-msgid "Detailed instructions for installing Fedora are available at <ulink url=\"http://docs.fedoraproject.org/install-guide/f14/\">http://docs.fedoraproject.org/install-guide/f13/</ulink> in a number of languages. The abbreviated version is as follows..."
-msgstr "Instrucțiuni detaliate pentru instalarea Fedora sunt disponibile la <ulink url=\"http://docs.fedoraproject.org/install-guide/f14/\">http://docs.fedoraproject.org/install-guide/f13/</ulink> într-un număr de limbi. Versiunea abreviată este după cum urmează ..."
+#. Tag: para
+#, no-c-format
+msgid "Detailed instructions for installing Fedora are available at <ulink url=\"http://docs.fedoraproject.org/install-guide/f14/\">http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/</ulink> in a number of languages. The abbreviated version is as follows..."
+msgstr "Instrucțiuni detaliate pentru instalarea Fedora sunt disponibile la <ulink url=\"http://docs.fedoraproject.org/install-guide/f14/\">http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/</ulink> într-un număr de limbi. Versiunea abreviată este după cum urmează ..."
 
-#: Ch-Installation.xml:17(para)
+#. Tag: para
+#, no-c-format
 msgid "Point your browser to <ulink url=\"http://fedoraproject.org/en/get-fedora-all\">http://fedoraproject.org/en/get-fedora-all</ulink>, locate the <emphasis>Install Media</emphasis> section and download the install DVD that matches your hardware."
 msgstr "Îndreptați browserul vostru către <ulink url=\"http://fedoraproject.org/en/get-fedora-all\">http://fedoraproject.org/en/get-fedora-all</ulink>, localizați secțiunea <emphasis>Install Media</emphasis> și descărcați DVD-ul de instalare care se potrivește cu hardware-ul vostru."
 
-#: Ch-Installation.xml:26(ulink)
-msgid "http://docs.fedoraproject.org/readme-burning-isos/en-US.html"
-msgstr "http://docs.fedoraproject.org/readme-burning-isos/en-US.html"
+#. Tag: para
+#, no-c-format
+msgid "Burn the disk image to a DVD <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/readme-burning-isos/en-US.html\"> http://docs.fedoraproject.org/readme-burning-isos/en-US.html </ulink> </para> </footnote> and boot from it. Or use the image to boot a virtual machine as I have done here. After clicking through the welcome screen, select your language and keyboard layout <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/s1-langselection-x86.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/s1-langselection-x86.html </ulink> </para> </footnote>"
+msgstr "Scrieți imaginea pe un DVD  <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/readme-burning-isos/en-US.html\"> http://docs.fedoraproject.org/readme-burning-isos/en-US.html </ulink> </para> </footnote> și bootați de pe acesta. Sau folosiți imaginea pentru a boota o mașină virtuală așa cum am făcut aici. După ce ați selectat prin ecranul de început, selectați limba voastră și așezarea tastaturii <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/s1-langselection-x86.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/s1-langselection-x86.html </ulink> </para> </footnote>"
 
-#: Ch-Installation.xml:35(ulink)
-msgid "http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-langselection-x86.html"
-msgstr "http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-langselection-x86.html"
-
-#: Ch-Installation.xml:22(para)
-msgid "Burn the disk image to a DVD <placeholder-1/> and boot from it. Or use the image to boot a virtual machine as I have done here. After clicking through the welcome screen, select your language and keyboard layout <placeholder-2/>"
-msgstr "Ardeți imaginea discului pe un DVD <placeholder-1/> și bootați de pe acesta. Sau folosiți imaginea să bootați o mașină virtuală așa cum am făcut și eu aici. După ce ați trecut prin ecranul de bine ați venit, selectați limba voastră și așezarea tastaturii <placeholder-2/>"
-
-#: Ch-Installation.xml:43(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Welcome"
 msgstr "Instalarea Fedora - Bine ați venit"
 
-#: Ch-Installation.xml:48(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Good choice"
 msgstr "Instalarea Fedora: O alegere bună"
 
-#: Ch-Installation.xml:54(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Storage Devices"
 msgstr "Instalarea Fedora - Dispozitive de Stocare"
 
-#: Ch-Installation.xml:59(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Storage Devices"
 msgstr "Instalarea Fedora: Dispozitive de Stocare"
 
-#: Ch-Installation.xml:67(ulink)
-msgid "http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html"
-msgstr "http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html"
+#. Tag: para
+#, no-c-format
+msgid "Assign your machine a host name. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-networkconfig-fedora.html </ulink> </para> </footnote> I happen to control the clusterlabs.org domain name, so I will use that here."
+msgstr "Asignați mașinii un nume de gazdă. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-networkconfig-fedora.html </ulink> </para> </footnote> Eu se întâmplă să controlez numele de domeniu clusterlabs.org, așa că îl voi folosi pe acesta aici."
 
-#: Ch-Installation.xml:74(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Hostname"
 msgstr "Instalarea Fedora - Nume de gazdă"
 
-#: Ch-Installation.xml:79(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Choose a hostname"
 msgstr "Instalarea Fedora: Alegeți un nume pentru gazdă"
 
-#: Ch-Installation.xml:63(para)
-msgid "Assign your machine a host name. <placeholder-1/> I happen to control the clusterlabs.org domain name, so I will use that here. <placeholder-2/>"
-msgstr "Asignați mașinii voastre un nume de gazdă. <placeholder-1/> Eu se întâmplă să controlez numele de domeniu clusterlabs.org, așa că voi folosi asta aici. <placeholder-2/>"
+#. Tag: para
+#, no-c-format
+msgid "You will then be prompted to indicate the machine’s physical location and to supply a root password. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-account_configuration.html </ulink> </para> </footnote>"
+msgstr "Vi se va cere ulterior să indicați locația fizică a mașinii și să furnizați o parolă de root. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-account_configuration.html </ulink> </para> </footnote>"
 
-#: Ch-Installation.xml:87(ulink)
-msgid "http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html"
-msgstr "http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html"
+#. Tag: para
+#, no-c-format
+msgid "Now select where you want Fedora installed. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html\">http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html</ulink> </para> </footnote> As I don’t care about any existing data, I will accept the default and allow Fedora to use the complete drive. However I want to reserve some space for DRBD, so I'll check the <literal>Review and modify partitioning layout</literal> box."
+msgstr "Acum selectați unde vreți Fedora să fie instalată. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html\">http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html</ulink> </para> </footnote> Deoarece nu îmi pasă de orice date existente, voi accepta valorile implicite și voi permite Fedorei să folosească întregul disc. Totuși vreau să rezerv ceva spațiu pentru DRBD, așa că voi bifa caseta <literal>Review and modify partitioning layout</literal>."
 
-#: Ch-Installation.xml:83(para)
-msgid "You will then be prompted to indicate the machine’s physical location and to supply a root password. <placeholder-1/>"
-msgstr "Apoi vi se va prezenta un prompt pentru a indica locația fizică a mașinii și pentru a furniza o parolă de root. <placeholder-1/>"
-
-#: Ch-Installation.xml:97(ulink)
-msgid "http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html"
-msgstr "http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html"
-
-#: Ch-Installation.xml:103(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Installation Type"
 msgstr "Instalarea Fedora - Tipul de Instalare"
 
-#: Ch-Installation.xml:108(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Choose an installation type"
 msgstr "Instalarea Fedora: Alegeți tipul de instalare"
 
-#: Ch-Installation.xml:93(para)
-msgid "Now select where you want Fedora installed. <placeholder-1/> As I don’t care about any existing data, I will accept the default and allow Fedora to use the complete drive. However I want to reserve some space for DRBD, so I'll check the <literal>Review and modify partitioning layout</literal> box. <placeholder-2/>"
-msgstr "Acum selectați unde vreți Fedora să fie instalată. <placeholder-1/> Deoarece nu îmi pasă de orice date existente, voi accepta valorile implicite și voi permite Fedorei să folosească întregul disc. Totuși vreau să rezerv ceva spațiu pentru DRBD, așa că voi bifa caseta <literal>Review and modify partitioning layout</literal>. <placeholder-2/>"
+#. Tag: para
+#, no-c-format
+msgid "By default, Fedora will give all the space to the <literal>/</literal> (aka. root) partition. Wel'll take some back so we can use DRBD."
+msgstr "În mod implicit, Fedora va da tot spațiul către partiția <literal>/</literal> (root). Vom lua ceva din acesta înapoi pentru a putea folosi DRBD. "
 
-#: Ch-Installation.xml:116(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Default Partitioning"
 msgstr "Instalarea Fedora - Partiționarea Implicită"
 
-#: Ch-Installation.xml:112(para)
-msgid "By default, Fedora will give all the space to the <literal>/</literal> (aka. root) partition. Wel'll take some back so we can use DRBD. <placeholder-1/>"
-msgstr "În mod implicit, Fedora va da tot spațiul către partiția <literal>/</literal> (root). Vom lua ceva din acesta înapoi pentru a putea folosi DRBD. <placeholder-1/>"
+#. Tag: para
+#, no-c-format
+msgid "The finalized partition layout should look something like the diagram below."
+msgstr "Așezarea finalizată a partițiilor ar trebui să arate asemănător cu diagrama de mai jos. "
 
-#: Ch-Installation.xml:127(para)
+#. Tag: para
+#, no-c-format
 msgid "If you plan on following the DRBD or GFS2 portions of this guide, you should reserve at least 1Gb of space on each machine from which to create a shared volume."
 msgstr "Dacă plănuiți să urmați porțiunile referitoare la DRBD sau GFS2 ale acestui ghid, ar trebui să rezervați cel puțin 1Gb de spațiu pe fieare mașină din care să creați un volum partajat."
 
-#: Ch-Installation.xml:132(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Customize Partitioning"
 msgstr "Instalarea Fedora - Customizarea Partiționării"
 
-#: Ch-Installation.xml:137(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Create a partition to use (later) for website data"
 msgstr "Instalarea Fedora: Creați o partiție pentru a o folosi (mai târziu) pentru datele website-ului"
 
-#: Ch-Installation.xml:124(para)
-msgid "The finalized partition layout should look something like the diagram below. <placeholder-1/><placeholder-2/>"
-msgstr "Așezarea finalizată a partițiilor ar trebui să arate asemănător cu diagrama de mai jos. <placeholder-1/><placeholder-2/>"
-
-#: Ch-Installation.xml:143(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Bootloader"
 msgstr "Instalarea Fedora - Bootloader"
 
-#: Ch-Installation.xml:148(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Unless you have a strong reason not to, accept the default bootloader location"
 msgstr "Instalarea Fedora: Decât dacă aveți un motiv puternic împotriva acestui lucru, acceptați locația implicită pentru bootloader"
 
-#: Ch-Installation.xml:158(title)
+#. Tag: para
+#, no-c-format
+msgid "Next choose which software should be installed. Change the selection to <literal>Web Server</literal> since we plan on using Apache. Don't enable updates yet, we'll do that (and install any extra software we need) later. After you click next, Fedora will begin installing."
+msgstr "În continuare alegeți ce software ar trebui să fie instalat. Schimbați selecția pe <literal>Web Server</literal> din moment ce plănuim să instalăm Apache. Nu activați încă actualizările, o să facem asta (și vom instala orice software adițional de care avem nevoie) mai târziu. După ce faceți click pe Next, Fedora va începe să se instaleze. "
+
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Software"
 msgstr "Instalarea Fedora - Software"
 
-#: Ch-Installation.xml:163(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Software selection"
 msgstr "Instalarea Fedora: Selecția software-ului"
 
-#: Ch-Installation.xml:152(para)
-msgid "Next choose which software should be installed. Change the selection to <literal>Web Server</literal> since we plan on using Apache. Don't enable updates yet, we'll do that (and install any extra software we need) later. After you click next, Fedora will begin installing. <placeholder-1/>"
-msgstr "În continuare alegem ce software ar trebui să fie instalat. Schimbați selecția pe <literal>Web Server</literal> din moment ce plănuim să instalăm Apache. Nu activați încă actualizările, o să facem asta (și vom instala orice soft adițional de care avem nevoie) mai târziu. După ce faceți click, Fedora va începe să se instaleze. <placeholder-1/>"
-
-#: Ch-Installation.xml:169(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Installing"
 msgstr "Instalarea Fedora - Instalează"
 
-#: Ch-Installation.xml:174(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Go grab something to drink, this may take a while"
-msgstr "Instalarea Fedora: Mergeți să vă luați ceva de băut, ar putea dura o vreme"
+msgstr "Instalarea Fedora: Mergeți să vă luați ceva de băut, asta ar putea dura o vreme"
 
-#: Ch-Installation.xml:180(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Installation Complete"
 msgstr "Instalarea Fedora - Instalarea a Terminat"
 
-#: Ch-Installation.xml:185(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Stage 1, completed"
 msgstr "Instalarea Fedora: Stadiul 1, terminat"
 
-#: Ch-Installation.xml:193(ulink)
-msgid "http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboot.html"
-msgstr "http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboot.html"
+#. Tag: para
+#, no-c-format
+msgid "Once the node reboots, follow the on screen instructions <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboot.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/ch-firstboot.html </ulink> </para> </footnote> to create a system user and configure the time."
+msgstr "Odată ce nodul repornește, urmați instrucțiunile de pe ecran <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboot.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/ch-firstboot.html </ulink> </para> </footnote> pentru a crea un utilizator de system și pentru a configura ora."
 
-#: Ch-Installation.xml:200(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - First Boot"
 msgstr "Instalarea Fedora - Primul Boot"
 
-#: Ch-Installation.xml:189(para)
-msgid "Once the node reboots, follow the on screen instructions <placeholder-1/> to create a system user and configure the time. <placeholder-2/>"
-msgstr "Odată ce nodul rebootează, urmăriți instrucțiunile de pe ecran <placeholder-1/> pentru a crea un utilizator de sistem și pentru a configura data. <placeholder-2/>"
-
-#: Ch-Installation.xml:210(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Create Non-privileged User"
 msgstr "Instalarea Fedora - Creați un Utilizator Neprivilegiat"
 
-#: Ch-Installation.xml:215(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Creating a non-privileged user, take note of the password, you'll need it soon"
 msgstr "Instalarea Fedora: Creând un utilizator neprivilegiat, rețineți parola, o să aveți nevoie de ea în curând"
 
-#: Ch-Installation.xml:221(para)
+#. Tag: para
+#, no-c-format
 msgid "It is highly recommended to enable NTP on your cluster nodes. Doing so ensures all nodes agree on the current time and makes reading log files significantly easier."
-msgstr "Este foarte recomandat să activați NTP-ul pe nodurile din cluster. Realizând acest lucru asigură câ toate nodurile sunt de acord asupra datei curente și acest luru face citirea fișierelor de log semnificativ mai ușoară."
+msgstr "Este foarte recomandat să activați NTP-ul pe nodurile din cluster. Realizând acest lucru asigură câ toate nodurile sunt de acord asupra datei curente și acest lucru face citirea fișierelor de log semnificativ mai ușoară."
 
-#: Ch-Installation.xml:227(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Date and Time"
 msgstr "Instalarea Fedora - Data și Ora"
 
-#: Ch-Installation.xml:232(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Enable NTP to keep the times on all your nodes consistent"
 msgstr "Instalarea Fedora: Activați NTP pentru a menține data consistentă pe noate nodurile"
 
-#: Ch-Installation.xml:219(para)
-msgid "<placeholder-1/><placeholder-2/> Click through the next screens until you reach the login window. Click on the user you created and supply the password you indicated earlier."
-msgstr "<placeholder-1/><placeholder-2/>Selectați cu mouse-ul prin următorul ecran până ajungeți la fereastra de login. Selectați utilizatorul pe care l-ați creat și furnizați parola pe care ați ales-o mai devreme."
+#. Tag: para
+#, no-c-format
+msgid "Click through the next screens until you reach the login window. Click on the user you created and supply the password you indicated earlier."
+msgstr "Selectați cu mouse-ul prin următorul ecran până ajungeți la fereastra de login. Selectați utilizatorul pe care l-ați creat și furnizați parola pe care ați ales-o mai devreme."
 
-#: Ch-Installation.xml:240(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Customize Networking"
 msgstr "Instalarea Fedora - Personalizați Rețeaua"
 
-#: Ch-Installation.xml:245(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Click here to configure networking"
 msgstr "Instalarea Fedora: Selectați aici pentru a configura rețeaua"
 
-#: Ch-Installation.xml:251(para)
+#. Tag: para
+#, no-c-format
 msgid "Do not accept the default network settings. Cluster machines should <emphasis>never</emphasis> obtain an ip address via DHCP. Here I will use the <emphasis>internal</emphasis> addresses for the clusterlab.org network."
 msgstr "Nu acceptați setările implicite de rețea. Mașinile din cluster nu ar trebui <emphasis>niciodată</emphasis> să obțină o adresă IP via DHCP. Aici voi folosi adresele <emphasis>interne</emphasis> pentru rețeaua clusterlab.org."
 
-#: Ch-Installation.xml:258(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Specify Network Preferences"
 msgstr "Instalarea Fedora - Specificați Preferințele de Rețea"
 
-#: Ch-Installation.xml:263(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Specify network settings for your machine, never choose DHCP"
-msgstr "Instalarea Fedora: Specificați setările de rețea pentru mașina voastră, niciodată să nu alegeți DHCP"
+msgstr "Instalarea Fedora: Specificați setările de rețea pentru mașina voastră, să nu alegeți niciodată DHCP"
 
-#: Ch-Installation.xml:269(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Activate Networking"
 msgstr "Instalarea Fedora - Activați Rețeaua"
 
-#: Ch-Installation.xml:274(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Click the big green button to activate your changes"
 msgstr "Instalarea Fedora: Selectați butonul mare verde pentru a activa modificările voastre"
 
-#: Ch-Installation.xml:280(title)
+#. Tag: title
+#, no-c-format
 msgid "Fedora Installation - Bring up the Terminal"
 msgstr "Instalarea Fedora - Porniți Terminalul"
 
-#: Ch-Installation.xml:285(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Fedora Installation: Down to business, fire up the command line"
 msgstr "Instalarea Fedora: Să trecem la afaceri, porniți linia de comandă"
 
-#: Ch-Installation.xml:290(para)
+#. Tag: para
+#, no-c-format
 msgid "That was the last screenshot, from here on in we’re going to be working from the terminal."
-msgstr "Acela a fost ultima captură de ecran, de aici înainte vom lucra de la terminal."
+msgstr "Aceea a fost ultima captură de ecran, de aici înainte vom lucra de la terminal."
 
-#: Ch-Installation.xml:297(title)
+#. Tag: title
+#, no-c-format
 msgid "Cluster Software Installation"
-msgstr "Instalarea Soft-ului de Cluster"
+msgstr "Instalarea Software-ului de Cluster"
 
-#: Ch-Installation.xml:298(para)
+#. Tag: para
+#, no-c-format
 msgid "Go to the terminal window you just opened and switch to the super user (aka. \"root\") account with the <command>su</command> command. You will need to supply the password you entered earlier during the installation process."
 msgstr "Mergeți la fereastra de terminal pe care tocmai ați deschis-o și schimbați la contul de super utilizator (adică la \"root\") cu comanda <command>su</command>. Va trebui să furnizați parola pe care ați introdus-o mai devreme în timpul procesului de instalare."
 
-#: Ch-Installation.xml:305(emphasis)
-msgid "root"
-msgstr "root"
-
-#: Ch-Installation.xml:302(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
 "[beekhof@pcmk-1 ~]$ su -\n"
 "Password:\n"
-"[<placeholder-1/>@pcmk-1 ~]#\n"
+"[<emphasis>root</emphasis>@pcmk-1 ~]#\n"
 "    "
 msgstr ""
 "\n"
 "[beekhof@pcmk-1 ~]$ su -\n"
 "Password:\n"
-"[<placeholder-1/>@pcmk-1 ~]#\n"
+"[<emphasis>root</emphasis>@pcmk-1 ~]#\n"
 "    "
 
-#: Ch-Installation.xml:308(para)
+#. Tag: para
+#, no-c-format
 msgid "Note that the username (the text before the @ symbol) now indicates we’re running as the super user “root”."
 msgstr "Luați aminte că numele de utilizator (textul dinaintea simbolului @) acum indică faptul că rulăm ca super utilizatorul \"root\"."
 
-#: Ch-Installation.xml:313(userinput)
-#, no-wrap
-msgid "ip addr"
-msgstr "ip addr"
-
-#: Ch-Installation.xml:335(userinput)
-#, no-wrap
-msgid "/sbin/chkconfig network on"
-msgstr "/sbin/chkconfig network on"
-
-#: Ch-Installation.xml:312(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>ip addr</userinput>\n"
 "1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 16436 qdisc noqueue state UNKNOWN \n"
 "    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n"
 "    inet 127.0.0.1/8 scope host lo\n"
@@ -400,12 +313,12 @@ msgid ""
 "--- www.l.google.com ping statistics ---\n"
 "1 packets transmitted, 1 received, 0% packet loss, time 20ms\n"
 "rtt min/avg/max/mdev = 16.713/16.713/16.713/0.000 ms\n"
-"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"[root@pcmk-1 ~]# <userinput>/sbin/chkconfig network on</userinput>\n"
 "[root@pcmk-1 ~]# \n"
 "    "
 msgstr ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>ip addr</userinput>\n"
 "1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 16436 qdisc noqueue state UNKNOWN \n"
 "    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n"
 "    inet 127.0.0.1/8 scope host lo\n"
@@ -427,24 +340,27 @@ msgstr ""
 "--- www.l.google.com ping statistics ---\n"
 "1 packets transmitted, 1 received, 0% packet loss, time 20ms\n"
 "rtt min/avg/max/mdev = 16.713/16.713/16.713/0.000 ms\n"
-"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"[root@pcmk-1 ~]# <userinput>/sbin/chkconfig network on</userinput>\n"
 "[root@pcmk-1 ~]# \n"
 "    "
 
-#: Ch-Installation.xml:339(title)
+#. Tag: title
+#, no-c-format
 msgid "Security Shortcuts"
 msgstr "Scurtături de Securitate"
 
-#: Ch-Installation.xml:344(para)
+#. Tag: para
+#, no-c-format
+msgid "To simplify this guide and focus on the aspects directly connected to clustering, we will now disable the machine’s firewall and SELinux installation. Both of these actions create significant security issues and should not be performed on machines that will be exposed to the outside world."
+msgstr "Pentru a simplifica acest ghid și pentru a ne concentra pe aspecte care sunt legate în mod direct de clustering, o să dezactivăm acum firewall-ul mașinii și instalarea de SELinux. Ambele aceste acțiuni creează probleme semnificative de securitate și nu ar trebui să fie efectuate pe mașini care vor fi expuse în mod direct către lumea exterioara. "
+
+#. Tag: para
+#, no-c-format
 msgid "TODO: Create an Appendix that deals with (at least) re-enabling the firewall."
 msgstr "TODO: Crearea unui Apendix care să se ocupe cu (cel puțin) reactivarea firewall-ului."
 
-#: Ch-Installation.xml:340(para)
-msgid "To simplify this guide and focus on the aspects directly connected to clustering, we will now disable the machine’s firewall and SELinux installation. Both of these actions create significant security issues and should not be performed on machines that will be exposed to the outside world. <placeholder-1/>"
-msgstr "Pentru a simplifica acest ghid și pentru a ne concentra pe aspecte care sunt legate în mod direct de clustering, o să dezactivăm acum firewall-ul mașinii și instalarea de SELinux. Ambele aceste acțiuni creează probleme semnificative de securitate și nu ar trebui să fie efectuate pe mașini care vor fi expuse în mod direct către lumea exterioara. <placeholder-1/>"
-
-#: Ch-Installation.xml:349(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
 "[root@pcmk-1 ~]# sed -i.bak \"s/SELINUX=enforcing/SELINUX=permissive/g\" /etc/selinux/config\n"
@@ -464,70 +380,58 @@ msgstr ""
 "iptables: Unloading modules:                               [  OK  ]\n"
 "      "
 
-#: Ch-Installation.xml:358(para)
+#. Tag: para
+#, no-c-format
 msgid "You will need to reboot for the SELinux changes to take effect. Otherwise you will see something like this when you start corosync:"
-msgstr "Va trebui să rebootați pentru ca modificările de SELinux să ia effect. Altfel ați vedea ceva similar cu acesta când veți porni corosync:"
+msgstr "Va trebui să reporniți pentru ca modificările de SELinux să ia effect. Altfel ați vedea ceva similar cu acesta când veți porni corosync:"
 
-#: Ch-Installation.xml:362(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
 "May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync \"getattr\" access on /. For complete SELinux messages. run sealert -l 6e0d4384-638e-4d55-9aaf-7dac011f29c1\n"
 "May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync \"getattr\" access on /. For complete SELinux messages. run sealert -l 6e0d4384-638e-4d55-9aaf-7dac011f29c1\n"
-"\t"
+"	"
 msgstr ""
 "\n"
 "May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync \"getattr\" access on /. For complete SELinux messages. run sealert -l 6e0d4384-638e-4d55-9aaf-7dac011f29c1\n"
 "May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync \"getattr\" access on /. For complete SELinux messages. run sealert -l 6e0d4384-638e-4d55-9aaf-7dac011f29c1\n"
-"\t"
+"	"
 
-#: Ch-Installation.xml:370(title)
+#. Tag: title
+#, no-c-format
 msgid "Install the Cluster Software"
-msgstr "Instalați Soft-ul de Cluster"
+msgstr "Instalați Software-ul de Cluster"
 
-#: Ch-Installation.xml:371(para)
+#. Tag: para
+#, no-c-format
 msgid "Since version 12, Fedora comes with recent versions of everything you need, so simply fire up the shell and run:"
 msgstr "Începând cu versiunea 12, Fedora vine cu versiuni recente ale tuturor lucrurilor de care aveți nevoie, așa că pur și simplu porniți shell-ul și rulați:"
 
-#: Ch-Installation.xml:375(userinput)
-#, no-wrap
-msgid "sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora.repo"
-msgstr "sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora.repo"
-
-#: Ch-Installation.xml:376(userinput)
-#, no-wrap
-msgid "sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora-updates.repo"
-msgstr "sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora-updates.repo"
-
-#: Ch-Installation.xml:377(userinput)
-#, no-wrap
-msgid "yum install -y pacemaker corosync"
-msgstr "yum install -y pacemaker corosync"
-
-#: Ch-Installation.xml:374(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
-"[root@pcmk-1 ~]# <placeholder-2/>\n"
-"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora.repo</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora-updates.repo</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>yum install -y pacemaker corosync</userinput>\n"
 "Loaded plugins: presto, refresh-packagekit\n"
-"fedora/metalink                   \t                           |  22 kB     00:00     \n"
-"fedora-debuginfo/metalink         \t                           |  16 kB     00:00     \n"
-"fedora-debuginfo                  \t                           | 3.2 kB     00:00     \n"
-"fedora-debuginfo/primary_db       \t                           | 1.4 MB     00:04     \n"
-"fedora-source/metalink            \t                           |  22 kB     00:00     \n"
-"fedora-source                     \t                           | 3.2 kB     00:00     \n"
-"fedora-source/primary_db          \t                           | 3.0 MB     00:05     \n"
-"updates/metalink                  \t                           |  26 kB     00:00     \n"
-"updates                           \t                           | 2.6 kB     00:00     \n"
-"updates/primary_db                \t                           | 1.1 kB     00:00     \n"
-"updates-debuginfo/metalink        \t                           |  18 kB     00:00     \n"
-"updates-debuginfo                 \t                           | 2.6 kB     00:00     \n"
-"updates-debuginfo/primary_db      \t                           | 1.1 kB     00:00     \n"
-"updates-source/metalink           \t                           |  25 kB     00:00     \n"
-"updates-source                    \t                           | 2.6 kB     00:00     \n"
-"updates-source/primary_db         \t                           | 1.1 kB     00:00     \n"
+"fedora/metalink                   	                           |  22 kB     00:00     \n"
+"fedora-debuginfo/metalink        	                           |  16 kB     00:00     \n"
+"fedora-debuginfo                  	                           | 3.2 kB     00:00     \n"
+"fedora-debuginfo/primary_db       	                           | 1.4 MB     00:04     \n"
+"fedora-source/metalink            	                           |  22 kB     00:00     \n"
+"fedora-source                     	                           | 3.2 kB     00:00     \n"
+"fedora-source/primary_db          	                           | 3.0 MB     00:05     \n"
+"updates/metalink                  	                           |  26 kB     00:00     \n"
+"updates                           	                           | 2.6 kB     00:00     \n"
+"updates/primary_db                	                           | 1.1 kB     00:00     \n"
+"updates-debuginfo/metalink        	                           |  18 kB     00:00     \n"
+"updates-debuginfo                 	                           | 2.6 kB     00:00     \n"
+"updates-debuginfo/primary_db      	                           | 1.1 kB     00:00     \n"
+"updates-source/metalink           	                           |  25 kB     00:00     \n"
+"updates-source                    	                           | 2.6 kB     00:00     \n"
+"updates-source/primary_db         	                           | 1.1 kB     00:00     \n"
 "Setting up Install Process\n"
 "Resolving Dependencies\n"
 "--&gt; Running transaction check\n"
@@ -616,26 +520,26 @@ msgid ""
 "      "
 msgstr ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
-"[root@pcmk-1 ~]# <placeholder-2/>\n"
-"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora.repo</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora-updates.repo</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>yum install -y pacemaker corosync</userinput>\n"
 "Loaded plugins: presto, refresh-packagekit\n"
-"fedora/metalink                   \t                           |  22 kB     00:00     \n"
-"fedora-debuginfo/metalink         \t                           |  16 kB     00:00     \n"
-"fedora-debuginfo                  \t                           | 3.2 kB     00:00     \n"
-"fedora-debuginfo/primary_db       \t                           | 1.4 MB     00:04     \n"
-"fedora-source/metalink            \t                           |  22 kB     00:00     \n"
-"fedora-source                     \t                           | 3.2 kB     00:00     \n"
-"fedora-source/primary_db          \t                           | 3.0 MB     00:05     \n"
-"updates/metalink                  \t                           |  26 kB     00:00     \n"
-"updates                           \t                           | 2.6 kB     00:00     \n"
-"updates/primary_db                \t                           | 1.1 kB     00:00     \n"
-"updates-debuginfo/metalink        \t                           |  18 kB     00:00     \n"
-"updates-debuginfo                 \t                           | 2.6 kB     00:00     \n"
-"updates-debuginfo/primary_db      \t                           | 1.1 kB     00:00     \n"
-"updates-source/metalink           \t                           |  25 kB     00:00     \n"
-"updates-source                    \t                           | 2.6 kB     00:00     \n"
-"updates-source/primary_db         \t                           | 1.1 kB     00:00     \n"
+"fedora/metalink                   	                           |  22 kB     00:00     \n"
+"fedora-debuginfo/metalink         	                           |  16 kB     00:00     \n"
+"fedora-debuginfo                  	                           | 3.2 kB     00:00     \n"
+"fedora-debuginfo/primary_db       	                           | 1.4 MB     00:04     \n"
+"fedora-source/metalink            	                           |  22 kB     00:00     \n"
+"fedora-source                     	                           | 3.2 kB     00:00     \n"
+"fedora-source/primary_db          	                           | 3.0 MB     00:05     \n"
+"updates/metalink                  	                           |  26 kB     00:00     \n"
+"updates                           	                           | 2.6 kB     00:00     \n"
+"updates/primary_db                	                           | 1.1 kB     00:00     \n"
+"updates-debuginfo/metalink        	                           |  18 kB     00:00     \n"
+"updates-debuginfo                 	                           | 2.6 kB     00:00     \n"
+"updates-debuginfo/primary_db      	                           | 1.1 kB     00:00     \n"
+"updates-source/metalink           	                           |  25 kB     00:00     \n"
+"updates-source                    	                           | 2.6 kB     00:00     \n"
+"updates-source/primary_db         	                           | 1.1 kB     00:00     \n"
 "Setting up Install Process\n"
 "Resolving Dependencies\n"
 "--&gt; Running transaction check\n"
@@ -723,8 +627,8 @@ msgstr ""
 "\n"
 "      "
 
-#: Ch-Installation.xml:481(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
 "==========================================================================================\n"
@@ -864,8 +768,8 @@ msgstr ""
 "Importing GPG key 0xE8E40FDE \"Fedora (13) &lt;fedora@fedoraproject.org%gt;\" from /etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-x86_64\n"
 "      "
 
-#: Ch-Installation.xml:549(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
 "Running rpm_check_debug\n"
@@ -977,39 +881,46 @@ msgstr ""
 "[root@pcmk-1 ~]# \n"
 "      "
 
-#: Ch-Installation.xml:607(title)
+#. Tag: title
+#, no-c-format
 msgid "Before You Continue"
 msgstr "Înainte de a Continua"
 
-#: Ch-Installation.xml:608(para)
+#. Tag: para
+#, no-c-format
 msgid "Repeat the Installation steps so that you have 2 Fedora nodes with the cluster software installed."
-msgstr "Repetați pașii de Instalare astfel încât să aveți 2 noduri cu Fedora cu soft-ul de cluster instalat."
+msgstr "Repetați pașii de Instalare astfel încât să aveți 2 noduri cu Fedora cu software-ul de cluster instalat."
 
-#: Ch-Installation.xml:611(para)
+#. Tag: para
+#, no-c-format
 msgid "For the purposes of this document, the additional node is called pcmk-2 with address 192.168.122.42."
 msgstr "Pentru scopurile acestui document, nodul adițional este numit pcmk-2 cu adresa 192.168.122.42."
 
-#: Ch-Installation.xml:617(title)
+#. Tag: title
+#, no-c-format
 msgid "Setup"
 msgstr "Setup"
 
-#: Ch-Installation.xml:619(title)
+#. Tag: title
+#, no-c-format
 msgid "Finalize Networking"
 msgstr "Finalizați Rețelistica"
 
-#: Ch-Installation.xml:620(para)
+#. Tag: para
+#, no-c-format
 msgid "Confirm that you can communicate with the two new nodes:"
 msgstr "Confirmați că puteți comunica cu cele două noi noduri:"
 
-#: Ch-Installation.xml:624(title)
+#. Tag: title
+#, no-c-format
 msgid "Verify Connectivity by IP address"
 msgstr "Verificați Conectivitatea după Adresa IP"
 
-#: Ch-Installation.xml:625(programlisting)
-#, no-wrap
+#. Tag: programlisting
+#, no-c-format
 msgid ""
 "\n"
-"\t  <userinput>ping -c 3 192.168.122.102</userinput>\n"
+"	  <userinput>ping -c 3 192.168.122.102</userinput>\n"
 "[root@pcmk-1 ~]# ping -c 3 192.168.122.102\n"
 "PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.\n"
 "64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=0.343 ms\n"
@@ -1019,10 +930,10 @@ msgid ""
 "--- 192.168.122.102 ping statistics ---\n"
 "<emphasis>3 packets transmitted, 3 received, 0% packet loss</emphasis>, time 2000ms\n"
 "rtt min/avg/max/mdev = 0.343/0.434/0.558/0.092 ms\n"
-"\t"
+"	"
 msgstr ""
 "\n"
-"\t  <userinput>ping -c 3 192.168.122.102</userinput>\n"
+"	  <userinput>ping -c 3 192.168.122.102</userinput>\n"
 "[root@pcmk-1 ~]# ping -c 3 192.168.122.102\n"
 "PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.\n"
 "64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=0.343 ms\n"
@@ -1032,46 +943,50 @@ msgstr ""
 "--- 192.168.122.102 ping statistics ---\n"
 "<emphasis>3 packets transmitted, 3 received, 0% packet loss</emphasis>, time 2000ms\n"
 "rtt min/avg/max/mdev = 0.343/0.434/0.558/0.092 ms\n"
-"\t"
+"	"
 
-#: Ch-Installation.xml:638(para)
+#. Tag: para
+#, no-c-format
 msgid "Now we need to make sure we can communicate with the machines by their name. If you have a DNS server, add additional entries for the two machines. Otherwise, you’ll need to add the machines to /etc/hosts . Below are the entries for my cluster nodes:"
 msgstr "Acum trebuie să ne asigurăm că putem comunica cu mașinile după numele acestora. Dacă aveți un server DNS, adăugați intrări adiționale pentru cele două mașini. În caz contrar, va trebui să adăugați mașinile în /etc/hosts. Mai jos sunt intrările pentru nodurile mele de cluster:"
 
-#: Ch-Installation.xml:645(title)
+#. Tag: title
+#, no-c-format
 msgid "Set up /etc/hosts entries"
 msgstr "Setați intrările din /etc/hosts"
 
-#: Ch-Installation.xml:646(programlisting)
-#, no-wrap
+#. Tag: programlisting
+#, no-c-format
 msgid ""
 "\n"
-"\t  <userinput>grep pcmk /etc/hosts</userinput>\n"
+"	  <userinput>grep pcmk /etc/hosts</userinput>\n"
 "[root@pcmk-1 ~]# grep pcmk /etc/hosts\n"
 "192.168.122.101 pcmk-1.clusterlabs.org pcmk-1\n"
 "192.168.122.102 pcmk-2.clusterlabs.org pcmk-2\n"
-"\t"
+"	"
 msgstr ""
 "\n"
-"\t  <userinput>grep pcmk /etc/hosts</userinput>\n"
+"	  <userinput>grep pcmk /etc/hosts</userinput>\n"
 "[root@pcmk-1 ~]# grep pcmk /etc/hosts\n"
 "192.168.122.101 pcmk-1.clusterlabs.org pcmk-1\n"
 "192.168.122.102 pcmk-2.clusterlabs.org pcmk-2\n"
-"\t"
+"	"
 
-#: Ch-Installation.xml:653(para)
+#. Tag: para
+#, no-c-format
 msgid "We can now verify the setup by again using ping:"
 msgstr "Putem verifica setup-ul folosind ping din nou:"
 
-#: Ch-Installation.xml:657(title)
+#. Tag: title
+#, no-c-format
 msgid "Verify Connectivity by Hostname"
 msgstr "Verificați Conectivitatea după Numele Gazdei"
 
-#: Ch-Installation.xml:658(programlisting)
-#, no-wrap
+#. Tag: programlisting
+#, no-c-format
 msgid ""
 "\n"
-"\t  <userinput>ping -c 3 pcmk-2</userinput>\n"
+"	  <userinput>ping -c 3 pcmk-2</userinput>\n"
 "[root@pcmk-1 ~]# ping -c 3 pcmk-2\n"
 "PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.\n"
 "64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=1 ttl=64 time=0.164 ms\n"
@@ -1081,43 +996,42 @@ msgid ""
 "--- pcmk-2.clusterlabs.org ping statistics ---\n"
 "<emphasis>3 packets transmitted, 3 received, 0% packet loss</emphasis>, time 2001ms\n"
 "rtt min/avg/max/mdev = 0.164/0.275/0.475/0.141 ms\n"
-"\t"
+"	"
 msgstr ""
 "\n"
-"\t  <userinput>ping -c 3 pcmk-2</userinput>\n"
-"[root@pcmk-1 ~]# ping -c 3 pcmk-2\n"
-"PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.\n"
-"64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=1 ttl=64 time=0.164 ms\n"
-"64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=2 ttl=64 time=0.475 ms\n"
-"64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=3 ttl=64 time=0.186 ms\n"
-"\n"
-"--- pcmk-2.clusterlabs.org ping statistics ---\n"
-"<emphasis>3 packets transmitted, 3 received, 0% packet loss</emphasis>, time 2001ms\n"
-"rtt min/avg/max/mdev = 0.164/0.275/0.475/0.141 ms\n"
-"\t"
+"	  <userinput>grep pcmk /etc/hosts</userinput>\n"
+"[root@pcmk-1 ~]# grep pcmk /etc/hosts\n"
+"192.168.122.101 pcmk-1.clusterlabs.org pcmk-1\n"
+"192.168.122.102 pcmk-2.clusterlabs.org pcmk-2\n"
+"	"
 
-#: Ch-Installation.xml:674(title)
+#. Tag: title
+#, no-c-format
 msgid "Configure SSH"
 msgstr "Configurați SSH"
 
-#: Ch-Installation.xml:675(para)
+#. Tag: para
+#, no-c-format
 msgid "SSH is a convenient and secure way to copy files and perform commands remotely. For the purposes of this guide, we will create a key without a password (using the -N “” option) so that we can perform remote actions without being prompted."
-msgstr "SSH este un mod convenabil și sigur de a copia fișierele și de a efectua comenzi pe sisteme la distanță. Pentru scopul acestui ghid, vom crea o cheie fără parolă (folosind opțiunea -N \"\") astfel încât să putem efectua acțiuni la distanță fără a mai fi întrebați."
+msgstr "SSH este un mod convenabil și sigur de a copia fișierele și de a efectua comenzi pe sisteme la distanță. Pentru scopurile acestui ghid, vom crea o cheie fără parolă (folosind opțiunea -N \"\") astfel încât să putem efectua acțiuni la distanță fără a mai fi întrebați."
 
-#: Ch-Installation.xml:679(para)
+#. Tag: para
+#, no-c-format
 msgid "Unprotected SSH keys, those without a password, are not recommended for servers exposed to the outside world."
 msgstr "Chei neprotejate de SSH, precum cele fără parolă, nu sunt recomandate pentru servere expuse la lumea externă."
 
-#: Ch-Installation.xml:683(para)
+#. Tag: para
+#, no-c-format
 msgid "Create a new key and allow anyone with that key to log in:"
 msgstr "Creați o cheie nouă și permiteți oricui cu acea cheie să se logheze:"
 
-#: Ch-Installation.xml:687(title)
+#. Tag: title
+#, no-c-format
 msgid "Creating and Activating a new SSH Key"
-msgstr "Crearea și Activarea unei Chei No SSH"
+msgstr "Crearea și Activarea unei Chei noi SSH"
 
-#: Ch-Installation.xml:688(programlisting)
-#, no-wrap
+#. Tag: programlisting
+#, no-c-format
 msgid ""
 "\n"
 "[root@pcmk-1 ~]# <userinput>ssh-keygen -t dsa -f ~/.ssh/id_dsa -N \"\"</userinput>\n"
@@ -1141,7 +1055,7 @@ msgid ""
 "+-----------------+\n"
 "[root@pcmk-1 ~]# <userinput>cp .ssh/id_dsa.pub .ssh/authorized_keys</userinput>\n"
 "[root@pcmk-1 ~]#\n"
-"\t"
+"	"
 msgstr ""
 "\n"
 "[root@pcmk-1 ~]# <userinput>ssh-keygen -t dsa -f ~/.ssh/id_dsa -N \"\"</userinput>\n"
@@ -1165,18 +1079,20 @@ msgstr ""
 "+-----------------+\n"
 "[root@pcmk-1 ~]# <userinput>cp .ssh/id_dsa.pub .ssh/authorized_keys</userinput>\n"
 "[root@pcmk-1 ~]#\n"
-"\t"
+"	"
 
-#: Ch-Installation.xml:712(para)
+#. Tag: para
+#, no-c-format
 msgid "Install the key on the other nodes and test that you can now run commands remotely, without being prompted"
 msgstr "Instalați cheia pe celelalte noduri și testați că acum puteți rula comenzi de la distanță, fără să mai fiți întrebați"
 
-#: Ch-Installation.xml:716(title)
+#. Tag: title
+#, no-c-format
 msgid "Installing the SSH Key on Another Host"
 msgstr "Instalarea Cheii SSH pe o Altă Gazdă"
 
-#: Ch-Installation.xml:717(programlisting)
-#, no-wrap
+#. Tag: programlisting
+#, no-c-format
 msgid ""
 "\n"
 "[root@pcmk-1 ~]# <userinput>scp -r .ssh pcmk-2:</userinput>\n"
@@ -1192,7 +1108,7 @@ msgid ""
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- uname -n</userinput>\n"
 "pcmk-2\n"
 "[root@pcmk-1 ~]#\n"
-"\t"
+"	"
 msgstr ""
 "\n"
 "[root@pcmk-1 ~]# <userinput>scp -r .ssh pcmk-2:</userinput>\n"
@@ -1208,285 +1124,236 @@ msgstr ""
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- uname -n</userinput>\n"
 "pcmk-2\n"
 "[root@pcmk-1 ~]#\n"
-"\t"
+"	"
 
-#: Ch-Installation.xml:736(title)
+#. Tag: title
+#, no-c-format
 msgid "Short Node Names"
 msgstr "Numele Scurte ale Nodurilor"
 
-#: Ch-Installation.xml:737(para)
+#. Tag: para
+#, no-c-format
 msgid "During installation, we filled in the machine’s fully qualifier domain name (FQDN) which can be rather long when it appears in cluster logs and status output. See for yourself how the machine identifies itself:"
 msgstr "În timpul instalării, am completat numele complet calificat de domeniu (FQDN) al mașinii care poate fi destul de lung când apare în logurile clusterului sau în rezultatul de ieșire al status-ului. Vedeți pentru voi înșivă cum se identifică singură mașina:"
 
-#: Ch-Installation.xml:742(userinput)
-#: Ch-Installation.xml:784(userinput)
-#, no-wrap
-msgid "uname -n"
-msgstr "uname -n"
-
-#: Ch-Installation.xml:743(emphasis)
-msgid ".clusterlabs.org"
-msgstr ".clusterlabs.org"
-
-#: Ch-Installation.xml:744(userinput)
-#: Ch-Installation.xml:786(userinput)
-#, no-wrap
-msgid "dnsdomainname "
-msgstr "dnsdomainname "
-
-#: Ch-Installation.xml:741(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
-"pcmk-1<placeholder-2/>\n"
-"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"[root@pcmk-1 ~]# <userinput>uname -n</userinput>\n"
+"pcmk-1<emphasis>.clusterlabs.org</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>dnsdomainname </userinput>\n"
 "clusterlabs.org\n"
 "      "
 msgstr ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
-"pcmk-1<placeholder-2/>\n"
-"[root@pcmk-1 ~]# <placeholder-3/>\n"
+"[root@pcmk-1 ~]# <userinput>uname -n</userinput>\n"
+"pcmk-1<emphasis>.clusterlabs.org</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>dnsdomainname </userinput>\n"
 "clusterlabs.org\n"
 "      "
 
-#: Ch-Installation.xml:747(para)
+#. Tag: para
+#, no-c-format
 msgid "The output from the second command is fine, but we really don’t need the domain name included in the basic host details. To address this, we need to update /etc/sysconfig/network. This is what it should look like before we start."
 msgstr "Rezultatul de ieșire de la a doua comandă este în regulă, dar nu avem nevoie cu adevărat ca numele de domeniu să fie inclus în detaliile de bază ale gazdei. Pentru a adresa acest lucru, trebuie să actualizăm /etc/sysconfig/network. Așa ar trebui să arate înainte să începem."
 
-#: Ch-Installation.xml:752(userinput)
-#: Ch-Installation.xml:767(userinput)
-#, no-wrap
-msgid "cat /etc/sysconfig/network"
-msgstr "cat /etc/sysconfig/network"
-
-#: Ch-Installation.xml:754(emphasis)
-msgid "HOSTNAME=pcmk-1.clusterlabs.org"
-msgstr "HOSTNAME=pcmk-1.clusterlabs.org"
-
-#: Ch-Installation.xml:751(screen)
-#: Ch-Installation.xml:766(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>cat /etc/sysconfig/network</userinput>\n"
 "NETWORKING=yes\n"
-"<placeholder-2/>\n"
+"<emphasis>HOSTNAME=pcmk-1.clusterlabs.org</emphasis>\n"
 "GATEWAY=192.168.122.1\n"
 "      "
 msgstr ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>cat /etc/sysconfig/network</userinput>\n"
 "NETWORKING=yes\n"
-"<placeholder-2/>\n"
+"<emphasis>HOSTNAME=pcmk-1.clusterlabs.org</emphasis>\n"
 "GATEWAY=192.168.122.1\n"
 "      "
 
-#: Ch-Installation.xml:757(para)
+#. Tag: para
+#, no-c-format
 msgid "All we need to do now is strip off the domain name portion, which is stored elsewhere anyway."
 msgstr "Tot ceea ce trebuie să facem acum este să scoatem porțiunea de nume de domeniu, care este stocată oricum în altă parte."
 
-#: Ch-Installation.xml:761(userinput)
-#, no-wrap
-msgid "sed -i.bak 's/\\.[a-z].*//g' /etc/sysconfig/network"
-msgstr "sed -i.bak 's/\\.[a-z].*//g' /etc/sysconfig/network"
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# <userinput>sed -i.bak 's/\\.[a-z].*//g' /etc/sysconfig/network</userinput>"
+msgstr "[root@pcmk-1 ~]# <userinput>sed -i.bak 's/\\.[a-z].*//g' /etc/sysconfig/network</userinput>"
 
-#: Ch-Installation.xml:761(screen)
-#: Ch-Installation.xml:831(screen)
-#, no-wrap
-msgid "[root@pcmk-1 ~]# <placeholder-1/>"
-msgstr "[root@pcmk-1 ~]# <placeholder-1/>"
-
-#: Ch-Installation.xml:762(para)
+#. Tag: para
+#, no-c-format
 msgid "Now confirm the change was successful. The revised file contents should look something like this."
 msgstr "Acum confirmați că modificarea a fost realizată cu succes. Conținutul fișierului revizuit ar trebui să arate ceva de genul acesta."
 
-#: Ch-Installation.xml:769(emphasis)
-msgid "HOSTNAME=pcmk-1"
-msgstr "HOSTNAME=pcmk-1"
-
-#: Ch-Installation.xml:772(para)
-msgid "However we’re not finished. The machine wont normally see the shortened host name until about it reboots, but we can force it to update."
-msgstr "Însă nu am terminat. Mașina nu ar vedea în mod normal lista de nume de gazde scurtate până ce nu rebootează, dar putem să o forțăm să se actualizeze."
-
-#: Ch-Installation.xml:777(userinput)
-#, no-wrap
-msgid "source /etc/sysconfig/network"
-msgstr "source /etc/sysconfig/network"
-
-#: Ch-Installation.xml:778(userinput)
-#, no-wrap
-msgid "hostname $HOSTNAME"
-msgstr "hostname $HOSTNAME"
-
-#: Ch-Installation.xml:776(screen)
-#: Ch-Installation.xml:823(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
-"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"[root@pcmk-1 ~]# <userinput>cat /etc/sysconfig/network</userinput>\n"
+"NETWORKING=yes\n"
+"<emphasis>HOSTNAME=pcmk-1</emphasis>\n"
+"GATEWAY=192.168.122.1\n"
 "      "
 msgstr ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
-"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"[root@pcmk-1 ~]# <userinput>cat /etc/sysconfig/network</userinput>\n"
+"NETWORKING=yes\n"
+"<emphasis>HOSTNAME=pcmk-1</emphasis>\n"
+"GATEWAY=192.168.122.1\n"
 "      "
 
-#: Ch-Installation.xml:780(para)
+#. Tag: para
+#, no-c-format
+msgid "However we’re not finished. The machine won't normally see the shortened host name until about it reboots, but we can force it to update."
+msgstr "Însă nu am terminat. Mașina nu ar vedea în mod normal lista de nume de gazde scurtate până ce nu repornește, dar putem să o forțăm să se actualizeze."
+
+#. Tag: screen
+#, no-c-format
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <userinput>source /etc/sysconfig/network</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>hostname $HOSTNAME</userinput>\n"
+"      "
+msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <userinput>source /etc/sysconfig/network</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>hostname $HOSTNAME</userinput>\n"
+"      "
+
+#. Tag: para
+#, no-c-format
 msgid "Now check the machine is using the correct names"
 msgstr "Acum verificați că mașina folosește numele corecte"
 
-#: Ch-Installation.xml:783(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>uname -n</userinput>\n"
 "pcmk-1\n"
-"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"[root@pcmk-1 ~]# <userinput>dnsdomainname </userinput>\n"
 "clusterlabs.org\n"
 "      "
 msgstr ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>uname -n</userinput>\n"
 "pcmk-1\n"
-"[root@pcmk-1 ~]# <placeholder-2/>\n"
+"[root@pcmk-1 ~]# <userinput>dnsdomainname </userinput>\n"
 "clusterlabs.org\n"
 "      "
 
-#: Ch-Installation.xml:789(para)
+#. Tag: para
+#, no-c-format
 msgid "Now repeat on pcmk-2."
 msgstr "Acum repetați pe pcmk-2."
 
-#: Ch-Installation.xml:795(title)
+#. Tag: title
+#, no-c-format
 msgid "Configuring Corosync"
 msgstr "Configurarea Corosync"
 
-#: Ch-Installation.xml:799(ulink)
-msgid "http://en.wikipedia.org/wiki/Multicast"
-msgstr "http://en.wikipedia.org/wiki/Multicast"
+#. Tag: para
+#, no-c-format
+msgid "Choose a port number and multicast <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast\">http://en.wikipedia.org/wiki/Multicast</ulink> </para> </footnote> address. <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast_address\">http://en.wikipedia.org/wiki/Multicast_address</ulink> </para> </footnote>"
+msgstr "Alegeți un număr de port și o <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast\">http://en.wikipedia.org/wiki/Multicast</ulink> </para> </footnote> adresă multicast. <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast_address\">http://en.wikipedia.org/wiki/Multicast_address</ulink> </para> </footnote>"
 
-#: Ch-Installation.xml:803(ulink)
-msgid "http://en.wikipedia.org/wiki/Multicast_address"
-msgstr "http://en.wikipedia.org/wiki/Multicast_address"
-
-#: Ch-Installation.xml:796(para)
-msgid "Choose a port number and multicast <placeholder-1/> address. <placeholder-2/>"
-msgstr "Alegeți un număr de port și o adresă multicast <placeholder-1/>. <placeholder-2/> "
-
-#: Ch-Installation.xml:807(para)
+#. Tag: para
+#, no-c-format
 msgid "Be sure that the values you chose do not conflict with any existing clusters you might have. For advice on choosing a multicast address, see <ulink url=\"http://www.29west.com/docs/THPM/multicast-address-assignment.html\"> http://www.29west.com/docs/THPM/multicast-address-assignment.html </ulink>"
-msgstr "Asigurați-vă că valorile pe care le alegeți nu dau conflicte cu alt clustere existente pe care le-ați putea avea. Pentru sfaturi în privința alegerii unei adresa multicast, vedeți <ulink url=\"http://www.29west.com/docs/THPM/multicast-address-assignment.html\"> http://www.29west.com/docs/THPM/multicast-address-assignment.html </ulink>"
+msgstr "Asigurați-vă că valorile pe care le alegeți nu dau conflicte cu alte clustere existente pe care le-ați putea avea. Pentru sfaturi în privința alegerii unei adrese multicast, vedeți <ulink url=\"http://www.29west.com/docs/THPM/multicast-address-assignment.html\"> http://www.29west.com/docs/THPM/multicast-address-assignment.html </ulink>"
 
-#: Ch-Installation.xml:814(para)
+#. Tag: para
+#, no-c-format
 msgid "For this document, I have chosen port 4000 and used 226.94.1.1 as the multicast address."
 msgstr "Pentru acest document, am ales portul 4000 și am folosit 226.94.1.1 ca adresă multicast"
 
-#: Ch-Installation.xml:818(para)
+#. Tag: para
+#, no-c-format
 msgid "The instructions below only apply for a machine with a single NIC. If you have a more complicated setup, you should edit the configuration manually."
 msgstr "Instrucțiunile de mai jos se aplică numai pentru o mașină cu o singură placă de rețea. Dacă aveți un setup mai complicat, ar trebui să editați configurația manual."
 
-#: Ch-Installation.xml:824(userinput)
-#, no-wrap
-msgid "export ais_port=4000"
-msgstr "export ais_port=4000"
+#. Tag: screen
+#, no-c-format
+msgid ""
+"\n"
+"[root@pcmk-1 ~]# <userinput>export ais_port=4000</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>export ais_mcast=226.94.1.1</userinput>\n"
+"      "
+msgstr ""
+"\n"
+"[root@pcmk-1 ~]# <userinput>export ais_port=4000</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>export ais_mcast=226.94.1.1</userinput>\n"
+"      "
 
-#: Ch-Installation.xml:825(userinput)
-#, no-wrap
-msgid "export ais_mcast=226.94.1.1"
-msgstr "export ais_mcast=226.94.1.1"
-
-#: Ch-Installation.xml:827(para)
+#. Tag: para
+#, no-c-format
 msgid "Next we automatically determine the hosts address. By not using the full address, we make the configuration suitable to be copied to other nodes."
 msgstr "În continuare determinăm în mod automat adresa gazdelor. Nefolosind adresa completă, facem configurația fezabilă pentru a fi copiată pe alte noduri."
 
-#: Ch-Installation.xml:831(userinput)
-#, no-wrap
-msgid "export ais_addr=`ip addr | grep \"inet \" | tail -n 1 | awk '{print $4}' | sed s/255/0/`"
-msgstr "export ais_addr=`ip addr | grep \"inet \" | tail -n 1 | awk '{print $4}' | sed s/255/0/`"
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# <userinput>export ais_addr=`ip addr | grep \"inet \" | tail -n 1 | awk '{print $4}' | sed s/255/0/`</userinput>"
+msgstr "[root@pcmk-1 ~]# <userinput>export ais_addr=`ip addr | grep \"inet \" | tail -n 1 | awk '{print $4}' | sed s/255/0/`</userinput>"
 
-#: Ch-Installation.xml:832(para)
+#. Tag: para
+#, no-c-format
 msgid "Display and verify the configuration options"
 msgstr "Listați și verificați opțiunile de configurare"
 
-#: Ch-Installation.xml:836(userinput)
-#, no-wrap
-msgid "env | grep ais_"
-msgstr "env | grep ais_"
-
-#: Ch-Installation.xml:835(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>env | grep ais_</userinput>\n"
 "ais_mcast=226.94.1.1\n"
 "ais_port=4000\n"
 "ais_addr=192.168.122.0\n"
 "      "
 msgstr ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>env | grep ais_</userinput>\n"
 "ais_mcast=226.94.1.1\n"
 "ais_port=4000\n"
 "ais_addr=192.168.122.0\n"
 "      "
 
-#: Ch-Installation.xml:841(para)
+#. Tag: para
+#, no-c-format
 msgid "Once you're happy with the chosen values, update the Corosync configuration"
 msgstr "Odată ce sunteți mulțumiți cu valorile alese, actualizați configurația Corosync"
 
-#: Ch-Installation.xml:845(userinput)
-#, no-wrap
-msgid "cp /etc/corosync/corosync.conf.example  /etc/corosync/corosync.conf"
-msgstr "cp /etc/corosync/corosync.conf.example  /etc/corosync/corosync.conf"
-
-#: Ch-Installation.xml:846(userinput)
-#, no-wrap
-msgid "sed -i.bak \"s/.*mcastaddr:.*/mcastaddr:\\ $ais_mcast/g\" /etc/corosync/corosync.conf"
-msgstr "sed -i.bak \"s/.*mcastaddr:.*/mcastaddr:\\ $ais_mcast/g\" /etc/corosync/corosync.conf"
-
-#: Ch-Installation.xml:847(userinput)
-#, no-wrap
-msgid "sed -i.bak \"s/.*mcastport:.*/mcastport:\\ $ais_port/g\" /etc/corosync/corosync.conf"
-msgstr "sed -i.bak \"s/.*mcastport:.*/mcastport:\\ $ais_port/g\" /etc/corosync/corosync.conf"
-
-#: Ch-Installation.xml:848(userinput)
-#, no-wrap
-msgid "sed -i.bak \"s/.*bindnetaddr:.*/bindnetaddr:\\ $ais_addr/g\" /etc/corosync/corosync.conf"
-msgstr "sed -i.bak \"s/.*bindnetaddr:.*/bindnetaddr:\\ $ais_addr/g\" /etc/corosync/corosync.conf"
-
-#: Ch-Installation.xml:844(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
-"[root@pcmk-1 ~]# <placeholder-2/>\n"
-"[root@pcmk-1 ~]# <placeholder-3/>\n"
-"[root@pcmk-1 ~]# <placeholder-4/>\n"
+"[root@pcmk-1 ~]# <userinput>cp /etc/corosync/corosync.conf.example  /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*mcastaddr:.*/mcastaddr:\\ $ais_mcast/g\" /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*mcastport:.*/mcastport:\\ $ais_port/g\" /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*bindnetaddr:.*/bindnetaddr:\\ $ais_addr/g\" /etc/corosync/corosync.conf</userinput>\n"
 "      "
 msgstr ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
-"[root@pcmk-1 ~]# <placeholder-2/>\n"
-"[root@pcmk-1 ~]# <placeholder-3/>\n"
-"[root@pcmk-1 ~]# <placeholder-4/>\n"
+"[root@pcmk-1 ~]# <userinput>cp /etc/corosync/corosync.conf.example  /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*mcastaddr:.*/mcastaddr:\\ $ais_mcast/g\" /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*mcastport:.*/mcastport:\\ $ais_port/g\" /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*bindnetaddr:.*/bindnetaddr:\\ $ais_addr/g\" /etc/corosync/corosync.conf</userinput>\n"
 "      "
 
-#: Ch-Installation.xml:850(para)
+#. Tag: para
+#, no-c-format
 msgid "Finally, tell Corosync to load the Pacemaker plugin."
 msgstr "În sfârșit, spuneți Corosync-ului să încarce plugin-ul de Pacemaker."
 
-#: Ch-Installation.xml:854(userinput)
-#, no-wrap
-msgid "cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/pcmk"
-msgstr "cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/pcmk"
-
-#: Ch-Installation.xml:853(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/pcmk</userinput>\n"
 "service {\n"
 "        # Load the Pacemaker Cluster Resource Manager\n"
 "        name: pacemaker\n"
@@ -1496,7 +1363,7 @@ msgid ""
 "      "
 msgstr ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/pcmk</userinput>\n"
 "service {\n"
 "        # Load the Pacemaker Cluster Resource Manager\n"
 "        name: pacemaker\n"
@@ -1505,58 +1372,54 @@ msgstr ""
 "END\n"
 "      "
 
-#: Ch-Installation.xml:862(para)
-msgid "The final configuration should look something like the sample in <xref linkend=\"ap-corosync-conf\"/>."
+#. Tag: para
+#, no-c-format
+msgid "The final configuration should look something like the sample in <xref linkend=\"ap-corosync-conf\" />."
 msgstr "Configurația finală ar trebui să arate ceva similar cu exemplul din <xref linkend=\"ap-corosync-conf\"/>."
 
-#: Ch-Installation.xml:866(para)
+#. Tag: para
+#, no-c-format
 msgid "When run in version 1 mode, the plugin does not start the Pacemaker daemons. Instead it just sets up the quorum and messaging interfaces needed by the rest of the stack."
 msgstr "Când rulează în modul versiunea 1, plugin-ul nu pornește daemonii Pacemaker-ului. În schimb doar setează quorum-ul și interfețele de mesagerie necesitate de către restul stivei."
 
-#: Ch-Installation.xml:875(para)
+#. Tag: para
+#, no-c-format
+msgid "Starting the dameons occurs when the Pacemaker init script is invoked. This resolves two long standing issues:"
+msgstr "Pornirea daemonilor se întâmplă când scriptul de init al Pacemaker este invocat. Acest lucru rezolvă două probleme existente de mult timp: "
+
+#. Tag: para
+#, no-c-format
 msgid "Forking inside a multi-threaded process like Corosync causes all sorts of pain. This has been problematic for Pacemaker as it needs a number of daemons to be spawned."
 msgstr "Forking-ul înăuntrul unui proces multi-threaded precum Corosync cauzează tot felul de probleme. Acest lucru a fost problematic pentru Pacemaker din moment ce acesta are nevoie de un număr de daemoni să fie lansați în execuție."
 
-#: Ch-Installation.xml:881(para)
+#. Tag: para
+#, no-c-format
 msgid "Corosync was never designed for staggered shutdown - something previously needed in order to prevent the cluster from leaving before Pacemaker could stop all active resources."
-msgstr "Corosync nu a fost niciodată conceput pentru închiderea în pași - un aspect necesar anterior pentru a preveni clusterul de la a ieși înainte ca Pacemaker să poată opri toate resursele active."
+msgstr "Corosync nu a fost niciodată conceput pentru închiderea în pași - un aspect necesar anterior pentru a preveni clusterul din a ieși înainte ca Pacemaker să poată opri toate resursele active."
 
-#: Ch-Installation.xml:870(para)
-msgid "Starting the dameons occurs when the Pacemaker init script is invoked. This resolves two long standing issues: <placeholder-1/>"
-msgstr "Pornirea daemonilor se întâmplă când scriptul de init al Pacemaker este invocat. Acest lucru rezolvă două probleme existente de mult timp: <placeholder-1/>"
-
-#: Ch-Installation.xml:890(title)
+#. Tag: title
+#, no-c-format
 msgid "Propagate the Configuration"
 msgstr "Propagarea Configurației"
 
-#: Ch-Installation.xml:891(para)
+#. Tag: para
+#, no-c-format
 msgid "Now we need to copy the changes so far to the other node:"
 msgstr "Acum trebuie să copiem modificările făcute până acum pe celălalt nod:"
 
-#: Ch-Installation.xml:895(userinput)
-#, no-wrap
-msgid "for f in /etc/corosync/corosync.conf /etc/corosync/service.d/pcmk /etc/hosts; do scp $f pcmk-2:$f ; done"
-msgstr "for f in /etc/corosync/corosync.conf /etc/corosync/service.d/pcmk /etc/hosts; do scp $f pcmk-2:$f ; done"
-
-#: Ch-Installation.xml:894(screen)
-#, no-wrap
+#. Tag: screen
+#, no-c-format
 msgid ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>for f in /etc/corosync/corosync.conf /etc/corosync/service.d/pcmk /etc/hosts; do scp $f pcmk-2:$f ; done</userinput>\n"
 "corosync.conf                            100% 1528     1.5KB/s   00:00\n"
 "hosts                                    100%  281     0.3KB/s   00:00\n"
 "[root@pcmk-1 ~]#\n"
 "      "
 msgstr ""
 "\n"
-"[root@pcmk-1 ~]# <placeholder-1/>\n"
+"[root@pcmk-1 ~]# <userinput>for f in /etc/corosync/corosync.conf /etc/corosync/service.d/pcmk /etc/hosts; do scp $f pcmk-2:$f ; done</userinput>\n"
 "corosync.conf                            100% 1528     1.5KB/s   00:00\n"
 "hosts                                    100%  281     0.3KB/s   00:00\n"
 "[root@pcmk-1 ~]#\n"
 "      "
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ch-Installation.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
-
