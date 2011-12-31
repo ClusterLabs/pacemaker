@@ -31,7 +31,7 @@ Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>The network interface 
 Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed.</emphasis>
 </screen>
 		<para>
-			With one node functional, its now safe to start Corosync on the second node as well.
+			With one node functional, it's now safe to start Corosync on the second node as well.
 		</para>
 		
 <screen>

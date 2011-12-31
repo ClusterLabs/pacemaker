@@ -7,7 +7,7 @@
 	<title>Apache - Adding More Services</title>
 	<note>
 		<para>
-			Now that we have a basic but functional active/passive two-node cluster, we’re ready to add some real services. We’re going to start with Apache because its a feature of many clusters and relatively simple to configure.
+			Now that we have a basic but functional active/passive two-node cluster, we’re ready to add some real services. We’re going to start with Apache because it's a feature of many clusters and relatively simple to configure.
 		</para>
 	</note>
 	<section>
@@ -237,7 +237,7 @@ WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-1<
 		  Here we instruct the cluster that WebSite can only run on the host that ClusterIP is active on.
 		</para>
 		<para>
-		  For the constraint, we need a name (choose something descriptive like website-with-ip), indicate that its mandatory (so that if ClusterIP is not active anywhere, WebSite will not be permitted to run anywhere either) by specifying a score of INFINITY and finally list the two resources.
+		  For the constraint, we need a name (choose something descriptive like website-with-ip), indicate that it's mandatory (so that if ClusterIP is not active anywhere, WebSite will not be permitted to run anywhere either) by specifying a score of INFINITY and finally list the two resources.
 		</para>
 		<note>
 		  <para>
@@ -293,7 +293,7 @@ WebSite        (ocf::heartbeat:apache):        Started pcmk-2
 	    When Apache starts, it binds to the available IP addresses. 
 	    It doesn’t know about any addresses we add afterwards, so not only do they need to run on the same node, but we need to make sure ClusterIP is already active before we start WebSite. 
 	    We do this by adding an ordering constraint. 
-	    We need to give it a name (choose something descriptive like apache-after-ip), indicate that its mandatory (so that any recovery for ClusterIP will also trigger recovery of WebSite) and list the two resources in the order we need them to start.
+	    We need to give it a name (choose something descriptive like apache-after-ip), indicate that it's mandatory (so that any recovery for ClusterIP will also trigger recovery of WebSite) and list the two resources in the order we need them to start.
 	  </para>
 		
 <screen>

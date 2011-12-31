@@ -54,7 +54,7 @@ property $id="cib-bootstrap-options" \
 			The last XML you’ll see in this document
 		</para>
 		<para>
-			Before we make any changes, its a good idea to check the validity of the configuration.
+			Before we make any changes, it's a good idea to check the validity of the configuration.
 		</para>
 		
 <screen>
@@ -109,7 +109,7 @@ crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: NOTE: Clusters wi
 	<section>
 		<title>Adding a Resource</title>
 		<para>
-			The first thing we should do is configure an IP address. Regardless of where the cluster service(s) are running, we need a consistent address to contact them on. Here I will choose and add 192.168.122.101 as the floating address, give it the imaginative name ClusterIP and tell the cluster to check that its running every 30 seconds.
+			The first thing we should do is configure an IP address. Regardless of where the cluster service(s) are running, we need a consistent address to contact them on. Here I will choose and add 192.168.122.101 as the floating address, give it the imaginative name ClusterIP and tell the cluster to check that it's running every 30 seconds.
 		</para>
 		<important>
 			<para>
