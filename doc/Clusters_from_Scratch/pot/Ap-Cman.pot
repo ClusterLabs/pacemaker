@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-12-29T20:04:51\n"
-"PO-Revision-Date: 2011-12-29T20:04:51\n"
+"POT-Creation-Date: 2011-12-31T15:15:49\n"
+"PO-Revision-Date: 2011-12-31T15:15:49\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -29,7 +29,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In a traditional Corosync-Pacemaker cluster, a Pacemaker plugin is loaded to provide membership and quorum information. The motivation for wanting to use CMAN for this instead, is to ensure all elements of the cluster stack are making decisions based on the same membership and quorum data. <footnote> <para> A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecessary down-time and/or data corruption. </para> </footnote>"
+msgid "In a traditional Corosync-Pacemaker cluster, a Pacemaker plugin is loaded to provide membership and quorum information. The motivation for wanting to use CMAN for this instead, is to ensure all elements of the cluster stack are making decisions based on the same membership and quorum data. <footnote> <para> A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecessary downtime and/or data corruption. </para> </footnote>"
 msgstr ""
 
 #. Tag: para
@@ -54,7 +54,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The preferred approach for enabling CMAN is to configure <filename>cluster.conf</filename> and use the <filename>/etc/init.d/cman</filename> script to start Corosync. Its far easier to maintain and start automatically starts the necessary pieces for using GFS2."
+msgid "The preferred approach for enabling CMAN is to configure <filename>cluster.conf</filename> and use the <filename>/etc/init.d/cman</filename> script to start Corosync. It's far easier to maintain and start automatically starts the necessary pieces for using GFS2."
 msgstr ""
 
 #. Tag: para

@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-12-29T20:04:51\n"
-"PO-Revision-Date: 2011-12-29T20:04:51\n"
+"POT-Creation-Date: 2011-12-31T15:15:49\n"
+"PO-Revision-Date: 2011-12-31T15:15:49\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -353,7 +353,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Next we create a basic configuration file and place is in <filename>/etc/cluster/cluster.conf</filename>. The <constant>name</constant> used for each <constant>clusternode</constant> should correspond to that node's <command>uname -n</command>, just as Pacemaker expects. The <constant>nodeid</constant> can be any positive mumber but nust be unique."
+msgid "Next we create a basic configuration file and place it in <filename>/etc/cluster/cluster.conf</filename>. The <constant>name</constant> used for each <constant>clusternode</constant> should correspond to that node's <command>uname -n</command>, just as Pacemaker expects. The <constant>nodeid</constant> can be any positive number but must be unique."
 msgstr ""
 
 #. Tag: title
@@ -554,7 +554,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Before we do anything to the existing partition, we need to make sure it is unmounted. We do this by tell the cluster to stop the WebFS resource. This will ensure that other resources (in our case, Apache) using WebFS are not only stopped, but stopped in the correct order."
+msgid "Before we do anything to the existing partition, we need to make sure it is unmounted. We do this by telling the cluster to stop the WebFS resource. This will ensure that other resources (in our case, Apache) using WebFS are not only stopped, but stopped in the correct order."
 msgstr ""
 
 #. Tag: screen
@@ -792,7 +792,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There’s no point making the services active on both locations if we can’t reach them, so lets first clone the IP address. Cloned IPaddr2 resources use an iptables rule to ensure that each request only processed by one of the two clone instances. The additional meta options tell the cluster how many instances of the clone we want (one \"request bucket\" for each node) and that if all other nodes fail, then the remaining node should hold all of them. Otherwise the requests would be simply discarded."
+msgid "There’s no point making the services active on both locations if we can’t reach them, so lets first clone the IP address. Cloned IPaddr2 resources use an iptables rule to ensure that each request only gets processed by one of the two clone instances. The additional meta options tell the cluster how many instances of the clone we want (one \"request bucket\" for each node) and that if all other nodes fail, then the remaining node should hold all of them. Otherwise the requests would be simply discarded."
 msgstr ""
 
 #. Tag: screen
