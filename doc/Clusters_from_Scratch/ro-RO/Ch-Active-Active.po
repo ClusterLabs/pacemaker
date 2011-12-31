@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
-"POT-Creation-Date: 2011-12-29T20:04:51\n"
+"POT-Creation-Date: 2011-12-31T15:15:49\n"
 "PO-Revision-Date: 2011-11-22 10:42+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
@@ -359,7 +359,7 @@ msgstr ""
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "Next we create a basic configuration file and place is in <filename>/etc/cluster/cluster.conf</filename>. The <constant>name</constant> used for each <constant>clusternode</constant> should correspond to that node's <command>uname -n</command>, just as Pacemaker expects. The <constant>nodeid</constant> can be any positive mumber but nust be unique."
+msgid "Next we create a basic configuration file and place it in <filename>/etc/cluster/cluster.conf</filename>. The <constant>name</constant> used for each <constant>clusternode</constant> should correspond to that node's <command>uname -n</command>, just as Pacemaker expects. The <constant>nodeid</constant> can be any positive number but must be unique."
 msgstr "În continuare creem un fișier de configurare de bază și îl punem în <filename>/etc/cluster/cluster.conf</filename>. <constant>Numele</constant> folosit pentru fiecare <constant>clusternode</constant> ar trebui să corespundă cu <command>uname -n</command> de pe nodul respectiv, exact așa cum se așteaptă și Pacemaker. <constant>nodeid</constant> poate fi orice număr pozitiv dar trebuie să fie unic."
 
 #. Tag: title
@@ -371,7 +371,7 @@ msgstr "Un cluster.conf de bază pentru un cluster format din două noduri"
 #, no-c-format
 msgid ""
 "\n"
-"	\n"
+"\t\n"
 "&lt;?xml version=\"1.0\"?&gt;\n"
 "&lt;cluster config_version=\"1\" name=\"my_cluster_name\"&gt;\n"
 "  &lt;logging debug=\"off\"/&gt;\n"
@@ -380,8 +380,8 @@ msgid ""
 "    &lt;clusternode name=\"pcmk-2\" nodeid=\"2\"/&gt;\n"
 "  &lt;/clusternodes&gt;\n"
 "&lt;/cluster&gt;\n"
-"	\n"
-"	  "
+"\t\n"
+"\t  "
 msgstr ""
 
 #. Tag: title
@@ -408,10 +408,10 @@ msgstr "Definiția ar trebui plasată în secțiunea <constant>fencedevices</con
 #, no-c-format
 msgid ""
 "\n"
-"	\n"
+"\t\n"
 " &lt;fencedevice name=\"pcmk\" agent=\"fence_pcmk\"/&gt;\n"
-"	\n"
-"	"
+"\t\n"
+"\t"
 msgstr ""
 
 #. Tag: para
@@ -423,14 +423,14 @@ msgstr "Fiecare <constant>clusternode</constant> trebuie să fie configurat să 
 #, no-c-format
 msgid ""
 "\n"
-"	\n"
+"\t\n"
 " &lt;fence&gt;\n"
 "   &lt;method name=\"pcmk-redirect\"&gt;\n"
 "     &lt;device name=\"pcmk\" port=\"node_name_here\"/&gt;\n"
 "   &lt;/method&gt;\n"
 " &lt;/fence&gt;\n"
-"	\n"
-"	"
+"\t\n"
+"\t"
 msgstr ""
 
 #. Tag: para
@@ -447,7 +447,7 @@ msgstr "cluster.conf pentru un cluster format din două noduri cu evacuare forț
 #, no-c-format
 msgid ""
 "\n"
-"	\n"
+"\t\n"
 "&lt;?xml version=\"1.0\"?&gt;\n"
 "&lt;cluster config_version=\"1\" name=\"mycluster\"&gt;\n"
 "  &lt;logging debug=\"off\"/&gt;\n"
@@ -471,8 +471,8 @@ msgid ""
 "    &lt;fencedevice name=\"pcmk\" agent=\"fence_pcmk\"/&gt;\n"
 "  &lt;/fencedevices&gt;\n"
 "&lt;/cluster&gt;\n"
-"	\n"
-"	  "
+"\t\n"
+"\t  "
 msgstr ""
 
 #. Tag: title
@@ -491,12 +491,12 @@ msgid ""
 "\n"
 "[root@pcmk-1 ~]# <userinput>ccs_config_validate</userinput>\n"
 "Configuration validates\n"
-"	"
+"\t"
 msgstr ""
 "\n"
 "[root@pcmk-1 ~]# <userinput>ccs_config_validate</userinput>\n"
 "Configuration validates\n"
-"	"
+"\t"
 
 #. Tag: para
 #, no-c-format
@@ -521,7 +521,7 @@ msgid ""
 "   Unfencing self...                                       [  OK  ]\n"
 "   Joining fence domain...                                 [  OK  ]\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon -1</userinput>\n"
-"	"
+"\t"
 msgstr ""
 "\n"
 "[root@pcmk-1 ~]# <userinput>service cman start</userinput>\n"
@@ -538,7 +538,7 @@ msgstr ""
 "   Unfencing self...                                       [  OK  ]\n"
 "   Joining fence domain...                                 [  OK  ]\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon -1</userinput>\n"
-"	"
+"\t"
 
 #. Tag: para
 #, no-c-format
@@ -567,7 +567,7 @@ msgid ""
 "   1   M    548   2011-09-28 10:52:21  pcmk-1\n"
 "   2   M    548   2011-09-28 10:52:21  pcmk-2\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon -1</userinput>\n"
-"	"
+"\t"
 msgstr ""
 "\n"
 "[root@pcmk-2 ~]# <userinput>service cman start</userinput>\n"
@@ -588,7 +588,7 @@ msgstr ""
 "   1   M    548   2011-09-28 10:52:21  pcmk-1\n"
 "   2   M    548   2011-09-28 10:52:21  pcmk-2\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon -1</userinput>\n"
-"	"
+"\t"
 
 #. Tag: para
 #, no-c-format
@@ -607,7 +607,7 @@ msgstr "Pregătire"
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "Before we do anything to the existing partition, we need to make sure it is unmounted. We do this by tell the cluster to stop the WebFS resource. This will ensure that other resources (in our case, Apache) using WebFS are not only stopped, but stopped in the correct order."
+msgid "Before we do anything to the existing partition, we need to make sure it is unmounted. We do this by telling the cluster to stop the WebFS resource. This will ensure that other resources (in our case, Apache) using WebFS are not only stopped, but stopped in the correct order."
 msgstr "Înainte de a face orice partiției existente, trebuie să ne asigurăm că este nemontată. Realizăm acest lucru spunând clusterului să oprească resursa WebFS. Acest lucru va asigura că alte resurse (în cazul nostru, Apache) care folosesc WebFS nu sunt doar oprite, ci sunt oprite în ordinea corectă."
 
 #. Tag: screen
@@ -960,7 +960,7 @@ msgstr ""
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "There’s no point making the services active on both locations if we can’t reach them, so lets first clone the IP address. Cloned IPaddr2 resources use an iptables rule to ensure that each request only processed by one of the two clone instances. The additional meta options tell the cluster how many instances of the clone we want (one \"request bucket\" for each node) and that if all other nodes fail, then the remaining node should hold all of them. Otherwise the requests would be simply discarded."
+msgid "There’s no point making the services active on both locations if we can’t reach them, so lets first clone the IP address. Cloned IPaddr2 resources use an iptables rule to ensure that each request only gets processed by one of the two clone instances. The additional meta options tell the cluster how many instances of the clone we want (one \"request bucket\" for each node) and that if all other nodes fail, then the remaining node should hold all of them. Otherwise the requests would be simply discarded."
 msgstr "Nu are nici un sens să facem serviciile active în ambele locații dacă nu putem ajunge la acestea, așa că hai să clonăm adresa IP. Resursele clonate IPaddr2 folosesc o regulă de iptables pentru a se asigura că fiecare cerere nu este procesată decât de una din cele două instanțe ale clonei. Meta opțiunile adiționale spun clusterului câte instanțe ale clonei dorim (câte o \"găleată de cereri\" pentru fiecare nod) și că dacă toate celelalte noduri eșuează, atunci nodul care rămâne ar trebui să le țină pe toate. Altfel cererile ar fi pur și simplu aruncate."
 
 #. Tag: screen
