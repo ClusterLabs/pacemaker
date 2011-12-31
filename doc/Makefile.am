@@ -33,8 +33,8 @@ generated_mans	=
 
 DOCBOOK_FORMATS := html-desktop,txt
 DOCBOOK_LANGS   := en-US
-
-SVG = $(wildcard */en-US/images/pcmk-*.svg)
+DOTs = $(wildcard */en-US/images/*.dot)
+SVG = $(wildcard */en-US/images/pcmk-*.svg) $(DOTs:%.dot=%.svg)
 
 PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 	\
 	Pacemaker_Explained/en-US/images/Policy-Engine-big.png

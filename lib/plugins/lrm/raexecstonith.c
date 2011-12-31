@@ -42,7 +42,6 @@
 #  include <glue_config.h>
 #endif
 
-#include <clplumbing/cl_log.h>
 #include <clplumbing/uids.h>
 #include <pils/plugin.h>
 #include <dirent.h>
@@ -177,7 +176,6 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
     stonith_api->cmds->disconnect(stonith_api);
     stonith_api_delete(stonith_api);
 
-    /* cl_log(LOG_DEBUG, "stonithRA orignal exit code=%d", exit_value); */
     exit(map_ra_retvalue(rc, op_type, NULL));
 }
 

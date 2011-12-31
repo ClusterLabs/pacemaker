@@ -48,9 +48,12 @@ extern int openais_dispatch_send(void *conn, void *msg, int mlen);
 
 #  endif
 
+#if !CS_USES_LIBQB
+#  include <corosync/coroipc_types.h>
+#endif
+
 #  ifdef SUPPORT_COROSYNC
 #    include <corosync/corodefs.h>
-#    include <corosync/coroipc_types.h>
 #    include <corosync/swab.h>
 #    include <corosync/hdb.h>
 
@@ -149,8 +152,8 @@ level2char(int level)
 	    log_printf(LOG_DEBUG, "debug%d: %s: " fmt,			\
 		       level-LOG_INFO, __PRETTY_FUNCTION__ , ##args);	\
 	} else {							\
-	    log_printf(level, "%s: %s: " fmt, level2char(level),	\
-		       __PRETTY_FUNCTION__ , ##args);			\
+            qb_log_from_external_source(__func__, __FILE__,             \
+               fmt, level, __LINE__, 0, ##args);			\
 	}								\
     } while(0)
 

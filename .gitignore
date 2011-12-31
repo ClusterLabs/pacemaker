@@ -8,6 +8,7 @@ Makefile.in
 .deps
 .libs
 *.pc
+*.pyc
 *.bz2
 *.rpm
 *.la
@@ -68,6 +69,7 @@ tools/hb2openais.sh
 *.8.xml
 *.8.html
 doc/*/en-US/images/*.png
+doc/*/tmp/**
 doc/*/publish
 cib/cib
 cib/cibmon
@@ -112,3 +114,15 @@ mock
 HTML
 pacemaker.spec
 pengine/.regression.failed.diff
+ClusterLabs-pacemaker-*.tar.gz
+coverity-*
+
+compat_reports
+.ABI-build
+abi_dumps
+logs
+
+*.sed
+*.orig
+*.rej
+*.swp

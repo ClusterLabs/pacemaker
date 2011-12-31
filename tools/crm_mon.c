@@ -316,13 +316,13 @@ static struct crm_option long_options[] = {
     {"xml-file",       1, 0, 'x', NULL, 1},
 
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', "Display the cluster´s status on the console with updates as they occur:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Display the cluster status on the console with updates as they occur:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_mon", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Display the cluster´s status on the console just once then exit:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Display the cluster status on the console just once then exit:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_mon -1", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Display your cluster´s status, group resources by node, and include inactive resources in the list:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Display your cluster status, group resources by node, and include inactive resources in the list:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_mon --group-by-node --inactive", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it write the cluster´s status to an HTML file:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_mon --daemonize --as-html /path/to/docroot/filename.html", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send email alerts:", pcmk_option_paragraph|!ENABLE_ESMTP},
     {"-spacer-",	1, 0, '-', " crm_mon --daemonize --mail-to user@example.com --mail-host mail.example.com", pcmk_option_example|!ENABLE_ESMTP},
@@ -365,8 +365,7 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 'V':
-                cl_log_enable_stderr(TRUE);
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case 'Q':
                 print_last_updated = FALSE;
@@ -472,7 +471,7 @@ main(int argc, char **argv)
 
     } else if (daemonize) {
         as_console = FALSE;
-        cl_log_enable_stderr(FALSE);
+        crm_enable_stderr(FALSE);
 
         if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent) {
             printf
@@ -487,7 +486,7 @@ main(int argc, char **argv)
         initscr();
         cbreak();
         noecho();
-        cl_log_enable_stderr(FALSE);
+        crm_enable_stderr(FALSE);
 #else
         one_shot = TRUE;
         as_console = FALSE;
@@ -1437,7 +1436,7 @@ crm_snmp_init(const char *target, char *community)
         return NULL;
     }
 
-    if (crm_log_level > LOG_INFO) {
+    if (get_crm_log_level() > LOG_INFO) {
         char *debug_tokens = crm_strdup("run:shell,snmptrap,tdomain");
 
         debug_register_tokens(debug_tokens);

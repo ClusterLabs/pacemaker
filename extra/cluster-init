@@ -109,7 +109,7 @@ while true; do
     esac
 done
 
-if [ -z $host_input ]; then
+if [ -z "$host_input" ]; then
     if [ ! -z $CTS_GROUP ]; then
 	host_input="-g $CTS_GROUP"
 	dsh_group=`echo $CTS_GROUP | sed s/[a-zA-Z]*//`
@@ -137,7 +137,11 @@ if [ $accept_defaults = 0 ]; then
     if [ $CMAN = 1 ]; then
 	echo ""
 	echo "Without a default domain, cman probably wont start because it can't look up the IP for hosts"
-	read -p "Shall I set one? [No]" -t 60 DOMAIN
+	read -p "Shall I set one? [No] (domain) " -t 60 DOMAIN
+    elif [ $pcmk_ver = 10 ]; then
+	echo ""
+	echo "Without a default domain, external/ssh fencing probably wont work because it can't find its peers"
+	read -p "Shall I set one? [No] (domain) " -t 60 DOMAIN
     fi
     echo ""
     read -p "Shall I install/update the relevant packages? [Yes] "  -t 60 INSTALL
@@ -176,9 +180,19 @@ if [ ! -z $rpm_repo ]; then
     REPO=$rpm_repo/$distro
 fi
 
+pkgs="corosync fence-virt qarsh-server xinetd nmap"
+if [ $do_heartbeat = 1 ]; then
+    pkgs="$pkgs heartbeat"
+fi
+if [ $CMAN = 1 ]; then
+    pkgs="$pkgs cman"
+fi
+
+
 init=`mktemp`
 cat<<-END>$init
 verbose=0
+pkgs="$pkgs"
 
 lhost=\`uname -n\`
 lshort=\`echo \$lhost | awk -F. '{print \$1}'\`
@@ -206,57 +220,53 @@ fatal() {
     exit 1
 }
 
-case \$SELINUX in
+case $SELINUX in
     [Yy][Ee][Ss]|[Yy]|"") 
 	sed -i.sed "s/enforcing/disabled/g" /etc/selinux/config
 	;;
 esac
 
-case \$IPTABLES in
+case $IPTABLES in
     [Yy][Ee][Ss]|[Yy]|"") 
 	service iptables stop
 	chkconfig iptables off
 	;;
 esac
 
-case \$DOMAIN in
+set -x
+case $DOMAIN in
     [Nn][Oo]|"") 
 	;;
-    *)
-	for host in $host_list; do
-	    grep -q "domain" /etc/resolv.conf
-	    if [ $? = 1 ]; then
-		sed -i.sed "s/nameserver/domain\ $DOMAIN\\\nnameserver/g" /etc/resolv.conf
-	    fi
-	done
+    *.*)
+	if
+            ! grep domain /etc/resolv.conf
+        then
+	    sed -i.sed "s/nameserver/domain\ $DOMAIN\\\nnameserver/g" /etc/resolv.conf
+	fi
 	;;
+    *) echo "Unknown domain: $DOMAIN";;
 esac
+set +x
 
 case $INSTALL in
     [Yy][Ee][Ss]|[Yy]|"") 
 
 	if [ ! -z $REPO ]; then
 	    info Configuring Clusterlabs repo: $REPO
-	    for host in $host_list; do
-		wget -O /etc/yum.repos.d/clusterlabs.repo http://www.clusterlabs.org/$REPO/clusterlabs.repo &>/dev/null
-	    done
+	    yum install -y wget
+	    rm -f /etc/yum.repos.d/clusterlabs.repo
+            wget -O /etc/yum.repos.d/clusterlabs.repo http://www.clusterlabs.org/$REPO/clusterlabs.repo &>/dev/null
 	fi
 
 	info Installing software on ${host}
-	pkgs="corosync fence-virt qarsh-server xinetd nmap"
-	if [ $do_heartbeat = 1 ]; then
-	    pkgs="$pkgs heartbeat"
-	fi
-	if [ $CMAN = 1 ]; then
-	    pkgs="$pkgs cman"
-	fi
-	
 	if [ $pcmk_ver = 10 ]; then
-	    yum update -y $pkgs at
+	    yum install -y $pkgs at
 	    service atd start
-	    yum update -y --disablerepo=* --enablerepo=clusterlabs* pacemaker
+	    systemctl enable atd.service
+
+	    yum install -y "pacemaker < 1.1"
 	else
-	    yum update -y $pkgs pacemaker
+	    yum install -y $pkgs pacemaker
 	fi
 	;;
 esac

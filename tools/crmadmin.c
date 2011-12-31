@@ -147,8 +147,7 @@ main(int argc, char **argv)
             case 'V':
                 BE_VERBOSE = TRUE;
                 admin_verbose = XML_BOOLEAN_TRUE;
-                cl_log_enable_stderr(TRUE);
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case 't':
                 message_timeout_ms = atoi(optarg);

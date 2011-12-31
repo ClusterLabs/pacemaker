@@ -138,8 +138,7 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 'V':
-                cl_log_enable_stderr(TRUE);
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case '$':
             case '?':
@@ -197,7 +196,7 @@ main(int argc, char **argv)
     }
 
     if (BE_QUIET == FALSE) {
-        cl_log_args(argc, argv);
+        crm_log_args(argc, argv);
     }
 
     if (optind < argc) {

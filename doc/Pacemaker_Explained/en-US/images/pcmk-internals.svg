@@ -840,7 +840,7 @@
            y="774.01617"
            x="390.88086"
            id="tspan4036"
-           sodipodi:role="line">crmd</tspan></text>
+           sodipodi:role="line">CRMd</tspan></text>
       <path
          inkscape:connector-type="polyline"
          id="path7961"
@@ -866,7 +866,7 @@
            id="tspan14136"
            x="390.88086"
            y="774.01617"
-           style="font-size:32px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">stonithd</tspan></text>
+           style="font-size:32px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">STONITHd</tspan></text>
       <rect
          ry="0.34836906"
          y="657.11078"
@@ -887,7 +887,7 @@
            y="774.01617"
            x="390.88086"
            id="tspan14144"
-           sodipodi:role="line">cib</tspan></text>
+           sodipodi:role="line">CIB</tspan></text>
       <rect
          style="fill:url(#radialGradient16570);fill-opacity:1;stroke:#000000;stroke-width:0.55753452;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          id="rect14154"
@@ -908,7 +908,7 @@
            id="tspan14158"
            x="390.88086"
            y="774.01617"
-           style="font-size:32px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">pengine</tspan></text>
+           style="font-size:32px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">PEngine</tspan></text>
       <rect
          ry="0.34743574"
          y="572.75574"
@@ -928,7 +928,7 @@
            id="tspan7856"
            x="237.91824"
            y="608.51038"
-           style="font-size:24px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">lrmd</tspan></text>
+           style="font-size:24px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">LRMd</tspan></text>
       <rect
          ry="0.20164233"
          y="741.75012"
@@ -949,7 +949,7 @@
            id="tspan14174"
            x="390.88086"
            y="774.01617"
-           style="font-size:17.77115822px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">cluster abstraction layer</tspan></text>
+           style="font-size:17.77115822px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">Cluster Abstraction Layer</tspan></text>
       <rect
          style="fill:url(#radialGradient16576);fill-opacity:1;stroke:#000000;stroke-width:0.59294689;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          id="rect14176"
@@ -969,7 +969,7 @@
            y="877.64417"
            x="562.24463"
            id="tspan14180"
-           sodipodi:role="line">corosync</tspan></text>
+           sodipodi:role="line">Corosync</tspan></text>
       <rect
          style="fill:url(#radialGradient16578);fill-opacity:1;stroke:#000000;stroke-width:0.49453112;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          id="rect14184"
@@ -989,7 +989,7 @@
            y="839.93359"
            x="213.90302"
            id="tspan14188"
-           sodipodi:role="line">ccm</tspan></text>
+           sodipodi:role="line">CCM</tspan></text>
       <text
          xml:space="preserve"
          style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
@@ -1021,7 +1021,7 @@
            id="tspan14206"
            x="212.8954"
            y="921.30896"
-           style="font-size:24px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">heartbeat</tspan></text>
+           style="font-size:24px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">Heartbeat</tspan></text>
       <path
          transform="translate(0,452.36218)"
          inkscape:connector-type="polyline"
@@ -1123,7 +1123,7 @@
            y="998.37762"
            x="331.45547"
            id="tspan14188-3"
-           sodipodi:role="line">linux-ha project</tspan></text>
+           sodipodi:role="line">Linux-HA Project</tspan></text>
       <rect
          style="fill:url(#radialGradient16745);fill-opacity:1;stroke:#000000;stroke-width:0.43995202;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          id="rect16739"
@@ -1144,7 +1144,7 @@
            y="774.01617"
            x="390.88086"
            id="tspan16743"
-           sodipodi:role="line">pacemaker project</tspan></text>
+           sodipodi:role="line">Pacemaker Project</tspan></text>
     </g>
     <rect
        style="fill:none;stroke:#000000;stroke-width:1.89999998;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:7.6, 1.9;stroke-dashoffset:0"

@@ -186,7 +186,7 @@ static void schedule_stonith_command(async_command_t *cmd, stonith_device_t *dev
     mainloop_set_trigger(device->work);
 }
 
-static void free_device(gpointer data)
+void free_device(gpointer data)
 {
     GListPtr gIter = NULL;
     stonith_device_t *device = data;
@@ -374,7 +374,7 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     return device;
 }
 
-static int stonith_device_register(xmlNode *msg) 
+int stonith_device_register(xmlNode *msg) 
 {
     const char *value = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
@@ -931,11 +931,6 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
     if(get_xpath_object("//"T_STONITH_REPLY, request, LOG_DEBUG_3)) {
 	is_reply = TRUE;
-    }
-    
-    if(device_list == NULL) {
-	device_list = g_hash_table_new_full(
-	    crm_str_hash, g_str_equal, NULL, free_device);
     }
     
     crm_debug("Processing %s%s from %s (%16x)", op, is_reply?" reply":"",

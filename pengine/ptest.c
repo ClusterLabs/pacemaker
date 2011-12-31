@@ -167,6 +167,7 @@ main(int argc, char **argv)
     const char *dot_file = NULL;
     const char *graph_file = NULL;
     const char *input_file = NULL;
+    const char *input_xml = NULL;
 
     /* disable glib's fancy allocators that can't be free'd */
     GMemVTable vtable;
@@ -203,7 +204,8 @@ main(int argc, char **argv)
                 inhibit_exit = TRUE;
                 break;
             case 'X':
-                use_stdin = TRUE;
+                /*use_stdin = TRUE;*/
+                input_xml = optarg;
                 break;
             case 's':
                 show_scores = TRUE;
@@ -227,8 +229,7 @@ main(int argc, char **argv)
                 input_file = optarg;
                 break;
             case 'V':
-                cl_log_enable_stderr(TRUE);
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case 'L':
                 USE_LIVE_CIB = TRUE;
@@ -290,6 +291,9 @@ main(int argc, char **argv)
     } else if (use_stdin) {
         source = "stdin";
         cib_object = filename2xml(NULL);
+    } else if (input_xml) {
+        source = "input string";
+        cib_object = string2xml(input_xml);
     }
 
     if (cib_object == NULL && source) {

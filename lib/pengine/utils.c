@@ -1121,34 +1121,19 @@ resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
 gint
 sort_op_by_callid(gconstpointer a, gconstpointer b)
 {
+    int a_call_id = -1;
+    int b_call_id = -1;
+
     char *a_uuid = NULL;
     char *b_uuid = NULL;
+    
     const xmlNode *xml_a = a;
     const xmlNode *xml_b = b;
 
     const char *a_xml_id = crm_element_value_const(xml_a, XML_ATTR_ID);
     const char *b_xml_id = crm_element_value_const(xml_b, XML_ATTR_ID);
 
-    const char *a_task_id = crm_element_value_const(xml_a, XML_LRM_ATTR_CALLID);
-    const char *b_task_id = crm_element_value_const(xml_b, XML_LRM_ATTR_CALLID);
-
-    const char *a_key = crm_element_value_const(xml_a, XML_ATTR_TRANSITION_MAGIC);
-    const char *b_key = crm_element_value_const(xml_b, XML_ATTR_TRANSITION_MAGIC);
-
-    int dummy = -1;
-
-    int a_id = -1;
-    int b_id = -1;
-
-    int a_rc = -1;
-    int b_rc = -1;
-
-    int a_status = -1;
-    int b_status = -1;
-
-    int a_call_id = -1;
-    int b_call_id = -1;
-
+    
     if (safe_str_eq(a_xml_id, b_xml_id)) {
         /* We have duplicate lrm_rsc_op entries in the status
          *    section which is unliklely to be a good thing
@@ -1159,11 +1144,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         sort_return(0, "duplicate");
     }
 
-    CRM_CHECK(a_task_id != NULL, sort_return(0, "bad id a"));
-    CRM_CHECK(a_task_id != NULL, sort_return(0, "bad id b"));
-
-    a_call_id = crm_parse_int(a_task_id, NULL);
-    b_call_id = crm_parse_int(b_task_id, NULL);
+    crm_element_value_const_int(xml_a, XML_LRM_ATTR_CALLID, &a_call_id);
+    crm_element_value_const_int(xml_b, XML_LRM_ATTR_CALLID, &b_call_id);
 
     if (a_call_id == -1 && b_call_id == -1) {
         /* both are pending ops so it doesnt matter since
@@ -1178,52 +1160,76 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         sort_return(1, "call id");
 
     } else if (b_call_id >= 0 && a_call_id == b_call_id) {
-        /* The last op and last_failed_op are the same */
-        sort_return(0, "duplicate failure");
-    }
-
-    /* now process pending ops */
-    CRM_CHECK(a_key != NULL && b_key != NULL, sort_return(0, "No key"));
-    CRM_CHECK(decode_transition_magic(a_key, &a_uuid, &a_id, &dummy, &a_status, &a_rc, &dummy),
-              sort_return(0, "bad magic a"));
-    CRM_CHECK(decode_transition_magic(b_key, &b_uuid, &b_id, &dummy, &b_status, &b_rc, &dummy),
-              sort_return(0, "bad magic b"));
-
-    /* try and determin the relative age of the operation...
-     * some pending operations (ie. a start) may have been supuerceeded
-     *   by a subsequent stop
-     *
-     * [a|b]_id == -1 means its a shutdown operation and _always_ comes last
-     */
-    if (safe_str_neq(a_uuid, b_uuid) || a_id == b_id) {
         /*
-         * some of the logic in here may be redundant...
-         *
-         * if the UUID from the TE doesnt match then one better
-         *   be a pending operation.
-         * pending operations dont survive between elections and joins
-         *   because we query the LRM directly
+         * The op and last_failed_op are the same
+         * Order on last-rc-change
+         */
+        int last_a = -1;
+        int last_b = -1;
+
+        crm_element_value_const_int(xml_a, "last-rc-change", &last_a);
+        crm_element_value_const_int(xml_b, "last-rc-change", &last_b);
+
+        if (last_a >= 0 && last_a < last_b) {
+            sort_return(-1, "rc-change");
+
+        } else if (last_b >= 0 && last_a > last_b) {
+            sort_return(1, "rc-change");
+        }
+        sort_return(0, "rc-change");
+
+    } else {
+        /* One of the inputs is a pending operation
+         * Attempt to use XML_ATTR_TRANSITION_MAGIC to determine its age relative to the other
          */
 
-        CRM_CHECK(a_call_id == -1 || b_call_id == -1, sort_return(0, "odd"));
-        CRM_CHECK(a_call_id >= 0 || b_call_id >= 0, sort_return(0, "odd"));
+        int a_id = -1;
+        int b_id = -1;
+        int dummy = -1;
 
-        if (b_call_id == -1) {
-            sort_return(-1, "transition + call");
+        const char *a_magic = crm_element_value_const(xml_a, XML_ATTR_TRANSITION_MAGIC);
+        const char *b_magic = crm_element_value_const(xml_b, XML_ATTR_TRANSITION_MAGIC);
 
-        } else if (a_call_id == -1) {
-            sort_return(1, "transition + call");
+        CRM_CHECK(a_magic != NULL && b_magic != NULL, sort_return(0, "No magic"));
+        CRM_CHECK(decode_transition_magic(a_magic, &a_uuid, &a_id, &dummy, &dummy, &dummy, &dummy),
+                  sort_return(0, "bad magic a"));
+        CRM_CHECK(decode_transition_magic(b_magic, &b_uuid, &b_id, &dummy, &dummy, &dummy, &dummy),
+                  sort_return(0, "bad magic b"));
+    
+        /* try and determin the relative age of the operation...
+         * some pending operations (ie. a start) may have been supuerceeded
+         *   by a subsequent stop
+         *
+         * [a|b]_id == -1 means its a shutdown operation and _always_ comes last
+         */
+        if (safe_str_neq(a_uuid, b_uuid) || a_id == b_id) {
+            /*
+             * some of the logic in here may be redundant...
+             *
+             * if the UUID from the TE doesnt match then one better
+             *   be a pending operation.
+             * pending operations dont survive between elections and joins
+             *   because we query the LRM directly
+             */
+
+            if (b_call_id == -1) {
+                sort_return(-1, "transition + call");
+
+            } else if (a_call_id == -1) {
+                sort_return(1, "transition + call");
+            }
+
+        } else if ((a_id >= 0 && a_id < b_id) || b_id == -1) {
+            sort_return(-1, "transition");
+
+        } else if ((b_id >= 0 && a_id > b_id) || a_id == -1) {
+            sort_return(1, "transition");
         }
-
-    } else if ((a_id >= 0 && a_id < b_id) || b_id == -1) {
-        sort_return(-1, "transition");
-
-    } else if ((b_id >= 0 && a_id > b_id) || a_id == -1) {
-        sort_return(1, "transition");
     }
-
+    
     /* we should never end up here */
     CRM_CHECK(FALSE, sort_return(0, "default"));
+
 }
 
 time_t

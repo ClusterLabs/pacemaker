@@ -39,6 +39,10 @@
 #include <time.h>
 #include <libgen.h>
 
+#if LIBQB_LOGGING
+#  include <qb/qbdefs.h>
+#endif
+
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -66,7 +70,6 @@
 CRM_TRACE_INIT_DATA(common);
 
 static uint ref_counter = 0;
-unsigned int crm_log_level = LOG_INFO;
 gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
 const char *crm_system_name = "unknown";
@@ -502,166 +505,44 @@ crm_log_init_quiet(const char *entity, int level, gboolean coredir, gboolean to_
     return crm_log_init_worker(entity, level, coredir, to_stderr, argc, argv, TRUE);
 }
 
-#if SUPPORT_TRACING
-static int
-update_trace_data(struct _pcmk_ddebug_query *query, struct _pcmk_ddebug *start,
-                  struct _pcmk_ddebug *stop)
-{
-    int lpc = 0;
-    unsigned nfound = 0;
-    struct _pcmk_ddebug *dp;
-    const char *match = "unknown";
-
-    CRM_ASSERT(stop != NULL);
-    CRM_ASSERT(start != NULL);
-
-    for (dp = start; dp != stop; dp++) {
-        gboolean bump = FALSE;
-
-        lpc++;
-        /* fprintf(stderr, "checking: %-12s %20s:%u fmt:%s\n", */
-        /*      dp->function, dp->filename, dp->lineno, dp->format); */
-
-        if (query->functions && strstr(query->functions, dp->function) != NULL) {
-            match = "function";
-            bump = TRUE;
-        }
-
-        if (query->files) {
-            char token[500];
-            const char *offset = NULL;
-            const char *next = query->files;
-
-            do {
-                offset = next;
-                next = strchrnul(offset, ',');
-                snprintf(token, 499, "%.*s", (int)(next - offset), offset);
-
-                if (query->files && strstr(dp->filename, token) != NULL) {
-                    match = "file";
-                    bump = TRUE;
-
-                } else if (next[0] != 0) {
-                    next++;
-                }
-
-            } while (bump == FALSE && next != NULL && next[0] != 0);
-        }
-
-        if (query->formats && strstr(query->formats, dp->format) != NULL) {
-            match = "format";
-            bump = TRUE;
-        }
-
-        if (bump) {
-            nfound++;
-            dp->bump = LOG_NOTICE;
-            do_crm_log_always(LOG_INFO, "Detected '%s' match: %-12s %20s:%u fmt:%s",
-                              match, dp->function, dp->filename, dp->lineno, dp->format);
-        }
-    }
-
-    query->total += lpc;
-    query->matches += nfound;
-    return nfound;
-}
-
-#  define _GNU_SOURCE
-#  include <link.h>
-#  include <stdlib.h>
-#  include <stdio.h>
-static int
-ddebug_callback(struct dl_phdr_info *info, size_t size, void *data)
-{
-    if (strlen(info->dlpi_name) > 0) {
-        struct _pcmk_ddebug_query *query = data;
-
-        void *handle;
-        void *start;
-        void *stop;
-        char *error;
-
-        handle = dlopen(info->dlpi_name, RTLD_LAZY);
-        error = dlerror();
-        if (!handle || error) {
-            crm_err("%s", error);
-            if (handle) {
-                dlclose(handle);
-            }
-            return 0;
-        }
-
-        start = dlsym(handle, "__start___verbose");
-        error = dlerror();
-        if (error) {
-            goto done;
-        }
-
-        stop = dlsym(handle, "__stop___verbose");
-        error = dlerror();
-        if (error) {
-            goto done;
-
-        } else {
-            unsigned long int len = (unsigned long int)stop - (unsigned long int)start;
-
-            crm_info("Checking for query matches in %lu trace symbols from: %s (offset: %p)",
-                     len / sizeof(struct _pcmk_ddebug), info->dlpi_name, start);
-
-            update_trace_data(query, start, stop);
-        }
-  done:
-        dlclose(handle);
-    }
-
-    return 0;
-}
-#endif
-
 void
 update_all_trace_data(void)
 {
-#if SUPPORT_TRACING
-    gboolean search = FALSE;
+#if LIBQB_LOGGING
     const char *env_value = NULL;
-    struct _pcmk_ddebug_query query;
-
-    memset(&query, 0, sizeof(struct _pcmk_ddebug_query));
 
     env_value = getenv("PCMK_trace_files");
     if (env_value) {
-        search = TRUE;
-        query.files = env_value;
+        qb_log_filter_ctl(QB_LOG_SYSLOG,
+                          QB_LOG_FILTER_ADD,
+                          QB_LOG_FILTER_FILE,
+                          env_value,
+                          LOG_TRACE);
     }
 
     env_value = getenv("PCMK_trace_formats");
     if (env_value) {
-        search = TRUE;
-        query.formats = env_value;
+        qb_log_filter_ctl(QB_LOG_SYSLOG,
+                          QB_LOG_FILTER_ADD,
+                          QB_LOG_FILTER_FORMAT,
+                          env_value,
+                          LOG_TRACE);
     }
 
     env_value = getenv("PCMK_trace_functions");
     if (env_value) {
-        search = TRUE;
-        query.functions = env_value;
+        crm_info("Looking for %s", env_value);
+        qb_log_filter_ctl(QB_LOG_SYSLOG,
+                          QB_LOG_FILTER_ADD,
+                          QB_LOG_FILTER_FUNCTION,
+                          env_value,
+                          LOG_TRACE);
+        qb_log_filter_ctl(QB_LOG_STDERR,
+                          QB_LOG_FILTER_ADD,
+                          QB_LOG_FILTER_FUNCTION,
+                          env_value,
+                          LOG_TRACE);
     }
-
-    if (search) {
-        update_trace_data(&query, __start___verbose, __stop___verbose);
-        dl_iterate_phdr(ddebug_callback, &query);
-        if (query.matches == 0) {
-            do_crm_log_always(LOG_DEBUG,
-                              "no matches for query: {fn='%s', file='%s', fmt='%s'} in %llu entries",
-                              crm_str(query.functions), crm_str(query.files),
-                              crm_str(query.formats), query.total);
-        } else {
-            do_crm_log_always(LOG_INFO,
-                              "%llu matches for query: {fn='%s', file='%s', fmt='%s'} in %llu entries",
-                              query.matches, crm_str(query.functions), crm_str(query.files),
-                              crm_str(query.formats), query.total);
-        }
-    }
-    /* return query.matches; */
 #endif
 }
 
@@ -692,23 +573,41 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     }
 
     setenv("PCMK_service", crm_system_name, 1);
+#if !LIBQB_LOGGING
     cl_log_set_entity(crm_system_name);
     set_crm_log_level(level);
     crm_set_env_options();
+#else
+    crm_log_level = level;
+#endif
 
     if (quiet) {
         /* Nuke any syslog activity */
         unsetenv("HA_logfacility");
+#if LIBQB_LOGGING
+        qb_log_init(crm_system_name, HA_LOG_FACILITY, level);
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+#endif
 
     } else {
-        cl_log_args(argc, argv);
+        crm_log_args(argc, argv);
+#if LIBQB_LOGGING
+        if (getenv("HA_logfacility") == NULL) {
+            /* Set a default */
+            qb_log_init(crm_system_name, HA_LOG_FACILITY, level);
+
+        } else {
+            qb_log_init(crm_system_name, qb_log_facility2int(getenv("HA_logfacility")), level);
+	}
+#else
         if (getenv("HA_logfacility") == NULL) {
             /* Set a default */
             cl_log_set_facility(HA_LOG_FACILITY);
-        }                       /* else: picked up by crm_set_env_options() */
+        }
+#endif
     }
 
-    cl_log_enable_stderr(to_stderr);
+    crm_enable_stderr(to_stderr);
 
     if (coredir) {
         const char *user = getenv("USER");
@@ -760,14 +659,82 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     return TRUE;
 }
 
+unsigned int crm_log_level = LOG_INFO;
+
 /* returns the old value */
 unsigned int
 set_crm_log_level(unsigned int level)
 {
     unsigned int old = crm_log_level;
+#if LIBQB_LOGGING
+    if(old > level) {
+        qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_REMOVE, QB_LOG_FILTER_FILE, "*", old);
+    }
 
+    if(old != level) {
+        if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
+	    int rc = qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
+            crm_info("New log level: %d %d", level, rc);            
+        }
+        if (qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
+            qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
+        }
+
+        /* qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_PRIORITY_BUMP, LOG_INFO - LOG_DEBUG); Needed? */
+        if(level > LOG_DEBUG) {
+            qb_log_format_set(QB_LOG_SYSLOG, "(%-12f:%5l %g) %-7p: %n: %b");
+            qb_log_format_set(QB_LOG_STDERR, "(%-12f:%5l %g) %-7p: %n: \t%b");
+
+        } else if(level > LOG_INFO) {
+            qb_log_format_set(QB_LOG_STDERR, "(%-12f:%5l %g) %-7p: %n: \t%b");
+
+        } else {
+            qb_log_format_set(QB_LOG_STDERR, "%g %-7p: %n: \t%b");
+            qb_log_format_set(QB_LOG_SYSLOG, "%g %-7p: %n: %b");
+        }
+    }
+#endif
     crm_log_level = level;
     return old;
+}
+
+void
+crm_enable_stderr(int enable)
+{
+#if LIBQB_LOGGING
+    if (enable && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
+ 	qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", crm_log_level);
+	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_TRUE);
+        qb_log_format_set(QB_LOG_STDERR, "%g %-7p: %n: \t%b");
+
+    } else if(enable == FALSE) {
+	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_FALSE);
+    }
+#else
+    cl_log_enable_stderr(enable);
+#endif
+}
+
+void
+crm_bump_log_level(void)
+{
+#if LIBQB_LOGGING
+    if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
+        set_crm_log_level(crm_log_level + 1);
+    }
+#else
+    set_crm_log_level(crm_log_level + 1);
+#endif
+    crm_enable_stderr(TRUE);
+}
+
+int
+crm_should_log(int level) 
+{
+    if(level <= crm_log_level) {
+        return 1;
+    }
+    return 0;
 }
 
 unsigned int
@@ -794,6 +761,35 @@ crm_version_helper(const char *text, char **end_text)
         }
     }
     return atoi_result;
+}
+
+void
+crm_log_args(int argc, char **argv)
+{
+    int lpc = 0;
+    int len = 0;
+    int existing_len = 0;
+    char *arg_string = NULL;
+
+    if(argc == 0 || argv == NULL) {
+        return;
+    }
+
+    for(;lpc < argc; lpc++) {
+        if(argv[lpc] == NULL) {
+            break;
+        }
+
+        len = 2 + strlen(argv[lpc]); /* +1 space, +1 EOS */
+        if(arg_string) {
+            existing_len = strlen(arg_string);
+        }
+
+        arg_string = realloc(arg_string, len + existing_len);
+        sprintf(arg_string + existing_len, "%s ", argv[lpc]);
+    }
+    cl_log(LOG_INFO, "Invoked: %s", arg_string);
+    free(arg_string);
 }
 
 /*
@@ -885,25 +881,24 @@ gboolean do_stderr = FALSE;
 void
 alter_debug(int nsig)
 {
+    int level = get_crm_log_level();
     crm_signal(DEBUG_INC, alter_debug);
     crm_signal(DEBUG_DEC, alter_debug);
-
+    
     switch (nsig) {
         case DEBUG_INC:
-            if (crm_log_level < 100) {
-                crm_log_level++;
-            }
+            crm_bump_log_level();
             break;
 
         case DEBUG_DEC:
-            if (crm_log_level > 0) {
-                crm_log_level--;
+            if (level > 0) {
+                set_crm_log_level(level-1);
             }
             break;
 
         default:
             fprintf(stderr, "Unknown signal %d\n", nsig);
-            cl_log(LOG_ERR, "Unknown signal %d", nsig);
+            crm_err("Unknown signal %d", nsig);
             break;
     }
 }
@@ -1022,7 +1017,7 @@ crm_set_env_options(void)
     cl_inherit_logging_environment(500);
     cl_log_set_logd_channel_source(NULL, NULL);
 
-    if (debug_level > 0 && (debug_level + LOG_INFO) > (int)crm_log_level) {
+    if (debug_level > 0 && (debug_level + LOG_INFO) > (int)get_crm_log_level()) {
         set_crm_log_level(LOG_INFO + debug_level);
     }
 }
@@ -1959,18 +1954,16 @@ crm_is_writable(const char *dir, const char *file,
 }
 
 static unsigned long long crm_bit_filter = 0;   /* 0x00000002ULL; */
-static unsigned int bit_log_level = LOG_DEBUG_5;
 
 long long
 crm_clear_bit(const char *function, long long word, long long bit)
 {
-    unsigned int level = bit_log_level;
-
-    if (bit & crm_bit_filter) {
-        level = LOG_ERR;
+    if(bit & crm_bit_filter) {
+	crm_err("Bit 0x%.16llx cleared by %s", bit, function);
+    } else {
+        crm_trace("Bit 0x%.16llx cleared by %s", bit, function);
     }
 
-    do_crm_log_unlikely(level, "Bit 0x%.16llx cleared by %s", bit, function);
     word &= ~bit;
 
     return word;
@@ -1979,13 +1972,12 @@ crm_clear_bit(const char *function, long long word, long long bit)
 long long
 crm_set_bit(const char *function, long long word, long long bit)
 {
-    unsigned int level = bit_log_level;
-
-    if (bit & crm_bit_filter) {
-        level = LOG_ERR;
+    if(bit & crm_bit_filter) {
+        crm_err("Bit 0x%.16llx set by %s", bit, function);
+    } else {
+        crm_trace("Bit 0x%.16llx set by %s", bit, function);
     }
 
-    do_crm_log_unlikely(level, "Bit 0x%.16llx set by %s", bit, function);
     word |= bit;
     return word;
 }
@@ -2411,7 +2403,7 @@ append_digest(lrm_op_t * op, xmlNode * update, const char *version, const char *
     digest = calculate_operation_digest(args_xml, version);
 
 #if 0
-    if (level < crm_log_level
+    if (level < get_crm_log_level()
         && op->interval == 0 && crm_str_eq(op->op_type, CRMD_ACTION_START, TRUE)) {
         char *digest_source = dump_xml_unformatted(args_xml);
 
@@ -2477,6 +2469,7 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
     xmlNode *xml_op = NULL;
     const char *task = NULL;
     gboolean dc_munges_migrate_ops = (compare_version(caller_version, "3.0.3") < 0);
+    gboolean dc_needs_unique_ops   = (compare_version(caller_version, "3.0.6") < 0);
 
     CRM_CHECK(op != NULL, return NULL);
     do_crm_log(level, "%s: Updating resouce %s after %s %s op (interval=%d)",
@@ -2514,7 +2507,7 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
     }
 
     key = generate_op_key(op->rsc_id, task, op->interval);
-    if (op->interval > 0) {
+    if(dc_needs_unique_ops && op->interval > 0) {
         op_id = crm_strdup(key);
 
     } else if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
@@ -2531,6 +2524,9 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
 
     } else if (did_rsc_op_fail(op, target_rc)) {
         op_id = generate_op_key(op->rsc_id, "last_failure", 0);
+
+    } else if (op->interval > 0) {
+        op_id = crm_strdup(key);
 
     } else {
         op_id = generate_op_key(op->rsc_id, "last", 0);
@@ -2610,7 +2606,9 @@ free_lrm_op(lrm_op_t * op)
     if (op == NULL) {
         return;
     }
-    g_hash_table_destroy(op->params);
+    if(op->params) {
+        g_hash_table_destroy(op->params);
+    }
     crm_free(op->user_data);
     crm_free(op->output);
     crm_free(op->rsc_id);

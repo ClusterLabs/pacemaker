@@ -35,6 +35,10 @@ core:
 	@echo "Building only core components: $(CORE)"
 	list='$(CORE)'; for subdir in $$list; do make -C $$subdir all; done
 
+core-install:
+	@echo "Installing only core components: $(CORE)"
+	list='$(CORE)'; for subdir in $$list; do make -C $$subdir install; done
+
 install-exec-local:
 	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CONFIG_DIR)
@@ -44,6 +48,14 @@ install-exec-local:
 if BUILD_CS_SUPPORT
 	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so
 	cp $(DESTDIR)$(libdir)/service_crm.so $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso
+endif
+if BUILD_HEARTBEAT_SUPPORT
+	$(INSTALL) -d $(DESTDIR)/$(HB_DAEMON_DIR)
+	ln -s $(CRM_DAEMON_DIR)/attrd     $(DESTDIR)$(HB_DAEMON_DIR)/
+	ln -s $(CRM_DAEMON_DIR)/cib       $(DESTDIR)$(HB_DAEMON_DIR)/
+	ln -s $(CRM_DAEMON_DIR)/crmd      $(DESTDIR)$(HB_DAEMON_DIR)/
+	ln -s $(CRM_DAEMON_DIR)/pengine   $(DESTDIR)$(HB_DAEMON_DIR)/
+	ln -s $(CRM_DAEMON_DIR)/stonithd  $(DESTDIR)$(HB_DAEMON_DIR)/
 endif
 # Use chown because the user/group may not exist
 

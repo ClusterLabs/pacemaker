@@ -291,7 +291,7 @@ do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * no
 
     crm_trace("=#=#=#=#= Summary =#=#=#=#=");
     crm_trace("\t========= Set %d (Un-runnable) =========", -1);
-    if (crm_log_level > LOG_DEBUG) {
+    if (get_crm_log_level() > LOG_DEBUG) {
         gIter = data_set->actions;
         for (; gIter != NULL; gIter = gIter->next) {
             action_t *action = (action_t *) gIter->data;

@@ -276,8 +276,7 @@ main(int argc, char **argv)
                 break;
             case 'V':
                 command_options = command_options | cib_verbose;
-                cl_log_enable_stderr(TRUE);
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case '?':
             case '$':

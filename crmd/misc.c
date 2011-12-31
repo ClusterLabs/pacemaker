@@ -56,7 +56,7 @@ do_log(long long action,
     } else if (msg_data->data_type == fsa_dt_xml) {
         xmlNode *input = fsa_typed_data(msg_data->data_type);
 
-        if (crm_log_level >= log_type) {
+        if (get_crm_log_level() >= log_type) {
             do_crm_log_xml(log_type, __FUNCTION__, input);
         }
 

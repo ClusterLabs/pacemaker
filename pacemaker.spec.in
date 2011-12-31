@@ -96,10 +96,18 @@ BuildRequires: python-curses python-xml
 # Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig python libtool-ltdl-devel
 BuildRequires: glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel 
-BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
+BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel pam-devel
+
+%if 0%{?suse_version} >= 1100
+# Renamed since opensuse-11.0
+BuildRequires:  libgnutls-devel
+%else
+BuildRequires:  gnutls-devel
+%endif
+
 
 # Enables optional functionality
-BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents
+BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents libqb-devel
 
 
 %if %{with cman}
@@ -278,7 +286,7 @@ mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
 
 # Scripts that should be executable
-chmod a+x %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.py
+chmod a+x %{buildroot}/%{_libexecdir}/pacemaker/hb2openais-helper.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/extracttests.py
 
@@ -293,9 +301,9 @@ find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
 # Do not package these either
-rm -f %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.*
-rm -f %{buildroot}/%{_libdir}/heartbeat/crm_primitive.*
-rm -f %{buildroot}/%{_libdir}/heartbeat/atest
+rm -f %{buildroot}/%{_libexecdir}/pacemaker/hb2openais-helper.*
+rm -f %{buildroot}/%{_libexecdir}/pacemaker/crm_primitive.*
+rm -f %{buildroot}/%{_libexecdir}/pacemaker/atest
 rm -f %{buildroot}/%{_libdir}/service_crm.so
 
 %if %{with gcov}
@@ -345,6 +353,7 @@ fi
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %{_libdir}/heartbeat/*
+%{_libexecdir}/pacemaker/*
 
 %{_sbindir}/crm_attribute
 %{_sbindir}/crm_master

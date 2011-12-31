@@ -1,6 +1,8 @@
-  <chapter id="ch-constraints"><title>Resource Constraints</title>
+  <chapter id="ch-constraints"><title> Resource Constraints</title>
     <section id="s-scores">
       <title>Scores</title>
+      <indexterm significance="preferred"><primary>Resource</primary><secondary>Constraints</secondary></indexterm>
+      <indexterm significance="preferred"><primary>Constraints</primary><secondary>for Resources</secondary></indexterm>
       <para>
 	Scores of all kinds are integral to how the cluster works.
 	Practically everything from moving a resource to deciding which resource to stop in a degraded cluster is achieved by manipulating scores in some way.
@@ -11,8 +13,8 @@
       </para>
       <section id="s-scores-infinity">
 	<title>Infinity Math</title>
-	<para><literal>INFINITY</literal> is currently defined as 1,000,000 and addition/subtraction with it follows the following 3 basic rules:</para>
-	<itemizedlist>
+	<para><literal>INFINITY</literal> is currently defined as 1,000,000 and addition/subtraction with it follows these three basic rules:</para>
+	<itemizedlist spacing="compact">
 	  <listitem><para>Any value + <literal>INFINITY</literal> = <literal>INFINITY</literal></para></listitem>
 	  <listitem><para>Any value - <literal>INFINITY</literal> = -<literal>INFINITY</literal></para></listitem>
 	  <listitem><para><literal>INFINITY</literal> - <literal>INFINITY</literal> = -<literal>INFINITY</literal></para></listitem>
@@ -32,73 +34,79 @@
 	<table frame="all">
 	  <title>Options for Simple Location Constraints</title>
 	  <tgroup cols="2">
+	    <colspec colwidth="1*"/>
+	    <colspec colwidth="6*"/>
             <thead>
               <row>
 		<entry>Field</entry>
 		<entry>Description</entry>
               </row>
             </thead><tbody><row>
-		<entry>id</entry>
+              <entry><indexterm significance="preferred"><primary>id</primary><secondary>Constraint Field</secondary></indexterm>
+                <indexterm><primary>Constraint Field</primary><secondary>id</secondary></indexterm>
+		entry>id</entry>
 		<entry>A unique name for the constraint</entry>
               </row>
               <row>
-		<entry>rsc</entry>
+                <entry><indexterm significance="preferred"><primary>rsc Constraint Field</primary></indexterm>
+                  <indexterm><primary>Constraint Field</primary><secondary>rsc</secondary></indexterm>
+                  rsc</entry>
 		<entry>A resource name</entry>
               </row>
               <row>
-		<entry>node</entry>
+                <entry><indexterm significance="preferred"><primary>Node</primary><secondary>Constraint Field</secondary></indexterm>
+                  <indexterm><primary>Constraint Field</primary><secondary>node</secondary></indexterm>
+                  node</entry>
 		<entry>A node's uname</entry>
               </row>
               <row>
-		<entry>score</entry>
-		<entry>Positive values indicate the resource can run on this node. Negative values indicate the resource can not run on this node. Values of +/- <literal>INFINITY</literal> change "can" to "must".</entry>
+                <entry><indexterm significance="preferred"><primary>score</primary><secondary>Constraint Field</secondary></indexterm>
+                  <indexterm><primary>Constraint Field</primary><secondary>score</secondary></indexterm>
+                  score</entry>
+		<entry>Positive values indicate the resource should run on this node. Negative values indicate the resource should not run on this node. Values of +/- <literal>INFINITY</literal> change "should"/"should not" to "must"/"must not".</entry>
               </row>
 	    </tbody>
 	  </tgroup>
 	</table>
       </section>
       <section>
-	<title>Asymmetrical "Opt-In" Clusters</title>
-	<para>To create an opt-in cluster, start by preventing resources from running anywhere by default</para>
-	<para><command>crm_attribute --attr-name symmetric-cluster --attr-value false</command></para>
+        <title><indexterm significance="preferred"><primary>Asymmetrical Opt-In Clusters</primary></indexterm>
+          <indexterm significance="preferred"><primary>Cluster Type</primary><secondary>Asymmetrical Opt-In</secondary></indexterm>
+          Asymmetrical "Opt-In" Clusters</title>
+	<para>To create an opt-in cluster, start by preventing resources from running anywhere by default:</para>
+	<programlisting><command>crm_attribute --attr-name symmetric-cluster --attr-value false</command></programlisting>
 	<para>
 	  Then start enabling nodes.
-	  The following fragment says that the web server prefers sles-1, the database prefers sles-2 and both can failover to sles-3 if their most preferred node fails.
+	  The following fragment says that the web server prefers <literal>sles-1</literal>, the database prefers <literal>sles-2</literal> and both can fail over to <literal>sles-3</literal> if their most preferred node fails.
 	</para>
 	<example>
 	  <title>Example set of opt-in location constraints</title>
-	  <programlisting>
-<![CDATA[
-  <constraints>
+	  <programlisting><![CDATA[<constraints>
     <rsc_location id="loc-1" rsc="Webserver" node="sles-1" score="200"/>
     <rsc_location id="loc-2" rsc="Webserver" node="sles-3" score="0"/>
     <rsc_location id="loc-3" rsc="Database" node="sles-2" score="200"/>
     <rsc_location id="loc-4" rsc="Database" node="sles-3" score="0"/>
-  </constraints>
-]]>
-	  </programlisting>
+  </constraints> ]]> </programlisting>
 	</example>
       </section>
       <section>
-	<title>Symmetrical "Opt-Out" Clusters</title>
+        <title><indexterm significance="preferred"><primary>Symmetrical Opt-Out Clusters</primary></indexterm>
+          <indexterm significance="preferred"><primary>Cluster Type</primary><secondary>Symmetrical Opt-Out</secondary></indexterm>
+          Symmetrical "Opt-Out" Clusters</title>
 	<para>To create an opt-out cluster, start by allowing resources to run anywhere by default</para>
-	<para><command>crm_attribute --attr-name symmetric-cluster --attr-value true</command></para>
+	<programlisting><command>crm_attribute --attr-name symmetric-cluster --attr-value true</command></programlisting>
 	<para>
 	  Then start disabling nodes.
 	  The following fragment is the equivalent of the above opt-in configuration.
 	</para>
 	<example>
 	  <title>Example set of opt-out location constraints</title>
-	  <programlisting>
-<![CDATA[
-  <constraints>
+	  <programlisting><![CDATA[ <constraints>
     <rsc_location id="loc-1" rsc="Webserver" node="sles-1" score="200"/>
     <rsc_location id="loc-2-dont-run" rsc="Webserver" node="sles-2" score="-INFINITY"/>
     <rsc_location id="loc-3-dont-run" rsc="Database" node="sles-1" score="-INFINITY"/>
     <rsc_location id="loc-4" rsc="Database" node="sles-2" score="200"/>
-  </constraints>
-]]>
-	  </programlisting>
+  </constraints> ]]> </programlisting>
 	</example>
 	<para>
 	  Whether you should choose opt-in or opt-out depends both on your personal preference and the make-up of your cluster.
@@ -110,21 +118,17 @@
 	<title>What if Two Nodes Have the Same Score</title>
 	<para>
 	  If two nodes have the same score, then the cluster will choose one.
-	  This choice may seem random and may not be what was intended, however the cluster was not given enough information to know what was intended.
+	  This choice may seem random and may not be what was intended, however the cluster was not given enough information to know any better.
 	</para>
 	<example>
 	  <title>Example of two resources that prefer two nodes equally</title>
-	  <programlisting>
-<![CDATA[
-  <constraints>
+	  <programlisting><![CDATA[ <constraints>
     <rsc_location id="loc-1" rsc="Webserver" node="sles-1" score="INFINITY"/>
     <rsc_location id="loc-2" rsc="Webserver" node="sles-2" score="INFINITY"/>
     <rsc_location id="loc-3" rsc="Database" node="sles-1" score="500"/>
     <rsc_location id="loc-4" rsc="Database" node="sles-2" score="300"/>
     <rsc_location id="loc-5" rsc="Database" node="sles-2" score="200"/>
-  </constraints>
-]]>
-	  </programlisting>
+  </constraints> ]]> </programlisting>
 	</example>
 	<para>
 	  In the example above, assuming no other constraints and an inactive cluster, Webserver would probably be placed on sles-1 and Database on sles-2.
@@ -134,11 +138,13 @@
       </section>
     </section>
     <section id="s-resource-ordering">
-      <title>Specifying the Order Resources Should Start/Stop In</title>
+      <title>Specifying in which Order Resources Should Start/Stop</title>
       <para>The way to specify the order in which resources should start is by creating <literal>rsc_order</literal> constraints.</para>
       <table frame="all">
 	<title>Properties of an Ordering Constraint</title>
 	<tgroup cols="2">
+	    <colspec colwidth="1*"/>
+	    <colspec colwidth="6*"/>
           <thead>
             <row>
 	      <entry>Field</entry>
@@ -152,11 +158,11 @@
             </row>
             <row>
 	      <entry>first</entry>
-	      <entry>The name of a resource that must be started before the then resource is allowed to. </entry>
+	      <entry>The name of a resource that must be started before the <literal>then</literal> resource is allowed to. </entry>
             </row>
             <row>
 	      <entry>then</entry>
-	      <entry>The name of a resource. This resource will start after the first resource.</entry>
+	      <entry>The name of a resource. This resource will start after the <literal>first</literal> resource.</entry>
             </row>
             <row>
 	      <entry>score</entry>
@@ -173,34 +179,30 @@
       <section>
 	<title>Mandatory Ordering</title>
 	<para>
-	  When the then resource cannot run without the first resource being active, one should use mandatory constraints.
-	  To specify a constraint is mandatory, use a scores greater than zero.
+	  When the <literal>then</literal> resource cannot run without the <literal>first</literal> resource being active, one should use mandatory constraints.
+	  To specify a constraint is mandatory, use scores greater than zero.
 	  This will ensure that the then resource will react when the first resource changes state.
 	</para>
-	<itemizedlist>
-	  <listitem><para>If the first resource was running and is stopped, the then resource will also be stopped (if it is running)</para></listitem>
-	  <listitem><para>If the first resource was not running and cannot be started, the then resource will be stopped (if it is running)</para></listitem>
-	  <listitem><para>If the first resource is (re)started while the then resource is running, the then resource will be stopped and restarted</para></listitem>
+	<itemizedlist spacing="compact">
+	  <listitem><para>If the <literal>first</literal> resource was running and is stopped, the <literal>then</literal> resource will also be stopped (if it is running).</para></listitem>
+	  <listitem><para>If the <literal>first</literal> resource was not running and cannot be started, the <literal>then</literal> resource will be stopped (if it is running).</para></listitem>
+	  <listitem><para>If the <literal>first</literal> resource is (re)started while the <literal>then</literal> resource is running, the <literal>then</literal> resource will be stopped and restarted.</para></listitem>
 	</itemizedlist>
       </section>
       <section>
 	<title>Advisory Ordering</title>
 	<para>
-	  On the other-hand, when <literal>score="0"</literal> is specified for a constraint, the constraint is considered optional and only has an effect when both resources are stopping and or starting.
-	  Any change in state by the first resource will have no effect on the then resource.
+	  On the other hand, when <literal>score="0"</literal> is specified for a constraint, the constraint is considered optional and only has an effect when both resources are stopping and/or starting.
+	  Any change in state by the <literal>first</literal> resource will have no effect on the <literal>then</literal> resource.
 	</para>
 	<example>
 	  <title>Example of an optional and mandatory ordering constraint</title>
-	  <programlisting>
-<![CDATA[
-  <constraints>
+	  <programlisting><![CDATA[ <constraints>
     <rsc_order id="order-1" first="Database" then="Webserver" />
     <rsc_order id="order-2" first="IP" then="Webserver" score="0"/>
-  </constraints>
-]]>
-	  </programlisting>
+  </constraints> ]]> </programlisting>
 	</example>
-	<para>Some additional information on ordering constraints can be found in the document <ulink url="http://www.clusterlabs.org/mediawiki/images/d/d6/Ordering_Explained.pdf">Ordering Explained</ulink>
+	<para>Some additional information on ordering constraints can be found in the document <ulink url="http://www.clusterlabs.org/mediawiki/images/d/d6/Ordering_Explained.pdf">Ordering Explained</ulink>.
 	</para>
       </section>
     </section>
@@ -208,10 +210,9 @@
       <title>Placing Resources Relative to other Resources</title>
       <para>When the location of one resource depends on the location of another one, we call this colocation.</para>
       <para>
-	There is an important side-effect of creating a colocation constraint between two resources, that it affects the order in which resources are assigned to a node.
-	If you think about it, its somewhat obvious.
-	You can't place A relative to B unless you know where B is
-	<footnote>
+	There is an important side-effect of creating a colocation constraint between two resources: it affects the order in which resources are assigned to a node.
+	If you think about it, it's somewhat obvious.
+	You can't place A relative to B unless you know where B is<footnote>
           <para>While the human brain is sophisticated enough to read the constraint in any order and choose the correct one depending on the situation, the cluster is not quite so smart. Yet.</para>
 	</footnote>.
 	So when you are creating colocation constraints, it is important to consider whether you should colocate A with B or B with A.
@@ -225,6 +226,8 @@
 	<table frame="all">
 	  <title>Properties of a Collocation Constraint</title>
 	  <tgroup cols="2">
+	    <colspec colwidth="1*"/>
+	    <colspec colwidth="6*"/>
             <thead>
               <row>
 		<entry>Field</entry>
@@ -234,7 +237,7 @@
 	    <tbody>
 	      <row>
 		<entry>id</entry>
-		<entry>A unique name for the constraint</entry>
+		<entry>A unique name for the constraint.</entry>
               </row>
               <row>
 		<entry>rsc</entry>
@@ -242,7 +245,7 @@
               </row>
               <row>
 		<entry>with-rsc</entry>
-		<entry>The colocation target. The cluster will decide where to put this resource first and then decide where to put the resource in the rsc field</entry>
+		<entry>The colocation target. The cluster will decide where to put this resource first and then decide where to put the resource in the <literal>rsc</literal> field.</entry>
               </row>
               <row>
 		<entry>score</entry>
@@ -256,31 +259,30 @@
 	<title>Mandatory Placement</title>
 	<para>
 	  Mandatory placement occurs any time the constraint's score is <literal>+INFINITY</literal> or <literal>-INFINITY</literal>.
-	  In such cases, if the constraint can't be satisfied, then the rsc resource is not permitted to run.
-	  For <literal>score=INFINITY</literal>, this includes cases where the with-rsc resource is not active.
+	  In such cases, if the constraint can't be satisfied, then the <literal>rsc</literal> resource is not permitted to run.
+	  For <literal>score=INFINITY</literal>, this includes cases where the <literal>with-rsc</literal> resource is not active.
 	</para>
-	<para>If you need resource1 to always run on the same machine as resource2, you would add the following constraint: </para>
+	<para>If you need <literal>resource1</literal> to always run on the same machine as <literal>resource2</literal>, you would add the following constraint: </para>
 	<example>
 	  <title>An example colocation constraint</title>
-	  <programlisting>
-  &lt;rsc_colocation id="colocate" rsc="resource1" with-rsc="resource2" score="INFINITY"/>
+	  <programlisting>&lt;rsc_colocation id="colocate" rsc="resource1" with-rsc="resource2" score="INFINITY"/>
 	  </programlisting>
 	</example>
-	<para>Remember, because <literal>INFINITY</literal> was used, if resource2 can't run on any of the cluster nodes (for whatever reason) then resource1 will not be allowed to run.</para>
+	<para>Remember, because <literal>INFINITY</literal> was used, if <literal>resource2</literal> can't run on any of the cluster nodes (for whatever reason) then <literal>resource1</literal> will not be allowed to run.</para>
 	<para>
 	  Alternatively, you may want the opposite...
-	  that resource1 cannot run on the same machine as resource2.
+	  that <literal>resource1</literal> cannot run on the same machine as <literal>resource2</literal>.
 	  In this case use <literal>score="-INFINITY"</literal>
 	</para>
 	<example>
 	  <title>An example anti-colocation constraint</title>
-	  <programlisting>
-  &lt;rsc_colocation id="anti-colocate" rsc="resource1" with-rsc="resource2" score="-INFINITY"/> 
+      <programlisting>&lt;rsc_colocation id="anti-colocate"
+    rsc="resource1" with-rsc="resource2" score="-INFINITY"/> 
 	  </programlisting>
 	</example>
 	<para>
 	  Again, by specifying <literal>-INFINTY</literal>, the constraint is binding.
-	  So if the only place left to run is where resource2 already is, then resource1 may not run anywhere.
+	  So if the only place left to run is where <literal>resource2</literal> already is, then <literal>resource1</literal> may not run anywhere.
 	</para>
       </section>
       <section>
@@ -292,8 +294,7 @@
 	<para>Like in life, where if enough people prefer something it effectively becomes mandatory,  advisory colocation constraints can combine with other elements of the configuration to behave as if they were mandatory.</para>
 	<example>
 	  <title>An example advisory-only colocation constraint</title>
-	  <programlisting>
-  &lt;rsc_colocation id="colocate-maybe" rsc="resource1" with-rsc="resource2" score="500"/>
+	  <programlisting>&lt;rsc_colocation id="colocate-maybe" rsc="resource1" with-rsc="resource2" score="500"/>
 	  </programlisting>
 	</example>
       </section>
@@ -303,15 +304,11 @@
       <para>A common situation is for an administrator to create a chain of ordered resources, such as:</para>
       <example>
 	<title>A chain of ordered resources</title>
-	<programlisting>
-<![CDATA[
-  <constraints>
+	<programlisting><![CDATA[ <constraints>
     <rsc_order id="order-1" first="A" then="B" />
     <rsc_order id="order-2" first="B" then="C" />
     <rsc_order id="order-3" first="C" then="D" />
-  </constraints>
-]]>
-	</programlisting>
+  </constraints> ]]> </programlisting>
       </example>
       <para>
 	<figure id="fig-ordered-set">
@@ -324,12 +321,10 @@
 	  </mediaobject>
 	</figure>
       </para>
-      <para>To simplify this situation, there is an alternate format for ordering constraints</para>
+      <para>To simplify this situation, there is an alternate format for ordering constraints:</para>
       <example>
 	<title>A chain of ordered resources expressed as a set</title>
-	<programlisting>
-<![CDATA[
-  <constraints>
+	<programlisting><![CDATA[ <constraints>
     <rsc_order id="order-1">
       <resource_set id="ordered-set-example" sequential="true">
         <resource_ref id="A"/>
@@ -338,33 +333,25 @@
         <resource_ref id="D"/>
       </resource_set>
     </rsc_order>
-  </constraints>
-]]>
-	</programlisting>
+  </constraints> ]]> </programlisting>
       </example>
-      <note><para>Resource sets have the same ordering semantics as groups.</para></note>
+      <note><para>Resource sets have the same ordering semantics as groups.</para><para><!-- vert ws --> </para></note>
       <example>
 	<title>A group resource with the equivalent ordering rules</title>
-	<programlisting>
-<![CDATA[
-  <group id="dummy">
+	<programlisting><![CDATA[ <group id="dummy">
     <primitive id="A" .../>
     <primitive id="B" .../>
     <primitive id="C" .../>
     <primitive id="D" .../>
-  </group>
-]]>
-	</programlisting>
+  </group> ]]> </programlisting>
       </example>
       <para>
 	While the set-based format is not less verbose, it is significantly easier to get right and maintain.
 	It can also be expanded to allow ordered sets of (un)ordered resources.
-	In the example below, rscA and rscB can both start in parallel, as can rscC and rscD, however rscC and rscD can only start once <emphasis>both</emphasis> rscA <emphasis>and</emphasis> rscB are active.</para>
+	In the example below, <literal>rscA</literal> and <literal>rscB</literal> can both start in parallel, as can <literal>rscC</literal> and <literal>rscD</literal>, however <literal>rscC</literal> and <literal>rscD</literal> can only start once <emphasis>both</emphasis> <literal>rscA</literal> <emphasis>and</emphasis> <literal>rscB</literal> are active.</para>
       <example>
 	<title>Ordered sets of unordered resources</title>
-	<programlisting>
-<![CDATA[
-  <constraints>
+	<programlisting><![CDATA[ <constraints>
     <rsc_order id="order-1">
       <resource_set id="ordered-set-1" sequential="false">
         <resource_ref id="A"/>
@@ -375,9 +362,7 @@
         <resource_ref id="D"/>
       </resource_set>
     </rsc_order>
-  </constraints>
-]]>
-	</programlisting>
+  </constraints> ]]> </programlisting>
       </example>
       <para>
 	<figure id="fig-ordered-set-two">
@@ -390,12 +375,10 @@
 	  </mediaobject>
 	</figure>
       </para>
-      <para>Of course either or both sets of resources can also be internally ordered (by setting <literal>sequential="true"</literal>) and there is no limit to the number of sets that can be specified.</para>
+      <para>Of course either set -- or both sets -- of resources can also be internally ordered (by setting <literal>sequential="true"</literal>) and there is no limit to the number of sets that can be specified.</para>
       <example>
 	<title>Advanced use of set ordering - Three ordered sets, two of which are internally unordered </title>
-	<programlisting>
-<![CDATA[
-  <constraints>
+	<programlisting><![CDATA[ <constraints>
     <rsc_order id="order-1">
       <resource_set id="ordered-set-1" sequential="false">
         <resource_ref id="A"/>
@@ -410,9 +393,7 @@
         <resource_ref id="F"/>
       </resource_set>
     </rsc_order>
-  </constraints>
-]]>
-	</programlisting>
+  </constraints> ]]> </programlisting>
       </example>
       <para>
 	<figure id="fig-ordered-set-three">
@@ -434,26 +415,20 @@
       </para>
       <example>
 	<title>A chain of collocated resources</title>
-	<programlisting>
-<![CDATA[
-  <constraints>
+	<programlisting><![CDATA[ <constraints>
     <rsc_colocation id="coloc-1" rsc="B" with-rsc="A" score="INFINITY"/>
     <rsc_colocation id="coloc-2" rsc="C" with-rsc="B" score="INFINITY"/>
     <rsc_colocation id="coloc-3" rsc="D" with-rsc="C" score="INFINITY"/>
-  </constraints>
-]]>
-	</programlisting>
+  </constraints> ]]> </programlisting>
       </example>
       <para>
-	To make things easier, we allow an alternate form of colocation constraints using resource_sets.
+	To make things easier, we allow an alternate form of colocation constraints using <literal>resource_sets</literal>.
 	Just like the expanded version, a resource that can't be active also prevents any resource that must be collocated with it from being active.
-	For example if B was not able to run, then both C (and by inference D) must also remain stopped.
+	For example, if <literal>B was</literal> not able to run, then both <literal>C (</literal>and by inference <literal>D)</literal> must also remain stopped.
       </para>
       <example>
-	<title>The equivalent colocation chain expressed using resource_sets</title>
-	<programlisting>
-<![CDATA[
-  <constraints>
+	<title>The equivalent colocation chain expressed using <literal>resource_sets</literal></title>
+	<programlisting><![CDATA[ <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
       <resource_set id="collocated-set-example" sequential="true">
         <resource_ref id="A"/>
@@ -462,33 +437,25 @@
         <resource_ref id="D"/>
       </resource_set>
     </rsc_colocation>
-  </constraints>
-]]>
-	</programlisting>
+  </constraints> ]]> </programlisting>
       </example>
-      <note><para>Resource sets have the same colocation semantics as groups.</para></note>
+      <note><para>Resource sets have the same colocation semantics as groups.</para><para><!-- ws --> </para></note>
       <example>
 	<title>A group resource with the equivalent colocation rules</title>
-	<programlisting>
-<![CDATA[
-  <group id="dummy">
+	<programlisting><![CDATA[ <group id="dummy">
     <primitive id="A" .../>
     <primitive id="B" .../>
     <primitive id="C" .../>
     <primitive id="D" .../>
-  </group>
-]]>
-	</programlisting>
+  </group> ]]> </programlisting>
       </example>
       <para>
 	This notation can also be used in this context to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other.
-	In this scenario, unlike the previous one, B would be allowed to remain active even if A or C (or both) were inactive.
+	In this scenario, unlike the previous, <literal>B would</literal> be allowed to remain active even if <literal>A or</literal> <literal>C</literal> (or both) were inactive.
       </para>
       <example>
 	<title>Using colocation sets to specify a common peer. </title>
-	<programlisting>
-<![CDATA[
-  <constraints>
+	<programlisting><![CDATA[ <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
       <resource_set id="collocated-set-1" sequential="false">
         <resource_ref id="A"/>
@@ -499,20 +466,16 @@
         <resource_ref id="D"/>
       </resource_set>
     </rsc_colocation>
-  </constraints>
-]]>
-	</programlisting>
+  </constraints> ]]> </programlisting>
       </example>
       <para>
 	Of course there is no limit to the number and size of the sets used.
-	The only thing that matters is that in order for any member of set N to be active, all the members of set N+1 must also be active (and naturally on the same node), and that if a set has <literal>sequential="true"</literal>, then in order for member M to be active, member M+1 must also be active.
+	The only thing that matters is that in order for any member of set N to be active, all the members of set N+1 must also be active (and naturally on the same node); and if a set has <literal>sequential="true"</literal>, then in order for member M to be active, member M+1 must also be active.
 	You can even specify the role in which the members of a set must be in using the set's role attribute.
       </para>
       <example>
 	<title>A colocation chain where the members of the middle set have no inter-dependencies and the last has master status.</title>
-	<programlisting>
-<![CDATA[
-  <constraints>
+	<programlisting><![CDATA[ <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
       <resource_set id="collocated-set-1" sequential="true">
         <resource_ref id="A"/>
@@ -528,9 +491,7 @@
         <resource_ref id="G"/>
       </resource_set>
     </rsc_colocation>
-  </constraints>
-]]>
-	</programlisting>
+  </constraints> ]]> </programlisting>
       </example>
       <para>
 	<figure>

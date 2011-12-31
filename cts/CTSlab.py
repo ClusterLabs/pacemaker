@@ -113,41 +113,48 @@ def usage(arg, status=1):
     print "Illegal argument " + arg
     print "usage: " + sys.argv[0] +" [options] number-of-iterations" 
     print "\nCommon options: "  
-    print "\t [--at-boot (1|0)],         does the cluster software start at boot time" 
-    print "\t [--nodes 'node list'],     list of cluster nodes separated by whitespace" 
-    print "\t [--limit-nodes max],       only use the first 'max' cluster nodes supplied with --nodes" 
-    print "\t [--stack (heartbeat|ais)], which cluster stack is installed"
-    print "\t [--logfile path],          where should the test software look for logs from cluster nodes" 
-    print "\t [--outputfile path],       optional location for the test software to write logs to" 
-    print "\t [--syslog-facility name],  which syslog facility should the test software log to" 
-    print "\t [--choose testcase-name],  run only the named test" 
-    print "\t [--list-tests],            list the valid tests" 
-    print "\t [--benchmark],             add the timing information" 
+    print "\t [--nodes 'node list']        list of cluster nodes separated by whitespace" 
+    print "\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)" 
+    print "\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes" 
+    print "\t [--stack (heartbeat|ais)]    which cluster stack is installed"
+    print "\t [--list-tests]               list the valid tests" 
+    print "\t [--benchmark]                add the timing information" 
+    print "\t "
+    print "Options that CTS will usually auto-detect correctly: "  
+    print "\t [--logfile path]             where should the test software look for logs from cluster nodes" 
+    print "\t [--syslog-facility name]     which syslog facility should the test software log to" 
+    print "\t [--at-boot (1|0)]            does the cluster software start at boot time" 
+    print "\t [--test-ip-base ip]          offset for generated IP address resources"
     print "\t "
     print "Options for release testing: "  
-    print "\t [--clobber-cib | -c ]       Erase any existing configuration"
-    print "\t [--populate-resources | -r] Generate a sample configuration"
-    print "\t [--test-ip-base ip]         Offset for generated IP address resources"
+    print "\t [--populate-resources | -r]  generate a sample configuration"
+    print "\t [--choose name]              run only the named test" 
+    print "\t [--stonith (1 | 0 | yes | no | rhcs | ssh)]" 
+    print "\t [--once]                     run all valid tests once" 
     print "\t "
     print "Additional (less common) options: "  
-    print "\t [--trunc (truncate logfile before starting)]" 
+    print "\t [--clobber-cib | -c ]        erase any existing configuration"
+    print "\t [--outputfile path]          optional location for the test software to write logs to" 
+    print "\t [--trunc]                    truncate logfile before starting" 
     print "\t [--xmit-loss lost-rate(0.0-1.0)]" 
     print "\t [--recv-loss lost-rate(0.0-1.0)]" 
     print "\t [--standby (1 | 0 | yes | no)]" 
     print "\t [--fencing (1 | 0 | yes | no)]" 
-    print "\t [--stonith (1 | 0 | yes | no | rhcs | lha)]" 
     print "\t [--stonith-type type]" 
     print "\t [--stonith-args name=value]" 
     print "\t [--bsc]" 
-    print "\t [--once],                 run all valid tests once" 
-    print "\t [--no-loop-tests],        dont run looping/time-based tests" 
-    print "\t [--no-unsafe-tests],      dont run tests that are unsafe for use with ocfs2/drbd" 
-    print "\t [--valgrind-tests],       include tests using valgrind" 
-    print "\t [--experimental-tests],   include experimental tests" 
-    print "\t [--oprofile 'node list'], list of cluster nodes to run oprofile on]" 
-    print "\t [--qarsh]                 Use the QARSH backdoor to access nodes instead of SSH"
+    print "\t [--no-loop-tests]            dont run looping/time-based tests" 
+    print "\t [--no-unsafe-tests]          dont run tests that are unsafe for use with ocfs2/drbd" 
+    print "\t [--valgrind-tests]           include tests using valgrind" 
+    print "\t [--experimental-tests]       include experimental tests" 
+    print "\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]" 
+    print "\t [--qarsh]                    use the QARSH backdoor to access nodes instead of SSH"
     print "\t [--seed random_seed]"
     print "\t [--set option=value]"
+    print "\t "
+    print "\t Example: "
+    print "\t    python ./CTSlab.py -g virt1 --stack cs -r --stonith ssh --schema pacemaker-1.0 500"
+
     sys.exit(status)
 
     
@@ -242,7 +249,7 @@ if __name__ == '__main__':
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "fence_xvm"
                Environment["stonith-params"] = "pcmk_arg_map=domain:uname"
-           elif args[i+1] == "lha":
+           elif args[i+1] == "ssh" or args[i+1] == "lha":
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "external/ssh"
                Environment["stonith-params"] = "hostlist=all,livedangerously=yes"
@@ -315,6 +322,26 @@ if __name__ == '__main__':
        elif args[i] == "--nodes":
            skipthis=1
            node_list = args[i+1].split(' ')
+
+       elif args[i] == "-g" or args[i] == "--group" or args[i] == "--dsh-group":
+           skipthis=1
+           if os.environ['USER'] == 'root':
+               Environment["OutputFile"] = "/var/log/cluster-%s.log" % args[i+1]
+           else:
+               Environment["OutputFile"] = "%s/cluster-%s.log" % (os.environ['HOME'], args[i+1])
+
+           dsh_file = "%s/.dsh/group/%s" % (os.environ['HOME'], args[i+1])
+           if os.path.isfile(dsh_file):
+               node_list = []
+               f = open(dsh_file, 'r')
+               for line in f:
+                   l = line.strip().rstrip()
+                   if not l.startswith('#'):
+                       node_list.append(l)
+               f.close()
+
+           else:
+               print("Unknown DSH group: %s" % args[i+1])
 
        elif args[i] == "--syslog-facility" or args[i] == "--facility":
            skipthis=1
@@ -536,6 +563,7 @@ if __name__ == '__main__':
     Environment.log("Schema:                 %s" % Environment["Schema"])
     Environment.log("Scenario:               %s" % scenario.__doc__)
     Environment.log("CTS Master:             %s" % Environment["cts-master"])
+    Environment.log("CTS Logfile:            %s" % Environment["OutputFile"])
     Environment.log("Random Seed:            %s" % Environment["RandSeed"])
     Environment.log("Syslog variant:         %s" % Environment["syslogd"].strip())
     Environment.log("System log files:       %s" % Environment["LogFileName"])

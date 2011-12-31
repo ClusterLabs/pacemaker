@@ -132,9 +132,10 @@ if (@ARGV > 0) {
    version if defined $opt_V;
 
    fail_usage "Unknown parameter." if (@ARGV > 0);
-}
 
-get_options_stdin();
+} else {
+    get_options_stdin();
+}
 
 $opt_o=lc($opt_o);
 fail "failed: unrecognised action: $opt_o"

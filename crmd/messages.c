@@ -189,7 +189,7 @@ fsa_dump_queue(int log_level)
     int offset = 0;
     GListPtr lpc = NULL;
 
-    if (log_level < (int)crm_log_level) {
+    if (log_level < (int)get_crm_log_level()) {
         return;
     }
     for (lpc = fsa_message_queue; lpc != NULL; lpc = lpc->next) {
@@ -669,6 +669,10 @@ handle_failcount_op(xmlNode * stored_msg)
         update_attrd(NULL, attr, NULL, NULL);
         crm_free(attr);
 
+        attr = generate_op_key(rsc, "last_failure", 0);
+        delete_op_entry(NULL, rsc, attr, 0);
+        crm_free(attr);
+
     } else {
         crm_log_xml_warn(stored_msg, "invalid failcount op");
     }
@@ -819,7 +823,7 @@ handle_request(xmlNode * stored_msg)
          * local node
          */
     } else if (strcmp(op, CRM_OP_DEBUG_UP) == 0) {
-        alter_debug(DEBUG_INC);
+        crm_bump_log_level();
         crm_info("Debug set to %d", get_crm_log_level());
 
     } else if (strcmp(op, CRM_OP_DEBUG_DOWN) == 0) {

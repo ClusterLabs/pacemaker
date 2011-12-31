@@ -587,8 +587,8 @@ append_restart_list(lrm_rsc_t * rsc, lrm_op_t * op, xmlNode * update, const char
     } else if (rsc == NULL) {
         return;
 
-    } else if (crm_str_eq(CRMD_ACTION_START, op->op_type, TRUE) == FALSE) {
-        /* only starts are potentially reloadable */
+    } else if (crm_str_eq(CRMD_ACTION_STOP, op->op_type, TRUE)) {
+        /* Stopped resources don't need to be reloaded */
         return;
 
     } else if (compare_version("1.0.8", version) > 0) {
@@ -936,7 +936,7 @@ delete_rsc_entry(ha_msg_input_t * input, const char *rsc_id, int rc, const char 
 #define op_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s']"
 #define op_call_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s' and @"XML_LRM_ATTR_CALLID"='%d']"
 
-static void
+void
 delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id)
 {
     xmlNode *xml_top = NULL;
@@ -945,6 +945,11 @@ delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id)
         xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
         crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
         crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
+
+        if(op->interval > 0) {
+            /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
+            crm_xml_add(xml_top, XML_ATTR_ID, op->user_data);
+        }
 
         crm_debug("async: Sending delete op for %s_%s_%d (call=%d)",
                   op->rsc_id, op->op_type, op->interval, op->call_id);
@@ -1449,9 +1454,9 @@ do_lrm_invoke(long long action,
 }
 
 static void
-copy_notify_keys(gpointer key, gpointer value, gpointer user_data)
+copy_meta_keys(gpointer key, gpointer value, gpointer user_data)
 {
-    if (strstr(key, CRM_META "_notify_") != NULL) {
+    if (strstr(key, CRM_META "_") != NULL) {
         g_hash_table_insert(user_data, strdup((const char *)key), strdup((const char *)value));
     }
 }
@@ -1526,7 +1531,7 @@ construct_op(xmlNode * rsc_op, const char *rsc_id, const char *operation)
             g_hash_table_insert(op->params, crm_strdup(XML_ATTR_CRM_VERSION), crm_strdup(version));
         }
 
-        g_hash_table_foreach(params, copy_notify_keys, op->params);
+        g_hash_table_foreach(params, copy_meta_keys, op->params);
         g_hash_table_destroy(params);
         params = NULL;
     }

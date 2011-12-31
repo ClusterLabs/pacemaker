@@ -7,8 +7,7 @@
 	<title>Prerequisites</title>
 	<example>
 	  <title>Minimum logging configuration</title>
-	  <programlisting>
-	    <userinput>
+	  <programlisting><userinput>
   # /etc/init.d/openais start
 	    </userinput>
 	    <computeroutput>
@@ -27,8 +26,7 @@
 	<title>Confirm Corosync Started</title>
 	<figure>
 	  <title>Expected output when starting openais</title>
-	  <screen>
-	    <userinput>
+	  <screen><userinput>
   # /etc/init.d/openais start
 	    </userinput>
 	    <computeroutput>
@@ -39,8 +37,7 @@
 	
 	<figure>
 	  <title>Expected log messages - startup</title>
-	  <screen>
-	    <userinput>
+	  <screen><userinput>
   # grep -e "openais.*network interface" -e "AIS Executive Service" /var/log/messages
 	    </userinput>
 	    <computeroutput>
@@ -56,8 +53,7 @@
 	
 	<figure>
 	  <title>Expected log messages - membership</title>
-	  <screen>
-	    <userinput>
+	  <screen><userinput>
   # grep CLM /var/log/messages
 	    </userinput>
 	    <computeroutput>
@@ -86,8 +82,7 @@
 
 	<figure>
 	  <title>Expected Pacemaker startup logging for Corosync</title>
-	  <screen>
-	    <userinput>
+	  <screen><userinput>
   # grep pcmk_plugin_init /var/log/messages
 	    </userinput>
 	    <computeroutput>
@@ -104,8 +99,7 @@
 
 	<figure>
 	  <title>Expected process listing on a 64-bit machine</title>
-	  <screen>
-	    <userinput>
+	  <screen><userinput>
   # ps axf
 	    </userinput>
 	    <computeroutput>

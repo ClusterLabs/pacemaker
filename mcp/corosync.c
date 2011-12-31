@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <pwd.h>                /* For getpwname() */
 
+#include <corosync/hdb.h>
 #include <corosync/cfg.h>
 #include <corosync/cpg.h>
 #include <corosync/confdb.h>
@@ -510,12 +511,12 @@ read_config(void)
     local_handle = config_find_next(config, "logging", top_handle);
 
     get_config_opt(config, local_handle, "debug", &value, "on");
-    if (crm_is_true(value) && crm_log_level < LOG_DEBUG) {
-        crm_log_level = LOG_DEBUG;
+    if (crm_is_true(value) && get_crm_log_level() < LOG_DEBUG) {
+        set_crm_log_level(LOG_DEBUG);
     }
 
-    if (crm_log_level >= LOG_DEBUG) {
-        char *level = crm_itoa(crm_log_level - LOG_INFO);
+    if (get_crm_log_level() >= LOG_DEBUG) {
+        char *level = crm_itoa(get_crm_log_level() - LOG_INFO);
 
         setenv("HA_debug", level, 1);
         crm_free(level);
@@ -561,8 +562,15 @@ read_config(void)
                 setenv("HA_debugfile", value, 1);
 
                 /* Ensure the file has the correct permissions */
-                fchown(logfd, pcmk_uid, pcmk_gid);
-                fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+                rc = fchown(logfd, pcmk_uid, pcmk_gid);
+                if(rc < 0) {
+                    crm_warn("Cannot change the ownership of %s to user %s and gid %d",
+                            value, CRM_DAEMON_USER, pcmk_gid);
+                }
+                rc = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+                if(rc < 0) {
+                    crm_warn("Cannot change the mode of %s to rw-rw---- %s", value);
+                }
 
                 fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
                         pcmk_uid, pcmk_gid, value);

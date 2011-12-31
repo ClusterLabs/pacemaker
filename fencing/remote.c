@@ -227,14 +227,14 @@ static gboolean remote_op_query_timeout(gpointer data)
 void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_TRACE);
     
     if(remote_op_list == NULL) {
 	remote_op_list = g_hash_table_new_full(
 	    crm_str_hash, g_str_equal, NULL, free_remote_op);
     }
     
-    if(peer) {
+    if(peer && dev) {
 	const char *peer_id = crm_element_value(dev, F_STONITH_REMOTE);
 	CRM_CHECK(peer_id != NULL, return NULL);
 	
@@ -248,7 +248,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     crm_malloc0(op, sizeof(remote_fencing_op_t));
     crm_element_value_int(request, F_STONITH_TIMEOUT, (int*)&(op->base_timeout));
 
-    if(peer) {
+    if(peer && dev) {
 	op->id = crm_element_value_copy(dev, F_STONITH_REMOTE);
         crm_trace("Recorded new stonith op: %s", op->id);
 
@@ -310,6 +310,8 @@ remote_fencing_op_t * initiate_remote_stonith_op(stonith_client_t *client, xmlNo
     if(!manual_ack) {
         op->op_timer = g_timeout_add(1200*op->base_timeout, remote_op_timeout, op);
         op->query_timer = g_timeout_add(100*op->base_timeout, remote_op_query_timeout, op);
+
+    } else {
         crm_xml_add(query, F_STONITH_DEVICE, "manual_ack");    
     }
     

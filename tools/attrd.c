@@ -534,8 +534,7 @@ main(int argc, char **argv)
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
         switch (flag) {
             case 'V':
-                cl_log_enable_stderr(1);
-                alter_debug(DEBUG_INC);
+                crm_bump_log_level();
                 break;
             case 'h':          /* Help message */
                 usage(T_ATTRD, LSB_EXIT_OK);

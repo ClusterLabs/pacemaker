@@ -69,7 +69,7 @@ crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
 			  $(COMMONLIBS) $(CLUSTERLIBS)
 
 crm_uuid_SOURCES	= crm_uuid.c
-crm_uuid_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la
+crm_uuid_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/cluster/libcrmcluster.la
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS) 
@@ -139,7 +139,7 @@ endif
 %.8:	% crm_attribute
 	echo Creating $@
 	chmod a+x $(top_builddir)/tools/$<
-	PATH=$$PATH:$(top_builddir)/tools $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
+	PATH=$(top_builddir)/tools:$$PATH $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
