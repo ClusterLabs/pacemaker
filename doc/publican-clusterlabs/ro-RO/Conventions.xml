@@ -1,0 +1,178 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
+%BOOK_ENTITIES;
+]>
+<section lang="ro-RO">
+	<title>Convențiile Documentului</title>
+	 <para>
+		Acest manual folosește mai multe convenții pentru a sublinia anumite cuvinte și fraze și a atrage atenția asupra unor bucăți de informație.
+	</para>
+	 <para>
+		În edițiile PDF și de hârtie, acest manual folosește typefaces desenate din setul <ulink url="https://fedorahosted.org/liberation-fonts/">Liberation Fonts</ulink>. Setup Liberation Fonts este folosit de asemenea în edițiile HTML dacă setul este instalat pe sistemul vostru. Dacă nu, typefaces echivalente dar alternative sunt prezentate. Notă: Red Hat Enterprise Linux 5 și versiunile ulterioare includ setul Liberation Fonts în mod implicit.
+	</para>
+	 <section>
+		<title>Convenții Tipografice</title>
+		 <para>
+			Patru convenții tipografice sunt folosite pentru a atrage atenția asupra unor cuvinte și fraze specifice. Aceste convenții și circumstanțele cărora se aplică, sunt după cum urmează.
+		</para>
+		 <para>
+			<literal>Mono-spaced Bold</literal>
+		</para>
+		 <para>
+			Folosit pentru a sublinia intrarea de sistem, incluzând comenzile de shell, numele de fișiere și căile. Folosit de asemenea pentru a sublinia majusculele și combinațiile de taste. De exemplu:
+		</para>
+		 <blockquote>
+			<para>
+				Pentru a vedea conținutul fișierului <filename>my_next_bestselling_novel</filename> din directorul curent, introduceți comanda <command>cat my_next_bestselling_novel</command> de la promptul shell-ului și apăsați <keycap>Enter</keycap> pentru a executa comanda.
+			</para>
+
+		</blockquote>
+		 <para>
+			Exemplul de mai sus include un nume de fișier, o comandă de shell și o scriere cu majuscule, toate prezentate în mono-spaced bold și toate sesizabile mulțumită contextului.
+		</para>
+		 <para>
+			Combinația de taste poate fi deosebită de scrierea cu majuscule prin cratima care conectează fiecare parte a unei combinații de taste. De exemplu:
+		</para>
+		 <blockquote>
+			<para>
+				Apăsați <keycap>Enter</keycap> pentru a executa comanda.
+			</para>
+			 <para>
+				Apăsați <keycombo><keycap>Ctrl</keycap><keycap>Alt</keycap><keycap>F2</keycap></keycombo> pentru a schimba la primul terminal virtual. Apăsați <keycombo><keycap>Ctrl</keycap><keycap>Alt</keycap><keycap>F1</keycap></keycombo> pentru a vă întoarce la sesiunea X-Windows.
+			</para>
+
+		</blockquote>
+		 <para>
+			Primul paragraf subliniază tasta specifică pe care să o apăsați. Al doilea subliniază două combinații de taste (fiecare un set de trei taste cu fiecare set apăsat simultan).
+		</para>
+		 <para>
+			Dacă este discutat codul sursă, numele de clase, metodele, funcțiile, numele de variabile și valorile returnate menționate în cadrul paragrafului vor fi prezentate ca mai sus, în <literal>mono-spaced bold</literal>. De exemplu:
+		</para>
+		 <blockquote>
+			<para>
+				Clasele legate de fișiere includ <classname>sistem de fișiere</classname> pentru sisteme de fișiere, <classname>fișier</classname> pentru fișiere și <classname>dir</classname> pentru directoare. Fiecare clasă are propriul set asociat de permisiuni.
+			</para>
+
+		</blockquote>
+		 <para>
+			<application>Proportional Bold</application>
+		</para>
+		 <para>
+			Aceasta denotă cuvintele sau frazele întâlnite pe un sistem, incluzând numele aplicației; căsuța de dialog textuală; butoanele etichetate; etichete check-box și butoane radio; titluri de meniu și titluri de sub-meniu. De exemplu:
+		</para>
+		 <blockquote>
+			<para>
+				Alegeți <menuchoice><guimenu>Sistem</guimenu><guisubmenu>Preferințe</guisubmenu><guimenuitem>Mouse</guimenuitem></menuchoice> din bara de meniu principală pentru a lansa <application>Preferințele Mouse-ului</application>. În tab-ul <guilabel>Butoane</guilabel>, realizați click pe casuța de bifat <guilabel>Mouse pentru stângaci</guilabel> și realizați click pe <guibutton>Închide</guibutton> pentru a schimba butonul primar al mouse-ului de la stânga la dreapta (făcând astfel mouse-ul convenabil pentru a fi folosit în mâna stângă).
+			</para>
+			 <para>
+				Pentru a insera un caracter special într-un fișier <application>gedit</application>, alegeți <menuchoice><guimenu>Aplicații</guimenu><guisubmenu>Accesorii</guisubmenu><guimenuitem>Harta Caractere</guimenuitem></menuchoice> din bara de meniu principală. Apoi, alegeți <menuchoice><guimenu>Caută</guimenu><guimenuitem>Find&hellip;</guimenuitem></menuchoice> din bara de meniu a <application>Harta Caractere</application>, tastați numele caracterului în câmpul de <guilabel>Căutare</guilabel> și realizați click pe <guibutton>Next</guibutton>. Caracterul pe care l-ați căutat va fi subliniat în <guilabel>Tabela cu Caractere</guilabel>. Realizați dublu click pe acest caracter subliniat pentru a îl plasa în câmpul <guilabel>Text de copiat</guilabel> și apoi realizați click pe butonul <guibutton>Copiere</guibutton>. Acum schimbați înapoi la documentul vostru și alegeți <menuchoice><guimenu>Editare</guimenu><guimenuitem>Lipire</guimenuitem></menuchoice> din bara de meniu a <application>gedit</application>.
+			</para>
+
+		</blockquote>
+		 <para>
+			Textu de mai sus include numele de aplicații; nume de meniu system-wide și articole; nume de meniu specifice aplicației; și butoate și text găsite înăuntrul unei interfețe GUI, toate prezentate în bold proporțional și deosebite prin context.
+		</para>
+		 <para>
+			<command><replaceable>Mono-spaced Bold Italic</replaceable></command> sau <application><replaceable>Proportional Bold Italic</replaceable></application>
+		</para>
+		 <para>
+			Fie mono-spaced bold sau bold proporțional, adăugarea de italice indică text înlocuibil sau variabil. Italic denotă text pe care nu îl introduci ad-literam sau text prezentat care se schimbă în funcție de circumstanțe. De exemplu:
+		</para>
+		 <blockquote>
+			<para>
+				Pentru a vă conecta la o mașină la distanță folosind ssh, tastați <command>ssh <replaceable>username</replaceable>@<replaceable>domain.name</replaceable></command> la promptul shell-ului. Dacă mașina la distanță este <filename>example.com</filename> și numele vostru de utilizator pe acea mașină este john, tastați <command>ssh john@example.com</command>.
+			</para>
+			 <para>
+				Comanda <command>mount -o remount <replaceable>file-system</replaceable></command> remontează sistemul de fișiere numit. De exemplu, pentru a remonta sistemul de fișiere <filename>/home</filename>, comanda este <command>mount -o remount /home</command>.
+			</para>
+			 <para>
+				Pentru a vedea versiunea curentă a unui pachet instalat în mod curent, folosiți comanda <command>rpm -q <replaceable>package</replaceable></command>. Va returna un rezultat după cum urmează: <command><replaceable>package-version-release</replaceable></command>.
+			</para>
+
+		</blockquote>
+		 <para>
+			Luați aminte la cuvintele cu bold și italic de mai sus &mdash; username, domain.name, file-system, package, version and release. Fiecare cuvânt este un ținător de loc, fie pentru text pe care îl adăugați când executați o comandă sau pentru text listat de către sistem.
+		</para>
+		 <para>
+			Pe lângă folosirea standard pentru prezentarea titlului unei munci, italic-ul denotă prima utilizare a unui termen nou și important. De exemplu:
+		</para>
+		 <blockquote>
+			<para>
+				Publican este un sistem de publicare <firstterm>DocBook</firstterm>.
+			</para>
+
+		</blockquote>
+
+	</section>
+	
+	 <section>
+		<title>Convenții pentru aducerea de citate</title>
+		 <para>
+			Rezultatul de ieșire de la terminal si listarea codului sursă sunt separate vizual de textul înconjurător.
+		</para>
+		 <para>
+			Rezultatul de ieșire trimis către un terminal este setat cu <computeroutput>mono-spaced roman</computeroutput> și este prezentat în felul acesta:
+		</para>
+		 
+<screen>books        Desktop   documentation  drafts  mss    photos   stuff  svn
+books_tests  Desktop1  downloads      images  notes  scripts  svgs</screen>
+		 <para>
+			Listarea codului sursă este de asemenea setată în <computeroutput>mono-spaced roman</computeroutput> dar se adaugă sublinierea sintaxei după cum urmează:
+		</para>
+		 
+<programlisting language="Java">package org.jboss.book.jca.ex1;
+
+import javax.naming.InitialContext;
+
+public class ExClient
+{
+   public static void main(String args[]) 
+       throws Exception
+   {
+      InitialContext iniCtx = new InitialContext();
+      Object         ref    = iniCtx.lookup("EchoBean");
+      EchoHome       home   = (EchoHome) ref;
+      Echo           echo   = home.create();
+
+      System.out.println("Created Echo");
+
+      System.out.println("Echo.echo('Hello') = " + echo.echo("Hello"));
+   }
+}</programlisting>
+
+	</section>
+	
+	 <section>
+		<title>Note și Avertismente</title>
+		 <para>
+			În sfârșit, folosim trei stiluri vizuale pentru a atrage atenția asupra informației care ar putea altfel să fie trecută cu vederea.
+		</para>
+		 <note>
+			<title>Notă</title>
+			 <para>
+				Notele sunt sfaturi, scurtături sau abordări alternative pentru adresarea sarcinii curente. Ignorarea unei note ar trebui să nu aibe nici un fel de consecințe negative, dar a-ți putea sări peste un giumbușluc care vă face viața mai ușoară.
+			</para>
+
+		</note>
+		 <important>
+			<title>Important</title>
+			 <para>
+				Căsuțele importante detaliază lucruri care sunt ușor trecut cu vederea: schimbări de configurație care se aplică numai sesiunii curente sau servicii care necesită restartarea înainte de o actualizare sunt ținta acestora. Ignorarea unei căsuțe etichetată 'Important' nu va cauza pierderea datelor dar ar putea cauza iritare și frustrare.
+			</para>
+
+		</important>
+		 <warning>
+			<title>Avertisment</title>
+			 <para>
+				Avertismentele nu ar trebui să fie ignorate. Ignorarea avertismentelor va cauza cel mai probabil pierderea de date.
+			</para>
+
+		</warning>
+
+	</section>
+	
+
+</section>
+
+
