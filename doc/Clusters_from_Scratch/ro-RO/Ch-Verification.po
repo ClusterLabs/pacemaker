@@ -1,4 +1,4 @@
-#
+# 
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
@@ -8,7 +8,6 @@ msgstr ""
 "PO-Revision-Date: 2011-11-26 13:57+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -30,14 +29,14 @@ msgstr "Porniți Corosync pe primul nod"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
 "<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
 "<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -46,8 +45,7 @@ msgstr "Verificați dacă a pornit corect clusterul și că o apartenență ini�
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>grep -e \"corosync.*network interface\" -e \"Corosync Cluster Engine\" \\</userinput>\n"
 "<userinput>-e \"Successfully read main configuration file\" /var/log/messages</userinput>\n"
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN  ] Corosync Cluster Engine ('1.1.0'): started and ready to provide service.\n"
@@ -57,8 +55,8 @@ msgid ""
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>The network interface [192.168.122.101] is now up.</emphasis>\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed.</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>grep -e \"corosync.*network interface\" -e \"Corosync Cluster Engine\" \\</userinput>\n"
 "<userinput>-e \"Successfully read main configuration file\" /var/log/messages</userinput>\n"
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN  ] Corosync Cluster Engine ('1.1.0'): started and ready to provide service.\n"
@@ -68,6 +66,7 @@ msgstr ""
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>The network interface [192.168.122.101] is now up.</emphasis>\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed.</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -76,16 +75,16 @@ msgstr "Cu un nod funcțional, este acum în siguranță să pornim Corosync de 
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- /etc/init.d/corosync start</userinput>\n"
 "<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
 "[root@pcmk-1 ~]#\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- /etc/init.d/corosync start</userinput>\n"
 "<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
 "[root@pcmk-1 ~]#\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -94,22 +93,22 @@ msgstr "Verificați dacă s-a format corect clusterul"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>grep TOTEM /var/log/messages</userinput>\n"
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transport (UDP/IP).\n"
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>The network interface [192.168.122.101] is now up.</emphasis>\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed.</emphasis>\n"
 "Aug 27 09:12:11 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed</emphasis>.\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>grep TOTEM /var/log/messages</userinput>\n"
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transport (UDP/IP).\n"
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>The network interface [192.168.122.101] is now up.</emphasis>\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed.</emphasis>\n"
 "Aug 27 09:12:11 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed</emphasis>.\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -123,22 +122,22 @@ msgstr "Acum că am confirmat că este funcțional Corosync putem verifica și r
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>grep pcmk_startup /var/log/messages</userinput>\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>CRM: Initialized</emphasis>\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] Logging: Initialized pcmk_startup\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: Maximum core file size is: 18446744073709551615\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>Service: 9</emphasis>\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>Local hostname: pcmk-1</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>grep pcmk_startup /var/log/messages</userinput>\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>CRM: Initialized</emphasis>\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] Logging: Initialized pcmk_startup\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: Maximum core file size is: 18446744073709551615\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>Service: 9</emphasis>\n"
 "Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>Local hostname: pcmk-1</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -147,21 +146,18 @@ msgstr "Acum încercați să porniți Pacemaker și verificați că procesele ne
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
 "<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>\n"
-"\t\t"
-msgstr ""
-"\n"
+"		"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
 "<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>\n"
-"\t\t"
+"		"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>grep -e pacemakerd.*get_config_opt -e pacemakerd.*start_child \\</userinput>\n"
 "<userinput>-e \"Starting Pacemaker\" /var/log/messages</userinput>\n"
 "Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'pacemaker' for option: name\n"
@@ -180,8 +176,8 @@ msgid ""
 "Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14025 <emphasis>for process attrd</emphasis>\n"
 "Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14026 <emphasis>for process pengine</emphasis>\n"
 "Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14027 <emphasis>for process crmd</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>grep -e pacemakerd.*get_config_opt -e pacemakerd.*start_child \\</userinput>\n"
 "<userinput>-e \"Starting Pacemaker\" /var/log/messages</userinput>\n"
 "Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'pacemaker' for option: name\n"
@@ -200,11 +196,11 @@ msgstr ""
 "Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14025 <emphasis>for process attrd</emphasis>\n"
 "Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14026 <emphasis>for process pengine</emphasis>\n"
 "Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14027 <emphasis>for process crmd</emphasis>\n"
+""
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>ps axf</userinput>\n"
 "  PID TTY      STAT   TIME COMMAND\n"
 "    2 ?        S&lt;     0:00 [kthreadd]\n"
@@ -217,8 +213,8 @@ msgid ""
 " 14025 ?    Sa      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>attrd</emphasis>\n"
 " 14026 ?    Sa      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>pengine</emphasis>\n"
 " 14027 ?    Sa      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>crmd</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>ps axf</userinput>\n"
 "  PID TTY      STAT   TIME COMMAND\n"
 "    2 ?        S&lt;     0:00 [kthreadd]\n"
@@ -231,6 +227,7 @@ msgstr ""
 " 14025 ?    Sa      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>attrd</emphasis>\n"
 " 14026 ?    Sa      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>pengine</emphasis>\n"
 " 14027 ?    Sa      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>crmd</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -239,14 +236,14 @@ msgstr "În continuare, verificați pentru orice mesaje de tip ERROR din timpul 
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>grep ERROR: /var/log/messages | grep -v unpack_resources</userinput>\n"
 "[root@pcmk-1 ~]# \n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>grep ERROR: /var/log/messages | grep -v unpack_resources</userinput>\n"
 "[root@pcmk-1 ~]# \n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -255,8 +252,7 @@ msgstr "Repetați pe nodul celălalt și listați status-ul clusterului."
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- /etc/init.d/pacemaker start</userinput>\n"
 "<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
@@ -270,8 +266,8 @@ msgid ""
 "============\n"
 "\n"
 "<emphasis>Online: [ pcmk-1 pcmk-2 ]</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- /etc/init.d/pacemaker start</userinput>\n"
 "<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
@@ -285,3 +281,5 @@ msgstr ""
 "============\n"
 "\n"
 "<emphasis>Online: [ pcmk-1 pcmk-2 ]</emphasis>\n"
+""
+

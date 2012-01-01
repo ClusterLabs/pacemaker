@@ -1,4 +1,4 @@
-#
+# 
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
@@ -8,7 +8,6 @@ msgstr ""
 "PO-Revision-Date: 2011-11-25 23:39+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -35,8 +34,7 @@ msgstr "De la includerea acestuia în kernelul 2.6.33, tot ce este necesar pentr
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>yum install -y drbd-pacemaker drbd-udev</userinput>\n"
 "Loaded plugins: presto, refresh-packagekit\n"
 "Setting up Install Process\n"
@@ -90,8 +88,7 @@ msgid ""
 "Complete!\n"
 "[root@pcmk-1 ~]#\n"
 "    "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>yum install -y drbd-pacemaker drbd-udev</userinput>\n"
 "Loaded plugins: presto, refresh-packagekit\n"
 "Setting up Install Process\n"
@@ -168,8 +165,7 @@ msgstr "Dacă aveți mai mult de 1Gb liber, simțiți-vă liberi să-l folosiți
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>lvcreate -n drbd-demo -L 1G VolGroup</userinput>\n"
 "  Logical volume \"drbd-demo\" created\n"
 "[root@pcmk-1 ~]# <userinput>lvs</userinput>\n"
@@ -178,8 +174,7 @@ msgid ""
 "  lv_root   VolGroup -wi-ao   7.30G                                      \n"
 "  lv_swap   VolGroup -wi-ao 500.00M\n"
 "      "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>lvcreate -n drbd-demo -L 1G VolGroup</userinput>\n"
 "  Logical volume \"drbd-demo\" created\n"
 "[root@pcmk-1 ~]# <userinput>lvs</userinput>\n"
@@ -196,8 +191,7 @@ msgstr "Repetați acest lucru pe al doilea nod, asigurați-vă că folosiți o p
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-2 ~]# <userinput>lvs</userinput>\n"
 "  LV      VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n"
 "  lv_root VolGroup -wi-ao   7.30G                                      \n"
@@ -210,8 +204,7 @@ msgid ""
 "  lv_root   VolGroup -wi-ao   7.30G                                      \n"
 "  lv_swap   VolGroup -wi-ao 500.00M\n"
 "      "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-2 ~]# <userinput>lvs</userinput>\n"
 "  LV      VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert\n"
 "  lv_root VolGroup -wi-ao   7.30G                                      \n"
@@ -247,8 +240,7 @@ msgstr "Asigurați-vă că folosiți numele și adresele nodurilor <emphasis>voa
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "global { \n"
 "  usage-count yes; \n"
 "}\n"
@@ -275,8 +267,7 @@ msgid ""
 "  }\n"
 "}\n"
 "      "
-msgstr ""
-"\n"
+msgstr "\n"
 "global { \n"
 "  usage-count yes; \n"
 "}\n"
@@ -321,8 +312,7 @@ msgstr "Cu configurația pusă la locul ei, acum putem executa inițializarea DR
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>drbdadm create-md wwwdata</userinput>\n"
 "md_offset 12578816\n"
 "al_offset 12546048\n"
@@ -340,8 +330,7 @@ msgid ""
 "New drbd meta data block successfully created.\n"
 "success\n"
 "      "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>drbdadm create-md wwwdata</userinput>\n"
 "md_offset 12578816\n"
 "al_offset 12546048\n"
@@ -367,8 +356,7 @@ msgstr "Acum încărcați modulul de kernel al DRBD și confirmați că totul es
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>modprobe drbd</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>drbdadm up wwwdata</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>cat /proc/drbd</userinput>\n"
@@ -400,8 +388,7 @@ msgid ""
 "<emphasis> 1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r----</emphasis>\n"
 "    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248\n"
 "      "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>modprobe drbd</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>drbdadm up wwwdata</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>cat /proc/drbd</userinput>\n"
@@ -412,7 +399,7 @@ msgstr ""
 "    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248\n"
 "[root@pcmk-1 ~]# \n"
 "\n"
-"Repetați pe al doilea nod\n"
+"Repeat on the second node\n"
 "drbdadm --force create-md wwwdata \n"
 "modprobe drbd\n"
 "drbdadm up wwwdata\n"
@@ -441,8 +428,7 @@ msgstr "Acum trebuie să spunem DRBD-ului care set de date să îl folosească. 
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>drbdadm -- --overwrite-data-of-peer primary wwwdata</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>cat /proc/drbd</userinput>\n"
 "version: 8.3.6 (api:88/proto:86-90)\n"
@@ -457,8 +443,7 @@ msgid ""
 " 1: <emphasis>cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate</emphasis> C r----\n"
 "    ns:12248 nr:0 dw:0 dr:12536 al:0 bm:1 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:0\n"
 "      "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>drbdadm -- --overwrite-data-of-peer primary wwwdata</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>cat /proc/drbd</userinput>\n"
 "version: 8.3.6 (api:88/proto:86-90)\n"
@@ -486,8 +471,7 @@ msgstr "Popularea DRBD-ului cu Date"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>mkfs.ext4 /dev/drbd1</userinput>\n"
 "mke2fs 1.41.4 (27-Jan-2009)\n"
 "Filesystem label=\n"
@@ -527,8 +511,7 @@ msgid ""
 "&gt; END\n"
 "[root@pcmk-1 ~]# <userinput>umount /dev/drbd1</userinput>\n"
 "      "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>mkfs.ext4 /dev/drbd1</userinput>\n"
 "mke2fs 1.41.4 (27-Jan-2009)\n"
 "Filesystem label=\n"
@@ -586,13 +569,11 @@ msgstr "Întâi lansăm shell-ul. Promptul se va schimba pentru a indica faptul 
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm</userinput>\n"
 "cib crm(live)#\n"
 "    "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm</userinput>\n"
 "cib crm(live)#\n"
 "    "
@@ -604,14 +585,12 @@ msgstr "În continuare trebuie să creăm o copie funcțională a configurației
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "cib crm(live)# <userinput>cib new drbd</userinput>\n"
 "INFO: drbd shadow CIB created\n"
 "crm(drbd)#\n"
 "    "
-msgstr ""
-"\n"
+msgstr "\n"
 "cib crm(live)# <userinput>cib new drbd</userinput>\n"
 "INFO: drbd shadow CIB created\n"
 "crm(drbd)#\n"
@@ -624,8 +603,7 @@ msgstr "Acum putem crea clona noastră de DRBD și să listăm configurația rev
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "crm(drbd)# <userinput>configure primitive WebData ocf:linbit:drbd params drbd_resource=wwwdata \\</userinput>\n"
 "<userinput>        op monitor interval=60s</userinput>\n"
 "crm(drbd)# <userinput>configure ms WebDataClone WebData meta master-max=1 master-node-max=1 \\</userinput>\n"
@@ -656,8 +634,7 @@ msgid ""
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
 "    "
-msgstr ""
-"\n"
+msgstr "\n"
 "crm(drbd)# <userinput>configure primitive WebData ocf:linbit:drbd params drbd_resource=wwwdata \\</userinput>\n"
 "<userinput>        op monitor interval=60s</userinput>\n"
 "crm(drbd)# <userinput>configure ms WebDataClone WebData meta master-max=1 master-node-max=1 \\</userinput>\n"
@@ -696,8 +673,7 @@ msgstr "Odată ce suntem multumiți cu modificările realizate, putem spune clus
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "crm(drbd)# <userinput>cib commit drbd</userinput>\n"
 "INFO: commited 'drbd' shadow CIB to the cluster\n"
 "crm(drbd)# <userinput>quit</userinput>\n"
@@ -720,8 +696,7 @@ msgid ""
 "<emphasis> Masters: [ pcmk-2 ]</emphasis>\n"
 "<emphasis> Slaves: [ pcmk-1 ]</emphasis>\n"
 "    "
-msgstr ""
-"\n"
+msgstr "\n"
 "crm(drbd)# <userinput>cib commit drbd</userinput>\n"
 "INFO: commited 'drbd' shadow CIB to the cluster\n"
 "crm(drbd)# <userinput>quit</userinput>\n"
@@ -762,8 +737,7 @@ msgstr "Încă o dată vom folosi modul interactiv al shell-ului"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm</userinput>\n"
 "crm(live)# <userinput>cib new fs</userinput>\n"
 "INFO: fs shadow CIB created\n"
@@ -772,8 +746,7 @@ msgid ""
 "crm(fs)# <userinput>configure colocation fs_on_drbd inf: WebFS WebDataClone:Master</userinput>\n"
 "crm(fs)# <userinput>configure order WebFS-after-WebData inf: WebDataClone:promote WebFS:start</userinput>\n"
 "    "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm</userinput>\n"
 "crm(live)# <userinput>cib new fs</userinput>\n"
 "INFO: fs shadow CIB created\n"
@@ -790,13 +763,11 @@ msgstr "Trebuie să spunem clusterului de asemenea că Apache are nevoie să rul
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "crm(fs)# <userinput>configure colocation WebSite-with-WebFS inf: WebSite WebFS</userinput>\n"
 "crm(fs)# <userinput>configure order WebSite-after-WebFS inf: WebFS WebSite</userinput>\n"
 "    "
-msgstr ""
-"\n"
+msgstr "\n"
 "crm(fs)# <userinput>configure colocation WebSite-with-WebFS inf: WebSite WebFS</userinput>\n"
 "crm(fs)# <userinput>configure order WebSite-after-WebFS inf: WebFS WebSite</userinput>\n"
 "    "
@@ -808,8 +779,7 @@ msgstr "E timpul să revizuim configurația actualizată:"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
@@ -842,8 +812,7 @@ msgid ""
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
 "    "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
@@ -884,8 +853,7 @@ msgstr "După ce am revizuit configurația nouă, o încărcăm din nou și urm�
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "crm(fs)# <userinput>cib commit fs</userinput>\n"
 "INFO: commited 'fs' shadow CIB to the cluster\n"
 "crm(fs)# <userinput>quit</userinput>\n"
@@ -909,8 +877,7 @@ msgid ""
 "        Slaves: [ pcmk-2 ]\n"
 "<emphasis>WebFS (ocf::heartbeat:Filesystem): Started pcmk-1</emphasis>\n"
 "    "
-msgstr ""
-"\n"
+msgstr "\n"
 "crm(fs)# <userinput>cib commit fs</userinput>\n"
 "INFO: commited 'fs' shadow CIB to the cluster\n"
 "crm(fs)# <userinput>quit</userinput>\n"
@@ -952,8 +919,7 @@ msgstr "Puneți nodul local în mod standby și observați cum clusterul mută t
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm node standby</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
@@ -975,8 +941,7 @@ msgid ""
 "        Stopped: [ WebData:1 ]\n"
 "WebFS   (ocf::heartbeat:Filesystem):    <emphasis>Started pcmk-2</emphasis>\n"
 "      "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm node standby</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
@@ -1006,8 +971,7 @@ msgstr "Odată ce am făcut tot ceea ce era nevoie să facem pe pcmk-1 (în aces
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm node online</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
@@ -1028,8 +992,7 @@ msgid ""
 "        Slaves: [ pcmk-1 ]\n"
 "WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2\n"
 "      "
-msgstr ""
-"\n"
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm node online</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"

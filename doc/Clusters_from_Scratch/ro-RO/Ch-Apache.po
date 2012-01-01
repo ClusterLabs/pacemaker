@@ -1,4 +1,4 @@
-#
+# 
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
@@ -8,7 +8,6 @@ msgstr ""
 "PO-Revision-Date: 2011-11-24 00:51+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -35,8 +34,7 @@ msgstr "Înainte de a continua, trebuie să ne asigurăm că Apache este înstal
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@ppcmk-1 ~]# <userinput>yum install -y httpd</userinput>\n"
 "Setting up Install Process\n"
 "Resolving Dependencies\n"
@@ -106,8 +104,8 @@ msgid ""
 "\n"
 "Complete!\n"
 "[root@pcmk-1 ~]#\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@ppcmk-1 ~]# <userinput>yum install -y httpd</userinput>\n"
 "Setting up Install Process\n"
 "Resolving Dependencies\n"
@@ -177,6 +175,7 @@ msgstr ""
 "\n"
 "Complete!\n"
 "[root@pcmk-1 ~]#\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -185,8 +184,7 @@ msgstr "De asemenea, avem nevoie de utilitarul wget pentru ca și clusterul să 
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>yum install -y wget</userinput>\n"
 "Setting up Install Process\n"
 "Resolving Dependencies\n"
@@ -222,8 +220,8 @@ msgid ""
 "\n"
 "Complete!\n"
 "[root@pcmk-1 ~]#\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>yum install -y wget</userinput>\n"
 "Setting up Install Process\n"
 "Resolving Dependencies\n"
@@ -259,6 +257,7 @@ msgstr ""
 "\n"
 "Complete!\n"
 "[root@pcmk-1 ~]#\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -272,22 +271,22 @@ msgstr "Mai întâi trebuie să creem o pagină pe care Apache să o servească.
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;/var/www/html/index.html</userinput>\n"
 " &lt;html&gt;\n"
 " &lt;body&gt;My Test Site - pcmk-1&lt;/body&gt;\n"
 " &lt;/html&gt;\n"
 " END\n"
 "[root@pcmk-1 ~]#\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;/var/www/html/index.html</userinput>\n"
 " &lt;html&gt;\n"
 " &lt;body&gt;My Test Site - pcmk-1&lt;/body&gt;\n"
 " &lt;/html&gt;\n"
 " END\n"
 "[root@pcmk-1 ~]#\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -296,22 +295,22 @@ msgstr "Pentru moment, vom simplifica lucrurile servind doar un site static și 
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-2 ~]# <userinput>cat &lt;&lt;-END &gt;/var/www/html/index.html</userinput>\n"
 " &lt;html&gt;\n"
 " &lt;body&gt;My Test Site - pcmk-2&lt;/body&gt;\n"
 " &lt;/html&gt;\n"
 " END\n"
 "[root@pcmk-2 ~]#\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-2 ~]# <userinput>cat &lt;&lt;-END &gt;/var/www/html/index.html</userinput>\n"
 " &lt;html&gt;\n"
 " &lt;body&gt;My Test Site - pcmk-2&lt;/body&gt;\n"
 " &lt;/html&gt;\n"
 " END\n"
 "[root@pcmk-2 ~]#\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -325,24 +324,22 @@ msgstr "Pentru a monitoriza sănătatea instanței voastre de Apache și pentru 
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "&lt;Location /server-status&gt;\n"
 "   SetHandler server-status\n"
 "   Order deny,allow\n"
 "   Deny from all\n"
 "   Allow from 127.0.0.1\n"
 "&lt;/Location&gt;\n"
-"\t  "
-msgstr ""
-"\n"
+"	  "
+msgstr "\n"
 "&lt;Location /server-status&gt;\n"
 "   SetHandler server-status\n"
 "   Order deny,allow\n"
 "   Deny from all\n"
 "   Allow from 127.0.0.1\n"
 "&lt;/Location&gt;\n"
-"\t  "
+"	  "
 
 #. Tag: title
 #, no-c-format
@@ -356,8 +353,7 @@ msgstr "La acest punct, Apache este gata de pornire, tot ce trebuie făcut este 
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure primitive WebSite ocf:heartbeat:apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=1min</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -376,8 +372,8 @@ msgid ""
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure primitive WebSite ocf:heartbeat:apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=1min</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -396,6 +392,7 @@ msgstr ""
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -404,8 +401,7 @@ msgstr "După o scurtă întârziere, ar trebui să vedem clusterul pornind apac
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
 "Last updated: Fri Aug 28 16:12:49 2009\n"
@@ -420,8 +416,8 @@ msgid ""
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
 "WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-1</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
 "Last updated: Fri Aug 28 16:12:49 2009\n"
@@ -436,6 +432,7 @@ msgstr ""
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
 "WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-1</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -469,8 +466,7 @@ msgstr "Restricțiile de colocare sunt \"direcționale\", în sensul că implic�
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure colocation website-with-ip INFINITY: WebSite ClusterIP</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -504,8 +500,8 @@ msgid ""
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
 "WebSite        (ocf::heartbeat:apache):        Started pcmk-2\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure colocation website-with-ip INFINITY: WebSite ClusterIP</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -539,6 +535,7 @@ msgstr ""
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
 "WebSite        (ocf::heartbeat:apache):        Started pcmk-2\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -552,8 +549,7 @@ msgstr "Când pornește Apache, se atașează de adresa IP disponibilă. Nu ști
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure order apache-after-ip mandatory: ClusterIP WebSite</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -574,8 +570,8 @@ msgid ""
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure order apache-after-ip mandatory: ClusterIP WebSite</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -596,6 +592,7 @@ msgstr ""
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -609,8 +606,7 @@ msgstr "Pacemaker nu se bazează pe nici un fel de simetrie hardware între nodu
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure location prefer-pcmk-1 WebSite 50: pcmk-1</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -645,8 +641,8 @@ msgid ""
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-2</emphasis>\n"
 "WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-2</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure location prefer-pcmk-1 WebSite 50: pcmk-1</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -681,6 +677,7 @@ msgstr ""
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-2</emphasis>\n"
 "WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-2</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -724,8 +721,7 @@ msgstr "Sunt întotdeauna momente când un administrator are nevoie să preia co
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm resource move WebSite pcmk-1</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
@@ -765,8 +761,8 @@ msgid ""
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm resource move WebSite pcmk-1</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
@@ -806,6 +802,7 @@ msgstr ""
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -824,8 +821,7 @@ msgstr "Odată ce am terminat oricare activitate ce ne-a cerut să mutăm resurs
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm resource unmove WebSite</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -846,8 +842,8 @@ msgid ""
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm resource unmove WebSite</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -868,6 +864,7 @@ msgstr ""
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -876,8 +873,7 @@ msgstr "Observați că restricția automată acum nu mai există. Dacă verific�
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
 "Last updated: Fri Aug 28 16:20:53 2009\n"
@@ -892,8 +888,8 @@ msgid ""
 "\n"
 " ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-1</emphasis>\n"
 " WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-1</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
 "Last updated: Fri Aug 28 16:20:53 2009\n"
@@ -908,3 +904,5 @@ msgstr ""
 "\n"
 " ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-1</emphasis>\n"
 " WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-1</emphasis>\n"
+""
+

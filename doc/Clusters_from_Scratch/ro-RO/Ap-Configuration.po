@@ -4,11 +4,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
-"POT-Creation-Date: 2011-12-31T15:15:49\n"
-"PO-Revision-Date: 2011-11-20 00:22+0200\n"
+"POT-Creation-Date: 2011-12-31T16:43:02\n"
+"PO-Revision-Date: 2011-12-31T16:43:02\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -25,8 +24,7 @@ msgstr "Configurația Finală a Clusterului"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# crm configure show\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
@@ -64,8 +62,8 @@ msgid ""
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# crm configure show\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
@@ -103,6 +101,7 @@ msgstr ""
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -116,14 +115,14 @@ msgstr "Lista nodurilor din cluster este populată în mod automat de către clu
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -167,22 +166,22 @@ msgstr "no-quorum-policy=ignore - Ignoră pierderea quorumului și continuă să
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "property $id=\"cib-bootstrap-options\" \\\n"
 "        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
 "        cluster-infrastructure=\"openais\" \\\n"
 "        expected-quorum-votes=\"2\" \\\n"
 "        stonith-enabled=\"true\" \\\n"
 "        no-quorum-policy=\"ignore\"\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "property $id=\"cib-bootstrap-options\" \\\n"
 "        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
 "        cluster-infrastructure=\"openais\" \\\n"
 "        expected-quorum-votes=\"2\" \\\n"
 "        stonith-enabled=\"true\" \\\n"
 "        no-quorum-policy=\"ignore\"\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -206,14 +205,14 @@ msgstr "resource-stickiness - Specifică aversiunea față de mutarea resurselor
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
 "        resource-stickiness=\"100\"\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -227,18 +226,18 @@ msgstr "TODO: Adaugă text aici"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "primitive ipmi-fencing stonith::fence_ipmilan \\\n"
 "        params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\\n"
 "        op monitor interval=\"60s\"\n"
 "clone Fencing rsa-fencing\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "primitive ipmi-fencing stonith::fence_ipmilan \\\n"
 "        params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\\n"
 "        op monitor interval=\"60s\"\n"
 "clone Fencing rsa-fencing\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -252,20 +251,20 @@ msgstr "Utilizatorii serviciilor furnizate de către cluster necesită o adresă
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
 "        params ip=\"192.168.122.101\" cidr_netmask=\"32\" clusterip_hash=\"sourceip\" \\\n"
 "        op monitor interval=\"30s\"\n"
 "clone WebIP ClusterIP  \n"
 "        meta globally-unique=\"true\" clone-max=\"2\" clone-node-max=\"2\"\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
 "        params ip=\"192.168.122.101\" cidr_netmask=\"32\" clusterip_hash=\"sourceip\" \\\n"
 "        op monitor interval=\"30s\"\n"
 "clone WebIP ClusterIP  \n"
 "        meta globally-unique=\"true\" clone-max=\"2\" clone-node-max=\"2\"\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -284,20 +283,20 @@ msgstr "Aici definim serviciul DRBD și specificăm care resursă DRBD (din drbd
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "primitive WebData ocf:linbit:drbd \\\n"
 "        params drbd_resource=\"wwwdata\" \\\n"
 "        op monitor interval=\"60s\"\n"
 "ms WebDataClone WebData \\\n"
 "        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "primitive WebData ocf:linbit:drbd \\\n"
 "        params drbd_resource=\"wwwdata\" \\\n"
 "        op monitor interval=\"60s\"\n"
 "ms WebDataClone WebData \\\n"
 "        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -311,8 +310,7 @@ msgstr "Sistemul de fișiere de cluster se asigură că fișierele sunt citite �
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "primitive WebFS ocf:heartbeat:Filesystem \\\n"
 "        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"gfs2\"\n"
 "clone WebFSClone WebFS\n"
@@ -320,8 +318,8 @@ msgid ""
 "colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
 "order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
 "order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "primitive WebFS ocf:heartbeat:Filesystem \\\n"
 "        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"gfs2\"\n"
 "clone WebFSClone WebFS\n"
@@ -329,6 +327,7 @@ msgstr ""
 "colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
 "order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
 "order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -342,8 +341,7 @@ msgstr "În cele din urmă avem serviciul în sine, Apache. Nu trebuie decât s�
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "primitive WebSite ocf:heartbeat:apache \\\n"
 "        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
 "        op monitor interval=\"1min\"\n"
@@ -352,8 +350,8 @@ msgid ""
 "colocation website-with-ip inf: WebSiteClone WebIP\n"
 "order apache-after-ip inf: WebIP WebSiteClone\n"
 "order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "primitive WebSite ocf:heartbeat:apache \\\n"
 "        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
 "        op monitor interval=\"1min\"\n"
@@ -362,3 +360,5 @@ msgstr ""
 "colocation website-with-ip inf: WebSiteClone WebIP\n"
 "order apache-after-ip inf: WebIP WebSiteClone\n"
 "order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
+""
+

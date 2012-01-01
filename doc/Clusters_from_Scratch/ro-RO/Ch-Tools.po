@@ -1,4 +1,4 @@
-#
+# 
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
@@ -8,7 +8,6 @@ msgstr ""
 "PO-Revision-Date: 2011-11-26 11:30+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -35,8 +34,7 @@ msgstr "Luați-vă ceva timp pentru a vă familiariza cu ceea ce poate să facă
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm --help</userinput>\n"
 "\n"
 "usage:\n"
@@ -61,8 +59,8 @@ msgid ""
 "    # crm &lt; stopapp2.cli\n"
 "    # crm resource stop global_www\n"
 "    # crm status\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm --help</userinput>\n"
 "\n"
 "usage:\n"
@@ -87,6 +85,7 @@ msgstr ""
 "    # crm &lt; stopapp2.cli\n"
 "    # crm resource stop global_www\n"
 "    # crm status\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -100,8 +99,7 @@ msgstr "Suplimentar, versiunea de Pacemaker și stiva(ele) suportate de cluster 
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon --version</userinput>\n"
 "Pacemaker 1.1.5\n"
 "Written by Andrew Beekhof\n"
@@ -164,8 +162,8 @@ msgid ""
 "        # crm_mon --daemonize --snmp-traps snmptrapd.example.com\n"
 "\n"
 "Report bugs to pacemaker@oss.clusterlabs.org\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon --version</userinput>\n"
 "Pacemaker 1.1.5\n"
 "Written by Andrew Beekhof\n"
@@ -228,6 +226,7 @@ msgstr ""
 "        # crm_mon --daemonize --snmp-traps snmptrapd.example.com\n"
 "\n"
 "Report bugs to pacemaker@oss.clusterlabs.org\n"
+""
 
 #. Tag: para
 #, no-c-format

@@ -1,4 +1,4 @@
-#
+# 
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
@@ -8,7 +8,6 @@ msgstr ""
 "PO-Revision-Date: 2011-11-22 23:24+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -35,8 +34,7 @@ msgstr "Așa ar trebui să arate configurația de bază."
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-2 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
@@ -44,8 +42,8 @@ msgid ""
 "        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
 "        cluster-infrastructure=\"openais\" \\\n"
 "        expected-quorum-votes=\"2\"\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-2 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
@@ -53,6 +51,7 @@ msgstr ""
 "        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
 "        cluster-infrastructure=\"openais\" \\\n"
 "        expected-quorum-votes=\"2\"\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -61,8 +60,7 @@ msgstr "Pentru cei care nu se tem de XML, puteți vedea configurația în stare 
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-2 ~]# <userinput>crm configure show xml</userinput>\n"
 "&lt;?xml version=\"1.0\" ?&gt;\n"
 "&lt;cib admin_epoch=\"0\" crm_feature_set=\"3.0.1\" dc-uuid=\"pcmk-1\" epoch=\"13\" have-quorum=\"1\" num_updates=\"7\" validate-with=\"pacemaker-1.0\"&gt;\n"
@@ -84,8 +82,8 @@ msgid ""
 "    &lt;constraints/&gt;\n"
 "  &lt;/configuration&gt;\n"
 "&lt;/cib&gt;\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-2 ~]# <userinput>crm configure show xml</userinput>\n"
 "&lt;?xml version=\"1.0\" ?&gt;\n"
 "&lt;cib admin_epoch=\"0\" crm_feature_set=\"3.0.1\" dc-uuid=\"pcmk-1\" epoch=\"13\" have-quorum=\"1\" num_updates=\"7\" validate-with=\"pacemaker-1.0\"&gt;\n"
@@ -107,6 +105,7 @@ msgstr ""
 "    &lt;constraints/&gt;\n"
 "  &lt;/configuration&gt;\n"
 "&lt;/cib&gt;\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -120,8 +119,7 @@ msgstr "Înainte de a realiza orice modificări, este o idee bună să verifica�
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm_verify -L</userinput>\n"
 "crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: <emphasis>Resource start-up disabled since no STONITH resources have been defined</emphasis>\n"
 "crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option\n"
@@ -129,8 +127,8 @@ msgid ""
 "<emphasis>Errors found during check: config not valid</emphasis>\n"
 "  -V may provide more details\n"
 "[root@pcmk-1 ~]#\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm_verify -L</userinput>\n"
 "crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: <emphasis>Resource start-up disabled since no STONITH resources have been defined</emphasis>\n"
 "crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option\n"
@@ -138,6 +136,7 @@ msgstr ""
 "<emphasis>Errors found during check: config not valid</emphasis>\n"
 "  -V may provide more details\n"
 "[root@pcmk-1 ~]#\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -196,16 +195,16 @@ msgstr "Adresa aleasă nu trebuie să fie una deja asociată cu un nod fizic"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "<userinput>crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \\ </userinput>\n"
 "        <userinput>params ip=192.168.122.101 cidr_netmask=32 \\ </userinput>\n"
 "        <userinput>op monitor interval=30s</userinput>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "<userinput>crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \\ </userinput>\n"
 "        <userinput>params ip=192.168.122.101 cidr_netmask=32 \\ </userinput>\n"
 "        <userinput>op monitor interval=30s</userinput>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -219,20 +218,20 @@ msgstr "Pentru a obține o listă a claselor de resurse disponibile, rulați"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm ra classes</userinput>\n"
 "heartbeat\n"
 "lsb\n"
 "<emphasis>ocf / heartbeat pacemaker</emphasis>\n"
 "stonith\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm ra classes</userinput>\n"
 "heartbeat\n"
 "lsb\n"
 "<emphasis>ocf / heartbeat pacemaker</emphasis>\n"
 "stonith\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -241,8 +240,7 @@ msgstr "Pentru a găsi mai apoi toți agenții de resursă OCF furnizați de Pac
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm ra list ocf pacemaker</userinput>\n"
 "ClusterMon     Dummy          Stateful       SysInfo        SystemHealth   controld\n"
 "ping           pingd          \n"
@@ -263,8 +261,8 @@ msgid ""
 "portblock              rsyncd                 scsi2reservation       sfex\n"
 "tomcat                 vmware                 \n"
 "[root@pcmk-1 ~]#\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm ra list ocf pacemaker</userinput>\n"
 "ClusterMon     Dummy          Stateful       SysInfo        SystemHealth   controld\n"
 "ping           pingd          \n"
@@ -285,6 +283,7 @@ msgstr ""
 "portblock              rsyncd                 scsi2reservation       sfex\n"
 "tomcat                 vmware                 \n"
 "[root@pcmk-1 ~]#\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -293,8 +292,7 @@ msgstr "Acum verificați că resursa IP a fost adăugată și listați status-ul
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
@@ -318,8 +316,8 @@ msgid ""
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "<emphasis>ClusterIP (ocf::heartbeat:IPaddr): Started</emphasis> pcmk-1\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
@@ -343,6 +341,7 @@ msgstr ""
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "<emphasis>ClusterIP (ocf::heartbeat:IPaddr): Started</emphasis> pcmk-1\n"
+""
 
 #. Tag: title
 #, no-c-format
@@ -361,16 +360,16 @@ msgstr "Întâi, găsiți nodul pe care rulează adresa IP."
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm resource status ClusterIP</userinput>\n"
 "resource ClusterIP is running on: pcmk-1\n"
 "[root@pcmk-1 ~]#\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm resource status ClusterIP</userinput>\n"
 "resource ClusterIP is running on: pcmk-1\n"
 "[root@pcmk-1 ~]#\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -379,8 +378,7 @@ msgstr "Opriți Pacemaker și Corosync pe acea mașină."
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>\n"
 "<emphasis>Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]</emphasis>\n"
 "<emphasis>Waiting for cluster services to unload:.                   [  OK  ]</emphasis>\n"
@@ -388,8 +386,8 @@ msgid ""
 "<emphasis>Stopping Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
 "<emphasis>Waiting for services to unload: [ OK ]</emphasis>\n"
 "[root@pcmk-1 ~]#\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>\n"
 "<emphasis>Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]</emphasis>\n"
 "<emphasis>Waiting for cluster services to unload:.                   [  OK  ]</emphasis>\n"
@@ -397,6 +395,7 @@ msgstr ""
 "<emphasis>Stopping Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
 "<emphasis>Waiting for services to unload: [ OK ]</emphasis>\n"
 "[root@pcmk-1 ~]#\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -405,8 +404,7 @@ msgstr "Odată ce Corosync nu mai rulează, mergeți pe celălalt nod și verifi
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-2 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
 "Last updated: Fri Aug 28 15:27:35 2009\n"
@@ -419,8 +417,8 @@ msgid ""
 "\n"
 "Online: [ pcmk-2 ]\n"
 "<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-2 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
 "Last updated: Fri Aug 28 15:27:35 2009\n"
@@ -433,6 +431,7 @@ msgstr ""
 "\n"
 "Online: [ pcmk-2 ]\n"
 "<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -466,8 +465,7 @@ msgstr "Prin urmare un cluster format din două noduri are quorum numai când am
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure property no-quorum-policy=ignore</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show </userinput>\n"
 "node pcmk-1\n"
@@ -481,8 +479,8 @@ msgid ""
 "        expected-quorum-votes=\"2\" \\\n"
 "        stonith-enabled=\"false\" \\\n"
 "        <emphasis>no-quorum-policy=\"ignore\"</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>crm configure property no-quorum-policy=ignore</userinput>\n"
 "[root@pcmk-1 ~]# <userinput>crm configure show </userinput>\n"
 "node pcmk-1\n"
@@ -496,6 +494,7 @@ msgstr ""
 "        expected-quorum-votes=\"2\" \\\n"
 "        stonith-enabled=\"false\" \\\n"
 "        <emphasis>no-quorum-policy=\"ignore\"</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -504,8 +503,7 @@ msgstr "După câteva momente, clusterul va porni adresa IP pe nodul rămas. Lua
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-2 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
 "Last updated: Fri Aug 28 15:30:18 2009\n"
@@ -519,8 +517,8 @@ msgid ""
 "<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
 "\n"
 "<emphasis>ClusterIP (ocf::heartbeat:IPaddr): Started pcmk-2</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-2 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
 "Last updated: Fri Aug 28 15:30:18 2009\n"
@@ -534,6 +532,7 @@ msgstr ""
 "<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
 "\n"
 "<emphasis>ClusterIP (ocf::heartbeat:IPaddr): Started pcmk-2</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -542,8 +541,7 @@ msgstr "Acum simulați recuperarea nodului restartând stiva de cluster pe pcmk-
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
 "<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>      \n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
@@ -560,8 +558,8 @@ msgid ""
 "Online: [ <emphasis>pcmk-1</emphasis> pcmk-2 ]\n"
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-1</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
 "<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>      \n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
@@ -578,6 +576,7 @@ msgstr ""
 "Online: [ <emphasis>pcmk-1</emphasis> pcmk-2 ]\n"
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-1</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -601,8 +600,7 @@ msgstr "Pentru a adresa acest aspect, Pacemaker are conceptul de adezivitate a r
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-2 ~]# <userinput>crm configure rsc_defaults resource-stickiness=100</userinput>\n"
 "[root@pcmk-2 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -618,8 +616,8 @@ msgid ""
 "        no-quorum-policy=\"ignore\"\n"
 "<emphasis>rsc_defaults $id=\"rsc-options\" \\</emphasis>\n"
 "<emphasis> resource-stickiness=\"100\"</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-2 ~]# <userinput>crm configure rsc_defaults resource-stickiness=100</userinput>\n"
 "[root@pcmk-2 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
@@ -635,6 +633,7 @@ msgstr ""
 "        no-quorum-policy=\"ignore\"\n"
 "<emphasis>rsc_defaults $id=\"rsc-options\" \\</emphasis>\n"
 "<emphasis> resource-stickiness=\"100\"</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -643,8 +642,7 @@ msgstr "Dacă încercăm din nou acum testul de failover, vedem că așa cum est
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>\n"
 "Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]\n"
 "Waiting for cluster services to unload:.                   [  OK  ]\n"
@@ -665,8 +663,8 @@ msgid ""
 "<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-2</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>\n"
 "Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]\n"
 "Waiting for cluster services to unload:.                   [  OK  ]\n"
@@ -687,6 +685,7 @@ msgstr ""
 "<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-2</emphasis>\n"
+""
 
 #. Tag: para
 #, no-c-format
@@ -695,8 +694,7 @@ msgstr "Însă când aducem pcmk-1 înapoi online, ClusterIP acum rămâne în f
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
 "<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
@@ -714,8 +712,8 @@ msgid ""
 "Online: [ <emphasis>pcmk-1</emphasis> pcmk-2 ]\n"
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        Started <emphasis>pcmk-2</emphasis>\n"
-msgstr ""
-"\n"
+""
+msgstr "\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
 "<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
@@ -733,3 +731,5 @@ msgstr ""
 "Online: [ <emphasis>pcmk-1</emphasis> pcmk-2 ]\n"
 "\n"
 "ClusterIP        (ocf::heartbeat:IPaddr):        Started <emphasis>pcmk-2</emphasis>\n"
+""
+
