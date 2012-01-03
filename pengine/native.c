@@ -1764,6 +1764,9 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set)
                        next->details->uname);
             g_list_free(possible_matches);
 
+        } else if(is_set(rsc->flags, pe_rsc_reload)) {
+            crm_notice("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+
         } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
             crm_notice("Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
@@ -1777,9 +1780,6 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set)
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
             crm_notice("Stop    %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
-
-        } else if(is_set(rsc->flags, pe_rsc_reload)) {
-            crm_notice("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
         } else {
             crm_notice("Restart %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
