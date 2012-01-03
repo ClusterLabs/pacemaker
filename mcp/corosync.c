@@ -569,7 +569,7 @@ read_config(void)
                 }
                 rc = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
                 if(rc < 0) {
-                    crm_warn("Cannot change the mode of %s to rw-rw---- %s", value);
+                    crm_warn("Cannot change the mode of %s to rw-rw----", value);
                 }
 
                 fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
