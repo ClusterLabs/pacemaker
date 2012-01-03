@@ -37,7 +37,7 @@ struct qb_ipc_request_header {
 } __attribute__((aligned(8)));
 
 struct qb_ipc_response_header {
-	int size; __attribute__((aligned(8)));
+	int size __attribute__((aligned(8)));
 	int id __attribute__((aligned(8)));
 	int error __attribute__((aligned(8)));
 } __attribute__((aligned(8)));
