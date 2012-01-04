@@ -1047,37 +1047,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     crm_debug("Processing %s%s from %s (%16x)", op, is_reply?" reply":"",
 	      client?client->name:remote, call_options);
 
-    if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
-	return;
-	    
-    } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
-	rc = stonith_device_register(request);
-	do_stonith_notify(call_options, op, rc, request, NULL);
-
-    } else if(crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
-	rc = stonith_device_remove(request);
-	do_stonith_notify(call_options, op, rc, request, NULL);
-
-    } else if(crm_str_eq(op, STONITH_OP_LEVEL_ADD, TRUE)) {
-	rc = stonith_level_register(request);
-	do_stonith_notify(call_options, op, rc, request, NULL);
-
-    } else if(crm_str_eq(op, STONITH_OP_LEVEL_DEL, TRUE)) {
-	rc = stonith_level_remove(request);
-	do_stonith_notify(call_options, op, rc, request, NULL);
-
-    } else if(crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
-	async_command_t *cmd = create_async_command(request);
-	xmlNode *reply = stonith_construct_async_reply(cmd, NULL, NULL, 0);
-
-	crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-	crm_notice("Broadcasting manual fencing confirmation for node %s", cmd->victim);
-	send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
-
-	free_async_command(cmd);
-	free_xml(reply);
-
-    } else if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
+    if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
 	rc = stonith_device_action(request, &output);
 
     } else if(is_reply && crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
@@ -1142,6 +1112,36 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     } else if (crm_str_eq(op, STONITH_OP_FENCE_HISTORY, TRUE)) {
 	rc = stonith_fence_history(request, &data);
 	always_reply = TRUE;
+
+    } else if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
+	return;
+	    
+    } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
+	rc = stonith_device_register(request);
+	do_stonith_notify(call_options, op, rc, request, NULL);
+
+    } else if(crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
+	rc = stonith_device_remove(request);
+	do_stonith_notify(call_options, op, rc, request, NULL);
+
+    } else if(crm_str_eq(op, STONITH_OP_LEVEL_ADD, TRUE)) {
+	rc = stonith_level_register(request);
+	do_stonith_notify(call_options, op, rc, request, NULL);
+
+    } else if(crm_str_eq(op, STONITH_OP_LEVEL_DEL, TRUE)) {
+	rc = stonith_level_remove(request);
+	do_stonith_notify(call_options, op, rc, request, NULL);
+
+    } else if(crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
+	async_command_t *cmd = create_async_command(request);
+	xmlNode *reply = stonith_construct_async_reply(cmd, NULL, NULL, 0);
+
+	crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+	crm_notice("Broadcasting manual fencing confirmation for node %s", cmd->victim);
+	send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
+
+	free_async_command(cmd);
+	free_xml(reply);
 
     } else {
 	crm_err("Unknown %s%s from %s", op, is_reply?" reply":"",
