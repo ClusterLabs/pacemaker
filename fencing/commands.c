@@ -45,6 +45,8 @@
 #include <clplumbing/proctrack.h>
 
 GHashTable *device_list = NULL;
+GHashTable *topology = NULL;
+
 static int active_children = 0;
 
 static gboolean stonith_device_dispatch(gpointer user_data);
@@ -374,7 +376,7 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     return device;
 }
 
-int stonith_device_register(xmlNode *msg) 
+static int stonith_device_register(xmlNode *msg) 
 {
     const char *value = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
@@ -393,6 +395,8 @@ int stonith_device_register(xmlNode *msg)
     return stonith_ok;
 }
 
+
+
 static int stonith_device_remove(xmlNode *msg) 
 {
     xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
@@ -404,7 +408,114 @@ static int stonith_device_remove(xmlNode *msg)
 	crm_info("Device '%s' not found (%d active devices)",
 		 id, g_hash_table_size(device_list));
     }
+    return stonith_ok;
+}
+
+typedef struct stonith_topology_s 
+{
+        char *node;
+        GListPtr levels[ST_LEVEL_MAX];
+        
+} stonith_topology_t;
+
+
+static int count_active_levels(stonith_topology_t *tp)
+{
+    int lpc = 0;
+    int count = 0;
+    for(lpc = 0; lpc < ST_LEVEL_MAX; lpc++) {
+        if(tp->levels[lpc] != NULL) {
+            count++;
+        }
+    }
+    return count;
+}
+
+void free_topology_entry(gpointer data)
+{
+    stonith_topology_t *tp = data;
+
+    int lpc = 0;
+    for(lpc = 0; lpc < ST_LEVEL_MAX; lpc++) {
+        if(tp->levels[lpc] != NULL) {
+            slist_basic_destroy(tp->levels[lpc]);
+        }
+    }
+    crm_free(tp->node);
+    crm_free(tp);
+}
+
+static int stonith_level_register(xmlNode *msg) 
+{
+    int id = 0;
+    int rc = stonith_ok;
+    xmlNode *child = NULL;
     
+    xmlNode *level = get_xpath_object("//"F_STONITH_LEVEL, msg, LOG_ERR);
+    const char *node = crm_element_value(level, F_STONITH_TARGET);
+    stonith_topology_t *tp = g_hash_table_lookup(topology, node);
+
+    crm_element_value_int(level, XML_ATTR_ID, &id);
+    if(id <= 0 || id >= ST_LEVEL_MAX) {
+        return st_err_invalid_level;
+    }
+    
+    if(tp == NULL) {
+        crm_malloc0(tp, sizeof(stonith_topology_t));
+        tp->node = crm_strdup(node);
+        g_hash_table_replace(topology, tp->node, tp);
+        crm_trace("Added %s to the topology (%d active entries)", node, g_hash_table_size(topology));
+    }
+
+    if(tp->levels[id] != NULL) {
+        crm_info("Adding to the existing %s (%d) topology entry (%d active entries)", node, count_active_levels(tp));
+    }
+
+    for (child = __xml_first_child(level); child != NULL; child = __xml_next(child)) {
+        const char *device = ID(child);
+        if(g_hash_table_lookup(device_list, device)) {
+            crm_trace("Added device '%s' for %s (%d)", device, node, id);
+            tp->levels[id] = g_list_append(tp->levels[id], crm_strdup(device));
+
+        } else {
+            crm_notice("Device '%s' for %s is unknown", device, node);
+            rc = st_err_unknown_device;
+        }
+    }
+    
+    crm_info("Node %s has %d active fencing levels", node, count_active_levels(tp));
+    return rc;
+}
+
+static int stonith_level_remove(xmlNode *msg) 
+{
+    int id = 0;
+    xmlNode *level = get_xpath_object("//"F_STONITH_LEVEL, msg, LOG_ERR);
+    const char *node = crm_element_value(level, F_STONITH_TARGET);
+    stonith_topology_t *tp = g_hash_table_lookup(topology, node);
+
+    if(tp == NULL) {
+	crm_info("Node %s not found (%d active entries)",
+		 node, g_hash_table_size(topology));
+        return st_err_invalid_target;
+    }
+
+    crm_element_value_int(level, XML_ATTR_ID, &id);
+    if(id < 0 || id >= ST_LEVEL_MAX) {
+        return st_err_invalid_level;
+    }
+
+    if(id == 0 && g_hash_table_remove(topology, node)) {
+	crm_info("Removed all %s related entries from the topology (%d active entries)",
+		 node, g_hash_table_size(topology));
+
+    } else if(id > 0 && tp->levels[id] != NULL) {
+        slist_basic_destroy(tp->levels[id]);
+        tp->levels[id] = NULL;
+
+	crm_info("Removed entry '%d' from %s's topology (%d active entries remaining)",
+		 id, node, count_active_levels(tp));
+    }    
     return stonith_ok;
 }
 
@@ -946,7 +1057,14 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
 	rc = stonith_device_remove(request);
 	do_stonith_notify(call_options, op, rc, request, NULL);
-	
+
+    } else if(crm_str_eq(op, STONITH_OP_LEVEL_ADD, TRUE)) {
+	rc = stonith_level_register(request);
+	do_stonith_notify(call_options, op, rc, request, NULL);
+
+    } else if(crm_str_eq(op, STONITH_OP_LEVEL_DEL, TRUE)) {
+	rc = stonith_level_remove(request);
+	do_stonith_notify(call_options, op, rc, request, NULL);
 
     } else if(crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
 	async_command_t *cmd = create_async_command(request);

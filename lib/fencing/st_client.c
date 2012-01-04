@@ -139,7 +139,7 @@ stonith_connection_destroy(gpointer user_data)
 }
 
 static int
-stonith_api_register_device(stonith_t * stonith, int call_options,
+stonith_api_register_device(stonith_t * st, int call_options,
                             const char *id, const char *namespace, const char *agent,
                             stonith_key_value_t * params)
 {
@@ -156,14 +156,14 @@ stonith_api_register_device(stonith_t * stonith, int call_options,
         hash2field((gpointer) params->key, (gpointer) params->value, args);
     }
 
-    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
+    rc = stonith_send_command(st, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
     free_xml(data);
 
     return rc;
 }
 
 static int
-stonith_api_remove_device(stonith_t * stonith, int call_options, const char *name)
+stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -171,11 +171,47 @@ stonith_api_remove_device(stonith_t * stonith, int call_options, const char *nam
     data = create_xml_node(NULL, F_STONITH_DEVICE);
     crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, XML_ATTR_ID, name);
-    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
+    rc = stonith_send_command(st, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
     free_xml(data);
 
     return rc;
 }
+
+static int stonith_api_remove_level(stonith_t *st, int options, const char *node, int level) 
+{
+    int rc = 0;
+    xmlNode *data = NULL;
+
+    data = create_xml_node(NULL, F_STONITH_DEVICE);
+    crm_xml_add(data, "origin", __FUNCTION__);
+    crm_xml_add(data, F_STONITH_TARGET, node);
+    crm_xml_add_int(data, F_STONITH_LEVEL, level);
+    rc = stonith_send_command(st, STONITH_OP_LEVEL_DEL, data, NULL, options, 0);
+    free_xml(data);
+
+    return rc;
+}
+
+static int stonith_api_register_level(stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list)
+{
+    int rc = 0;
+    xmlNode *data = NULL;
+
+    data = create_xml_node(NULL, F_STONITH_LEVEL);
+    crm_xml_add_int(data, XML_ATTR_ID, level);
+    crm_xml_add(data, F_STONITH_TARGET, node);
+    crm_xml_add(data, "origin", __FUNCTION__);
+
+    for (; device_list; device_list = device_list->next) {
+        xmlNode *dev = create_xml_node(data, F_STONITH_DEVICE);
+        crm_xml_add(dev, XML_ATTR_ID, device_list->value);
+    }
+
+    rc = stonith_send_command(st, STONITH_OP_LEVEL_ADD, data, NULL, options, 0);
+    free_xml(data);
+
+    return rc;
+}       
 
 static void
 append_arg(gpointer key, gpointer value, gpointer user_data)
@@ -882,6 +918,11 @@ stonith_error2string(enum stonith_errors return_code)
             break;
         case st_err_agent:
             error_msg = "Execution of the stonith agent failed";
+            break;
+        case st_err_invalid_target:
+            error_msg = "";
+        case st_err_invalid_level:
+            error_msg = "";
             break;
     }
 
@@ -1812,6 +1853,9 @@ stonith_api_new(void)
     new_stonith->cmds->query           = stonith_api_query;
     new_stonith->cmds->remove_device   = stonith_api_remove_device;
     new_stonith->cmds->register_device = stonith_api_register_device;
+
+    new_stonith->cmds->remove_level    = stonith_api_remove_level;
+    new_stonith->cmds->register_level  = stonith_api_register_level;
     
     new_stonith->cmds->remove_callback       = stonith_api_del_callback;	
     new_stonith->cmds->register_callback     = stonith_api_add_callback;	
@@ -1829,8 +1873,12 @@ stonith_key_value_add(stonith_key_value_t * kvp, const char *key, const char *va
 
     crm_malloc(p, sizeof(stonith_key_value_t));
     p->next = kvp;
-    p->key = crm_strdup(key);
-    p->value = crm_strdup(value);
+    if(key) {
+        p->key = crm_strdup(key);
+    }
+    if(value) {
+        p->value = crm_strdup(value);
+    }
     return (p);
 }
 

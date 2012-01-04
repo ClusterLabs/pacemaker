@@ -78,10 +78,11 @@ extern void *create_remote_stonith_op(const char *client, xmlNode * request, gbo
 
 extern int stonith_fence_history(xmlNode * msg, xmlNode ** output);
 
-extern int stonith_device_register(xmlNode *msg);
-
 extern void free_device(gpointer data);
+
+extern void free_topology_entry(gpointer data);
 
 extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
+extern GHashTable *topology;

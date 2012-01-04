@@ -645,6 +645,9 @@ main(int argc, char ** argv)
     device_list = g_hash_table_new_full(
         crm_str_hash, g_str_equal, NULL, free_device);
 
+    topology = g_hash_table_new_full(
+        crm_str_hash, g_str_equal, NULL, free_topology_entry);
+
     channel1 = crm_strdup(stonith_channel);
     rc = init_server_ipc_comms(
 	channel1, stonith_client_connect,
