@@ -122,7 +122,7 @@ mock-%:
 	make srpm-$(firstword $(shell echo $(@:mock-%=%) | tr '-' ' '))
 	-rm -rf $(RPM_ROOT)/mock
 	@echo "mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm"
-	mock -q --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
+	mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
 
 srpm:	srpm-$(DISTRO)
 
