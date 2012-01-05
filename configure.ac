@@ -1714,6 +1714,8 @@ fencing/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\
 	extra/rgmanager/Makefile				\
+	extra/rsyslog/Makefile					\
+	extra/rsyslog/pacemaker.conf				\
 tools/Makefile							\
 	tools/crm_report					\
 	tools/coverage.sh					\
