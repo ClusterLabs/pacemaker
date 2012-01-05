@@ -254,6 +254,7 @@ case $INSTALL in
 	    yum install -y wget
 	    rm -f /etc/yum.repos.d/clusterlabs.repo
             wget -O /etc/yum.repos.d/clusterlabs.repo http://www.clusterlabs.org/$REPO/clusterlabs.repo &>/dev/null
+	    yum clean all
 	fi
 
 	info Installing software on ${host}
@@ -465,7 +466,6 @@ END
 }
 
 function create_cman_config() {
-    cs_conf=/etc/cluster/cluster.conf
     cs_tmp=/tmp/cs_conf.$$
     cat <<-END >$cs_tmp
 <?xml version="1.0"?>
@@ -536,8 +536,8 @@ for host in $host_list; do
 	create_hb_config ${host}
 
     elif [ $CMAN = 1 ]; then
-        printf "%-10s  Installing $cs_conf\n" ${host}:
 	create_cman_config
+        printf "%-10s  Installed $cs_conf\n" ${host}:
 
     else
 	ssh -l root ${host} -- grep -q "token:" $cs_conf 2>&1 > /dev/null
