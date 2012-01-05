@@ -44,7 +44,7 @@ TAG     ?= $(shell git log --pretty="format:%h" -n 1)
 WITH    ?= 
 
 LAST_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1)
-NEXT_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1 | awk -F. '/[0-9]+\./{$$NF+=1;OFS=".";print}')
+NEXT_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1 | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
 BUILD_COUNTER	?= build.counter
 LAST_COUNT      = $(shell test ! -e $(BUILD_COUNTER) && echo 0; test -e $(BUILD_COUNTER) && cat $(BUILD_COUNTER))
