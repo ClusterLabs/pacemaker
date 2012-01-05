@@ -36,6 +36,7 @@ enum stonith_call_options {
     st_opt_manual_ack	   = 0x00000008,
     st_opt_discard_reply   = 0x00000010,
     st_opt_all_replies	   = 0x00000020,
+    st_opt_topology	   = 0x00000040,
     st_opt_scope_local     = 0x00000100,
     st_opt_cs_nodeid       = 0x00000200,
     st_opt_sync_call       = 0x00001000,
@@ -68,7 +69,7 @@ enum stonith_errors {
     st_err_invalid_level		= -21,
 };
 
-#define ST_LEVEL_MAX 128
+#define ST_LEVEL_MAX 10
 
 #define F_STONITH_CLIENTID		"st_clientid"
 #define F_STONITH_CALLOPTS		"st_callopt"

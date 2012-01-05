@@ -411,14 +411,6 @@ static int stonith_device_remove(xmlNode *msg)
     return stonith_ok;
 }
 
-typedef struct stonith_topology_s 
-{
-        char *node;
-        GListPtr levels[ST_LEVEL_MAX];
-        
-} stonith_topology_t;
-
-
 static int count_active_levels(stonith_topology_t *tp)
 {
     int lpc = 0;
@@ -915,49 +907,59 @@ static gint sort_device_priority(gconstpointer a, gconstpointer b)
 static int stonith_fence(xmlNode *msg) 
 {
     int options = 0;
+    const char *device_id = NULL;
     struct device_search_s search;
     stonith_device_t *device = NULL;
     async_command_t *cmd = create_async_command(msg);
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
+
+    crm_log_xml_trace(msg, "Exec");
     
     if(cmd == NULL) {
 	return st_err_internal;
     }
-    
-    search.capable = NULL;
-    search.host = crm_element_value(dev, F_STONITH_TARGET);
 
-    crm_element_value_int(msg, F_STONITH_CALLOPTS, &options);
-    if(options & st_opt_cs_nodeid) {
-        int nodeid = crm_atoi(search.host, NULL);
-        crm_node_t *node = crm_get_peer(nodeid, NULL);
-        if(node) {
-            search.host = node->uname;
+    device_id = crm_element_value(dev, F_STONITH_DEVICE);
+    if(device_id) {
+        device = g_hash_table_lookup(device_list, device_id);
+        
+    } else {
+        search.capable = NULL;
+        search.host = crm_element_value(dev, F_STONITH_TARGET);
+        
+        crm_element_value_int(msg, F_STONITH_CALLOPTS, &options);
+        if(options & st_opt_cs_nodeid) {
+            int nodeid = crm_atoi(search.host, NULL);
+            crm_node_t *node = crm_get_peer(nodeid, NULL);
+            if(node) {
+                search.host = node->uname;
+            }
+        }
+        
+        g_hash_table_foreach(device_list, search_devices, &search);
+        crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), search.host);
+        
+        if(g_list_length(search.capable) > 0) {
+            /* Order based on priority */
+            search.capable = g_list_sort(search.capable, sort_device_priority);
+            
+            device = search.capable->data;
+
+            /* TODO: Shouldn't we remove the element here? */
+            if(g_list_length(search.capable) > 1) {
+                cmd->device_list = search.capable;
+            }
         }
     }
 
-    crm_log_xml_info(msg, "Exec");
-    
-    g_hash_table_foreach(device_list, search_devices, &search);
-    crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), search.host);
-
-    if(g_list_length(search.capable) == 0) {
-	free_async_command(cmd);	
-	return st_err_none_available;
+    if(device) {
+        cmd->device = device->id;
+        schedule_stonith_command(cmd, device);
+        return stonith_pending;
     }
 
-    /* Order based on priority */
-    search.capable = g_list_sort(search.capable, sort_device_priority);
-    
-    device = search.capable->data;
-    cmd->device = device->id;
-
-    if(g_list_length(search.capable) > 1) {
-	cmd->device_list = search.capable;
-    }
-
-    schedule_stonith_command(cmd, device);
-    return stonith_pending;
+    free_async_command(cmd);	
+    return st_err_none_available;
 }
 
 xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, int rc) 

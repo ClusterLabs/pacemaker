@@ -50,8 +50,18 @@ typedef struct remote_fencing_op_s
 	char *originator;
 	GListPtr query_results;
 	xmlNode *request;
-	
+
+	guint level; /* ABI */
+	GListPtr devices; /* ABI */
+
 } remote_fencing_op_t;
+
+typedef struct stonith_topology_s 
+{
+        char *node;
+        GListPtr levels[ST_LEVEL_MAX];
+
+} stonith_topology_t;
 
 extern long long get_stonith_flag(const char *name);
 
