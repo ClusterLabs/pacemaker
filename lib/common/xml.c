@@ -1329,7 +1329,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
     }
 	
     for(child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
-	log_data_element(log_level, NULL, function, 0, "-", child, 0, TRUE);
+	log_data_element(log_level, "", function, 0, "-", child, 0, TRUE);
 	if(is_first) {
 	    is_first = FALSE;
 	} else {
@@ -1339,7 +1339,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
     
     is_first = TRUE;
     for(child = __xml_first_child(added); child != NULL; child = __xml_next(child)) {
-	log_data_element(log_level, NULL, function, 0, "+", child, 0, TRUE);
+	log_data_element(log_level, "", function, 0, "+", child, 0, TRUE);
 	if(is_first) {
 	    is_first = FALSE;
 	} else {
