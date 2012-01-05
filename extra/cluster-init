@@ -137,7 +137,7 @@ if [ $accept_defaults = 0 ]; then
     if [ $CMAN = 1 ]; then
 	echo ""
 	echo "Without a default domain, cman probably wont start because it can't look up the IP for hosts"
-	read -p "Shall I set one? [No] (domain) " -t 60 DOMAIN
+	read -p "Shall I set one? [No] (domain.name) " -t 60 DOMAIN
     elif [ $pcmk_ver = 10 ]; then
 	echo ""
 	echo "Without a default domain, external/ssh fencing probably wont work because it can't find its peers"
@@ -233,7 +233,6 @@ case $IPTABLES in
 	;;
 esac
 
-set -x
 case $DOMAIN in
     [Nn][Oo]|"") 
 	;;
@@ -246,7 +245,6 @@ case $DOMAIN in
 	;;
     *) echo "Unknown domain: $DOMAIN";;
 esac
-set +x
 
 case $INSTALL in
     [Yy][Ee][Ss]|[Yy]|"") 
