@@ -1,0 +1,7 @@
+@localstatedir@/log/@PACKAGE_TARNAME@/*.log {
+  rotate 4
+  weekly
+  compress
+  missingok
+  notifempty
+}
