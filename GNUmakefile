@@ -38,14 +38,13 @@ MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
 # openSUSE: /etc/SuSE-release
 # RHEL:     /etc/redhat-release
 # Fedora:   /etc/fedora-release, /etc/redhat-release, /etc/system-release
-getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-release && echo suse)
 PROFILE ?= $(shell test -e /etc/fedora-release && rpm --eval fedora-%{fedora}-%{_arch})
-DISTRO  ?= $(call getdistro)
+DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 TAG     ?= $(shell git log --pretty="format:%h" -n 1)
 WITH    ?= 
 
 LAST_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1)
-NEXT_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1 | awk -F. '/[0-9]+\./{$NF+=1;OFS=".";print}')
+NEXT_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1 | awk -F. '/[0-9]+\./{$$NF+=1;OFS=".";print}')
 
 BUILD_COUNTER	?= build.counter
 LAST_COUNT      = $(shell test ! -e $(BUILD_COUNTER) && echo 0; test -e $(BUILD_COUNTER) && cat $(BUILD_COUNTER))
