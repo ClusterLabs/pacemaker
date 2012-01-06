@@ -228,7 +228,11 @@ static gboolean remote_op_query_timeout(gpointer data)
 
 static int stonith_topology_next(remote_fencing_op_t *op) 
 {
-    stonith_topology_t *tp = g_hash_table_lookup(topology, op->target);
+    stonith_topology_t *tp = NULL;
+    if(op->target) {
+        /* Queries don't have a target set */
+        tp = g_hash_table_lookup(topology, op->target);
+    }
     if(tp == NULL) {
         return stonith_ok;
     }
