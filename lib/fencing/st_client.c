@@ -1871,7 +1871,7 @@ stonith_key_value_add(stonith_key_value_t * kvp, const char *key, const char *va
 {
     stonith_key_value_t *p;
 
-    crm_malloc(p, sizeof(stonith_key_value_t));
+    crm_malloc0(p, sizeof(stonith_key_value_t));
     p->next = kvp;
     if(key) {
         p->key = crm_strdup(key);
