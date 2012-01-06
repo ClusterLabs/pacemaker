@@ -7,14 +7,14 @@ Requires=syslog.target network.target
 WantedBy=multi-user.target
 
 [Service]
-Type=forking
+Type=simple
 KillMode=process
 NotifyAccess=main
 SysVStartPriority=99
 EnvironmentFile=@sysconfdir@/sysconfig/pacemaker
 
 WorkingDirectory=@CRM_STATE_DIR@
-ExecStart=@sbindir@/pacemakerd
+ExecStart=@sbindir@/pacemakerd -f
 ExecStop=/bin/kill -TERM $MAINPID
 
 
