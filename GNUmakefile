@@ -93,6 +93,7 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	sed -i.sed s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
 	sed -i.sed s:libtool-ltdl-devel::g $@
 	sed -i.sed s:libqb-devel::g $@
+	sed -i.sed s:without\ cman:with\ cman:g $@
 	@echo Rebuilt $@
 
 # Works for all fedora based distros

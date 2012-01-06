@@ -25,10 +25,10 @@
 # to disable or enable specific features
 
 # Supported cluster stacks, must support at least one
-%bcond_with cman
+%bcond_without cman
 %bcond_without doc
 %bcond_without corosync
-%bcond_without heartbeat
+%bcond_with heartbeat
 
 # ESMTP is not available in RHEL, only in EPEL. Allow people to build
 # the RPM without ESMTP in case they choose not to use EPEL packages
