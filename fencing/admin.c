@@ -245,7 +245,6 @@ main(int argc, char ** argv)
 	    rc = st->cmds->query(st, st_opts, target, &devices, timeout);
 	    for(dIter = devices; dIter; dIter = dIter->next ) {
 		fprintf( stdout, " %s\n", dIter->value );
-		crm_free(dIter->value);
 	    }
 	    if(rc == 0) {
 		fprintf(stderr, "No devices found\n");
