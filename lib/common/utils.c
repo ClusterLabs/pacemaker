@@ -513,11 +513,27 @@ update_all_trace_data(void)
 
     env_value = getenv("PCMK_trace_files");
     if (env_value) {
-        qb_log_filter_ctl(QB_LOG_SYSLOG,
-                          QB_LOG_FILTER_ADD,
-                          QB_LOG_FILTER_FILE,
-                          env_value,
-                          LOG_TRACE);
+        char token[500];
+        const char *offset = NULL;
+        const char *next = env_value;
+
+        do {
+            offset = next;
+            next = strchrnul(offset, ',');
+            snprintf(token, 499, "%.*s", (int)(next - offset), offset);
+            crm_info("Looking for %s from %s", token, env_value);
+
+            qb_log_filter_ctl(QB_LOG_SYSLOG,
+                              QB_LOG_FILTER_ADD,
+                              QB_LOG_FILTER_FILE,
+                              token,
+                              LOG_TRACE);
+
+            if (next[0] != 0) {
+                next++;
+            }
+
+        } while (next != NULL && next[0] != 0);
     }
 
     env_value = getenv("PCMK_trace_formats");
