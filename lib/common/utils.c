@@ -623,6 +623,11 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
 #endif
     }
 
+#if LIBQB_LOGGING
+    qb_log_format_set(QB_LOG_STDERR, "%g %-7p: %n: \t%b");
+    qb_log_format_set(QB_LOG_SYSLOG, "%g %-7p: %n: %b");
+#endif
+
     crm_enable_stderr(to_stderr);
 
     if (coredir) {
