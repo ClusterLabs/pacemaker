@@ -482,14 +482,14 @@ static int stonith_level_register(xmlNode *msg)
 static int stonith_level_remove(xmlNode *msg) 
 {
     int id = 0;
-    xmlNode *level = get_xpath_object("//"F_STONITH_LEVEL, msg, LOG_ERR);
+    xmlNode *level = get_xpath_object("//@"F_STONITH_LEVEL, msg, LOG_ERR);
     const char *node = crm_element_value(level, F_STONITH_TARGET);
     stonith_topology_t *tp = g_hash_table_lookup(topology, node);
 
     if(tp == NULL) {
 	crm_info("Node %s not found (%d active entries)",
 		 node, g_hash_table_size(topology));
-        return st_err_invalid_target;
+        return stonith_ok;
     }
 
     crm_element_value_int(level, XML_ATTR_ID, &id);
