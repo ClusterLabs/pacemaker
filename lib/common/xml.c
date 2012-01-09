@@ -1254,7 +1254,7 @@ log_data_element(
     if(formatted) {
 	offset = print_spaces(buffer, depth, buffer_len);
     }
-    do_crm_log_alias(log_level, file, function, line, "%s%s</%s>", prefix?prefix:"", buffer, name);
+    do_crm_log_alias(log_level, file, function, line, ".%s%s</%s>", prefix?prefix:"", buffer, name);
     crm_free(buffer);
     return 1;
 }

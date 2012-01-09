@@ -146,7 +146,7 @@ static gboolean stonith_device_execute(stonith_device_t *device)
     }
 
     if(cmd == NULL) {
-	crm_info("Nothing to do for %s", device->id);
+	crm_trace("Nothing further to do for %s", device->id);
 	return TRUE;
     }
     
@@ -833,6 +833,9 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 	cmd->stdout = 0;
     }
 
+    crm_trace("Operation on %s failed with rc=%d (%d remaining)",
+              cmd->device, rc, g_list_length(cmd->device_next));
+
     if(rc != 0 && cmd->device_next) {
 	stonith_device_t *dev = cmd->device_next->data;
 
@@ -857,6 +860,7 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 	   || crm_str_eq(cmd->action, "poweron", TRUE)
 	   || crm_str_eq(cmd->action, "off", TRUE)
 	   || crm_str_eq(cmd->action, "on", TRUE)) {
+        /* TODO: Invert this logic */
 	bcast = TRUE;
     }
 

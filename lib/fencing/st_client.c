@@ -393,7 +393,7 @@ make_args(const char *action, const char *victim, GHashTable * device_args, GHas
 
         /* Don't overwrite explictly set values for $param */
         if (value == NULL || safe_str_eq(value, "dynamic")) {
-            crm_info("%s-ing node '%s' as '%s=%s'", action, victim, param, alias);
+            crm_debug("Performing %s action for node '%s' as '%s=%s'", action, victim, param, alias);
             append_const_arg(param, alias, &arg_list);
         }
     }
