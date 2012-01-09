@@ -398,12 +398,7 @@ static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
 void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer) 
 {
     const char *device = NULL;
-    xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);;
-    crm_xml_add(query, F_STONITH_REMOTE, op->id);
-    crm_xml_add(query, F_STONITH_TARGET, op->target);    
-    crm_xml_add(query, F_STONITH_ACTION, op->action);    
-    crm_xml_add_int(query, F_STONITH_TIMEOUT, 900*op->base_timeout);
-    
+
     op->state = st_exec;
 
     if(peer == NULL) {
@@ -415,6 +410,12 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     }
         
     if(peer) {
+        xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);;
+        crm_xml_add(query, F_STONITH_REMOTE, op->id);
+        crm_xml_add(query, F_STONITH_TARGET, op->target);    
+        crm_xml_add(query, F_STONITH_ACTION, op->action);    
+        crm_xml_add_int(query, F_STONITH_TIMEOUT, 900*op->base_timeout);
+
         if(device) {
             crm_info("Requesting that %s perform op %s %s with %s", peer->host, op->action, op->target, device);
             crm_xml_add(query, F_STONITH_DEVICE, device);
@@ -422,7 +423,10 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         } else {
             crm_info("Requesting that %s perform op %s %s", peer->host, op->action, op->target);
         }
+
 	send_cluster_message(peer->host, crm_msg_stonith_ng, query, FALSE);
+        free_xml(query);
+        return;
 
     } else if(op->query_timer == 0) {
 	/* We've exhausted all available peers */
@@ -437,7 +441,6 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     }
     
     free_remote_query(peer);
-    free_xml(query);
 }
 
 static gint sort_peers(gconstpointer a, gconstpointer b)
