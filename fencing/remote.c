@@ -496,9 +496,9 @@ int process_remote_stonith_query(xmlNode *msg)
         return stonith_ok;
     }
 
-    crm_trace("Query result from %s (%d devices)", result->host, result->devices);
+    crm_trace("Query result from %s (%d devices)", host, devices);
     crm_malloc0(result, sizeof(st_query_result_t));
-    result->host = crm_element_value_copy(msg, F_ORIG);
+    result->host = host;
     result->devices = devices;
 
     for (child = __xml_first_child(dev); child != NULL; child = __xml_next(child)) {
