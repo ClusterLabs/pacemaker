@@ -465,14 +465,8 @@ static int stonith_level_register(xmlNode *msg)
 
     for (child = __xml_first_child(level); child != NULL; child = __xml_next(child)) {
         const char *device = ID(child);
-        if(g_hash_table_lookup(device_list, device)) {
-            crm_trace("Added device '%s' for %s (%d)", device, node, id);
-            tp->levels[id] = g_list_append(tp->levels[id], crm_strdup(device));
-
-        } else {
-            crm_notice("Device '%s' for %s is unknown", device, node);
-            rc = st_err_unknown_device;
-        }
+        crm_trace("Adding device '%s' for %s (%d)", device, node, id);
+        tp->levels[id] = g_list_append(tp->levels[id], crm_strdup(device));
     }
     
     crm_info("Node %s has %d active fencing levels", node, count_active_levels(tp));
