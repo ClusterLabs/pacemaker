@@ -75,6 +75,10 @@ size_t strlcpy(char *dest, const char *source, size_t len);
 size_t strlcat(char *dest, const char *source, size_t len);
 #  endif
 
+#  ifndef HAVE_STRCHRNUL
+char *strchrnul(const char *s, int c);
+#  endif
+
 /*
  * Some compilers do not define __FUNCTION__
  */

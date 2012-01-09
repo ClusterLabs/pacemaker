@@ -628,6 +628,44 @@ if test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x""; then
    PCMK_FEATURES="$PCMK_FEATURES publican-docs"
 fi
 
+dnl ========================================================================
+dnl checks for library functions to replace them
+dnl
+dnl     NoSuchFunctionName:
+dnl             is a dummy function which no system supplies.  It is here to make
+dnl             the system compile semi-correctly on OpenBSD which doesn't know
+dnl             how to create an empty archive
+dnl
+dnl     scandir: Only on BSD.
+dnl             System-V systems may have it, but hidden and/or deprecated.
+dnl             A replacement function is supplied for it.
+dnl
+dnl     setenv: is some bsdish function that should also be avoided (use
+dnl             putenv instead)
+dnl             On the other hand, putenv doesn't provide the right API for the
+dnl             code and has memory leaks designed in (sigh...)  Fortunately this
+dnl             A replacement function is supplied for it.
+dnl
+dnl     strerror: returns a string that corresponds to an errno.
+dnl             A replacement function is supplied for it.
+dnl
+dnl     unsetenv: is some bsdish function that should also be avoided (No 
+dnl             replacement)
+dnl             A replacement function is supplied for it.
+dnl
+dnl	strnlen: is a gnu function similar to strlen, but safer.
+dnl		We wrote a tolearably-fast replacement function for it.
+dnl
+dnl	strndup: is a gnu function similar to strdup, but safer.
+dnl		We wrote a tolearably-fast replacement function for it.
+dnl
+dnl	daemon: is a GNU function.  The daemon() function is for programs wishing to
+dnl             detach themselves from the controlling terminal and run in the
+dnl             background as system daemon
+dnl             A replacement function is supplied for it.
+
+AC_REPLACE_FUNCS(alphasort inet_pton NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup daemon strlcpy strlcat)
+
 dnl ===============================================
 dnl Libraries
 dnl ===============================================
@@ -1493,44 +1531,6 @@ then
 fi
 AC_MSG_RESULT($OPENIPMI_SERVICELOG_EXISTS)
 AM_CONDITIONAL(BUILD_OPENIPMI_SERVICELOG, test "$OPENIPMI_SERVICELOG_EXISTS" = "yes")
-
-dnl ========================================================================
-dnl checks for library functions to replace them
-dnl
-dnl     NoSuchFunctionName:
-dnl             is a dummy function which no system supplies.  It is here to make
-dnl             the system compile semi-correctly on OpenBSD which doesn't know
-dnl             how to create an empty archive
-dnl
-dnl     scandir: Only on BSD.
-dnl             System-V systems may have it, but hidden and/or deprecated.
-dnl             A replacement function is supplied for it.
-dnl
-dnl     setenv: is some bsdish function that should also be avoided (use
-dnl             putenv instead)
-dnl             On the other hand, putenv doesn't provide the right API for the
-dnl             code and has memory leaks designed in (sigh...)  Fortunately this
-dnl             A replacement function is supplied for it.
-dnl
-dnl     strerror: returns a string that corresponds to an errno.
-dnl             A replacement function is supplied for it.
-dnl
-dnl     unsetenv: is some bsdish function that should also be avoided (No 
-dnl             replacement)
-dnl             A replacement function is supplied for it.
-dnl
-dnl	strnlen: is a gnu function similar to strlen, but safer.
-dnl		We wrote a tolearably-fast replacement function for it.
-dnl
-dnl	strndup: is a gnu function similar to strdup, but safer.
-dnl		We wrote a tolearably-fast replacement function for it.
-dnl
-dnl	daemon: is a GNU function.  The daemon() function is for programs wishing to
-dnl             detach themselves from the controlling terminal and run in the
-dnl             background as system daemon
-dnl             A replacement function is supplied for it.
-
-AC_REPLACE_FUNCS(alphasort inet_pton NoSuchFunctionName scandir setenv strerror unsetenv strnlen strndup daemon strlcpy strlcat)
 
 dnl ========================================================================
 dnl Compiler flags
