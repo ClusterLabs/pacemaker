@@ -1867,36 +1867,47 @@ stonith_api_new(void)
 }
 
 stonith_key_value_t *
-stonith_key_value_add(stonith_key_value_t * kvp, const char *key, const char *value)
+stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *value)
 {
-    stonith_key_value_t *p;
+    stonith_key_value_t *p, *end;
 
     crm_malloc0(p, sizeof(stonith_key_value_t));
-    p->next = kvp;
     if(key) {
         p->key = crm_strdup(key);
     }
     if(value) {
         p->value = crm_strdup(value);
     }
-    return (p);
+
+    end = head;
+    while(end && end->next) {
+        end = end->next;
+    }
+
+    if(end) {
+        end->next = p;
+    } else {
+        head = p;
+    }
+
+    return head;
 }
 
 void
-stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values)
+stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
 {
     stonith_key_value_t *p;
 
-    while (kvp) {
-        p = kvp->next;
+    while (head) {
+        p = head->next;
         if (keys) {
-            free(kvp->key);
+            free(head->key);
         }
         if (values) {
-            free(kvp->value);
+            free(head->value);
         }
-        free(kvp);
-        kvp = p;
+        free(head);
+        head = p;
     }
 }
 
