@@ -388,8 +388,6 @@ dnl Eventually remove this
 CFLAGS="$CFLAGS -I${prefix}/include/heartbeat"
 
 AC_SUBST(INIT_EXT)
-AC_DEFINE_UNQUOTED(HA_LOG_FACILITY, LOG_DAEMON, Default logging facility)
-
 AC_MSG_NOTICE(Host CPU: $host_cpu)
 
 case "$host_cpu" in
