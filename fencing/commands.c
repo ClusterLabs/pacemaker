@@ -312,16 +312,21 @@ static void parse_host_line(const char *line, GListPtr *output)
 	    /* fast-forward to the end of the spaces */
 	
 	} else if(a_space || line[lpc] == ',' || line[lpc] == 0) {
-	    int rc = 0;
+	    int rc = 1;
 	    char *entry = NULL;
 	    
-	    crm_malloc0(entry, 1 + lpc - last);
-	    rc = sscanf(line+last, "%[a-zA-Z0-9_-.]", entry);
-	    if(rc != 1) {
-		crm_warn("Could not parse (%d %d): %s", last, lpc, line+last);
-		
+            if(lpc != last) {
+                crm_malloc0(entry, 1 + lpc - last);
+                rc = sscanf(line+last, "%[a-zA-Z0-9_-.]", entry);
+	    }
+
+            if(entry == NULL) {
+                /* Skip */
+            } else if(rc != 1) {
+                crm_warn("Could not parse (%d %d): %s", last, lpc, line+last);
+                
 	    } else if(safe_str_neq(entry, "on") && safe_str_neq(entry, "off")) {
-		crm_debug_2("Adding '%s'", entry);
+		crm_trace("Adding '%s'", entry);
 		*output = g_list_append(*output, entry);
 		entry = NULL;
 	    }
@@ -770,7 +775,7 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 		last = lpc+1;
 	    }
 	}
-	crm_debug("%s output: %s (total %d bytes)", cmd->device, local_copy+last, more);
+	crm_debug("%s: %s (total %d bytes)", cmd->device, local_copy+last, more);
 	crm_free(local_copy);
     }
 }
