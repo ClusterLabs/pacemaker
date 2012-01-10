@@ -28,13 +28,12 @@ header_HEADERS = stack.h
 lib_LTLIBRARIES	= libcrmcluster.la 
 
 libcrmcluster_la_SOURCES = cluster.c membership.c stack.h
-libcrmcluster_la_LDFLAGS = -version-info 1:0:0
-libcrmcluster_la_LIBADD  = $(top_builddir)/lib/common/libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la $(CLUSTERLIBS) 
+libcrmcluster_la_LDFLAGS = -version-info 1:0:0 $(CLUSTERLIBS) 
+libcrmcluster_la_LIBADD  = $(top_builddir)/lib/common/libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la
 libcrmcluster_la_DEPENDENCIES = $(top_builddir)/lib/common/libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la 
 
 if BUILD_CS_SUPPORT
 libcrmcluster_la_SOURCES += corosync.c
-libcrmcluster_la_LIBADD  += -lcfg -lconfdb  
 endif
 
 if BUILD_HEARTBEAT_SUPPORT

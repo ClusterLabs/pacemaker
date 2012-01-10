@@ -105,7 +105,7 @@ tengine_stonith_connection_destroy(stonith_t * st, const char *event, xmlNode * 
       <st_calldata >
         <st-reply st_origin="stonith_construct_async_reply" t="stonith-ng" st_op="reboot" st_remote_op="1230801d-dba5-42ac-8e2c-bf444fb2a401" st_callid="0" st_callopt="0" st_rc="0" src="pcmk-4" seq="2" state="0" st_target="pcmk-1" />
 */
-#ifdef SUPPORT_CMAN
+#if SUPPORT_CMAN
 #  include <libfenced.h>
 #  include "../lib/cluster/stack.h"
 #endif
@@ -148,7 +148,7 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
                 crm_element_value(action, F_STONITH_REMOTE), stonith_error2string(rc));
     }
 
-#ifdef SUPPORT_CMAN
+#if SUPPORT_CMAN
     if (rc == stonith_ok && is_cman_cluster()) {
         int local_rc = 0;
         int confirm = 0;

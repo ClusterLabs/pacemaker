@@ -28,12 +28,18 @@
 #include <corosync/hdb.h>
 #include <corosync/cfg.h>
 #include <corosync/cpg.h>
-#include <corosync/confdb.h>
+#if HAVE_CONFDB
+#  include <corosync/confdb.h>
+#endif
 
 #include <crm/common/cluster.h>
 
-#ifdef SUPPORT_CMAN
+#if SUPPORT_CMAN
 #  include <libcman.h>
+#endif
+
+#if HAVE_CMAP
+#  include <corosync/cmap.h>
 #endif
 
 static struct cpg_name cpg_group = {
@@ -315,7 +321,7 @@ send_cpg_message(struct iovec * iov)
 }
 
 /* =::=::=::= Configuration =::=::=::= */
-
+#if HAVE_CONFDB
 static int
 get_config_opt(confdb_handle_t config,
                hdb_handle_t object_handle, const char *key, char **value, const char *fallback)
@@ -398,6 +404,22 @@ config_find_next(confdb_handle_t config, const char *name, confdb_handle_t top_h
     }
     return local_handle;
 }
+#else
+static int
+get_config_opt(cmap_handle_t object_handle, const char *key, char **value, const char *fallback)
+{
+    int rc = cmap_get_string(object_handle, key, value);
+    if(rc != CS_OK) {
+        if(fallback) {
+            *value = crm_strdup(fallback);
+        } else {
+            *value = NULL;
+        }
+    }
+    return rc;
+}
+
+#endif
 
 char *
 get_local_node_name(void)
@@ -406,7 +428,7 @@ get_local_node_name(void)
     struct utsname res;
 
     if (use_cman) {
-#ifdef SUPPORT_CMAN
+#if SUPPORT_CMAN
         cman_node_t us;
         cman_handle_t cman;
 
@@ -434,32 +456,51 @@ get_local_node_name(void)
     return name;
 }
 
+
 gboolean
 read_config(void)
 {
-    confdb_handle_t config;
-
-    int rc;
-    char *value = NULL;
+    int rc = CS_OK;
     gboolean have_log = FALSE;
-    confdb_handle_t top_handle = 0;
-    hdb_handle_t local_handle = 0;
-    static confdb_callbacks_t callbacks = { };
+
+    char *logging_debug = NULL;
+    char *logging_logfile = NULL;
+    char *logging_to_logfile = NULL;
+    char *logging_to_syslog = NULL;
+    char *logging_syslog_facility = NULL;    
+
     enum cluster_type_e stack = get_cluster_type();
 
-    crm_info("Reading configure for stack: %s", name_for_cluster_type(stack));
+#if HAVE_CONFDB
+    char *value = NULL;
+    confdb_handle_t config;
+    confdb_handle_t top_handle = 0;
+    hdb_handle_t local_handle;
+    static confdb_callbacks_t callbacks = { };
 
     rc = confdb_initialize(&config, &callbacks);
-    if (rc != CS_OK) {
-        printf("Could not initialize Cluster Configuration Database API instance error %d\n", rc);
+#endif
+
+#if HAVE_CMAP
+    cmap_handle_t local_handle;
+
+    /* There can be only one (possibility if confdb isn't around) */
+    rc = cmap_initialize(&local_handle);
+#endif
+
+if (rc != CS_OK) {
+        printf("Could not initialize Cluster Configuration Database API instance, error %d\n", rc);
         return FALSE;
     }
 
+    crm_info("Reading configure for stack: %s", name_for_cluster_type(stack));
+    
     /* =::=::= Should we be here =::=::= */
     if (stack == pcmk_cluster_corosync) {
         setenv("HA_cluster_type", "corosync", 1);
         setenv("HA_quorum_type",  "corosync", 1);
 
+#if HAVE_CONFDB
     } else if (stack == pcmk_cluster_cman) {
         setenv("HA_cluster_type", "cman", 1);
         setenv("HA_quorum_type",  "cman", 1);
@@ -500,111 +541,130 @@ read_config(void)
         }
         crm_free(value);
 
+#endif
     } else {
         crm_err("Unsupported stack type: %s", name_for_cluster_type(stack));
         return FALSE;
     }
 
+#if HAVE_CMAP
     /* =::=::= Logging =::=::= */
+    get_config_opt(local_handle, "logging.debug", &logging_debug, "on");
+    get_config_opt(local_handle, "logging.logfile", &logging_logfile, "/var/log/pacemaker");
+    get_config_opt(local_handle, "logging.to_logfile", &logging_to_logfile, "off");
+    get_config_opt(local_handle, "logging.to_syslog", &logging_to_syslog, "on");
+    get_config_opt(local_handle, "logging.syslog_facility", &logging_syslog_facility, "daemon");
 
+    cmap_finalize(local_handle); 
+#endif
+
+#if HAVE_CONFDB
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "logging", top_handle);
+    
+    get_config_opt(config, local_handle, "debug", &logging_debug, "on");
+    get_config_opt(config, local_handle, "logfile", &logging_logfile, "/var/log/pacemaker");
+    get_config_opt(config, local_handle, "to_logfile", &logging_to_logfile, "off");
+    get_config_opt(config, local_handle, "to_syslog", &logging_to_syslog, "on");
+    get_config_opt(config, local_handle, "syslog_facility", &logging_syslog_facility, "daemon");
 
-    get_config_opt(config, local_handle, "debug", &value, "on");
-    if (crm_is_true(value) && get_crm_log_level() < LOG_DEBUG) {
+    confdb_finalize(config);    
+#endif
+    
+    if (crm_is_true(logging_debug) && get_crm_log_level() < LOG_DEBUG) {
         set_crm_log_level(LOG_DEBUG);
     }
 
     if (get_crm_log_level() >= LOG_DEBUG) {
-        char *level = crm_itoa(get_crm_log_level() - LOG_INFO);
-
-        setenv("HA_debug", level, 1);
-        crm_free(level);
+        setenv("HA_debug", "1", 1);
     }
 
-    get_config_opt(config, local_handle, "to_logfile", &value, "off");
-    if (crm_is_true(value)) {
-        get_config_opt(config, local_handle, "logfile", &value, NULL);
+    if (crm_is_true(logging_to_logfile)) {
+        struct stat parent;
+        uid_t pcmk_uid = 0;
+        uid_t pcmk_gid = getegid();
 
-        if (value == NULL) {
-            crm_err("Logging to a file requested but no log file specified");
+        FILE *logfile = NULL;
+        char *parent_dir = NULL;
+        struct passwd *pcmk_user = getpwnam(CRM_DAEMON_USER);
+
+        if(pcmk_user) { 
+            pcmk_uid = pcmk_user->pw_uid;
 
         } else {
-            struct stat parent;
-            FILE *logfile = NULL;
-            char *parent_dir = dirname(strdup(value));
-            struct passwd *pcmk_user = getpwnam(CRM_DAEMON_USER);
-            uid_t pcmk_uid = pcmk_user->pw_uid;
-            uid_t pcmk_gid = getegid();
-
-            rc = stat(parent_dir, &parent);
-
-            if (rc != 0) {
-                crm_err("Directory '%s' does not exist for logfile '%s'", parent_dir, value);
-
-            } else if (parent.st_uid == pcmk_uid && (parent.st_mode & (S_IRUSR | S_IWUSR))) {
-                /* all good - user */
-                logfile = fopen(value, "a");
-
-            } else if (parent.st_gid == pcmk_gid && (parent.st_mode & S_IXGRP)) {
-                /* all good - group */
-                logfile = fopen(value, "a");
-
-            } else {
-                crm_err
-                    ("Daemons running as %s do not have permission to access '%s'. Logging to '%s' is disabled",
-                     CRM_DAEMON_USER, parent_dir, value);
-            }
-
-            if (logfile) {
-                int logfd = fileno(logfile);
-
-                setenv("HA_debugfile", value, 1);
-
-                /* Ensure the file has the correct permissions */
-                rc = fchown(logfd, pcmk_uid, pcmk_gid);
-                if(rc < 0) {
-                    crm_warn("Cannot change the ownership of %s to user %s and gid %d",
-                            value, CRM_DAEMON_USER, pcmk_gid);
-                }
-                rc = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-                if(rc < 0) {
-                    crm_warn("Cannot change the mode of %s to rw-rw----", value);
-                }
-
-                fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
-                        pcmk_uid, pcmk_gid, value);
-                fflush(logfile);
-                fsync(logfd);
-                fclose(logfile);
-                have_log = TRUE;
-
-            } else {
-                crm_err("Couldn't create logfile: %s", value);
-            }
-            crm_free(parent_dir);
+            crm_err("User %s does not exist. Terminating", CRM_DAEMON_USER);
+            exit(100);
         }
+
+        parent_dir = dirname(strdup(logging_logfile));
+        rc = stat(parent_dir, &parent);
+
+        if (rc != 0) {
+            crm_err("Directory '%s' does not exist for logfile '%s'", parent_dir, logging_logfile);
+
+        } else if (parent.st_uid == pcmk_uid && (parent.st_mode & (S_IRUSR | S_IWUSR))) {
+            /* all good - user */
+            logfile = fopen(logging_logfile, "a");
+
+        } else if (parent.st_gid == pcmk_gid && (parent.st_mode & S_IXGRP)) {
+            /* all good - group */
+            logfile = fopen(logging_logfile, "a");
+
+        } else {
+            crm_err
+                ("Daemons running as %s do not have permission to access '%s'. Logging to '%s' is disabled",
+                 CRM_DAEMON_USER, parent_dir, logging_logfile);
+        }
+
+        if (logfile) {
+            int logfd = fileno(logfile);
+
+            setenv("HA_debugfile", logging_logfile, 1);
+
+            /* Ensure the file has the correct permissions */
+            rc = fchown(logfd, pcmk_uid, pcmk_gid);
+            if(rc < 0) {
+                crm_warn("Cannot change the ownership of %s to user %s and gid %d",
+                         logging_logfile, CRM_DAEMON_USER, pcmk_gid);
+            }
+            rc = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+            if(rc < 0) {
+                crm_warn("Cannot change the mode of %s to rw-rw----", logging_logfile);
+            }
+
+            fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
+                    pcmk_uid, pcmk_gid, logging_logfile);
+            fflush(logfile);
+            fsync(logfd);
+            fclose(logfile);
+            have_log = TRUE;
+
+        } else {
+            crm_err("Couldn't create logfile: %s", logging_logfile);
+        }
+        crm_free(parent_dir);
     }
 
-    get_config_opt(config, local_handle, "to_syslog", &value, "on");
-    if (have_log && crm_is_true(value) == FALSE) {
+    if (have_log && crm_is_true(logging_to_syslog) == FALSE) {
         crm_info("User configured file based logging and explicitly disabled syslog.");
-        crm_free(value);
-        value = NULL;
+        free(logging_syslog_facility);
+        logging_syslog_facility = NULL;
 
     } else {
-        if (crm_is_true(value) == FALSE) {
+        if (crm_is_true(logging_to_syslog) == FALSE) {
             crm_err
                 ("Please enable some sort of logging, either 'to_file: on' or  'to_syslog: on'.");
             crm_err("If you use file logging, be sure to also define a value for 'logfile'");
         }
-        get_config_opt(config, local_handle, "syslog_facility", &value, "daemon");
     }
 
-    setenv("HA_logfacility", value ? value : "none", 1);
-    setenv("HA_LOGFACILITY", value ? value : "none", 1);
+    setenv("HA_logfacility", logging_syslog_facility, 1);
+    setenv("HA_LOGFACILITY", logging_syslog_facility, 1);
 
-    confdb_finalize(config);
-    crm_free(value);
+    free(logging_debug);
+    free(logging_logfile);
+    free(logging_to_logfile);
+    free(logging_to_syslog);
+    free(logging_syslog_facility);
     return TRUE;
 }

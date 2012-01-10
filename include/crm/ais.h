@@ -28,9 +28,9 @@
 
 #  define AIS_IPC_MESSAGE_SIZE 8192*128
 
-#    if HAVE_QB_QBIPCC_H
-#       include <qb/qbipc_common.h>
-#    else
+#  if HAVE_QB_QBIPC_COMMON_H
+#     include <qb/qbipc_common.h>
+#  else
 struct qb_ipc_request_header {
 	int size __attribute__((aligned(8)));
 	int id __attribute__((aligned(8)));
@@ -41,7 +41,7 @@ struct qb_ipc_response_header {
 	int id __attribute__((aligned(8)));
 	int error __attribute__((aligned(8)));
 } __attribute__((aligned(8)));
-#endif
+#  endif
 
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB

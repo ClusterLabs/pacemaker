@@ -42,7 +42,7 @@ clean-local:
 SUBDIRS	= common pengine transition cib fencing cluster plugins
 DIST_SUBDIRS =  $(SUBDIRS) ais
 
-if BUILD_CS_SUPPORT
+if BUILD_CS_PLUGIN
 SUBDIRS			+= ais
 endif
 

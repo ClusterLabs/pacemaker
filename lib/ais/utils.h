@@ -52,6 +52,11 @@ extern int openais_dispatch_send(void *conn, void *msg, int mlen);
 #  include <corosync/coroipc_types.h>
 #endif
 
+#  if LIBQB_LOGGING
+#    include <qb/qblog.h>
+#  endif
+
+
 #  ifdef SUPPORT_COROSYNC
 #    include <corosync/corodefs.h>
 #    include <corosync/swab.h>

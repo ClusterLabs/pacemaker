@@ -23,21 +23,33 @@
 #include <crm/common/cluster.h>
 #include <sys/utsname.h>
 #include "stack.h"
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
 #  if CS_USES_LIBQB
 #    include <qb/qbipcc.h>
 #    include <qb/qbutil.h>
 #    include <corosync/corodefs.h>
 #    include <corosync/corotypes.h>
 #    include <corosync/hdb.h>
-#    include <corosync/confdb.h>
+#    if HAVE_CONFDB
+#      include <corosync/confdb.h>
+#    endif
 #  else
 #    include <corosync/confdb.h>
 #    include <corosync/corodefs.h>
 #  endif
+#  include <corosync/cpg.h>
+cpg_handle_t pcmk_cpg_handle = 0;
+struct cpg_name pcmk_cpg_group = {
+    .length = 0,
+    .value[0] = 0,
+};
 #endif
 
-#ifdef SUPPORT_CMAN
+#if HAVE_CMAP
+#  include <corosync/cmap.h>
+#endif
+
+#if SUPPORT_CMAN
 #  include <libcman.h>
 cman_handle_t pcmk_cman_handle = NULL;
 #endif
@@ -47,16 +59,10 @@ cman_handle_t pcmk_cman_handle = NULL;
 #  include <netinet/in.h>
 #  include <arpa/inet.h>
 
-#  include <corosync/cpg.h>
 #  include <corosync/quorum.h>
 
 quorum_handle_t pcmk_quorum_handle = 0;
-cpg_handle_t pcmk_cpg_handle = 0;
 
-struct cpg_name pcmk_cpg_group = {
-    .length = 0,
-    .value[0] = 0,
-};
 #endif
 
 static char *pcmk_uname = NULL;
@@ -449,15 +455,17 @@ terminate_ais_connection(void)
         cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group);
     }
 
+#ifdef SUPPORT_CS_QUORUM
     if (is_corosync_cluster()) {
         quorum_finalize(pcmk_quorum_handle);
     }
-#  ifdef SUPPORT_CMAN
+#endif
+#if SUPPORT_CMAN
     if (is_cman_cluster()) {
         cman_stop_notification(pcmk_cman_handle);
         cman_finish(pcmk_cman_handle);
     }
-#  endif
+#endif
 }
 
 int ais_membership_timer = 0;
@@ -680,7 +688,7 @@ pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
     return stay_connected;
 }
 
-#  ifdef SUPPORT_CMAN
+#  if SUPPORT_CMAN
 
 static gboolean
 pcmk_cman_dispatch(int sender, gpointer user_data)
@@ -764,7 +772,7 @@ cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
 gboolean
 init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*destroy) (gpointer))
 {
-#  ifdef SUPPORT_CMAN
+#  if SUPPORT_CMAN
     int rc = -1, fd = -1;
     cman_cluster_t cluster;
 
@@ -981,10 +989,11 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
     int rc = -1;
     int fd = 0;
     int quorate = 0;
-
+    uint32_t quorum_type = 0;
+    
     crm_info("Configuring Pacemaker to obtain quorum from Corosync");
 
-    rc = quorum_initialize(&pcmk_quorum_handle, &quorum_callbacks);
+    rc = quorum_initialize(&pcmk_quorum_handle, &quorum_callbacks, &quorum_type);
     if (rc != CS_OK) {
         crm_err("Could not connect to the Quorum API: %d\n", rc);
         goto bail;
@@ -1139,7 +1148,7 @@ get_local_node_name(void)
     struct utsname res;
 
     if (is_cman_cluster()) {
-#  ifdef SUPPORT_CMAN
+#  if SUPPORT_CMAN
         cman_node_t us;
         cman_handle_t cman;
 
@@ -1312,6 +1321,7 @@ check_message_sanity(const AIS_Message * msg, const char *data)
 }
 #endif
 
+#if HAVE_CONFDB
 static int
 get_config_opt(confdb_handle_t config,
                hdb_handle_t object_handle, const char *key, char **value, const char *fallback)
@@ -1451,3 +1461,22 @@ find_corosync_variant(void)
     confdb_finalize(config);
     return found;
 }
+
+#else
+enum cluster_type_e
+find_corosync_variant(void)
+{
+    int rc = CS_OK;
+    cmap_handle_t handle;
+
+    /* There can be only one (possibility if confdb isn't around) */
+    rc = cmap_initialize(&handle);
+    if (rc != CS_OK) {
+        crm_info("Failed to initialize the cmap API. Error %d", rc);
+        return pcmk_cluster_unknown;
+    }
+
+    cmap_finalize(handle);
+    return pcmk_cluster_corosync;
+}
+#endif
