@@ -247,10 +247,10 @@ typedef GList *GListPtr;
     } while(0)
 
 #    define do_crm_log_xml(level, text, xml) do {                       \
-	if(xml == NULL) {						\
-	} else if(__likely((level) <= crm_log_level)) {			\
-	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
-	}								\
+        static struct qb_log_callsite my_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, "xml-block", LOG_DEBUG, __LINE__, 0, 0 }; \
+        if (my_cs.targets) {                                            \
+            log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
+        }                                                               \
     } while(0)
 
 #    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
