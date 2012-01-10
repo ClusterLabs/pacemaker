@@ -1195,9 +1195,14 @@ log_data_element(
     const char *name = NULL;
     const char *hidden = NULL;
 
+    /* Since we use the same file and line, to avoid confusing libqb, we need to use the same format strings */
     if(data == NULL) {
-	crm_warn("No data to dump as XML");
+        do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, ": No data to dump as XML");
 	return 0;
+    }
+
+    if(prefix == NULL) {
+        prefix = "";
     }
 	
     name = crm_element_name(data);
@@ -1239,7 +1244,7 @@ log_data_element(
     update_buffer();
 	
   print:
-    do_crm_log_alias(log_level, file, function, line, "%s%s", prefix?prefix:"", buffer);
+    do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
 	
     if(xml_has_children(data) == FALSE) {
 	crm_free(buffer);
@@ -1254,7 +1259,11 @@ log_data_element(
     if(formatted) {
 	offset = print_spaces(buffer, depth, buffer_len);
     }
-    do_crm_log_alias(log_level, file, function, line, ".%s%s</%s>", prefix?prefix:"", buffer, name);
+
+    printed = snprintf(buffer + offset, buffer_len - offset, "</%s>", name);
+    update_buffer();
+
+    do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
     crm_free(buffer);
     return 1;
 }
