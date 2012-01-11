@@ -286,8 +286,8 @@ crm_node_t *
 crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
                 const char *uuid, const char *uname, const char *addr, const char *state)
 {
-    gboolean state_changed = FALSE;
     gboolean addr_changed = FALSE;
+    gboolean state_changed = FALSE;
     gboolean procs_changed = FALSE;
     gboolean votes_changed = FALSE;
 

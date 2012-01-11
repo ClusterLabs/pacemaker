@@ -896,6 +896,8 @@ pcmk_quorum_dispatch(int sender, gpointer user_data)
     return TRUE;
 }
 
+gboolean(*quorum_app_callback) (unsigned long long seq, gboolean quorate) = NULL;
+
 static void
 pcmk_quorum_notification(quorum_handle_t handle,
                          uint32_t quorate,
@@ -913,7 +915,14 @@ pcmk_quorum_notification(quorum_handle_t handle,
                  quorate ? "retained" : "still lost", (long unsigned int)view_list_entries);
     }
     for (i = 0; i < view_list_entries; i++) {
-        crm_debug(" %d ", view_list[i]);
+        crm_debug("Member[%d] %d ", i, view_list[i]);
+
+        crm_update_peer(view_list[i], 0, ring_id, 0, 0,
+                        NULL, /* view_list[i] */NULL, NULL, CRM_NODE_MEMBER);
+    }
+
+    if(quorum_app_callback) {
+        quorum_app_callback(ring_id, quorate);
     }
 }
 
@@ -1005,6 +1014,7 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
         goto bail;
     }
     crm_notice("Quorum %s", quorate ? "acquired" : "lost");
+    quorum_app_callback = dispatch;
     crm_have_quorum = quorate;
 
     rc = quorum_trackstart(pcmk_quorum_handle, CS_TRACK_CHANGES | CS_TRACK_CURRENT);
