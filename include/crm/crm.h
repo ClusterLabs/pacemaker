@@ -214,21 +214,6 @@ typedef GList *GListPtr;
 
 #  define LOG_MSG  LOG_TRACE
 
-#  define CRM_LOG_ASSERT(expr) do {					\
-	if(__unlikely((expr) == FALSE)) {				\
-	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
-		      FALSE, TRUE);                                     \
-	}								\
-    } while(0)
-
-#  define CRM_CHECK(expr, failure_action) do {				\
-	if(__unlikely((expr) == FALSE)) {				\
-	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
-		      FALSE, TRUE);                                     \
-	    failure_action;						\
-	}								\
-    } while(0)
-
 /*
  * Throughout the macros below, note the leading, pre-comma, space in the
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
@@ -267,6 +252,23 @@ typedef GList *GListPtr;
 #    define crm_debug(fmt, args...)   qb_logt(LOG_DEBUG,   0, fmt , ##args)
 #    define crm_trace(fmt, args...)   qb_logt(LOG_TRACE,   0, fmt , ##args)
 
+#    define CRM_LOG_ASSERT(expr) do {					\
+        static struct qb_log_callsite core_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, "assert-block", LOG_TRACE, __LINE__, 0, 0 }; \
+        if(__unlikely((expr) == FALSE)) {				\
+            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,   \
+                      core_cs.targets, TRUE);                           \
+        }                                                               \
+    } while(0)
+
+#    define CRM_CHECK(expr, failure_action) do {				\
+        static struct qb_log_callsite core_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, "assert-block", LOG_TRACE, __LINE__, 0, 0 }; \
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
+		      core_cs.targets, TRUE);                                     \
+	    failure_action;						\
+	}								\
+    } while(0)
+
 #  else
 #    define CRM_TRACE_INIT_DATA(name)
 
@@ -302,6 +304,22 @@ typedef GList *GListPtr;
 #    define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
 #    define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
 #    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
+
+#    define CRM_LOG_ASSERT(expr) do {					\
+        if(__unlikely((expr) == FALSE)) {				\
+            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,   \
+                      FALSE, TRUE);                                     \
+        }                                                               \
+    } while(0)
+
+#    define CRM_CHECK(expr, failure_action) do {				\
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
+		      FALSE, TRUE);                                     \
+	    failure_action;						\
+	}								\
+    } while(0)
+
 #  endif
 
 #  define crm_debug_2 crm_trace
