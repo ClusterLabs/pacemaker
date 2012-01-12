@@ -670,6 +670,7 @@ pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
                 int children = 0;
                 const char *uname = crm_element_value(node, "uname");
 
+                crm_element_value_int(node, "id", &id);
                 crm_element_value_int(node, "processes", &children);
 
                 crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
