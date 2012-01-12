@@ -573,7 +573,7 @@ do_state_transition(long long actions,
                 crm_free(msg);
 
             } else {
-                crm_info("All %d cluster nodes "
+                crm_debug("All %d cluster nodes "
                          "responded to the join offer.", g_hash_table_size(integrated_nodes));
             }
             break;
@@ -595,7 +595,7 @@ do_state_transition(long long actions,
 
             } else if (g_hash_table_size(confirmed_nodes)
                        == crm_active_members()) {
-                crm_info("All %u cluster nodes are"
+                crm_debug("All %u cluster nodes are"
                          " eligible to run resources.", crm_active_members());
 
             } else if (g_hash_table_size(confirmed_nodes) > crm_active_members()) {

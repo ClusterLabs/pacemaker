@@ -702,14 +702,14 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
     shutdown_escalation_timer->period_ms = crm_get_msec(value);
-    crm_info("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
+    crm_debug("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
     election_timeout->period_ms = crm_get_msec(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
     recheck_timer->period_ms = crm_get_msec(value);
-    crm_info("Checking for expired actions every %dms", recheck_timer->period_ms);
+    crm_debug("Checking for expired actions every %dms", recheck_timer->period_ms);
 
     value = crmd_pref(config_hash, "crmd-transition-delay");
     transition_timer->period_ms = crm_get_msec(value);
@@ -723,7 +723,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 #if SUPPORT_COROSYNC
     if (is_classic_ais_cluster()) {
         value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
-        crm_info("Sending expected-votes=%s to corosync", value);
+        crm_debug("Sending expected-votes=%s to corosync", value);
         send_ais_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);
     }
 #endif
