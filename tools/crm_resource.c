@@ -134,7 +134,7 @@ resource_ipc_callback(IPC_Channel * server, void *private_data)
         }
     }
 
-    crm_debug_2("Processed %d messages (%d)", lpc, server->ch_status);
+    crm_trace("Processed %d messages (%d)", lpc, server->ch_status);
 
     if (server->ch_status != IPC_CONNECT) {
         stay_connected = FALSE;
@@ -169,7 +169,7 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
     for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
         node_t *node = (node_t *) lpc->data;
 
-        crm_debug_3("resource %s is running on: %s", rsc, node->details->uname);
+        crm_trace("resource %s is running on: %s", rsc, node->details->uname);
         if (BE_QUIET) {
             fprintf(stdout, "%s\n", node->details->uname);
         } else {
@@ -1302,7 +1302,7 @@ main(int argc, char **argv)
             case 'h':
             case 'H':
             case 'N':
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 host_uname = optarg;
                 break;
 

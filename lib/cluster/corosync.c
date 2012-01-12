@@ -129,11 +129,11 @@ get_ais_data(const AIS_Message * msg)
     unsigned int new_size = msg->size + 1;
 
     if (msg->is_compressed == FALSE) {
-        crm_debug_2("Returning uncompressed message data");
+        crm_trace("Returning uncompressed message data");
         uncompressed = strdup(msg->data);
 
     } else {
-        crm_debug_2("Decompressing message data");
+        crm_trace("Decompressing message data");
         crm_malloc0(uncompressed, new_size);
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, (char *)msg->data,
@@ -306,7 +306,7 @@ send_ais_text(int class, const char *data,
         char *uncompressed = crm_strdup(data);
         unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
 
-        crm_debug_5("Compressing message payload");
+        crm_trace("Compressing message payload");
         crm_malloc(compressed, len);
 
         rc = BZ2_bzBuffToBuffCompress(compressed, &len, uncompressed, ais_msg->size, CRM_BZ2_BLOCKS,
@@ -328,12 +328,12 @@ send_ais_text(int class, const char *data,
         ais_msg->is_compressed = TRUE;
         ais_msg->compressed_size = len;
 
-        crm_debug_2("Compression details: %d -> %d", ais_msg->size, ais_data_len(ais_msg));
+        crm_trace("Compression details: %d -> %d", ais_msg->size, ais_data_len(ais_msg));
     }
 
     ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
 
-    crm_debug_3("Sending%s message %d to %s.%s (data=%d, total=%d)",
+    crm_trace("Sending%s message %d to %s.%s (data=%d, total=%d)",
                 ais_msg->is_compressed ? " compressed" : "",
                 ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
                 ais_data_len(ais_msg), ais_msg->header.size);
@@ -409,7 +409,7 @@ send_ais_text(int class, const char *data,
                    ais_msg->id, transport, rc, ais_error2text(rc));
 
     } else {
-        crm_debug_4("Message %d: sent", ais_msg->id);
+        crm_trace("Message %d: sent", ais_msg->id);
     }
 
     crm_free(buf);
@@ -481,7 +481,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
 
     CRM_ASSERT(msg != NULL);
 
-    crm_debug_3("Got new%s message (size=%d, %d, %d)",
+    crm_trace("Got new%s message (size=%d, %d, %d)",
                 msg->is_compressed ? " compressed" : "",
                 ais_data_len(msg), msg->size, msg->compressed_size);
 
@@ -494,7 +494,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
             goto badmsg;
         }
 
-        crm_debug_5("Decompressing message data");
+        crm_trace("Decompressing message data");
         crm_malloc0(uncompressed, new_size);
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, data, msg->compressed_size, 1, 0);
 
@@ -1325,7 +1325,7 @@ check_message_sanity(const AIS_Message * msg, const char *data)
              msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
              ais_data_len(msg), msg->header.size);
     } else {
-        crm_debug_3
+        crm_trace
             ("Verfied message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
              msg->id, ais_dest(&(msg->host)), msg_type2text(dest), ais_dest(&(msg->sender)),
              msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
@@ -1409,7 +1409,7 @@ config_find_next(confdb_handle_t config, const char *name, confdb_handle_t top_h
         return 0;
     }
 
-    crm_debug_2("Searching for %s in " HDB_X_FORMAT, name, top_handle);
+    crm_trace("Searching for %s in " HDB_X_FORMAT, name, top_handle);
     rc = confdb_object_find(config, top_handle, name, strlen(name), &local_handle);
     if (rc != CS_OK) {
         crm_info("No additional configuration supplied for: %s", name);

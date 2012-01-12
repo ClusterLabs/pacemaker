@@ -170,15 +170,15 @@ main(int argc, char **argv)
                 cib_action = CIB_OP_BUMP;
                 break;
             case 'o':
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 section = crm_strdup(optarg);
                 break;
             case 'x':
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 input_file = crm_strdup(optarg);
                 break;
             case 'X':
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 input_xml = crm_strdup(optarg);
                 break;
             case 'f':

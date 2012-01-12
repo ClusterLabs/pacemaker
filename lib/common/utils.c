@@ -208,7 +208,7 @@ cluster_option(GHashTable * options, gboolean(*validate) (const char *),
     }
 
     if (value == NULL) {
-        crm_debug_2("Using default value '%s' for cluster option '%s'", def_value, name);
+        crm_trace("Using default value '%s' for cluster option '%s'", def_value, name);
 
         if (options == NULL) {
             return def_value;
@@ -340,7 +340,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
     *name = NULL;
     *value = NULL;
 
-    crm_debug_4("Attempting to decode: [%s]", srcstring);
+    crm_trace("Attempting to decode: [%s]", srcstring);
     if (srcstring != NULL) {
         len = strlen(srcstring);
         while (lpc <= len) {
@@ -406,7 +406,7 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 {
     char *hash_key = crm_concat(sys ? sys : "none", crm_msg_reference, '_');
 
-    crm_debug_3("created hash key: (%s)", hash_key);
+    crm_trace("created hash key: (%s)", hash_key);
     return hash_key;
 }
 
@@ -910,12 +910,12 @@ compare_version(const char *version1, const char *version2)
 
         if (digit1 < digit2) {
             rc = -1;
-            crm_debug_5("%d < %d", digit1, digit2);
+            crm_trace("%d < %d", digit1, digit2);
             break;
 
         } else if (digit1 > digit2) {
             rc = 1;
-            crm_debug_5("%d > %d", digit1, digit2);
+            crm_trace("%d > %d", digit1, digit2);
             break;
         }
 
@@ -938,11 +938,11 @@ compare_version(const char *version1, const char *version2)
     crm_free(ver2_copy);
 
     if (rc == 0) {
-        crm_debug_3("%s == %s (%d)", version1, version2, lpc);
+        crm_trace("%s == %s (%d)", version1, version2, lpc);
     } else if (rc < 0) {
-        crm_debug_3("%s < %s (%d)", version1, version2, lpc);
+        crm_trace("%s < %s (%d)", version1, version2, lpc);
     } else if (rc > 0) {
-        crm_debug_3("%s > %s (%d)", version1, version2, lpc);
+        crm_trace("%s > %s (%d)", version1, version2, lpc);
     }
 
     return rc;
@@ -1266,7 +1266,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
     len = strlen(key);
     offset = len - 1;
 
-    crm_debug_3("Source: %s", key);
+    crm_trace("Source: %s", key);
 
     while (offset > 0 && isdigit(key[offset])) {
         int digits = len - offset;
@@ -1282,7 +1282,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
         offset--;
     }
 
-    crm_debug_3("  Interval: %d", *interval);
+    crm_trace("  Interval: %d", *interval);
     CRM_CHECK(key[offset] == '_', return FALSE);
 
     mutable_key = crm_strdup(key);
@@ -1299,7 +1299,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 
     mutable_key_ptr = mutable_key + offset + 1;
 
-    crm_debug_3("  Action: %s", mutable_key_ptr);
+    crm_trace("  Action: %s", mutable_key_ptr);
 
     *op_type = crm_strdup(mutable_key_ptr);
 
@@ -1319,7 +1319,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
         notify[0] = 0;
     }
 
-    crm_debug_3("  Resource: %s", mutable_key);
+    crm_trace("  Resource: %s", mutable_key);
     *rsc_id = mutable_key;
 
     return TRUE;
@@ -1584,7 +1584,7 @@ filter_reload_parameters(xmlNode * param_set, const char *restart_string)
 
             match = strstr(restart_string, name);
             if (match == NULL) {
-                crm_debug_3("%s not found in %s", prop_name, restart_string);
+                crm_trace("%s not found in %s", prop_name, restart_string);
                 xml_remove_prop(param_set, prop_name);
             }
             crm_free(name);
@@ -1703,7 +1703,7 @@ get_last_sequence(const char *directory, const char *series)
         buffer = NULL;
 
     } else {
-        crm_debug_3("Reading %d bytes from file", length);
+        crm_trace("Reading %d bytes from file", length);
         crm_malloc0(buffer, (length + 1));
         read_len = fread(buffer, 1, length, file_strm);
         if (read_len != length) {
@@ -2219,7 +2219,7 @@ crm_get_option(int argc, char **argv, int *index)
             case -1:           /* End of option processing */
                 break;
             case ':':
-                crm_debug_2("Missing argument");
+                crm_trace("Missing argument");
                 crm_help('?', 1);
                 break;
             case '?':
@@ -2548,11 +2548,11 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
                origin, op->rsc_id, op_status2text(op->op_status), op->op_type, op->interval);
 
     if (op->op_status == LRM_OP_CANCELLED) {
-        crm_debug_3("Ignoring cancelled op");
+        crm_trace("Ignoring cancelled op");
         return NULL;
     }
 
-    crm_debug_3("DC version: %s", caller_version);
+    crm_trace("DC version: %s", caller_version);
 
     task = op->op_type;
     /* remap the task name under various scenarios
@@ -2634,7 +2634,7 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
 
     if (compare_version("2.1", caller_version) <= 0) {
         if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-            crm_debug_2("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
+            crm_trace("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
                         op->rsc_id, op->op_type, op->interval,
                         op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 
@@ -2719,7 +2719,7 @@ determine_request_user(char **user, IPC_Channel * channel, xmlNode * request, co
 /*  } else { Legal delegation */
     }
 
-    crm_debug_2("Processing msg for user '%s'", crm_element_value(request, field));
+    crm_trace("Processing msg for user '%s'", crm_element_value(request, field));
 }
 #endif
 

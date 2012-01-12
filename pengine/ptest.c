@@ -393,7 +393,7 @@ main(int argc, char **argv)
         const char *fill = NULL;
         char *action_name = create_action_name(action);
 
-        crm_debug_3("Action %d: %p", action->id, action);
+        crm_trace("Action %d: %p", action->id, action);
 
         if (is_set(action->flags, pe_action_pseudo)) {
             font = "orange";

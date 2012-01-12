@@ -189,9 +189,9 @@ status_from_rc(crm_action_t * action, int orig_status, int rc, int target_rc)
     int status = orig_status;
 
     if (target_rc == rc) {
-        crm_debug_2("Target rc: == %d", rc);
+        crm_trace("Target rc: == %d", rc);
         if (status != LRM_OP_DONE) {
-            crm_debug_2("Re-mapping op status to" " LRM_OP_DONE for rc=%d", rc);
+            crm_trace("Re-mapping op status to" " LRM_OP_DONE for rc=%d", rc);
             status = LRM_OP_DONE;
         }
 
@@ -486,7 +486,7 @@ process_graph_event(xmlNode * event, const char *event_node)
 
     } else {
         passed = TRUE;
-        crm_debug_2("Processed update to %s: %s", id, magic);
+        crm_trace("Processed update to %s: %s", id, magic);
     }
 
     if (passed == FALSE) {

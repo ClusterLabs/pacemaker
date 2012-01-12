@@ -189,7 +189,7 @@ init_server_ipc_comms(char *channel_name,
     G_main_add_IPC_WaitConnection(G_PRIORITY_LOW, wait_ch, NULL, FALSE,
                                   channel_client_connect, channel_name, channel_connection_destroy);
 
-    crm_debug_3("Listening on: %s", commpath);
+    crm_trace("Listening on: %s", commpath);
 
     return 0;
 }
@@ -221,7 +221,7 @@ init_client_ipc_comms(const char *channel_name,
         crm_warn("No dispatch method specified..."
                  "maybe you meant init_client_ipc_comms_nodispatch()?");
     } else {
-        crm_debug_3("Adding dispatch method to channel");
+        crm_trace("Adding dispatch method to channel");
 
         the_source = G_main_add_IPC_Channel(G_PRIORITY_HIGH, a_ch, FALSE, dispatch, callback_data,
                                             default_ipc_connection_destroy);
@@ -271,7 +271,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
     ch->ops->set_send_qlen(ch, 512);
     ch->should_send_block = TRUE;
 
-    crm_debug_3("Processing of %s complete", commpath);
+    crm_trace("Processing of %s complete", commpath);
 
     crm_free(commpath);
     return ch;
@@ -365,7 +365,7 @@ subsystem_msg_dispatch(IPC_Channel * sender, void *user_data)
         }
     }
 
-    crm_debug_2("Processed %d messages", lpc);
+    crm_trace("Processed %d messages", lpc);
     if (sender->ch_status != IPC_CONNECT) {
         crm_err("The server %d has left us: Shutting down...NOW", sender->farside_pid);
 
@@ -410,11 +410,11 @@ send_hello_message(IPC_Channel * ipc_client,
     crm_xml_add(hello_node, "client_name", client_name);
     crm_xml_add(hello_node, "client_uuid", uuid);
 
-    crm_debug_4("creating hello message");
+    crm_trace("creating hello message");
     hello = create_request(CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
 
     send_ipc_message(ipc_client, hello);
-    crm_debug_4("hello message sent");
+    crm_trace("hello message sent");
 
     free_xml(hello_node);
     free_xml(hello);
@@ -465,7 +465,7 @@ process_hello_message(xmlNode * hello,
     *major_version = crm_strdup(local_major_version);
     *minor_version = crm_strdup(local_minor_version);
 
-    crm_debug_3("Hello message ok");
+    crm_trace("Hello message ok");
     return TRUE;
 }
 
@@ -562,7 +562,7 @@ validate_crm_message(xmlNode * msg, const char *sys, const char *uuid, const cha
         crm_info("No sub-system defined.");
         action = NULL;
     } else if (true_sys != NULL && strcasecmp(to, true_sys) != 0) {
-        crm_debug_3("The message is not for this sub-system (%s != %s).", to, true_sys);
+        crm_trace("The message is not for this sub-system (%s != %s).", to, true_sys);
         action = NULL;
     }
 
@@ -583,10 +583,10 @@ validate_crm_message(xmlNode * msg, const char *sys, const char *uuid, const cha
     }
 /*
  	if(action != NULL) 
-		crm_debug_3(
+		crm_trace(
 		       "XML is valid and node with message type (%s) found.",
 		       type);
-	crm_debug_3("Returning node (%s)", crm_element_name(action));
+	crm_trace("Returning node (%s)", crm_element_name(action));
 */
 
     return action;

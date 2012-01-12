@@ -151,7 +151,7 @@ destroy_crm_node(gpointer data)
 {
     crm_node_t *node = data;
 
-    crm_debug_2("Destroying entry for node %u", node->id);
+    crm_trace("Destroying entry for node %u", node->id);
 
     crm_free(node->addr);
     crm_free(node->uname);

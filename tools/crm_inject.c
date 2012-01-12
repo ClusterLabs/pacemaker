@@ -661,7 +661,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
         const char *color = "black";
         char *action_name = create_action_name(action);
 
-        crm_debug_3("Action %d: %p", action->id, action);
+        crm_trace("Action %d: %p", action->id, action);
 
         if (is_set(action->flags, pe_action_pseudo)) {
             font = "orange";

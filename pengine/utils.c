@@ -108,7 +108,7 @@ can_run_resources(const node_t * node)
 
     if (node->details->online == FALSE
         || node->details->shutdown || node->details->unclean || node->details->standby) {
-        crm_debug_2("%s: online=%d, unclean=%d, standby=%d",
+        crm_trace("%s: online=%d, unclean=%d, standby=%d",
                     node->details->uname, node->details->online,
                     node->details->unclean, node->details->standby);
         return FALSE;
@@ -435,7 +435,7 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
         }
     }
 
-    crm_debug_3("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
+    crm_trace("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
 
     log_action(LOG_DEBUG_4, "LH (order_actions)", lh_action, FALSE);
     log_action(LOG_DEBUG_4, "RH (order_actions)", rh_action, FALSE);

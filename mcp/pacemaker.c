@@ -135,7 +135,7 @@ pcmk_user_lookup(const char *name, uid_t * uid, gid_t * gid)
         if (gid) {
             *gid = pwentry->pw_gid;
         }
-        crm_debug_2("Cluster user %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
+        crm_trace("Cluster user %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
 
     } else {
         crm_err("Cluster user %s does not exist", name);
@@ -227,7 +227,7 @@ stop_child(pcmk_child_t * child, int signal)
     }
 
     if (child->pid <= 0) {
-        crm_debug_2("Client %s not running", child->name);
+        crm_trace("Client %s not running", child->name);
         return TRUE;
     }
 
@@ -555,7 +555,7 @@ update_process_clients(void)
 {
     xmlNode *update = create_xml_node(NULL, "nodes");
 
-    crm_debug_2("Sending process list to %d children", g_hash_table_size(client_list));
+    crm_trace("Sending process list to %d children", g_hash_table_size(client_list));
 
     g_hash_table_foreach(peers, peer_loop_fn, update);
     g_hash_table_foreach_remove(client_list, ghash_send_proc_details, update);

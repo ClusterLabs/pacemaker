@@ -114,7 +114,7 @@ cib_diskwrite_complete(gpointer userdata, int status, int signo, int exitcode)
         }
 
     } else {
-        crm_debug_2("Disk write passed");
+        crm_trace("Disk write passed");
     }
 }
 
@@ -358,7 +358,7 @@ ccm_connect(void)
         }
 
         if (did_fail == FALSE) {
-            crm_debug_3("Setting up CCM callbacks");
+            crm_trace("Setting up CCM callbacks");
             ret = (*ccm_api_set_callback) (cib_ev_token, OC_EV_MEMB_CLASS,
                                            cib_ccm_msg_callback, NULL);
             if (ret != 0) {
@@ -369,7 +369,7 @@ ccm_connect(void)
         if (did_fail == FALSE) {
             (*ccm_api_special) (cib_ev_token, OC_EV_MEMB_CLASS, 0);
 
-            crm_debug_3("Activating CCM token");
+            crm_trace("Activating CCM token");
             ret = (*ccm_api_activate) (cib_ev_token, &cib_ev_fd);
             if (ret != 0) {
                 crm_warn("CCM Activation failed");
@@ -591,7 +591,7 @@ disconnect_cib_client(gpointer key, gpointer value, gpointer user_data)
 {
     cib_client_t *a_client = value;
 
-    crm_debug_2("Processing client %s/%s... send=%d, recv=%d",
+    crm_trace("Processing client %s/%s... send=%d, recv=%d",
                 crm_str(a_client->name), crm_str(a_client->channel_name),
                 (int)a_client->channel->send_queue->current_qlen,
                 (int)a_client->channel->recv_queue->current_qlen);

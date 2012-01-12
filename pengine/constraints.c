@@ -67,7 +67,7 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
             continue;
         }
 
-        crm_debug_3("Processing constraint %s %s", crm_element_name(xml_obj), id);
+        crm_trace("Processing constraint %s %s", crm_element_name(xml_obj), id);
 
         lifetime = first_named_child(xml_obj, "lifetime");
         if (lifetime) {
@@ -300,14 +300,14 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     kind = get_ordering_type(xml_obj);
 
     if (kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
-        crm_debug_2("Upgrade : recovery - implies right");
+        crm_trace("Upgrade : recovery - implies right");
         cons_weight |= pe_order_implies_then;
     }
 
     cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
     order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
 
-    crm_debug_2("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
+    crm_trace("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
                 order_id, id, rsc_first->id, action_first, rsc_then->id, action_then, cons_weight);
 
     if (invert_bool == FALSE) {
@@ -340,14 +340,14 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     cons_weight = pe_order_optional;
     if (kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
-        crm_debug_2("Upgrade : recovery - implies left");
+        crm_trace("Upgrade : recovery - implies left");
         cons_weight |= pe_order_implies_first;
     }
 
     cons_weight |= get_flags(id, kind, action_first, action_then, TRUE);
     order_id = new_rsc_order(rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
 
-    crm_debug_2("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
+    crm_trace("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
                 order_id, id, rsc_then->id, action_then, rsc_first->id, action_first, cons_weight);
 
     return TRUE;
@@ -399,7 +399,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_working_set_t * data_set)
              rule_xml = __xml_next(rule_xml)) {
             if (crm_str_eq((const char *)rule_xml->name, XML_TAG_RULE, TRUE)) {
                 empty = FALSE;
-                crm_debug_2("Unpacking %s/%s", id, ID(rule_xml));
+                crm_trace("Unpacking %s/%s", id, ID(rule_xml));
                 generate_location_rule(rsc_lh, rule_xml, data_set);
             }
         }
@@ -480,7 +480,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
     boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
     role = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
 
-    crm_debug_2("Processing rule: %s", rule_id);
+    crm_trace("Processing rule: %s", rule_id);
 
     if (role != NULL && text2role(role) == RSC_ROLE_UNKNOWN) {
         pe_err("Bad role specified for %s: %s", rule_id, role);
@@ -510,7 +510,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
         return NULL;
     }
     if (role != NULL) {
-        crm_debug_2("Setting role filter: %s", role);
+        crm_trace("Setting role filter: %s", role);
         location_rule->role_filter = text2role(role);
         if (location_rule->role_filter == RSC_ROLE_SLAVE) {
             /* Fold slave back into Started for simplicity
@@ -536,7 +536,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
 
         accept = test_rule(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN, data_set->now);
 
-        crm_debug_2("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
+        crm_trace("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
                     node->details->uname);
 
         score_f = get_node_score(rule_id, score, raw_score, node);
@@ -558,7 +558,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
             if (do_and == FALSE) {
                 local->weight = merge_weights(local->weight, score_f);
             }
-            crm_debug_2("node %s now has weight %d", node->details->uname, local->weight);
+            crm_trace("node %s now has weight %d", node->details->uname, local->weight);
 
         } else if (do_and && !accept) {
             /* remove it */
@@ -566,7 +566,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
 
             if (delete != NULL) {
                 match_L = g_list_remove(match_L, delete);
-                crm_debug_5("node %s did not match", node->details->uname);
+                crm_trace("node %s did not match", node->details->uname);
             }
             crm_free(delete);
         }
@@ -574,11 +574,11 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
 
     location_rule->node_list_rh = match_L;
     if (location_rule->node_list_rh == NULL) {
-        crm_debug_2("No matching nodes for rule %s", rule_id);
+        crm_trace("No matching nodes for rule %s", rule_id);
         return NULL;
     }
 
-    crm_debug_3("%s: %d nodes matched", rule_id, g_list_length(location_rule->node_list_rh));
+    crm_trace("%s: %d nodes matched", rule_id, g_list_length(location_rule->node_list_rh));
     return location_rule;
 }
 
@@ -676,7 +676,7 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
         node_attr = "#" XML_ATTR_UNAME;
     }
 
-    crm_debug_3("%s ==> %s (%s %d)", rsc_lh->id, rsc_rh->id, node_attr, score);
+    crm_trace("%s ==> %s (%s %d)", rsc_lh->id, rsc_rh->id, node_attr, score);
 
     rsc_lh->rsc_cons = g_list_insert_sorted(rsc_lh->rsc_cons, new_con, sort_cons_priority_rh);
 
@@ -770,15 +770,15 @@ get_flags(const char *id, enum pe_order_kind kind,
     enum pe_ordering flags = pe_order_optional;
 
     if (invert && kind == pe_order_kind_mandatory) {
-        crm_debug_2("Upgrade %s: implies left", id);
+        crm_trace("Upgrade %s: implies left", id);
         flags |= pe_order_implies_first;
 
     } else if (kind == pe_order_kind_mandatory) {
-        crm_debug_2("Upgrade %s: implies right", id);
+        crm_trace("Upgrade %s: implies right", id);
         flags |= pe_order_implies_then;
         if (safe_str_eq(action_first, RSC_START)
             || safe_str_eq(action_first, RSC_PROMOTE)) {
-            crm_debug_2("Upgrade %s: runnable", id);
+            crm_trace("Upgrade %s: runnable", id);
             flags |= pe_order_runnable_left;
         }
 
@@ -839,7 +839,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
     }
 
     if (g_list_length(resources) == 1) {
-        crm_debug_2("Single set: %s", id);
+        crm_trace("Single set: %s", id);
         *rsc = resource;
         *end = NULL;
         *begin = NULL;
@@ -1380,7 +1380,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
             if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
                 EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
                 if (with != NULL) {
-                    crm_debug_2("Colocating %s with %s", resource->id, with->id);
+                    crm_trace("Colocating %s with %s", resource->id, with->id);
                     rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role,
                                        data_set);
                 }
@@ -1413,7 +1413,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                             return FALSE;
                         }
                         EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
-                        crm_debug_2("Anti-Colocating %s with %s", resource->id, with->id);
+                        crm_trace("Anti-Colocating %s with %s", resource->id, with->id);
                         rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role,
                                            data_set);
                     }
@@ -1786,7 +1786,7 @@ rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
         }
     }
 
-    crm_debug_3("%s (%s) ==> %s", rsc_lh->id, role2text(new_rsc_ticket->role_lh), ticket->id);
+    crm_trace("%s (%s) ==> %s", rsc_lh->id, role2text(new_rsc_ticket->role_lh), ticket->id);
 
     rsc_lh->rsc_tickets = g_list_append(rsc_lh->rsc_tickets, new_rsc_ticket);
 
@@ -1822,7 +1822,7 @@ unpack_rsc_ticket_set(xmlNode * set, ticket_t * ticket, const char *loss_policy,
     for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
         if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
             EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-            crm_debug_2("Resource '%s' depends on ticket '%s'", resource->id, ticket->id);
+            crm_trace("Resource '%s' depends on ticket '%s'", resource->id, ticket->id);
             rsc_ticket_new(set_id, resource, ticket, role, loss_policy, data_set);
         }
     }

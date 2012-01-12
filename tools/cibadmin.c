@@ -284,15 +284,15 @@ main(int argc, char **argv)
                 crm_help(flag, LSB_EXIT_OK);
                 break;
             case 'o':
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 obj_type = crm_strdup(optarg);
                 break;
             case 'X':
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 admin_input_xml = crm_strdup(optarg);
                 break;
             case 'x':
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 admin_input_file = crm_strdup(optarg);
                 break;
             case 'p':
@@ -419,7 +419,7 @@ main(int argc, char **argv)
 
         mainloop = g_main_new(FALSE);
 
-        crm_debug_3("%s waiting for reply from the local CIB", crm_system_name);
+        crm_trace("%s waiting for reply from the local CIB", crm_system_name);
 
         crm_info("Starting mainloop");
         g_main_run(mainloop);
@@ -453,7 +453,7 @@ main(int argc, char **argv)
         free_xml(output);
     }
 
-    crm_debug_3("%s exiting normally", crm_system_name);
+    crm_trace("%s exiting normally", crm_system_name);
 
     free_xml(input);
     crm_free(admin_input_xml);
@@ -480,19 +480,19 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
     }
 
     if (strcasecmp(CIB_OP_SYNC, cib_action) == 0) {
-        crm_debug_4("Performing %s op...", cib_action);
+        crm_trace("Performing %s op...", cib_action);
         return the_cib->cmds->sync_from(the_cib, host, obj_type, call_options);
 
     } else if (strcasecmp(CIB_OP_SLAVE, cib_action) == 0 && (call_options ^ cib_scope_local)) {
-        crm_debug_4("Performing %s op on all nodes...", cib_action);
+        crm_trace("Performing %s op on all nodes...", cib_action);
         return the_cib->cmds->set_slave_all(the_cib, call_options);
 
     } else if (strcasecmp(CIB_OP_MASTER, cib_action) == 0) {
-        crm_debug_4("Performing %s op on all nodes...", cib_action);
+        crm_trace("Performing %s op on all nodes...", cib_action);
         return the_cib->cmds->set_master(the_cib, call_options);
 
     } else if (cib_action != NULL) {
-        crm_debug_4("Passing \"%s\" to variant_op...", cib_action);
+        crm_trace("Passing \"%s\" to variant_op...", cib_action);
         return the_cib->cmds->variant_op(the_cib, cib_action, host, obj_type,
                                          input, output, call_options);
 

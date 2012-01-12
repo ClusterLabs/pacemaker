@@ -394,7 +394,7 @@ config_find_next(confdb_handle_t config, const char *name, confdb_handle_t top_h
         return 0;
     }
 
-    crm_debug_2("Searching for %s in " HDB_X_FORMAT, name, top_handle);
+    crm_trace("Searching for %s in " HDB_X_FORMAT, name, top_handle);
     rc = confdb_object_find(config, top_handle, name, strlen(name), &local_handle);
     if (rc != CS_OK) {
         crm_info("No additional configuration supplied for: %s", name);

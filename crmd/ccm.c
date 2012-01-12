@@ -142,7 +142,7 @@ do_ccm_control(long long action,
             int fsa_ev_fd;
             gboolean did_fail = FALSE;
 
-            crm_debug_3("Registering with CCM");
+            crm_trace("Registering with CCM");
             clear_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
             ret = (*ccm_api_register) (&fsa_ev_token);
             if (ret != 0) {
@@ -151,7 +151,7 @@ do_ccm_control(long long action,
             }
 
             if (did_fail == FALSE) {
-                crm_debug_3("Setting up CCM callbacks");
+                crm_trace("Setting up CCM callbacks");
                 ret = (*ccm_api_set_callback) (fsa_ev_token, OC_EV_MEMB_CLASS,
                                                crmd_ccm_msg_callback, NULL);
                 if (ret != 0) {
@@ -162,7 +162,7 @@ do_ccm_control(long long action,
             if (did_fail == FALSE) {
                 (*ccm_api_special) (fsa_ev_token, OC_EV_MEMB_CLASS, 0 /*don't care */ );
 
-                crm_debug_3("Activating CCM token");
+                crm_trace("Activating CCM token");
                 ret = (*ccm_api_activate) (fsa_ev_token, &fsa_ev_fd);
                 if (ret != 0) {
                     crm_warn("CCM Activation failed");
@@ -212,7 +212,7 @@ ccm_event_detail(const oc_ev_membership_t * oc, oc_ed_t event)
 
     member = FALSE;
 
-    crm_debug_2("-----------------------");
+    crm_trace("-----------------------");
     crm_info("%s: trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
              "new_idx=%d, old_idx=%d",
              ccm_event_name(event),
@@ -248,7 +248,7 @@ ccm_event_detail(const oc_ev_membership_t * oc, oc_ed_t event)
                  oc->m_array[oc->m_out_idx + lpc].node_born_on);
     }
 
-    crm_debug_2("-----------------------");
+    crm_trace("-----------------------");
 
 }
 
@@ -359,7 +359,7 @@ ccm_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, v
     last_peer_update = 0;
 
     if (rc == cib_ok) {
-        crm_debug_2("Node update %d complete", call_id);
+        crm_trace("Node update %d complete", call_id);
 
     } else {
         crm_err("Node update %d failed", call_id);
@@ -451,7 +451,7 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
     fsa_data_t *msg_data = NULL;
 
     if (rc == cib_ok) {
-        crm_debug_2("Quorum update %d complete", call_id);
+        crm_trace("Quorum update %d complete", call_id);
 
     } else {
         crm_err("Quorum update %d failed", call_id);

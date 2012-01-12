@@ -41,7 +41,7 @@ void crmd_ha_msg_filter(xmlNode * msg);
 /* From join_dc... */
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
-#define trigger_fsa(source) crm_debug_3("Triggering FSA: %s", __FUNCTION__); \
+#define trigger_fsa(source) crm_trace("Triggering FSA: %s", __FUNCTION__); \
 	mainloop_set_trigger(source);
 #if SUPPORT_HEARTBEAT
 gboolean
@@ -50,7 +50,7 @@ crmd_ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
     IPC_Channel *channel = NULL;
     gboolean stay_connected = TRUE;
 
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
 
     if (cluster_conn != NULL) {
         channel = cluster_conn->llc_ops->ipcchan(cluster_conn);
@@ -61,7 +61,7 @@ crmd_ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
 
     if (channel != NULL && IPC_ISRCONN(channel)) {
         if (cluster_conn->llc_ops->msgready(cluster_conn) == 0) {
-            crm_debug_2("no message ready yet");
+            crm_trace("no message ready yet");
         }
         /* invoke the callbacks but dont block */
         cluster_conn->llc_ops->rcvmsg(cluster_conn, 0);
@@ -84,7 +84,7 @@ crmd_ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
 void
 crmd_ha_connection_destroy(gpointer user_data)
 {
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
     if (is_set(fsa_input_register, R_HA_DISCONNECTED)) {
         /* we signed out, so this is expected */
         crm_info("Heartbeat disconnection complete");
@@ -153,7 +153,7 @@ crmd_ha_msg_callback(HA_Message * hamsg, void *private_data)
 
     CRM_CHECK(from != NULL, crm_log_xml_err(msg, "anon"); goto bail);
 
-    crm_debug_2("HA[inbound]: %s from %s", op, from);
+    crm_trace("HA[inbound]: %s from %s", op, from);
 
     if (crm_peer_cache == NULL || crm_active_members() == 0) {
         crm_debug("Ignoring HA messages until we are"
@@ -201,7 +201,7 @@ crmd_ipc_msg_callback(IPC_Channel * client, gpointer user_data)
     crmd_client_t *curr_client = (crmd_client_t *) user_data;
     gboolean stay_connected = TRUE;
 
-    crm_debug_2("Invoked: %s", curr_client->table_key);
+    crm_trace("Invoked: %s", curr_client->table_key);
 
     while (IPC_ISRCONN(client)) {
         if (client->ops->is_message_pending(client) == 0) {
@@ -217,7 +217,7 @@ crmd_ipc_msg_callback(IPC_Channel * client, gpointer user_data)
 #endif
 
         lpc++;
-        crm_debug_2("Processing msg from %s", curr_client->table_key);
+        crm_trace("Processing msg from %s", curr_client->table_key);
         crm_log_xml(LOG_DEBUG_2, "CRMd[inbound]", msg);
 
         if (crmd_authorize_message(msg, curr_client)) {
@@ -232,7 +232,7 @@ crmd_ipc_msg_callback(IPC_Channel * client, gpointer user_data)
         }
     }
 
-    crm_debug_2("Processed %d messages", lpc);
+    crm_trace("Processed %d messages", lpc);
 
     if (client->ch_status != IPC_CONNECT) {
         stay_connected = FALSE;
@@ -420,7 +420,7 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
     crm_node_t *member = NULL;
     gboolean clear_shutdown = FALSE;
 
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
     if (safe_str_neq(client, CRM_SYSTEM_CRMD)) {
         return;
     }
@@ -443,7 +443,7 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
 
     if (safe_str_eq(status, ONLINESTATUS)) {
         /* remove the cached value in case it changed */
-        crm_debug_2("Uncaching UUID for %s", node);
+        crm_trace("Uncaching UUID for %s", node);
         unget_uuid(node);
     }
 
@@ -459,7 +459,7 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
     if (AM_I_DC) {
         xmlNode *update = NULL;
 
-        crm_debug_3("Got client status callback");
+        crm_trace("Got client status callback");
         update =
             create_node_state(node, NULL, NULL, status, join, NULL, clear_shutdown, __FUNCTION__);
 
@@ -487,15 +487,15 @@ crmd_ipc_connection_destroy(gpointer user_data)
  */
 
     if (client == NULL) {
-        crm_debug_4("No client to delete");
+        crm_trace("No client to delete");
         return;
     }
 
-    crm_debug_2("Disconnecting client %s (%p)", client->table_key, client);
+    crm_trace("Disconnecting client %s (%p)", client->table_key, client);
     source = client->client_source;
     client->client_source = NULL;
     if (source != NULL) {
-        crm_debug_3("Deleting %s (%p) from mainloop", client->table_key, source);
+        crm_trace("Deleting %s (%p) from mainloop", client->table_key, source);
         G_main_del_IPC_Channel(source);
     }
     crm_free(client->table_key);
@@ -510,7 +510,7 @@ crmd_ipc_connection_destroy(gpointer user_data)
 gboolean
 crmd_client_connect(IPC_Channel * client_channel, gpointer user_data)
 {
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
     if (client_channel == NULL) {
         crm_err("Channel was NULL");
 
@@ -520,11 +520,11 @@ crmd_client_connect(IPC_Channel * client_channel, gpointer user_data)
     } else {
         crmd_client_t *blank_client = NULL;
 
-        crm_debug_3("Channel connected");
+        crm_trace("Channel connected");
         crm_malloc0(blank_client, sizeof(crmd_client_t));
         CRM_ASSERT(blank_client != NULL);
 
-        crm_debug_2("Created client: %p", blank_client);
+        crm_trace("Created client: %p", blank_client);
 
         client_channel->ops->set_recv_qlen(client_channel, 1024);
         client_channel->ops->set_send_qlen(client_channel, 1024);
@@ -556,7 +556,7 @@ ccm_dispatch(int fd, gpointer user_data)
     oc_ev_t *ccm_token = (oc_ev_t *) user_data;
     gboolean was_error = FALSE;
 
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
     if (ccm_api_handle_event == NULL) {
         ccm_api_handle_event =
             find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event");
@@ -584,7 +584,7 @@ crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data
 
     gboolean update_quorum = FALSE;
 
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
     CRM_ASSERT(data != NULL);
 
     crm_info("Quorum %s after event=%s (id=%d)",
@@ -640,7 +640,7 @@ crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data
     }
 
     if (update_cache) {
-        crm_debug_2("Updating cache after event %s", ccm_event_name(event));
+        crm_trace("Updating cache after event %s", ccm_event_name(event));
         do_ccm_update_cache(C_CCM_CALLBACK, fsa_state, event, data, NULL);
 
     } else if (event != OC_EV_MS_NOT_PRIMARY) {
@@ -662,7 +662,7 @@ crmd_cib_connection_destroy(gpointer user_data)
 {
     CRM_CHECK(user_data == fsa_cib_conn,;);
 
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
     trigger_fsa(fsa_source);
     fsa_cib_conn->state = cib_disconnected;
 
@@ -682,8 +682,8 @@ crmd_cib_connection_destroy(gpointer user_data)
 gboolean
 crm_fsa_trigger(gpointer user_data)
 {
-    crm_debug_2("Invoked (queue len: %d)", g_list_length(fsa_message_queue));
+    crm_trace("Invoked (queue len: %d)", g_list_length(fsa_message_queue));
     s_crmd_fsa(C_FSA_INTERNAL);
-    crm_debug_2("Exited  (queue len: %d)", g_list_length(fsa_message_queue));
+    crm_trace("Exited  (queue len: %d)", g_list_length(fsa_message_queue));
     return TRUE;
 }

@@ -44,7 +44,7 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
         }
     }
 
-    crm_debug_3("Adding %s to %s", rsc->id, node->details->uname);
+    crm_trace("Adding %s to %s", rsc->id, node->details->uname);
 
     rsc->running_on = g_list_append(rsc->running_on, node);
     if (rsc->variant == pe_native) {
@@ -99,7 +99,7 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
     native_variant_data_t *native_data = NULL;
 
-    crm_debug_3("Processing resource %s...", rsc->id);
+    crm_trace("Processing resource %s...", rsc->id);
 
     crm_malloc0(native_data, sizeof(native_variant_data_t));
 
@@ -216,13 +216,13 @@ native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *n
     CRM_CHECK(rsc != NULL, return NULL);
     CRM_CHECK(name != NULL && strlen(name) != 0, return NULL);
 
-    crm_debug_2("Looking up %s in %s", name, rsc->id);
+    crm_trace("Looking up %s in %s", name, rsc->id);
 
     if (create || g_hash_table_size(rsc->parameters) == 0) {
         if (node != NULL) {
-            crm_debug_2("Creating hash with node %s", node->details->uname);
+            crm_trace("Creating hash with node %s", node->details->uname);
         } else {
-            crm_debug_2("Creating default hash");
+            crm_trace("Creating default hash");
         }
 
         local_hash = g_hash_table_new_full(crm_str_hash, g_str_equal,
@@ -452,7 +452,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
 void
 native_free(resource_t * rsc)
 {
-    crm_debug_4("Freeing resource action list (not the data)");
+    crm_trace("Freeing resource action list (not the data)");
     common_free(rsc);
 }
 
@@ -464,7 +464,7 @@ native_resource_state(const resource_t * rsc, gboolean current)
     if (current) {
         role = rsc->role;
     }
-    crm_debug_4("%s state: %s", rsc->id, role2text(role));
+    crm_trace("%s state: %s", rsc->id, role2text(role));
     return role;
 }
 

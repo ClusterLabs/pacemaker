@@ -299,7 +299,7 @@ static void parse_host_line(const char *line, GListPtr *output)
 	return;
     }
     
-    crm_debug_2("Processing: %s", line);
+    crm_trace("Processing: %s", line);
     /* Skip initial whitespace */
     for(lpc = 0; lpc <= max && isspace(line[lpc]); lpc++) {
 	last = lpc+1;
@@ -533,7 +533,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
     stonith_device_t *device = NULL;
 
     if(id) {
-	crm_debug_2("Looking for '%s'", id);
+	crm_trace("Looking for '%s'", id);
 	device = g_hash_table_lookup(device_list, id);
     }
 
@@ -652,7 +652,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    crm_err("Could not invoke %s: rc=%d", dev->id, exec_rc);
 
 	} else if(rc == 1 /* unkown */) {
-	    crm_debug_2("Host %s is not known by %s", host, dev->id);
+	    crm_trace("Host %s is not known by %s", host, dev->id);
 	    
 	} else if(rc == 0 /* active */ || rc == 2 /* inactive */) {
 	    can = TRUE;
@@ -980,7 +980,7 @@ xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, 
 	F_STONITH_CALLOPTS
     };
 
-    crm_debug_4("Creating a basic reply");
+    crm_trace("Creating a basic reply");
     reply = create_xml_node(NULL, T_STONITH_REPLY);
 
     crm_xml_add(reply, "st_origin", __FUNCTION__);
@@ -996,7 +996,7 @@ xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, 
     }
 
     if(data != NULL) {
-	crm_debug_4("Attaching reply output");
+	crm_trace("Attaching reply output");
 	add_message_xml(reply, F_STONITH_CALLDATA, data);
     }
     return reply;
@@ -1006,7 +1006,7 @@ xmlNode *stonith_construct_async_reply(async_command_t *cmd, char *output, xmlNo
 {
     xmlNode *reply = NULL;
 
-    crm_debug_4("Creating a basic reply");
+    crm_trace("Creating a basic reply");
     reply = create_xml_node(NULL, T_STONITH_REPLY);
 
     crm_xml_add(reply, "st_origin", __FUNCTION__);

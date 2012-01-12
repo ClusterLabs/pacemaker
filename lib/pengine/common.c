@@ -388,7 +388,7 @@ merge_weights(int w1, int w2)
 
     if (w1 <= -INFINITY || w2 <= -INFINITY) {
         if (w1 >= INFINITY || w2 >= INFINITY) {
-            crm_debug_2("-INFINITY + INFINITY == -INFINITY");
+            crm_trace("-INFINITY + INFINITY == -INFINITY");
         }
         return -INFINITY;
 
@@ -414,7 +414,7 @@ merge_weights(int w1, int w2)
         result = -INFINITY;
     }
 
-    crm_debug_5("%d + %d = %d", w1, w2, result);
+    crm_trace("%d + %d = %d", w1, w2, result);
     return result;
 }
 
@@ -423,7 +423,7 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
 {
     CRM_CHECK(hash != NULL, return);
 
-    crm_debug_3("adding: name=%s value=%s", crm_str(name), crm_str(value));
+    crm_trace("adding: name=%s value=%s", crm_str(name), crm_str(value));
     if (name == NULL || value == NULL) {
         return;
 

@@ -67,7 +67,7 @@ crmdManagedChildDied(ProcTrack * p, int status, int signo, int exitcode, int was
     the_subsystem->ipc = NULL;
     clear_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
 
-    crm_debug_3("Triggering FSA: %s", __FUNCTION__);
+    crm_trace("Triggering FSA: %s", __FUNCTION__);
     mainloop_set_trigger(fsa_source);
 
     if (is_set(fsa_input_register, the_subsystem->flag_required)) {
@@ -111,11 +111,11 @@ stop_subsystem(struct crm_subsystem_s *the_subsystem, gboolean force_quit)
 {
     int quit_signal = SIGTERM;
 
-    crm_debug_2("Stopping sub-system \"%s\"", the_subsystem->name);
+    crm_trace("Stopping sub-system \"%s\"", the_subsystem->name);
     clear_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 
     if (the_subsystem->pid <= 0) {
-        crm_debug_2("Client %s not running", the_subsystem->name);
+        crm_trace("Client %s not running", the_subsystem->name);
         return FALSE;
 
     }
@@ -190,7 +190,7 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
 
         default:               /* Parent */
             NewTrackedProc(pid, 0, PT_LOGNORMAL, the_subsystem, &crmd_managed_child_ops);
-            crm_debug_2("Client %s is has pid: %d", the_subsystem->name, pid);
+            crm_trace("Client %s is has pid: %d", the_subsystem->name, pid);
             the_subsystem->pid = pid;
             return TRUE;
 

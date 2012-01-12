@@ -288,7 +288,7 @@ do_lrm_control(long long action,
         }
 
         if (ret == HA_OK) {
-            crm_debug_4("LRM: set_lrm_callback...");
+            crm_trace("LRM: set_lrm_callback...");
             ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(fsa_lrm_conn, lrm_op_callback);
             if (ret != HA_OK) {
                 crm_err("Failed to set LRM callbacks");
@@ -429,7 +429,7 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
         provider = "heartbeat";
     }
 
-    crm_debug_2("Retreiving metadata for %s::%s:%s", type, class, provider);
+    crm_trace("Retreiving metadata for %s::%s:%s", type, class, provider);
     metadata = fsa_lrm_conn->lrm_ops->get_rsc_type_metadata(fsa_lrm_conn, class, type, provider);
 
     if (metadata) {
@@ -675,7 +675,7 @@ is_rsc_active(const char *rsc_id)
 {
     rsc_history_t *entry = NULL;
 
-    crm_debug_3("Processing lrm_rsc_t entry %s", rsc_id);
+    crm_trace("Processing lrm_rsc_t entry %s", rsc_id);
 
     entry = g_hash_table_lookup(resource_history, rsc_id);
     if (entry == NULL || entry->last == NULL) {
@@ -1090,7 +1090,7 @@ get_lrm_resource(xmlNode * resource, xmlNode * op_msg, gboolean do_create)
     const char *short_id = ID(resource);
     const char *long_id = crm_element_value(resource, XML_ATTR_ID_LONG);
 
-    crm_debug_2("Retrieving %s from the LRM.", short_id);
+    crm_trace("Retrieving %s from the LRM.", short_id);
     CRM_CHECK(short_id != NULL, return NULL);
 
     if (rsc == NULL) {
@@ -1116,7 +1116,7 @@ get_lrm_resource(xmlNode * resource, xmlNode * op_msg, gboolean do_create)
         CRM_CHECK(class != NULL, return NULL);
         CRM_CHECK(type != NULL, return NULL);
 
-        crm_debug_2("Adding rsc %s before operation", short_id);
+        crm_trace("Adding rsc %s before operation", short_id);
         strncpy(rid, short_id, RID_LEN);
         rid[RID_LEN - 1] = 0;
 
@@ -1199,7 +1199,7 @@ do_lrm_invoke(long long action,
 
 #if ENABLE_ACL
     user_name = crm_element_value(input->msg, F_CRM_USER);
-    crm_debug_2("LRM command from user '%s'", user_name);
+    crm_trace("LRM command from user '%s'", user_name);
 #endif
 
     crm_op = crm_element_value(input->msg, F_CRM_TASK);
@@ -1208,7 +1208,7 @@ do_lrm_invoke(long long action,
         from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
     }
 
-    crm_debug_2("LRM command from: %s", from_sys);
+    crm_trace("LRM command from: %s", from_sys);
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
         operation = CRMD_ACTION_DELETE;
@@ -1500,7 +1500,7 @@ construct_op(xmlNode * rsc_op, const char *rsc_id, const char *operation)
         g_hash_table_insert(op->params,
                             crm_strdup(XML_ATTR_CRM_VERSION), crm_strdup(CRM_FEATURE_SET));
 
-        crm_debug_2("Constructed %s op for %s", operation, rsc_id);
+        crm_trace("Constructed %s op for %s", operation, rsc_id);
         return op;
     }
 
@@ -1569,7 +1569,7 @@ construct_op(xmlNode * rsc_op, const char *rsc_id, const char *operation)
         }
     }
 
-    crm_debug_2("Constructed %s op for %s: interval=%d", operation, rsc_id, op->interval);
+    crm_trace("Constructed %s op for %s: interval=%d", operation, rsc_id, op->interval);
 
     return op;
 }
@@ -1723,7 +1723,7 @@ do_lrm_rsc_op(lrm_rsc_t * rsc, const char *operation, xmlNode * msg, xmlNode * r
         struct recurring_op_s *pending = NULL;
 
         crm_malloc0(pending, sizeof(struct recurring_op_s));
-        crm_debug_2("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
+        crm_trace("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
 
         pending->call_id = call_id;
         pending->interval = op->interval;
@@ -1830,7 +1830,7 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
         case cib_ok:
         case cib_diff_failed:
         case cib_diff_resync:
-            crm_debug_2("Resource update %d complete: rc=%d", call_id, rc);
+            crm_trace("Resource update %d complete: rc=%d", call_id, rc);
             break;
         default:
             crm_warn("Resource update %d failed: (rc=%d) %s", call_id, rc, cib_error2string(rc));
@@ -1909,7 +1909,7 @@ do_update_resource(lrm_rsc_t * rsc, lrm_op_t * op)
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, rc, NULL);
 
     /* the return code is a call number, not an error code */
-    crm_debug_2("Sent resource state update message: %d", rc);
+    crm_trace("Sent resource state update message: %d", rc);
     fsa_cib_conn->cmds->register_callback(fsa_cib_conn, rc, 60, FALSE, NULL, "cib_rsc_callback",
                                           cib_rsc_callback);
 
@@ -2004,12 +2004,12 @@ process_lrm_event(lrm_op_t * op)
 
     } else {
         /* Before a stop is called, no need to direct ack */
-        crm_debug_2("Op %s (call=%d): no delete event required", op_key, op->call_id);
+        crm_trace("Op %s (call=%d): no delete event required", op_key, op->call_id);
     }
 
     if (g_hash_table_remove(pending_ops, op_id)) {
         removed = TRUE;
-        crm_debug_2("Op %s (call=%d, stop-id=%s): Confirmed", op_key, op->call_id, op_id);
+        crm_trace("Op %s (call=%d, stop-id=%s): Confirmed", op_key, op->call_id, op_id);
     }
 
   out:

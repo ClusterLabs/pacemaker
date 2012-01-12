@@ -154,7 +154,7 @@ find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
 	
     for(a_child = __xml_first_child(root); a_child != NULL; a_child = __xml_next(a_child)) {
 	if(crm_str_eq((const char *)a_child->name, search_path, TRUE)) {
-/* 		crm_debug_5("returning node (%s).", crm_element_name(a_child)); */
+/* 		crm_trace("returning node (%s).", crm_element_name(a_child)); */
 	    crm_validate_data(a_child);
 	    return a_child;
 	}
@@ -163,9 +163,9 @@ find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
     if(must_find) {
 	crm_warn("Could not find %s in %s.", search_path, name);
     } else if(root != NULL) {
-	crm_debug_3("Could not find %s in %s.", search_path, name);
+	crm_trace("Could not find %s in %s.", search_path, name);
     } else {
-	crm_debug_3("Could not find %s in <NULL>.", search_path);
+	crm_trace("Could not find %s in <NULL>.", search_path);
     }
 	
 	
@@ -181,14 +181,14 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
 	/* Uncertain if node_name == NULL check is strictly necessary here */
 	if(node_name == NULL || crm_str_eq((const char *)a_child->name, node_name, TRUE)) {
 	    if(id == NULL || crm_str_eq(id, ID(a_child), TRUE)) {
-		crm_debug_4("returning node (%s).", 
+		crm_trace("returning node (%s).", 
 			    crm_element_name(a_child));
 		return a_child;
 	    }
 	}
     }
     
-    crm_debug_3("node <%s id=%s> not found in %s.",
+    crm_trace("node <%s id=%s> not found in %s.",
 		node_name, id, crm_element_name(parent));
     return NULL;
 }
@@ -622,7 +622,7 @@ decompress_file(const char *filename)
 	read_len = BZ2_bzRead (
 	    &rc, bz_file, buffer + length, XML_BUFFER_SIZE);
 	
-	crm_debug_5("Read %ld bytes from file: %d",
+	crm_trace("Read %ld bytes from file: %d",
 		    (long)read_len, rc);
 	
 	if ( rc == BZ_OK || rc == BZ_STREAM_END) {
@@ -721,7 +721,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 	
     CRM_CHECK(filename != NULL, return -1);
 
-    crm_debug_3("Writing XML out to %s", filename);
+    crm_trace("Writing XML out to %s", filename);
     crm_validate_data(xml_node);
     if (xml_node == NULL) {
 	crm_err("Cannot write NULL to %s", filename);
@@ -771,7 +771,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 		crm_err("bzWriteClose() failed: %d",rc);
 		out = -1;
 	    } else {
-		crm_debug_2("%s: In: %d, out: %d", filename, in, out);
+		crm_trace("%s: In: %d, out: %d", filename, in, out);
 	    }
 	}
 #else
@@ -802,7 +802,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 	    
     fclose(file_output_strm);
 	
-    crm_debug_3("Saved %d bytes to the Cib as XML", res);
+    crm_trace("Saved %d bytes to the Cib as XML", res);
     crm_free(buffer);
 
     return res;
@@ -886,7 +886,7 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
     
     crm_free(buffer);
     buffer = compressed;
-    crm_debug_2("Compression details: %d -> %d", orig, len);
+    crm_trace("Compression details: %d -> %d", orig, len);
     ha_msg_addbin(msg, name, buffer, len);
   done:
     crm_free(buffer);
@@ -962,7 +962,7 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	case FT_STRING:
 	    value = msg->values[lpc];
 	    CRM_CHECK(value != NULL, return);
-	    crm_debug_5("Converting %s/%d/%s", name, type, value[0] == '<' ? "xml":"field");
+	    crm_trace("Converting %s/%d/%s", name, type, value[0] == '<' ? "xml":"field");
 
 	    if( value[0] != '<' ) {
 		crm_xml_add(parent, name, value);
@@ -996,7 +996,7 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	    crm_malloc0(compressed, orig_len);
 	    memcpy(compressed, value, orig_len);
 	    
-	    crm_debug_2("Trying to decompress %d bytes", (int)orig_len);
+	    crm_trace("Trying to decompress %d bytes", (int)orig_len);
 	retry:
 	    crm_realloc(uncompressed, size);
 	    memset(uncompressed, 0, size);
@@ -1208,7 +1208,7 @@ log_data_element(
     name = crm_element_name(data);
     CRM_ASSERT(name != NULL);
 	
-    crm_debug_5("Dumping %s", name);
+    crm_trace("Dumping %s", name);
     crm_malloc0(buffer, buffer_len);
 	
     if(formatted) {
@@ -1232,7 +1232,7 @@ log_data_element(
 	    prop_value = "*****";
 	}
 		
-	crm_debug_5("Dumping <%s %s=\"%s\"...",
+	crm_trace("Dumping <%s %s=\"%s\"...",
 		    name, prop_name, prop_value);
 	printed = snprintf(buffer + offset, buffer_len - offset,
 			   " %s=\"%s\"", prop_name, prop_value);
@@ -1383,7 +1383,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 
     CRM_CHECK(new != NULL, return FALSE);
 
-    crm_debug_2("Substraction Phase");
+    crm_trace("Substraction Phase");
     for(child_diff = __xml_first_child(removed); child_diff != NULL; child_diff = __xml_next(child_diff)) {
 	CRM_CHECK(root_nodes_seen == 0, result = FALSE);
 	if(root_nodes_seen == 0) {
@@ -1402,7 +1402,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
     }
 
     root_nodes_seen = 0;
-    crm_debug_2("Addition Phase");
+    crm_trace("Addition Phase");
     if(result) {
 	xmlNode *child_diff = NULL;
 	for(child_diff = __xml_first_child(added); child_diff != NULL; child_diff = __xml_next(child_diff)) {
@@ -1430,7 +1430,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 	    crm_log_xml_trace(diff, "diff:input");
 	    result = FALSE;
 	} else {
-	    crm_debug_2("Digest matched: expected %s, calculated %s",
+	    crm_trace("Digest matched: expected %s, calculated %s",
 			digest, new_digest);
 	}
 	crm_free(new_digest);
@@ -1451,7 +1451,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 	    XML_ATTR_GENERATION_ADMIN
 	};
 
-	crm_debug_2("Verification Phase");
+	crm_trace("Verification Phase");
 	intermediate = diff_xml_object(old, *new, FALSE);
 	calc_added = find_xml_node(intermediate, "diff-added", FALSE);
 	calc_removed = find_xml_node(intermediate, "diff-removed", FALSE);
@@ -1628,7 +1628,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
     if(right == NULL) {
 	xmlNode *deleted = NULL;
 
-	crm_debug_5("Processing <%s id=%s> (complete copy)",
+	crm_trace("Processing <%s id=%s> (complete copy)",
 		    crm_element_name(left), id);
 	deleted = add_node_copy(parent, left);
 	crm_xml_add(deleted, XML_DIFF_MARKER, marker);
@@ -1662,7 +1662,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 	for(right_child = __xml_first_child(right); right_child != NULL; right_child = __xml_next(right_child)) {
 	    value = crm_element_value(right_child, XML_DIFF_MARKER);
 	    if(value != NULL && safe_str_eq(value, "removed:top")) {
-		crm_debug_3("Found the root of the deletion: %s", name);
+		crm_trace("Found the root of the deletion: %s", name);
 		xml_prop_iter(left, name, value, xmlSetProp(diff, (const xmlChar*)name, (const xmlChar*)value));
 		differences = TRUE;
 		goto done;
@@ -1735,7 +1735,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 
     if(differences == FALSE) {
 	free_xml_from_parent(parent, diff);
-	crm_debug_5("\tNo changes to <%s id=%s>", crm_str(name), id);
+	crm_trace("\tNo changes to <%s id=%s>", crm_str(name), id);
 	return NULL;
 
     } else if(full == FALSE && id) {
@@ -1776,11 +1776,11 @@ add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, gboolean as_di
 	target = create_xml_node(parent, object_name);
 	CRM_CHECK(target != NULL, return 0);
 #if XML_PARSER_DEBUG
-	crm_debug_2("Added  <%s%s%s/>", crm_str(object_name),
+	crm_trace("Added  <%s%s%s/>", crm_str(object_name),
 		    object_id?" id=":"", object_id?object_id:"");
 
     } else {
-	crm_debug_3("Found node <%s%s%s/> to update",
+	crm_trace("Found node <%s%s%s/> to update",
 		    crm_str(object_name),
 		    object_id?" id=":"", object_id?object_id:"");
 #endif
@@ -1800,14 +1800,14 @@ add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, gboolean as_di
 	
     for(a_child = __xml_first_child(update); a_child != NULL; a_child = __xml_next(a_child)) {
 #if XML_PARSER_DEBUG
-	crm_debug_4("Updating child <%s id=%s>",
+	crm_trace("Updating child <%s id=%s>",
 		    crm_element_name(a_child), ID(a_child));
 #endif
 	add_xml_object(target, NULL, a_child, as_diff);
     }
 
 #if XML_PARSER_DEBUG
-    crm_debug_3("Finished with <%s id=%s>",
+    crm_trace("Finished with <%s id=%s>",
 		crm_str(object_name), crm_str(object_id));
 #endif
     return 0;
@@ -1963,7 +1963,7 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
     crm_xml_add(xml_child, XML_NVPAIR_ATTR_NAME, name);
     crm_xml_add(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
 
-    crm_debug_3("dumped: name=%s value=%s", name, s_value);
+    crm_trace("dumped: name=%s value=%s", name, s_value);
 }
 
 void
@@ -1981,10 +1981,10 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
 	    
     } else if(crm_element_value(xml_node, name) == NULL) {
 	crm_xml_add(xml_node, name, s_value);
-	crm_debug_3("dumped: %s=%s", name, s_value);
+	crm_trace("dumped: %s=%s", name, s_value);
 
     } else {
-	crm_debug_2("duplicate: %s=%s", name, s_value);
+	crm_trace("duplicate: %s=%s", name, s_value);
     }
 }
 
@@ -1998,10 +1998,10 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
 
     if(crm_element_value(xml_node, name) == NULL) {
 	crm_xml_add(xml_node, name, s_value);
-	crm_debug_3("dumped: %s=%s", name, s_value);
+	crm_trace("dumped: %s=%s", name, s_value);
 
     } else {
-	crm_debug_2("duplicate: %s=%s", name, s_value);
+	crm_trace("duplicate: %s=%s", name, s_value);
     }
 }
 
@@ -2037,7 +2037,7 @@ xml2list(xmlNode *parent)
 
     nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
     if(nvpair_list == NULL) {
-	crm_debug_2("No attributes in %s",
+	crm_trace("No attributes in %s",
 		    crm_element_name(parent));
 	crm_log_xml_debug_2(
 	    parent,"No attributes for resource op");
@@ -2048,7 +2048,7 @@ xml2list(xmlNode *parent)
     xml_prop_iter(
 	nvpair_list, key, value, 
 		
-	crm_debug_4("Added %s=%s", key, value);
+	crm_trace("Added %s=%s", key, value);
 		
 	g_hash_table_insert(
 	    nvpair_hash, crm_strdup(key), crm_strdup(value));
@@ -2058,7 +2058,7 @@ xml2list(xmlNode *parent)
 	if(crm_str_eq((const char *)child->name, XML_TAG_PARAM, TRUE)) {
 	    const char *key = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
 	    const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
-	    crm_debug_4("Added %s=%s", key, value);
+	    crm_trace("Added %s=%s", key, value);
 	    if(key != NULL && value != NULL) {
 		g_hash_table_insert(nvpair_hash, crm_strdup(key), crm_strdup(value));		
 	    }
@@ -2197,7 +2197,7 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
 	sprintf(digest+(2*i), "%02x", raw_digest[i]);
     }
     digest[(2*digest_len)] = 0;
-    crm_debug_2("Digest %s: %s\n", digest, buffer);
+    crm_trace("Digest %s: %s\n", digest, buffer);
     crm_log_xml(LOG_DEBUG_3,  "digest:source", copy);
     crm_free(buffer);
     crm_free(raw_digest);
@@ -2556,7 +2556,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
     
-    crm_debug_2("Validating with: %s (type=%d)", crm_str(file), type);
+    crm_trace("Validating with: %s (type=%d)", crm_str(file), type);
     switch(type) {
 	case 0:
 	    valid = TRUE;
@@ -2882,7 +2882,7 @@ xpath_search(xmlNode *xml_top, const char *path)
     
     doc = getDocPtr(xml_top);
 
-    crm_debug_2("Evaluating: %s", path);
+    crm_trace("Evaluating: %s", path);
     xpathCtx = xmlXPathNewContext(doc);
     CRM_ASSERT(xpathCtx != NULL);
     

@@ -104,7 +104,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
     char *uuid_ticket = NULL;
     cib_native_opaque_t *native = cib->variant_opaque;
 
-    crm_debug_4("Connecting command channel");
+    crm_trace("Connecting command channel");
 
     if (type == cib_command) {
         cib->state = cib_connected_command;
@@ -181,7 +181,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
         }
 
         if (do_mainloop) {
-            crm_debug_4("Connecting callback channel");
+            crm_trace("Connecting callback channel");
             native->callback_source =
                 G_main_add_IPC_Channel(G_PRIORITY_HIGH, native->callback_channel, FALSE,
                                        cib_native_dispatch, cib, default_ipc_connection_destroy);
@@ -356,31 +356,31 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
         return cib_create_msg;
     }
 
-    crm_debug_3("Sending %s message to CIB service", op);
+    crm_trace("Sending %s message to CIB service", op);
     if (send_ipc_message(native->command_channel, op_msg) == FALSE) {
         crm_err("Sending message to CIB service FAILED");
         free_xml(op_msg);
         return cib_send_failed;
 
     } else {
-        crm_debug_3("Message sent");
+        crm_trace("Message sent");
     }
 
     free_xml(op_msg);
 
     if ((call_options & cib_discard_reply)) {
-        crm_debug_3("Discarding reply");
+        crm_trace("Discarding reply");
         return cib_ok;
 
     } else if (!(call_options & cib_sync_call)) {
-        crm_debug_3("Async call, returning");
+        crm_trace("Async call, returning");
         CRM_CHECK(cib->call_id != 0, return cib_reply_failed);
 
         return cib->call_id;
     }
 
     rc = IPC_OK;
-    crm_debug_3("Waiting for a syncronous reply");
+    crm_trace("Waiting for a syncronous reply");
 
 #ifndef HAVE_MSGFROMIPC_TIMEOUT
     sync_timer.ref = 0;
@@ -408,7 +408,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
             break;
 
         } else if (reply_id == msg_id) {
-            crm_debug_3("Syncronous reply received");
+            crm_trace("Syncronous reply received");
             if (crm_element_value_int(op_reply, F_CIB_RC, &rc) != 0) {
                 rc = cib_return_code;
             }
@@ -524,12 +524,12 @@ cib_native_msgready(cib_t * cib)
         return FALSE;
 
     } else if (native->callback_channel->ops->is_message_pending(native->callback_channel)) {
-        crm_debug_4("Message pending on command channel [%d]",
+        crm_trace("Message pending on command channel [%d]",
                     native->callback_channel->farside_pid);
         return TRUE;
     }
 
-    crm_debug_3("No message pending");
+    crm_trace("No message pending");
     return FALSE;
 }
 
@@ -549,7 +549,7 @@ cib_native_rcvmsg(cib_t * cib, int blocking)
 
     /* if it is not blocking mode and no message in the channel, return */
     if (blocking == 0 && cib_native_msgready(cib) == FALSE) {
-        crm_debug_3("No message ready and non-blocking...");
+        crm_trace("No message ready and non-blocking...");
         return 0;
 
     } else if (cib_native_msgready(cib) == FALSE) {
@@ -575,7 +575,7 @@ cib_native_rcvmsg(cib_t * cib, int blocking)
 
     /* do callbacks */
     type = crm_element_value(msg, F_TYPE);
-    crm_debug_4("Activating %s callbacks...", type);
+    crm_trace("Activating %s callbacks...", type);
 
     if (safe_str_eq(type, T_CIB)) {
         cib_native_callback(cib, msg, 0, 0);
@@ -657,7 +657,7 @@ cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_da
         set_IPC_Channel_dnotify(native->callback_source, default_cib_connection_destroy);
 
     } else {
-        crm_debug_3("Setting dnotify");
+        crm_trace("Setting dnotify");
         set_IPC_Channel_dnotify(native->callback_source, dnotify);
     }
     return cib_ok;

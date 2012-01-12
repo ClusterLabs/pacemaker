@@ -135,7 +135,7 @@ static void
 stop_attrd_timer(attr_hash_entry_t * hash_entry)
 {
     if (hash_entry != NULL && hash_entry->timer_id != 0) {
-        crm_debug_2("Stopping %s timer", hash_entry->id);
+        crm_trace("Stopping %s timer", hash_entry->id);
         g_source_remove(hash_entry->timer_id);
         hash_entry->timer_id = 0;
     }
@@ -149,7 +149,7 @@ attrd_ipc_callback(IPC_Channel * client, gpointer user_data)
     attrd_client_t *curr_client = (attrd_client_t *) user_data;
     gboolean stay_connected = TRUE;
 
-    crm_debug_2("Invoked: %s", curr_client->id);
+    crm_trace("Invoked: %s", curr_client->id);
 
     while (IPC_ISRCONN(client)) {
         if (client->ops->is_message_pending(client) == 0) {
@@ -167,7 +167,7 @@ attrd_ipc_callback(IPC_Channel * client, gpointer user_data)
         determine_request_user(&curr_client->user, client, msg, F_ATTRD_USER);
 #endif
 
-        crm_debug_2("Processing msg from %s", curr_client->id);
+        crm_trace("Processing msg from %s", curr_client->id);
         crm_log_xml(LOG_DEBUG_3, __PRETTY_FUNCTION__, msg);
 
         attrd_local_callback(msg);
@@ -180,7 +180,7 @@ attrd_ipc_callback(IPC_Channel * client, gpointer user_data)
         }
     }
 
-    crm_debug_2("Processed %d messages", lpc);
+    crm_trace("Processed %d messages", lpc);
     if (client->ch_status != IPC_CONNECT) {
         stay_connected = FALSE;
     }
@@ -200,17 +200,17 @@ attrd_connection_destroy(gpointer user_data)
     }
 
     if (client->source != NULL) {
-        crm_debug_4("Deleting %s (%p) from mainloop", client->name, client->source);
+        crm_trace("Deleting %s (%p) from mainloop", client->name, client->source);
         G_main_del_IPC_Channel(client->source);
         client->source = NULL;
     }
 
-    crm_debug_3("Destroying %s (%p)", client->name, client);
+    crm_trace("Destroying %s (%p)", client->name, client);
     crm_free(client->name);
     crm_free(client->id);
     crm_free(client->user);
     crm_free(client);
-    crm_debug_4("Freed the cib client");
+    crm_trace("Freed the cib client");
 
     return;
 }
@@ -220,7 +220,7 @@ attrd_connect(IPC_Channel * channel, gpointer user_data)
 {
     attrd_client_t *new_client = NULL;
 
-    crm_debug_3("Connecting channel");
+    crm_trace("Connecting channel");
 
     if (channel == NULL) {
         crm_err("Channel was NULL");
@@ -237,7 +237,7 @@ attrd_connect(IPC_Channel * channel, gpointer user_data)
     crm_malloc0(new_client, sizeof(attrd_client_t));
     new_client->channel = channel;
 
-    crm_debug_3("Created channel %p for channel %s", new_client, new_client->id);
+    crm_trace("Created channel %p for channel %s", new_client, new_client->id);
 
 /* 		channel->ops->set_recv_qlen(channel, 100); */
 /* 		channel->ops->set_send_qlen(channel, 400); */
@@ -246,7 +246,7 @@ attrd_connect(IPC_Channel * channel, gpointer user_data)
         G_main_add_IPC_Channel(G_PRIORITY_DEFAULT, channel, FALSE, attrd_ipc_callback, new_client,
                                attrd_connection_destroy);
 
-    crm_debug_3("Client %s connected", new_client->id);
+    crm_trace("Client %s connected", new_client->id);
 
     return TRUE;
 }
@@ -299,7 +299,7 @@ find_hash_entry(xmlNode * msg)
     }
     crm_free(hash_entry->section);
     hash_entry->section = crm_strdup(value);
-    crm_debug_2("\t%s->section: %s", attr, value);
+    crm_trace("\t%s->section: %s", attr, value);
 
     value = crm_element_value(msg, F_ATTRD_DAMPEN);
     if (value != NULL) {
@@ -307,7 +307,7 @@ find_hash_entry(xmlNode * msg)
         hash_entry->dampen = crm_strdup(value);
 
         hash_entry->timeout = crm_get_msec(value);
-        crm_debug_2("\t%s->timeout: %s", attr, value);
+        crm_trace("\t%s->timeout: %s", attr, value);
     }
 #if ENABLE_ACL
     crm_free(hash_entry->user);
@@ -315,7 +315,7 @@ find_hash_entry(xmlNode * msg)
     value = crm_element_value(msg, F_ATTRD_USER);
     if (value != NULL) {
         hash_entry->user = crm_strdup(value);
-        crm_debug_2("\t%s->user: %s", attr, value);
+        crm_trace("\t%s->user: %s", attr, value);
     }
 #endif
 
@@ -327,7 +327,7 @@ find_hash_entry(xmlNode * msg)
 static void
 attrd_ha_connection_destroy(gpointer user_data)
 {
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
     if (need_shutdown) {
         /* we signed out, so this is expected */
         crm_info("Heartbeat disconnection complete");
@@ -394,7 +394,7 @@ attrd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
             attrd_local_callback(xml);
 
         } else if (ignore == NULL || safe_str_neq(wrapper->sender.uname, attrd_uname)) {
-            crm_debug_2("%s message from %s", op, wrapper->sender.uname);
+            crm_trace("%s message from %s", op, wrapper->sender.uname);
             hash_entry = find_hash_entry(xml);
             stop_attrd_timer(hash_entry);
             attrd_perform_update(hash_entry);
@@ -698,7 +698,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
 #if ENABLE_ACL
     if (hash_entry->user) {
         user_name = hash_entry->user;
-        crm_debug_2("Performing request from user '%s'", hash_entry->user);
+        crm_trace("Performing request from user '%s'", hash_entry->user);
     }
 #endif
 
@@ -721,7 +721,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
                  hash_entry->set, hash_entry->section, cib_error2string(rc), rc);
 
         } else {
-            crm_debug_2("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
+            crm_trace("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
                         rc, attrd_uuid, hash_entry->id,
                         hash_entry->uuid ? hash_entry->uuid : "<n/a>", hash_entry->set,
                         hash_entry->section);
@@ -735,7 +735,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
         if (safe_str_neq(hash_entry->value, hash_entry->stored_value) || rc < 0) {
             crm_notice("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         } else {
-            crm_debug_2("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
+            crm_trace("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         }
     }
 
@@ -790,7 +790,7 @@ attrd_local_callback(xmlNode * msg)
 
     if (safe_str_eq(value, hash_entry->value)
         && safe_str_eq(value, hash_entry->stored_value)) {
-        crm_debug_2("Ignoring non-change");
+        crm_trace("Ignoring non-change");
         return;
 
     } else if (value) {

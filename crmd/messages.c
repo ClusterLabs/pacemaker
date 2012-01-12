@@ -46,10 +46,10 @@ enum crmd_fsa_input handle_shutdown_request(xmlNode * stored_msg);
 gboolean ipc_queue_helper(gpointer key, gpointer value, gpointer user_data);
 
 #ifdef MSG_LOG
-#  define ROUTER_RESULT(x)	crm_debug_3("Router result: %s", x);	\
+#  define ROUTER_RESULT(x)	crm_trace("Router result: %s", x);	\
     crm_log_xml(LOG_MSG, "router.log", msg);
 #else
-#  define ROUTER_RESULT(x)	crm_debug_3("Router result: %s", x)
+#  define ROUTER_RESULT(x)	crm_trace("Router result: %s", x)
 #endif
 /* debug only, can wrap all it likes */
 int last_data_id = 0;
@@ -83,7 +83,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     last_data_id++;
     CRM_CHECK(raised_from != NULL, raised_from = "<unknown>");
 
-    crm_debug_2("%s %s FSA input %d (%s) (cause=%s) %s data",
+    crm_trace("%s %s FSA input %d (%s) (cause=%s) %s data",
                 raised_from, prepend ? "prepended" : "appended", last_data_id,
                 fsa_input2string(input), fsa_cause2string(cause), data ? "with" : "without");
 
@@ -118,7 +118,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     fsa_data->actions = with_actions;
 
     if (with_actions != A_NOTHING) {
-        crm_debug_3("Adding actions %.16llx to input", with_actions);
+        crm_trace("Adding actions %.16llx to input", with_actions);
     }
 
     if (data != NULL) {
@@ -127,7 +127,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             case C_CRMD_STATUS_CALLBACK:
             case C_IPC_MESSAGE:
             case C_HA_MESSAGE:
-                crm_debug_3("Copying %s data from %s as a HA msg",
+                crm_trace("Copying %s data from %s as a HA msg",
                             fsa_cause2string(cause), raised_from);
                 CRM_CHECK(((ha_msg_input_t *) data)->msg != NULL,
                           crm_err("Bogus data from %s", raised_from));
@@ -136,7 +136,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                 break;
 
             case C_LRM_OP_CALLBACK:
-                crm_debug_3("Copying %s data from %s as lrm_op_t",
+                crm_trace("Copying %s data from %s as lrm_op_t",
                             fsa_cause2string(cause), raised_from);
                 fsa_data->data = copy_lrm_op((lrm_op_t *) data);
                 fsa_data->data_type = fsa_dt_lrm;
@@ -157,18 +157,18 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                 exit(1);
                 break;
         }
-        crm_debug_4("%s data copied", fsa_cause2string(fsa_data->fsa_cause));
+        crm_trace("%s data copied", fsa_cause2string(fsa_data->fsa_cause));
     }
 
     /* make sure to free it properly later */
     if (prepend) {
-        crm_debug_2("Prepending input");
+        crm_trace("Prepending input");
         fsa_message_queue = g_list_prepend(fsa_message_queue, fsa_data);
     } else {
         fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
     }
 
-    crm_debug_2("Queue len: %d", g_list_length(fsa_message_queue));
+    crm_trace("Queue len: %d", g_list_length(fsa_message_queue));
 
     fsa_dump_queue(LOG_DEBUG_2);
 
@@ -177,7 +177,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 
     if (fsa_source) {
-        crm_debug_3("Triggering FSA: %s", __FUNCTION__);
+        crm_trace("Triggering FSA: %s", __FUNCTION__);
         mainloop_set_trigger(fsa_source);
     }
     return last_data_id;
@@ -209,11 +209,11 @@ copy_ha_msg_input(ha_msg_input_t * orig)
     xmlNodePtr data = NULL;
 
     if (orig != NULL) {
-        crm_debug_4("Copy msg");
+        crm_trace("Copy msg");
         data = copy_xml(orig->msg);
 
     } else {
-        crm_debug_3("No message to copy");
+        crm_trace("No message to copy");
     }
     copy = new_ha_msg_input(data);
     if (orig && orig->msg != NULL) {
@@ -231,7 +231,7 @@ delete_fsa_input(fsa_data_t * fsa_data)
     if (fsa_data == NULL) {
         return;
     }
-    crm_debug_4("About to free %s data", fsa_cause2string(fsa_data->fsa_cause));
+    crm_trace("About to free %s data", fsa_cause2string(fsa_data->fsa_cause));
 
     if (fsa_data->data != NULL) {
         switch (fsa_data->data_type) {
@@ -257,7 +257,7 @@ delete_fsa_input(fsa_data_t * fsa_data)
                 }
                 break;
         }
-        crm_debug_4("%s data freed", fsa_cause2string(fsa_data->fsa_cause));
+        crm_trace("%s data freed", fsa_cause2string(fsa_data->fsa_cause));
     }
 
     crm_free(fsa_data);
@@ -270,7 +270,7 @@ get_message(void)
     fsa_data_t *message = g_list_nth_data(fsa_message_queue, 0);
 
     fsa_message_queue = g_list_remove(fsa_message_queue, message);
-    crm_debug_2("Processing input %d", message->id);
+    crm_trace("Processing input %d", message->id);
     return message;
 }
 
@@ -371,7 +371,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     const char *type = crm_element_value(msg, F_TYPE);
     const char *msg_error = NULL;
 
-    crm_debug_3("Routing message %s", crm_element_value(msg, XML_ATTR_REFERENCE));
+    crm_trace("Routing message %s", crm_element_value(msg, XML_ATTR_REFERENCE));
 
     if (msg == NULL) {
         msg_error = "Cannot route empty message";
@@ -509,7 +509,7 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
             can_reply = TRUE;   /* reply can be routed */
         }
 
-        crm_debug_2("Message reply can%s be routed from %s.", can_reply ? "" : " not", sys_from);
+        crm_trace("Message reply can%s be routed from %s.", can_reply ? "" : " not", sys_from);
 
         if (can_reply == FALSE) {
             crm_warn("Message [%s] not authorized",
@@ -519,7 +519,7 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
         return can_reply;
     }
 
-    crm_debug_3("received client join msg");
+    crm_trace("received client join msg");
     crm_log_xml(LOG_MSG, "join", client_msg);
     xml = get_message_xml(client_msg, F_CRM_DATA);
     auth_result = process_hello_message(xml, &uuid, &client_name, &major_version, &minor_version);
@@ -537,7 +537,7 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
         int mav = atoi(major_version);
         int miv = atoi(minor_version);
 
-        crm_debug_3("Checking client version number");
+        crm_trace("Checking client version number");
         if (mav < 0 || miv < 0) {
             crm_err("Client version (%d:%d) is not acceptable", mav, miv);
             auth_result = FALSE;
@@ -586,7 +586,7 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
     }
 
     if (auth_result == TRUE) {
-        crm_debug_2("Accepted client %s", crm_str(table_key));
+        crm_trace("Accepted client %s", crm_str(table_key));
 
         curr_client->table_key = table_key;
         curr_client->sub_sys = crm_strdup(client_name);
@@ -596,9 +596,9 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
 
         send_hello_message(curr_client->client_channel, "n/a", CRM_SYSTEM_CRMD, "0", "1");
 
-        crm_debug_3("Updated client list with %s", crm_str(table_key));
+        crm_trace("Updated client list with %s", crm_str(table_key));
 
-        crm_debug_3("Triggering FSA: %s", __FUNCTION__);
+        crm_trace("Triggering FSA: %s", __FUNCTION__);
         mainloop_set_trigger(fsa_source);
 
         if (the_subsystem != NULL) {
@@ -858,7 +858,7 @@ handle_response(xmlNode * stored_msg)
 
             fsa_input.msg = stored_msg;
             register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
-            crm_debug_2("Completed: %s...", fsa_pe_ref);
+            crm_trace("Completed: %s...", fsa_pe_ref);
 
         } else {
             crm_info("%s calculation %s is obsolete", op, msg_ref);
@@ -930,7 +930,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
     }
 
     if (client_channel != NULL) {
-        crm_debug_3("Sending message via channel %s.", sys);
+        crm_trace("Sending message via channel %s.", sys);
         send_ok = send_ipc_message(client_channel, msg);
 
     } else if (sys != NULL && strcmp(sys, CRM_SYSTEM_TENGINE) == 0) {
@@ -954,7 +954,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         fsa_data.data_type = fsa_dt_ha_msg;
 
 #ifdef FSA_TRACE
-        crm_debug_2("Invoking action A_LRM_INVOKE (%.16llx)", A_LRM_INVOKE);
+        crm_trace("Invoking action A_LRM_INVOKE (%.16llx)", A_LRM_INVOKE);
 #endif
         do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, fsa_state, I_MESSAGE, &fsa_data);
 

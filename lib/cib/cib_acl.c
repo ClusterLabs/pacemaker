@@ -363,7 +363,7 @@ acl_append(xmlNode * acl_child, GListPtr * acl)
 
     *acl = g_list_append(*acl, acl_obj);
 
-    crm_debug_3("ACL object appended: mode=%s, tag=%s, ref=%s, xpath=%s, attribute=%s",
+    crm_trace("ACL object appended: mode=%s, tag=%s, ref=%s, xpath=%s, attribute=%s",
                 acl_obj->mode, acl_obj->tag, acl_obj->ref, acl_obj->xpath, acl_obj->attribute);
 
     return TRUE;
@@ -404,7 +404,7 @@ parse_acl_xpath(xmlNode * xml, GListPtr acl, GListPtr * parsed_acl)
 
             *parsed_acl = g_list_append(*parsed_acl, new_acl_obj);
 
-            crm_debug_3("Copied ACL object: mode=%s, tag=%s, ref=%s, xpath=%s, attribute=%s",
+            crm_trace("Copied ACL object: mode=%s, tag=%s, ref=%s, xpath=%s, attribute=%s",
                         new_acl_obj->mode, new_acl_obj->tag, new_acl_obj->ref,
                         new_acl_obj->xpath, new_acl_obj->attribute);
 
@@ -428,7 +428,7 @@ parse_acl_xpath(xmlNode * xml, GListPtr acl, GListPtr * parsed_acl)
 
                 *parsed_acl = g_list_append(*parsed_acl, new_acl_obj);
 
-                crm_debug_3
+                crm_trace
                     ("Parsed the ACL object with xpath '%s' to: mode=%s, tag=%s, ref=%s, xpath=%s, attribute=%s",
                      acl_obj->xpath, new_acl_obj->mode, new_acl_obj->tag, new_acl_obj->ref,
                      new_acl_obj->xpath, new_acl_obj->attribute);
@@ -571,7 +571,7 @@ update_xml_perms(xmlNode * xml, acl_obj_t * acl_obj, GHashTable * xml_perms)
         xmlNode *child = NULL;
 
         perm->mode = acl_obj->mode;
-        crm_debug_3("Permission for element: element_mode=%s, tag=%s, id=%s",
+        crm_trace("Permission for element: element_mode=%s, tag=%s, id=%s",
                     perm->mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
 
         for (child = __xml_first_child(xml); child; child = __xml_next(child)) {
@@ -591,7 +591,7 @@ update_xml_perms(xmlNode * xml, acl_obj_t * acl_obj, GHashTable * xml_perms)
 
             g_hash_table_insert(perm->attribute_perms,
                                 crm_strdup(acl_obj->attribute), crm_strdup(acl_obj->mode));
-            crm_debug_3("Permission for attribute: attribute_mode=%s, tag=%s, id=%s attribute=%s",
+            crm_trace("Permission for attribute: attribute_mode=%s, tag=%s, id=%s attribute=%s",
                         acl_obj->mode, crm_element_name(xml),
                         crm_element_value(xml, XML_ATTR_ID), acl_obj->attribute);
         }
@@ -619,7 +619,7 @@ update_xml_children_perms(xmlNode * xml, const char *mode, GHashTable * xml_perm
     }
 
     perm->mode = mode;
-    crm_debug_4("Permission for child element: element_mode=%s, tag=%s, id=%s",
+    crm_trace("Permission for child element: element_mode=%s, tag=%s, id=%s",
                 mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
 
     for (child = __xml_first_child(xml); child; child = __xml_next(child)) {
@@ -668,7 +668,7 @@ acl_filter_xml(xmlNode * xml, GHashTable * xml_perms)
     g_hash_table_lookup_extended(xml_perms, xml, NULL, (gpointer) & perm);
 
     if (perm == NULL) {
-        crm_debug_4("No ACL defined to read the element: tag=%s, id=%s",
+        crm_trace("No ACL defined to read the element: tag=%s, id=%s",
                     crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
         goto end_filter;
     }
@@ -677,7 +677,7 @@ acl_filter_xml(xmlNode * xml, GHashTable * xml_perms)
         if (can_read(perm->mode)) {
             return FALSE;
         } else {
-            crm_debug_4("No enough permission to read the element: element_mode=%s, tag=%s, id=%s",
+            crm_trace("No enough permission to read the element: element_mode=%s, tag=%s, id=%s",
                         perm->mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
             goto end_filter;
         }
@@ -696,7 +696,7 @@ acl_filter_xml(xmlNode * xml, GHashTable * xml_perms)
                     allow_counter++;
                 } else {
                     xml_remove_prop(xml, prop_name);
-                    crm_debug_4
+                    crm_trace
                         ("Filtered out the attribute: attribute_mode=%s, tag=%s, id=%s, attribute=%s",
                          (char *)mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID),
                          prop_name);
@@ -706,7 +706,7 @@ acl_filter_xml(xmlNode * xml, GHashTable * xml_perms)
                     allow_counter++;
                 } else if (crm_str_eq(prop_name, XML_ATTR_ID, TRUE) == FALSE) {
                     xml_remove_prop(xml, prop_name);
-                    crm_debug_4
+                    crm_trace
                         ("Filtered out the attribute: element_mode=%s, tag=%s, id=%s, attribute=%s",
                          perm->mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID),
                          prop_name);
@@ -725,14 +725,14 @@ acl_filter_xml(xmlNode * xml, GHashTable * xml_perms)
 
   end_filter:
     if (children_counter) {
-        crm_debug_4
+        crm_trace
             ("Don't filter out the element (tag=%s, id=%s) because user can read its children",
              crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
         return FALSE;
     }
 
     free_xml_from_parent(NULL, xml);
-    crm_debug_4("Filtered out the element: tag=%s, id=%s",
+    crm_trace("Filtered out the element: tag=%s, id=%s",
                 crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
     return TRUE;
 }

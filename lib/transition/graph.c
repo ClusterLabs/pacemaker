@@ -40,10 +40,10 @@ update_synapse_ready(synapse_t * synapse, int action_id)
     for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         crm_action_t *prereq = (crm_action_t *) lpc->data;
 
-        crm_debug_3("Processing input %d", prereq->id);
+        crm_trace("Processing input %d", prereq->id);
 
         if (prereq->id == action_id) {
-            crm_debug_2("Marking input %d of synapse %d confirmed", action_id, synapse->id);
+            crm_trace("Marking input %d of synapse %d confirmed", action_id, synapse->id);
             prereq->confirmed = TRUE;
             updates = TRUE;
 
@@ -54,7 +54,7 @@ update_synapse_ready(synapse_t * synapse, int action_id)
     }
 
     if (updates) {
-        crm_debug_2("Updated synapse %d", synapse->id);
+        crm_trace("Updated synapse %d", synapse->id);
     }
     return updates;
 }
@@ -73,27 +73,27 @@ update_synapse_confirmed(synapse_t * synapse, int action_id)
     for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         crm_action_t *action = (crm_action_t *) lpc->data;
 
-        crm_debug_3("Processing action %d", action->id);
+        crm_trace("Processing action %d", action->id);
 
         if (action->id == action_id) {
-            crm_debug_2("Confirmed: Action %d of Synapse %d", action_id, synapse->id);
+            crm_trace("Confirmed: Action %d of Synapse %d", action_id, synapse->id);
             action->confirmed = TRUE;
             updates = TRUE;
 
         } else if (action->confirmed == FALSE) {
             is_confirmed = FALSE;
-            crm_debug_3("Synapse %d still not confirmed after action %d", synapse->id, action_id);
+            crm_trace("Synapse %d still not confirmed after action %d", synapse->id, action_id);
         }
     }
 
     if (is_confirmed && synapse->confirmed == FALSE) {
-        crm_debug_2("Confirmed: Synapse %d", synapse->id);
+        crm_trace("Confirmed: Synapse %d", synapse->id);
         synapse->confirmed = TRUE;
         updates = TRUE;
     }
 
     if (updates) {
-        crm_debug_3("Updated synapse %d", synapse->id);
+        crm_trace("Updated synapse %d", synapse->id);
     }
     return updates;
 }
@@ -109,10 +109,10 @@ update_graph(crm_graph_t * graph, crm_action_t * action)
         synapse_t *synapse = (synapse_t *) lpc->data;
 
         if (synapse->confirmed || synapse->failed) {
-            crm_debug_2("Synapse complete");
+            crm_trace("Synapse complete");
 
         } else if (synapse->executed) {
-            crm_debug_2("Synapse executed");
+            crm_trace("Synapse executed");
             rc = update_synapse_confirmed(synapse, action->id);
 
         } else if (action->failed == FALSE || synapse->priority == INFINITY) {
@@ -122,7 +122,7 @@ update_graph(crm_graph_t * graph, crm_action_t * action)
     }
 
     if (updates) {
-        crm_debug_2("Updated graph with completed action %d", action->id);
+        crm_trace("Updated graph with completed action %d", action->id);
     }
     return updates;
 }
@@ -135,15 +135,15 @@ should_fire_synapse(synapse_t * synapse)
     CRM_CHECK(synapse->executed == FALSE, return FALSE);
     CRM_CHECK(synapse->confirmed == FALSE, return FALSE);
 
-    crm_debug_3("Checking pre-reqs for %d", synapse->id);
+    crm_trace("Checking pre-reqs for %d", synapse->id);
     /* lookup prereqs */
     synapse->ready = TRUE;
     for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         crm_action_t *prereq = (crm_action_t *) lpc->data;
 
-        crm_debug_3("Processing input %d", prereq->id);
+        crm_trace("Processing input %d", prereq->id);
         if (prereq->confirmed == FALSE) {
-            crm_debug_3("Inputs for synapse %d not satisfied", synapse->id);
+            crm_trace("Inputs for synapse %d not satisfied", synapse->id);
             synapse->ready = FALSE;
             break;
         }
@@ -164,11 +164,11 @@ initiate_action(crm_graph_t * graph, crm_action_t * action)
 
     action->executed = TRUE;
     if (action->type == action_type_pseudo) {
-        crm_debug_2("Executing pseudo-event: %d", action->id);
+        crm_trace("Executing pseudo-event: %d", action->id);
         return graph_fns->pseudo(graph, action);
 
     } else if (action->type == action_type_rsc) {
-        crm_debug_2("Executing rsc-event: %d", action->id);
+        crm_trace("Executing rsc-event: %d", action->id);
         return graph_fns->rsc(graph, action);
 
     } else if (action->type == action_type_crm) {
@@ -178,11 +178,11 @@ initiate_action(crm_graph_t * graph, crm_action_t * action)
         CRM_CHECK(task != NULL, return FALSE);
 
         if (safe_str_eq(task, CRM_OP_FENCE)) {
-            crm_debug_2("Executing STONITH-event: %d", action->id);
+            crm_trace("Executing STONITH-event: %d", action->id);
             return graph_fns->stonith(graph, action);
         }
 
-        crm_debug_2("Executing crm-event: %d", action->id);
+        crm_trace("Executing crm-event: %d", action->id);
         return graph_fns->crmd(graph, action);
     }
 
@@ -201,7 +201,7 @@ fire_synapse(crm_graph_t * graph, synapse_t * synapse)
     CRM_CHECK(synapse->ready, return FALSE);
     CRM_CHECK(synapse->confirmed == FALSE, return TRUE);
 
-    crm_debug_2("Synapse %d fired", synapse->id);
+    crm_trace("Synapse %d fired", synapse->id);
     synapse->executed = TRUE;
     for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         crm_action_t *action = (crm_action_t *) lpc->data;
@@ -318,18 +318,18 @@ run_graph(crm_graph_t * graph)
     graph->completed = 0;
     graph->incomplete = 0;
     g_hash_table_remove_all(graph->migrating);
-    crm_debug_2("Entering graph %d callback", graph->id);
+    crm_trace("Entering graph %d callback", graph->id);
 
     /* Pre-calculate the number of completed and in-flight operations */
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
 
         if (synapse->confirmed) {
-            crm_debug_3("Synapse %d complete", synapse->id);
+            crm_trace("Synapse %d complete", synapse->id);
             graph->completed++;
 
         } else if (synapse->failed == FALSE && synapse->executed) {
-            crm_debug_2("Synapse %d: confirmation pending", synapse->id);
+            crm_trace("Synapse %d: confirmation pending", synapse->id);
             graph->pending++;
 
             if (graph->migration_limit >= 0) {
@@ -359,11 +359,11 @@ run_graph(crm_graph_t * graph)
         }
 
         if (synapse->priority < graph->abort_priority) {
-            crm_debug_2("Skipping synapse %d: aborting", synapse->id);
+            crm_trace("Skipping synapse %d: aborting", synapse->id);
             graph->skipped++;
 
         } else if (should_fire_synapse(synapse)) {
-            crm_debug_2("Synapse %d fired", synapse->id);
+            crm_trace("Synapse %d fired", synapse->id);
             graph->fired++;
             CRM_CHECK(fire_synapse(graph, synapse), stat_log_level = LOG_ERR;
                       graph->abort_priority = INFINITY; graph->incomplete++; graph->fired--);
@@ -377,7 +377,7 @@ run_graph(crm_graph_t * graph)
             }
 
         } else {
-            crm_debug_2("Synapse %d cannot fire", synapse->id);
+            crm_trace("Synapse %d cannot fire", synapse->id);
             graph->incomplete++;
         }
     }

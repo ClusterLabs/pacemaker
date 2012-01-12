@@ -122,11 +122,11 @@ main(int argc, char **argv)
 #endif
 
             case 'X':
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 xml_string = crm_strdup(optarg);
                 break;
             case 'x':
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 xml_file = crm_strdup(optarg);
                 break;
             case 'p':

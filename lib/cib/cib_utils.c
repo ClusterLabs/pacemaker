@@ -304,11 +304,11 @@ cib_compare_generation(xmlNode * left, xmlNode * right)
         }
 
         if (int_elem_l < int_elem_r) {
-            crm_debug_2("%s (%s < %s)", attributes[lpc], crm_str(elem_l), crm_str(elem_r));
+            crm_trace("%s (%s < %s)", attributes[lpc], crm_str(elem_l), crm_str(elem_r));
             return -1;
 
         } else if (int_elem_l > int_elem_r) {
-            crm_debug_2("%s (%s > %s)", attributes[lpc], crm_str(elem_l), crm_str(elem_r));
+            crm_trace("%s (%s > %s)", attributes[lpc], crm_str(elem_l), crm_str(elem_r));
             return 1;
         }
     }
@@ -472,7 +472,7 @@ create_cib_fragment_adv(xmlNode * update, const char *update_section, const char
 /* 	crm_debug("Creating a blank fragment: %s", update_section); */
 
     if (update == NULL && update_section == NULL) {
-        crm_debug_3("Creating a blank fragment");
+        crm_trace("Creating a blank fragment");
         update = createEmptyCib();
         crm_xml_add(cib, XML_ATTR_ORIGIN, source);
         return update;
@@ -500,7 +500,7 @@ create_cib_fragment_adv(xmlNode * update, const char *update_section, const char
     }
 
     crm_free(local_section);
-    crm_debug_3("Verifying created fragment");
+    crm_trace("Verifying created fragment");
     return cib;
 }
 
@@ -756,7 +756,7 @@ get_channel_token(IPC_Channel * ch, char **token)
     CRM_CHECK(ch != NULL, return cib_missing);
     CRM_CHECK(token != NULL, return cib_output_ptr);
 
-    crm_debug_4("Waiting for msg on command channel");
+    crm_trace("Waiting for msg on command channel");
 
     reg_msg = xmlfromIPC(ch, MAX_IPC_DELAY);
 
@@ -811,7 +811,7 @@ cib_create_op(int call_id, const char *token, const char *op, const char *host, 
         crm_xml_add(op_msg, F_CIB_USER, user_name);
     }
 #endif
-    crm_debug_4("Sending call options: %.8lx, %d", (long)call_options, call_options);
+    crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
     crm_xml_add_int(op_msg, F_CIB_CALLOPTS, call_options);
 
     if (data != NULL) {
@@ -858,7 +858,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         remove_cib_op_callback(call_id, FALSE);
 
     } else {
-        crm_debug_2("No callback found for call %d", call_id);
+        crm_trace("No callback found for call %d", call_id);
         local_blob.callback = NULL;
     }
 
@@ -872,7 +872,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     }
 
     if (local_blob.callback != NULL && (rc == cib_ok || local_blob.only_success == FALSE)) {
-        crm_debug_2("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
+        crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
         local_blob.callback(msg, call_id, rc, output, local_blob.user_data);
 
     } else if (cib && cib->op_callback == NULL && rc != cib_ok) {
@@ -881,10 +881,10 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     }
 
     if (cib && cib->op_callback != NULL) {
-        crm_debug_2("Invoking global callback for call %d", call_id);
+        crm_trace("Invoking global callback for call %d", call_id);
         cib->op_callback(msg, call_id, rc, output);
     }
-    crm_debug_4("OP callback activated.");
+    crm_trace("OP callback activated.");
 }
 
 void
@@ -910,13 +910,13 @@ cib_native_notify(gpointer data, gpointer user_data)
         return;
 
     } else if (safe_str_neq(entry->event, event)) {
-        crm_debug_4("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
+        crm_trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
         return;
     }
 
-    crm_debug_4("Invoking callback for %p/%s event...", entry, event);
+    crm_trace("Invoking callback for %p/%s event...", entry, event);
     entry->callback(event, msg);
-    crm_debug_4("Callback invoked...");
+    crm_trace("Callback invoked...");
 }
 
 gboolean

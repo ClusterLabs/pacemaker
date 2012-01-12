@@ -291,7 +291,7 @@ update_attr_delegate(cib_t * the_cib, int call_options,
             attr_name = attr_id;
         }
 
-        crm_debug_2("Creating %s/%s", section, tag);
+        crm_trace("Creating %s/%s", section, tag);
         if (tag != NULL) {
             xml_obj = create_xml_node(xml_obj, tag);
             crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);

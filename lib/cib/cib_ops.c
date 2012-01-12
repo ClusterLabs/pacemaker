@@ -41,7 +41,7 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     xmlNode *obj_root = NULL;
     enum cib_errors result = cib_ok;
 
-    crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
+    crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
 
     if (options & cib_xpath) {
         return cib_process_xpath(op, options, section, req, input,
@@ -78,7 +78,7 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
 {
     enum cib_errors result = cib_ok;
 
-    crm_debug_2("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event", op);
     *answer = NULL;
     free_xml(*result_cib);
     *result_cib = createEmptyCib();
@@ -101,7 +101,7 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
     const char *value = crm_element_value(existing_cib, XML_ATTR_VALIDATION);;
 
     *answer = NULL;
-    crm_debug_2("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event", op);
 
     if (value != NULL) {
         current_version = get_schema_version(value);
@@ -121,7 +121,7 @@ cib_process_bump(const char *op, int options, const char *section, xmlNode * req
 {
     enum cib_errors result = cib_ok;
 
-    crm_debug_2("Processing \"%s\" event for epoch=%s",
+    crm_trace("Processing \"%s\" event for epoch=%s",
                 op, crm_str(crm_element_value(existing_cib, XML_ATTR_GENERATION)));
 
     *answer = NULL;
@@ -148,7 +148,7 @@ cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
         new_value = crm_strdup("1");
     }
 
-    crm_debug_4("%s %d(%s)->%s", field, int_value, crm_str(old_value), crm_str(new_value));
+    crm_trace("%s %d(%s)->%s", field, int_value, crm_str(old_value), crm_str(new_value));
     crm_xml_add(xml_obj, field, new_value);
 
     crm_free(new_value);
@@ -166,7 +166,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
     gboolean verbose = FALSE;
     enum cib_errors result = cib_ok;
 
-    crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
+    crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
 
     if (options & cib_xpath) {
         return cib_process_xpath(op, options, section, req, input,
@@ -238,7 +238,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         obj_root = get_object_root(section, *result_cib);
         ok = replace_xml_child(NULL, obj_root, input, FALSE);
         if (ok == FALSE) {
-            crm_debug_2("No matching object to replace");
+            crm_trace("No matching object to replace");
             result = cib_NOTEXISTS;
         }
     }
@@ -252,7 +252,7 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
 {
     xmlNode *obj_root = NULL;
 
-    crm_debug_2("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event", op);
 
     if (options & cib_xpath) {
         return cib_process_xpath(op, options, section, req, input,
@@ -270,7 +270,7 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
     crm_validate_data(*result_cib);
 
     if (replace_xml_child(NULL, obj_root, input, TRUE) == FALSE) {
-        crm_debug_2("No matching object to delete");
+        crm_trace("No matching object to delete");
     }
 
     return cib_ok;
@@ -282,7 +282,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 {
     xmlNode *obj_root = NULL;
 
-    crm_debug_2("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event", op);
 
     if (options & cib_xpath) {
         return cib_process_xpath(op, options, section, req, input,
@@ -344,7 +344,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     CRM_CHECK(object_name != NULL, return cib_NOOBJECT);
 
     object_id = ID(update);
-    crm_debug_3("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
 
     if (object_id == NULL) {
         /*  placeholder object */
@@ -358,7 +358,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         target = create_xml_node(parent, object_name);
     }
 
-    crm_debug_2("Found node <%s id=%s> to update", crm_str(object_name), crm_str(object_id));
+    crm_trace("Found node <%s id=%s> to update", crm_str(object_name), crm_str(object_id));
 
     replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
     if (replace != NULL) {
@@ -381,7 +381,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
                 remove = find_xml_node(target, replace_item, FALSE);
                 if (remove != NULL) {
-                    crm_debug_3("Replacing node <%s> in <%s>",
+                    crm_trace("Replacing node <%s> in <%s>",
                                 replace_item, crm_element_name(target));
                     zap_xml_from_parent(target, remove);
                 }
@@ -397,12 +397,12 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     copy_in_properties(target, update);
 
-    crm_debug_3("Processing children of <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Processing children of <%s id=%s>", crm_str(object_name), crm_str(object_id));
 
     for (a_child = __xml_first_child(update); a_child != NULL; a_child = __xml_next(a_child)) {
         int tmp_result = 0;
 
-        crm_debug_3("Updating child <%s id=%s>", crm_element_name(a_child), ID(a_child));
+        crm_trace("Updating child <%s id=%s>", crm_element_name(a_child), ID(a_child));
 
         tmp_result = update_cib_object(target, a_child);
 
@@ -416,7 +416,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         }
     }
 
-    crm_debug_3("Finished with <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Finished with <%s id=%s>", crm_str(object_name), crm_str(object_id));
 
     return result;
 }
@@ -434,7 +434,7 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     }
     object_id = crm_element_value(new_obj, XML_ATTR_ID);
 
-    crm_debug_3("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
 
     if (new_obj == NULL || object_name == NULL) {
         result = cib_NOOBJECT;
@@ -471,7 +471,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     enum cib_errors result = cib_ok;
     xmlNode *update_section = NULL;
 
-    crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
+    crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
     if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
         section = NULL;
 
@@ -548,7 +548,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     int diff_del_epoch = 0;
     int diff_del_admin_epoch = 0;
 
-    crm_debug_2("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event", op);
 
     cib_diff_version_details(input,
                              &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
@@ -652,7 +652,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
         }
 
     } else if (apply_diff) {
-        crm_debug_2("Diff %d.%d.%d -> %d.%d.%d was applied to %d.%d.%d",
+        crm_trace("Diff %d.%d.%d -> %d.%d.%d was applied to %d.%d.%d",
                     diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
                     diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
                     this_admin_epoch, this_epoch, this_updates);
@@ -684,15 +684,15 @@ apply_cib_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
 
     value = crm_element_value(old, XML_ATTR_GENERATION_ADMIN);
     this_admin_epoch = crm_parse_int(value, "0");
-    crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION_ADMIN, this_admin_epoch, value);
+    crm_trace("%s=%d (%s)", XML_ATTR_GENERATION_ADMIN, this_admin_epoch, value);
 
     value = crm_element_value(old, XML_ATTR_GENERATION);
     this_epoch = crm_parse_int(value, "0");
-    crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION, this_epoch, value);
+    crm_trace("%s=%d (%s)", XML_ATTR_GENERATION, this_epoch, value);
 
     value = crm_element_value(old, XML_ATTR_NUMUPDATES);
     this_updates = crm_parse_int(value, "0");
-    crm_debug_3("%s=%d (%s)", XML_ATTR_NUMUPDATES, this_updates, value);
+    crm_trace("%s=%d (%s)", XML_ATTR_NUMUPDATES, this_updates, value);
 
     cib_diff_version_details(diff,
                              &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
@@ -702,17 +702,17 @@ apply_cib_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
     if (result && diff_del_admin_epoch != this_admin_epoch) {
         value = XML_ATTR_GENERATION_ADMIN;
         result = FALSE;
-        crm_debug_3("%s=%d", value, diff_del_admin_epoch);
+        crm_trace("%s=%d", value, diff_del_admin_epoch);
 
     } else if (result && diff_del_epoch != this_epoch) {
         value = XML_ATTR_GENERATION;
         result = FALSE;
-        crm_debug_3("%s=%d", value, diff_del_epoch);
+        crm_trace("%s=%d", value, diff_del_epoch);
 
     } else if (result && diff_del_updates != this_updates) {
         value = XML_ATTR_NUMUPDATES;
         result = FALSE;
-        crm_debug_3("%s=%d", value, diff_del_updates);
+        crm_trace("%s=%d", value, diff_del_updates);
     }
 
     if (result) {
@@ -875,7 +875,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
 
     xmlXPathObjectPtr xpathObj = NULL;
 
-    crm_debug_2("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event", op);
 
     if (is_query) {
         xpathObj = xpath_search(existing_cib, section);

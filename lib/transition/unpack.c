@@ -79,7 +79,7 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
         crm_str_to_boolean(value, &(action->can_fail));
     }
 
-    crm_debug_3("Action %d has timer set to %dms", action->id, action->timeout);
+    crm_trace("Action %d has timer set to %dms", action->id, action->timeout);
 
     return action;
 }
@@ -93,7 +93,7 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
     synapse_t *new_synapse = NULL;
 
     CRM_CHECK(xml_synapse != NULL, return NULL);
-    crm_debug_3("looking in synapse %s", ID(xml_synapse));
+    crm_trace("looking in synapse %s", ID(xml_synapse));
 
     crm_malloc0(new_synapse, sizeof(synapse_t));
     new_synapse->id = crm_parse_int(ID(xml_synapse), NULL);
@@ -107,7 +107,7 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
     CRM_CHECK(new_synapse->id >= 0, crm_free(new_synapse);
               return NULL);
 
-    crm_debug_3("look for actions in synapse %s", crm_element_value(xml_synapse, XML_ATTR_ID));
+    crm_trace("look for actions in synapse %s", crm_element_value(xml_synapse, XML_ATTR_ID));
 
     for (action_set = __xml_first_child(xml_synapse); action_set != NULL;
          action_set = __xml_next(action_set)) {
@@ -123,14 +123,14 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
                 if (new_action == NULL) {
                     continue;
                 }
-                crm_debug_3("Adding action %d to synapse %d", new_action->id, new_synapse->id);
+                crm_trace("Adding action %d to synapse %d", new_action->id, new_synapse->id);
 
                 new_synapse->actions = g_list_append(new_synapse->actions, new_action);
             }
         }
     }
 
-    crm_debug_3("look for inputs in synapse %s", ID(xml_synapse));
+    crm_trace("look for inputs in synapse %s", ID(xml_synapse));
 
     for (inputs = __xml_first_child(xml_synapse); inputs != NULL; inputs = __xml_next(inputs)) {
         if (crm_str_eq((const char *)inputs->name, "inputs", TRUE)) {
@@ -147,7 +147,7 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
                         continue;
                     }
 
-                    crm_debug_3("Adding input %d to synapse %d", new_input->id, new_synapse->id);
+                    crm_trace("Adding input %d to synapse %d", new_input->id, new_synapse->id);
 
                     new_synapse->inputs = g_list_append(new_synapse->inputs, new_input);
                 }

@@ -69,7 +69,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, IPC_Channel * sender)
     const char *op = crm_element_value(msg, F_CRM_TASK);
     const char *ref = crm_element_value(msg, XML_ATTR_REFERENCE);
 
-    crm_debug_3("Processing %s op (ref=%s)...", op, ref);
+    crm_trace("Processing %s op (ref=%s)...", op, ref);
 
     if (op == NULL) {
         /* error */
@@ -81,7 +81,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, IPC_Channel * sender)
         /* ignore */
 
     } else if (sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
-        crm_debug_3("Bad sys-to %s", crm_str(sys_to));
+        crm_trace("Bad sys-to %s", crm_str(sys_to));
         return FALSE;
 
     } else if (strcasecmp(op, CRM_OP_PECALC) == 0) {
@@ -255,7 +255,7 @@ do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * no
         crm_trace("Already have status - reusing");
     }
 
-    crm_debug_5("Calculate cluster status");
+    crm_trace("Calculate cluster status");
     stage0(data_set);
 
     gIter = data_set->resources;

@@ -231,7 +231,7 @@ cib_connect(gboolean full)
     }
 
     if (cib->state != cib_connected_query && cib->state != cib_connected_command) {
-        crm_debug_4("Connecting to the CIB");
+        crm_trace("Connecting to the CIB");
         if (as_console && need_pass && cib->variant == cib_remote) {
             need_pass = FALSE;
             print_as("Password:");
@@ -1388,7 +1388,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
 	    if(s_rc != 0) {						\
 		crm_err("Could not add %s=%s rc=%d", oid_string, value, s_rc); \
 	    } else {							\
-		crm_debug_2("Added %s=%s", oid_string, value);		\
+		crm_trace("Added %s=%s", oid_string, value);		\
 	    }								\
 	} else {							\
 	    crm_err("Could not parse OID: %s", oid_string);		\
@@ -1404,7 +1404,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
 		   (u_char *) & value, sizeof(value))) {		\
 		crm_err("Could not add %s=%d", oid_string, value);	\
 	    } else {							\
-		crm_debug_2("Added %s=%d", oid_string, value);		\
+		crm_trace("Added %s=%d", oid_string, value);		\
 	    }								\
 	} else {							\
 	    crm_err("Could not parse OID: %s", oid_string);		\
@@ -1672,7 +1672,7 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
         execl(external_agent, external_agent, NULL);
     }
 
-    crm_debug_2("Finished running custom notification program '%s'.", external_agent);
+    crm_trace("Finished running custom notification program '%s'.", external_agent);
     crm_free(target_rc_s);
     crm_free(status_s);
     crm_free(rc_s);
