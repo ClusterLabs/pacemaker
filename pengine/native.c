@@ -1723,7 +1723,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set)
 
     if (is_not_set(rsc->flags, pe_rsc_managed)
         || (current == NULL && next == NULL)) {
-        crm_notice("Leave   %s\t(%s%s)",
+        crm_info("Leave   %s\t(%s%s)",
                    rsc->id, role2text(rsc->role), is_not_set(rsc->flags,
                                                              pe_rsc_managed) ? " unmanaged" : "");
         return;
@@ -1768,7 +1768,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set)
             crm_notice("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
         } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
-            crm_notice("Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            crm_info("Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
         } else if (moving && current) {
             crm_notice("Move    %s\t(%s %s -> %s)",
