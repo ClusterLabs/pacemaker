@@ -38,6 +38,7 @@
 #include <grp.h>
 #include <time.h>
 #include <libgen.h>
+#include <sys/utsname.h>
 
 #if LIBQB_LOGGING
 #  include <qb/qbdefs.h>
@@ -515,7 +516,12 @@ void set_format_string(int method, const char *daemon, gboolean trace)
     char fmt[FMT_MAX];
     if(method > QB_LOG_STDERR) {
         /* When logging to a file */
-        offset += snprintf(fmt+offset, FMT_MAX-offset, "%%t %-10s[%d] ", daemon, getpid());
+        struct utsname res;
+        if (uname(&res) == 0) {
+            offset += snprintf(fmt+offset, FMT_MAX-offset, "%%t [%d] %s %10s: ", getpid(), res.nodename, daemon);
+        } else {
+            offset += snprintf(fmt+offset, FMT_MAX-offset, "%%t [%d] %10s: ", getpid(), daemon);
+        }
     }
     
     if(trace) {
