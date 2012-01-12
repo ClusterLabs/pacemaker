@@ -21,6 +21,7 @@
 
 #include <pwd.h>
 
+#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <clplumbing/proctrack.h>
 
@@ -480,6 +481,17 @@ pcmk_client_msg(IPC_Channel * client, gpointer user_data)
         }
 
         msg = xmlfromIPC(client, MAX_IPC_DELAY);
+
+        if(msg) {
+            const char *task = crm_element_value(msg, F_CRM_TASK);
+            if(crm_str_eq(task, CRM_OP_QUIT, TRUE)) {
+                /* Time to quit */
+                crm_notice("Shutting down in responce to ticket %s (%s)",
+                           crm_element_value(msg, XML_ATTR_REFERENCE),
+                           crm_element_value(msg, F_CRM_ORIGIN));
+                pcmk_shutdown(15);
+            }
+        }
         free_xml(msg);
 
         if (client->ch_status != IPC_CONNECT) {
@@ -619,6 +631,7 @@ static struct crm_option long_options[] = {
     {"help",           0, 0, '?', "\tThis text"},
     {"version",        0, 0, '$', "\tVersion information"  },
     {"verbose",        0, 0, 'V', "\tIncrease debug output"},
+    {"shutdown",       0, 0, 'S', "\tInstruct Pacemaker to shutdown on this machine"},
     {"features",       0, 0, 'F', "\tDisplay the full version and list of features Pacemaker was built with"},
 
     {"-spacer-",       1, 0, '-', "\nAdditional Options:"},
@@ -637,6 +650,7 @@ main(int argc, char **argv)
     int argerr = 0;
 
     int option_index = 0;
+    gboolean shutdown = FALSE;
     gboolean daemonize = TRUE;
 
     int start_seq = 1, lpc = 0;
@@ -645,6 +659,7 @@ main(int argc, char **argv)
     uid_t pcmk_uid = 0;
     gid_t pcmk_gid = 0;
     struct rlimit cores;
+    IPC_Channel *old_instance = NULL;
 
 /* *INDENT-OFF* */
     /* =::=::= Default Environment =::=::= */
@@ -683,6 +698,9 @@ main(int argc, char **argv)
             case '?':
                 crm_help(flag, LSB_EXIT_OK);
                 break;
+            case 'S':
+                shutdown = TRUE;
+                break;
             case 'F':
                 printf("Pacemaker %s (Build: %s)\n Supporting: %s\n", VERSION, BUILD_VERSION,
                        CRM_FEATURES);
@@ -702,6 +720,30 @@ main(int argc, char **argv)
     }
     if (argerr) {
         crm_help('?', LSB_EXIT_GENERIC);
+    }
+
+    crm_debug("Checking for old instances of %s", crm_system_name);
+    old_instance = init_client_ipc_comms_nodispatch(ipc_name);
+    
+    if(shutdown) {
+        while (old_instance != NULL) {
+            xmlNode *cmd = create_request(CRM_OP_QUIT, NULL, NULL, crm_system_name, crm_system_name, NULL);
+
+            crm_debug("Terminating previous instance");
+            send_ipc_message(old_instance, cmd);
+            free_xml(cmd);
+
+            sleep(2);
+
+            old_instance->ops->destroy(old_instance);
+            old_instance = init_client_ipc_comms_nodispatch(ipc_name);
+        }
+        exit(0);
+
+    } else if(old_instance != NULL) {
+        old_instance->ops->destroy(old_instance);
+        crm_err("Pacemaker is already active, aborting startup");
+        exit(100);
     }
 
     if (read_config() == FALSE) {
