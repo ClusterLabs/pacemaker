@@ -578,6 +578,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
         }
     }
 
+    crm_trace("Payload: %s", data);
     if (dispatch != NULL) {
         dispatch(msg, data, 0);
     }
@@ -672,8 +673,11 @@ pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
 
                 crm_element_value_int(node, "id", &id);
                 crm_element_value_int(node, "processes", &children);
-
-                crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+                if(id == 0) {
+                    crm_log_xml_err(msg, "Bad Update");
+                } else {
+                    crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+                }
             }
             free_xml(msg);
         }

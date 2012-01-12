@@ -207,6 +207,7 @@ crm_new_peer(unsigned int id, const char *uname)
 {
     crm_node_t *node = NULL;
 
+    CRM_CHECK(id > 0, return NULL);
     CRM_CHECK(uname != NULL || id > 0, return NULL);
 
     crm_debug("Creating entry for node %s/%u", uname, id);
@@ -299,6 +300,7 @@ crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, ui
 
     node = crm_get_peer(id, uname);
     if (node == NULL) {
+        crm_trace("No node found for %d/%s", id, uname);
         node = crm_new_peer(id, uname);
 
         /* do it now so we don't get '(new)' everywhere */
