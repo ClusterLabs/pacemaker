@@ -384,7 +384,10 @@ static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
             st_query_result_t *peer = iter->data;
             if(is_set(op->call_options, st_opt_topology)) {
                 /* Do they have the next device of the current fencing level? */
-                GListPtr match = g_list_find_custom(peer->device_list, op->devices->data, sort_strings);
+                GListPtr match = NULL;
+                if(op->devices) {
+                    match = g_list_find_custom(peer->device_list, op->devices->data, sort_strings);
+                }
                 if(match) {
                     crm_trace("Removing %s from %s (%d remaining)", match->data, peer->host, g_list_length(peer->device_list));
                     peer->device_list = g_list_remove(peer->device_list, match->data);
