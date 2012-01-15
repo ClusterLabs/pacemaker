@@ -920,9 +920,10 @@ stonith_error2string(enum stonith_errors return_code)
             error_msg = "Execution of the stonith agent failed";
             break;
         case st_err_invalid_target:
-            error_msg = "";
+            error_msg = "Invalid target";
+            break;
         case st_err_invalid_level:
-            error_msg = "";
+            error_msg = "Invalid fencing level specified";
             break;
     }
 
