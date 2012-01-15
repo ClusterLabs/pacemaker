@@ -424,7 +424,7 @@
       <para>
 	To make things easier, we allow an alternate form of colocation constraints using <literal>resource_sets</literal>.
 	Just like the expanded version, a resource that can't be active also prevents any resource that must be collocated with it from being active.
-	For example, if <literal>B was</literal> not able to run, then both <literal>C (</literal>and by inference <literal>D)</literal> must also remain stopped.
+	For example, if <literal>B</literal> was not able to run, then both <literal>C</literal> (and by inference <literal>D</literal>) must also remain stopped.
       </para>
       <example>
 	<title>The equivalent colocation chain expressed using <literal>resource_sets</literal></title>
@@ -451,7 +451,7 @@
       </example>
       <para>
 	This notation can also be used in this context to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other.
-	In this scenario, unlike the previous, <literal>B would</literal> be allowed to remain active even if <literal>A or</literal> <literal>C</literal> (or both) were inactive.
+	In this scenario, unlike the previous, <literal>B</literal> would be allowed to remain active even if <literal>A</literal> or <literal>C</literal> (or both) were inactive.
       </para>
       <example>
 	<title>Using colocation sets to specify a common peer. </title>

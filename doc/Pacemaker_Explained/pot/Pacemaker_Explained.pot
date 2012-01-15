@@ -1,9 +1,12 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2012-01-01T17:48:32\n"
-"PO-Revision-Date: 2012-01-01T17:48:32\n"
-"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2012-01-01T17:48:37\n"
+"PO-Revision-Date: 2012-01-01T17:48:37\n"
+"Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
@@ -12,45 +15,45 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Receiving Notification for Cluster Events"
-msgstr "Primirea de Notificări ale Evenimentelor Clusterului"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
 msgid "Configuring Email Notifications"
-msgstr "Configurarea de Notificări pe Email"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
 msgid "Configuring SNMP Notifications"
-msgstr "Configurarea de Notificări pe SNMP"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
 msgid "Further Reading"
-msgstr "Documentaţie Adiţională"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Project Website <ulink url=\"http://www.clusterlabs.org/\" />"
-msgstr "Site-ul Proiectului <ulink url=\"http://www.corosync.org/\" />"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Project Documentation <ulink url=\"http://www.clusterlabs.org/wiki/Documentation\" />"
-msgstr "Documentaţia Proiectului <ulink url=\"http://www.clusterlabs.org/wiki/Documentation\" />"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "A comprehensive guide to cluster commands has been written by Novell<footnote><para><ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\" /></para></footnote>"
-msgstr "Un ghid comprehensiv al comenzilor clusterului a fost scris de Novell şi poate fi găsit la: <ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\" />"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Heartbeat configuration: <ulink url=\"http://www.linux-ha.org/\" />"
-msgstr "Configuraţia Heartbeat: <ulink url=\"http://www.linux-ha.org/\" />"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Corosync Configuration: <ulink url=\"http://www.corosync.org/\" />"
-msgstr "Configuraţia Corosync: <ulink url=\"http://www.corosync.org/\" />"
+msgstr ""
 
