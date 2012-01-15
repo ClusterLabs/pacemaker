@@ -547,6 +547,9 @@ write_cib_contents(gpointer p)
     char *digest_file = NULL;
     char *primary_file = NULL;
 
+    char *backup_file = NULL;
+    char *backup_digest = NULL;
+
     const char *epoch = NULL;
     const char *admin_epoch = NULL;
 
@@ -584,8 +587,6 @@ write_cib_contents(gpointer p)
     need_archive = (stat(primary_file, &buf) == 0);
     if (need_archive) {
         int rc = 0;
-        char *backup_file = NULL;
-        char *backup_digest = NULL;
         int seq = get_last_sequence(cib_root, CIB_SERIES);
 
         /* check the admin didnt modify it underneath us */
@@ -620,9 +621,6 @@ write_cib_contents(gpointer p)
         sync_directory(cib_root);
 
         crm_info("Archived previous version as %s", backup_file);
-
-        crm_free(backup_digest);
-        crm_free(backup_file);
     }
 
     /* Given that we discard the status section on startup
@@ -670,7 +668,9 @@ write_cib_contents(gpointer p)
     sync_directory(cib_root);
 
   cleanup:
+    crm_free(backup_digest);
     crm_free(primary_file);
+    crm_free(backup_file);
     crm_free(digest_file);
     crm_free(digest);
     crm_free(tmp2);
