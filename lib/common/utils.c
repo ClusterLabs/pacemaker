@@ -512,6 +512,7 @@ crm_log_init_quiet(const char *entity, int level, gboolean coredir, gboolean to_
 #define FMT_MAX 256
 void set_format_string(int method, const char *daemon, gboolean trace) 
 {
+#if LIBQB_LOGGING
     int offset = 0;
     char fmt[FMT_MAX];
     if(method > QB_LOG_STDERR) {
@@ -535,7 +536,6 @@ void set_format_string(int method, const char *daemon, gboolean trace)
     } else {
         offset += snprintf(fmt+offset, FMT_MAX-offset, "\t%%b");
     }
-#if LIBQB_LOGGING
     qb_log_format_set(method, fmt);
 #endif
 }
