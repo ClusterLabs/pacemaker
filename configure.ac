@@ -1158,7 +1158,7 @@ else
     AC_DEFINE_UNQUOTED(HAVE_CMAP, $HAVE_cmap, Have the new non-herarchial Corosync config API)
 fi
 
-if test $SUPPORT_CS = 1 -a $HAVE_cmap = 1; then
+if test $SUPPORT_CS = 1 -a x$HAVE_cmap = x1; then
     dnl Support for plugins was removed about the time the cmap API was added
     dnl The only option now is the built-in quorum API
     CFLAGS="$CFLAGS $cmap_CFLAGS $quorum_CFLAGS"
@@ -1168,7 +1168,7 @@ if test $SUPPORT_CS = 1 -a $HAVE_cmap = 1; then
     AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
 fi
 
-if test $SUPPORT_CS = 1 -a $HAVE_confdb = 1; then
+if test $SUPPORT_CS = 1 -a x$HAVE_confdb = x1; then
     dnl Need confdb to support cman and the plugins
     LCRSODIR=`$PKGCONFIG corosync --variable=lcrsodir`
     STACKS="$STACKS corosync-plugin"
@@ -1192,7 +1192,7 @@ fi
 if test $SUPPORT_CS = 1; then
     CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
 
-else
+elif test $SUPPORT_CS != no; then
     SUPPORT_CS=0
     if test $missingisfatal = 0; then
         AC_MSG_WARN(Unable to support Corosync: $aisreason) 
