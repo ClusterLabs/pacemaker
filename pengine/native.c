@@ -2700,11 +2700,11 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
     }
 
     if(start == NULL || stop == NULL) {
-        crm_trace("%s: not moving %p -> %p", rsc->id, stop->node, start->node);
+        crm_trace("%s: not exists %p -> %p", rsc->id, stop, start);
         return;
         
     } else if (start->node == NULL || stop->node == NULL) {
-        crm_trace("%s: not moving %p -> %p", rsc->id, stop->node, start->node);
+        crm_trace("%s: no node %p -> %p", rsc->id, stop->node, start->node);
         return;
 
     } else if(is_set(stop->flags, pe_action_optional)) {
