@@ -1025,7 +1025,9 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     clone_variant_data_t *clone_data = NULL;
     clone_variant_data_t *clone_data_lh = NULL;
 
-    CRM_CHECK(rsc_lh != NULL, return);
+    CRM_CHECK(constraint != NULL, return);
+    CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
+    CRM_CHECK(rsc_rh != NULL, pe_err("rsc_rh was NULL for %s", constraint->id); return);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
     get_clone_variant_data(clone_data, constraint->rsc_rh);
@@ -1047,11 +1049,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
         }
     }
 
-    if (rsc_rh == NULL) {
-        pe_err("rsc_rh was NULL for %s", constraint->id);
-        return;
-
-    } else if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
+    if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
         crm_trace("%s is still provisional", rsc_rh->id);
         return;
 
