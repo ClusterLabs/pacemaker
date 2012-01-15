@@ -658,9 +658,14 @@ if (rc != CS_OK) {
         }
     }
 
-    setenv("HA_logfacility", logging_syslog_facility, 1);
-    setenv("HA_LOGFACILITY", logging_syslog_facility, 1);
-
+    if(logging_syslog_facility) {
+        setenv("HA_logfacility", logging_syslog_facility, 1);
+        setenv("HA_LOGFACILITY", logging_syslog_facility, 1);
+    } else {
+        unsetenv("HA_logfacility");
+        unsetenv("HA_LOGFACILITY");
+    }
+    
     free(logging_debug);
     free(logging_logfile);
     free(logging_to_logfile);
