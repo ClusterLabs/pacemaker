@@ -285,8 +285,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
     if (safe_str_neq(digest_all_calc, digest_all)) {
         /* Changes that can potentially be handled by a reload */
-        action_t *op = NULL;
-
         did_change = TRUE;
         crm_log_xml_info(params_all, "params:reload");
         crm_info("Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
@@ -295,6 +293,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
                  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 
         if (interval > 0) {
+            action_t *op = NULL;
 #if 0
             /* Always reload/restart the entire resource */
             op = custom_action(rsc, start_key(rsc), RSC_START, NULL, FALSE, TRUE, data_set);
@@ -315,7 +314,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
             /* Create these for now, it keeps the action IDs the same in the regression outputs */
             key = generate_op_key(rsc->id, task, interval);
-            op = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
+            custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
 
         } else {
             crm_trace("Resource %s doesn't know how to reload", rsc->id);
