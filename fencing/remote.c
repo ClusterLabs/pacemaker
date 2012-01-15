@@ -497,8 +497,6 @@ int process_remote_stonith_query(xmlNode *msg)
     CRM_CHECK(dev != NULL, return st_err_internal);
     crm_element_value_int(dev, "st-available-devices", &devices);
 
-    host = crm_element_value_copy(msg, F_ORIG);
-
     op = g_hash_table_lookup(remote_op_list, id);
     if(op == NULL) {
 	crm_debug("Unknown or expired remote op: %s", id);
@@ -506,6 +504,8 @@ int process_remote_stonith_query(xmlNode *msg)
     }
 
     op->replies++;
+    host = crm_element_value(msg, F_ORIG);
+
     if(devices <= 0) {
         /* If we're doing 'known' then we might need to fire anyway */
         return stonith_ok;
@@ -520,7 +520,7 @@ int process_remote_stonith_query(xmlNode *msg)
 
     crm_trace("Query result from %s (%d devices)", host, devices);
     crm_malloc0(result, sizeof(st_query_result_t));
-    result->host = host;
+    result->host = crm_strdup(host);
     result->devices = devices;
 
     for (child = __xml_first_child(dev); child != NULL; child = __xml_next(child)) {
