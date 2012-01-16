@@ -1,0 +1,50 @@
+<cib epoch="1" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.1" cib-last-written="Thu Mar 24 16:15:36 2011" have-quorum="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+	<nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" type="normal" uname="node1"/>
+      <node id="node2" type="normal" uname="node2"/>
+    </nodes>
+    <resources>
+      <template class="ocf" id="template1" provider="pacemaker" type="Dummy"/>
+      <primitive id="rsc1" template="template1"/>
+      <primitive id="rsc2" template="template1"/>
+      <primitive id="rsc3" template="template1"/>
+      <primitive class="ocf" id="rsc4" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="rsc5" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_colocation id="template1-colo" score="INFINITY">
+        <resource_set id="template1-colo-0">
+          <resource_ref id="rsc5"/>
+        </resource_set>
+        <resource_set id="template1-colo-1" sequential="true">
+          <resource_ref id="template1"/>
+        </resource_set>
+        <resource_set id="template1-colo-2">
+          <resource_ref id="rsc4"/>
+        </resource_set>
+      </rsc_colocation>
+      <rsc_order id="template1-order" score="INFINITY">
+        <resource_set id="template1-order-0">
+          <resource_ref id="rsc4"/>
+        </resource_set>
+        <resource_set id="template1-order-1" sequential="true">
+          <resource_ref id="template1"/>
+        </resource_set>
+        <resource_set id="template1-order-2">
+          <resource_ref id="rsc5"/>
+        </resource_set>
+      </rsc_order>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node2" uname="node2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+  </status>
+</cib>
