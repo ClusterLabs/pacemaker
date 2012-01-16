@@ -1736,8 +1736,8 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
     if (max == 0) {
         return;
     }
-    while (max > 0 && sequence > max) {
-        sequence -= max;
+    if (sequence >= max) {
+        sequence = 0;
     }
 
     len += strlen(directory);
