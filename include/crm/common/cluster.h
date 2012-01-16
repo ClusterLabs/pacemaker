@@ -35,6 +35,9 @@ extern unsigned long long crm_peer_seq;
 
 extern void crm_peer_init(void);
 extern void crm_peer_destroy(void);
+extern char *get_corosync_uuid(uint32_t id, const char *uname);
+extern const char *get_node_uuid(uint32_t id, const char *uname);
+extern int get_corosync_id(int id, const char *uuid);
 
 extern gboolean crm_cluster_connect(char **our_uname, char **our_uuid, void *dispatch,
                                     void *destroy,

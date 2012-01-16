@@ -40,7 +40,137 @@ CRM_TRACE_INIT_DATA(cluster);
 void *hb_library = NULL;
 #endif
 
+static GHashTable *crm_uuid_cache = NULL;
+static GHashTable *crm_uname_cache = NULL;
+
 xmlNode *create_common_message(xmlNode * original_request, xmlNode * xml_response_data);
+
+static char *get_heartbeat_uuid(uint32_t unused, const char *uname) 
+{
+    char *uuid_calc = NULL;
+#if SUPPORT_HEARTBEAT
+    cl_uuid_t uuid_raw;
+    const char *unknown = "00000000-0000-0000-0000-000000000000";
+
+    if (heartbeat_cluster == NULL) {
+        crm_warn("No connection to heartbeat, using uuid=uname");
+        return NULL;
+    }
+
+    if (heartbeat_cluster->llc_ops->get_uuid_by_name(heartbeat_cluster, uname, &uuid_raw) ==
+        HA_FAIL) {
+        crm_err("get_uuid_by_name() call failed for host %s", uname);
+        crm_free(uuid_calc);
+        return NULL;
+    }
+
+    crm_malloc0(uuid_calc, 50);
+    cl_uuid_unparse(&uuid_raw, uuid_calc);
+
+    if (safe_str_eq(uuid_calc, unknown)) {
+        crm_warn("Could not calculate UUID for %s", uname);
+        crm_free(uuid_calc);
+        return NULL;
+    }
+#endif
+    return uuid_calc;
+}
+
+static gboolean uname_is_uuid(void) 
+{
+    static const char *uuid_pref = NULL;
+
+    if(uuid_pref == NULL) {
+        uuid_pref = getenv("PCMK_uname_is_uuid");
+    }
+
+    if(uuid_pref == NULL) {
+        /* true is legacy mode */
+        uuid_pref = "false";
+    }
+
+    return crm_is_true(uuid_pref);
+}
+
+int get_corosync_id(int id, const char *uuid) 
+{
+    if(id == 0 && !uname_is_uuid() && is_corosync_cluster()) {
+        id = crm_atoi(uuid, "0");
+    }
+    
+    return id;
+}
+
+char *
+get_corosync_uuid(uint32_t id, const char *uname) 
+{
+    if(!uname_is_uuid() && is_corosync_cluster()) {
+        if(id <= 0) {
+            /* Try the membership cache... */
+            crm_node_t *node = g_hash_table_lookup(crm_peer_cache, uname);
+            if(node != NULL) {
+                id = node->id;
+            }
+        }
+
+        if(id > 0) {
+            return crm_itoa(id);
+        } else {
+            crm_warn("Node %s is not yet known by corosync", uname);
+        }
+
+    } else if(uname != NULL) {
+        return crm_strdup(uname);
+    }
+
+    return NULL;
+}
+
+const char *
+get_node_uuid(uint32_t id, const char *uname) 
+{
+    char *uuid = NULL;
+    enum cluster_type_e type = get_cluster_type();
+
+    CRM_CHECK(uname != NULL, return NULL);
+
+    if (crm_uuid_cache == NULL) {
+        crm_uuid_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                               g_hash_destroy_str, g_hash_destroy_str);
+    }
+
+    /* avoid blocking heartbeat calls where possible */
+    uuid = g_hash_table_lookup(crm_uuid_cache, uname);
+    if (uuid != NULL) {
+        return uuid;
+    }
+
+    switch (type) {
+        case pcmk_cluster_corosync:
+            uuid = get_corosync_uuid(id, uname);
+            break;
+
+        case pcmk_cluster_cman:
+        case pcmk_cluster_classic_ais:
+            uuid = crm_strdup(uname);
+            break;
+            
+        case pcmk_cluster_heartbeat:
+            uuid = get_heartbeat_uuid(id, uname);
+
+        case pcmk_cluster_unknown:
+        case pcmk_cluster_invalid:
+            crm_err("Unsupported cluster type");
+            break;
+    }
+
+    if(uuid == NULL) {
+        return NULL;
+    }
+    
+    g_hash_table_insert(crm_uuid_cache, crm_strdup(uname), uuid);
+    return g_hash_table_lookup(crm_uuid_cache, uname);
+}
 
 gboolean
 crm_cluster_connect(char **our_uname, char **our_uuid, void *dispatch, void *destroy,
@@ -131,9 +261,6 @@ send_cluster_message(const char *node, enum crm_ais_msg_types service, xmlNode *
     return FALSE;
 }
 
-static GHashTable *crm_uuid_cache = NULL;
-static GHashTable *crm_uname_cache = NULL;
-
 void
 empty_uuid_cache(void)
 {
@@ -155,63 +282,7 @@ unget_uuid(const char *uname)
 const char *
 get_uuid(const char *uname)
 {
-    char *uuid_calc = NULL;
-
-    CRM_CHECK(uname != NULL, return NULL);
-
-    if (crm_uuid_cache == NULL) {
-        crm_uuid_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                               g_hash_destroy_str, g_hash_destroy_str);
-    }
-
-    CRM_CHECK(uname != NULL, return NULL);
-
-    /* avoid blocking calls where possible */
-    uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
-    if (uuid_calc != NULL) {
-        return uuid_calc;
-    }
-#if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        uuid_calc = crm_strdup(uname);
-        goto fallback;
-    }
-#endif
-#if SUPPORT_HEARTBEAT
-    if (is_heartbeat_cluster()) {
-        cl_uuid_t uuid_raw;
-        const char *unknown = "00000000-0000-0000-0000-000000000000";
-
-        if (heartbeat_cluster == NULL) {
-            crm_warn("No connection to heartbeat, using uuid=uname");
-            uuid_calc = crm_strdup(uname);
-            goto fallback;
-        }
-
-        if (heartbeat_cluster->llc_ops->get_uuid_by_name(heartbeat_cluster, uname, &uuid_raw) ==
-            HA_FAIL) {
-            crm_err("get_uuid_by_name() call failed for host %s", uname);
-            crm_free(uuid_calc);
-            return NULL;
-        }
-
-        crm_malloc0(uuid_calc, 50);
-        cl_uuid_unparse(&uuid_raw, uuid_calc);
-
-        if (safe_str_eq(uuid_calc, unknown)) {
-            crm_warn("Could not calculate UUID for %s", uname);
-            crm_free(uuid_calc);
-            return NULL;
-        }
-    }
-#endif
-    goto fallback;
-
-  fallback:
-    g_hash_table_insert(crm_uuid_cache, crm_strdup(uname), uuid_calc);
-    uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
-
-    return uuid_calc;
+    return get_node_uuid(0, uname);
 }
 
 const char *

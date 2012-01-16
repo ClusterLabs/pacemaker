@@ -1,5 +1,9 @@
 # For non-systemd based systems, prefix export to each enabled line
 
+# Enable this for compatibility with older corosync (prior to 2.0)
+# based clusters which used the nodes uname as its uuid also
+# PCMK_uname_is_uuid=no
+
 # Variables that control logging
 # PCMK_trace_functions=function1,function2,function3
 # PCMK_trace_formats="Sent delete %d"

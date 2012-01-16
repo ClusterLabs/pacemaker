@@ -1251,7 +1251,7 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
     }
 
     if (our_uuid != NULL) {
-        *our_uuid = crm_strdup(pcmk_uname);
+        *our_uuid = get_corosync_uuid(pcmk_nodeid, pcmk_uname);
     }
 
     if (our_uname != NULL) {

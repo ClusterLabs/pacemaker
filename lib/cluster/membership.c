@@ -294,6 +294,8 @@ crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, ui
 
     crm_node_t *node = NULL;
 
+    id = get_corosync_id(id, uuid);
+
     CRM_CHECK(uname != NULL || id > 0, return NULL);
     CRM_ASSERT(crm_peer_cache != NULL);
     CRM_ASSERT(crm_peer_id_cache != NULL);
@@ -317,11 +319,12 @@ crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, ui
     }
 
     if (node->uuid == NULL) {
-        if (uuid != NULL) {
-            node->uuid = crm_strdup(uuid);
+        if (is_openais_cluster()) {
+            /* Yes, overrule whatever was passed in */
+            node->uuid = get_corosync_uuid(id, uname);
 
-        } else if (node->uname != NULL && is_openais_cluster()) {
-            node->uuid = crm_strdup(node->uname);
+        } else if (uuid != NULL) {
+            node->uuid = crm_strdup(uuid);
         }
     }
 
