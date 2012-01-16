@@ -291,8 +291,7 @@ msgstr "Un exemplu de resursă LSB"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"/&gt;\n"
+msgid "&lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"/&gt;\n"
 "	"
 msgstr ""
 "&lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"/&gt;\n"
@@ -315,8 +314,7 @@ msgstr "Un exemplu de resursă OCF"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+msgid "&lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "     &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
 "        &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
 "     &lt;/instance_attributes&gt;\n"
@@ -340,8 +338,7 @@ msgstr "Un exemplu de resursă Heartbeat"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;primitive id=\"Public-IP-legacy\" class=\"heartbeat\" type=\"IPaddr\"&gt;\n"
+msgid " &lt;primitive id=\"Public-IP-legacy\" class=\"heartbeat\" type=\"IPaddr\"&gt;\n"
 "     &lt;instance_attributes id=\"params-public-ip-legacy\"&gt;\n"
 "        &lt;nvpair id=\"public-ip-addr-legacy\" name=\"1\" value=\"1.2.3.4\"/&gt;\n"
 "     &lt;/instance_attributes&gt;\n"
@@ -520,8 +517,7 @@ msgstr "Dacă aţi efectuat următoarele comenzi pe resursa LSB Email anterioar�
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<command>crm_resource --meta --resource Email --set-parameter priority --property-value 100</command>\n"
+msgid "<command>crm_resource --meta --resource Email --set-parameter priority --property-value 100</command>\n"
 "	<command>crm_resource --meta --resource Email --set-parameter multiple-active --property-value block</command>\n"
 "      "
 msgstr ""
@@ -541,8 +537,7 @@ msgstr "O resursă LSB cu opţiuni ale clusterului"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"&gt;\n"
+msgid "&lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"&gt;\n"
 "     &lt;meta_attributes id=\"meta-email\"&gt;\n"
 "        &lt;nvpair id=\"email-priority\" name=\"priority\" value=\"100\"/&gt;\n"
 "        &lt;nvpair id=\"email-active\" name=\"multiple-active\" value=\"block\"/&gt;\n"
@@ -608,8 +603,7 @@ msgstr "Un exemplu de resursă OCF cu atribute de instanţă"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+msgid " &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "    &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
 "       &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
 "    &lt;/instance_attributes&gt;\n"
@@ -638,8 +632,7 @@ msgstr "Afişarea metadata pentru template-ul agentului de resursă Dummy"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<userinput>export OCF_ROOT=/usr/lib/ocf; $OCF_ROOT/resource.d/pacemaker/Dummy meta-data</userinput>\n"
+msgid "<userinput>export OCF_ROOT=/usr/lib/ocf; $OCF_ROOT/resource.d/pacemaker/Dummy meta-data</userinput>\n"
 " &lt;?xml version=\"1.0\"?&gt;\n"
 "  &lt;!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\"&gt;\n"
 "  &lt;resource-agent name=\"Dummy\" version=\"0.9\"&gt;\n"
@@ -747,8 +740,7 @@ msgstr "O resursă OCF cu o verificare recurentă a sănătăţii"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+msgid " &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "    &lt;operations&gt;\n"
 "     &lt;op id=\"public-ip-check\" name=\"monitor\" interval=\"60s\"/&gt;\n"
 "    &lt;/operations&gt;\n"
@@ -933,8 +925,7 @@ msgstr "O resursă OCF cu intervale customizate pentru acţiunile implicite ale 
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+msgid " &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "    &lt;operations&gt;\n"
 "     &lt;op id=\"public-ip-startup\" name=\"monitor\" interval=\"0\" timeout=\"90s\"/&gt;\n"
 "     &lt;op id=\"public-ip-start\" name=\"start\" interval=\"0\" timeout=\"180s\"/&gt;\n"
@@ -983,8 +974,7 @@ msgstr "O resursă OCF cu două verificări de sănătate recurente, efectuând 
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+msgid " &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "    &lt;operations&gt;\n"
 "     &lt;op id=\"public-ip-health-60\" name=\"monitor\" interval=\"60\"&gt;\n"
 "       &lt;instance_attributes id=\"params-public-ip-depth-60\"&gt;\n"
@@ -1037,8 +1027,7 @@ msgstr "Exemplu de resursă OCF cu o verificare a sănătăţii dezactivată"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+msgid " &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "    &lt;operations&gt;\n"
 "     &lt;op id=\"public-ip-check\" name=\"monitor\" interval=\"60s\" disabled=\"true\"/&gt;\n"
 "    &lt;/operations&gt;\n"

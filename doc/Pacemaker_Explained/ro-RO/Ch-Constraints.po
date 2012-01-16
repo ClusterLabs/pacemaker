@@ -161,8 +161,7 @@ msgstr "Exemplu de restricţii de locaţie opt-in"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;constraints&gt;\n"
+msgid "&lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"200\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-2\" rsc=\"Webserver\" node=\"sles-3\" score=\"0\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-3\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"
@@ -203,8 +202,7 @@ msgstr "Exemplu de restricţii de locaţie opt-out"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"200\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-2-dont-run\" rsc=\"Webserver\" node=\"sles-2\" score=\"-INFINITY\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-3-dont-run\" rsc=\"Database\" node=\"sles-1\" score=\"-INFINITY\"/&gt;\n"
@@ -240,8 +238,7 @@ msgstr "Exemplu de două resurse care preferă două noduri în mod egal"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"INFINITY\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-2\" rsc=\"Webserver\" node=\"sles-2\" score=\"INFINITY\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-3\" rsc=\"Database\" node=\"sles-1\" score=\"500\"/&gt;\n"
@@ -364,8 +361,7 @@ msgstr "Exemplu de restricţie de ordonare obligatorie şi recomandată"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\" first=\"Database\" then=\"Webserver\" /&gt;\n"
 "    &lt;rsc_order id=\"order-2\" first=\"IP\" then=\"Webserver\" score=\"0\"/&gt;\n"
 "  &lt;/constraints&gt;  "
@@ -457,8 +453,7 @@ msgstr "Un exemplu de restricţie de colocare"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;rsc_colocation id=\"colocate\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"INFINITY\"/&gt;\n"
+msgid "&lt;rsc_colocation id=\"colocate\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"INFINITY\"/&gt;\n"
 "	  "
 msgstr ""
 " &lt;rsc_colocation id=\"colocate\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"INFINITY\"/&gt;\n"
@@ -481,8 +476,7 @@ msgstr "Un exemplu de restricţie anti-colocare"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;rsc_colocation id=\"anti-colocate\"\n"
+msgid "&lt;rsc_colocation id=\"anti-colocate\"\n"
 "    rsc=\"resource1\" with-rsc=\"resource2\" score=\"-INFINITY\"/&gt; \n"
 "	  "
 msgstr ""
@@ -517,8 +511,7 @@ msgstr "Un exemplu de restricţie de colocare doar recomandată"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;rsc_colocation id=\"colocate-maybe\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"500\"/&gt;\n"
+msgid "&lt;rsc_colocation id=\"colocate-maybe\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"500\"/&gt;\n"
 "	  "
 msgstr ""
 "&lt;rsc_colocation id=\"colocate-maybe\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"500\"/&gt;\n"
@@ -541,8 +534,7 @@ msgstr "Un lanţ de resurse ordonate"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\" first=\"A\" then=\"B\" /&gt;\n"
 "    &lt;rsc_order id=\"order-2\" first=\"B\" then=\"C\" /&gt;\n"
 "    &lt;rsc_order id=\"order-3\" first=\"C\" then=\"D\" /&gt;\n"
@@ -576,8 +568,7 @@ msgstr "Un lanţ de resurse ordonate exprimate ca un set"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\"&gt;\n"
 "      &lt;resource_set id=\"ordered-set-example\" sequential=\"true\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -611,8 +602,7 @@ msgstr "Un grup de resurse cu regulile de ordonare echivalente"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;group id=\"dummy\"&gt;\n"
+msgid " &lt;group id=\"dummy\"&gt;\n"
 "    &lt;primitive id=\"A\" .../&gt;\n"
 "    &lt;primitive id=\"B\" .../&gt;\n"
 "    &lt;primitive id=\"C\" .../&gt;\n"
@@ -638,8 +628,7 @@ msgstr "Seturi ordonate de resurse neordonate"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\"&gt;\n"
 "      &lt;resource_set id=\"ordered-set-1\" sequential=\"false\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -687,8 +676,7 @@ msgstr "Utilizări avansate ale ordonării seturilor - Trei seturi ordonate, dou
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\"&gt;\n"
 "      &lt;resource_set id=\"ordered-set-1\" sequential=\"false\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -749,8 +737,7 @@ msgstr "Un lanţ de resurse colocate"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" rsc=\"B\" with-rsc=\"A\" score=\"INFINITY\"/&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-2\" rsc=\"C\" with-rsc=\"B\" score=\"INFINITY\"/&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-3\" rsc=\"D\" with-rsc=\"C\" score=\"INFINITY\"/&gt;\n"
@@ -765,7 +752,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "To make things easier, we allow an alternate form of colocation constraints using <literal>resource_sets</literal>. Just like the expanded version, a resource that can't be active also prevents any resource that must be collocated with it from being active. For example, if <literal>B</literal> was not able to run, then both <literal>C</literal> (and by inference <literal>D</literal>) must also remain stopped."
-msgstr "Pentru a face lucrurile mai uşoare, permitem o altă formă de restricţii de colocare folosind <literal>resource_sets<literal> (seturi de resurse). La fel ca şi versiunea extinsă, o resursă care nu poate fi activă împiedică de asemenea orice resursă care trebuie colocată cu aceasta de a fi activă. De exemplu dacă <literal>B</literal> nu era capabil să ruleze, atunci atât <literal>C</literal> (şi prin alianţă <literal>D</literal>) trebuie să rămână oprite."
+msgstr "Pentru a face lucrurile mai uşoare, permitem o altă formă de restricţii de colocare folosind <literal>resource_sets</literal> (seturi de resurse). La fel ca şi versiunea extinsă, o resursă care nu poate fi activă împiedică de asemenea orice resursă care trebuie colocată cu aceasta de a fi activă. De exemplu dacă <literal>B</literal> nu era capabil să ruleze, atunci atât <literal>C</literal> (şi prin alianţă <literal>D</literal>) trebuie să rămână oprite."
 
 #. Tag: title
 #, no-c-format
@@ -774,8 +761,7 @@ msgstr "Lanţul echivalent de restricţii de colocare exprimat folosind <literal
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
 "      &lt;resource_set id=\"collocated-set-example\" sequential=\"true\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -819,8 +805,7 @@ msgstr "Folosirea seturilor de colocare pentru a specifica un nod comun."
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
 "      &lt;resource_set id=\"collocated-set-1\" sequential=\"false\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -858,8 +843,7 @@ msgstr "Un lanţ de colocare unde membrii setului mijlociu nu au interdependenţ
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
 "      &lt;resource_set id=\"collocated-set-1\" sequential=\"true\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"

@@ -26,8 +26,7 @@ msgstr "O <indexterm significance=\"preferred\"><primary>Configuraţie Goală</p
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;cib admin_epoch=\"0\" epoch=\"0\" num_updates=\"0\" have-quorum=\"false\"&gt;\n"
+msgid "&lt;cib admin_epoch=\"0\" epoch=\"0\" num_updates=\"0\" have-quorum=\"false\"&gt;\n"
 "  &lt;configuration&gt;\n"
 "    &lt;crm_config/&gt;\n"
 "    &lt;nodes/&gt;\n"
@@ -59,8 +58,7 @@ msgstr "2 noduri, câteva opţiuni de cluster şi o resursă"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;cib admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\" have-quorum=\"false\"\n"
+msgid "&lt;cib admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\" have-quorum=\"false\"\n"
 "    validate-with=\"pacemaker-1.0\"&gt;\n"
 "  &lt;configuration&gt;\n"
 "    &lt;crm_config&gt;\n"
@@ -147,8 +145,7 @@ msgstr "grupuri şi clone cu stonith"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;cib admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\" have-quorum=\"false\"\n"
+msgid " &lt;cib admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\" have-quorum=\"false\"\n"
 "    validate-with=\"pacemaker-1.0\"&gt;\n"
 "  &lt;configuration&gt;\n"
 "    &lt;crm_config&gt;\n"

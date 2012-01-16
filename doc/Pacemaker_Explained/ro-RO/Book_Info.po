@@ -12,7 +12,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Configuration Explained"
-msgstr "Configuraţia Explicată"
+msgstr "Configuration Explained"
 
 #. Tag: subtitle
 #, no-c-format

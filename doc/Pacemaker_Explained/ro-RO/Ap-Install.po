@@ -96,8 +96,7 @@ msgstr "Un exemplu de fişier de configurare al Corosync"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"totem {\n"
+msgid "totem {\n"
 "      version: 2\n"
 "      secauth: off\n"
 "      threads: 0\n"
@@ -161,8 +160,7 @@ msgstr "Exemple de opţiuni pentru un mediu IPV6"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"bindnetaddr: fec0::1:a800:4ff:fe00:20 \n"
+msgid "bindnetaddr: fec0::1:a800:4ff:fe00:20 \n"
 "  mcastaddr: ff05::1\n"
 "	  "
 msgstr ""
@@ -182,8 +180,7 @@ msgstr "Fragment de configurare pentru a activa Pacemaker sub Corosync"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"aisexec {\n"
+msgid "aisexec {\n"
 "    user:  root\n"
 "    group: root\n"
 "}\n"
@@ -230,8 +227,7 @@ msgstr "Fragment de configurare pentru a activa Pacemaker sub Heartbeat"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"crm respawn\n"
+msgid "crm respawn\n"
 "	  "
 msgstr ""
 "crm respawn\n"

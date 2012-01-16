@@ -31,10 +31,10 @@ msgstr "Exemplu de intrare de nod de cluster"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;node id=\"1186dc9a-324d-425a-966e-d757e693dc86\" uname=\"pcmk-1\" type=\"normal\"/&gt;\n"
+msgid "&lt;node id=\"1186dc9a-324d-425a-966e-d757e693dc86\" uname=\"pcmk-1\" type=\"normal\"/&gt;\n"
 "	"
-msgstr ""
+msgstr "&lt;node id=\"1186dc9a-324d-425a-966e-d757e693dc86\" uname=\"pcmk-1\" type=\"normal\"/&gt;\n"
+"	"
 
 #. Tag: para
 #, no-c-format
@@ -68,15 +68,20 @@ msgstr "Rezultatul folosirii crm_attribute pentru a specifica pe ce kernel rulea
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<userinput>crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` </userinput>\n"
+msgid "<userinput>crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` </userinput>\n"
 "\n"
 "  &lt;node uname=\"pcmk-1\" type=\"normal\" id=\"1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
 "   &lt;instance_attributes id=\"nodes-1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
 "     &lt;nvpair id=\"kernel-1186dc9a-324d-425a-966e-d757e693dc86\" name=\"kernel\" value=\"2.6.16.46-0.4-default\"/&gt;\n"
 "   &lt;/instance_attributes&gt;\n"
 "  &lt;/node&gt;  "
-msgstr ""
+msgstr "<userinput>crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` </userinput>\n"
+"\n"
+"  &lt;node uname=\"pcmk-1\" type=\"normal\" id=\"1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
+"   &lt;instance_attributes id=\"nodes-1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
+"     &lt;nvpair id=\"kernel-1186dc9a-324d-425a-966e-d757e693dc86\" name=\"kernel\" value=\"2.6.16.46-0.4-default\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"  &lt;/node&gt;  "
 
 #. Tag: para
 #, no-c-format
@@ -86,7 +91,7 @@ msgstr "O metodă mai simplă de a determina valoarea curentă a unui atribut es
 #. Tag: programlisting
 #, no-c-format
 msgid "<command>  crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value</command>"
-msgstr "crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value"
+msgstr "<command>  crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value</command>"
 
 #. Tag: para
 #, no-c-format
@@ -170,10 +175,10 @@ msgstr "Doar acum este în siguranţă să ştergeţi nodul din CIB cu:"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"<replaceable>pcmk-1</replaceable>\"/&gt;'</command>\n"
+msgid "<command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"<replaceable>pcmk-1</replaceable>\"/&gt;'</command>\n"
 "	    <command>cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"<replaceable>pcmk-1</replaceable>\"/&gt;'</command>"
-msgstr ""
+msgstr "<command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"<replaceable>pcmk-1</replaceable>\"/&gt;'</command>\n"
+"	    <command>cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"<replaceable>pcmk-1</replaceable>\"/&gt;'</command>"
 
 #. Tag: para
 #, no-c-format
@@ -183,7 +188,7 @@ msgstr "Datorită faptului că straturile de mesagerie şi apartenenţă sunt su
 #. Tag: para
 #, no-c-format
 msgid "<command>hb_delnode pcmk-1</command>"
-msgstr "hb_delnode pcmk-1"
+msgstr "<command>hb_delnode pcmk-1</command>"
 
 #. Tag: para
 #, no-c-format
@@ -192,10 +197,10 @@ msgstr "Doar acum este în siguranţă să ştergeţi nodul din CIB cu:"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'</command>\n"
+msgid "<command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'</command>\n"
 "	<command>cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"pcmk-1\"/&gt;'</command>"
-msgstr ""
+msgstr "<command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'</command>\n"
+"	<command>cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"pcmk-1\"/&gt;'</command>"
 
 #. Tag: title
 #, no-c-format
@@ -262,26 +267,3 @@ msgstr "Copiaţi <filename>/etc/corosync/corosync.conf</filename> şi <filename>
 msgid "On the new node, populate it's UUID using <command>crm_uuid -w</command> and the UUID from step 2"
 msgstr "Pe nodul nou, populaţi UUID-ul acestuia folosind crm_uuid -w şi UUID-ul prelevat de la pasul 2"
 
-#~ msgid "crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` "
-#~ msgstr "crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` "
-
-#~ msgid "pcmk-1"
-#~ msgstr "pcmk-1"
-
-#~ msgid "cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"<placeholder-1/>\"/&gt;'"
-#~ msgstr "cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"<placeholder-1/>\"/&gt;'"
-
-#~ msgid "cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"<placeholder-1/>\"/&gt;'"
-#~ msgstr "cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"<placeholder-1/>\"/&gt;'"
-
-#~ msgid "cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'"
-#~ msgstr "cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'"
-
-#~ msgid "cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"pcmk-1\"/&gt;'"
-#~ msgstr "cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"pcmk-1\"/&gt;'"
-
-#~ msgid "Copy ha.cf and authkeys to the new node"
-#~ msgstr "Copiaţi <filename>ha.cf</filename> şi <filename>authkeys</filename> pe nodul nou"
-
-#~ msgid "translator-credits"
-#~ msgstr "genericul-traducătorului"

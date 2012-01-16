@@ -176,8 +176,7 @@ msgstr "Un exemplu al câmpurilor setate pentru un obiect CIB"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"&lt;cib have-quorum=\"true\" validate-with=\"pacemaker-1.0\"\n"
+msgid "&lt;cib have-quorum=\"true\" validate-with=\"pacemaker-1.0\"\n"
 "  admin_epoch=\"1\" epoch=\"12\" num_updates=\"65\"\n"
 "  dc-uuid=\"ea7d39f4-3b94-4cfa-ba7a-952956daabee\"&gt; \n"
 "	  "
@@ -390,7 +389,7 @@ msgstr "Numărul de intrări PE \"normale\" care să fie salvate. Folosite când
 #. Tag: para
 #, no-c-format
 msgid "You can always obtain an up-to-date list of cluster options, including their default values, by running the <command>pengine metadata</command> command."
-msgstr "Puteţi întotdeauna să obţineţi o listă actualizată a opţiunilor clusterului, incluzând valorile implicite ale acestora, prin rularea comenzii <command>pengine metadata<command>."
+msgstr "Puteţi întotdeauna să obţineţi o listă actualizată a opţiunilor clusterului, incluzând valorile implicite ale acestora, prin rularea comenzii <command>pengine metadata</command>."
 
 #. Tag: title
 #, no-c-format
@@ -424,8 +423,7 @@ msgstr "Dacă o valoare este găsită, atunci veţi vedea un rezultat ca acesta"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<command> # crm_attribute --get-value -n cluster-delay</command>\n"
+msgid "<command> # crm_attribute --get-value -n cluster-delay</command>\n"
 " name=cluster-delay value=60s"
 msgstr ""
 "<command> # crm_attribute --get-value -n cluster-delay</command>\n"
@@ -438,8 +436,7 @@ msgstr "Însă dacă nici o valoare nu este găsită, utilitarul va arăta o ero
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<command># crm_attribute --get-value -n clusta-deway</command>\n"
+msgid "<command># crm_attribute --get-value -n clusta-deway</command>\n"
 " name=clusta-deway value=(null)\n"
 " Error performing operation: The object/attribute does not exist"
 msgstr ""
@@ -484,8 +481,7 @@ msgstr "Ştergerea unei opţiuni care este listată de două ori"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<command># crm_attribute --attr-name batch-limit --delete-attr</command>\n"
+msgid "<command># crm_attribute --attr-name batch-limit --delete-attr</command>\n"
 " Multiple attributes match name=batch-limit in crm_config:\n"
 " Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)\n"
 " Value: 100         (set=custom, id=custom-batch-limit)\n"

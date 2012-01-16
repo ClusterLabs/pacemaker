@@ -31,8 +31,7 @@ msgstr "Un exemplu de grup"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;group id=\"shortcut\"&gt;\n"
+msgid " &lt;group id=\"shortcut\"&gt;\n"
 "   &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "    &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
 "       &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
@@ -92,8 +91,7 @@ msgstr "Cum vede clusterul un grup de resurse"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;configuration&gt;\n"
+msgid " &lt;configuration&gt;\n"
 "   &lt;resources&gt;\n"
 "    &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "     &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
@@ -210,8 +208,7 @@ msgstr "Exemple de restricţii care implică grupuri"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"group-prefers-node1\" rsc=\"shortcut\" node=\"node1\" score=\"500\"/&gt;\n"
 "    &lt;rsc_colocation id=\"webserver-with-group\" rsc=\"Webserver\" with-rsc=\"shortcut\"/&gt;\n"
 "    &lt;rsc_order id=\"start-group-then-webserver\" first=\"Webserver\" then=\"shortcut\"/&gt;\n"
@@ -290,8 +287,7 @@ msgstr "Un exemplu de clonă"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;clone id=\"apache-clone\"&gt;\n"
+msgid " &lt;clone id=\"apache-clone\"&gt;\n"
 "    &lt;meta_attributes id=\"apache-clone-meta\"&gt;\n"
 "       &lt;nvpair id=\"apache-unique\" name=\"globally-unique\" value=\"false\"/&gt;\n"
 "    &lt;/meta_attributes&gt;\n"
@@ -383,7 +379,7 @@ msgstr "Ar trebui copiile să fie pornite secvenţial (în loc de în paralel). 
 #. Tag: entry
 #, no-c-format
 msgid "<indexterm significance=\"preferred\"><primary>interleave Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>interleave</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>interleave</tertiary></indexterm> interleave"
-msgstr "<indexterm significance=\"preferred\"><primary>interleave Proprietatea Resursei Clonă</primary></indexterm> <indexterm><primary>Proprietățile Resursei Clonă</primary><secondary>interleave</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Clonei</secondary><tertiary>interleave</tertiary>"
+msgstr "<indexterm significance=\"preferred\"><primary>interleave Proprietatea Resursei Clonă</primary></indexterm> <indexterm><primary>Proprietățile Resursei Clonă</primary><secondary>interleave</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Clonei</secondary><tertiary>interleave</tertiary></indexterm>"
 
 #. Tag: entry
 #, no-c-format
@@ -432,8 +428,7 @@ msgstr "Exemple de restricţii implicând clone"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"clone-prefers-node1\" rsc=\"apache-clone\" node=\"node1\" score=\"500\"/&gt;\n"
 "    &lt;rsc_colocation id=\"stats-with-clone\" rsc=\"apache-stats\" with=\"apache-clone\"/&gt;\n"
 "    &lt;rsc_order id=\"start-clone-then-stats\" first=\"apache-clone\" then=\"apache-stats\"/&gt;\n"
@@ -622,8 +617,7 @@ msgstr "Exemple de variabile de notificare"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<envar>\n"
+msgid "<envar>\n"
 "		OCF_RESKEY_CRM_meta_notify_start_resource</envar>=\"clone:0 clone:2 clone:3\" <envar>\n"
 "		OCF_RESKEY_CRM_meta_notify_start_uname</envar>=\"sles-1 sles-3 sles-2\"\n"
 "	    "
@@ -781,7 +775,7 @@ msgstr "<indexterm significance=\"preferred\"><primary>master-max Proprietatea R
 #. Tag: entry
 #, no-c-format
 msgid "How many copies of the resource can be promoted to <literal>master</literal> status; default 1."
-msgstr "Câte copii ale resursei pot fi promovate la statutul de <literal>master<literal>; valoarea implicită este 1."
+msgstr "Câte copii ale resursei pot fi promovate la statutul de <literal>master</literal>; valoarea implicită este 1."
 
 #. Tag: entry
 #, no-c-format
@@ -835,8 +829,7 @@ msgstr "Monitorizarea ambelor stări ale unei resurse multi-state"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;master id=\"myMasterRsc\"&gt;\n"
+msgid " &lt;master id=\"myMasterRsc\"&gt;\n"
 "   &lt;primitive id=\"myRsc\" class=\"ocf\" type=\"myApp\" provider=\"myCorp\"&gt;\n"
 "    &lt;operations&gt;\n"
 "     &lt;op id=\"public-ip-slave-check\" name=\"monitor\" interval=\"60\"/&gt;\n"
@@ -921,8 +914,7 @@ msgstr "Exemple de restricţii implicând resurse multi-state"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;constraints&gt;\n"
+msgid " &lt;constraints&gt;\n"
 "   &lt;rsc_location id=\"db-prefers-node1\" rsc=\"database\" node=\"node1\" score=\"500\"/&gt;\n"
 "   &lt;rsc_colocation id=\"backup-with-db-slave\" rsc=\"backup\"\n"
 "     with-rsc=\"database\" with-rsc-role=\"Slave\"/&gt;\n"
@@ -981,8 +973,7 @@ msgstr "Specificând manual care nod ar trebui să fie promovat"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;rsc_location id=\"master-location\" rsc=\"myMasterRsc\"&gt;\n"
+msgid " &lt;rsc_location id=\"master-location\" rsc=\"myMasterRsc\"&gt;\n"
 "    &lt;rule id=\"master-rule\" score=\"100\" role=\"Master\"&gt;\n"
 "      &lt;expression id=\"master-exp\" attribute=\"#uname\" operation=\"eq\" value=\"node1\"/&gt;\n"
 "    &lt;/rule&gt;\n"
@@ -1002,7 +993,7 @@ msgstr "Din moment ce resursele multi-state sunt o extensie a resurselor clonate
 #. Tag: para
 #, no-c-format
 msgid "The states can mean whatever you wish, but when the resource is started, it must come up in the mode called <literal>Slave</literal>. From there the cluster will then decide which instances to promote to <literal>Master</literal>."
-msgstr "Stările pot însemna orice doriţi, dar atunci când resursa este pornită, trebuie să ajungă în modul numit <literal>Slave</literal>. De acolo clusterul va decide mai apoi care instanţe să promoveze într-un <literal>Master<literal>."
+msgstr "Stările pot însemna orice doriţi, dar atunci când resursa este pornită, trebuie să ajungă în modul numit <literal>Slave</literal>. De acolo clusterul va decide mai apoi care instanţe să promoveze într-un <literal>Master</literal>."
 
 #. Tag: para
 #, no-c-format
@@ -1352,7 +1343,7 @@ msgstr "minus <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
 #. Tag: para
 #, no-c-format
 msgid "Resources that were demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
-msgstr "Resurse care au fost degradate: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource<envar>"
+msgstr "Resurse care au fost degradate: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
 
 #. Tag: para
 #, no-c-format

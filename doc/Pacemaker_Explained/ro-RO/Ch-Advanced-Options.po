@@ -96,8 +96,7 @@ msgstr "Deci dacă <literal>c001n01</literal> este un nod activ de cluster şi a
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<userinput>\n"
+msgid "<userinput>\n"
 "  export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;\n"
 "  cibadmin -Q </userinput> "
 msgstr ""
@@ -272,8 +271,7 @@ msgstr "Este important de menţionat că invocări ulterioare ale <command>crm_r
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<command>crm_resource -M -r Email -H sles-2</command>\n"
+msgid "<command>crm_resource -M -r Email -H sles-2</command>\n"
 "          <command>crm_resource -M -r Email -H sles-3</command>"
 msgstr ""
 "<command>crm_resource -M -r Email -H sles-2</command>\n"
@@ -301,8 +299,7 @@ msgstr "Luaţi aminte de folosirea cuvântului <emphasis>allow</emphasis>. Resur
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<command>crm_resource -M -r Email -H sles-1</command>\n"
+msgid "<command>crm_resource -M -r Email -H sles-1</command>\n"
 "          <command>crm_resource -U -r Email</command>"
 msgstr ""
 "<command>crm_resource -M -r Email -H sles-1</command>\n"
@@ -465,8 +462,7 @@ msgstr "Un exemplu de resursă ping în cluster, verifică odată pe minut conec
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;clone id=\"Connected\"&gt;\n"
+msgid " &lt;clone id=\"Connected\"&gt;\n"
 "   &lt;primitive id=\"ping\" provider=\"pacemaker\" class=\"ocf\" type=\"ping\"&gt;\n"
 "    &lt;instance_attributes id=\"ping-attrs\"&gt;\n"
 "      &lt;nvpair id=\"pingd-dampen\" name=\"dampen\" value=\"5s\"/&gt;\n"
@@ -519,8 +515,7 @@ msgstr "Nu rula pe noduri neconectate"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;rsc_location id=\"WebServer-no-connectivity\" rsc=\"Webserver\"&gt;\n"
+msgid " &lt;rsc_location id=\"WebServer-no-connectivity\" rsc=\"Webserver\"&gt;\n"
 "   &lt;rule id=\"ping-exclude-rule\" score=\"-INFINITY\" &gt;\n"
 "    &lt;expression id=\"ping-exclude\" attribute=\"pingd\" operation=\"not_defined\"/&gt;\n"
 "   &lt;/rule&gt;\n"
@@ -544,8 +539,7 @@ msgstr "Rulează doar pe noduri conectate la 3 sau mai multe noduri de ping (pre
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+msgid " &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
 "   &lt;rule id=\"ping-prefer-rule\" score=\"-INFINITY\" &gt;\n"
 "    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"lt\" value=\"3000\"/&gt;\n"
 "   &lt;/rule&gt;\n"
@@ -569,8 +563,7 @@ msgstr "Preferă nodul cu cele mai multe noduri de ping conectate"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+msgid " &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
 "   &lt;rule id=\"ping-prefer-rule\" score-attribute=\"pingd\" &gt;\n"
 "    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"defined\"/&gt;\n"
 "   &lt;/rule&gt;\n"
@@ -594,8 +587,7 @@ msgstr "Cum traduce clusterul restricţia pingd"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;rsc_location id=\"ping-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"5000\"/&gt;\n"
+msgid " &lt;rsc_location id=\"ping-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"5000\"/&gt;\n"
 "  &lt;rsc_location id=\"ping-2\" rsc=\"Webserver\" node=\"sles-2\" score=\"2000\"/&gt;  "
 msgstr ""
 " &lt;rsc_location id=\"ping-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"5000\"/&gt;\n"
@@ -618,8 +610,7 @@ msgstr "Un exemplu mai complex pentru alegerea locaţiei pe baza conectivităţi
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+msgid " &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
 "   &lt;rule id=\"ping-exclude-rule\" score=\"-INFINITY\" &gt;\n"
 "    &lt;expression id=\"ping-exclude\" attribute=\"pingd\" operation=\"lt\" value=\"3000\"/&gt;\n"
 "   &lt;/rule&gt;\n"
@@ -749,8 +740,7 @@ msgstr "Realizând referinţe către reguli din alte restricţii"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;rsc_location id=\"WebDB-connectivity\" rsc=\"WebDB\"&gt;\n"
+msgid " &lt;rsc_location id=\"WebDB-connectivity\" rsc=\"WebDB\"&gt;\n"
 "      &lt;rule id-ref=\"ping-prefer-rule\"/&gt;\n"
 "  &lt;/rsc_location&gt;  "
 msgstr ""
@@ -775,8 +765,7 @@ msgstr "Referenţierea atributelor, opţiunilor şi operaţiunilor din alte resu
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
+msgid " &lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
 "   &lt;instance_attributes id=\"mySpecialRsc-attrs\" score=\"1\" &gt;\n"
 "    &lt;nvpair id=\"default-interface\" name=\"interface\" value=\"eth0\"/&gt;\n"
 "    &lt;nvpair id=\"default-port\" name=\"port\" value=\"9999\"/&gt;\n"
@@ -845,8 +834,7 @@ msgstr "Logica de Control pentru Suportarea Operaţiunii de <literal>reload</lit
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" case $1 in\n"
+msgid " case $1 in\n"
 "    start)\n"
 "        drbd_start\n"
 "        ;;\n"
@@ -898,8 +886,7 @@ msgstr "Anunţarea Suportului Operaţiunii de <literal>reload</literal> a Agentu
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;?xml version=\"1.0\"?&gt;\n"
+msgid " &lt;?xml version=\"1.0\"?&gt;\n"
 "  &lt;!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\"&gt;\n"
 "  &lt;resource-agent name=\"drbd\"&gt;\n"
 "    &lt;version&gt;1.1&lt;/version&gt;\n"
@@ -962,8 +949,7 @@ msgstr "Parametru care poate fi schimbat folosind reload"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-" &lt;parameter name=\"drbdconf\" unique=\"0\"&gt;\n"
+msgid " &lt;parameter name=\"drbdconf\" unique=\"0\"&gt;\n"
 "    &lt;longdesc lang=\"en\"&gt;Full path to the drbd.conf file.&lt;/longdesc&gt;\n"
 "    &lt;shortdesc lang=\"en\"&gt;Path to drbd.conf&lt;/shortdesc&gt;\n"
 "    &lt;content type=\"string\" default=\"${OCF_RESKEY_drbdconf_default}\"/&gt;\n"

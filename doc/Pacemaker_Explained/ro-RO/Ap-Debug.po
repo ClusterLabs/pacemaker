@@ -31,8 +31,7 @@ msgstr "Configuraţia minim necesară pentru log-uri"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<userinput>\n"
+msgid "<userinput>\n"
 "  # /etc/init.d/openais start\n"
 "	    </userinput>\n"
 "	    <computeroutput>\n"
@@ -71,8 +70,7 @@ msgstr "Rezultatul aşteptat la pornirea openais"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<userinput>\n"
+msgid "<userinput>\n"
 "  # /etc/init.d/openais start\n"
 "	    </userinput>\n"
 "	    <computeroutput>\n"
@@ -95,8 +93,7 @@ msgstr "Mesaje de log aşteptate - la pornire"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<userinput>\n"
+msgid "<userinput>\n"
 "  # grep -e \"openais.*network interface\" -e \"AIS Executive Service\" /var/log/messages\n"
 "	    </userinput>\n"
 "	    <computeroutput>\n"
@@ -128,8 +125,7 @@ msgstr "Mesaje de log aşteptate - apartenenţă"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<userinput>\n"
+msgid "<userinput>\n"
 "  # grep CLM /var/log/messages\n"
 "	    </userinput>\n"
 "	    <computeroutput>\n"
@@ -187,8 +183,7 @@ msgstr "Log-urile aşteptate la pornirea Pacemaker pentru Corosync"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<userinput>\n"
+msgid "<userinput>\n"
 "  # grep pcmk_plugin_init /var/log/messages\n"
 "	    </userinput>\n"
 "	    <computeroutput>\n"
@@ -222,8 +217,7 @@ msgstr "Lista de procese aşteptate pe o maşină pe 64 de biţi"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<userinput>\n"
+msgid "<userinput>\n"
 "  # ps axf\n"
 "	    </userinput>\n"
 "	    <computeroutput>\n"

@@ -66,8 +66,7 @@ msgstr "O configuraţie goală"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"\n"
+msgid "\n"
 "  &lt;cib generated=\"true\" admin_epoch=\"0\" epoch=\"0\" num_updates=\"0\" have-quorum=\"false\"&gt;\n"
 "     &lt;configuration&gt;\n"
 "        &lt;crm_config/&gt;\n"
@@ -120,8 +119,7 @@ msgstr "Exemplu de rezultat obţinut din crm_mon"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<command># crm_mon</command>\n"
+msgid "<command># crm_mon</command>\n"
 "  ============\n"
 "  Last updated: Fri Nov 23 15:26:13 2007\n"
 "  Current DC: sles-3 (2298606a-6a8c-499a-9d25-76242f7006ec)\n"
@@ -168,8 +166,7 @@ msgstr "Exemplu de rezultat obţinut din crm_mon -n"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<command># crm_mon -n</command>\n"
+msgid "<command># crm_mon -n</command>\n"
 "  ============\n"
 "  Last updated: Fri Nov 23 15:26:13 2007\n"
 "  Current DC: sles-3 (2298606a-6a8c-499a-9d25-76242f7006ec)\n"
@@ -270,8 +267,7 @@ msgstr "Folosind cu siguranţă un editor pentru a modifica configuraţia cluste
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<command>cibadmin --query &gt; tmp.xml</command>\n"
+msgid "<command>cibadmin --query &gt; tmp.xml</command>\n"
 "  <command>vi tmp.xml</command>\n"
 "  <command>cibadmin --replace --xml-file tmp.xml</command>\n"
 "	"
@@ -298,8 +294,7 @@ msgstr "Folosind cu siguranţă un editor pentru a modifica o subsecţiune din c
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"<command>cibadmin --query --obj_type resources &gt; tmp.xml</command>\n"
+msgid "<command>cibadmin --query --obj_type resources &gt; tmp.xml</command>\n"
 "  <command>vi tmp.xml</command>\n"
 "  <command>cibadmin --replace --obj_type resources --xml-file tmp.xml</command>\n"
 "	"
@@ -331,8 +326,7 @@ msgstr "Căutând pentru elemente de configurare legate de STONITH"
 
 #. Tag: screen
 #, no-c-format
-msgid ""
-"<command># cibadmin -Q | grep stonith</command>\n"
+msgid "<command># cibadmin -Q | grep stonith</command>\n"
 "\n"
 "   &lt;nvpair id=\"cib-bootstrap-options-stonith-action\" name=\"stonith-action\" value=\"reboot\"/&gt;\n"
 "   &lt;nvpair id=\"cib-bootstrap-options-stonith-enabled\" name=\"stonith-enabled\" value=\"1\"/&gt;\n"
@@ -344,6 +338,7 @@ msgid ""
 "   &lt;lrm_resource id=\"child_DoFencing:2\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
 "   &lt;lrm_resource id=\"child_DoFencing:0\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
 "   &lt;lrm_resource id=\"child_DoFencing:3\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
+""
 msgstr ""
 "<command># cibadmin -Q | grep stonith</command>\n"                                                                                            
 "\n"                                                                                                                                           
@@ -435,8 +430,7 @@ msgstr "Crearea şi prezentarea sandbox-ului activ"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"# <command>crm_shadow --create test</command>\n"
+msgid "# <command>crm_shadow --create test</command>\n"
 " Setting up shadow instance\n"
 " Type Ctrl-D to exit the crm_shadow shell\n"
 " shadow[test]: \n"
@@ -467,8 +461,7 @@ msgstr "Folosirea unui sandbox pentru a realiza mai multe modificări în mod at
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"shadow[test] # <command>crm_failcount -G -r rsc_c001n01</command>\n"
+msgid "shadow[test] # <command>crm_failcount -G -r rsc_c001n01</command>\n"
 "  name=fail-count-rsc_c001n01 value=0\n"
 " shadow[test] # <command>crm_standby -v on -n c001n02</command>\n"
 " shadow[test] # <command>crm_standby -G -n c001n02</command>\n"

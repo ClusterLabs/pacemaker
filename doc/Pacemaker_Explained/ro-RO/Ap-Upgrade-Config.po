@@ -32,7 +32,7 @@ msgstr "<primary>Actualizarea</primary><secondary>Configuraţiei</secondary>"
 #. Tag: para
 #, no-c-format
 msgid "<indexterm significance=\"preferred\"><primary>Download</primary><secondary>DTD</secondary></indexterm> <indexterm significance=\"preferred\"><primary>DTD</primary><secondary>Download</secondary></indexterm> Download the latest DTD<footnote><para><ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\" /></para></footnote> and ensure your configuration validates."
-msgstr "<indexterm significance=\"preferred\"><primary>Descărcaţi</primary><secondary>DTD</secondary></indexterm> <indexterm significance=\"preferred\"><primary>DTD</primary><secondary>Descărcaţi</secondary></indexterm> Descărcaţi cel mai recent DTD de la<footnote><para><ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\" /></footnote></para> şi asiguraţi-vă că, configuraţia voastră se validează."
+msgstr "<indexterm significance=\"preferred\"><primary>Descărcaţi</primary><secondary>DTD</secondary></indexterm> <indexterm significance=\"preferred\"><primary>DTD</primary><secondary>Descărcaţi</secondary></indexterm> Descărcaţi cel mai recent DTD de la<footnote><para><ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\" /></para></footnote>> şi asiguraţi-vă că, configuraţia voastră se validează."
 
 #. Tag: title
 #, no-c-format
@@ -171,8 +171,7 @@ msgstr "Testaţi ce va face clusterul când încărcaţi noua configuraţie"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"# <command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>\n"
+msgid "# <command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>\n"
 "# <command>graphviz upgrade06.dot</command>"
 msgstr ""
 "# <command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>\n"
