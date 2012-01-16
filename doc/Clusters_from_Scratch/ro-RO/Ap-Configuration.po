@@ -1,0 +1,364 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Clusters from Scratch 1.1\n"
+"POT-Creation-Date: 2011-12-31T16:43:02\n"
+"PO-Revision-Date: 2011-12-31T16:43:02\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Configuration Recap"
+msgstr "Recapitularea Configurației"
+
+#. Tag: title
+#, no-c-format
+msgid "Final Cluster Configuration"
+msgstr "Configurația Finală a Clusterului"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# crm configure show\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=\"wwwdata\" \\\n"
+"        op monitor interval=\"60s\"\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"gfs2\"\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+"        op monitor interval=\"1min\"\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" clusterip_hash=\"sourceip\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"primitive ipmi-fencing stonith::fence_ipmilan \\\n"
+"        params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\\n"
+"        op monitor interval=\"60s\"\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+"clone WebFSClone WebFS\n"
+"clone WebIP ClusterIP  \\\n"
+"        meta globally-unique=\"true\" clone-max=\"2\" clone-node-max=\"2\"\n"
+"clone WebSiteClone WebSite\n"
+"colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
+"colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
+"colocation website-with-ip inf: WebSiteClone WebIP\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
+"order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
+"order apache-after-ip inf: WebIP WebSiteClone\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"true\" \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+"rsc_defaults $id=\"rsc-options\" \\\n"
+"        resource-stickiness=\"100\"\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# crm configure show\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=\"wwwdata\" \\\n"
+"        op monitor interval=\"60s\"\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"gfs2\"\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+"        op monitor interval=\"1min\"\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" clusterip_hash=\"sourceip\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"primitive ipmi-fencing stonith::fence_ipmilan \\\n"
+"        params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\\n"
+"        op monitor interval=\"60s\"\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+"clone WebFSClone WebFS\n"
+"clone WebIP ClusterIP  \\\n"
+"        meta globally-unique=\"true\" clone-max=\"2\" clone-node-max=\"2\"\n"
+"clone WebSiteClone WebSite\n"
+"colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
+"colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
+"colocation website-with-ip inf: WebSiteClone WebIP\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
+"order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
+"order apache-after-ip inf: WebIP WebSiteClone\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"true\" \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+"rsc_defaults $id=\"rsc-options\" \\\n"
+"        resource-stickiness=\"100\"\n"
+""
+
+#. Tag: title
+#, no-c-format
+msgid "Node List"
+msgstr "Lista Nodurilor"
+
+#. Tag: para
+#, no-c-format
+msgid "The list of cluster nodes is automatically populated by the cluster."
+msgstr "Lista nodurilor din cluster este populată în mod automat de către cluster."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+""
+msgstr "\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+""
+
+#. Tag: title
+#, no-c-format
+msgid "Cluster Options"
+msgstr "Opțiunile Clusterului"
+
+#. Tag: para
+#, no-c-format
+msgid "This is where the cluster automatically stores some information about the cluster"
+msgstr "Aici este locul unde clusterul stochează automat anumite informații despre cluster"
+
+#. Tag: para
+#, no-c-format
+msgid "dc-version - the version (including upstream source-code hash) of Pacemaker used on the DC"
+msgstr "dc-version - versiunea (incluzând hash-ul codului sursă din upstream) Pacemaker-ului folosit pe DC"
+
+#. Tag: para
+#, no-c-format
+msgid "cluster-infrastructure - the cluster infrastructure being used (heartbeat or openais)"
+msgstr "cluster-infrastructure - infrastructura de cluster folosită (heartbeat sau openais)"
+
+#. Tag: para
+#, no-c-format
+msgid "expected-quorum-votes - the maximum number of nodes expected to be part of the cluster"
+msgstr "expected-quorum-votes - numărul maxim de noduri care se așteaptă să facă parte din cluster"
+
+#. Tag: para
+#, no-c-format
+msgid "and where the admin can set options that control the way the cluster operates"
+msgstr "și locul unde administratorul poate seta opțiuni care controlează modul în care operează clusterul"
+
+#. Tag: para
+#, no-c-format
+msgid "stonith-enabled=true - Make use of STONITH"
+msgstr "stonith-enabled=true - Pune STONITH în folosință"
+
+#. Tag: para
+#, no-c-format
+msgid "no-quorum-policy=ignore - Ignore loss of quorum and continue to host resources."
+msgstr "no-quorum-policy=ignore - Ignoră pierderea quorumului și continuă să găzduiască resurse."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"true\" \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+""
+msgstr "\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"true\" \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+""
+
+#. Tag: title
+#, no-c-format
+msgid "Resources"
+msgstr "Resurse"
+
+#. Tag: title
+#, no-c-format
+msgid "Default Options"
+msgstr "Opțiuni Implicite"
+
+#. Tag: para
+#, no-c-format
+msgid "Here we configure cluster options that apply to every resource."
+msgstr "Aici configurăm opțiuni ale clusterului care se aplică fiecărei resurse."
+
+#. Tag: para
+#, no-c-format
+msgid "resource-stickiness - Specify the aversion to moving resources to other machines"
+msgstr "resource-stickiness - Specifică aversiunea față de mutarea resurselor către alte mașini"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"rsc_defaults $id=\"rsc-options\" \\\n"
+"        resource-stickiness=\"100\"\n"
+""
+msgstr "\n"
+"rsc_defaults $id=\"rsc-options\" \\\n"
+"        resource-stickiness=\"100\"\n"
+""
+
+#. Tag: title
+#, no-c-format
+msgid "Fencing"
+msgstr "Evacuarea Forțată"
+
+#. Tag: para
+#, no-c-format
+msgid "TODO: Add text here"
+msgstr "TODO: Adaugă text aici"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"primitive ipmi-fencing stonith::fence_ipmilan \\\n"
+"        params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\\n"
+"        op monitor interval=\"60s\"\n"
+"clone Fencing rsa-fencing\n"
+""
+msgstr "\n"
+"primitive ipmi-fencing stonith::fence_ipmilan \\\n"
+"        params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\\n"
+"        op monitor interval=\"60s\"\n"
+"clone Fencing rsa-fencing\n"
+""
+
+#. Tag: title
+#, no-c-format
+msgid "Service Address"
+msgstr "Adresa Serviciului"
+
+#. Tag: para
+#, no-c-format
+msgid "Users of the services provided by the cluster require an unchanging address with which to access it. Additionally, we cloned the address so it will be active on both nodes. An iptables rule (created as part of the resource agent) is used to ensure that each request only gets processed by one of the two clone instances. The additional meta options tell the cluster that we want two instances of the clone (one \"request bucket\" for each node) and that if one node fails, then the remaining node should hold both."
+msgstr "Utilizatorii serviciilor furnizate de către cluster necesită o adresă neschimbabilă prin care să le acceseze. În mod adițional, am clonat adresa astfel încât va fi activă pe ambele noduri. O regulă de iptables (creată ca parte din agentul de resursă) este folosită pentru a asigura faptul că fiecare cerere va fi procesată doar de către una din cele două instanțe ale clonei. Meta opțiunile adiționale spun clusterului că dorim două instanțe ale clonei (câte o \"găleată de cereri\" pentru fiecare nod) și că dacă un nod eșuează, atunci nodul care rămâne ar trebui să le țină pe amândouă."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" clusterip_hash=\"sourceip\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"clone WebIP ClusterIP  \n"
+"        meta globally-unique=\"true\" clone-max=\"2\" clone-node-max=\"2\"\n"
+""
+msgstr "\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" clusterip_hash=\"sourceip\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"clone WebIP ClusterIP  \n"
+"        meta globally-unique=\"true\" clone-max=\"2\" clone-node-max=\"2\"\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "TODO: The RA should check for globally-unique=true when cloned"
+msgstr "TODO: RA-ul ar trebui să verifice globally-unique=true când este clonat"
+
+#. Tag: title
+#, no-c-format
+msgid "DRBD - Shared Storage"
+msgstr "DRBD - Stocare Partajată"
+
+#. Tag: para
+#, no-c-format
+msgid "Here we define the DRBD service and specify which DRBD resource (from drbd.conf) it should manage. We make it a master/slave resource and, in order to have an active/active setup, allow both instances to be promoted by specifying master-max=2. We also set the notify option so that the cluster will tell DRBD agent when it’s peer changes state."
+msgstr "Aici definim serviciul DRBD și specificăm care resursă DRBD (din drbd.conf) ar trebui să gestioneze. O creem ca resursă master/slave și pentru a avea un setup activ/activ, permitem ambelor instanțe să fie promovate specificând master-max=2. De asemenea setăm opțiunea notify astfel încât clusterul va spune agentului DRBD când vecinul acestuia își schimbă starea."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=\"wwwdata\" \\\n"
+"        op monitor interval=\"60s\"\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+""
+msgstr "\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=\"wwwdata\" \\\n"
+"        op monitor interval=\"60s\"\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+""
+
+#. Tag: title
+#, no-c-format
+msgid "Cluster Filesystem"
+msgstr "Sistem de Fișiere de Cluster"
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster filesystem ensures that files are read and written correctly. We need to specify the block device (provided by DRBD), where we want it mounted and that we are using GFS2. Again it is a clone because it is intended to be active on both nodes. The additional constraints ensure that it can only be started on nodes with active gfs-control and drbd instances."
+msgstr "Sistemul de fișiere de cluster se asigură că fișierele sunt citite și scrise corect. Trebuie să specificâm dispozitivul de tip bloc (furnizat de DRBD), unde îl vrem montat și că folosim GFS2. Din nou este o clonă deoarece este intenționat să fie activă pe ambele noduri. Restricțiile adiționale asigură faptul că poate fi pornită numai pe noduri cu gfs-control activ și instanțe DRBD."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"gfs2\"\n"
+"clone WebFSClone WebFS\n"
+"colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone\n"
+"colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
+"order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone\n"
+""
+msgstr "\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"gfs2\"\n"
+"clone WebFSClone WebFS\n"
+"colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone\n"
+"colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
+"order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone\n"
+""
+
+#. Tag: title
+#, no-c-format
+msgid "Apache"
+msgstr "Apache"
+
+#. Tag: para
+#, no-c-format
+msgid "Lastly we have the actual service, Apache. We need only tell the cluster where to find its main configuration file and restrict it to running on nodes that have the required filesystem mounted and the IP address active."
+msgstr "În cele din urmă avem serviciul în sine, Apache. Nu trebuie decât să specificăm clusterului unde să găsească fișierul principal de configurare al acestuia și să-l restricționăm în a rula numai pe nodurile care au montat sistemul de fișiere cerut și adresa IP activă."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+"        op monitor interval=\"1min\"\n"
+"clone WebSiteClone WebSite\n"
+"colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
+"colocation website-with-ip inf: WebSiteClone WebIP\n"
+"order apache-after-ip inf: WebIP WebSiteClone\n"
+"order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
+""
+msgstr "\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+"        op monitor interval=\"1min\"\n"
+"clone WebSiteClone WebSite\n"
+"colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
+"colocation website-with-ip inf: WebSiteClone WebIP\n"
+"order apache-after-ip inf: WebIP WebSiteClone\n"
+"order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
+""
+

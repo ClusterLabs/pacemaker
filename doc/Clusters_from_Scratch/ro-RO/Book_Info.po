@@ -1,0 +1,73 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Clusters from Scratch 1.1\n"
+"POT-Creation-Date: 2011-12-31T15:15:49\n"
+"PO-Revision-Date: 2011-11-21 23:38+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Clusters from Scratch"
+msgstr "Clusters from Scratch"
+
+#. Tag: subtitle
+#, no-c-format
+msgid "Creating Active/Passive and Active/Active Clusters on Fedora"
+msgstr "Crearea de Clustere Active/Pasive și Active/Active pe Fedora"
+
+#. Tag: productname
+#, no-c-format
+msgid "Pacemaker"
+msgstr "Pacemaker"
+
+#. Tag: para
+#, no-c-format
+msgid "The purpose of this document is to provide a start-to-finish guide to building an example active/passive cluster with Pacemaker and show how it can be converted to an active/active one."
+msgstr "Scopul acestui document este de a furniza un ghid de la început-la-sfârșit despre cum să construiți un exemplu de cluster activ/pasiv cu Pacemaker și de a arăta cum poate fi convertit la unul de tip activ/activ."
+
+#. Tag: para
+#, no-c-format
+msgid "The example cluster will use:"
+msgstr "Clusterul din exemplu va folosi: "
+
+#. Tag: para
+#, no-c-format
+msgid "&DISTRO; &DISTRO_VERSION; as the host operating system"
+msgstr "&DISTRO; &DISTRO_VERSION; ca sistem de operare gazdă"
+
+#. Tag: para
+#, no-c-format
+msgid "Corosync to provide messaging and membership services,"
+msgstr "Corosync pentru a furniza servicii de mesagerie și apartenență,"
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker to perform resource management,"
+msgstr "Pacemaker pentru a efectua gestiunea resurselor,"
+
+#. Tag: para
+#, no-c-format
+msgid "DRBD as a cost-effective alternative to shared storage,"
+msgstr "DRBD ca o alternativă eficientă ca și cost pentru spațiu de stocare partajat,"
+
+#. Tag: para
+#, no-c-format
+msgid "GFS2 as the cluster filesystem (in active/active mode)"
+msgstr "GFS2 ca și sistem de fișiere de cluster (în mod activ/activ)"
+
+#. Tag: para
+#, no-c-format
+msgid "The crm shell for displaying the configuration and making changes"
+msgstr "Shell-ul crm pentru vizualizarea configurației și pentru realizarea de modificări"
+
+#. Tag: para
+#, no-c-format
+msgid "Given the graphical nature of the Fedora install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs."
+msgstr "Dată fiind natura grafică a procesului de instalare al Fedora, un număr de capturi de ecran sunt incluse. Însă ghidul este compus în mod primar din comenzi, motivele pentru care sunt executate și rezultatele de ieșire așteptate ale acestora."

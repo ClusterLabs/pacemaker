@@ -8,6 +8,11 @@
     <contrib>Primary author</contrib>
     <email>andrew@beekhof.net</email>
   </author>
+  <othercredit class="translator">
+    <firstname>Dan</firstname><surname>Frîncu</surname>
+    <contrib>Romanian translation</contrib>
+    <email>df.cluster@gmail.com</email>
+  </othercredit>
   <othercredit>
     <firstname>Philipp</firstname><surname>Marek</surname>
     <affiliation><orgname>LINBit</orgname></affiliation>
