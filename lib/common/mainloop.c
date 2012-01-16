@@ -34,6 +34,25 @@ crm_trigger_prepare(GSource * source, gint * timeout)
 {
     crm_trigger_t *trig = (crm_trigger_t *) source;
 
+    /* cluster-glue's FD and IPC related sources make use of
+     * g_source_add_poll() but do not set a timeout in their prepare
+     * functions
+     *
+     * This means mainloop's poll() will block until an event for one
+     * of these sources occurs - any /other/ type of source, such as
+     * this one or g_idle_*, that doesn't use g_source_add_poll() is
+     * S-O-L and wont be processed until there is something fd-based
+     * happens.
+     *
+     * Luckily the timeout we can set here affects all sources and
+     * puts an upper limit on how long poll() can take.
+     *
+     * So unconditionally set a small-ish timeout, not too small that
+     * we're in constant motion, which will act as an upper bound on
+     * how long the signal handling might be delayed for.
+     */
+    *timeout = 500; /* Timeout in ms */
+
     return trig->trigger;
 }
 
@@ -219,6 +238,17 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
         mainloop_destroy_trigger((crm_trigger_t *) tmp);
         return FALSE;
     }
+
+#if 0
+    /* If we want signals to interrupt mainloop's poll(), instead of waiting for
+     * the timeout, then we should call siginterrupt() below
+     *
+     * For now, just enforce a low timeout
+     */
+    if(siginterrupt(sig, 1) < 0) {
+        crm_perror(LOG_INFO, "Could not enable system call interruptions for signal %d", sig);
+    }
+#endif
 
     return TRUE;
 }
