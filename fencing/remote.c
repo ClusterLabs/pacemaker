@@ -587,7 +587,7 @@ int process_remote_stonith_exec(xmlNode *msg)
         if(rc == stonith_ok && op->devices) {
             /* Success, are there any more? */
             crm_info("Call to %s for %s passed, %s next", (char*)op->devices->data,
-                      op->target, (char*)op->devices->next?op->devices->next->data:"<none>");
+                     op->target, op->devices->next?(char*)op->devices->next->data:"<none>");
             op->devices = op->devices->next;
         }
     }
