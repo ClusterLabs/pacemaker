@@ -672,15 +672,15 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     }
     
     crm_enable_stderr(to_stderr);
-
     logfile = getenv("HA_debugfile");
+
+#if LIBQB_LOGGING
     if(logfile) {
         int fd = qb_log_file_open(logfile);
         qb_log_filter_ctl(fd, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
         qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
     }
 
-#if LIBQB_LOGGING
     /* Set the default log formats */
     for(lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
         set_format_string(lpc, crm_system_name, FALSE);
