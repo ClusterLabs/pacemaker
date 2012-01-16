@@ -615,7 +615,6 @@ gboolean
 crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to_stderr,
                     int argc, char **argv, gboolean quiet)
 {
-    int lpc = 0;
     const char *logfile = NULL;
     const char *facility = getenv("HA_logfacility");
 
@@ -682,8 +681,11 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     }
 
     /* Set the default log formats */
-    for(lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        set_format_string(lpc, crm_system_name, FALSE);
+    {
+        int lpc = 0;
+        for(lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+            set_format_string(lpc, crm_system_name, FALSE);
+        }
     }
 #endif
 
