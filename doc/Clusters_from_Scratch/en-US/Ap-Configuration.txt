@@ -116,7 +116,7 @@ clone Fencing rsa-fencing
 Users of the services provided by the cluster require an unchanging
 address with which to access it. Additionally, we cloned the address so
 it will be active on both nodes. An iptables rule (created as part of the
-resource agent) is used to ensure that each request only processed by one
+resource agent) is used to ensure that each request only gets processed by one
 of the two clone instances. The additional meta options tell the cluster
 that we want two instances of the clone (one "request bucket" for each
 node) and that if one node fails, then the remaining node should hold

@@ -27,7 +27,7 @@ consult the included man pages. Both sets of output are created from
 the tool, and so will always be in sync with each other and the tool
 itself.
 
-Additionally, the Pacemaker version and supported cluster stack(s) is
+Additionally, the Pacemaker version and supported cluster stack(s) are
 available via the --feature option to pacemakerd.
 
 pass:[# <command>pacemakerd --features</command>]

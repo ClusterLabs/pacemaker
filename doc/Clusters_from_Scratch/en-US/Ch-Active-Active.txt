@@ -28,10 +28,10 @@ loaded to provide membership and quorum information. The motivation
 for wanting to use CMAN for this instead, is to ensure all elements of
 the cluster stack are making decisions based on the same membership
 and quorum data.
-footnote:[A failure to do this can lead to what is called internal
-split-brain - a situation where different parts of the stack disagree
+footnote:[A failure to do this can lead to what is called 'internal
+split-brain' - a situation where different parts of the stack disagree
 about whether some nodes are alive or dead - which quickly leads to
-unnecssary down-time and/or data corruption.]
+unnecessary down-time and/or data corruption.]
 
 In the case of GFS2, the key pieces are the dlm_controld and
 gfs_controld helpers which act as the glue between the filesystem and
@@ -324,10 +324,10 @@ without quorum. We can do this by changing the quorum timeout setting:
 # sed -i.sed "s/.*CMAN_QUORUM_TIMEOUT=.*/CMAN_QUORUM_TIMEOUT=0/g" /etc/sysconfig/cman
 -----
 
-Next we create a basic configuration file and place is in
+Next we create a basic configuration file and place it in
 /etc/cluster/cluster.conf. The name used for each clusternode should
 correspond to that node's uname -n, just as Pacemaker expects. The nodeid
-can be any positive mumber but nust be unique.
+can be any positive mumber but must be unique.
 
 .Basic cluster.conf for a two-node cluster
 [source,XML]
@@ -473,7 +473,7 @@ You should now see both nodes online and services started.
 === Preparation ===
 
 Before we do anything to the existing partition, we need to make sure it
-is unmounted. We do this by tell the cluster to stop the WebFS resource.
+is unmounted. We do this by telling the cluster to stop the WebFS resource.
 This will ensure that other resources (in our case, Apache) using WebFS
 are not only stopped, but stopped in the correct order.
 
@@ -668,7 +668,7 @@ mode.
 
 There's no point making the services active on both locations if we can't
 reach them, so lets first clone the IP address. Cloned IPaddr2 resources
-use an iptables rule to ensure that each request only processed by one of
+use an iptables rule to ensure that each request only gets processed by one of
 the two clone instances. The additional meta options tell the cluster how
 many instances of the clone we want (one "request bucket" for each node)
 and that if all other nodes fail, then the remaining node should hold all

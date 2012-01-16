@@ -181,7 +181,7 @@ crm(stonith)# configure primitive impi-fencing stonith::fence_ipmilan \
 ----
 
 And finally, since we disabled it earlier, we need to re-enable STONITH.
-At this point we should have the following configuration..
+At this point we should have the following configuration.
 
 [source,Bash]
 ----
