@@ -1,623 +1,978 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-24 06:46+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ch-Advanced-Options.xml:1(title)
+#. Tag: title
+#, no-c-format
 msgid "Advanced Configuration"
 msgstr "Configuraţii Avansate"
 
-#: Ch-Advanced-Options.xml:3(title)
-msgid "Connecting to the Cluster Configuration from a Remote Machine"
-msgstr "Conectarea la Configuraţia Clusterului de pe o Maşină la Distanţă"
+#. Tag: title
+#, no-c-format
+msgid "Connecting from a Remote Machine"
+msgstr "Conectarea de pe o Maşină la Distanţă"
 
-#: Ch-Advanced-Options.xml:4(para)
-msgid "Provided Pacemaker is installed on a machine, it is possible to connect to the cluster even if the machine itself is not a part of it. To do this, one simply sets up a number of environment variables and runs the same commands as you would when working on a cluster node."
-msgstr "Cu condiţia ca Pacemaker să fie instalat pe o maşină, este posibilă conectarea la cluster chiar dacă maşina în sine nu este parte din el. Pentru a realiza acest lucru, nu trebuie decât să setaţi un număr de variabile de mediu şi să rulaţi aceleaşi comenzi ca şi când aţi lucra pe un nod din cluster."
+#. Tag: para
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"> <primary>Remote</primary> <secondary>connect</secondary></indexterm> <indexterm significance=\"preferred\"> <primary>Remote</primary> <secondary>administration</secondary></indexterm> Provided Pacemaker is installed on a machine, it is possible to connect to the cluster even if the machine itself is not in the same cluster. To do this, one simply sets up a number of environment variables and runs the same commands as when working on a cluster node."
+msgstr "<indexterm significance=\"preferred\"> <primary>La distanță</primary> <secondary>conectare</secondary></indexterm> <indexterm significance=\"preferred\"> <primary>La distanță</primary> <secondary>administrare</secondary></indexterm> Cu condiţia ca Pacemaker să fie instalat pe o maşină, este posibilă conectarea la cluster chiar dacă maşina în sine nu este parte din el. Pentru a realiza acest lucru, nu trebuie decât să setaţi un număr de variabile de mediu şi să rulaţi aceleaşi comenzi ca şi când aţi lucra pe un nod din cluster."
 
-#: Ch-Advanced-Options.xml:9(title)
+#. Tag: title
+#, no-c-format
 msgid "Environment Variables Used to Connect to Remote Instances of the CIB"
 msgstr "Variabile de Mediu Folosite pentru Conectare la Instanţe la Distanţă ale CIB-ului"
 
-#: Ch-Advanced-Options.xml:13(entry)
-msgid "Environment Variable"
-msgstr "Variabilă de Mediu"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Environment Variable</primary><secondary>Remote Administration</secondary></indexterm> Environment Variable"
+msgstr "<indexterm significance=\"preferred\"><primary>Variabilă de Mediu</primary><secondary>Administrare la Distanță</secondary></indexterm> Variabilă de Mediu"
 
-#: Ch-Advanced-Options.xml:14(entry)
-#: Ch-Advanced-Options.xml:60(entry)
-#: Ch-Advanced-Options.xml:223(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Description"
 msgstr "Descriere"
 
-#: Ch-Advanced-Options.xml:17(entry)
-msgid "CIB_user"
-msgstr "CIB_user"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>CIB_*, Env. Var. for Remote Conn.</primary><secondary>user</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Environment Variable</primary><secondary>CIB_</secondary><tertiary>user</tertiary></indexterm> CIB_user"
+msgstr "<indexterm significance=\"preferred\"><primary>CIB_*, Env. Var. for Remote Conn.</primary><secondary>user</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Environment Variable</primary><secondary>CIB_</secondary><tertiary>user</tertiary></indexterm> CIB_user"
 
-#: Ch-Advanced-Options.xml:18(emphasis)
-msgid "$USER"
-msgstr "$USER"
+#. Tag: entry
+#, no-c-format
+msgid "The user to connect as. Needs to be part of the <literal>hacluster</literal> group on the target host. Defaults to <emphasis>$USER</emphasis>."
+msgstr "Userul sub care se va realiza conectarea. Trebuie să facă parte din grupul <literal>hacluster</literal> pe gazda destinaţie. Valoarea implicită este <emphasis>$USER</emphasis>."
 
-#: Ch-Advanced-Options.xml:18(entry)
-msgid "The user to connect as. Needs to be part of the hacluster group on the target host. Defaults to <placeholder-1/>"
-msgstr "Userul sub care se va realiza conectarea. Trebuie să facă parte din grupul hacluster pe gazda destinaţie. Valoarea implicită este <placeholder-1/>"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>CIB_*, Env. Var. for Remote Conn.</primary><secondary>passwd</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Environment Variable</primary><secondary>CIB_</secondary><tertiary>passwd</tertiary></indexterm> CIB_passwd"
+msgstr "<indexterm significance=\"preferred\"><primary>CIB_*, Env. Var. pentru Conexiuni la Distanță</primary><secondary>passwd</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Variabilă de Mediu</primary><secondary>CIB_</secondary><tertiary>passwd</tertiary></indexterm> CIB_passwd"
 
-#: Ch-Advanced-Options.xml:22(entry)
-msgid "CIB_passwd"
-msgstr "CIB_passwd"
-
-#: Ch-Advanced-Options.xml:23(entry)
-msgid "The user's password. Read from the command line if unset"
+#. Tag: entry
+#, no-c-format
+msgid "The user's password. Read from the command line if unset."
 msgstr "Parola utilizatorului. Este citită de la linia de comandă dacă nu este setată"
 
-#: Ch-Advanced-Options.xml:26(entry)
-msgid "CIB_server"
-msgstr "CIB_server"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>CIB_*, Env. Var. for Remote Conn.</primary><secondary>server</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Environment Variable</primary><secondary>CIB_</secondary><tertiary>server</tertiary></indexterm> CIB_server"
+msgstr "<indexterm significance=\"preferred\"><primary>CIB_*, Env. Var. pentru Conexiuni la Distanță</primary><secondary>server</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Variabilă de Mediu</primary><secondary>CIB_</secondary><tertiary>server</tertiary></indexterm> CIB_server"
 
-#: Ch-Advanced-Options.xml:27(emphasis)
-msgid "localhost"
-msgstr "localhost"
+#. Tag: entry
+#, no-c-format
+msgid "The host to contact. Defaults to <emphasis>localhost</emphasis>."
+msgstr "Gazda care să fie contactată. Valoarea implicită este <emphasis>localhost</emphasis>."
 
-#: Ch-Advanced-Options.xml:27(entry)
-msgid "The host to contact. Defaults to <placeholder-1/>."
-msgstr "Gazda care să fie contactată. Valoarea implicită este <placeholder-1/>."
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>CIB_*, Env. Var. for Remote Conn.</primary><secondary>port</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Environment Variable</primary><secondary>CIB_</secondary><tertiary>port</tertiary></indexterm> CIB_port"
+msgstr "<indexterm significance=\"preferred\"><primary>CIB_*, Env. Var. pentru Conexiuni la Distanță</primary><secondary>port</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Variabilă de Mediu</primary><secondary>CIB_</secondary><tertiary>port</tertiary></indexterm> CIB_port"
 
-#: Ch-Advanced-Options.xml:30(entry)
-msgid "CIB_port"
-msgstr "CIB_port"
-
-#: Ch-Advanced-Options.xml:31(entry)
-msgid "The port on which to contact the server. Required."
+#. Tag: entry
+#, no-c-format
+msgid "The port on which to contact the server; required."
 msgstr "Portul pe care să contacteze serverul. Cerinţă obligatorie."
 
-#: Ch-Advanced-Options.xml:34(entry)
-msgid "CIB_encrypted"
-msgstr "CIB_encrypted"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>CIB_*, Env. Var. for Remote Conn.</primary><secondary>encrypted</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Environment Variable</primary><secondary>CIB_</secondary><tertiary>encrypted</tertiary></indexterm> CIB_encrypted"
+msgstr "<indexterm significance=\"preferred\"><primary>CIB_*, Env. Var. pentru Conexiuni la Distanță</primary><secondary>encrtpted</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Variabilă de Mediu</primary><secondary>CIB_</secondary><tertiary>encrypted</tertiary></indexterm> CIB_encrypted"
 
-#: Ch-Advanced-Options.xml:35(emphasis)
-msgid "true"
-msgstr "true"
+#. Tag: entry
+#, no-c-format
+msgid "Encrypt network traffic; defaults to <emphasis>true</emphasis>."
+msgstr "Criptează traficul de reţea. Valoarea implicită este <emphasis>true</emphasis>."
 
-#: Ch-Advanced-Options.xml:35(entry)
-msgid "Encrypt network traffic. Defaults to <placeholder-1/>."
-msgstr "Criptează traficul de reţea. Valoarea implicită este <placeholder-1/>."
+#. Tag: para
+#, no-c-format
+msgid "So, if <literal>c001n01</literal> is an active cluster node and is listening on <literal>1234</literal> for connections, and <literal>someguy</literal> is a member of the <literal>hacluster</literal> group, then the following would prompt for <literal>someguy</literal>'s password and return the cluster's current configuration:"
+msgstr "Deci dacă <literal>c001n01</literal> este un nod activ de cluster şi ascultă pentru conexiuni pe <literal>1234</literal>, iar <literal>someguy</literal> este un membru al grupului <literal>hacluster</literal>. Atunci următoarele ar cere parola lui <literal>someguy</literal> şi ar returna configuraţia curentă a clusterului:"
 
-#: Ch-Advanced-Options.xml:40(para)
-msgid "So if c001n01 is an active cluster node and is listening on 1234 for connections, and someguy is a member of the hacluster group. Then the following would prompt for someguy's password and return the cluster's current configuration:"
-msgstr "Deci dacă c001n01 este un nod activ de cluster şi ascultă pentru conexiuni pe 1234, iar vreun_tip este un membru al grupului hacluster. Atunci următoarele ar cere parola lui vreun_tip şi ar returna configuraţia curentă a clusterului:"
-
-#: Ch-Advanced-Options.xml:45(userinput)
-#, no-wrap
-msgid ""
-"\n"
+#. Tag: programlisting
+#, no-c-format
+msgid "<userinput>\n"
 "  export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;\n"
-"  cibadmin -Q\n"
-"\t"
+"  cibadmin -Q </userinput> "
 msgstr ""
-"\n"
-"  export CIB_port=1234; export CIB_server=c001n01; export CIB_user=vreun_tip;\n"
-"  cibadmin -Q\n"
-"\t"
+"<userinput>\n"
+"  export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;\n"
+"  cibadmin -Q </userinput> "
 
-#: Ch-Advanced-Options.xml:50(para)
-msgid "For security reasons, the cluster does not listen remote connections by default. If you wish to allow remote access, you need to set the <literal>remote-tls-port</literal> (encrypted) or <literal>remote-clear-port</literal> (unencrypted) top-level options (ie. those kept in the cib tag , like <literal>num_updates</literal> and <literal>epoch</literal>)."
+#. Tag: para
+#, no-c-format
+msgid "For security reasons, the cluster does not listen for remote connections by default. If you wish to allow remote access, you need to set the <literal>remote-tls-port</literal> (encrypted) or <literal>remote-clear-port</literal> (unencrypted) top-level options (ie., those kept in the cib tag, like <literal>num_updates</literal> and <literal>epoch</literal>)."
 msgstr "Din motive de securitate, clusterul nu ascultă pentru conexiuni la distanţă în mod implicit. Dacă doriţi să permiteţi accesul de la distanţă, trebuie să setaţi opţiunile primare <literal>remote-tls-port</literal> (criptat) sau <literal>remote-clear-port</literal> (necriptat) (ex. acelea stocate în tag-ul cib, precum <literal>num_updates</literal> şi <literal>epoch</literal>)."
 
-#: Ch-Advanced-Options.xml:55(title)
-msgid "Extra top-level CIB options for remote access"
-msgstr "Opţiuni primare suplimentare de CIB pentru acces la distanţă"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Remote</primary><secondary>connect, CIB options</secondary></indexterm> Extra top-level CIB options for remote access"
+msgstr "<indexterm significance=\"preferred\"><primary>La distanță</primary><secondary>conectare, opțiuni CIB</secondary></indexterm> Opțiuni primare suplimentare pentru accesul la distanță"
 
-#: Ch-Advanced-Options.xml:59(entry)
-#: Ch-Advanced-Options.xml:222(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Field"
 msgstr "Câmp"
 
-#: Ch-Advanced-Options.xml:63(entry)
-msgid "remote-tls-port"
-msgstr "remote-tls-port"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>remote-tls-port</primary></indexterm> remote-tls-port"
+msgstr "<indexterm significance=\"preferred\"><primary>remote-tls-port</primary></indexterm> remote-tls-port"
 
-#: Ch-Advanced-Options.xml:64(emphasis)
-#: Ch-Advanced-Options.xml:68(emphasis)
-msgid "none"
-msgstr "none"
+#. Tag: entry
+#, no-c-format
+msgid "Listen for encrypted remote connections on this port. Default: <emphasis>none</emphasis>"
+msgstr "Ascultă pentru conexiuni de la distanţă criptate pe acest port. Valoarea implicită: <emphasis>none</emphasis>"
 
-#: Ch-Advanced-Options.xml:64(entry)
-msgid "Listen for encrypted remote connections on this port. Default: <placeholder-1/>"
-msgstr "Ascultă pentru conexiuni de la distanţă criptate pe acest port. Valoarea implicită: <placeholder-1/>"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>remote-clear-port</primary></indexterm> remote-clear-port"
+msgstr "<indexterm significance=\"preferred\"><primary>remote-clear-port</primary></indexterm> remote-clear-port"
 
-#: Ch-Advanced-Options.xml:67(entry)
-msgid "remote-clear-port"
-msgstr "remote-clear-port"
+#. Tag: entry
+#, no-c-format
+msgid "Listen for plaintext remote connections on this port. Default: <emphasis>none</emphasis>"
+msgstr "Ascultă pentru conexiuni de la distanţă în clar pe acest port. Valoarea implicită: <emphasis>none</emphasis>"
 
-#: Ch-Advanced-Options.xml:68(entry)
-msgid "Listen for plaintext remote connections on this port. Default: <placeholder-1/>"
-msgstr "Ascultă pentru conexiuni de la distanţă în clar pe acest port. Valoarea implicită: <placeholder-1/>"
-
-#: Ch-Advanced-Options.xml:75(title)
+#. Tag: title
+#, no-c-format
 msgid "Specifying When Recurring Actions are Performed"
 msgstr "Specificând Când Acţiunile Recurente sunt Efectuate"
 
-#: Ch-Advanced-Options.xml:76(para)
+#. Tag: para
+#, no-c-format
 msgid "By default, recurring actions are scheduled relative to when the resource started. So if your resource was last started at 14:32 and you have a backup set to be performed every 24 hours, then the backup will always run at in the middle of the business day - hardly desirable."
 msgstr "În mod implicit, acţiunile recurente sunt programate în mod relativ faţă de când a fost pornită resursa. Deci dacă resursa voastră a fost pornită la 14:32 şi aveţi un backup setat să fie executat la fiecare 24 de ore, atunci backup-ul va rula întotdeauna în mijlocul zilei de lucru - deloc de dorit."
 
-#: Ch-Advanced-Options.xml:80(para)
-msgid "To specify a date/time that the operation should be relative to, set the operation's <literal>interval-origin</literal>. The cluster uses this point to calculate the correct <literal>start-delay</literal> such that the operation will occur at origin + (interval * N)."
-msgstr "Pentru a specifica un/o timp/dată faţă de care ar trebui să fie relativă operaţiunea, setaţi <literal>interval-origin</literal> pentru operaţiune. Clusterul foloseşte acest punct pentru a calcula un <literal>start-delay</literal> corect astfel încât operaţiunea să se întâmple la origine + (interval * N)."
+#. Tag: para
+#, no-c-format
+msgid "To specify a date/time that the operation should be relative to, set the operation's <literal>interval-origin</literal>. The cluster uses this point to calculate the correct <literal>start-delay</literal> such that the operation will occur at <emphasis>origin + (interval * N)</emphasis>."
+msgstr "Pentru a specifica un/o timp/dată faţă de care ar trebui să fie relativă operaţiunea, setaţi <literal>interval-origin</literal> pentru operaţiune. Clusterul foloseşte acest punct pentru a calcula un <literal>start-delay</literal> corect astfel încât operaţiunea să se întâmple la <emphasis>origine + (interval * N)</emphasis>."
 
-#: Ch-Advanced-Options.xml:84(para)
-msgid "So if the operation's interval is 24h, it's interval-origin is set to 02:00 and it is currently 14:32, then the cluster would initiate the operation with a start delay of 11 hours and 28 minutes. If the resource is moved to another node before 2am, then the operation is of course cancelled."
-msgstr "Deci dacă intervalul operaţiunii este de 24 de ore, parametrul interval-origin este setat la 02:00 şi acum este 14:32, atunci clusterul va iniţia operaţiunea cu un start-delay de 11 ore şi 28 de minute. Dacă resursa este mutată pe un alt nod înainte de ora 2 dimineaţa, atunci operaţiunea este desigur anulată."
+#. Tag: para
+#, no-c-format
+msgid "So, if the operation's interval is 24h, it's interval-origin is set to <literal>02:00</literal> and it is currently <literal>14:32</literal>, then the cluster would initiate the operation with a start delay of 11 hours and 28 minutes. If the resource is moved to another node before 2am, then the operation is of course cancelled."
+msgstr "Deci dacă intervalul operaţiunii este de 24 de ore, parametrul interval-origin este setat la <literal>02:00</literal> şi acum este <literal>14:32</literal>, atunci clusterul va iniţia operaţiunea cu un start-delay de 11 ore şi 28 de minute. Dacă resursa este mutată pe un alt nod înainte de ora 2 dimineaţa, atunci operaţiunea este desigur anulată."
 
-#: Ch-Advanced-Options.xml:88(para)
+#. Tag: para
+#, no-c-format
 msgid "The value specified for interval and <literal>interval-origin</literal> can be any date/time conforming to the <ulink url=\"http://en.wikipedia.org/wiki/ISO_8601\">ISO8601 standard</ulink>. By way of example, to specify an operation that would run on the first Monday of 2009 and every Monday after that you would add:"
 msgstr "Valoarea specificată pentru interval şi <literal>interval-origin</literal> poate fi orice dată/timp ce se conformează cu <ulink url=\"http://en.wikipedia.org/wiki/ISO_8601\">standardul ISO8601</ulink>. Spre exemplu, pentru a specifica o operaţiune care ar rula în prima zi de Luni din 2009 şi în fiecare zi de Luni de atunci înainte aţi adauga:"
 
-#: Ch-Advanced-Options.xml:93(title)
+#. Tag: title
+#, no-c-format
 msgid "Specifying a Base for Recurring Action Intervals"
 msgstr "Specificând o Bază pentru Intervalele Acţiunilor Recurente"
 
-#: Ch-Advanced-Options.xml:94(programlisting)
-#, no-wrap
-msgid ""
-"\n"
-"  &lt;op id=\"my-weekly-action\" name=\"custom-action\" interval=\"P7D\" interval-origin=\"2009-W01-1\"/&gt;\n"
-"\t"
-msgstr ""
-"\n"
-"  &lt;op id=\"my-weekly-action\" name=\"custom-action\" interval=\"P7D\" interval-origin=\"2009-W01-1\"/&gt;\n"
-"\t"
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;op id=\"my-weekly-action\" name=\"custom-action\" interval=\"P7D\" interval-origin=\"2009-W01-1\"/&gt; "
+msgstr "&lt;op id=\"my-weekly-action\" name=\"custom-action\" interval=\"P7D\" interval-origin=\"2009-W01-1\"/&gt; "
 
-#: Ch-Advanced-Options.xml:100(title)
+#. Tag: title
+#, no-c-format
 msgid "Moving Resources"
 msgstr "Mutarea Resurselor"
 
-#: Ch-Advanced-Options.xml:102(title)
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Moving Resources</primary>"
+msgstr "<primary>Mutarea Resurselor</primary>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Resource</primary><secondary>Moving</secondary>"
+msgstr "<primary>Mutarea</primary><secondary>Resurselor</secondary>"
+
+#. Tag: title
+#, no-c-format
 msgid "Manual Intervention"
 msgstr "Intervenţie Manuală"
 
-#: Ch-Advanced-Options.xml:103(para)
-msgid "There are primarily two occasions when you would want to move a resource from it's current location: when the whole node is under maintenance and when a single resource needs to be moved."
+#. Tag: para
+#, no-c-format
+msgid "There are primarily two occasions when you would want to move a resource from it's current location: when the whole node is under maintenance, and when a single resource needs to be moved."
 msgstr "Sunt în principal două ocazii în care aţi vrea să mutaţi o resursă de pe locaţia ei curentă: când întregul nod este sub mentenanţă şi când o singură resursă trebuie mutată."
 
-#: Ch-Advanced-Options.xml:104(para)
-msgid "In the case where everything needs to move, since everything eventually comes down to a score, you could create constraints for every resource you have preventing it from running on that node. While the configuration can seem convoluted at times, not even we would require this of administrators."
+#. Tag: para
+#, no-c-format
+msgid "Since everything eventually comes down to a score, you could create constraints for every resource to prevent them from running on one node. While the configuration can seem convoluted at times, not even we would require this of administrators."
 msgstr "În cazul în care totul trebuie mutat, din moment ce totul ajunge eventual să ţină de un scor, aţi putea crea restricţii pentru fiecare resursă pe care o aveţi împiedicând-o din a mai rula pe acel nod. În timp ce configuraţia poate părea complicată în anumite momente, nici chiar noi nu am solicita acest lucru de la administratori."
 
-#: Ch-Advanced-Options.xml:108(para)
-msgid "Instead one can set a special node attribute which tells the cluster \"don't let anything run here\". There is even a helpful tool to help query and set it called <command>crm_standby</command>. To check the standby status of the current machine, simply run:"
+#. Tag: para
+#, no-c-format
+msgid "Instead one can set a special node attribute which tells the cluster \"don't let anything run here\". There is even a helpful tool to help query and set it, called <command>crm_standby</command>. To check the standby status of the current machine, simply run:"
 msgstr "În schimb aţi putea seta un atribut special de nod care îi spune clusterului \"nu lăsa nimic să ruleze aici\". Există chiar şi un utilitar pentru a ajuta la interogarea şi setarea acestuia numit <command>crm_standby</command>. Pentru a verifica status-ul stării de aşteptare pe maşina curentă, pur şi simplu rulaţi:"
 
-#: Ch-Advanced-Options.xml:113(command)
-msgid "crm_standby --get-value"
-msgstr "crm_standby --get-value"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_standby --get-value</command>"
+msgstr "<command>crm_standby --get-value</command>"
 
-#: Ch-Advanced-Options.xml:114(para)
-msgid "A value of true indicates that the node is NOT able to host any resources and a value of false indicates that it CAN. You can also check the status of other nodes in the cluster by specifying the <parameter>--node-uname</parameter> option. Eg."
-msgstr "O valoare de adevăr indică faptul că nodul NU este capabil să găzduiască resurse şi o valoare de fals indică faptul că acesta POATE. Puteţi să verificaţi de asemenea status-ul celorlalte noduri din cluster specificând opţiunea <parameter>--node-uname</parameter>. Ex."
+#. Tag: para
+#, no-c-format
+msgid "A value of <literal>true</literal> indicates that the node is <emphasis>NOT</emphasis> able to host any resources, while a value of <literal>false</literal> says that it <emphasis>CAN</emphasis>."
+msgstr "O valoarea de <literal>true</literal> indică faptul că nodul <emphasis>NU</emphasis> poate găzdui nici un fel de resurse, în timp ce o valoare de <literal>false</literal> spune că acesta <emphasis>POATE</emphasis>."
 
-#: Ch-Advanced-Options.xml:118(command)
-msgid "crm_standby --get-value --node-uname sles-2"
-msgstr "crm_standby --get-value --node-uname sles-2"
+#. Tag: para
+#, no-c-format
+msgid "You can also check the status of other nodes in the cluster by specifying the <parameter>--node-uname</parameter> option:"
+msgstr "Puteţi să verificaţi de asemenea status-ul celorlalte noduri din cluster specificând opţiunea <parameter>--node-uname</parameter>:"
 
-#: Ch-Advanced-Options.xml:119(para)
-msgid "To change the current node's standby status, use <parameter>--attr-value</parameter> instead of <parameter>--get-value</parameter>. Eg."
-msgstr "Pentru a schimba status-ul stării de aşteptare a nodului curent, folosiţi <parameter>--attr-value</parameter> în loc de <parameter>--get-value</parameter>. Ex."
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_standby --get-value --node-uname sles-2</command>"
+msgstr "<command>crm_standby --get-value --node-uname sles-2</command>"
 
-#: Ch-Advanced-Options.xml:120(command)
-msgid "crm_standby --attr-value"
-msgstr "crm_standby --attr-value"
+#. Tag: para
+#, no-c-format
+msgid "To change the current node's standby status, use <parameter>--attr-value</parameter> instead of <parameter>--get-value</parameter>."
+msgstr "Pentru a schimba status-ul stării de aşteptare a nodului curent, folosiţi <parameter>--attr-value</parameter> în loc de <parameter>--get-value</parameter>."
 
-#: Ch-Advanced-Options.xml:121(para)
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_standby --attr-value</command>"
+msgstr "<command>crm_standby --attr-value</command>"
+
+#. Tag: para
+#, no-c-format
 msgid "Again, you can change another host's value by supplying a host name with <parameter>--node-uname</parameter>."
 msgstr "Din nou, puteţi schimba valoarea altei gazde prin furnizarea unui hostname cu <parameter>--node-uname</parameter>."
 
-#: Ch-Advanced-Options.xml:122(para)
-msgid "When only one resource is required to move, we do this by creating location constraints. However once again we provide a user friendly shortcut as part of the <command>crm_resource</command> command which creates and modifies the extra constraints for you. If Email was running on sles-1 and you wanted it moved to a specific location, the command would look something like:"
-msgstr "Când doar o resursă este necesar a fi mutată, realizăm acest lucru prin crearea de restricţii de locaţie. În schimb încă o dată furnizăm utilizatorului o scurtătură prietenoasă ca parte din comanda <command>crm_resource</command> care creează şi modifică restricţiile suplimentare pentru voi. Dacă Email rula pe sles-1 şi doreaţi mutarea acesteia pe o locaţie specifică, comanda ar arăta ceva de genul:"
+#. Tag: para
+#, no-c-format
+msgid "When only one resource is required to move, we do this by creating location constraints. However, once again we provide a user friendly shortcut as part of the <command>crm_resource</command> command, which creates and modifies the extra constraints for you. If <literal>Email</literal> was running on <literal>sles-1</literal> and you wanted it moved to a specific location, the command would look something like:"
+msgstr "Când doar o resursă este necesar a fi mutată, realizăm acest lucru prin crearea de restricţii de locaţie. În schimb încă o dată furnizăm utilizatorului o scurtătură prietenoasă ca parte din comanda <command>crm_resource</command> care creează şi modifică restricţiile suplimentare pentru voi. Dacă <literal>Email</literal> rula pe <literal>sles-1</literal> şi doreaţi mutarea acesteia pe o locaţie specifică, comanda ar arăta ceva de genul:"
 
-#: Ch-Advanced-Options.xml:127(command)
-#: Ch-Advanced-Options.xml:135(command)
-msgid "crm_resource -M -r Email -H sles-2"
-msgstr "crm_resource -M -r Email -H sles-2"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_resource -M -r Email -H sles-2</command>"
+msgstr "<command>crm_resource -M -r Email -H sles-2</command>"
 
-#: Ch-Advanced-Options.xml:128(para)
+#. Tag: para
+#, no-c-format
 msgid "Behind the scenes, the tool will create the following location constraint:"
 msgstr "În culise, utilitarul va crea următoarea restricţie de locaţie:"
 
-#: Ch-Advanced-Options.xml:130(programlisting)
-#, no-wrap
-msgid ""
-"\n"
-"  &lt;rsc_location rsc=\"Email\" node=\"sles-2\" score=\"INFINITY\"/&gt;\n"
-"\t  "
-msgstr ""
-"\n"
-"  &lt;rsc_location rsc=\"Email\" node=\"sles-2\" score=\"INFINITY\"/&gt;\n"
-"\t  "
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_location rsc=\"Email\" node=\"sles-2\" score=\"INFINITY\"/&gt; "
+msgstr "&lt;rsc_location rsc=\"Email\" node=\"sles-2\" score=\"INFINITY\"/&gt; "
 
-#: Ch-Advanced-Options.xml:134(para)
-msgid "It is important to note that subsequent invocations of <command>crm_resource -M</command> are not cumulative. So if you ran:"
+#. Tag: para
+#, no-c-format
+msgid "It is important to note that subsequent invocations of <command>crm_resource -M</command> are not cumulative. So, if you ran these commands"
 msgstr "Este important de menţionat că invocări ulterioare ale <command>crm_resource -M</command> nu sunt cumulative. Deci dacă aţi rula:"
 
-#: Ch-Advanced-Options.xml:136(command)
-msgid "crm_resource -M -r Email -H sles-3"
-msgstr "crm_resource -M -r Email -H sles-3"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_resource -M -r Email -H sles-2</command>\n"
+"          <command>crm_resource -M -r Email -H sles-3</command>"
+msgstr ""
+"<command>crm_resource -M -r Email -H sles-2</command>\n"
+"          <command>crm_resource -M -r Email -H sles-3</command>"
 
-#: Ch-Advanced-Options.xml:137(para)
+#. Tag: para
+#, no-c-format
 msgid "then it is as if you had never performed the first command."
 msgstr "atunci ar fi ca şi când nu aţi fi efectuat niciodată prima comandă."
 
-#: Ch-Advanced-Options.xml:138(para)
+#. Tag: para
+#, no-c-format
 msgid "To allow the resource to move back again, use:"
 msgstr "Pentru a permite resursei să se mute înapoi, folosiţi:"
 
-#: Ch-Advanced-Options.xml:139(command)
-#: Ch-Advanced-Options.xml:146(command)
-msgid "crm_resource -U -r Email"
-msgstr "crm_resource -U -r Email"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_resource -U -r Email</command>"
+msgstr "<command>crm_resource -U -r Email</command>"
 
-#: Ch-Advanced-Options.xml:140(para)
-msgid "Note the use of the word allow. The resource can move back to its original location but, depending on resource stickiness, it may stay where it is. To be absolutely certain that it moves back to sles-1, move it there before issuing the call to <command>crm_resource -U</command>:"
-msgstr "Luaţi aminte de folosirea cuvântului allow. Resursa se poate muta înapoi la locaţia originală a acesteia însă, în funcţie de adezivitatea resursei, ar putea să rămână acolo unde este. Pentru a fi absolut siguri că se mută înapoi pe sles-1, mutaţi-o acolo înainte de a apela <command>crm_resource -U</command>:"
+#. Tag: para
+#, no-c-format
+msgid "Note the use of the word <emphasis>allow</emphasis>. The resource can move back to its original location but, depending on <literal>resource-stickiness</literal>, it might stay where it is. To be absolutely certain that it moves back to <literal>sles-1</literal>, move it there before issuing the call to <command>crm_resource -U</command>:"
+msgstr "Luaţi aminte de folosirea cuvântului <emphasis>allow</emphasis>. Resursa se poate muta înapoi la locaţia originală a acesteia însă, în funcţie de <emphasis>resource-stickiness</emphasis>, ar putea să rămână acolo unde este. Pentru a fi absolut siguri că se mută înapoi pe <literal>sles-1</literal>, mutaţi-o acolo înainte de a apela <command>crm_resource -U</command>:"
 
-#: Ch-Advanced-Options.xml:145(command)
-msgid "crm_resource -M -r Email -H sles-1"
-msgstr "crm_resource -M -r Email -H sles-1"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_resource -M -r Email -H sles-1</command>\n"
+"          <command>crm_resource -U -r Email</command>"
+msgstr ""
+"<command>crm_resource -M -r Email -H sles-1</command>\n"
+"          <command>crm_resource -U -r Email</command>"
 
-#: Ch-Advanced-Options.xml:147(para)
+#. Tag: para
+#, no-c-format
 msgid "Alternatively, if you only care that the resource should be moved from its current location, try"
 msgstr "Ca alternativă, dacă vă pasă doar că resursa ar trebui să fie mutată din locaţia ei curentă, încercaţi"
 
-#: Ch-Advanced-Options.xml:148(command)
-msgid "crm_resource -M -r Email"
-msgstr "crm_resource -M -r Email"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_resource -M -r Email</command>"
+msgstr "<command>crm_resource -M -r Email</command>"
 
-#: Ch-Advanced-Options.xml:149(para)
-msgid "Which will instead create a negative constraint. Eg."
-msgstr "Care va crea în schimb o restricţie negativă. Ex."
+#. Tag: para
+#, no-c-format
+msgid "Which will instead create a negative constraint, like"
+msgstr "Care va crea în schimb o restricţie negativă, precum"
 
-#: Ch-Advanced-Options.xml:150(para)
+#. Tag: programlisting
+#, no-c-format
 msgid "&lt;rsc_location rsc=\"Email\" node=\"sles-1\" score=\"-INFINITY\"/&gt;"
 msgstr "&lt;rsc_location rsc=\"Email\" node=\"sles-1\" score=\"-INFINITY\"/&gt;"
 
-#: Ch-Advanced-Options.xml:151(para)
-msgid "This will achieve the desired effect but will also have long-term consequences. As the tool will warn you, the creation of a <literal>-INFINITY</literal> constraint will prevent the resource from running on that node until <command>crm_resource -U</command> is used. This includes the situation where every other cluster node is no longer available."
-msgstr "Acest lucru va atinge efectul scontat dar va avea consecinţe pe termen lung. Aşa cum utilitarul vă va avertiza de altfel, crearea unei restricţii cu <literal>-INFINITY</literal> va împiedica resursa de a mai rula pe acel nod până ce comanda <command>crm_resource -U</command> va fi folosită. Acesta include situaţia în care oricare alt nod din cluster nu mai este disponibil."
+#. Tag: para
+#, no-c-format
+msgid "This will achieve the desired effect, but will also have long-term consequences. As the tool will warn you, the creation of a <literal>-INFINITY</literal> constraint will prevent the resource from running on that node until <command>crm_resource -U</command> is used. This includes the situation where every other cluster node is no longer available!"
+msgstr "Acest lucru va atinge efectul scontat dar va avea consecinţe pe termen lung. Aşa cum utilitarul vă va avertiza de altfel, crearea unei restricţii cu <literal>-INFINITY</literal> va împiedica resursa de a mai rula pe acel nod până ce comanda <command>crm_resource -U</command> va fi folosită. Acesta include situaţia în care oricare alt nod din cluster nu mai este disponibil!"
 
-#: Ch-Advanced-Options.xml:156(para)
-msgid "In some cases, such as when resource stickiness is set to <literal>INFINITY</literal>, it is possible that you will end up with the problem described in <xref linkend=\"node-score-equal\"/>. The tool can detect some of these cases and deals with them by also creating both a positive and negative constraint. Eg."
-msgstr "În anumite cazuri, precum cel în care adezivitatea resursei este setată la <literal>INFINITY</literal>, este posibil să ajungeţi la problema descrisă în <xref linkend=\"node-score-equal\"/>. Utilitarul poate detecta unele din aceste cazuri şi le tratează prin crearea atât de restricţii pozitive cât şi negative. Ex."
+#. Tag: para
+#, no-c-format
+msgid "In some cases, such as when <literal>resource-stickiness</literal> is set to <literal>INFINITY</literal>, it is possible that you will end up with the problem described in <xref linkend=\"node-score-equal\" />. The tool can detect some of these cases and deals with them by also creating both a positive and negative constraint. Eg."
+msgstr "În anumite cazuri, precum cel în care <literal>resource-stickiness</literal> este setată la <literal>INFINITY</literal>, este posibil să ajungeţi la problema descrisă în <xref linkend=\"node-score-equal\" />. Utilitarul poate detecta unele din aceste cazuri şi le tratează prin crearea atât de restricţii pozitive cât şi negative. Ex."
 
-#: Ch-Advanced-Options.xml:160(para)
-msgid "Email prefers sles-1 with a score of <literal>-INFINITY</literal>"
-msgstr "Email preferă sles-1 cu un scor de <literal>-INFINITY</literal>"
+#. Tag: para
+#, no-c-format
+msgid "<literal>Email</literal> prefers <literal>sles-1</literal> with a score of <literal>-INFINITY</literal>"
+msgstr "<literal>Email</literal> preferă <literal>sles-1</literal> cu un scor de <literal>-INFINITY</literal>"
 
-#: Ch-Advanced-Options.xml:161(para)
-msgid "Email prefers sles-2 with a score of <literal>INFINITY</literal>"
-msgstr "Email preferă sles-2 cu un scor de <literal>-INFINITY</literal>"
+#. Tag: para
+#, no-c-format
+msgid "<literal>Email</literal> prefers <literal>sles-2</literal> with a score of <literal>INFINITY</literal>"
+msgstr "<literal>Email</literal> preferă <literal>sles-2</literal> cu un scor de <literal>INFINITY</literal>"
 
-#: Ch-Advanced-Options.xml:162(para)
+#. Tag: para
+#, no-c-format
 msgid "which has the same long-term consequences as discussed earlier."
 msgstr "care are aceleaşi consecinţe pe termen lung precum am discutat anterior."
 
-#: Ch-Advanced-Options.xml:165(title)
+#. Tag: title
+#, no-c-format
 msgid "Moving Resources Due to Failure"
 msgstr "Mutarea Resurselor Datorită Eşecului"
 
-#: Ch-Advanced-Options.xml:168(para)
-msgid "The naming of this option was unfortunate as it is easily confused with true migration, the process of moving a resource from one node to another without stopping it. Xen virtual guests are the most common example of resources that can be migrated in this manner."
-msgstr "Denumirea acestei opţiuni este nefericită deoarece este uşor confundată cu migrarea adevărată, procesul mutării unei resurse de pe un nod pe altul fără oprirea acesteia. Oaspeţii virtuali de Xen sunt cel mai comun exemplu de resurse care pot fi migrate în această manieră."
+#. Tag: para
+#, no-c-format
+msgid "New in 1.0 is the concept of a migration threshold<footnote> <para> The naming of this option was unfortunate as it is easily confused with true migration, the process of moving a resource from one node to another without stopping it. Xen virtual guests are the most common example of resources that can be migrated in this manner. </para> </footnote>. Simply define <literal>migration-threshold=N</literal> for a resource and it will migrate to a new node after N failures. There is no threshold defined by default. To determine the resource's current failure status and limits, use <command>crm_mon --failcounts</command>."
+msgstr "Nou în 1.0 este conceptul unui prag de migrare<footnote> <para> Denumirea acestei opţiuni este nefericită deoarece este uşor confundată cu migrarea adevărată, procesul mutării unei resurse de pe un nod pe altul fără oprirea acesteia. Oaspeţii virtuali de Xen sunt cel mai comun exemplu de resurse care pot fi migrate în această manieră. </para> </footnote>. Pur şi simplu definiţi <literal>migration-threshold=N</literal> pentru o resursă şi aceasta va migra pe un nod nou după N eşecuri. Nu este definit nici un prag în mod implicit. Pentru a determina status-ul de eşec şi limitele curente ale resursei, folosiţi <command>crm_mon --failcounts</command>"
 
-#: Ch-Advanced-Options.xml:166(para)
-msgid "New in 1.0 is the concept of a migration threshold <placeholder-1/>. Simply define <literal>migration-threshold=N</literal> for a resource and it will migrate to a new node after N failures. There is no threshold defined by default. To determine the resource's current failure status and limits, use <command>crm_mon --failcounts</command>"
-msgstr "Nou în 1.0 este conceptul unui prag de migrare <placeholder-1/>. Pur şi simplu definiţi <literal>migration-threshold=N</literal> pentru o resursă şi aceasta va migra pe un nod nou după N eşecuri. Nu este definit nici un prag în mod implicit. Pentru a determina status-ul de eşec şi limitele curente ale resursei, folosiţi <command>crm_mon --failcounts</command>"
-
-#: Ch-Advanced-Options.xml:177(para)
-msgid "By default, once the threshold has been reached, node will no longer be allowed to run the failed resource until the administrator manually resets the resource's failcount using <command>crm_failcount</command> (after hopefully first fixing the failure's cause). However it is possible to expire them by setting the resource's <literal>failure-timeout</literal> option."
+#. Tag: para
+#, no-c-format
+msgid "By default, once the threshold has been reached, this node will no longer be allowed to run the failed resource until the administrator manually resets the resource's failcount using <command>crm_failcount</command> (after hopefully first fixing the failure's cause). However it is possible to expire them by setting the resource's <literal>failure-timeout</literal> option."
 msgstr "În mod implicit, odată ce pragul a fost atins, nodului nu îi va mai fi permisă rularea resursei care a eşuat până ce un administrator resetează manual failcount-ul resursei folosind <command>crm_failcount</command> (asta sperând după ce cauza eşecului resursei a fost reparată). Totodată este posibilă expirarea acestora prin setarea opţiunii <literal>failure-timeout</literal> resursei."
 
-#: Ch-Advanced-Options.xml:181(para)
-msgid "So a setting of <literal>migration-threshold=2</literal> and <literal>failure-timeout=60s</literal> would cause the resource to move to a new node after 2 failures and potentially allow it to move back (depending on the stickiness and constraint scores) after one minute."
+#. Tag: para
+#, no-c-format
+msgid "So a setting of <literal>migration-threshold=2</literal> and <literal>failure-timeout=60s</literal> would cause the resource to move to a new node after 2 failures, and allow it to move back (depending on the stickiness and constraint scores) after one minute."
 msgstr "Prin urmare setarea <literal>migration-threshold=2</literal> şi <literal>failure-timeout=60s</literal> ar conduce resursa la mutarea pe un nod nou după 2 eşecuri şi potenţial îi va permite să se mute înapoi (în funcţie de scorurile de adezivitate şi restrictie) după un minut."
 
-#: Ch-Advanced-Options.xml:182(para)
-msgid "There are two exceptions to the migration threshold concept and occur when a resource either fails to start or fails to stop. Start failures cause the failcount to be set to <literal>INFINITY</literal> and thus always cause the resource to move immediately."
+#. Tag: para
+#, no-c-format
+msgid "There are two exceptions to the migration threshold concept; they occur when a resource either fails to start or fails to stop. Start failures cause the failcount to be set to <literal>INFINITY</literal> and thus always cause the resource to move immediately."
 msgstr "Sunt două excepţii la conceptul de prag de migrare şi se întâmplă atunci când o resursă fie eşuează să pornească sau eşuează să se oprească. Eşecurile de pornire fac failcount-ul să fie setat la <literal>INFINITY</literal> şi prin urmare provoacă mutarea imediată a resursei."
 
-#: Ch-Advanced-Options.xml:186(para)
+#. Tag: para
+#, no-c-format
 msgid "Stop failures are slightly different and crucial. If a resource fails to stop and STONITH is enabled, then the cluster will fence the node in order to be able to start the resource elsewhere. If STONITH is not enabled, then the cluster has no way to continue and will not try to start the resource elsewhere, but will try to stop it again after the failure timeout."
 msgstr "Eşecurile la oprire sunt puţin diferite şi cruciale. Dacă o resursă eşuează de a se opri şi STONITH este activat, atunci clusterul va evacua nodul pentru a putea să pornească resursa în altă parte. Dacă STONITH nu este activat, atunci clusterul nu are nici o mod de a continua şi nu va încerca să pornească resursa în altă parte, dar va încerca să o oprească din nou după ce se depaşeşte timpul limită al eşecului."
 
-#: Ch-Advanced-Options.xml:191(para)
-msgid "Please read <xref linkend=\"s-rules-recheck\"/> before enabling this option."
-msgstr "Vă rugăm să citiţi <xref linkend=\"s-rules-recheck\"/> înainte de activarea acestei opţiuni."
+#. Tag: para
+#, no-c-format
+msgid "Please read <xref linkend=\"s-rules-recheck\" /> before enabling this option."
+msgstr "Vă rugăm să citiţi <xref linkend=\"s-rules-recheck\" /> înainte de activarea acestei opţiuni."
 
-#: Ch-Advanced-Options.xml:194(title)
+#. Tag: title
+#, no-c-format
 msgid "Moving Resources Due to Connectivity Changes"
 msgstr "Mutarea Resurselor Din Cauza Schimbărilor de Conectivitate"
 
-#: Ch-Advanced-Options.xml:195(para)
-msgid "Setting up the cluster to move resources when external connectivity is lost, is a two-step process."
+#. Tag: para
+#, no-c-format
+msgid "Setting up the cluster to move resources when external connectivity is lost is a two-step process."
 msgstr "Setarea clusterului pentru a muta resursele când conectivitatea externă este pierdută, este un proces în doi paşi."
 
-#: Ch-Advanced-Options.xml:197(title)
+#. Tag: title
+#, no-c-format
 msgid "Tell Pacemaker to monitor connectivity"
 msgstr "Spuneţi Pacemaker-ului să monitorizeze conectivitatea"
 
-#: Ch-Advanced-Options.xml:202(para)
-msgid "The attribute name is customizable which allows multiple ping groups to be defined"
-msgstr "Numele atributului este personalizabil ceea ce vă permite definirea de grupuri multiple de ping"
+#. Tag: para
+#, no-c-format
+msgid "To do this, you need to add a <literal>ping</literal> resource to the cluster. The <literal>ping</literal> resource uses the system utility of the same name to a test if list of machines (specified by DNS hostname or IPv4/IPv6 address) are reachable and uses the results to maintain a node attribute normally called <literal>pingd</literal><footnote> <para>The attribute name is customizable; that allows multiple ping groups to be defined.</para> </footnote>."
+msgstr "Pentru a realiza acest lucru, trebuie să adăugaţi o resursă <literal>ping</literal> la cluster. Resursa <literal>ping</literal> foloseşte utilitarul de sistem cu acelaşi nume pentru a testa dacă o listă de maşini (specificată după numele DNS sau adresa IPV4/IPV6) sunt accesibile şi foloseşte rezultatele pentru a menţine un atribut de nod numit în mod normal <literal>pingd</literal><footnote> <para>Numele atributului este personalizabil ceea ce vă permite definirea de grupuri multiple de ping</para> </footnote>. "
 
-#: Ch-Advanced-Options.xml:198(para)
-msgid "To do this, you need to add a ping resource to the cluster. The ping resource uses the system utility of the same name to a test if list of machines (specified by DNS hostname or IPv4/ IPv6 address) are reachable and uses the results to maintain a node attribute normally called pingd. <placeholder-1/>"
-msgstr "Pentru a realiza acest lucru, trebuie să adăugaţi o resursă ping la cluster. Resursa ping foloseşte utilitarul de sistem cu acelaşi nume pentru a testa dacă o listă de maşini (specificată după numele DNS sau adresa IPV4/IPV6) sunt accesibile şi foloseşte rezultatele pentru a menţine un atribut de nod numit în mod normal pingd. <placeholder-1/>"
+#. Tag: para
+#, no-c-format
+msgid "Older versions of Heartbeat required users to add ping nodes to <filename>ha.cf</filename> - this is no longer required."
+msgstr "Versiuni mai vechi de Heartbeat necesitau ca utilizatorii să adauge noduri de ping în <filename>ha.cf</filename> - acest lucru nu mai este necesar."
 
-#: Ch-Advanced-Options.xml:205(para)
-msgid "Older versions of Heartbeat required users to add ping nodes to ha.cf - this is no longer required."
-msgstr "Versiuni mai vechi de Heartbeat necesitau ca utilizatorii să adauge noduri de ping în ha.cf - acest lucru nu mai este necesar."
+#. Tag: para
+#, no-c-format
+msgid "Older versions of Pacemaker used a custom binary called <filename>pingd</filename> for this functionality; this is now deprecated in favor of <literal>ping</literal>. If your version of Pacemaker does not contain the <literal>ping</literal> agent, you can download the latest version<footnote><para><ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping\" /></para></footnote>."
+msgstr "Versiuni mai vechi de Pacemaker foloseau un binar special numit <filename>pingd</filename> pentru această funcţionalitate; acest lucru este acum depreciat în favoarea comenzii <literal>ping</literal>. Dacă versiunea voastră de Pacemaker nu conţine agentul <literal>ping</literal>, puteţi descărca cea mai recentă versiune de la <footnote><para><ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping\" /></para></footnote>."
 
-#: Ch-Advanced-Options.xml:208(para)
-msgid "Older versions of Pacemaker used a custom binary called pingd for this functionality, this is now deprecated in favor of ping. If your version of Pacemaker does not contain the ping agent, you can download the latest version from: <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping\"/>"
-msgstr "Versiuni mai vechi de Pacemaker foloseau un binar special numit pingd pentru această funcţionalitate, acest lucru este acum depreciat în favoarea comenzii ping. Dacă versiunea voastră de Pacemaker nu conţine agentul ping, puteţi descărca cea mai recentă versiune de la: <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping\"/>"
-
-#: Ch-Advanced-Options.xml:213(para)
+#. Tag: para
+#, no-c-format
 msgid "Normally the resource will run on all cluster nodes, which means that you'll need to create a clone. A template for this can be found below along with a description of the most interesting parameters."
 msgstr "În mod normal resursa va rula pe toate nodurile clusterului, ceea ce înseamnă că va trebui să creaţi o clonă. Un template pentru aceasta poate fi găsit mai jos împreună cu o descriere ale parametrilor cei mai interesanţi."
 
-#: Ch-Advanced-Options.xml:218(title)
+#. Tag: title
+#, no-c-format
 msgid "Common Options for a 'ping' Resource"
 msgstr "Opţiuni Obişnuite pentru o Resursă 'ping'"
 
-#: Ch-Advanced-Options.xml:228(entry)
-msgid "dampen"
-msgstr "dampen"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>dampen</primary><secondary>Resource Option</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Resource</primary><secondary>Option</secondary><tertiary>dampen</tertiary></indexterm> dampen"
+msgstr "<indexterm significance=\"preferred\"><primary>atenuare</primary><secondary>Opțiunea Resursei</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunea</primary><secondary>Resursei</secondary><tertiary>atenuare</tertiary></indexterm> atenuare"
 
-#: Ch-Advanced-Options.xml:229(entry)
-msgid "The time to wait (dampening) for further changes occur. Use this to prevent a resource from bouncing around the cluster when cluster nodes notice the loss of connectivity at slightly different times."
+#. Tag: entry
+#, no-c-format
+msgid "The time to wait (dampening) for further changes to occur. Use this to prevent a resource from bouncing around the cluster when cluster nodes notice the loss of connectivity at slightly different times."
 msgstr "Timpul pe care să îl aştepte (atenuarea) pentru alte modificări să se întâmple. Folosiţi acesta pentru a preveni o resursă de a ricoşa de colo-colo prin cluster atunci când nodurile observă pierderea conectivităţii la intervale uşor diferite de timp."
 
-#: Ch-Advanced-Options.xml:232(entry)
-msgid "multiplier"
-msgstr "multiplier"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>multiplier</primary><secondary>Resource Option</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Resource</primary><secondary>Option</secondary><tertiary>multiplier</tertiary></indexterm> multiplier"
+msgstr "<indexterm significance=\"preferred\"><primary>multiplicator</primary><secondary>Opțiunea Resursei</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunea</primary><secondary>Resursei</secondary><tertiary>multiplicator</tertiary></indexterm> multiplicator"
 
-#: Ch-Advanced-Options.xml:233(entry)
-msgid "The number by which to multiply the number of connected ping nodes by. Useful when there are multiple ping nodes configured."
+#. Tag: entry
+#, no-c-format
+msgid "The number of connected ping nodes gets multiplied by this value to get a score. Useful when there are multiple ping nodes configured."
 msgstr "Numărul cu care să se multiplice numărul de noduri ping conectate. Folositor când sunt mai multe noduri ping configurate."
 
-#: Ch-Advanced-Options.xml:236(entry)
-msgid "host_list"
-msgstr "host_list"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>host_list</primary><secondary>Resource Option</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Resource</primary><secondary>Option</secondary><tertiary>host_list</tertiary></indexterm> host_list"
+msgstr "<indexterm significance=\"preferred\"><primary>host_list</primary><secondary>Opțiunea Resursei</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunea</primary><secondary>Resursei</secondary><tertiary>host_list</tertiary></indexterm> host_list"
 
-#: Ch-Advanced-Options.xml:237(entry)
-msgid "The machines to contact in order to determine the current connectivity status. Allowed values include resolvable DNS hostnames, IPv4 and IPv6 addresses."
+#. Tag: entry
+#, no-c-format
+msgid "The machines to contact in order to determine the current connectivity status. Allowed values include resolvable DNS host names, IPv4 and IPv6 addresses."
 msgstr "Maşinile pe care să le contacteze pentru a determina status-ul curent de conectivitate. Valorile permise includ hostname-uri DNS rezolvabile, adrese IPV4 şi IPV6."
 
-#: Ch-Advanced-Options.xml:243(title)
+#. Tag: title
+#, no-c-format
 msgid "An example ping cluster resource, checks node connectivity once every minute"
 msgstr "Un exemplu de resursă ping în cluster, verifică odată pe minut conectivatea nodului"
 
-#: Ch-Advanced-Options.xml:262(para)
-msgid "You're only half done. The next section deals with telling Pacemaker how to deal with the connectivity status that ocf:pacemaker:ping is recording."
-msgstr "Aţi terminat doar jumătate. Secţiunea următoare se ocupă cu informarea Pacemaker-ului despre cum să se comporte cu status-ul conectivităţii pe care ocf:pacemaker:ping îl înregistrează."
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;clone id=\"Connected\"&gt;\n"
+"   &lt;primitive id=\"ping\" provider=\"pacemaker\" class=\"ocf\" type=\"ping\"&gt;\n"
+"    &lt;instance_attributes id=\"ping-attrs\"&gt;\n"
+"      &lt;nvpair id=\"pingd-dampen\" name=\"dampen\" value=\"5s\"/&gt;\n"
+"      &lt;nvpair id=\"pingd-multiplier\" name=\"multiplier\" value=\"1000\"/&gt;\n"
+"      &lt;nvpair id=\"pingd-hosts\" name=\"host_list\" value=\"my.gateway.com www.bigcorp.com\"/&gt;\n"
+"    &lt;/instance_attributes&gt;\n"
+"    &lt;operations&gt;\n"
+"      &lt;op id=\"ping-monitor-60s\" interval=\"60s\" name=\"monitor\"/&gt;\n"
+"    &lt;/operations&gt;\n"
+"   &lt;/primitive&gt;\n"
+"  &lt;/clone&gt;  "
+msgstr ""
+" &lt;clone id=\"Connected\"&gt;\n"
+"   &lt;primitive id=\"ping\" provider=\"pacemaker\" class=\"ocf\" type=\"ping\"&gt;\n"
+"    &lt;instance_attributes id=\"ping-attrs\"&gt;\n"
+"      &lt;nvpair id=\"pingd-dampen\" name=\"dampen\" value=\"5s\"/&gt;\n"
+"      &lt;nvpair id=\"pingd-multiplier\" name=\"multiplier\" value=\"1000\"/&gt;\n"
+"      &lt;nvpair id=\"pingd-hosts\" name=\"host_list\" value=\"my.gateway.com www.bigcorp.com\"/&gt;\n"
+"    &lt;/instance_attributes&gt;\n"
+"    &lt;operations&gt;\n"
+"      &lt;op id=\"ping-monitor-60s\" interval=\"60s\" name=\"monitor\"/&gt;\n"
+"    &lt;/operations&gt;\n"
+"   &lt;/primitive&gt;\n"
+"  &lt;/clone&gt;  "
 
-#: Ch-Advanced-Options.xml:269(title)
+#. Tag: para
+#, no-c-format
+msgid "You're only half done. The next section deals with telling Pacemaker how to deal with the connectivity status that <literal>ocf:pacemaker:ping</literal> is recording."
+msgstr "Aţi terminat doar jumătate. Secţiunea următoare se ocupă cu informarea Pacemaker-ului despre cum să se comporte cu status-ul conectivităţii pe care <literal>ocf:pacemaker:ping</literal> îl înregistrează."
+
+#. Tag: title
+#, no-c-format
 msgid "Tell Pacemaker how to interpret the connectivity data"
 msgstr "Spuneţi Pacemaker-ului cum să interpreteze datele de conectivitate"
 
-#: Ch-Advanced-Options.xml:270(para)
-msgid "NOTE: Before reading the following, please make sure you have read and understood <xref linkend=\"ch-rules\"/> above."
-msgstr "NOTĂ: Înainte de a citi următoarele, vă rugăm să vă asiguraţi că aţi citit şi aţi înteles <xref linkend=\"ch-rules\"/> de mai sus."
+#. Tag: para
+#, no-c-format
+msgid "NOTE: Before reading the following, please make sure you have read and understood <xref linkend=\"ch-rules\" /> above."
+msgstr "NOTĂ: Înainte de a citi următoarele, vă rugăm să vă asiguraţi că aţi citit şi aţi înteles <xref linkend=\"ch-rules\" /> de mai sus."
 
-#: Ch-Advanced-Options.xml:271(para)
-msgid "There are a number of ways to use the connectivity data provided by Heartbeat. The most common setup is for people to have a single ping node and want to prevent the cluster from running a resource on any unconnected node."
-msgstr "Sunt un număr de feluri în care se pot folosi datele de conectivitate furnizate de Heartbeat. Cel mai întâlnit setup este ca oamenii să aibe un singur nod de ping şi să împiedice clusterul de a rula o resursă pe orice nod neconectat."
+#. Tag: para
+#, no-c-format
+msgid "There are a number of ways to use the connectivity data provided by Heartbeat. The most common setup is for people to have a single ping node, to prevent the cluster from running a resource on any unconnected node. TODO: is the idea that only nodes that can reach eg. the router should have active resources?"
+msgstr "Sunt un număr de feluri în care se pot folosi datele de conectivitate furnizate de Heartbeat. Cel mai întâlnit setup este ca oamenii să aibe un singur nod de ping şi să împiedice clusterul de a rula o resursă pe orice nod neconectat. TODO: este ideea că doar nodurile care pot ajunge ex. routerul ar trebui să aibe resurse active?"
 
-#: Ch-Advanced-Options.xml:276(title)
+#. Tag: title
+#, no-c-format
 msgid "Don't run on unconnected nodes"
 msgstr "Nu rula pe noduri neconectate"
 
-#: Ch-Advanced-Options.xml:287(para)
-msgid "A more complex setup is to have a number of ping nodes configured. You can require the cluster to only run resources on nodes that can connect to all (or a minimum subset) of them"
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;rsc_location id=\"WebServer-no-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-exclude-rule\" score=\"-INFINITY\" &gt;\n"
+"    &lt;expression id=\"ping-exclude\" attribute=\"pingd\" operation=\"not_defined\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
+msgstr ""
+" &lt;rsc_location id=\"WebServer-no-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-exclude-rule\" score=\"-INFINITY\" &gt;\n"
+"    &lt;expression id=\"ping-exclude\" attribute=\"pingd\" operation=\"not_defined\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
+
+#. Tag: para
+#, no-c-format
+msgid "A more complex setup is to have a number of ping nodes configured. You can require the cluster to only run resources on nodes that can connect to all (or a minimum subset) of them."
 msgstr "Un setup mai complex este acela de a avea un număr de noduri de ping configurate. Poţi solicita clusterului să ruleze resursele pe nodurile care se pot conecta la toate (sau doar un subset din) acestea"
 
-#: Ch-Advanced-Options.xml:292(title)
-msgid "Run only on nodes connected to 3 or more ping nodes (assumes <literal>multiplier</literal> is set to 1000)"
+#. Tag: title
+#, no-c-format
+msgid "Run only on nodes connected to three or more ping nodes; this assumes <literal>multiplier</literal> is set to 1000."
 msgstr "Rulează doar pe noduri conectate la 3 sau mai multe noduri de ping (presupune că <literal>multiplier</literal> este setat la 1000)"
 
-#: Ch-Advanced-Options.xml:303(para)
-msgid "or instead you can tell the cluster only to prefer nodes with the most connectivity. Just be sure to set the multiplier to a value higher than that of <literal>resource-stickiness</literal> (and don't set either of them to <literal>INFINITY</literal>)."
-msgstr "sau în schimb puteţi spune clusterului să prefere doar nodurile cu cea mai mare conectivitate. Doar să vă asiguraţi să setaţi multiplicatorul la o valoare mai mare decât cea a <literal>resource-stickiness</literal> (şi să nu setaţi oricare dintre acestea la <literal>INFINITY</literal>)."
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-prefer-rule\" score=\"-INFINITY\" &gt;\n"
+"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"lt\" value=\"3000\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
+msgstr ""
+" &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-prefer-rule\" score=\"-INFINITY\" &gt;\n"
+"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"lt\" value=\"3000\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
 
-#: Ch-Advanced-Options.xml:308(title)
+#. Tag: para
+#, no-c-format
+msgid "Instead you can tell the cluster only to <emphasis>prefer</emphasis> nodes with the best connectivity. Just be sure to set <literal>multiplier</literal> to a value higher than that of <literal>resource-stickiness</literal> (and don't set either of them to <literal>INFINITY</literal>)."
+msgstr "sau în schimb puteţi spune clusterului să <emphasis>prefere</emphasis> doar nodurile cu cea mai mare conectivitate. Doar să vă asiguraţi să setaţi <literal>multiplicatorul</literal> la o valoare mai mare decât cea a <literal>resource-stickiness</literal> (şi să nu setaţi oricare dintre acestea la <literal>INFINITY</literal>)."
+
+#. Tag: title
+#, no-c-format
 msgid "Prefer the node with the most connected ping nodes"
 msgstr "Preferă nodul cu cele mai multe noduri de ping conectate"
 
-#: Ch-Advanced-Options.xml:319(para)
-msgid "It is perhaps easier to think of this in terms of the simple constraints that the cluster translates it into. For example, if sles-1 is connected to all 5 ping nodes but sles-2 is only connected to 2, then it would be as if you instead had the following constraints in your configuration:"
-msgstr "Este probabil mai simplu să vă gândiţi la acest lucru în termenii simplelor restricţii în care clusterul traduce acest lucru. De exemplu, dacă sles-1 este conectat la toate cele 5 noduri de ping dar sles-2 este conectat doar la 2, atunci ar fi la fel ca şi când aţi avea următoarele restricţii în configuraţia voastră:"
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-prefer-rule\" score-attribute=\"pingd\" &gt;\n"
+"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"defined\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
+msgstr ""
+" &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-prefer-rule\" score-attribute=\"pingd\" &gt;\n"
+"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"defined\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
 
-#: Ch-Advanced-Options.xml:324(title)
+#. Tag: para
+#, no-c-format
+msgid "It is perhaps easier to think of this in terms of the simple constraints that the cluster translates it into. For example, if <literal>sles-1</literal> is connected to all 5 ping nodes but <literal>sles-2</literal> is only connected to 2, then it would be as if you instead had the following constraints in your configuration:"
+msgstr "Este probabil mai simplu să vă gândiţi la acest lucru în termenii simplelor restricţii în care clusterul traduce acest lucru. De exemplu, dacă <literal>sles-1</literal> este conectat la toate cele 5 noduri de ping dar <literal>sles-2</literal> este conectat doar la 2, atunci ar fi la fel ca şi când aţi avea următoarele restricţii în configuraţia voastră:"
+
+#. Tag: title
+#, no-c-format
 msgid "How the cluster translates the pingd constraint"
 msgstr "Cum traduce clusterul restricţia pingd"
 
-#: Ch-Advanced-Options.xml:332(para)
-msgid "The advantage being that you don't have to manually update them whenever your network connectivity changes."
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;rsc_location id=\"ping-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"5000\"/&gt;\n"
+"  &lt;rsc_location id=\"ping-2\" rsc=\"Webserver\" node=\"sles-2\" score=\"2000\"/&gt;  "
+msgstr ""
+" &lt;rsc_location id=\"ping-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"5000\"/&gt;\n"
+"  &lt;rsc_location id=\"ping-2\" rsc=\"Webserver\" node=\"sles-2\" score=\"2000\"/&gt;  "
+
+#. Tag: para
+#, no-c-format
+msgid "The advantage is that you don't have to manually update any constraints whenever your network connectivity changes."
 msgstr "Avantajul fiind că nu mai trebuie să le actualizaţi manual de fiecare dată când conectivitatea de reţea se schimbă."
 
-#: Ch-Advanced-Options.xml:333(para)
-msgid "You can also combine the concepts above into something even more complex. The example below shows how you can prefer the node with the most connected ping nodes provided they have connectivity to at least three (assuming multiplier is set to 1000)."
-msgstr "Puteţi de asemenea să combinaţi conceptele de mai sus în ceva chiar mai complex de atât. Exemplul de mai jos arată cum puteţi prefera nodul cu cele mai multe noduri de ping conectate cu cerinţa că acestea trebuie să aibe conectivitate la minim trei (presupunând că multiplicatorul este setat la 1000)."
+#. Tag: para
+#, no-c-format
+msgid "You can also combine the concepts above into something even more complex. The example below shows how you can prefer the node with the most connected ping nodes provided they have connectivity to at least three (again assuming that <literal>multiplier</literal> is set to 1000)."
+msgstr "Puteţi de asemenea să combinaţi conceptele de mai sus în ceva chiar mai complex de atât. Exemplul de mai jos arată cum puteţi prefera nodul cu cele mai multe noduri de ping conectate cu cerinţa că acestea trebuie să aibe conectivitate la minim trei (presupunând că <literal>multiplicatorul</literal> este setat la 1000)."
 
-#: Ch-Advanced-Options.xml:338(title)
+#. Tag: title
+#, no-c-format
 msgid "A more complex example of choosing a location based on connectivity"
 msgstr "Un exemplu mai complex pentru alegerea locaţiei pe baza conectivităţii"
 
-#: Ch-Advanced-Options.xml:355(title)
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-exclude-rule\" score=\"-INFINITY\" &gt;\n"
+"    &lt;expression id=\"ping-exclude\" attribute=\"pingd\" operation=\"lt\" value=\"3000\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"   &lt;rule id=\"ping-prefer-rule\" score-attribute=\"pingd\" &gt;\n"
+"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"defined\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
+msgstr ""
+" &lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-exclude-rule\" score=\"-INFINITY\" &gt;\n"
+"    &lt;expression id=\"ping-exclude\" attribute=\"pingd\" operation=\"lt\" value=\"3000\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"   &lt;rule id=\"ping-prefer-rule\" score-attribute=\"pingd\" &gt;\n"
+"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"defined\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
+
+#. Tag: title
+#, no-c-format
 msgid "Resource Migration"
 msgstr "Migrarea Resurselor"
 
-#: Ch-Advanced-Options.xml:356(para)
-msgid "Some resources, such as Xen virtual guests, are able to move to another location without lose of state. We call this resource migration and is different from the normal practice of stopping the resource on the first machine and starting it elsewhere."
+#. Tag: para
+#, no-c-format
+msgid "Some resources, such as Xen virtual guests, are able to move to another location without loss of state. We call this resource migration; this is different from the normal practice of stopping the resource on the first machine and starting it elsewhere."
 msgstr "Unele resurse, precum oaspeţii virtuali de Xen, sunt capabili să se mute în altă locaţie fără pierderea stării. Numim acest lucru migrarea resurselor şi este diferit de practica normală a opririi resurselor pe prima maşină şi apoi pornirea acestora în altă parte."
 
-#: Ch-Advanced-Options.xml:360(para)
-msgid "Not all resources are able to migrate, see the Migration Checklist below, and those that can won't do so in all situations. Conceptually there are two requirements from which the other prerequisites follow:"
+#. Tag: para
+#, no-c-format
+msgid "Not all resources are able to migrate, see the Migration Checklist below, and those that can, won't do so in all situations. Conceptually there are two requirements from which the other prerequisites follow:"
 msgstr "Nu toate resursele sunt capabile de migrare, vedeţi Lista de Migrare de mai jos, şi mai sunt cele care nu pot să facă acest lucru în toate situaţiile. În mod conceptual sunt două cerinţe din care celelalte necesităţi urmează:"
 
-#: Ch-Advanced-Options.xml:365(para)
+#. Tag: para
+#, no-c-format
 msgid "the resource must be active and healthy at the old location"
 msgstr "resursa trebuie să fie activă şi sănătoasă în locaţia veche"
 
-#: Ch-Advanced-Options.xml:366(para)
+#. Tag: para
+#, no-c-format
 msgid "everything required for the resource to run must be available on both the old and new locations"
 msgstr "tot ce este necesar pentru ca resursa să funcţioneze trebuie să fie disponibil atât la vechea cât şi la noua locaţie"
 
-#: Ch-Advanced-Options.xml:368(para)
+#. Tag: para
+#, no-c-format
 msgid "The cluster is able to accommodate both push and pull migration models by requiring the resource agent to support two new actions: <literal>migrate_to</literal> (performed on the current location) and <literal>migrate_from</literal> (performed on the destination)."
 msgstr "Clusterul este capabil să acomodeze atât modele de migrare de tip push cât şi pull prin solicitarea ca agentul de resursă să suporte două noi acţiuni: <literal>migrate_to</literal> (efectuată pe locaţia curentă) şi <literal>migrate_from</literal> (efectuată pe destinaţie)."
 
-#: Ch-Advanced-Options.xml:369(para)
-msgid "In push migration, the process on the current location transfers the to the new location where is it later activated. In this scenario, most of the work would be done in the <literal>migrate_to</literal> action and, if anything, the activation would occur during <literal>migrate_from</literal>."
+#. Tag: para
+#, no-c-format
+msgid "In push migration, the process on the current location transfers the resource to the new location where is it later activated. In this scenario, most of the work would be done in the <literal>migrate_to</literal> action and, if anything, the activation would occur during <literal>migrate_from</literal>."
 msgstr "În migrarea de tip push, procesul de pe locaţia curentă se transferă pe locaţia nouă unde este activat mai târziu. În acest scenariu, majoritatea muncii ar fi realizată în acţiunea <literal>migrate_to</literal> şi activarea ar avea loc în timpul <literal>migrate_from</literal>."
 
-#: Ch-Advanced-Options.xml:373(para)
+#. Tag: para
+#, no-c-format
 msgid "Conversely for pull, the <literal>migrate_to</literal> action is practically empty and <literal>migrate_from</literal> does most of the work, extracting the relevant resource state from the old location and activating it."
 msgstr "În egală măsură pentru pull, acţiunea <literal>migrate_to</literal> este practic fără conţinut şi <literal>migrate_from</literal> realizează majoritatea muncii, extrăgând starea relevantă a resursei de la locaţia veche şi activând-o."
 
-#: Ch-Advanced-Options.xml:374(para)
+#. Tag: para
+#, no-c-format
 msgid "There is no wrong or right way to implement migration for your service, as long as it works."
 msgstr "Nu există un mod greşit sau corect de a implementa migrarea serviciului vostru, atâta timp cât funcţionează."
 
-#: Ch-Advanced-Options.xml:376(title)
+#. Tag: title
+#, no-c-format
 msgid "Migration Checklist"
 msgstr "Lista de Migrare"
 
-#: Ch-Advanced-Options.xml:378(para)
+#. Tag: para
+#, no-c-format
 msgid "The resource may not be a clone."
 msgstr "Resursa nu poate fi o clonă."
 
-#: Ch-Advanced-Options.xml:379(para)
+#. Tag: para
+#, no-c-format
 msgid "The resource must use an OCF style agent."
 msgstr "Resursa trebuie să folosească un agent de stilul OCF."
 
-#: Ch-Advanced-Options.xml:380(para)
+#. Tag: para
+#, no-c-format
 msgid "The resource must not be in a failed or degraded state."
 msgstr "Resursa nu trebuie să fie într-o stare degradată sau să fi eşuat."
 
-#: Ch-Advanced-Options.xml:381(para)
-msgid "The resource must not, directly or indirectly, depend on any primitive or group resources."
+#. Tag: para
+#, no-c-format
+msgid "The resource must not, directly or indirectly, depend on any primitive or group resources. TODO: how can a KVM with DRBD migrate?"
 msgstr "Resursa trebuie să nu depindă, în mod direct sau indirect, de orice primitivă sau grup de resurse."
 
-#: Ch-Advanced-Options.xml:382(para)
-msgid "The resources must support two new actions: migrate_to and migrate_from and advertise them in its metadata."
-msgstr "Resursa trebuie să suporte două noi acţiuni: migrate_to şi migrate_from şi trebuie să le anunţe în meta-informaţiile proprii."
+#. Tag: para
+#, no-c-format
+msgid "The resource must support two new actions: <literal>migrate_to</literal> and <literal>migrate_from</literal>, and advertise them in its metadata."
+msgstr "Resursa trebuie să suporte două noi acţiuni: <literal>migrate_to</literal> şi <literal>migrate_from</literal> şi trebuie să le anunţe în meta-informaţiile proprii."
 
-#: Ch-Advanced-Options.xml:383(para)
-msgid "The resource must have the allow-migrate meta-attribute set to true (not the default)."
-msgstr "Resursa trebuie să aibe meta-atributul allow-migrate setat pe true (nu pe valoarea implicită)"
+#. Tag: para
+#, no-c-format
+msgid "The resource must have the <literal>allow-migrate</literal> meta-attribute set to <literal>true</literal> (which is not the default)."
+msgstr "Resursa trebuie să aibe meta-atributul <literal>allow-migrate</literal> setat pe <literal>true</literal> (nu pe valoarea implicită)"
 
-#: Ch-Advanced-Options.xml:385(para)
+#. Tag: para
+#, no-c-format
 msgid "If the resource depends on a clone, and at the time the resource needs to be move, the clone has instances that are stopping and instances that are starting, then the resource will be moved in the traditional manner. The Policy Engine is not yet able to model this situation correctly and so takes the safe (yet less optimal) path."
 msgstr "Dacă resursa depinde de o clonă, iar la momentul când resursa trebuie să fie mutată, clona are instanţe care se opresc şi instanţe care pornesc, atunci resursa va fi mutată în modul tradiţional. Policy Engine-ul nu este capabil încă să modeleze această situaţie în mod corect aşa că ia calea (mai puţin optimă) dar mai sigură."
 
-#: Ch-Advanced-Options.xml:393(title)
+#. Tag: title
+#, no-c-format
 msgid "Reusing Rules, Options and Sets of Operations"
 msgstr "Refolosirea Regulilor, Opţiunilor şi a Setului de Operaţiuni"
 
-#: Ch-Advanced-Options.xml:394(para)
-msgid "Sometimes a number of constraints need to use the same set of rules and resources need to set the same options and parameters. To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id."
+#. Tag: para
+#, no-c-format
+msgid "Sometimes a number of constraints need to use the same set of rules, and resources need to set the same options and parameters. To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id."
 msgstr "Câteodată un număr de restricţii trebuie să folosească acelaşi set de reguli şi resursele trebuie sa seteze aceleaşi opţiuni şi parametri. Pentru a simplifica această situaţie, puteţi face referinţă la un obiect existent folosind un <literal>id-ref</literal> în loc de un id."
 
-#: Ch-Advanced-Options.xml:398(para)
+#. Tag: para
+#, no-c-format
 msgid "So if for one resource you have"
 msgstr "Deci dacă pentru o resursă aveţi"
 
-#: Ch-Advanced-Options.xml:408(para)
+#. Tag: para
+#, no-c-format
 msgid "Then instead of duplicating the rule for all your other resources, you can instead specify"
 msgstr "Atunci în loc să duplicaţi regula pentru toate celelalte resurse, puteţi specifica în schimb"
 
-#: Ch-Advanced-Options.xml:410(title)
+#. Tag: title
+#, no-c-format
 msgid "Referencing rules from other constraints"
 msgstr "Realizând referinţe către reguli din alte restricţii"
 
-#: Ch-Advanced-Options.xml:420(para)
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;rsc_location id=\"WebDB-connectivity\" rsc=\"WebDB\"&gt;\n"
+"      &lt;rule id-ref=\"ping-prefer-rule\"/&gt;\n"
+"  &lt;/rsc_location&gt;  "
+msgstr ""
+" &lt;rsc_location id=\"WebDB-connectivity\" rsc=\"WebDB\"&gt;\n"
+"      &lt;rule id-ref=\"ping-prefer-rule\"/&gt;\n"
+"  &lt;/rsc_location&gt;  "
+
+#. Tag: para
+#, no-c-format
 msgid "The cluster will insist that the <literal>rule</literal> exists somewhere. Attempting to add a reference to a non-existing rule will cause a validation failure, as will attempting to remove a <literal>rule</literal> that is referenced elsewhere."
 msgstr "Clusterul va insista că <literal>regula</literal> există undeva. Încercând să adaugaţi o referinţă către o regulă ce nu există va cauza un eşec al validării, la fel ca şi încercarea de a înlătura <literal>regula</literal> care este referenţiată în altă parte."
 
-#: Ch-Advanced-Options.xml:425(para)
+#. Tag: para
+#, no-c-format
 msgid "The same principle applies for <literal>meta_attributes</literal> and <literal>instance_attributes</literal> as illustrated in the example below"
 msgstr "Acelaşi principiu se aplică pentru <literal>meta_attributes</literal> şi pentru <literal>instance_attributes</literal> după cum este prezentat în exemplul de mai jos"
 
-#: Ch-Advanced-Options.xml:427(title)
-msgid "Referencing attributes, options and operations from other resources"
+#. Tag: title
+#, no-c-format
+msgid "Referencing attributes, options, and operations from other resources"
 msgstr "Referenţierea atributelor, opţiunilor şi operaţiunilor din alte resurse"
 
-#: Ch-Advanced-Options.xml:456(title)
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
+"   &lt;instance_attributes id=\"mySpecialRsc-attrs\" score=\"1\" &gt;\n"
+"    &lt;nvpair id=\"default-interface\" name=\"interface\" value=\"eth0\"/&gt;\n"
+"    &lt;nvpair id=\"default-port\" name=\"port\" value=\"9999\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"   &lt;meta_attributes id=\"mySpecialRsc-options\"&gt;\n"
+"    &lt;nvpair id=\"failure-timeout\" name=\"failure-timeout\" value=\"5m\"/&gt;\n"
+"    &lt;nvpair id=\"migration-threshold\" name=\"migration-threshold\" value=\"1\"/&gt;\n"
+"    &lt;nvpair id=\"stickiness\" name=\"resource-stickiness\" value=\"0\"/&gt;\n"
+"   &lt;/meta_attributes&gt;\n"
+"   &lt;operations id=\"health-checks\"&gt;\n"
+"     &lt;op id=\"health-check\" name=\"monitor\" interval=\"60s\"/&gt;\n"
+"     &lt;op id=\"health-check\" name=\"monitor\" interval=\"30min\"/&gt;\n"
+"    &lt;/operations&gt;\n"
+"  &lt;/primitive&gt;\n"
+"  &lt;primitive id=\"myOtherlRsc\" class=\"ocf\" type=\"Other\" provider=\"me\"&gt;\n"
+"   &lt;instance_attributes id-ref=\"mySpecialRsc-attrs\"/&gt;\n"
+"   &lt;meta_attributes id-ref=\"mySpecialRsc-options\"/&gt;\n"
+"   &lt;operations id-ref=\"health-checks\"/&gt;\n"
+"  &lt;/primitive&gt;  "
+msgstr ""
+" &lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
+"   &lt;instance_attributes id=\"mySpecialRsc-attrs\" score=\"1\" &gt;\n"
+"    &lt;nvpair id=\"default-interface\" name=\"interface\" value=\"eth0\"/&gt;\n"
+"    &lt;nvpair id=\"default-port\" name=\"port\" value=\"9999\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"   &lt;meta_attributes id=\"mySpecialRsc-options\"&gt;\n"
+"    &lt;nvpair id=\"failure-timeout\" name=\"failure-timeout\" value=\"5m\"/&gt;\n"
+"    &lt;nvpair id=\"migration-threshold\" name=\"migration-threshold\" value=\"1\"/&gt;\n"
+"    &lt;nvpair id=\"stickiness\" name=\"resource-stickiness\" value=\"0\"/&gt;\n"
+"   &lt;/meta_attributes&gt;\n"
+"   &lt;operations id=\"health-checks\"&gt;\n"
+"     &lt;op id=\"health-check\" name=\"monitor\" interval=\"60s\"/&gt;\n"
+"     &lt;op id=\"health-check\" name=\"monitor\" interval=\"30min\"/&gt;\n"
+"    &lt;/operations&gt;\n"
+"  &lt;/primitive&gt;\n"
+"  &lt;primitive id=\"myOtherlRsc\" class=\"ocf\" type=\"Other\" provider=\"me\"&gt;\n"
+"   &lt;instance_attributes id-ref=\"mySpecialRsc-attrs\"/&gt;\n"
+"   &lt;meta_attributes id-ref=\"mySpecialRsc-options\"/&gt;\n"
+"   &lt;operations id-ref=\"health-checks\"/&gt;\n"
+"  &lt;/primitive&gt;  "
+
+#. Tag: title
+#, no-c-format
 msgid "Reloading Services After a Definition Change"
 msgstr "Reîncărcarea Serviciilor După Schimbarea unei Definiţii"
 
-#: Ch-Advanced-Options.xml:457(para)
-msgid "The cluster automatically detects changes to the definition of services it manages. However, the normal response is to stop the service (using the old definition) and start it again (with the new definition). This works well, but some services are smart and can be told to use a new set of options without restarting."
+#. Tag: para
+#, no-c-format
+msgid "The cluster automatically detects changes to the definition of services it manages. However, the normal response is to stop the service (using the old definition) and start it again (with the new definition). This works well, but some services are smarter and can be told to use a new set of options without restarting."
 msgstr "Clusterul detectează în mod automat schimbări ale definiţiei serviciilor pe care le gestionează. Totuşi, răspunsul normal este să oprească serviciul (folosind definiţia veche) şi să îl pornească din nou (cu definiţia nouă). Acest lucru functionează bine, dar unele servicii sunt inteligente şi li se poate spune să folosească un set nou de opţiuni fară să repornească."
 
-#: Ch-Advanced-Options.xml:466(para)
-msgid "Accept the <literal>reload</literal> operation and perform any required actions."
-msgstr "Acceptă operaţiunea <literal>reload</literal> şi efectuează acţiunile necesare."
+#. Tag: para
+#, no-c-format
+msgid "To take advantage of this capability, your resource agent must:"
+msgstr "Pentru a profita de această capabilitate, agentul vostru de resursă trebuie să:"
 
-#: Ch-Advanced-Options.xml:467(para)
-msgid "The steps required here depend completely on your application"
-msgstr "Paşii necesitaţi aici depind complet de aplicaţia voastră"
+#. Tag: para
+#, no-c-format
+msgid "Accept the <literal>reload</literal> operation and perform any required actions. The steps required here depend completely on your application!"
+msgstr "Accepte operaţiunea <literal>reload</literal> şi să efectueze orice acţiuni necesare. Pașii necesari aici depind complet de aplicația voastră!"
 
-#: Ch-Advanced-Options.xml:469(title)
+#. Tag: title
+#, no-c-format
 msgid "The DRBD Agent's Control logic for Supporting the <literal>reload</literal> Operation"
 msgstr "Logica de Control pentru Suportarea Operaţiunii de <literal>reload</literal> a Agentului DRBD"
 
-#: Ch-Advanced-Options.xml:496(para)
+#. Tag: programlisting
+#, no-c-format
+msgid " case $1 in\n"
+"    start)\n"
+"        drbd_start\n"
+"        ;;\n"
+"    stop)\n"
+"        drbd_stop\n"
+"        ;;\n"
+"    reload)\n"
+"        drbd_reload\n"
+"        ;;\n"
+"    monitor)\n"
+"        drbd_monitor\n"
+"        ;;\n"
+"    *)  \n"
+"        drbd_usage\n"
+"        exit $OCF_ERR_UNIMPLEMENTED\n"
+"        ;;\n"
+"  esac\n"
+"  exit $?   "
+msgstr ""
+" case $1 in\n"
+"    start)\n"
+"        drbd_start\n"
+"        ;;\n"
+"    stop)\n"
+"        drbd_stop\n"
+"        ;;\n"
+"    reload)\n"
+"        drbd_reload\n"
+"        ;;\n"
+"    monitor)\n"
+"        drbd_monitor\n"
+"        ;;\n"
+"    *)  \n"
+"        drbd_usage\n"
+"        exit $OCF_ERR_UNIMPLEMENTED\n"
+"        ;;\n"
+"  esac\n"
+"  exit $?   "
+
+#. Tag: para
+#, no-c-format
 msgid "Advertise the <literal>reload</literal> operation in the <literal>actions</literal> section of its metadata"
 msgstr "Anunţă operaţiunea <literal>reload</literal> în secţiunea de <literal>actions</literal> din meta-informaţiile proprii"
 
-#: Ch-Advanced-Options.xml:498(title)
+#. Tag: title
+#, no-c-format
 msgid "The DRBD Agent Advertising Support for the <literal>reload</literal> Operation"
 msgstr "Anunţarea Suportului Operaţiunii de <literal>reload</literal> a Agentului DRBD"
 
-#: Ch-Advanced-Options.xml:546(para)
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;?xml version=\"1.0\"?&gt;\n"
+"  &lt;!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\"&gt;\n"
+"  &lt;resource-agent name=\"drbd\"&gt;\n"
+"    &lt;version&gt;1.1&lt;/version&gt;\n"
+"    \n"
+"    &lt;longdesc lang=\"en\"&gt;\n"
+"      Master/Slave OCF Resource Agent for DRBD\n"
+"    &lt;/longdesc&gt;\n"
+"    \n"
+"    ...\n"
+"    \n"
+"    &lt;actions&gt;\n"
+"      &lt;action name=\"start\"   timeout=\"240\" /&gt;\n"
+"      &lt;action name=\"reload\"  timeout=\"240\" /&gt;\n"
+"      &lt;action name=\"promote\" timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"demote\"  timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"notify\"  timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"stop\"    timeout=\"100\" /&gt;\n"
+"      &lt;action name=\"meta-data\"    timeout=\"5\" /&gt;\n"
+"      &lt;action name=\"validate-all\" timeout=\"30\" /&gt;\n"
+"    &lt;/actions&gt;\n"
+"  &lt;/resource-agent&gt;  "
+msgstr ""
+" &lt;?xml version=\"1.0\"?&gt;\n"
+"  &lt;!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\"&gt;\n"
+"  &lt;resource-agent name=\"drbd\"&gt;\n"
+"    &lt;version&gt;1.1&lt;/version&gt;\n"
+"    \n"
+"    &lt;longdesc lang=\"en\"&gt;\n"
+"      Master/Slave OCF Resource Agent for DRBD\n"
+"    &lt;/longdesc&gt;\n"
+"    \n"
+"    ...\n"
+"    \n"
+"    &lt;actions&gt;\n"
+"      &lt;action name=\"start\"   timeout=\"240\" /&gt;\n"
+"      &lt;action name=\"reload\"  timeout=\"240\" /&gt;\n"
+"      &lt;action name=\"promote\" timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"demote\"  timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"notify\"  timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"stop\"    timeout=\"100\" /&gt;\n"
+"      &lt;action name=\"meta-data\"    timeout=\"5\" /&gt;\n"
+"      &lt;action name=\"validate-all\" timeout=\"30\" /&gt;\n"
+"    &lt;/actions&gt;\n"
+"  &lt;/resource-agent&gt;  "
+
+#. Tag: para
+#, no-c-format
 msgid "Advertise one or more parameters that can take effect using <literal>reload</literal>."
 msgstr "Promovaţi unul sau mai mulţi parametri care pot intra în vigoare folosing <literal>reload</literal>."
 
-#: Ch-Advanced-Options.xml:547(para)
-msgid "Any parameter with the <literal>unique</literal> set to 0 is eligable to be used in this way."
+#. Tag: para
+#, no-c-format
+msgid "Any parameter with the <literal>unique</literal> set to 0 is eligible to be used in this way."
 msgstr "Orice parametru cu <literal>unique</literal> setat pe 0 este eligibil să fie folosit în acest fel."
 
-#: Ch-Advanced-Options.xml:549(title)
+#. Tag: title
+#, no-c-format
 msgid "Parameter that can be changed using reload"
 msgstr "Parametru care poate fi schimbat folosind reload"
 
-#: Ch-Advanced-Options.xml:462(para)
-msgid "To take advantage of this capability, your resource agent must: <placeholder-1/>"
-msgstr "Pentru a profita de această capabilitate, agentul vostru de resursă trebuie să: <placeholder-1/>"
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;parameter name=\"drbdconf\" unique=\"0\"&gt;\n"
+"    &lt;longdesc lang=\"en\"&gt;Full path to the drbd.conf file.&lt;/longdesc&gt;\n"
+"    &lt;shortdesc lang=\"en\"&gt;Path to drbd.conf&lt;/shortdesc&gt;\n"
+"    &lt;content type=\"string\" default=\"${OCF_RESKEY_drbdconf_default}\"/&gt;\n"
+"  &lt;/parameter&gt;  "
+msgstr ""
+" &lt;parameter name=\"drbdconf\" unique=\"0\"&gt;\n"
+"    &lt;longdesc lang=\"en\"&gt;Full path to the drbd.conf file.&lt;/longdesc&gt;\n"
+"    &lt;shortdesc lang=\"en\"&gt;Path to drbd.conf&lt;/shortdesc&gt;\n"
+"    &lt;content type=\"string\" default=\"${OCF_RESKEY_drbdconf_default}\"/&gt;\n"
+"  &lt;/parameter&gt;  "
 
-#: Ch-Advanced-Options.xml:563(para)
-msgid "Once these requirements are satisfied, the cluster will automatically know to reload, instead of restarting, the resource when a non-unique fields changes."
+#. Tag: para
+#, no-c-format
+msgid "Once these requirements are satisfied, the cluster will automatically know to reload the resource (instead of restarting) when a non-unique fields changes."
 msgstr "Odată ce aceste cerinţe au fost satisfăcute, clusterul automat va şti să reîncarce, în loc să restarteze, resursa când un câmp non-unic se schimbă."
 
-#: Ch-Advanced-Options.xml:567(para)
+#. Tag: para
+#, no-c-format
 msgid "The metadata is re-read when the resource is started. This may mean that the resource will be restarted the first time, even though you changed a parameter with <literal>unique=0</literal>"
 msgstr "Meta-informaţiile sunt recitite când resursa este pornită. Acest lucru înseamnă că resursa va fi restartată prima data, deşi aţi schimbat un parametru cu <literal>unique=0</literal>"
 
-#: Ch-Advanced-Options.xml:573(para)
-msgid "If both a unique and non-unique field is changed simultaneously, the resource will still be restarted."
+#. Tag: para
+#, no-c-format
+msgid "If both a unique and non-unique field are changed simultaneously, the resource will still be restarted."
 msgstr "Dacă atât un câmp unic si non-unic sunt schimbate simultan, resursa tot va fi restartată."
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ch-Advanced-Options.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
 

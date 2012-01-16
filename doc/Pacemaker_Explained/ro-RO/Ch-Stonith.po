@@ -1,301 +1,295 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-11-03 01:16+0100\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ch-Stonith.xml:2(title)
+#. Tag: title
+#, no-c-format
 msgid "Protecting Your Data - STONITH"
 msgstr "Protejarea Datelor Voastre - STONITH"
 
-#: Ch-Stonith.xml:4(title)
+#. Tag: title
+#, no-c-format
 msgid "Why You Need STONITH"
 msgstr "De Ce Aveţi Nevoie De STONITH"
 
-#: Ch-Stonith.xml:5(para)
-msgid "<ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rogue nodes or concurrent access."
+#. Tag: para
+#, no-c-format
+msgid "<ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> is an acronym for Shoot-The-Other-Node-In-The-Head; its purpose is to protect your data from being corrupted by rogue nodes or concurrent access."
 msgstr "<ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> este un acronim pentru Shoot-The-Other-Node-In-The-Head şi protejează datele voastre de la a fi corupte de către noduri pribege sau de la acces simultan."
 
-#: Ch-Stonith.xml:6(para)
-msgid "Just because a node is unresponsive, this doesn't mean it isn't accessing your data. The only way to be 100% sure that your data is safe, is to use STONITH so we can be certain that the node is truly offline, before allowing the data to be accessed from another node."
+#. Tag: para
+#, no-c-format
+msgid "When a node is unresponsive it might still access your data. The only way to be 100% sure that your data is safe, is to use STONITH, so we can be certain that the node is truly offline, before allowing the data to be accessed from another node."
 msgstr "Doar pentru că un nod nu mai răspunde, acest lucru nu înseamnă că acesta nu mai accesează datele voastre. Singura metodă de a fi 100% siguri că datele voastre sunt în siguranţă, este să folosiţi STONITH pentru a putea fi siguri că nodul este cu adevărat offline, înainte de a permite datelor să fie accesate de pe alt nod."
 
-#: Ch-Stonith.xml:10(para)
+#. Tag: para
+#, no-c-format
 msgid "STONITH also has a role to play in the event that a clustered service cannot be stopped. In this case, the cluster uses STONITH to force the whole node offline, thereby making it safe to start the service elsewhere."
 msgstr "STONITH mai are un rol pe care îl joacă în cazul în care un serviciu de pe cluster nu poate fi oprit. În acest caz, clusterul foloseşte STONITH pentru a forţa întregul nod offline, astfel făcând să fie sigurâ pornirea serviciului în altă parte."
 
-#: Ch-Stonith.xml:16(title)
+#. Tag: title
+#, no-c-format
 msgid "What STONITH Device Should You Use"
 msgstr "Ce Dispozitiv STONITH Ar Trebui Să Folosiţi"
 
-#: Ch-Stonith.xml:17(para)
-msgid "It is crucial that the STONITH device can allow the cluster to differentiate between a node failure and a network one."
+#. Tag: para
+#, no-c-format
+msgid "It is crucial that the STONITH device can allow the cluster to differentiate between a node and a network failure."
 msgstr "Este imperativ ca dispozitivul STONITH să permită clusterului să facă diferenţa între o defecţiune a nodului şi una a reţelei."
 
-#: Ch-Stonith.xml:18(para)
-msgid "The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many on-board IMPI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault."
+#. Tag: para
+#, no-c-format
+msgid "The biggest mistake people make in choosing a STONITH device is to use a remote power switch (such as many on-board IPMI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault."
 msgstr "Cea mai mare greşeală pe care o fac oamenii în alegerea unui dispozitiv STONITH este să folosească un switch de curent cu acces la distanţă (cum ar fi multe controlere IPMI integrate) care partajează curentul cu nodul pe care îl controlează. În astfel de cazuri, clusterul nu poate fi sigur dacă nodul este cu adevărat offline sau inactiv şi suferă din cauza unei probleme de reţea."
 
-#: Ch-Stonith.xml:22(para)
+#. Tag: para
+#, no-c-format
 msgid "Likewise, any device that relies on the machine being active (such as SSH-based \"devices\" used during testing) are inappropriate."
 msgstr "În mod similar, orice dispozitiv care se bazează pe maşină să fie activă (cum ar fi \"dispozitivele\" bazate pe SSH folosite în timpul testării) sunt nepotrivite."
 
-#: Ch-Stonith.xml:25(title)
+#. Tag: title
+#, no-c-format
 msgid "Configuring STONITH"
 msgstr "Configurarea STONITH"
 
-#: Ch-Stonith.xml:28(para)
+#. Tag: para
+#, no-c-format
 msgid "Find the correct driver: <command>stonith_admin --list-installed</command>"
 msgstr "Găsiţi driverul corect: <command>stonith_admin --list-installed</command>"
 
-#: Ch-Stonith.xml:31(para)
-msgid "Since every device is different, the parameters needed to configure it will vary. To find out the parameters associated with the device, run:"
+#. Tag: para
+#, no-c-format
+msgid "Since every device is different, the parameters needed to configure it will vary. To find out which parameters the device supports resp. needs, run:"
 msgstr "Din moment ce fiecare dispozitiv este diferit, parametrii necesari să îl configureze vor varia. Pentru a afla parametrii asociaţi dispozitivului, rulaţi:"
 
-#: Ch-Stonith.xml:33(replaceable)
-msgid "type"
-msgstr "type"
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"<command>stonith_admin --metadata --agent <replaceable>type</replaceable></command>\n"
+"        "
+msgstr ""
+"<command>stonith_admin --metadata --agent <replaceable>type</replaceable></command>\n"
+"        "
 
-#: Ch-Stonith.xml:33(command)
-msgid "stonith_admin --metadata --agent <placeholder-1/>"
-msgstr "stonith_admin --metadata --agent <placeholder-1/>"
-
-#: Ch-Stonith.xml:35(para)
+#. Tag: para
+#, no-c-format
 msgid "The output should be XML formatted text containing additional parameter descriptions. We will endeavour to make the output more friendly in a later version."
 msgstr "Rezultatul de ieşire ar trebui să fie un text formatat XML conţinând descrierile parametrilor adiţionali. Ne vom aventura să facem rezultatul de ieşire mai prietenos într-o versiune ulterioară."
 
-#: Ch-Stonith.xml:39(para)
-msgid "Create a file called stonith.xml containing a primitive resource with a class of stonith, a type of <replaceable>type</replaceable> and a parameter for each of the values returned in step 2"
-msgstr "Creaţi un fişier numit stonith.xml conţinând o resursă primitivă cu o clasă de stonith, un tip de <replaceable>type</replaceable> şi un parametru pentru fiecare dintre valorile returnate la pasul 2"
+#. Tag: para
+#, no-c-format
+msgid "Create a file called <filename>stonith.xml</filename> containing a primitive resource with a class of <literal>stonith</literal>, a type of <replaceable>type</replaceable> and a parameter for each of the values returned in step 2."
+msgstr "Creaţi un fişier numit <filename>stonith.xml</filename> conţinând o resursă primitivă cu o clasă de <literal>stonith</literal>, un tip de <replaceable>type</replaceable> şi un parametru pentru fiecare dintre valorile returnate la pasul 2"
 
-#: Ch-Stonith.xml:44(para)
+#. Tag: para
+#, no-c-format
 msgid "If the device does not know how to fence nodes based on their uname, you may also need to set the special <constant>pcmk_host_map</constant> parameter. See <command>man stonithd</command> for details."
 msgstr "Dacă dispozitivul nu ştie să evacueze noduri pe baza uname-ului acestora, ar putea fi nevoie să setaţi parametrul special <constant>pcmk_host_map</constant>. Vedeţi <command>man stonithd</command> pentru detalii."
 
-#: Ch-Stonith.xml:49(para)
+#. Tag: para
+#, no-c-format
 msgid "If the device does not support the <constant>list</constant> command, you may also need to set the special <constant>pcmk_host_list</constant> and/or <constant>pcmk_host_check</constant> parameters. See <command>man stonithd</command> for details."
 msgstr "Dacă dispozitivul nu suportă comanda <command>list</command>, ar putea fi nevoie să setaţi parametrii speciali <constant>pcmk_host_list</constant> şi/sau <constant>pcmk_host_check</constant>. Vedeţi <command>man stonithd</command> pentru detalii."
 
-#: Ch-Stonith.xml:55(para)
+#. Tag: para
+#, no-c-format
 msgid "If the device does not expect the victim to be specified with the <constant>port</constant> parameter, you may also need to set the special <constant>pcmk_host_argument</constant> parameter. See <command>man stonithd</command> for details."
 msgstr "Dacă dispozitivul nu se aşteaptă ca victima să fie specificată cu parametrul <constant>port</constant>, ar putea fi nevoie să setaţi parametrul special <constant>pcmk_host_argument</constant>. Vedeţi <command>man stonithd</command> pentru detalii."
 
-#: Ch-Stonith.xml:61(para)
+#. Tag: para
+#, no-c-format
 msgid "Upload it into the CIB using cibadmin: <command>cibadmin -C -o resources --xml-file <filename><replaceable>stonith.xml</replaceable></filename></command>"
 msgstr "Încărcaţi-l în CIB folosind cibadmin: <command>cibadmin -C -o resources --xml-file <filename><replaceable>stonith.xml</replaceable></filename></command>"
 
-#: Ch-Stonith.xml:65(para)
+#. Tag: para
+#, no-c-format
 msgid "Once the stonith resource is running, you can test it by executing: <command>stonith_admin --reboot <replaceable>nodename</replaceable></command>. Although you might want to stop the cluster on that machine first."
 msgstr "Odată ce resursa stonith rulează, o puteţi testa executând: <command>stonith_admin --reboot <replaceable>nodename</replaceable></command>. Deşi aţi putea dori să opriţi clusterul pe acea maşină mai întâi."
 
-#: Ch-Stonith.xml:71(title)
+#. Tag: title
+#, no-c-format
 msgid "Example"
 msgstr "Exemplu"
 
-#: Ch-Stonith.xml:72(para)
-msgid "Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then we would chose the <literal>fence_ipmilan</literal> driver in step 2 and obtain the following list of parameters"
+#. Tag: para
+#, no-c-format
+msgid "Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then we would chose the <literal>fence_ipmilan</literal> driver in step 2 and obtain the following list of parameters:"
 msgstr "Presupunând că avem un şasiu conţinând patru noduri şi un dispozitiv IPMI activ pe 10.0.0.1, atunci am alege driverul <literal>fence_ipmilan</literal> la pasul 2 şi am obţine următoarea listă de parametri"
 
-#: Ch-Stonith.xml:76(title)
+#. Tag: title
+#, no-c-format
 msgid "Obtaining a list of STONITH Parameters"
 msgstr "Obţinerea unei liste de Parametri STONITH"
 
-#: Ch-Stonith.xml:77(programlisting)
-#, no-wrap
+#. Tag: programlisting
+#, no-c-format
 msgid ""
-"\n"
-"# stonith_admin --metadata -a fence_ipmilan\n"
-"\n"
+"# <command>stonith_admin --metadata -a fence_ipmilan</command>\n"
 "&lt;?xml version=\"1.0\" ?&gt;\n"
 "&lt;resource-agent name=\"fence_ipmilan\" shortdesc=\"Fence agent for IPMI over LAN\"&gt;\n"
 "&lt;longdesc&gt;\n"
-"fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).\n"
+"fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI.\n"
+"This agent calls support software using ipmitool (http://ipmitool.sf.net/).\n"
 "\n"
-"To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)&lt;/longdesc&gt;\n"
+"To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and\n"
+"increase wait after operation to 4 seconds (power_wait=4 / -T 4)&lt;/longdesc&gt;\n"
 "&lt;parameters&gt;\n"
-"\t&lt;parameter name=\"auth\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-A\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;IPMI Lan Auth type (md5, password, or none)&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"ipaddr\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-a\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;IPMI Lan IP to talk to&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"passwd\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-p\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Password (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"passwd_script\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-S\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Script to retrieve password (if required)&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"lanplus\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-P\" /&gt;\n"
-"\t\t&lt;content type=\"boolean\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Use Lanplus&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"login\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-l\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Username/Login (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"action\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-o\" /&gt;\n"
-"\t\t&lt;content type=\"string\" default=\"reboot\"/&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"timeout\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-t\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Timeout (sec) for IPMI operation&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"cipher\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-C\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Ciphersuite to use (same as ipmitool -C parameter)&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"method\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-M\" /&gt;\n"
-"\t\t&lt;content type=\"string\" default=\"onoff\"/&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Method to fence (onoff or cycle)&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"power_wait\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-T\" /&gt;\n"
-"\t\t&lt;content type=\"string\" default=\"2\"/&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Wait X seconds after on/off operation&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"delay\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-f\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Wait X seconds before fencing is started&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"verbose\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-v\" /&gt;\n"
-"\t\t&lt;content type=\"boolean\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Verbose mode&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
+"   &lt;parameter name=\"auth\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;IPMI Lan Auth type (md5, password, or none)&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-A\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"ipaddr\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;IPMI Lan IP to talk to&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-a\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"passwd\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Password  to control power on IPMI device&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-p\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"passwd_script\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Script to retrieve password (if required)&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-S\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"lanplus\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Use Lanplus&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-P\" /&gt;         &lt;content type=\"boolean\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"login\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Username/Login to control IPMI device&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-l\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"action\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Operation to perform. Valid operations:\n"
+"         on, off, reboot, status, list, diag, monitor or metadata&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-o\" /&gt;         &lt;content type=\"string\" default=\"reboot\"/&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"timeout\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Timeout (sec) for IPMI operation&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-t\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"cipher\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Ciphersuite to use (same as ipmitool -C parameter)&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-C\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"method\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Method to fence (onoff or cycle)&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-M\" /&gt;         &lt;content type=\"string\" default=\"onoff\"/&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"power_wait\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Wait X seconds after on/off operation&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-T\" /&gt;         &lt;content type=\"string\" default=\"2\"/&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"delay\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Wait X seconds before fencing is started&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-f\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"verbose\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Verbose mode&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-v\" /&gt;         &lt;content type=\"boolean\" /&gt; &lt;/parameter&gt;\n"
 "&lt;/parameters&gt;\n"
 "&lt;actions&gt;\n"
-"\t&lt;action name=\"on\" /&gt;\n"
-"\t&lt;action name=\"off\" /&gt;\n"
-"\t&lt;action name=\"reboot\" /&gt;\n"
-"\t&lt;action name=\"status\" /&gt;\n"
-"\t&lt;action name=\"diag\" /&gt;\n"
-"\t&lt;action name=\"list\" /&gt;\n"
-"\t&lt;action name=\"monitor\" /&gt;\n"
-"\t&lt;action name=\"metadata\" /&gt;\n"
+"   &lt;action name=\"on\"      /&gt;        &lt;action name=\"off\"      /&gt; \n"
+"   &lt;action name=\"reboot\"  /&gt;        &lt;action name=\"status\"   /&gt; \n"
+"   &lt;action name=\"diag\"    /&gt;        &lt;action name=\"list\"     /&gt; \n"
+"   &lt;action name=\"monitor\" /&gt;        &lt;action name=\"metadata\" /&gt;\n"
 "&lt;/actions&gt;\n"
 "&lt;/resource-agent&gt;\n"
+" "
 msgstr ""
-"\n"
-"# stonith_admin --metadata -a fence_ipmilan\n"
-"\n"
+"# <command>stonith_admin --metadata -a fence_ipmilan</command>\n"
 "&lt;?xml version=\"1.0\" ?&gt;\n"
 "&lt;resource-agent name=\"fence_ipmilan\" shortdesc=\"Fence agent for IPMI over LAN\"&gt;\n"
 "&lt;longdesc&gt;\n"
-"fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).\n"
+"fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI.\n"
+"This agent calls support software using ipmitool (http://ipmitool.sf.net/).\n"
 "\n"
-"To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)&lt;/longdesc&gt;\n"
+"To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and\n"
+"increase wait after operation to 4 seconds (power_wait=4 / -T 4)&lt;/longdesc&gt;\n"
 "&lt;parameters&gt;\n"
-"\t&lt;parameter name=\"auth\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-A\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;IPMI Lan Auth type (md5, password, or none)&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"ipaddr\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-a\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;IPMI Lan IP to talk to&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"passwd\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-p\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Password (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"passwd_script\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-S\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Script to retrieve password (if required)&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"lanplus\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-P\" /&gt;\n"
-"\t\t&lt;content type=\"boolean\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Use Lanplus&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"login\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-l\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Username/Login (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"action\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-o\" /&gt;\n"
-"\t\t&lt;content type=\"string\" default=\"reboot\"/&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"timeout\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-t\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Timeout (sec) for IPMI operation&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"cipher\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-C\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Ciphersuite to use (same as ipmitool -C parameter)&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"method\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-M\" /&gt;\n"
-"\t\t&lt;content type=\"string\" default=\"onoff\"/&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Method to fence (onoff or cycle)&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"power_wait\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-T\" /&gt;\n"
-"\t\t&lt;content type=\"string\" default=\"2\"/&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Wait X seconds after on/off operation&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"delay\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-f\" /&gt;\n"
-"\t\t&lt;content type=\"string\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Wait X seconds before fencing is started&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
-"\t&lt;parameter name=\"verbose\" unique=\"1\"&gt;\n"
-"\t\t&lt;getopt mixed=\"-v\" /&gt;\n"
-"\t\t&lt;content type=\"boolean\" /&gt;\n"
-"\t\t&lt;shortdesc lang=\"en\"&gt;Verbose mode&lt;/shortdesc&gt;\n"
-"\t&lt;/parameter&gt;\n"
+"   &lt;parameter name=\"auth\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;IPMI Lan Auth type (md5, password, or none)&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-A\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"ipaddr\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;IPMI Lan IP to talk to&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-a\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"passwd\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Password  to control power on IPMI device&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-p\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"passwd_script\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Script to retrieve password (if required)&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-S\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"lanplus\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Use Lanplus&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-P\" /&gt;         &lt;content type=\"boolean\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"login\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Username/Login to control IPMI device&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-l\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"action\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Operation to perform. Valid operations:\n"
+"         on, off, reboot, status, list, diag, monitor or metadata&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-o\" /&gt;         &lt;content type=\"string\" default=\"reboot\"/&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"timeout\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Timeout (sec) for IPMI operation&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-t\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"cipher\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Ciphersuite to use (same as ipmitool -C parameter)&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-C\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"method\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Method to fence (onoff or cycle)&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-M\" /&gt;         &lt;content type=\"string\" default=\"onoff\"/&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"power_wait\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Wait X seconds after on/off operation&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-T\" /&gt;         &lt;content type=\"string\" default=\"2\"/&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"delay\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Wait X seconds before fencing is started&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-f\" /&gt;         &lt;content type=\"string\" /&gt; &lt;/parameter&gt;\n"
+"   &lt;parameter name=\"verbose\" unique=\"1\"&gt;\n"
+"      &lt;shortdesc lang=\"en\"&gt;Verbose mode&lt;/shortdesc&gt;\n"
+"      &lt;getopt mixed=\"-v\" /&gt;         &lt;content type=\"boolean\" /&gt; &lt;/parameter&gt;\n"
 "&lt;/parameters&gt;\n"
 "&lt;actions&gt;\n"
-"\t&lt;action name=\"on\" /&gt;\n"
-"\t&lt;action name=\"off\" /&gt;\n"
-"\t&lt;action name=\"reboot\" /&gt;\n"
-"\t&lt;action name=\"status\" /&gt;\n"
-"\t&lt;action name=\"diag\" /&gt;\n"
-"\t&lt;action name=\"list\" /&gt;\n"
-"\t&lt;action name=\"monitor\" /&gt;\n"
-"\t&lt;action name=\"metadata\" /&gt;\n"
+"   &lt;action name=\"on\"      /&gt;        &lt;action name=\"off\"      /&gt; \n"
+"   &lt;action name=\"reboot\"  /&gt;        &lt;action name=\"status\"   /&gt; \n"
+"   &lt;action name=\"diag\"    /&gt;        &lt;action name=\"list\"     /&gt; \n"
+"   &lt;action name=\"monitor\" /&gt;        &lt;action name=\"metadata\" /&gt;\n"
 "&lt;/actions&gt;\n"
 "&lt;/resource-agent&gt;\n"
+" "
 
-#: Ch-Stonith.xml:166(para)
-msgid "from which we would create a STONITH resource fragment that might look like this"
-msgstr "din care am crea un fragment de resursă STONITH care ar putea arăta aşa"
+#. Tag: para
+#, no-c-format
+msgid "From this list we would create a STONITH resource fragment that might look like this:"
+msgstr "Din această listă am putea crea un fragment de resursă STONITH care ar putea arăta aşa:"
 
-#: Ch-Stonith.xml:168(title)
+#. Tag: title
+#, no-c-format
 msgid "Sample STONITH Resource"
 msgstr "Exemplu de Resursă STONITH"
 
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ch-Stonith.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;primitive id=\"ipmi\" class=\"stonith\" type=\"fence_ipmilan\"&gt;\n"
+"        &lt;operations&gt;\n"
+"         &lt;op id=\"ipmi-mon-1\" name=\"monitor\" interval=\"2h\"/&gt;\n"
+"        &lt;/operations&gt;\n"
+"        &lt;instance_attributes id=\"ipmi-parameters\"&gt;\n"
+"          &lt;nvpair id=\"ipmi-attr-1\" name=\"pcmk_host_list\" value=\"node1 node2 node3 node4\"/&gt;\n"
+"          &lt;nvpair id=\"ipmi-attr-1\" name=\"ipaddr\" value=\"10.0.0.1\"/&gt;\n"
+"          &lt;nvpair id=\"ipmi-attr-1\" name=\"login\" value=\"testuser\"/&gt;\n"
+"          &lt;nvpair id=\"ipmi-attr-1\" name=\"passwd\" value=\"abc123\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"       &lt;/primitive&gt;  "
+msgstr ""
+" &lt;primitive id=\"ipmi\" class=\"stonith\" type=\"fence_ipmilan\"&gt;\n"
+"        &lt;operations&gt;\n"
+"         &lt;op id=\"ipmi-mon-1\" name=\"monitor\" interval=\"2h\"/&gt;\n"
+"        &lt;/operations&gt;\n"
+"        &lt;instance_attributes id=\"ipmi-parameters\"&gt;\n"
+"          &lt;nvpair id=\"ipmi-attr-1\" name=\"pcmk_host_list\" value=\"node1 node2 node3 node4\"/&gt;\n"
+"          &lt;nvpair id=\"ipmi-attr-1\" name=\"ipaddr\" value=\"10.0.0.1\"/&gt;\n"
+"          &lt;nvpair id=\"ipmi-attr-1\" name=\"login\" value=\"testuser\"/&gt;\n"
+"          &lt;nvpair id=\"ipmi-attr-1\" name=\"passwd\" value=\"abc123\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"       &lt;/primitive&gt;  "
+
+#. Tag: para
+#, no-c-format
+msgid "The monitor interval of two hours is explained by bugs in some IPMI implementations; see <emphasis>Monitoring the fencing devices</emphasis><footnote><para><ulink url=\"http://www.clusterlabs.org/doc/crm_fencing.html\" /></para></footnote>."
+msgstr "Intervalul de monitorizare de două ore este explicat de bug-uri în anumite implementări de IPMI; vedeți <emphasis>Monitorizarea dispozitivelor de evacuare forțată</emphasis><footnote><para><ulink url=\"http://www.clusterlabs.org/doc/crm_fencing.html\" /></para></footnote>."
 

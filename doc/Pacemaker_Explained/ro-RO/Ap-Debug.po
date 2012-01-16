@@ -1,137 +1,134 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-19 07:21+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ap-Debug.xml:2(title)
+#. Tag: title
+#, no-c-format
 msgid "Debugging Cluster Startup"
 msgstr "Depanarea Pornirii Clusterului"
 
-#: Ap-Debug.xml:4(title)
+#. Tag: title
+#, no-c-format
 msgid "Corosync"
 msgstr "Corosync"
 
-#: Ap-Debug.xml:7(title)
+#. Tag: title
+#, no-c-format
 msgid "Prerequisites"
 msgstr "Premise"
 
-#: Ap-Debug.xml:9(title)
+#. Tag: title
+#, no-c-format
 msgid "Minimum logging configuration"
 msgstr "Configuraţia minim necesară pentru log-uri"
 
-#: Ap-Debug.xml:11(userinput)
-#: Ap-Debug.xml:31(userinput)
-#, no-wrap
-msgid ""
-"\n"
+#. Tag: programlisting
+#, no-c-format
+msgid "<userinput>\n"
 "  # /etc/init.d/openais start\n"
-"\t    "
-msgstr ""
-"\n"
-"  # /etc/init.d/openais start\n"
-"\t    "
-
-#: Ap-Debug.xml:14(computeroutput)
-#, no-wrap
-msgid ""
-"\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  logging {\n"
 "      to_syslog: yes\n"
 "      syslog_facility: daemon\n"
 "  }\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 msgstr ""
-"\n"
+"<userinput>\n"
+"  # /etc/init.d/openais start\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  logging {\n"
 "      to_syslog: yes\n"
 "      syslog_facility: daemon\n"
 "  }\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 
-#: Ap-Debug.xml:21(caption)
+#. Tag: caption
+#, no-c-format
 msgid "Whatever other logging you have, these two lines are required for Pacemaker clusters"
 msgstr "Indiferent de ce alte log-uri aveţi, aceste două linii sunt necesare pentru clusterele de tip Pacemaker"
 
-#: Ap-Debug.xml:27(title)
+#. Tag: title
+#, no-c-format
 msgid "Confirm Corosync Started"
 msgstr "Confirmaţi că a Pornit Corosync"
 
-#: Ap-Debug.xml:29(title)
+#. Tag: title
+#, no-c-format
 msgid "Expected output when starting openais"
 msgstr "Rezultatul aşteptat la pornirea openais"
 
-#: Ap-Debug.xml:34(computeroutput)
-#, no-wrap
-msgid ""
-"\n"
+#. Tag: screen
+#, no-c-format
+msgid "<userinput>\n"
+"  # /etc/init.d/openais start\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  Starting Corosync daemon (aisexec): starting... rc=0: OK\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 msgstr ""
-"\n"
+"<userinput>\n"
+"  # /etc/init.d/openais start\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  Starting Corosync daemon (aisexec): starting... rc=0: OK\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 
-#: Ap-Debug.xml:41(title)
+#. Tag: title
+#, no-c-format
 msgid "Expected log messages - startup"
 msgstr "Mesaje de log aşteptate - la pornire"
 
-#: Ap-Debug.xml:43(userinput)
-#, no-wrap
-msgid ""
-"\n"
+#. Tag: screen
+#, no-c-format
+msgid "<userinput>\n"
 "  # grep -e \"openais.*network interface\" -e \"AIS Executive Service\" /var/log/messages\n"
-"\t    "
-msgstr ""
-"\n"
-"  # grep -e \"openais.*network interface\" -e \"AIS Executive Service\" /var/log/messages\n"
-"\t    "
-
-#: Ap-Debug.xml:46(computeroutput)
-#, no-wrap
-msgid ""
-"\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  Aug 27 16:23:37 test1 openais[26337]: [MAIN ] AIS Executive Service RELEASE 'subrev 1152 version 0.80'\n"
 "  Aug 27 16:23:38 test1 openais[26337]: [MAIN ] AIS Executive Service: started and ready to provide service.\n"
 "  Aug 27 16:23:38 test1 openais[26337]: [TOTEM] The network interface [192.168.9.41] is now up.\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 msgstr ""
-"\n"
+"<userinput>\n"
+"  # grep -e \"openais.*network interface\" -e \"AIS Executive Service\" /var/log/messages\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  Aug 27 16:23:37 test1 openais[26337]: [MAIN ] AIS Executive Service RELEASE 'subrev 1152 version 0.80'\n"
 "  Aug 27 16:23:38 test1 openais[26337]: [MAIN ] AIS Executive Service: started and ready to provide service.\n"
 "  Aug 27 16:23:38 test1 openais[26337]: [TOTEM] The network interface [192.168.9.41] is now up.\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 
-#: Ap-Debug.xml:52(caption)
+#. Tag: caption
+#, no-c-format
 msgid "The versions may differ, but you should see Corosync indicate it started and sucessfully attached to the machine's network interface"
 msgstr "Versiunile pot fi diferite, însă ar trebui să vedeţi Corosync indicând că a pornit şi s-a ataşat cu succes la interfaţa de reţea a maşinii"
 
-#: Ap-Debug.xml:58(title)
+#. Tag: title
+#, no-c-format
 msgid "Expected log messages - membership"
 msgstr "Mesaje de log aşteptate - apartenenţă"
 
-#: Ap-Debug.xml:60(userinput)
-#, no-wrap
-msgid ""
-"\n"
+#. Tag: screen
+#, no-c-format
+msgid "<userinput>\n"
 "  # grep CLM /var/log/messages\n"
-"\t    "
-msgstr ""
-"\n"
-"  # grep CLM /var/log/messages\n"
-"\t    "
-
-#: Ap-Debug.xml:63(computeroutput)
-#, no-wrap
-msgid ""
-"\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] CLM CONFIGURATION CHANGE\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] New Configuration:\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Left:\n"
@@ -143,9 +140,13 @@ msgid ""
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Joined:\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ]     r(0) ip(192.168.9.41) \n"
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] got nodejoin message 192.168.9.41\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 msgstr ""
-"\n"
+"<userinput>\n"
+"  # grep CLM /var/log/messages\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] CLM CONFIGURATION CHANGE\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] New Configuration:\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Left:\n"
@@ -157,75 +158,69 @@ msgstr ""
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Joined:\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ]     r(0) ip(192.168.9.41) \n"
 "  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] got nodejoin message 192.168.9.41\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 
-#: Ap-Debug.xml:77(caption)
+#. Tag: caption
+#, no-c-format
 msgid "The exact messages will differ, but you should see a new membership formed with the real IP address of your node"
 msgstr "Mesajele exacte vor fi diferite, însă ar trebui sa vedeţi o nouă apartenenţă formată cu adresa IP reală a nodului vostru"
 
-#: Ap-Debug.xml:84(title)
+#. Tag: title
+#, no-c-format
 msgid "Checking Pacemaker"
-msgstr "Verificarea Pacemaker-ului"
+msgstr "Verificarea Pacemaker"
 
-#: Ap-Debug.xml:85(para)
+#. Tag: para
+#, no-c-format
 msgid "Now that we have confirmed that Corosync is functional we can check the rest of the stack."
 msgstr "Acum că am confirmat că procesul Corosync este funcţional putem verifica restul stivei."
 
-#: Ap-Debug.xml:88(title)
+#. Tag: title
+#, no-c-format
 msgid "Expected Pacemaker startup logging for Corosync"
 msgstr "Log-urile aşteptate la pornirea Pacemaker pentru Corosync"
 
-#: Ap-Debug.xml:90(userinput)
-#, no-wrap
-msgid ""
-"\n"
+#. Tag: screen
+#, no-c-format
+msgid "<userinput>\n"
 "  # grep pcmk_plugin_init /var/log/messages\n"
-"\t    "
-msgstr ""
-"\n"
-"  # grep pcmk_plugin_init /var/log/messages\n"
-"\t    "
-
-#: Ap-Debug.xml:93(computeroutput)
-#, no-wrap
-msgid ""
-"\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: CRM: Initialized\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] Logging: Initialized pcmk_plugin_init\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: Service: 9\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: Local hostname: test1\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 msgstr ""
-"\n"
+"<userinput>\n"
+"  # grep pcmk_plugin_init /var/log/messages\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: CRM: Initialized\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] Logging: Initialized pcmk_plugin_init\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: Service: 9\n"
 "  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: Local hostname: test1\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 
-#: Ap-Debug.xml:100(caption)
+#. Tag: caption
+#, no-c-format
 msgid "If you don't see these messages, or some like them, there is likely a problem finding or loading the pacemaker plugin."
 msgstr "Dacă nu vedeţi aceste mesaje sau unele similare, este probabil o problemă în găsirea sau încărcarea plugin-ului pacemaker."
 
-#: Ap-Debug.xml:106(title)
+#. Tag: title
+#, no-c-format
 msgid "Expected process listing on a 64-bit machine"
 msgstr "Lista de procese aşteptate pe o maşină pe 64 de biţi"
 
-#: Ap-Debug.xml:108(userinput)
-#, no-wrap
-msgid ""
-"\n"
+#. Tag: screen
+#, no-c-format
+msgid "<userinput>\n"
 "  # ps axf\n"
-"\t    "
-msgstr ""
-"\n"
-"  # ps axf\n"
-"\t    "
-
-#: Ap-Debug.xml:111(computeroutput)
-#, no-wrap
-msgid ""
-"\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  3718 ?        Ssl    0:05 /usr/sbin/aisexec\n"
 "  3723 ?        SLs    0:00  \\_ /usr/lib64/heartbeat/stonithd\n"
 "  3724 ?        S      0:05  \\_ /usr/lib64/heartbeat/cib\n"
@@ -233,9 +228,13 @@ msgid ""
 "  3726 ?        S      0:01  \\_ /usr/lib64/heartbeat/attrd\n"
 "  3727 ?        S      0:00  \\_ /usr/lib64/heartbeat/pengine\n"
 "  3728 ?        S      0:01  \\_ /usr/lib64/heartbeat/crmd\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 msgstr ""
-"\n"
+"<userinput>\n"
+"  # ps axf\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
 "  3718 ?        Ssl    0:05 /usr/sbin/aisexec\n"
 "  3723 ?        SLs    0:00  \\_ /usr/lib64/heartbeat/stonithd\n"
 "  3724 ?        S      0:05  \\_ /usr/lib64/heartbeat/cib\n"
@@ -243,14 +242,11 @@ msgstr ""
 "  3726 ?        S      0:01  \\_ /usr/lib64/heartbeat/attrd\n"
 "  3727 ?        S      0:00  \\_ /usr/lib64/heartbeat/pengine\n"
 "  3728 ?        S      0:01  \\_ /usr/lib64/heartbeat/crmd\n"
-"\t    "
+"	    </computeroutput>\n"
+"	  "
 
-#: Ap-Debug.xml:121(caption)
+#. Tag: caption
+#, no-c-format
 msgid "On 32-bit systems the exact path may differ, but all the above processes should be listed."
 msgstr "Pe sistemele pe 32 de biţi calea exactă poate fi diferită, dar toate procesele de mai sus ar trebui să fie listate."
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ap-Debug.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
 

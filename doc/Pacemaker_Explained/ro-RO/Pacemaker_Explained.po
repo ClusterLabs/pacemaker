@@ -1,54 +1,56 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-11-03 01:17+0100\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Pacemaker_Explained.xml:15(title)
-msgid "Receiving Notification of Cluster Events"
+#. Tag: title
+#, no-c-format
+msgid "Receiving Notification for Cluster Events"
 msgstr "Primirea de Notificări ale Evenimentelor Clusterului"
 
-#: Pacemaker_Explained.xml:16(title)
+#. Tag: title
+#, no-c-format
 msgid "Configuring Email Notifications"
 msgstr "Configurarea de Notificări pe Email"
 
-#: Pacemaker_Explained.xml:17(title)
+#. Tag: title
+#, no-c-format
 msgid "Configuring SNMP Notifications"
 msgstr "Configurarea de Notificări pe SNMP"
 
-#: Pacemaker_Explained.xml:34(title)
+#. Tag: title
+#, no-c-format
 msgid "Further Reading"
 msgstr "Documentaţie Adiţională"
 
-#: Pacemaker_Explained.xml:36(para)
-msgid "Project Website: <ulink url=\"http://www.clusterlabs.org/\"/> and Documentation <ulink url=\"http://www.clusterlabs.org/wiki/Documentation\"/>"
-msgstr "Site-ul Proiectului: <ulink url=\"http://www.clusterlabs.org/\"/> şi Documentaţia <ulink url=\"http://www.clusterlabs.org/wiki/Documentation\"/>"
+#. Tag: para
+#, no-c-format
+msgid "Project Website <ulink url=\"http://www.clusterlabs.org/\" />"
+msgstr "Site-ul Proiectului <ulink url=\"http://www.corosync.org/\" />"
 
-#: Pacemaker_Explained.xml:38(para)
-msgid "Cluster Commands"
-msgstr "Comenzile Clusterului"
+#. Tag: para
+#, no-c-format
+msgid "Project Documentation <ulink url=\"http://www.clusterlabs.org/wiki/Documentation\" />"
+msgstr "Documentaţia Proiectului <ulink url=\"http://www.clusterlabs.org/wiki/Documentation\" />"
 
-#: Pacemaker_Explained.xml:39(para)
-msgid "A comprehensive guide to cluster commands has been written by Novell and can be found at: <ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\"/>"
-msgstr "Un ghid comprehensiv al comenzilor clusterului a fost scris de Novell şi poate fi găsit la: <ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\"/>"
+#. Tag: para
+#, no-c-format
+msgid "A comprehensive guide to cluster commands has been written by Novell<footnote><para><ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\" /></para></footnote>"
+msgstr "Un ghid comprehensiv al comenzilor clusterului a fost scris de Novell şi poate fi găsit la: <ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\" />"
 
-#: Pacemaker_Explained.xml:41(para)
-msgid "Heartbeat configuration: <ulink url=\"http://www.linux-ha.org/\"/>"
-msgstr "Configuraţia Heartbeat: <ulink url=\"http://www.linux-ha.org/\"/>"
+#. Tag: para
+#, no-c-format
+msgid "Heartbeat configuration: <ulink url=\"http://www.linux-ha.org/\" />"
+msgstr "Configuraţia Heartbeat: <ulink url=\"http://www.linux-ha.org/\" />"
 
-#: Pacemaker_Explained.xml:42(para)
-msgid "Corosync Configuration: <ulink url=\"http://www.corosync.org/\"/>"
-msgstr "Configuraţia Corosync: <ulink url=\"http://www.corosync.org/\"/>"
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Pacemaker_Explained.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
+#. Tag: para
+#, no-c-format
+msgid "Corosync Configuration: <ulink url=\"http://www.corosync.org/\" />"
+msgstr "Configuraţia Corosync: <ulink url=\"http://www.corosync.org/\" />"
 

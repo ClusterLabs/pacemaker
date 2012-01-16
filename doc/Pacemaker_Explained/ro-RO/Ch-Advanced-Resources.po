@@ -1,1008 +1,1392 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-24 07:42+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Bookmarks: 5,-1,-1,-1,-1,-1,-1,-1,-1,-1\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ch-Advanced-Resources.xml:1(title)
+#. Tag: title
+#, no-c-format
 msgid "Advanced Resource Types"
 msgstr "Tipuri Avansate de Resurse"
 
-#: Ch-Advanced-Resources.xml:3(title)
-msgid "Groups - A Syntactic Shortcut"
-msgstr "Grupuri - O Scurtătură Sintactică"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Group Resources</primary></indexterm> <indexterm><primary>Resources</primary><secondary>Groups</secondary></indexterm> Groups - A Syntactic Shortcut"
+msgstr "<indexterm significance=\"preferred\"><primary>Grup de Resurse</primary></indexterm> <indexterm><primary>Resurse</primary><secondary>Grupuri</secondary></indexterm> Grupuri - A Scurtătură Sintactică"
 
-#: Ch-Advanced-Resources.xml:4(para)
-msgid "One of the most common elements of a cluster is a set of resources that need to be located together, start sequentially and stop in the reverse order. To simplify this configuration we support the concept of groups."
+#. Tag: para
+#, no-c-format
+msgid "One of the most common elements of a cluster is a set of resources that need to be located together, start sequentially, and stop in the reverse order. To simplify this configuration we support the concept of groups."
 msgstr "Unul dintre cele mai comune elemente ale unui cluster este un set de resurse care trebuie plasate împreună, pornesc secvenţial şi se opres în ordine inversă. Pentru a simplifica această configuraţie suportăm conceptul de grupuri."
 
-#: Ch-Advanced-Resources.xml:9(title)
+#. Tag: title
+#, no-c-format
 msgid "An example group"
 msgstr "Un exemplu de grup"
 
-#: Ch-Advanced-Resources.xml:23(para)
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;group id=\"shortcut\"&gt;\n"
+"   &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+"    &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
+"       &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"    &lt;/instance_attributes&gt;\n"
+"   &lt;/primitive&gt;\n"
+"   &lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"/&gt;\n"
+"  &lt;/group&gt;  "
+msgstr ""
+" &lt;group id=\"shortcut\"&gt;\n"
+"   &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+"    &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
+"       &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"    &lt;/instance_attributes&gt;\n"
+"   &lt;/primitive&gt;\n"
+"   &lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"/&gt;\n"
+"  &lt;/group&gt;  "
+
+#. Tag: para
+#, no-c-format
 msgid "Although the example above contains only two resources, there is no limit to the number of resources a group can contain. The example is also sufficient to explain the fundamental properties of a group:"
 msgstr "Deşi exemplul de mai sus conţine doar două resurse, nu este nici o limită asupra numărului de resurse pe care le poate conţine un grup. Exemplul este de asemenea suficient pentru a explica proprietăţile fundamentale ale unui grup:"
 
-#: Ch-Advanced-Resources.xml:28(para)
-msgid "Resources are started in the order they appear in (Public-IP first, then Email)"
-msgstr "Resursele sunt pornite în ordinea în care apar (întâi Public-IP, apoi Email)"
+#. Tag: para
+#, no-c-format
+msgid "Resources are started in the order they appear in (<literal>Public-IP</literal> first, then <literal>Email</literal>)"
+msgstr "Resursele sunt pornite în ordinea în care apar (întâi <literal>Public-IP</literal>, apoi <literal>Email</literal>)"
 
-#: Ch-Advanced-Resources.xml:29(para)
-msgid "Resources are stopped in the reverse order to which they appear in (Email first, then Public-IP)"
-msgstr "Resursele sunt oprite în ordine inversă faţă de cea în care apar (întâi Email, apoi Public-IP)"
+#. Tag: para
+#, no-c-format
+msgid "Resources are stopped in the reverse order to which they appear in (<literal>Email</literal> first, then <literal>Public-IP</literal>)"
+msgstr "Resursele sunt oprite în ordine inversă faţă de cea în care apar (întâi <literal>Email</literal>, apoi <literal>Public-IP</literal>)"
 
-#: Ch-Advanced-Resources.xml:31(para)
-msgid "If a resource in the group can't run anywhere, then nothing after that is allowed to run"
+#. Tag: para
+#, no-c-format
+msgid "If a resource in the group can't run anywhere, then nothing after that is allowed to run, too."
 msgstr "Dacă o resursă din grup nu poate rula nicăieri, atunci nimic din ce urmează după aceasta nu îi este permis să ruleze"
 
-#: Ch-Advanced-Resources.xml:33(para)
-msgid "If Public-IP can’t run anywhere, neither can Email"
-msgstr "Dacă Public-IP nu poate rula nicăieri, nici Email nu va putea"
+#. Tag: para
+#, no-c-format
+msgid "If <literal>Public-IP</literal> can't run anywhere, neither can <literal>Email</literal>;"
+msgstr "Dacă <literal>Public-IP</literal> nu poate rula nicăieri, nici <literal>Email</literal> nu va putea;"
 
-#: Ch-Advanced-Resources.xml:34(para)
-msgid "If Email can’t run anywhere, this does not affect Public-IP in any way"
-msgstr "Dacă Email nu poate rula nicăieri, acest lucru nu afectează Public-IP în nici un fel"
+#. Tag: para
+#, no-c-format
+msgid "but if <literal>Email</literal> can't run anywhere, this does not affect <literal>Public-IP</literal> in any way"
+msgstr "dar dacă <literal>Email</literal> nu poate rula nicăieri, acest lucru nu afectează <literal>Public-IP</literal> în nici un fel"
 
-#: Ch-Advanced-Resources.xml:38(para)
+#. Tag: para
+#, no-c-format
 msgid "The group above is logically equivalent to writing:"
 msgstr "Grupul de deasupra este echivalent logic cu a scrie:"
 
-#: Ch-Advanced-Resources.xml:40(title)
+#. Tag: title
+#, no-c-format
 msgid "How the cluster sees a group resource"
 msgstr "Cum vede clusterul un grup de resurse"
 
-#: Ch-Advanced-Resources.xml:60(para)
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;configuration&gt;\n"
+"   &lt;resources&gt;\n"
+"    &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+"     &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
+"        &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"     &lt;/instance_attributes&gt;\n"
+"    &lt;/primitive&gt;\n"
+"    &lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"/&gt;\n"
+"   &lt;/resources&gt;\n"
+"   &lt;constraints&gt;\n"
+"      &lt;rsc_colocation id=\"xxx\" rsc=\"Email\" with-rsc=\"Public-IP\" score=\"INFINITY\"/&gt;\n"
+"      &lt;rsc_order id=\"yyy\" first=\"Public-IP\" then=\"Email\"/&gt;\n"
+"   &lt;/constraints&gt;\n"
+"  &lt;/configuration&gt;  "
+msgstr ""
+" &lt;configuration&gt;\n"
+"   &lt;resources&gt;\n"
+"    &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+"     &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
+"        &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"     &lt;/instance_attributes&gt;\n"
+"    &lt;/primitive&gt;\n"
+"    &lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"/&gt;\n"
+"   &lt;/resources&gt;\n"
+"   &lt;constraints&gt;\n"
+"      &lt;rsc_colocation id=\"xxx\" rsc=\"Email\" with-rsc=\"Public-IP\" score=\"INFINITY\"/&gt;\n"
+"      &lt;rsc_order id=\"yyy\" first=\"Public-IP\" then=\"Email\"/&gt;\n"
+"   &lt;/constraints&gt;\n"
+"  &lt;/configuration&gt;  "
+
+#. Tag: para
+#, no-c-format
 msgid "Obviously as the group grows bigger, the reduced configuration effort can become significant."
 msgstr "În mod evident pe măsură ce grupul creşte, efortul de configurare redus poate deveni semnificativ."
 
-#: Ch-Advanced-Resources.xml:62(title)
-#: Ch-Advanced-Resources.xml:160(title)
-#: Ch-Advanced-Resources.xml:442(title)
+#. Tag: para
+#, no-c-format
+msgid "Another (typical) example of a group is a DRBD volume, the filesystem mount, an IP address, and an application that uses them."
+msgstr "Un alt exemplu (tipi) al unui grup este un volum DBRD, un mount de sistem de fișiere, o adresă IP și o aplicație care le folosește."
+
+#. Tag: title
+#, no-c-format
 msgid "Properties"
 msgstr "Proprietăţi"
 
-#: Ch-Advanced-Resources.xml:64(title)
+#. Tag: title
+#, no-c-format
 msgid "Properties of a Group Resource"
 msgstr "Proprietăţile unui Grup de Resurse"
 
-#: Ch-Advanced-Resources.xml:68(entry)
-#: Ch-Advanced-Resources.xml:166(entry)
-#: Ch-Advanced-Resources.xml:185(entry)
-#: Ch-Advanced-Resources.xml:448(entry)
-#: Ch-Advanced-Resources.xml:468(entry)
-#: Ch-Advanced-Resources.xml:536(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Field"
 msgstr "Câmp"
 
-#: Ch-Advanced-Resources.xml:69(entry)
-#: Ch-Advanced-Resources.xml:167(entry)
-#: Ch-Advanced-Resources.xml:186(entry)
-#: Ch-Advanced-Resources.xml:311(entry)
-#: Ch-Advanced-Resources.xml:449(entry)
-#: Ch-Advanced-Resources.xml:469(entry)
-#: Ch-Advanced-Resources.xml:537(entry)
-#: Ch-Advanced-Resources.xml:650(entry)
-#: Ch-Advanced-Resources.xml:688(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Description"
 msgstr "Descriere"
 
-#: Ch-Advanced-Resources.xml:74(entry)
-#: Ch-Advanced-Resources.xml:170(entry)
-#: Ch-Advanced-Resources.xml:452(entry)
-msgid "id"
-msgstr "id"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Group Resource Property</secondary></indexterm> <indexterm><primary>Group Resource Properties</primary><secondary>id</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Group Property</secondary><tertiary>id</tertiary></indexterm> id"
+msgstr "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Proprietatea unei Resurse de Grup</secondary></indexterm> <indexterm><primary>Proprietățile unei Resurse de Grup</primary><secondary>id</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietate de Grup</secondary><tertiary>id</tertiary></indexterm> id"
 
-#: Ch-Advanced-Resources.xml:75(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Your name for the group"
 msgstr "Numele pe care îl daţi grupului"
 
-#: Ch-Advanced-Resources.xml:82(title)
-#: Ch-Advanced-Resources.xml:178(title)
-#: Ch-Advanced-Resources.xml:460(title)
+#. Tag: title
+#, no-c-format
 msgid "Options"
 msgstr "Opţiuni"
 
-#: Ch-Advanced-Resources.xml:83(para)
+#. Tag: para
+#, no-c-format
 msgid "Options inherited from <link linkend=\"s-resource-options\">simple resources</link>: <literal>priority, target-role, is-managed</literal>"
 msgstr "Opţiuni moştenite de la <link linkend=\"s-resource-options\">resurse simple</link>: <literal>priority, target-role, is-managed</literal>"
 
-#: Ch-Advanced-Resources.xml:86(title)
-msgid "Using Groups"
-msgstr "Folosirea Grupurilor"
-
-#: Ch-Advanced-Resources.xml:88(title)
-#: Ch-Advanced-Resources.xml:224(title)
-#: Ch-Advanced-Resources.xml:484(title)
+#. Tag: title
+#, no-c-format
 msgid "Instance Attributes"
 msgstr "Atributele Instanţelor"
 
-#: Ch-Advanced-Resources.xml:89(para)
+#. Tag: para
+#, no-c-format
 msgid "Groups have no instance attributes, however any that are set here will be inherited by the group's children."
 msgstr "Grupurile nu au atribute de instanţă, totuşi oricare ar fi setate aici vor fi moştenite de către copiii grupului."
 
-#: Ch-Advanced-Resources.xml:92(title)
-#: Ch-Advanced-Resources.xml:228(title)
-#: Ch-Advanced-Resources.xml:488(title)
+#. Tag: title
+#, no-c-format
 msgid "Contents"
 msgstr "Conţinut"
 
-#: Ch-Advanced-Resources.xml:93(para)
+#. Tag: para
+#, no-c-format
 msgid "Groups may only contain a collection of <link linkend=\"s-resource-supported\">primitive</link> cluster resources. To refer to the child of a group resource, just use the child's id instead of the group's."
-msgstr "Grupurile pot conţine numai o colecţie de resurse de cluster de tip <link linkend=\"s-resource-supported\">primitive</link> . Pentru a face referinţă la copilul unei resurse dintr-un grup, folosiţi pur şi simplu id-ul copilului în locul celui al grupului."
+msgstr "Grupurile pot conţine numai o colecţie de resurse de cluster de tip <link linkend=\"s-resource-supported\">primitive</link>. Pentru a face referinţă la copilul unei resurse dintr-un grup, folosiţi pur şi simplu id-ul copilului în locul celui al grupului."
 
-#: Ch-Advanced-Resources.xml:99(title)
-#: Ch-Advanced-Resources.xml:238(title)
-#: Ch-Advanced-Resources.xml:521(title)
+#. Tag: title
+#, no-c-format
 msgid "Constraints"
 msgstr "Restricţii"
 
-#: Ch-Advanced-Resources.xml:100(para)
+#. Tag: para
+#, no-c-format
 msgid "Although it is possible to reference the group's children in constraints, it is usually preferable to use the group's name instead."
 msgstr "Deşi este posibil să referenţiezi copiii grupului în restricţii, este în mod uzual preferabil să folosiţi numele grupului în schimb."
 
-#: Ch-Advanced-Resources.xml:102(title)
+#. Tag: title
+#, no-c-format
 msgid "Example constraints involving groups"
 msgstr "Exemple de restricţii care implică grupuri"
 
-#: Ch-Advanced-Resources.xml:115(title)
-#: Ch-Advanced-Resources.xml:273(title)
-#: Ch-Advanced-Resources.xml:600(title)
-msgid "Stickiness"
-msgstr "Adezivitate"
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;constraints&gt;\n"
+"    &lt;rsc_location id=\"group-prefers-node1\" rsc=\"shortcut\" node=\"node1\" score=\"500\"/&gt;\n"
+"    &lt;rsc_colocation id=\"webserver-with-group\" rsc=\"Webserver\" with-rsc=\"shortcut\"/&gt;\n"
+"    &lt;rsc_order id=\"start-group-then-webserver\" first=\"Webserver\" then=\"shortcut\"/&gt;\n"
+"  &lt;/constraints&gt;  "
+msgstr ""
+" &lt;constraints&gt;\n"
+"    &lt;rsc_location id=\"group-prefers-node1\" rsc=\"shortcut\" node=\"node1\" score=\"500\"/&gt;\n"
+"    &lt;rsc_colocation id=\"webserver-with-group\" rsc=\"Webserver\" with-rsc=\"shortcut\"/&gt;\n"
+"    &lt;rsc_order id=\"start-group-then-webserver\" first=\"Webserver\" then=\"shortcut\"/&gt;\n"
+"  &lt;/constraints&gt;  "
 
-#: Ch-Advanced-Resources.xml:116(para)
-msgid "Stickiness, the measure of how much a resource wants to stay where it is, is additive in groups. Every active member of the group will contribute its stickiness value to the group's total. So if the default <literal>resource-stickiness</literal> is 100 a group has seven members, five of which are active, then the group as a whole will prefer its current location with a score of 500."
+#. Tag: title
+#, no-c-format
+msgid "<indexterm><primary>resource-stickiness</primary><secondary>of a Group Resource</secondary></indexterm> Stickiness"
+msgstr "<indexterm><primary>resource-stickiness</primary><secondary>a unei Resurse de Grup</secondary></indexterm> Adezivitatea"
+
+#. Tag: para
+#, no-c-format
+msgid "Stickiness, the measure of how much a resource wants to stay where it is, is additive in groups. Every active resource of the group will contribute its stickiness value to the group's total. So if the default <literal>resource-stickiness</literal> is 100, and a group has seven members, five of which are active, then the group as a whole will prefer its current location with a score of 500."
 msgstr "Adezivitatea, măsura a cât de mult vrea o resursă să rămână acolo unde este, este aditivă în grupuri. Fiecare membru activ al grupului va contribui cu valoarea adezivităţii acestuia la totalul grupului. Deci dacă valoarea implicită a <literal>resource-stickiness</literal> este 100 şi grupul are şapte membri, cinci din aceştia fiind activi, atunci grupul ca întreg va prefera locaţia curentă cu un scor de 500."
 
-#: Ch-Advanced-Resources.xml:123(title)
-msgid "Clones - Resources That Should be Active on Multiple Hosts"
-msgstr "Clone - Resurse Care Trebuie să fie Active pe Gazde Multiple"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Clone Resources</primary></indexterm> <indexterm><primary>Resources</primary><secondary>Clones</secondary></indexterm> Clones - Resources That Get Active on Multiple Hosts"
+msgstr "<indexterm significance=\"preferred\"><primary>Resursele Clonă</primary></indexterm> <indexterm><primary>Resursele</primary><secondary>Clone</secondary></indexterm> Clonele - Resursele Care Devin Active pe mai Multe Gazde"
 
-#: Ch-Advanced-Resources.xml:124(para)
-msgid "Clones were initially conceived as a convenient way to start N instances of an IP resource and have them distributed throughout the cluster for load balancing. They have turned out to quite useful for a number of purposes including integrating with Red Hat's DLM, the fencing subsystem and OCFS2."
+#. Tag: para
+#, no-c-format
+msgid "Clones were initially conceived as a convenient way to start N instances of an IP resource and have them distributed throughout the cluster for load balancing. They have turned out to quite useful for a number of purposes including integrating with Red Hat's DLM, the fencing subsystem, and OCFS2."
 msgstr "Clonele au fost concepute iniţial ca o modalitate convenientă de a porni N instanţe ale unei resurse IP şi de a le avea distribuite de-a lungul clusterului pentru partajarea nivelului de încărcare. S-au dovedit a fi chiar utile pentru un număr de scopuri incluzând integrarea cu DLM-ul de la Red Hat, subsistemul de evacuare şi OCFS2."
 
-#: Ch-Advanced-Resources.xml:128(para)
-msgid "You can clone any resource provided the resource agent supports it."
+#. Tag: para
+#, no-c-format
+msgid "You can clone any resource, provided the resource agent supports it."
 msgstr "Puteţi clona orice resursă atâta timp cât agentul de resursă suportă acest lucru."
 
-#: Ch-Advanced-Resources.xml:129(para)
-msgid "Three types of cloned resources exist."
+#. Tag: para
+#, no-c-format
+msgid "Three types of cloned resources exist:"
 msgstr "Există trei tipuri de resurse clonate."
 
-#: Ch-Advanced-Resources.xml:131(para)
+#. Tag: para
+#, no-c-format
 msgid "Anonymous"
 msgstr "Anonime"
 
-#: Ch-Advanced-Resources.xml:132(para)
+#. Tag: para
+#, no-c-format
 msgid "Globally Unique"
 msgstr "Unice la nivel global"
 
-#: Ch-Advanced-Resources.xml:133(para)
+#. Tag: para
+#, no-c-format
 msgid "Stateful"
 msgstr "Stateful"
 
-#: Ch-Advanced-Resources.xml:135(para)
+#. Tag: para
+#, no-c-format
 msgid "Anonymous clones are the simplest type. These resources behave completely identically everywhere they are running. Because of this, there can only be one copy of an anonymous clone active per machine."
 msgstr "Clonele anonime sunt tipul cel mai simplu. Aceste resurse se comportă absolut identic oriunde rulează. Din această cauză, poate exista doar o copie a unei clone anonime activă per maşină."
 
-#: Ch-Advanced-Resources.xml:140(para)
+#. Tag: para
+#, no-c-format
 msgid "Globally unique clones are distinct entities. A copy of the clone running on one machine is not equivalent to another instance on another node. Nor would any two copies on the same node be equivalent."
 msgstr "Clonele unice la nivel global sunt entităţi distincte. O copie a unei clone rulând pe o maşină nu este echivalentă cu o altă instanţă pe alt nod. Nici nu ar fi echivalente oricare două copii pe acelaşi nod."
 
-#: Ch-Advanced-Resources.xml:145(para)
-msgid "Stateful clones are covered later in <xref linkend=\"s-resource-multistate\"/>."
-msgstr "Clonele stateful sunt discutate mai târziu în <xref linkend=\"s-resource-multistate\"/>."
+#. Tag: para
+#, no-c-format
+msgid "Stateful clones are covered later in <xref linkend=\"s-resource-multistate\" />."
+msgstr "Clonele stateful sunt discutate mai târziu în <xref linkend=\"s-resource-multistate\" />."
 
-#: Ch-Advanced-Resources.xml:147(title)
+#. Tag: title
+#, no-c-format
 msgid "An example clone"
 msgstr "Un exemplu de clonă"
 
-#: Ch-Advanced-Resources.xml:162(title)
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;clone id=\"apache-clone\"&gt;\n"
+"    &lt;meta_attributes id=\"apache-clone-meta\"&gt;\n"
+"       &lt;nvpair id=\"apache-unique\" name=\"globally-unique\" value=\"false\"/&gt;\n"
+"    &lt;/meta_attributes&gt;\n"
+"    &lt;primitive id=\"apache\" class=\"lsb\" type=\"apache\"/&gt;\n"
+"  &lt;/clone&gt;  "
+msgstr ""
+" &lt;clone id=\"apache-clone\"&gt;\n"
+"    &lt;meta_attributes id=\"apache-clone-meta\"&gt;\n"
+"       &lt;nvpair id=\"apache-unique\" name=\"globally-unique\" value=\"false\"/&gt;\n"
+"    &lt;/meta_attributes&gt;\n"
+"    &lt;primitive id=\"apache\" class=\"lsb\" type=\"apache\"/&gt;\n"
+"  &lt;/clone&gt;  "
+
+#. Tag: title
+#, no-c-format
 msgid "Properties of a Clone Resource"
 msgstr "Proprietăţile unei Resurse Clonă"
 
-#: Ch-Advanced-Resources.xml:171(entry)
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Clone Resource Property</secondary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>id</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>id</tertiary></indexterm> id"
+msgstr "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Proprietatea unei Resurse Clonă</secondary></indexterm> <indexterm><primary>Proprietățile Resurselor Clonă</primary><secondary>id</secondary></indexterm> <indexterm><primary>Resurse</primary><secondary>Proprietatea Clonei</secondary><tertiary>id</tertiary></indexterm> id"
+
+#. Tag: entry
+#, no-c-format
 msgid "Your name for the clone"
 msgstr "Numele dat clonei"
 
-#: Ch-Advanced-Resources.xml:179(para)
-#: Ch-Advanced-Resources.xml:461(para)
+#. Tag: para
+#, no-c-format
 msgid "Options inherited from <link linkend=\"s-resource-supported\">simple resources</link>: <literal>priority, target-role, is-managed</literal>"
 msgstr "Opţiunile moştenite de la <link linkend=\"s-resource-supported\">resurse simple</link>: <literal>priority, target-role, is-managed</literal>"
 
-#: Ch-Advanced-Resources.xml:181(title)
+#. Tag: title
+#, no-c-format
 msgid "Clone specific configuration options"
 msgstr "Opţiuni de configurare specifice clonei"
 
-#: Ch-Advanced-Resources.xml:191(entry)
-msgid "clone-max"
-msgstr "clone-max"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>clone-max Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>clone-max</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>clone-max</tertiary></indexterm> clone-max"
+msgstr "<indexterm significance=\"preferred\"><primary>clone-max Proprietatea unei Resurse Clonă</primary></indexterm> <indexterm><primary>Proprietățile Resursei Clonă</primary><secondary>clone-max</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Clonei</secondary><tertiary>clone-max</tertiary></indexterm> clone-max"
 
-#: Ch-Advanced-Resources.xml:192(entry)
+#. Tag: entry
+#, no-c-format
 msgid "How many copies of the resource to start. Defaults to the number of nodes in the cluster."
 msgstr "Câte copii ale resursei să pornească. Valoarea implicită este egală cu numărul de noduri din cluster."
 
-#: Ch-Advanced-Resources.xml:195(entry)
-msgid "clone-node-max"
-msgstr "clone-node-max"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>clone-node-max Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>clone-node-max</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>clone-node-max</tertiary></indexterm> clone-node-max"
+msgstr "<indexterm significance=\"preferred\"><primary>clone-node-max Proprietatea unei Resurse Clonă</primary></indexterm> <indexterm><primary>Proprietățile Resursei Clonă</primary><secondary>clone-node-max</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Clonei</secondary><tertiary>clone-node-max</tertiary></indexterm> clone-node-max"
 
-#: Ch-Advanced-Resources.xml:196(entry)
-msgid "How many copies of the resource can be started on a single node. Defaults to 1."
-msgstr "Câte copii ale resursei pot fi pornite pe un singur nod. Valoarea implicită este 1."
+#. Tag: entry
+#, no-c-format
+msgid "How many copies of the resource can be started on a single node; default <emphasis>1</emphasis>."
+msgstr "Câte copii ale resursei pot fi pornite pe un singur nod; valoarea implicită este <emphasis>1</emphasis>."
 
-#: Ch-Advanced-Resources.xml:199(entry)
-msgid "notify"
-msgstr "notify"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>notify Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>notify</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>notify</tertiary></indexterm> notify"
+msgstr "<indexterm significance=\"preferred\"><primary>notify Proprietatea unei Resurse Clonă</primary></indexterm> <indexterm><primary>Proprietățile Resursei Clonă</primary><secondary>notify</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Clonei</secondary><tertiary>notify</tertiary></indexterm>"
 
-#: Ch-Advanced-Resources.xml:200(emphasis)
-#: Ch-Advanced-Resources.xml:205(emphasis)
-#: Ch-Advanced-Resources.xml:209(emphasis)
-#: Ch-Advanced-Resources.xml:214(emphasis)
-msgid "false"
-msgstr "false"
+#. Tag: entry
+#, no-c-format
+msgid "When stopping or starting a copy of the clone, tell all the other copies beforehand and when the action was successful. Allowed values: <emphasis>false</emphasis>, <literal>true</literal>"
+msgstr "Când este oprită sau pornită o copie a clonei, comunică tuturor celorlalte copii înainte şi după ce acţiunea a reuşit. Valori permise: <emphasis>false</emphasis>, <literal>true</literal>"
 
-#: Ch-Advanced-Resources.xml:200(entry)
-msgid "When stopping or starting a copy of the clone, tell all the other copies beforehand and when the action was successful. Allowed values: true, <placeholder-1/>"
-msgstr "Când este oprită sau pornită o copie a clonei, comunică tuturor celorlalte copii înainte şi după ce acţiunea a reuşit. Valori permise: true, <placeholder-1/>"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>globally-unique Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>globally-unique</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>globally-unique</tertiary></indexterm> globally-unique"
+msgstr "<indexterm significance=\"preferred\"><primary>globally-unique Proprietatea unei Resurse Clonă</primary></indexterm> <indexterm><primary>Proprietățile unei Resurse Clonă</primary><secondary>globally-unique</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Clonei</secondary><tertiary>globally-unique</tertiary></indexterm> globally-unique"
 
-#: Ch-Advanced-Resources.xml:204(entry)
-msgid "globally-unique"
-msgstr "globally-unique"
+#. Tag: entry
+#, no-c-format
+msgid "Does each copy of the clone perform a different function? Allowed values: <emphasis>false</emphasis>, <literal>true</literal>"
+msgstr "Efectuează fiecare copie a unei clone o funcţie diferită? Valori permise: <emphasis>false</emphasis>, <literal>true</literal>"
 
-#: Ch-Advanced-Resources.xml:205(entry)
-msgid "Does each copy of the clone perform a different function? Allowed values: true, <placeholder-1/>"
-msgstr "Efectuează fiecare copie a unei clone o funcţie diferită? Valori permise: true, <placeholder-1/>"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>ordered Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>ordered</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>ordered</tertiary></indexterm> ordered"
+msgstr "<indexterm significance=\"preferred\"><primary>ordered Proprietatea Resursei Clonă</primary></indexterm> <indexterm><primary>Proprietățile Resursei Clonă</primary><secondary>ordered</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Clonei</secondary><tertiary>ordered</tertiary></indexterm> ordered"
 
-#: Ch-Advanced-Resources.xml:208(entry)
-msgid "ordered"
-msgstr "ordered"
+#. Tag: entry
+#, no-c-format
+msgid "Should the copies be started in series (instead of in parallel). Allowed values: <emphasis>false</emphasis>, <literal>true</literal>"
+msgstr "Ar trebui copiile să fie pornite secvenţial (în loc de în paralel). Valori permise: <emphasis>false</emphasis>, <literal>true</literal>"
 
-#: Ch-Advanced-Resources.xml:209(entry)
-msgid "Should the copies be started in series (instead of in parallel). Allowed values: true, <placeholder-1/>"
-msgstr "Ar trebui copiile să fie pornite secvenţial (în loc de în paralel). Valori permise: true, <placeholder-1/>"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>interleave Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>interleave</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>interleave</tertiary></indexterm> interleave"
+msgstr "<indexterm significance=\"preferred\"><primary>interleave Proprietatea Resursei Clonă</primary></indexterm> <indexterm><primary>Proprietățile Resursei Clonă</primary><secondary>interleave</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Clonei</secondary><tertiary>interleave</tertiary></indexterm>"
 
-#: Ch-Advanced-Resources.xml:213(entry)
-msgid "interleave"
-msgstr "interleave"
+#. Tag: entry
+#, no-c-format
+msgid "Changes the behavior of ordering constraints (between clones/masters) so that instances can start/stop as soon as their peer instance has (rather than waiting for every instance of the other clone has). Allowed values: <emphasis>false</emphasis>, <literal>true</literal>"
+msgstr "Schimbă comportamentul de ordonare al restricţiilor (între clone/masters) astfel încât instanţele să se poată porni/opri de îndată ce şi instanţa vecină a făcut-o (decât să aştepte pentru fiecare instanţă pe care o are clona cealaltă). Valori permise: <emphasis>false</emphasis>, <literal>true</literal>"
 
-#: Ch-Advanced-Resources.xml:214(entry)
-msgid "Changes the behavior of ordering constraints (between clones/masters) so that instances can start/stop as soon as their peer instance has (rather than waiting for every instance of the other clone has). Allowed values: true, <placeholder-1/>"
-msgstr "Schimbă comportamentul de ordonare al restricţiilor (între clone/masters) astfel încât instanţele să se poată porni/opri de îndată ce şi instanţa vecină a făcut-o (decât să aştepte pentru fiecare instanţă pe care o are clona cealaltă). Valori permise: true, <placeholder-1/>"
-
-#: Ch-Advanced-Resources.xml:222(title)
-msgid "Using Clones"
-msgstr "Folosind Clonele"
-
-#: Ch-Advanced-Resources.xml:225(para)
-msgid "Clones have no instance attributes, however any that are set here will be inherited by the clone's children."
+#. Tag: para
+#, no-c-format
+msgid "Clones have no instance attributes; however, any that are set here will be inherited by the clone's children."
 msgstr "Clonele nu au atribute de instanţă, totuşi cele care sunt setate aici vor fi moştenite de copiii clonei."
 
-#: Ch-Advanced-Resources.xml:229(para)
+#. Tag: para
+#, no-c-format
 msgid "Clones must contain exactly one group or one regular resource."
 msgstr "Clonele trebuie să conţină fix un grup sau o resursă obişnuită."
 
-#: Ch-Advanced-Resources.xml:231(para)
+#. Tag: para
+#, no-c-format
 msgid "You should never reference the name of a clone's child. If you think you need to do this, you probably need to re-evaluate your design."
 msgstr "Nu ar trebui să referenţiaţi niciodată numele copilului unei clone. Dacă se consideră că este necesar acest lucru, probabil trebuie sa re-evaluaţi design-ul vostru."
 
-#: Ch-Advanced-Resources.xml:239(para)
-msgid "In most cases, a clone will have a single copy on each active cluster node. However if this is not the case, you can indicate which nodes the cluster should to preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the clone's id is used."
+#. Tag: para
+#, no-c-format
+msgid "In most cases, a clone will have a single copy on each active cluster node. If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the clone's id is used."
 msgstr "În majoritatea cazurilor, o clonă va avea o singură copie pe fiecare nod activ din cluster. Totuşi dacă nu este cazul, puteţi indica prin restricţii de locaţie a resursei către care noduri ar trebui clusterul să asigneze în mod preferenţial copiile. Aceste restricţii nu sunt scrise în mod diferit faţă de cele pentru resurse obişnuite cu excepţia faptului că id-ul clonei este folosit."
 
-#: Ch-Advanced-Resources.xml:244(para)
-msgid "Ordering constraints behave slightly differently for clones. In the example below, apache-stats will wait until all copies of the clone that need to be started have done so before being started itself. Only if no copies can be started will apache-stats be prevented from being active. Additionally, the clone will wait for apache-stats to be stopped before stopping the clone."
-msgstr "Restricţiile de ordonare se comportă uşor diferit în cazul clonelor. În exemplele de mai jos, apache-stats va aştepta până ce toate copiile clonelor care trebuie să fie pornite au făcut acest lucru înainte ca aceasta să fie pornită la rândul ei. Doar dacă nici o copie nu poate fi pornită va fi împiedicată apache-stats din a fi activă. În plus, clona va aştepta ca apache-stats să fie oprită înainte de a opri clona."
+#. Tag: para
+#, no-c-format
+msgid "Ordering constraints behave slightly differently for clones. In the example below, <literal>apache-stats</literal> will wait until all copies of the clone that need to be started have done so before being started itself. Only if <emphasis>no</emphasis> copies can be started <literal>apache-stats</literal> will be prevented from being active. Additionally, the clone will wait for <literal>apache-stats</literal> to be stopped before stopping the clone."
+msgstr "Restricţiile de ordonare se comportă uşor diferit în cazul clonelor. În exemplele de mai jos, <literal>apache-stats</literal> va aştepta până ce toate copiile clonelor care trebuie să fie pornite au făcut acest lucru înainte ca aceasta să fie pornită la rândul ei. Doar dacă <emphasis>nici o</emphasis> copie nu poate fi pornită va fi împiedicată <literal>apache-stats</literal> din a fi activă. În plus, clona va aştepta ca apache-stats să fie oprită înainte de a opri clona."
 
-#: Ch-Advanced-Resources.xml:250(para)
-msgid "Colocation of a regular (or group) resource with a clone means that the resource can run on any machine with an active copy of the clone. The cluster will choose a copy based on where the clone is running and the rsc resource's own location preferences."
+#. Tag: para
+#, no-c-format
+msgid "Colocation of a regular (or group) resource with a clone means that the resource can run on any machine with an active copy of the clone. The cluster will choose a copy based on where the clone is running and the resource's own location preferences."
 msgstr "Colocarea unei resurse obişnuite (sau a unui grup) cu o clonă înseamnă că resursa poate rula pe orice maşină cu o copie activă a clonei. Clusterul va alege o copie ţinând cont unde rulează în mod curent clona şi de preferinţele proprii de locaţie ale resursei."
 
-#: Ch-Advanced-Resources.xml:254(para)
-msgid "Colocation between clones is also possible. In such cases, the set of allowed locations for the rsc clone is limited to nodes on which the with clone is (or will be) active. Allocation is then performed as-per-normal."
+#. Tag: para
+#, no-c-format
+msgid "Colocation between clones is also possible. In such cases, the set of allowed locations for the clone is limited to nodes on which the clone is (or will be) active. Allocation is then performed as normally."
 msgstr "Colocarea între clone este posibilă de asemenea. În astfel de cazuri, setul de locaţii permise pentru clonă este limitat la nodurile pe care clona alături de care va fi colocată este (sau va fi) activă. Alocarea este mai apoi efectuată în mod normal."
 
-#: Ch-Advanced-Resources.xml:260(title)
+#. Tag: title
+#, no-c-format
 msgid "Example constraints involving clones"
 msgstr "Exemple de restricţii implicând clone"
 
-#: Ch-Advanced-Resources.xml:274(para)
-#: Ch-Advanced-Resources.xml:601(para)
-msgid "To achieve a stable allocation pattern, clones are slightly sticky by default. If no value for <literal>resource-stickiness</literal> is provided, the clone will use a value of 1. Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster."
-msgstr "Pentru a atinge un tipar de alocare stabil, clonele sunt uşor adezive în mod implicit. Dacă nu este furnizată nici o valoare pentru <literal>resource-stickiness</literal>, clona va folosi valoarea 1. Fiind o valoare mică, aceasta cauzează o perturbare minimală a calcului scorului celorlalte resurse dar este suficientă pentru a împiedica Pacemaker-ul de a muta inutil copiile prin cluster."
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;constraints&gt;\n"
+"    &lt;rsc_location id=\"clone-prefers-node1\" rsc=\"apache-clone\" node=\"node1\" score=\"500\"/&gt;\n"
+"    &lt;rsc_colocation id=\"stats-with-clone\" rsc=\"apache-stats\" with=\"apache-clone\"/&gt;\n"
+"    &lt;rsc_order id=\"start-clone-then-stats\" first=\"apache-clone\" then=\"apache-stats\"/&gt;\n"
+"  &lt;/constraints&gt;  "
+msgstr ""
+" &lt;constraints&gt;\n"
+"    &lt;rsc_location id=\"clone-prefers-node1\" rsc=\"apache-clone\" node=\"node1\" score=\"500\"/&gt;\n"
+"    &lt;rsc_colocation id=\"stats-with-clone\" rsc=\"apache-stats\" with=\"apache-clone\"/&gt;\n"
+"    &lt;rsc_order id=\"start-clone-then-stats\" first=\"apache-clone\" then=\"apache-stats\"/&gt;\n"
+"  &lt;/constraints&gt;  "
 
-#: Ch-Advanced-Resources.xml:281(title)
-#: Ch-Advanced-Resources.xml:629(title)
+#. Tag: title
+#, no-c-format
+msgid "Stickiness"
+msgstr "Adezivitate"
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm><primary>resource-stickiness</primary><secondary>of a Clone Resource</secondary></indexterm> To achieve a stable allocation pattern, clones are slightly sticky by default. If no value for <literal>resource-stickiness</literal> is provided, the clone will use a value of 1. Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster."
+msgstr "<indexterm><primary>resource-stickiness</primary><secondary>a unei Resurse Clonă</secondary></indexterm> Pentru a atinge un tipar de alocare stabil, clonele sunt uşor adezive în mod implicit. Dacă nu este furnizată nici o valoare pentru <literal>resource-stickiness</literal>, clona va folosi valoarea 1. Fiind o valoare mică, aceasta cauzează o perturbare minimală a calcului scorului celorlalte resurse dar este suficientă pentru a împiedica Pacemaker-ul de a muta inutil copiile prin cluster."
+
+#. Tag: title
+#, no-c-format
 msgid "Resource Agent Requirements"
 msgstr "Cerinţele Agentului de Resursă"
 
-#: Ch-Advanced-Resources.xml:282(para)
-msgid "Any resource can be used as an anonymous clone as it requires no additional support from the resource agent. Whether it makes sense to do so depends on your resource and its resource agent."
+#. Tag: para
+#, no-c-format
+msgid "Any resource can be used as an anonymous clone, as it requires no additional support from the resource agent. Whether it makes sense to do so depends on your resource and its resource agent."
 msgstr "Orice resursă poate fi utilizată ca o clonă anonimă deoarece nu necesită vreun suport adiţional din partea agentului de resursă. Dacă are logică să facă acest lucru depinde de resursa voastră şi de agentul de resursă aferent."
 
-#: Ch-Advanced-Resources.xml:286(para)
+#. Tag: para
+#, no-c-format
 msgid "Globally unique clones do require some additional support in the resource agent. In particular, it must only respond with <envar>${OCF_SUCCESS}</envar> if the node has that exact instance active. All other probes for instances of the clone should result in <envar>${OCF_NOT_RUNNING}</envar>. Unless of course they are failed, in which case they should return one of the other OCF error codes."
 msgstr "Clonele unice la nivel global necesită suport adiţional în agentul de resursă. În special, trebuie să răspundă doar cu <envar>${OCF_SUCCESS}</envar> dacă nodul are exact acea instanţă activă. Tot restul de probe pentru instanţe ale clonei ar trebui să rezulte în <envar>${OCF_NOT_RUNNING}</envar>. Cu excepţia cazului în care au eşuat, caz în care ar trebui să returneze unul din celelalte coduri de eroare OCF."
 
-#: Ch-Advanced-Resources.xml:292(para)
-msgid "Copies of a clone are identified by appending a colon and a numerical offset. Eg. apache:2"
-msgstr "Copiile unei clone sunt identificate prin sufixarea a două puncte şi a unui delimitator numeric. Ex. apache:2"
+#. Tag: para
+#, no-c-format
+msgid "Copies of a clone are identified by appending a colon and a numerical offset, eg. <literal>apache:2</literal>."
+msgstr "Copiile unei clone sunt identificate prin sufixarea a două puncte şi a unui delimitator numeric. Ex. <literal>apache:2</literal>"
 
-#: Ch-Advanced-Resources.xml:293(para)
+#. Tag: para
+#, no-c-format
 msgid "Resource agents can find out how many copies there are by examining the <envar>OCF_RESKEY_CRM_meta_clone_max</envar> environment variable and which copy it is by examining <envar>OCF_RESKEY_CRM_meta_clone</envar>."
 msgstr "Agenţii de resursă pot afla câte copii există prin examinarea variabilei de mediu <envar>OCF_RESKEY_CRM_meta_clone_max</envar> şi a cărei copii este cea curentă examinând <envar>OCF_RESKEY_CRM_meta_clone</envar>."
 
-#: Ch-Advanced-Resources.xml:294(para)
+#. Tag: para
+#, no-c-format
 msgid "You should not make any assumptions (based on <envar>OCF_RESKEY_CRM_meta_clone</envar>) about which copies are active. In particular, the list of active copies will not always be an unbroken sequence, nor always start at 0."
 msgstr "Nu ar trebui să faceţi presupuneri (pe baza <envar>OCF_RESKEY_CRM_meta_clone</envar>) în privinţa căror copii sunt active. În special, lista de copii active nu va fi întotdeauna o secvenţă continuă, nici nu va începe întotdeauna de la 0."
 
-#: Ch-Advanced-Resources.xml:300(title)
-#: Ch-Advanced-Resources.xml:675(title)
+#. Tag: title
+#, no-c-format
 msgid "Notifications"
 msgstr "Notificări"
 
-#: Ch-Advanced-Resources.xml:301(para)
+#. Tag: para
+#, no-c-format
 msgid "Supporting notifications requires the <literal>notify</literal> action to be implemented. Once supported, the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it."
 msgstr "Suportarea notificărilor necesită acţiunea <literal>notify</literal> să fie implementată. Odată ce este suportată, acţiunii de notificare îi vor fi trimise un număr de variabile suplimentare care, atunci când sunt combinate cu un context adiţional, pot fi folosite pentru a calcula starea curentă a clusterului şi ceea ce urmează să i se întâmple."
 
-#: Ch-Advanced-Resources.xml:306(title)
+#. Tag: title
+#, no-c-format
 msgid "Environment variables supplied with Clone notify actions"
 msgstr "Variabile de mediu furnizate împreună cu acţiunile de notificare ale Clonei"
 
-#: Ch-Advanced-Resources.xml:310(entry)
-#: Ch-Advanced-Resources.xml:687(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Variable"
 msgstr "Variabilă"
 
-#: Ch-Advanced-Resources.xml:316(entry)
-#: Ch-Advanced-Resources.xml:691(entry)
-msgid "OCF_RESKEY_CRM_meta_notify_type"
-msgstr "OCF_RESKEY_CRM_meta_notify_type"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_type</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_type</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_type"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_type</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_type</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_type"
 
-#: Ch-Advanced-Resources.xml:317(entry)
-#: Ch-Advanced-Resources.xml:692(entry)
-msgid "Allowed values: pre, post"
-msgstr "Valori permise: pre, post"
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: <literal>pre</literal>, <literal>post</literal>"
+msgstr "Valori permise: <literal>pre</literal>, <literal>post</literal>"
 
-#: Ch-Advanced-Resources.xml:320(entry)
-#: Ch-Advanced-Resources.xml:695(entry)
-msgid "OCF_RESKEY_CRM_meta_notify_operation"
-msgstr "OCF_RESKEY_CRM_meta_notify_operation"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_operation</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_operation</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_operation"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_operation</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_operation</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_operation"
 
-#: Ch-Advanced-Resources.xml:321(entry)
-#: Ch-Advanced-Resources.xml:696(entry)
-msgid "Allowed values: start, stop"
-msgstr "Valori permise: start, stop"
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: <literal>start</literal>, <literal>stop</literal>"
+msgstr "Valori permise: <literal>start</literal>, <literal>stop</literal>"
 
-#: Ch-Advanced-Resources.xml:324(entry)
-#: Ch-Advanced-Resources.xml:715(entry)
-msgid "OCF_RESKEY_CRM_meta_notify_start_resource"
-msgstr "OCF_RESKEY_CRM_meta_notify_start_resource"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_start_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_start_resource"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_start_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_start_resource"
 
-#: Ch-Advanced-Resources.xml:325(entry)
-#: Ch-Advanced-Resources.xml:716(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Resources to be started"
 msgstr "Resursele care vor fi pornite"
 
-#: Ch-Advanced-Resources.xml:328(entry)
-#: Ch-Advanced-Resources.xml:719(entry)
-msgid "OCF_RESKEY_CRM_meta_notify_stop_resource"
-msgstr "OCF_RESKEY_CRM_meta_notify_stop_resource"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_stop_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_stop_resource"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_stop_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_stop_resource"
 
-#: Ch-Advanced-Resources.xml:329(entry)
-#: Ch-Advanced-Resources.xml:720(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Resources to be stopped"
 msgstr "Resursele care vor fi oprite"
 
-#: Ch-Advanced-Resources.xml:332(entry)
-#: Ch-Advanced-Resources.xml:699(entry)
-msgid "OCF_RESKEY_CRM_meta_notify_active_resource"
-msgstr "OCF_RESKEY_CRM_meta_notify_active_resource"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_active_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_active_resource"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_active_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_active_resource"
 
-#: Ch-Advanced-Resources.xml:333(entry)
-#: Ch-Advanced-Resources.xml:700(entry)
-msgid "Resources the that are running"
+#. Tag: entry
+#, no-c-format
+msgid "Resources that are running"
 msgstr "Resursele care rulează"
 
-#: Ch-Advanced-Resources.xml:336(entry)
-#: Ch-Advanced-Resources.xml:703(entry)
-msgid "OCF_RESKEY_CRM_meta_notify_inactive_resource"
-msgstr "OCF_RESKEY_CRM_meta_notify_inactive_resource"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_inactive_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_inactive_resource"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_inactive_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_inactive_resource"
 
-#: Ch-Advanced-Resources.xml:337(entry)
-#: Ch-Advanced-Resources.xml:704(entry)
-msgid "Resources the that are not running"
+#. Tag: entry
+#, no-c-format
+msgid "Resources that are not running"
 msgstr "Resursele care nu rulează"
 
-#: Ch-Advanced-Resources.xml:340(entry)
-#: Ch-Advanced-Resources.xml:731(entry)
-msgid "OCF_RESKEY_CRM_meta_notify_start_uname"
-msgstr "OCF_RESKEY_CRM_meta_notify_start_uname"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_start_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_start_uname"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_start_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_start_uname"
 
-#: Ch-Advanced-Resources.xml:341(entry)
-#: Ch-Advanced-Resources.xml:732(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Nodes on which resources will be started"
 msgstr "Nodurile pe care resursele vor fi pornite"
 
-#: Ch-Advanced-Resources.xml:344(entry)
-#: Ch-Advanced-Resources.xml:735(entry)
-msgid "OCF_RESKEY_CRM_meta_notify_stop_uname"
-msgstr "OCF_RESKEY_CRM_meta_notify_stop_uname"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_stop_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_stop_uname"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_stop_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_stop_uname"
 
-#: Ch-Advanced-Resources.xml:345(entry)
-#: Ch-Advanced-Resources.xml:736(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Nodes on which resources will be stopped"
 msgstr "Nodurile pe care resursele vor fi oprite"
 
-#: Ch-Advanced-Resources.xml:348(entry)
-#: Ch-Advanced-Resources.xml:747(entry)
-msgid "OCF_RESKEY_CRM_meta_notify_active_uname"
-msgstr "OCF_RESKEY_CRM_meta_notify_active_uname"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_active_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_active_uname"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_active_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_active_uname"
 
-#: Ch-Advanced-Resources.xml:349(entry)
-#: Ch-Advanced-Resources.xml:748(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Nodes on which resources are running"
 msgstr "Nodurile pe care rulează resursele"
 
-#: Ch-Advanced-Resources.xml:352(entry)
-#: Ch-Advanced-Resources.xml:751(entry)
-msgid "OCF_RESKEY_CRM_meta_notify_inactive_uname"
-msgstr "OCF_RESKEY_CRM_meta_notify_inactive_uname"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_inactive_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_inactive_uname"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_inactive_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_inactive_uname"
 
-#: Ch-Advanced-Resources.xml:353(entry)
-#: Ch-Advanced-Resources.xml:752(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Nodes on which resources are not running"
 msgstr "Nodurile pe care nu rulează resursele"
 
-#: Ch-Advanced-Resources.xml:358(para)
+#. Tag: para
+#, no-c-format
 msgid "The variables come in pairs, such as <envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar> and <envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar> and should be treated as an array of whitespace separated elements."
 msgstr "Variabilele vin în perechi, cum ar fi <envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar> şi <envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar> şi ar trebui tratate ca un array de elemente separate de spaţiu."
 
-#: Ch-Advanced-Resources.xml:359(para)
-msgid "Thus in order to indicate that clone:0 will be started on sles-1, clone:2 will be started on sles-3, and clone:3 will be started on sles-2, the cluster would set"
-msgstr "Drept urmare pentru a indica faptul că, clone:0 va fi pornită pe sles-1, clone:2 va fi pornită pe sles-3 şi clone:3 va fi pornită pe sles-2, clusterul va seta"
+#. Tag: para
+#, no-c-format
+msgid "Thus in order to indicate that <literal>clone:0</literal> will be started on <literal>sles-1</literal>, <literal>clone:2</literal> will be started on <literal>sles-3</literal>, and <literal>clone:3</literal> will be started on <literal>sles-2</literal>, the cluster would set"
+msgstr "Drept urmare pentru a indica faptul că, <literal>clone:0</literal> va fi pornită pe <literal>sles-1</literal>, <literal>clone:2</literal> va fi pornită pe <literal>sles-3</literal> şi <literal>clone:3</literal> va fi pornită pe <literal>sles-2</literal>, clusterul va seta"
 
-#: Ch-Advanced-Resources.xml:360(para)
-msgid "<envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar>=\"clone:0 clone:2 clone:3\""
-msgstr "<envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar>=\"clone:0 clone:2 clone:3\""
-
-#: Ch-Advanced-Resources.xml:361(para)
-msgid "<envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar>=\"sles-1 sles-3 sles-2\""
-msgstr "<envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar>=\"sles-1 sles-3 sles-2\""
-
-#: Ch-Advanced-Resources.xml:362(para)
+#. Tag: title
+#, no-c-format
 msgid "Example notification variables"
 msgstr "Exemple de variabile de notificare"
 
-#: Ch-Advanced-Resources.xml:365(title)
-#: Ch-Advanced-Resources.xml:765(title)
+#. Tag: programlisting
+#, no-c-format
+msgid "<envar>\n"
+"		OCF_RESKEY_CRM_meta_notify_start_resource</envar>=\"clone:0 clone:2 clone:3\" <envar>\n"
+"		OCF_RESKEY_CRM_meta_notify_start_uname</envar>=\"sles-1 sles-3 sles-2\"\n"
+"	    "
+msgstr ""
+"<envar>\n"
+"		OCF_RESKEY_CRM_meta_notify_start_resource</envar>=\"clone:0 clone:2 clone:3\" <envar>\n"
+"		OCF_RESKEY_CRM_meta_notify_start_uname</envar>=\"sles-1 sles-3 sles-2\"\n"
+"	    "
+
+#. Tag: title
+#, no-c-format
 msgid "Proper Interpretation of Notification Environment Variables"
 msgstr "Interpretarea Corespunzătoare a Variabilelor de Mediu de Notificare"
 
-#: Ch-Advanced-Resources.xml:366(para)
-msgid "Pre-notification (stop)"
+#. Tag: para
+#, no-c-format
+msgid "Pre-notification (stop):"
 msgstr "Pre-notificare (oprire)"
 
-#: Ch-Advanced-Resources.xml:369(para)
-#: Ch-Advanced-Resources.xml:768(para)
-#: Ch-Advanced-Resources.xml:780(para)
-msgid "Active resources: $OCF_RESKEY_CRM_meta_notify_active_resource"
-msgstr "Resurse active: $OCF_RESKEY_CRM_meta_notify_active_resource"
+#. Tag: para
+#, no-c-format
+msgid "Active resources: <envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
+msgstr "Resurse active: <envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:372(para)
-#: Ch-Advanced-Resources.xml:771(para)
-#: Ch-Advanced-Resources.xml:787(para)
-msgid "Inactive resources: $OCF_RESKEY_CRM_meta_notify_inactive_resource"
-msgstr "Resurse inactive: $OCF_RESKEY_CRM_meta_notify_inactive_resource"
+#. Tag: para
+#, no-c-format
+msgid "Inactive resources: <envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar>"
+msgstr "Resurse inactive: <envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:375(para)
-#: Ch-Advanced-Resources.xml:772(para)
-#: Ch-Advanced-Resources.xml:788(para)
-#: Ch-Advanced-Resources.xml:817(para)
-#: Ch-Advanced-Resources.xml:849(para)
-#: Ch-Advanced-Resources.xml:885(para)
-msgid "Resources to be started: $OCF_RESKEY_CRM_meta_notify_start_resource"
-msgstr "Resurse care vor fi pornite: $OCF_RESKEY_CRM_meta_notify_start_resource"
+#. Tag: para
+#, no-c-format
+msgid "Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+msgstr "Resurse care vor fi pornite: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:378(para)
-#: Ch-Advanced-Resources.xml:775(para)
-#: Ch-Advanced-Resources.xml:791(para)
-#: Ch-Advanced-Resources.xml:820(para)
-#: Ch-Advanced-Resources.xml:852(para)
-#: Ch-Advanced-Resources.xml:888(para)
-msgid "Resources to be stopped: $OCF_RESKEY_CRM_meta_notify_stop_resource"
-msgstr "Resurse care vor fi oprite: $OCF_RESKEY_CRM_meta_notify_stop_resource"
+#. Tag: para
+#, no-c-format
+msgid "Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+msgstr "Resurse care vor fi oprite: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:382(para)
-#: Ch-Advanced-Resources.xml:795(para)
-msgid "Post-notification (stop) / Pre-notification (start)"
+#. Tag: para
+#, no-c-format
+msgid "Post-notification (stop) / Pre-notification (start):"
 msgstr "Post-notificare (oprire) / Pre-notificare (pornire)"
 
-#: Ch-Advanced-Resources.xml:385(para)
-#: Ch-Advanced-Resources.xml:409(para)
-#: Ch-Advanced-Resources.xml:797(para)
-#: Ch-Advanced-Resources.xml:826(para)
-#: Ch-Advanced-Resources.xml:860(para)
+#. Tag: para
+#, no-c-format
+msgid "Active resources"
+msgstr "Resurse active:"
+
+#. Tag: para
+#, no-c-format
+msgid "<envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
+msgstr "<envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
+
+#. Tag: para
+#, no-c-format
+msgid "minus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+msgstr "minus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+
+#. Tag: para
+#, no-c-format
+msgid "Inactive resources"
+msgstr "Resurse inactive:"
+
+#. Tag: para
+#, no-c-format
+msgid "<envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar>"
+msgstr "<envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar>"
+
+#. Tag: para
+#, no-c-format
+msgid "plus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+msgstr "plus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+
+#. Tag: para
+#, no-c-format
+msgid "Resources that were started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+msgstr "Resurse care au fost pornite: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+
+#. Tag: para
+#, no-c-format
+msgid "Resources that were stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+msgstr "Resurse care au fost oprite: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+
+#. Tag: para
+#, no-c-format
+msgid "Post-notification (start):"
+msgstr "Post-notificare (pornire)"
+
+#. Tag: para
+#, no-c-format
 msgid "Active resources:"
 msgstr "Resurse active:"
 
-#: Ch-Advanced-Resources.xml:388(para)
-#: Ch-Advanced-Resources.xml:412(para)
-#: Ch-Advanced-Resources.xml:799(para)
-#: Ch-Advanced-Resources.xml:828(para)
-#: Ch-Advanced-Resources.xml:862(para)
-msgid "$OCF_RESKEY_CRM_meta_notify_active_resource"
-msgstr "$OCF_RESKEY_CRM_meta_notify_active_resource"
+#. Tag: para
+#, no-c-format
+msgid "plus <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+msgstr "plus <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:389(para)
-#: Ch-Advanced-Resources.xml:413(para)
-#: Ch-Advanced-Resources.xml:800(para)
-#: Ch-Advanced-Resources.xml:810(para)
-#: Ch-Advanced-Resources.xml:829(para)
-#: Ch-Advanced-Resources.xml:840(para)
-#: Ch-Advanced-Resources.xml:863(para)
-#: Ch-Advanced-Resources.xml:875(para)
-msgid "minus $OCF_RESKEY_CRM_meta_notify_stop_resource"
-msgstr "minus $OCF_RESKEY_CRM_meta_notify_stop_resource"
-
-#: Ch-Advanced-Resources.xml:392(para)
-#: Ch-Advanced-Resources.xml:417(para)
-#: Ch-Advanced-Resources.xml:812(para)
-#: Ch-Advanced-Resources.xml:843(para)
-#: Ch-Advanced-Resources.xml:879(para)
+#. Tag: para
+#, no-c-format
 msgid "Inactive resources:"
 msgstr "Resurse inactive:"
 
-#: Ch-Advanced-Resources.xml:395(para)
-#: Ch-Advanced-Resources.xml:420(para)
-#: Ch-Advanced-Resources.xml:814(para)
-#: Ch-Advanced-Resources.xml:845(para)
-#: Ch-Advanced-Resources.xml:881(para)
-msgid "$OCF_RESKEY_CRM_meta_notify_inactive_resource"
-msgstr "$OCF_RESKEY_CRM_meta_notify_inactive_resource"
+#. Tag: para
+#, no-c-format
+msgid "minus <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+msgstr "minus <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:396(para)
-#: Ch-Advanced-Resources.xml:421(para)
-#: Ch-Advanced-Resources.xml:815(para)
-#: Ch-Advanced-Resources.xml:846(para)
-#: Ch-Advanced-Resources.xml:882(para)
-msgid "plus $OCF_RESKEY_CRM_meta_notify_stop_resource"
-msgstr "plus $OCF_RESKEY_CRM_meta_notify_stop_resource"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Multi-state Resources</primary></indexterm> <indexterm significance=\"preferred\"><primary>Resources</primary><secondary>Multi-state</secondary></indexterm> Multi-state - Resources That Have Multiple Modes"
+msgstr "<indexterm significance=\"preferred\"><primary>Resurse Multi-state</primary></indexterm> <indexterm significance=\"preferred\"><primary>Resurse</primary><secondary>Multi-state</secondary></indexterm> Multi-state - Resurse Care Au Moduri Multiple"
 
-#: Ch-Advanced-Resources.xml:399(para)
-#: Ch-Advanced-Resources.xml:425(para)
-#: Ch-Advanced-Resources.xml:853(para)
-#: Ch-Advanced-Resources.xml:889(para)
-msgid "Resources that were started: $OCF_RESKEY_CRM_meta_notify_start_resource"
-msgstr "Resurse care au fost pornite: $OCF_RESKEY_CRM_meta_notify_start_resource"
+#. Tag: para
+#, no-c-format
+msgid "Multi-state resources are a specialization of Clone resources; please ensure you understand the section on clones before continuing! They allow the instances to be in one of two operating modes; these are called <literal>Master</literal> and <literal>Slave</literal>, but can mean whatever you wish them to mean. The only limitation is that when an instance is started, it must come up in the <literal>Slave</literal> state."
+msgstr "Resursele multi-state sunt o specializare a Clonelor (vă rugăm să vă asiguraţi că înţelegeţi secţiunea referitoare la clone înainte de a continua) care permite instanţelor să se afle în unul din două moduri operaţionale; aceste moduri sunt numite <literal>Master</literal> şi <literal>Slave</literal> dar pot însemna orice doriţi să însemne. Singura limitare este că atunci când o instanţă este pornită, trebuie să o facă în starea <literal>Slave</literal>."
 
-#: Ch-Advanced-Resources.xml:402(para)
-#: Ch-Advanced-Resources.xml:428(para)
-#: Ch-Advanced-Resources.xml:822(para)
-#: Ch-Advanced-Resources.xml:855(para)
-#: Ch-Advanced-Resources.xml:892(para)
-msgid "Resources that were stopped: $OCF_RESKEY_CRM_meta_notify_stop_resource"
-msgstr "Resurse care au fost oprite: $OCF_RESKEY_CRM_meta_notify_stop_resource"
-
-#: Ch-Advanced-Resources.xml:406(para)
-msgid "Post-notification (start)"
-msgstr "Post-notificare (pornire)"
-
-#: Ch-Advanced-Resources.xml:414(para)
-#: Ch-Advanced-Resources.xml:830(para)
-#: Ch-Advanced-Resources.xml:841(para)
-#: Ch-Advanced-Resources.xml:864(para)
-#: Ch-Advanced-Resources.xml:876(para)
-msgid "plus $OCF_RESKEY_CRM_meta_notify_start_resource"
-msgstr "plus $OCF_RESKEY_CRM_meta_notify_start_resource"
-
-#: Ch-Advanced-Resources.xml:422(para)
-#: Ch-Advanced-Resources.xml:847(para)
-#: Ch-Advanced-Resources.xml:883(para)
-msgid "minus $OCF_RESKEY_CRM_meta_notify_start_resource"
-msgstr "minus $OCF_RESKEY_CRM_meta_notify_start_resource"
-
-#: Ch-Advanced-Resources.xml:435(title)
-msgid "Multi-state - Resources That Have Multiple Modes"
-msgstr "Resurse cu stări multiple - Resurse Care Au Mai Multe Moduri"
-
-#: Ch-Advanced-Resources.xml:436(para)
-msgid "Multi-state resources are a specialization of Clones (please ensure you understand the section on clones before continuing) that allow the instances to be in one of two operating modes. These modes are called Master and Slave but can mean whatever you wish them to mean. The only limitation is that when an instance is started, it must come up in the Slave state."
-msgstr "Resursele cu stări multiple sunt o specializare a Clonelor (vă rugăm să vă asiguraţi că înţelegeţi secţiunea referitoare la clone înainte de a continua) care permite instanţelor să se afle în unul din două moduri operaţionale. Aceste moduri sunt numite Master şi Slave dar pot însemna orice doriţi să însemne. Singura limitare este că atunci când o instanţă este pornită, trebuie să o facă în starea Slave."
-
-#: Ch-Advanced-Resources.xml:444(title)
+#. Tag: title
+#, no-c-format
 msgid "Properties of a Multi-State Resource"
-msgstr "Proprietăţile unei Resurse cu Stări Multiple"
+msgstr "Proprietăţile unei Resurse Multi-State"
 
-#: Ch-Advanced-Resources.xml:453(entry)
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Multi-State Resource Property</secondary></indexterm> <indexterm><primary>Multi-State Resource Properties</primary><secondary>id</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Property</secondary><tertiary>id</tertiary></indexterm> id"
+msgstr "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Proprietatea Resursei Multi-State</secondary></indexterm> <indexterm><primary>Proprietățile Resursei Multi-State</primary><secondary>id</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Multi-State</secondary><tertiary>id</tertiary></indexterm> id"
+
+#. Tag: entry
+#, no-c-format
 msgid "Your name for the multi-state resource"
-msgstr "Numele asignat pentru resursa cu stări multiple"
+msgstr "Numele asignat pentru resursa multi-state"
 
-#: Ch-Advanced-Resources.xml:462(para)
-msgid "Options inherited from <link linkend=\"s-resource-clone\">clone resources</link>: <literal>clone-max, clone-node-max, notify, globally-unique, ordered, interleave</literal>"
-msgstr "Opţiuni moştenite de la <link linkend=\"s-resource-clone\">resursele clonate</link>: <literal>clone-max, clone-node-max, notify, globally-unique, ordered, interleave</literal>"
+#. Tag: para
+#, no-c-format
+msgid "Options inherited from <link linkend=\"s-resource-supported\">simple resources</link>: <literal>priority</literal>, <literal>target-role</literal>, <literal>is-managed</literal>"
+msgstr "Opţiunile moştenite de la <link linkend=\"s-resource-supported\">resurse simple</link>: <literal>priority</literal>, <literal>target-role</literal>, <literal>is-managed</literal>"
 
-#: Ch-Advanced-Resources.xml:464(title)
+#. Tag: para
+#, no-c-format
+msgid "Options inherited from <link linkend=\"s-resource-clone\">clone resources</link>: <literal>clone-max</literal>, <literal>clone-node-max</literal>, <literal>notify</literal>, <literal>globally-unique</literal>, <literal>ordered</literal>, <literal>interleave</literal>"
+msgstr "Opţiuni moştenite de la <link linkend=\"s-resource-clone\">resursele clonate</link>: <literal>clone-max</literal>, <literal>clone-node-max</literal>, <literal>notify</literal>, <literal>globally-unique</literal>, <literal>ordered</literal>, <literal>interleave</literal>"
+
+#. Tag: title
+#, no-c-format
 msgid "Multi-state specific resource configuration options"
-msgstr "Opţiuni specifice de configurare pentru resurse cu stări multiple"
+msgstr "Opţiuni specifice de configurare pentru resurse multi-state"
 
-#: Ch-Advanced-Resources.xml:472(entry)
-msgid "master-max"
-msgstr "master-max"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>master-max Multi-State Resource Property</primary></indexterm> <indexterm><primary>Multi-State Resource Properties</primary><secondary>master-max</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Property</secondary><tertiary>master-max</tertiary></indexterm> master-max"
+msgstr "<indexterm significance=\"preferred\"><primary>master-max Proprietatea Resursei Multi-State</primary></indexterm> <indexterm><primary>Proprietățile Resursei Multi-State</primary><secondary>master-max</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Multi-State</secondary><tertiary>master-max</tertiary></indexterm> master-max"
 
-#: Ch-Advanced-Resources.xml:473(entry)
-msgid "How many copies of the resource can be promoted to master status. Defaults to 1."
-msgstr "Câte copii ale resursei pot fi promovate la statutul de master. Valoarea implicită este 1."
+#. Tag: entry
+#, no-c-format
+msgid "How many copies of the resource can be promoted to <literal>master</literal> status; default 1."
+msgstr "Câte copii ale resursei pot fi promovate la statutul de <literal>master</literal>; valoarea implicită este 1."
 
-#: Ch-Advanced-Resources.xml:476(entry)
-msgid "master-node-max"
-msgstr "master-node-max"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>master-node-max Multi-State Resource Property</primary></indexterm> <indexterm><primary>Multi-State Resource Properties</primary><secondary>master-node-max</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Property</secondary><tertiary>master-node-max</tertiary></indexterm> master-node-max"
+msgstr "<indexterm significance=\"preferred\"><primary>master-node-max Proprietatea Resursei Multi-State</primary></indexterm> <indexterm><primary>Proprietățile Resursei Multi-State</primary><secondary>master-node-max</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Proprietatea Multi-State</secondary><tertiary>master-node-max</tertiary></indexterm> master-node-max"
 
-#: Ch-Advanced-Resources.xml:477(entry)
-msgid "How many copies of the resource can be promoted to master status on a single node. Defaults to 1."
-msgstr "Câte copii ale resursei pot fi promovate la statutul de master pe un singur nod. Valoarea implicită este 1."
+#. Tag: entry
+#, no-c-format
+msgid "How many copies of the resource can be promoted to <literal>master</literal> status on a single node; default 1."
+msgstr "Câte copii ale resursei pot fi promovate la statutul de <literal>master</literal> pe un singur nod; valoarea implicită este 1."
 
-#: Ch-Advanced-Resources.xml:482(title)
-msgid "Using Multi-state Resources"
-msgstr "Folosind Resursele cu Stări Multiple"
+#. Tag: para
+#, no-c-format
+msgid "Multi-state resources have no instance attributes; however, any that are set here will be inherited by master's children."
+msgstr "Resursele multi-state nu au atribute de instanţă; însă, oricare ar fi setate aici vor fi moştenite de către copiii master-ului."
 
-#: Ch-Advanced-Resources.xml:485(para)
-msgid "Multi-state resources have no instance attributes, however any that are set here will be inherited by the master's children."
-msgstr "Resursele cu stări multiple nu au atribute de instanţă, însă oricare ar fi setate aici vor fi moştenite de către copiii master-ului."
-
-#: Ch-Advanced-Resources.xml:489(para)
+#. Tag: para
+#, no-c-format
 msgid "Masters must contain exactly one group or one regular resource."
-msgstr "Resursele Master trebuie să conţină exact un grup sau o resursă obişnuită."
+msgstr "Masterii trebuie să conţină exact un grup sau o resursă obişnuită."
 
-#: Ch-Advanced-Resources.xml:491(para)
+#. Tag: para
+#, no-c-format
 msgid "You should never reference the name of a master's child. If you think you need to do this, you probably need to re-evaluate your design."
-msgstr "Nu ar trebui să referenţiaţi niciodată copilul unui master. Dacă se consideră necesar acest aspect, atunci este probabil necesară re-evaluarea designului vostru."
+msgstr "Nu ar trebui să referenţiaţi niciodată numele copilului unui master. Dacă credeți că trebuie sa faceți asta, atunci probabil trebuie să re-evaluați designul vostru."
 
-#: Ch-Advanced-Resources.xml:498(title)
+#. Tag: title
+#, no-c-format
 msgid "Monitoring Multi-State Resources"
-msgstr "Monitorizarea Resurselor cu Stări Multiple"
+msgstr "Monitorizarea Resurselor Multi-State"
 
-#: Ch-Advanced-Resources.xml:499(para)
-msgid "The normal type of monitor actions you define are not sufficient to monitor a multi-state resource in the Master state. To detect failures of the master instance, you need to define an additional monitor action with <literal>role=\"Master\"</literal>."
-msgstr "Tipul normal de acţiune de monitorizare pe care îl definim nu este suficient pentru a monitoriza o resursă cu stări multiple în starea Master. Pentru a detecta eşecurile instanţei master, trebuie să definiţi o acţiune de monitorizare adiţională cu <literal>role=\"Master\"</literal>."
+#. Tag: para
+#, no-c-format
+msgid "The normal type of monitor actions are not sufficient to monitor a multi-state resource in the <literal>Master</literal> state. To detect failures of the <literal>Master</literal> instance, you need to define an additional monitor action with <literal>role=\"Master\"</literal>."
+msgstr "Tipul normal de acţiuni de monitorizare nu sunt suficiente pentru a monitoriza o resursă multi-state în starea <literal>Master</literal>. Pentru a detecta eşecurile instanţei <literal>Master</literal>, trebuie să definiţi o acţiune de monitorizare adiţională cu <literal>role=\"Master\"</literal>."
 
-#: Ch-Advanced-Resources.xml:503(para)
-msgid "It is crucial that every monitor operation has a different interval"
-msgstr "Este imperativ ca fiecare operaţiune de monitorizare să aibă un interval diferit"
+#. Tag: para
+#, no-c-format
+msgid "It is crucial that <emphasis>every</emphasis> monitor operation has a different interval!"
+msgstr "Este imperativ ca <emphasis>fiecare</emphasis> operaţiune de monitorizare să aibă un interval diferit!"
 
-#: Ch-Advanced-Resources.xml:505(title)
+#. Tag: para
+#, no-c-format
+msgid "This is because Pacemaker currently differentiates between operations only by resource and interval; so if eg. a master/slave resource has the same monitor interval for both roles, Pacemaker would ignore the role when checking the status - which would cause unexpected return codes, and therefore unnecessary complications."
+msgstr "Acest lucru este necesar deoarece Pacemaker diferențiază în mod curent între operațiuni numai după resursă și interval; deci dacă de ex. o resursă master/slave are același interval de monitorizare pentru ambele roluri, Pacemaker ar ignora rolul când ar verifica statusul - fapt care ar cauza coduri de ieșire neașteptate și respectiv complicații inutile."
+
+#. Tag: title
+#, no-c-format
 msgid "Monitoring both states of a multi-state resource"
-msgstr "Monitorizarea ambelor stări ale unei resurse cu stări multiple"
+msgstr "Monitorizarea ambelor stări ale unei resurse multi-state"
 
-#: Ch-Advanced-Resources.xml:522(para)
-msgid "In most cases, a multi-state resources will have a single copy on each active cluster node. However if this is not the case, you can indicate which nodes the cluster should to preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the master's id is used."
-msgstr "În majoritatea cazurilor, o resursă cu stări multiple va avea o singură copie pe fiecare nod activ din cluster. Dacă nu este cazul însă, puteţi indica pe care noduri ar trebui clusterul să asigneze copii cu restricţii de locaţie ale resurselor. Aceste restricţii nu sunt scrise diferit faţă de cele pentru resursele obişnuite cu excepţia faptului că id-ul masterului este folosit."
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;master id=\"myMasterRsc\"&gt;\n"
+"   &lt;primitive id=\"myRsc\" class=\"ocf\" type=\"myApp\" provider=\"myCorp\"&gt;\n"
+"    &lt;operations&gt;\n"
+"     &lt;op id=\"public-ip-slave-check\" name=\"monitor\" interval=\"60\"/&gt;\n"
+"     &lt;op id=\"public-ip-master-check\" name=\"monitor\" interval=\"61\" role=\"Master\"/&gt;\n"
+"    &lt;/operations&gt;\n"
+"   &lt;/primitive&gt;\n"
+"  &lt;/master&gt;  "
+msgstr ""
+" &lt;master id=\"myMasterRsc\"&gt;\n"
+"   &lt;primitive id=\"myRsc\" class=\"ocf\" type=\"myApp\" provider=\"myCorp\"&gt;\n"
+"    &lt;operations&gt;\n"
+"     &lt;op id=\"public-ip-slave-check\" name=\"monitor\" interval=\"60\"/&gt;\n"
+"     &lt;op id=\"public-ip-master-check\" name=\"monitor\" interval=\"61\" role=\"Master\"/&gt;\n"
+"    &lt;/operations&gt;\n"
+"   &lt;/primitive&gt;\n"
+"  &lt;/master&gt;  "
 
-#: Ch-Advanced-Resources.xml:527(para)
-msgid "When considering multi-state resources in constraints, for most purposes it is sufficient to treat them as clones. The exception is when the <literal>rsc-role</literal> and/or <literal>with-rsc-role</literal> (for colocation constraints) and <literal>first-action</literal> and/or <literal>then-action</literal> (for ordering constraints) are used."
-msgstr "Când ţinem cont de resursele cu stări multiple în restricţii, pentru majoritatea scopurilor este suficient să le tratăm ca pe clone. Excepţia survine atunci când sunt folosite <literal>rsc-role</literal> şi/sau <literal>with-rsc-role</literal> (pentru restricţii de colocare) şi <literal>first-action</literal> şi/sau <literal>then-action</literal> (pentru restricţii de ordonare)."
+#. Tag: para
+#, no-c-format
+msgid "In most cases, a multi-state resources will have a single copy on each active cluster node. If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the master's id is used."
+msgstr "În majoritatea cazurilor, o resursă multi-state va avea o singură copie pe fiecare nod activ din cluster. Dacă nu este cazul însă, puteţi indica pe care noduri ar trebui clusterul în mod preferențial să asigneze copii cu restricţii de locaţie ale resurselor. Aceste restricţii nu sunt scrise diferit faţă de cele pentru resursele obişnuite cu excepţia faptului că id-ul masterului este folosit."
 
-#: Ch-Advanced-Resources.xml:532(title)
+#. Tag: para
+#, no-c-format
+msgid "When considering multi-state resources in constraints, for most purposes it is sufficient to treat them as clones. The exception is when the <literal>rsc-role</literal> and/or <literal>with-rsc-role</literal> fields (for colocation constraints) and <literal>first-action</literal> and/or <literal>then-action</literal> fields (for ordering constraints) are used."
+msgstr "Când ţinem cont de resursele multi-state în restricţii, pentru majoritatea scopurilor este suficient să le tratăm ca pe clone. Excepţia survine atunci când sunt folosite câmpurile <literal>rsc-role</literal> şi/sau <literal>with-rsc-role</literal> (pentru restricţii de colocare) şi câmpurile <literal>first-action</literal> şi/sau <literal>then-action</literal> (pentru restricţii de ordonare)."
+
+#. Tag: title
+#, no-c-format
 msgid "Additional constraint options relevant to multi-state resources"
-msgstr "Opţiuni de restricţionare adiţionale relevante la resurse cu stări multiple"
+msgstr "Opţiuni de restricţionare adiţionale relevante la resurse multi-state"
 
-#: Ch-Advanced-Resources.xml:540(entry)
-msgid "rsc-role"
-msgstr "rsc-role"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>rsc-role Multi-State Resource Constraints</primary></indexterm> <indexterm><primary>Multi-State Resource Constraints</primary><secondary>rsc-role</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>rsc-role</tertiary></indexterm> rsc-role"
+msgstr "<indexterm significance=\"preferred\"><primary>rsc-role Restricții Resursă Multi-State</primary></indexterm> <indexterm><primary>Restricții Resursă Multi-State</primary><secondary>rsc-role</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Restricții Multi-State</secondary><tertiary>rsc-role</tertiary></indexterm> rsc-role"
 
-#: Ch-Advanced-Resources.xml:542(para)
-msgid "An additional attribute of colocation constraints that specifies the role that rsc must be in."
-msgstr "Un atribut adiţional al restricţiilor de colocare care specifică rolul în care trebuie să se alfe rsc."
+#. Tag: para
+#, no-c-format
+msgid "An additional attribute of colocation constraints that specifies the role that <literal>rsc</literal> must be in. Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>."
+msgstr "Un atribut adiţional al restricţiilor de colocare care specifică rolul în care trebuie să se alfe <literal>rsc</literal>. Valori permise: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>."
 
-#: Ch-Advanced-Resources.xml:543(para)
-#: Ch-Advanced-Resources.xml:550(para)
-msgid "Allowed values: <emphasis>Started</emphasis>, Master, Slave"
-msgstr "Valori permise: <emphasis>Pornit</emphasis>, Master, Slave"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>with-rsc-role Multi-State Resource Constraints</primary></indexterm> <indexterm><primary>Multi-State Resource Constraints</primary><secondary>with-rsc-role</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>with-rsc-role</tertiary></indexterm> with-rsc-role"
+msgstr "<indexterm significance=\"preferred\"><primary>with-rsc-role Restricții Resursă Multi-State</primary></indexterm> <indexterm><primary>Restricții Resursă Multi-State</primary><secondary>with-rsc-role</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Restricții Multi-State</secondary><tertiary>with-rsc-role</tertiary></indexterm> with-rsc-role"
 
-#: Ch-Advanced-Resources.xml:547(entry)
-msgid "with-rsc-role"
-msgstr "with-rsc-role"
+#. Tag: para
+#, no-c-format
+msgid "An additional attribute of colocation constraints that specifies the role that <literal>with-rsc</literal> must be in. Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>."
+msgstr "Un atribut adiţional al restricţiilor de colocare care specifică rolul în care trebuie să se alfe <literal>with-rsc</literal>. Valori permise: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>."
 
-#: Ch-Advanced-Resources.xml:549(para)
-msgid "An additional attribute of colocation constraints that specifies the role that with-rsc must be in."
-msgstr "Un atribut adiţional al restricţiilor de colocare care specifică rolul în care trebuie să se alfe with-rsc."
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>first-action Multi-State Resource Constraints</primary></indexterm> <indexterm><primary>Multi-State Resource Constraints</primary><secondary>first-action</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>first-action</tertiary></indexterm> first-action"
+msgstr "<indexterm significance=\"preferred\"><primary>first-action Restricții Resursă Multi-State</primary></indexterm> <indexterm><primary>Restricții Resursă Multi-State</primary><secondary>first-action</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Restricții Multi-State</secondary><tertiary>first-action</tertiary></indexterm> first-action"
 
-#: Ch-Advanced-Resources.xml:554(entry)
-msgid "first-action"
-msgstr "first-action"
+#. Tag: para
+#, no-c-format
+msgid "An additional attribute of ordering constraints that specifies the action that the <literal>first</literal> resource must complete before executing the specified action for the <literal>then</literal> resource. Allowed values: <emphasis>start</emphasis>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>."
+msgstr "Un atribut adiţional al restricţiilor de ordonare care specifică acţiunea pe care resursa <literal>first</literal> trebuie să o termine înaintea executării acţiunii specificate pentru resursa <literal>then</literal>. Valori permise: <emphasis>start</emphasis>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>."
 
-#: Ch-Advanced-Resources.xml:556(para)
-msgid "An additional attribute of ordering constraints that specifies the action that the first resource must complete before executing the specified action for the then resource."
-msgstr "Un atribut adiţional al restricţiilor de ordonare care specifică acţiunea pe care resursa first trebuie să o termine înaintea executării acţiunii specificate pentru resursa then."
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>then-action Multi-State Resource Constraints</primary></indexterm> <indexterm><primary>Multi-State Resource Constraints</primary><secondary>then-action</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>then-action</tertiary></indexterm> then-action"
+msgstr "<indexterm significance=\"preferred\"><primary>then-action Restricții Resursă Multi-State</primary></indexterm> <indexterm><primary>Restricții Resursă Multi-State</primary><secondary>then-action</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Restricții Multi-State</secondary><tertiary>then-action</tertiary></indexterm> then-action"
 
-#: Ch-Advanced-Resources.xml:557(para)
-msgid "Allowed values: <emphasis>start</emphasis>, stop, promote, demote"
-msgstr "Valori permise: <emphasis>start</emphasis>, stop, promote, demote"
+#. Tag: para
+#, no-c-format
+msgid "An additional attribute of ordering constraints that specifies the action that the <literal>then</literal> resource can only execute after the <literal>first-action</literal> on the <literal>first</literal> resource has completed. Allowed values: <literal>start</literal>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. Defaults to the value (specified or implied) of <literal>first-action</literal>."
+msgstr "Un atribut adiţional al restricţiilor de ordonare care specifică acţiunea pe care resursa <literal>then</literal> o poate executa doar după ce <literal>first-action</literal> asupra resursei <literal>first</literal> a terminat. Valori permise: <emphasis>start</emphasis>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. Valoarea implicită (specificată sau subînțeleasă) a <literal>first-action</literal>."
 
-#: Ch-Advanced-Resources.xml:561(entry)
-msgid "then-action"
-msgstr "then-action"
+#. Tag: para
+#, no-c-format
+msgid "In the example below, <literal>myApp</literal> will wait until one of the database copies has been started and promoted to master before being started itself. Only if no copies can be promoted will <literal>apache-stats</literal> be prevented from being active. Additionally, the database will wait for <literal>myApp</literal> to be stopped before it is demoted."
+msgstr "În exemplul de mai jos, <literal>myApp</literal> va aştepta până când una din copiile bazei de date a fost pornită şi promovată la master înainte de a fi ea însăşi pornită. Doar dacă nici o copie nu poate fi promovată va fi împiedicată <literal>apache-stats</literal> de a fi activă. În mod adiţional, baza de date va aştepta ca <literal>myApp</literal> să fie oprită înainte să fie degradată."
 
-#: Ch-Advanced-Resources.xml:563(para)
-msgid "An additional attribute of ordering constraints that specifies the action that the then resource can only execute after the first-action on the first resource has completed."
-msgstr "Un atribut adiţional al restricţiilor de ordonare care specifică acţiunea pe care resursa then o va putea executa după ce first-action pe prima resursă a terminat."
-
-#: Ch-Advanced-Resources.xml:564(para)
-msgid "Allowed values: start, stop, promote, demote. Defaults to the value (specified or implied) of first-action"
-msgstr "Valori permise: start, stop, promote, demote. Valoarea implicită (specificată sau subînţeleasă) este cea dată de first-action"
-
-#: Ch-Advanced-Resources.xml:570(para)
-msgid "In the example below, myApp will wait until one of the database copies has been started and promoted to master before being started itself. Only if no copies can be promoted will apache-stats be prevented from being active. Additionally, the database will wait for myApp to be stopped before it is demoted."
-msgstr "În exemplul de mai jos, myApp va aştepta până când una din copiile bazei de date a fost pornită şi promovată la master înainte de a fi ea însăşi pornită. Doar dacă nici o copie nu poate fi promovată va fi împiedicată apache-stats de a fi activă. În mod adiţional, baza de date va aştepta ca myApp să fie oprită înainte să fie degradată."
-
-#: Ch-Advanced-Resources.xml:575(para)
-msgid "Colocation of a regular (or group) resource with a multi-state resource means that it can run on any machine with an active copy of the clone that is in the specified state (Master or Slave). In the example, the cluster will choose a location based on where database is running as a Master, and if there are multiple Master instances it will also factor in myApp‘s own location preferences when deciding which location to choose."
-msgstr "Colocarea unei resurse obişnuite (sau a unui grup) cu o resursă cu stări-multiple înseamnă că poate rula pe orice maşină cu o copie activă a clonei care se alfă în starea specificată (Master sau Slave). În exemplu, clusterul va alege o locaţie în funcţie de unde rulează baza de date în mod curent ca Master, şi dacă sunt mai multe instanţe de Master va lua în considerare şi preferinţele proprii de locaţie ale myApp când va decide care locaţie să aleagă."
-
-#: Ch-Advanced-Resources.xml:579(para)
-msgid "Colocation with regular clones and other multi-state resources is also possible. In such cases, the set of allowed locations for the rsc clone is (after role filtering) limited to nodes on which the <literal>with-rsc</literal> clone is (or will be) in the specified role. Allocation is then performed as-per-normal."
-msgstr "Colocarea alături de clone obişnuite şi alte resurse cu stări multiple este posibilă de asemenea. În astfel de cazuri, setul de locaţii permise pentru clona rsc este (după filtrarea rolului) limitat la nodurile pe care clona <literal>with-rsc</literal> există (sau va exista) în rolul specificat. Alocarea este atunci efectuată în mod normal."
-
-#: Ch-Advanced-Resources.xml:585(title)
+#. Tag: title
+#, no-c-format
 msgid "Example constraints involving multi-state resources"
-msgstr "Exemple de restricţii implicând resurse cu stări multiple"
+msgstr "Exemple de restricţii implicând resurse multi-state"
 
-#: Ch-Advanced-Resources.xml:608(title)
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;constraints&gt;\n"
+"   &lt;rsc_location id=\"db-prefers-node1\" rsc=\"database\" node=\"node1\" score=\"500\"/&gt;\n"
+"   &lt;rsc_colocation id=\"backup-with-db-slave\" rsc=\"backup\"\n"
+"     with-rsc=\"database\" with-rsc-role=\"Slave\"/&gt;\n"
+"   &lt;rsc_colocation id=\"myapp-with-db-master\" rsc=\"myApp\"\n"
+"     with-rsc=\"database\" with-rsc-role=\"Master\"/&gt;\n"
+"   &lt;rsc_order id=\"start-db-before-backup\" first=\"database\" then=\"backup\"/&gt;\n"
+"   &lt;rsc_order id=\"promote-db-then-app\" first=\"database\" first-action=\"promote\"\n"
+"     then=\"myApp\" then-action=\"start\"/&gt;\n"
+"  &lt;/constraints&gt;  "
+msgstr ""
+" &lt;constraints&gt;\n"
+"   &lt;rsc_location id=\"db-prefers-node1\" rsc=\"database\" node=\"node1\" score=\"500\"/&gt;\n"
+"   &lt;rsc_colocation id=\"backup-with-db-slave\" rsc=\"backup\"\n"
+"     with-rsc=\"database\" with-rsc-role=\"Slave\"/&gt;\n"
+"   &lt;rsc_colocation id=\"myapp-with-db-master\" rsc=\"myApp\"\n"
+"     with-rsc=\"database\" with-rsc-role=\"Master\"/&gt;\n"
+"   &lt;rsc_order id=\"start-db-before-backup\" first=\"database\" then=\"backup\"/&gt;\n"
+"   &lt;rsc_order id=\"promote-db-then-app\" first=\"database\" first-action=\"promote\"\n"
+"     then=\"myApp\" then-action=\"start\"/&gt;\n"
+"  &lt;/constraints&gt;  "
+
+#. Tag: para
+#, no-c-format
+msgid "Colocation of a regular (or group) resource with a multi-state resource means that it can run on any machine with an active copy of the multi-state resource that is in the specified state (<literal>Master</literal> or <literal>Slave</literal>). In the example, the cluster will choose a location based on where database is running as a <literal>Master</literal>, and if there are multiple <literal>Master</literal> instances it will also factor in <literal>myApp</literal>'s own location preferences when deciding which location to choose."
+msgstr "Colocarea unei resurse obişnuite (sau a unui grup) cu o resursă multi-state înseamnă că poate rula pe orice maşină cu o copie activă a resursei multi-state care se alfă în starea specificată (<literal>Master</literal> sau <literal>Slave</literal>). În exemplu, clusterul va alege o locaţie în funcţie de unde rulează baza de date în mod curent ca <literal>Master</literal>, şi dacă sunt mai multe instanţe de <literal>Master</literal> va lua în considerare şi preferinţele proprii de locaţie ale <literal>myApp</literal> când va decide care locaţie să aleagă."
+
+#. Tag: para
+#, no-c-format
+msgid "Colocation with regular clones and other multi-state resources is also possible. In such cases, the set of allowed locations for the <literal>rsc</literal> clone is (after role filtering) limited to nodes on which the <literal>with-rsc</literal> multi-state resource is (or will be) in the specified role. Allocation is then performed as-per-normal."
+msgstr "Colocarea alături de clone obişnuite şi alte resurse multi-state este posibilă de asemenea. În astfel de cazuri, setul de locaţii permise pentru clona <literal>rsc</literal> este (după filtrarea rolului) limitat la nodurile pe care resursa multi-state <literal>with-rsc</literal> există (sau va exista) în rolul specificat. Alocarea este atunci efectuată în mod normal."
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm><primary>resource-stickiness</primary><secondary>of a Multi-State Resource</secondary></indexterm> To achieve a stable allocation pattern, multi-state resources are slightly sticky by default. If no value for <literal>resource-stickiness</literal> is provided, the multi-state resource will use a value of 1. Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster."
+msgstr "<indexterm><primary>resource-stickiness</primary><secondary> unei Resurse Multi-State</secondary></indexterm> Pentru a atinge un tipar de alocare stabil, resursele multi-state sunt uşor adezive în mod implicit. Dacă nu este furnizată nici o valoare pentru <literal>resource-stickiness</literal>, resursa multi-state va folosi valoarea 1. Fiind o valoare mică, aceasta cauzează o perturbare minimală a calcului scorului celorlalte resurse dar este suficientă pentru a împiedica Pacemaker-ul de a muta inutil copiile prin cluster."
+
+#. Tag: title
+#, no-c-format
 msgid "Which Resource Instance is Promoted"
 msgstr "Care Instanţă a Resursei este Promovată"
 
-#: Ch-Advanced-Resources.xml:609(para)
+#. Tag: para
+#, no-c-format
 msgid "During the start operation, most Resource Agent scripts should call the <command>crm_master</command> utility. This tool automatically detects both the resource and host and should be used to set a preference for being promoted. Based on this, <literal>master-max</literal>, and <literal>master-node-max</literal>, the instance(s) with the highest preference will be promoted."
-msgstr "În timpul operaţiunii de pornire, majoritatea scripturilor Agenţilor de Resursă ar trebui să apeleze utilitarul <command>crm_master</command>. Acesta detectează în mod automat atât resursa cât şi gazda şi ar trebui să fie folosit pentru a seta o preferinţă pentru a fi promovat. În funcţie de asta, de <literal>master-max</literal> şi de <literal>master-node-max</literal>, instanţa(ele) cu cea mai mare preferinţă va fi promovată."
+msgstr "În timpul operaţiunii de pornire, majoritatea scripturilor Agenţilor de Resursă ar trebui să apeleze utilitarul <command>crm_master</command>. Acesta detectează în mod automat atât resursa cât şi gazda şi ar trebui să fie folosit pentru a seta o preferinţă pentru a fi promovat. În funcţie de asta, de <literal>master-max</literal> şi de <literal>master-node-max</literal>, instanţa(ele) cu cea mai mare preferinţă va(vor) fi promovată(e)."
 
-#: Ch-Advanced-Resources.xml:614(para)
+#. Tag: para
+#, no-c-format
 msgid "The other alternative is to create a location constraint that indicates which nodes are most preferred as masters."
 msgstr "Cealaltă alternativă să se creeze o restricţie de locaţie care să indice care noduri sunt cele mai preferate ca masteri."
 
-#: Ch-Advanced-Resources.xml:616(title)
+#. Tag: title
+#, no-c-format
 msgid "Manually specifying which node should be promoted"
 msgstr "Specificând manual care nod ar trebui să fie promovat"
 
-#: Ch-Advanced-Resources.xml:630(para)
-msgid "Since multi-state resources are an extension of cloned resources, all the requirements of Clones are also requirements of multi-state resources. Additionally, multi-state resources require two extra actions demote and promote. These actions are responsible for changing the state of the resource. Like start and stop, they should return <envar>OCF_SUCCESS</envar> if they completed successfully or a relevant error code if they did not."
-msgstr "Din moment ce resursele multi-state sunt o extensie a resurselor clonate, toate cerinţele Clonelor sunt de asemenea cerinţe ale resurselor multi-state. Adiţional, resursele multi-state necesită două acţiuni suplimentare promote şi demote. Aceste acţiuni sunt responsabile pentru schimbarea stării resursei. Precum start şi stop, acestea ar trebui să returneze <envar>OCF_SUCCESS</envar> dacă au terminat cu succes sau un cod de eroare relevant în caz contrar."
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;rsc_location id=\"master-location\" rsc=\"myMasterRsc\"&gt;\n"
+"    &lt;rule id=\"master-rule\" score=\"100\" role=\"Master\"&gt;\n"
+"      &lt;expression id=\"master-exp\" attribute=\"#uname\" operation=\"eq\" value=\"node1\"/&gt;\n"
+"    &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
+msgstr ""
+" &lt;rsc_location id=\"master-location\" rsc=\"myMasterRsc\"&gt;\n"                                                                           
+"    &lt;rule id=\"master-rule\" score=\"100\" role=\"Master\"&gt;\n"                                                                          
+"      &lt;expression id=\"master-exp\" attribute=\"#uname\" operation=\"eq\" value=\"node1\"/&gt;\n"                                          
+"    &lt;/rule&gt;\n"                                                                                                                          
+"  &lt;/rsc_location&gt;  "
 
-#: Ch-Advanced-Resources.xml:636(para)
-msgid "The states can mean whatever you wish, but when the resource is started, it must come up in the mode called Slave. From there the cluster will then decide which instances to promote into a Master."
-msgstr "Stările pot însemna orice doriţi, dar atunci când resursa este pornită, trebuie să ajungă în modul numit Slave. De acolo clusterul va decide mai apoi care instanţe să promoveze într-un Master."
+#. Tag: para
+#, no-c-format
+msgid "Since multi-state resources are an extension of cloned resources, all the requirements of Clones are also requirements of multi-state resources. Additionally, multi-state resources require two extra actions: <literal>demote</literal> and <literal>promote</literal>; these actions are responsible for changing the state of the resource. Like <literal>start</literal> and <literal>stop</literal>, they should return <envar>OCF_SUCCESS</envar> if they completed successfully or a relevant error code if they did not."
+msgstr "Din moment ce resursele multi-state sunt o extensie a resurselor clonate, toate cerinţele Clonelor sunt de asemenea cerinţe ale resurselor multi-state. Adiţional, resursele multi-state necesită două acţiuni suplimentare: <literal>promote</literal> şi <literal>demote</literal>; aceste acţiuni sunt responsabile pentru schimbarea stării resursei. Precum <literal>start</literal> şi <literal>stop</literal>, acestea ar trebui să returneze <envar>OCF_SUCCESS</envar> dacă au terminat cu succes sau un cod de eroare relevant în caz contrar."
 
-#: Ch-Advanced-Resources.xml:640(para)
+#. Tag: para
+#, no-c-format
+msgid "The states can mean whatever you wish, but when the resource is started, it must come up in the mode called <literal>Slave</literal>. From there the cluster will then decide which instances to promote to <literal>Master</literal>."
+msgstr "Stările pot însemna orice doriţi, dar atunci când resursa este pornită, trebuie să ajungă în modul numit <literal>Slave</literal>. De acolo clusterul va decide mai apoi care instanţe să promoveze într-un <literal>Master</literal>."
+
+#. Tag: para
+#, no-c-format
 msgid "In addition to the Clone requirements for monitor actions, agents must also <emphasis>accurately</emphasis> report which state they are in. The cluster relies on the agent to report its status (including role) accurately and does not indicate to the agent what role it currently believes it to be in."
 msgstr "În plus faţă de cerinţele Clonelor pentru acţiunile de monitorizare, agenţii trebuie să raporteze <emphasis>corespunzător</emphasis> starea în care sunt. Clusterul se bazează pe agent să-şi raporteze statusul (incluzând rolul) în mod corespunzător şi nu indică agentului în care rol crede acesta în mod curent că ar trebui să se afle."
 
-#: Ch-Advanced-Resources.xml:645(title)
+#. Tag: title
+#, no-c-format
 msgid "Role implications of OCF return codes"
 msgstr "Implicaţiile rolurilor codurilor returnate de OCF"
 
-#: Ch-Advanced-Resources.xml:649(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Monitor Return Code"
 msgstr "Cod de Monitorizare Returnat"
 
-#: Ch-Advanced-Resources.xml:653(entry)
-msgid "OCF_NOT_RUNNING"
-msgstr "OCF_NOT_RUNNING"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm> <indexterm><primary>OCF_NOT_RUNNING</primary></indexterm> OCF_NOT_RUNNING"
+msgstr "<indexterm><primary>cod de ieșire</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm> <indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm> <indexterm><primary>OCF_NOT_RUNNING</primary></indexterm> OCF_NOT_RUNNING"
 
-#: Ch-Advanced-Resources.xml:654(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Stopped"
 msgstr "Oprit"
 
-#: Ch-Advanced-Resources.xml:657(entry)
-msgid "OCF_SUCCESS"
-msgstr "OCF_SUCCESS"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>OCF_SUCCESS</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_SUCCESS</secondary></indexterm> <indexterm><primary>OCF_SUCCESS</primary></indexterm> OCF_SUCCESS"
+msgstr "<indexterm><primary>cod de ieșire</primary><secondary>OCF_SUCCESS</secondary></indexterm> <indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_SUCCESS</secondary></indexterm> <indexterm><primary>OCF_SUCCESS</primary></indexterm> OCF_SUCCESS"
 
-#: Ch-Advanced-Resources.xml:658(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Running (Slave)"
 msgstr "Rulând (Slave)"
 
-#: Ch-Advanced-Resources.xml:661(entry)
-msgid "OCF_RUNNING_MASTER"
-msgstr "OCF_RUNNING_MASTER"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm> <indexterm><primary>OCF_RUNNING_MASTER</primary></indexterm> OCF_RUNNING_MASTER"
+msgstr "<indexterm><primary>cod de ieșire</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm> <indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm> <indexterm><primary>OCF_RUNNING_MASTER</primary></indexterm> OCF_RUNNING_MASTER"
 
-#: Ch-Advanced-Resources.xml:662(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Running (Master)"
 msgstr "Rulează (Master)"
 
-#: Ch-Advanced-Resources.xml:665(entry)
-msgid "OCF_FAILED_MASTER"
-msgstr "OCF_FAILED_MASTER"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm> <indexterm><primary>OCF_FAILED_MASTER</primary></indexterm> OCF_FAILED_MASTER"
+msgstr "<indexterm><primary>cod de ieșire</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm> <indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm> <indexterm><primary>OCF_FAILED_MASTER</primary></indexterm> OCF_FAILED_MASTER"
 
-#: Ch-Advanced-Resources.xml:666(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Failed (Master)"
 msgstr "Eşuat (Master)"
 
-#: Ch-Advanced-Resources.xml:669(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Other"
 msgstr "Altul"
 
-#: Ch-Advanced-Resources.xml:670(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Failed (Slave)"
 msgstr "Eşuat (Slave)"
 
-#: Ch-Advanced-Resources.xml:676(para)
-msgid "Like with clones, supporting notifications requires the <literal>notify</literal> action to be implemented. Once supported, the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it."
+#. Tag: para
+#, no-c-format
+msgid "Like clones, supporting notifications requires the <literal>notify</literal> action to be implemented. Once supported the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it."
 msgstr "Ca şi în cazul clonelor, suportarea notificărilor necesită acţiunea <literal>notify</literal> să fie implementată. Odată ce este suportată, acţiunii notify îi vor fi trimise un număr de variabile suplimentare care, când sunt combinate cu un context suplimentar, pot fi folosite pentru a calcula starea curentă a clusterului şi ceea ce urmează să i se întâmple."
 
-#: Ch-Advanced-Resources.xml:682(para)
-msgid "Variables in bold are specific to Master resources and all behave in the same manner as described for Clone resources."
-msgstr "Variabilele îngroşate sunt specifice resurselor Master şi se comportă toate în acelaşi fel ca şi cel descris pentru resursele Clonă."
+#. Tag: title
+#, no-c-format
+msgid "Environment variables supplied with <literal>Master</literal> notify actions<footnote><para>Emphasized variables are specific to <literal>Master</literal> resources and all behave in the same manner as described for Clone resources.</para></footnote>"
+msgstr "Variabilele de mediu furnizate cu acţiunile de notificare <literal>Master</literal><footnote><para>Variabilele îngroşate sunt specifice resurselor Master şi se comportă toate în acelaşi fel ca şi cel descris pentru resursele Clonă.</para></footnote>"
 
-#: Ch-Advanced-Resources.xml:681(title)
-msgid "Environment variables supplied with Master notify actions <placeholder-1/>"
-msgstr "Variabilele de mediu furnizate cu acţiunile de notificare Master <placeholder-1/>"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_type</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_type</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_type</envar>"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_type</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_type</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_type</envar>"
 
-#: Ch-Advanced-Resources.xml:707(emphasis)
-msgid "OCF_RESKEY_CRM_meta_notify_master_resource"
-msgstr "OCF_RESKEY_CRM_meta_notify_master_resource"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_operation</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_operation</secondary></indexterm><envar>OCF_RESKEY_CRM_meta_notify_operation</envar>"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_operation</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_operation</secondary></indexterm><envar>OCF_RESKEY_CRM_meta_notify_operation</envar>"
 
-#: Ch-Advanced-Resources.xml:708(entry)
-msgid "Resources that are running in Master mode"
-msgstr "Resursele care funcţionează în mod Master"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_active_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_active_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:711(emphasis)
-msgid "OCF_RESKEY_CRM_meta_notify_slave_resource"
-msgstr "OCF_RESKEY_CRM_meta_notify_slave_resource"
+#. Tag: entry
+#, no-c-format
+msgid "Resources the that are running"
+msgstr "Resursele care rulează"
 
-#: Ch-Advanced-Resources.xml:712(entry)
-msgid "Resources that are running in Slave mode"
-msgstr "Resursele care funcţionează în mod Slave"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_inactive_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_inactive_resource</envar>"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_inactive_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_inactive_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:723(emphasis)
-msgid "OCF_RESKEY_CRM_meta_notify_promote_resource"
-msgstr "OCF_RESKEY_CRM_meta_notify_promote_resource"
+#. Tag: entry
+#, no-c-format
+msgid "Resources the that are not running"
+msgstr "Resursele care nu rulează"
 
-#: Ch-Advanced-Resources.xml:724(entry)
+#. Tag: entry
+#, no-c-format
+msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_master_resource</envar></emphasis>"
+msgstr "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_master_resource</envar></emphasis>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_master_resource</tertiary>"
+msgstr "<primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_master_resource</tertiary>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_master_resource</secondary>"
+msgstr "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_master_resource</secondary>"
+
+#. Tag: entry
+#, no-c-format
+msgid "Resources that are running in <literal>Master</literal> mode"
+msgstr "Resursele care funcţionează în mod <literal>Master</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_slave_resource</envar></emphasis>"
+msgstr "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_slave_resource</envar></emphasis>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_slave_resource</tertiary>"
+msgstr "<primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_slave_resource</tertiary>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_slave_resource</secondary>"
+msgstr "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_slave_resource</secondary>"
+
+#. Tag: entry
+#, no-c-format
+msgid "Resources that are running in <literal>Slave</literal> mode"
+msgstr "Resursele care funcţionează în mod <literal>Slave</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_start_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_start_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_stop_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_stop_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+
+#. Tag: entry
+#, no-c-format
+msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_promote_resource</envar></emphasis>"
+msgstr "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_promote_resource</envar></emphasis>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_promote_resource</tertiary>"
+msgstr "<primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_promote_resource</tertiary>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_promote_resource</secondary>"
+msgstr "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_promote_resource</secondary>"
+
+#. Tag: entry
+#, no-c-format
 msgid "Resources to be promoted"
 msgstr "Resursele care vor fi promovate"
 
-#: Ch-Advanced-Resources.xml:727(emphasis)
-msgid "OCF_RESKEY_CRM_meta_notify_demote_resource"
-msgstr "OCF_RESKEY_CRM_meta_notify_demote_resource"
+#. Tag: entry
+#, no-c-format
+msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_demote_resource</envar></emphasis>"
+msgstr "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_demote_resource</envar></emphasis>"
 
-#: Ch-Advanced-Resources.xml:728(entry)
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_demote_resource</tertiary>"
+msgstr "<primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_demote_resource</tertiary>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_demote_resource</secondary>"
+msgstr "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_demote_resource</secondary>"
+
+#. Tag: entry
+#, no-c-format
 msgid "Resources to be demoted"
 msgstr "Resursele care vor fi degradate"
 
-#: Ch-Advanced-Resources.xml:739(emphasis)
-msgid "OCF_RESKEY_CRM_meta_notify_promote_uname"
-msgstr "OCF_RESKEY_CRM_meta_notify_promote_uname"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_start_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar>"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_start_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar>"
 
-#: Ch-Advanced-Resources.xml:740(entry)
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_stop_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_stop_uname</envar>"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_stop_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_stop_uname</envar>"
+
+#. Tag: entry
+#, no-c-format
+msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_promote_uname</envar></emphasis>"
+msgstr "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_promote_uname</envar></emphasis>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_promote_uname</tertiary>"
+msgstr "<primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_promote_uname</tertiary>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_promote_uname</secondary>"
+msgstr "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_promote_uname</secondary>"
+
+#. Tag: entry
+#, no-c-format
 msgid "Nodes on which resources will be promoted"
 msgstr "Nodurile pe care resursele vor fi promovate"
 
-#: Ch-Advanced-Resources.xml:743(emphasis)
-msgid "OCF_RESKEY_CRM_meta_notify_demote_uname"
-msgstr "OCF_RESKEY_CRM_meta_notify_demote_uname"
+#. Tag: entry
+#, no-c-format
+msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_demote_uname</envar></emphasis>"
+msgstr "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_demote_uname</envar></emphasis>"
 
-#: Ch-Advanced-Resources.xml:744(entry)
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_demote_uname</tertiary>"
+msgstr "<primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_demote_uname</tertiary>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_demote_uname</secondary>"
+msgstr "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_demote_uname</secondary>"
+
+#. Tag: entry
+#, no-c-format
 msgid "Nodes on which resources will be demoted"
 msgstr "Nodurile pe care resursele vor fi degradate"
 
-#: Ch-Advanced-Resources.xml:755(emphasis)
-msgid "OCF_RESKEY_CRM_meta_notify_master_uname"
-msgstr "OCF_RESKEY_CRM_meta_notify_master_uname"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_active_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_active_uname</envar>"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_active_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_active_uname</envar>"
 
-#: Ch-Advanced-Resources.xml:756(entry)
-msgid "Nodes on which resources are running in Master mode"
-msgstr "Nodurile pe care resursele rulează în mod Master"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_inactive_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_inactive_uname</envar>"
+msgstr "<indexterm><primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_inactive_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_inactive_uname</envar>"
 
-#: Ch-Advanced-Resources.xml:759(emphasis)
-msgid "OCF_RESKEY_CRM_meta_notify_slave_uname"
-msgstr "OCF_RESKEY_CRM_meta_notify_slave_uname"
+#. Tag: entry
+#, no-c-format
+msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_master_uname</envar></emphasis>"
+msgstr "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_master_uname</envar></emphasis>"
 
-#: Ch-Advanced-Resources.xml:760(entry)
-msgid "Nodes on which resources are running in Slave mode"
-msgstr "Nodurile pe care resursele rulează în mod Slave"
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_master_uname</tertiary>"
+msgstr "<primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_master_uname</tertiary>"
 
-#: Ch-Advanced-Resources.xml:766(para)
-msgid "Pre-notification (demote)"
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_master_uname</secondary>"
+msgstr "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_master_uname</secondary>"
+
+#. Tag: entry
+#, no-c-format
+msgid "Nodes on which resources are running in <literal>Master</literal> mode"
+msgstr "Nodurile pe care resursele rulează în modul <literal>Master</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_slave_uname</envar></emphasis>"
+msgstr "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_slave_uname</envar></emphasis>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_slave_uname</tertiary>"
+msgstr "<primary>Variabilă de Mediu</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_slave_uname</tertiary>"
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_slave_uname</secondary>"
+msgstr "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_slave_uname</secondary>"
+
+#. Tag: entry
+#, no-c-format
+msgid "Nodes on which resources are running in <literal>Slave</literal> mode"
+msgstr "Nodurile pe care resursele rulează în modul <literal>Slave</literal>"
+
+#. Tag: para
+#, no-c-format
+msgid "Pre-notification (demote):"
 msgstr "Pre-notificare (degradează)"
 
-#: Ch-Advanced-Resources.xml:769(para)
-msgid "Master resources: $OCF_RESKEY_CRM_meta_notify_master_resource"
-msgstr "Resurse Master: $OCF_RESKEY_CRM_meta_notify_master_resource"
+#. Tag: para
+#, no-c-format
+msgid "<literal>Active</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
+msgstr "Resursele <literal>Active</literal>: <envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:770(para)
-#: Ch-Advanced-Resources.xml:786(para)
-msgid "Slave resources: $OCF_RESKEY_CRM_meta_notify_slave_resource"
-msgstr "Resurse Slave: $OCF_RESKEY_CRM_meta_notify_slave_resource"
+#. Tag: para
+#, no-c-format
+msgid "<literal>Master</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_master_resource</envar>"
+msgstr "Resursele <literal>Master</literal>: <envar>$OCF_RESKEY_CRM_meta_notify_master_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:773(para)
-#: Ch-Advanced-Resources.xml:789(para)
-#: Ch-Advanced-Resources.xml:818(para)
-#: Ch-Advanced-Resources.xml:850(para)
-#: Ch-Advanced-Resources.xml:886(para)
-msgid "Resources to be promoted: $OCF_RESKEY_CRM_meta_notify_promote_resource"
-msgstr "Resursele care vor fi promovate: $OCF_RESKEY_CRM_meta_notify_promote_resource"
+#. Tag: para
+#, no-c-format
+msgid "<literal>Slave</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar>"
+msgstr "Resursele <literal>Slave</literal>: <envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:774(para)
-#: Ch-Advanced-Resources.xml:790(para)
-#: Ch-Advanced-Resources.xml:819(para)
-#: Ch-Advanced-Resources.xml:851(para)
-#: Ch-Advanced-Resources.xml:887(para)
-msgid "Resources to be demoted: $OCF_RESKEY_CRM_meta_notify_demote_resource"
-msgstr "Resursele care vor fi degradate: $OCF_RESKEY_CRM_meta_notify_demote_resource"
+#. Tag: para
+#, no-c-format
+msgid "Resources to be promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
+msgstr "Resursele care vor fi promovate: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:778(para)
-msgid "Post-notification (demote) / Pre-notification (stop)"
+#. Tag: para
+#, no-c-format
+msgid "Resources to be demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
+msgstr "Resursele care vor fi degradate: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
+
+#. Tag: para
+#, no-c-format
+msgid "Post-notification (demote) / Pre-notification (stop):"
 msgstr "Post-notificare (degradează) / Pre-notificare (oprire)"
 
-#: Ch-Advanced-Resources.xml:781(para)
-#: Ch-Advanced-Resources.xml:802(para)
-#: Ch-Advanced-Resources.xml:832(para)
-#: Ch-Advanced-Resources.xml:866(para)
-msgid "Master resources:"
-msgstr "Resurse Master:"
+#. Tag: para
+#, no-c-format
+msgid "<literal>Master</literal> resources:"
+msgstr "Resurse <literal>Master</literal>:"
 
-#: Ch-Advanced-Resources.xml:783(para)
-#: Ch-Advanced-Resources.xml:804(para)
-#: Ch-Advanced-Resources.xml:834(para)
-#: Ch-Advanced-Resources.xml:868(para)
-msgid "$OCF_RESKEY_CRM_meta_notify_master_resource"
-msgstr "$OCF_RESKEY_CRM_meta_notify_master_resource"
+#. Tag: para
+#, no-c-format
+msgid "<envar>$OCF_RESKEY_CRM_meta_notify_master_resource</envar>"
+msgstr "<envar>$OCF_RESKEY_CRM_meta_notify_master_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:784(para)
-#: Ch-Advanced-Resources.xml:805(para)
-#: Ch-Advanced-Resources.xml:835(para)
-#: Ch-Advanced-Resources.xml:869(para)
-msgid "minus $OCF_RESKEY_CRM_meta_notify_demote_resource"
-msgstr "minus $OCF_RESKEY_CRM_meta_notify_demote_resource"
+#. Tag: para
+#, no-c-format
+msgid "minus <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
+msgstr "minus <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:792(para)
-#: Ch-Advanced-Resources.xml:821(para)
-#: Ch-Advanced-Resources.xml:854(para)
-#: Ch-Advanced-Resources.xml:891(para)
-msgid "Resources that were demoted: $OCF_RESKEY_CRM_meta_notify_demote_resource"
-msgstr "Resurse care au fost degradate: $OCF_RESKEY_CRM_meta_notify_demote_resource"
+#. Tag: para
+#, no-c-format
+msgid "Resources that were demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
+msgstr "Resurse care au fost degradate: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:807(para)
-#: Ch-Advanced-Resources.xml:837(para)
-#: Ch-Advanced-Resources.xml:872(para)
-msgid "Slave resources:"
-msgstr "Resurse Slave:"
+#. Tag: para
+#, no-c-format
+msgid "Post-notification (stop) / Pre-notification (start)"
+msgstr "Post-notificare (oprire) / Pre-notificare (pornire)"
 
-#: Ch-Advanced-Resources.xml:809(para)
-#: Ch-Advanced-Resources.xml:839(para)
-#: Ch-Advanced-Resources.xml:874(para)
-msgid "$OCF_RESKEY_CRM_meta_notify_slave_resource"
-msgstr "$OCF_RESKEY_CRM_meta_notify_slave_resource"
+#. Tag: para
+#, no-c-format
+msgid "<literal>Active</literal> resources:"
+msgstr "Resursele <literal>Active</literal>:"
 
-#: Ch-Advanced-Resources.xml:824(para)
+#. Tag: para
+#, no-c-format
+msgid "<literal>Slave</literal> resources:"
+msgstr "Resursele <literal>Slave</literal>:"
+
+#. Tag: para
+#, no-c-format
+msgid "<envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar>"
+msgstr "<envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar>"
+
+#. Tag: para
+#, no-c-format
 msgid "Post-notification (start) / Pre-notification (promote)"
 msgstr "Post-notificare (pornire) / Pre-notificare (promovează)"
 
-#: Ch-Advanced-Resources.xml:858(para)
+#. Tag: para
+#, no-c-format
 msgid "Post-notification (promote)"
 msgstr "Post-notificare (promovează)"
 
-#: Ch-Advanced-Resources.xml:870(para)
-msgid "plus $OCF_RESKEY_CRM_meta_notify_promote_resource"
-msgstr "plus $OCF_RESKEY_CRM_meta_notify_promote_resource"
+#. Tag: para
+#, no-c-format
+msgid "plus <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
+msgstr "plus <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:877(para)
-msgid "minus $OCF_RESKEY_CRM_meta_notify_promote_resource"
-msgstr "minus $OCF_RESKEY_CRM_meta_notify_promote_resource"
+#. Tag: para
+#, no-c-format
+msgid "minus <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
+msgstr "minus <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
 
-#: Ch-Advanced-Resources.xml:890(para)
-msgid "Resources that were promoted: $OCF_RESKEY_CRM_meta_notify_promote_resource"
-msgstr "Resursele care au fost promovate: $OCF_RESKEY_CRM_meta_notify_promote_resource"
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ch-Advanced-Resources.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
+#. Tag: para
+#, no-c-format
+msgid "Resources that were promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
+msgstr "Resursele care au fost promovate: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
 

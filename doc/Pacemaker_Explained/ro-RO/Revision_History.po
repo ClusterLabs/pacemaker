@@ -1,84 +1,75 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-16 07:25+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
-"X-Poedit-Country: ROMANIA\n"
 
-#: Revision_History.xml:5(title)
+#. Tag: title
+#, no-c-format
 msgid "Revision History"
 msgstr "Istoricul Reviziilor"
 
-#: Revision_History.xml:9(revnumber)
-msgid "1"
-msgstr "1"
-
-#: Revision_History.xml:10(date)
-msgid "19 Oct 2009"
-msgstr "19 Oct 2009"
-
-#: Revision_History.xml:11(firstname)
-#: Revision_History.xml:17(firstname)
-#: Revision_History.xml:23(firstname)
+#. Tag: firstname
+#, no-c-format
 msgid "Andrew"
 msgstr "Andrew"
 
-#: Revision_History.xml:11(surname)
-#: Revision_History.xml:17(surname)
-#: Revision_History.xml:23(surname)
+#. Tag: surname
+#, no-c-format
 msgid "Beekhof"
 msgstr "Beekhof"
 
-#: Revision_History.xml:11(email)
-#: Revision_History.xml:17(email)
-#: Revision_History.xml:23(email)
-msgid "andrew@beekhof.net"
-msgstr "andrew@beekhof.net"
-
-#: Revision_History.xml:12(member)
+#. Tag: member
+#, no-c-format
 msgid "Import from Pages.app"
 msgstr "Import din Pages.app"
 
-#: Revision_History.xml:15(revnumber)
-msgid "2"
-msgstr "2"
-
-#: Revision_History.xml:16(date)
-msgid "26 Oct 2009"
-msgstr "26 Oct 2009"
-
-#: Revision_History.xml:18(member)
+#. Tag: member
+#, no-c-format
 msgid "Cleanup and reformatting of docbook xml complete"
 msgstr "Curăţarea şi reformatarea xml-ului pentru docbook terminată"
 
-#: Revision_History.xml:21(revnumber)
-msgid "3"
-msgstr "3"
-
-#: Revision_History.xml:22(date)
-msgid "Tue Nov 12 2009"
-msgstr "Tue Nov 12 2009"
-
-#: Revision_History.xml:26(member)
+#. Tag: member
+#, no-c-format
 msgid "Split book into chapters and pass validation"
 msgstr "Împărţirea cărţii în capitole şi trecerea validării"
 
-#: Revision_History.xml:27(ulink)
-msgid "Publican"
-msgstr "Publican"
+#. Tag: member
+#, no-c-format
+msgid "Re-organize book for use with <ulink url=\"https://fedorahosted.org/publican/\">Publican</ulink>"
+msgstr ""
 
-#: Revision_History.xml:27(member)
-msgid "Re-organize book for use with <placeholder-1/>"
-msgstr "Reorganizarea cărţii pentru folosirea cu <placeholder-1/>"
+#~ msgid "1"
+#~ msgstr "1"
 
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Revision_History.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
+#~ msgid "19 Oct 2009"
+#~ msgstr "19 Oct 2009"
 
+#~ msgid "andrew@beekhof.net"
+#~ msgstr "andrew@beekhof.net"
+
+#~ msgid "2"
+#~ msgstr "2"
+
+#~ msgid "26 Oct 2009"
+#~ msgstr "26 Oct 2009"
+
+#~ msgid "3"
+#~ msgstr "3"
+
+#~ msgid "Tue Nov 12 2009"
+#~ msgstr "Tue Nov 12 2009"
+
+#~ msgid "Publican"
+#~ msgstr "Publican"
+
+#~ msgid "Re-organize book for use with <placeholder-1/>"
+#~ msgstr "Reorganizarea cărţii pentru folosirea cu <placeholder-1/>"
+
+#~ msgid "translator-credits"
+#~ msgstr "genericul-traducătorului"

@@ -1,212 +1,244 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-23 13:05+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ap-Upgrade-Config.xml:2(title)
+#. Tag: title
+#, no-c-format
 msgid "Upgrading the Configuration from 0.6"
 msgstr "Actualizarea Configuraţiei de la 0.6"
 
-#: Ap-Upgrade-Config.xml:4(title)
+#. Tag: title
+#, no-c-format
 msgid "Preparation"
 msgstr "Pregătire"
 
-#: Ap-Upgrade-Config.xml:5(para)
-msgid "Download the latest DTD from <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\"/> and ensure your configuration validates."
-msgstr "Descărcaţi cel mai recent DTD de la <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\"/> şi asiguraţi-vă că, configuraţia se validează."
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Upgrading the Configuration</primary>"
+msgstr "<primary>Actualizarea Configuraţiei</primary>"
 
-#: Ap-Upgrade-Config.xml:8(title)
-#: Ap-Upgrade-Config.xml:32(para)
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Configuration</primary><secondary>Upgrading</secondary>"
+msgstr "<primary>Actualizarea</primary><secondary>Configuraţiei</secondary>"
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Download</primary><secondary>DTD</secondary></indexterm> <indexterm significance=\"preferred\"><primary>DTD</primary><secondary>Download</secondary></indexterm> Download the latest DTD<footnote><para><ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\" /></para></footnote> and ensure your configuration validates."
+msgstr "<indexterm significance=\"preferred\"><primary>Descărcaţi</primary><secondary>DTD</secondary></indexterm> <indexterm significance=\"preferred\"><primary>DTD</primary><secondary>Descărcaţi</secondary></indexterm> Descărcaţi cel mai recent DTD de la<footnote><para><ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\" /></para></footnote>> şi asiguraţi-vă că, configuraţia voastră se validează."
+
+#. Tag: title
+#, no-c-format
 msgid "Perform the upgrade"
 msgstr "Realizaţi actualizarea"
 
-#: Ap-Upgrade-Config.xml:10(title)
+#. Tag: title
+#, no-c-format
 msgid "Upgrade the software"
 msgstr "Actualizaţi software-ul"
 
-#: Ap-Upgrade-Config.xml:11(para)
-msgid "Refer to the appendix: <xref linkend=\"ap-upgrade\"/>"
-msgstr "Consultaţi anexa: <xref linkend=\"ap-upgrade\"/>"
+#. Tag: para
+#, no-c-format
+msgid "Refer to the appendix: <xref linkend=\"ap-upgrade\" />"
+msgstr "Consultaţi anexa: <xref linkend=\"ap-upgrade\" />"
 
-#: Ap-Upgrade-Config.xml:14(title)
+#. Tag: title
+#, no-c-format
 msgid "Upgrade the Configuration"
 msgstr "Actualizaţi Configuraţia"
 
-#: Ap-Upgrade-Config.xml:15(para)
+#. Tag: para
+#, no-c-format
 msgid "As XML is not the friendliest of languages, it is common for cluster administrators to have scripted some of their activities. In such cases, it is likely that those scripts will not work with the new 1.0 syntax."
 msgstr "Cum XML-ul nu este cel mai prietenos dintre limbaje, este obişnuit pentru administratorii de cluster să fi scriptat unele dintre activităţile acestora. În astfel de cazuri, este probabil ca acele scripturi să nu funcţioneze cu noua sintaxă 1.0."
 
-#: Ap-Upgrade-Config.xml:16(para)
+#. Tag: para
+#, no-c-format
 msgid "In order to support such environments, it is actually possible to continue using the old 0.6 syntax."
 msgstr "Pentru a suporta astfel de medii, este chiar posibilă continuarea folosirii sintaxei vechi de 0.6."
 
-#: Ap-Upgrade-Config.xml:17(para)
-msgid "The downside however, is that not all the new features will be available and there is a performance impact since the cluster must do a non-persistent configuration upgrade before each transition. So while using the old syntax is possible, it is not advisable to continue using it indefinitely."
+#. Tag: para
+#, no-c-format
+msgid "The downside is, however, that not all the new features will be available and there is a performance impact since the cluster must do a non-persistent configuration upgrade before each transition. So while using the old syntax is possible, it is not advisable to continue using it indefinitely."
 msgstr "Partea nefastă însă, este că nu toate funcţionalităţile noi vor fi disponibile şi este un impact de performanţă din moment ce clusterul trebuie să execute o actualizare non-persistentă a configuraţiei înainte de fiecare tranziţie. Deci în timp ce folosirea sintaxei vechi este posibilă, nu este recomandată folosirea acesteia pe termen nelimitat."
 
-#: Ap-Upgrade-Config.xml:18(para)
+#. Tag: para
+#, no-c-format
 msgid "Even if you wish to continue using the old syntax, it is advisable to follow the upgrade procedure to ensure that the cluster is able to use your existing configuration (since it will perform much the same task internally)."
 msgstr "Chiar dacă doriţi să continuaţi folosirea sintaxei vechi, este recomandat să urmaţi procedura de actualizare pentru a vă asigura că clusterul este capabil să  folosească configuraţia existentă (din moment ce va efectua în mare parte aceeaşi sarcină intern)."
 
-#: Ap-Upgrade-Config.xml:21(para)
-msgid "Create a shadow copy to work with"
-msgstr "Creaţi o copie ascunsă pe care să lucraţi"
+#. Tag: para
+#, no-c-format
+msgid "Create a <indexterm><primary>shadow copy</primary><secondary>example for upgrading</secondary></indexterm>shadow copy to work with"
+msgstr "Creaţi o <indexterm><primary>copie ascunsă</primary><secondary>exemplu pentru actualizare</secondary></indexterm>copie ascunsă pe care să lucraţi"
 
-#: Ap-Upgrade-Config.xml:22(command)
-msgid "crm_shadow --create upgrade06"
-msgstr "crm_shadow --create upgrade06"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_shadow --create upgrade06</command>"
+msgstr "<command>crm_shadow --create upgrade06</command>"
 
-#: Ap-Upgrade-Config.xml:25(para)
-msgid "Verify the configuration is valid"
-msgstr "Verificaţi că, configuraţia este validă"
+#. Tag: para
+#, no-c-format
+msgid "Verify the <indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Verify</secondary></indexterm><indexterm significance=\"preferred\"><primary>Verify</primary><secondary>Configuration</secondary></indexterm>configuration is valid"
+msgstr "Verificați că, <indexterm significance=\"preferred\"><primary>Configurația</primary><secondary>Verificați</secondary></indexterm><indexterm significance=\"preferred\"><primary>Verificați</primary><secondary>Configurația</secondary></indexterm>configuraţia este validă"
 
-#: Ap-Upgrade-Config.xml:26(command)
-msgid "crm_verify --live-check"
-msgstr "crm_verify --live-check"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_verify --live-check</command>"
+msgstr "<command>crm_verify --live-check</command>"
 
-#: Ap-Upgrade-Config.xml:29(para)
+#. Tag: para
+#, no-c-format
 msgid "Fix any errors or warnings"
 msgstr "Reparaţi orice erori sau avertismente"
 
-#: Ap-Upgrade-Config.xml:33(command)
-msgid "cibadmin --upgrade"
-msgstr "cibadmin --upgrade"
+#. Tag: para
+#, no-c-format
+msgid "Perform the upgrade:"
+msgstr "Realizaţi actualizarea"
 
-#: Ap-Upgrade-Config.xml:34(para)
-msgid "If this step fails, there are three main possibilities"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>cibadmin --upgrade</command>"
+msgstr "<command>cibadmin --upgrade</command>"
+
+#. Tag: para
+#, no-c-format
+msgid "If this step fails, there are three main possibilities:"
 msgstr "Dacă acest pas eşuează, sunt trei posibilităţi principale"
 
-#: Ap-Upgrade-Config.xml:36(para)
+#. Tag: para
+#, no-c-format
 msgid "The configuration was not valid to start with - go back to step 2"
 msgstr "Configuraţia nu a fost validă de la început - mergeţi înapoi la pasul 2"
 
-#: Ap-Upgrade-Config.xml:37(para)
-msgid "The transformation failed - report a bug or email the project at <ulink url=\"mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\">pacemaker@oss.clusterlabs.org</ulink>"
-msgstr "Transformarea a eşuat - raportaţi un bug sau trimite-ţi un email către proiect la <ulink url=\"mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\">pacemaker@oss.clusterlabs.org</ulink>"
+#. Tag: para
+#, no-c-format
+msgid "The transformation failed - report a bug or email the project<footnote><para><ulink url=\"mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\" /></para></footnote>"
+msgstr "Transformarea a eşuat - raportaţi un bug sau trimite-ţi un email către proiect la <footnote><para><ulink url=\"mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\">pacemaker@oss.clusterlabs.org</ulink></para></footnote>"
 
-#: Ap-Upgrade-Config.xml:40(para)
-msgid "The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation"
-msgstr "Cel mai comun motiv îl reprezintă valorile ID-ului fiind repetate sau invalide. Pacemaker 1.0 este mult mai strict în privinţa acestui tip de validare"
+#. Tag: para
+#, no-c-format
+msgid "The transformation was successful but produced an invalid result<footnote> <para>The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation.</para> </footnote>"
+msgstr "Transformarea a reuşit dar a produs un rezultat invalid<footnote> <para>Cel mai comun motiv îl reprezintă valorile ID-ului fiind repetate sau invalide. Pacemaker 1.0 este mult mai strict în privinţa acestui tip de validare.</para> </footnote>"
 
-#: Ap-Upgrade-Config.xml:38(para)
-msgid "The transformation was successful but produced an invalid result <placeholder-1/>"
-msgstr "Transformarea a reuşit dar a produs un rezultat invalid <placeholder-1/>"
+#. Tag: para
+#, no-c-format
+msgid "If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\" /> and/or try the procedure described below under <xref linkend=\"s-upgrade-config-manual\" />."
+msgstr "Dacă rezultatul transformării este invalid, se pot observa un număr de erori de la biblioteca de validare. Dacă acestea nu sunt folositoare, vizitaţi <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\" /> şi/sau încercaţi următoarea procedură descrisă mai jos sub <xref linkend=\"s-upgrade-config-manual\" />."
 
-#: Ap-Upgrade-Config.xml:44(para)
-msgid "If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\"/> and/or try the following procedure described below under <xref linkend=\"s-upgrade-config-manual\"/>."
-msgstr "Dacă rezultatul transformării este invalid, se pot observa un număr de erori de la biblioteca de validare. Dacă acestea nu sunt folositoare, vizitaţi <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\"/> şi/sau încercaţi următoarea procedură descrisă mai jos sub <xref linkend=\"s-upgrade-config-manual\"/>."
-
-#: Ap-Upgrade-Config.xml:47(para)
+#. Tag: para
+#, no-c-format
 msgid "Check the changes"
 msgstr "Verificaţi modificările"
 
-#: Ap-Upgrade-Config.xml:48(command)
-msgid "crm_shadow --diff"
-msgstr "crm_shadow --diff"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_shadow --diff</command>"
+msgstr "<command>crm_shadow --diff</command>"
 
-#: Ap-Upgrade-Config.xml:49(para)
+#. Tag: para
+#, no-c-format
 msgid "If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:"
 msgstr "Dacă la acest punct există orice legat de actualizare ce doriţi să reglaţi fin (de exemplu, să schimbaţi unele din ID-urile automate) acum este momentul să realizaţi acest lucru. Din moment ce configuraţia ascunsă nu este folosită de către cluster, este neprimejdios să editaţi fişierul manual:"
 
-#: Ap-Upgrade-Config.xml:50(command)
-msgid "crm_shadow --edit"
-msgstr "crm_shadow --edit"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_shadow --edit</command>"
+msgstr "<command>crm_shadow --edit</command>"
 
-#: Ap-Upgrade-Config.xml:51(para)
-msgid "Will open the configuration in your favorite editor (or whichever one is specified by the standard <envar>EDITOR</envar> environment variable)."
+#. Tag: para
+#, no-c-format
+msgid "This will open the configuration in your favorite editor (whichever is specified by the standard <envar>$EDITOR</envar> environment variable)."
 msgstr "Va deschide configuraţia în editorul vostru preferat (sau oricare este specificat de variabila standard de mediu <envar>EDITOR</envar>)"
 
-#: Ap-Upgrade-Config.xml:54(para)
+#. Tag: para
+#, no-c-format
 msgid "Preview how the cluster will react"
 msgstr "Previzualizaţi cum va reacţiona clusterul"
 
-#: Ap-Upgrade-Config.xml:55(para)
+#. Tag: para
+#, no-c-format
 msgid "Test what the cluster will do when you upload the new configuration"
 msgstr "Testaţi ce va face clusterul când încărcaţi noua configuraţie"
 
-#: Ap-Upgrade-Config.xml:56(filename)
-msgid "upgrade06.dot"
-msgstr "upgrade06.dot"
+#. Tag: programlisting
+#, no-c-format
+msgid "# <command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>\n"
+"# <command>graphviz upgrade06.dot</command>"
+msgstr ""
+"# <command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>\n"
+"# <command>graphviz upgrade06.dot</command>"
 
-#: Ap-Upgrade-Config.xml:56(command)
-msgid "ptest -VVVVV --live-check --save-dotfile <placeholder-1/>"
-msgstr "ptest -VVVVV --live-check --save-dotfile <placeholder-1/>"
+#. Tag: para
+#, no-c-format
+msgid "Verify that either no resource actions will occur or that you are happy with any that are scheduled. If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes. See <xref linkend=\"s-config-testing-changes\" /> for further details on how to interpret the output of ptest."
+msgstr "Verificaţi că fie nu vor avea loc acţiuni ale resurelor sau că sunteţi mulţumiţi cu cele care sunt programate. Dacă rezultatul conţine acţiuni pe care nu le aşteptaţi (posibil datorită modificărilor în calculul scorurilor), ar putea fi necesar să realizaţi modificări suplimentare manual. Vedeţi <xref linkend=\"s-config-testing-changes\" /> pentru detalii suplimentare despre cum să interpretaţi rezultatul de ieşire al ptest."
 
-#: Ap-Upgrade-Config.xml:57(command)
-msgid "graphviz upgrade06.dot"
-msgstr "graphviz upgrade06.dot"
-
-#: Ap-Upgrade-Config.xml:58(para)
-msgid "Verify that either no resource actions will occur or that you are happy with any that are scheduled. If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes. See <xref linkend=\"s-config-testing-changes\"/> for further details on how to interpret the output of ptest."
-msgstr "Verificaţi că fie nu vor avea loc acţiuni ale resurelor sau că sunteţi mulţumiţi cu cele care sunt programate. Dacă rezultatul conţine acţiuni pe care nu le aşteptaţi (posibil datorită modificărilor în calculul scorurilor), ar putea fi necesar să realizaţi modificări suplimentare manual. Vedeţi <xref linkend=\"s-config-testing-changes\"/> pentru detalii suplimentare despre cum să interpretaţi rezultatul de ieşire al ptest."
-
-#: Ap-Upgrade-Config.xml:65(para)
+#. Tag: para
+#, no-c-format
 msgid "Upload the changes"
 msgstr "Încărcaţi modificările"
 
-#: Ap-Upgrade-Config.xml:66(command)
-msgid "crm_shadow --commit upgrade06 --force"
-msgstr "crm_shadow --commit upgrade06 --force"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_shadow --commit upgrade06 --force</command>"
+msgstr "<command>crm_shadow --commit upgrade06 --force</command>"
 
-#: Ap-Upgrade-Config.xml:67(para)
+#. Tag: para
+#, no-c-format
 msgid "If this step fails, something really strange has occurred. You should report a bug."
 msgstr "Dacă acest pas eşuează, ceva cu adevărat ciudat s-a întâmplat. Ar trebui să raportaţi bug-ul."
 
-#: Ap-Upgrade-Config.xml:72(title)
+#. Tag: title
+#, no-c-format
 msgid "Manually Upgrading the Configuration"
 msgstr "Actualizarea Manuală a Configuraţiei"
 
-#: Ap-Upgrade-Config.xml:73(para)
-msgid "It is also possible to perform the configuration upgrade steps manually. To do this"
-msgstr "Este de asemenea posibil să efectuaţi paşii de actualizare ai configuraţiei manual. Pentru a realiza acest lucru"
+#. Tag: para
+#, no-c-format
+msgid "It is also possible to perform the <indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Upgrade manually</secondary></indexterm>configuration upgrade steps manually. To do this"
+msgstr "Este de asemenea posibil să efectuaţi <indexterm significance=\"preferred\"><primary>Configurație</primary><secondary>Actualizare manuală</secondary></indexterm>paşii de actualizare ai configuraţiei manual. Pentru a realiza acest lucru"
 
-#: Ap-Upgrade-Config.xml:76(para)
+#. Tag: para
+#, no-c-format
 msgid "Locate the <filename>upgrade06.xsl</filename> conversion script or download the latest version from <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/xml/upgrade06.xsl\">version control</ulink>"
 msgstr "Localizaţi scriptul de conversie <filename>upgrade06.xsl</filename> sau descărcaţi cea mai recentă versiune de <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/xml/upgrade06.xsl\">controlul versiunii</ulink>"
 
-#: Ap-Upgrade-Config.xml:80(filename)
-msgid "/path/to/upgrade06.xsl"
-msgstr "/calea/către/upgrade06.xsl"
+#. Tag: para
+#, no-c-format
+msgid "Convert the <indexterm><primary>XML</primary><secondary>Convert</secondary></indexterm>XML blob:"
+msgstr "Convertiți <indexterm><primary>XML</primary><secondary>Convertiți</secondary></indexterm>XML-ul:"
 
-#: Ap-Upgrade-Config.xml:80(filename)
-msgid "config06.xml"
-msgstr "config06.xml"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>xsltproc <filename>/path/to/upgrade06.xsl</filename> <filename>config06.xml</filename> &gt; <filename>config10.xml</filename></command>"
+msgstr "<command>xsltproc <filename>/calea/către/upgrade06.xsl</filename> <filename>config06.xml</filename> &gt; <filename>config10.xml</filename></command>"
 
-#: Ap-Upgrade-Config.xml:80(filename)
-#: Ap-Upgrade-Config.xml:86(filename)
-msgid "config10.xml"
-msgstr "config10.xml"
-
-#: Ap-Upgrade-Config.xml:80(command)
-msgid "xsltproc <placeholder-1/><placeholder-2/> &gt; <placeholder-3/>"
-msgstr "xsltproc <placeholder-1/><placeholder-2/> &gt; <placeholder-3/>"
-
-#: Ap-Upgrade-Config.xml:83(para)
+#. Tag: para
+#, no-c-format
 msgid "Locate the <filename>pacemaker.rng</filename> script."
 msgstr "Localizaţi scriptul <filename>pacemaker.rng</filename>."
 
-#: Ap-Upgrade-Config.xml:86(filename)
-msgid "/path/to/pacemaker.rng"
-msgstr "/calea/către/pacemaker.rng"
+#. Tag: para
+#, no-c-format
+msgid "Check the <indexterm significance=\"preferred\"><primary>Validate</primary><secondary>XML</secondary></indexterm><indexterm><primary>xmllint</primary><secondary>Validate XML</secondary></indexterm>XML validity:"
+msgstr "Verificați <indexterm significance=\"preferred\"><primary>Validați</primary><secondary>XML</secondary></indexterm><indexterm><primary>xmllint</primary><secondary>Validați XML-ul</secondary></indexterm>validitatea XML-ului:"
 
-#: Ap-Upgrade-Config.xml:86(command)
-msgid "xmllint --relaxng <placeholder-1/><placeholder-2/>"
-msgstr "xmllint --relaxng <placeholder-1/><placeholder-2/>"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>xmllint --relaxng <filename>/path/to/pacemaker.rng</filename> <filename>config10.xml</filename></command>"
+msgstr "<command>xmllint --relaxng <filename>/calea/către/pacemaker.rng</filename> <filename>config10.xml</filename></command>"
 
-#: Ap-Upgrade-Config.xml:90(para)
+#. Tag: para
+#, no-c-format
 msgid "The advantage of this method is that it can be performed without the cluster running and any validation errors should be more informative (despite being generated by the same library!) since they include line numbers."
 msgstr "Avantajul acestei metode este acela că poate fi efectuată fară ca şi clusterul să funcţioneze şi orice erori de validare ar trebui să fie cu caracter mai informativ (în ciuda faptului că sunt generate de aceeaşi bibliotecă!) din moment ce includ numerele liniilor."
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ap-Upgrade-Config.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
 

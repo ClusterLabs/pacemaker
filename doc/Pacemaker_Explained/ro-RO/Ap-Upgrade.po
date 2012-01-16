@@ -1,328 +1,361 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-23 19:24+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ap-Upgrade.xml:2(title)
+#. Tag: title
+#, no-c-format
 msgid "Upgrading Cluster Software"
 msgstr "Actualizarea Soft-ului de Cluster"
 
-#: Ap-Upgrade.xml:4(title)
-#: Ap-Upgrade.xml:140(title)
+#. Tag: title
+#, no-c-format
 msgid "Version Compatibility"
 msgstr "Compatibilitatea Versiunii"
 
-#: Ap-Upgrade.xml:5(para)
-msgid "When releasing newer versions we take care to make sure we are backwardly compatible with older versions. While you will always be able to upgrade from version x to x+1, in order to continue to produce high quality software it may occasionally be necessary to drop compatibility with older versions."
+#. Tag: para
+#, no-c-format
+msgid "When releasing newer versions we take care to make sure we are backwards compatible with older versions. While you will always be able to upgrade from version x to x+1, in order to continue to produce high quality software it may occasionally be necessary to drop compatibility with older versions."
 msgstr "Când lansăm versiuni noi avem grijă că suntem compatibili invers cu versiunile anterioare. În timp ce veţi putea oricând să actualizaţi de la versiunea x la x+1, pentru a putea să continuăm producţia de soft de înaltă calitate ar putea fi necesar în mod ocazional să renunţăm la compatibilitatea cu versiunile mai vechi."
 
-#: Ap-Upgrade.xml:6(para)
+#. Tag: para
+#, no-c-format
 msgid "There will always be an upgrade path from any series-2 release to any other series-2 release."
 msgstr "Întotdeauna va exista o cale de actualizare de la oricare produs lansat în seria-2 la oricare alt produs lansat în aceeaşi serie-2."
 
-#: Ap-Upgrade.xml:7(para)
-msgid "There are three approaches to upgrading your cluster software"
+#. Tag: para
+#, no-c-format
+msgid "There are three approaches to upgrading your cluster software:"
 msgstr "Sunt trei alternative în scopul actualizării soft-ului de cluster"
 
-#: Ap-Upgrade.xml:9(para)
-#: Ap-Upgrade.xml:65(title)
+#. Tag: para
+#, no-c-format
 msgid "Complete Cluster Shutdown"
 msgstr "Oprirea Completă a Clusterului"
 
-#: Ap-Upgrade.xml:10(para)
-#: Ap-Upgrade.xml:101(title)
+#. Tag: para
+#, no-c-format
 msgid "Rolling (node by node)"
 msgstr "Secvenţial (nod după nod)"
 
-#: Ap-Upgrade.xml:11(para)
-#: Ap-Upgrade.xml:186(title)
+#. Tag: para
+#, no-c-format
 msgid "Disconnect and Reattach"
 msgstr "Deconectează şi Reataşează"
 
-#: Ap-Upgrade.xml:13(para)
+#. Tag: para
+#, no-c-format
 msgid "Each method has advantages and disadvantages, some of which are listed in the table below, and you should chose the one most appropriate to your needs."
 msgstr "Fiecare metodă are avantaje şi dezavantaje, unele dintre acestea sunt listate în tabelul de mai jos şi ar trebui să o alegeţi pe aceea cel mai apropiată de nevoile voastre."
 
-#: Ap-Upgrade.xml:15(title)
+#. Tag: title
+#, no-c-format
 msgid "Summary of Upgrade Methodologies"
 msgstr "Sumar al Metodologiilor de Actualizare"
 
-#: Ap-Upgrade.xml:19(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Type"
 msgstr "Tip"
 
-#: Ap-Upgrade.xml:20(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Available between all software versions"
 msgstr "Disponibil între toate versiunile de soft"
 
-#: Ap-Upgrade.xml:21(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Service Outage During Upgrade"
 msgstr "Indisponibilitatea Serviciului pe Durata Actualizării"
 
-#: Ap-Upgrade.xml:22(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Service Recovery During Upgrade"
 msgstr "Recuperarea Serviciului pe Durata Actualizării"
 
-#: Ap-Upgrade.xml:23(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Exercises Failover Logic/Configuration"
 msgstr "Exersează Logica/Configuraţia de Failover"
 
-#: Ap-Upgrade.xml:27(para)
-msgid "For example, switching from Heartbeat to Corosync. Consult the Heartbeat or Corosync documentation to see if upgrading them to a newer version is also supported"
-msgstr "De exemplu, trecerea de la Heartbeat la Corosync. Consultaţi documentaţia de Heartbeat sau Corosync pentru vedea dacă actualizarea acestora la o versiune mai nouă este de asemenea suportată"
+#. Tag: entry
+#, no-c-format
+msgid "Allows change of cluster stack type<footnote> <para> <indexterm significance=\"preferred\"><primary>Cluster Stack</primary><secondary>switching between</secondary></indexterm> For example, switching from Heartbeat to Corosync. Consult the Heartbeat or Corosync documentation to see if upgrading them to a newer version is also supported. </para> </footnote>"
+msgstr "Permite schimbarea tipului de stivă de cluster<footnote> <para> <indexterm significance=\"preferred\"><primary>Stivă de Cluster</primary><secondary>trecerea de la</secondary></indexterm> De exemplu, trecerea de la Heartbeat la Corosync. Consultaţi documentaţia de Heartbeat sau Corosync pentru vedea dacă actualizarea acestora la o versiune mai nouă este de asemenea suportată. </para> </footnote>"
 
-#: Ap-Upgrade.xml:24(entry)
-msgid "Allows change of cluster stack type <placeholder-1/>"
-msgstr "Permite schimbarea tipului de stivă de cluster <placeholder-1/>"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Shutdown</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Shutdown Upgrade</primary></indexterm> Shutdown"
+msgstr "<indexterm significance=\"preferred\"><primary>Actualizare</primary><secondary>Închidere</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Închidere pentru Actualizare</primary></indexterm> Închidere"
 
-#: Ap-Upgrade.xml:37(entry)
-msgid "Shutdown"
-msgstr "Închidere"
-
-#: Ap-Upgrade.xml:38(entry)
-#: Ap-Upgrade.xml:42(entry)
-#: Ap-Upgrade.xml:48(entry)
-#: Ap-Upgrade.xml:49(entry)
-#: Ap-Upgrade.xml:54(entry)
-#: Ap-Upgrade.xml:58(entry)
+#. Tag: entry
+#, no-c-format
 msgid "yes"
 msgstr "da"
 
-#: Ap-Upgrade.xml:39(entry)
-#: Ap-Upgrade.xml:47(entry)
+#. Tag: entry
+#, no-c-format
 msgid "always"
 msgstr "întotdeauna"
 
-#: Ap-Upgrade.xml:40(entry)
+#. Tag: entry
+#, no-c-format
 msgid "N/A"
 msgstr "N/A"
 
-#: Ap-Upgrade.xml:41(entry)
-#: Ap-Upgrade.xml:46(entry)
-#: Ap-Upgrade.xml:50(entry)
-#: Ap-Upgrade.xml:56(entry)
-#: Ap-Upgrade.xml:57(entry)
+#. Tag: entry
+#, no-c-format
 msgid "no"
 msgstr "nu"
 
-#: Ap-Upgrade.xml:45(entry)
-msgid "Rolling"
-msgstr "Secvenţial"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Rolling</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Rolling Upgrade</primary></indexterm> Rolling"
+msgstr "<indexterm significance=\"preferred\"><primary>Actualizare</primary><secondary>Secvenţială</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Actualizare Secvenţială</primary></indexterm> Secvenţială"
 
-#: Ap-Upgrade.xml:53(entry)
-msgid "Reattach"
-msgstr "Reataşare"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Reattach</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Reattach Upgrade</primary></indexterm> Reattach"
+msgstr "<indexterm significance=\"preferred\"><primary>Actualizare</primary><secondary>Reatașare</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Actualizare cu Reatașare</primary></indexterm> Reatașare"
 
-#: Ap-Upgrade.xml:55(entry)
+#. Tag: entry
+#, no-c-format
 msgid "only due to failure"
 msgstr "doar din cauza eşecului"
 
-#: Ap-Upgrade.xml:66(para)
+#. Tag: para
+#, no-c-format
 msgid "In this scenario one shuts down all cluster nodes and resources and upgrades all the nodes before restarting the cluster."
 msgstr "În acest scenariu se închid toate nodurile şi resursele clusterului şi se actualizează toate nodurile înainte de a reporni clusterul."
 
-#: Ap-Upgrade.xml:67(title)
-#: Ap-Upgrade.xml:115(title)
-#: Ap-Upgrade.xml:189(title)
+#. Tag: title
+#, no-c-format
 msgid "Procedure"
 msgstr "Procedură"
 
-#: Ap-Upgrade.xml:70(para)
-#: Ap-Upgrade.xml:87(para)
-#: Ap-Upgrade.xml:116(para)
-#: Ap-Upgrade.xml:203(para)
-#: Ap-Upgrade.xml:217(para)
+#. Tag: para
+#, no-c-format
 msgid "On each node:"
 msgstr "Pe fiecare nod:"
 
-#: Ap-Upgrade.xml:73(para)
-#: Ap-Upgrade.xml:119(para)
-#: Ap-Upgrade.xml:206(para)
+#. Tag: para
+#, no-c-format
 msgid "Shutdown the cluster stack (Heartbeat or Corosync)"
 msgstr "Închideţi stiva de cluster (Heartbeat sau Corosync)"
 
-#: Ap-Upgrade.xml:76(para)
+#. Tag: para
+#, no-c-format
 msgid "Upgrade the Pacemaker software. This may also include upgrading the cluster stack and/or the underlying operating system."
 msgstr "Actualizaţi soft-ul Pacemaker. Acest lucru poate include actualizarea stivei de cluster şi/sau a sistemului de operare de bază."
 
-#: Ap-Upgrade.xml:84(para)
-#: Ap-Upgrade.xml:214(para)
+#. Tag: para
+#, no-c-format
 msgid "Check the configuration manually or with the <command>crm_verify</command> tool if available."
 msgstr "Verificaţi configuraţia manual sau cu utilitarul <command>crm_verify</command> dacă este disponibil."
 
-#: Ap-Upgrade.xml:90(para)
-#: Ap-Upgrade.xml:219(para)
+#. Tag: para
+#, no-c-format
 msgid "Start the cluster stack. This can be either Corosync or Heartbeat and does not need to be the same as the previous cluster stack."
 msgstr "Porniţi stiva de cluster. Aceasta poate fi oricare dintre Corosync sau Heartbeat şi nu trebuie să fie aceeaşi ca stiva anterioară de cluster."
 
-#: Ap-Upgrade.xml:102(para)
+#. Tag: para
+#, no-c-format
 msgid "In this scenario each node is removed from the cluster, upgraded and then brought back online until all nodes are running the newest version."
 msgstr "În acest scenariu fiecare nod este scos din cluster, actualizat şi apoi adus înapoi online până ce toate nodurile rulează pe cea mai recentă versiune."
 
-#: Ap-Upgrade.xml:104(para)
-msgid "This method is currently broken between Pacemaker 0.6.x and 1.0.x"
+#. Tag: para
+#, no-c-format
+msgid "This method is currently broken between Pacemaker 0.6.x and 1.0.x."
 msgstr "Această metodă este în prezent nefuncţională între Pacemaker 0.6.x şi 1.0.x"
 
-#: Ap-Upgrade.xml:107(para)
-msgid "Measures have been put into place to ensure rolling upgrades always work for versions after 1.0.0 If there is sufficient demand, the work to repair 0.6 -&gt; 1.0 compatibility will be carried out. Otherwise, please try one of the other upgrade strategies. Detach/Reattach is a particularly good option for most people."
+#. Tag: para
+#, no-c-format
+msgid "Measures have been put into place to ensure rolling upgrades always work for versions after 1.0.0. If there is sufficient demand, the work to repair 0.6 -&gt; 1.0 compatibility will be carried out. Otherwise, please try one of the other upgrade strategies. Detach/Reattach is a particularly good option for most people."
 msgstr "Măsuri au fost implementate pentru a asigura că actualizările secvenţiale vor funcţiona întotdeauna pentru versiunile după 1.0.0. Dacă există o cerere suficientă, munca necesară pentru a repara compatibilitatea între 0.6 -&gt; 1.0 va fi dusă la final. În caz contrar, vă rugăm să încercaţi una din celelalte strategii de actualizare. Detaşare/Reataşare este o opţiune deosebit de bună pentru majoritatea persoanelor."
 
-#: Ap-Upgrade.xml:122(para)
-msgid "Upgrade the Pacemaker software. This may also include upgrading the cluster stack and/or the underlying operating system."
-msgstr "Actualizaţi soft-ul Pacemaker. Acest lucru poate include actualizarea stivei de cluster şi/sau a sistemului de operare de bază."
-
-#: Ap-Upgrade.xml:125(para)
+#. Tag: para
+#, no-c-format
 msgid "On the first node, check the configuration manually or with the <command>crm_verify</command> tool if available."
 msgstr "Pe primul nod, verificaţi configuraţia manual sau cu utilitarul <command>crm_verify</command> dacă este disponibil."
 
-#: Ap-Upgrade.xml:130(para)
+#. Tag: para
+#, no-c-format
 msgid "Start the cluster stack. This must be the same type of cluster stack (Corosync or Heartbeat) that the rest of the cluster is using. Upgrading Corosync/Heartbeat may also be possible, please consult the documentation for those projects to see if the two versions will be compatible."
 msgstr "Porniţi stiva de cluster. Aceasta trebuie să fie acelaşi tip de stivă de cluster (Corosync sau Heartbeat) care este folosită de către restul clusterului. Actualizarea Corosync/Heartbeat este posibilă de asemenea, vă rugăm să consultaţi documentaţia pentru acele proiecte pentru a vedea dacă cele două versiuni vor fi compatibile."
 
-#: Ap-Upgrade.xml:137(para)
-msgid "Repeat for each node in the cluster"
+#. Tag: para
+#, no-c-format
+msgid "Repeat for each node in the cluster."
 msgstr "Repetaţi pentru fiecare nod din cluster"
 
-#: Ap-Upgrade.xml:142(title)
+#. Tag: title
+#, no-c-format
 msgid "Version Compatibility Table"
 msgstr "Tabel cu Compatibilitatea Versiunilor"
 
-#: Ap-Upgrade.xml:146(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Version being Installed"
 msgstr "Versiunea care este Instalată"
 
-#: Ap-Upgrade.xml:147(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Oldest Compatible Version"
 msgstr "Cea mai Veche Versiune Compatibilă"
 
-#: Ap-Upgrade.xml:150(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Pacemaker 1.0.x"
 msgstr "Pacemaker 1.0.x"
 
-#: Ap-Upgrade.xml:151(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Pacemaker 1.0.0"
 msgstr "Pacemaker 1.0.0"
 
-#: Ap-Upgrade.xml:154(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Pacemaker 0.7.x"
 msgstr "Pacemaker 0.7.x"
 
-#: Ap-Upgrade.xml:155(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Pacemaker 0.6 or Heartbeat 2.1.3"
 msgstr "Pacemaker 0.6 sau Heartbeat 2.1.3"
 
-#: Ap-Upgrade.xml:158(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Pacemaker 0.6.x"
 msgstr "Pacemaker 0.6.x"
 
-#: Ap-Upgrade.xml:159(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Heartbeat 2.0.8"
 msgstr "Heartbeat 2.0.8"
 
-#: Ap-Upgrade.xml:162(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Heartbeat 2.1.3 (or less)"
 msgstr "Heartbeat 2.1.3 (sau mai mică)"
 
-#: Ap-Upgrade.xml:163(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Heartbeat 2.0.4"
 msgstr "Heartbeat 2.0.4"
 
-#: Ap-Upgrade.xml:166(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Heartbeat 2.0.4 (or less)"
 msgstr "Heartbeat 2.0.4 (sau mai mică)"
 
-#: Ap-Upgrade.xml:167(entry)
-#: Ap-Upgrade.xml:170(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Heartbeat 2.0.0"
 msgstr "Heartbeat 2.0.0"
 
-#: Ap-Upgrade.xml:171(entry)
+#. Tag: entry
+#, no-c-format
 msgid "None. Use an alternate upgrade strategy."
 msgstr "Niciuna. Folosiţi o strategie de actualizare alternativă."
 
-#: Ap-Upgrade.xml:176(title)
+#. Tag: title
+#, no-c-format
 msgid "Crossing Compatibility Boundaries"
 msgstr "Trecerea Graniţelor de Compatibilitate"
 
-#: Ap-Upgrade.xml:177(para)
+#. Tag: para
+#, no-c-format
 msgid "Rolling upgrades that cross compatibility boundaries must be preformed in multiple steps. For example, to perform a rolling update from Heartbeat 2.0.1 to Pacemaker 0.6.6 one must:"
 msgstr "Actualizările secvenţiale care trec de graniţele compatibilităţii trebuie efectuate în paşi multipli. De exemplu, pentru a efectua o actualizare secvenţială de la Heartbeat 2.0.1 la Pacemaker 0.6.6 trebuie să:"
 
-#: Ap-Upgrade.xml:179(para)
+#. Tag: para
+#, no-c-format
 msgid "Perform a rolling upgrade from Heartbeat 2.0.1 to Heartbeat 2.0.4"
 msgstr "Efectueaze o actualizare secvenţială de la Heartbeat 2.0.1 la Heartbeat 2.0.4"
 
-#: Ap-Upgrade.xml:180(para)
+#. Tag: para
+#, no-c-format
 msgid "Perform a rolling upgrade from Heartbeat 2.0.4 to Heartbeat 2.1.3"
 msgstr "Efectueaze o actualizare secvenţială de la Heartbeat 2.0.4 la Heartbeat 2.1.3"
 
-#: Ap-Upgrade.xml:181(para)
+#. Tag: para
+#, no-c-format
 msgid "Perform a rolling upgrade from Heartbeat 2.1.3 to Pacemaker 0.6.6"
 msgstr "Efectueaze o actualizare secvenţială de la Heartbeat 2.1.3 la Pacemaker 0.6.6"
 
-#: Ap-Upgrade.xml:187(para)
-msgid "A variant of a complete cluster shutdown, but the resources are left active and re-detected when the cluster is restarted."
+#. Tag: para
+#, no-c-format
+msgid "A variant of a complete cluster shutdown, but the resources are left active and get re-detected when the cluster is restarted."
 msgstr "O variantă de închidere completă a clusterului, dar resursele sunt lăsate active şi re-detectate când clusterul este repornit."
 
-#: Ap-Upgrade.xml:192(para)
+#. Tag: para
+#, no-c-format
 msgid "Tell the cluster to stop managing services. This is required to allow the services to remain active after the cluster shuts down."
 msgstr "Spune clusterului să se oprească din gestionarea serviciilor. Acest lucru este necesar pentru a permite serviciilor să rămână active după ce clusterul este oprit."
 
-#: Ap-Upgrade.xml:196(command)
-msgid "crm_attribute -t crm_config -n is-managed-default -v false"
-msgstr "crm_attribute -t crm_config -n is-managed-default -v false"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_attribute -t crm_config -n is-managed-default -v false </command>"
+msgstr "<command>crm_attribute -t crm_config -n is-managed-default -v false </command>"
 
-#: Ap-Upgrade.xml:199(para)
-msgid "For any resource that has a value for is-managed, make sure it is set to false (so that the cluster will not stop it)"
-msgstr "Pentru orice resursă care are o valoare pentru is-managed, vă rugăm să vă asiguraţi că este setată pe false (astfel încât clusterul să nu o oprească)"
+#. Tag: para
+#, no-c-format
+msgid "For any resource that has a value for <literal>is-managed</literal>, make sure it is set to <literal>false</literal> (so that the cluster will not stop it)"
+msgstr "Pentru orice resursă care are o valoare pentru <literal>is-managed</literal>, vă rugăm să vă asiguraţi că este setată pe <literal>false</literal> (astfel încât clusterul să nu o oprească)"
 
-#: Ap-Upgrade.xml:200(command)
-#: Ap-Upgrade.xml:234(command)
-msgid "crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false"
-msgstr "crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false </command>"
+msgstr "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false </command>"
 
-#: Ap-Upgrade.xml:209(para)
+#. Tag: para
+#, no-c-format
 msgid "Upgrade the cluster stack program - This may also include upgrading the underlying operating system."
 msgstr "Actualizaţi stiva de cluster - Acest lucru poate include actualizarea sistemului de operare de bază."
 
-#: Ap-Upgrade.xml:226(para)
-msgid "Verify the cluster re-detected all resources correctly"
+#. Tag: para
+#, no-c-format
+msgid "Verify that the cluster re-detected all resources correctly."
 msgstr "Verificaţi că, clusterul a re-detectat toate resursele în mod corect"
 
-#: Ap-Upgrade.xml:229(para)
-msgid "Allow the cluster to resume managing resources again"
+#. Tag: para
+#, no-c-format
+msgid "Allow the cluster to resume managing resources again:"
 msgstr "Permiteţi clusterului să reia gestionarea resurselor"
 
-#: Ap-Upgrade.xml:230(command)
-msgid "crm_attribute -t crm_config -n is-managed-default -v true"
-msgstr "crm_attribute -t crm_config -n is-managed-default -v true"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_attribute -t crm_config -n is-managed-default -v true </command>"
+msgstr "<command>crm_attribute -t crm_config -n is-managed-default -v true </command>"
 
-#: Ap-Upgrade.xml:233(para)
-msgid "For any resource that has a value for is-managed reset it to true (so the cluster can recover the service if it fails) if desired"
-msgstr "Pentru orice resursă care are o valoare pentru is-managed resetaţi-o, dacă doriţi, pe true (astfel încât clusterul să poată recupera serviciul dacă acesta eşuează)"
+#. Tag: para
+#, no-c-format
+msgid "For any resource that has a value for <literal>is-managed</literal> reset it to <literal>true</literal> (so the cluster can recover the service if it fails) if desired:"
+msgstr "Pentru orice resursă care are o valoare pentru <literal>is-managed</literal> resetaţi-o, dacă doriţi, pe <literal>true</literal> (astfel încât clusterul să poată recupera serviciul dacă acesta eşuează)"
 
-#: Ap-Upgrade.xml:239(title)
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false</command>"
+msgstr "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false</command>"
+
+#. Tag: title
+#, no-c-format
 msgid "Notes"
 msgstr "Menţiuni"
 
-#: Ap-Upgrade.xml:241(para)
+#. Tag: para
+#, no-c-format
 msgid "Always check your existing configuration is still compatible with the version you are installing before starting the cluster."
 msgstr "Întotdeauna verificaţi configuraţia existentă şi că este in continuare compatibilă cu versiunea pe care o instalaţi înainte de a porni clusterul."
 
-#: Ap-Upgrade.xml:245(para)
+#. Tag: para
+#, no-c-format
 msgid "The oldest version of the CRM to support this upgrade type was in Heartbeat 2.0.4"
 msgstr "Cea mai veche versiune de CRM care suportă acest tip de actualizare a fost Heartbeat 2.0.4"
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ap-Upgrade.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
 

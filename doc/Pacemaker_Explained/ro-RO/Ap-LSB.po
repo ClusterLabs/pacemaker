@@ -1,134 +1,141 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-23 11:20+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ap-LSB.xml:2(title)
-msgid "Is This init Script LSB Compatible?"
-msgstr "Este acest script compatibil LSB?"
+#. Tag: title
+#, no-c-format
+msgid "init-Script LSB Compliance"
+msgstr "Este acest script de init compatibil LSB?"
 
-#: Ap-LSB.xml:3(para)
-msgid "The relevant part of LSB spec can be found at: <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\">http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html</ulink>. It includes a description of all the return codes listed here."
-msgstr "Partea relevantă a specificaţiei LSB poate fi găsită la: <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\">http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html</ulink>. Aceasta include o descriere a tuturor codurilor de ieşire listate aici."
+#. Tag: para
+#, no-c-format
+msgid "The relevant part of <indexterm significance=\"preferred\"><primary>LSB init scripts</primary></indexterm><indexterm><primary>init scripts</primary><secondary>compatibility</secondary></indexterm>LSB spec<footnote><para> <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\" /></para></footnote> includes a description of all the return codes listed here."
+msgstr "Partea relevantă a <indexterm significance=\"preferred\"><primary>scripturi de init LSB</primary></indexterm><indexterm><primary>scripturi de init</primary><secondary>compatibilitate</secondary></indexterm>specificaţiei LSB<footnote><para> <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\">http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html</ulink></para></footnote> include o descriere a tuturor codurilor de ieşire listate aici."
 
-#: Ap-LSB.xml:7(para)
-msgid "Assuming some_service is configured correctly and currently not active, the following sequence will help you determine if it is LSB compatible:"
-msgstr "Sub presupunerea că un_serviciu este configurat corect şi nu este activ în momentul de faţă, următoarea secvenţă vă poate ajuta să determinaţi dacă este compatibil LSB:"
+#. Tag: para
+#, no-c-format
+msgid "Assuming <literal>some_service</literal> is configured correctly and currently not active, the following sequence will help you determine if it is LSB compatible:"
+msgstr "Sub presupunerea că <literal>some_service</literal> este configurat corect şi nu este activ în momentul de faţă, următoarea secvenţă vă poate ajuta să determinaţi dacă este compatibil LSB:"
 
-#: Ap-LSB.xml:10(para)
+#. Tag: para
+#, no-c-format
 msgid "Start (stopped):"
 msgstr "Porneşte (oprit):"
 
-#: Ap-LSB.xml:11(command)
-#: Ap-LSB.xml:26(command)
-msgid "/etc/init.d/some_service start ; echo \"result: $?\""
-msgstr "/etc/init.d/un_serviciu start ; echo \"rezultat: $?\""
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>/etc/init.d/some_service start ; echo \"result: $?\"</command>"
+msgstr "<command>/etc/init.d/some_service start ; echo \"rezultat: $?\"</command>"
 
-#: Ap-LSB.xml:13(para)
+#. Tag: para
+#, no-c-format
 msgid "Did the service start?"
 msgstr "A pornit serviciul?"
 
-#: Ap-LSB.xml:14(para)
-#: Ap-LSB.xml:22(para)
-#: Ap-LSB.xml:29(para)
-#: Ap-LSB.xml:36(para)
-#: Ap-LSB.xml:52(para)
+#. Tag: para
+#, no-c-format
 msgid "Did the command print result: 0 (in addition to the regular output)?"
 msgstr "A printat comanda rezultatul de ieşire: 0 (suplimentar faţă de rezultatul contextual normal)?"
 
-#: Ap-LSB.xml:17(para)
+#. Tag: para
+#, no-c-format
 msgid "Status (running):"
 msgstr "Status (rulând):"
 
-#: Ap-LSB.xml:18(command)
-#: Ap-LSB.xml:40(command)
-msgid "/etc/init.d/some_service status ; echo \"result: $?\""
-msgstr "/etc/init.d/un_serviciu status ; echo \"rezultatul: $?\""
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>/etc/init.d/some_service status ; echo \"result: $?\" </command>"
+msgstr "<command>/etc/init.d/some_service status ; echo \"rezultat: $?\" </command>"
 
-#: Ap-LSB.xml:20(para)
-#: Ap-LSB.xml:42(para)
+#. Tag: para
+#, no-c-format
 msgid "Did the script accept the command?"
 msgstr "A acceptat scriptul comanda?"
 
-#: Ap-LSB.xml:21(para)
+#. Tag: para
+#, no-c-format
 msgid "Did the script indicate the service was running?"
 msgstr "A indicat scriptul dacă serviciul rula?"
 
-#: Ap-LSB.xml:25(para)
+#. Tag: para
+#, no-c-format
 msgid "Start (running):"
 msgstr "Porneşte (rulând):"
 
-#: Ap-LSB.xml:28(para)
+#. Tag: programlisting
+#, no-c-format
+msgid "<command> /etc/init.d/some_service start ; echo \"result: $?\" </command>"
+msgstr "<command> /etc/init.d/some_service start ; echo \"rezultat: $?\" </command>"
+
+#. Tag: para
+#, no-c-format
 msgid "Is the service still running?"
 msgstr "Serviciul încă rulează?"
 
-#: Ap-LSB.xml:32(para)
+#. Tag: para
+#, no-c-format
 msgid "Stop (running):"
 msgstr "Opreşte (rulând):"
 
-#: Ap-LSB.xml:33(command)
-#: Ap-LSB.xml:49(command)
-msgid "/etc/init.d/some_service stop ; echo \"result: $?\""
-msgstr "/etc/init.d/un_serviciu stop ; echo \"rezultatul: $?\""
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>/etc/init.d/some_service stop ; echo \"result: $?\" </command>"
+msgstr "<command>/etc/init.d/some_service stop ; echo \"rezultat: $?\" </command>"
 
-#: Ap-LSB.xml:35(para)
+#. Tag: para
+#, no-c-format
 msgid "Was the service stopped?"
 msgstr "A fost oprit serviciul?"
 
-#: Ap-LSB.xml:39(para)
+#. Tag: para
+#, no-c-format
 msgid "Status (stopped):"
 msgstr "Status (oprit):"
 
-#: Ap-LSB.xml:43(para)
+#. Tag: para
+#, no-c-format
 msgid "Did the script indicate the service was not running?"
 msgstr "A indicat scriptul faptul că serviciul nu rula?"
 
-#: Ap-LSB.xml:44(para)
+#. Tag: para
+#, no-c-format
 msgid "Did the command print result: 3 (in addition to the regular output)?"
 msgstr "A printat comanda rezultatul de ieşire: 3 (suplimentar faţă de rezultatul contextual normal)?"
 
-#: Ap-LSB.xml:48(para)
+#. Tag: para
+#, no-c-format
 msgid "Stop (stopped):"
 msgstr "Opreşte (oprit):"
 
-#: Ap-LSB.xml:51(para)
+#. Tag: para
+#, no-c-format
 msgid "Is the service still stopped?"
 msgstr "Este serviciul în continuare oprit?"
 
-#: Ap-LSB.xml:56(para)
+#. Tag: para
+#, no-c-format
 msgid "Status (failed):"
 msgstr "Status (eşuat):"
 
-#: Ap-LSB.xml:57(para)
+#. Tag: para
+#, no-c-format
 msgid "This step is not readily testable and relies on manual inspection of the script."
 msgstr "Acest pas nu este gata pentru a fi testat şi se bazează pe inspecţia manuală a scriptului."
 
-#: Ap-LSB.xml:58(para)
-msgid "The script can use one of the error codes (other than 3) listed in the LSB spec to indicate that it is active but failed."
-msgstr "Scriptul poate folosi unul din codurile de eroare (altul decât 3) listate în specificaţia LSB pentru a indica faptul că este activ dar eşuat."
-
-#: Ap-LSB.xml:59(para)
-msgid "This tells the cluster that before moving the resource to another node, it needs to stop it on the existing one first."
-msgstr "Aceasta îi spune clusterului ca înainte de a muta resursa pe alt nod, trebuie să o oprească mai întâi pe cel existent."
-
-#: Ap-LSB.xml:62(para)
+#. Tag: para
+#, no-c-format
 msgid "The script can use one of the error codes (other than 3) listed in the LSB spec to indicate that it is active but failed. This tells the cluster that before moving the resource to another node, it needs to stop it on the existing one first."
 msgstr "Scriptul poate folosi unul din codurile de eroare (altul decât 3) listate în specificaţia LSB pentru a indica faptul că este activ dar eşuat. Acesta îi spune clusterului ca înainte de a muta resursa pe alt nod, trebuie să o oprească mai întâi pe cel existent."
 
-#: Ap-LSB.xml:63(para)
+#. Tag: para
+#, no-c-format
 msgid "If the answer to any of the above questions is no, then the script is not LSB compliant. Your options are then to either fix the script or write an OCF agent based on the existing script."
 msgstr "Dacă răspunsul la oricare din întrebările de mai sus este nu, atunci scriptul nu este compatibil LSB. Opţiunile disponibile în acel moment sunt fie de a repara scriptul fie de a scrie un agent OCF bazat pe scriptul existent."
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ap-LSB.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
 

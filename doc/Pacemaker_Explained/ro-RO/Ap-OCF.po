@@ -1,432 +1,526 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-23 12:37+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ap-OCF.xml:2(title)
+#. Tag: title
+#, no-c-format
 msgid "More About OCF Resource Agents"
 msgstr "Mai Multe Despre Agenţii de Resursă OCF"
 
-#: Ap-OCF.xml:4(title)
+#. Tag: title
+#, no-c-format
 msgid "Location of Custom Scripts"
 msgstr "Locaţia Scripturilor Personalizate"
 
-#: Ap-OCF.xml:5(para)
-msgid "OCF Resource Agents are found in <filename>/usr/lib/ocf/resource.d/<replaceable>provider</replaceable></filename>."
-msgstr "Agenţii de Resursă OCF se găsesc în <filename>/usr/lib/ocf/resource.d/<replaceable>furnizor</replaceable></filename>."
+#. Tag: para
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF Resource Agents</primary></indexterm>OCF Resource Agents are found in <filename>/usr/lib/ocf/resource.d/<replaceable>provider</replaceable></filename>."
+msgstr "<indexterm significance=\"preferred\"><primary>Agenţii de Resursă OCF</primary></indexterm>Agenţii de Resursă OCF se găsesc în <filename>/usr/lib/ocf/resource.d/<replaceable>furnizor</replaceable></filename>."
 
-#: Ap-OCF.xml:6(para)
+#. Tag: para
+#, no-c-format
 msgid "When creating your own agents, you are encouraged to create a new directory under <filename>/usr/lib/ocf/resource.d/</filename> so that they are not confused with (or overwritten by) the agents shipped with Heartbeat. So, for example, if you chose the provider name of bigCorp and wanted a new resource named bigApp, you would create a script called <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> and define a resource:"
 msgstr "Când vă creaţi proprii agenţi, sunteţi încurajaţi să creaţi un nou director sub <filename>/usr/lib/ocf/resource.d/</filename> astfel încât aceştia să nu fie încurcaţi cu (sau suprascrişi de) agenţii livraţi împreună cu Heartbeat. Deci, de exemplu, dacă aţi fi ales numele de furnizor bigCorp şi aţi fi dorit o nouă resursă numită bigApp, aţi crea un script numit <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> şi aţi defini o resursă:"
 
-#: Ap-OCF.xml:10(programlisting)
-#, no-wrap
+#. Tag: programlisting
+#, no-c-format
 msgid "&lt;primitive id=\"custom-app\" class=\"ocf\" provider=\"bigCorp\" type=\"bigApp\"/&gt;"
 msgstr "&lt;primitive id=\"custom-app\" class=\"ocf\" provider=\"bigCorp\" type=\"bigApp\"/&gt;"
 
-#: Ap-OCF.xml:13(title)
+#. Tag: title
+#, no-c-format
 msgid "Actions"
 msgstr "Acţiuni"
 
-#: Ap-OCF.xml:14(para)
+#. Tag: para
+#, no-c-format
 msgid "All OCF Resource Agents are required to implement the following actions"
 msgstr "Toţi Agenţii de Resursă OCF sunt obligaţi să implementeze următoarele acţiuni"
 
-#: Ap-OCF.xml:16(title)
+#. Tag: title
+#, no-c-format
 msgid "Required Actions for OCF Agents"
 msgstr "Acţiuni Necesare pentru Agenţii OCF"
 
-#: Ap-OCF.xml:20(entry)
-#: Ap-OCF.xml:64(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Action"
 msgstr "Acţiune"
 
-#: Ap-OCF.xml:21(entry)
-#: Ap-OCF.xml:65(entry)
-#: Ap-OCF.xml:103(entry)
-#: Ap-OCF.xml:130(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Description"
 msgstr "Descriere"
 
-#: Ap-OCF.xml:22(entry)
-#: Ap-OCF.xml:66(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Instructions"
 msgstr "Instrucţiuni"
 
-#: Ap-OCF.xml:27(entry)
-msgid "start"
-msgstr "start"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>start action</primary></indexterm> <indexterm><primary>action</primary><secondary>start</secondary></indexterm>start"
+msgstr "<indexterm significance=\"preferred\"><primary>start action</primary></indexterm> <indexterm><primary>action</primary><secondary>start</secondary></indexterm>start"
 
-#: Ap-OCF.xml:28(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Start the resource"
 msgstr "Porneşte resursa"
 
-#: Ap-OCF.xml:29(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully active."
 msgstr "Returnează 0 în caz de succes şi un cod de eroare potrivit în caz contrar. Nu trebuie să raporteze succes până ce resursa nu este complet activă."
 
-#: Ap-OCF.xml:32(entry)
-msgid "stop"
-msgstr "stop"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>stop action</primary></indexterm> <indexterm><primary>action</primary><secondary>stop</secondary></indexterm>stop"
+msgstr "<indexterm significance=\"preferred\"><primary>stop action</primary></indexterm> <indexterm><primary>action</primary><secondary>stop</secondary></indexterm>stop"
 
-#: Ap-OCF.xml:33(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Stop the resource"
 msgstr "Opreşte resursa"
 
-#: Ap-OCF.xml:34(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully stopped."
 msgstr "Returnează 0 în caz de succes şi un cod de eroare potrivit în caz contrar. Nu trebuie să raporteze succes până ce resursa nu este complet oprită."
 
-#: Ap-OCF.xml:37(entry)
-msgid "monitor"
-msgstr "monitor"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>monitor action</primary></indexterm> <indexterm><primary>action</primary><secondary>monitor</secondary></indexterm>monitor"
+msgstr "<indexterm significance=\"preferred\"><primary>monitor action</primary></indexterm> <indexterm><primary>action</primary><secondary>monitor</secondary></indexterm>monitor"
 
-#: Ap-OCF.xml:38(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Check the resource's state"
 msgstr "Verifică starea resursei"
 
-#: Ap-OCF.xml:40(para)
-msgid "Exit 0 if the resource is running, 7 if it is stopped and anything else if it is failed."
+#. Tag: para
+#, no-c-format
+msgid "Exit 0 if the resource is running, 7 if it is stopped, and anything else if it is failed."
 msgstr "Iese cu 0 dacă resursa rulează, 7 dacă este oprită şi orice altceva dacă a eşuat."
 
-#: Ap-OCF.xml:41(para)
+#. Tag: para
+#, no-c-format
 msgid "NOTE: The monitor script should test the state of the resource on the local machine only."
 msgstr "NOTĂ: Scriptul de monitorizare ar trebui să testeze starea resursei numai pe maşina locală."
 
-#: Ap-OCF.xml:45(entry)
-msgid "meta-data"
-msgstr "meta-data"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>meta-data action</primary></indexterm> <indexterm><primary>action</primary><secondary>meta-data</secondary></indexterm>meta-data"
+msgstr "<indexterm significance=\"preferred\"><primary>meta-data action</primary></indexterm> <indexterm><primary>action</primary><secondary>meta-data</secondary></indexterm>meta-data"
 
-#: Ap-OCF.xml:46(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Describe the resource"
 msgstr "Descrie resursa"
 
-#: Ap-OCF.xml:48(para)
+#. Tag: para
+#, no-c-format
 msgid "Provide information about this resource as an XML snippet. Exit with 0."
 msgstr "Furnizează informaţii despre această resursă ca un extras XML. Iese cu 0."
 
-#: Ap-OCF.xml:49(para)
+#. Tag: para
+#, no-c-format
 msgid "NOTE: This is <emphasis>not</emphasis> performed as root."
 msgstr "NOTĂ: Acest aspect <emphasis>nu este</emphasis> efectuat ca root."
 
-#: Ap-OCF.xml:53(entry)
-msgid "validate-all"
-msgstr "validate-all"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>validate-all action</primary></indexterm> <indexterm><primary>action</primary><secondary>validate-all</secondary></indexterm>validate-all"
+msgstr "<indexterm significance=\"preferred\"><primary>validate-all action</primary></indexterm> <indexterm><primary>action</primary><secondary>validate-all</secondary></indexterm>validate-all"
 
-#: Ap-OCF.xml:54(entry)
-msgid "Verify the supplied parameters are correct"
+#. Tag: entry
+#, no-c-format
+msgid "Verify the supplied parameters"
 msgstr "Verifică dacă parametrii furnizaţi sunt corecţi"
 
-#: Ap-OCF.xml:55(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Exit with 0 if parameters are valid, 2 if not valid, 6 if resource is not configured."
 msgstr "Iese cu 0 dacă parametrii sunt valizi, 2 dacă nu sunt valizi, 6 dacă resursa nu este configurată."
 
-#: Ap-OCF.xml:58(para)
+#. Tag: para
+#, no-c-format
 msgid "Additional requirements (not part of the OCF specs) are placed on agents that will be used for advanced concepts like <link linkend=\"s-resource-clone\">clones</link> and <link linkend=\"s-resource-multistate\">multi-state</link> resources."
 msgstr "Cerinţe suplimentare (care nu sunt parte din specificaţia OCF) sunt plasate pe agenţi care vor fi folosiţi pentru concepte avansate cum ar fi <link linkend=\"s-resource-clone\">clone</link> şi resurse <link linkend=\"s-resource-multistate\">multi-state</link>."
 
-#: Ap-OCF.xml:60(title)
+#. Tag: title
+#, no-c-format
 msgid "Optional Actions for OCF Agents"
 msgstr "Acţiuni Opţionale pentru Agenţi OCF"
 
-#: Ap-OCF.xml:69(entry)
-msgid "promote"
-msgstr "promote"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>promote action</primary></indexterm> <indexterm><primary>action</primary><secondary>promote</secondary></indexterm>promote"
+msgstr "<indexterm significance=\"preferred\"><primary>promote action</primary></indexterm> <indexterm><primary>action</primary><secondary>promote</secondary></indexterm>promote"
 
-#: Ap-OCF.xml:70(entry)
-msgid "Promote the local instance of a multi-state resource to the master/primary state"
+#. Tag: entry
+#, no-c-format
+msgid "Promote the local instance of a multi-state resource to the master/primary state."
 msgstr "Promovează instanţa locală a unei resurse multi-state la starea master/primară"
 
-#: Ap-OCF.xml:71(entry)
-#: Ap-OCF.xml:76(entry)
-msgid "Return 0 on success"
-msgstr "Returnează 0 în caz de succes"
+#. Tag: entry
+#, no-c-format
+msgid "Return 0 on success."
+msgstr "Returnează 0 în caz de succes."
 
-#: Ap-OCF.xml:74(entry)
-msgid "demote"
-msgstr "demote"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>demote action</primary></indexterm> <indexterm><primary>action</primary><secondary>demote</secondary></indexterm>demote"
+msgstr "<indexterm significance=\"preferred\"><primary>demote action</primary></indexterm> <indexterm><primary>action</primary><secondary>demote</secondary></indexterm>demote"
 
-#: Ap-OCF.xml:75(entry)
-msgid "Demote the local instance of a multi-state resource to the slave/secondary state"
+#. Tag: entry
+#, no-c-format
+msgid "Demote the local instance of a multi-state resource to the slave/secondary state."
 msgstr "Retrogradează instanţa locală a unei resurse multi-state la starea slave/secundară"
 
-#: Ap-OCF.xml:79(entry)
-msgid "notify"
-msgstr "notify"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>notify action</primary></indexterm> <indexterm><primary>action</primary><secondary>notify</secondary></indexterm>notify"
+msgstr "<indexterm significance=\"preferred\"><primary>notify action</primary></indexterm> <indexterm><primary>action</primary><secondary>notify</secondary></indexterm>notify"
 
-#: Ap-OCF.xml:80(entry)
-msgid "Used by the cluster to send the agent pre and post notification events telling the resource what is or has just taken place"
+#. Tag: entry
+#, no-c-format
+msgid "Used by the cluster to send the agent pre and post notification events telling the resource what has happened and will happen."
 msgstr "Folosit de către cluster pentru a trimite agentului notificări pre şi post eveniment spunându-i resursei ceea ce se întâmplă sau ce tocmai s-a întâmplat"
 
-#: Ap-OCF.xml:81(entry)
-msgid "Must not fail. Must exit 0"
+#. Tag: entry
+#, no-c-format
+msgid "Must not fail. Must exit with 0."
 msgstr "Nu trebuie să fie eşueze. Trebuie să iasă cu 0"
 
-#: Ap-OCF.xml:84(para)
-msgid "One action specified in the OCF specs is not currently used by the cluster"
+#. Tag: para
+#, no-c-format
+msgid "One action specified in the OCF specs is not currently used by the cluster:"
 msgstr "O acţiune specificată în specificaţiile OCF nu este folosită de către cluster în mod curent"
 
-#: Ap-OCF.xml:86(para)
-msgid "recover - a variant of the start action, this should try to recover a resource locally."
-msgstr "recuperare - o variantă a acţiunii de pornire, aceasta ar trebui să recupereze o resursă local."
+#. Tag: para
+#, no-c-format
+msgid "<literal>recover</literal> - a variant of the <literal>start</literal> action, this should try to recover a resource locally."
+msgstr "<literal>recover</literal> - o variantă a acţiunii <literal>start</literal>, aceasta ar trebui să recupereze o resursă local."
 
-#: Ap-OCF.xml:89(para)
-msgid "Remember to use ocf-tester to verify that your new agent complies with the OCF standard properly."
-msgstr "Nu uitaţi să folosiţi ocf-tester pentru a verifica dacă noul vostru agent este compatibil cu standardul OCF."
+#. Tag: para
+#, no-c-format
+msgid "Remember to use <indexterm significance=\"preferred\"><primary>ocf-tester</primary></indexterm><filename>ocf-tester</filename> to verify that your new agent complies with the OCF standard properly."
+msgstr "Nu uitaţi să folosiţi <indexterm significance=\"preferred\"><primary>ocf-tester</primary></indexterm><filename>ocf-tester</filename> pentru a verifica dacă noul vostru agent este compatibil cu standardul OCF."
 
-#: Ap-OCF.xml:92(title)
-msgid "How Does the Cluster Interpret the OCF Return Codes?"
-msgstr "Cum Interpretează Clusterul Codurile de Ieşire OCF?"
+#. Tag: title
+#, no-c-format
+msgid "How are OCF Return Codes Interpreted?"
+msgstr "Cum sunt Interpretate Codurile de Ieșire OCF?"
 
-#: Ap-OCF.xml:93(para)
-msgid "The first thing the cluster does is check the return code against the expected result. If the result does not match the expected value, then the operation is considered to have failed and recovery action is initiated."
+#. Tag: para
+#, no-c-format
+msgid "The first thing the cluster does is to check the return code against the expected result. If the result does not match the expected value, then the operation is considered to have failed and recovery action is initiated."
 msgstr "Primul lucru pe care îl face clusterul este să verifice codul de ieşire faţă de rezultatul aşteptat. Dacă rezultatul nu se potriveşte cu valoarea aşteptată, atunci este considerat că operaţiunea a eşuat şi acţiunea de recuperare este iniţiată."
 
-#: Ap-OCF.xml:96(para)
+#. Tag: para
+#, no-c-format
 msgid "There are three types of failure recovery:"
 msgstr "Sunt trei tipuri de recuperare în caz de eşec:"
 
-#: Ap-OCF.xml:98(title)
+#. Tag: title
+#, no-c-format
 msgid "Types of recovery performed by the cluster"
 msgstr "Tipuri de recuperare realizate de către cluster"
 
-#: Ap-OCF.xml:102(entry)
-#: Ap-OCF.xml:131(entry)
-msgid "Recovery Type"
-msgstr "Tip de Recuperare"
+#. Tag: entry
+#, no-c-format
+msgid "Type"
+msgstr "Tip"
 
-#: Ap-OCF.xml:104(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Action Taken by the Cluster"
 msgstr "Acţiunea Luată de către Cluster"
 
-#: Ap-OCF.xml:107(entry)
-#: Ap-OCF.xml:137(entry)
-#: Ap-OCF.xml:143(entry)
-#: Ap-OCF.xml:185(entry)
-#: Ap-OCF.xml:191(entry)
-#: Ap-OCF.xml:197(entry)
-msgid "soft"
-msgstr "soft"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>soft error type</primary></indexterm> <indexterm><primary>error type</primary><secondary>soft</secondary></indexterm>soft"
+msgstr "<indexterm significance=\"preferred\"><primary>soft error type</primary></indexterm> <indexterm><primary>error type</primary><secondary>soft</secondary></indexterm>soft"
 
-#: Ap-OCF.xml:108(entry)
+#. Tag: entry
+#, no-c-format
 msgid "A transient error occurred"
 msgstr "O eroare tranzientă a avut loc"
 
-#: Ap-OCF.xml:109(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Restart the resource or move it to a new location"
 msgstr "Reporneşte resursa sau mut-o într-o locaţie nouă"
 
-#: Ap-OCF.xml:112(entry)
-#: Ap-OCF.xml:149(entry)
-#: Ap-OCF.xml:155(entry)
-#: Ap-OCF.xml:161(entry)
-#: Ap-OCF.xml:167(entry)
-msgid "hard"
-msgstr "hard"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>hard error type</primary></indexterm> <indexterm><primary>error type</primary><secondary>hard</secondary></indexterm>hard"
+msgstr "<indexterm significance=\"preferred\"><primary>hard error type</primary></indexterm> <indexterm><primary>error type</primary><secondary>hard</secondary></indexterm>hard"
 
-#: Ap-OCF.xml:113(entry)
+#. Tag: entry
+#, no-c-format
 msgid "A non-transient error that may be specific to the current node occurred"
 msgstr "O eroare non-tranzientă s-a produs care ar putea fi specifică nodului curent"
 
-#: Ap-OCF.xml:114(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Move the resource elsewhere and prevent it from being retried on the current node"
 msgstr "Mută resursa în altă parte şi previne reîncercarea acesteia pe nodul curent"
 
-#: Ap-OCF.xml:117(entry)
-#: Ap-OCF.xml:173(entry)
-msgid "fatal"
-msgstr "fatal"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>fatal error type</primary></indexterm> <indexterm><primary>error type</primary><secondary>fatal</secondary></indexterm>fatal"
+msgstr "<indexterm significance=\"preferred\"><primary>fatal error type</primary></indexterm> <indexterm><primary>error type</primary><secondary>fatal</secondary></indexterm>fatal"
 
-#: Ap-OCF.xml:118(entry)
-msgid "A non-transient error that will be common to all cluster nodes (I.e. a bad configuration was specified)"
+#. Tag: entry
+#, no-c-format
+msgid "A non-transient error that will be common to all cluster nodes (eg. a bad configuration was specified)"
 msgstr "O eroare non-tranzientă care va fi comună pe toate nodurile clusterului (ex.: o configuraţie greşită a fost specificată)"
 
-#: Ap-OCF.xml:119(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Stop the resource and prevent it from being started on any cluster node"
 msgstr "Opreşte resursa si împiedică pornirea acesteia pe oricare nod al clusterului"
 
-#: Ap-OCF.xml:122(para)
+#. Tag: para
+#, no-c-format
 msgid "Assuming an action is considered to have failed, the following table outlines the different OCF return codes and the type of recovery the cluster will initiate when it is received."
 msgstr "Plecând de la presupunerea că o acţiune este considerată că ar fi eşuat, următorul tabel evidenţiază diferitele coduri de ieşire OCF şi tipul de recuperare pe care o va iniţia clusterul când acest cod este primit."
 
-#: Ap-OCF.xml:124(title)
-msgid "OCF Return Codes and How They are Handled"
+#. Tag: title
+#, no-c-format
+msgid "OCF Return Codes and their Recovery Types"
 msgstr "Codurile de Ieşire OCF şi Cum Sunt Ele Gestionate"
 
-#: Ap-OCF.xml:128(entry)
-msgid "OCF Return Code"
-msgstr "Cod de Ieşire OCF"
+#. Tag: entry
+#, no-c-format
+msgid "RC"
+msgstr "RC"
 
-#: Ap-OCF.xml:129(entry)
+#. Tag: entry
+#, no-c-format
 msgid "OCF Alias"
 msgstr "Alias OCF"
 
-#: Ap-OCF.xml:134(entry)
-msgid "0"
-msgstr "0"
+#. Tag: entry
+#, no-c-format
+msgid "RT"
+msgstr "RT"
 
-#: Ap-OCF.xml:135(entry)
-msgid "OCF_SUCCESS"
-msgstr "OCF_SUCCESS"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>0</secondary></indexterm>0"
+msgstr "<indexterm><primary>return code</primary><secondary>0</secondary></indexterm>0"
 
-#: Ap-OCF.xml:136(entry)
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_SUCCESS</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_SUCCESS</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_SUCCESS</secondary></indexterm>OCF_SUCCESS"
+msgstr "<indexterm significance=\"preferred\"><primary>OCF_SUCCESS</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_SUCCESS</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_SUCCESS</secondary></indexterm>OCF_SUCCESS"
+
+#. Tag: entry
+#, no-c-format
 msgid "Success. The command completed successfully. This is the expected result for all start, stop, promote and demote commands."
 msgstr "Succes. Comanda a fost rulată cu succes. Acesta este rezultatul aşteptat pentru toate comenzile start, stop, promote şi demote."
 
-#: Ap-OCF.xml:140(entry)
-msgid "1"
-msgstr "1"
+#. Tag: entry
+#, no-c-format
+msgid "soft"
+msgstr "soft"
 
-#: Ap-OCF.xml:141(entry)
-msgid "OCF_ERR_GENERIC"
-msgstr "OCF_ERR_GENERIC"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>1</secondary></indexterm>1"
+msgstr "<indexterm><primary>return code</primary><secondary>1</secondary></indexterm>1"
 
-#: Ap-OCF.xml:142(entry)
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>GENERIC</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>GENERIC</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>GENERIC</tertiary></indexterm> OCF_ERR_GENERIC"
+msgstr "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>GENERIC</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>GENERIC</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>GENERIC</tertiary></indexterm> OCF_ERR_GENERIC"
+
+#. Tag: entry
+#, no-c-format
 msgid "Generic \"there was a problem\" error code."
 msgstr "Cod de eroare generic \"a fost o problemă\""
 
-#: Ap-OCF.xml:146(entry)
-msgid "2"
-msgstr "2"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>2</secondary></indexterm>2"
+msgstr "<indexterm><primary>return code</primary><secondary>2</secondary></indexterm>2"
 
-#: Ap-OCF.xml:147(entry)
-msgid "OCF_ERR_ARGS"
-msgstr "OCF_ERR_ARGS"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>ARGS</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>ARGS</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>ARGS</tertiary></indexterm>OCF_ERR_ARGS"
+msgstr "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>ARGS</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>ARGS</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>ARGS</tertiary></indexterm>OCF_ERR_ARGS"
 
-#: Ap-OCF.xml:148(entry)
-msgid "The resource's configuration is not valid on this machine. Eg. Refers to a location/tool not found on the node."
+#. Tag: entry
+#, no-c-format
+msgid "The resource's configuration is not valid on this machine. Eg. refers to a location/tool not found on the node."
 msgstr "Configuraţia resursei nu este validă pe această maşină. Ex. Face referinţă la o/un locaţie/utilitar care nu a fost găsit/ă pe acest nod."
 
-#: Ap-OCF.xml:152(entry)
-msgid "3"
-msgstr "3"
+#. Tag: entry
+#, no-c-format
+msgid "hard"
+msgstr "hard"
 
-#: Ap-OCF.xml:153(entry)
-msgid "OCF_ERR_UNIMPLEMENTED"
-msgstr "OCF_ERR_UNIMPLEMENTED"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>3</secondary></indexterm>3"
+msgstr "<indexterm><primary>return code</primary><secondary>3</secondary></indexterm>3"
 
-#: Ap-OCF.xml:154(entry)
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>UNIMPLEMENTED</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>UNIMPLEMENTED</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>UNIMPLEMENTED</tertiary></indexterm>OCF_ERR_UNIMPLEMENTED"
+msgstr "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>UNIMPLEMENTED</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>UNIMPLEMENTED</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>UNIMPLEMENTED</tertiary></indexterm>OCF_ERR_UNIMPLEMENTED"
+
+#. Tag: entry
+#, no-c-format
 msgid "The requested action is not implemented."
 msgstr "Acţiunea solicitată nu este implementată."
 
-#: Ap-OCF.xml:158(entry)
-msgid "4"
-msgstr "4"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>4</secondary></indexterm>4"
+msgstr "<indexterm><primary>return code</primary><secondary>4</secondary></indexterm>4"
 
-#: Ap-OCF.xml:159(entry)
-msgid "OCF_ERR_PERM"
-msgstr "OCF_ERR_PERM"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>PERM</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>PERM</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>PERM</tertiary></indexterm>OCF_ERR_PERM"
+msgstr "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>PERM</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>PERM</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>PERM</tertiary></indexterm>OCF_ERR_PERM"
 
-#: Ap-OCF.xml:160(entry)
+#. Tag: entry
+#, no-c-format
 msgid "The resource agent does not have sufficient privileges to complete the task."
 msgstr "Agentul de resursă nu are suficiente privilegii pentru a îndeplini sarcina."
 
-#: Ap-OCF.xml:164(entry)
-msgid "5"
-msgstr "5"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>5</secondary></indexterm>5"
+msgstr "<indexterm><primary>return code</primary><secondary>5</secondary></indexterm>5"
 
-#: Ap-OCF.xml:165(entry)
-msgid "OCF_ERR_INSTALLED"
-msgstr "OCF_ERR_INSTALLED"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>INSTALLED</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>INSTALLED</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>INSTALLED</tertiary></indexterm>OCF_ERR_INSTALLED"
+msgstr "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>INSTALLED</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>INSTALLED</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>INSTALLED</tertiary></indexterm>OCF_ERR_INSTALLED"
 
-#: Ap-OCF.xml:166(entry)
+#. Tag: entry
+#, no-c-format
 msgid "The tools required by the resource are not installed on this machine."
 msgstr "Utilitarele necesitate de către resursă nu sunt instalate pe această maşină."
 
-#: Ap-OCF.xml:170(entry)
-msgid "6"
-msgstr "6"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>6</secondary></indexterm>6"
+msgstr "<indexterm><primary>return code</primary><secondary>6</secondary></indexterm>6"
 
-#: Ap-OCF.xml:171(entry)
-msgid "OCF_ERR_CONFIGURED"
-msgstr "OCF_ERR_CONFIGURED"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>CONFIGURED</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>CONFIGURED</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>CONFIGURED</tertiary></indexterm>OCF_ERR_CONFIGURED"
+msgstr "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>CONFIGURED</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>CONFIGURED</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>CONFIGURED</tertiary></indexterm>OCF_ERR_CONFIGURED"
 
-#: Ap-OCF.xml:172(entry)
-msgid "The resource's configuration is invalid. Eg. A required parameter is missing."
+#. Tag: entry
+#, no-c-format
+msgid "The resource's configuration is invalid. Eg. required parameters are missing."
 msgstr "Configuraţia resursei este invalidă. Ex. Un parametru necesar lipseşte."
 
-#: Ap-OCF.xml:176(entry)
-msgid "7"
-msgstr "7"
+#. Tag: entry
+#, no-c-format
+msgid "fatal"
+msgstr "fatal"
 
-#: Ap-OCF.xml:177(entry)
-msgid "OCF_NOT_RUNNING"
-msgstr "OCF_NOT_RUNNING"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>7</secondary></indexterm>7"
+msgstr "<indexterm><primary>return code</primary><secondary>7</secondary></indexterm>7"
 
-#: Ap-OCF.xml:178(entry)
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_NOT_RUNNING</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm>OCF_NOT_RUNNING"
+msgstr "<indexterm significance=\"preferred\"><primary>OCF_NOT_RUNNING</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm>OCF_NOT_RUNNING"
+
+#. Tag: entry
+#, no-c-format
 msgid "The resource is safely stopped. The cluster will not attempt to stop a resource that returns this for any action."
 msgstr "Resursa a fost oprită cu succes. Clusterul nu va încerca să oprească o resursă care returnează acest cod pentru orice acţiune."
 
-#: Ap-OCF.xml:179(entry)
+#. Tag: entry
+#, no-c-format
 msgid "N/A"
 msgstr "N/A"
 
-#: Ap-OCF.xml:182(entry)
-msgid "8"
-msgstr "8"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>8</secondary></indexterm>8"
+msgstr "<indexterm><primary>return code</primary><secondary>8</secondary></indexterm>8"
 
-#: Ap-OCF.xml:183(entry)
-msgid "OCF_RUNNING_MASTER"
-msgstr "OCF_RUNNING_MASTER"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_RUNNING_MASTER</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm>OCF_RUNNING_MASTER"
+msgstr "<indexterm significance=\"preferred\"><primary>OCF_RUNNING_MASTER</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm>OCF_RUNNING_MASTER"
 
-#: Ap-OCF.xml:184(entry)
-msgid "The resource is running in Master mode."
-msgstr "Resursa rulează în modul Master."
+#. Tag: entry
+#, no-c-format
+msgid "The resource is running in <literal>Master</literal> mode."
+msgstr "Resursa rulează în modul <literal>Master</literal>."
 
-#: Ap-OCF.xml:188(entry)
-msgid "9"
-msgstr "9"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>9</secondary></indexterm>9"
+msgstr "<indexterm><primary>return code</primary><secondary>9</secondary></indexterm>9"
 
-#: Ap-OCF.xml:189(entry)
-msgid "OCF_FAILED_MASTER"
-msgstr "OCF_FAILED_MASTER"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_FAILED_MASTER</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm>OCF_FAILED_MASTER"
+msgstr "<indexterm significance=\"preferred\"><primary>OCF_FAILED_MASTER</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm>OCF_FAILED_MASTER"
 
-#: Ap-OCF.xml:190(entry)
-msgid "The resource is in Master mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again."
-msgstr "Resursa este în modul Master dar a eşuat. Resursa va fi retrogradată, oprită şi apoi pornită (şi posibil promovată) din nou."
+#. Tag: entry
+#, no-c-format
+msgid "The resource is in <literal>Master</literal> mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again."
+msgstr "Resursa este în modul <literal>Master</literal> dar a eşuat. Resursa va fi retrogradată, oprită şi apoi pornită (şi posibil promovată) din nou."
 
-#: Ap-OCF.xml:194(entry)
-msgid "other"
-msgstr "other"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>other return codes</primary></indexterm> <indexterm><primary>return code</primary><secondary>other</secondary></indexterm>other"
+msgstr "<indexterm significance=\"preferred\"><primary>other return codes</primary></indexterm> <indexterm><primary>return code</primary><secondary>other</secondary></indexterm>other"
 
-#: Ap-OCF.xml:195(entry)
+#. Tag: entry
+#, no-c-format
 msgid "NA"
 msgstr "NA"
 
-#: Ap-OCF.xml:196(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Custom error code."
 msgstr "Cod de eroare personalizat."
 
-#: Ap-OCF.xml:200(para)
-msgid "Although counter intuitive, even actions that return 0 (aka. <envar>OCF_SUCCESS</envar>) can be considered to have failed. This can happen when a resource that is expected to be in the Master state is found running as a Slave, or when a resource is found active on multiple machines.."
+#. Tag: para
+#, no-c-format
+msgid "Although counterintuitive, even actions that return 0 (aka. <envar>OCF_SUCCESS</envar>) can be considered to have failed. This can happen when a resource that is expected to be in the Master state is found running as a Slave, or when a resource is found active on multiple machines."
 msgstr "Deşi contra intuitiv, chiar şi acţiunile care returnează 0 (aka. <envar>OCF_SUCCESS</envar>) pot fi considerate că ar fi eşuat. Acest lucru se poate întâmpla când o resursă care este de aşteptat să fie în starea Master este găsită rulând ca Slave sau când o resursă este găsită activă pe mai multe maşini."
 
-#: Ap-OCF.xml:201(title)
+#. Tag: title
+#, no-c-format
 msgid "Exceptions"
 msgstr "Excepţii"
 
-#: Ap-OCF.xml:203(para)
+#. Tag: para
+#, no-c-format
 msgid "Non-recurring monitor actions (probes) that find a resource active (or in Master mode) will not result in recovery action unless it is also found active elsewhere"
 msgstr "Acţiunile de monitorizare nerecurente (probele) care găsesc o resursă activă (sau în starea Master) nu vor rezulta într-o acţiune de recuperare decât dacă este găsită activă în altă parte"
 
-#: Ap-OCF.xml:204(para)
+#. Tag: para
+#, no-c-format
 msgid "The recovery action taken when a resource is found active more than once is determined by the <literal>multiple-active</literal> property of the resource"
 msgstr "Acţiunea de recuperare luată când o resursă este găsită activă mai mult de o dată este determinată de proprietatea <literal>multiple-active</literal> a resursei"
 
-#: Ap-OCF.xml:205(para)
+#. Tag: para
+#, no-c-format
 msgid "Recurring actions that return <envar>OCF_ERR_UNIMPLEMENTED</envar> do not cause any type of recovery"
 msgstr "Acţiunile recurente care returnează <envar>OCF_ERR_UNIMPLEMENTED</envar> nu cauzează nici un fel de recuperare"
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ap-OCF.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
 

@@ -1,227 +1,269 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-25 09:02+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ch-Nodes.xml:2(title)
+#. Tag: title
+#, no-c-format
 msgid "Cluster Nodes"
 msgstr "Nodurile Clusterului"
 
-#: Ch-Nodes.xml:4(title)
+#. Tag: title
+#, no-c-format
 msgid "Defining a Cluster Node"
 msgstr "Definirea unui Nod de Cluster"
 
-#: Ch-Nodes.xml:5(para)
-msgid "Each node in the cluster will have an entry in the nodes section containing its UUID, uname and type."
+#. Tag: para
+#, no-c-format
+msgid "Each node in the cluster will have an entry in the nodes section containing its UUID, uname, and type."
 msgstr "Fiecare nod în cluster va avea o intrare în secţiunea de noduri conţinând UUID-ul, uname-ul şi tipul acestuia."
 
-#: Ch-Nodes.xml:7(title)
+#. Tag: title
+#, no-c-format
 msgid "Example cluster node entry"
 msgstr "Exemplu de intrare de nod de cluster"
 
-#: Ch-Nodes.xml:12(para)
-msgid "In normal circumstances, the admin should let the cluster populate this information automatically from the communications and membership data. However one can use the crm_uuid tool to read an existing UUID or define a value before the cluster starts."
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;node id=\"1186dc9a-324d-425a-966e-d757e693dc86\" uname=\"pcmk-1\" type=\"normal\"/&gt;\n"
+"	"
+msgstr "&lt;node id=\"1186dc9a-324d-425a-966e-d757e693dc86\" uname=\"pcmk-1\" type=\"normal\"/&gt;\n"
+"	"
+
+#. Tag: para
+#, no-c-format
+msgid "In normal circumstances, the admin should let the cluster populate this information automatically from the communications and membership data. However one can use the <command>crm_uuid</command> tool to read an existing UUID or define a value before the cluster starts."
 msgstr "În circumstanţe normale, admin-ul ar trebui să lase clusterul să populeze această informaţie în mod automat din datele de comunicare şi apartenenţă. Totuşi cineva poate folosi utilitarul crm_uuid pentru a citi un UUID existent sau pentru a defini o valoare înainte să pornească clusterul."
 
-#: Ch-Nodes.xml:18(title)
+#. Tag: title
+#, no-c-format
 msgid "Describing a Cluster Node"
 msgstr "Descrierea unui Nod de Cluster"
 
-#: Ch-Nodes.xml:19(para)
-msgid "Beyond the basic definition of a node, the administrator can also describe the node's attributes, such as how much RAM, disk, what OS or kernel version it has, perhaps even its physical location. This information can then be used by the cluster when deciding where to place resources. For more information on the use of node attributes, see the section on <xref linkend=\"ch-rules\"/>."
-msgstr "Dincolo de definiţia de bază a unui nod, administratorul poate descrie de asemenea şi atributele nodului, cum ar fi cât de mult RAM, disc are, care OS sau versiune de kernel are, poate chiar şi locaţia fizică. Această informaţie poate fi utilizată mai apoi de către cluster când va decide unde să plaseze resursele. Pentru mai multe informaţii referitoare la folosirea atributelor nodului, vedeţi secţiunea despre <xref linkend=\"ch-rules\"/>."
+#. Tag: para
+#, no-c-format
+msgid "Beyond the basic definition of a node the administrator can also describe the node's attributes, such as how much RAM, disk, what OS or kernel version it has, perhaps even its physical location. This information can then be used by the cluster when deciding where to place resources. For more information on the use of node attributes, see the section on <xref linkend=\"ch-rules\" />."
+msgstr "Dincolo de definiţia de bază a unui nod, administratorul poate descrie de asemenea şi atributele nodului, cum ar fi cât de mult RAM, disc are, care OS sau versiune de kernel are, poate chiar şi locaţia fizică. Această informaţie poate fi utilizată mai apoi de către cluster când va decide unde să plaseze resursele. Pentru mai multe informaţii referitoare la folosirea atributelor nodului, vedeţi secţiunea despre <xref linkend=\"ch-rules\" />."
 
-#: Ch-Nodes.xml:24(para)
+#. Tag: para
+#, no-c-format
 msgid "Node attributes can be specified ahead of time or populated later, when the cluster is running, using <command>crm_attribute</command>."
 msgstr "Atributele nodului pot fi specificate în avans sau populate ulterior, când clusterul rulează, folosind <command>crm_attribute</command>."
 
-#: Ch-Nodes.xml:25(para)
+#. Tag: para
+#, no-c-format
 msgid "Below is what the node's definition would look like if the admin ran the command:"
 msgstr "Mai jos este prezentat cum ar arăta definiţia nodului dacă administratorul ar executa comanda:"
 
-#: Ch-Nodes.xml:27(title)
+#. Tag: title
+#, no-c-format
 msgid "The result of using crm_attribute to specify which kernel pcmk-1 is running"
 msgstr "Rezultatul folosirii crm_attribute pentru a specifica pe ce kernel rulează pcmk-1"
 
-#: Ch-Nodes.xml:29(userinput)
-#, no-wrap
-msgid "crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` "
-msgstr "crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` "
+#. Tag: programlisting
+#, no-c-format
+msgid "<userinput>crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` </userinput>\n"
+"\n"
+"  &lt;node uname=\"pcmk-1\" type=\"normal\" id=\"1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
+"   &lt;instance_attributes id=\"nodes-1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
+"     &lt;nvpair id=\"kernel-1186dc9a-324d-425a-966e-d757e693dc86\" name=\"kernel\" value=\"2.6.16.46-0.4-default\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"  &lt;/node&gt;  "
+msgstr "<userinput>crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` </userinput>\n"
+"\n"
+"  &lt;node uname=\"pcmk-1\" type=\"normal\" id=\"1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
+"   &lt;instance_attributes id=\"nodes-1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
+"     &lt;nvpair id=\"kernel-1186dc9a-324d-425a-966e-d757e693dc86\" name=\"kernel\" value=\"2.6.16.46-0.4-default\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"  &lt;/node&gt;  "
 
-#: Ch-Nodes.xml:39(para)
-msgid "A simpler way to determine the current value of an attribute is to use crm_attribute command again:"
+#. Tag: para
+#, no-c-format
+msgid "A simpler way to determine the current value of an attribute is to use <command>crm_attribute</command> command again:"
 msgstr "O metodă mai simplă de a determina valoarea curentă a unui atribut este de a folosi comanda crm_attribute din nou:"
 
-#: Ch-Nodes.xml:40(command)
-msgid "crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value"
-msgstr "crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>  crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value</command>"
+msgstr "<command>  crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value</command>"
 
-#: Ch-Nodes.xml:42(para)
-msgid "By specifying <parameter>--type</parameter> nodes the admin tells the cluster that this attribute is persistent. There are also transient attributes which are kept in the status section which are \"forgotten\" whenever the node rejoins the cluster. The cluster uses this area to store a record of how many times a resource has failed on that node but administrators can also read and write to this section by specifying <parameter>--type status</parameter>."
+#. Tag: para
+#, no-c-format
+msgid "By specifying <parameter>--type nodes</parameter> the admin tells the cluster that this attribute is persistent. There are also transient attributes which are kept in the status section which are \"forgotten\" whenever the node rejoins the cluster. The cluster uses this area to store a record of how many times a resource has failed on that node but administrators can also read and write to this section by specifying <parameter>--type status</parameter>."
 msgstr "Prin specificarea <parameter>--type</parameter> noduri administratorul îi spune clusterului că acest atribut este persistent. Există de asemenea atribute tranzitive care sunt păstrate în secţiunea de status şi care sunt \"uitate\" oricând nodul se realătură clusterului. Clusterul foloseşte această zonă pentru a stoca o înregistrare despre de câte ori a eşuat o resursă pe acel nod însâ administratorii pot citi şi scrie în această secţiune prin specificarea a <parameter>--type status</parameter>."
 
-#: Ch-Nodes.xml:49(title)
+#. Tag: title
+#, no-c-format
 msgid "Adding a New Cluster Node"
 msgstr "Adăugarea unui Nou Nod în Cluster"
 
-#: Ch-Nodes.xml:51(title)
-#: Ch-Nodes.xml:65(title)
-#: Ch-Nodes.xml:107(title)
+#. Tag: title
+#, no-c-format
 msgid "Corosync"
 msgstr "Corosync"
 
-#: Ch-Nodes.xml:52(para)
-msgid "Adding a new node is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node. You may need to modify the mcastaddr option to match the new node's IP address."
+#. Tag: para
+#, no-c-format
+msgid "Adding a new node is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node. You may need to modify the <literal>mcastaddr</literal> option to match the new node's IP address."
 msgstr "Adăugarea unui nou nod este la fel de simplă ca instalarea Corosync şi Pacemaker şi copierea <filename>/etc/corosync/corosync.conf</filename> şi a <filename>/etc/ais/authkey</filename> (dacă există) de pe un nod existent. Ar putea fi necesar să modificaţi opţiunea mcastaddr pentru a se potrivi cu adresa IP a noului nod."
 
-#: Ch-Nodes.xml:54(para)
-#: Ch-Nodes.xml:116(para)
+#. Tag: para
+#, no-c-format
 msgid "If a log message containing \"Invalid digest\" appears from Corosync, the keys are not consistent between the machines."
 msgstr "Dacă apare în log-uri un mesaj de la Corosync conţinând \"Invalid digest\", cheile nu sunt consistente între maşini."
 
-#: Ch-Nodes.xml:57(title)
-#: Ch-Nodes.xml:92(title)
-#: Ch-Nodes.xml:119(title)
+#. Tag: title
+#, no-c-format
 msgid "Heartbeat"
 msgstr "Heartbeat"
 
-#: Ch-Nodes.xml:58(para)
-msgid "Provided you specified autojoin any in <filename>ha.cf</filename>, adding a new node is as simple as installing heartbeat and copying <filename>ha.cf</filename> and <filename>authkeys</filename> from an existing node."
+#. Tag: para
+#, no-c-format
+msgid "Provided you specified <literal>autojoin any</literal> in <filename>ha.cf</filename>, adding a new node is as simple as installing heartbeat and copying <filename>ha.cf</filename> and <filename>authkeys</filename> from an existing node."
 msgstr "Dacă aţi specificat autojoin any în <filename>ha.cf</filename>, adăugarea unui nod nou este la fel de simpla ca şi instalarea Heartbeat şi copierea <filename>ha.cf</filename> şi a  <filename>authkeys</filename> de pe un nod existent."
 
-#: Ch-Nodes.xml:59(para)
-msgid "If not, then after setting up <filename>ha.cf</filename> and <filename>authkeys</filename>, you must use the hb_addnode command before starting the new node."
+#. Tag: para
+#, no-c-format
+msgid "If you don't want to use <literal>autojoin</literal>, then after setting up <filename>ha.cf</filename> and <filename>authkeys</filename>, you must use the <command>hb_addnode</command> command before starting the new node."
 msgstr "În caz contrar, după setarea <filename>ha.cf</filename> şi a <filename>authkeys</filename>, trebuie să folosiţi comanda hb_addnode înainte de a porni noul nod."
 
-#: Ch-Nodes.xml:63(title)
+#. Tag: title
+#, no-c-format
 msgid "Removing a Cluster Node"
 msgstr "Înlăturarea unui Nod din Cluster"
 
-#: Ch-Nodes.xml:66(para)
+#. Tag: para
+#, no-c-format
 msgid "Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution. First one must arrange for heartbeat to forget about the node (<replaceable>pcmk-1</replaceable> in the example below)."
 msgstr "Datorită faptului că straturile de mesagerie şi apartenenţă sunt surse autoritative pentru nodurile clusterului, ştergerea acestoa din CIB nu este o soluţie de încredere. Întâi cineva trebuie să facă astfel încât heartbeat să uite de nod (<replaceable>pcmk-1</replaceable> în exemplul de mai jos)."
 
-#: Ch-Nodes.xml:70(para)
+#. Tag: para
+#, no-c-format
 msgid "On the host to be removed:"
 msgstr "Pe gazda care va fi înlăturată:"
 
-#: Ch-Nodes.xml:73(para)
+#. Tag: para
+#, no-c-format
 msgid "Find and record the node's Corosync id: <command>crm_node -i</command>"
 msgstr "Găsiţi şi înregistraţi id-ul Corosync al nodului: <command>crm_node -i</command>"
 
-#: Ch-Nodes.xml:76(para)
+#. Tag: para
+#, no-c-format
 msgid "Stop the cluster: <command>/etc/init.d/corosync stop</command>"
 msgstr "Opriţi clusterul: <command>/etc/init.d/corosync stop</command>"
 
-#: Ch-Nodes.xml:79(para)
+#. Tag: para
+#, no-c-format
 msgid "Next, from one of the remaining active cluster nodes:"
 msgstr "Ulterior, de pe unul din nodurile rămase active ale clusterului:"
 
-#: Ch-Nodes.xml:82(para)
+#. Tag: para
+#, no-c-format
 msgid "Tell the cluster to forget about the removed host: <command>crm_node -R <replaceable>COROSYNC_ID</replaceable></command>"
 msgstr "Comunicaţi clusterului să uite despre gazda înlăturată: <command>crm_node -R <replaceable>COROSYNC_ID</replaceable></command>"
 
-#: Ch-Nodes.xml:85(para)
+#. Tag: para
+#, no-c-format
 msgid "Only now is it safe to delete the node from the CIB with:"
 msgstr "Doar acum este în siguranţă să ştergeţi nodul din CIB cu:"
 
-#: Ch-Nodes.xml:86(replaceable)
-#: Ch-Nodes.xml:87(replaceable)
-msgid "pcmk-1"
-msgstr "pcmk-1"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"<replaceable>pcmk-1</replaceable>\"/&gt;'</command>\n"
+"	    <command>cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"<replaceable>pcmk-1</replaceable>\"/&gt;'</command>"
+msgstr "<command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"<replaceable>pcmk-1</replaceable>\"/&gt;'</command>\n"
+"	    <command>cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"<replaceable>pcmk-1</replaceable>\"/&gt;'</command>"
 
-#: Ch-Nodes.xml:86(command)
-msgid "cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"<placeholder-1/>\"/&gt;'"
-msgstr "cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"<placeholder-1/>\"/&gt;'"
-
-#: Ch-Nodes.xml:87(command)
-msgid "cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"<placeholder-1/>\"/&gt;'"
-msgstr "cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"<placeholder-1/>\"/&gt;'"
-
-#: Ch-Nodes.xml:93(para)
+#. Tag: para
+#, no-c-format
 msgid "Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution. First one must arrange for heartbeat to forget about the node (pcmk-1 in the example below). To do this, shut down heartbeat on the node and then, from one of the remaining active cluster nodes, run:"
 msgstr "Datorită faptului că straturile de mesagerie şi apartenenţă sunt surse autoritative pentru nodurile clusterului, ştergerea acestoa din CIB nu este o soluţie de încredere. Întâi cineva trebuie să facă astfel încât heartbeat să uite de nod (<replaceable>pcmk-1</replaceable> în exemplul de mai jos). Pentru a realiza acest lucru, opriţi heartbeat pe nod şi apoi, de pe unul din nodurile rămase active în cluster, rulaţi:"
 
-#: Ch-Nodes.xml:98(command)
-msgid "hb_delnode pcmk-1"
-msgstr "hb_delnode pcmk-1"
+#. Tag: para
+#, no-c-format
+msgid "<command>hb_delnode pcmk-1</command>"
+msgstr "<command>hb_delnode pcmk-1</command>"
 
-#: Ch-Nodes.xml:99(para)
+#. Tag: para
+#, no-c-format
 msgid "Only then is it safe to delete the node from the CIB with:"
 msgstr "Doar acum este în siguranţă să ştergeţi nodul din CIB cu:"
 
-#: Ch-Nodes.xml:100(command)
-msgid "cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'"
-msgstr "cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'"
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'</command>\n"
+"	<command>cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"pcmk-1\"/&gt;'</command>"
+msgstr "<command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'</command>\n"
+"	<command>cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"pcmk-1\"/&gt;'</command>"
 
-#: Ch-Nodes.xml:101(command)
-msgid "cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"pcmk-1\"/&gt;'"
-msgstr "cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"pcmk-1\"/&gt;'"
-
-#: Ch-Nodes.xml:105(title)
+#. Tag: title
+#, no-c-format
 msgid "Replacing a Cluster Node"
 msgstr "Înlocuirea unui Nod din Cluster"
 
-#: Ch-Nodes.xml:108(para)
+#. Tag: para
+#, no-c-format
 msgid "The five-step guide to replacing an existing cluster node:"
 msgstr "Ghidul în cinci paşi pentru înlocuirea unui nod existent din cluster:"
 
-#: Ch-Nodes.xml:110(para)
-#: Ch-Nodes.xml:122(para)
+#. Tag: para
+#, no-c-format
 msgid "Make sure the old node is completely stopped"
 msgstr "Asiguraţi-vă că nodul vechi este oprit de tot."
 
-#: Ch-Nodes.xml:111(para)
+#. Tag: para
+#, no-c-format
 msgid "Give the new machine the same hostname and IP address as the old one"
 msgstr "Daţi maşinii noi acelaşi hostname şi adresă IP ca celei vechi"
 
-#: Ch-Nodes.xml:112(para)
+#. Tag: para
+#, no-c-format
 msgid "Install the cluster software :-)"
 msgstr "Instalaţi soft-ul de cluster :-)"
 
-#: Ch-Nodes.xml:113(para)
+#. Tag: para
+#, no-c-format
 msgid "Copy <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) to the new node"
 msgstr "Copiaţi <filename>/etc/corosync/corosync.conf</filename> şi <filename>/etc/ais/authkey</filename> (dacă există) pe nodul nou"
 
-#: Ch-Nodes.xml:114(para)
-#: Ch-Nodes.xml:128(para)
+#. Tag: para
+#, no-c-format
 msgid "Start the new cluster node"
 msgstr "Porniţi noul nod în cluster"
 
-#: Ch-Nodes.xml:120(para)
+#. Tag: para
+#, no-c-format
 msgid "The seven-step guide to replacing an existing cluster node:"
 msgstr "Ghidul în şapte paşi pentru înlocuirea unui nod existent din cluster"
 
-#: Ch-Nodes.xml:123(para)
+#. Tag: para
+#, no-c-format
 msgid "Give the new machine the same hostname as the old one"
 msgstr "Daţi maşinii noi acelaşi hostname ca şi celei vechi"
 
-#: Ch-Nodes.xml:124(para)
+#. Tag: para
+#, no-c-format
 msgid "Go to an active cluster node and look up the UUID for the old node in <filename>/var/lib/heartbeat/hostcache</filename>"
 msgstr "Mergeţi pe un nod activ din cluster şi căutaţi UUID-ul nodului vechi în <filename>/var/lib/heartbeat/hostcache</filename>"
 
-#: Ch-Nodes.xml:125(para)
+#. Tag: para
+#, no-c-format
 msgid "Install the cluster software"
 msgstr "Instalaţi soft-ul de cluster"
 
-#: Ch-Nodes.xml:126(para)
-msgid "Copy ha.cf and authkeys to the new node"
-msgstr "Copiaţi <filename>ha.cf</filename> şi <filename>authkeys</filename> pe nodul nou"
+#. Tag: para
+#, no-c-format
+msgid "Copy <filename>ha.cf</filename> and <filename>authkeys</filename> to the new node"
+msgstr "Copiaţi <filename>/etc/corosync/corosync.conf</filename> şi <filename>/etc/ais/authkey</filename> (dacă există) pe nodul nou"
 
-#: Ch-Nodes.xml:127(para)
-msgid "On the new node, populate it's UUID using crm_uuid -w and the UUID from step 2"
+#. Tag: para
+#, no-c-format
+msgid "On the new node, populate it's UUID using <command>crm_uuid -w</command> and the UUID from step 2"
 msgstr "Pe nodul nou, populaţi UUID-ul acestuia folosind crm_uuid -w şi UUID-ul prelevat de la pasul 2"
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ch-Nodes.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
 
