@@ -465,7 +465,7 @@ static int stonith_level_register(xmlNode *msg)
     }
 
     if(tp->levels[id] != NULL) {
-        crm_info("Adding to the existing %s (%d) topology entry (%d active entries)", node, count_active_levels(tp));
+        crm_info("Adding to the existing %s[%d] topology entry (%d active entries)", node, id, count_active_levels(tp));
     }
 
     for (child = __xml_first_child(level); child != NULL; child = __xml_next(child)) {
