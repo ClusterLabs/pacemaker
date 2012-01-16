@@ -96,7 +96,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
         return FALSE;
 
     } else if (client->name == NULL) {
-        crm_debug_2("Skipping unnammed client / comamnd channel");
+        crm_trace("Skipping unnammed client / comamnd channel");
         return FALSE;
     }
 
@@ -202,10 +202,10 @@ cib_pre_notify(int options, const char *op, xmlNode * existing, xmlNode * update
     g_hash_table_foreach_remove(client_list, cib_notify_client, update_msg);
 
     if (update == NULL) {
-        crm_debug_2("Performing operation %s (on section=%s)", op, type);
+        crm_trace("Performing operation %s (on section=%s)", op, type);
 
     } else {
-        crm_debug_2("Performing %s on <%s%s%s>", op, type, id ? " id=" : "", id ? id : "");
+        crm_trace("Performing %s on <%s%s%s>", op, type, id ? " id=" : "", id ? id : "");
     }
 
     free_xml(update_msg);
@@ -290,15 +290,15 @@ do_cib_notify(int options, const char *op, xmlNode * update,
     }
 
     if (update != NULL) {
-        crm_debug_4("Setting type to update->name: %s", crm_element_name(update));
+        crm_trace("Setting type to update->name: %s", crm_element_name(update));
         crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
 
     } else if (result_data != NULL) {
-        crm_debug_4("Setting type to new_obj->name: %s", crm_element_name(result_data));
+        crm_trace("Setting type to new_obj->name: %s", crm_element_name(result_data));
         crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(result_data));
 
     } else {
-        crm_debug_4("Not Setting type");
+        crm_trace("Not Setting type");
     }
 
     attach_cib_generation(update_msg, "cib_generation", the_cib);
@@ -309,10 +309,10 @@ do_cib_notify(int options, const char *op, xmlNode * update,
         add_message_xml(update_msg, F_CIB_UPDATE_RESULT, result_data);
     }
 
-    crm_debug_3("Notifying clients");
+    crm_trace("Notifying clients");
     g_hash_table_foreach_remove(client_list, cib_notify_client, update_msg);
     free_xml(update_msg);
-    crm_debug_3("Notify complete");
+    crm_trace("Notify complete");
 }
 
 void

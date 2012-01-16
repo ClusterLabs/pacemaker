@@ -134,7 +134,7 @@ resource_ipc_callback(IPC_Channel * server, void *private_data)
         }
     }
 
-    crm_debug_2("Processed %d messages (%d)", lpc, server->ch_status);
+    crm_trace("Processed %d messages (%d)", lpc, server->ch_status);
 
     if (server->ch_status != IPC_CONNECT) {
         stay_connected = FALSE;
@@ -169,7 +169,7 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
     for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
         node_t *node = (node_t *) lpc->data;
 
-        crm_debug_3("resource %s is running on: %s", rsc, node->details->uname);
+        crm_trace("resource %s is running on: %s", rsc, node->details->uname);
         if (BE_QUIET) {
             fprintf(stdout, "%s\n", node->details->uname);
         } else {
@@ -1210,7 +1210,6 @@ main(int argc, char **argv)
     cib_t *cib_conn = NULL;
     enum cib_errors rc = cib_ok;
 
-    gboolean need_cib = TRUE;
     int option_index = 0;
     int argerr = 0;
     int flag;
@@ -1271,7 +1270,6 @@ main(int argc, char **argv)
                 break;
             case 'R':
             case 'P':
-                need_cib = FALSE;
                 rsc_cmd = flag;
                 break;
             case 'L':
@@ -1302,7 +1300,7 @@ main(int argc, char **argv)
             case 'h':
             case 'H':
             case 'N':
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 host_uname = optarg;
                 break;
 
@@ -1342,20 +1340,20 @@ main(int argc, char **argv)
     }
 
     set_working_set_defaults(&data_set);
-    if (need_cib) {
+    if (rsc_cmd != 'P') {
         resource_t *rsc = NULL;
+
+        cib_conn = cib_new();
+        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+        if (rc != cib_ok) {
+            CMD_ERR("Error signing on to the CIB service: %s\n", cib_error2string(rc));
+            return rc;
+        }
 
         if (xml_file != NULL) {
             cib_xml_copy = filename2xml(xml_file);
 
         } else {
-            cib_conn = cib_new();
-            rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-            if (rc != cib_ok) {
-                CMD_ERR("Error signing on to the CIB service: %s\n", cib_error2string(rc));
-                return rc;
-            }
-
             cib_xml_copy = get_cib_copy(cib_conn);
         }
 

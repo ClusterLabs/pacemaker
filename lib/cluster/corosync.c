@@ -23,21 +23,33 @@
 #include <crm/common/cluster.h>
 #include <sys/utsname.h>
 #include "stack.h"
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
 #  if CS_USES_LIBQB
 #    include <qb/qbipcc.h>
 #    include <qb/qbutil.h>
 #    include <corosync/corodefs.h>
 #    include <corosync/corotypes.h>
 #    include <corosync/hdb.h>
-#    include <corosync/confdb.h>
+#    if HAVE_CONFDB
+#      include <corosync/confdb.h>
+#    endif
 #  else
 #    include <corosync/confdb.h>
 #    include <corosync/corodefs.h>
 #  endif
+#  include <corosync/cpg.h>
+cpg_handle_t pcmk_cpg_handle = 0;
+struct cpg_name pcmk_cpg_group = {
+    .length = 0,
+    .value[0] = 0,
+};
 #endif
 
-#ifdef SUPPORT_CMAN
+#if HAVE_CMAP
+#  include <corosync/cmap.h>
+#endif
+
+#if SUPPORT_CMAN
 #  include <libcman.h>
 cman_handle_t pcmk_cman_handle = NULL;
 #endif
@@ -47,16 +59,10 @@ cman_handle_t pcmk_cman_handle = NULL;
 #  include <netinet/in.h>
 #  include <arpa/inet.h>
 
-#  include <corosync/cpg.h>
 #  include <corosync/quorum.h>
 
 quorum_handle_t pcmk_quorum_handle = 0;
-cpg_handle_t pcmk_cpg_handle = 0;
 
-struct cpg_name pcmk_cpg_group = {
-    .length = 0,
-    .value[0] = 0,
-};
 #endif
 
 static char *pcmk_uname = NULL;
@@ -123,11 +129,11 @@ get_ais_data(const AIS_Message * msg)
     unsigned int new_size = msg->size + 1;
 
     if (msg->is_compressed == FALSE) {
-        crm_debug_2("Returning uncompressed message data");
+        crm_trace("Returning uncompressed message data");
         uncompressed = strdup(msg->data);
 
     } else {
-        crm_debug_2("Decompressing message data");
+        crm_trace("Decompressing message data");
         crm_malloc0(uncompressed, new_size);
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, (char *)msg->data,
@@ -300,7 +306,7 @@ send_ais_text(int class, const char *data,
         char *uncompressed = crm_strdup(data);
         unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
 
-        crm_debug_5("Compressing message payload");
+        crm_trace("Compressing message payload");
         crm_malloc(compressed, len);
 
         rc = BZ2_bzBuffToBuffCompress(compressed, &len, uncompressed, ais_msg->size, CRM_BZ2_BLOCKS,
@@ -322,12 +328,12 @@ send_ais_text(int class, const char *data,
         ais_msg->is_compressed = TRUE;
         ais_msg->compressed_size = len;
 
-        crm_debug_2("Compression details: %d -> %d", ais_msg->size, ais_data_len(ais_msg));
+        crm_trace("Compression details: %d -> %d", ais_msg->size, ais_data_len(ais_msg));
     }
 
     ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
 
-    crm_debug_3("Sending%s message %d to %s.%s (data=%d, total=%d)",
+    crm_trace("Sending%s message %d to %s.%s (data=%d, total=%d)",
                 ais_msg->is_compressed ? " compressed" : "",
                 ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
                 ais_data_len(ais_msg), ais_msg->header.size);
@@ -403,7 +409,7 @@ send_ais_text(int class, const char *data,
                    ais_msg->id, transport, rc, ais_error2text(rc));
 
     } else {
-        crm_debug_4("Message %d: sent", ais_msg->id);
+        crm_trace("Message %d: sent", ais_msg->id);
     }
 
     crm_free(buf);
@@ -449,15 +455,17 @@ terminate_ais_connection(void)
         cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group);
     }
 
+#ifdef SUPPORT_CS_QUORUM
     if (is_corosync_cluster()) {
         quorum_finalize(pcmk_quorum_handle);
     }
-#  ifdef SUPPORT_CMAN
+#endif
+#if SUPPORT_CMAN
     if (is_cman_cluster()) {
         cman_stop_notification(pcmk_cman_handle);
         cman_finish(pcmk_cman_handle);
     }
-#  endif
+#endif
 }
 
 int ais_membership_timer = 0;
@@ -473,7 +481,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
 
     CRM_ASSERT(msg != NULL);
 
-    crm_debug_3("Got new%s message (size=%d, %d, %d)",
+    crm_trace("Got new%s message (size=%d, %d, %d)",
                 msg->is_compressed ? " compressed" : "",
                 ais_data_len(msg), msg->size, msg->compressed_size);
 
@@ -486,7 +494,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
             goto badmsg;
         }
 
-        crm_debug_5("Decompressing message data");
+        crm_trace("Decompressing message data");
         crm_malloc0(uncompressed, new_size);
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, data, msg->compressed_size, 1, 0);
 
@@ -570,6 +578,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
         }
     }
 
+    crm_trace("Payload: %s", data);
     if (dispatch != NULL) {
         dispatch(msg, data, 0);
     }
@@ -662,9 +671,13 @@ pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
                 int children = 0;
                 const char *uname = crm_element_value(node, "uname");
 
+                crm_element_value_int(node, "id", &id);
                 crm_element_value_int(node, "processes", &children);
-
-                crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+                if(id == 0) {
+                    crm_log_xml_err(msg, "Bad Update");
+                } else {
+                    crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+                }
             }
             free_xml(msg);
         }
@@ -680,7 +693,7 @@ pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
     return stay_connected;
 }
 
-#  ifdef SUPPORT_CMAN
+#  if SUPPORT_CMAN
 
 static gboolean
 pcmk_cman_dispatch(int sender, gpointer user_data)
@@ -764,7 +777,7 @@ cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
 gboolean
 init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*destroy) (gpointer))
 {
-#  ifdef SUPPORT_CMAN
+#  if SUPPORT_CMAN
     int rc = -1, fd = -1;
     cman_cluster_t cluster;
 
@@ -888,6 +901,8 @@ pcmk_quorum_dispatch(int sender, gpointer user_data)
     return TRUE;
 }
 
+gboolean(*quorum_app_callback) (unsigned long long seq, gboolean quorate) = NULL;
+
 static void
 pcmk_quorum_notification(quorum_handle_t handle,
                          uint32_t quorate,
@@ -905,7 +920,14 @@ pcmk_quorum_notification(quorum_handle_t handle,
                  quorate ? "retained" : "still lost", (long unsigned int)view_list_entries);
     }
     for (i = 0; i < view_list_entries; i++) {
-        crm_debug(" %d ", view_list[i]);
+        crm_debug("Member[%d] %d ", i, view_list[i]);
+
+        crm_update_peer(view_list[i], 0, ring_id, 0, 0,
+                        NULL, /* view_list[i] */NULL, NULL, CRM_NODE_MEMBER);
+    }
+
+    if(quorum_app_callback) {
+        quorum_app_callback(ring_id, quorate);
     }
 }
 
@@ -981,10 +1003,11 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
     int rc = -1;
     int fd = 0;
     int quorate = 0;
-
+    uint32_t quorum_type = 0;
+    
     crm_info("Configuring Pacemaker to obtain quorum from Corosync");
 
-    rc = quorum_initialize(&pcmk_quorum_handle, &quorum_callbacks);
+    rc = quorum_initialize(&pcmk_quorum_handle, &quorum_callbacks, &quorum_type);
     if (rc != CS_OK) {
         crm_err("Could not connect to the Quorum API: %d\n", rc);
         goto bail;
@@ -996,6 +1019,7 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
         goto bail;
     }
     crm_notice("Quorum %s", quorate ? "acquired" : "lost");
+    quorum_app_callback = dispatch;
     crm_have_quorum = quorate;
 
     rc = quorum_trackstart(pcmk_quorum_handle, CS_TRACK_CHANGES | CS_TRACK_CURRENT);
@@ -1139,7 +1163,7 @@ get_local_node_name(void)
     struct utsname res;
 
     if (is_cman_cluster()) {
-#  ifdef SUPPORT_CMAN
+#  if SUPPORT_CMAN
         cman_node_t us;
         cman_handle_t cman;
 
@@ -1301,7 +1325,7 @@ check_message_sanity(const AIS_Message * msg, const char *data)
              msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
              ais_data_len(msg), msg->header.size);
     } else {
-        crm_debug_3
+        crm_trace
             ("Verfied message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
              msg->id, ais_dest(&(msg->host)), msg_type2text(dest), ais_dest(&(msg->sender)),
              msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
@@ -1312,6 +1336,7 @@ check_message_sanity(const AIS_Message * msg, const char *data)
 }
 #endif
 
+#if HAVE_CONFDB
 static int
 get_config_opt(confdb_handle_t config,
                hdb_handle_t object_handle, const char *key, char **value, const char *fallback)
@@ -1384,7 +1409,7 @@ config_find_next(confdb_handle_t config, const char *name, confdb_handle_t top_h
         return 0;
     }
 
-    crm_debug_2("Searching for %s in " HDB_X_FORMAT, name, top_handle);
+    crm_trace("Searching for %s in " HDB_X_FORMAT, name, top_handle);
     rc = confdb_object_find(config, top_handle, name, strlen(name), &local_handle);
     if (rc != CS_OK) {
         crm_info("No additional configuration supplied for: %s", name);
@@ -1451,3 +1476,22 @@ find_corosync_variant(void)
     confdb_finalize(config);
     return found;
 }
+
+#else
+enum cluster_type_e
+find_corosync_variant(void)
+{
+    int rc = CS_OK;
+    cmap_handle_t handle;
+
+    /* There can be only one (possibility if confdb isn't around) */
+    rc = cmap_initialize(&handle);
+    if (rc != CS_OK) {
+        crm_info("Failed to initialize the cmap API. Error %d", rc);
+        return pcmk_cluster_unknown;
+    }
+
+    cmap_finalize(handle);
+    return pcmk_cluster_corosync;
+}
+#endif

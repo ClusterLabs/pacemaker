@@ -166,7 +166,7 @@ main(int argc, char **argv)
     mainloop = g_main_new(FALSE);
     crm_info("Starting mainloop");
     g_main_run(mainloop);
-    crm_debug_3("%s exiting normally", crm_system_name);
+    crm_trace("%s exiting normally", crm_system_name);
     fflush(stderr);
     return -exit_code;
 }

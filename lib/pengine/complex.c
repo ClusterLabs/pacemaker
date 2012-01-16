@@ -411,7 +411,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     (*rsc)->fns = &resource_class_functions[(*rsc)->variant];
-    crm_debug_3("Unpacking resource...");
+    crm_trace("Unpacking resource...");
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
 
@@ -459,7 +459,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         clear_bit((*rsc)->flags, pe_rsc_managed);
     }
 
-    crm_debug_2("Options for %s", (*rsc)->id);
+    crm_trace("Options for %s", (*rsc)->id);
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
 
     top = uber_parent(*rsc);
@@ -470,25 +470,25 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
     if (safe_str_eq(value, "restart")) {
         (*rsc)->restart_type = pe_restart_restart;
-        crm_debug_2("\tDependency restart handling: restart");
+        crm_trace("\tDependency restart handling: restart");
 
     } else {
         (*rsc)->restart_type = pe_restart_ignore;
-        crm_debug_2("\tDependency restart handling: ignore");
+        crm_trace("\tDependency restart handling: ignore");
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
     if (safe_str_eq(value, "stop_only")) {
         (*rsc)->recovery_type = recovery_stop_only;
-        crm_debug_2("\tMultiple running resource recovery: stop only");
+        crm_trace("\tMultiple running resource recovery: stop only");
 
     } else if (safe_str_eq(value, "block")) {
         (*rsc)->recovery_type = recovery_block;
-        crm_debug_2("\tMultiple running resource recovery: block");
+        crm_trace("\tMultiple running resource recovery: block");
 
     } else {
         (*rsc)->recovery_type = recovery_stop_start;
-        crm_debug_2("\tMultiple running resource recovery: stop/start");
+        crm_trace("\tMultiple running resource recovery: stop/start");
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_STICKINESS);
@@ -548,7 +548,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     get_target_role(*rsc, &((*rsc)->next_role));
-    crm_debug_2("\tDesired next state: %s",
+    crm_trace("\tDesired next state: %s",
                 (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");
 
     if ((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
@@ -559,7 +559,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
     }
 
-    crm_debug_2("\tAction notification: %s",
+    crm_trace("\tAction notification: %s",
                 is_set((*rsc)->flags, pe_rsc_notify) ? "required" : "not required");
 
     if (safe_str_eq(class, "stonith")) {
@@ -589,7 +589,7 @@ common_update_score(resource_t * rsc, const char *id, int score)
 
     node = pe_hash_table_lookup(rsc->allowed_nodes, id);
     if (node != NULL) {
-        crm_debug_2("Updating score for %s on %s: %d + %d", rsc->id, id, node->weight, score);
+        crm_trace("Updating score for %s on %s: %d + %d", rsc->id, id, node->weight, score);
         node->weight = merge_weights(node->weight, score);
     }
 
@@ -625,7 +625,7 @@ common_free(resource_t * rsc)
         return;
     }
 
-    crm_debug_5("Freeing %s %d", rsc->id, rsc->variant);
+    crm_trace("Freeing %s %d", rsc->id, rsc->variant);
 
     g_list_free(rsc->rsc_cons);
     g_list_free(rsc->rsc_cons_lhs);
@@ -674,5 +674,5 @@ common_free(resource_t * rsc)
     crm_free(rsc->allocated_to);
     crm_free(rsc->variant_opaque);
     crm_free(rsc);
-    crm_debug_5("Resource freed");
+    crm_trace("Resource freed");
 }

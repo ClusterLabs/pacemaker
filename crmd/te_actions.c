@@ -313,14 +313,14 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     xml_op = create_operation_update(rsc, op, CRM_FEATURE_SET, target_rc, __FUNCTION__, LOG_INFO);
     free_lrm_op(op);
 
-    crm_debug_3("Updating CIB with \"%s\" (%s): %s %s on %s",
+    crm_trace("Updating CIB with \"%s\" (%s): %s %s on %s",
                 status < 0 ? "new action" : XML_ATTR_TIMEOUT,
                 crm_element_name(action->xml), crm_str(task), rsc_id, target);
     crm_log_xml_trace(xml_op, "Op");
 
     rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
 
-    crm_debug_2("Updating CIB with %s action %d: %s on %s (call_id=%d)",
+    crm_trace("Updating CIB with %s action %d: %s on %s (call_id=%d)",
                 op_status2text(status), action->id, task_uuid, target, rc);
 
     add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, cib_action_updated);

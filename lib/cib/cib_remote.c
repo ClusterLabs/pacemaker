@@ -339,7 +339,7 @@ cib_remote_dispatch(int fd, gpointer user_data)
         msg = cib_recv_remote_msg(private->callback.session, private->callback.encrypted);
 
         type = crm_element_value(msg, F_TYPE);
-        crm_debug_4("Activating %s callbacks...", type);
+        crm_trace("Activating %s callbacks...", type);
 
         if (safe_str_eq(type, T_CIB)) {
             cib_native_callback(cib, msg, 0, 0);
@@ -527,12 +527,12 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         return cib_create_msg;
     }
 
-    crm_debug_3("Sending %s message to CIB service", op);
+    crm_trace("Sending %s message to CIB service", op);
     cib_send_remote_msg(private->command.session, op_msg, private->command.encrypted);
     free_xml(op_msg);
 
     if ((call_options & cib_discard_reply)) {
-        crm_debug_3("Discarding reply");
+        crm_trace("Discarding reply");
         return cib_ok;
 
     } else if (!(call_options & cib_sync_call)) {
@@ -540,7 +540,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     }
 
     rc = IPC_OK;
-    crm_debug_3("Waiting for a syncronous reply");
+    crm_trace("Waiting for a syncronous reply");
 
     if (cib->call_timeout > 0) {
         /* We need this, even with msgfromIPC_timeout(), because we might
@@ -605,7 +605,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         return cib_reply_failed;
     }
 
-    crm_debug_3("Syncronous reply received");
+    crm_trace("Syncronous reply received");
     rc = cib_ok;
 
     /* Start processing the reply... */
@@ -634,7 +634,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         xmlNode *tmp = get_message_xml(op_reply, F_CIB_CALLDATA);
 
         if (tmp == NULL) {
-            crm_debug_3("No output in reply to \"%s\" command %d", op, cib->call_id - 1);
+            crm_trace("No output in reply to \"%s\" command %d", op, cib->call_id - 1);
         } else {
             *output_data = copy_xml(tmp);
         }

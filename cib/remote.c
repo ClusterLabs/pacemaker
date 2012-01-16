@@ -430,7 +430,7 @@ cib_remote_msg(int csock, gpointer data)
         value = crm_element_value(command, F_CIB_CALLBACK_TOKEN);
         if (value != NULL) {
             client->callback_id = crm_strdup(value);
-            crm_debug_2("Callback channel for %s is %s", client->id, client->callback_id);
+            crm_trace("Callback channel for %s is %s", client->id, client->callback_id);
 
         } else {
             client->callback_id = crm_strdup(client->id);

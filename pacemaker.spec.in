@@ -20,15 +20,18 @@
 %{!?with:          %{expand: %%global with()          %%{expand:%%%%{?with_%%{1}:1}%%%%{!?with_%%{1}:0}}}}
 %{!?without:       %{expand: %%global without()       %%{expand:%%%%{?with_%%{1}:0}%%%%{!?with_%%{1}:1}}}}
 
+%global cs_major %(pkg-config corosync --modversion  | awk -F . '{print $1}')
+%global cs_minor %(pkg-config corosync --modversion  | awk -F . '{print $2}')
+
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
 # to disable or enable specific features
 
 # Supported cluster stacks, must support at least one
-%bcond_with cman
+%bcond_without cman
 %bcond_without doc
 %bcond_without corosync
-%bcond_without heartbeat
+%bcond_with heartbeat
 
 # ESMTP is not available in RHEL, only in EPEL. Allow people to build
 # the RPM without ESMTP in case they choose not to use EPEL packages
@@ -261,6 +264,8 @@ find . -exec touch \{\} \;
 eval `objdump --headers --private-headers /usr/bin/perl | grep RPATH | awk '{print "export LD_LIBRARY_PATH="$2}'`
 %endif
 
+echo "CSV: %{cs_major} . %{cs_minor}."
+
 # RHEL <= 5 does not support --docdir
 docdir=%{pcmk_docdir} %{configure}                 \
         %{!?with_heartbeat:  --without-heartbeat}  \
@@ -393,8 +398,13 @@ fi
 %dir /usr/lib/ocf
 %dir /usr/lib/ocf/resource.d
 /usr/lib/ocf/resource.d/pacemaker
+
 %if %{with corosync}
+%if 0%{?cs_major} < 2
+%if 0%{?cs_minor} < 8
 %{_libexecdir}/lcrso/pacemaker.lcrso
+%endif
+%endif
 %endif
 
 %files cli

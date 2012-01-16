@@ -106,7 +106,7 @@ cib_process_default(const char *op, int options, const char *section, xmlNode * 
 {
     enum cib_errors result = cib_ok;
 
-    crm_debug_2("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event", op);
     *answer = NULL;
 
     if (op == NULL) {
@@ -129,7 +129,7 @@ cib_process_quit(const char *op, int options, const char *section, xmlNode * req
 {
     enum cib_errors result = cib_ok;
 
-    crm_debug_2("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event", op);
 
     crm_warn("The CRMd has asked us to exit... complying");
     exit(0);
@@ -146,7 +146,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 #else
     enum cib_errors result = cib_ok;
 
-    crm_debug_2("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event", op);
 
     if (safe_str_eq(op, CIB_OP_ISMASTER)) {
         if (cib_is_master == TRUE) {
@@ -185,7 +185,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 #else
     enum cib_errors result = cib_ok;
 
-    crm_debug_2("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event", op);
     *answer = createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
     return result;
 #endif
@@ -311,7 +311,7 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
     }
     object_id = crm_element_value(delete_spec, XML_ATTR_ID);
 
-    crm_debug_3("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
 
     if (delete_spec == NULL) {
         result = cib_NOOBJECT;
@@ -363,7 +363,7 @@ cib_process_delete_absolute(const char *op, int options, const char *section, xm
     enum cib_errors result = cib_ok;
     xmlNode *update_section = NULL;
 
-    crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
+    crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
     if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
         section = NULL;
 

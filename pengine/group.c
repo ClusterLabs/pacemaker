@@ -41,7 +41,7 @@ group_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     if (is_not_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to;
     }
-    crm_debug_2("Processing %s", rsc->id);
+    crm_trace("Processing %s", rsc->id);
     if (is_set(rsc->flags, pe_rsc_allocating)) {
         crm_debug("Dependency loop detected involving %s", rsc->id);
         return NULL;
@@ -105,7 +105,7 @@ group_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     const char *value = NULL;
     GListPtr gIter = rsc->children;
 
-    crm_debug_2("Creating actions for %s", rsc->id);
+    crm_trace("Creating actions for %s", rsc->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
@@ -171,12 +171,12 @@ group_update_pseudo_status(resource_t * parent, resource_t * child)
         }
         if (safe_str_eq(RSC_STOP, action->task) && is_set(action->flags, pe_action_runnable)) {
             group_data->child_stopping = TRUE;
-            crm_debug_3("Based on %s the group is stopping", action->uuid);
+            crm_trace("Based on %s the group is stopping", action->uuid);
 
         } else if (safe_str_eq(RSC_START, action->task)
                    && is_set(action->flags, pe_action_runnable)) {
             group_data->child_starting = TRUE;
-            crm_debug_3("Based on %s the group is starting", action->uuid);
+            crm_trace("Based on %s the group is starting", action->uuid);
         }
     }
 }
@@ -304,7 +304,7 @@ group_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     }
 
     gIter = rsc_lh->children;
-    crm_debug_4("Processing constraints from %s", rsc_lh->id);
+    crm_trace("Processing constraints from %s", rsc_lh->id);
 
     get_group_variant_data(group_data, rsc_lh);
 
@@ -335,7 +335,7 @@ group_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     get_group_variant_data(group_data, rsc_rh);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
-    crm_debug_3("Processing RH of constraint %s", constraint->id);
+    crm_trace("Processing RH of constraint %s", constraint->id);
     print_resource(LOG_DEBUG_3, "LHS", rsc_lh, TRUE);
 
     if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
@@ -465,7 +465,7 @@ group_expand(resource_t * rsc, pe_working_set_t * data_set)
 
     get_group_variant_data(group_data, rsc);
 
-    crm_debug_3("Processing actions from %s", rsc->id);
+    crm_trace("Processing actions from %s", rsc->id);
 
     CRM_CHECK(rsc != NULL, return);
     native_expand(rsc, data_set);

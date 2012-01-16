@@ -62,19 +62,19 @@ ais_ipc_connection_destroy(gpointer user_data)
     }
 
     if (ais_client->source != NULL) {
-        crm_debug_4("Deleting %s (%p) from mainloop", ais_client->name, ais_client->source);
+        crm_trace("Deleting %s (%p) from mainloop", ais_client->name, ais_client->source);
         G_main_del_IPC_Channel(ais_client->source);
         ais_client->source = NULL;
     }
 
-    crm_debug_3("Destroying %s (%p)", ais_client->name, user_data);
+    crm_trace("Destroying %s (%p)", ais_client->name, user_data);
     num_clients--;
     crm_debug("Num unfree'd clients: %d", num_clients);
     crm_free(ais_client->name);
     crm_free(ais_client->callback_id);
     crm_free(ais_client->id);
     crm_free(ais_client);
-    crm_debug_4("Freed the cib client");
+    crm_trace("Freed the cib client");
 
     return;
 }
@@ -90,7 +90,7 @@ ais_process_disconnect(IPC_Channel * channel, ais_client_t * ais_client)
 
     } else {
         CRM_LOG_ASSERT(channel->ch_status != IPC_CONNECT);
-        crm_debug_2("Cleaning up after client disconnect: %s/%s/%s",
+        crm_trace("Cleaning up after client disconnect: %s/%s/%s",
                     crm_str(ais_client->name), ais_client->channel_name, ais_client->id);
 
         if (ais_client->id != NULL) {
@@ -159,10 +159,10 @@ ais_ipc_callback(IPC_Channel * channel, gpointer user_data)
         }
     }
 
-    crm_debug_2("Processed %d messages", lpc);
+    crm_trace("Processed %d messages", lpc);
 
     if (channel->ch_status != IPC_CONNECT) {
-        crm_debug_2("Client disconnected");
+        crm_trace("Client disconnected");
         keep_channel = ais_process_disconnect(channel, ais_client);
     }
 
@@ -175,7 +175,7 @@ ais_client_connect(IPC_Channel * channel, gpointer user_data)
     const char *channel_name = user_data;
     ais_client_t *new_client = NULL;
 
-    crm_debug_3("Connecting channel");
+    crm_trace("Connecting channel");
 
     if (channel == NULL) {
         crm_err("Channel was NULL");
@@ -195,7 +195,7 @@ ais_client_connect(IPC_Channel * channel, gpointer user_data)
         new_client->channel = channel;
         new_client->channel_name = channel_name;
 
-        crm_debug_3("Created channel %p for channel %s", new_client, new_client->channel_name);
+        crm_trace("Created channel %p for channel %s", new_client, new_client->channel_name);
 
         channel->ops->set_recv_qlen(channel, 500);
         channel->ops->set_send_qlen(channel, 500);
@@ -204,7 +204,7 @@ ais_client_connect(IPC_Channel * channel, gpointer user_data)
             G_main_add_IPC_Channel(G_PRIORITY_DEFAULT, channel, FALSE, ais_ipc_callback, new_client,
                                    ais_ipc_connection_destroy);
 
-        crm_debug_3("Channel %s connected for client %s", new_client->channel_name, new_client->id);
+        crm_trace("Channel %s connected for client %s", new_client->channel_name, new_client->id);
     }
 
     if (new_client == NULL) {

@@ -164,7 +164,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     long long new_actions = A_NOTHING;
     enum crmd_fsa_state last_state = fsa_state;
 
-    crm_debug_2("FSA invoked with Cause: %s\tState: %s",
+    crm_trace("FSA invoked with Cause: %s\tState: %s",
                 fsa_cause2string(cause), fsa_state2string(fsa_state));
 
     do_fsa_stall = FALSE;
@@ -179,7 +179,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_data = NULL;
     }
     while (is_message() && do_fsa_stall == FALSE) {
-        crm_debug_2("Checking messages (%d remaining)", g_list_length(fsa_message_queue));
+        crm_trace("Checking messages (%d remaining)", g_list_length(fsa_message_queue));
 
         fsa_data = get_message();
         CRM_CHECK(fsa_data != NULL, continue);
@@ -201,7 +201,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         }
 #ifdef FSA_TRACE
         if (new_actions != A_NOTHING) {
-            crm_debug_2("Adding FSA actions %.16llx for %s/%s",
+            crm_trace("Adding FSA actions %.16llx for %s/%s",
                         new_actions, fsa_input2string(fsa_data->fsa_input),
                         fsa_state2string(fsa_state));
             fsa_dump_actions(new_actions, "\tFSA scheduled");
@@ -211,7 +211,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
                       fsa_input2string(fsa_data->fsa_input), fsa_state2string(fsa_state));
         }
         if (fsa_data->actions != A_NOTHING) {
-            crm_debug_2("Adding input actions %.16llx for %s/%s",
+            crm_trace("Adding input actions %.16llx for %s/%s",
                         new_actions, fsa_input2string(fsa_data->fsa_input),
                         fsa_state2string(fsa_state));
             fsa_dump_actions(fsa_data->actions, "\tInput scheduled");
@@ -264,7 +264,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         crm_debug("Exiting the FSA: queue=%d, fsa_actions=0x%llx, stalled=%s",
                   g_list_length(fsa_message_queue), fsa_actions, do_fsa_stall ? "true" : "false");
     } else {
-        crm_debug_2("Exiting the FSA");
+        crm_trace("Exiting the FSA");
     }
 
     /* cleanup inputs? */
@@ -456,20 +456,20 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
 void
 log_fsa_input(fsa_data_t * stored_msg)
 {
-    crm_debug_2("Processing queued input %d", stored_msg->id);
+    crm_trace("Processing queued input %d", stored_msg->id);
     if (stored_msg->fsa_cause == C_CCM_CALLBACK) {
-        crm_debug_3("FSA processing CCM callback from %s", stored_msg->origin);
+        crm_trace("FSA processing CCM callback from %s", stored_msg->origin);
 
     } else if (stored_msg->fsa_cause == C_LRM_OP_CALLBACK) {
-        crm_debug_3("FSA processing LRM callback from %s", stored_msg->origin);
+        crm_trace("FSA processing LRM callback from %s", stored_msg->origin);
 
     } else if (stored_msg->data == NULL) {
-        crm_debug_3("FSA processing input from %s", stored_msg->origin);
+        crm_trace("FSA processing input from %s", stored_msg->origin);
 
     } else {
         ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, fsa_dt_ha_msg, __FUNCTION__);
 
-        crm_debug_3("FSA processing XML message from %s", stored_msg->origin);
+        crm_trace("FSA processing XML message from %s", stored_msg->origin);
         crm_log_xml(LOG_MSG, "FSA message data", ha_input->xml);
     }
 }
@@ -540,7 +540,7 @@ do_state_transition(long long actions,
             fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
             /* fall through */
         case S_ELECTION:
-            crm_debug_2("Resetting our DC to NULL on transition to %s",
+            crm_trace("Resetting our DC to NULL on transition to %s",
                         fsa_state2string(next_state));
             update_dc(NULL);
             break;
@@ -573,7 +573,7 @@ do_state_transition(long long actions,
                 crm_free(msg);
 
             } else {
-                crm_info("All %d cluster nodes "
+                crm_debug("All %d cluster nodes "
                          "responded to the join offer.", g_hash_table_size(integrated_nodes));
             }
             break;
@@ -595,7 +595,7 @@ do_state_transition(long long actions,
 
             } else if (g_hash_table_size(confirmed_nodes)
                        == crm_active_members()) {
-                crm_info("All %u cluster nodes are"
+                crm_debug("All %u cluster nodes are"
                          " eligible to run resources.", crm_active_members());
 
             } else if (g_hash_table_size(confirmed_nodes) > crm_active_members()) {

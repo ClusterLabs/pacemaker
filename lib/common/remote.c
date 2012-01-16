@@ -119,7 +119,7 @@ cib_send_tls(gnutls_session * session, xmlNode * msg)
         int rc = 0;
 
         len++;                  /* null char */
-        crm_debug_3("Message size: %d", len);
+        crm_trace("Message size: %d", len);
 
         while (TRUE) {
             rc = gnutls_record_send(*session, unsent, len);
@@ -165,10 +165,10 @@ cib_recv_tls(gnutls_session * session)
     while (TRUE) {
         errno = 0;
         rc = gnutls_record_recv(*session, buf + len, chunk_size);
-        crm_debug_2("Got %d more bytes. errno=%d", rc, errno);
+        crm_trace("Got %d more bytes. errno=%d", rc, errno);
 
         if (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN) {
-            crm_debug_2("Retry");
+            crm_trace("Retry");
 
         } else if (rc == GNUTLS_E_UNEXPECTED_PACKET_LENGTH) {
             crm_trace("Session disconnected");
@@ -182,18 +182,18 @@ cib_recv_tls(gnutls_session * session)
             len += rc;
             chunk_size *= 2;
             crm_realloc(buf, len + chunk_size);
-            crm_debug_2("Retry with %d more bytes", (int)chunk_size);
+            crm_trace("Retry with %d more bytes", (int)chunk_size);
             CRM_ASSERT(buf != NULL);
 
         } else if (buf[len + rc - 1] != 0) {
-            crm_debug_2("Last char is %d '%c'", buf[len + rc - 1], buf[len + rc - 1]);
-            crm_debug_2("Retry with %d more bytes", (int)chunk_size);
+            crm_trace("Last char is %d '%c'", buf[len + rc - 1], buf[len + rc - 1]);
+            crm_trace("Retry with %d more bytes", (int)chunk_size);
             len += rc;
             crm_realloc(buf, len + chunk_size);
             CRM_ASSERT(buf != NULL);
 
         } else {
-            crm_debug_2("Got %d more bytes", (int)rc);
+            crm_trace("Got %d more bytes", (int)rc);
             return buf;
         }
     }
@@ -215,14 +215,14 @@ cib_send_plaintext(int sock, xmlNode * msg)
         int len = strlen(xml_text);
 
         len++;                  /* null char */
-        crm_debug_3("Message on socket %d: size=%d", sock, len);
+        crm_trace("Message on socket %d: size=%d", sock, len);
   retry:
         rc = write(sock, unsent, len);
         if (rc < 0) {
             switch (errno) {
                 case EINTR:
                 case EAGAIN:
-                    crm_debug_2("Retry");
+                    crm_trace("Retry");
                     goto retry;
                 default:
                     crm_perror(LOG_ERR, "Could only write %d of the remaining %d bytes", rc, len);
@@ -230,13 +230,13 @@ cib_send_plaintext(int sock, xmlNode * msg)
             }
 
         } else if (rc < len) {
-            crm_debug_2("Only sent %d of %d remaining bytes", rc, len);
+            crm_trace("Only sent %d of %d remaining bytes", rc, len);
             len -= rc;
             unsent += rc;
             goto retry;
 
         } else {
-            crm_debug_2("Sent %d bytes: %.100s", rc, xml_text);
+            crm_trace("Sent %d bytes: %.100s", rc, xml_text);
         }
     }
     crm_free(xml_text);
@@ -258,10 +258,10 @@ cib_recv_plaintext(int sock)
     while (1) {
         errno = 0;
         rc = read(sock, buf + len, chunk_size);
-        crm_debug_2("Got %d more bytes. errno=%d", (int)rc, errno);
+        crm_trace("Got %d more bytes. errno=%d", (int)rc, errno);
 
         if (errno == EINTR || errno == EAGAIN) {
-            crm_debug_2("Retry: %d", (int)rc);
+            crm_trace("Retry: %d", (int)rc);
             if (rc > 0) {
                 len += rc;
                 crm_realloc(buf, len + chunk_size);
@@ -276,12 +276,12 @@ cib_recv_plaintext(int sock)
             len += rc;
             chunk_size *= 2;
             crm_realloc(buf, len + chunk_size);
-            crm_debug_2("Retry with %d more bytes", (int)chunk_size);
+            crm_trace("Retry with %d more bytes", (int)chunk_size);
             CRM_ASSERT(buf != NULL);
 
         } else if (buf[len + rc - 1] != 0) {
-            crm_debug_2("Last char is %d '%c'", buf[len + rc - 1], buf[len + rc - 1]);
-            crm_debug_2("Retry with %d more bytes", (int)chunk_size);
+            crm_trace("Last char is %d '%c'", buf[len + rc - 1], buf[len + rc - 1]);
+            crm_trace("Retry with %d more bytes", (int)chunk_size);
             len += rc;
             crm_realloc(buf, len + chunk_size);
             CRM_ASSERT(buf != NULL);

@@ -114,7 +114,7 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
     CRM_ASSERT(start == ftell(expected_strm));
 
     if (length > 0) {
-        crm_debug_3("Reading %d bytes from file", length);
+        crm_trace("Reading %d bytes from file", length);
         crm_malloc0(expected, (length + 1));
         read_len = fread(expected, 1, length, expected_strm);   /* Coverity: False positive */
         CRM_ASSERT(read_len == length);
@@ -126,7 +126,7 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
         crm_err("On-disk digest is empty");
 
     } else if (safe_str_eq(expected, digest)) {
-        crm_debug_2("Digest comparision passed: %s", digest);
+        crm_trace("Digest comparision passed: %s", digest);
         passed = TRUE;
 
     } else {
@@ -193,7 +193,7 @@ validate_on_disk_cib(const char *filename, xmlNode ** on_disk_cib)
         char *sigfile = NULL;
         size_t fnsize;
 
-        crm_debug_2("Reading cluster configuration from: %s", filename);
+        crm_trace("Reading cluster configuration from: %s", filename);
         root = filename2xml(filename);
 
         fnsize = strlen(filename) + 5;
@@ -547,6 +547,9 @@ write_cib_contents(gpointer p)
     char *digest_file = NULL;
     char *primary_file = NULL;
 
+    char *backup_file = NULL;
+    char *backup_digest = NULL;
+
     const char *epoch = NULL;
     const char *admin_epoch = NULL;
 
@@ -584,8 +587,6 @@ write_cib_contents(gpointer p)
     need_archive = (stat(primary_file, &buf) == 0);
     if (need_archive) {
         int rc = 0;
-        char *backup_file = NULL;
-        char *backup_digest = NULL;
         int seq = get_last_sequence(cib_root, CIB_SERIES);
 
         /* check the admin didnt modify it underneath us */
@@ -603,22 +604,23 @@ write_cib_contents(gpointer p)
         rc = link(primary_file, backup_file);
         if(rc < 0) {
             exit_rc = 4;
-            crm_err("Cannot link %s to %s", primary_file, backup_file);
+            crm_perror(LOG_ERR, "Cannot link %s to %s", primary_file, backup_file);
             goto cleanup;
         }
-        rc = link(digest_file, backup_digest);
-        if(rc < 0) {
-            exit_rc = 5;
-            crm_err("Cannot link %s to %s", digest_file, backup_digest);
-            goto cleanup;
+
+        rc = stat(digest_file, &buf);
+        if (rc == 0) {
+            rc = link(digest_file, backup_digest);
+            if(rc < 0) {
+                exit_rc = 5;
+                crm_perror(LOG_ERR, "Cannot link %s to %s", digest_file, backup_digest);
+                goto cleanup;
+            }
         }
         write_last_sequence(cib_root, CIB_SERIES, seq + 1, cib_wrap);
         sync_directory(cib_root);
 
         crm_info("Archived previous version as %s", backup_file);
-
-        crm_free(backup_digest);
-        crm_free(backup_file);
     }
 
     /* Given that we discard the status section on startup
@@ -666,7 +668,9 @@ write_cib_contents(gpointer p)
     sync_directory(cib_root);
 
   cleanup:
+    crm_free(backup_digest);
     crm_free(primary_file);
+    crm_free(backup_file);
     crm_free(digest_file);
     crm_free(digest);
     crm_free(tmp2);

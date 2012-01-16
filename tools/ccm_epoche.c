@@ -54,10 +54,10 @@ static struct crm_option long_options[] = {
     {"quiet",      0, 0, 'Q', "\tEssential output only"},
 
     {"-spacer-",   1, 0, '-', "\nStack:"},
-#ifdef SUPPORT_CMAN
+#if SUPPORT_CMAN
     {"cman",       0, 0, 'c', "\tOnly try connecting to a cman-based cluster"},
 #endif
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
     {"openais",    0, 0, 'A', "\tOnly try connecting to an OpenAIS-based cluster"},
 #endif
 #ifdef SUPPORT_HEARTBEAT

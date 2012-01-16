@@ -111,11 +111,11 @@ do_cl_join_offer_respond(long long action,
     }
 #endif
 
-    crm_debug_2("Accepting join offer: join-%s", crm_element_value(input->msg, F_CRM_JOIN_ID));
+    crm_trace("Accepting join offer: join-%s", crm_element_value(input->msg, F_CRM_JOIN_ID));
 
     /* we only ever want the last one */
     if (query_call_id > 0) {
-        crm_debug_3("Cancelling previous join query: %d", query_call_id);
+        crm_trace("Cancelling previous join query: %d", query_call_id);
         remove_cib_op_callback(query_call_id, FALSE);
         query_call_id = 0;
     }
@@ -129,7 +129,7 @@ do_cl_join_offer_respond(long long action,
     query_call_id = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
     add_cib_op_callback(fsa_cib_conn, query_call_id, FALSE, crm_strdup(join_id),
                         join_query_callback);
-    crm_debug_2("Registered join query callback: %d", query_call_id);
+    crm_trace("Registered join query callback: %d", query_call_id);
 
     register_fsa_action(A_DC_TIMER_STOP);
 }
@@ -193,7 +193,7 @@ do_cl_join_finalize_respond(long long action,
     const char *welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
 
     if (safe_str_neq(op, CRM_OP_JOIN_ACKNAK)) {
-        crm_debug_2("Ignoring op=%s message", op);
+        crm_trace("Ignoring op=%s message", op);
         return;
     }
 

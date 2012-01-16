@@ -106,7 +106,7 @@ static int
 cib_client_set_master(cib_t * cib, int call_options)
 {
     op_common(cib);
-    crm_debug_3("Adding cib_scope_local to options");
+    crm_trace("Adding cib_scope_local to options");
     return cib->cmds->variant_op(cib, CIB_OP_MASTER, NULL, NULL, NULL, NULL,
                                  call_options | cib_scope_local);
 }
@@ -425,7 +425,7 @@ cib_client_set_op_callback(cib_t * cib, void (*callback) (const xmlNode * msg, i
         crm_info("Un-Setting operation callback");
 
     } else {
-        crm_debug_3("Setting operation callback");
+        crm_trace("Setting operation callback");
     }
     cib->op_callback = callback;
     return cib_ok;
@@ -442,7 +442,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
         return cib_NOTSUPPORTED;
     }
 
-    crm_debug_2("Adding callback for %s events (%d)", event, g_list_length(cib->notify_list));
+    crm_trace("Adding callback for %s events (%d)", event, g_list_length(cib->notify_list));
 
     crm_malloc0(new_client, sizeof(cib_notify_client_t));
     new_client->event = event;
@@ -460,7 +460,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
 
         cib->cmds->register_notification(cib, event, 1);
 
-        crm_debug_3("Callback added (%d)", g_list_length(cib->notify_list));
+        crm_trace("Callback added (%d)", g_list_length(cib->notify_list));
     }
     return cib_ok;
 }
@@ -492,10 +492,10 @@ cib_client_del_notify_callback(cib_t * cib, const char *event,
         cib->notify_list = g_list_remove(cib->notify_list, list_client);
         crm_free(list_client);
 
-        crm_debug_3("Removed callback");
+        crm_trace("Removed callback");
 
     } else {
-        crm_debug_3("Callback not present");
+        crm_trace("Callback not present");
     }
     crm_free(new_client);
     return cib_ok;

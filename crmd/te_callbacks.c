@@ -95,17 +95,17 @@ te_update_diff(const char *event, xmlNode * msg)
     crm_element_value_int(msg, F_CIB_RC, &rc);
 
     if (transition_graph == NULL) {
-        crm_debug_3("No graph");
+        crm_trace("No graph");
         return;
 
     } else if (rc < cib_ok) {
-        crm_debug_3("Filter rc=%d (%s)", rc, cib_error2string(rc));
+        crm_trace("Filter rc=%d (%s)", rc, cib_error2string(rc));
         return;
 
     } else if (transition_graph->complete == TRUE
                && fsa_state != S_IDLE
                && fsa_state != S_TRANSITION_ENGINE && fsa_state != S_POLICY_ENGINE) {
-        crm_debug_2("Filter state=%s, complete=%d", fsa_state2string(fsa_state),
+        crm_trace("Filter state=%s, complete=%d", fsa_state2string(fsa_state),
                     transition_graph->complete);
         return;
     }
@@ -353,14 +353,14 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     const char *op = crm_element_value(msg, F_CRM_TASK);
     const char *type = crm_element_value(msg, F_CRM_MSG_TYPE);
 
-    crm_debug_2("Processing %s (%s) message", op, ref);
+    crm_trace("Processing %s (%s) message", op, ref);
     crm_log_xml(LOG_DEBUG_3, "ipc", msg);
 
     if (op == NULL) {
         /* error */
 
     } else if (sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
-        crm_debug_2("Bad sys-to %s", crm_str(sys_to));
+        crm_trace("Bad sys-to %s", crm_str(sys_to));
         return FALSE;
 
     } else if (safe_str_eq(op, CRM_OP_INVOKE_LRM)
@@ -387,7 +387,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         crm_err("Unknown command: %s::%s from %s", type, op, sys_from);
     }
 
-    crm_debug_3("finished processing message");
+    crm_trace("finished processing message");
 
     return TRUE;
 }

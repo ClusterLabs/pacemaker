@@ -61,7 +61,7 @@ cluster_status(pe_working_set_t * data_set)
     xmlNode *cib_domains = get_object_root(XML_CIB_TAG_DOMAINS, data_set->input);
     const char *value = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
 
-    crm_debug_3("Beginning unpack");
+    crm_trace("Beginning unpack");
     pe_dataset = data_set;
 
     /* reset remaining global variables */
@@ -146,11 +146,11 @@ pe_free_nodes(GListPtr nodes)
 
         iterator = iterator->next;
 
-        crm_debug_5("deleting node");
-        crm_debug_5("%s is being deleted", details->uname);
+        crm_trace("deleting node");
         print_node("delete", node, FALSE);
 
         if (details != NULL) {
+            crm_trace("%s is being deleted", details->uname);
             if (details->attrs != NULL) {
                 g_hash_table_destroy(details->attrs);
             }
@@ -191,17 +191,17 @@ cleanup_calculations(pe_working_set_t * data_set)
 
     crm_free(data_set->dc_uuid);
 
-    crm_debug_3("deleting resources");
+    crm_trace("deleting resources");
     pe_free_resources(data_set->resources);
 
-    crm_debug_3("deleting actions");
+    crm_trace("deleting actions");
     pe_free_actions(data_set->actions);
 
     if (data_set->domains) {
         g_hash_table_destroy(data_set->domains);
     }
 
-    crm_debug_3("deleting nodes");
+    crm_trace("deleting nodes");
     pe_free_nodes(data_set->nodes);
 
     free_xml(data_set->graph);
@@ -253,7 +253,7 @@ pe_find_resource(GListPtr rsc_list, const char *id)
             return match;
         }
     }
-    crm_debug_2("No match for %s", id);
+    crm_trace("No match for %s", id);
     return NULL;
 }
 

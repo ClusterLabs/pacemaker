@@ -168,7 +168,7 @@ main(int argc, char **argv)
                 break;
             case 'K':
                 DO_RESET = TRUE;
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 dest_node = crm_strdup(optarg);
                 crmd_operation = CRM_OP_LOCAL_SHUTDOWN;
                 break;
@@ -177,17 +177,17 @@ main(int argc, char **argv)
                 break;
             case 'i':
                 DO_DEBUG = debug_inc;
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 dest_node = crm_strdup(optarg);
                 break;
             case 'd':
                 DO_DEBUG = debug_dec;
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 dest_node = crm_strdup(optarg);
                 break;
             case 'S':
                 DO_HEALTH = TRUE;
-                crm_debug_2("Option %c => %s", flag, optarg);
+                crm_trace("Option %c => %s", flag, optarg);
                 dest_node = crm_strdup(optarg);
                 break;
             case 'E':
@@ -231,7 +231,7 @@ main(int argc, char **argv)
              */
             mainloop = g_main_new(FALSE);
             expected_responses++;
-            crm_debug_2("Waiting for %d replies from the local CRM", expected_responses);
+            crm_trace("Waiting for %d replies from the local CRM", expected_responses);
 
             message_timer_id = g_timeout_add(message_timeout_ms, admin_message_timeout, NULL);
 
@@ -246,7 +246,7 @@ main(int argc, char **argv)
         operation_status = -2;
     }
 
-    crm_debug_2("%s exiting normally", crm_system_name);
+    crm_trace("%s exiting normally", crm_system_name);
     return operation_status;
 }
 
@@ -264,7 +264,7 @@ do_work(void)
     crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 
     if (DO_HEALTH == TRUE) {
-        crm_debug_2("Querying the system");
+        crm_trace("Querying the system");
 
         sys_to = CRM_SYSTEM_DC;
 
@@ -447,7 +447,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
         }
 
         if (msg == NULL) {
-            crm_debug_4("No message this time");
+            crm_trace("No message this time");
             continue;
         }
 
@@ -464,7 +464,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
         } else if (validate_crm_message(xml, crm_system_name, admin_uuid,
                                         XML_ATTR_RESPONSE) == FALSE) {
-            crm_debug_2("Message was not a CRM response. Discarding.");
+            crm_trace("Message was not a CRM response. Discarding.");
             goto cleanup;
         }
 
@@ -503,12 +503,12 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
     }
 
     if (server->ch_status == IPC_DISCONNECT) {
-        crm_debug_2("admin_msg_callback: received HUP");
+        crm_trace("admin_msg_callback: received HUP");
         return !hack_return_good;
     }
 
     if (received_responses >= expected_responses) {
-        crm_debug_2("Received expected number (%d) of messages from Heartbeat."
+        crm_trace("Received expected number (%d) of messages from Heartbeat."
                     "  Exiting normally.", expected_responses);
         exit(0);
     }
@@ -543,13 +543,13 @@ is_node_online(xmlNode * node_state)
         && (ha_state == NULL || safe_str_eq(ha_state, "active"))
         && crm_is_true(ccm_state)
         && safe_str_eq(crm_state, "online")) {
-        crm_debug_3("Node %s is online", uname);
+        crm_trace("Node %s is online", uname);
         return TRUE;
     }
-    crm_debug_3("Node %s: ha=%s ccm=%s join=%s exp=%s crm=%s",
+    crm_trace("Node %s: ha=%s ccm=%s join=%s exp=%s crm=%s",
                 uname, crm_str(ha_state), crm_str(ccm_state),
                 crm_str(join_state), crm_str(exp_state), crm_str(crm_state));
-    crm_debug_3("Node %s is offline", uname);
+    crm_trace("Node %s is offline", uname);
     return FALSE;
 }
 

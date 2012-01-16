@@ -105,7 +105,7 @@ tengine_stonith_connection_destroy(stonith_t * st, const char *event, xmlNode * 
       <st_calldata >
         <st-reply st_origin="stonith_construct_async_reply" t="stonith-ng" st_op="reboot" st_remote_op="1230801d-dba5-42ac-8e2c-bf444fb2a401" st_callid="0" st_callopt="0" st_rc="0" src="pcmk-4" seq="2" state="0" st_target="pcmk-1" />
 */
-#ifdef SUPPORT_CMAN
+#if SUPPORT_CMAN
 #  include <libfenced.h>
 #  include "../lib/cluster/stack.h"
 #endif
@@ -148,7 +148,7 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
                 crm_element_value(action, F_STONITH_REMOTE), stonith_error2string(rc));
     }
 
-#ifdef SUPPORT_CMAN
+#if SUPPORT_CMAN
     if (rc == stonith_ok && is_cman_cluster()) {
         int local_rc = 0;
         int confirm = 0;
@@ -216,7 +216,7 @@ te_connect_stonith(gpointer user_data)
     }
 
     if (stonith_api->state != stonith_disconnected) {
-        crm_debug_2("Still connected");
+        crm_trace("Still connected");
         return TRUE;
     }
 
@@ -260,16 +260,16 @@ stop_te_timer(crm_action_timer_t * timer)
     }
     if (timer->reason == timeout_abort) {
         timer_desc = "global timer";
-        crm_debug_2("Stopping %s", timer_desc);
+        crm_trace("Stopping %s", timer_desc);
     }
 
     if (timer->source_id != 0) {
-        crm_debug_2("Stopping %s", timer_desc);
+        crm_trace("Stopping %s", timer_desc);
         g_source_remove(timer->source_id);
         timer->source_id = 0;
 
     } else {
-        crm_debug_2("%s was already stopped", timer_desc);
+        crm_trace("%s was already stopped", timer_desc);
         return FALSE;
     }
 
@@ -286,7 +286,7 @@ te_graph_trigger(gpointer user_data)
         return TRUE;
     }
 
-    crm_debug_2("Invoking graph %d in state %s", transition_graph->id, fsa_state2string(fsa_state));
+    crm_trace("Invoking graph %d in state %s", transition_graph->id, fsa_state2string(fsa_state));
 
     switch (fsa_state) {
         case S_STARTING:
@@ -307,11 +307,11 @@ te_graph_trigger(gpointer user_data)
         print_graph(LOG_DEBUG_3, transition_graph);
 
         if (graph_rc == transition_active) {
-            crm_debug_3("Transition not yet complete");
+            crm_trace("Transition not yet complete");
             return TRUE;
 
         } else if (graph_rc == transition_pending) {
-            crm_debug_3("Transition not yet complete - no actions fired");
+            crm_trace("Transition not yet complete - no actions fired");
             return TRUE;
         }
 
@@ -332,7 +332,7 @@ void
 trigger_graph_processing(const char *fn, int line)
 {
     mainloop_set_trigger(transition_trigger);
-    crm_debug_2("%s:%d - Triggered graph processing", fn, line);
+    crm_trace("%s:%d - Triggered graph processing", fn, line);
 }
 
 void

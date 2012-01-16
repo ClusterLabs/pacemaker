@@ -29,60 +29,60 @@
 
 #define do_add_field(atime, field, extra, limit, overflow)		\
 	{								\
-		crm_debug_6("Adding %d to %d (limit=%d)",		\
+		crm_trace("Adding %d to %d (limit=%d)",		\
 			    extra, atime->field, limit);		\
 		atime->field += extra;					\
 		if(limit > 0) {						\
 			while(limit < atime->field) {			\
-				crm_debug_6("Overflowing: %d", atime->field); \
+				crm_trace("Overflowing: %d", atime->field); \
 				atime->field -= limit;			\
 				overflow(atime, 1);			\
 			}						\
 		}							\
 		atime->field = atime->field;				\
-		crm_debug_6("Result: %d", atime->field);		\
+		crm_trace("Result: %d", atime->field);		\
 	}
 
 #define do_add_time_field(atime, field, extra, limit, overflow)		\
 	{								\
-		crm_debug_6("Adding %d to %d (limit=%d)",		\
+		crm_trace("Adding %d to %d (limit=%d)",		\
 			    extra, atime->field, limit);		\
 		atime->field += extra;					\
 		if(limit > 0) {						\
 			while(limit <= atime->field) {			\
-				crm_debug_6("Overflowing: %d", atime->field); \
+				crm_trace("Overflowing: %d", atime->field); \
 				atime->field -= limit;			\
 				overflow(atime, 1);			\
 			}						\
 		}							\
 		atime->field = atime->field;				\
-		crm_debug_6("Result: %d", atime->field);		\
+		crm_trace("Result: %d", atime->field);		\
 	}
 
 #define do_sub_field(atime, field, extra, limit, overflow)		\
 	{								\
-		crm_debug_6("Subtracting %d from %d (limit=%d)",	\
+		crm_trace("Subtracting %d from %d (limit=%d)",	\
 			    extra, atime->field, limit);		\
 		atime->field -= extra;					\
 		while(atime->field <= 1) {				\
-			crm_debug_6("Underflowing: %d", atime->field);	\
+			crm_trace("Underflowing: %d", atime->field);	\
 			atime->field += limit;				\
 			overflow(atime, 1);				\
 		}							\
-		crm_debug_6("Result: %d", atime->field);		\
+		crm_trace("Result: %d", atime->field);		\
 	}
 
 #define do_sub_time_field(atime, field, extra, limit, overflow)		\
 	{								\
-		crm_debug_6("Subtracting %d from %d (limit=%d)",	\
+		crm_trace("Subtracting %d from %d (limit=%d)",	\
 			    extra, atime->field, limit);		\
 		atime->field -= extra;					\
 		while(atime->field < 0) {				\
-			crm_debug_6("Underflowing: %d", atime->field);	\
+			crm_trace("Underflowing: %d", atime->field);	\
 			atime->field += limit;				\
 			overflow(atime, 1);				\
 		}							\
-		crm_debug_6("Result: %d", atime->field);		\
+		crm_trace("Result: %d", atime->field);		\
 	}
 
 void
@@ -119,7 +119,7 @@ void
 add_days(ha_time_t * a_time, int extra)
 {
     if (a_time->has->days == FALSE) {
-        crm_debug_4("has->days == FALSE");
+        crm_trace("has->days == FALSE");
         return;
     }
     if (extra < 0) {
@@ -136,7 +136,7 @@ void
 add_weekdays(ha_time_t * a_time, int extra)
 {
     if (a_time->has->weekdays == FALSE) {
-        crm_debug_4("has->weekdays == FALSE");
+        crm_trace("has->weekdays == FALSE");
         return;
     }
     if (extra < 0) {
@@ -152,7 +152,7 @@ void
 add_yeardays(ha_time_t * a_time, int extra)
 {
     if (a_time->has->yeardays == FALSE) {
-        crm_debug_4("has->yeardays == FALSE");
+        crm_trace("has->yeardays == FALSE");
         return;
     }
     if (extra < 0) {
@@ -169,7 +169,7 @@ void
 add_weeks(ha_time_t * a_time, int extra)
 {
     if (a_time->has->weeks == FALSE) {
-        crm_debug_4("has->weeks == FALSE");
+        crm_trace("has->weeks == FALSE");
         return;
     }
     if (extra < 0) {
@@ -187,7 +187,7 @@ add_months(ha_time_t * a_time, int extra)
     int max = 0;
 
     if (a_time->has->months == FALSE) {
-        crm_debug_4("has->months == FALSE");
+        crm_trace("has->months == FALSE");
         return;
     }
     if (extra < 0) {
@@ -207,7 +207,7 @@ void
 add_years(ha_time_t * a_time, int extra)
 {
     if (a_time->has->years == FALSE) {
-        crm_debug_4("has->years == FALSE");
+        crm_trace("has->years == FALSE");
         return;
     }
     a_time->years += extra;
@@ -218,7 +218,7 @@ void
 add_ordinalyears(ha_time_t * a_time, int extra)
 {
     if (a_time->has->years == FALSE) {
-        crm_debug_4("has->years == FALSE");
+        crm_trace("has->years == FALSE");
         return;
     }
     a_time->years += extra;
@@ -229,7 +229,7 @@ void
 add_weekyears(ha_time_t * a_time, int extra)
 {
     if (a_time->has->weekyears == FALSE) {
-        crm_debug_4("has->weekyears == FALSE");
+        crm_trace("has->weekyears == FALSE");
         return;
     }
     a_time->weekyears += extra;
@@ -270,11 +270,11 @@ void
 sub_days(ha_time_t * a_time, int extra)
 {
     if (a_time->has->days == FALSE) {
-        crm_debug_4("has->days == FALSE");
+        crm_trace("has->days == FALSE");
         return;
     }
 
-    crm_debug_5("Subtracting %d days from %.4d-%.2d-%.2d",
+    crm_trace("Subtracting %d days from %.4d-%.2d-%.2d",
                 extra, a_time->years, a_time->months, a_time->days);
 
     if (extra < 0) {
@@ -291,11 +291,11 @@ void
 sub_weekdays(ha_time_t * a_time, int extra)
 {
     if (a_time->has->weekdays == FALSE) {
-        crm_debug_4("has->weekdays == FALSE");
+        crm_trace("has->weekdays == FALSE");
         return;
     }
 
-    crm_debug_5("Subtracting %d days from %.4d-%.2d-%.2d",
+    crm_trace("Subtracting %d days from %.4d-%.2d-%.2d",
                 extra, a_time->years, a_time->months, a_time->days);
 
     if (extra < 0) {
@@ -311,11 +311,11 @@ void
 sub_yeardays(ha_time_t * a_time, int extra)
 {
     if (a_time->has->yeardays == FALSE) {
-        crm_debug_4("has->yeardays == FALSE");
+        crm_trace("has->yeardays == FALSE");
         return;
     }
 
-    crm_debug_5("Subtracting %d days from %.4d-%.3d", extra, a_time->years, a_time->yeardays);
+    crm_trace("Subtracting %d days from %.4d-%.3d", extra, a_time->years, a_time->yeardays);
 
     if (extra < 0) {
         add_yeardays(a_time, -extra);
@@ -331,7 +331,7 @@ void
 sub_weeks(ha_time_t * a_time, int extra)
 {
     if (a_time->has->weeks == FALSE) {
-        crm_debug_4("has->weeks == FALSE");
+        crm_trace("has->weeks == FALSE");
         return;
     }
     if (extra < 0) {
@@ -347,7 +347,7 @@ void
 sub_months(ha_time_t * a_time, int extra)
 {
     if (a_time->has->months == FALSE) {
-        crm_debug_4("has->months == FALSE");
+        crm_trace("has->months == FALSE");
         return;
     }
     if (extra < 0) {
@@ -362,7 +362,7 @@ void
 sub_years(ha_time_t * a_time, int extra)
 {
     if (a_time->has->years == FALSE) {
-        crm_debug_4("has->years == FALSE");
+        crm_trace("has->years == FALSE");
         return;
     }
     a_time->years -= extra;
@@ -373,7 +373,7 @@ void
 sub_weekyears(ha_time_t * a_time, int extra)
 {
     if (a_time->has->weekyears == FALSE) {
-        crm_debug_4("has->weekyears == FALSE");
+        crm_trace("has->weekyears == FALSE");
         return;
     }
     a_time->weekyears -= extra;
@@ -385,7 +385,7 @@ void
 sub_ordinalyears(ha_time_t * a_time, int extra)
 {
     if (a_time->has->years == FALSE) {
-        crm_debug_4("has->years == FALSE");
+        crm_trace("has->years == FALSE");
         return;
     }
     a_time->years -= extra;

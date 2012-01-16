@@ -154,7 +154,7 @@ crm_timer_popped(gpointer data)
         register_fsa_input(C_TIMER_POPPED, timer->fsa_input, NULL);
     }
 
-    crm_debug_3("Triggering FSA: %s", __FUNCTION__);
+    crm_trace("Triggering FSA: %s", __FUNCTION__);
     mainloop_set_trigger(fsa_source);
 
     return TRUE;
@@ -195,14 +195,14 @@ crm_timer_stop(fsa_timer_t * timer)
         return FALSE;
 
     } else if (timer->source_id != 0) {
-        crm_debug_2("Stopping %s (%s:%dms), src=%d",
+        crm_trace("Stopping %s (%s:%dms), src=%d",
                     timer_desc, fsa_input2string(timer->fsa_input),
                     timer->period_ms, timer->source_id);
         g_source_remove(timer->source_id);
         timer->source_id = 0;
 
     } else {
-        crm_debug_2("%s (%s:%dms) already stopped",
+        crm_trace("%s (%s:%dms) already stopped",
                     timer_desc, fsa_input2string(timer->fsa_input), timer->period_ms);
         return FALSE;
     }
@@ -945,7 +945,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
      */
     xmlNode *tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
-    crm_debug_3("Creating node entry for %s", uname);
+    crm_trace("Creating node entry for %s", uname);
     set_uuid(tmp1, XML_ATTR_UUID, uname);
 
     crm_xml_add(tmp1, XML_ATTR_UNAME, uname);
@@ -965,7 +965,7 @@ create_node_state(const char *uname, const char *ha_state, const char *ccm_state
 {
     xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
-    crm_debug_2("%s Creating node state entry for %s", src, uname);
+    crm_trace("%s Creating node state entry for %s", src, uname);
     set_uuid(node_state, XML_ATTR_UUID, uname);
 
     if (crm_element_value(node_state, XML_ATTR_UUID) == NULL) {
@@ -999,10 +999,10 @@ process_client_disconnect(crmd_client_t * curr_client)
     struct crm_subsystem_s *the_subsystem = NULL;
 
     CRM_CHECK(curr_client != NULL, return);
-    crm_debug_2("received HUP from %s", curr_client->table_key);
+    crm_trace("received HUP from %s", curr_client->table_key);
 
     if (curr_client->sub_sys == NULL) {
-        crm_debug_2("Client hadn't registered with us yet");
+        crm_trace("Client hadn't registered with us yet");
 
     } else if (strcasecmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) {
         the_subsystem = pe_subsystem;
@@ -1021,7 +1021,7 @@ process_client_disconnect(crmd_client_t * curr_client)
 
     } else {
         /* else that was a transient client */
-        crm_debug_2("Received HUP from transient client");
+        crm_trace("Received HUP from transient client");
     }
 
     if (curr_client->table_key != NULL) {

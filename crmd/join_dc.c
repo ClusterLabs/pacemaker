@@ -486,7 +486,7 @@ do_dc_join_ack(long long action,
 
     /* now update them to "member" */
 
-    crm_debug_2("Processing ack from %s", join_from);
+    crm_trace("Processing ack from %s", join_from);
 
     join_state = (const char *)
         g_hash_table_lookup(finalized_nodes, join_from);

@@ -103,7 +103,7 @@ ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
 {
     IPC_Channel *channel = NULL;
 
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
 
     if (cluster_conn != NULL) {
         channel = cluster_conn->llc_ops->ipcchan(cluster_conn);
@@ -114,7 +114,7 @@ ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
 
     if (channel != NULL && IPC_ISRCONN(channel)) {
         if (cluster_conn->llc_ops->msgready(cluster_conn) == 0) {
-            crm_debug_2("no message ready yet");
+            crm_trace("no message ready yet");
         }
         /* invoke the callbacks but dont block */
         cluster_conn->llc_ops->rcvmsg(cluster_conn, 0);

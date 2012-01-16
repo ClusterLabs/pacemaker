@@ -390,11 +390,11 @@ do_election_count_vote(long long action,
 
         crm_timer_stop(election_timeout);
         if (fsa_input_register & R_THE_DC) {
-            crm_debug_3("Give up the DC to %s", vote_from);
+            crm_trace("Give up the DC to %s", vote_from);
             register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
 
         } else if (cur_state != S_STARTING) {
-            crm_debug_3("We werent the DC anyway");
+            crm_trace("We werent the DC anyway");
             register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
         }
 
@@ -508,7 +508,7 @@ do_dc_takeover(long long action,
 #endif
 
     if (voted != NULL) {
-        crm_debug_2("Destroying voted hash");
+        crm_trace("Destroying voted hash");
         g_hash_table_destroy(voted);
         voted = NULL;
     }
@@ -559,6 +559,6 @@ do_dc_release(long long action,
         crm_err("Unknown action %s", fsa_action2string(action));
     }
 
-    crm_debug_2("Am I still the DC? %s", AM_I_DC ? XML_BOOLEAN_YES : XML_BOOLEAN_NO);
+    crm_trace("Am I still the DC? %s", AM_I_DC ? XML_BOOLEAN_YES : XML_BOOLEAN_NO);
 
 }

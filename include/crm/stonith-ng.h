@@ -36,6 +36,7 @@ enum stonith_call_options {
     st_opt_manual_ack	   = 0x00000008,
     st_opt_discard_reply   = 0x00000010,
     st_opt_all_replies	   = 0x00000020,
+    st_opt_topology	   = 0x00000040,
     st_opt_scope_local     = 0x00000100,
     st_opt_cs_nodeid       = 0x00000200,
     st_opt_sync_call       = 0x00001000,
@@ -64,7 +65,11 @@ enum stonith_errors {
     st_err_agent_fork			= -17,
     st_err_agent_args			= -18,
     st_err_agent			= -19,
+    st_err_invalid_target		= -20,
+    st_err_invalid_level		= -21,
 };
+
+#define ST_LEVEL_MAX 10
 
 #define F_STONITH_CLIENTID		"st_clientid"
 #define F_STONITH_CALLOPTS		"st_callopt"
@@ -85,6 +90,7 @@ enum stonith_errors {
 #define F_STONITH_HISTORY_LIST		"st_history"
 #define F_STONITH_DATE			"st_date"
 #define F_STONITH_STATE			"st_state"
+#define F_STONITH_LEVEL		        "st_level"
 
 #define T_STONITH_NG		"stonith-ng"
 #define T_STONITH_REPLY		"st-reply"
@@ -112,6 +118,8 @@ enum stonith_errors {
 #define STONITH_OP_DEVICE_DEL	"st_device_remove"
 #define STONITH_OP_DEVICE_METADATA "st_device_metadata"
 #define STONITH_OP_FENCE_HISTORY   "st_fence_history"
+#define STONITH_OP_LEVEL_ADD	   "st_level_add"
+#define STONITH_OP_LEVEL_DEL	   "st_level_remove"
 
 #define stonith_channel			"st_command"
 #define stonith_channel_callback	"st_callback"
@@ -155,6 +163,11 @@ typedef struct stonith_api_operations_s
 	    stonith_t *st, int options, const char *id,
 	    const char *namespace, const char *agent, stonith_key_value_t *params);
 
+	int (*remove_level)(
+	    stonith_t *st, int options, const char *node, int level);
+	int (*register_level)(
+	    stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list);
+        
 	int (*metadata)(stonith_t *st, int options,
 			const char *device, const char *namespace, char **output, int timeout);
 	int (*list)(stonith_t *stonith, int call_options, const char *namespace,

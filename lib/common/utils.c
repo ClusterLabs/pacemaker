@@ -38,6 +38,7 @@
 #include <grp.h>
 #include <time.h>
 #include <libgen.h>
+#include <sys/utsname.h>
 
 #if LIBQB_LOGGING
 #  include <qb/qbdefs.h>
@@ -79,7 +80,10 @@ int node_score_green = 0;
 int node_score_yellow = 0;
 int node_score_infinity = INFINITY;
 
+unsigned int crm_log_level = LOG_INFO;
+
 void crm_set_env_options(void);
+void set_format_string(int method, const char *daemon, gboolean trace);
 
 gboolean
 check_time(const char *value)
@@ -204,7 +208,7 @@ cluster_option(GHashTable * options, gboolean(*validate) (const char *),
     }
 
     if (value == NULL) {
-        crm_debug_2("Using default value '%s' for cluster option '%s'", def_value, name);
+        crm_trace("Using default value '%s' for cluster option '%s'", def_value, name);
 
         if (options == NULL) {
             return def_value;
@@ -336,7 +340,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
     *name = NULL;
     *value = NULL;
 
-    crm_debug_4("Attempting to decode: [%s]", srcstring);
+    crm_trace("Attempting to decode: [%s]", srcstring);
     if (srcstring != NULL) {
         len = strlen(srcstring);
         while (lpc <= len) {
@@ -402,7 +406,7 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 {
     char *hash_key = crm_concat(sys ? sys : "none", crm_msg_reference, '_');
 
-    crm_debug_3("created hash key: (%s)", hash_key);
+    crm_trace("created hash key: (%s)", hash_key);
     return hash_key;
 }
 
@@ -505,51 +509,115 @@ crm_log_init_quiet(const char *entity, int level, gboolean coredir, gboolean to_
     return crm_log_init_worker(entity, level, coredir, to_stderr, argc, argv, TRUE);
 }
 
+#define FMT_MAX 256
+void set_format_string(int method, const char *daemon, gboolean trace) 
+{
+#if LIBQB_LOGGING
+    int offset = 0;
+    char fmt[FMT_MAX];
+    if(method > QB_LOG_STDERR) {
+        /* When logging to a file */
+        struct utsname res;
+        if (uname(&res) == 0) {
+            offset += snprintf(fmt+offset, FMT_MAX-offset, "%%t [%d] %s %10s: ", getpid(), res.nodename, daemon);
+        } else {
+            offset += snprintf(fmt+offset, FMT_MAX-offset, "%%t [%d] %10s: ", getpid(), daemon);
+        }
+    }
+    
+    if(trace) {
+        offset += snprintf(fmt+offset, FMT_MAX-offset, "(%%-12f:%%5l %%g) %%-7p: %%n: ");
+    } else {
+        offset += snprintf(fmt+offset, FMT_MAX-offset, "%%g %%-7p: %%n: ");
+    }
+
+    if(method == QB_LOG_SYSLOG) {
+        offset += snprintf(fmt+offset, FMT_MAX-offset, "%%b");
+    } else {
+        offset += snprintf(fmt+offset, FMT_MAX-offset, "\t%%b");
+    }
+    qb_log_format_set(method, fmt);
+#endif
+}
+
 void
 update_all_trace_data(void)
 {
 #if LIBQB_LOGGING
-    const char *env_value = NULL;
+    int lpc = 0;
 
-    env_value = getenv("PCMK_trace_files");
-    if (env_value) {
-        qb_log_filter_ctl(QB_LOG_SYSLOG,
-                          QB_LOG_FILTER_ADD,
-                          QB_LOG_FILTER_FILE,
-                          env_value,
-                          LOG_TRACE);
-    }
+    /* No tracing to SYSLOG */
+    for(lpc = QB_LOG_STDERR; lpc < QB_LOG_TARGET_MAX; lpc++) {
+        if (qb_log_ctl(lpc, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
+    
+            gboolean trace = FALSE;
+            const char *env_value = NULL;
 
-    env_value = getenv("PCMK_trace_formats");
-    if (env_value) {
-        qb_log_filter_ctl(QB_LOG_SYSLOG,
-                          QB_LOG_FILTER_ADD,
-                          QB_LOG_FILTER_FORMAT,
-                          env_value,
-                          LOG_TRACE);
-    }
+            env_value = getenv("PCMK_trace_files");
+            if (env_value) {
+                char token[500];
+                const char *offset = NULL;
+                const char *next = env_value;
+                
+                trace = TRUE;
+                
+                do {
+                    offset = next;
+                    next = strchrnul(offset, ',');
+                    snprintf(token, 499, "%.*s", (int)(next - offset), offset);
+                    crm_info("Looking for %s from %s (%d)", token, env_value, lpc);
+                    
+                    qb_log_filter_ctl(lpc,
+                                      QB_LOG_FILTER_ADD,
+                                      QB_LOG_FILTER_FILE,
+                                      token,
+                                      LOG_TRACE);
 
-    env_value = getenv("PCMK_trace_functions");
-    if (env_value) {
-        crm_info("Looking for %s", env_value);
-        qb_log_filter_ctl(QB_LOG_SYSLOG,
-                          QB_LOG_FILTER_ADD,
-                          QB_LOG_FILTER_FUNCTION,
-                          env_value,
-                          LOG_TRACE);
-        qb_log_filter_ctl(QB_LOG_STDERR,
-                          QB_LOG_FILTER_ADD,
-                          QB_LOG_FILTER_FUNCTION,
-                          env_value,
-                          LOG_TRACE);
+                    if (next[0] != 0) {
+                        next++;
+                    }
+                    
+                } while (next != NULL && next[0] != 0);
+            }
+
+            env_value = getenv("PCMK_trace_formats");
+            if (env_value) {
+                trace = TRUE;
+                crm_info("Looking for format strings matching %s (%d)", env_value, lpc);
+                qb_log_filter_ctl(lpc,
+                                  QB_LOG_FILTER_ADD,
+                                  QB_LOG_FILTER_FORMAT,
+                                  env_value,
+                                  LOG_TRACE);
+            }
+            
+            env_value = getenv("PCMK_trace_functions");
+            if (env_value) {
+                trace = TRUE;
+                crm_info("Looking for functions named %s (%d)", env_value, lpc);
+                qb_log_filter_ctl(lpc,
+                                  QB_LOG_FILTER_ADD,
+                                  QB_LOG_FILTER_FUNCTION,
+                                  env_value,
+                                  LOG_TRACE);
+            }
+            
+            if(trace) {
+                set_format_string(lpc, crm_system_name, trace);
+            }
+        }
     }
 #endif
 }
+
 
 gboolean
 crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to_stderr,
                     int argc, char **argv, gboolean quiet)
 {
+    const char *logfile = NULL;
+    const char *facility = getenv("HA_logfacility");
+
     /* Redirect messages from glib functions to our handler */
 /*  	cl_malloc_forced_for_glib(); */
 #ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
@@ -559,6 +627,11 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     /* and for good measure... - this enum is a bit field (!) */
     g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
 
+    if(facility == NULL) {
+        /* Set a default */
+        facility = "daemon";
+    }
+    
     if (entity) {
         crm_system_name = entity;
 
@@ -573,47 +646,56 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     }
 
     setenv("PCMK_service", crm_system_name, 1);
-#if !LIBQB_LOGGING
+
+#if LIBQB_LOGGING
+    crm_log_level = level;
+    qb_log_init(crm_system_name, qb_log_facility2int(facility), level);
+#else
     cl_log_set_entity(crm_system_name);
     set_crm_log_level(level);
     crm_set_env_options();
-#else
-    crm_log_level = level;
 #endif
 
     if (quiet) {
         /* Nuke any syslog activity */
         unsetenv("HA_logfacility");
 #if LIBQB_LOGGING
-        qb_log_init(crm_system_name, HA_LOG_FACILITY, level);
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+#else
+        cl_log_set_facility(0);
 #endif
 
     } else {
+        setenv("HA_logfacility", facility, TRUE);
         crm_log_args(argc, argv);
-#if LIBQB_LOGGING
-        if (getenv("HA_logfacility") == NULL) {
-            /* Set a default */
-            qb_log_init(crm_system_name, HA_LOG_FACILITY, level);
+    }
+    
+    crm_enable_stderr(to_stderr);
+    logfile = getenv("HA_debugfile");
 
-        } else {
-            qb_log_init(crm_system_name, qb_log_facility2int(getenv("HA_logfacility")), level);
-	}
-#else
-        if (getenv("HA_logfacility") == NULL) {
-            /* Set a default */
-            cl_log_set_facility(HA_LOG_FACILITY);
-        }
-#endif
+#if LIBQB_LOGGING
+    if(logfile) {
+        int fd = qb_log_file_open(logfile);
+        qb_log_filter_ctl(fd, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
+        qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
     }
 
-    crm_enable_stderr(to_stderr);
+    /* Set the default log formats */
+    {
+        int lpc = 0;
+        for(lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+            set_format_string(lpc, crm_system_name, FALSE);
+        }
+    }
+#endif
 
+    /* Ok, now we can start logging... */
+    
     if (coredir) {
         const char *user = getenv("USER");
 
         if (user != NULL && safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
-            crm_info("Not switching to corefile directory for %s", user);
+            crm_trace("Not switching to corefile directory for %s", user);
             coredir = FALSE;
         }
     }
@@ -659,38 +741,30 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     return TRUE;
 }
 
-unsigned int crm_log_level = LOG_INFO;
-
 /* returns the old value */
 unsigned int
 set_crm_log_level(unsigned int level)
 {
     unsigned int old = crm_log_level;
 #if LIBQB_LOGGING
-    if(old > level) {
-        qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_REMOVE, QB_LOG_FILTER_FILE, "*", old);
-    }
+    int lpc = 0;
+    
+    for(lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+        if (qb_log_ctl(lpc, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
 
-    if(old != level) {
-        if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
-	    int rc = qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
-            crm_info("New log level: %d %d", level, rc);            
-        }
-        if (qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
-            qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
-        }
+            if(old > level) {
+                qb_log_filter_ctl(lpc, QB_LOG_FILTER_REMOVE, QB_LOG_FILTER_FILE, "*", old);
+            }
 
-        /* qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_PRIORITY_BUMP, LOG_INFO - LOG_DEBUG); Needed? */
-        if(level > LOG_DEBUG) {
-            qb_log_format_set(QB_LOG_SYSLOG, "(%-12f:%5l %g) %-7p: %n: %b");
-            qb_log_format_set(QB_LOG_STDERR, "(%-12f:%5l %g) %-7p: %n: \t%b");
+            if(old != level) {
+                int rc = qb_log_filter_ctl(lpc, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
+                crm_info("New log level: %d %d", level, rc);            
+                /* qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_PRIORITY_BUMP, LOG_INFO - LOG_DEBUG);
+                 * Needed? Yes, if we want trace logging sent to syslog but the semantics suck
+                 */
+            }
 
-        } else if(level > LOG_INFO) {
-            qb_log_format_set(QB_LOG_STDERR, "(%-12f:%5l %g) %-7p: %n: \t%b");
-
-        } else {
-            qb_log_format_set(QB_LOG_STDERR, "%g %-7p: %n: \t%b");
-            qb_log_format_set(QB_LOG_SYSLOG, "%g %-7p: %n: %b");
+            set_format_string(lpc, crm_system_name, level > LOG_DEBUG);
         }
     }
 #endif
@@ -704,8 +778,8 @@ crm_enable_stderr(int enable)
 #if LIBQB_LOGGING
     if (enable && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
  	qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", crm_log_level);
+        set_format_string(QB_LOG_STDERR, crm_system_name, crm_log_level > LOG_DEBUG);
 	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_TRUE);
-        qb_log_format_set(QB_LOG_STDERR, "%g %-7p: %n: \t%b");
 
     } else if(enable == FALSE) {
 	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_FALSE);
@@ -838,12 +912,12 @@ compare_version(const char *version1, const char *version2)
 
         if (digit1 < digit2) {
             rc = -1;
-            crm_debug_5("%d < %d", digit1, digit2);
+            crm_trace("%d < %d", digit1, digit2);
             break;
 
         } else if (digit1 > digit2) {
             rc = 1;
-            crm_debug_5("%d > %d", digit1, digit2);
+            crm_trace("%d > %d", digit1, digit2);
             break;
         }
 
@@ -866,11 +940,11 @@ compare_version(const char *version1, const char *version2)
     crm_free(ver2_copy);
 
     if (rc == 0) {
-        crm_debug_3("%s == %s (%d)", version1, version2, lpc);
+        crm_trace("%s == %s (%d)", version1, version2, lpc);
     } else if (rc < 0) {
-        crm_debug_3("%s < %s (%d)", version1, version2, lpc);
+        crm_trace("%s < %s (%d)", version1, version2, lpc);
     } else if (rc > 0) {
-        crm_debug_3("%s > %s (%d)", version1, version2, lpc);
+        crm_trace("%s > %s (%d)", version1, version2, lpc);
     }
 
     return rc;
@@ -1194,7 +1268,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
     len = strlen(key);
     offset = len - 1;
 
-    crm_debug_3("Source: %s", key);
+    crm_trace("Source: %s", key);
 
     while (offset > 0 && isdigit(key[offset])) {
         int digits = len - offset;
@@ -1210,7 +1284,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
         offset--;
     }
 
-    crm_debug_3("  Interval: %d", *interval);
+    crm_trace("  Interval: %d", *interval);
     CRM_CHECK(key[offset] == '_', return FALSE);
 
     mutable_key = crm_strdup(key);
@@ -1227,7 +1301,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 
     mutable_key_ptr = mutable_key + offset + 1;
 
-    crm_debug_3("  Action: %s", mutable_key_ptr);
+    crm_trace("  Action: %s", mutable_key_ptr);
 
     *op_type = crm_strdup(mutable_key_ptr);
 
@@ -1247,7 +1321,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
         notify[0] = 0;
     }
 
-    crm_debug_3("  Resource: %s", mutable_key);
+    crm_trace("  Resource: %s", mutable_key);
     *rsc_id = mutable_key;
 
     return TRUE;
@@ -1512,7 +1586,7 @@ filter_reload_parameters(xmlNode * param_set, const char *restart_string)
 
             match = strstr(restart_string, name);
             if (match == NULL) {
-                crm_debug_3("%s not found in %s", prop_name, restart_string);
+                crm_trace("%s not found in %s", prop_name, restart_string);
                 xml_remove_prop(param_set, prop_name);
             }
             crm_free(name);
@@ -1631,7 +1705,7 @@ get_last_sequence(const char *directory, const char *series)
         buffer = NULL;
 
     } else {
-        crm_debug_3("Reading %d bytes from file", length);
+        crm_trace("Reading %d bytes from file", length);
         crm_malloc0(buffer, (length + 1));
         read_len = fread(buffer, 1, length, file_strm);
         if (read_len != length) {
@@ -2147,7 +2221,7 @@ crm_get_option(int argc, char **argv, int *index)
             case -1:           /* End of option processing */
                 break;
             case ':':
-                crm_debug_2("Missing argument");
+                crm_trace("Missing argument");
                 crm_help('?', 1);
                 break;
             case '?':
@@ -2476,11 +2550,11 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
                origin, op->rsc_id, op_status2text(op->op_status), op->op_type, op->interval);
 
     if (op->op_status == LRM_OP_CANCELLED) {
-        crm_debug_3("Ignoring cancelled op");
+        crm_trace("Ignoring cancelled op");
         return NULL;
     }
 
-    crm_debug_3("DC version: %s", caller_version);
+    crm_trace("DC version: %s", caller_version);
 
     task = op->op_type;
     /* remap the task name under various scenarios
@@ -2562,7 +2636,7 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
 
     if (compare_version("2.1", caller_version) <= 0) {
         if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-            crm_debug_2("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
+            crm_trace("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
                         op->rsc_id, op->op_type, op->interval,
                         op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 
@@ -2647,7 +2721,7 @@ determine_request_user(char **user, IPC_Channel * channel, xmlNode * request, co
 /*  } else { Legal delegation */
     }
 
-    crm_debug_2("Processing msg for user '%s'", crm_element_value(request, field));
+    crm_trace("Processing msg for user '%s'", crm_element_value(request, field));
 }
 #endif
 

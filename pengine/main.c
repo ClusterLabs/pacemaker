@@ -79,7 +79,7 @@ pe_connection_destroy(gpointer user_data)
 static gboolean
 pe_client_connect(IPC_Channel * client, gpointer user_data)
 {
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
     if (client == NULL) {
         crm_err("Channel was NULL");
 

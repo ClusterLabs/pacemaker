@@ -59,7 +59,7 @@ do_cib_updated(const char *event, xmlNode * msg)
     CRM_CHECK(msg != NULL, return);
     crm_element_value_int(msg, F_CIB_RC, &rc);
     if (rc < cib_ok) {
-        crm_debug_3("Filter rc=%d (%s)", rc, cib_error2string(rc));
+        crm_trace("Filter rc=%d (%s)", rc, cib_error2string(rc));
         return;
     }
 
@@ -89,7 +89,7 @@ revision_check_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
     CRM_CHECK(safe_str_eq(crm_element_name(generation), XML_TAG_CIB),
               crm_log_xml_err(output, __FUNCTION__); return);
 
-    crm_debug_3("Checking our feature revision is allowed: %s", CIB_FEATURE_SET);
+    crm_trace("Checking our feature revision is allowed: %s", CIB_FEATURE_SET);
 
     revision = crm_element_value(generation, XML_ATTR_CRM_VERSION);
     cmp = compare_version(revision, CRM_FEATURE_SET);

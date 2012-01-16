@@ -43,7 +43,7 @@ node_copy(node_t * this_node)
     crm_malloc0(new_node, sizeof(node_t));
     CRM_ASSERT(new_node != NULL);
 
-    crm_debug_5("Copying %p (%s) to %p", this_node, this_node->details->uname, new_node);
+    crm_trace("Copying %p (%s) to %p", this_node, this_node->details->uname, new_node);
 
     new_node->weight = this_node->weight;
     new_node->fixed = this_node->fixed;
@@ -344,7 +344,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
 
         action = g_list_nth_data(possible_matches, 0);
-        crm_debug_4("Found existing action (%d) %s for %s on %s",
+        crm_trace("Found existing action (%d) %s for %s on %s",
                     action->id, task, rsc ? rsc->id : "<NULL>",
                     on_node ? on_node->details->uname : "<NULL>");
         g_list_free(possible_matches);
@@ -352,7 +352,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
     if (action == NULL) {
         if (save_action) {
-            crm_debug_4("Creating%s action %d: %s for %s on %s",
+            crm_trace("Creating%s action %d: %s for %s on %s",
                         optional ? "" : " manditory", data_set->action_id, key,
                         rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>");
         }
@@ -409,12 +409,12 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
 
         if (save_action) {
-            crm_debug_4("Action %d created", action->id);
+            crm_trace("Action %d created", action->id);
         }
     }
 
     if (optional == FALSE && (action->flags & pe_action_optional)) {
-        crm_debug_2("Action %d (%s) marked manditory", action->id, action->uuid);
+        crm_trace("Action %d (%s) marked manditory", action->id, action->uuid);
         clear_bit_inplace(action->flags, pe_action_optional);
     }
 
@@ -462,7 +462,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
                        action->uuid, action->node->details->uname);
 
         } else if (action->needs == rsc_req_nothing) {
-            crm_debug_3("Action %s doesnt require anything", action->uuid);
+            crm_trace("Action %s doesnt require anything", action->uuid);
             set_bit_inplace(action->flags, pe_action_runnable);
 #if 0
             /*
@@ -470,7 +470,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
              * - if we dont have quorum we cant stonith anyway
              */
         } else if (action->needs == rsc_req_stonith) {
-            crm_debug_3("Action %s requires only stonith", action->uuid);
+            crm_trace("Action %s requires only stonith", action->uuid);
             action->runnable = TRUE;
 #endif
         } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
@@ -480,7 +480,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
                    && data_set->no_quorum_policy == no_quorum_freeze) {
-            crm_debug_3("Check resource is already active");
+            crm_trace("Check resource is already active");
             if (rsc->fns->active(rsc, TRUE) == FALSE) {
                 clear_bit_inplace(action->flags, pe_action_runnable);
                 crm_debug("%s\t%s (cancelled : quorum freeze)",
@@ -488,7 +488,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
             }
 
         } else {
-            crm_debug_3("Action %s is runnable", action->uuid);
+            crm_trace("Action %s is runnable", action->uuid);
             set_bit_inplace(action->flags, pe_action_runnable);
         }
 
@@ -591,7 +591,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         }
     }
 
-    crm_debug_3("\tAction %s requires: %s", action->task, value);
+    crm_trace("\tAction %s requires: %s", action->task, value);
 
     value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
     if (safe_str_eq(action->task, CRMD_ACTION_STOP)
@@ -659,7 +659,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         value = "restart (and possibly migrate) (default)";
     }
 
-    crm_debug_3("\t%s failure handling: %s", action->task, value);
+    crm_trace("\t%s failure handling: %s", action->task, value);
 
     value = NULL;
     if (xml_obj != NULL) {
@@ -676,7 +676,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
             action->fail_role = RSC_ROLE_STARTED;
         }
     }
-    crm_debug_3("\t%s failure results in: %s", action->task, role2text(action->fail_role));
+    crm_trace("\t%s failure results in: %s", action->task, role2text(action->fail_role));
 
     field = XML_LRM_ATTR_INTERVAL;
     value = g_hash_table_lookup(action->meta, field);
@@ -821,11 +821,11 @@ void
 print_node(const char *pre_text, node_t * node, gboolean details)
 {
     if (node == NULL) {
-        crm_debug_4("%s%s: <NULL>", pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
+        crm_trace("%s%s: <NULL>", pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
         return;
     }
 
-    crm_debug_4("%s%s%sNode %s: (weight=%d, fixed=%s)",
+    crm_trace("%s%s%sNode %s: (weight=%d, fixed=%s)",
                 pre_text == NULL ? "" : pre_text,
                 pre_text == NULL ? "" : ": ",
                 node->details ==
@@ -836,11 +836,11 @@ print_node(const char *pre_text, node_t * node, gboolean details)
         char *pe_mutable = crm_strdup("\t\t");
         GListPtr gIter = node->details->running_rsc;
 
-        crm_debug_4("\t\t===Node Attributes");
+        crm_trace("\t\t===Node Attributes");
         g_hash_table_foreach(node->details->attrs, print_str_str, pe_mutable);
         crm_free(pe_mutable);
 
-        crm_debug_4("\t\t=== Resources");
+        crm_trace("\t\t=== Resources");
 
         for (; gIter != NULL; gIter = gIter->next) {
             resource_t *rsc = (resource_t *) gIter->data;
@@ -856,7 +856,7 @@ print_node(const char *pre_text, node_t * node, gboolean details)
 void
 print_str_str(gpointer key, gpointer value, gpointer user_data)
 {
-    crm_debug_4("%s%s %s ==> %s",
+    crm_trace("%s%s %s ==> %s",
                 user_data == NULL ? "" : (char *)user_data,
                 user_data == NULL ? "" : ": ", (char *)key, (char *)value);
 }
@@ -917,13 +917,13 @@ find_recurring_actions(GListPtr input, node_t * not_on_node)
         } else if (safe_str_eq(CRMD_ACTION_CANCEL, action->task)) {
             /* skip */
         } else if (not_on_node == NULL) {
-            crm_debug_5("(null) Found: %s", action->uuid);
+            crm_trace("(null) Found: %s", action->uuid);
             result = g_list_prepend(result, action);
 
         } else if (action->node == NULL) {
             /* skip */
         } else if (action->node->details != not_on_node->details) {
-            crm_debug_5("Found: %s", action->uuid);
+            crm_trace("Found: %s", action->uuid);
             result = g_list_prepend(result, action);
         }
     }
@@ -996,7 +996,7 @@ find_actions(GListPtr input, const char *key, node_t * on_node)
     for (; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        crm_debug_5("Matching %s against %s", key, action->uuid);
+        crm_trace("Matching %s against %s", key, action->uuid);
         if (safe_str_neq(key, action->uuid)) {
             continue;
 
@@ -1005,7 +1005,7 @@ find_actions(GListPtr input, const char *key, node_t * on_node)
 
         } else if (action->node == NULL) {
             /* skip */
-            crm_debug_2("While looking for %s action on %s, "
+            crm_trace("While looking for %s action on %s, "
                         "found an unallocated one.  Assigning"
                         " it to the requested node...", key, on_node->details->uname);
 
@@ -1031,19 +1031,19 @@ find_actions_exact(GListPtr input, const char *key, node_t * on_node)
     for (; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        crm_debug_5("Matching %s against %s", key, action->uuid);
+        crm_trace("Matching %s against %s", key, action->uuid);
         if (safe_str_neq(key, action->uuid)) {
-            crm_debug_3("Key mismatch: %s vs. %s", key, action->uuid);
+            crm_trace("Key mismatch: %s vs. %s", key, action->uuid);
             continue;
 
         } else if (on_node == NULL || action->node == NULL) {
-            crm_debug_3("on_node=%p, action->node=%p", on_node, action->node);
+            crm_trace("on_node=%p, action->node=%p", on_node, action->node);
             continue;
 
         } else if (safe_str_eq(on_node->details->id, action->node->details->id)) {
             result = g_list_prepend(result, action);
         }
-        crm_debug_2("Node mismatch: %s vs. %s", on_node->details->id, action->node->details->id);
+        crm_trace("Node mismatch: %s vs. %s", on_node->details->id, action->node->details->id);
     }
 
     return result;
@@ -1064,7 +1064,7 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
         }
     }
 
-    crm_debug_2("Setting %s for %s on %s: %d", tag, rsc->id, node->details->uname, score);
+    crm_trace("Setting %s for %s on %s: %d", tag, rsc->id, node->details->uname, score);
     match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = node_copy(node);

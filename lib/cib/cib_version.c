@@ -105,15 +105,15 @@ internal_update_feature_set(xmlNode * xml_obj, int current)
     for (; lpc < num_sets; lpc++) {
         const char *tag = crm_element_name(xml_obj);
 
-        crm_debug_3("Checking set %d with %d tags", lpc, feature_tags[lpc].length);
+        crm_trace("Checking set %d with %d tags", lpc, feature_tags[lpc].length);
 
         lpc_nested = 0;
         for (; lpc_nested < feature_tags[lpc].length; lpc_nested++) {
             const char *name = feature_tags[lpc].tags[lpc_nested];
 
-            crm_debug_4("Checking %s vs. %s", tag, name);
+            crm_trace("Checking %s vs. %s", tag, name);
             if (safe_str_eq(tag, name)) {
-                crm_debug_2("Found feature %s from set %s", tag, feature_sets[lpc]);
+                crm_trace("Found feature %s from set %s", tag, feature_sets[lpc]);
                 current = lpc;
                 break;
             }
@@ -125,7 +125,7 @@ internal_update_feature_set(xmlNode * xml_obj, int current)
         for (lpc_nested = 0; lpc_nested < feature_attrs[lpc].length; lpc_nested++) {
             const char *name = feature_attrs[lpc].tags[lpc_nested];
 
-            crm_debug_4("Checking for %s", name);
+            crm_trace("Checking for %s", name);
             value = crm_element_value(xml_obj, name);
             if (value != NULL) {
                 crm_info("Found feature '%s' from set %s", name, feature_sets[lpc]);

@@ -78,7 +78,7 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
     char *raw_task = NULL;
     int task = no_action;
 
-    crm_debug_3("Processing %s", old_uuid);
+    crm_trace("Processing %s", old_uuid);
     if (old_uuid == NULL) {
         return NULL;
 
@@ -127,7 +127,7 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
         } else {
             uuid = generate_op_key(rid, task2text(task + 1), 0);
         }
-        crm_debug_2("Converted %s -> %s", old_uuid, uuid);
+        crm_trace("Converted %s -> %s", old_uuid, uuid);
     }
 
   done:
@@ -444,7 +444,7 @@ action2xml(action_t * action, gboolean as_input)
         return NULL;
     }
 
-    crm_debug_4("Dumping action %d as XML", action->id);
+    crm_trace("Dumping action %d as XML", action->id);
     if (safe_str_eq(action->task, CRM_OP_FENCE)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 /* 		needs_node_info = FALSE; */

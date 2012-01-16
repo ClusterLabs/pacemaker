@@ -139,7 +139,7 @@ stonith_connection_destroy(gpointer user_data)
 }
 
 static int
-stonith_api_register_device(stonith_t * stonith, int call_options,
+stonith_api_register_device(stonith_t * st, int call_options,
                             const char *id, const char *namespace, const char *agent,
                             stonith_key_value_t * params)
 {
@@ -156,14 +156,14 @@ stonith_api_register_device(stonith_t * stonith, int call_options,
         hash2field((gpointer) params->key, (gpointer) params->value, args);
     }
 
-    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
+    rc = stonith_send_command(st, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
     free_xml(data);
 
     return rc;
 }
 
 static int
-stonith_api_remove_device(stonith_t * stonith, int call_options, const char *name)
+stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -171,11 +171,47 @@ stonith_api_remove_device(stonith_t * stonith, int call_options, const char *nam
     data = create_xml_node(NULL, F_STONITH_DEVICE);
     crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, XML_ATTR_ID, name);
-    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
+    rc = stonith_send_command(st, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
     free_xml(data);
 
     return rc;
 }
+
+static int stonith_api_remove_level(stonith_t *st, int options, const char *node, int level) 
+{
+    int rc = 0;
+    xmlNode *data = NULL;
+
+    data = create_xml_node(NULL, F_STONITH_DEVICE);
+    crm_xml_add(data, "origin", __FUNCTION__);
+    crm_xml_add(data, F_STONITH_TARGET, node);
+    crm_xml_add_int(data, F_STONITH_LEVEL, level);
+    rc = stonith_send_command(st, STONITH_OP_LEVEL_DEL, data, NULL, options, 0);
+    free_xml(data);
+
+    return rc;
+}
+
+static int stonith_api_register_level(stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list)
+{
+    int rc = 0;
+    xmlNode *data = NULL;
+
+    data = create_xml_node(NULL, F_STONITH_LEVEL);
+    crm_xml_add_int(data, XML_ATTR_ID, level);
+    crm_xml_add(data, F_STONITH_TARGET, node);
+    crm_xml_add(data, "origin", __FUNCTION__);
+
+    for (; device_list; device_list = device_list->next) {
+        xmlNode *dev = create_xml_node(data, F_STONITH_DEVICE);
+        crm_xml_add(dev, XML_ATTR_ID, device_list->value);
+    }
+
+    rc = stonith_send_command(st, STONITH_OP_LEVEL_ADD, data, NULL, options, 0);
+    free_xml(data);
+
+    return rc;
+}       
 
 static void
 append_arg(gpointer key, gpointer value, gpointer user_data)
@@ -202,7 +238,7 @@ append_arg(gpointer key, gpointer value, gpointer user_data)
     }
 
     crm_realloc(*args, last + len);
-    crm_debug_2("Appending: %s=%s", (char *)key, (char *)value);
+    crm_trace("Appending: %s=%s", (char *)key, (char *)value);
     sprintf((*args) + last, "%s=%s\n", (char *)key, (char *)value);
 }
 
@@ -357,12 +393,12 @@ make_args(const char *action, const char *victim, GHashTable * device_args, GHas
 
         /* Don't overwrite explictly set values for $param */
         if (value == NULL || safe_str_eq(value, "dynamic")) {
-            crm_info("%s-ing node '%s' as '%s=%s'", action, victim, param, alias);
+            crm_debug("Performing %s action for node '%s' as '%s=%s'", action, victim, param, alias);
             append_const_arg(param, alias, &arg_list);
         }
     }
 
-    crm_debug_3("Calculated: %s", arg_list);
+    crm_trace("Calculated: %s", arg_list);
     return arg_list;
 }
 
@@ -883,6 +919,12 @@ stonith_error2string(enum stonith_errors return_code)
         case st_err_agent:
             error_msg = "Execution of the stonith agent failed";
             break;
+        case st_err_invalid_target:
+            error_msg = "Invalid target";
+            break;
+        case st_err_invalid_level:
+            error_msg = "Invalid fencing level specified";
+            break;
     }
 
     if (error_msg == NULL) {
@@ -967,7 +1009,7 @@ get_stonith_token(IPC_Channel * ch, char **token)
     CRM_CHECK(ch != NULL, return st_err_missing);
     CRM_CHECK(token != NULL, return st_err_missing);
 
-    crm_debug_4("Waiting for msg on command channel");
+    crm_trace("Waiting for msg on command channel");
 
     reg_msg = xmlfromIPC(ch, MAX_IPC_DELAY);
 
@@ -1017,7 +1059,7 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
     crm_xml_add(op_msg, F_STONITH_CALLBACK_TOKEN, token);
     crm_xml_add(op_msg, F_STONITH_OPERATION, op);
     crm_xml_add_int(op_msg, F_STONITH_CALLID, call_id);
-    crm_debug_4("Sending call options: %.8lx, %d", (long)call_options, call_options);
+    crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
     crm_xml_add_int(op_msg, F_STONITH_CALLOPTS, call_options);
 
     if (data != NULL) {
@@ -1083,7 +1125,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     char *uuid_ticket = NULL;
     stonith_private_t *native = stonith->private;
 
-    crm_debug_4("Connecting command channel");
+    crm_trace("Connecting command channel");
 
     stonith->state = stonith_connected_command;
     native->command_channel = init_client_ipc_comms_nodispatch(stonith_channel);
@@ -1150,7 +1192,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
         } else {                /* do mainloop */
 
-            crm_debug_4("Connecting callback channel");
+            crm_trace("Connecting callback channel");
             native->callback_source =
                 G_main_add_IPC_Channel(G_PRIORITY_HIGH, native->callback_channel, FALSE,
                                        stonith_dispatch_internal, stonith,
@@ -1209,7 +1251,7 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
     stonith_private_t *private = NULL;
 
     private = stonith->private;
-    crm_debug_2("Adding callback for %s events (%d)", event, g_list_length(private->notify_list));
+    crm_trace("Adding callback for %s events (%d)", event, g_list_length(private->notify_list));
 
     crm_malloc0(new_client, sizeof(stonith_notify_client_t));
     new_client->event = event;
@@ -1227,7 +1269,7 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
 
         stonith_set_notification(stonith, event, 1);
 
-        crm_debug_3("Callback added (%d)", g_list_length(private->notify_list));
+        crm_trace("Callback added (%d)", g_list_length(private->notify_list));
     }
     return stonith_ok;
 }
@@ -1256,10 +1298,10 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
         private->notify_list = g_list_remove(private->notify_list, list_client);
         crm_free(list_client);
 
-        crm_debug_3("Removed callback");
+        crm_trace("Removed callback");
 
     } else {
-        crm_debug_3("Callback not present");
+        crm_trace("Callback not present");
     }
     crm_free(new_client);
     return stonith_ok;
@@ -1404,7 +1446,7 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
         stonith_api_del_callback(stonith, call_id, FALSE);
 
     } else {
-        crm_debug_2("No callback found for call %d", call_id);
+        crm_trace("No callback found for call %d", call_id);
         local_blob.callback = NULL;
     }
 
@@ -1413,7 +1455,7 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
     }
 
     if (local_blob.callback != NULL && (rc == stonith_ok || local_blob.only_success == FALSE)) {
-        crm_debug_2("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
+        crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
         local_blob.callback(stonith, msg, call_id, rc, output, local_blob.user_data);
 
     } else if (private->op_callback == NULL && rc != stonith_ok) {
@@ -1422,10 +1464,10 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
     }
 
     if (private->op_callback != NULL) {
-        crm_debug_2("Invoking global callback for call %d", call_id);
+        crm_trace("Invoking global callback for call %d", call_id);
         private->op_callback(stonith, msg, call_id, rc, output, NULL);
     }
-    crm_debug_4("OP callback activated.");
+    crm_trace("OP callback activated.");
 }
 
 static void
@@ -1451,13 +1493,13 @@ stonith_send_notification(gpointer data, gpointer user_data)
         return;
 
     } else if (safe_str_neq(entry->event, event)) {
-        crm_debug_4("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
+        crm_trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
         return;
     }
 
-    crm_debug_4("Invoking callback for %p/%s event...", entry, event);
+    crm_trace("Invoking callback for %p/%s event...", entry, event);
     entry->notify(blob->stonith, event, blob->xml);
-    crm_debug_4("Callback invoked...");
+    crm_trace("Callback invoked...");
 }
 
 int
@@ -1501,31 +1543,31 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     }
 
     crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
-    crm_debug_3("Sending %s message to STONITH service, Timeout: %d", op, timeout);
+    crm_trace("Sending %s message to STONITH service, Timeout: %d", op, timeout);
     if (send_ipc_message(native->command_channel, op_msg) == FALSE) {
         crm_err("Sending message to STONITH service FAILED");
         free_xml(op_msg);
         return st_err_ipc;
 
     } else {
-        crm_debug_3("Message sent");
+        crm_trace("Message sent");
     }
 
     free_xml(op_msg);
 
     if ((call_options & st_opt_discard_reply)) {
-        crm_debug_3("Discarding reply");
+        crm_trace("Discarding reply");
         return stonith_ok;
 
     } else if (!(call_options & st_opt_sync_call)) {
-        crm_debug_3("Async call, returning");
+        crm_trace("Async call, returning");
         CRM_CHECK(stonith->call_id != 0, return st_err_ipc);
 
         return stonith->call_id;
     }
 
     rc = IPC_OK;
-    crm_debug_3("Waiting for a syncronous reply");
+    crm_trace("Waiting for a syncronous reply");
 
     rc = stonith_ok;
     while (IPC_ISRCONN(native->command_channel)) {
@@ -1544,7 +1586,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
             break;
 
         } else if (reply_id == msg_id) {
-            crm_debug_3("Syncronous reply received");
+            crm_trace("Syncronous reply received");
             crm_log_xml(LOG_MSG, "Reply", op_reply);
             if (crm_element_value_int(op_reply, F_STONITH_RC, &rc) != 0) {
                 rc = st_err_peer;
@@ -1627,12 +1669,12 @@ stonith_msgready(stonith_t * stonith)
         return FALSE;
 
     } else if (private->callback_channel->ops->is_message_pending(private->callback_channel)) {
-        crm_debug_4("Message pending on command channel [%d]",
+        crm_trace("Message pending on command channel [%d]",
                     private->callback_channel->farside_pid);
         return TRUE;
     }
 
-    crm_debug_3("No message pending");
+    crm_trace("No message pending");
     return FALSE;
 }
 
@@ -1653,7 +1695,7 @@ stonith_rcvmsg(stonith_t * stonith)
 
     /* if it is not blocking mode and no message in the channel, return */
     if (stonith_msgready(stonith) == FALSE) {
-        crm_debug_3("No message ready and non-blocking...");
+        crm_trace("No message ready and non-blocking...");
         return 0;
     }
 
@@ -1666,7 +1708,7 @@ stonith_rcvmsg(stonith_t * stonith)
 
     /* do callbacks */
     type = crm_element_value(blob.xml, F_TYPE);
-    crm_debug_4("Activating %s callbacks...", type);
+    crm_trace("Activating %s callbacks...", type);
 
     if (safe_str_eq(type, T_STONITH_NG)) {
         stonith_perform_callback(stonith, blob.xml, 0, 0);
@@ -1812,6 +1854,9 @@ stonith_api_new(void)
     new_stonith->cmds->query           = stonith_api_query;
     new_stonith->cmds->remove_device   = stonith_api_remove_device;
     new_stonith->cmds->register_device = stonith_api_register_device;
+
+    new_stonith->cmds->remove_level    = stonith_api_remove_level;
+    new_stonith->cmds->register_level  = stonith_api_register_level;
     
     new_stonith->cmds->remove_callback       = stonith_api_del_callback;	
     new_stonith->cmds->register_callback     = stonith_api_add_callback;	
@@ -1823,32 +1868,47 @@ stonith_api_new(void)
 }
 
 stonith_key_value_t *
-stonith_key_value_add(stonith_key_value_t * kvp, const char *key, const char *value)
+stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *value)
 {
-    stonith_key_value_t *p;
+    stonith_key_value_t *p, *end;
 
-    crm_malloc(p, sizeof(stonith_key_value_t));
-    p->next = kvp;
-    p->key = crm_strdup(key);
-    p->value = crm_strdup(value);
-    return (p);
+    crm_malloc0(p, sizeof(stonith_key_value_t));
+    if(key) {
+        p->key = crm_strdup(key);
+    }
+    if(value) {
+        p->value = crm_strdup(value);
+    }
+
+    end = head;
+    while(end && end->next) {
+        end = end->next;
+    }
+
+    if(end) {
+        end->next = p;
+    } else {
+        head = p;
+    }
+
+    return head;
 }
 
 void
-stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values)
+stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
 {
     stonith_key_value_t *p;
 
-    while (kvp) {
-        p = kvp->next;
+    while (head) {
+        p = head->next;
         if (keys) {
-            free(kvp->key);
+            free(head->key);
         }
         if (values) {
-            free(kvp->value);
+            free(head->value);
         }
-        free(kvp);
-        kvp = p;
+        free(head);
+        head = p;
     }
 }
 

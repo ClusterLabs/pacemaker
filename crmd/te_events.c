@@ -189,9 +189,9 @@ status_from_rc(crm_action_t * action, int orig_status, int rc, int target_rc)
     int status = orig_status;
 
     if (target_rc == rc) {
-        crm_debug_2("Target rc: == %d", rc);
+        crm_trace("Target rc: == %d", rc);
         if (status != LRM_OP_DONE) {
-            crm_debug_2("Re-mapping op status to" " LRM_OP_DONE for rc=%d", rc);
+            crm_trace("Re-mapping op status to" " LRM_OP_DONE for rc=%d", rc);
             status = LRM_OP_DONE;
         }
 
@@ -279,7 +279,7 @@ match_graph_event(int action_id, xmlNode * event, const char *event_node,
 
     this_event = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    te_log_action(LOG_INFO, "Action %s (%d) confirmed on %s (rc=%d)",
+    te_log_action(LOG_DEBUG, "Action %s (%d) confirmed on %s (rc=%d)",
                   crm_str(this_event), action->id, crm_str(target), op_status);
 
     return action->id;
@@ -486,7 +486,7 @@ process_graph_event(xmlNode * event, const char *event_node)
 
     } else {
         passed = TRUE;
-        crm_debug_2("Processed update to %s: %s", id, magic);
+        crm_trace("Processed update to %s: %s", id, magic);
     }
 
     if (passed == FALSE) {

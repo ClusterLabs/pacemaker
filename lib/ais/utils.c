@@ -43,9 +43,14 @@ log_ais_message(int level, const AIS_Message * msg)
 {
     char *data = get_ais_data(msg);
 
+#if LIBQB_LOGGING
     qb_log_from_external_source(__func__, __FILE__,
                "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s",
 		level, __LINE__, 0,
+#else
+    log_printf(level,
+               "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s",
+#endif
                msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
                ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
                msg->sender.pid,
@@ -500,7 +505,7 @@ send_client_ipc(void *conn, const AIS_Message * ais_msg)
 /* 	    ais_err("Connection is throttled: %d", queue->size); */
 
     } else {
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
         rc = pcmk_api->ipc_dispatch_send(conn, ais_msg, ais_msg->header.size);
 #endif
     }
@@ -582,7 +587,7 @@ config_find_init(struct corosync_api_v1 * config, char *name)
 {
     hdb_handle_t local_handle = 0;
 
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
     config->object_find_create(OBJECT_PARENT_HANDLE, name, strlen(name), &local_handle);
     ais_info("Local handle: %lld for %s", local_handle, name);
 #endif
@@ -596,7 +601,7 @@ config_find_next(struct corosync_api_v1 * config, char *name, hdb_handle_t top_h
     int rc = 0;
     hdb_handle_t local_handle = 0;
 
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
     rc = config->object_find_next(top_handle, &local_handle);
 #endif
 
@@ -612,7 +617,7 @@ config_find_next(struct corosync_api_v1 * config, char *name, hdb_handle_t top_h
 void
 config_find_done(struct corosync_api_v1 *config, hdb_handle_t local_handle)
 {
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
     config->object_find_destroy(local_handle);
 #endif
 }

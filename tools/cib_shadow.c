@@ -500,7 +500,7 @@ dump_data_element(int depth, char **buffer, int *max, int *offset, const char *p
     CRM_CHECK(name != NULL, return 0);
     CRM_CHECK(buffer != NULL && *buffer != NULL, return 0);
 
-    crm_debug_5("Dumping %s...", name);
+    crm_trace("Dumping %s...", name);
 
     if (prefix) {
         printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s", prefix);
@@ -520,7 +520,7 @@ dump_data_element(int depth, char **buffer, int *max, int *offset, const char *p
         for(xIter = data->properties; xIter; xIter = xIter->next) {
             const char *prop_name = (const char *)xIter->name;
             const char *prop_value = crm_element_value(data, prop_name);
-            crm_debug_5("Dumping <%s %s=\"%s\"...",
+            crm_trace("Dumping <%s %s=\"%s\"...",
                         name, prop_name, prop_value);
             printed = snprintf(bhead(buffer, offset), bremain(max, offset), " %s=\"%s\"", prop_name, prop_value);
             update_buffer_head(printed);
@@ -556,7 +556,7 @@ dump_data_element(int depth, char **buffer, int *max, int *offset, const char *p
         snprintf(bhead(buffer, offset), bremain(max, offset), "</%s>%s", name,
                  formatted ? "\n" : "");
     update_buffer_head(printed);
-    crm_debug_5("Dumped %s...", name);
+    crm_trace("Dumped %s...", name);
 
     return has_children;
 }

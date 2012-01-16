@@ -69,17 +69,17 @@ test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, ha_time_
         passed = FALSE;
     }
 
-    crm_debug_2("Testing rule %s", ID(rule));
+    crm_trace("Testing rule %s", ID(rule));
     for (expr = __xml_first_child(rule); expr != NULL; expr = __xml_next(expr)) {
         test = test_expression(expr, node_hash, role, now);
         empty = FALSE;
 
         if (test && do_and == FALSE) {
-            crm_debug_3("Expression %s/%s passed", ID(rule), ID(expr));
+            crm_trace("Expression %s/%s passed", ID(rule), ID(expr));
             return TRUE;
 
         } else if (test == FALSE && do_and) {
-            crm_debug_3("Expression %s/%s failed", ID(rule), ID(expr));
+            crm_trace("Expression %s/%s failed", ID(rule), ID(expr));
             return FALSE;
         }
     }
@@ -88,7 +88,7 @@ test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, ha_time_
         crm_err("Invalid Rule %s: rules must contain at least one expression", ID(rule));
     }
 
-    crm_debug_2("Rule %s %s", ID(rule), passed ? "passed" : "failed");
+    crm_trace("Rule %s %s", ID(rule), passed ? "passed" : "failed");
     return passed;
 }
 
@@ -128,7 +128,7 @@ test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, ha
         uname = g_hash_table_lookup(node_hash, "#uname");
     }
 
-    crm_debug_2("Expression %s %s on %s",
+    crm_trace("Expression %s %s on %s",
                 ID(expr), accept ? "passed" : "failed", uname ? uname : "all ndoes");
     return accept;
 }
@@ -240,7 +240,7 @@ test_attr_expression(xmlNode * expr, GHashTable * hash, ha_time_t * now)
             } else {
                 type = "string";
             }
-            crm_debug_2("Defaulting to %s based comparison for '%s' op", type, op);
+            crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
         }
 
         if (safe_str_eq(type, "string")) {
@@ -449,7 +449,7 @@ test_date_expression(xmlNode * time_expr, ha_time_t * now)
 
     gboolean passed = FALSE;
 
-    crm_debug_2("Testing expression: %s", ID(time_expr));
+    crm_trace("Testing expression: %s", ID(time_expr));
 
     duration_spec = first_named_child(time_expr, "duration");
     date_spec = first_named_child(time_expr, "date_spec");
@@ -559,7 +559,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite)
         if (crm_str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, TRUE)) {
             name = crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);
 
-            crm_debug_4("Setting attribute: %s", name);
+            crm_trace("Setting attribute: %s", name);
             value = crm_element_value(an_attr, XML_NVPAIR_ATTR_VALUE);
 
             if (name == NULL || value == NULL) {
@@ -571,7 +571,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite)
 
             if (safe_str_eq(value, "#default")) {
                 if (old_value) {
-                    crm_debug_2("Removing value for %s (%s)", name, value);
+                    crm_trace("Removing value for %s (%s)", name, value);
                     g_hash_table_remove(hash, name);
                 }
                 continue;
@@ -604,7 +604,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
         return;
     }
 
-    crm_debug_3("Adding attributes from %s", pair->name);
+    crm_trace("Adding attributes from %s", pair->name);
     populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite);
 }
 
@@ -621,11 +621,11 @@ unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_nam
     xmlNode *attr_set = NULL;
 
     if (xml_obj == NULL) {
-        crm_debug_4("No instance attributes");
+        crm_trace("No instance attributes");
         return;
     }
 
-    crm_debug_4("Checking for attributes");
+    crm_trace("Checking for attributes");
     for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next(attr_set)) {
         /* Uncertain if set_name == NULL check is strictly necessary here */
         if (set_name == NULL || crm_str_eq((const char *)attr_set->name, set_name, TRUE)) {

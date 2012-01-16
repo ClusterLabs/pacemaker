@@ -151,7 +151,7 @@ destroy_crm_node(gpointer data)
 {
     crm_node_t *node = data;
 
-    crm_debug_2("Destroying entry for node %u", node->id);
+    crm_trace("Destroying entry for node %u", node->id);
 
     crm_free(node->addr);
     crm_free(node->uname);
@@ -207,6 +207,7 @@ crm_new_peer(unsigned int id, const char *uname)
 {
     crm_node_t *node = NULL;
 
+    CRM_CHECK(id > 0, return NULL);
     CRM_CHECK(uname != NULL || id > 0, return NULL);
 
     crm_debug("Creating entry for node %s/%u", uname, id);
@@ -286,8 +287,8 @@ crm_node_t *
 crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
                 const char *uuid, const char *uname, const char *addr, const char *state)
 {
-    gboolean state_changed = FALSE;
     gboolean addr_changed = FALSE;
+    gboolean state_changed = FALSE;
     gboolean procs_changed = FALSE;
     gboolean votes_changed = FALSE;
 
@@ -299,6 +300,7 @@ crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, ui
 
     node = crm_get_peer(id, uname);
     if (node == NULL) {
+        crm_trace("No node found for %d/%s", id, uname);
         node = crm_new_peer(id, uname);
 
         /* do it now so we don't get '(new)' everywhere */

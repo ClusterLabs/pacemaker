@@ -48,10 +48,12 @@ static struct crm_option long_options[] = {
     {"verbose",     0, 0, 'V', "\tIncrease debug output"},
     {"quiet",       0, 0, 'q', "\tPrint only essential output"},
 
+    {"-spacer-",    0, 0, '-', "Commands:"},
     {"list",            1, 0, 'l', "List devices that can terminate the specified host"},
     {"list-registered", 0, 0, 'L', "List all registered devices"},
     {"list-installed",  0, 0, 'I', "List all installed devices"},
 
+    {"-spacer-",    0, 0, '-', ""},
     {"metadata",    0, 0, 'M', "Check the device's metadata"},
     {"query",       1, 0, 'Q', "Check the device's status"},
     {"fence",       1, 0, 'F', "Fence the named host"},
@@ -60,14 +62,23 @@ static struct crm_option long_options[] = {
     {"confirm",     1, 0, 'C', "Confirm the named host is now safely down"},
     {"history",     1, 0, 'H', "Retrieve last fencing operation"},
 
-    {"register",    1, 0, 'R', "Register a stonith device"},
-    {"deregister",  1, 0, 'D', "De-register a stonith device"},
+    {"-spacer-",    0, 0, '-', ""},
+    {"register",    1, 0, 'R', "Register the named stonith device. Requires: --agent, optional: --option"},
+    {"deregister",  1, 0, 'D', "De-register the named stonith device"},
 
+    {"register-level",    1, 0, 'r', "Register a stonith level for the named host. Requires: --index, one or more --device entries"},
+    {"deregister-level",  1, 0, 'd', "De-register a stonith level for the named host. Requires: --index"},
+    
+    {"-spacer-",    0, 0, '-', ""},
+    {"-spacer-",    0, 0, '-', "Options and modifiers:"},
+    {"agent",       1, 0, 'a', "The agent (eg. fence_xvm) to instantiate when calling with --register"},
     {"env-option",  1, 0, 'e'},
     {"option",      1, 0, 'o'},
-    {"agent",       1, 0, 'a'},
 
-    {"timeout",     1, 0, 't'},
+    {"device",      1, 0, 'v', "A device to associate with a given host and stonith level"},
+    {"index",       1, 0, 'i', "The stonith level (1-9)"},
+
+    {"timeout",     1, 0, 't', "Operation timeout in seconds"},
 
     {"list-all",    0, 0, 'L', "legacy alias for --list-registered"},
 
@@ -87,6 +98,7 @@ main(int argc, char ** argv)
     int argerr = 0;
     int timeout = 120;
     int option_index = 0;
+    int fence_level = 0;
 
     char name[512];
     char value[512];
@@ -150,9 +162,17 @@ main(int argc, char ** argv)
 	    case 'U':
 	    case 'C':
 	    case 'H':
+	    case 'r':
+	    case 'd':
 		target = optarg;
 		action = flag;
 		break;
+            case 'i':
+                fence_level = crm_atoi(optarg, NULL);
+                break;
+            case 'v':
+                devices = stonith_key_value_add(devices, NULL, optarg);
+                break;
 	    case 'o':
 		crm_info("Scanning: -o %s", optarg);
 		rc = sscanf(optarg, "%[^=]=%[^=]", name, value);
@@ -225,7 +245,6 @@ main(int argc, char ** argv)
 	    rc = st->cmds->query(st, st_opts, target, &devices, timeout);
 	    for(dIter = devices; dIter; dIter = dIter->next ) {
 		fprintf( stdout, " %s\n", dIter->value );
-		crm_free(dIter->value);
 	    }
 	    if(rc == 0) {
 		fprintf(stderr, "No devices found\n");
@@ -248,6 +267,12 @@ main(int argc, char ** argv)
 	    break;
 	case 'D':
 	    rc = st->cmds->remove_device(st, st_opts, device);
+	    break;
+	case 'r':
+	    rc = st->cmds->register_level(st, st_opts, target, fence_level, devices);
+	    break;
+	case 'd':
+	    rc = st->cmds->remove_level(st, st_opts, target, fence_level);
 	    break;
 	case 'M':
 	    if (agent == NULL) {

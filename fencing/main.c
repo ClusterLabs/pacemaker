@@ -67,7 +67,7 @@ stonith_client_disconnect(
 		
     } else {
 	CRM_LOG_ASSERT(channel->ch_status != IPC_CONNECT);
-	crm_debug_2("Cleaning up after client disconnect: %s/%s/%s",
+	crm_trace("Cleaning up after client disconnect: %s/%s/%s",
 		    crm_str(stonith_client->name),
 		    stonith_client->channel_name,
 		    stonith_client->id);
@@ -134,7 +134,7 @@ stonith_client_callback(IPC_Channel *channel, gpointer user_data)
     
   bail:
     if(channel->ch_status != IPC_CONNECT) {
-	crm_debug_2("Client disconnected");
+	crm_trace("Client disconnected");
 	keep_channel = stonith_client_disconnect(channel, stonith_client);	
     }
 
@@ -147,23 +147,23 @@ stonith_client_destroy(gpointer user_data)
     stonith_client_t *stonith_client = user_data;
 	
     if(stonith_client == NULL) {
-	crm_debug_4("Destroying %p", user_data);
+	crm_trace("Destroying %p", user_data);
 	return;
     }
 
     if(stonith_client->source != NULL) {
-	crm_debug_4("Deleting %s (%p) from mainloop",
+	crm_trace("Deleting %s (%p) from mainloop",
 		    stonith_client->name, stonith_client->source);
 	G_main_del_IPC_Channel(stonith_client->source); 
 	stonith_client->source = NULL;
     }
 	
-    crm_debug_3("Destroying %s (%p)", stonith_client->name, user_data);
+    crm_trace("Destroying %s (%p)", stonith_client->name, user_data);
     crm_free(stonith_client->name);
     crm_free(stonith_client->callback_id);
     crm_free(stonith_client->id);
     crm_free(stonith_client);
-    crm_debug_4("Freed the cib client");
+    crm_trace("Freed the cib client");
 
     return;
 }
@@ -177,7 +177,7 @@ stonith_client_connect(IPC_Channel *channel, gpointer user_data)
     char uuid_str[UU_UNPARSE_SIZEOF];
     const char *channel_name = user_data;
 
-    crm_debug_3("Connecting channel");
+    crm_trace("Connecting channel");
     CRM_CHECK(channel_name != NULL, return FALSE);
 	
     if (channel == NULL) {
@@ -198,7 +198,7 @@ stonith_client_connect(IPC_Channel *channel, gpointer user_data)
     new_client->channel = channel;
     new_client->channel_name = channel_name;
 	
-    crm_debug_3("Created channel %p for channel %s",
+    crm_trace("Created channel %p for channel %s",
 		new_client, new_client->channel_name);
 	
     channel->ops->set_recv_qlen(channel, 1024);
@@ -208,7 +208,7 @@ stonith_client_connect(IPC_Channel *channel, gpointer user_data)
 	G_PRIORITY_DEFAULT, channel, FALSE, stonith_client_callback,
 	new_client, stonith_client_destroy);
 	
-    crm_debug_3("Channel %s connected for client %s",
+    crm_trace("Channel %s connected for client %s",
 		new_client->channel_name, new_client->id);
 	
     cl_uuid_generate(&client_id);
@@ -307,7 +307,7 @@ send_via_callback_channel(xmlNode *msg, const char *token)
     stonith_client_t *hash_client = NULL;
     enum stonith_errors rc = stonith_ok;
 	
-    crm_debug_3("Delivering msg %p to client %s", msg, token);
+    crm_trace("Delivering msg %p to client %s", msg, token);
 
     if(token == NULL) {
 	crm_err("No client id token, cant send message");
@@ -338,7 +338,7 @@ send_via_callback_channel(xmlNode *msg, const char *token)
     }
 
     if(rc == stonith_ok) {
-	crm_debug_3("Delivering reply to client %s (%s)",
+	crm_trace("Delivering reply to client %s (%s)",
 		    token, hash_client->channel_name);
 	if(send_ipc_message(hash_client->channel, msg) == FALSE) {
 	    crm_warn("Delivery of reply to client %s/%s failed",
@@ -357,22 +357,22 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
     stonith_client_t *client_obj = NULL;
     enum stonith_errors local_rc = stonith_ok;
 
-    crm_debug_2("Sending response");
+    crm_trace("Sending response");
 
     if(client_id != NULL) {
 	client_obj = g_hash_table_lookup(client_list, client_id);
     } else {
-	crm_debug_2("No client to sent the response to."
+	crm_trace("No client to sent the response to."
 		    "  F_STONITH_CLIENTID not set.");
     }
 	
-    crm_debug_3("Sending callback to request originator");
+    crm_trace("Sending callback to request originator");
     if(client_obj == NULL) {
 	local_rc = -1;
 		
     } else {
 	const char *client_id = client_obj->callback_id;
-	crm_debug_2("Sending %ssync response to %s %s",
+	crm_trace("Sending %ssync response to %s %s",
 		    sync_reply?"":"an a-",
 		    client_obj->name,
 		    from_peer?"(originator of delegated request)":"");
@@ -428,7 +428,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 	return;
 
     } else if(client->name == NULL) {
-	crm_debug_2("Skipping unnammed client / comamnd channel");
+	crm_trace("Skipping unnammed client / comamnd channel");
 	return;
     }
 
@@ -466,10 +466,10 @@ do_stonith_notify(
 	add_message_xml(update_msg, F_STONITH_CALLDATA, data);
     }
 
-    crm_debug_3("Notifying clients");
+    crm_trace("Notifying clients");
     g_hash_table_foreach(client_list, stonith_notify_client, update_msg);
     free_xml(update_msg);
-    crm_debug_3("Notify complete");
+    crm_trace("Notify complete");
 }
 
 static void
@@ -644,6 +644,9 @@ main(int argc, char ** argv)
 
     device_list = g_hash_table_new_full(
         crm_str_hash, g_str_equal, NULL, free_device);
+
+    topology = g_hash_table_new_full(
+        crm_str_hash, g_str_equal, NULL, free_topology_entry);
 
     channel1 = crm_strdup(stonith_channel);
     rc = init_server_ipc_comms(

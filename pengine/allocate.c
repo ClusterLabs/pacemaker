@@ -216,7 +216,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     if (interval > 0) {
         xmlNode *op_match = NULL;
 
-        crm_debug_2("Checking parameters for %s", key);
+        crm_trace("Checking parameters for %s", key);
         op_match = find_rsc_op_entry(rsc, key);
 
         if (op_match == NULL && is_set(data_set->flags, pe_flag_stop_action_orphans)) {
@@ -285,8 +285,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
     if (safe_str_neq(digest_all_calc, digest_all)) {
         /* Changes that can potentially be handled by a reload */
-        action_t *op = NULL;
-
         did_change = TRUE;
         crm_log_xml_info(params_all, "params:reload");
         crm_info("Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
@@ -295,6 +293,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
                  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 
         if (interval > 0) {
+            action_t *op = NULL;
 #if 0
             /* Always reload/restart the entire resource */
             op = custom_action(rsc, start_key(rsc), RSC_START, NULL, FALSE, TRUE, data_set);
@@ -315,7 +314,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
             /* Create these for now, it keeps the action IDs the same in the regression outputs */
             key = generate_op_key(rsc->id, task, interval);
-            op = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
+            custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
 
         } else {
             crm_trace("Resource %s doesn't know how to reload", rsc->id);
@@ -363,16 +362,16 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     CRM_CHECK(node != NULL, return);
 
     if (is_set(rsc->flags, pe_rsc_orphan)) {
-        crm_debug_2("Skipping param check for %s: orphan", rsc->id);
+        crm_trace("Skipping param check for %s: orphan", rsc->id);
         return;
 
     } else if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
-        crm_debug_2("Skipping param check for %s: no longer active on %s",
+        crm_trace("Skipping param check for %s: no longer active on %s",
                     rsc->id, node->details->uname);
         return;
     }
 
-    crm_debug_3("Processing %s on %s", rsc->id, node->details->uname);
+    crm_trace("Processing %s on %s", rsc->id, node->details->uname);
 
     if (check_rsc_parameters(rsc, node, rsc_entry, data_set)) {
         DeleteRsc(rsc, node, FALSE, data_set);
@@ -508,12 +507,12 @@ check_actions(pe_working_set_t * data_set)
                 continue;
 
             } else if (can_run_resources(node) == FALSE) {
-                crm_debug_2("Skipping param check for %s: cant run resources",
+                crm_trace("Skipping param check for %s: cant run resources",
                             node->details->uname);
                 continue;
             }
 
-            crm_debug_2("Processing node %s", node->details->uname);
+            crm_trace("Processing node %s", node->details->uname);
             if (node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 xmlNode *rsc_entry = NULL;
 
@@ -548,7 +547,7 @@ apply_placement_constraints(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
-    crm_debug_3("Applying constraints...");
+    crm_trace("Applying constraints...");
 
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
         rsc_to_node_t *cons = (rsc_to_node_t *) gIter->data;
@@ -889,7 +888,7 @@ stage2(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
-    crm_debug_3("Applying placement constraints");
+    crm_trace("Applying placement constraints");
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -1227,7 +1226,7 @@ stage6(pe_working_set_t * data_set)
     gboolean need_stonith = FALSE;
     GListPtr gIter = data_set->nodes;
 
-    crm_debug_3("Processing fencing and shutdown cases");
+    crm_trace("Processing fencing and shutdown cases");
 
     if (is_set(data_set->flags, pe_flag_stonith_enabled)
         && (is_set(data_set->flags, pe_flag_have_quorum)
@@ -1310,7 +1309,7 @@ stage6(pe_working_set_t * data_set)
     if (dc_down != NULL) {
         GListPtr shutdown_matches = find_actions(data_set->actions, CRM_OP_SHUTDOWN, NULL);
 
-        crm_debug_2("Ordering shutdowns before %s on %s (DC)",
+        crm_trace("Ordering shutdowns before %s on %s (DC)",
                     dc_down->task, dc_down->node->details->uname);
 
         add_hash_param(dc_down->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
@@ -1396,7 +1395,7 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
     CRM_CHECK(order != NULL, return);
 
     rh_action = order->rh_action;
-    crm_debug_3("Processing RH of ordering constraint %d", order->id);
+    crm_trace("Processing RH of ordering constraint %d", order->id);
 
     if (rh_action != NULL) {
         rh_actions = g_list_prepend(NULL, rh_action);
@@ -1406,10 +1405,10 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
     }
 
     if (rh_actions == NULL) {
-        crm_debug_4("No RH-Side (%s/%s) found for constraint..."
+        crm_trace("No RH-Side (%s/%s) found for constraint..."
                     " ignoring", rsc->id, order->rh_action_task);
         if (lh_action) {
-            crm_debug_4("LH-Side was: %s", lh_action->uuid);
+            crm_trace("LH-Side was: %s", lh_action->uuid);
         }
         return;
     }
@@ -1445,7 +1444,7 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
     action_t *lh_action = order->lh_action;
     resource_t *rh_rsc = order->rh_rsc;
 
-    crm_debug_3("Processing LH of ordering constraint %d", order->id);
+    crm_trace("Processing LH of ordering constraint %d", order->id);
     CRM_ASSERT(lh_rsc != NULL);
 
     if (lh_action != NULL) {
@@ -1465,13 +1464,13 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
         key = generate_op_key(lh_rsc->id, op_type, interval);
 
         if (lh_rsc->fns->state(lh_rsc, TRUE) != RSC_ROLE_STOPPED || safe_str_neq(op_type, RSC_STOP)) {
-            crm_debug_4("No LH-Side (%s/%s) found for constraint %d with %s - creating",
+            crm_trace("No LH-Side (%s/%s) found for constraint %d with %s - creating",
                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
             lh_action = custom_action(lh_rsc, key, op_type, NULL, TRUE, TRUE, data_set);
             lh_actions = g_list_prepend(NULL, lh_action);
         } else {
             crm_free(key);
-            crm_debug_4("No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
+            crm_trace("No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
         }
 
@@ -1504,7 +1503,7 @@ stage7(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
-    crm_debug_4("Applying ordering constraints");
+    crm_trace("Applying ordering constraints");
 
     /* Don't ask me why, but apparently they need to be processed in
      * the order they were created in... go figure
@@ -1519,26 +1518,26 @@ stage7(pe_working_set_t * data_set)
         order_constraint_t *order = (order_constraint_t *) gIter->data;
         resource_t *rsc = order->lh_rsc;
 
-        crm_debug_3("Applying ordering constraint: %d", order->id);
+        crm_trace("Applying ordering constraint: %d", order->id);
 
         if (rsc != NULL) {
-            crm_debug_4("rsc_action-to-*");
+            crm_trace("rsc_action-to-*");
             rsc_order_first(rsc, order, data_set);
             continue;
         }
 
         rsc = order->rh_rsc;
         if (rsc != NULL) {
-            crm_debug_4("action-to-rsc_action");
+            crm_trace("action-to-rsc_action");
             rsc_order_then(order->lh_action, rsc, order);
 
         } else {
-            crm_debug_4("action-to-action");
+            crm_trace("action-to-action");
             order_actions(order->lh_action, order->rh_action, order->type);
         }
     }
 
-    crm_debug_2("Updating %d actions", g_list_length(data_set->actions));
+    crm_trace("Updating %d actions", g_list_length(data_set->actions));
 
     gIter = data_set->actions;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -1547,7 +1546,7 @@ stage7(pe_working_set_t * data_set)
         update_action(action);
     }
 
-    crm_debug_2("Processing migrations");
+    crm_trace("Processing migrations");
 
     gIter = data_set->resources;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -1656,7 +1655,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
                 existing_len = strlen(*rsc_list);
             }
 
-            crm_debug_5("Adding %s (%dc) at offset %d", rsc_id, len - 2, existing_len);
+            crm_trace("Adding %s (%dc) at offset %d", rsc_id, len - 2, existing_len);
             crm_realloc(*rsc_list, len + existing_len);
             sprintf(*rsc_list + existing_len, "%s ", rsc_id);
         }
@@ -1673,7 +1672,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
                 existing_len = strlen(*node_list);
             }
 
-            crm_debug_5("Adding %s (%dc) at offset %d", uname, len - 2, existing_len);
+            crm_trace("Adding %s (%dc) at offset %d", uname, len - 2, existing_len);
             crm_realloc(*node_list, len + existing_len);
             sprintf(*node_list + existing_len, "%s ", uname);
         }
@@ -1697,24 +1696,24 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
     const char *task = NULL;
 
     if (op == NULL || confirm == NULL) {
-        crm_debug_2("Op=%p confirm=%p", op, confirm);
+        crm_trace("Op=%p confirm=%p", op, confirm);
         return NULL;
     }
 
     CRM_CHECK(node != NULL, return NULL);
 
     if (node->details->online == FALSE) {
-        crm_debug_2("Skipping notification for %s: node offline", rsc->id);
+        crm_trace("Skipping notification for %s: node offline", rsc->id);
         return NULL;
     } else if (is_set(op->flags, pe_action_runnable) == FALSE) {
-        crm_debug_2("Skipping notification for %s: not runnable", op->uuid);
+        crm_trace("Skipping notification for %s: not runnable", op->uuid);
         return NULL;
     }
 
     value = g_hash_table_lookup(op->meta, "notify_type");
     task = g_hash_table_lookup(op->meta, "notify_operation");
 
-    crm_debug_2("Creating notify actions for %s: %s (%s-%s)", op->uuid, rsc->id, value, task);
+    crm_trace("Creating notify actions for %s: %s (%s-%s)", op->uuid, rsc->id, value, task);
 
     key = generate_notify_key(rsc->id, value, task);
     trigger = custom_action(rsc, key, op->task, node,
@@ -1723,7 +1722,7 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
     g_hash_table_foreach(n_data->keys, dup_attr, trigger->meta);
 
     /* pseudo_notify before notify */
-    crm_debug_3("Ordering %s before %s (%d->%d)", op->uuid, trigger->uuid, trigger->id, op->id);
+    crm_trace("Ordering %s before %s (%d->%d)", op->uuid, trigger->uuid, trigger->id, op->id);
 
     order_actions(op, trigger, pe_order_optional);
     order_actions(trigger, confirm, pe_order_optional);
@@ -1755,10 +1754,10 @@ pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_worki
             const char *interval = g_hash_table_lookup(mon->meta, "interval");
 
             if (interval == NULL || safe_str_eq(interval, "0")) {
-                crm_debug_3("Skipping %s: interval", mon->uuid);
+                crm_trace("Skipping %s: interval", mon->uuid);
                 continue;
             } else if (safe_str_eq(mon->task, "cancel")) {
-                crm_debug_3("Skipping %s: cancel", mon->uuid);
+                crm_trace("Skipping %s: cancel", mon->uuid);
                 continue;
             }
 
@@ -1897,7 +1896,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
             entry->node = rsc->running_on->data;
         }
 
-        crm_debug_2("%s state: %s", rsc->id, role2text(rsc->role));
+        crm_trace("%s state: %s", rsc->id, role2text(rsc->role));
 
         switch (rsc->role) {
             case RSC_ROLE_STOPPED:
@@ -2089,7 +2088,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
         }
     }
 
-    crm_debug_2("Creating notificaitons for: %s.%s (%s->%s)",
+    crm_trace("Creating notificaitons for: %s.%s (%s->%s)",
                 n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
 
     stop = find_first_action(rsc->actions, NULL, RSC_STOP, NULL);
@@ -2157,7 +2156,7 @@ stage8(pe_working_set_t * data_set)
     const char *value = NULL;
 
     transition_id++;
-    crm_debug_2("Creating transition graph %d.", transition_id);
+    crm_trace("Creating transition graph %d.", transition_id);
 
     data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
 
@@ -2197,14 +2196,14 @@ stage8(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
 
-        crm_debug_4("processing actions for rsc=%s", rsc->id);
+        crm_trace("processing actions for rsc=%s", rsc->id);
         rsc->cmds->expand(rsc, data_set);
     }
 
     crm_log_xml_debug_3(data_set->graph, "created resource-driven action list");
 
     /* catch any non-resource specific actions */
-    crm_debug_4("processing non-resource actions");
+    crm_trace("processing non-resource actions");
 
     gIter = data_set->actions;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -2214,7 +2213,7 @@ stage8(pe_working_set_t * data_set)
     }
 
     crm_log_xml_debug_3(data_set->graph, "created generic action list");
-    crm_debug_2("Created transition graph %d.", transition_id);
+    crm_trace("Created transition graph %d.", transition_id);
 
     return TRUE;
 }
@@ -2226,22 +2225,22 @@ cleanup_alloc_calculations(pe_working_set_t * data_set)
         return;
     }
 
-    crm_debug_3("deleting %d order cons: %p",
+    crm_trace("deleting %d order cons: %p",
                 g_list_length(data_set->ordering_constraints), data_set->ordering_constraints);
     pe_free_ordering(data_set->ordering_constraints);
     data_set->ordering_constraints = NULL;
 
-    crm_debug_3("deleting %d node cons: %p",
+    crm_trace("deleting %d node cons: %p",
                 g_list_length(data_set->placement_constraints), data_set->placement_constraints);
     pe_free_rsc_to_node(data_set->placement_constraints);
     data_set->placement_constraints = NULL;
 
-    crm_debug_3("deleting %d inter-resource cons: %p",
+    crm_trace("deleting %d inter-resource cons: %p",
                 g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
     slist_basic_destroy(data_set->colocation_constraints);
     data_set->colocation_constraints = NULL;
 
-    crm_debug_3("deleting %d ticket deps: %p",
+    crm_trace("deleting %d ticket deps: %p",
                 g_list_length(data_set->ticket_constraints), data_set->ticket_constraints);
     slist_basic_destroy(data_set->ticket_constraints);
     data_set->ticket_constraints = NULL;

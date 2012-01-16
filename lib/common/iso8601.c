@@ -71,7 +71,7 @@ date_to_string(ha_time_t * date_time, int flags)
     ha_time_t *dt = NULL;
 
     if (flags & ha_log_local) {
-        crm_debug_6("Local version");
+        crm_trace("Local version");
         dt = date_time;
     } else {
         dt = date_time->normalized;
@@ -220,26 +220,26 @@ parse_time(char **time_str, ha_time_t * a_time, gboolean with_offset)
     new_time->minutes = 0;
     new_time->seconds = 0;
 
-    crm_debug_4("Get hours...");
+    crm_trace("Get hours...");
     new_time->has->hours = FALSE;
     if (parse_int(time_str, 2, 24, &new_time->hours)) {
         new_time->has->hours = TRUE;
     }
 
-    crm_debug_4("Get minutes...");
+    crm_trace("Get minutes...");
     new_time->has->minutes = FALSE;
     if (parse_int(time_str, 2, 60, &new_time->minutes)) {
         new_time->has->minutes = TRUE;
     }
 
-    crm_debug_4("Get seconds...");
+    crm_trace("Get seconds...");
     new_time->has->seconds = FALSE;
     if (parse_int(time_str, 2, 60, &new_time->seconds)) {
         new_time->has->seconds = TRUE;
     }
 
     if (with_offset) {
-        crm_debug_4("Get offset...");
+        crm_trace("Get offset...");
         while (isspace((int)(*time_str)[0])) {
             (*time_str)++;
         }
@@ -304,7 +304,7 @@ parse_date(char **date_str)
     while (is_done == FALSE) {
         char ch = (*date_str)[0];
 
-        crm_debug_5("Switching on ch=%c (len=%d)", ch, (int)strlen(*date_str));
+        crm_trace("Switching on ch=%c (len=%d)", ch, (int)strlen(*date_str));
 
         if (ch == 0) {
             /* all done */
@@ -443,7 +443,7 @@ parse_time_duration(char **interval_str)
         ch = (*interval_str)[0];
         (*interval_str)++;
 
-        crm_debug_4("%c=%d", ch, an_int);
+        crm_trace("%c=%d", ch, an_int);
 
         switch (ch) {
             case 0:
@@ -594,8 +594,8 @@ january1(int year)
     int G = YY + YY / 4;
     int jan1 = 1 + (((((C / 100) % 4) * 5) + G) % 7);
 
-    crm_debug_6("YY=%d, C=%d, G=%d", YY, C, G);
-    crm_debug_5("January 1 %.4d: %d", year, jan1);
+    crm_trace("YY=%d, C=%d, G=%d", YY, C, G);
+    crm_trace("January 1 %.4d: %d", year, jan1);
     return jan1;
 }
 
@@ -644,7 +644,7 @@ gregorian_to_ordinal(ha_time_t * a_date)
     if (is_leap_year(a_date->years) && a_date->months > 2) {
         (a_date->yeardays)++;
     }
-    crm_debug_4("Converted %.4d-%.2d-%.2d to %.4d-%.3d",
+    crm_trace("Converted %.4d-%.2d-%.2d to %.4d-%.3d",
                 a_date->years, a_date->months, a_date->days, a_date->years, a_date->yeardays);
 
     return TRUE;
@@ -685,7 +685,7 @@ ordinal_to_gregorian(ha_time_t * a_date)
         m_end += days_per_month(a_date->months, a_date->years);
         a_date->days -= days_per_month(a_date->months - 1, a_date->years);
 
-        crm_debug_6("month %d: %d vs. %d - current day: %d",
+        crm_trace("month %d: %d vs. %d - current day: %d",
                     a_date->months, a_date->yeardays, m_end, a_date->days);
     } while (a_date->months < 12 && m_end < a_date->yeardays);
 
@@ -696,7 +696,7 @@ ordinal_to_gregorian(ha_time_t * a_date)
     a_date->has->months = TRUE;
     a_date->has->years = TRUE;
 
-    crm_debug_4("Converted %.4d-%.3d to %.4d-%.2d-%.2d",
+    crm_trace("Converted %.4d-%.3d to %.4d-%.2d-%.2d",
                 a_date->years, a_date->yeardays, a_date->years, a_date->months, a_date->days);
 
     return TRUE;
@@ -751,7 +751,7 @@ ordinal_to_weekdays(ha_time_t * a_date)
 
     a_date->weekyears = year_num;
     a_date->has->weekyears = TRUE;
-    crm_debug_4("Converted %.4d-%.3d to %.4dW%.2d-%d",
+    crm_trace("Converted %.4d-%.3d to %.4dW%.2d-%d",
                 a_date->years, a_date->yeardays,
                 a_date->weekyears, a_date->weeks, a_date->weekdays);
     return TRUE;
@@ -784,7 +784,7 @@ convert_from_weekdays(ha_time_t * a_date)
         add_yeardays(a_date, a_date->weekdays);
     }
 
-    crm_debug_5("Pre-conversion: %dW%d-%d to %.4d-%.3d",
+    crm_trace("Pre-conversion: %dW%d-%d to %.4d-%.3d",
                 a_date->weekyears, a_date->weeks, a_date->weekdays,
                 a_date->years, a_date->yeardays);
 
@@ -803,7 +803,7 @@ convert_from_weekdays(ha_time_t * a_date)
 void
 ha_set_time(ha_time_t * lhs, ha_time_t * rhs, gboolean offset)
 {
-    crm_debug_6("lhs=%p, rhs=%p, offset=%d", lhs, rhs, offset);
+    crm_trace("lhs=%p, rhs=%p, offset=%d", lhs, rhs, offset);
 
     CRM_CHECK(lhs != NULL && rhs != NULL, return);
     CRM_CHECK(lhs->has != NULL && rhs->has != NULL, return);
@@ -899,7 +899,7 @@ ha_set_tm_time(ha_time_t * lhs, struct tm *rhs)
     /* tm_gmtoff == offset from UTC in seconds */
     h_offset = GMTOFF(rhs) / (3600);
     m_offset = (GMTOFF(rhs) - (3600 * h_offset)) / (60);
-    crm_debug_6("Offset (s): %ld, offset (hh:mm): %.2d:%.2d", GMTOFF(rhs), h_offset, m_offset);
+    crm_trace("Offset (s): %ld, offset (hh:mm): %.2d:%.2d", GMTOFF(rhs), h_offset, m_offset);
 
     lhs->offset->hours = h_offset;
     lhs->offset->has->hours = TRUE;
@@ -1104,7 +1104,7 @@ parse_int(char **str, int field_width, int uppper_bound, int *result)
         *result = 0 - *result;
     }
     if (lpc > 0) {
-        crm_debug_5("Found int: %d.  Stopped at str[%d]='%c'", *result, lpc, (*str)[lpc]);
+        crm_trace("Found int: %d.  Stopped at str[%d]='%c'", *result, lpc, (*str)[lpc]);
         return TRUE;
     }
     return FALSE;
@@ -1114,7 +1114,7 @@ gboolean
 check_for_ordinal(const char *str)
 {
     if (isdigit((int)str[2]) == FALSE) {
-        crm_debug_6("char 3 == %c", str[2]);
+        crm_trace("char 3 == %c", str[2]);
         return FALSE;
     }
     if (isspace((int)str[3])) {
@@ -1126,7 +1126,7 @@ check_for_ordinal(const char *str)
     } else if (str[3] == '/') {
         return TRUE;
     }
-    crm_debug_6("char 4 == %c", str[3]);
+    crm_trace("char 4 == %c", str[3]);
     return FALSE;
 }
 
@@ -1202,7 +1202,7 @@ is_date_sane(ha_time_t * a_date)
     ydays = is_leap_year(a_date->years) ? 366 : 365;
     mdays = days_per_month(a_date->months, a_date->years);
     weeks = weeks_in_year(a_date->weekyears);
-    crm_debug_5("max ydays: %d, max mdays: %d, max weeks: %d", ydays, mdays, weeks);
+    crm_trace("max ydays: %d, max mdays: %d, max weeks: %d", ydays, mdays, weeks);
 
     CRM_CHECK(a_date->has->years, return FALSE);
     CRM_CHECK(a_date->has->weekyears, return FALSE);
@@ -1242,11 +1242,11 @@ is_date_sane(ha_time_t * a_date)
 #define do_cmp_field(lhs, rhs, field)					\
 	{								\
 		if(lhs->field > rhs->field) {				\
-			crm_debug_2("%s: %d > %d",			\
+			crm_trace("%s: %d > %d",			\
 				    #field, lhs->field, rhs->field);	\
 			return 1;					\
 		} else if(lhs->field < rhs->field) {			\
-			crm_debug_2("%s: %d < %d",			\
+			crm_trace("%s: %d < %d",			\
 				    #field, lhs->field, rhs->field);	\
 			return -1;					\
 		}							\

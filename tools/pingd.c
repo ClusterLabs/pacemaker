@@ -575,7 +575,7 @@ ping_open(ping_node * node)
         hostname = node->host;
     }
 
-    crm_debug_2("Got address %s for %s", hostname, node->host);
+    crm_trace("Got address %s for %s", hostname, node->host);
 
     if (!res->ai_addr) {
         crm_warn("getaddrinfo failed: no address");
@@ -698,7 +698,7 @@ ping_open(ping_node * node)
     }
 #endif
 
-    crm_debug_2("Opened connection to %s", node->dest);
+    crm_trace("Opened connection to %s", node->dest);
     freeaddrinfo(res);
     return TRUE;
 
@@ -721,7 +721,7 @@ ping_close(ping_node * node)
             crm_perror(LOG_ERR, "Could not close ping socket");
         } else {
             tmp_fd = -1;
-            crm_debug_2("Closed connection to %s", node->dest);
+            crm_trace("Closed connection to %s", node->dest);
         }
     }
     return (tmp_fd == -1);
@@ -868,7 +868,7 @@ ping_read(ping_node * node, int *lenp)
 
     bytes = recvmsg(node->fd, &m, 0);
     saved_errno = errno;
-    crm_debug_2("Got %d bytes", bytes);
+    crm_trace("Got %d bytes", bytes);
 
     if (bytes < 0) {
         crm_perror(LOG_DEBUG, "Read failed");
@@ -999,7 +999,7 @@ ping_write(ping_node * node, const char *data, size_t size)
         return FALSE;
     }
 
-    crm_debug_2("Sent %d bytes to %s", rc, node->dest);
+    crm_trace("Sent %d bytes to %s", rc, node->dest);
     return TRUE;
 }
 
@@ -1021,11 +1021,11 @@ pingd_ha_dispatch(IPC_Channel * channel, gpointer user_data)
 {
     gboolean stay_connected = TRUE;
 
-    crm_debug_2("Invoked");
+    crm_trace("Invoked");
 
     while (pingd_cluster != NULL && IPC_ISRCONN(channel)) {
         if (pingd_cluster->llc_ops->msgready(pingd_cluster) == 0) {
-            crm_debug_2("no message ready yet");
+            crm_trace("no message ready yet");
             break;
         }
         /* invoke the callbacks but dont block */
@@ -1047,7 +1047,7 @@ pingd_ha_dispatch(IPC_Channel * channel, gpointer user_data)
 static void
 pingd_ha_connection_destroy(gpointer user_data)
 {
-    crm_debug_3("Invoked");
+    crm_trace("Invoked");
     if (need_shutdown) {
         /* we signed out, so this is expected */
         crm_info("Heartbeat disconnection complete");
@@ -1078,7 +1078,7 @@ register_with_ha(void)
 
     do_node_walk(pingd_cluster);
 
-    crm_debug_3("Be informed of Node Status changes");
+    crm_trace("Be informed of Node Status changes");
     if (HA_OK !=
         pingd_cluster->llc_ops->set_nstatus_callback(pingd_cluster, pingd_nstatus_callback, NULL)) {
 
@@ -1093,7 +1093,7 @@ register_with_ha(void)
         return FALSE;
     }
 
-    crm_debug_3("Adding channel to mainloop");
+    crm_trace("Adding channel to mainloop");
     G_main_add_IPC_Channel(G_PRIORITY_HIGH, pingd_cluster->llc_ops->ipcchan(pingd_cluster),
                            FALSE, pingd_ha_dispatch, pingd_cluster, pingd_ha_connection_destroy);
 
@@ -1106,8 +1106,8 @@ do_node_walk(ll_cluster_t * hb_cluster)
     const char *ha_node = NULL;
 
     /* Async get client status information in the cluster */
-    crm_debug_2("Invoked");
-    crm_debug_3("Requesting an initial dump of CRMD client_status");
+    crm_trace("Invoked");
+    crm_trace("Requesting an initial dump of CRMD client_status");
     hb_cluster->llc_ops->client_status(hb_cluster, NULL, CRM_SYSTEM_CRMD, -1);
 
     crm_info("Requesting the list of configured nodes");
@@ -1141,7 +1141,7 @@ do_node_walk(ll_cluster_t * hb_cluster)
     } while (ha_node != NULL);
 
     hb_cluster->llc_ops->end_nodewalk(hb_cluster);
-    crm_debug_2("Complete");
+    crm_trace("Complete");
     send_update(-1);
 }
 #endif
@@ -1152,7 +1152,7 @@ stand_alone_ping(gpointer data)
     int num_active = 0;
     GListPtr num = NULL;
 
-    crm_debug_2("Checking connectivity");
+    crm_trace("Checking connectivity");
     for (num = ping_list; num != NULL; num = num->next) {
         ping_node *ping = (ping_node *) num->data;
 

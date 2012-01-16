@@ -94,7 +94,7 @@ do_ha_control(long long action,
         }
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {
-            crm_debug_3("Be informed of Node Status changes");
+            crm_trace("Be informed of Node Status changes");
             if (registered &&
                 fsa_cluster_conn->llc_ops->set_nstatus_callback(fsa_cluster_conn,
                                                                 crmd_ha_status_callback,
@@ -105,7 +105,7 @@ do_ha_control(long long action,
                 registered = FALSE;
             }
 
-            crm_debug_3("Be informed of CRM Client Status changes");
+            crm_trace("Be informed of CRM Client Status changes");
             if (registered &&
                 fsa_cluster_conn->llc_ops->set_cstatus_callback(fsa_cluster_conn,
                                                                 crmd_client_status_callback,
@@ -117,7 +117,7 @@ do_ha_control(long long action,
             }
 
             if (registered) {
-                crm_debug_3("Requesting an initial dump of CRMD client_status");
+                crm_trace("Requesting an initial dump of CRMD client_status");
                 fsa_cluster_conn->llc_ops->client_status(fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD,
                                                          -1);
             }
@@ -577,14 +577,14 @@ do_started(long long action,
         /* try reading from HA */
         crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
 
-        crm_debug_3("Looking for a HA message");
+        crm_trace("Looking for a HA message");
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {
             msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
         }
 #endif
         if (msg != NULL) {
-            crm_debug_3("There was a HA message");
+            crm_trace("There was a HA message");
             crm_msg_del(msg);
         }
         crmd_fsa_stall(NULL);
@@ -702,14 +702,14 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
     shutdown_escalation_timer->period_ms = crm_get_msec(value);
-    crm_info("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
+    crm_debug("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
     election_timeout->period_ms = crm_get_msec(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
     recheck_timer->period_ms = crm_get_msec(value);
-    crm_info("Checking for expired actions every %dms", recheck_timer->period_ms);
+    crm_debug("Checking for expired actions every %dms", recheck_timer->period_ms);
 
     value = crmd_pref(config_hash, "crmd-transition-delay");
     transition_timer->period_ms = crm_get_msec(value);
@@ -723,13 +723,13 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 #if SUPPORT_COROSYNC
     if (is_classic_ais_cluster()) {
         value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
-        crm_info("Sending expected-votes=%s to corosync", value);
+        crm_debug("Sending expected-votes=%s to corosync", value);
         send_ais_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);
     }
 #endif
 
     set_bit_inplace(fsa_input_register, R_READ_CONFIG);
-    crm_debug_3("Triggering FSA: %s", __FUNCTION__);
+    crm_trace("Triggering FSA: %s", __FUNCTION__);
     mainloop_set_trigger(fsa_source);
 
     g_hash_table_destroy(config_hash);
@@ -744,7 +744,7 @@ crm_read_options(gpointer user_data)
         fsa_cib_conn->cmds->query(fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
 
     add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, config_query_callback);
-    crm_debug_2("Querying the CIB... call %d", call_id);
+    crm_trace("Querying the CIB... call %d", call_id);
     return TRUE;
 }
 
@@ -860,7 +860,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
     add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
 
     free_xml(cib_node_list);
-    crm_debug_2("Complete");
+    crm_trace("Complete");
 }
 
 #endif
@@ -899,5 +899,5 @@ populate_cib_nodes(gboolean with_client_status)
     add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
 
     free_xml(cib_node_list);
-    crm_debug_2("Complete");
+    crm_trace("Complete");
 }

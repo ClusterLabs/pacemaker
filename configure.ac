@@ -388,8 +388,6 @@ dnl Eventually remove this
 CFLAGS="$CFLAGS -I${prefix}/include/heartbeat"
 
 AC_SUBST(INIT_EXT)
-AC_DEFINE_UNQUOTED(HA_LOG_FACILITY, LOG_DAEMON, Default logging facility)
-
 AC_MSG_NOTICE(Host CPU: $host_cpu)
 
 case "$host_cpu" in
@@ -430,129 +428,6 @@ CFLAGS=$ac_save_CFLAGS
 
 AC_MSG_RESULT($U64T)
 AC_DEFINE_UNQUOTED(U64T, "$U64T", Correct printf format for logging uint64_t)
-
-AC_CHECK_HEADERS(hb_config.h)
-AC_CHECK_HEADERS(glue_config.h)
-AC_CHECK_HEADERS(agent_config.h)
-GLUE_HEADER=none
-if test "$ac_cv_header_glue_config_h" = "yes";  then
-   GLUE_HEADER=glue_config.h
-
-elif test "$ac_cv_header_hb_config_h" = "yes"; then
-   GLUE_HEADER=hb_config.h
-
-else
-   AC_MSG_FAILURE(Core development headers were not found)
-fi
-
-dnl Variables needed for substitution
-CRM_DTD_DIRECTORY="${datadir}/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_DTD_DIRECTORY,"$CRM_DTD_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
-AC_SUBST(CRM_DTD_DIRECTORY)
-
-AC_DEFINE_UNQUOTED(CRM_DTD_VERSION,"$CRM_DTD_VERSION", Current version of the Pacemaker Relax-NG Schema)
-AC_SUBST(CRM_DTD_VERSION)
-
-CRM_DAEMON_USER=`extract_header_define $GLUE_HEADER HA_CCMUSER`
-AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
-AC_SUBST(CRM_DAEMON_USER)
-
-CRM_DAEMON_GROUP=`extract_header_define $GLUE_HEADER HA_APIGROUP`
-AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
-AC_SUBST(CRM_DAEMON_GROUP)
-
-CRM_STATE_DIR=${localstatedir}/run/crm
-AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
-AC_SUBST(CRM_STATE_DIR)
-
-PE_STATE_DIR="${localstatedir}/lib/pengine"
-AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep PEngine outputs)
-AC_SUBST(PE_STATE_DIR)
-
-dnl Eventually move out of the heartbeat dir tree and create compatability code
-CRM_CONFIG_DIR="${localstatedir}/lib/heartbeat/crm"
-AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep CIB configuration files)
-AC_SUBST(CRM_CONFIG_DIR)
-
-dnl Eventually move out of the heartbeat dir tree and create compatability code
-CRM_DAEMON_DIR="${libexecdir}/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
-AC_SUBST(CRM_DAEMON_DIR)
-
-dnl Create symlinks to here from CRM_DAEMON_DIR when needed
-HB_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
-AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location for Heartbeat expects Pacemaker daemons to be in)
-AC_SUBST(HB_DAEMON_DIR)
-
-dnl Needed so that the Corosync plugin can clear out the directory as Heartbeat does
-HA_STATE_DIR=`extract_header_define $GLUE_HEADER HA_VARRUNDIR`
-AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
-AC_SUBST(HA_STATE_DIR)
-
-CRM_RSCTMP_DIR=
-if test "$ac_cv_header_agent_config_h" = "yes";  then
-   CRM_RSCTMP_DIR=`extract_header_define agent_config.h HA_RSCTMPDIR`
-else
-   AC_MSG_WARN(Agents development headers were not found.)
-fi
-
-if test x$CRM_RSCTMP_DIR = x; then
-   CRM_RSCTMP_DIR="$HA_STATE_DIR/heartbeat/rsctmp"
-fi
-AC_MSG_CHECKING(Scratch dir for resource agents)
-AC_MSG_RESULT($CRM_RSCTMP_DIR)
-AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
-AC_SUBST(CRM_RSCTMP_DIR)
-
-dnl Needed for the location of hostcache in CTS.py
-HA_VARLIBHBDIR=`extract_header_define $GLUE_HEADER HA_VARLIBHBDIR`
-AC_SUBST(HA_VARLIBHBDIR)
-
-AC_DEFINE_UNQUOTED(UUID_FILE,"$localstatedir/lib/heartbeat/hb_uuid", Location of Heartbeat's UUID file)
-
-OCF_ROOT_DIR=`extract_header_define $GLUE_HEADER OCF_ROOT_DIR`
-if test "X$OCF_ROOT_DIR" = X; then
-  AC_MSG_ERROR(Could not locate OCF directory)
-fi
-AC_SUBST(OCF_ROOT_DIR)
-
-OCF_RA_DIR=`extract_header_define $GLUE_HEADER OCF_RA_DIR`
-AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
-AC_SUBST(OCF_RA_DIR)
-
-dnl Extract this value from glue_config.h once we no longer support anything else
-STONITH_PLUGIN_DIR="$libdir/stonith/plugins/stonith/"
-AC_DEFINE_UNQUOTED(STONITH_PLUGIN_DIR,"$STONITH_PLUGIN_DIR", Location for Stonith plugins)
-AC_SUBST(STONITH_PLUGIN_DIR)
-
-RH_STONITH_DIR="$sbindir"
-AC_DEFINE_UNQUOTED(RH_STONITH_DIR,"$RH_STONITH_DIR", Location for Red Hat Stonith agents)
-
-RH_STONITH_PREFIX="fence_"
-AC_DEFINE_UNQUOTED(RH_STONITH_PREFIX,"$RH_STONITH_PREFIX", Prefix for Red Hat Stonith agents)
-
-AC_PATH_PROGS(GIT, git false)
-AC_MSG_CHECKING(build version)
-
-BUILD_VERSION=$Format:%H$
-if test $BUILD_VERSION != ":%H$"; then
-   AC_MSG_RESULT(Using archive hash: $BUILD_VERSION)
-
-elif test -x $GIT -a -d .git; then
-   BUILD_VERSION=`$GIT log --pretty="format:%h" -n 1`
-   AC_MSG_RESULT(Using git hash: $BUILD_VERSION)
-
-else
-   # The current directory name make a reasonable default
-   # Most generated archives will include the hash or tag 
-   BASE=`basename $PWD`
-   BUILD_VERSION=`echo $BASE | sed s:.*[Pp]acemaker-::`
-   AC_MSG_RESULT(Using directory based hash: $BUILD_VERSION)
-fi
-
-AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
-AC_MSG_RESULT($BUILD_VERSION)
-AC_SUBST(BUILD_VERSION)
 
 dnl ===============================================
 dnl Program Paths
@@ -630,6 +505,44 @@ if test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x""; then
    PCMK_FEATURES="$PCMK_FEATURES publican-docs"
 fi
 
+dnl ========================================================================
+dnl checks for library functions to replace them
+dnl
+dnl     NoSuchFunctionName:
+dnl             is a dummy function which no system supplies.  It is here to make
+dnl             the system compile semi-correctly on OpenBSD which doesn't know
+dnl             how to create an empty archive
+dnl
+dnl     scandir: Only on BSD.
+dnl             System-V systems may have it, but hidden and/or deprecated.
+dnl             A replacement function is supplied for it.
+dnl
+dnl     setenv: is some bsdish function that should also be avoided (use
+dnl             putenv instead)
+dnl             On the other hand, putenv doesn't provide the right API for the
+dnl             code and has memory leaks designed in (sigh...)  Fortunately this
+dnl             A replacement function is supplied for it.
+dnl
+dnl     strerror: returns a string that corresponds to an errno.
+dnl             A replacement function is supplied for it.
+dnl
+dnl     unsetenv: is some bsdish function that should also be avoided (No 
+dnl             replacement)
+dnl             A replacement function is supplied for it.
+dnl
+dnl	strnlen: is a gnu function similar to strlen, but safer.
+dnl		We wrote a tolearably-fast replacement function for it.
+dnl
+dnl	strndup: is a gnu function similar to strdup, but safer.
+dnl		We wrote a tolearably-fast replacement function for it.
+dnl
+dnl	daemon: is a GNU function.  The daemon() function is for programs wishing to
+dnl             detach themselves from the controlling terminal and run in the
+dnl             background as system daemon
+dnl             A replacement function is supplied for it.
+
+AC_REPLACE_FUNCS(alphasort inet_pton NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup daemon strlcpy strlcat)
+
 dnl ===============================================
 dnl Libraries
 dnl ===============================================
@@ -645,13 +558,6 @@ AC_CHECK_LIB(uuid, uuid_create)			dnl ossp
 if test x"${PKGCONFIG}" = x""; then
    AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})
 fi
-
-dnl
-dnl     On many systems libcrypto is needed when linking against libsnmp.
-dnl     Check to see if it exists, and if so use it.
-dnl
-AC_CHECK_LIB(crypto, CRYPTO_free, CRYPTOLIB="-lcrypto",)
-AC_SUBST(CRYPTOLIB)
 
 if test "x${enable_thread_safe}" = "xyes"; then
         GPKGNAME="gthread-2.0"
@@ -963,6 +869,10 @@ fi
 
 AC_SUBST(CURSESLIBS)
 
+dnl ========================================================================
+dnl    Profiling and GProf
+dnl ========================================================================
+
 case $SUPPORT_PROFILING in
      1|yes|true) 
 	SUPPORT_PROFILING=1
@@ -1014,7 +924,7 @@ AC_DEFINE_UNQUOTED(SUPPORT_TRACING, $SUPPORT_TRACING, Support the dynamic enable
 
 
 dnl ========================================================================
-dnl    Cluster infrastructure - Heartbeat
+dnl    Cluster infrastructure - Heartbeat / LibQB
 dnl ========================================================================
 
 dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
@@ -1027,17 +937,152 @@ if test x"$ac_cv_lib_plumb_G_main_add_IPC_Channel" != x"yes"; then
    AC_MSG_FAILURE(Core Heartbeat utility libraries not found: $ac_cv_lib_plumb_G_main_add_IPC_Channel)
 fi
 
-AC_CHECK_LIB(qb, qb_log_from_external_source)
-
 dnl Compatability checks
 AC_CHECK_FUNCS(msgfromIPC_timeout)
 AC_CHECK_MEMBERS([struct lrm_ops.fail_rsc],,,[[#include <lrm/lrm_api.h>]])
-
 
 if test x${enable_no_stack} = xyes; then
     SUPPORT_HEARTBEAT=no
     SUPPORT_CS=no
 fi
+
+PKG_CHECK_MODULES(libqb, libqb, HAVE_libqb=1, HAVE_libqb=0)
+AC_CHECK_HEADERS(qb/qbipc_common.h)
+
+if test $HAVE_libqb = 1; then
+   PCMK_FEATURES="$PCMK_FEATURES libqb"
+fi
+
+AC_DEFINE_UNQUOTED(LIBQB_LOGGING, $HAVE_libqb, Use libqb for logging)
+AC_DEFINE_UNQUOTED(LIBQB_IPC, 0, Use libqb for IPC)
+
+LIBS="$LIBS $libqb_LIBS"
+
+AC_CHECK_HEADERS(hb_config.h)
+AC_CHECK_HEADERS(glue_config.h)
+AC_CHECK_HEADERS(agent_config.h)
+GLUE_HEADER=none
+if test "$ac_cv_header_glue_config_h" = "yes";  then
+   GLUE_HEADER=glue_config.h
+
+elif test "$ac_cv_header_hb_config_h" = "yes"; then
+   GLUE_HEADER=hb_config.h
+
+else
+   AC_MSG_FAILURE(Core development headers were not found)
+fi
+
+dnl ===============================================
+dnl Variables needed for substitution
+dnl ===============================================
+CRM_DTD_DIRECTORY="${datadir}/pacemaker"
+AC_DEFINE_UNQUOTED(CRM_DTD_DIRECTORY,"$CRM_DTD_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
+AC_SUBST(CRM_DTD_DIRECTORY)
+
+AC_DEFINE_UNQUOTED(CRM_DTD_VERSION,"$CRM_DTD_VERSION", Current version of the Pacemaker Relax-NG Schema)
+AC_SUBST(CRM_DTD_VERSION)
+
+CRM_DAEMON_USER=`extract_header_define $GLUE_HEADER HA_CCMUSER`
+AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
+AC_SUBST(CRM_DAEMON_USER)
+
+CRM_DAEMON_GROUP=`extract_header_define $GLUE_HEADER HA_APIGROUP`
+AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
+AC_SUBST(CRM_DAEMON_GROUP)
+
+CRM_STATE_DIR=${localstatedir}/run/crm
+AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
+AC_SUBST(CRM_STATE_DIR)
+
+PE_STATE_DIR="${localstatedir}/lib/pengine"
+AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep PEngine outputs)
+AC_SUBST(PE_STATE_DIR)
+
+dnl Eventually move out of the heartbeat dir tree and create compatability code
+CRM_CONFIG_DIR="${localstatedir}/lib/heartbeat/crm"
+AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep CIB configuration files)
+AC_SUBST(CRM_CONFIG_DIR)
+
+CRM_DAEMON_DIR="${libexecdir}/pacemaker"
+AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
+AC_SUBST(CRM_DAEMON_DIR)
+
+HB_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
+AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location for Heartbeat expects Pacemaker daemons to be in)
+AC_SUBST(HB_DAEMON_DIR)
+
+dnl Needed so that the Corosync plugin can clear out the directory as Heartbeat does
+HA_STATE_DIR=`extract_header_define $GLUE_HEADER HA_VARRUNDIR`
+AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
+AC_SUBST(HA_STATE_DIR)
+
+CRM_RSCTMP_DIR=
+if test "$ac_cv_header_agent_config_h" = "yes";  then
+   CRM_RSCTMP_DIR=`extract_header_define agent_config.h HA_RSCTMPDIR`
+else
+   AC_MSG_WARN(Agents development headers were not found.)
+fi
+
+if test x$CRM_RSCTMP_DIR = x; then
+   CRM_RSCTMP_DIR="$HA_STATE_DIR/heartbeat/rsctmp"
+fi
+AC_MSG_CHECKING(Scratch dir for resource agents)
+AC_MSG_RESULT($CRM_RSCTMP_DIR)
+AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
+AC_SUBST(CRM_RSCTMP_DIR)
+
+dnl Needed for the location of hostcache in CTS.py
+HA_VARLIBHBDIR=`extract_header_define $GLUE_HEADER HA_VARLIBHBDIR`
+AC_SUBST(HA_VARLIBHBDIR)
+
+AC_DEFINE_UNQUOTED(UUID_FILE,"$localstatedir/lib/heartbeat/hb_uuid", Location of Heartbeat's UUID file)
+
+OCF_ROOT_DIR=`extract_header_define $GLUE_HEADER OCF_ROOT_DIR`
+if test "X$OCF_ROOT_DIR" = X; then
+  AC_MSG_ERROR(Could not locate OCF directory)
+fi
+AC_SUBST(OCF_ROOT_DIR)
+
+OCF_RA_DIR=`extract_header_define $GLUE_HEADER OCF_RA_DIR`
+AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
+AC_SUBST(OCF_RA_DIR)
+
+dnl Extract this value from glue_config.h once we no longer support anything else
+STONITH_PLUGIN_DIR="$libdir/stonith/plugins/stonith/"
+AC_DEFINE_UNQUOTED(STONITH_PLUGIN_DIR,"$STONITH_PLUGIN_DIR", Location for Stonith plugins)
+AC_SUBST(STONITH_PLUGIN_DIR)
+
+RH_STONITH_DIR="$sbindir"
+AC_DEFINE_UNQUOTED(RH_STONITH_DIR,"$RH_STONITH_DIR", Location for Red Hat Stonith agents)
+
+RH_STONITH_PREFIX="fence_"
+AC_DEFINE_UNQUOTED(RH_STONITH_PREFIX,"$RH_STONITH_PREFIX", Prefix for Red Hat Stonith agents)
+
+AC_PATH_PROGS(GIT, git false)
+AC_MSG_CHECKING(build version)
+
+BUILD_VERSION=$Format:%H$
+if test $BUILD_VERSION != ":%H$"; then
+   AC_MSG_RESULT(archive hash: $BUILD_VERSION)
+
+elif test -x $GIT -a -d .git; then
+   BUILD_VERSION=`$GIT log --pretty="format:%h" -n 1`
+   AC_MSG_RESULT(git hash: $BUILD_VERSION)
+
+else
+   # The current directory name make a reasonable default
+   # Most generated archives will include the hash or tag 
+   BASE=`basename $PWD`
+   BUILD_VERSION=`echo $BASE | sed s:.*[Pp]acemaker-::`
+   AC_MSG_RESULT(directory based hash: $BUILD_VERSION)
+fi
+
+AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
+AC_SUBST(BUILD_VERSION)
+
+
+STACKS=""
+CLUSTERLIBS=""
 
 dnl ========================================================================
 dnl    Cluster stack - Heartbeat
@@ -1053,6 +1098,12 @@ case $SUPPORT_HEARTBEAT in
      *) SUPPORT_HEARTBEAT=0;;
 esac
 
+if test $SUPPORT_HEARTBEAT = 1; then
+   STACKS="$STACKS heartbeat"
+   AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
+   AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
+fi
+
 AM_CONDITIONAL(BUILD_HEARTBEAT_SUPPORT, test $SUPPORT_HEARTBEAT = 1)
 AC_DEFINE_UNQUOTED(SUPPORT_HEARTBEAT, $SUPPORT_HEARTBEAT, Support the Heartbeat messaging and membership layer)
 AC_SUBST(SUPPORT_HEARTBEAT)
@@ -1061,8 +1112,6 @@ dnl ========================================================================
 dnl    Cluster stack - Corosync
 dnl ========================================================================
 
-CSLIB=""
-
 dnl Normalize the values
 case $SUPPORT_CS in
      1|yes|true) missingisfatal=1;;
@@ -1070,188 +1119,102 @@ case $SUPPORT_CS in
      *) SUPPORT_CS=no;;
 esac
 
-HAVE_LIBQB=0
-AC_CHECK_HEADERS(qb/qbipcc.h)
-if test "$ac_cv_header_qb_qbipcc_h" = "yes"; then
-   HAVE_LIBQB=1
-   PCMK_FEATURES="$PCMK_FEATURES libqb"
-fi
-
-AC_DEFINE_UNQUOTED(LIBQB_LOGGING, $HAVE_LIBQB, Use libqb for logging)
-AC_DEFINE_UNQUOTED(LIBQB_IPC, $HAVE_LIBQB, Use libqb for IPC)
-
 AC_MSG_CHECKING(for native corosync)
-AISMSGLIB=""
-CS_VERSION="none"
+COROSYNC_LIBS=""
 CS_USES_LIBQB=0
-COROSYNC_PKG="false"
-
-if test $SUPPORT_CS = no; then
-   AC_MSG_RESULT(no... not requested.)
-
-else
-   AC_MSG_RESULT($SUPPORT_CS, with '$CSPREFIX')
-
-   AC_CHECK_HEADERS(openais/saAis.h)
-   AC_CHECK_HEADERS(corosync/coroipcc.h)
-
-   saveLIBS="$LIBS"
-   if test "$ac_cv_header_corosync_coroipcc_h" = "yes"; then
-        COROSYNC_PKG="$PKGCONFIG libcoroipcc"
-   	LIBS="$LIBS `$COROSYNC_PKG --libs-only-L`"
-   	AC_CHECK_LIB(coroipcc, coroipcc_msg_send_reply_receive, [])
-
-   	if test $ac_cv_lib_coroipcc_coroipcc_msg_send_reply_receive != yes; then
-	    aisreason="requred Corosync messaging libraries not found"
-            CS_VERSION="none"
-        fi
-
-   elif test "$ac_cv_header_qb_qbipcc_h" = "yes"; then
-        CS_USES_LIBQB=1
-   	COROSYNC_PKG="$PKGCONFIG libqb"
-   	LIBS="$LIBS `$COROSYNC_PKG --libs-only-L`"
-        AC_CHECK_LIB(qb, qb_ipcc_send, [])
-
-        if test $ac_cv_lib_qb_qb_ipcc_send != yes; then
-	    aisreason="requred libqb libraries not found"
-	    CS_VERSION="none"
-	fi
-   
-   else
-       aisreason="corosync/libqb headers not found"
-   fi
-   LIBS="$saveLIBS"
-
-   $COROSYNC_PKG --exists
-   if test $? = 0; then
-       CS_VERSION="corosync"
-   else
-       aisreason="Corosync installation not found by pkg_config"
-   fi  
-fi
-
-if test $CS_VERSION != "none"; then
-   AC_MSG_CHECKING(for Corosync branch)
-   AC_MSG_RESULT($CS_VERSION)
-fi
-
-SUPPORT_CS=1
-case $CS_VERSION in
-    corosync)
-	AC_DEFINE_UNQUOTED(SUPPORT_COROSYNC, 1, Support the Corosync messaging and membership layer)
-   	LCRSODIR=`$PKGCONFIG corosync --variable=lcrsodir`
-   	CFLAGS="$CFLAGS `$COROSYNC_PKG --cflags`"
-	CSMSGLIB=`$COROSYNC_PKG --libs`
-	;;
-    none)
-     	SUPPORT_CS=0
-	if test "x$aisreason" != x; then
-     	  if test $missingisfatal = 0; then
-	    AC_MSG_WARN(Unable to support Corosync: $aisreason) 
-          else
-	    AC_MSG_FAILURE(Unable to support Corosync: $aisreason) 
-          fi
-        fi
-	;;
-    *) AC_MSG_FAILURE(Unknown Corosync branch: $CS_VERSION);;
-esac
-
-
-AC_DEFINE_UNQUOTED(CS_USES_LIBQB, $CS_USES_LIBQB, Does corosync use libqb for its ipc)
-AC_DEFINE_UNQUOTED(AIS_COROSYNC, $SUPPORT_CS, Compatability alias for SUPPORT_COROSYNC)
-AC_DEFINE_UNQUOTED(SUPPORT_AIS, $SUPPORT_CS, Compatability alias for SUPPORT_COROSYNC)
-AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
-AC_SUBST(SUPPORT_CS)
 
 PCMK_SERVICE_ID=9
-if test $SUPPORT_CMAN != no; then
-    AC_MSG_CHECKING(for cman)
-    $PKGCONFIG libcman --exists
-    if test $? = 0; then
-	AC_MSG_RESULT(yes)
+LCRSODIR="$libdir"
+
+if test $SUPPORT_CS = no; then
+    AC_MSG_RESULT(no (disabled))
+else
+    AC_MSG_RESULT($SUPPORT_CS, with '$CSPREFIX')
+    PKG_CHECK_MODULES(cpg,    libcpg) dnl Fatal
+    PKG_CHECK_MODULES(cfg,    libcfg) dnl Fatal
+    PKG_CHECK_MODULES(cmap,   libcmap,   HAVE_cmap=1,   HAVE_cmap=0)
+    PKG_CHECK_MODULES(cman,   libcman,   HAVE_cman=1,   HAVE_cman=0)
+    PKG_CHECK_MODULES(confdb, libconfdb, HAVE_confdb=1, HAVE_confdb=0)
+    PKG_CHECK_MODULES(fenced, libfenced, HAVE_fenced=1, HAVE_fenced=0)
+    PKG_CHECK_MODULES(quorum, libquorum, HAVE_quorum=1, HAVE_quorum=0)
+    PKG_CHECK_MODULES(oldipc, libcoroipcc, HAVE_oldipc=1, HAVE_oldipc=0)
+
+    if test $HAVE_oldipc = 1; then
+        SUPPORT_CS=1
+	CFLAGS="$CFLAGS $oldipc_FLAGS $cpg_FLAGS $cfg_FLAGS"
+        COROSYNC_LIBS="$COROSYNC_LIBS $oldipc_LIBS $cpg_LIBS $cfg_LIBS"
+    
+    elif test $HAVE_libqb = 1; then
+        SUPPORT_CS=1
+        CS_USES_LIBQB=1
+	CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS"
+        COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS"
+
     else
-	AC_MSG_RESULT(no)
+        aisreason="corosync/libqb IPC libraries not found by pkg_config"
     fi
 
-    AC_MSG_CHECKING(for cpg)
-    $PKGCONFIG libcpg --exists
-    if test $? = 0; then
-	AC_MSG_RESULT(yes)
-    else
-	AC_MSG_RESULT(no)
-    fi
+    AC_DEFINE_UNQUOTED(HAVE_CONFDB, $HAVE_confdb, Have the old herarchial Corosync config API)
+    AC_DEFINE_UNQUOTED(HAVE_CMAP, $HAVE_cmap, Have the new non-herarchial Corosync config API)
+fi
 
-    AC_MSG_CHECKING(for fenced)
-    $PKGCONFIG libfenced --exists
-    if test $? = 0; then
-	AC_MSG_RESULT(yes)
-    else
-	AC_MSG_RESULT(no)
-    fi
-
-    $PKGCONFIG libcpg libcman libfenced --exists
-    if test $? = 0; then
-	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libcman libfenced --cflags`"
-	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libcman libfenced --libs`"
+if test $SUPPORT_CS = 1 -a x$HAVE_cmap = x1; then
+    dnl Support for plugins was removed about the time the cmap API was added
+    dnl The only option now is the built-in quorum API
+    CFLAGS="$CFLAGS $cmap_CFLAGS $quorum_CFLAGS"
+    COROSYNC_LIBS="$COROSYNC_LIBS $cmap_LIBS $quorum_LIBS"
 	
-	PCMK_FEATURES="$PCMK_FEATURES cman"
-	SUPPORT_CMAN=1
-	AC_DEFINE_UNQUOTED(SUPPORT_CMAN, 1, Support the consumption of membership and quorum from cman)
-    else
-	SUPPORT_CMAN=0
+    STACKS="$STACKS corosync-native"
+    AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
+fi
+
+if test $SUPPORT_CS = 1 -a x$HAVE_confdb = x1; then
+    dnl Need confdb to support cman and the plugins
+    LCRSODIR=`$PKGCONFIG corosync --variable=lcrsodir`
+    STACKS="$STACKS corosync-plugin"
+    COROSYNC_LIBS="$COROSYNC_LIBS $confdb_LIBS"
+
+    if test $SUPPORT_CMAN != no; then
+        if test $HAVE_cman = 1 -a $HAVE_fenced = 1; then
+            SUPPORT_CMAN=1
+	    STACKS="$STACKS cman"
+            CFLAGS="$CFLAGS $cman_FLAGS $fenced_FLAGS"
+            COROSYNC_LIBS="$COROSYNC_LIBS $cman_LIBS $fenced_LIBS"
+        fi
     fi
 fi
-AC_DEFINE_UNQUOTED(PCMK_SERVICE_ID, $PCMK_SERVICE_ID, Corosync service number)
+
+dnl Normalize SUPPORT_CS and SUPPORT_CMAN for use with #if directives
+if test $SUPPORT_CMAN != 1; then
+    SUPPORT_CMAN=0
+fi
+
+if test $SUPPORT_CS = 1; then
+    CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
+
+elif test $SUPPORT_CS != no; then
+    SUPPORT_CS=0
+    if test $missingisfatal = 0; then
+        AC_MSG_WARN(Unable to support Corosync: $aisreason) 
+    else
+        AC_MSG_FAILURE(Unable to support Corosync: $aisreason) 
+    fi
+fi
+
+AC_DEFINE_UNQUOTED(SUPPORT_COROSYNC, $SUPPORT_CS,    Support the Corosync messaging and membership layer)
+AC_DEFINE_UNQUOTED(SUPPORT_CMAN,     $SUPPORT_CMAN,  Support the consumption of membership and quorum from cman)
+AC_DEFINE_UNQUOTED(CS_USES_LIBQB,    $CS_USES_LIBQB, Does corosync use libqb for its ipc)
+AC_DEFINE_UNQUOTED(PCMK_SERVICE_ID,  $PCMK_SERVICE_ID, Corosync service number)
+
+AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
+AM_CONDITIONAL(BUILD_CS_PLUGIN, test $HAVE_confdb = 1) dnl confdb went away at about the same time as plugins
+
 AC_SUBST(SUPPORT_CMAN)
-
-if test $SUPPORT_CS_QUORUM != no; then
-    AC_MSG_CHECKING(for cpg)
-    $PKGCONFIG libcpg --exists
-    if test $? = 0; then
-	AC_MSG_RESULT(yes)
-    else
-	AC_MSG_RESULT(no)
-    fi
-
-    AC_MSG_CHECKING(for quorum)
-    $PKGCONFIG libquorum --exists
-    if test $? = 0; then
-	AC_MSG_RESULT(yes)
-    else
-	AC_MSG_RESULT(no)
-    fi
-
-    $PKGCONFIG libcpg libquorum --exists
-    if test $? = 0; then
-	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libquorum --cflags`"
-	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libquorum --libs`"
-	
-	PCMK_FEATURES="$PCMK_FEATURES corosync-quorum"
-	AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
-    fi
-fi
+AC_SUBST(SUPPORT_CS)
 
 dnl
 dnl    Cluster stack - Sanity
 dnl
-
-STACKS=""
-CLUSTERLIBS=""
-if test $SUPPORT_HEARTBEAT = 1; then
-   STACKS="$STACKS heartbeat"
-   AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
-   AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
-fi
-
-if test $SUPPORT_CS = 1; then
-   STACKS="$STACKS $CS_VERSION"
-   CLUSTERLIBS="$CLUSTERLIBS ${CSMSGLIB}"
-else
-   CSPREFIX=""
-   LCRSODIR="$libdir"
-fi
-
-PCMK_FEATURES="$PCMK_FEATURES$STACKS"
 
 if test x${enable_no_stack} = xyes; then
     AC_MSG_NOTICE(No cluster stack supported.  Just building the Policy Engine)
@@ -1259,9 +1222,10 @@ if test x${enable_no_stack} = xyes; then
 else
     AC_MSG_CHECKING(for supported stacks)
     if test x"$STACKS" = x; then
-      AC_MSG_FAILURE(You must choose at least one cluster stack to support)
+      AC_MSG_FAILURE(You must support at least one cluster stack (heartbeat or corosync) )
     fi
     AC_MSG_RESULT($STACKS)
+    PCMK_FEATURES="$PCMK_FEATURES $STACKS"
 fi
 
 AC_SUBST(CLUSTERLIBS)
@@ -1281,47 +1245,53 @@ SNMPLIBS=""
 
 AC_MSG_CHECKING(for snmp support)
 if test $SUPPORT_SNMP = no; then
-   AC_MSG_RESULT(no... not requested.)
+   AC_MSG_RESULT(no (disabled))
    SUPPORT_SNMP=0
 else
-   SNMPCONFIG=""
-   AC_MSG_RESULT($SUPPORT_SNMP)
-   AC_CHECK_HEADERS(net-snmp/net-snmp-config.h)
+    SNMPCONFIG=""
+    AC_MSG_RESULT($SUPPORT_SNMP)
+    AC_CHECK_HEADERS(net-snmp/net-snmp-config.h)
 
-   if test "x${ac_cv_header_net_snmp_net_snmp_config_h}" != "xyes"; then
-	SUPPORT_SNMP="no"
-   fi
+    if test "x${ac_cv_header_net_snmp_net_snmp_config_h}" != "xyes"; then
+ 	SUPPORT_SNMP="no"
+    fi
 
-   if test $SUPPORT_SNMP != no; then
+    if test $SUPPORT_SNMP != no; then
 	AC_PATH_PROGS(SNMPCONFIG, net-snmp-config)
 	if test "X${SNMPCONFIG}" = "X"; then
 		AC_MSG_RESULT(You need the net_snmp development package to continue.)
 		SUPPORT_SNMP=no
 	fi
-   fi
+    fi
 
-   if test $SUPPORT_SNMP != no; then
+    if test $SUPPORT_SNMP != no; then
 	AC_MSG_CHECKING(for special snmp libraries)
 	SNMPLIBS=`$SNMPCONFIG --agent-libs`
 	AC_MSG_RESULT($SNMPLIBS)
-   fi
+    fi
 
-   if test $SUPPORT_SNMP != no; then
-      savedLibs=$LIBS
-      LIBS="$LIBS $SNMPLIBS"
-      AC_CHECK_FUNCS(netsnmp_transport_open_client)
-      if test $ac_cv_func_netsnmp_transport_open_client != yes; then
-         AC_CHECK_FUNCS(netsnmp_tdomain_transport)
-         if test $ac_cv_func_netsnmp_tdomain_transport != yes; then
-            SUPPORT_SNMP=no
-	 else
-            AC_DEFINE_UNQUOTED(NETSNMPV53, 1, [Use the older 5.3 version of the net-snmp API])
-         fi
-      fi
-      LIBS=$savedLibs
-   fi
+    if test $SUPPORT_SNMP != no; then
+        savedLibs=$LIBS
+        LIBS="$LIBS $SNMPLIBS"
 
-   if test $SUPPORT_SNMP = no; then
+        dnl    On many systems libcrypto is needed when linking against libsnmp.
+        dnl    Check to see if it exists, and if so use it.
+	dnl AC_CHECK_LIB(crypto, CRYPTO_free, CRYPTOLIB="-lcrypto",)
+	dnl AC_SUBST(CRYPTOLIB)
+
+        AC_CHECK_FUNCS(netsnmp_transport_open_client)
+        if test $ac_cv_func_netsnmp_transport_open_client != yes; then
+            AC_CHECK_FUNCS(netsnmp_tdomain_transport)
+            if test $ac_cv_func_netsnmp_tdomain_transport != yes; then
+                SUPPORT_SNMP=no
+	    else
+                AC_DEFINE_UNQUOTED(NETSNMPV53, 1, [Use the older 5.3 version of the net-snmp API])
+            fi
+        fi
+        LIBS=$savedLibs
+    fi
+
+    if test $SUPPORT_SNMP = no; then
    	SNMPLIBS=""
    	SUPPORT_SNMP=0
      	if test $missingisfatal = 0; then
@@ -1329,9 +1299,9 @@ else
         else
 	    AC_MSG_FAILURE(Unable to support SNMP) 
         fi
-   else
+    else
    	SUPPORT_SNMP=1
-   fi
+    fi
 fi
 
 if test $SUPPORT_SNMP = 1; then
@@ -1356,7 +1326,7 @@ ESMTPLIB=""
 
 AC_MSG_CHECKING(for esmtp support)
 if test $SUPPORT_ESMTP = no; then
-   AC_MSG_RESULT(no... not requested.)
+   AC_MSG_RESULT(no (disabled))
    SUPPORT_ESMTP=0
 else
    ESMTPCONFIG=""
@@ -1390,11 +1360,8 @@ else
         fi
    else
    	SUPPORT_ESMTP=1
+        PCMK_FEATURES="$PCMK_FEATURES libesmtp"
    fi
-fi
-
-if test $SUPPORT_ESMTP = 1; then
-   PCMK_FEATURES="$PCMK_FEATURES libesmtp"
 fi
 
 AC_SUBST(ESMTPLIBS)
@@ -1413,23 +1380,20 @@ esac
 
 AC_MSG_CHECKING(for acl support)
 if test $SUPPORT_ACL = no; then
-   AC_MSG_RESULT(no... not requested.)
+   AC_MSG_RESULT(no (disabled))
    SUPPORT_ACL=0
 else
    AC_MSG_RESULT($SUPPORT_ACL)
 
    AC_CHECK_MEMBERS([struct IPC_CHANNEL.farside_uid],
-		    [SUPPORT_ACL=yes], [SUPPORT_ACL=no], [[#include <clplumbing/ipc.h>]])
+		    [SUPPORT_ACL=1], [SUPPORT_ACL=0], [[#include <clplumbing/ipc.h>]])
 
-   if test $SUPPORT_ACL = no; then
-   	SUPPORT_ACL=0
+   if test $SUPPORT_ACL = 0; then
      	if test $missingisfatal = 0; then
 	    AC_MSG_WARN(Unable to support ACL. You need to use cluster-glue >= 1.0.6) 
         else
 	    AC_MSG_FAILURE(Unable to support ACL. You need to use cluster-glue >= 1.0.6) 
         fi
-   else
-   	SUPPORT_ACL=1
    fi
 fi
 
@@ -1495,44 +1459,6 @@ then
 fi
 AC_MSG_RESULT($OPENIPMI_SERVICELOG_EXISTS)
 AM_CONDITIONAL(BUILD_OPENIPMI_SERVICELOG, test "$OPENIPMI_SERVICELOG_EXISTS" = "yes")
-
-dnl ========================================================================
-dnl checks for library functions to replace them
-dnl
-dnl     NoSuchFunctionName:
-dnl             is a dummy function which no system supplies.  It is here to make
-dnl             the system compile semi-correctly on OpenBSD which doesn't know
-dnl             how to create an empty archive
-dnl
-dnl     scandir: Only on BSD.
-dnl             System-V systems may have it, but hidden and/or deprecated.
-dnl             A replacement function is supplied for it.
-dnl
-dnl     setenv: is some bsdish function that should also be avoided (use
-dnl             putenv instead)
-dnl             On the other hand, putenv doesn't provide the right API for the
-dnl             code and has memory leaks designed in (sigh...)  Fortunately this
-dnl             A replacement function is supplied for it.
-dnl
-dnl     strerror: returns a string that corresponds to an errno.
-dnl             A replacement function is supplied for it.
-dnl
-dnl     unsetenv: is some bsdish function that should also be avoided (No 
-dnl             replacement)
-dnl             A replacement function is supplied for it.
-dnl
-dnl	strnlen: is a gnu function similar to strlen, but safer.
-dnl		We wrote a tolearably-fast replacement function for it.
-dnl
-dnl	strndup: is a gnu function similar to strdup, but safer.
-dnl		We wrote a tolearably-fast replacement function for it.
-dnl
-dnl	daemon: is a GNU function.  The daemon() function is for programs wishing to
-dnl             detach themselves from the controlling terminal and run in the
-dnl             background as system daemon
-dnl             A replacement function is supplied for it.
-
-AC_REPLACE_FUNCS(alphasort inet_pton NoSuchFunctionName scandir setenv strerror unsetenv strnlen strndup daemon strlcpy strlcat)
 
 dnl ========================================================================
 dnl Compiler flags
