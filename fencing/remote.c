@@ -376,7 +376,7 @@ static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
     GListPtr iter = NULL;
     do {
         if(op->devices) {
-            crm_trace("Checking for someone to fence %s with %s", op->target, op->devices->data);
+            crm_trace("Checking for someone to fence %s with %s", op->target, (char*)op->devices->data);
         } else {
             crm_trace("Checking for someone to fence %s", op->target);
         }
@@ -389,7 +389,7 @@ static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
                     match = g_list_find_custom(peer->device_list, op->devices->data, sort_strings);
                 }
                 if(match) {
-                    crm_trace("Removing %s from %s (%d remaining)", match->data, peer->host, g_list_length(peer->device_list));
+                    crm_trace("Removing %s from %s (%d remaining)", (char*)match->data, peer->host, g_list_length(peer->device_list));
                     peer->device_list = g_list_remove(peer->device_list, match->data);
                     return peer;
                 }
@@ -406,7 +406,7 @@ static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
             && stonith_topology_next(op) == stonith_ok);
 
     if(op->devices) {
-        crm_trace("Couldn't find anyone to fence %s with %s", op->target, op->devices->data);
+        crm_trace("Couldn't find anyone to fence %s with %s", op->target, (char*)op->devices->data);
     } else {
         crm_trace("Couldn't find anyone to fence %s", op->target);
     }
@@ -480,7 +480,7 @@ int process_remote_stonith_query(xmlNode *msg)
 {
     int devices = 0;
     const char *id = NULL;
-    char *host = NULL;
+    const char *host = NULL;
     remote_fencing_op_t *op = NULL;
     st_query_result_t *result = NULL;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE, msg, LOG_ERR);
@@ -586,8 +586,8 @@ int process_remote_stonith_exec(xmlNode *msg)
     if(is_set(op->call_options, st_opt_topology)) {
         if(rc == stonith_ok && op->devices) {
             /* Success, are there any more? */
-            crm_info("Call to %s for %s passed, %s next", op->devices->data,
-                      op->target, op->devices->next?op->devices->next->data:"<none>");
+            crm_info("Call to %s for %s passed, %s next", (char*)op->devices->data,
+                      op->target, (char*)op->devices->next?op->devices->next->data:"<none>");
             op->devices = op->devices->next;
         }
     }
