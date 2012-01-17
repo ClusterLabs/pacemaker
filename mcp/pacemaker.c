@@ -612,7 +612,7 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
     }
 
     if (procs != 0 && procs != node->processes) {
-        crm_info("Node %s now has process list: %.32x (was %.32x)",
+        crm_debug("Node %s now has process list: %.32x (was %.32x)",
                  node->uname, procs, node->processes);
         node->processes = procs;
         changed = TRUE;
