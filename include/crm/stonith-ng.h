@@ -223,66 +223,68 @@ extern stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, con
                                                   const char *value);
 extern void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
 
+/* Basic helpers that allows nodes to be fenced and the history to be
+ * queried without mainloop or the caller understanding the full API
+ *
+ * At least one of nodeid and uname are required
+ */
+extern int stonith_api_kick(int nodeid, const char *uname, int timeout, bool off);
+extern time_t stonith_api_time(int nodeid, const char *uname, bool in_progress);
 
 /*
- * Helpers for initiating fencing from CPG based controld's
- * that avoid the need for install-time dependancies
+ * Helpers for using the above functions without install-time dependancies
  *
  * Usage:
  *  #include <crm/stonith-ng.h>
  *
- * To turn a node off:
- *  stonith_api_kick_cs_helper(nodeid, 120, 1);
+ * To turn a node off by corosync nodeid:
+ *  stonith_api_kick_helper(nodeid, 120, 1);
  *
- * To check the last fence date/time:
- *  last = stonith_api_time_cs_helper(nodeid, 0);
+ * To check the last fence date/time (also by nodeid):
+ *  last = stonith_api_time_helper(nodeid, 0);
  *
  * To check if fencing is in progress:
- *  if(stonith_api_time_cs_helper(nodeid, 1) > 0) { ... }
- *
+ *  if(stonith_api_time_helper(nodeid, 1) > 0) { ... }
  */
 
 #  define STONITH_LIBRARY "libstonithd.so.1"
 
-int stonith_api_cs_kick(int nodeid, int timeout, bool off);
-time_t stonith_api_cs_time(int nodeid, bool in_progress);
-
 static inline int
-stonith_api_kick_cs_helper(int nodeid, int timeout, bool off)
+stonith_api_kick_helper(int nodeid, int timeout, bool off)
 {
     static void *st_library = NULL;
-    static int(*st_kick_fn)(int nodeid, int timeout, bool off) = NULL;
+    static int(*st_kick_fn)(int nodeid, const char *uname, int timeout, bool off) = NULL;
 
     if(st_library == NULL) {
         st_library = dlopen(STONITH_LIBRARY, RTLD_LAZY);
     }
     if(st_library && st_kick_fn == NULL) {
-        st_kick_fn = dlsym(&st_library, "stonith_api_cs_kick");
+        st_kick_fn = dlsym(&st_library, "stonith_api_kick");
     }
     if(st_kick_fn == NULL) {
         return st_err_not_supported;
     }
 
-    return (*st_kick_fn)(nodeid, timeout, off);
+    return (*st_kick_fn)(nodeid, NULL, timeout, off);
 }
 
 static inline time_t
-stonith_api_time_cs_helper(int nodeid, bool in_progress)
+stonith_api_time_helper(int nodeid, bool in_progress)
 {
     static void *st_library = NULL;
-    static time_t(*st_time_fn)(int nodeid, bool in_progress) = NULL;
+    static time_t(*st_time_fn)(int nodeid, const char *uname, bool in_progress) = NULL;
 
     if(st_library == NULL) {
         st_library = dlopen(STONITH_LIBRARY, RTLD_LAZY);
     }
     if(st_library && st_time_fn == NULL) {
-        st_time_fn = dlsym(&st_library, "stonith_api_cs_time");
+        st_time_fn = dlsym(&st_library, "stonith_api_time");
     }
     if(st_time_fn == NULL) {
         return 0;
     }
 
-    return (*st_time_fn)(nodeid, in_progress);
+    return (*st_time_fn)(nodeid, NULL, in_progress);
 }
 
 #endif

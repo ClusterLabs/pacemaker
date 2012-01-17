@@ -1914,24 +1914,37 @@ stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
 
 
 int
-stonith_api_cs_kick(int nodeid, int timeout, bool off)
+stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
 {
+    char *name = NULL;
+    const char *action = "reboot";
+
     int rc = stonith_ok;
     stonith_t *st = NULL;
-    enum stonith_call_options opts = st_opt_sync_call|st_opt_allow_suicide|st_opt_cs_nodeid;
+    enum stonith_call_options opts = st_opt_sync_call|st_opt_allow_suicide;
 
-    crm_log_init("st-client", LOG_INFO, FALSE, FALSE, 0, NULL);
+    crm_log_init("st-client", LOG_NOTICE, FALSE, FALSE, 0, NULL);
 
     st = stonith_api_new();
     if(st) {
 	rc = st->cmds->connect(st, crm_system_name, NULL);
     }
 
+    if(uname != NULL) {
+        name = strdup(uname);
+
+    } else if(nodeid > 0) {
+        opts |= st_opt_cs_nodeid;
+        name = crm_itoa(nodeid);
+    }
+
+    if(off) {
+        action = "off";
+    }
+
     if(st && rc == stonith_ok) {
-        char *name = crm_itoa(nodeid);
-        crm_info("Requesting that node %d be terminated", nodeid);
-        rc = st->cmds->fence(st, opts, name, "off", 120);
-        crm_free(name);
+        crm_notice("Requesting that node %d/%s be terminated (%s)", nodeid, name, action);
+        rc = st->cmds->fence(st, opts, name, action, timeout);
     }
 
     if(st) {
@@ -1939,39 +1952,45 @@ stonith_api_cs_kick(int nodeid, int timeout, bool off)
         stonith_api_delete(st);
     }
 
-    if(rc < stonith_ok) {
+    if(st != NULL || rc < stonith_ok) {
         crm_err("Could not terminate node %d: %s", nodeid, stonith_error2string(rc));
         rc = 1;
 
     } else {
         rc = 0;
     }
+
+    crm_free(name);
     return rc;
 }
 
 time_t
-stonith_api_cs_time(int nodeid, bool in_progress)
+stonith_api_time(int nodeid, const char *uname, bool in_progress)
 {
     int rc = 0;
+    char *name = NULL;
+
     time_t when = 0;
     time_t progress = 0;
     stonith_t *st = NULL;
     stonith_history_t *history, *hp = NULL;
-
-    crm_log_init("st-client", LOG_INFO, FALSE, FALSE, 0, NULL);
+    enum stonith_call_options opts = st_opt_sync_call;
 
     st = stonith_api_new();
     if(st) {
 	rc = st->cmds->connect(st, crm_system_name, NULL);
     }
 
+    if(uname != NULL) {
+        name = strdup(uname);
+
+    } else if(nodeid > 0) {
+        opts |= st_opt_cs_nodeid;
+        name = crm_itoa(nodeid);
+    }
+
     if(st && rc == stonith_ok) {
-        char *name = NULL;
-        if(nodeid > 0) {
-            name = crm_itoa(nodeid);
-        }
         st->cmds->history(st, st_opt_sync_call|st_opt_cs_nodeid, name, &history, 120);
-        crm_free(name);
 
         for(hp = history; hp; hp = hp->next) {
             if(in_progress) {
@@ -1986,19 +2005,14 @@ stonith_api_cs_time(int nodeid, bool in_progress)
     }
 
     if(progress) {
-        crm_debug("Node %d is in the process of being shot", nodeid);
         when = progress;
-
-    } else if(when != 0) {
-        crm_debug("Node %d was last shot at: %s", nodeid, ctime(&when));
-
-    } else {
-        crm_debug("It does not appear node %d has been shot", nodeid);
     }
 
     if(st) {
         st->cmds->disconnect(st);
         stonith_api_delete(st);
     }
+
+    crm_free(name);
     return when;
 }

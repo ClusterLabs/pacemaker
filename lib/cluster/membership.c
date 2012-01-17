@@ -486,63 +486,15 @@ crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
     }
 }
 
-static int
-crm_terminate_member_common(int nodeid, const char *uname, IPC_Channel * cluster, int *connection)
-{
-    int rc = stonith_ok;
-    stonith_t *st = NULL;
-
-    if(uname == NULL) {
-        crm_node_t *node = crm_get_peer(nodeid, uname);
-        if (node) {
-            uname = node->uname;
-        }
-    }
-    
-    if(uname == NULL) {
-        crm_err("Nothing known about node id=%d", nodeid);
-        return -1;
-        
-    } else {
-        st = stonith_api_new();
-    }
-    
-    if(st) {
-	rc = st->cmds->connect(st, crm_system_name, NULL);
-    }
-
-    if(rc == stonith_ok) {
-        crm_info("Requesting that node %d/%s be terminated", nodeid, uname);
-        rc = st->cmds->fence(st, st_opt_allow_suicide, uname, "off", 120);
-    }    
-
-    if(st) {
-        st->cmds->disconnect(st);
-        stonith_api_delete(st);
-    }
-        
-    if(rc < stonith_ok) {
-        crm_err("Could not terminate node %d/%s: %s", nodeid, crm_str(uname), stonith_error2string(rc));
-        rc = 1;
-
-    } else {
-        rc = 0;
-    }
-    return rc;
-}
-
 int
 crm_terminate_member(int nodeid, const char *uname, IPC_Channel * cluster)
 {
-    if (cluster != NULL) {
-        return crm_terminate_member_common(nodeid, uname, cluster, NULL);
-    }
-    crm_err("Could not terminate node %d/%s: No cluster connection", nodeid, uname);
-    return 0;
+    /* Always use the synchronous, non-mainloop version */ 
+    return stonith_api_kick(nodeid, uname, 120, TRUE);
 }
 
 int
 crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 {
-    return crm_terminate_member_common(nodeid, uname, NULL, connection);
+    return stonith_api_kick(nodeid, uname, 120, TRUE);
 }
