@@ -21,6 +21,9 @@
 #  include <dlfcn.h>
 #  include <stdbool.h>
 
+/* TO-DO: Work out how to drop this requirement */
+#  include <libxml/tree.h>
+
 /* *INDENT-OFF* */
 enum stonith_state {
     stonith_connected_command,
@@ -245,6 +248,31 @@ extern time_t stonith_api_time(int nodeid, const char *uname, bool in_progress);
  *
  * To check if fencing is in progress:
  *  if(stonith_api_time_helper(nodeid, 1) > 0) { ... }
+ *
+ * eg.
+
+ #include <stdio.h>
+ #include <time.h>
+ #include <crm/stonith-ng.h>
+ int
+ main(int argc, char ** argv)
+ {
+     int rc = 0;
+     int nodeid = 102;
+
+     rc = stonith_api_time_helper(nodeid, 0);
+     printf("%d last fenced at %s\n", nodeid, ctime(rc));
+
+     rc = stonith_api_kick_helper(nodeid, 120, 1);
+     printf("%d fence result: %d\n", nodeid, rc);
+
+     rc = stonith_api_time_helper(nodeid, 0);
+     printf("%d last fenced at %s\n", nodeid, ctime(rc));
+
+     return 0;
+ }
+
+
  */
 
 #  define STONITH_LIBRARY "libstonithd.so.1"
@@ -259,7 +287,7 @@ stonith_api_kick_helper(int nodeid, int timeout, bool off)
         st_library = dlopen(STONITH_LIBRARY, RTLD_LAZY);
     }
     if(st_library && st_kick_fn == NULL) {
-        st_kick_fn = dlsym(&st_library, "stonith_api_kick");
+        st_kick_fn = dlsym(st_library, "stonith_api_kick");
     }
     if(st_kick_fn == NULL) {
         return st_err_not_supported;
@@ -278,7 +306,7 @@ stonith_api_time_helper(int nodeid, bool in_progress)
         st_library = dlopen(STONITH_LIBRARY, RTLD_LAZY);
     }
     if(st_library && st_time_fn == NULL) {
-        st_time_fn = dlsym(&st_library, "stonith_api_time");
+        st_time_fn = dlsym(st_library, "stonith_api_time");
     }
     if(st_time_fn == NULL) {
         return 0;
