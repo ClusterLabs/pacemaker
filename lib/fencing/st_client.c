@@ -1925,7 +1925,7 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
 
     st = stonith_api_new();
     if(st) {
-	rc = st->cmds->connect(st, crm_system_name, NULL);
+	rc = st->cmds->connect(st, "stonith-api", NULL);
     }
 
     if(uname != NULL) {
@@ -1967,7 +1967,7 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
 
     st = stonith_api_new();
     if(st) {
-	rc = st->cmds->connect(st, crm_system_name, NULL);
+	rc = st->cmds->connect(st, "stonith-api", NULL);
     }
 
     if(uname != NULL) {
