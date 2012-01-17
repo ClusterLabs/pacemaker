@@ -610,6 +610,31 @@ update_all_trace_data(void)
 #endif
 }
 
+#ifndef NAME_MAX
+#  define NAME_MAX 256
+#endif
+gboolean daemon_option_enabled(const char *daemon, const char *option) 
+{
+    char env_name[NAME_MAX];
+    const char *value = NULL;
+
+    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
+    value = getenv(env_name);
+    if (value != NULL && crm_is_true(value)) {
+        return TRUE;
+
+    } else if (value != NULL && strstr(value, daemon)) {
+        return TRUE;
+    }
+
+    snprintf(env_name, NAME_MAX, "HA_%s", option);
+    value = getenv(env_name);
+    if (value != NULL && crm_is_true(value)) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
 
 gboolean
 crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to_stderr,
@@ -619,7 +644,6 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     const char *facility = getenv("HA_logfacility");
 
     /* Redirect messages from glib functions to our handler */
-/*  	cl_malloc_forced_for_glib(); */
 #ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
     glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
 #endif
@@ -646,6 +670,16 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     }
 
     setenv("PCMK_service", crm_system_name, 1);
+
+    if(daemon_option_enabled(crm_system_name, "debug")) {
+        /* Override the default setting */
+        level = LOG_DEBUG;
+    }
+
+    if(daemon_option_enabled(crm_system_name, "stderr")) {
+        /* Override the default setting */
+        to_stderr = TRUE;
+    }
 
 #if LIBQB_LOGGING
     crm_log_level = level;

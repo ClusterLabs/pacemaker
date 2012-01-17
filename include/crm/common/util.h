@@ -95,6 +95,8 @@ extern gboolean crm_log_init(const char *entity, int level, gboolean coredir, gb
 extern gboolean crm_log_init_quiet(const char *entity, int level, gboolean coredir,
                                    gboolean to_stderr, int argc, char **argv);
 
+extern gboolean daemon_option_enabled(const char *daemon, const char *option);
+
 extern gboolean crm_log_init_worker(const char *entity, int level, gboolean coredir,
                                     gboolean to_stderr, int argc, char **argv, gboolean quiet);
 
