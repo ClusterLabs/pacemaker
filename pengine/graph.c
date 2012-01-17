@@ -575,23 +575,21 @@ action2xml(action_t * action, gboolean as_input)
 static gboolean
 should_dump_action(action_t * action)
 {
-    int log_filter = LOG_DEBUG_5;
-
     CRM_CHECK(action != NULL, return FALSE);
 
     if (is_set(action->flags, pe_action_dumped)) {
-        do_crm_log_unlikely(log_filter, "action %d (%s) was already dumped",
+        crm_trace( "action %d (%s) was already dumped",
                             action->id, action->uuid);
         return FALSE;
 
     } else if (is_set(action->flags, pe_action_runnable) == FALSE) {
-        do_crm_log_unlikely(log_filter, "action %d (%s) was not runnable",
+        crm_trace( "action %d (%s) was not runnable",
                             action->id, action->uuid);
         return FALSE;
 
     } else if (is_set(action->flags, pe_action_optional)
                && is_set(action->flags, pe_action_print_always) == FALSE) {
-        do_crm_log_unlikely(log_filter, "action %d (%s) was optional", action->id, action->uuid);
+        crm_trace( "action %d (%s) was optional", action->id, action->uuid);
         return FALSE;
 
     } else if (action->rsc != NULL && is_not_set(action->rsc->flags, pe_rsc_managed)) {
@@ -601,7 +599,7 @@ should_dump_action(action_t * action)
 
         /* make sure probes and recurring monitors go through */
         if (safe_str_neq(action->task, RSC_STATUS) && interval == NULL) {
-            do_crm_log_unlikely(log_filter, "action %d (%s) was for an unmanaged resource (%s)",
+            crm_trace( "action %d (%s) was for an unmanaged resource (%s)",
                                 action->id, action->uuid, action->rsc->id);
             return FALSE;
         }
@@ -664,8 +662,6 @@ static gboolean
 should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
 {
     int type = wrapper->type;
-    int log_dump = LOG_DEBUG_3;
-    int log_filter = LOG_DEBUG_3;
 
     type &= ~pe_order_implies_first_printed;
     type &= ~pe_order_implies_then_printed;
@@ -673,25 +669,25 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
 
     wrapper->state = pe_link_not_dumped;
     if (last_action == wrapper->action->id) {
-        do_crm_log_unlikely(log_filter, "Input (%d) %s duplicated for %s",
+        crm_trace( "Input (%d) %s duplicated for %s",
                             wrapper->action->id, wrapper->action->uuid, action->uuid);
         wrapper->state = pe_link_dup;
         return FALSE;
 
     } else if (wrapper->type == pe_order_none) {
-        do_crm_log_unlikely(log_filter, "Input (%d) %s suppressed for %s",
+        crm_trace( "Input (%d) %s suppressed for %s",
                             wrapper->action->id, wrapper->action->uuid, action->uuid);
         return FALSE;
 
     } else if (is_set(wrapper->action->flags, pe_action_runnable) == FALSE
                && type == pe_order_none && safe_str_neq(wrapper->action->uuid, CRM_OP_PROBED)) {
-        do_crm_log_unlikely(log_filter, "Input (%d) %s optional (ordering) for %s",
+        crm_trace( "Input (%d) %s optional (ordering) for %s",
                             wrapper->action->id, wrapper->action->uuid, action->uuid);
         return FALSE;
 
     } else if (is_set(action->flags, pe_action_pseudo)
                && (wrapper->type & pe_order_stonith_stop)) {
-        do_crm_log_unlikely(log_filter, "Input (%d) %s suppressed for %s",
+        crm_trace( "Input (%d) %s suppressed for %s",
                             wrapper->action->id, wrapper->action->uuid, action->uuid);
         return FALSE;
 
@@ -708,7 +704,7 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
 
     } else if (is_set(wrapper->action->flags, pe_action_dumped)
                || should_dump_action(wrapper->action)) {
-        do_crm_log_unlikely(log_dump, "Input (%d) %s should be dumped for %s", wrapper->action->id,
+        crm_trace( "Input (%d) %s should be dumped for %s", wrapper->action->id,
                             wrapper->action->uuid, action->uuid);
         goto dump;
 
@@ -722,9 +718,9 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
 #endif
     } else if (is_set(wrapper->action->flags, pe_action_optional) == TRUE
                && is_set(wrapper->action->flags, pe_action_print_always) == FALSE) {
-        do_crm_log_unlikely(log_filter, "Input (%d) %s optional for %s", wrapper->action->id,
+        crm_trace( "Input (%d) %s optional for %s", wrapper->action->id,
                             wrapper->action->uuid, action->uuid);
-        do_crm_log_unlikely(log_filter, "Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x",
+        crm_trace( "Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x",
                             wrapper->action->id, wrapper->action->uuid, wrapper->action->node,
                             is_set(wrapper->action->flags, pe_action_pseudo),
                             is_set(wrapper->action->flags, pe_action_runnable),
@@ -734,7 +730,7 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
     }
 
   dump:
-    do_crm_log_unlikely(log_dump, "Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x dumped for %s",
+    crm_trace( "Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x dumped for %s",
                         wrapper->action->id,
                         wrapper->action->uuid,
                         wrapper->action->node,

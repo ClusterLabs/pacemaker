@@ -1225,36 +1225,34 @@ static gboolean
 filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
                              rsc_colocation_t * constraint)
 {
-    int level = LOG_DEBUG_4;
-
     if (constraint->score == 0) {
         return FALSE;
     }
 
     if (constraint->score > 0
         && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh != rsc_lh->next_role) {
-        do_crm_log_unlikely(level, "LH: Skipping constraint: \"%s\" state filter",
+        crm_trace( "LH: Skipping constraint: \"%s\" state filter",
                             role2text(constraint->role_rh));
         return FALSE;
     }
 
     if (constraint->score > 0
         && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh != rsc_rh->next_role) {
-        do_crm_log_unlikely(level, "RH: Skipping constraint: \"%s\" state filter",
+        crm_trace( "RH: Skipping constraint: \"%s\" state filter",
                             role2text(constraint->role_rh));
         return FALSE;
     }
 
     if (constraint->score < 0
         && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh == rsc_lh->next_role) {
-        do_crm_log_unlikely(level, "LH: Skipping -ve constraint: \"%s\" state filter",
+        crm_trace( "LH: Skipping -ve constraint: \"%s\" state filter",
                             role2text(constraint->role_rh));
         return FALSE;
     }
 
     if (constraint->score < 0
         && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh == rsc_rh->next_role) {
-        do_crm_log_unlikely(level, "RH: Skipping -ve constraint: \"%s\" state filter",
+        crm_trace( "RH: Skipping -ve constraint: \"%s\" state filter",
                             role2text(constraint->role_rh));
         return FALSE;
     }
@@ -1377,10 +1375,8 @@ native_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
 static gboolean
 filter_rsc_ticket(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket)
 {
-    int level = LOG_DEBUG_4;
-
     if (rsc_ticket->role_lh != RSC_ROLE_UNKNOWN && rsc_ticket->role_lh != rsc_lh->role) {
-        do_crm_log_unlikely(level, "LH: Skipping constraint: \"%s\" state filter",
+        crm_trace( "LH: Skipping constraint: \"%s\" state filter",
                             role2text(rsc_ticket->role_lh));
         return FALSE;
     }

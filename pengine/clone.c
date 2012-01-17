@@ -63,7 +63,6 @@ gint
 sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 {
     int rc = 0;
-    int level = LOG_DEBUG_3;
     node_t *node1 = NULL;
     node_t *node2 = NULL;
 
@@ -86,11 +85,11 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
     if (resource1->running_on && resource2->running_on) {
         if (g_list_length(resource1->running_on) < g_list_length(resource2->running_on)) {
-            do_crm_log_unlikely(level, "%s < %s: running_on", resource1->id, resource2->id);
+            crm_trace( "%s < %s: running_on", resource1->id, resource2->id);
             return -1;
 
         } else if (g_list_length(resource1->running_on) > g_list_length(resource2->running_on)) {
-            do_crm_log_unlikely(level, "%s > %s: running_on", resource1->id, resource2->id);
+            crm_trace( "%s > %s: running_on", resource1->id, resource2->id);
             return 1;
         }
     }
@@ -106,7 +105,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         node_t *match = pe_hash_table_lookup(resource1->allowed_nodes, node1->details->id);
 
         if (match == NULL || match->weight < 0) {
-            do_crm_log_unlikely(level, "%s: current location is unavailable", resource1->id);
+            crm_trace( "%s: current location is unavailable", resource1->id);
             node1 = NULL;
             can1 = FALSE;
         }
@@ -116,7 +115,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         node_t *match = pe_hash_table_lookup(resource2->allowed_nodes, node2->details->id);
 
         if (match == NULL || match->weight < 0) {
-            do_crm_log_unlikely(level, "%s: current location is unavailable", resource2->id);
+            crm_trace( "%s: current location is unavailable", resource2->id);
             node2 = NULL;
             can2 = FALSE;
         }
@@ -124,35 +123,35 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
     if (can1 != can2) {
         if (can1) {
-            do_crm_log_unlikely(level, "%s < %s: availability of current location", resource1->id,
+            crm_trace( "%s < %s: availability of current location", resource1->id,
                                 resource2->id);
             return -1;
         }
-        do_crm_log_unlikely(level, "%s > %s: availability of current location", resource1->id,
+        crm_trace( "%s > %s: availability of current location", resource1->id,
                             resource2->id);
         return 1;
     }
 
     if (resource1->priority < resource2->priority) {
-        do_crm_log_unlikely(level, "%s < %s: priority", resource1->id, resource2->id);
+        crm_trace( "%s < %s: priority", resource1->id, resource2->id);
         return 1;
 
     } else if (resource1->priority > resource2->priority) {
-        do_crm_log_unlikely(level, "%s > %s: priority", resource1->id, resource2->id);
+        crm_trace( "%s > %s: priority", resource1->id, resource2->id);
         return -1;
     }
 
     if (node1 == NULL && node2 == NULL) {
-        do_crm_log_unlikely(level, "%s == %s: not active", resource1->id, resource2->id);
+        crm_trace( "%s == %s: not active", resource1->id, resource2->id);
         return 0;
     }
 
     if (node1 != node2) {
         if (node1 == NULL) {
-            do_crm_log_unlikely(level, "%s > %s: active", resource1->id, resource2->id);
+            crm_trace( "%s > %s: active", resource1->id, resource2->id);
             return 1;
         } else if (node2 == NULL) {
-            do_crm_log_unlikely(level, "%s < %s: active", resource1->id, resource2->id);
+            crm_trace( "%s < %s: active", resource1->id, resource2->id);
             return -1;
         }
     }
@@ -161,34 +160,34 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     can2 = can_run_resources(node2);
     if (can1 != can2) {
         if (can1) {
-            do_crm_log_unlikely(level, "%s < %s: can", resource1->id, resource2->id);
+            crm_trace( "%s < %s: can", resource1->id, resource2->id);
             return -1;
         }
-        do_crm_log_unlikely(level, "%s > %s: can", resource1->id, resource2->id);
+        crm_trace( "%s > %s: can", resource1->id, resource2->id);
         return 1;
     }
 
     node1 = parent_node_instance(resource1, node1);
     node2 = parent_node_instance(resource2, node2);
     if (node1 != NULL && node2 == NULL) {
-        do_crm_log_unlikely(level, "%s < %s: not allowed", resource1->id, resource2->id);
+        crm_trace( "%s < %s: not allowed", resource1->id, resource2->id);
         return -1;
     } else if (node1 == NULL && node2 != NULL) {
-        do_crm_log_unlikely(level, "%s > %s: not allowed", resource1->id, resource2->id);
+        crm_trace( "%s > %s: not allowed", resource1->id, resource2->id);
         return 1;
     }
 
     if (node1 == NULL || node2 == NULL) {
-        do_crm_log_unlikely(level, "%s == %s: not allowed", resource1->id, resource2->id);
+        crm_trace( "%s == %s: not allowed", resource1->id, resource2->id);
         return 0;
     }
 
     if (node1->count < node2->count) {
-        do_crm_log_unlikely(level, "%s < %s: count", resource1->id, resource2->id);
+        crm_trace( "%s < %s: count", resource1->id, resource2->id);
         return -1;
 
     } else if (node1->count > node2->count) {
-        do_crm_log_unlikely(level, "%s > %s: count", resource1->id, resource2->id);
+        crm_trace( "%s > %s: count", resource1->id, resource2->id);
         return 1;
     }
 
@@ -196,10 +195,10 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     can2 = did_fail(resource2);
     if (can1 != can2) {
         if (can1) {
-            do_crm_log_unlikely(level, "%s > %s: failed", resource1->id, resource2->id);
+            crm_trace( "%s > %s: failed", resource1->id, resource2->id);
             return 1;
         }
-        do_crm_log_unlikely(level, "%s < %s: failed", resource1->id, resource2->id);
+        crm_trace( "%s < %s: failed", resource1->id, resource2->id);
         return -1;
     }
 
@@ -224,7 +223,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         for (gIter = resource1->parent->rsc_cons; gIter; gIter = gIter->next) {
             rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
-            do_crm_log_unlikely(level + 1, "Applying %s to %s", constraint->id, resource1->id);
+            crm_trace( "Applying %s to %s", constraint->id, resource1->id);
 
             hash1 = native_merge_weights(constraint->rsc_rh, resource1->id, hash1,
                                          constraint->node_attribute,
@@ -234,7 +233,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
             rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
-            do_crm_log_unlikely(level + 1, "Applying %s to %s", constraint->id, resource1->id);
+            crm_trace( "Applying %s to %s", constraint->id, resource1->id);
 
             hash1 = native_merge_weights(constraint->rsc_lh, resource1->id, hash1,
                                          constraint->node_attribute,
@@ -244,7 +243,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         for (gIter = resource2->parent->rsc_cons; gIter; gIter = gIter->next) {
             rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
-            do_crm_log_unlikely(level + 1, "Applying %s to %s", constraint->id, resource2->id);
+            crm_trace( "Applying %s to %s", constraint->id, resource2->id);
 
             hash2 = native_merge_weights(constraint->rsc_rh, resource2->id, hash2,
                                          constraint->node_attribute,
@@ -254,7 +253,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         for (gIter = resource2->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
             rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
-            do_crm_log_unlikely(level + 1, "Applying %s to %s", constraint->id, resource2->id);
+            crm_trace( "Applying %s to %s", constraint->id, resource2->id);
 
             hash2 = native_merge_weights(constraint->rsc_lh, resource2->id, hash2,
                                          constraint->node_attribute,
@@ -270,18 +269,18 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
         if (node1->weight < node2->weight) {
             if (node1->weight < 0) {
-                do_crm_log_unlikely(level, "%s > %s: current score", resource1->id, resource2->id);
+                crm_trace( "%s > %s: current score", resource1->id, resource2->id);
                 rc = -1;
                 goto out;
 
             } else {
-                do_crm_log_unlikely(level, "%s < %s: current score", resource1->id, resource2->id);
+                crm_trace( "%s < %s: current score", resource1->id, resource2->id);
                 rc = 1;
                 goto out;
             }
 
         } else if (node1->weight > node2->weight) {
-            do_crm_log_unlikely(level, "%s > %s: current score", resource1->id, resource2->id);
+            crm_trace( "%s > %s: current score", resource1->id, resource2->id);
             rc = -1;
             goto out;
         }
@@ -305,26 +304,26 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
             node1 = g_list_nth_data(list1, lpc);
             node2 = g_list_nth_data(list2, lpc);
             if (node1 == NULL) {
-                do_crm_log_unlikely(level, "%s < %s: colocated score NULL", resource1->id,
+                crm_trace( "%s < %s: colocated score NULL", resource1->id,
                                     resource2->id);
                 rc = 1;
                 break;
 
             } else if (node2 == NULL) {
-                do_crm_log_unlikely(level, "%s > %s: colocated score NULL", resource1->id,
+                crm_trace( "%s > %s: colocated score NULL", resource1->id,
                                     resource2->id);
                 rc = -1;
                 break;
             }
 
             if (node1->weight < node2->weight) {
-                do_crm_log_unlikely(level, "%s < %s: colocated score", resource1->id,
+                crm_trace( "%s < %s: colocated score", resource1->id,
                                     resource2->id);
                 rc = 1;
                 break;
 
             } else if (node1->weight > node2->weight) {
-                do_crm_log_unlikely(level, "%s > %s: colocated score", resource1->id,
+                crm_trace( "%s > %s: colocated score", resource1->id,
                                     resource2->id);
                 rc = -1;
                 break;
@@ -344,7 +343,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     }
 
     rc = strcmp(resource1->id, resource2->id);
-    do_crm_log_unlikely(level, "%s %c %s: default", resource1->id, rc < 0 ? '<' : '>',
+    crm_trace( "%s %c %s: default", resource1->id, rc < 0 ? '<' : '>',
                         resource2->id);
     return rc;
 }

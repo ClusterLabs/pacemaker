@@ -168,7 +168,6 @@ can_be_master(resource_t * rsc)
     node_t *local_node = NULL;
     resource_t *parent = uber_parent(rsc);
     clone_variant_data_t *clone_data = NULL;
-    int level = LOG_DEBUG_2;
 
 #if 0
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
@@ -184,7 +183,7 @@ can_be_master(resource_t * rsc)
             resource_t *child = (resource_t *) gIter->data;
 
             if (can_be_master(child) == NULL) {
-                do_crm_log_unlikely(level, "Child %s of %s can't be promoted", child->id, rsc->id);
+                crm_trace( "Child %s of %s can't be promoted", child->id, rsc->id);
                 return NULL;
             }
         }
@@ -192,7 +191,7 @@ can_be_master(resource_t * rsc)
 
     node = rsc->fns->location(rsc, NULL, FALSE);
     if (node == NULL) {
-        do_crm_log_unlikely(level, "%s cannot be master: not allocated", rsc->id);
+        crm_trace( "%s cannot be master: not allocated", rsc->id);
         return NULL;
 
     } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
@@ -205,11 +204,11 @@ can_be_master(resource_t * rsc)
         }
 
     } else if (rsc->priority < 0) {
-        do_crm_log_unlikely(level, "%s cannot be master: preference: %d", rsc->id, rsc->priority);
+        crm_trace( "%s cannot be master: preference: %d", rsc->id, rsc->priority);
         return NULL;
 
     } else if (can_run_resources(node) == FALSE) {
-        do_crm_log_unlikely(level, "Node cant run any resources: %s", node->details->uname);
+        crm_trace( "Node cant run any resources: %s", node->details->uname);
         return NULL;
     }
 
@@ -225,7 +224,7 @@ can_be_master(resource_t * rsc)
         return local_node;
 
     } else {
-        do_crm_log_unlikely(level, "%s cannot be master on %s: node full",
+        crm_trace( "%s cannot be master on %s: node full",
                             rsc->id, node->details->uname);
     }
 
@@ -682,7 +681,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                     child_rsc->id, chosen ? chosen->details->uname : "none", score);
 
         } else {
-            do_crm_log_unlikely(scores_log_level, "%s promotion score on %s: %s",
+            do_crm_log(scores_log_level, "%s promotion score on %s: %s",
                                 child_rsc->id, chosen ? chosen->details->uname : "none", score);
         }
         crm_free(score);

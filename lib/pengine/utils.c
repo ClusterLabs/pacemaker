@@ -237,7 +237,7 @@ dump_node_capacity(int level, const char *comment, node_t * node)
     if (level == 0) {
         fprintf(stdout, "%s\n", dump_text);
     } else {
-        do_crm_log_unlikely(level, "%s", dump_text);
+        crm_trace( "%s", dump_text);
     }
 
     crm_free(dump_text);
@@ -259,7 +259,7 @@ dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * 
     if (level == 0) {
         fprintf(stdout, "%s\n", dump_text);
     } else {
-        do_crm_log_unlikely(level, "%s", dump_text);
+        crm_trace( "%s", dump_text);
     }
 
     crm_free(dump_text);
@@ -442,7 +442,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (is_not_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
-            do_crm_log_unlikely(LOG_DEBUG, "Action %s (unmanaged)", action->uuid);
+            crm_debug( "Action %s (unmanaged)", action->uuid);
             set_bit_inplace(action->flags, pe_action_optional);
 /*   			action->runnable = FALSE; */
 

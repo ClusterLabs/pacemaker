@@ -70,7 +70,7 @@ extern GHashTable *integrated_nodes;
 extern void initialize_join(gboolean before);
 
 #define DOT_PREFIX "actions:trace: "
-#define do_dot_log(fmt, args...)     do_crm_log_unlikely(LOG_DEBUG_2, fmt, ##args)
+#define do_dot_log(fmt, args...)     crm_trace( fmt, ##args)
 
 long long do_state_transition(long long actions,
                               enum crmd_fsa_state cur_state,

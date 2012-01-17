@@ -186,7 +186,6 @@ compare_capacity(const node_t * node1, const node_t * node2)
 gint
 sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 {
-    int level = LOG_DEBUG_3;
     const node_t *node1 = (const node_t *)a;
     const node_t *node2 = (const node_t *)b;
     const node_t *active = (node_t *) data;
@@ -214,20 +213,20 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     if (node1_weight > node2_weight) {
-        do_crm_log_unlikely(level, "%s (%d) > %s (%d) : weight",
+        crm_trace( "%s (%d) > %s (%d) : weight",
                             node1->details->uname, node1_weight,
                             node2->details->uname, node2_weight);
         return -1;
     }
 
     if (node1_weight < node2_weight) {
-        do_crm_log_unlikely(level, "%s (%d) < %s (%d) : weight",
+        crm_trace( "%s (%d) < %s (%d) : weight",
                             node1->details->uname, node1_weight,
                             node2->details->uname, node2_weight);
         return 1;
     }
 
-    do_crm_log_unlikely(level, "%s (%d) == %s (%d) : weight",
+    crm_trace( "%s (%d) == %s (%d) : weight",
                         node1->details->uname, node1_weight, node2->details->uname, node2_weight);
 
     if (safe_str_eq(pe_dataset->placement_strategy, "minimal")) {
@@ -243,31 +242,31 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 
     /* now try to balance resources across the cluster */
     if (node1->details->num_resources < node2->details->num_resources) {
-        do_crm_log_unlikely(level, "%s (%d) < %s (%d) : resources",
+        crm_trace( "%s (%d) < %s (%d) : resources",
                             node1->details->uname, node1->details->num_resources,
                             node2->details->uname, node2->details->num_resources);
         return -1;
 
     } else if (node1->details->num_resources > node2->details->num_resources) {
-        do_crm_log_unlikely(level, "%s (%d) > %s (%d) : resources",
+        crm_trace( "%s (%d) > %s (%d) : resources",
                             node1->details->uname, node1->details->num_resources,
                             node2->details->uname, node2->details->num_resources);
         return 1;
     }
 
     if (active && active->details == node1->details) {
-        do_crm_log_unlikely(level, "%s (%d) > %s (%d) : active",
+        crm_trace( "%s (%d) > %s (%d) : active",
                             node1->details->uname, node1->details->num_resources,
                             node2->details->uname, node2->details->num_resources);
         return -1;
     } else if (active && active->details == node2->details) {
-        do_crm_log_unlikely(level, "%s (%d) > %s (%d) : active",
+        crm_trace( "%s (%d) > %s (%d) : active",
                             node1->details->uname, node1->details->num_resources,
                             node2->details->uname, node2->details->num_resources);
         return 1;
     }
   equal:
-    do_crm_log_unlikely(level, "%s = %s", node1->details->uname, node2->details->uname);
+    crm_trace( "%s = %s", node1->details->uname, node2->details->uname);
     return strcmp(node1->details->uname, node2->details->uname);
 }
 
@@ -480,7 +479,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
 
     if (action == NULL) {
 
-        do_crm_log_unlikely(log_level, "%s%s: <NULL>",
+        crm_trace( "%s%s: <NULL>",
                             pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
         return;
     }
@@ -500,7 +499,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
     switch (text2task(action->task)) {
         case stonith_node:
         case shutdown_crm:
-            do_crm_log_unlikely(log_level,
+            crm_trace(
                                 "%s%s%sAction %d: %s%s%s%s%s%s",
                                 pre_text == NULL ? "" : pre_text,
                                 pre_text == NULL ? "" : ": ",
@@ -516,7 +515,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
                                 node_uuid ? node_uuid : "", node_uuid ? ")" : "");
             break;
         default:
-            do_crm_log_unlikely(log_level,
+            crm_trace(
                                 "%s%s%sAction %d: %s %s%s%s%s%s%s",
                                 pre_text == NULL ? "" : pre_text,
                                 pre_text == NULL ? "" : ": ",
@@ -538,7 +537,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
     if (details) {
         GListPtr gIter = NULL;
 
-        do_crm_log_unlikely(log_level + 1, "\t\t====== Preceding Actions");
+        crm_trace( "\t\t====== Preceding Actions");
 
         gIter = action->actions_before;
         for (; gIter != NULL; gIter = gIter->next) {
@@ -547,7 +546,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
             log_action(log_level + 1, "\t\t", other->action, FALSE);
         }
 
-        do_crm_log_unlikely(log_level + 1, "\t\t====== Subsequent Actions");
+        crm_trace( "\t\t====== Subsequent Actions");
 
         gIter = action->actions_after;
         for (; gIter != NULL; gIter = gIter->next) {
@@ -556,10 +555,10 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
             log_action(log_level + 1, "\t\t", other->action, FALSE);
         }
 
-        do_crm_log_unlikely(log_level + 1, "\t\t====== End");
+        crm_trace( "\t\t====== End");
 
     } else {
-        do_crm_log_unlikely(log_level, "\t\t(seen=%d, before=%d, after=%d)",
+        crm_trace( "\t\t(seen=%d, before=%d, after=%d)",
                             action->seen_count,
                             g_list_length(action->actions_before),
                             g_list_length(action->actions_after));

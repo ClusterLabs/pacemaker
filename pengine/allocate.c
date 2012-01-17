@@ -953,7 +953,6 @@ static gint
 sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 {
     int rc = 0;
-    int level = LOG_TRACE;
     int r1_weight = -INFINITY;
     int r2_weight = -INFINITY;
 
@@ -1074,7 +1073,7 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
         g_hash_table_destroy(r2_nodes);
     }
 
-    do_crm_log_unlikely(level, "%s (%d) %c %s (%d) on %s: %s",
+    crm_trace( "%s (%d) %c %s (%d) on %s: %s",
                         resource1->id, r1_weight, rc < 0 ? '>' : rc > 0 ? '<' : '=',
                         resource2->id, r2_weight, node ? node->details->id : "n/a", reason);
     return rc;
