@@ -227,8 +227,13 @@ typedef GList *GListPtr;
         qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args); \
     } while(0)
 
+/* level /MUST/ be a constant or compilation will fail */
 #    define do_crm_log_unlikely(level, fmt, args...) do {               \
-        qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args); \
+        static struct qb_log_callsite trace_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, fmt, level, __LINE__, 0, 0 }; \
+        if (trace_cs.targets) {                                         \
+            qb_log_from_external_source(                                \
+                __func__, __FILE__, fmt, level, __LINE__, 0,  ##args);  \
+        }                                                               \
     } while(0)
 
 #    define do_crm_log_xml(level, text, xml) do {                       \
@@ -250,7 +255,7 @@ typedef GList *GListPtr;
 #    define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
 #    define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
 #    define crm_debug(fmt, args...)   qb_logt(LOG_DEBUG,   0, fmt , ##args)
-#    define crm_trace(fmt, args...)   qb_logt(LOG_TRACE,   0, fmt , ##args)
+#    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
 
 #    define CRM_LOG_ASSERT(expr) do {					\
         static struct qb_log_callsite core_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, "assert-block", LOG_TRACE, __LINE__, 0, 0 }; \
