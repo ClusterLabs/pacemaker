@@ -1919,11 +1919,9 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
     char *name = NULL;
     const char *action = "reboot";
 
-    int rc = stonith_ok;
+    int rc = st_err_internal;
     stonith_t *st = NULL;
     enum stonith_call_options opts = st_opt_sync_call|st_opt_allow_suicide;
-
-    crm_log_init("st-client", LOG_NOTICE, FALSE, FALSE, 0, NULL);
 
     st = stonith_api_new();
     if(st) {
@@ -1942,22 +1940,13 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
         action = "off";
     }
 
-    if(st && rc == stonith_ok) {
-        crm_notice("Requesting that node %d/%s be terminated (%s)", nodeid, name, action);
+    if(rc == stonith_ok) {
         rc = st->cmds->fence(st, opts, name, action, timeout);
     }
 
     if(st) {
         st->cmds->disconnect(st);
         stonith_api_delete(st);
-    }
-
-    if(st != NULL || rc < stonith_ok) {
-        crm_err("Could not terminate node %d: %s", nodeid, stonith_error2string(rc));
-        rc = 1;
-
-    } else {
-        rc = 0;
     }
 
     crm_free(name);
