@@ -213,7 +213,8 @@ main(int argc, char **argv)
         fflush(stdout);
 
         if (apply) {
-            buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, CRM_FEATURE_SET);
+            const char *version = crm_element_value(output, XML_ATTR_CRM_VERSION);
+            buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
             crm_trace("Digest: %s\n", crm_str(buffer));
             crm_free(buffer);
         }
