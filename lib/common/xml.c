@@ -2271,8 +2271,27 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     }
     digest[(2*digest_len)] = 0;
     crm_trace("Digest %s\n", digest);
-    crm_log_xml_trace(input, "digest:source");
-    
+
+#if LIBQB_LOGGING
+    {
+        static struct qb_log_callsite digest_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, "digest-block", LOG_TRACE, __LINE__, 0, 0 };
+        if (digest_cs.targets) {
+            FILE *st = NULL;
+            char *trace_file = crm_concat("/tmp/cib-digest", digest, '-');
+            crm_trace("Saving %s.%s.%s to %s",
+                      crm_element_value(input, XML_ATTR_GENERATION_ADMIN),
+                      crm_element_value(input, XML_ATTR_GENERATION),
+                      crm_element_value(input, XML_ATTR_NUMUPDATES),
+                      trace_file);
+            st = fopen(trace_file, "w");
+            fprintf(st, "%s", xml_buffer->content);
+            /* fflush(st); */
+            /* fsync(fileno(st)); */
+            fclose(st);
+        }
+    }
+#endif
+
   done:
     xmlBufferFree(xml_buffer);
     crm_free(raw_digest);
