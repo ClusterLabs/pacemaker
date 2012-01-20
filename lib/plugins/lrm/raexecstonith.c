@@ -126,12 +126,18 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
        const char *op_type, const int timeout, GHashTable * params)
 {
     int rc = 0;
+    static gboolean log_init = FALSE;
+
     stonith_key_value_t *device_params = NULL;
     stonith_t *stonith_api = NULL;
 
     provider = get_stonith_provider(rsc_type, provider);
-    crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL);
 
+    if(log_init == FALSE) {
+        log_init = TRUE;
+        crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL);
+    }
+    
     if (0 == STRNCMP_CONST(op_type, "meta-data")) {
         char *meta = get_resource_meta(rsc_type, provider);
 
