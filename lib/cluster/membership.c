@@ -227,8 +227,13 @@ crm_new_peer(unsigned int id, const char *uname)
         crm_info("Node %u is now known as %s", id, node->uname);
         g_hash_table_replace(crm_peer_cache, node->uname, node);
 
-        if (is_openais_cluster()) {
-            node->uuid = crm_strdup(node->uname);
+        if(node->uuid == NULL) {
+            const char *uuid = get_node_uuid(id, node->uname);
+            if(node->uuid) {
+                crm_info("Node %u has uuid %s", id, node->uuid);
+            } else {
+                node->uuid = crm_strdup(uuid);
+            }
         }
 
         if (crm_status_callback) {
@@ -270,7 +275,15 @@ crm_get_peer(unsigned int id, const char *uname)
         if (crm_status_callback) {
             crm_status_callback(crm_status_uname, node, NULL);
         }
+    }
 
+    if(node && node->uuid == NULL) {
+        const char *uuid = get_node_uuid(id, node->uname);
+        if(node->uuid) {
+            crm_info("Node %u has uuid %s", id, node->uuid);
+        } else {
+            node->uuid = crm_strdup(uuid);
+        }
     }
 
     if (node && id > 0 && id != node->id) {
