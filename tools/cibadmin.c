@@ -92,7 +92,8 @@ static struct crm_option long_options[] = {
     {"delete",      0, 0, 'D', "\tDelete the first object matching the supplied criteria, Eg. <op id=\"rsc1_op1\" name=\"monitor\"/>"},
     {"-spacer-",    0, 0, '-', "\n\t\t\tThe tagname and all attributes must match in order for the element to be deleted"},
     {"delete-all",  0, 0, 'd', "\tWhen used with --xpath, remove all matching objects in the configuration instead of just the first one"},
-    {"md5-sum",	    0, 0, '5', "\tCalculate a CIB digest"},    
+    {"md5-sum",	    0, 0, '5', "\tCalculate the on-disk CIB digest"},    
+    {"md5-sum-versioned",  0, 0, '6', "\tCalculate an on-the-wire versioned CIB digest"},    
     {"sync",        0, 0, 'S', "\t(Advanced) Force a refresh of the CIB to all nodes\n"},
     {"make-slave",  0, 0, 'r', NULL, 1},
     {"make-master", 0, 0, 'w', NULL, 1},
@@ -252,6 +253,9 @@ main(int argc, char **argv)
             case '5':
                 cib_action = "md5-sum";
                 break;
+            case '6':
+                cib_action = "md5-sum-versioned";
+                break;
             case 'c':
                 command_options |= cib_can_create;
                 break;
@@ -398,8 +402,24 @@ main(int argc, char **argv)
         fprintf(stdout, "%s\n", crm_str(digest));
         crm_free(digest);
         exit(0);
-    }
 
+    } else if (safe_str_eq(cib_action, "md5-sum-versioned")) {
+        char *digest = NULL;
+        const char *version = NULL;
+
+        if (input == NULL) {
+            fprintf(stderr, "Please supply XML to process with -X, -x or -p\n");
+            exit(1);
+        }
+
+        version = crm_element_value(input, XML_ATTR_CRM_VERSION);
+        digest = calculate_xml_versioned_digest(input, FALSE, TRUE, version);
+        fprintf(stderr, "Versioned (%s) digest: ", version);
+        fprintf(stdout, "%s\n", crm_str(digest));
+        crm_free(digest);
+        exit(0);
+    }
+    
     exit_code = do_init();
     if (exit_code != cib_ok) {
         crm_err("Init failed, could not perform requested operations");
