@@ -649,6 +649,32 @@ decompress_file(const char *filename)
     return buffer;
 }
 
+static void strip_text_nodes(xmlNode *xml) 
+{
+    xmlNode *iter = NULL;
+    for(iter = xml->children; iter; iter = iter->next) {
+        switch(iter->type) {
+            case XML_TEXT_NODE:
+                /* Remove it */
+                xmlUnlinkNode(iter);
+                xmlFreeNode(iter);
+
+                /* Start again since xml->children will have changed */
+                strip_text_nodes(xml);
+                return;
+
+            case XML_ELEMENT_NODE:
+                /* Search it */
+                strip_text_nodes(iter);
+                break;
+
+            default:
+                /* Leave it */
+                break;
+        }
+    }
+}
+
 xmlNode *
 filename2xml(const char *filename)
 {
@@ -683,6 +709,7 @@ filename2xml(const char *filename)
 
     if(output) {
 	xml = xmlDocGetRootElement(output);
+        strip_text_nodes(xml);
     }
     
     last_error = xmlCtxtGetLastError(ctxt);
