@@ -41,4 +41,26 @@ extern gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
 extern gboolean mainloop_destroy_signal(int sig);
 
+#include <crm/common/ipc.h>
+
+struct ipc_client_callbacks 
+{
+        int (*dispatch)(const char *buffer, ssize_t length, gpointer userdata);
+        void (*destroy) (gpointer);
+};
+
+qb_ipcs_service_t *mainloop_add_ipc_server(
+    const char *name, enum qb_ipc_type type, struct qb_ipcs_service_handlers *callbacks);
+
+void mainloop_del_ipc_server(qb_ipcs_service_t *server);
+
+typedef struct mainloop_ipc_s mainloop_ipc_t;
+
+mainloop_ipc_t *mainloop_add_ipc_client(
+    const char *name, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks);
+
+void mainloop_del_ipc_client(mainloop_ipc_t *client);
+
+crm_ipc_t *mainloop_get_ipc_client(mainloop_ipc_t *client);
+
 #endif

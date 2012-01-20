@@ -1,3 +1,5 @@
+#include <crm/common/mainloop.h>
+
 typedef struct stonith_device_s {
     char *id;
     char *agent;

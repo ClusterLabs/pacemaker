@@ -638,3 +638,296 @@ create_reply_adv(xmlNode * original_request, xmlNode * xml_response_data, const 
 
     return reply;
 }
+
+
+/* Libqb based IPC */
+
+/* Server... */
+
+int
+crm_ipcs_client_pid(qb_ipcs_connection_t *c)
+{
+    struct qb_ipcs_connection_stats stats;
+    stats.client_pid = 0;
+    qb_ipcs_connection_stats_get(c, &stats, 0);
+    return stats.client_pid;
+}
+
+xmlNode *
+crm_ipcs_recv(qb_ipcs_connection_t *c, void *data, size_t size)
+{
+    char *text = ((char*)data) + sizeof(struct qb_ipc_request_header);
+    crm_trace("Received %.120s", text);
+    return string2xml(text);
+}
+
+ssize_t
+crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, gboolean event)
+{
+    int rc;
+    struct iovec iov[2];
+    static uint32_t id = 0;
+    const char *type = "Response";
+    struct qb_ipc_response_header header;
+    char *buffer = dump_xml_unformatted(message);
+
+    iov[0].iov_len = sizeof(struct qb_ipc_response_header);
+    iov[0].iov_base = &header;
+    iov[1].iov_len = 1 + strlen(buffer);
+    iov[1].iov_base = buffer;
+
+    header.id = id++; /* We don't really use it, but doesn't hurt to set one */
+    header.error = 0; /* unused */
+    header.size = iov[0].iov_len + iov[1].iov_len;    
+    
+    if(event) {
+        rc = qb_ipcs_event_sendv(c, iov, 2);
+        type = "Event";
+
+    } else {
+        rc = qb_ipcs_response_sendv(c, iov, 2);
+    }
+
+    if(rc < header.size) {
+        do_crm_log((flags & ipcs_send_error)?LOG_ERR:LOG_INFO,
+                   "%s %d failed, size=%d, to=%p[%d], rc=%d: %.120s",
+                   type, header.id, header.size, crm_ipcs_client_pid(c), rc, buffer);
+    } else {
+        crm_trace("%s %d sent, %d bytes to %p: %.120s", type, header.id, rc, c, buffer);
+    }
+    crm_free(buffer);
+    return rc;
+}
+
+void
+crm_ipcs_send_ack(
+    qb_ipcs_connection_t *c, const char *tag, const char *function, int line)
+{
+    xmlNode *ack = create_xml_node(NULL, tag);
+    crm_xml_add(ack, "function", function);
+    crm_xml_add_int(ack, "line", line);
+    crm_ipcs_send(c, ack, FALSE);
+    free_xml(ack);
+}
+
+/* Client... */
+
+#define MIN_MSG_SIZE    12336 /* sizeof(struct qb_ipc_connection_response) */
+#define MAX_MSG_SIZE    20*1024
+
+typedef struct crm_ipc_s
+{
+        struct pollfd pfd;
+        
+        int buf_size;
+        int msg_size;
+        char *buffer;
+        char *name;
+
+        qb_ipcc_connection_t *ipc;
+        
+} crm_ipc_t;
+
+static int
+_infer_ipc_buffer(int max)
+{
+    const char *env = getenv("PCMK_ipc_buffer");
+
+    if(env) {
+        max = crm_parse_int(env, "0");
+    }
+
+    if(max <= 0) {
+        max = MAX_MSG_SIZE;
+    }
+
+    if(max < MIN_MSG_SIZE) {
+        max = MIN_MSG_SIZE;
+    }
+
+    crm_trace("Using max message size of %d", max);
+    return max;
+}
+
+
+crm_ipc_t *
+crm_ipc_new(const char *name, size_t max_size) 
+{
+    crm_ipc_t *client = NULL;
+    crm_malloc0(client, sizeof(crm_ipc_t));
+
+    client->name = crm_strdup(name);
+    client->buf_size = _infer_ipc_buffer(max_size);
+    client->buffer = malloc(client->buf_size);
+
+    client->pfd.fd = -1;
+    client->pfd.events = POLLIN;
+    client->pfd.revents = 0;
+    
+    crm_trace("Using max message size of %d for %s", client->buf_size, client->name);
+    
+    return client;
+}
+
+bool
+crm_ipc_connect(crm_ipc_t *client) 
+{
+    client->ipc = qb_ipcc_connect(client->name, client->buf_size);
+
+    if (client->ipc == NULL) {
+        crm_perror(LOG_INFO, "Could not establish %s connection", client->name);
+        return FALSE;
+    }
+
+    client->closed = FALSE;
+    client->pfd.fd = crm_ipc_get_fd(client);
+    if(client->pfd.fd < 0) {
+        crm_perror(LOG_INFO, "Could not obtain file descriptor for %s connection", client->name);
+        return FALSE;
+    }
+
+    qb_ipcc_context_set(client->ipc, client);
+
+    return TRUE;
+}
+
+void
+crm_ipc_close(crm_ipc_t *client) 
+{
+    crm_trace("Disconnecting %s IPC connection %p", client->name, client);
+    if(client->ipc) {
+        qb_ipcc_disconnect(client->ipc);
+    }
+}
+
+void
+crm_ipc_destroy(crm_ipc_t *client) 
+{
+    crm_trace("Destroying %s IPC connection %p", client->name, client);
+    free(client->buffer);
+    free(client->name);
+    free(client);    
+}
+
+int
+crm_ipc_get_fd(crm_ipc_t *client)
+{
+    int fd = 0;
+    
+    CRM_ASSERT(client != NULL);
+    if(qb_ipcc_fd_get(client->ipc, &fd) < 0) {
+        crm_perror(LOG_ERR, "Could not obtain file IPC descriptor for %s", client->name);
+    }
+    return fd;
+}
+
+bool
+crm_ipc_connected(crm_ipc_t *client) 
+{
+    bool rc = FALSE;
+
+    if(client == NULL) {
+        crm_trace("No client");
+        return FALSE;
+
+    } else if(client->pfd.fd < 0) {
+        crm_trace("Bad descriptor");
+        return FALSE;        
+    }
+
+    rc = qb_ipcc_is_connected(client->ipc);
+    if(rc == FALSE) {
+        client->pfd.fd = -1;
+    }
+    return rc;
+}
+
+int
+crm_ipc_ready(crm_ipc_t *client) 
+{
+    CRM_ASSERT(client != NULL);
+
+    if(crm_ipc_connected(client) == FALSE) {
+        return -ENOTCONN;
+    }
+
+    client->pfd.revents = 0;
+    return poll(&(client->pfd), 1, 0);
+}
+
+long
+crm_ipc_read(crm_ipc_t *client) 
+{
+    CRM_ASSERT(client != NULL);
+    CRM_ASSERT(client->buffer != NULL);
+    
+    crm_trace("Message recieved on %s IPC connection", client->name);
+
+    client->buffer[0] = 0;
+    client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer, client->buf_size-1, -1);
+    if(client->msg_size >= 0) {
+        struct qb_ipc_response_header *header = (struct qb_ipc_response_header *)client->buffer;
+        crm_trace("Recieved response %d, size=%d, rc=%d", header->id, header->size, client->msg_size);
+        client->buffer[client->msg_size] = 0;
+    }
+
+    if(crm_ipc_connected(client) == FALSE || client->msg_size == -ENOTCONN) {
+        crm_err("Connection to %s failed", client->name);
+    }
+    
+    return client->msg_size;
+}
+
+const char *
+crm_ipc_buffer(crm_ipc_t *client) 
+{
+    CRM_ASSERT(client != NULL);    
+    return client->buffer + sizeof(struct qb_ipc_response_header);
+}
+
+const char *crm_ipc_name(crm_ipc_t *client)
+{
+    CRM_ASSERT(client != NULL);
+    return client->name;
+}
+
+int
+crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_timeout)
+{
+    long rc = 0;
+    struct iovec iov[2];
+    static uint32_t id = 0;
+    struct qb_ipc_request_header header;
+    char *buffer = dump_xml_unformatted(message);
+
+    iov[0].iov_len = sizeof(struct qb_ipc_request_header);
+    iov[0].iov_base = &header;
+    iov[1].iov_len = 1 + strlen(buffer);
+    iov[1].iov_base = buffer;
+
+    header.id = id++; /* We don't really use it, but doesn't hurt to set one */
+    header.size = iov[0].iov_len + iov[1].iov_len;
+
+    if(ms_timeout == 0) {
+        ms_timeout = 5000;
+    }
+    
+    crm_trace("Waiting for reply to %ld bytes: %.120s...", iov[1].iov_base, buffer);
+    rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer, client->buf_size, ms_timeout);
+    crm_trace("rc=%d, errno=%d", rc, errno);
+
+    if(rc > 0 && reply) {
+        *reply = string2xml(crm_ipc_buffer(client));
+    }
+
+    if(crm_ipc_connected(client) == FALSE) {
+        crm_notice("Connection to %s closed: %d", client->name, rc);
+
+    } else if(rc <= 0) {
+        crm_perror(LOG_ERR, "Request to %s failed: %ld", client->name, rc);
+        crm_info("Request was %.120s", buffer);
+    }
+
+    crm_free(buffer);
+    return rc;
+}
