@@ -529,6 +529,70 @@ createEmptyCib(void)
 
 static unsigned int dtd_throttle = 0;
 
+void fix_cib_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff, gboolean changed)
+{
+    xmlNode *cib = NULL;
+    xmlNode *diff_child = NULL;
+    const char *tag = NULL;
+    const char *value = NULL;
+
+    tag = "diff-removed";
+    diff_child = find_xml_node(local_diff, tag, FALSE);
+    if (diff_child == NULL) {
+        diff_child = create_xml_node(local_diff, tag);
+    }
+
+    tag = XML_TAG_CIB;
+    cib = find_xml_node(diff_child, tag, FALSE);
+    if (cib == NULL) {
+        cib = create_xml_node(diff_child, tag);
+    }
+
+    tag = XML_ATTR_GENERATION_ADMIN;
+    value = crm_element_value(last, tag);
+    crm_xml_add(diff_child, tag, value);
+    if (changed) {
+        crm_xml_add(cib, tag, value);
+    }
+
+    tag = XML_ATTR_GENERATION;
+    value = crm_element_value(last, tag);
+    crm_xml_add(diff_child, tag, value);
+    if (changed) {
+        crm_xml_add(cib, tag, value);
+    }
+
+    tag = XML_ATTR_NUMUPDATES;
+    value = crm_element_value(last, tag);
+    crm_xml_add(cib, tag, value);
+    crm_xml_add(diff_child, tag, value);
+
+    tag = "diff-added";
+    diff_child = find_xml_node(local_diff, tag, FALSE);
+    if (diff_child == NULL) {
+        diff_child = create_xml_node(local_diff, tag);
+    }
+
+    tag = XML_TAG_CIB;
+    cib = find_xml_node(diff_child, tag, FALSE);
+    if (cib == NULL) {
+        cib = create_xml_node(diff_child, tag);
+    }
+
+    if (next) {
+        xmlAttrPtr xIter = NULL;
+
+        for (xIter = next->properties; xIter; xIter = xIter->next) {
+            const char *p_name = (const char *)xIter->name;
+            const char *p_value = crm_element_value(next, p_name);
+
+            xmlSetProp(cib, (const xmlChar *)p_name, (const xmlChar *)p_value);
+        }
+    }
+
+    crm_log_xml_trace(local_diff, "Repaired-diff");
+}
+
 enum cib_errors
 cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_query,
                const char *section, xmlNode * req, xmlNode * input,
@@ -669,67 +733,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
     if (diff != NULL && local_diff != NULL) {
         /* Only fix the diff if we'll return it... */
-
-        xmlNode *cib = NULL;
-        xmlNode *diff_child = NULL;
-        const char *tag = NULL;
-        const char *value = NULL;
-
-        tag = "diff-removed";
-        diff_child = find_xml_node(local_diff, tag, FALSE);
-        if (diff_child == NULL) {
-            diff_child = create_xml_node(local_diff, tag);
-        }
-
-        tag = XML_TAG_CIB;
-        cib = find_xml_node(diff_child, tag, FALSE);
-        if (cib == NULL) {
-            cib = create_xml_node(diff_child, tag);
-        }
-
-        tag = XML_ATTR_GENERATION_ADMIN;
-        value = crm_element_value(current_cib, tag);
-        crm_xml_add(diff_child, tag, value);
-        if (*config_changed) {
-            crm_xml_add(cib, tag, value);
-        }
-
-        tag = XML_ATTR_GENERATION;
-        value = crm_element_value(current_cib, tag);
-        crm_xml_add(diff_child, tag, value);
-        if (*config_changed) {
-            crm_xml_add(cib, tag, value);
-        }
-
-        tag = XML_ATTR_NUMUPDATES;
-        value = crm_element_value(current_cib, tag);
-        crm_xml_add(cib, tag, value);
-        crm_xml_add(diff_child, tag, value);
-
-        tag = "diff-added";
-        diff_child = find_xml_node(local_diff, tag, FALSE);
-        if (diff_child == NULL) {
-            diff_child = create_xml_node(local_diff, tag);
-        }
-
-        tag = XML_TAG_CIB;
-        cib = find_xml_node(diff_child, tag, FALSE);
-        if (cib == NULL) {
-            cib = create_xml_node(diff_child, tag);
-        }
-
-        if (scratch) {
-            xmlAttrPtr xIter = NULL;
-
-            for (xIter = scratch->properties; xIter; xIter = xIter->next) {
-                const char *p_name = (const char *)xIter->name;
-                const char *p_value = crm_element_value(scratch, p_name);
-
-                xmlSetProp(cib, (const xmlChar *)p_name, (const xmlChar *)p_value);
-            }
-        }
-
-        crm_log_xml_trace(local_diff, "Repaired-diff");
+        fix_cib_diff(current_cib, scratch, local_diff, *config_changed);
         *diff = local_diff;
         local_diff = NULL;
     }

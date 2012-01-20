@@ -804,63 +804,18 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
 xmlNode *
 diff_cib_object(xmlNode * old_cib, xmlNode * new_cib, gboolean suppress)
 {
-    xmlNode *dest = NULL;
-    xmlNode *src = NULL;
-    const char *name = NULL;
-    const char *value = NULL;
+    char *digest = NULL;
+    xmlNode *diff = NULL;
+    const char *version = crm_element_value(new_cib, XML_ATTR_CRM_VERSION);
+    gboolean changed = cib_config_changed(old_cib, new_cib, &diff);
+    
+    fix_cib_diff(old_cib, new_cib, diff, changed);
 
-    xmlNode *diff = diff_xml_object(old_cib, new_cib, suppress);
+    digest = calculate_xml_versioned_digest(new_cib, FALSE, TRUE, version);
+    crm_xml_add(diff, XML_ATTR_DIGEST, digest);
 
-    /* add complete version information */
-    src = old_cib;
-    dest = find_xml_node(diff, "diff-removed", FALSE);
-    if (src != NULL && dest != NULL) {
-        name = XML_ATTR_GENERATION_ADMIN;
-        value = crm_element_value(src, name);
-        if (value == NULL) {
-            value = "0";
-        }
-        crm_xml_add(dest, name, value);
-
-        name = XML_ATTR_GENERATION;
-        value = crm_element_value(src, name);
-        if (value == NULL) {
-            value = "0";
-        }
-        crm_xml_add(dest, name, value);
-
-        name = XML_ATTR_NUMUPDATES;
-        value = crm_element_value(src, name);
-        if (value == NULL) {
-            value = "0";
-        }
-        crm_xml_add(dest, name, value);
-    }
-
-    src = new_cib;
-    dest = find_xml_node(diff, "diff-added", FALSE);
-    if (src != NULL && dest != NULL) {
-        name = XML_ATTR_GENERATION_ADMIN;
-        value = crm_element_value(src, name);
-        if (value == NULL) {
-            value = "0";
-        }
-        crm_xml_add(dest, name, value);
-
-        name = XML_ATTR_GENERATION;
-        value = crm_element_value(src, name);
-        if (value == NULL) {
-            value = "0";
-        }
-        crm_xml_add(dest, name, value);
-
-        name = XML_ATTR_NUMUPDATES;
-        value = crm_element_value(src, name);
-        if (value == NULL) {
-            value = "0";
-        }
-        crm_xml_add(dest, name, value);
-    }
+    crm_free(digest);
+    
     return diff;
 }
 
