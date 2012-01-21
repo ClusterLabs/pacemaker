@@ -167,6 +167,9 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 
         rc = stonith_api->cmds->register_device(stonith_api, st_opt_sync_call, rsc_id, provider,
                                                 agent, device_params);
+        if (rc == 0) {
+            rc = stonith_api->cmds->call(stonith_api, st_opt_sync_call, rsc_id, "monitor", NULL, timeout);
+        }
 
     } else if (0 == STRNCMP_CONST(op_type, "stop")) {
         rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, rsc_id);
