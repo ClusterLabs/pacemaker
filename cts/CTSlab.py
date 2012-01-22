@@ -478,10 +478,10 @@ if __name__ == '__main__':
     if not Environment.has_key("syslogd") or not Environment["syslogd"]:
         if not Environment.has_key("syslogd") or not Environment["syslogd"]:
             # SYS-V
-            Environment["syslogd"] = rsh(discover, "chkconfig | grep log.*on | awk '{print $1}' | head -n 1", stdout=1)
+            Environment["syslogd"] = rsh(discover, "chkconfig | grep syslog.*on | awk '{print $1}' | head -n 1", stdout=1)
         if not Environment.has_key("syslogd") or not Environment["syslogd"]:
             # Systemd
-            Environment["syslogd"] = rsh(discover, "systemctl list-units | grep log.*\.service.*active.*running | sed 's:.service.*::'", stdout=1)
+            Environment["syslogd"] = rsh(discover, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", stdout=1)
 
         if not Environment.has_key("syslogd") or not Environment["syslogd"]:
             Environment["syslogd"] = "rsyslogd"
