@@ -473,30 +473,33 @@ if __name__ == '__main__':
            Environment["nodes"].append(n.strip())
 
     discover = random.Random().choice(Environment["nodes"])
+    Environment["have_systemd"] = not rsh(discover, "systemctl list-units")
 
     # Detect syslog variant
     if not Environment.has_key("syslogd") or not Environment["syslogd"]:
-        if not Environment.has_key("syslogd") or not Environment["syslogd"]:
-            # SYS-V
-            Environment["syslogd"] = rsh(discover, "chkconfig | grep syslog.*on | awk '{print $1}' | head -n 1", stdout=1)
-        if not Environment.has_key("syslogd") or not Environment["syslogd"]:
+        if Environment["have_systemd"]:
             # Systemd
             Environment["syslogd"] = rsh(discover, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", stdout=1)
+        else:
+            # SYS-V
+            Environment["syslogd"] = rsh(discover, "chkconfig | grep syslog.*on | awk '{print $1}' | head -n 1", stdout=1)
 
         if not Environment.has_key("syslogd") or not Environment["syslogd"]:
-            Environment["syslogd"] = "rsyslogd"
+            # default
+            Environment["syslogd"] = "rsyslog"
 
     # Detect if the cluster starts at boot
     if not Environment.has_key("at-boot"):
         atboot = 0
 
-        # SYS-V
-        atboot = atboot or not rsh(discover, "chkconfig | grep -e corosync.*on -e heartbeat.*on -e pacemaker.*on")
-
-        # Systemd
-        atboot = atboot or not rsh(discover, "systemctl is-enabled heartbeat.service")
-        atboot = atboot or not rsh(discover, "systemctl is-enabled corosync.service")
-        atboot = atboot or not rsh(discover, "systemctl is-enabled pacemaker.service")
+        if Environment["have_systemd"]:
+            # Systemd
+            atboot = atboot or not rsh(discover, "systemctl is-enabled heartbeat.service")
+            atboot = atboot or not rsh(discover, "systemctl is-enabled corosync.service")
+            atboot = atboot or not rsh(discover, "systemctl is-enabled pacemaker.service")
+        else:
+            # SYS-V
+            atboot = atboot or not rsh(discover, "chkconfig | grep -e corosync.*on -e heartbeat.*on -e pacemaker.*on")
 
         Environment["at-boot"] = atboot
 
