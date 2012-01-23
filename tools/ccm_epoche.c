@@ -360,7 +360,7 @@ try_cman(int command, enum cluster_type_e stack)
 }
 #endif
 
-#if SUPPORT_COROSYNC
+#if HAVE_CONFDB
 static void
 ais_membership_destroy(gpointer user_data)
 {
@@ -441,9 +441,143 @@ ais_membership_dispatch(AIS_Message * wrapper, char *data, int sender)
 
     return TRUE;
 }
+#endif
+
+#ifdef SUPPORT_CS_QUORUM
+#  include <corosync/quorum.h>
+#  include <corosync/cpg.h>
+static gboolean
+node_dispatch(IPC_Channel * ch, gpointer user_data)
+{
+    xmlNode *msg = NULL;
+    gboolean stay_connected = TRUE;
+
+    while (IPC_ISRCONN(ch)) {
+        if (ch->ops->is_message_pending(ch) == 0) {
+            break;
+        }
+
+        msg = xmlfromIPC(ch, MAX_IPC_DELAY);
+
+        if (msg) {
+            xmlNode *node = NULL;
+
+            crm_log_xml_trace(msg, "message");
+
+            for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
+                const char *uname = crm_element_value(node, "uname");
+                if (command == 'l') {
+                    int id = 0;
+                    crm_element_value_int(node, "id", &id);
+                    fprintf(stdout, "%u %s\n", id, uname);
+
+                } else if (command == 'p') {
+                    fprintf(stdout, "%s ", uname);
+                }
+            }
+            free_xml(msg);
+
+            if (command == 'p') {
+                fprintf(stdout, "\n");
+            }
+
+            exit(0);
+        }
+
+        if (ch->ch_status != IPC_CONNECT) {
+            break;
+        }
+    }
+
+    if (ch->ch_status != IPC_CONNECT) {
+        stay_connected = FALSE;
+    }
+    return stay_connected;
+}
+
+static void
+node_destroy(gpointer user_data)
+{
+}
 
 static gboolean
 try_corosync(int command, enum cluster_type_e stack)
+{
+    int rc = 0;
+    int quorate = 0;
+    uint32_t quorum_type = 0;
+    unsigned int nodeid = 0;
+    cpg_handle_t c_handle = 0;
+    quorum_handle_t q_handle = 0;
+
+    IPC_Channel *ch = NULL;
+    GMainLoop *amainloop = NULL;
+
+    switch (command) {
+        case 'e':
+            /* Age makes no sense (yet) in an AIS cluster */
+            fprintf(stdout, "1\n");
+            exit(0);
+
+        case 'q':
+            /* Go direct to the Quorum API */
+            rc = quorum_initialize(&q_handle, NULL, &quorum_type);
+            if (rc != CS_OK) {
+                crm_err("Could not connect to the Quorum API: %d\n", rc);
+                return FALSE;
+            }
+
+            rc = quorum_getquorate(q_handle, &quorate);
+            if (rc != CS_OK) {
+                crm_err("Could not obtain the current Quorum API state: %d\n", rc);
+                return FALSE;
+            }
+
+            if (quorate) {
+                fprintf(stdout, "1\n");
+            } else {
+                fprintf(stdout, "0\n");
+            }
+            quorum_finalize(q_handle);
+            exit(0);
+
+        case 'i':
+            /* Go direct to the CPG API */
+            rc = cpg_initialize(&c_handle, NULL);
+            if (rc != CS_OK) {
+                crm_err("Could not connect to the Cluster Process Group API: %d\n", rc);
+                return FALSE;
+            }
+
+            rc = cpg_local_get(c_handle, &nodeid);
+            if (rc != CS_OK) {
+                crm_err("Could not get local node id from the CPG API");
+                return FALSE;
+            }
+
+            fprintf(stdout, "%u\n", nodeid);
+            cpg_finalize(c_handle);
+            exit(0);
+
+        case 'l':
+        case 'p':
+            /* Go to pacemakerd */ 
+            ch = init_client_ipc_comms_nodispatch("pcmk");
+
+            if(G_main_add_IPC_Channel(G_PRIORITY_HIGH, ch, FALSE, node_dispatch, NULL, node_destroy)) {
+                amainloop = g_main_new(FALSE);
+                g_main_run(amainloop);
+            }
+
+            break;
+    }
+    return FALSE;
+}
+#endif
+
+#if HAVE_CONFDB
+static gboolean
+try_openais(int command, enum cluster_type_e stack)
 {
     if (init_ais_connection_once
         (ais_membership_dispatch, ais_membership_destroy, NULL, NULL, &local_id)) {
@@ -577,8 +711,15 @@ main(int argc, char **argv)
     }
 #endif
 
-#if SUPPORT_COROSYNC
-    if (try_stack == pcmk_cluster_corosync || try_stack == pcmk_cluster_classic_ais) {
+#ifdef SUPPORT_CS_QUORUM
+    if (try_stack == pcmk_cluster_corosync) {
+        try_corosync(command, try_stack);
+    }
+#endif
+
+#if HAVE_CONFDB
+    /* Only an option if we're using the plugins */
+    if (try_stack == pcmk_cluster_classic_ais) {
         try_corosync(command, try_stack);
     }
 #endif
