@@ -50,7 +50,7 @@ te_start_action_timer(crm_graph_t * graph, crm_action_t * action)
 static gboolean
 te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
 {
-    crm_info("Pseudo action %d fired and confirmed", pseudo->id);
+    crm_debug("Pseudo action %d fired and confirmed", pseudo->id);
     pseudo->confirmed = TRUE;
     update_graph(graph, pseudo);
     trigger_graph();
@@ -81,7 +81,7 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
                                     cib_quorum_override | cib_scope_local | cib_can_create);
 
     /* Delay processing the trigger until the update completes */
-    crm_info("Sending fencing update %d for %s", rc, target);
+    crm_debug("Sending fencing update %d for %s", rc, target);
     add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(target), cib_fencing_updated);
 
     /* Make sure it sticks */
@@ -457,7 +457,6 @@ crm_graph_functions_t te_graph_fns = {
 void
 notify_crmd(crm_graph_t * graph)
 {
-    int log_level = LOG_DEBUG;
     const char *type = "unknown";
     enum crmd_fsa_input event = I_NULL;
 
@@ -471,7 +470,6 @@ notify_crmd(crm_graph_t * graph)
             /* fall through */
         case tg_done:
             type = "done";
-            log_level = LOG_INFO;
             if (fsa_state == S_TRANSITION_ENGINE) {
                 event = I_TE_SUCCESS;
             }
@@ -502,7 +500,7 @@ notify_crmd(crm_graph_t * graph)
             }
     }
 
-    te_log_action(log_level, "Transition %d status: %s - %s",
+    te_log_action(LOG_DEBUG, "Transition %d status: %s - %s",
                   graph->id, type, crm_str(graph->abort_reason));
 
     graph->abort_reason = NULL;

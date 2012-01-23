@@ -100,7 +100,7 @@ erase_node_from_join(const char *uname)
     }
 
     if (w || i || f || c) {
-        crm_info("Removed node %s from join calculations:"
+        crm_debug("Removed node %s from join calculations:"
                  " welcomed=%d itegrated=%d finalized=%d confirmed=%d", uname, w, i, f, c);
     }
 }
@@ -593,7 +593,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
     crm_debug("Invoked by %s in state: %s", source, fsa_state2string(cur_state));
 
     if (saved_ccm_membership_id != crm_peer_seq) {
-        crm_info("%s: Membership changed since join started: %llu -> %llu",
+        crm_debug("%s: Membership changed since join started: %llu -> %llu",
                  source, saved_ccm_membership_id, crm_peer_seq);
         register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
@@ -650,7 +650,7 @@ do_dc_join_final(long long action,
                  enum crmd_fsa_state cur_state,
                  enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    crm_info("Ensuring DC, quorum and node attributes are up-to-date");
+    crm_debug("Ensuring DC, quorum and node attributes are up-to-date");
     update_attrd(NULL, NULL, NULL, NULL);
     crm_update_quorum(crm_have_quorum, TRUE);
 }

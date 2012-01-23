@@ -229,7 +229,7 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
         }
     }
 
-    crm_info("Unpacked transition %d: %d actions in %d synapses",
+    crm_debug("Unpacked transition %d: %d actions in %d synapses",
              new_graph->id, new_graph->num_actions, new_graph->num_synapses);
 
     return new_graph;

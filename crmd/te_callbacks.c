@@ -271,7 +271,7 @@ te_update_diff(const char *event, xmlNode * msg)
             /* Updates by, or in response to, TE actions will never contain updates
              * for more than one resource at a time
              */
-            crm_info("Detected LRM refresh - %d resources updated: Skipping all resource events",
+            crm_debug("Detected LRM refresh - %d resources updated: Skipping all resource events",
                      updates);
             abort_transition(INFINITY, tg_restart, "LRM Refresh", diff);
             goto bail;
@@ -370,7 +370,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         xmlXPathObject *xpathObj = NULL;
 
         crm_log_xml(LOG_DEBUG_2, "Processing (N)ACK", msg);
-        crm_info("Processing (N)ACK %s from %s", crm_element_value(msg, XML_ATTR_REFERENCE), from);
+        crm_debug("Processing (N)ACK %s from %s", crm_element_value(msg, XML_ATTR_REFERENCE), from);
 
         xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
         if (xpathObj) {
@@ -404,7 +404,7 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
 
     CRM_CHECK(userdata != NULL, return);
     crm_log_xml_info(output, "StonithOp");
-    crm_info("Stonith operation %d/%s: %s (%d)", call_id, (char *)userdata,
+    crm_debug("Stonith operation %d/%s: %s (%d)", call_id, (char *)userdata,
              stonith_error2string(rc), rc);
 
     if (AM_I_DC == FALSE) {
@@ -438,7 +438,7 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
         const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
-        crm_info("Stonith of %s passed", target);
+        crm_debug("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
             action->confirmed = TRUE;
             send_stonith_update(action, target, uuid);
@@ -450,7 +450,7 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
 
         action->failed = TRUE;
         if (crm_is_true(allow_fail) == FALSE) {
-            crm_err("Stonith of %s failed (%d)... aborting transition.", target, rc);
+            crm_err("Stonith operation %d for %s failed (%s)... aborting transition.", call_id, target, stonith_error2string(rc));
             abort_transition(INFINITY, tg_restart, "Stonith failed", NULL);
         }
     }

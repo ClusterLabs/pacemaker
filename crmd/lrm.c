@@ -1606,7 +1606,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
 
     crm_log_xml_debug_2(update, "ACK Update");
 
-    crm_info("ACK'ing resource op %s_%s_%d from %s: %s",
+    crm_debug("ACK'ing resource op %s_%s_%d from %s: %s",
              op->rsc_id, op->op_type, op->interval, op->user_data,
              crm_element_value(reply, XML_ATTR_REFERENCE));
 

@@ -221,7 +221,7 @@ te_connect_stonith(gpointer user_data)
     }
 
     for (lpc = 0; lpc < 30; lpc++) {
-        crm_info("Attempting connection to fencing daemon...");
+        crm_debug("Attempting connection to fencing daemon...");
 
         sleep(1);
         rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
@@ -246,7 +246,7 @@ te_connect_stonith(gpointer user_data)
 
     stonith_api->cmds->register_notification(stonith_api, STONITH_OP_FENCE, tengine_stonith_notify);
 
-    crm_info("Connected");
+    crm_trace("Connected");
     return TRUE;
 }
 
@@ -321,7 +321,7 @@ te_graph_trigger(gpointer user_data)
         }
     }
 
-    crm_info("Transition %d is now complete", transition_graph->id);
+    crm_debug("Transition %d is now complete", transition_graph->id);
     transition_graph->complete = TRUE;
     notify_crmd(transition_graph);
 

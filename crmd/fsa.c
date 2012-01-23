@@ -494,7 +494,7 @@ do_state_transition(long long actions,
     do_dot_log(DOT_PREFIX "\t%s -> %s [ label=%s cause=%s origin=%s ]",
                state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
 
-    crm_info("State transition %s -> %s [ input=%s cause=%s origin=%s ]",
+    crm_notice("State transition %s -> %s [ input=%s cause=%s origin=%s ]",
              state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
 
     /* the last two clauses might cause trouble later */
@@ -631,7 +631,7 @@ do_state_transition(long long actions,
                 set_bit_inplace(tmp, A_SHUTDOWN_REQ);
             }
             if (recheck_timer->period_ms > 0) {
-                crm_info("Starting %s", get_timer_desc(recheck_timer));
+                crm_debug("Starting %s", get_timer_desc(recheck_timer));
                 crm_timer_start(recheck_timer);
             }
             break;

@@ -386,12 +386,16 @@ crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, ui
         }
     }
 
-    if (state_changed || addr_changed || votes_changed || procs_changed) {
+    if (state_changed || addr_changed || votes_changed) {
         crm_info("Node %s: id=%u state=%s%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
                  " proc=%.32x%s", node->uname, node->id, node->state, state_changed ? " (new)" : "",
                  node->addr, addr_changed ? " (new)" : "", node->votes,
                  votes_changed ? " (new)" : "", node->born, node->last_seen, node->processes,
                  procs_changed ? " (new)" : "");
+
+    } else if(procs_changed) {
+        crm_debug("Node %s: id=%u seen=" U64T
+                  " proc=%.32x (new)", node->uname, node->id, node->last_seen, node->processes);
     }
 
     return node;

@@ -254,7 +254,7 @@ do_pe_invoke(long long action,
 
     fsa_pe_query = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
 
-    crm_info("Query %d: Requesting the current CIB: %s", fsa_pe_query, fsa_state2string(fsa_state));
+    crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query, fsa_state2string(fsa_state));
 
     /* Make sure any queued calculations are discarded */
     crm_free(fsa_pe_ref);
@@ -317,7 +317,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
     }
 
-    crm_info("Invoking the PE: query=%d, ref=%s, seq=%llu, quorate=%d",
+    crm_debug("Invoking the PE: query=%d, ref=%s, seq=%llu, quorate=%d",
              fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
     free_xml(cmd);
 }

@@ -609,7 +609,7 @@ do_started(long long action,
     set_bit_inplace(fsa_input_register, R_ST_REQUIRED);
     mainloop_set_trigger(stonith_reconnect);
 
-    crm_info("The local CRM is operational");
+    crm_notice("The local CRM is operational");
     clear_bit_inplace(fsa_input_register, R_STARTING);
     register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
 }
