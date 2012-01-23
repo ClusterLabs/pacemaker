@@ -885,7 +885,19 @@ pcmk_cpg_membership(cpg_handle_t handle,
                     const struct cpg_address *left_list, size_t left_list_entries,
                     const struct cpg_address *joined_list, size_t joined_list_entries)
 {
-    /* Don't care about CPG membership */
+    int i;
+
+    for (i = 0; i < member_list_entries; i++) {
+        crm_debug("Member[%d] %d ", i, member_list[i].nodeid);
+        crm_update_peer(member_list[i].nodeid, 0, 0, 0, 0,
+                        NULL, /* view_list[i] */NULL, NULL, CRM_NODE_MEMBER);
+    }
+
+    for (i = 0; i < left_list_entries; i++) {
+        crm_debug("Left[%d] %d ", i, left_list[i].nodeid);
+        crm_update_peer(left_list[i].nodeid, 0, 0, 0, 0,
+                        NULL, /* view_list[i] */NULL, NULL, CRM_NODE_LOST);
+    }
 }
 
 static gboolean
