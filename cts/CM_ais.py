@@ -48,7 +48,7 @@ class crm_ais(crm_lha):
             "QuorumCmd"      : "crm_node -q --openais",
             "ParitionCmd"    : "crm_node -p --openais",
 
-            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",            
+            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",            
             "Pat:ChildExit"    : "Child process .* exited",
 
             # Bad news Regexes.  Should never occur.
@@ -118,15 +118,15 @@ class crm_ais(crm_lha):
                     "Connection to the CIB terminated...",
                     "Sending message to CIB service FAILED",
                     "apply_xml_diff: Diff application failed!",
-                    "crmd: .*Action A_RECOVER .* not supported",
-                    "pingd: .*ERROR: send_update: Could not send update",
+                    "crmd.*Action A_RECOVER .* not supported",
+                    "pingd.*ERROR: send_update: Could not send update",
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
-                    "crmd:.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
+                    "crmd.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
                     "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
                     "ERROR: attrd_connection_destroy: Lost connection to attrd",
-                    "nfo: te_fence_node: Executing .* fencing operation",
+                    "info: te_fence_node: Executing .* fencing operation",
             ]
 
         fullcomplist["cib"] = Process(self, "cib", pats = [
@@ -137,19 +137,19 @@ class crm_ais(crm_lha):
                     "Connection to the CIB terminated...",
                     "Child process crmd exited .* rc=2",
                     "Child process attrd exited .* rc=1",
-                    "crmd: .*Input I_TERMINATE from do_recover",
-                    "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
-                    "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd.*Input I_TERMINATE from do_recover",
+                    "crmd.*I_ERROR.*crmd_cib_connection_destroy",
+                    "crmd.*do_exit: Could not recover from internal error",
                     ], badnews_ignore = self.common_ignore)
 
         fullcomplist["lrmd"] = Process(self, "lrmd", pats = [
                     "State transition .* S_RECOVERY",
                     "LRM Connection failed",
                     "Respawning .* crmd",
-                    "crmd: .*I_ERROR.*lrm_connection_destroy",
+                    "crmd.*I_ERROR.*lrm_connection_destroy",
                     "Child process crmd exited .* rc=2",
-                    "crmd: .*Input I_TERMINATE from do_recover",
-                    "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd.*Input I_TERMINATE from do_recover",
+                    "crmd.*do_exit: Could not recover from internal error",
                     ], badnews_ignore = self.common_ignore)
 
         fullcomplist["crmd"] = Process(self, "crmd", pats = [
@@ -161,17 +161,17 @@ class crm_ais(crm_lha):
                     ], badnews_ignore = self.common_ignore)
 
         fullcomplist["attrd"] = Process(self, "attrd", pats = [
-                    "crmd: .*ERROR: attrd_connection_destroy: Lost connection to attrd"
+                    "crmd.*ERROR: attrd_connection_destroy: Lost connection to attrd"
                     ], badnews_ignore = self.common_ignore)
 
         fullcomplist["pengine"] = Process(self, "pengine", dc_pats = [
                     "State transition .* S_RECOVERY",
                     "Respawning .* crmd",
                     "Child process crmd exited .* rc=2",
-                    "crmd: .*pe_connection_destroy: Connection to the Policy Engine failed",
-                    "crmd: .*I_ERROR.*save_cib_contents",
-                    "crmd: .*Input I_TERMINATE from do_recover",
-                    "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd.*pe_connection_destroy: Connection to the Policy Engine failed",
+                    "crmd.*I_ERROR.*save_cib_contents",
+                    "crmd.*Input I_TERMINATE from do_recover",
+                    "crmd.*do_exit: Could not recover from internal error",
                     ], badnews_ignore = self.common_ignore)
 
         stonith_ignore = [
@@ -219,7 +219,7 @@ class crm_whitetank(crm_ais):
             "StopCmd"        : CTSvars.INITDIR+"/openais stop",
 
             "Pat:We_stopped"   : "%s.*openais.*pcmk_shutdown: Shutdown complete",
-            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
+            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
             "Pat:They_dead"    : "openais:.*Node %s is now: lost",
             
             "Pat:ChildKilled"  : "%s openais.*Child process %s terminated with signal 9",
@@ -232,23 +232,23 @@ class crm_whitetank(crm_ais):
 
         aisexec_ignore = [
                     "ERROR: ais_dispatch: Receiving message .* failed",
-                    "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
-                    "cib: .*ERROR: cib_ais_destroy: AIS connection terminated",
-                    #"crmd: .*ERROR: crm_ais_destroy: AIS connection terminated",
-                    "crmd:.*do_exit: Could not recover from internal error",
-                    "crmd: .*I_TERMINATE.*do_recover",
-                    "attrd: .*CRIT: attrd_ais_destroy: Lost connection to OpenAIS service!",
-                    "stonithd: .*ERROR: AIS connection terminated",
+                    "crmd.*I_ERROR.*crmd_cib_connection_destroy",
+                    "cib.*ERROR: cib_ais_destroy: AIS connection terminated",
+                    #"crmd.*ERROR: crm_ais_destroy: AIS connection terminated",
+                    "crmd.*do_exit: Could not recover from internal error",
+                    "crmd.*I_TERMINATE.*do_recover",
+                    "attrd.*CRIT: attrd_ais_destroy: Lost connection to OpenAIS service!",
+                    "stonithd.*ERROR: AIS connection terminated",
             ]
 
         aisexec_ignore.extend(self.common_ignore)
 
         self.complist.append(Process(self, "aisexec", pats = [
                     "ERROR: ais_dispatch: AIS connection failed",
-                    "crmd: .*ERROR: do_exit: Could not recover from internal error",
-                    "pengine: .*Scheduling Node .* for STONITH",
-                    "stonithd: .*requests a STONITH operation RESET on node",
-                    "stonithd: .*Succeeded to STONITH the node",
+                    "crmd.*ERROR: do_exit: Could not recover from internal error",
+                    "pengine.*Scheduling Node .* for STONITH",
+                    "stonithd.*requests a STONITH operation RESET on node",
+                    "stonithd.*Succeeded to STONITH the node",
                     ], badnews_ignore = aisexec_ignore))
         
 class crm_cs_v0(crm_ais):
@@ -271,7 +271,7 @@ class crm_cs_v0(crm_ais):
 # The next pattern would be preferred, but it doesn't always come out
 #            "Pat:We_stopped"   : "%s.*Corosync Cluster Engine exiting with status",
             "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
-            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
+            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
             "Pat:They_dead"    : "corosync:.*Node %s is now: lost",
             
             "Pat:ChildKilled"  : "%s corosync.*Child process %s terminated with signal 9",
@@ -283,23 +283,23 @@ class crm_cs_v0(crm_ais):
 
         corosync_ignore = [
                     "ERROR: ais_dispatch: Receiving message .* failed",
-                    "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
-                    "cib: .*ERROR: cib_ais_destroy: AIS connection terminated",
-                    #"crmd: .*ERROR: crm_ais_destroy: AIS connection terminated",
-                    "crmd:.*do_exit: Could not recover from internal error",
-                    "crmd: .*I_TERMINATE.*do_recover",
-                    "attrd: .*CRIT: attrd_ais_destroy: Lost connection to Corosync service!",
-                    "stonithd: .*ERROR: AIS connection terminated",
+                    "crmd.*I_ERROR.*crmd_cib_connection_destroy",
+                    "cib.*ERROR: cib_ais_destroy: AIS connection terminated",
+                    #"crmd.*ERROR: crm_ais_destroy: AIS connection terminated",
+                    "crmd.*do_exit: Could not recover from internal error",
+                    "crmd.*I_TERMINATE.*do_recover",
+                    "attrd.*CRIT: attrd_ais_destroy: Lost connection to Corosync service!",
+                    "stonithd.*ERROR: AIS connection terminated",
             ]
 
 #        corosync_ignore.extend(self.common_ignore)
 
 #        self.complist.append(Process(self, "corosync", pats = [
 #                    "ERROR: ais_dispatch: AIS connection failed",
-#                    "crmd: .*ERROR: do_exit: Could not recover from internal error",
-#                    "pengine: .*Scheduling Node .* for STONITH",
-#                    "stonithd: .*requests a STONITH operation RESET on node",
-#                    "stonithd: .*Succeeded to STONITH the node",
+#                    "crmd.*ERROR: do_exit: Could not recover from internal error",
+#                    "pengine.*Scheduling Node .* for STONITH",
+#                    "stonithd.*requests a STONITH operation RESET on node",
+#                    "stonithd.*Succeeded to STONITH the node",
 #                    ], badnews_ignore = corosync_ignore))
         
     
@@ -320,9 +320,13 @@ class crm_cs_v1(crm_cs_v0):
             "StartCmd"       : "service corosync start; service pacemaker start",
             "StopCmd"        : "service pacemaker stop; service corosync stop",
 
+            "EpocheCmd"      : "crm_node -e",
+            "QuorumCmd"      : "crm_node -q",
+            "ParitionCmd"    : "crm_node -p",
+
             "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
-            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
-            "Pat:They_dead"    : "crmd:.*Node %s: .* state=lost .new",
+            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
+            "Pat:They_dead"    : "crmd.*Node %s: .* state=lost .new",
             
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
@@ -347,8 +351,8 @@ class crm_mcp(crm_cs_v0):
             "ParitionCmd"    : "crm_node -p",
 
             "Pat:We_stopped"  : "%s.*Corosync Cluster Engine exiting normally",
-            "Pat:They_stopped" : "%s crmd[:\[].*Node %s: .* state=lost .new",
-            "Pat:They_dead"    : "crmd[:\[].*Node %s: .* state=lost .new",
+            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
+            "Pat:They_dead"    : "crmd.*Node %s: .* state=lost .new",
             
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
@@ -374,8 +378,8 @@ class crm_cman(crm_cs_v0):
             "ParitionCmd"    : "crm_node -p --cman",
 
             "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
-            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
-            "Pat:They_dead"    : "crmd:.*Node %s: .* state=lost .new",
+            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
+            "Pat:They_dead"    : "crmd.*Node %s: .* state=lost .new",
             
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",

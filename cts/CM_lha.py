@@ -102,12 +102,12 @@ class crm_lha(ClusterManager):
             "Pat:DC_IDLE"      : "crmd.*State transition.*-> S_IDLE",
             
             # This wont work if we have multiple partitions
-            "Pat:Local_started" : "%s crmd:.*The local CRM is operational",
-            "Pat:Slave_started" : "%s crmd:.*State transition.*-> S_NOT_DC",
-            "Pat:Master_started"   : "%s crmd:.* State transition.*-> S_IDLE",
+            "Pat:Local_started" : "%s .*The local CRM is operational",
+            "Pat:Slave_started" : "%s .*State transition.*-> S_NOT_DC",
+            "Pat:Master_started"   : "%s .* State transition.*-> S_IDLE",
             "Pat:We_stopped"   : "heartbeat.*%s.*Heartbeat shutdown complete",
             "Pat:Logd_stopped" : "%s logd:.*Exiting write process",
-            "Pat:They_stopped" : "%s crmd:.*LOST:.* %s ",
+            "Pat:They_stopped" : "%s .*LOST:.* %s ",
             "Pat:They_dead"    : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
@@ -115,7 +115,7 @@ class crm_lha(ClusterManager):
             "Pat:ChildRespawn" : "%s heartbeat.*Respawning client.*%s",
             "Pat:ChildExit"    : "ERROR: Client .* exited with return code",
             
-            "Pat:They_fenced"  : "stonith-ng: .* Operation 'reboot' .* for host '%s' with device .* returned: 0",
+            "Pat:They_fenced"  : "stonith.* log_operation: Operation .* for host '%s' with device .* returned: 0",
             "Pat:They_fenced_offset"  : "for host '",
 
 
@@ -170,9 +170,9 @@ class crm_lha(ClusterManager):
             return [ 
                 "ERROR: crm_abort: crm_glib_handler: ",
                 "ERROR: Message hist queue is filling up",
-                "stonithd: .*CRIT: external_hostlist: 'vmware gethosts' returned an empty hostlist",
-                "stonithd: .*ERROR: Could not list nodes for stonith RA external/vmware.",
-                "pengine: Preventing .* from re-starting",
+                "stonithd.*CRIT: external_hostlist: 'vmware gethosts' returned an empty hostlist",
+                "stonithd.*ERROR: Could not list nodes for stonith RA external/vmware.",
+                "pengine.*Preventing .* from re-starting",
                 ]
         return []
 
@@ -460,13 +460,13 @@ class crm_lha(ClusterManager):
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
                     "Sending message to CIB service FAILED",
-                    "crmd: .*Action A_RECOVER .* not supported",
+                    "Action A_RECOVER .* not supported",
                     "ERROR: stonithd_op_result_ready: not signed on",
-                    "pingd: .*ERROR: send_update: Could not send update",
+                    "pingd.*ERROR: send_update: Could not send update",
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
-                    "crmd:.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
+                    "do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
                     "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
             ]
 
@@ -474,9 +474,9 @@ class crm_lha(ClusterManager):
             "ERROR: stonithd_signon: ",
             "update_failcount: Updating failcount for child_DoFencing",
             "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
-            "lrmd: .*ERROR: cl_get_value: wrong argument (reply)",
-            "lrmd: .*ERROR: is_expected_msg:.* null message",
-            "lrmd: .*ERROR: stonithd_receive_ops_result failed.",
+            "lrmd.*ERROR: cl_get_value: wrong argument (reply)",
+            "lrmd.*ERROR: is_expected_msg:.* null message",
+            "lrmd.*ERROR: stonithd_receive_ops_result failed.",
              ]
 
         stonith_ignore.extend(common_ignore)
@@ -490,14 +490,14 @@ class crm_lha(ClusterManager):
         ccm = Process(self, "ccm", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
                     "CCM connection appears to have failed",
-                    "crmd: .*Action A_RECOVER .* not supported",
-                    "crmd: .*Input I_TERMINATE from do_recover",
+                    "crmd.*Action A_RECOVER .* not supported",
+                    "crmd.*Input I_TERMINATE from do_recover",
                     "Exiting to recover from CCM connection failure",
-                    "crmd:.*do_exit: Could not recover from internal error",
-                    "crmd: .*I_ERROR.*(ccm_dispatch|crmd_cib_connection_destroy)",
-                    "crmd .*exited with return code 2.",
-                    "attrd .*exited with return code 1.",
-                    "cib .*exited with return code 2.",
+                    "crmd.*do_exit: Could not recover from internal error",
+                    "crmd.*I_ERROR.*(ccm_dispatch|crmd_cib_connection_destroy)",
+                    "crmd.*exited with return code 2.",
+                    "attrd.*exited with return code 1.",
+                    "cib.*exited with return code 2.",
 
 # Not if it was fenced
 #                    "A new node joined the cluster",
@@ -515,21 +515,21 @@ class crm_lha(ClusterManager):
                     "State transition .* S_RECOVERY",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
-                    "crmd: .*Input I_TERMINATE from do_recover",
-                    "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
-                    "crmd:.*do_exit: Could not recover from internal error",
-                    "crmd .*exited with return code 2.",
-                    "attrd .*exited with return code 1.",
+                    "crmd.*Input I_TERMINATE from do_recover",
+                    "crmd.*I_ERROR.*crmd_cib_connection_destroy",
+                    "crmd.*do_exit: Could not recover from internal error",
+                    "crmd.*exited with return code 2.",
+                    "attrd.*exited with return code 1.",
                     ], badnews_ignore = common_ignore)
 
         lrmd = Process(self, "lrmd", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
                     "LRM Connection failed",
-                    "crmd: .*I_ERROR.*lrm_connection_destroy",
+                    "crmd.*I_ERROR.*lrm_connection_destroy",
                     "State transition S_STARTING -> S_PENDING",
-                    "crmd: .*Input I_TERMINATE from do_recover",
-                    "crmd:.*do_exit: Could not recover from internal error",
-                    "crmd .*exited with return code 2.",
+                    "crmd.*Input I_TERMINATE from do_recover",
+                    "crmd.*do_exit: Could not recover from internal error",
+                    "crmd.*exited with return code 2.",
                     ], badnews_ignore = common_ignore)
 
         crmd = Process(self, "crmd", triggersreboot=self.fastfail, pats = [
@@ -543,17 +543,17 @@ class crm_lha(ClusterManager):
 
         pengine = Process(self, "pengine", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
-                    "crmd .*exited with return code 2.",
-                    "crmd: .*Input I_TERMINATE from do_recover",
-                    "crmd: .*do_exit: Could not recover from internal error",
-                    "crmd: .*CRIT: pe_connection_destroy: Connection to the Policy Engine failed",
-                    "crmd: .*I_ERROR.*save_cib_contents",
-                    "crmd .*exited with return code 2.",
+                    "crmd.*exited with return code 2.",
+                    "crmd.*Input I_TERMINATE from do_recover",
+                    "crmd.*do_exit: Could not recover from internal error",
+                    "crmd.*CRIT: pe_connection_destroy: Connection to the Policy Engine failed",
+                    "crmd.*I_ERROR.*save_cib_contents",
+                    "crmd.*exited with return code 2.",
                     ], badnews_ignore = common_ignore, dc_only=1)
 
         if self.Env["DoFencing"] == 1 :
             complist.append(Process(self, "stoniths", triggersreboot=self.fastfail, dc_pats = [
-                        "crmd: .*CRIT: tengine_stonith_connection_destroy: Fencing daemon connection failed",
+                        "crmd.*CRIT: tengine_stonith_connection_destroy: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
                     ], badnews_ignore = stonith_ignore))
@@ -562,19 +562,19 @@ class crm_lha(ClusterManager):
             ccm.pats.extend([
                 "attrd .* exited with return code 1",
                 "ERROR: Respawning client .*attrd",
-                "cib .* exited with return code 2",
+                "cib.* exited with return code 2",
                 "ERROR: Respawning client .*cib",
-                "crmd .* exited with return code 2",
+                "crmd.* exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
             cib.pats.extend([
-                "attrd .* exited with return code 1",
+                "attrd.* exited with return code 1",
                 "ERROR: Respawning client .*attrd",
-                "crmd .* exited with return code 2",
+                "crmd.* exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
             lrmd.pats.extend([
-                "crmd .* exited with return code 2",
+                "crmd.* exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
             pengine.pats.extend([

@@ -430,7 +430,7 @@ class StonithdTest(CTSTest):
         is_dc = self.CM.is_node_dc(node)
 
         watchpats = []
-        watchpats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
+        watchpats.append("log_operation: Operation .* for host '%s' with device .* returned: 0" % node)
         watchpats.append("tengine_stonith_notify: Peer %s was terminated .*: OK" % node)
 
         if is_dc:
@@ -450,8 +450,8 @@ class StonithdTest(CTSTest):
             self.CM.ShouldBeStatus[node]="down"
         else:
             self.CM.debug("Expecting %s to come up again %d" % (node, self.CM.Env["at-boot"]))
-            watchpats.append("%s crmd: .* S_STARTING -> S_PENDING" % node)
-            watchpats.append("%s crmd: .* S_PENDING -> S_NOT_DC" % node)
+            watchpats.append("%s .*do_state_transition: .* S_STARTING -> S_PENDING" % node)
+            watchpats.append("%s .*do_state_transition: .* S_PENDING -> S_NOT_DC" % node)
 
         watch = self.create_watch(watchpats, 30 + self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
@@ -1098,14 +1098,14 @@ class ResourceRecover(CTSTest):
                     % (self.rid, self.action))
 
         if rsc.managed():
-            pats.append("crmd:.* Performing .* op=%s_stop_0" % self.rid)
+            pats.append("te_rsc_command: Initiating action .* stop %s_stop_0" % self.rid)
             if rsc.unique():
-                pats.append("crmd:.* Performing .* op=%s_start_0" % self.rid)
-                pats.append("crmd:.* LRM operation %s_start_0.*confirmed.*ok" % self.rid)
+                pats.append("te_rsc_command: Initiating action .* start %s_start_0" % self.rid)
+                pats.append("process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % self.rid)
             else:
                 # Anonymous clones may get restarted with a different clone number
-                pats.append("crmd:.* Performing .* op=.*_start_0")
-                pats.append("crmd:.* LRM operation .*_start_0.*confirmed.*ok")
+                pats.append("te_rsc_command: Initiating action .* start .*_start_0")
+                pats.append("process_lrm_event: LRM operation .*_start_0.*confirmed.*ok")
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
@@ -1202,9 +1202,9 @@ class ComponentFail(CTSTest):
 
             if chosen.dc_only: 
                 # Sometimes these will be in the log, and sometimes they won't...
-                self.okerrpatterns.append("%s crmd:.*Process %s:.* exited" %(node, chosen.name))
-                self.okerrpatterns.append("%s crmd:.*I_ERROR.*crmdManagedChildDied" %node)
-                self.okerrpatterns.append("%s crmd:.*The %s subsystem terminated unexpectedly" %(node, chosen.name))
+                self.okerrpatterns.append("%s .*Process %s:.* exited" %(node, chosen.name))
+                self.okerrpatterns.append("%s .*I_ERROR.*crmdManagedChildDied" %node)
+                self.okerrpatterns.append("%s .*The %s subsystem terminated unexpectedly" %(node, chosen.name))
                 self.okerrpatterns.append("ERROR: Client .* exited with return code")
             else:
                 # Sometimes this won't be in the log...
@@ -1219,7 +1219,7 @@ class ComponentFail(CTSTest):
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
         stonithPats = []
-        stonithPats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
+        stonithPats.append(self.CM["Pat:They_fenced"] % node)
         stonith = self.create_watch(stonithPats, 0)
         stonith.setwatch()
 
@@ -1514,11 +1514,11 @@ class Reattach(CTSTest):
             return self.failure("Resource management not disabled")
 
         pats = []
-        pats.append("crmd:.*Performing.*_stop_0")
-        pats.append("crmd:.*Performing.*_start_0")
-        pats.append("crmd:.*Performing.*_promote_0")
-        pats.append("crmd:.*Performing.*_demote_0")
-        pats.append("crmd:.*Performing.*_migrate_.*_0")
+        pats.append("te_rsc_command: Initiating action .* stop")
+        pats.append("te_rsc_command: Initiating action .* start")
+        pats.append("te_rsc_command: Initiating action .* promote")
+        pats.append("te_rsc_command: Initiating action .* demote")
+        pats.append("te_rsc_command: Initiating action .* migrate")
 
         watch = self.create_watch(pats, 60, "ShutdownActivity")
         watch.setwatch()
@@ -1565,8 +1565,8 @@ class Reattach(CTSTest):
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
                 if r.rclass == "stonith":
-                    self.CM.debug("Ignoring: crmd:.*Performing.*op=%s_.*_0" % r.id)
-                    ignore.append("crmd:.*Performing.*op=%s_.*_0" % r.id)
+                    self.CM.debug("Ignoring: te_rsc_command: Initiating action .* start %s_.*_0" % r.id)
+                    ignore.append("te_rsc_command: Initiating action .* start %s_.*_0" % r.id)
         
         if self.local_badnews("ResourceActivity:", watch, ignore):
             return self.failure("Resources stopped or started after resource management was re-enabled")
