@@ -746,8 +746,8 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
         update_action_flags(mon, pe_action_runnable | pe_action_clear);
 
     } else if (is_set(mon->flags, pe_action_optional) == FALSE) {
-        crm_notice(" Start recurring %s (%llus) for %s on %s", mon->task, interval_ms / 1000,
-                   rsc->id, crm_str(node_uname));
+        crm_info(" Start recurring %s (%llus) for %s on %s", mon->task, interval_ms / 1000,
+                 rsc->id, crm_str(node_uname));
     }
 
     if (rsc->next_role == RSC_ROLE_MASTER) {
