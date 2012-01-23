@@ -251,17 +251,18 @@ class crm_whitetank(crm_ais):
                     "stonithd: .*Succeeded to STONITH the node",
                     ], badnews_ignore = aisexec_ignore))
         
-class crm_flatiron(crm_ais):
+class crm_cs_v0(crm_ais):
     '''
     The crm version 3 cluster manager class.
     It implements the things we need to talk to and manipulate
-    crm clusters running on top of openais
+
+    crm clusters running against version 0 of our plugin
     '''
     def __init__(self, Environment, randseed=None):
         crm_ais.__init__(self, Environment, randseed=randseed)
 
         self.update({
-            "Name"           : "crm-flatiron",
+            "Name"           : "crm-plugin-v0",
             "StartCmd"       : "service corosync start",
             "StopCmd"        : "service corosync stop",
 
@@ -304,17 +305,18 @@ class crm_flatiron(crm_ais):
     
         return self.complist
 
-class crm_mcp(crm_flatiron):
+class crm_cs_v1(crm_cs_v0):
     '''
     The crm version 3 cluster manager class.
     It implements the things we need to talk to and manipulate
-    crm clusters running on top of openais
+
+    crm clusters running on top of version 1 of our plugin
     '''
     def __init__(self, Environment, randseed=None):
-        crm_flatiron.__init__(self, Environment, randseed=randseed)
+        crm_cs_v0.__init__(self, Environment, randseed=randseed)
 
         self.update({
-            "Name"           : "crm-mcp",
+            "Name"           : "crm-plugin-v1",
             "StartCmd"       : "service corosync start; service pacemaker start",
             "StopCmd"        : "service pacemaker stop; service corosync stop",
 
@@ -326,14 +328,41 @@ class crm_mcp(crm_flatiron):
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
         })
 
-class crm_cman(crm_flatiron):
+class crm_mcp(crm_cs_v0):
+    '''
+    The crm version 4 cluster manager class.
+    It implements the things we need to talk to and manipulate
+    crm clusters running on top of native corosync (no plugins)
+    '''
+    def __init__(self, Environment, randseed=None):
+        crm_cs_v0.__init__(self, Environment, randseed=randseed)
+
+        self.update({
+            "Name"           : "crm-mcp",
+            "StartCmd"       : "service corosync start; service pacemaker start",
+            "StopCmd"        : "service pacemaker stop; service corosync stop",
+
+            "EpocheCmd"      : "crm_node -e",
+            "QuorumCmd"      : "crm_node -q",
+            "ParitionCmd"    : "crm_node -p",
+
+            "Pat:We_stopped"  : "%s.*Corosync Cluster Engine exiting normally",
+            "Pat:They_stopped" : "%s crmd[:\[].*Node %s: .* state=lost .new",
+            "Pat:They_dead"    : "crmd[:\[].*Node %s: .* state=lost .new",
+            
+            "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
+            "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
+        })
+
+
+class crm_cman(crm_cs_v0):
     '''
     The crm version 3 cluster manager class.
     It implements the things we need to talk to and manipulate
     crm clusters running on top of openais
     '''
     def __init__(self, Environment, randseed=None):
-        crm_flatiron.__init__(self, Environment, randseed=randseed)
+        crm_cs_v0.__init__(self, Environment, randseed=randseed)
 
         self.update({
             "Name"           : "crm-cman",

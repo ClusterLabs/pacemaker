@@ -437,9 +437,9 @@ if __name__ == '__main__':
         Environment['CMclass']  = crm_whitetank
         Environment["use_logd"] = 0
 
-    elif Environment["Stack"] == "corosync" or Environment["Stack"] == "cs" or Environment["Stack"] == "flatiron":
-        Environment["Stack"]    = "corosync (flatiron)"
-        Environment['CMclass']  = crm_flatiron
+    elif Environment["Stack"] == "corosync" or Environment["Stack"] == "cs" or Environment["Stack"] == "mcp":
+        Environment["Stack"]    = "corosync"
+        Environment['CMclass']  = crm_mcp
         Environment["use_logd"] = 0
 
     elif Environment["Stack"] == "cman":
@@ -447,9 +447,14 @@ if __name__ == '__main__':
         Environment['CMclass']  = crm_cman
         Environment["use_logd"] = 0
 
-    elif Environment["Stack"] == "mcp":
-        Environment["Stack"]    = "corosync (mcp)"
-        Environment['CMclass']  = crm_mcp
+    elif Environment["Stack"] == "v1":
+        Environment["Stack"]    = "corosync (plugin v1)"
+        Environment['CMclass']  = crm_cs_v1
+        Environment["use_logd"] = 0
+
+    elif Environment["Stack"] == "v0":
+        Environment["Stack"]    = "corosync (plugin v0)"
+        Environment['CMclass']  = crm_cs_v0
         Environment["use_logd"] = 0
 
     else:
