@@ -37,6 +37,10 @@ if [ $kill = 1 ]; then
     echo "Cleaning processes"
     cluster-helper $target -- "killall -q -9 corosync aisexec heartbeat pacemakerd ccm stonithd ha_logd lrmd crmd pengine attrd pingd mgmtd cib fenced dlm_controld gfs_controld" &> /dev/null
     cluster-helper $target -- "rm -rf /var/lib/heartbeat/crm/cib*"
+
+    # Bah. Force systemd to actually look at the process and realize its dead"
+    cluster-helper $target -- "service corosync stop" &> /dev/null
+    cluster-helper $target -- "service pacemaker stop" &> /dev/null
 fi
 
 #logrotate -f $cluster_rotate
