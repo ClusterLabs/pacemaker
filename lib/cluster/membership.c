@@ -318,6 +318,12 @@ crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, ui
         crm_trace("No node found for %d/%s", id, uname);
         node = crm_new_peer(id, uname);
 
+        CRM_LOG_ASSERT(node != NULL);
+        if(node == NULL) {
+            crm_err("Insufficient information to create node %d/%s", id, uname);
+            return NULL;
+        }
+
         /* do it now so we don't get '(new)' everywhere */
         node->votes = votes;
         node->processes = children;
