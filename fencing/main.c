@@ -420,11 +420,11 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
 
     if(client == NULL) {
-	crm_warn("Skipping NULL client");
+	crm_trace("Skipping NULL client");
 	return;
 
     } else if(client->channel == NULL) {
-	crm_warn("Skipping client with NULL channel");
+	crm_trace("Skipping client with NULL channel");
 	return;
 
     } else if(client->name == NULL) {
@@ -434,10 +434,10 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 
     ipc_client = client->channel;
     if(client->flags & get_stonith_flag(type)) {
-	crm_info("Sending %s-notification to client %s/%s", type, client->name, client->id);
+	crm_trace("Sending %s-notification to client %s/%s", type, client->name, client->id);
 	if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
 	    /* We never want the STONITH to exit because our client is slow */
-	    crm_crit("%s-notification of client %s/%s failed - queue saturated",
+	    crm_debug("%s-notification of client %s/%s failed - queue saturated",
 		     type, client->name, client->id);
 			
 	} else if(send_ipc_message(ipc_client, update_msg) == FALSE) {
