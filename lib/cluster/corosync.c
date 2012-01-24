@@ -1203,16 +1203,6 @@ get_local_node_name(void)
     return name;
 }
 
-#if CS_USES_LIBQB
-static void libqb_log_fn(const char *file_name,
-        int32_t file_line,
-        int32_t severity,
-        const char *msg)
-{
-        syslog(LOG_INFO, "libqb> %s:%d %s", file_name, file_line, msg);
-}
-#endif
-
 extern int set_cluster_type(enum cluster_type_e type);
 
 gboolean
@@ -1223,10 +1213,6 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
 
     crm_peer_init();
 
-#if CS_USES_LIBQB
-    qb_util_set_log_function (libqb_log_fn);
-#endif
-    
     /* Here we just initialize comms */
     switch (stack) {
         case pcmk_cluster_classic_ais:
