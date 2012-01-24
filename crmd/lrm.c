@@ -338,7 +338,7 @@ ghash_print_pending_for_rsc(gpointer key, gpointer value, gpointer user_data)
     struct recurring_op_s *pending = value;
 
     if (safe_str_eq(rsc, pending->rsc_id)) {
-        do_crm_log(LOG_NOTICE, "%sction %s (%s) incomplete at shutdown",
+        crm_notice("%sction %s (%s) incomplete at shutdown",
                    pending->interval == 0 ? "A" : "Recurring a", stop_id, pending->op_key);
     }
 }
@@ -802,7 +802,7 @@ do_lrm_query(gboolean is_replace)
     build_active_RAs(rsc_list);
 
     xml_result = create_cib_fragment(xml_state, XML_CIB_TAG_STATUS);
-    crm_log_xml_debug_3(xml_state, "Current state of the LRM");
+    crm_log_xml_trace(xml_state, "Current state of the LRM");
     free_xml(xml_state);
 
     return xml_result;
@@ -983,7 +983,7 @@ delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id)
         return;
     }
 
-    crm_log_xml_debug_2(xml_top, "op:cancel");
+    crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
 }
 
@@ -1287,7 +1287,7 @@ do_lrm_invoke(long long action,
 
         if (relay_message(reply, TRUE) == FALSE) {
             crm_err("Unable to route reply");
-            crm_log_xml(LOG_ERR, "reply", reply);
+            crm_log_xml_err(reply, "reply");
         }
         free_xml(reply);
         free_xml(data);
@@ -1604,14 +1604,14 @@ send_direct_ack(const char *to_host, const char *to_sys,
 
     reply = create_request(CRM_OP_INVOKE_LRM, fragment, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
 
-    crm_log_xml_debug_2(update, "ACK Update");
+    crm_log_xml_trace(update, "ACK Update");
 
     crm_debug("ACK'ing resource op %s_%s_%d from %s: %s",
              op->rsc_id, op->op_type, op->interval, op->user_data,
              crm_element_value(reply, XML_ATTR_REFERENCE));
 
     if (relay_message(reply, TRUE) == FALSE) {
-        crm_log_xml(LOG_ERR, "Unable to route reply", reply);
+        crm_log_xml_err(reply, "Unable to route reply");
     }
 
     free_xml(fragment);

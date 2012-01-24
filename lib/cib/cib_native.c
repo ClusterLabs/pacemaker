@@ -425,12 +425,12 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
 
         } else if (reply_id < msg_id) {
             crm_debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
-            crm_log_xml(LOG_MSG, "Old reply", op_reply);
+            crm_log_xml_trace(op_reply, "Old reply");
 
         } else if ((reply_id - 10000) > msg_id) {
             /* wrap-around case */
             crm_debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
-            crm_log_xml(LOG_MSG, "Old reply", op_reply);
+            crm_log_xml_trace(op_reply, "Old reply");
 
         } else {
             crm_err("Received a __future__ reply:" " %d (wanted %d)", reply_id, msg_id);
@@ -467,7 +467,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
         case cib_master_timeout:
             crm_err("Call failed: %s", cib_error2string(rc));
             if (op_reply) {
-                crm_log_xml(LOG_ERR, "Invalid reply", op_reply);
+                crm_log_xml_err(op_reply, "Invalid reply");
             }
             break;
 

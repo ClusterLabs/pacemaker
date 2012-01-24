@@ -120,11 +120,11 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
     xmlNode *action = get_xpath_object("//st-data", msg, LOG_ERR);
 
     if (action == NULL) {
-        crm_log_xml(LOG_ERR, "Notify data not found", msg);
+        crm_log_xml_err(msg, "Notify data not found");
         return;
     }
 
-    crm_log_xml(LOG_DEBUG, "stonith_notify", msg);
+    crm_log_xml_debug(msg, "stonith_notify");
     crm_element_value_int(msg, F_STONITH_RC, &rc);
     origin = crm_element_value(action, F_STONITH_ORIGIN);
     target = crm_element_value(action, F_STONITH_TARGET);
@@ -339,7 +339,6 @@ void
 abort_transition_graph(int abort_priority, enum transition_action abort_action,
                        const char *abort_text, xmlNode * reason, const char *fn, int line)
 {
-    int log_level = LOG_INFO;
     const char *magic = NULL;
 
     CRM_CHECK(transition_graph != NULL, return);
@@ -361,30 +360,26 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
                                      &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
                                      &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
             if (crm_str_eq(TYPE(reason), XML_CIB_TAG_NVPAIR, TRUE)) {
-                do_crm_log(log_level,
-                           "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, name=%s, value=%s, magic=%s, cib=%d.%d.%d) : %s",
-                           fn, line, transition_graph->complete, TYPE(reason), ID(reason),
-                           NAME(reason), VALUE(reason), magic ? magic : "NA", diff_add_admin_epoch,
-                           diff_add_epoch, diff_add_updates, abort_text);
+                crm_info("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, name=%s, value=%s, magic=%s, cib=%d.%d.%d) : %s",
+                         fn, line, transition_graph->complete, TYPE(reason), ID(reason),
+                         NAME(reason), VALUE(reason), magic ? magic : "NA", diff_add_admin_epoch,
+                         diff_add_epoch, diff_add_updates, abort_text);
             } else {
-                do_crm_log(log_level,
-                           "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s, cib=%d.%d.%d) : %s",
-                           fn, line, transition_graph->complete, TYPE(reason), ID(reason),
-                           magic ? magic : "NA", diff_add_admin_epoch, diff_add_epoch,
-                           diff_add_updates, abort_text);
+                crm_info("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s, cib=%d.%d.%d) : %s",
+                         fn, line, transition_graph->complete, TYPE(reason), ID(reason),
+                         magic ? magic : "NA", diff_add_admin_epoch, diff_add_epoch,
+                         diff_add_updates, abort_text);
             }
 
         } else {
-            do_crm_log(log_level,
-                       "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s) : %s",
-                       fn, line, transition_graph->complete, TYPE(reason), ID(reason),
-                       magic ? magic : "NA", abort_text);
+            crm_info("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s) : %s",
+                     fn, line, transition_graph->complete, TYPE(reason), ID(reason),
+                     magic ? magic : "NA", abort_text);
         }
 
     } else {
-        do_crm_log(log_level,
-                   "%s:%d - Triggered transition abort (complete=%d) : %s",
-                   fn, line, transition_graph->complete, abort_text);
+        crm_info("%s:%d - Triggered transition abort (complete=%d) : %s",
+                 fn, line, transition_graph->complete, abort_text);
     }
 
     switch (fsa_state) {
@@ -395,16 +390,15 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         case S_ILLEGAL:
         case S_STOPPING:
         case S_TERMINATE:
-            do_crm_log(log_level,
-                       "Abort suppressed: state=%s (complete=%d)",
-                       fsa_state2string(fsa_state), transition_graph->complete);
+            crm_info("Abort suppressed: state=%s (complete=%d)",
+                     fsa_state2string(fsa_state), transition_graph->complete);
             return;
         default:
             break;
     }
 
     if (magic == NULL && reason != NULL) {
-        crm_log_xml(log_level + 1, "Cause", reason);
+        crm_log_xml_debug(reason, "Cause");
     }
 
     /* Make sure any queued calculations are discarded ASAP */

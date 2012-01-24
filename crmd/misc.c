@@ -31,10 +31,10 @@ do_log(long long action,
        enum crmd_fsa_cause cause,
        enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    unsigned log_type = LOG_DEBUG_3;
+    unsigned log_type = LOG_TRACE;
 
     if (action & A_LOG) {
-        log_type = LOG_DEBUG_2;
+        log_type = LOG_DEBUG;
     } else if (action & A_WARN) {
         log_type = LOG_WARNING;
     } else if (action & A_ERROR) {
@@ -48,17 +48,11 @@ do_log(long long action,
 
     if (msg_data->data_type == fsa_dt_ha_msg) {
         ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
-
-        if (log_type > LOG_DEBUG) {
-            crm_log_xml(log_type, "input", input->msg);
-        }
+        crm_log_xml_debug(input->msg, __FUNCTION__);
 
     } else if (msg_data->data_type == fsa_dt_xml) {
         xmlNode *input = fsa_typed_data(msg_data->data_type);
-
-        if (get_crm_log_level() >= log_type) {
-            do_crm_log_xml(log_type, __FUNCTION__, input);
-        }
+        crm_log_xml_debug(input, __FUNCTION__);
 
     } else if (msg_data->data_type == fsa_dt_lrm) {
         lrm_op_t *input = fsa_typed_data(msg_data->data_type);

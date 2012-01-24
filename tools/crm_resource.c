@@ -116,7 +116,7 @@ resource_ipc_callback(IPC_Channel * server, void *private_data)
 
         lpc++;
         fprintf(stderr, ".");
-        crm_log_xml(LOG_DEBUG_2, "[inbound]", msg);
+        crm_log_xml_trace(msg, "[inbound]");
 
         crmd_replies_needed--;
         if (crmd_replies_needed == 0) {

@@ -363,7 +363,7 @@ ccm_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, v
 
     } else {
         crm_err("Node update %d failed", call_id);
-        crm_log_xml(LOG_DEBUG, "failed", msg);
+        crm_log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }
@@ -455,7 +455,7 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
 
     } else {
         crm_err("Quorum update %d failed", call_id);
-        crm_log_xml(LOG_DEBUG, "failed", msg);
+        crm_log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }

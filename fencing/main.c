@@ -126,7 +126,7 @@ stonith_client_callback(IPC_Channel *channel, gpointer user_data)
 	    }
 	}
 
-	crm_log_xml(LOG_MSG, "Client[inbound]", request);
+	crm_log_xml_trace(request, "Client[inbound]");
 	stonith_command(stonith_client, request, NULL);
 
 	free_xml(request);
@@ -236,7 +236,7 @@ static void
 stonith_peer_callback(xmlNode * msg, void* private_data)
 {
     const char *remote = crm_element_value(msg, F_ORIG);
-    crm_log_xml(LOG_MSG, "Peer[inbound]", msg);
+    crm_log_xml_trace(msg, "Peer[inbound]");
     stonith_command(NULL, msg, remote);
 }
 

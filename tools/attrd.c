@@ -168,7 +168,7 @@ attrd_ipc_callback(IPC_Channel * client, gpointer user_data)
 #endif
 
         crm_trace("Processing msg from %s", curr_client->id);
-        crm_log_xml(LOG_DEBUG_3, __PRETTY_FUNCTION__, msg);
+        crm_log_xml_trace(msg, __PRETTY_FUNCTION__);
 
         attrd_local_callback(msg);
 

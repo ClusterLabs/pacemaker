@@ -589,7 +589,7 @@ stdin2xml(void)
     xml_obj = string2xml(xml_buffer);
     crm_free(xml_buffer);
 
-    crm_log_xml_debug_3(xml_obj, "Created fragment");
+    crm_log_xml_trace(xml_obj, "Created fragment");
     return xml_obj;
 }
 
@@ -764,7 +764,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
     /* establish the correct permissions */
     fchmod(fileno(file_output_strm), cib_mode);
 	
-    crm_log_xml_debug_4(xml_node, "Writing out");
+    crm_log_xml_trace(xml_node, "Writing out");
 	
     now = time(NULL);
     now_str = ctime(&now);
@@ -1780,8 +1780,8 @@ add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, gboolean as_di
     const char *object_name = NULL;
 
 #if XML_PARSE_DEBUG
-    crm_log_xml(LOG_DEBUG_5, "update:", update);
-    crm_log_xml(LOG_DEBUG_5, "target:", target);
+    crm_log_xml_trace("update:", update);
+    crm_log_xml_trace("target:", target);
 #endif
 
     CRM_CHECK(update != NULL, return 0);
@@ -1857,7 +1857,7 @@ update_xml_child(xmlNode *child, xmlNode *to_update)
 
     } else if(can_update) {
 #if XML_PARSER_DEBUG
-	crm_log_xml_debug_2(child, "Update match found...");
+	crm_log_xml_trace(child, "Update match found...");
 #endif
 	add_xml_object(NULL, child, to_update, FALSE);
     }
@@ -1941,7 +1941,7 @@ replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update, gboolean del
     }
 	
     if(can_delete && parent != NULL) {
-	crm_log_xml_debug_4(child, "Delete match found...");
+	crm_log_xml_trace(child, "Delete match found...");
 	if(delete_only || update == NULL) {
 	    free_xml_from_parent(NULL, child);
 		    
@@ -2066,11 +2066,11 @@ xml2list(xmlNode *parent)
     if(nvpair_list == NULL) {
 	crm_trace("No attributes in %s",
 		    crm_element_name(parent));
-	crm_log_xml_debug_2(
+	crm_log_xml_trace(
 	    parent,"No attributes for resource op");
     }
 	
-    crm_log_xml_debug_3(nvpair_list, "Unpacking");
+    crm_log_xml_trace(nvpair_list, "Unpacking");
 
     xml_prop_iter(
 	nvpair_list, key, value, 
@@ -2225,7 +2225,7 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
     }
     digest[(2*digest_len)] = 0;
     crm_trace("Digest %s: %s\n", digest, buffer);
-    crm_log_xml(LOG_DEBUG_3,  "digest:source", copy);
+    crm_log_xml_trace(copy,  "digest:source");
     crm_free(buffer);
     crm_free(raw_digest);
     free_xml(copy);
@@ -3083,7 +3083,7 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
     nodePath = (char *)xmlGetNodePath(xml_obj);
     if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
 	do_crm_log(error_level, "No match for %s in %s", xpath, crm_str(nodePath));
-	crm_log_xml(error_level+1, "Unexpected Input", xml_obj);
+	crm_log_xml_trace(xml_obj, "Unexpected Input");
 	
     } else if(xpathObj->nodesetval->nodeNr > 1) {
 	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
@@ -3097,7 +3097,7 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
 	    do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, crm_str(matchNodePath));
 	    crm_free(matchNodePath);
 	}
-	crm_log_xml(LOG_DEBUG_2, "Bad Input", xml_obj);
+	crm_log_xml_trace(xml_obj, "Bad Input");
 
     } else {
 	result = getXpathResult(xpathObj, 0);

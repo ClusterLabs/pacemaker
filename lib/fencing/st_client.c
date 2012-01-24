@@ -1068,7 +1068,7 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
 
     if (rc != HA_OK) {
         crm_err("Failed to create STONITH operation message");
-        crm_log_xml(LOG_ERR, "BadOp", op_msg);
+        crm_log_xml_err(op_msg, "BadOp");
         free_xml(op_msg);
         return NULL;
     }
@@ -1460,7 +1460,7 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
 
     } else if (private->op_callback == NULL && rc != stonith_ok) {
         crm_warn("STONITH command failed: %s", stonith_error2string(rc));
-        crm_log_xml(LOG_DEBUG, "Failed STONITH Update", msg);
+        crm_log_xml_debug(msg, "Failed STONITH Update");
     }
 
     if (private->op_callback != NULL) {
@@ -1587,7 +1587,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 
         } else if (reply_id == msg_id) {
             crm_trace("Syncronous reply received");
-            crm_log_xml(LOG_MSG, "Reply", op_reply);
+            crm_log_xml_trace(op_reply, "Reply");
             if (crm_element_value_int(op_reply, F_STONITH_RC, &rc) != 0) {
                 rc = st_err_peer;
             }
@@ -1601,12 +1601,12 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 
         } else if (reply_id < msg_id) {
             crm_debug("Recieved old reply: %d (wanted %d)", reply_id, msg_id);
-            crm_log_xml(LOG_MSG, "Old reply", op_reply);
+            crm_log_xml_trace(op_reply, "Old reply");
 
         } else if ((reply_id - 10000) > msg_id) {
             /* wrap-around case */
             crm_debug("Recieved old reply: %d (wanted %d)", reply_id, msg_id);
-            crm_log_xml(LOG_MSG, "Old reply", op_reply);
+            crm_log_xml_trace(op_reply, "Old reply");
 
         } else {
             crm_err("Received a __future__ reply:" " %d (wanted %d)", reply_id, msg_id);

@@ -132,7 +132,7 @@ crmd_ha_msg_filter(xmlNode * msg)
         }
     }
 
-    /* crm_log_xml(LOG_MSG, "HA[inbound]", msg); */
+    /* crm_log_xml_trace("HA[inbound]", msg); */
     route_message(C_HA_MESSAGE, msg);
 
   done:
@@ -158,7 +158,7 @@ crmd_ha_msg_callback(HA_Message * hamsg, void *private_data)
     if (crm_peer_cache == NULL || crm_active_members() == 0) {
         crm_debug("Ignoring HA messages until we are"
                   " connected to the CCM (%s op from %s)", op, from);
-        crm_log_xml(LOG_MSG, "HA[inbound]: Ignore (No CCM)", msg);
+        crm_log_xml_trace(msg, "HA[inbound]: Ignore (No CCM)");
         goto bail;
     }
 
@@ -177,7 +177,7 @@ crmd_ha_msg_callback(HA_Message * hamsg, void *private_data)
                    "Ignoring HA message (op=%s) from %s: not in our"
                    " membership list (size=%d)", op, from, crm_active_members());
 
-        crm_log_xml(LOG_MSG, "HA[inbound]: CCM Discard", msg);
+        crm_log_xml_trace(msg, "HA[inbound]: CCM Discard");
 
     } else {
         crmd_ha_msg_filter(msg);
@@ -218,7 +218,7 @@ crmd_ipc_msg_callback(IPC_Channel * client, gpointer user_data)
 
         lpc++;
         crm_trace("Processing msg from %s", curr_client->table_key);
-        crm_log_xml(LOG_DEBUG_2, "CRMd[inbound]", msg);
+        crm_log_xml_trace(msg, "CRMd[inbound]");
 
         if (crmd_authorize_message(msg, curr_client)) {
             route_message(C_IPC_MESSAGE, msg);

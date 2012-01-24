@@ -354,7 +354,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     const char *type = crm_element_value(msg, F_CRM_MSG_TYPE);
 
     crm_trace("Processing %s (%s) message", op, ref);
-    crm_log_xml(LOG_DEBUG_3, "ipc", msg);
+    crm_log_xml_trace(msg, "ipc");
 
     if (op == NULL) {
         /* error */
@@ -369,7 +369,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         ) {
         xmlXPathObject *xpathObj = NULL;
 
-        crm_log_xml(LOG_DEBUG_2, "Processing (N)ACK", msg);
+        crm_log_xml_trace(msg, "Processing (N)ACK");
         crm_debug("Processing (N)ACK %s from %s", crm_element_value(msg, XML_ATTR_REFERENCE), from);
 
         xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
@@ -379,7 +379,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
             xpathObj = NULL;
 
         } else {
-            crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
+            crm_log_xml_err(msg, "Invalid (N)ACK");
             return FALSE;
         }
 
@@ -422,7 +422,7 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
 
     if (transition_graph->complete || stonith_id < 0 || safe_str_neq(uuid, te_uuid)
         || transition_graph->id != transition_id) {
-        crm_info("Ignoring STONITH action initiated outside" " of the current transition");
+        crm_info("Ignoring STONITH action initiated outside of the current transition");
         goto bail;
     }
 

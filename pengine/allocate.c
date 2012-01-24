@@ -2199,7 +2199,7 @@ stage8(pe_working_set_t * data_set)
         rsc->cmds->expand(rsc, data_set);
     }
 
-    crm_log_xml_debug_3(data_set->graph, "created resource-driven action list");
+    crm_log_xml_trace(data_set->graph, "created resource-driven action list");
 
     /* catch any non-resource specific actions */
     crm_trace("processing non-resource actions");
@@ -2211,7 +2211,7 @@ stage8(pe_working_set_t * data_set)
         graph_element_from_action(action, data_set);
     }
 
-    crm_log_xml_debug_3(data_set->graph, "created generic action list");
+    crm_log_xml_trace(data_set->graph, "created generic action list");
     crm_trace("Created transition graph %d.", transition_id);
 
     return TRUE;

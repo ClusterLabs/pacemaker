@@ -566,7 +566,7 @@ action2xml(action_t * action, gboolean as_input)
     }
 
     sorted_xml(args_xml, action_xml, FALSE);
-    crm_log_xml_debug_4(action_xml, "dumped action");
+    crm_log_xml_trace(action_xml, "dumped action");
     free_xml(args_xml);
 
     return action_xml;
@@ -712,7 +712,7 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
     } else if (is_set(wrapper->action->flags, pe_action_runnable)
                && is_set(wrapper->action->flags, pe_action_pseudo)
                && wrapper->action->rsc->variant != pe_native) {
-        do_crm_log(LOG_CRIT, "Input (%d) %s should be dumped for %s",
+        crm_crit("Input (%d) %s should be dumped for %s",
                    wrapper->action->id, wrapper->action->uuid, action->uuid);
         goto dump;
 #endif

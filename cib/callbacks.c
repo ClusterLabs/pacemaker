@@ -299,7 +299,7 @@ cib_common_callback(IPC_Channel * channel, cib_client_t * cib_client,
         determine_request_user(&cib_client->user, channel, op_request, F_CIB_USER);
 #endif
 
-        /* crm_log_xml(LOG_MSG, "Client[inbound]", op_request); */
+        /* crm_log_xml_trace(op_request, "Client[inbound]"); */
 
         if (cib_client->callback_id == NULL) {
             value = crm_element_value(op_request, F_CIB_CALLBACK_TOKEN);
@@ -468,7 +468,7 @@ parse_peer_options(int call_type, xmlNode * request,
 
     } else {
         crm_err("Nothing for us to do?");
-        crm_log_xml(LOG_ERR, "Peer[inbound]", request);
+        crm_log_xml_err(request, "Peer[inbound]");
     }
 
     return FALSE;
@@ -540,7 +540,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         crm_free(digest);
 
         add_message_xml(msg, F_CIB_UPDATE_DIFF, result_diff);
-        crm_log_xml(LOG_DEBUG_3, "copy", msg);
+        crm_log_xml_trace(msg, "copy");
         send_cluster_message(NULL, crm_msg_cib, msg, TRUE);
 
     } else if (originator != NULL) {
@@ -682,7 +682,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
 
         if (op_reply == NULL && (needs_reply || local_notify)) {
             crm_err("Unexpected NULL reply to message");
-            crm_log_xml(LOG_ERR, "null reply", request);
+            crm_log_xml_err(request, "null reply");
             needs_reply = FALSE;
             local_notify = FALSE;
         }
@@ -856,7 +856,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         call_options |= cib_force_diff;
 
         CRM_CHECK(call_type == 3 || call_type == 4, crm_err("Call type: %d", call_type);
-                  crm_log_xml(LOG_ERR, "bad op", request));
+                  crm_log_xml_err(request, "bad op"));
     }
 #ifdef SUPPORT_PRENOTIFY
     if ((call_options & cib_inhibit_notify) == 0) {
@@ -1169,7 +1169,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
         crm_xml_add(msg, F_CIB_CLIENTNAME, originator);
     }
 
-    /* crm_log_xml(LOG_MSG, "Peer[inbound]", msg); */
+    /* crm_log_xml_trace("Peer[inbound]", msg); */
     cib_process_request(msg, FALSE, TRUE, TRUE, NULL);
     return;
 

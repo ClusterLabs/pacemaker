@@ -470,7 +470,7 @@ log_fsa_input(fsa_data_t * stored_msg)
         ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, fsa_dt_ha_msg, __FUNCTION__);
 
         crm_trace("FSA processing XML message from %s", stored_msg->origin);
-        crm_log_xml(LOG_MSG, "FSA message data", ha_input->xml);
+        crm_log_xml_trace(ha_input->xml, "FSA message data");
     }
 }
 

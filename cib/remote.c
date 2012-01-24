@@ -413,7 +413,7 @@ cib_remote_msg(int csock, gpointer data)
 
     value = crm_element_name(command);
     if (safe_str_neq(value, "cib_command")) {
-        crm_log_xml(LOG_MSG, "Bad command: ", command);
+        crm_log_xml_trace(command, "Bad command: ");
         goto bail;
     }
 
@@ -463,7 +463,7 @@ cib_remote_msg(int csock, gpointer data)
         crm_xml_add_int(command, F_CIB_CALLOPTS, 0);
     }
 
-    crm_log_xml(LOG_MSG, "Remote command: ", command);
+    crm_log_xml_trace(command, "Remote command: ");
     cib_common_callback_worker(command, client, FALSE, TRUE);
   bail:
     free_xml(command);

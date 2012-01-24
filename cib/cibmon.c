@@ -221,7 +221,7 @@ cibmon_diff(const char *event, xmlNode * msg)
     }
 
     if (log_updates && update != NULL) {
-        do_crm_log_xml(log_level + 2, "raw_update", update);
+        crm_log_xml_trace(update, "raw_update");
     }
 
     if (cib_copy != NULL) {

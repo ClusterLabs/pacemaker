@@ -344,7 +344,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *class = crm_element_value(xml_obj, XML_AGENT_ATTR_CLASS);
 
-    crm_log_xml_debug_3(xml_obj, "Processing resource input...");
+    crm_log_xml_trace(xml_obj, "Processing resource input...");
 
     if (id == NULL) {
         pe_err("Must specify id tag in <resource>");
@@ -363,7 +363,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     crm_malloc0(*rsc, sizeof(resource_t));
 
     if (expanded_xml) {
-        crm_log_xml_debug_3(expanded_xml, "Expanded resource...");
+        crm_log_xml_trace(expanded_xml, "Expanded resource...");
         (*rsc)->xml = expanded_xml;
         (*rsc)->orig_xml = xml_obj;
 

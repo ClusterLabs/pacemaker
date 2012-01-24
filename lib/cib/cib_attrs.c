@@ -130,7 +130,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
                                              user_name);
 
     if (rc != cib_ok) {
-        do_crm_log(LOG_DEBUG_2,
+        crm_trace(
                    "Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
                    attr_name, section, crm_str(node_uuid), crm_str(set_name), xpath_string,
                    cib_error2string(rc));
@@ -334,7 +334,7 @@ update_attr_delegate(cib_t * the_cib, int call_options,
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 
-    crm_log_xml_debug_2(xml_top, "update_attr");
+    crm_log_xml_trace(xml_top, "update_attr");
     rc = the_cib->cmds->delegated_variant_op(the_cib, CIB_OP_MODIFY, NULL, section, xml_top, NULL,
                                              call_options | cib_quorum_override, user_name);
 
@@ -368,7 +368,7 @@ read_attr_delegate(cib_t * the_cib,
     rc = find_nvpair_attr_delegate(the_cib, XML_NVPAIR_ATTR_VALUE, section, node_uuid, set_type,
                                    set_name, attr_id, attr_name, to_console, attr_value, user_name);
     if (rc != cib_ok) {
-        do_crm_log(LOG_DEBUG_2, "Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
+        crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
                    attr_name, section, crm_str(set_name), crm_str(node_uuid), cib_error2string(rc));
     }
     return rc;
@@ -481,7 +481,7 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     xml_obj = fragment;
     CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_CIB_TAG_NODES), return cib_output_data);
     CRM_ASSERT(xml_obj != NULL);
-    crm_log_xml_debug_2(xml_obj, "Result section");
+    crm_log_xml_trace(xml_obj, "Result section");
 
     rc = cib_NOTEXISTS;
     *uname = NULL;

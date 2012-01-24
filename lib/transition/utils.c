@@ -183,7 +183,7 @@ print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t * 
     }
 
     if (action->confirmed == FALSE) {
-        crm_log_xml(LOG_DEBUG_3, "\t\t\tRaw xml: ", action->xml);
+        crm_log_xml_trace(action->xml, "\t\t\tRaw xml: ");
     }
 }
 

@@ -771,7 +771,7 @@ dump_v6_echo(ping_node * node, u_char * buf, int bytes, struct msghdr *hdr)
         rc = process_icmp6_error(node, (struct sockaddr_in6 *)&(node->addr));
     }
 
-    do_crm_log(LOG_DEBUG_2,
+    crm_trace(
                "Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
                from_host, node->iseq, ntohs(icp->icmp6_seq),
                ntohs(icp->icmp6_id), node->dest, (char *)(buf + ICMP6ECHOLEN),
@@ -824,7 +824,7 @@ dump_v4_echo(ping_node * node, u_char * buf, int bytes, struct msghdr *hdr)
     }
 
     /* TODO: Stop logging icmp_id once we're sure everything works */
-    do_crm_log(LOG_DEBUG_2,
+    crm_trace(
                "Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
                from_host, node->iseq, ntohs(icp->icmp_seq),
                ntohs(icp->icmp_id), node->dest, icp->icmp_data,

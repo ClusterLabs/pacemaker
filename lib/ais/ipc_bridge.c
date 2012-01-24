@@ -147,7 +147,7 @@ ais_ipc_callback(IPC_Channel * channel, gpointer user_data)
 
         ha_msg_add(op_request, "client-id", ais_client->id);
         ha_msg_add(op_request, "client-name", ais_client->name);
-        crm_log_xml(LOG_ERR, "Client[inbound]", op_request);
+        crm_log_xml_err("Client[inbound]", op_request);
 
 /* 		cib_common_callback_worker( */
 /* 			op_request, cib_client, force_synchronous, privileged); */

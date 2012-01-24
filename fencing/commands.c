@@ -870,7 +870,7 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     }
 
     log_operation(cmd, rc, pid, NULL, output);
-    crm_log_xml_debug_3(reply, "Reply");
+    crm_log_xml_trace(reply, "Reply");
     
     if(bcast && !stand_alone) {
 	/* Send reply as T_STONITH_NOTIFY so everyone does notifications

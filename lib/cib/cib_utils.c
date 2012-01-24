@@ -283,8 +283,8 @@ cib_compare_generation(xmlNode * left, xmlNode * right)
         XML_ATTR_NUMUPDATES,
     };
 
-    crm_log_xml_debug_3(left, "left");
-    crm_log_xml_debug_3(right, "right");
+    crm_log_xml_trace(left, "left");
+    crm_log_xml_trace(right, "right");
 
     for (lpc = 0; lpc < DIMOF(attributes); lpc++) {
         int int_elem_l = -1;
@@ -824,7 +824,7 @@ cib_create_op(int call_id, const char *token, const char *op, const char *host, 
 
     if (rc != HA_OK) {
         crm_err("Failed to create CIB operation message");
-        crm_log_xml(LOG_ERR, "op", op_msg);
+        crm_log_xml_err(op_msg, "op");
         free_xml(op_msg);
         return NULL;
     }
@@ -881,7 +881,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
 
     } else if (cib && cib->op_callback == NULL && rc != cib_ok) {
         crm_warn("CIB command failed: %s", cib_error2string(rc));
-        crm_log_xml(LOG_DEBUG, "Failed CIB Update", msg);
+        crm_log_xml_debug(msg, "Failed CIB Update");
     }
 
     if (cib && cib->op_callback != NULL) {

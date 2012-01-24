@@ -37,7 +37,7 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
 
     if (value == NULL) {
         crm_err("Actions must have an id!");
-        crm_log_xml_debug_3(xml_action, "Action with missing id");
+        crm_log_xml_trace(xml_action, "Action with missing id");
         return NULL;
     }
 

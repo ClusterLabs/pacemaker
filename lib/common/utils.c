@@ -1637,7 +1637,7 @@ crm_abort(const char *file, const char *function, int line,
     int status = 0;
 
     if (do_core == FALSE) {
-        do_crm_log(LOG_ERR, "%s: Triggered assert at %s:%d : %s",
+        crm_err("%s: Triggered assert at %s:%d : %s",
                    function, file, line, assert_condition);
         return;
 
@@ -1645,13 +1645,13 @@ crm_abort(const char *file, const char *function, int line,
         pid = fork();
 
     } else {
-        do_crm_log(LOG_ERR, "%s: Triggered fatal assert at %s:%d : %s",
+        crm_err("%s: Triggered fatal assert at %s:%d : %s",
                    function, file, line, assert_condition);
     }
 
     switch (pid) {
         case -1:
-            do_crm_log(LOG_CRIT, "%s: Cannot create core for non-fatal assert at %s:%d : %s",
+            crm_crit("%s: Cannot create core for non-fatal assert at %s:%d : %s",
                        function, file, line, assert_condition);
             return;
 
@@ -1660,7 +1660,7 @@ crm_abort(const char *file, const char *function, int line,
             break;
 
         default:               /* Parent */
-            do_crm_log(LOG_ERR,
+            crm_err(
                        "%s: Forked child %d to record non-fatal assert at %s:%d : %s",
                        function, pid, file, line, assert_condition);
             do {

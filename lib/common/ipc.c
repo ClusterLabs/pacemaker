@@ -153,8 +153,6 @@ send_ipc_message(IPC_Channel * ipc_client, xmlNode * msg)
             }
         }
     }
-    /* crm_log_xml(all_is_good?LOG_MSG:LOG_WARNING,"IPC[outbound]",msg); */
-
     return all_is_good;
 }
 
@@ -327,7 +325,7 @@ subsystem_msg_dispatch(IPC_Channel * sender, void *user_data)
         }
 
         lpc++;
-        crm_log_xml(LOG_MSG, __FUNCTION__, msg);
+        crm_log_xml_trace(msg, __FUNCTION__);
 
         sys_to = crm_element_value(msg, F_CRM_SYS_TO);
         task = crm_element_value(msg, F_CRM_TASK);

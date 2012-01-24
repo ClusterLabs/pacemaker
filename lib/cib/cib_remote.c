@@ -283,7 +283,7 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection)
     free_xml(login);
 
     answer = cib_recv_remote_msg(connection->session, connection->encrypted);
-    crm_log_xml_debug_3(answer, "Reply");
+    crm_log_xml_trace(answer, "Reply");
     if (answer == NULL) {
         rc = cib_authentication;
 
@@ -571,12 +571,12 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
 
         } else if (reply_id < msg_id) {
             crm_debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
-            crm_log_xml(LOG_MSG, "Old reply", op_reply);
+            crm_log_xml_trace(op_reply, "Old reply");
 
         } else if ((reply_id - 10000) > msg_id) {
             /* wrap-around case */
             crm_debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
-            crm_log_xml(LOG_MSG, "Old reply", op_reply);
+            crm_log_xml_trace(op_reply, "Old reply");
         } else {
             crm_err("Received a __future__ reply:" " %d (wanted %d)", reply_id, msg_id);
         }
@@ -619,12 +619,12 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     }
 
     if (rc == cib_ok || rc == cib_not_master || rc == cib_master_timeout) {
-        crm_log_xml(LOG_DEBUG, "passed", op_reply);
+        crm_log_xml_debug(op_reply, "passed");
 
     } else {
 /* 	} else if(rc == cib_remote_timeout) { */
         crm_err("Call failed: %s", cib_error2string(rc));
-        crm_log_xml(LOG_WARNING, "failed", op_reply);
+        crm_log_xml_warn(op_reply, "failed");
     }
 
     if (output_data == NULL) {

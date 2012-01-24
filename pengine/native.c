@@ -876,7 +876,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
                                     pe_order_runnable_left, data_set);
             }
 
-            do_crm_log(LOG_INFO, "Cancel action %s (%s vs. %s) on %s",
+            crm_info("Cancel action %s (%s vs. %s) on %s",
                        key, role, role2text(rsc->next_role), crm_str(node_uname));
         }
     }

@@ -1223,7 +1223,7 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
     }
 
     if(any_sets) {
-	crm_log_xml_debug_3(new_xml, "Expanded rsc_order...");
+	crm_log_xml_trace(new_xml, "Expanded rsc_order...");
 	*expanded_xml = new_xml;
     } else {
 	free_xml(new_xml);
@@ -1663,7 +1663,7 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
     }
 
     if(any_sets) {
-	crm_log_xml_debug_3(new_xml, "Expanded rsc_colocation...");
+	crm_log_xml_trace(new_xml, "Expanded rsc_colocation...");
 	*expanded_xml = new_xml;
     } else {
 	free_xml(new_xml);
@@ -1958,7 +1958,7 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
     }
 
     if(any_sets) {
-	crm_log_xml_debug_3(new_xml, "Expanded rsc_ticket...");
+	crm_log_xml_trace(new_xml, "Expanded rsc_ticket...");
 	*expanded_xml = new_xml;
     } else {
 	free_xml(new_xml);

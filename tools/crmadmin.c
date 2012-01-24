@@ -456,7 +456,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
         xml = convert_ipc_message(msg, __FUNCTION__);
         msg->msg_done(msg);
-        crm_log_xml(LOG_MSG, "ipc", xml);
+        crm_log_xml_trace(xml, "ipc");
 
         if (xml == NULL) {
             crm_info("XML in IPC message was not valid... " "discarding.");

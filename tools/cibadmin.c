@@ -571,7 +571,7 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
 
     } else if (safe_str_eq(cib_action, CIB_OP_QUERY) && output == NULL) {
         crm_err("Output expected in query response");
-        crm_log_xml(LOG_ERR, "no output", msg);
+        crm_log_xml_err(msg, "no output");
 
     } else if (output == NULL) {
         crm_info("Call passed");

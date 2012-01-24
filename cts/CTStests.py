@@ -435,8 +435,6 @@ class StonithdTest(CTSTest):
 
         if is_dc:
             watchpats.append("tengine_stonith_notify: Target was our leader .*%s" % node)
-        else:
-            watchpats.append("tengine_stonith_callback: .*: OK ")
 
         if self.CM.Env["LogWatcher"] != "remote" or not is_dc:
             # Often remote logs aren't flushed to disk by the time the node is shot,

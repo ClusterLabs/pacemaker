@@ -984,7 +984,7 @@ create_node_state(const char *uname, const char *ha_state, const char *ccm_state
         crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN, "0");
     }
 
-    crm_log_xml_debug_3(node_state, "created");
+    crm_log_xml_trace(node_state, "created");
 
     return node_state;
 }

@@ -363,7 +363,7 @@ cib_replace_notify(const char *origin, xmlNode * update, enum cib_errors result,
     crm_xml_add_int(replace_msg, F_CIB_RC, result);
     attach_cib_generation(replace_msg, "cib-replace-generation", update);
 
-    crm_log_xml(LOG_DEBUG_2, "CIB Replaced", replace_msg);
+    crm_log_xml_trace(replace_msg, "CIB Replaced");
 
     g_hash_table_foreach_remove(client_list, cib_notify_client, replace_msg);
     free_xml(replace_msg);

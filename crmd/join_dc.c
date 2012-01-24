@@ -455,7 +455,7 @@ join_update_complete_callback(xmlNode * msg, int call_id, int rc, xmlNode * outp
 
     } else {
         crm_err("Join update %d failed", call_id);
-        crm_log_xml(LOG_DEBUG, "failed", msg);
+        crm_log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }

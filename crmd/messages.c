@@ -47,7 +47,7 @@ gboolean ipc_queue_helper(gpointer key, gpointer value, gpointer user_data);
 
 #ifdef MSG_LOG
 #  define ROUTER_RESULT(x)	crm_trace("Router result: %s", x);	\
-    crm_log_xml(LOG_MSG, "router.log", msg);
+    crm_log_xml_trace(msg, "router.log");
 #else
 #  define ROUTER_RESULT(x)	crm_trace("Router result: %s", x)
 #endif
@@ -287,13 +287,13 @@ fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type, const char 
     void *ret_val = NULL;
 
     if (fsa_data == NULL) {
-        do_crm_log(LOG_ERR, "%s: No FSA data available", caller);
+        crm_err("%s: No FSA data available", caller);
 
     } else if (fsa_data->data == NULL) {
-        do_crm_log(LOG_ERR, "%s: No message data available. Origin: %s", caller, fsa_data->origin);
+        crm_err("%s: No message data available. Origin: %s", caller, fsa_data->origin);
 
     } else if (fsa_data->data_type != a_type) {
-        do_crm_log(LOG_CRIT,
+        crm_crit(
                    "%s: Message data was the wrong type! %d vs. requested=%d."
                    "  Origin: %s", caller, fsa_data->data_type, a_type, fsa_data->origin);
         CRM_ASSERT(fsa_data->data_type == a_type);
@@ -390,7 +390,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     if (msg_error != NULL) {
         processing_complete = TRUE;
         crm_err("%s", msg_error);
-        crm_log_xml(LOG_WARNING, "bad msg", msg);
+        crm_log_xml_warn(msg, "bad msg");
     }
 
     if (processing_complete) {
@@ -520,7 +520,7 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
     }
 
     crm_trace("received client join msg");
-    crm_log_xml(LOG_MSG, "join", client_msg);
+    crm_log_xml_trace(client_msg, "join");
     xml = get_message_xml(client_msg, F_CRM_DATA);
     auth_result = process_hello_message(xml, &uuid, &client_name, &major_version, &minor_version);
 
@@ -689,7 +689,7 @@ handle_request(xmlNode * stored_msg)
     /* Optimize this for the DC - it has the most to do */
 
     if (op == NULL) {
-        crm_log_xml(LOG_ERR, "Bad message", stored_msg);
+        crm_log_xml_err(stored_msg, "Bad message");
         return I_NULL;
     }
 
@@ -832,7 +832,7 @@ handle_request(xmlNode * stored_msg)
 
     } else {
         crm_err("Unexpected request (%s) sent to %s", op, AM_I_DC ? "the DC" : "non-DC node");
-        crm_log_xml(LOG_ERR, "Unexpected", stored_msg);
+        crm_log_xml_err(stored_msg, "Unexpected");
     }
 
     return I_NULL;
@@ -844,7 +844,7 @@ handle_response(xmlNode * stored_msg)
     const char *op = crm_element_value(stored_msg, F_CRM_TASK);
 
     if (op == NULL) {
-        crm_log_xml(LOG_ERR, "Bad message", stored_msg);
+        crm_log_xml_err(stored_msg, "Bad message");
 
     } else if (AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
         /* Check if the PE answer been superceeded by a subsequent request? */
@@ -897,13 +897,13 @@ handle_shutdown_request(xmlNode * stored_msg)
 
     crm_info("Creating shutdown request for %s (state=%s)", host_from, fsa_state2string(fsa_state));
 
-    crm_log_xml(LOG_MSG, "message", stored_msg);
+    crm_log_xml_trace(stored_msg, "message");
 
     node_state = create_node_state(host_from, NULL, NULL, NULL, NULL,
                                    CRMD_STATE_INACTIVE, FALSE, __FUNCTION__);
 
     fsa_cib_anon_update(XML_CIB_TAG_STATUS, node_state, cib_quorum_override);
-    crm_log_xml_debug_2(node_state, "Shutdown update");
+    crm_log_xml_trace(node_state, "Shutdown update");
     free_xml(node_state);
 
     now_s = crm_itoa(now);
