@@ -113,7 +113,7 @@ class crm_lha(ClusterManager):
 
             "Pat:ChildKilled"  : "%s heartbeat.*%s.*killed by signal 9",
             "Pat:ChildRespawn" : "%s heartbeat.*Respawning client.*%s",
-            "Pat:ChildExit"    : "ERROR: Client .* exited with return code",
+            "Pat:ChildExit"    : "(ERROR|error): Client .* exited with return code",
             
             "Pat:They_fenced"  : "stonith.* log_operation: Operation .* for host '%s' with device .* returned: 0",
             "Pat:They_fenced_offset"  : "for host '",
@@ -121,10 +121,12 @@ class crm_lha(ClusterManager):
 
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
+                r" trace:",
+                r"error:",
+                r"crit:",
                 r"ERROR:",
                 r"CRIT:",
-                r"Shutting down\.",
-                r"Forcing shutdown\.",
+                r"Shutting down...NOW",
                 r"Timer I_TERMINATE just popped",
                 r"input=I_ERROR",
                 r"input=I_FAIL",
@@ -168,10 +170,10 @@ class crm_lha(ClusterManager):
         '''Return list of errors which are known and very noisey should be ignored'''
         if 1:
             return [ 
-                "ERROR: crm_abort: crm_glib_handler: ",
-                "ERROR: Message hist queue is filling up",
+                "(ERROR|error): crm_abort: crm_glib_handler: ",
+                "(ERROR|error): Message hist queue is filling up",
                 "stonithd.*CRIT: external_hostlist: 'vmware gethosts' returned an empty hostlist",
-                "stonithd.*ERROR: Could not list nodes for stonith RA external/vmware.",
+                "stonithd.*(ERROR|error): Could not list nodes for stonith RA external/vmware.",
                 "pengine.*Preventing .* from re-starting",
                 ]
         return []
@@ -454,15 +456,15 @@ class crm_lha(ClusterManager):
         complist = []
         common_ignore = [
                     "Pending action:",
-                    "ERROR: crm_log_message_adv:",
-                    "ERROR: MSG: No message to dump",
+                    "(ERROR|error): crm_log_message_adv:",
+                    "(ERROR|error): MSG: No message to dump",
                     "pending LRM operations at shutdown",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
                     "Sending message to CIB service FAILED",
                     "Action A_RECOVER .* not supported",
-                    "ERROR: stonithd_op_result_ready: not signed on",
-                    "pingd.*ERROR: send_update: Could not send update",
+                    "(ERROR|error): stonithd_op_result_ready: not signed on",
+                    "pingd.*(ERROR|error): send_update: Could not send update",
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
@@ -471,18 +473,18 @@ class crm_lha(ClusterManager):
             ]
 
         stonith_ignore = [
-            "ERROR: stonithd_signon: ",
+            "(ERROR|error): stonithd_signon: ",
             "update_failcount: Updating failcount for child_DoFencing",
-            "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
-            "lrmd.*ERROR: cl_get_value: wrong argument (reply)",
-            "lrmd.*ERROR: is_expected_msg:.* null message",
-            "lrmd.*ERROR: stonithd_receive_ops_result failed.",
+            "(ERROR|error): te_connect_stonith: Sign-in failed: triggered a retry",
+            "lrmd.*(ERROR|error): cl_get_value: wrong argument (reply)",
+            "lrmd.*(ERROR|error): is_expected_msg:.* null message",
+            "lrmd.*(ERROR|error): stonithd_receive_ops_result failed.",
              ]
 
         stonith_ignore.extend(common_ignore)
 
         ccm_ignore = [
-            "ERROR: get_channel_token: No reply message - disconnected"
+            "(ERROR|error): get_channel_token: No reply message - disconnected"
             ]
 
         ccm_ignore.extend(common_ignore)
@@ -561,24 +563,24 @@ class crm_lha(ClusterManager):
         if self.fastfail == 0:
             ccm.pats.extend([
                 "attrd .* exited with return code 1",
-                "ERROR: Respawning client .*attrd",
+                "(ERROR|error): Respawning client .*attrd",
                 "cib.* exited with return code 2",
-                "ERROR: Respawning client .*cib",
+                "(ERROR|error): Respawning client .*cib",
                 "crmd.* exited with return code 2",
-                "ERROR: Respawning client .*crmd" 
+                "(ERROR|error): Respawning client .*crmd" 
                 ])
             cib.pats.extend([
                 "attrd.* exited with return code 1",
-                "ERROR: Respawning client .*attrd",
+                "(ERROR|error): Respawning client .*attrd",
                 "crmd.* exited with return code 2",
-                "ERROR: Respawning client .*crmd" 
+                "(ERROR|error): Respawning client .*crmd" 
                 ])
             lrmd.pats.extend([
                 "crmd.* exited with return code 2",
-                "ERROR: Respawning client .*crmd" 
+                "(ERROR|error): Respawning client .*crmd" 
                 ])
             pengine.pats.extend([
-                "ERROR: Respawning client .*crmd" 
+                "(ERROR|error): Respawning client .*crmd" 
                 ])
 
         complist.append(ccm)

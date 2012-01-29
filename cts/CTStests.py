@@ -856,7 +856,7 @@ class ValgrindTest(CTSTest):
             if not rc:
                 self.failure("Couldn't shut down %s" % node)
 
-            rc = self.CM.rsh(node, "grep -e indirectly.*lost:.*[1-9] -e definitely.*lost:.*[1-9] -e ERROR.*SUMMARY:.*[1-9].*errors %s" % self.logPat, 0)
+            rc = self.CM.rsh(node, "grep -e indirectly.*lost:.*[1-9] -e definitely.*lost:.*[1-9] -e (ERROR|error).*SUMMARY:.*[1-9].*errors %s" % self.logPat, 0)
             if rc != 1:
                 leaked.append(node)
                 self.failure("Valgrind errors detected on %s" % node)
@@ -1139,9 +1139,9 @@ class ResourceRecover(CTSTest):
                  """LogActions: Recover %s""" % self.rid,
                  """LogActions: Recover %s""" % self.rid_alt,
                  """Unknown operation: fail""",
-                 """ERROR: sending stonithRA op to stonithd failed.""",
-                 """ERROR: process_lrm_event: LRM operation %s_%s_%d""" % (self.rid, self.action, self.interval),
-                 """ERROR: process_graph_event: Action %s_%s_%d .* initiated outside of a transition""" % (self.rid, self.action, self.interval),
+                 """(ERROR|error): sending stonithRA op to stonithd failed.""",
+                 """(ERROR|error): process_lrm_event: LRM operation %s_%s_%d""" % (self.rid, self.action, self.interval),
+                 """(ERROR|error): process_graph_event: Action %s_%s_%d .* initiated outside of a transition""" % (self.rid, self.action, self.interval),
                  ]
 
 AllTestClasses.append(ResourceRecover)
@@ -1205,7 +1205,7 @@ class ComponentFail(CTSTest):
                 self.okerrpatterns.append("%s .*Process %s:.* exited" %(node, chosen.name))
                 self.okerrpatterns.append("%s .*I_ERROR.*crmdManagedChildDied" %node)
                 self.okerrpatterns.append("%s .*The %s subsystem terminated unexpectedly" %(node, chosen.name))
-                self.okerrpatterns.append("ERROR: Client .* exited with return code")
+                self.okerrpatterns.append("(ERROR|error): Client .* exited with return code")
             else:
                 # Sometimes this won't be in the log...
                 self.okerrpatterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
@@ -1429,7 +1429,7 @@ class SplitBrainTest(CTSTest):
         '''Return list of errors which are 'normal' and should be ignored'''
         return [
             "Another DC detected:",
-            "ERROR: attrd_cib_callback: .*Application of an update diff failed",
+            "(ERROR|error): attrd_cib_callback: .*Application of an update diff failed",
             "crmd_ha_msg_callback:.*not in our membership list",
             "CRIT:.*node.*returning after partition",
             ]
@@ -1577,9 +1577,9 @@ class Reattach(CTSTest):
         '''Return list of errors which should be ignored'''
         return [ 
             "You may ignore this error if it is unmanaged.",
-            "pingd: .*ERROR: send_ipc_message:",
-            "pingd: .*ERROR: send_update:",
-            "lrmd: .*ERROR: notify_client:",
+            "pingd: .*(ERROR|error): send_ipc_message:",
+            "pingd: .*(ERROR|error): send_update:",
+            "lrmd: .*(ERROR|error): notify_client:",
             ]
 
     def is_applicable(self):

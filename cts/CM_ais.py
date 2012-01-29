@@ -53,11 +53,12 @@ class crm_ais(crm_lha):
 
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
+                r" trace:",
+                r"error:",
+                r"crit:",
                 r"ERROR:",
                 r"CRIT:",
-                r"TRACE:",
-                r"Shutting down\.",
-                r"Forcing shutdown\.",
+                r"Shutting down...NOW",
                 r"Timer I_TERMINATE just popped",
                 r"input=I_ERROR",
                 r"input=I_FAIL",
@@ -65,7 +66,7 @@ class crm_ais(crm_lha):
                 r"input=I_FINALIZED cause=C_TIMER_POPPED",
                 r"input=I_ERROR",
                 r", exiting\.",
-                r"WARN.*Ignoring HA message.*vote.*not in our membership list",
+                r"(WARN|warn).*Ignoring HA message.*vote.*not in our membership list",
                 r"pengine.*Attempting recovery of resource",
                 r"is taking more than 2x its timeout",
                 r"Confirm not received from",
@@ -99,7 +100,7 @@ class crm_ais(crm_lha):
                 "crmadmin:",
                 "update_trace_data",
                 "async_notify: strange, client not found",
-                "ERROR: Message hist queue is filling up"
+                "(ERROR|error): Message hist queue is filling up"
                 ]
         return []
 
@@ -111,21 +112,21 @@ class crm_ais(crm_lha):
         self.complist = []
         self.common_ignore = [
                     "Pending action:",
-                    "ERROR: crm_log_message_adv:",
-                    "ERROR: MSG: No message to dump",
+                    "(ERROR|error): crm_log_message_adv:",
+                    "(ERROR|error): MSG: No message to dump",
                     "pending LRM operations at shutdown",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
                     "Sending message to CIB service FAILED",
                     "apply_xml_diff: Diff application failed!",
                     "crmd.*Action A_RECOVER .* not supported",
-                    "pingd.*ERROR: send_update: Could not send update",
+                    "pingd.*(ERROR|error): send_update: Could not send update",
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
                     "crmd.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
                     "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
-                    "ERROR: attrd_connection_destroy: Lost connection to attrd",
+                    "(ERROR|error): attrd_connection_destroy: Lost connection to attrd",
                     "info: te_fence_node: Executing .* fencing operation",
             ]
 
@@ -161,7 +162,7 @@ class crm_ais(crm_lha):
                     ], badnews_ignore = self.common_ignore)
 
         fullcomplist["attrd"] = Process(self, "attrd", pats = [
-                    "crmd.*ERROR: attrd_connection_destroy: Lost connection to attrd"
+                    "crmd.*(ERROR|error): attrd_connection_destroy: Lost connection to attrd"
                     ], badnews_ignore = self.common_ignore)
 
         fullcomplist["pengine"] = Process(self, "pengine", dc_pats = [
@@ -177,7 +178,7 @@ class crm_ais(crm_lha):
         stonith_ignore = [
             "LogActions: Recover Fencing",
             "update_failcount: Updating failcount for Fencing",
-            "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
+            "(ERROR|error): te_connect_stonith: Sign-in failed: triggered a retry",
             ]
         
         stonith_ignore.extend(self.common_ignore)
@@ -231,21 +232,21 @@ class crm_whitetank(crm_ais):
         self.ais_components()
 
         aisexec_ignore = [
-                    "ERROR: ais_dispatch: Receiving message .* failed",
+                    "(ERROR|error): ais_dispatch: Receiving message .* failed",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
-                    "cib.*ERROR: cib_ais_destroy: AIS connection terminated",
-                    #"crmd.*ERROR: crm_ais_destroy: AIS connection terminated",
+                    "cib.*(ERROR|error): cib_ais_destroy: AIS connection terminated",
+                    #"crmd.*(ERROR|error): crm_ais_destroy: AIS connection terminated",
                     "crmd.*do_exit: Could not recover from internal error",
                     "crmd.*I_TERMINATE.*do_recover",
                     "attrd.*CRIT: attrd_ais_destroy: Lost connection to OpenAIS service!",
-                    "stonithd.*ERROR: AIS connection terminated",
+                    "stonithd.*(ERROR|error): AIS connection terminated",
             ]
 
         aisexec_ignore.extend(self.common_ignore)
 
         self.complist.append(Process(self, "aisexec", pats = [
-                    "ERROR: ais_dispatch: AIS connection failed",
-                    "crmd.*ERROR: do_exit: Could not recover from internal error",
+                    "(ERROR|error): ais_dispatch: AIS connection failed",
+                    "crmd.*(ERROR|error): do_exit: Could not recover from internal error",
                     "pengine.*Scheduling Node .* for STONITH",
                     "stonithd.*requests a STONITH operation RESET on node",
                     "stonithd.*Succeeded to STONITH the node",
@@ -282,21 +283,21 @@ class crm_cs_v0(crm_ais):
         self.ais_components()
 
         corosync_ignore = [
-                    "ERROR: ais_dispatch: Receiving message .* failed",
+                    "(ERROR|error): ais_dispatch: Receiving message .* failed",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
-                    "cib.*ERROR: cib_ais_destroy: AIS connection terminated",
-                    #"crmd.*ERROR: crm_ais_destroy: AIS connection terminated",
+                    "cib.*(ERROR|error): cib_ais_destroy: AIS connection terminated",
+                    #"crmd.*(ERROR|error): crm_ais_destroy: AIS connection terminated",
                     "crmd.*do_exit: Could not recover from internal error",
                     "crmd.*I_TERMINATE.*do_recover",
                     "attrd.*CRIT: attrd_ais_destroy: Lost connection to Corosync service!",
-                    "stonithd.*ERROR: AIS connection terminated",
+                    "stonithd.*(ERROR|error): AIS connection terminated",
             ]
 
 #        corosync_ignore.extend(self.common_ignore)
 
 #        self.complist.append(Process(self, "corosync", pats = [
-#                    "ERROR: ais_dispatch: AIS connection failed",
-#                    "crmd.*ERROR: do_exit: Could not recover from internal error",
+#                    "(ERROR|error): ais_dispatch: AIS connection failed",
+#                    "crmd.*(ERROR|error): do_exit: Could not recover from internal error",
 #                    "pengine.*Scheduling Node .* for STONITH",
 #                    "stonithd.*requests a STONITH operation RESET on node",
 #                    "stonithd.*Succeeded to STONITH the node",
