@@ -958,7 +958,7 @@ static gboolean
 init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*destroy) (gpointer),
                     uint32_t * nodeid)
 {
-#  ifdef SUPPORT_CS_QUORUM
+#  ifdef SUPPORT_COROSYNC
     int rc = -1;
     int fd = 0;
     int retries = 0;
