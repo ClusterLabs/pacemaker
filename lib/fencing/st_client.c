@@ -100,7 +100,7 @@ static const char META_TEMPLATE[] =
     "    <action name=\"start\"   timeout=\"20\" />\n"
     "    <action name=\"stop\"    timeout=\"15\" />\n"
     "    <action name=\"status\"  timeout=\"20\" />\n"
-    "    <action name=\"monitor\" timeout=\"20\" interval=\"3600\" start-delay=\"15\" />\n"
+    "    <action name=\"monitor\" timeout=\"20\" interval=\"3600\"/>\n"
     "    <action name=\"meta-data\"  timeout=\"15\" />\n"
     "  </actions>\n"
     "  <special tag=\"heartbeat\">\n"
