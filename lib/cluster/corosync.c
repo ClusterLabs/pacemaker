@@ -824,7 +824,7 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
     return TRUE;
 }
 
-#  ifdef SUPPORT_CS_QUORUM
+#  ifdef SUPPORT_COROSYNC
 gboolean(*pcmk_cpg_dispatch_fn) (AIS_Message *, char *, int) = NULL;
 
 static gboolean
@@ -900,6 +900,13 @@ pcmk_cpg_membership(cpg_handle_t handle,
     }
 }
 
+cpg_callbacks_t cpg_callbacks = {
+    .cpg_deliver_fn = pcmk_cpg_deliver,
+    .cpg_confchg_fn = pcmk_cpg_membership,
+};
+#  endif
+
+#  ifdef SUPPORT_CS_QUORUM
 static gboolean
 pcmk_quorum_dispatch(int sender, gpointer user_data)
 {
@@ -942,11 +949,6 @@ pcmk_quorum_notification(quorum_handle_t handle,
         quorum_app_callback(ring_id, quorate);
     }
 }
-
-cpg_callbacks_t cpg_callbacks = {
-    .cpg_deliver_fn = pcmk_cpg_deliver,
-    .cpg_confchg_fn = pcmk_cpg_membership,
-};
 
 quorum_callbacks_t quorum_callbacks = {
     .quorum_notify_fn = pcmk_quorum_notification,
