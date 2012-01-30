@@ -720,7 +720,7 @@ main(int argc, char **argv)
 #if HAVE_CONFDB
     /* Only an option if we're using the plugins */
     if (try_stack == pcmk_cluster_classic_ais) {
-        try_corosync(command, try_stack);
+        try_openais(command, try_stack);
     }
 #endif
 
