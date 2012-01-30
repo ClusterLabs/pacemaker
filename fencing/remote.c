@@ -136,12 +136,15 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
 	reply = stonith_construct_reply(op->request, NULL, data, rc);
 	crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
 	
-	crm_info("Notifing clients of %s (%s of %s from %s by %s): %d, rc=%d",
-		 op->id, op->action, op->target, op->client_id, op->delegate, op->state, rc);
+        do_crm_log(rc==stonith_ok?LOG_NOTICE:LOG_ERR,
+                   "Operation %s of %s by %s (op=%s, for=%s, state=%d): %d",
+                   op->action, op->target, op->delegate, op->id, op->client_id, op->state,
+                   stonith_error2string(rc));
 
     } else {
-	crm_err("We've already notified clients of %s (%s of %s from %s by %s): %d, rc=%d",
-		op->id, op->action, op->target, op->client_id, op->delegate, op->state, rc);
+        crm_err("Already sent notifications for '%s of %s by %s' (op=%s, for=%s, state=%d): %d",
+                op->action, op->target, op->delegate, op->id, op->client_id, op->state,
+                stonith_error2string(rc));
 	return;
     }
     
@@ -193,7 +196,7 @@ static gboolean remote_op_timeout(gpointer userdata)
 	return FALSE;
     }
     
-    crm_err("Action %s (%s) for %s timed out", op->action, op->id, op->target);
+    crm_debug("Action %s (%s) for %s timed out", op->action, op->id, op->target);
     remote_op_done(op, NULL, st_err_timeout);
     op->state = st_failed;
 
@@ -212,11 +215,10 @@ static gboolean remote_op_query_timeout(gpointer data)
 	crm_debug("Operation %s for %s already in progress", op->id, op->target);
 	
     } else if(op->query_results) {
-	crm_info("Query %s for %s complete: %d", op->id, op->target, op->state);
+	crm_debug("Query %s for %s complete: %d", op->id, op->target, op->state);
 	call_remote_stonith(op, NULL);
 
     } else {
-	crm_err("Query %s for %s timed out", op->id, op->target);
 	if(op->op_timer) {
 	    g_source_remove(op->op_timer);
 	    op->op_timer = 0;
