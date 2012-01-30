@@ -1113,10 +1113,32 @@ expand_templates_in_sets(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_se
 
             template_rsc_set = g_hash_table_lookup(data_set->template_rsc_sets, ID(xml_rsc));
             if (template_rsc_set) {
+                /* The resource_ref under the resource_set references a template */
                 xmlNode *rsc_ref = NULL;
                 xmlNode *new_rsc_ref = NULL;
                 xmlNode *last_ref = xml_rsc;
 
+                /* A sample: 
+
+                   Original XML:
+                 
+                   <resource_set id="template1-order-0" sequential="true">
+                     <resource_ref id="rsc1"/>
+                     <resource_ref id="template1"/>
+                     <resource_ref id="rsc4"/>
+                   </resource_set>
+
+                   Now we are appending rsc2 and rsc3 which are derived from template1 right after it:
+
+                   <resource_set id="template1-order-0" sequential="true">
+                     <resource_ref id="rsc1"/>
+                     <resource_ref id="template1"/>
+                     <resource_ref id="rsc2"/>
+                     <resource_ref id="rsc3"/>
+                     <resource_ref id="rsc4"/>
+                   </resource_set>
+
+                 */
                 for (rsc_ref = __xml_first_child(template_rsc_set); rsc_ref != NULL; rsc_ref = __xml_next(rsc_ref)) {
                     new_rsc_ref = xmlDocCopyNode(rsc_ref, set->doc, 1);
                     xmlAddNextSibling(last_ref, new_rsc_ref);
@@ -1125,10 +1147,25 @@ expand_templates_in_sets(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_se
                 }
 
                 any_refs = TRUE;
+
+                /* Do not directly free '<resource_ref id="template1"/>'.
+                   That would break the further __xml_next(xml_rsc)) and cause "Invalid read" seen by valgrind.
+                   So just record it into a hash table for freeing it later.
+                 */
                 template_refs = g_list_append(template_refs, xml_rsc);
             }
         }
 
+        /* Now free '<resource_ref id="template1"/>', and finally get:
+
+           <resource_set id="template1-order-0" sequential="true">
+             <resource_ref id="rsc1"/>
+             <resource_ref id="rsc2"/>
+             <resource_ref id="rsc3"/>
+             <resource_ref id="rsc4"/>
+           </resource_set>
+
+         */
         for (gIter = template_refs; gIter != NULL; gIter = gIter->next) {
             xmlNode *template_ref = gIter->data;
             free_xml_from_parent(NULL, template_ref);
