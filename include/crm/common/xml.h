@@ -59,6 +59,8 @@ extern void hash2field(gpointer key, gpointer value, gpointer user_data);
 extern void hash2metafield(gpointer key, gpointer value, gpointer user_data);
 extern void hash2smartfield(gpointer key, gpointer value, gpointer user_data);
 
+extern xmlDoc *getDocPtr(xmlNode *node);
+
 /*
  * Replacement function for xmlCopyPropList which at the very least,
  * doesnt work the way *I* would expect it to.

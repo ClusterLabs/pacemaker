@@ -1140,7 +1140,7 @@ expand_templates_in_sets(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_se
 
                  */
                 for (rsc_ref = __xml_first_child(template_rsc_set); rsc_ref != NULL; rsc_ref = __xml_next(rsc_ref)) {
-                    new_rsc_ref = xmlDocCopyNode(rsc_ref, set->doc, 1);
+                    new_rsc_ref = xmlDocCopyNode(rsc_ref, getDocPtr(set), 1);
                     xmlAddNextSibling(last_ref, new_rsc_ref);
 
                     last_ref = new_rsc_ref;
