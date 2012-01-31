@@ -184,7 +184,7 @@ class crm_ais(crm_lha):
         stonith_ignore.extend(self.common_ignore)
         
         fullcomplist["stonith-ng"] = Process(self, "stonith-ng", process="stonithd", pats = [
-                "CRIT: stonith_dispatch.* Lost connection to the STONITH service",
+                "stonith_dispatch.* Lost connection to the STONITH service",
                 "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                 "Attempting connection to fencing daemon",
                 "te_connect_stonith: Connected",
@@ -238,7 +238,7 @@ class crm_whitetank(crm_ais):
                     #"crmd.*(ERROR|error): crm_ais_destroy: AIS connection terminated",
                     "crmd.*do_exit: Could not recover from internal error",
                     "crmd.*I_TERMINATE.*do_recover",
-                    "attrd.*CRIT: attrd_ais_destroy: Lost connection to OpenAIS service!",
+                    "attrd.*attrd_ais_destroy: Lost connection to OpenAIS service!",
                     "stonithd.*(ERROR|error): AIS connection terminated",
             ]
 
@@ -289,7 +289,7 @@ class crm_cs_v0(crm_ais):
                     #"crmd.*(ERROR|error): crm_ais_destroy: AIS connection terminated",
                     "crmd.*do_exit: Could not recover from internal error",
                     "crmd.*I_TERMINATE.*do_recover",
-                    "attrd.*CRIT: attrd_ais_destroy: Lost connection to Corosync service!",
+                    "attrd.*attrd_ais_destroy: Lost connection to Corosync service!",
                     "stonithd.*(ERROR|error): AIS connection terminated",
             ]
 
