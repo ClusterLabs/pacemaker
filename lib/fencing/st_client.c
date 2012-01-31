@@ -489,7 +489,16 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
             return pid;
 
         } else {
-            waitpid(pid, &status, 0);
+            while(TRUE) {
+                pid_t p = waitpid(pid, &status, 0);
+                if(p < 0) {
+                    crm_perror(LOG_ERR, "waitpid(%d)", pid);
+                } else if(p != pid) {
+                    crm_err("Waited for %d, got %d", pid, p);
+                } else {
+                    break;
+                }  
+            }
 
             if (output != NULL) {
                 len = 0;
@@ -514,6 +523,14 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
                 crm_debug("result = %d", WEXITSTATUS(status));
                 *agent_result = -WEXITSTATUS(status);
                 rc = 0;
+
+            } else if(WIFSIGNALED(status)) {
+                crm_err("call %s for %s exited due to signal %d",
+                         action, agent, WTERMSIG(status));
+
+            } else {
+                crm_err("call %s for %s exited abnormally. stopped=%d, continued=%d",
+                        action, agent, WIFSTOPPED(status), WIFCONTINUED(status));
             }
         }
 
