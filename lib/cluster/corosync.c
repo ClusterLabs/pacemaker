@@ -1003,7 +1003,7 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
         return FALSE;
     }
 #  else
-    crm_err("corosync qorum is not supported in this build");
+    crm_err("The Corosync CPG API is not supported in this build");
     exit(100);
 #  endif
     return TRUE;
@@ -1019,7 +1019,7 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
     int quorate = 0;
     uint32_t quorum_type = 0;
     
-    crm_info("Configuring Pacemaker to obtain quorum from Corosync");
+    crm_debug("Configuring Pacemaker to obtain quorum from Corosync");
 
     rc = quorum_initialize(&pcmk_quorum_handle, &quorum_callbacks, &quorum_type);
     if (rc != CS_OK) {
@@ -1057,7 +1057,7 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
         return FALSE;
     }
 #  else
-    crm_err("corosync quorum is not supported in this build");
+    crm_err("The Corosync quorum API is not supported in this build");
     exit(100);
 #  endif
     return TRUE;
