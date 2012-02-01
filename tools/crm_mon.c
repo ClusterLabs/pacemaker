@@ -1372,6 +1372,8 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
     }
 
     fprintf(stream, "</crm_mon>\n");
+    fflush(stream);
+    fclose(stream);
 
     /* rename tmp file */
     if (rename(filename_tmp, filename) != 0) {
