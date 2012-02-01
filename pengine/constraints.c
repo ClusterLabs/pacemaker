@@ -1287,9 +1287,10 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
     /* Attempt to expand any template references in possible resource sets. */
     expand_templates_in_sets(xml_obj, &new_xml, data_set);
     if (new_xml) {
+        /* There are resource sets referencing templates. Return with the expanded XML. */
 	crm_log_xml_debug_3(new_xml, "Expanded rsc_order...");
 	*expanded_xml = new_xml;
-	any_sets = TRUE;
+	return TRUE;
     }
 
     id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
@@ -1313,10 +1314,7 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
     action_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
 
-    *expanded_xml = NULL;
-    if (new_xml == NULL) {
-        new_xml = copy_xml(xml_obj);
-    }
+    new_xml = copy_xml(xml_obj);
 
     /* Convert the template reference in "first" into a resource_set under the order constraint. */
     if(template_to_set(new_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST,
@@ -1740,9 +1738,10 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
     /* Attempt to expand any template references in possible resource sets. */
     expand_templates_in_sets(xml_obj, &new_xml, data_set);
     if (new_xml) {
+        /* There are resource sets referencing templates. Return with the expanded XML. */
 	crm_log_xml_debug_3(new_xml, "Expanded rsc_colocation...");
 	*expanded_xml = new_xml;
-	any_sets = TRUE;
+	return TRUE;
     }
 
     id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
@@ -1772,10 +1771,7 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
     state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
 
-    *expanded_xml = NULL;
-    if (new_xml == NULL) {
-        new_xml = copy_xml(xml_obj);
-    }
+    new_xml = copy_xml(xml_obj);
 
     /* Convert the template reference in "rsc" into a resource_set under the colocation constraint. */
     if(template_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE,
@@ -2076,9 +2072,10 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
     /* Attempt to expand any template references in possible resource sets. */
     expand_templates_in_sets(xml_obj, &new_xml, data_set);
     if (new_xml) {
+        /* There are resource sets referencing templates. Return with the expanded XML. */
 	crm_log_xml_debug_3(new_xml, "Expanded rsc_ticket...");
 	*expanded_xml = new_xml;
-	any_sets = TRUE;
+	return TRUE;
     }
 
     id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
@@ -2099,10 +2096,7 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
 
-    *expanded_xml = NULL;
-    if (new_xml == NULL) {
-	new_xml = copy_xml(xml_obj);
-    }
+    new_xml = copy_xml(xml_obj);
 
     /* Convert the template reference in "rsc" into a resource_set under the rsc_ticket constraint. */
     if(template_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE,
