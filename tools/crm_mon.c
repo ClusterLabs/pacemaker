@@ -1250,7 +1250,7 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
         char *now_str = ctime(&now);
 
         now_str[24] = EOS;      /* replace the newline */
-        fprintf(stream, "<last_update time=\"%s\" />\n", now_str);
+        fprintf(stream, "    <last_update time=\"%s\" />\n", now_str);
     }
 
     if (print_last_change) {
@@ -1259,7 +1259,7 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-        fprintf(stream, "<last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
+        fprintf(stream, "    <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
             last_written ? last_written : "",
             user ? user : "",
             client ? client : "",
@@ -1270,11 +1270,11 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
         data_set->input,
         LOG_DEBUG);
     if (stack) {
-        fprintf(stream, "<stack type=\"%s\" />\n", crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
+        fprintf(stream, "    <stack type=\"%s\" />\n", crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
     }
 
     if (!dc) {
-        fprintf(stream, "<current_dc present=\"false\" />\n");
+        fprintf(stream, "    <current_dc present=\"false\" />\n");
     } else {
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
         const char *uname = dc->details->uname;
@@ -1282,7 +1282,7 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
         xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
             data_set->input,
             LOG_DEBUG);
-        fprintf(stream, "<current_dc present=\"true\" version=\"%s\" name=\"%s\" id=\"%s\" with_quorum=\"%s\" />\n",
+        fprintf(stream, "    <current_dc present=\"true\" version=\"%s\" name=\"%s\" id=\"%s\" with_quorum=\"%s\" />\n",
             dc_version ? crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE) : "",
             uname,
             id,
@@ -1295,11 +1295,11 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
     if (quorum_node) {
         quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
     }
-    fprintf(stream, "<nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
+    fprintf(stream, "    <nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
         g_list_length(data_set->nodes),
         quorum_votes);
 
-    fprintf(stream, "<resources_configured number=\"%d\" />\n", count_resources(data_set, NULL));
+    fprintf(stream, "    <resources_configured number=\"%d\" />\n", count_resources(data_set, NULL));
 
     fprintf(stream, "</summary>\n");
 
@@ -1318,7 +1318,7 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
             break;
         }
 
-        fprintf(stream, "<node name=\"%s\" ", node->details->uname);
+        fprintf(stream, "    <node name=\"%s\" ", node->details->uname);
         fprintf(stream, "id=\"%s\" ", node->details->id);
         fprintf(stream, "online=\"%s\" ", node->details->online ? "true" : "false");
         fprintf(stream, "standby=\"%s\" ", node->details->standby ? "true" : "false");
@@ -1334,14 +1334,14 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
         if (group_by_node) {
             GListPtr lpc2 = NULL;
             fprintf(stream, ">\n");
-            fprintf(stream, "<node_resources>\n");
+            fprintf(stream, "        <node_resources>\n");
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
                 resource_t *rsc = (resource_t *) lpc2->data;
 
-                rsc->fns->print(rsc, NULL, pe_print_xml | pe_print_rsconly, stream);
+                rsc->fns->print(rsc, "            ", pe_print_xml | pe_print_rsconly, stream);
             }
-            fprintf(stream, "</node_resources>\n");
-            fprintf(stream, "</node>\n");
+            fprintf(stream, "        </node_resources>\n");
+            fprintf(stream, "    </node>\n");
         } else {
             fprintf(stream, "/>\n");
         }
@@ -1361,11 +1361,11 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
 
             } else if (group_by_node == FALSE) {
                 if (partially_active || inactive_resources) {
-                    rsc->fns->print(rsc, NULL, pe_print_xml, stream);
+                    rsc->fns->print(rsc, "    ", pe_print_xml, stream);
                 }
 
             } else if (is_active == FALSE && inactive_resources) {
-                rsc->fns->print(rsc, NULL, pe_print_xml, stream);
+                rsc->fns->print(rsc, "    ", pe_print_xml, stream);
             }
         }
         fprintf(stream, "</resources>\n");

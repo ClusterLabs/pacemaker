@@ -360,9 +360,10 @@ static void
 clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     int is_master_slave = rsc->variant == pe_master ? 1 : 0;
+    char *child_text = child_text = crm_concat(pre_text, "       ", ' ');
     GListPtr gIter = rsc->children;
 
-    status_print("<clone ");
+    status_print("%s<clone ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
     status_print("multi_state_slave_master=\"%s\" ", is_master_slave ? "true" : "false");
     status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
@@ -371,15 +372,16 @@ clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
     status_print("failure_ignored=\"%s\" ", is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
     status_print(">\n");
 
-    status_print("<clone_resources>\n");
+    status_print("%s    <clone_resources>\n", pre_text);
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        child_rsc->fns->print(child_rsc, "", options, print_data);
+        child_rsc->fns->print(child_rsc, child_text, options, print_data);
     }
 
-    status_print("</clone_resources>\n");
-    status_print("</clone>\n");
+    status_print("%s    </clone_resources>\n", pre_text);
+    status_print("%s</clone>\n", pre_text);
+    crm_free(child_text);
 }
 
 void
@@ -393,6 +395,10 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     GListPtr gIter = rsc->children;
     clone_variant_data_t *clone_data = NULL;
 
+    if (pre_text == NULL) {
+        pre_text = " ";
+    }
+
     if (options & pe_print_xml) {
         clone_print_xml(rsc, pre_text, options, print_data);
         return;
@@ -400,9 +406,6 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
     get_clone_variant_data(clone_data, rsc);
 
-    if (pre_text == NULL) {
-        pre_text = " ";
-    }
     child_text = crm_concat(pre_text, "   ", ' ');
 
     if (rsc->variant == pe_master) {
