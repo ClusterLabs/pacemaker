@@ -360,7 +360,7 @@ static void
 clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     int is_master_slave = rsc->variant == pe_master ? 1 : 0;
-    char *child_text = child_text = crm_concat(pre_text, "       ", ' ');
+    char *child_text = crm_concat(pre_text, "       ", ' ');
     GListPtr gIter = rsc->children;
 
     status_print("%s<clone ", pre_text);
