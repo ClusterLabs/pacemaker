@@ -86,6 +86,9 @@ extern char *increment_clone(char *last_rsc_id);
 	} else if(options & pe_print_printf) {		\
 		FILE *stream = print_data;		\
 		fprintf(stream, fmt, ##args);		\
+	} else if(options & pe_print_xml) {		\
+		FILE *stream = print_data;		\
+		fprintf(stream, fmt, ##args);		\
 	} else if(options & pe_print_log) {		\
 		int log_level = *(int*)print_data;	\
 		do_crm_log(log_level, fmt, ##args);	\

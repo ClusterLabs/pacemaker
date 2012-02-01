@@ -136,11 +136,34 @@ group_active(resource_t * rsc, gboolean all)
     return TRUE;
 }
 
+static void
+group_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
+{
+    GListPtr gIter = rsc->children;
+    status_print("<group id=\"%s\" ", rsc->id);
+    status_print("number_resources=\"%d\" ", g_list_length(rsc->children));
+    status_print(">\n");
+
+    status_print("<group_resources>\n");
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+        child_rsc->fns->print(child_rsc, "", options, print_data);
+    }
+    status_print("</group_resources>\n");
+
+    status_print("</group>\n");
+}
+
 void
 group_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     char *child_text = NULL;
     GListPtr gIter = rsc->children;
+
+    if (options & pe_print_xml) {
+        group_print_xml(rsc, pre_text, options, print_data);
+        return;
+    }
 
     if (pre_text == NULL) {
         pre_text = " ";
