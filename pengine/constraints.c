@@ -1222,10 +1222,18 @@ template_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 	    crm_config_err("Invalid constraint '%s': No template named '%s'", cons_id, id);
 	    return FALSE;
 	}
+
+        /* A template is referenced by the "attr" attribute (first, then, rsc or with-rsc).
+           Add the template's corresponding "resource_set" which contains the primitives derived
+           from it under the constraint. */
 	*rsc_set = add_node_copy(xml_obj, template_rsc_set);
+
+        /* Set sequential="false" for the resource_set */
 	crm_xml_add(*rsc_set, "sequential", XML_BOOLEAN_FALSE);
 
     } else if(convert_rsc) {
+        /* Even a regular resource is referenced by "attr", convert it into a resource_set.
+           Because the other side of the constraint could be a template reference. */
 	xmlNode *rsc_ref = NULL;
 
 	*rsc_set = create_xml_node(xml_obj, XML_CONS_TAG_RSC_SET);
@@ -1238,6 +1246,7 @@ template_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 	return TRUE;
     }
 
+    /* Remove the "attr" attribute referencing the template */
     if(*rsc_set) {
 	xml_remove_prop(xml_obj, attr);
     }
@@ -1275,6 +1284,7 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
 	return FALSE;
     }
 
+    /* Attempt to expand any template references in possible resource sets. */
     expand_templates_in_sets(xml_obj, &new_xml, data_set);
     if (new_xml) {
 	crm_log_xml_debug_3(new_xml, "Expanded rsc_order...");
@@ -1291,6 +1301,7 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
     rsc_first = pe_find_resource(data_set->resources, id_first);
     rsc_then = pe_find_resource(data_set->resources, id_then);
     if(rsc_first && rsc_then) {
+        /* Neither side references any template. */
 	return TRUE;
     }
 
@@ -1307,6 +1318,7 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
         new_xml = copy_xml(xml_obj);
     }
 
+    /* Convert the template reference in "first" into a resource_set under the order constraint. */
     if(template_to_set(new_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST,
 			    TRUE, data_set) == FALSE) {
 	free_xml(new_xml);
@@ -1315,12 +1327,15 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
 
     if(rsc_set_first) {
 	if(action_first) {
+            /* A "first-action" is specified.
+               Move it into the converted resource_set as an "action" attribute. */
 	    crm_xml_add(rsc_set_first, "action", action_first);
 	    xml_remove_prop(new_xml, XML_ORDER_ATTR_FIRST_ACTION);
 	}
 	any_sets = TRUE;
     }
 
+    /* Convert the template reference in "then" into a resource_set under the order constraint. */
     if(template_to_set(new_xml, &rsc_set_then, XML_ORDER_ATTR_THEN,
 			    TRUE, data_set) == FALSE) {
 	free_xml(new_xml);
@@ -1329,6 +1344,8 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
 
     if(rsc_set_then) {
 	if(action_then) {
+            /* A "then-action" is specified.
+               Move it into the converted resource_set as an "action" attribute. */
 	    crm_xml_add(rsc_set_then, "action", action_then);
 	    xml_remove_prop(new_xml, XML_ORDER_ATTR_THEN_ACTION);
 	}
@@ -1720,6 +1737,7 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 	return FALSE;
     }
 
+    /* Attempt to expand any template references in possible resource sets. */
     expand_templates_in_sets(xml_obj, &new_xml, data_set);
     if (new_xml) {
 	crm_log_xml_debug_3(new_xml, "Expanded rsc_colocation...");
@@ -1736,6 +1754,7 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
     rsc_lh = pe_find_resource(data_set->resources, id_lh);
     rsc_rh = pe_find_resource(data_set->resources, id_rh);
     if(rsc_lh && rsc_rh) {
+        /* Neither side references any template. */
 	return TRUE;
     }
 
@@ -1745,6 +1764,7 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 	return FALSE;
     }
     if(template_rsc_set_lh && template_rsc_set_rh) {
+        /* A colocation constraint between two templates makes no sense. */
 	crm_config_err("Either LHS or RHS of %s should be a normal resource instead of a template",  id);
 	return FALSE;
     }
@@ -1757,6 +1777,7 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
         new_xml = copy_xml(xml_obj);
     }
 
+    /* Convert the template reference in "rsc" into a resource_set under the colocation constraint. */
     if(template_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE,
 			    TRUE, data_set) == FALSE) {
 	free_xml(new_xml);
@@ -1765,12 +1786,15 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 
     if(rsc_set_lh) {
 	if(state_lh) {
+            /* A "rsc-role" is specified.
+               Move it into the converted resource_set as a "role"" attribute. */
 	    crm_xml_add(rsc_set_lh, "role", state_lh);
 	    xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
 	}
 	any_sets = TRUE;
     }
 
+    /* Convert the template reference in "with-rsc" into a resource_set under the colocation constraint. */
     if(template_to_set(new_xml, &rsc_set_rh, XML_COLOC_ATTR_TARGET,
 			    TRUE, data_set) == FALSE) {
 	free_xml(new_xml);
@@ -1779,6 +1803,8 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 
     if(rsc_set_rh) {
 	if(state_rh) {
+            /* A "with-rsc-role" is specified.
+               Move it into the converted resource_set as a "role"" attribute. */
 	    crm_xml_add(rsc_set_rh, "role", state_rh);
 	    xml_remove_prop(new_xml, XML_COLOC_ATTR_TARGET_ROLE);
 	}
@@ -2047,6 +2073,7 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 	return FALSE;
     }
 
+    /* Attempt to expand any template references in possible resource sets. */
     expand_templates_in_sets(xml_obj, &new_xml, data_set);
     if (new_xml) {
 	crm_log_xml_debug_3(new_xml, "Expanded rsc_ticket...");
@@ -2061,6 +2088,7 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 
     rsc_lh = pe_find_resource(data_set->resources, id_lh);
     if(rsc_lh) {
+        /* No template is referenced. */
 	return TRUE;
     }
 
@@ -2076,6 +2104,7 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 	new_xml = copy_xml(xml_obj);
     }
 
+    /* Convert the template reference in "rsc" into a resource_set under the rsc_ticket constraint. */
     if(template_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE,
 			    FALSE, data_set) == FALSE) {
 	free_xml(new_xml);
@@ -2084,6 +2113,8 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 
     if(rsc_set_lh) {
 	if(state_lh) {
+            /* A "rsc-role" is specified.
+               Move it into the converted resource_set as a "role"" attribute. */
 	    crm_xml_add(rsc_set_lh, "role", state_lh);
 	    xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
 	}
