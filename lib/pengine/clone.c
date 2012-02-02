@@ -365,7 +365,7 @@ clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
 
     status_print("%s<clone ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
-    status_print("multi_state_slave_master=\"%s\" ", is_master_slave ? "true" : "false");
+    status_print("multi_state=\"%s\" ", is_master_slave ? "true" : "false");
     status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
     status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");

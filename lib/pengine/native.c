@@ -323,7 +323,7 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
         status_print(">\n");
         for (; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
-            status_print("%s    <node name=\"%s\" />\n", pre_text, node->details->uname);
+            status_print("%s    <node name=\"%s\" id=\"%s\" />\n", pre_text, node->details->uname, node->details->id);
         }
         status_print("%s</resource>\n", pre_text);
     } else {
