@@ -321,12 +321,10 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
         GListPtr gIter = rsc->running_on;
 
         status_print(">\n");
-        status_print("%s    <nodes_running_on>\n", pre_text);
         for (; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
-            status_print("%s        <node name=\"%s\" />\n", pre_text, node->details->uname);
+            status_print("%s    <node name=\"%s\" />\n", pre_text, node->details->uname);
         }
-        status_print("%s    </nodes_running_on>\n", pre_text);
         status_print("%s</resource>\n", pre_text);
     } else {
         status_print("/>\n");
