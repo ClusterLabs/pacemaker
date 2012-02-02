@@ -1334,13 +1334,11 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
         if (group_by_node) {
             GListPtr lpc2 = NULL;
             fprintf(stream, ">\n");
-            fprintf(stream, "        <node_resources>\n");
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
                 resource_t *rsc = (resource_t *) lpc2->data;
 
-                rsc->fns->print(rsc, "            ", pe_print_xml | pe_print_rsconly, stream);
+                rsc->fns->print(rsc, "        ", pe_print_xml | pe_print_rsconly, stream);
             }
-            fprintf(stream, "        </node_resources>\n");
             fprintf(stream, "    </node>\n");
         } else {
             fprintf(stream, "/>\n");

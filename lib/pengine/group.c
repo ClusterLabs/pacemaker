@@ -140,18 +140,16 @@ static void
 group_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     GListPtr gIter = rsc->children;
-    char *child_text = crm_concat(pre_text, "        ", ' ');
+    char *child_text = crm_concat(pre_text, "    ", ' ');
 
     status_print("%s<group id=\"%s\" ", pre_text, rsc->id);
     status_print("number_resources=\"%d\" ", g_list_length(rsc->children));
     status_print(">\n");
 
-    status_print("%s    <group_resources>\n", pre_text);
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
         child_rsc->fns->print(child_rsc, child_text, options, print_data);
     }
-    status_print("%s    </group_resources>\n", pre_text);
 
     status_print("%s</group>\n", pre_text);
     crm_free(child_text);
