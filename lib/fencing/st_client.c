@@ -489,15 +489,17 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
             return pid;
 
         } else {
-            while(TRUE) {
-                pid_t p = waitpid(pid, &status, 0);
-                if(p < 0) {
-                    crm_perror(LOG_ERR, "waitpid(%d)", pid);
-                } else if(p != pid) {
-                    crm_err("Waited for %d, got %d", pid, p);
-                } else {
-                    break;
-                }  
+            pid_t p;
+
+            do {
+                p = waitpid(pid, &status, 0);
+            } while(p < 0 && errno == EINTR);
+
+            if(p < 0) {
+                crm_perror(LOG_ERR, "waitpid(%d)", pid);
+
+            } else if(p != pid) {
+                crm_err("Waited for %d, got %d", pid, p);
             }
 
             if (output != NULL) {
