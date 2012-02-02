@@ -467,7 +467,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
         if (track) {
             track->stdout = p_read_fd;
             NewTrackedProc(pid, 0, PT_LOGNORMAL, track, track->pt_ops);
-            crm_trace("Op: %s on %s, timeout: %d", action, agent, track->timeout);
+            crm_trace("Op: %s on %s, pid: %d, timeout: %d", action, agent, pid, track->timeout);
 
             if (track->timeout) {
                 track->killseq[0].mstimeout = track->timeout;   /* after timeout send TERM */

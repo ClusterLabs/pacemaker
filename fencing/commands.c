@@ -617,10 +617,25 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    dev->targets = NULL;
 	    
 	    exec_rc = run_stonith_agent(dev->agent, "list", NULL, dev->params, NULL, &rc, &output, NULL);
-	    if(exec_rc < 0 || rc != 0) {
+            if(rc != 0 && dev->active_pid == 0) {
+                /* This device probably only supports a single
+                 * connection, which appears to already be in use,
+                 * likely involved in a montior or (less likely)
+                 * metadata operation.
+                 *
+                 * Avoid disabling port list queries in the hope that
+                 * the op would succeed next time
+                 */
+                crm_info("Couldn't query ports for %s. Call failed with rc=%d and active_pid=%d: %s",
+                         dev->agent, rc, dev->active_pid, output);
+
+	    } else if(exec_rc < 0 || rc != 0) {
 		crm_notice("Disabling port list queries for %s (%d/%d): %s",
 				dev->id, exec_rc, rc, output);
 		dev->targets_age = -1;
+
+                /* Fall back to status */
+                g_hash_table_replace(dev->params, crm_strdup(STONITH_ATTR_HOSTCHECK), crm_strdup("status"));
 		
 	    } else {
 		crm_info("Refreshing port list for %s", dev->id);
@@ -658,7 +673,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    can = TRUE;
 
 	} else {
-	    crm_err("Unkown result calling %s for %s with %s: rc=%d", "status", host, dev->id, rc);
+	    crm_notice("Unkown result when testing if %s can fence %s: rc=%d", dev->id, host, rc);
 	}
 
     } else {
@@ -838,7 +853,7 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 	cmd->stdout = 0;
     }
 
-    crm_trace("Operation on %s failed with rc=%d (%d remaining)",
+    crm_trace("Operation on %s completed with rc=%d (%d remaining)",
               cmd->device, rc, g_list_length(cmd->device_next));
 
     if(rc != 0 && cmd->device_next) {
