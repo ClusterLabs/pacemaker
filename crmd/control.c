@@ -767,7 +767,6 @@ crm_shutdown(int nsig)
             register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
 
         } else {
-            crm_info("Requesting shutdown");
             set_bit_inplace(fsa_input_register, R_SHUTDOWN);
             register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
@@ -775,12 +774,12 @@ crm_shutdown(int nsig)
                 const char *value = crmd_pref(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
                 int msec = crm_get_msec(value);
 
-                crm_info("Using default shutdown escalation: %dms", msec);
+                crm_debug("Using default shutdown escalation: %dms", msec);
                 shutdown_escalation_timer->period_ms = msec;
             }
 
             /* cant rely on this... */
-            crm_notice("Forcing shutdown in: %dms", shutdown_escalation_timer->period_ms);
+            crm_notice("Requesting shutdown, upper limit is %dms", shutdown_escalation_timer->period_ms);
             crm_timer_start(shutdown_escalation_timer);
         }
 
