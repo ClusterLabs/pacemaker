@@ -186,8 +186,7 @@ class crm_ais(crm_lha):
         fullcomplist["stonith-ng"] = Process(self, "stonith-ng", process="stonithd", pats = [
                 "stonith_dispatch.* Lost connection to the STONITH service",
                 "tengine_stonith_connection_destroy: Fencing daemon connection failed",
-                "Attempting connection to fencing daemon",
-                "te_connect_stonith: Connected",
+                "crmd.*stonith_api_add_notification: Callback already present",
                 ], badnews_ignore = stonith_ignore)
         
         vgrind = self.Env["valgrind-procs"].split()
