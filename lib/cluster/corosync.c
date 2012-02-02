@@ -895,7 +895,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
     for (i = 0; i < left_list_entries; i++) {
         crm_debug("Left[%d] %d ", i, left_list[i].nodeid);
-        crm_update_peer(left_list[i].nodeid, 0, 0, 0, 0,
+        crm_update_peer(left_list[i].nodeid, 0, 0, 0, crm_proc_none,
                         NULL, /* view_list[i] */NULL, NULL, CRM_NODE_LOST);
     }
 }
