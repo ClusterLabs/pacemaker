@@ -28,8 +28,7 @@
 # to disable or enable specific features
 
 # Supported cluster stacks, must support at least one
-%bcond_without cman
-%bcond_without doc
+%bcond_with cman
 %bcond_without corosync
 %bcond_with heartbeat
 
@@ -45,6 +44,7 @@
 # Support additional trace logging
 %bcond_without tracedata
 
+%bcond_without doc
 # We generate some docs using Publican, but its not available everywhere
 %bcond_without publican
 
