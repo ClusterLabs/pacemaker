@@ -384,7 +384,7 @@ do_election_count_vote(long long action,
         xmlNode *novote = create_request(CRM_OP_NOVOTE, NULL, vote_from,
                                          CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-        do_crm_log(log_level + 1, "Election %d (owner: %s) lost: %s from %s (%s)",
+        do_crm_log(log_level, "Election %d (owner: %s) lost: %s from %s (%s)",
                    election_id, election_owner, op, vote_from, reason);
         update_dc(NULL);
 
@@ -417,8 +417,8 @@ do_election_count_vote(long long action,
             time_t tm_now = time(NULL);
 
             if (tm_now - last_election_loss < (time_t) loss_dampen) {
-                crm_info("Election %d ignore: We already lost an election less than %ds ago",
-                         election_id, loss_dampen);
+                crm_info("Election %d ignore: We already lost an election less than %ds ago (%s)",
+                         election_id, loss_dampen, ctime(&last_election_loss));
                 update_dc(NULL);
                 return;
             }
