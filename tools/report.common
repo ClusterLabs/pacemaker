@@ -194,7 +194,7 @@ get_time() {
 }
 
 get_time_() {
-    warning "No time format specified for: $*"
+    warning "Unknown time format used by: $*"
 }
 
 get_time_syslog() {
@@ -205,18 +205,27 @@ get_time_legacy() {
     awk '{print $2}' | sed 's/_/ /'
 }
 
+get_time_format_for_string() {
+    l="$*"
+    t=$(get_time `echo $l | get_time_syslog`)
+    if [ "$t" ]; then
+	echo syslog
+	return
+    fi
+
+    t=$(get_time `echo $l | get_time_legacy`)
+    if [ "$t" ]; then
+	echo legacy
+	return
+    fi
+}
+
 get_time_format() {
     t=0 l="" func=""
     trycnt=10
     while [ $trycnt -gt 0 ] && read l; do
-	t=$(get_time `echo $l | get_time_syslog`)
-	if [ "$t" ]; then
-	    func="syslog"
-	    break
-	fi
-	t=$(get_time `echo $l | get_time_legacy`)
-	if [ "$t" ]; then
-	    func="legacy"
+	func=$(get_time_format_for_string $l)
+	if [ "$func" ]; then
 	    break
 	fi
 	trycnt=$(($trycnt-1))
@@ -226,9 +235,10 @@ get_time_format() {
 }
 
 linetime() {
-    format=`get_time_format < $1`
-    l=`tail -n +$2 $1 | grep ":[0-5][0-9]:" | head -1 | get_time_$format`
-    get_time "$l"
+    l=`tail -n +$2 $1 | grep ":[0-5][0-9]:" | head -1`
+    format=`get_time_format_for_string $l`
+    t=`echo $l | get_time_$format`
+    get_time "$t"
 }
 
 # Find pattern in a logfile somewhere
