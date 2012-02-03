@@ -768,7 +768,7 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
     }
     
     if(cmd->victim != NULL) {
-	do_crm_log(rc==0?LOG_INFO:LOG_ERR,
+	do_crm_log(rc==0?LOG_NOTICE:LOG_ERR,
 		   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned: %d%s%s",
 		   cmd->action, pid, cmd->id, cmd->client, cmd->victim, cmd->device, rc,
 		   next?". Trying: ":"", next?next:"");

@@ -939,10 +939,11 @@ pcmk_quorum_notification(quorum_handle_t handle,
                  quorate ? "retained" : "still lost", (long unsigned int)view_list_entries);
     }
     for (i = 0; i < view_list_entries; i++) {
+        char *uuid = get_corosync_uuid(view_list[i], NULL); 
         crm_debug("Member[%d] %d ", i, view_list[i]);
 
         crm_update_peer(view_list[i], 0, ring_id, 0, 0,
-                        NULL, /* view_list[i] */NULL, NULL, CRM_NODE_MEMBER);
+                        uuid, NULL, NULL, NULL, CRM_NODE_MEMBER);
     }
 
     if(quorum_app_callback) {

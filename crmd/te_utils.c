@@ -135,7 +135,7 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
 
     } else if (rc == stonith_ok) {
-        crm_info("Peer %s was terminated (%s) by %s for %s (ref=%s): %s",
+        crm_notice("Peer %s was terminated (%s) by %s for %s (ref=%s): %s",
                  target,
                  crm_element_value(action, F_STONITH_OPERATION),
                  executioner, origin,

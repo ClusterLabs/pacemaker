@@ -156,7 +156,7 @@ pcmk_child_exit(ProcTrack * p, int status, int signo, int exitcode, int waslogge
         crm_notice("Child process %s terminated with signal %d (pid=%d, rc=%d)",
                    child->name, signo, child->pid, exitcode);
     } else {
-        do_crm_log(exitcode == 0 ? LOG_NOTICE : LOG_ERR,
+        do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
                    "Child process %s exited (pid=%d, rc=%d)", child->name, child->pid, exitcode);
     }
 
@@ -411,7 +411,7 @@ pcmk_shutdown_worker(gpointer user_data)
             }
 
             /* cleanup */
-            crm_notice("%s confirmed stopped", child->name);
+            crm_debug("%s confirmed stopped", child->name);
             child->pid = 0;
         }
     }

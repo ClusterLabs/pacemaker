@@ -1090,7 +1090,7 @@ update_dc(xmlNode * msg)
         crm_info("Set DC to %s (%s)", crm_str(fsa_our_dc), crm_str(fsa_our_dc_version));
 
     } else if (last_dc != NULL) {
-        crm_info("Unset DC %s", crm_str(last_dc));
+        crm_debug("Unset DC. Was %s", crm_str(last_dc));
     }
 
     crm_free(last_dc);

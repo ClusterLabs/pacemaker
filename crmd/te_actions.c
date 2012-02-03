@@ -124,7 +124,7 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
-    te_log_action(LOG_INFO,
+    te_log_action(LOG_NOTICE,
                   "Executing %s fencing operation (%s) on %s (timeout=%d)",
                   type, id, target, transition_graph->stonith_timeout);
 

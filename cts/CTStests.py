@@ -686,7 +686,7 @@ class PartialStart(CTSTest):
 #   FIXME!  This should use the CM class to get the pattern
 #       then it would be applicable in general
         watchpats = []
-        watchpats.append("Starting crmd")
+        watchpats.append("crmd.*Connecting to cluster infrastructure")
         watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
         watch.setwatch()
 
