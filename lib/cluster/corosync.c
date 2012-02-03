@@ -889,14 +889,10 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
     for (i = 0; i < member_list_entries; i++) {
         crm_debug("Member[%d] %d ", i, member_list[i].nodeid);
-        crm_update_peer(member_list[i].nodeid, 0, 0, 0, 0,
-                        NULL, /* view_list[i] */NULL, NULL, CRM_NODE_MEMBER);
     }
 
     for (i = 0; i < left_list_entries; i++) {
         crm_debug("Left[%d] %d ", i, left_list[i].nodeid);
-        crm_update_peer(left_list[i].nodeid, 0, 0, 0, crm_proc_none,
-                        NULL, /* view_list[i] */NULL, NULL, CRM_NODE_LOST);
     }
 }
 
@@ -923,6 +919,20 @@ pcmk_quorum_dispatch(int sender, gpointer user_data)
 gboolean(*quorum_app_callback) (unsigned long long seq, gboolean quorate) = NULL;
 
 static void
+corosync_mark_unseen_peer_dead(gpointer key, gpointer value, gpointer user_data)
+{
+    int *seq = user_data;
+    crm_node_t *node = value;
+
+    if (node->last_seen != *seq
+        && crm_str_eq(CRM_NODE_LOST, node->state, TRUE) == FALSE) {
+        crm_notice("Node %d/%s was not seen in the previous transition",
+                   node->id, node->uname);
+        crm_update_peer(node->id, 0, 0, 0, 0, NULL, NULL, NULL, CRM_NODE_LOST);
+    }
+}
+
+static void
 pcmk_quorum_notification(quorum_handle_t handle,
                          uint32_t quorate,
                          uint64_t ring_id, uint32_t view_list_entries, uint32_t * view_list)
@@ -943,8 +953,11 @@ pcmk_quorum_notification(quorum_handle_t handle,
         crm_debug("Member[%d] %d ", i, view_list[i]);
 
         crm_update_peer(view_list[i], 0, ring_id, 0, 0,
-                        uuid, NULL, NULL, NULL, CRM_NODE_MEMBER);
+                        uuid, NULL, NULL, CRM_NODE_MEMBER);
     }
+
+    crm_trace("Reaping unseen nodes...");
+    g_hash_table_foreach(crm_peer_cache, corosync_mark_unseen_peer_dead, &ring_id);
 
     if(quorum_app_callback) {
         quorum_app_callback(ring_id, quorate);
