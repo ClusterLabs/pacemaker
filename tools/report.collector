@@ -535,8 +535,8 @@ get_logfile() {
 	    debug "Reading log settings from $cf_file"
 	    if iscfvartrue $cf_type to_syslog $cf_file; then
 		facility_var=syslog_facility
-	    elif iscfvartrue $cf_type to_file $cf_file; then
-		logfile=`getcfvar $cf_type logfile $cf_file syslog_facility`
+	    elif iscfvartrue $cf_type to_logfile $cf_file; then
+		logfile=`getcfvar $cf_type logfile $cf_file`
 	    fi
 	    ;;
 	heartbeat|logd)
