@@ -57,8 +57,6 @@ void xml_log(int priority, const char * fmt, ...)
 #  define xml_log cl_log
 #endif
 
-xmlDoc *getDocPtr(xmlNode *node);
-
 typedef struct 
 {
 	xmlRelaxNGPtr rng;

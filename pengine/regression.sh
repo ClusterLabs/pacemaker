@@ -533,6 +533,11 @@ do_test template-order-2 "Template - Order 2"
 do_test template-order-3 "Template - Order 3"
 do_test template-ticket  "Template - Ticket"
 
+do_test template-rsc-sets-1  "Template - Resource Sets 1"
+do_test template-rsc-sets-2  "Template - Resource Sets 2"
+do_test template-rsc-sets-3  "Template - Resource Sets 3"
+do_test template-rsc-sets-4  "Template - Resource Sets 4"
+
 echo ""
 
 test_results
