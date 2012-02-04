@@ -240,6 +240,7 @@ do_election_count_vote(long long action,
                        enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     struct timeval your_age;
+    int age;
     int election_id = -1;
     int log_level = LOG_INFO;
     gboolean use_born_on = FALSE;
@@ -293,6 +294,8 @@ do_election_count_vote(long long action,
         use_born_on = TRUE;
     }
 
+    age = crm_compare_age(your_age);
+
     if (cur_state == S_STARTING) {
         reason = "Still starting";
         we_loose = TRUE;
@@ -341,11 +344,11 @@ do_election_count_vote(long long action,
     } else if (compare_version(your_version, CRM_FEATURE_SET) > 0) {
         reason = "Version";
 
-    } else if (crm_compare_age(your_age) < 0) {
+    } else if (age < 0) {
         reason = "Uptime";
         we_loose = TRUE;
 
-    } else if (crm_compare_age(your_age) > 0) {
+    } else if (age > 0) {
         reason = "Uptime";
 
         /* TODO: Check for y(our) born < 0 */
