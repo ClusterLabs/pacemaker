@@ -57,7 +57,6 @@ crm_uptime(struct timeval *output)
 static int
 crm_compare_age(struct timeval your_age)
 {
-    int fuzz = 10000;
     struct timeval our_age;
 
     if (crm_uptime(&our_age) < 0) {
@@ -71,12 +70,6 @@ crm_compare_age(struct timeval your_age)
         return 1;
     } else if (our_age.tv_sec < your_age.tv_sec) {
         crm_debug("Loose: %ld vs %ld (seconds)", (long)our_age.tv_sec, (long)your_age.tv_sec);
-        return -1;
-    } else if (our_age.tv_usec > (your_age.tv_usec + fuzz)) {
-        crm_debug("Win: %ld vs %ld  (nano seconds)", (long)our_age.tv_usec, (long)your_age.tv_usec);
-        return 1;
-    } else if (our_age.tv_usec < (your_age.tv_usec - fuzz)) {
-        crm_debug("Loose: %ld vs %ld(nano seconds)", (long)our_age.tv_usec, (long)your_age.tv_usec);
         return -1;
     }
 
