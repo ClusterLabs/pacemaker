@@ -137,9 +137,9 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
 	crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
 	
         do_crm_log(rc==stonith_ok?LOG_NOTICE:LOG_ERR,
-                   "Operation %s of %s by %s (op=%s, for=%s, state=%d): %s",
-                   op->action, op->target, op->delegate, op->id, op->client_id, op->state,
-                   stonith_error2string(rc));
+                   "Operation %s of %s by %s for %s[%s]: %s",
+                   op->action, op->target, op->delegate?op->delegate:"<no-one>",
+                   op->originator, op->client_id, stonith_error2string(rc));
 
     } else {
         crm_err("Already sent notifications for '%s of %s by %s' (op=%s, for=%s, state=%d): %s",

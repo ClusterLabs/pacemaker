@@ -133,20 +133,15 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
     if (rc == stonith_ok && crm_str_eq(target, fsa_our_uname, TRUE)) {
         crm_err("We were alegedly just fenced by %s for %s!", executioner, origin);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
-
-    } else if (rc == stonith_ok) {
-        crm_notice("Peer %s was terminated (%s) by %s for %s (ref=%s): %s",
-                 target,
-                 crm_element_value(action, F_STONITH_OPERATION),
-                 executioner, origin,
-                 crm_element_value(action, F_STONITH_REMOTE), stonith_error2string(rc));
-    } else {
-        crm_err("Peer %s could not be terminated (%s) by %s for %s (ref=%s): %s",
-                target,
-                crm_element_value(action, F_STONITH_OPERATION),
-                executioner ? executioner : "<anyone>", origin,
-                crm_element_value(action, F_STONITH_REMOTE), stonith_error2string(rc));
+        return;
+        
     }
+
+    crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s)",
+               target, rc == stonith_ok?"":" not",
+               crm_element_value(action, F_STONITH_OPERATION),
+               executioner ? executioner : "<anyone>", origin,
+               stonith_error2string(rc), crm_element_value(action, F_STONITH_REMOTE));
 
 #if SUPPORT_CMAN
     if (rc == stonith_ok && is_cman_cluster()) {

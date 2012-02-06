@@ -2303,8 +2303,8 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
         }
 
         if (is_set(rsc->flags, pe_rsc_failed)) {
-            crm_warn("Stop of failed resource %s is"
-                     " implicit after %s is fenced", rsc->id, action->node->details->uname);
+            crm_notice("Stop of failed resource %s is"
+                       " implicit after %s is fenced", rsc->id, action->node->details->uname);
         } else {
             crm_info("%s is implicit after %s is fenced",
                      action->uuid, action->node->details->uname);
