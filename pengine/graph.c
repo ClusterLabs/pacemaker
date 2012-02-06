@@ -392,14 +392,21 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
      */
     GListPtr lpc = NULL;
 
-    for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
-        resource_t *rsc = (resource_t *) lpc->data;
+    for (lpc = data_set->actions; lpc != NULL; lpc = lpc->next) {
+        action_t *action = (action_t *) lpc->data;
 
-        if (is_not_set(rsc->flags, pe_rsc_managed)) {
+        if (action->rsc == NULL || action->node == NULL) {
+            continue;
+        } else if(is_not_set(action->rsc->flags, pe_rsc_managed)) {
+            continue;
+        } else if(action->node->details != node->details) {
+            continue;
+        } else if(safe_str_neq(action->task, RSC_STOP)) {
             continue;
         }
 
-        custom_action_order(rsc, stop_key(rsc), NULL,
+        crm_trace("Ordering %s before shutdown on %s", action->uuid, node->details->uname);
+        custom_action_order(action->rsc, NULL, action,
                             NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
                             pe_order_optional, data_set);
     }
