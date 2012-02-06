@@ -1306,9 +1306,34 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
 	return TRUE;
     }
 
-    if(g_hash_table_lookup(data_set->template_rsc_sets, id_first) == NULL
-       && g_hash_table_lookup(data_set->template_rsc_sets, id_then) == NULL) {
-	return FALSE;
+    if (rsc_first == NULL) {
+        xmlNode *template_rsc_set_first = NULL;
+        gboolean rc = g_hash_table_lookup_extended(data_set->template_rsc_sets, id_first,
+                                                   NULL, (gpointer) &template_rsc_set_first);
+
+        if (rc == FALSE) {
+            crm_config_err("Invalid constraint '%s': No resource or template named '%s'", id, id_first);
+            return FALSE;
+
+        } else if (template_rsc_set_first == NULL) {
+            crm_config_warn("Constraint '%s': Template '%s' is not referenced by any resource", id, id_first);
+            return FALSE;
+        }
+    }
+
+    if (rsc_then == NULL) {
+        xmlNode *template_rsc_set_then = NULL;
+        gboolean rc = g_hash_table_lookup_extended(data_set->template_rsc_sets, id_then,
+                                                   NULL, (gpointer) &template_rsc_set_then);
+
+        if (rc == FALSE) {
+            crm_config_err("Invalid constraint '%s': No resource or template named '%s'", id, id_then);
+            return FALSE;
+
+        } else if (template_rsc_set_then == NULL) {
+            crm_config_warn("Constraint '%s': Template '%s' is not referenced by any resource", id, id_then);
+            return FALSE;
+        }
     }
 
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
@@ -1394,14 +1419,19 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 
+    gboolean rc = TRUE;
+
     if (invert == NULL) {
         invert = "true";
     }
 
-    unpack_order_template(xml_obj, &expanded_xml, data_set);
+    rc = unpack_order_template(xml_obj, &expanded_xml, data_set);
     if(expanded_xml) {
 	orig_xml = xml_obj;
 	xml_obj = expanded_xml;
+
+    } else if (rc == FALSE) {
+        return FALSE;
     }
 
     for (set = __xml_first_child(xml_obj); set != NULL; set = __xml_next(set)) {
@@ -1757,11 +1787,34 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 	return TRUE;
     }
 
-    template_rsc_set_lh = g_hash_table_lookup(data_set->template_rsc_sets, id_lh);
-    template_rsc_set_rh = g_hash_table_lookup(data_set->template_rsc_sets, id_rh);
-    if(template_rsc_set_lh == NULL &&  template_rsc_set_rh == NULL) {
-	return FALSE;
+    if (rsc_lh == NULL) {
+        gboolean rc = g_hash_table_lookup_extended(data_set->template_rsc_sets, id_lh,
+                                                   NULL, (gpointer) &template_rsc_set_lh);
+
+        if (rc == FALSE) {
+            crm_config_err("Invalid constraint '%s': No resource or template named '%s'", id, id_lh);
+            return FALSE;
+
+        } else if (template_rsc_set_lh == NULL) {
+            crm_config_warn("Constraint '%s': Template '%s' is not referenced by any resource", id, id_lh);
+            return FALSE;
+        }
     }
+
+    if (rsc_rh == NULL) {
+        gboolean rc = g_hash_table_lookup_extended(data_set->template_rsc_sets, id_rh,
+                                                   NULL, (gpointer) &template_rsc_set_rh);
+
+        if (rc == FALSE) {
+            crm_config_err("Invalid constraint '%s': No resource or template named '%s'", id, id_rh);
+            return FALSE;
+
+        } else if (template_rsc_set_rh == NULL) {
+            crm_config_warn("Constraint '%s': Template '%s' is not referenced by any resource", id, id_rh);
+            return FALSE;
+        }
+    }
+
     if(template_rsc_set_lh && template_rsc_set_rh) {
         /* A colocation constraint between two templates makes no sense. */
 	crm_config_err("Either LHS or RHS of %s should be a normal resource instead of a template",  id);
@@ -1831,14 +1884,19 @@ unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 
+    gboolean rc = TRUE;
+
     if (score) {
         score_i = char2score(score);
     }
 
-    unpack_colocation_template(xml_obj, &expanded_xml, data_set);
+    rc = unpack_colocation_template(xml_obj, &expanded_xml, data_set);
     if(expanded_xml) {
 	orig_xml = xml_obj;
 	xml_obj = expanded_xml;
+
+    } else if (rc == FALSE) {
+        return FALSE;
     }
  
     for (set = __xml_first_child(xml_obj); set != NULL; set = __xml_next(set)) {
@@ -2052,6 +2110,8 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 
     resource_t *rsc_lh = NULL;
 
+    xmlNode *template_rsc_set_lh = NULL;
+
     xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
     gboolean any_sets = FALSE;
@@ -2089,9 +2149,14 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 	return TRUE;
     }
 
-    if(g_hash_table_lookup(data_set->template_rsc_sets, id_lh) == NULL) {
-	crm_config_err("Invalid constraint '%s': No template named '%s'", id, id_lh);
+    if(g_hash_table_lookup_extended(data_set->template_rsc_sets, id_lh,
+                                    NULL, (gpointer) &template_rsc_set_lh) == FALSE) {
+        crm_config_err("Invalid constraint '%s': No resource or template named '%s'", id, id_lh);
 	return FALSE;
+
+    } else if (template_rsc_set_lh == NULL) {
+        crm_config_warn("Constraint '%s': Template '%s' is not referenced by any resource", id, id_lh);
+        return FALSE;
     }
 
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
@@ -2140,6 +2205,8 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
 
+    gboolean rc = TRUE;
+
     if (xml_obj == NULL) {
         crm_config_err("No rsc_ticket constraint object to process.");
         return FALSE;
@@ -2171,10 +2238,13 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
         g_hash_table_insert(data_set->tickets, crm_strdup(ticket->id), ticket);
     }
 
-    unpack_rsc_ticket_template(xml_obj, &expanded_xml, data_set);
+    rc = unpack_rsc_ticket_template(xml_obj, &expanded_xml, data_set);
     if(expanded_xml) {
 	orig_xml = xml_obj;
 	xml_obj = expanded_xml;
+
+    } else if (rc == FALSE) {
+        return FALSE;
     }
 
     for (set = __xml_first_child(xml_obj); set != NULL; set = __xml_next(set)) {
