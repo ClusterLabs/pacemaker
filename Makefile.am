@@ -51,11 +51,11 @@ if BUILD_CS_PLUGIN
 endif
 if BUILD_HEARTBEAT_SUPPORT
 	$(INSTALL) -d $(DESTDIR)/$(HB_DAEMON_DIR)
-	ln -s $(CRM_DAEMON_DIR)/attrd     $(DESTDIR)$(HB_DAEMON_DIR)/
-	ln -s $(CRM_DAEMON_DIR)/cib       $(DESTDIR)$(HB_DAEMON_DIR)/
-	ln -s $(CRM_DAEMON_DIR)/crmd      $(DESTDIR)$(HB_DAEMON_DIR)/
-	ln -s $(CRM_DAEMON_DIR)/pengine   $(DESTDIR)$(HB_DAEMON_DIR)/
-	ln -s $(CRM_DAEMON_DIR)/stonithd  $(DESTDIR)$(HB_DAEMON_DIR)/
+	ln -sf $(CRM_DAEMON_DIR)/attrd     $(DESTDIR)$(HB_DAEMON_DIR)/
+	ln -sf $(CRM_DAEMON_DIR)/cib       $(DESTDIR)$(HB_DAEMON_DIR)/
+	ln -sf $(CRM_DAEMON_DIR)/crmd      $(DESTDIR)$(HB_DAEMON_DIR)/
+	ln -sf $(CRM_DAEMON_DIR)/pengine   $(DESTDIR)$(HB_DAEMON_DIR)/
+	ln -sf $(CRM_DAEMON_DIR)/stonithd  $(DESTDIR)$(HB_DAEMON_DIR)/
 endif
 # Use chown because the user/group may not exist
 
