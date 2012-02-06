@@ -442,7 +442,7 @@ void free_topology_entry(gpointer data)
     crm_free(tp);
 }
 
-static int stonith_level_register(xmlNode *msg) 
+int stonith_level_register(xmlNode *msg) 
 {
     int id = 0;
     int rc = stonith_ok;
@@ -478,7 +478,7 @@ static int stonith_level_register(xmlNode *msg)
     return rc;
 }
 
-static int stonith_level_remove(xmlNode *msg) 
+int stonith_level_remove(xmlNode *msg) 
 {
     int id = 0;
     xmlNode *level = get_xpath_object("//"F_STONITH_LEVEL, msg, LOG_ERR);

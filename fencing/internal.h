@@ -92,6 +92,11 @@ extern void free_device(gpointer data);
 
 extern void free_topology_entry(gpointer data);
 
+extern int stonith_level_remove(xmlNode *msg);
+
+extern int stonith_level_register(xmlNode *msg);
+
+
 extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;

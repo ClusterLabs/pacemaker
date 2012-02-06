@@ -299,6 +299,12 @@
 
 #  define XML_CIB_TAG_TICKETS   		"tickets"
 
+#  define XML_TAG_FENCING_TOPOLOGY      "fencing-topology"
+#  define XML_TAG_FENCING_LEVEL         "fencing-level"
+#  define XML_ATTR_STONITH_INDEX        "index"
+#  define XML_ATTR_STONITH_TARGET       "target"
+#  define XML_ATTR_STONITH_DEVICES      "devices"
+
 #  include <crm/common/xml.h>
 
 #  define ID(x) crm_element_value(x, XML_ATTR_ID)

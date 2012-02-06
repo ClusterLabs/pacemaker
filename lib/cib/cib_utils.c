@@ -59,6 +59,7 @@ struct config_root_s known_paths[] = {
     { XML_CIB_TAG_OPCONFIG,	"/cib/configuration", "//cib/configuration/op_defaults" },
     { XML_CIB_TAG_RSCCONFIG,	"/cib/configuration", "//cib/configuration/rsc_defaults" },
     { XML_CIB_TAG_ACLS,		"/cib/configuration", "//cib/configuration/acls" },
+    { XML_TAG_FENCING_TOPOLOGY,	"/cib/configuration", "//cib/configuration/fencing-topology" },
     { XML_CIB_TAG_SECTION_ALL,  NULL,                 "//cib" },
 };
 /* *INDENT-ON* */

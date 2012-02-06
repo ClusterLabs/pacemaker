@@ -46,6 +46,8 @@
 #include <crm/cib.h>
 #include <crmd.h>
 
+#include <tengine.h>
+
 struct crm_subsystem_s *cib_subsystem = NULL;
 
 int cib_retries = 0;
@@ -54,7 +56,6 @@ static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
     int rc = -1;
-    xmlNode *diff = NULL;
 
     CRM_CHECK(msg != NULL, return);
     crm_element_value_int(msg, F_CIB_RC, &rc);
@@ -63,9 +64,8 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
     if (get_xpath_object
-        ("//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_CRMCONFIG, diff,
+        ("//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_CRMCONFIG, msg,
          LOG_DEBUG) != NULL) {
         mainloop_set_trigger(config_read);
     }
@@ -177,12 +177,12 @@ do_cib_control(long long action,
         } else if (cib_ok !=
                    fsa_cib_conn->cmds->add_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY,
                                                            do_cib_replaced)) {
-            crm_err("Could not set CIB notification callback");
+            crm_err("Could not set CIB notification callback (replace)");
 
         } else if (cib_ok !=
                    fsa_cib_conn->cmds->add_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY,
                                                            do_cib_updated)) {
-            crm_err("Could not set CIB notification callback");
+            crm_err("Could not set CIB notification callback (update)");
 
         } else {
             set_bit_inplace(fsa_input_register, R_CIB_CONNECTED);

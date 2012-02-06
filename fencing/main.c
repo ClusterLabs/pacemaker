@@ -39,6 +39,8 @@
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 
+#include <crm/cib.h>
+
 #include <internal.h>
 
 char *channel1 = NULL;
@@ -472,6 +474,200 @@ do_stonith_notify(
     crm_trace("Notify complete");
 }
 
+static stonith_key_value_t *parse_device_list(const char *devices) 
+{
+    int lpc = 0;
+    int max = 0;
+    int last = 0;
+    stonith_key_value_t *output = NULL;
+
+    if(devices == NULL) {
+	return output;
+    }
+
+    max = strlen(devices);
+    for(lpc = 0; lpc <= max; lpc++) {
+        if(devices[lpc] == ',' || devices[lpc] == 0) {
+	    char *line = NULL;
+
+            crm_malloc0(line, 2 + lpc - last);
+            snprintf(line, 1 + lpc - last, "%s", devices+last);
+            output = stonith_key_value_add(output, NULL, line);
+            crm_free(line);
+
+            last = lpc + 1;
+        }
+    }
+
+    return output;
+}
+
+static void topology_remove_helper(const char *node, int level) 
+{
+    xmlNode *data = create_xml_node(NULL, F_STONITH_LEVEL);
+    crm_xml_add(data, "origin", __FUNCTION__);
+    crm_xml_add_int(data, XML_ATTR_ID, level);
+    crm_xml_add(data, F_STONITH_TARGET, node);
+    stonith_level_remove(data);
+    free_xml(data);
+}
+
+static void topology_register_helper(const char *node, int level, stonith_key_value_t *device_list) 
+{
+    xmlNode *data = create_xml_node(NULL, F_STONITH_LEVEL);
+    crm_xml_add(data, "origin", __FUNCTION__);
+    crm_xml_add_int(data, XML_ATTR_ID, level);
+    crm_xml_add(data, F_STONITH_TARGET, node);
+
+    for (; device_list; device_list = device_list->next) {
+        xmlNode *dev = create_xml_node(data, F_STONITH_DEVICE);
+        crm_xml_add(dev, XML_ATTR_ID, device_list->value);
+    }
+
+    stonith_level_register(data);
+    free_xml(data);
+}
+
+static void remove_fencing_topology(xmlXPathObjectPtr xpathObj)
+{
+    int max = 0, lpc = 0;
+
+    if(xpathObj && xpathObj->nodesetval) {
+        max = xpathObj->nodesetval->nodeNr;
+    }
+
+    for(lpc = 0; lpc < max; lpc++) {
+        xmlNode *match = getXpathResult(xpathObj, lpc);
+        CRM_CHECK(match != NULL, continue);
+
+        if(crm_element_value(match, XML_DIFF_MARKER)) {
+            /* Deletion */
+            int index = 0;
+            const char *target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
+
+            crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
+            if(target == NULL) {
+                crm_err("Invalid fencing target in element %s", ID(match));
+
+            } else if(index <= 0) {
+                crm_err("Invalid level for %s in element %s", target, ID(match));
+
+            } else {
+                topology_remove_helper(target, index);
+            }
+     /* } else { Deal with modifications during the 'addition' stage */
+        }
+    }
+}
+
+
+static void register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force)
+{
+    int max = 0, lpc = 0;
+
+    if(xpathObj && xpathObj->nodesetval) {
+        max = xpathObj->nodesetval->nodeNr;
+    }
+
+    for(lpc = 0; lpc < max; lpc++) {
+        int index = 0;
+        const char *target;
+        const char *dev_list;
+        stonith_key_value_t *devices = NULL;
+        xmlNode *match = getXpathResult(xpathObj, lpc);
+        CRM_CHECK(match != NULL, continue);
+
+        crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
+        target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
+        dev_list = crm_element_value(match, XML_ATTR_STONITH_DEVICES);
+        devices = parse_device_list(dev_list);
+
+        crm_trace("Updating %s[%d] (%s) to %s", target, index, ID(match), dev_list);
+
+        if(target == NULL) {
+            crm_err("Invalid fencing target in element %s", ID(match));
+
+        } else if(index <= 0) {
+            crm_err("Invalid level for %s in element %s", target, ID(match));
+
+        } else if(force == FALSE && crm_element_value(match, XML_DIFF_MARKER)) {
+            /* Addition */
+            topology_register_helper(target, index, devices);
+
+        } else { /* Modification */
+            /* Remove then re-add */
+            topology_remove_helper(target, index);
+            topology_register_helper(target, index, devices);
+        }
+
+        stonith_key_value_freeall(devices, 1, 1);
+    }
+}
+
+/* Fencing 
+<diff crm_feature_set="3.0.6">
+  <diff-removed>
+    <fencing-topology>
+      <fencing-level id="f-p1.1" target="pcmk-1" index="1" devices="poison-pill" __crm_diff_marker__="removed:top"/>
+      <fencing-level id="f-p1.2" target="pcmk-1" index="2" devices="power" __crm_diff_marker__="removed:top"/>
+      <fencing-level devices="disk,network" id="f-p2.1"/>
+    </fencing-topology>
+  </diff-removed>
+  <diff-added>
+    <fencing-topology>
+      <fencing-level id="f-p.1" target="pcmk-1" index="1" devices="poison-pill" __crm_diff_marker__="added:top"/>
+      <fencing-level id="f-p2.1" target="pcmk-2" index="1" devices="disk,something"/>
+      <fencing-level id="f-p3.1" target="pcmk-2" index="2" devices="power" __crm_diff_marker__="added:top"/>
+    </fencing-topology>
+  </diff-added>
+</diff>
+*/
+
+static void
+fencing_topology_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
+{
+    xmlXPathObjectPtr xpathObj = NULL;
+    const char *xpath = "//" XML_TAG_FENCING_LEVEL;
+
+    crm_trace("Pushing in stonith topology");
+
+    /* Grab everything */
+    xpathObj = xpath_search(msg, xpath);
+
+    register_fencing_topology(xpathObj, TRUE);
+
+    if(xpathObj) {
+	xmlXPathFreeObject(xpathObj);
+    }
+}
+
+static void
+update_fencing_topology(const char *event, xmlNode * msg)
+{
+    const char *xpath;
+    xmlXPathObjectPtr xpathObj = NULL;
+
+    /* Process deletions (only) */
+    xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_TAG_FENCING_LEVEL;
+    xpathObj = xpath_search(msg, xpath);
+
+    remove_fencing_topology(xpathObj);
+
+    if(xpathObj) {
+	xmlXPathFreeObject(xpathObj);
+    }
+
+    /* Process additions and changes */
+    xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_TAG_FENCING_LEVEL;
+    xpathObj = xpath_search(msg, xpath);
+
+    register_fencing_topology(xpathObj, FALSE);
+
+    if(xpathObj) {
+	xmlXPathFreeObject(xpathObj);
+    }
+}
+
 static void
 stonith_shutdown(int nsig)
 {
@@ -503,6 +699,54 @@ static struct crm_option long_options[] = {
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
+
+static void
+setup_cib(void)
+{
+    static void *cib_library = NULL;
+    static cib_t *(*cib_new_fn)(void) = NULL;
+    static const char *(*cib_err_fn)(enum cib_errors) = NULL;
+
+    int rc, retries = 0;
+    cib_t *cib = NULL;
+
+    if(cib_library == NULL) {
+        cib_library = dlopen(CIB_LIBRARY, RTLD_LAZY);
+    }
+    if(cib_library && cib_new_fn == NULL) {
+        cib_new_fn = dlsym(cib_library, "cib_new");
+    }
+    if(cib_library && cib_err_fn == NULL) {
+        cib_err_fn = dlsym(cib_library, "cib_error2string");
+    }
+    if(cib_new_fn != NULL) {
+        cib = (*cib_new_fn)();
+    }
+    
+    if(cib == NULL) {
+        crm_err("No connection to the CIB");
+        return;
+    }
+
+    do {
+        sleep(retries);
+        rc = cib->cmds->signon(cib, CRM_SYSTEM_CRMD, cib_command);
+    } while(rc == cib_connection && ++retries < 5);
+    
+    if (rc != cib_ok) {
+        crm_err("Could not connect to the CIB service: %s", (*cib_err_fn)(rc));
+        
+    } else if (cib_ok != cib->cmds->add_notify_callback(
+                   cib, T_CIB_DIFF_NOTIFY, update_fencing_topology)) {
+        crm_err("Could not set CIB notification callback");
+        
+    } else {
+        rc = cib->cmds->query(cib, NULL, NULL, cib_scope_local);
+        add_cib_op_callback(cib, rc, FALSE, NULL, fencing_topology_callback);
+        crm_notice("Watching for stonith topology changes");
+    }
+    
+}
 
 int
 main(int argc, char ** argv)
@@ -619,7 +863,7 @@ main(int argc, char ** argv)
     if(stand_alone == FALSE) {
 	void *dispatch = stonith_peer_hb_callback;
 	void *destroy = stonith_peer_hb_destroy;
-	    
+
 	if(is_openais_cluster()) {
 #if SUPPORT_COROSYNC
 	    destroy = stonith_peer_ais_destroy;
@@ -637,7 +881,9 @@ main(int argc, char ** argv)
 	    crm_crit("Cannot sign in to the cluster... terminating");
 	    exit(100);
 	}
-	
+
+        setup_cib();
+
     } else {
 	stonith_our_uname = crm_strdup("localhost");
     }
