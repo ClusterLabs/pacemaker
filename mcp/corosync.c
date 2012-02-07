@@ -106,12 +106,14 @@ cluster_disconnect_cfg(void)
 
 #define cs_repeat(counter, max, code) do {		\
 	code;						\
-	if(rc == CS_ERR_TRY_AGAIN) {			\
+	if(rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {  \
 	    counter++;					\
 	    crm_debug("Retrying operation after %ds", counter);	\
 	    sleep(counter);				\
+	} else {                                        \
+            break;                                      \
 	}						\
-    } while(rc == CS_ERR_TRY_AGAIN && counter < max)
+    } while(counter < max)
 
 gboolean
 cluster_connect_cfg(uint32_t * nodeid)
@@ -289,7 +291,7 @@ send_cpg_message(struct iovec * iov)
 
     do {
         rc = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 1);
-        if (rc == CS_ERR_TRY_AGAIN) {
+        if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
             cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;
             int rc2 = cpg_flow_control_state_get(cpg_handle, &fc_state);
 
@@ -307,10 +309,12 @@ send_cpg_message(struct iovec * iov)
                 crm_debug("Retrying operation after %ds", retries);
                 sleep(retries);
             }
+        } else {
+            break;
         }
 
         /* 5 retires is plenty, we'll resend once the membership reforms anyway */
-    } while (rc == CS_ERR_TRY_AGAIN && retries < 5);
+    } while (retries < 5);
 
   bail:
     if (rc != CS_OK) {

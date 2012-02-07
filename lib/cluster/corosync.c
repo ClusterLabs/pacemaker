@@ -71,12 +71,14 @@ static uint32_t pcmk_nodeid = 0;
 
 #define cs_repeat(counter, max, code) do {		\
 	code;						\
-	if(rc == CS_ERR_TRY_AGAIN) {			\
+	if(rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {  \
 	    counter++;					\
 	    crm_debug("Retrying operation after %ds", counter);	\
 	    sleep(counter);				\
-	}						\
-    } while(rc == CS_ERR_TRY_AGAIN && counter < max)
+	} else {                                        \
+            break;                                      \
+        }                                               \
+    } while(counter < max)
 
 enum crm_ais_msg_types
 text2msg_type(const char *text)
@@ -196,7 +198,7 @@ get_ais_nodeid(uint32_t * id, char **uname)
                   crm_err("Bad response id: %d", answer.header.id));
     }
 
-    if (rc == CS_ERR_TRY_AGAIN && retries < 20) {
+    if ((rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) && retries < 20) {
         retries++;
         crm_info("Peer overloaded: Re-sending message (Attempt %d of 20)", retries);
         sleep(retries);         /* Proportional back off */
@@ -343,7 +345,7 @@ send_ais_text(int class, const char *data,
     crm_realloc(buf, buf_len);
 
     do {
-        if (rc == CS_ERR_TRY_AGAIN) {
+        if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
             retries++;
             crm_info("Peer overloaded or membership in flux:"
                      " Re-sending message (Attempt %d of 20)", retries);
@@ -378,7 +380,7 @@ send_ais_text(int class, const char *data,
                 CRM_CHECK(dest != crm_msg_ais, rc = CS_ERR_MESSAGE_ERROR;
                           goto bail);
                 rc = cpg_mcast_joined(pcmk_cpg_handle, CPG_TYPE_AGREED, &iov, 1);
-                if (rc == CS_ERR_TRY_AGAIN) {
+                if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
                     cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;
                     int rc2 = cpg_flow_control_state_get(pcmk_cpg_handle, &fc_state);
 
@@ -401,7 +403,7 @@ send_ais_text(int class, const char *data,
                 break;
         }
 
-    } while (rc == CS_ERR_TRY_AGAIN && retries < 20);
+    } while ((rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) && retries < 20);
 
   bail:
     if (rc != CS_OK) {
@@ -616,7 +618,7 @@ ais_dispatch(int sender, gpointer user_data)
         rc = coroipcc_dispatch_get(ais_ipc_handle, (void **)&buffer, 0);
 #endif
 
-        if (rc == CS_ERR_TRY_AGAIN) {
+        if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
             return TRUE;
         }
         if (rc != CS_OK) {
@@ -1184,6 +1186,7 @@ init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
                 return TRUE;
                 break;
             case CS_ERR_TRY_AGAIN:
+            case CS_ERR_QUEUE_FULL:
                 break;
             default:
                 return FALSE;
