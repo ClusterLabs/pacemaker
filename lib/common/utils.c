@@ -816,6 +816,9 @@ crm_enable_stderr(int enable)
         set_format_string(QB_LOG_STDERR, crm_system_name, crm_log_level > LOG_DEBUG);
 	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_TRUE);
 
+        /* Need to reprocess now that a new target is active */
+        update_all_trace_data();
+
     } else if(enable == FALSE) {
 	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_FALSE);
     }
