@@ -297,16 +297,6 @@ sanitize() {
 	trap "" 0
 }
 
-pickfirst() {
-    for x; do
-	which $x >/dev/null 2>&1 && {
-	    echo $x
-	    return 0
-	}
-    done
-    return 1
-}
-
 #
 # get some system info
 #

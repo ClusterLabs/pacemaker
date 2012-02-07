@@ -580,6 +580,16 @@ getcfvar() {
     esac
 }
 
+pickfirst() {
+    for x; do
+	which $x >/dev/null 2>&1 && {
+	    echo $x
+	    return 0
+	}
+    done
+    return 1
+}
+
 #
 # figure out the cluster type, depending on the process list
 # and existence of configuration files
@@ -588,7 +598,11 @@ get_cluster_type() {
     if 
 	ps -ef | egrep -qs '[c]orosync'
     then
-	quorum=`corosync-objctl -a | grep quorum.provider | sed s/.*=//`
+	tool=`pickfirst corosync-objctl corosync-cmapctl`
+	case $tool in
+	    *objctl) quorum=`$tool -a | grep quorum.provider | sed s/.*=//`;;
+	    *cmapctl) quorum=`$tool | grep quorum.provider | sed s/.*=//`;;
+	esac
 	if [ x"$quorum" = x"quorum_cman" ]; then
 	    stack="cman"
 	else
