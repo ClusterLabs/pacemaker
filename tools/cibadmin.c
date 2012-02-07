@@ -98,7 +98,7 @@ static struct crm_option long_options[] = {
     {"make-slave",  0, 0, 'r', NULL, 1},
     {"make-master", 0, 0, 'w', NULL, 1},
     {"is-master",   0, 0, 'm', NULL, 1},
-    {"empty",       0, 0, 'a', "\tOutput an empty CIB", 1},
+    {"empty",       0, 0, 'a', "\tOutput an empty CIB"},
     {"blank",       0, 0, 'a', NULL, 1},
 
     {"-spacer-",1, 0, '-', "\nAdditional options:"},
