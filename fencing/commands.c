@@ -481,7 +481,7 @@ static int stonith_level_register(xmlNode *msg)
 static int stonith_level_remove(xmlNode *msg) 
 {
     int id = 0;
-    xmlNode *level = get_xpath_object("//@"F_STONITH_LEVEL, msg, LOG_ERR);
+    xmlNode *level = get_xpath_object("//"F_STONITH_LEVEL, msg, LOG_ERR);
     const char *node = crm_element_value(level, F_STONITH_TARGET);
     stonith_topology_t *tp = g_hash_table_lookup(topology, node);
 
