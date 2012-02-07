@@ -933,6 +933,13 @@ corosync_mark_unseen_peer_dead(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
+corosync_mark_node_unseen(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+    node->last_seen = 0;
+}
+
+static void
 pcmk_quorum_notification(quorum_handle_t handle,
                          uint32_t quorate,
                          uint64_t ring_id, uint32_t view_list_entries, uint32_t * view_list)
@@ -948,6 +955,9 @@ pcmk_quorum_notification(quorum_handle_t handle,
         crm_info("Membership " U64T ": quorum %s (%lu)", ring_id,
                  quorate ? "retained" : "still lost", (long unsigned int)view_list_entries);
     }
+
+    g_hash_table_foreach(crm_peer_cache, corosync_mark_node_unseen, NULL);
+
     for (i = 0; i < view_list_entries; i++) {
         char *uuid = get_corosync_uuid(view_list[i], NULL); 
         crm_debug("Member[%d] %d ", i, view_list[i]);
