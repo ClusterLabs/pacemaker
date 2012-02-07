@@ -660,7 +660,8 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
         crm_system_name = entity;
 
     } else if (argc > 0 && argv != NULL) {
-        crm_system_name = basename(argv[0]);
+        char *mutable = crm_strdup(argv[0]);
+        crm_system_name = basename(mutable);
         if (strstr(crm_system_name, "lt-") == crm_system_name) {
             crm_system_name += 3;
         }
