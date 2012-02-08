@@ -1,15 +1,15 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
 #include <assert.h>
 #include "standalone_config.h"
 
-
 extern int yylex (void);
 int yyerror(const char *foo);
 static void handle_line_value(void);
-static void reset_line();
+static void reset_line(void);
 static void add_line_value(char *key, char *val);
 
 enum line_type {
@@ -172,7 +172,6 @@ static void
 handle_line_value(void)
 {
 	int i;
-	const char *type;
 
 	switch (line_val.type) {
 	case STANDALONE_LINE_DEVICE:
@@ -203,7 +202,7 @@ handle_line_value(void)
 	reset_line();
 }
 
-#ifdef STANDALONE
+#if 0
 int
 main(int argc, char *argv[])
 {

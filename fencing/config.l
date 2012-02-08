@@ -3,7 +3,8 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-#include "config.tab.h"
+#include "stonithd-config.h"
+#include "standalone_config.h"
 
 /* Some distributions can't use the output from flex without help */
 #define ECHO if(fwrite( yytext, yyleng, 1, yyout ))
@@ -91,12 +92,6 @@ _unescape(char *val)
 }
 
 %%
-void
-reset_vars(void)
-{
-	_line_count = 1;
-}
-
 
 int
 yywrap(void)
@@ -106,6 +101,8 @@ yywrap(void)
 
 int standalone_cfg_read_file(const char *file_path)
 {
+#if 0
+
 	FILE *fp = fopen(file_path, "r");
 
 	if (!fp) {
@@ -115,6 +112,9 @@ int standalone_cfg_read_file(const char *file_path)
 	yyparse();
 
 	fclose(fp);
+#endif
+	yyunput(1, NULL);
+	input();
 	return 0;
 }
 
