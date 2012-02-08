@@ -7,6 +7,7 @@
 #include "standalone_config.h"
 
 extern int yylex (void);
+extern void yyset_in  (FILE * in_str  );
 int yyerror(const char *foo);
 static void handle_line_value(void);
 static void reset_line(void);
@@ -202,14 +203,18 @@ handle_line_value(void)
 	reset_line();
 }
 
-#if 0
-int
-main(int argc, char *argv[])
+int standalone_cfg_read_file(const char *file_path)
 {
-	if (standalone_cfg_read_file("test2.conf")) {
+	FILE *fp = fopen(file_path, "r");
+
+	if (!fp) {
 		return -1;
 	}
-	standalone_cfg_commit();
+
+	yyset_in(fp);
+	yyparse();
+	fclose(fp);
+
 	return 0;
 }
-#endif
+
