@@ -412,14 +412,18 @@ config_find_next(confdb_handle_t config, const char *name, confdb_handle_t top_h
 static int
 get_config_opt(cmap_handle_t object_handle, const char *key, char **value, const char *fallback)
 {
-    int rc = cmap_get_string(object_handle, key, value);
+    int rc = 0, retries = 0;
+
+    cs_repeat(retries, 5, rc = cmap_get_string(object_handle, key, value));
     if(rc != CS_OK) {
+        crm_trace("Search for %s failed %d, defaulting to %s", key, rc, fallback);
         if(fallback) {
             *value = crm_strdup(fallback);
         } else {
             *value = NULL;
         }
     }
+    crm_trace("%s: %s", key, *value);
     return rc;
 }
 
@@ -685,7 +689,7 @@ read_config(void)
     } else {
         if (crm_is_true(logging_to_syslog) == FALSE) {
             crm_err
-                ("Please enable some sort of logging, either 'to_file: on' or  'to_syslog: on'.");
+                ("Please enable some sort of logging, either 'to_logfile: on' or  'to_syslog: on'.");
             crm_err("If you use file logging, be sure to also define a value for 'logfile'");
         }
     }
