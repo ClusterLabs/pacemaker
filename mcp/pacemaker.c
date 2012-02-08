@@ -25,6 +25,7 @@
 #include <crm/common/ipc.h>
 #include <clplumbing/proctrack.h>
 
+gboolean fatal_error = FALSE;
 GMainLoop *mainloop = NULL;
 GHashTable *client_list = NULL;
 GHashTable *peers = NULL;
@@ -162,8 +163,11 @@ pcmk_child_exit(ProcTrack * p, int status, int signo, int exitcode, int waslogge
 
     child->pid = 0;
     if (exitcode == 100) {
-        crm_notice("Child process %s no longer wishes" " to be respawned", child->name);
+        crm_warn("Pacemaker child process %s no longer wishes to be respawned. "
+                 "Shutting ourselves down.", child->name);
         child->respawn = FALSE;
+        fatal_error = TRUE;
+        pcmk_shutdown(15);
     }
 
     /* Broadcast the fact that one of our processes died ASAP
@@ -419,6 +423,12 @@ pcmk_shutdown_worker(gpointer user_data)
     /* send_cluster_id(); */
     crm_notice("Shutdown complete");
     g_main_loop_quit(mainloop);
+
+    if(fatal_error) {
+        crm_notice("Attempting to inhibit respawning after fatal error");
+        exit(100);
+    }
+    
     return TRUE;
 }
 
@@ -604,7 +614,8 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
 
     if (uname != NULL) {
         if (node->uname == NULL || safe_str_eq(node->uname, uname) == FALSE) {
-            crm_info("%p Node %u now known as %s (was: %s)", node, id, uname, node->uname);
+            crm_notice("%p Node %u now known as %s%s%s", node, id, uname,
+                     node->uname?node->uname:", was: ", node->uname?node->uname:"");
             crm_free(node->uname);
             node->uname = crm_strdup(uname);
             changed = TRUE;
@@ -758,7 +769,8 @@ main(int argc, char **argv)
         crm_log_init(NULL, LOG_INFO, TRUE, FALSE, 0, NULL);
     }
 
-    crm_info("Starting Pacemaker %s (Build: %s): %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);
+    crm_notice("Starting Pacemaker %s (Build: %s): %s\n",
+               VERSION, BUILD_VERSION, CRM_FEATURES);
     mainloop = g_main_new(FALSE);
 
     rc = getrlimit(RLIMIT_CORE, &cores);
