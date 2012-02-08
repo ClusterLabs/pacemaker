@@ -465,6 +465,7 @@ gboolean
 read_config(void)
 {
     int rc = CS_OK;
+    int retries = 0;
     gboolean have_log = FALSE;
 
     char *logging_debug = NULL;
@@ -473,7 +474,7 @@ read_config(void)
     char *logging_to_syslog = NULL;
     char *logging_syslog_facility = NULL;    
 
-    enum cluster_type_e stack = get_cluster_type();
+    enum cluster_type_e stack = pcmk_cluster_unknown;
 
 #if HAVE_CONFDB
     char *value = NULL;
@@ -482,21 +483,45 @@ read_config(void)
     hdb_handle_t local_handle;
     static confdb_callbacks_t callbacks = { };
 
-    rc = confdb_initialize(&config, &callbacks);
+    do {
+        rc = confdb_initialize(&config, &callbacks);
+	if(rc < 0) {
+	    retries++;
+	    printf("Connection setup failed: %d.  Retrying in %ds\n", rc, retries);
+	    sleep(retries);
+
+	} else {
+            break;
+        }
+
+    } while(retries < 5);
 #endif
 
 #if HAVE_CMAP
     cmap_handle_t local_handle;
 
     /* There can be only one (possibility if confdb isn't around) */
-    rc = cmap_initialize(&local_handle);
+    do {
+        rc = cmap_initialize(&local_handle);
+	if(rc < 0) {
+	    retries++;
+	    printf("Connection setup failed: %s.  Retrying in %ds\n",
+                   cs_strerror(rc), retries);
+	    sleep(retries);
+
+	} else {
+            break;
+        }
+
+    } while(retries < 5);
 #endif
 
-if (rc != CS_OK) {
+    if (rc != CS_OK) {
         printf("Could not initialize Cluster Configuration Database API instance, error %d\n", rc);
         return FALSE;
     }
 
+    stack = get_cluster_type();
     crm_info("Reading configure for stack: %s", name_for_cluster_type(stack));
     
     /* =::=::= Should we be here =::=::= */
