@@ -203,7 +203,8 @@ handle_line_value(void)
 	reset_line();
 }
 
-int standalone_cfg_read_file(const char *file_path)
+int
+standalone_cfg_read_file(const char *file_path)
 {
 	FILE *fp = fopen(file_path, "r");
 

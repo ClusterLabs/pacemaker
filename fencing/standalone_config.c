@@ -2,7 +2,7 @@
  * Copyright (C) 2012
  * David Vossel  <dvossel@redhat.com>
  *
- * This program is free software; you can redistribute it and/or modify
+ * This program is crm_free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
@@ -20,8 +20,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <crm/crm.h>
 #include <string.h>
-//#include <crm/crm.h>
 #include "standalone_config.h"
 
 struct device {
@@ -53,7 +53,8 @@ struct topology {
 struct device *device_list;
 struct topology *topology_list;
 
-static struct device *find_device(const char *name)
+static struct device *
+find_device(const char *name)
 {
 	struct device *dev = NULL;
 
@@ -66,7 +67,8 @@ static struct device *find_device(const char *name)
 	return dev;
 }
 
-static struct topology *find_topology(const char *name)
+static struct topology *
+find_topology(const char *name)
 {
 	struct topology *topo = NULL;
 
@@ -79,19 +81,22 @@ static struct topology *find_topology(const char *name)
 	return topo;
 }
 
-static void add_device(struct device *dev)
+static void
+add_device(struct device *dev)
 {
 	dev->next = device_list;
 	device_list = dev;
 }
 
-static void add_topology(struct topology *topo)
+static void
+add_topology(struct topology *topo)
 {
 	topo->next = topology_list;
 	topology_list = topo;
 }
 
-int standalone_cfg_add_device(const char *device, const char *agent)
+int
+standalone_cfg_add_device(const char *device, const char *agent)
 {
 	struct device *dev;
 
@@ -99,11 +104,7 @@ int standalone_cfg_add_device(const char *device, const char *agent)
 	if (find_device(device)) {
 		return 0;
 	}
-	/* TODO use crm_malloc0(dev, sizeof(*dev)); */
-
-	if (!(dev = calloc(1, sizeof(*dev)))) {
-		return -1;
-	}
+	crm_malloc0(dev, sizeof(*dev));
 
 	dev->name = strdup(device);
 	dev->agent = strdup(agent);
@@ -112,7 +113,8 @@ int standalone_cfg_add_device(const char *device, const char *agent)
 	return 0;
 }
 
-int standalone_cfg_add_device_options(const char *device, const char *key, const char *value)
+int
+standalone_cfg_add_device_options(const char *device, const char *key, const char *value)
 {
 	struct device *dev;
 
@@ -127,24 +129,23 @@ int standalone_cfg_add_device_options(const char *device, const char *key, const
 	return 0;
 }
 
-int standalone_cfg_add_node(const char *node, const char *device, const char *ports)
+int
+standalone_cfg_add_node(const char *node, const char *device, const char *ports)
 {
 	/* TODO implement this with crm_concat */
 	return 0;
 }
 
-int standalone_cfg_add_node_priority(const char *node, const char *device, unsigned int level)
+int
+standalone_cfg_add_node_priority(const char *node, const char *device, unsigned int level)
 {
 	struct topology *topo;
-	int new = 1;
+	int new = 0;
 
-	if ((topo = find_topology(node))) {
-		new = 0;
-	/* TODO use crm_malloc0(topo, sizeof(*topo)); */
-	} else if ((topo = calloc(1, sizeof(*topo)))) {
+	if (!(topo = find_topology(node))) {
+		new = 1;
+	    crm_malloc0(topo, sizeof(*topo));
 		topo->node_name = strdup(node);
-	} else {
-		return -1;
 	}
 
 	topo->priority_levels[topo->priority_levels_count].device_name = strdup(device);
@@ -158,27 +159,28 @@ int standalone_cfg_add_node_priority(const char *node, const char *device, unsig
 	return 0;
 }
 
-static int destroy_topology(void)
+static int
+destroy_topology(void)
 {
 	struct topology *topo = NULL;
 	int i;
 
 	while (topology_list) {
-		/* TODO use crm free */
 		topo = topology_list;
 
-		free(topo->node_name);
+		crm_free(topo->node_name);
 		for (i = 0; i < topo->priority_levels_count; i++) {
-			free(topo->priority_levels[i].device_name);
+			crm_free(topo->priority_levels[i].device_name);
 		}
 
 		topology_list = topo->next;
-		free(topo);
+		crm_free(topo);
 	}
 	return 0;
 }
 
-static int destroy_devices(void)
+static int
+destroy_devices(void)
 {
 	struct device *dev = NULL;
 	int i;
@@ -186,23 +188,23 @@ static int destroy_devices(void)
 	while (device_list) {
 		dev = device_list;
 
-		/* TODO use crm free */
-		free(dev->name);
-		free(dev->agent);
-		free(dev->hostlist);
-		free(dev->hostmap);
+		crm_free(dev->name);
+		crm_free(dev->agent);
+		crm_free(dev->hostlist);
+		crm_free(dev->hostmap);
 		for (i = 0; i < dev->key_vals_count; i++) {
-			free(dev->key_vals[i].key);
-			free(dev->key_vals[i].val);
+			crm_free(dev->key_vals[i].key);
+			crm_free(dev->key_vals[i].val);
 		}
 		device_list = dev->next;
-		free(dev);
+		crm_free(dev);
 	}
 
 	return 0;
 }
 
-int standalone_cfg_commit(void)
+int
+standalone_cfg_commit(void)
 {
 	struct device *dev = NULL;
 	struct topology *topo = NULL;
