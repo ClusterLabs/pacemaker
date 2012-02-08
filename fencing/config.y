@@ -194,9 +194,16 @@ handle_line_value(void)
 		break;
 	case STANDALONE_LINE_PORT:
 		for (i = 0; i < line_val.val_count; i++) {
-			standalone_cfg_add_node(line_val.name, 
-				line_val.keys[i],
-				line_val.vals[i]); /* vals may be NULL if no port specified */
+			if (line_val.keys[i]) {
+				standalone_cfg_add_node(line_val.keys[i],
+					line_val.name,
+					line_val.vals[i]);
+			} else {
+				/* if value only, that means it is just a node name */
+				standalone_cfg_add_node(line_val.vals[i],
+					line_val.name,
+					NULL);
+			}
 		}
 		break;
 	}

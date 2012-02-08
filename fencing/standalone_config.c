@@ -132,7 +132,43 @@ standalone_cfg_add_device_options(const char *device, const char *key, const cha
 int
 standalone_cfg_add_node(const char *node, const char *device, const char *ports)
 {
-	/* TODO implement this with crm_concat */
+	struct device *dev;
+	char **ptr;
+	char *tmp;
+	size_t len = strlen(":;") + 1;
+	size_t offset = 0;
+
+	if (!(dev = find_device(device))) {
+		return -1;
+	}
+
+	ptr = &dev->hostlist;
+
+	len += strlen(node);
+	if (ports) {
+		ptr = &dev->hostmap;
+		len += strlen(ports);
+	}
+
+	tmp = *ptr;
+
+	if (tmp) {
+		offset = strlen(tmp);
+		crm_realloc(tmp, len + offset + 1);
+		*ptr = tmp;
+	} else {
+		crm_malloc(tmp, len);
+		*ptr = tmp;
+	}
+
+	tmp += offset;
+
+	if (ports) {
+		sprintf(tmp, "%s:%s;", node, ports);
+	} else {
+		sprintf(tmp, "%s ", node);
+	}
+
 	return 0;
 }
 
