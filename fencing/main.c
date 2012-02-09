@@ -646,13 +646,6 @@ main(int argc, char ** argv)
 	
     } else {
         stonith_our_uname = crm_strdup("localhost");
-
-        if (standalone_conf && standalone_cfg_read_file(standalone_conf)) {
-	        crm_err("Could not read standalone config file located at, %s.", standalone_conf);
-            return -1;
-        } else if (standalone_conf) {
-            standalone_cfg_commit();
-        }
     }
 
     device_list = g_hash_table_new_full(
@@ -665,6 +658,15 @@ main(int argc, char ** argv)
     rc = init_server_ipc_comms(
 	channel1, stonith_client_connect,
 	default_ipc_connection_destroy);
+
+    if (stand_alone == TRUE) {
+        if (standalone_conf && standalone_cfg_read_file(standalone_conf)) {
+            crm_err("Could not read standalone config file located at, %s.", standalone_conf);
+            return -1;
+        } else if (standalone_conf) {
+            standalone_cfg_commit();
+        }
+    }
 
     channel2 = crm_strdup(stonith_channel_callback);
     rc = init_server_ipc_comms(
