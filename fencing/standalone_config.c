@@ -115,6 +115,10 @@ standalone_cfg_add_device(const char *device, const char *agent)
 {
 	struct device *dev;
 
+	if (!device || !agent) {
+		return -1;
+	}
+
 	/* just ignore duplicates */
 	if (find_device(device)) {
 		return 0;
@@ -133,6 +137,9 @@ standalone_cfg_add_device_options(const char *device, const char *key, const cha
 {
 	struct device *dev;
 
+	if (!device || !key || !value) {
+		return -1;
+	}
 	if (!(dev = find_device(device))) {
 		return -1;
 	}
@@ -152,6 +159,11 @@ standalone_cfg_add_node(const char *node, const char *device, const char *ports)
 	char *tmp;
 	size_t len = strlen(":;") + 1;
 	size_t offset = 0;
+
+	/* note that ports may be NULL, it is not a required argument */
+	if (!node || !device) {
+		return -1;
+	}
 
 	if (!(dev = find_device(device))) {
 		return -1;
@@ -192,6 +204,10 @@ standalone_cfg_add_node_priority(const char *node, const char *device, unsigned 
 {
 	struct topology *topo;
 	int new = 0;
+
+	if (!node || !device) {
+		return -1;
+	}
 
 	if (!(topo = find_topology(node))) {
 		new = 1;

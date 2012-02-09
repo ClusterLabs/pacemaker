@@ -498,7 +498,7 @@ stonith_cleanup(void)
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     {"stand-alone", 0, 0, 's'},
-    {"stand-alone-config", 1, 0, 'c'},
+    {"stand-alone-cfg", 1, 0, 'c'},
     {"verbose",     0, 0, 'V'},
     {"version",     0, 0, '$'},
     {"help",        0, 0, '?'},
@@ -645,7 +645,7 @@ main(int argc, char ** argv)
 	}
 	
     } else {
-        stonith_our_uname = crm_strdup("localhost");
+	stonith_our_uname = crm_strdup("localhost");
     }
 
     device_list = g_hash_table_new_full(

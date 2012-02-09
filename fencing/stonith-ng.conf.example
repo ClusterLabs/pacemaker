@@ -4,7 +4,7 @@
 # stonitd process while in standalone mode.  This is achieved
 # by using the --stand-alone option when launching stonithd.
 # The configuration file path is give to stonithd by using
-# the --stand-alone-conf option.
+# the --stand-alone-cfg option.
 #
 
 # Example 1: Standalone fence_ipmilan configuration

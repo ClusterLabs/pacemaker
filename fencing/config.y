@@ -4,8 +4,10 @@
 #include <malloc.h>
 #include <string.h>
 #include <assert.h>
-#include "standalone_config.h"
+#include <crm/crm.h>
+#include <standalone_config.h>
 
+extern int _line_count;
 extern int yylex (void);
 extern void yyset_in  (FILE * in_str  );
 int yyerror(const char *foo);
@@ -76,10 +78,16 @@ optline:
 
 prioline:
 	T_PRIO T_VAL T_VAL vals T_ENDL {
-		line_val.name = $2;
-		line_val.priority = atoi($3);
-		line_val.type = STANDALONE_LINE_PRIORITY;
-		handle_line_value();
+		int priority = crm_atoi($3, NULL);
+
+		if (priority != -1) {
+			line_val.name = $2;
+			line_val.priority = priority;
+			line_val.type = STANDALONE_LINE_PRIORITY;
+			handle_line_value();
+		} else {
+			crm_err("Standalone Config parser error: priority value, %s, on line %d is not a valid positive integer\n", $3, _line_count);
+		}
 	}
 	;
 
@@ -135,12 +143,10 @@ stuff:
 
 %%
 
-extern int _line_count;
-
 int
 yyerror(const char *foo)
 {
-	printf("%s on line %d\n", foo, _line_count);
+	crm_err("Standalone Config parser error: %s on line %d\n", foo, _line_count);
 	return 0;
 }
 
@@ -219,6 +225,7 @@ standalone_cfg_read_file(const char *file_path)
 		return -1;
 	}
 
+	/* redirect parse input from stdin to our file */
 	yyset_in(fp);
 	yyparse();
 	fclose(fp);
