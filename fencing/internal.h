@@ -67,6 +67,10 @@ extern long long get_stonith_flag(const char *name);
 
 extern void stonith_command(stonith_client_t * client, xmlNode * op_request, const char *remote);
 
+extern int stonith_device_register(xmlNode *msg);
+
+extern int stonith_level_register(xmlNode *msg);
+
 extern void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                            gboolean from_peer);
 

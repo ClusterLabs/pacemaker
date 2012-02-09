@@ -381,7 +381,7 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     return device;
 }
 
-static int stonith_device_register(xmlNode *msg) 
+int stonith_device_register(xmlNode *msg) 
 {
     const char *value = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
@@ -442,7 +442,7 @@ void free_topology_entry(gpointer data)
     crm_free(tp);
 }
 
-static int stonith_level_register(xmlNode *msg) 
+int stonith_level_register(xmlNode *msg) 
 {
     int id = 0;
     int rc = stonith_ok;
