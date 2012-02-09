@@ -18,26 +18,13 @@
  */
 
 
-#include <stdio.h>
-#include <standalone_config.h>
-
 #include <crm_internal.h>
-
-#include <sys/param.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
 #include <crm/stonith-ng-internal.h>
 #include <internal.h>
-
+#include <standalone_config.h>
 
 struct device {
 	char *name;
@@ -140,6 +127,8 @@ standalone_cfg_add_device_options(const char *device, const char *key, const cha
 	if (!device || !key || !value) {
 		return -1;
 	} else if (!(dev = find_device(device))) {
+		crm_err("Standalone config error, could not find device %s to add key value %s=%s to",
+			device, key, value);
 		return -1;
 	} else if (dev->key_vals_count >= STANDALONE_CFG_MAX_KEYVALS) {
 		return -1;
@@ -165,6 +154,8 @@ standalone_cfg_add_node(const char *node, const char *device, const char *ports)
 	if (!node || !device) {
 		return -1;
 	} else if (!(dev = find_device(device))) {
+		crm_err("Standalone config error, could not find device %s to add mode %s to",
+			device, node);
 		return -1;
 	}
 

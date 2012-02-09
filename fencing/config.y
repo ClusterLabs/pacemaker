@@ -175,21 +175,22 @@ static void
 handle_line_value(void)
 {
 	int i;
+	int res = 0;
 
 	switch (line_val.type) {
 	case STANDALONE_LINE_DEVICE:
-		standalone_cfg_add_device(line_val.name, line_val.agent);
+		res |= standalone_cfg_add_device(line_val.name, line_val.agent);
 		/* fall through */
 	case STANDALONE_LINE_OPTION:
 		for (i = 0; i < line_val.val_count; i++) {
-			standalone_cfg_add_device_options(line_val.name,
+			res |= standalone_cfg_add_device_options(line_val.name,
 				line_val.keys[i],
 				line_val.vals[i]);
 		}
 		break;
 	case STANDALONE_LINE_PRIORITY:
 		for (i = 0; i < line_val.val_count; i++) {
-			standalone_cfg_add_node_priority(line_val.name,
+			res |= standalone_cfg_add_node_priority(line_val.name,
 				line_val.vals[i], /* fence device name */
 				line_val.priority);
 		}
@@ -197,17 +198,21 @@ handle_line_value(void)
 	case STANDALONE_LINE_PORT:
 		for (i = 0; i < line_val.val_count; i++) {
 			if (line_val.keys[i]) {
-				standalone_cfg_add_node(line_val.keys[i],
+				res |= standalone_cfg_add_node(line_val.keys[i],
 					line_val.name,
 					line_val.vals[i]);
 			} else {
 				/* if value only, that means it is just a node name */
-				standalone_cfg_add_node(line_val.vals[i],
+				res |= standalone_cfg_add_node(line_val.vals[i],
 					line_val.name,
 					NULL);
 			}
 		}
 		break;
+	}
+
+	if (res) {
+		crm_err("Standalone Config parser error on line %d\n", _line_count);
 	}
 	reset_line();
 }
