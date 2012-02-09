@@ -78,7 +78,16 @@ Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails 
-Clusters_from_Scratch.txt: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml)
+CFS_TXT=$(wildcard Clusters_from_Scratch/en-US/*.txt)
+CFS_XML=$(CFS_TXT:%.txt=%.xml)
+%.xml:  %.txt
+	asciidoc -b docbook -d article -o $@ $<
+	sed -i.sed 's/lang="en"//' $@     # Never specify a language here
+	sed -i.sed 's/simpara/para/g' $@  # publican doesn't correctly render footnotes with simpara 
+	sed -i.sed 's///' $@            # Fix line endings
+	echo Rebuilt $@ from $<
+
+Clusters_from_Scratch.txt: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
 	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
@@ -91,6 +100,16 @@ Pacemaker_Explained.txt: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml)
 	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
 	rm -rf $(@:%.txt=%)/tmp
 	touch $@
+
+pot:
+	for book in Clusters_from_Scratch; do		 \
+		cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_pot; \
+	done
+
+po:
+	for book in $(docbook); do 						\
+		cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_po --langs=$(DOCBOOK_LANGS);\
+	done
 
 if BUILD_DOCBOOK
 docbook_txt = $(docbook:%=%.txt)

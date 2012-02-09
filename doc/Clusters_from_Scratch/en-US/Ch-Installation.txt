@@ -1,0 +1,754 @@
+= Installation =
+
+== OS Installation ==
+
+Detailed instructions for installing Fedora are available at
+http://docs.fedoraproject.org/install-guide/f13/ in a number of
+languages. The abbreviated version is as follows... 
+
+Point your browser to http://fedoraproject.org/en/get-fedora-all,
+locate the Install Media section and download the install DVD that
+matches your hardware.
+
+Burn the disk image to a DVD
+footnote:[http://docs.fedoraproject.org/readme-burning-isos/en-US.html]
+and boot from it. Or use the image to boot a virtual machine as I have
+done here. After clicking through the welcome screen, select your
+language and keyboard layout
+footnote:[http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-langselection-x86.html]
+
+.Installation: Good choice
+image::images/f-13.1-welcome.png[Fedora Installation - Welcome]
+
+.Fedora Installation - Storage Devices
+image::images/f-13.2-devices.png[Fedora Installation - Storage Devices]
+
+Assign your machine a host name.
+footnote:[http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html]
+I happen to control the clusterlabs.org domain name, so I will use
+that here.
+
+.Fedora Installation - Hostname
+image::images/f-13.3-hostname.png[Fedora Installation - Hostname]
+
+You will then be prompted to indicate the machine's physical location
+and to supply a root password.
+footnote:[http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html]
+
+Now select where you want Fedora installed. 
+footnote:[http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html] 
+
+As I don’t care about any existing data, I will accept the default and
+allow Fedora to use the complete drive. However I want to reserve some
+space for DRBD, so I'll check the Review and modify partitioning
+layout box.
+
+.Fedora Installation - Installation Type
+image::images/f-13.4-partition-overview.png[Fedora Installation - Choose Install Type]
+
+
+By default, Fedora will give all the space to the / (aka. root)
+partition. Wel'll take some back so we can use DRBD.
+
+.Fedora Installation - Default Partitioning
+image::images/f-13.5-partition-default.png[Fedora Installation - Default Partitioning]
+
+
+The finalized partition layout should look something like the diagram
+below.
+
+
+[IMPORTANT]
+===========
+If you plan on following the DRBD or GFS2 portions of this
+guide, you should reserve at least 1Gb of space on each machine from
+which to create a shared volume. Fedora Installation - Customize
+PartitioningFedora Installation: Create a partition to use (later) for
+website data
+===========
+
+.Fedora Installation - Customize Partitioning
+image::images/f-13.6-partition-custom.png[Customize Partitioning]
+
+.Fedora Installation - Bootloader
+image::images/f-13.7-bootloader.png[Unless you have a strong reason not to, accept the default bootloader location]
+
+
+Next choose which software should be installed. Change the selection to
+Web Server since we plan on using Apache. Don't enable updates yet, we'll
+do that (and install any extra software we need) later. After you click
+next, Fedora will begin installing. 
+
+.Fedora Installation - Software
+image::images/f-13.8-software.png[Fedora Installation - Software selection]
+
+Go grab something to drink, this may take a while
+
+.Fedora Installation - Installing
+image::images/f-13.9-installing.png[Fedora Installation - Installing]
+
+.Fedora Installation - Installation Complete
+image::images/f-13.10-install-complete.png[Stage 1, completed]
+
+
+Once the node reboots, follow the on screen instructions
+footnote:[http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboot.html]
+to create a system user and configure the time. 
+
+.Fedora Installation - First Boot
+image::images/f-13.11-post-welcome.png[First boot]
+
+.Fedora Installation - Create Non-privileged User
+image::images/f-13.12-new-user.png[Creating a new user, take note of the password, you'll need it soon]
+
+
+[NOTE]
+=======
+It is highly recommended to enable NTP on your cluster nodes. Doing so
+ensures all nodes agree on the current time and makes reading log files
+significantly easier. Fedora Installation - Date and TimeFedora
+Installation: Enable NTP to keep the times on all your nodes consistent
+=======
+
+.Fedora Installation - Date and Time
+image::images/f-13.13-date-time.png[Date and time]
+
+Click through the next screens until you reach the login window. Click on
+the user you created and supply the password you indicated earlier.
+
+.Fedora Installation - Customize Networking
+image::images/f-13.14-networking.png[Click here to configure networking]
+
+[IMPORTANT]
+===========
+Do not accept the default network settings. Cluster
+machines should never obtain an ip address via DHCP. Here I will use
+the internal addresses for the clusterlab.org network.  
+===========
+
+.Fedora Installation - Specify Network Preferences
+image::images/f-13.15-manual-networking.png[Specify network settings for your machine, never choose DHCP]
+
+.Fedora Installation - Activate Networking
+image::images/f-13.16-networking-activate.png[Click the big green button to activate your changes]
+
+.Fedora Installation - Bring up the Terminal
+image::images/f-13.17-terminal.png[Down to business, fire up the command line]
+
+
+[NOTE]
+======
+
+That was the last screenshot, from here on in we’re going to be working
+from the terminal.
+
+======
+
+== Cluster Software Installation ==
+
+Go to the terminal window you just opened and switch to the super user
+(aka. "root") account with the su command. You will need to supply the
+password you entered earlier during the installation process.
+
+
+[source,Bash]
+----
+[beekhof@pcmk-1 ~]$ su -
+Password:
+[root@pcmk-1 ~]#
+----
+
+[NOTE]
+======
+
+Note that the username (the text before the @ symbol) now indicates we’re
+running as the super user “root”.
+
+======
+
+[source,Bash]
+....
+# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue state UNKNOWN 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UNKNOWN qlen 1000
+    link/ether 00:0c:29:6f:e1:58 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.9.41/24 brd 192.168.9.255 scope global eth0
+    inet6 ::20c:29ff:fe6f:e158/64 scope global dynamic 
+       valid_lft 2591667sec preferred_lft 604467sec
+    inet6 2002:57ae:43fc:0:20c:29ff:fe6f:e158/64 scope global dynamic 
+       valid_lft 2591990sec preferred_lft 604790sec
+    inet6 fe80::20c:29ff:fe6f:e158/64 scope link 
+       valid_lft forever preferred_lft forever
+# ping -c 1 www.google.com
+PING www.l.google.com (74.125.39.99) 56(84) bytes of data.
+64 bytes from fx-in-f99.1e100.net (74.125.39.99): icmp_seq=1 ttl=56 time=16.7 ms
+
+--- www.l.google.com ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 20ms
+rtt min/avg/max/mdev = 16.713/16.713/16.713/0.000 ms
+# /sbin/chkconfig network on
+# 
+....
+
+=== Security Shortcuts ===
+
+To simplify this guide and focus on the aspects directly connected to
+clustering, we will now disable the machine’s firewall and SELinux
+installation. Both of these actions create significant security issues
+and should not be performed on machines that will be exposed to the
+outside world.
+
+
+[IMPORTANT]
+===========
+ TODO: Create an Appendix that deals with (at least) re-enabling the firewall.
+===========
+
+[source,Bash]
+----
+# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+# /sbin/chkconfig --del iptables
+# service iptables stop
+iptables: Flushing firewall rules:                         [  OK  ]
+iptables: Setting chains to policy ACCEPT: filter          [  OK  ]
+iptables: Unloading modules:                               [  OK  ]
+----
+
+[NOTE]
+================
+
+You will need to reboot for the SELinux changes to take effect. Otherwise
+you will see something like this when you start corosync:
+
+ May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync "getattr" access on /. For complete SELinux messages. run sealert -l 6e0d4384-638e-4d55-9aaf-7dac011f29c1
+ May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync "getattr" access on /. For complete SELinux messages. run sealert -l 6e0d4384-638e-4d55-9aaf-7dac011f29c1
+================
+
+
+=== Install the Cluster Software ===
+
+Since version 12, Fedora comes with recent versions of everything you
+need, so simply fire up the shell and run:
+
+....
+# sed -i.bak "s/enabled=0/enabled=1/g"
+/etc/yum.repos.d/fedora.repo
+# sed -i.bak "s/enabled=0/enabled=1/g"
+/etc/yum.repos.d/fedora-updates.repo
+# yum install -y pacemaker corosyncLoaded plugins: presto, refresh-packagekit
+fedora/metalink                                                    |  22 kB     00:00     
+fedora-debuginfo/metalink                                          |  16 kB     00:00     
+fedora-debuginfo                                                   | 3.2 kB     00:00     
+fedora-debuginfo/primary_db                                        | 1.4 MB     00:04     
+fedora-source/metalink                                             |  22 kB     00:00     
+fedora-source                                                      | 3.2 kB     00:00     
+fedora-source/primary_db                                           | 3.0 MB     00:05     
+updates/metalink                                                   |  26 kB     00:00     
+updates                                                            | 2.6 kB     00:00     
+updates/primary_db                                                 | 1.1 kB     00:00     
+updates-debuginfo/metalink                                         |  18 kB     00:00     
+updates-debuginfo                                                  | 2.6 kB     00:00     
+updates-debuginfo/primary_db                                       | 1.1 kB     00:00     
+updates-source/metalink                                            |  25 kB     00:00     
+updates-source                                                     | 2.6 kB     00:00     
+updates-source/primary_db                                          | 1.1 kB     00:00     
+Setting up Install Process
+Resolving Dependencies
+--> Running transaction check
+---> Package corosync.x86_64 0:1.2.1-1.fc13 set to be updated
+--> Processing Dependency: corosynclib = 1.2.1-1.fc13 for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libquorum.so.4(COROSYNC_QUORUM_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libvotequorum.so.4(COROSYNC_VOTEQUORUM_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libcpg.so.4(COROSYNC_CPG_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libconfdb.so.4(COROSYNC_CONFDB_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libcfg.so.4(COROSYNC_CFG_0.82)(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libpload.so.4(COROSYNC_PLOAD_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: liblogsys.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libconfdb.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libcoroipcc.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libcpg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libquorum.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libcoroipcs.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libvotequorum.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libcfg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libtotem_pg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libpload.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
+---> Package pacemaker.x86_64 0:1.1.5-1.fc13 set to be updated
+--> Processing Dependency: heartbeat >= 3.0.0 for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: net-snmp >= 5.4 for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: resource-agents for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: cluster-glue for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libnetsnmp.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libcrmcluster.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libpengine.so.3()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libnetsnmpagent.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libesmtp.so.5()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libstonithd.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libhbclient.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libpils.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libpe_status.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libnetsnmpmibs.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libnetsnmphelpers.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libcib.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libccmclient.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libstonith.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: liblrm.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libtransitioner.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libpe_rules.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libcrmcommon.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Processing Dependency: libplumb.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--> Running transaction check
+---> Package cluster-glue.x86_64 0:1.0.2-1.fc13 set to be updated
+--> Processing Dependency: perl-TimeDate for package: cluster-glue-1.0.2-1.fc13.x86_64
+--> Processing Dependency: libOpenIPMIutils.so.0()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64
+--> Processing Dependency: libOpenIPMIposix.so.0()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64
+--> Processing Dependency: libopenhpi.so.2()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64
+--> Processing Dependency: libOpenIPMI.so.0()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64
+---> Package cluster-glue-libs.x86_64 0:1.0.2-1.fc13 set to be updated
+---> Package corosynclib.x86_64 0:1.2.1-1.fc13 set to be updated
+--> Processing Dependency: librdmacm.so.1(RDMACM_1.0)(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libibverbs.so.1(IBVERBS_1.0)(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libibverbs.so.1(IBVERBS_1.1)(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64
+--> Processing Dependency: libibverbs.so.1()(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64
+--> Processing Dependency: librdmacm.so.1()(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64
+---> Package heartbeat.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13 set to be updated
+--> Processing Dependency: PyXML for package: heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64
+---> Package heartbeat-libs.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13 set to be updated
+---> Package libesmtp.x86_64 0:1.0.4-12.fc12 set to be updated
+---> Package net-snmp.x86_64 1:5.5-12.fc13 set to be updated
+--> Processing Dependency: libsensors.so.4()(64bit) for package: 1:net-snmp-5.5-12.fc13.x86_64
+---> Package net-snmp-libs.x86_64 1:5.5-12.fc13 set to be updated
+---> Package pacemaker-libs.x86_64 0:1.1.5-1.fc13 set to be updated
+---> Package resource-agents.x86_64 0:3.0.10-1.fc13 set to be updated
+--> Processing Dependency: libnet.so.1()(64bit) for package: resource-agents-3.0.10-1.fc13.x86_64
+--> Running transaction check
+---> Package OpenIPMI-libs.x86_64 0:2.0.16-8.fc13 set to be updated
+---> Package PyXML.x86_64 0:0.8.4-17.fc13 set to be updated
+---> Package libibverbs.x86_64 0:1.1.3-4.fc13 set to be updated
+--> Processing Dependency: libibverbs-driver for package: libibverbs-1.1.3-4.fc13.x86_64
+---> Package libnet.x86_64 0:1.1.4-3.fc12 set to be updated
+---> Package librdmacm.x86_64 0:1.0.10-2.fc13 set to be updated
+---> Package lm_sensors-libs.x86_64 0:3.1.2-2.fc13 set to be updated
+---> Package openhpi-libs.x86_64 0:2.14.1-3.fc13 set to be updated
+---> Package perl-TimeDate.noarch 1:1.20-1.fc13 set to be updated
+--> Running transaction check
+---> Package libmlx4.x86_64 0:1.0.1-5.fc13 set to be updated
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+
+==========================================================================================
+ Package                Arch     Version                             Repository      Size
+==========================================================================================
+Installing:
+ corosync               x86_64   1.2.1-1.fc13                        fedora         136 k
+ pacemaker              x86_64   1.1.5-1.fc13                        fedora         543 k
+Installing for dependencies:
+ OpenIPMI-libs          x86_64   2.0.16-8.fc13                       fedora         474 k
+ PyXML                  x86_64   0.8.4-17.fc13                       fedora         906 k
+ cluster-glue           x86_64   1.0.2-1.fc13                        fedora         230 k
+ cluster-glue-libs      x86_64   1.0.2-1.fc13                        fedora         116 k
+ corosynclib            x86_64   1.2.1-1.fc13                        fedora         145 k
+ heartbeat              x86_64   3.0.0-0.7.0daab7da36a8.hg.fc13      updates        172 k
+ heartbeat-libs         x86_64   3.0.0-0.7.0daab7da36a8.hg.fc13      updates        265 k
+ libesmtp               x86_64   1.0.4-12.fc12                       fedora          54 k
+ libibverbs             x86_64   1.1.3-4.fc13                        fedora          42 k
+ libmlx4                x86_64   1.0.1-5.fc13                        fedora          27 k
+ libnet                 x86_64   1.1.4-3.fc12                        fedora          49 k
+ librdmacm              x86_64   1.0.10-2.fc13                       fedora          22 k
+ lm_sensors-libs        x86_64   3.1.2-2.fc13                        fedora          37 k
+ net-snmp               x86_64   1:5.5-12.fc13                       fedora         295 k
+ net-snmp-libs          x86_64   1:5.5-12.fc13                       fedora         1.5 M
+ openhpi-libs           x86_64   2.14.1-3.fc13                       fedora         135 k
+ pacemaker-libs         x86_64   1.1.5-1.fc13                        fedora         264 k
+ perl-TimeDate          noarch   1:1.20-1.fc13                       fedora          42 k
+ resource-agents        x86_64   3.0.10-1.fc13                       fedora         357 k
+
+Transaction Summary
+=========================================================================================
+Install      21 Package(s)
+Upgrade       0 Package(s)
+
+Total download size: 5.7 M
+Installed size: 20 M
+Downloading Packages:
+Setting up and reading Presto delta metadata
+updates-testing/prestodelta                                           | 164 kB     00:00     
+fedora/prestodelta                                                    |  150 B     00:00     
+Processing delta metadata
+Package(s) data still to download: 5.7 M
+(1/21): OpenIPMI-libs-2.0.16-8.fc13.x86_64.rpm                        | 474 kB     00:00     
+(2/21): PyXML-0.8.4-17.fc13.x86_64.rpm                                | 906 kB     00:01     
+(3/21): cluster-glue-1.0.2-1.fc13.x86_64.rpm                          | 230 kB     00:00     
+(4/21): cluster-glue-libs-1.0.2-1.fc13.x86_64.rpm                     | 116 kB     00:00     
+(5/21): corosync-1.2.1-1.fc13.x86_64.rpm                              | 136 kB     00:00     
+(6/21): corosynclib-1.2.1-1.fc13.x86_64.rpm                           | 145 kB     00:00     
+(7/21): heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64.rpm           | 172 kB     00:00     
+(8/21): heartbeat-libs-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64.rpm      | 265 kB     00:00     
+(9/21): libesmtp-1.0.4-12.fc12.x86_64.rpm                             |  54 kB     00:00     
+(10/21): libibverbs-1.1.3-4.fc13.x86_64.rpm                           |  42 kB     00:00     
+(11/21): libmlx4-1.0.1-5.fc13.x86_64.rpm                              |  27 kB     00:00     
+(12/21): libnet-1.1.4-3.fc12.x86_64.rpm                               |  49 kB     00:00     
+(13/21): librdmacm-1.0.10-2.fc13.x86_64.rpm                           |  22 kB     00:00     
+(14/21): lm_sensors-libs-3.1.2-2.fc13.x86_64.rpm                      |  37 kB     00:00     
+(15/21): net-snmp-5.5-12.fc13.x86_64.rpm                              | 295 kB     00:00     
+(16/21): net-snmp-libs-5.5-12.fc13.x86_64.rpm                         | 1.5 MB     00:01     
+(17/21): openhpi-libs-2.14.1-3.fc13.x86_64.rpm                        | 135 kB     00:00     
+(18/21): pacemaker-1.1.5-1.fc13.x86_64.rpm                            | 543 kB     00:00     
+(19/21): pacemaker-libs-1.1.5-1.fc13.x86_64.rpm                       | 264 kB     00:00     
+(20/21): perl-TimeDate-1.20-1.fc13.noarch.rpm                         |  42 kB     00:00     
+(21/21): resource-agents-3.0.10-1.fc13.x86_64.rpm                     | 357 kB     00:00     
+
+Total                                                        539 kB/s | 5.7 MB     00:10     
+warning: rpmts_HdrFromFdno: Header V3 RSA/SHA256 Signature, key ID e8e40fde: NOKEY
+fedora/gpgkey                                                         | 3.2 kB     00:00 ... 
+Importing GPG key 0xE8E40FDE "Fedora (13) <fedora@fedoraproject.org%gt;" from /etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-x86_64
+
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing     : lm_sensors-libs-3.1.2-2.fc13.x86_64                            1/21 
+  Installing     : 1:net-snmp-libs-5.5-12.fc13.x86_64                             2/21 
+  Installing     : 1:net-snmp-5.5-12.fc13.x86_64                                  3/21 
+  Installing     : openhpi-libs-2.14.1-3.fc13.x86_64                              4/21 
+  Installing     : libibverbs-1.1.3-4.fc13.x86_64                                 5/21 
+  Installing     : libmlx4-1.0.1-5.fc13.x86_64                                    6/21 
+  Installing     : librdmacm-1.0.10-2.fc13.x86_64                                 7/21 
+  Installing     : corosync-1.2.1-1.fc13.x86_64                                   8/21 
+  Installing     : corosynclib-1.2.1-1.fc13.x86_64                                9/21 
+  Installing     : libesmtp-1.0.4-12.fc12.x86_64                                 10/21 
+  Installing     : OpenIPMI-libs-2.0.16-8.fc13.x86_64                            11/21 
+  Installing     : PyXML-0.8.4-17.fc13.x86_64                                    12/21 
+  Installing     : libnet-1.1.4-3.fc12.x86_64                                    13/21 
+  Installing     : 1:perl-TimeDate-1.20-1.fc13.noarch                            14/21 
+  Installing     : cluster-glue-1.0.2-1.fc13.x86_64                              15/21 
+  Installing     : cluster-glue-libs-1.0.2-1.fc13.x86_64                         16/21 
+  Installing     : resource-agents-3.0.10-1.fc13.x86_64                          17/21 
+  Installing     : heartbeat-libs-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64          18/21 
+  Installing     : heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64               19/21 
+  Installing     : pacemaker-1.1.5-1.fc13.x86_64                                 20/21 
+  Installing     : pacemaker-libs-1.1.5-1.fc13.x86_64                            21/21 
+
+Installed:
+  corosync.x86_64 0:1.2.1-1.fc13                    pacemaker.x86_64 0:1.1.5-1.fc13                   
+
+Dependency Installed:
+  OpenIPMI-libs.x86_64 0:2.0.16-8.fc13                          
+  PyXML.x86_64 0:0.8.4-17.fc13                                  
+  cluster-glue.x86_64 0:1.0.2-1.fc13                            
+  cluster-glue-libs.x86_64 0:1.0.2-1.fc13                       
+  corosynclib.x86_64 0:1.2.1-1.fc13                             
+  heartbeat.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13             
+  heartbeat-libs.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13        
+  libesmtp.x86_64 0:1.0.4-12.fc12                               
+  libibverbs.x86_64 0:1.1.3-4.fc13                              
+  libmlx4.x86_64 0:1.0.1-5.fc13                                 
+  libnet.x86_64 0:1.1.4-3.fc12                                  
+  librdmacm.x86_64 0:1.0.10-2.fc13                              
+  lm_sensors-libs.x86_64 0:3.1.2-2.fc13                         
+  net-snmp.x86_64 1:5.5-12.fc13                                 
+  net-snmp-libs.x86_64 1:5.5-12.fc13                            
+  openhpi-libs.x86_64 0:2.14.1-3.fc13                           
+  pacemaker-libs.x86_64 0:1.1.5-1.fc13                          
+  perl-TimeDate.noarch 1:1.20-1.fc13                            
+  resource-agents.x86_64 0:3.0.10-1.fc13                        
+
+Complete!
+# 
+....
+
+== Before You Continue ==
+
+Repeat the Installation steps so that you have 2 Fedora nodes with the
+cluster software installed.
+
+For the purposes of this document, the additional node is called
+pcmk-2 with address 192.168.122.42.
+
+== Setup ==
+
+=== Finalize Networking ===
+
+Confirm that you can communicate with the two new nodes:
+
+[source,Bash]
+----
+# ping -c 3 192.168.122.102
+PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.
+64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=0.343 ms
+64 bytes from 192.168.122.102: icmp_seq=2 ttl=64 time=0.402 ms
+64 bytes from 192.168.122.102: icmp_seq=3 ttl=64 time=0.558 ms
+
+--- 192.168.122.102 ping statistics ---3 packets transmitted, 3 received, 0% packet loss, time 2000ms
+rtt min/avg/max/mdev = 0.343/0.434/0.558/0.092 ms
+----
+
+Figure 2.18. Verify Connectivity by IP address
+
+
+Now we need to make sure we can communicate with the machines by their
+name. If you have a DNS server, add additional entries for the two
+machines. Otherwise, you’ll need to add the machines to /etc/hosts .
+Below are the entries for my cluster nodes:
+
+[source,Bash]
+----
+# grep pcmk /etc/hosts
+192.168.122.101 pcmk-1.clusterlabs.org pcmk-1
+192.168.122.102 pcmk-2.clusterlabs.org pcmk-2
+----
+
+Figure 2.19. Set up /etc/hosts entries
+
+
+We can now verify the setup by again using ping:
+
+[source,Bash]
+----
+# ping -c 3 pcmk-2
+PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.
+64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=1 ttl=64 time=0.164 ms
+64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=2 ttl=64 time=0.475 ms
+64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=3 ttl=64 time=0.186 ms
+
+--- pcmk-2.clusterlabs.org ping statistics ---3 packets transmitted, 3 received, 0% packet loss, time 2001ms
+rtt min/avg/max/mdev = 0.164/0.275/0.475/0.141 ms
+----
+
+Figure 2.20. Verify Connectivity by Hostname
+
+
+=== Configure SSH === 
+
+SSH is a convenient and secure way to copy files and perform commands
+remotely. For the purposes of this guide, we will create a key without a
+password (using the -N “” option) so that we can perform remote actions
+without being prompted.
+
+((SSH))
+
+[WARNING]
+=========
+Unprotected SSH keys, those without a password, are not recommended for servers exposed to the outside world.
+=========
+
+Create a new key and allow anyone with that key to log in:
+
+.Creating and Activating a new SSH Key
+[source,Bash]
+----
+# ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
+Generating public/private dsa key pair.
+Your identification has been saved in /root/.ssh/id_dsa.
+Your public key has been saved in /root/.ssh/id_dsa.pub.
+The key fingerprint is:
+91:09:5c:82:5a:6a:50:08:4e:b2:0c:62:de:cc:74:44 root@pcmk-1.clusterlabs.org
+
+The key's randomart image is:
++--[ DSA 1024]----+
+|==.ooEo..        |
+|X O + .o o       |
+| * A    +        |
+|  +      .       |
+| .      S        |
+|                 |
+|                 |
+|                 |
+|                 |
++-----------------+
+
+# cp .ssh/id_dsa.pub .ssh/authorized_keys
+----
+(((Creating and Activating a new SSH Key)))
+
+Install the key on the other nodes and test that you can now run commands
+remotely, without being prompted
+
+[source,Bash]
+----
+# scp -r .ssh pcmk-2:
+The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.
+RSA key fingerprint is b1:2b:55:93:f1:d9:52:2b:0f:f2:8a:4e:ae:c6:7c:9a.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'pcmk-2,192.168.122.102' (RSA) to the list of known hosts.root@pcmk-2's password: 
+id_dsa.pub                           100%  616     0.6KB/s   00:00    
+id_dsa                               100%  672     0.7KB/s   00:00    
+known_hosts                          100%  400     0.4KB/s   00:00    
+authorized_keys                      100%  616     0.6KB/s   00:00    
+# ssh pcmk-2 -- uname -npcmk-2
+#
+----
+
+Figure 2.22. Installing the SSH Key on Another Host
+
+
+=== Short Node Names ===
+
+During installation, we filled in the machine’s fully qualifier domain
+name (FQDN) which can be rather long when it appears in cluster logs and
+status output. See for yourself how the machine identifies itself:
+(((Nodes, short name)))
+
+[source,Bash]
+----
+# uname -n
+pcmk-1.clusterlabs.org
+# dnsdomainname clusterlabs.org
+----
+(((Nodes, Domain name (Query))))
+
+The output from the second command is fine, but we really don’t need the
+domain name included in the basic host details. To address this, we need
+to update /etc/sysconfig/network. This is what it should look like before
+we start.
+
+[source,Bash]
+----
+# cat /etc/sysconfig/network
+NETWORKING=yes
+HOSTNAME=pcmk-1.clusterlabs.org
+GATEWAY=192.168.122.1
+----
+
+All we need to do now is strip off the domain name portion, which is
+stored elsewhere anyway.
+
+[source,Bash]
+----
+ # sed -i.bak 's/\.[a-z].*//g' /etc/sysconfig/network
+----
+
+Now confirm the change was successful. The revised file contents should
+look something like this.
+
+[source,Bash]
+----
+# cat /etc/sysconfig/network
+NETWORKING=yes
+HOSTNAME=pcmk-1
+GATEWAY=192.168.122.1
+----
+
+However we’re not finished. The machine wont normally see the shortened
+host name until about it reboots, but we can force it to update.
+
+[source,Bash]
+----
+# source /etc/sysconfig/network
+# hostname $HOSTNAME
+----
+(((Nodes, Domain name (Remove from host name))))
+
+Now check the machine is using the correct names
+
+[source,Bash]
+----
+# uname -npcmk-1
+# dnsdomainname clusterlabs.org
+----
+
+Now repeat on pcmk-2.
+
+
+=== Configuring Corosync ===
+
+Choose a port number and multi-cast footnote:[http://en.wikipedia.org/wiki/Multicast] address. footnote:[http://en.wikipedia.org/wiki/Multicast_address] Be sure that the
+values you chose do not conflict with any existing clusters you might
+have. For advice on choosing a multi-cast address, see
+http://www.29west.com/docs/THPM/multicast-address-assignment.html For
+this document, I have chosen port 4000 and used 226.94.1.1 as the
+multi-cast address.
+
+
+[IMPORTANT]
+===========
+The instructions below only apply for a machine with a single NIC. If you
+have a more complicated setup, you should edit the configuration
+manually.
+===========
+
+[source,Bash]
+----
+# export ais_port=4000
+# export ais_mcast=226.94.1.1
+----
+
+Next we automatically determine the hosts address. By not using the full
+address, we make the configuration suitable to be copied to other nodes.
+
+[source,Bash]
+----
+# export ais_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/`
+----
+
+Display and verify the configuration options
+
+[source,Bash]
+----
+# env | grep ais_ais_mcast=226.94.1.1
+ais_port=4000
+ais_addr=192.168.122.0
+----
+
+Once you're happy with the chosen values, update the Corosync
+configuration
+
+[source,Bash]
+----
+# cp /etc/corosync/corosync.conf.example /etc/corosync/corosync.conf
+# sed -i.bak "s/.*mcastaddr:.*/mcastaddr:\ $ais_mcast/g" /etc/corosync/corosync.conf
+# sed -i.bak "s/.*mcastport:.*/mcastport:\ $ais_port/g" /etc/corosync/corosync.conf
+# sed -i.bak "s/.*bindnetaddr:.*/bindnetaddr:\ $ais_addr/g" /etc/corosync/corosync.conf
+----
+
+Finally, tell Corosync to load the Pacemaker plugin.
+
+[source,Bash]
+----
+# cat <<-END >>/etc/corosync/service.d/pcmkservice {
+        # Load the Pacemaker Cluster Resource Manager
+        name: pacemaker
+        ver:  1
+}
+END
+----
+
+The final configuration should look something like the sample in
+Appendix B, Sample Corosync Configuration.
+
+
+[IMPORTANT]
+===========
+When run in version 1 mode, the plugin does not start the Pacemaker
+daemons. Instead it just sets up the quorum and messaging interfaces
+needed by the rest of the stack. Starting the dameons occurs when the
+Pacemaker init script is invoked. This resolves two long standing issues:
+
+.. Forking inside a multi-threaded process like Corosync causes all
+   sorts of pain. This has been problematic for Pacemaker as it needs a
+   number of daemons to be spawned.
+
+.. Corosync was never designed for staggered shutdown - something
+   previously needed in order to prevent the cluster from leaving
+   before Pacemaker could stop all active resources.
+===========
+
+
+=== Propagate the Configuration ===
+
+Now we need to copy the changes so far to the other node:
+
+[source,Bash]
+----
+# for f in /etc/corosync/corosync.conf /etc/corosync/service.d/pcmk /etc/hosts; do scp $f pcmk-2:$f ; done
+corosync.conf                            100% 1528     1.5KB/s   00:00
+hosts                                    100%  281     0.3KB/s   00:00
+#
+----
+
