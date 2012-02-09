@@ -275,6 +275,7 @@ cfg_register_topology(struct topology *topo)
 {
 	int i;
 	int res = 0;
+	char *dump;
 	xmlNode *data;
 	xmlNode *args;
 
@@ -285,7 +286,11 @@ cfg_register_topology(struct topology *topo)
 		crm_xml_add_int(data, XML_ATTR_ID, topo->priority_levels[i].level);
 		crm_xml_add(args, XML_ATTR_ID, topo->priority_levels[i].device_name);
 
+		dump = dump_xml_formatted(data);
+		crm_info("Standalone config level being added:\n%s", dump);
+
 		res |= stonith_level_register(data);
+		crm_free(dump);
 		free_xml(data);
 	}
 
@@ -297,6 +302,7 @@ cfg_register_device(struct device *dev)
 {
 	int i;
 	int res;
+	char *dump;
 	xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
 	xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
 
@@ -317,7 +323,12 @@ cfg_register_device(struct device *dev)
 		crm_xml_add(args, dev->key_vals[i].key, dev->key_vals[i].val);
 	}
 
+	dump = dump_xml_formatted(data);
+	crm_info("Standalone device being added:\n%s", dump);
+
 	res = stonith_device_register(data);
+
+	crm_free(dump);
 	free_xml(data);
 	return res;
 }
@@ -327,41 +338,12 @@ standalone_cfg_commit(void)
 {
 	struct device *dev = NULL;
 	struct topology *topo = NULL;
-#ifdef STANDALONE_PRINT
-	int i;
-
-	printf("commit!\n");
-	printf("--- Devices\n");
-#endif
 
 	for (dev = dev_list; dev != NULL; dev = dev->next) {
-#ifdef STANDALONE_PRINT
-		printf("	name: %s\n", dev->name);
-		printf("	agent: %s\n", dev->agent);
-		printf("	hostlist: %s\n", dev->hostlist);
-		printf("	hostmap: %s\n", dev->hostmap);
-		for (i = 0; i < dev->key_vals_count; i++) {
-			printf("		%s=%s\n", dev->key_vals[i].key, dev->key_vals[i].val);
-		}
-		printf("\n");
-#endif
 		cfg_register_device(dev);
 	}
 
-#ifdef STANDALONE_PRINT
-	printf("--- Topology\n");
-#endif
-
 	for (topo = topo_list; topo != NULL; topo = topo->next) {
-#ifdef STANDALONE_PRINT
-		printf("	node: %s\n", topo->node_name);
-		for (i = 0; i < topo->priority_levels_count; i++) {
-			printf("		%d=%s\n",
-				topo->priority_levels[i].level,
-				topo->priority_levels[i].device_name);
-		}
-		printf("\n");
-#endif
 		cfg_register_topology(topo);
 	}
 
