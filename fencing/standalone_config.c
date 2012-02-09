@@ -139,8 +139,9 @@ standalone_cfg_add_device_options(const char *device, const char *key, const cha
 
 	if (!device || !key || !value) {
 		return -1;
-	}
-	if (!(dev = find_device(device))) {
+	} else if (!(dev = find_device(device))) {
+		return -1;
+	} else if (dev->key_vals_count >= STANDALONE_CFG_MAX_KEYVALS) {
 		return -1;
 	}
 
@@ -163,9 +164,7 @@ standalone_cfg_add_node(const char *node, const char *device, const char *ports)
 	/* note that ports may be NULL, it is not a required argument */
 	if (!node || !device) {
 		return -1;
-	}
-
-	if (!(dev = find_device(device))) {
+	} else if (!(dev = find_device(device))) {
 		return -1;
 	}
 
@@ -213,6 +212,10 @@ standalone_cfg_add_node_priority(const char *node, const char *device, unsigned 
 		new = 1;
 		crm_malloc0(topo, sizeof(*topo));
 		topo->node_name = crm_strdup(node);
+	}
+
+	if (topo->priority_levels_count >= STANDALONE_CFG_MAX_KEYVALS) {
+		return -1;
 	}
 
 	topo->priority_levels[topo->priority_levels_count].device_name = crm_strdup(device);
