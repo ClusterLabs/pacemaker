@@ -181,12 +181,11 @@ standalone_cfg_add_node(const char *node, const char *device, const char *ports)
 	if (tmp) {
 		offset = strlen(tmp);
 		crm_realloc(tmp, len + offset + 1);
-		*ptr = tmp;
 	} else {
 		crm_malloc(tmp, len);
-		*ptr = tmp;
 	}
 
+	*ptr = tmp;
 	tmp += offset;
 
 	if (ports) {
@@ -212,9 +211,7 @@ standalone_cfg_add_node_priority(const char *node, const char *device, unsigned 
 		new = 1;
 		crm_malloc0(topo, sizeof(*topo));
 		topo->node_name = crm_strdup(node);
-	}
-
-	if (topo->priority_levels_count >= STANDALONE_CFG_MAX_KEYVALS) {
+	} else if (topo->priority_levels_count >= STANDALONE_CFG_MAX_KEYVALS) {
 		return -1;
 	}
 
@@ -309,11 +306,11 @@ cfg_register_device(struct device *dev)
 	crm_xml_add(data, "namespace", "stonith-ng");
 
 	if (dev->hostlist) {
-		crm_xml_add(args, "pcmk_host_list", dev->hostlist);
+		crm_xml_add(args, STONITH_ATTR_HOSTLIST, dev->hostlist);
 	}
 
 	if (dev->hostmap) {
-		crm_xml_add(args, "pcmk_host_map", dev->hostmap);
+		crm_xml_add(args, STONITH_ATTR_HOSTMAP, dev->hostmap);
 	}
 
 	for (i = 0; i < dev->key_vals_count; i++) {
