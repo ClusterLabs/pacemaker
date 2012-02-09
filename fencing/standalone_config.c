@@ -255,7 +255,7 @@ destroy_devices(void)
 }
 
 static int
-__standalone_cfg_register_topology(struct topology *topo)
+cfg_register_topology(struct topology *topo)
 {
 	int i;
 	int res = 0;
@@ -277,7 +277,7 @@ __standalone_cfg_register_topology(struct topology *topo)
 }
 
 static int
-__standalone_cfg_register_device(struct device *dev)
+cfg_register_device(struct device *dev)
 {
 	int i;
 	int res;
@@ -329,7 +329,7 @@ standalone_cfg_commit(void)
 		}
 		printf("\n");
 #endif
-		__standalone_cfg_register_device(dev);
+		cfg_register_device(dev);
 	}
 
 #ifdef STANDALONE_PRINT
@@ -346,7 +346,7 @@ standalone_cfg_commit(void)
 		}
 		printf("\n");
 #endif
-		__standalone_cfg_register_topology(topo);
+		cfg_register_topology(topo);
 	}
 
 	destroy_devices();
