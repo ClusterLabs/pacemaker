@@ -54,6 +54,7 @@ int cib_connect(gboolean full);
 
 char *xml_file = NULL;
 char *as_html_file = NULL;
+char *as_xml_file = NULL;
 char *pid_file = NULL;
 char *snmp_target = NULL;
 char *snmp_community = NULL;
@@ -285,7 +286,8 @@ static struct crm_option long_options[] = {
     {"quiet",          0, 0, 'Q', "\tDisplay only essential output" },
 
     {"-spacer-",	1, 0, '-', "\nModes:"},
-    {"as-html",        1, 0, 'h', "Write cluster status to the named file"},
+    {"as-html",        1, 0, 'h', "Write cluster status to the named html file"},
+    {"as-xml",         1, 0, 'X', "Write cluster status to the named xml file"},
     {"web-cgi",        0, 0, 'w', "\tWeb mode with output suitable for cgi"},
     {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)"},
     {"snmp-traps",     1, 0, 'S', "Send SNMP traps to this station", !ENABLE_SNMP},
@@ -324,6 +326,8 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', " crm_mon --group-by-node --inactive", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_mon --daemonize --as-html /path/to/docroot/filename.html", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Start crm_mon and export the current cluster status to an xml file, then exit.:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_mon --one-shot --as-xml /path/to/docroot/filename.xml", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send email alerts:", pcmk_option_paragraph|!ENABLE_ESMTP},
     {"-spacer-",	1, 0, '-', " crm_mon --daemonize --mail-to user@example.com --mail-host mail.example.com", pcmk_option_example|!ENABLE_ESMTP},
     {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send SNMP alerts:", pcmk_option_paragraph|!ENABLE_SNMP},
@@ -407,6 +411,9 @@ main(int argc, char **argv)
             case 'h':
                 as_html_file = crm_strdup(optarg);
                 break;
+            case 'X':
+                as_xml_file = crm_strdup(optarg);
+                break;
             case 'w':
                 web_cgi = TRUE;
                 one_shot = TRUE;
@@ -473,9 +480,9 @@ main(int argc, char **argv)
         as_console = FALSE;
         crm_enable_stderr(FALSE);
 
-        if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent) {
+        if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent && !as_xml_file) {
             printf
-                ("Looks like you forgot to specify one or more of: --as-html, --mail-to, --snmp-target, --external-agent\n");
+                ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --mail-to, --snmp-target, --external-agent\n");
             crm_help('?', LSB_EXIT_GENERIC);
         }
 
@@ -1207,6 +1214,170 @@ print_status(pe_working_set_t * data_set)
         refresh();
     }
 #endif
+    return 0;
+}
+
+static int
+print_xml_status(pe_working_set_t * data_set, const char *filename)
+{
+    FILE *stream;
+    GListPtr gIter = NULL;
+    node_t *dc = NULL;
+    xmlNode *stack = NULL;
+    xmlNode *quorum_node = NULL;
+    char *filename_tmp = NULL;
+    const char *quorum_votes = "unknown";
+
+    filename_tmp = crm_concat(filename, "tmp", '.');
+    stream = fopen(filename_tmp, "w");
+    if (stream == NULL) {
+        crm_perror(LOG_ERR, "Cannot open %s for writing", filename_tmp);
+        crm_free(filename_tmp);
+        return -1;
+    }
+
+    dc = data_set->dc_node;
+
+
+    fprintf(stream, "<?xml version=\"1.0\"?>\n");
+    fprintf(stream, "<crm_mon version=\"%s\">\n", VERSION);
+
+    /*** SUMMARY ***/
+    fprintf(stream, "    <summary>\n");
+
+    if (print_last_updated) {
+        time_t now = time(NULL);
+        char *now_str = ctime(&now);
+
+        now_str[24] = EOS;      /* replace the newline */
+        fprintf(stream, "        <last_update time=\"%s\" />\n", now_str);
+    }
+
+    if (print_last_change) {
+        const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
+        const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
+        const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
+        const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
+
+        fprintf(stream, "        <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
+            last_written ? last_written : "",
+            user ? user : "",
+            client ? client : "",
+            origin ? origin : "");
+    }
+
+    stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
+        data_set->input,
+        LOG_DEBUG);
+    if (stack) {
+        fprintf(stream, "        <stack type=\"%s\" />\n", crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
+    }
+
+    if (!dc) {
+        fprintf(stream, "        <current_dc present=\"false\" />\n");
+    } else {
+        const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
+        const char *uname = dc->details->uname;
+        const char *id = dc->details->id;
+        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+            data_set->input,
+            LOG_DEBUG);
+        fprintf(stream, "        <current_dc present=\"true\" version=\"%s\" name=\"%s\" id=\"%s\" with_quorum=\"%s\" />\n",
+            dc_version ? crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE) : "",
+            uname,
+            id,
+            quorum ? (crm_is_true(quorum) ? "true" : "false") : "false");
+    }
+
+    quorum_node = get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']",
+                    data_set->input,
+                    LOG_DEBUG);
+    if (quorum_node) {
+        quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
+    }
+    fprintf(stream, "        <nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
+        g_list_length(data_set->nodes),
+        quorum_votes);
+
+    fprintf(stream, "        <resources_configured number=\"%d\" />\n", count_resources(data_set, NULL));
+
+    fprintf(stream, "    </summary>\n");
+
+    /*** NODES ***/
+    fprintf(stream, "    <nodes>\n");
+    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        node_t *node = (node_t *) gIter->data;
+        const char *node_type = "unknown";
+
+        switch (node->details->type) {
+        case node_member:
+            node_type = "member";
+            break;
+        case node_ping:
+            node_type = "ping";
+            break;
+        }
+
+        fprintf(stream, "        <node name=\"%s\" ", node->details->uname);
+        fprintf(stream, "id=\"%s\" ", node->details->id);
+        fprintf(stream, "online=\"%s\" ", node->details->online ? "true" : "false");
+        fprintf(stream, "standby=\"%s\" ", node->details->standby ? "true" : "false");
+        fprintf(stream, "standby_onfail=\"%s\" ", node->details->standby_onfail ? "true" : "false");
+        fprintf(stream, "pending=\"%s\" ", node->details->pending ? "true" : "false");
+        fprintf(stream, "unclean=\"%s\" ", node->details->unclean ? "true" : "false");
+        fprintf(stream, "shutdown=\"%s\" ", node->details->shutdown ? "true" : "false");
+        fprintf(stream, "expected_up=\"%s\" ", node->details->expected_up ? "true" : "false");
+        fprintf(stream, "is_dc=\"%s\" ", node->details->is_dc ? "true" : "false");
+        fprintf(stream, "resources_running=\"%d\" ", g_list_length(node->details->running_rsc));
+        fprintf(stream, "type=\"%s\" ", node_type);
+
+        if (group_by_node) {
+            GListPtr lpc2 = NULL;
+            fprintf(stream, ">\n");
+            for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
+                resource_t *rsc = (resource_t *) lpc2->data;
+
+                rsc->fns->print(rsc, "            ", pe_print_xml | pe_print_rsconly, stream);
+            }
+            fprintf(stream, "        </node>\n");
+        } else {
+            fprintf(stream, "/>\n");
+        }
+    }
+    fprintf(stream, "    </nodes>\n");
+
+    /*** RESOURCES ***/
+    if (group_by_node == FALSE || inactive_resources) {
+        fprintf(stream, "    <resources>\n");
+        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+            resource_t *rsc = (resource_t *) gIter->data;
+            gboolean is_active = rsc->fns->active(rsc, TRUE);
+            gboolean partially_active = rsc->fns->active(rsc, FALSE);
+
+            if (is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
+                continue;
+
+            } else if (group_by_node == FALSE) {
+                if (partially_active || inactive_resources) {
+                    rsc->fns->print(rsc, "        ", pe_print_xml, stream);
+                }
+
+            } else if (is_active == FALSE && inactive_resources) {
+                rsc->fns->print(rsc, "        ", pe_print_xml, stream);
+            }
+        }
+        fprintf(stream, "    </resources>\n");
+    }
+
+    fprintf(stream, "</crm_mon>\n");
+    fflush(stream);
+    fclose(stream);
+
+    /* rename tmp file */
+    if (rename(filename_tmp, filename) != 0) {
+        crm_perror(LOG_ERR, "Unable to rename %s->%s", filename_tmp, filename);
+    }
+    crm_free(filename_tmp);
     return 0;
 }
 
@@ -2024,7 +2195,11 @@ mon_refresh_display(gpointer user_data)
             fprintf(stderr, "Critical: Unable to output html file\n");
             clean_up(LSB_EXIT_GENERIC);
         }
-
+    } else if (as_xml_file) {
+        if (print_xml_status(&data_set, as_xml_file) != 0) {
+            fprintf(stderr, "Critical: Unable to output xml file\n");
+            clean_up(LSB_EXIT_GENERIC);
+        }
     } else if (daemonize) {
         /* do nothing */
 
@@ -2073,6 +2248,7 @@ clean_up(int rc)
     }
 
     crm_free(as_html_file);
+    crm_free(as_xml_file);
     crm_free(xml_file);
     crm_free(pid_file);
 
