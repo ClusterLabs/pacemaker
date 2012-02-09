@@ -694,6 +694,7 @@ stonith_cleanup(void)
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     {"stand-alone", 0, 0, 's'},
+    {"stand-alone-cfg", 1, 0, 'c'},
     {"verbose",     0, 0, 'V'},
     {"version",     0, 0, '$'},
     {"help",        0, 0, '?'},
@@ -759,6 +760,7 @@ main(int argc, char ** argv)
     int argerr = 0;
     int option_index = 0;
     const char *actions[] = { "reboot", "poweroff", "list", "monitor", "status" };
+    char *standalone_conf = NULL;
 
     crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
@@ -766,25 +768,27 @@ main(int argc, char ** argv)
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
     while (1) {
-	flag = crm_get_option(argc, argv, &option_index);
-	if (flag == -1)
-	    break;
-		
-	switch(flag) {
-	    case 'V':
-		crm_bump_log_level();
-		break;
-	    case 's':
-		stand_alone = TRUE;
-		break;
-	    case '$':
-	    case '?':
-		crm_help(flag, LSB_EXIT_OK);
-		break;
-	    default:
-		++argerr;
-		break;
-	}
+        flag = crm_get_option(argc, argv, &option_index);
+        if (flag == -1)
+            break;
+        switch(flag) {
+        case 'V':
+            crm_bump_log_level();
+            break;
+        case 's':
+            stand_alone = TRUE;
+            break;
+        case 'c':
+            standalone_conf = crm_strdup(optarg);
+            break;
+        case '$':
+        case '?':
+            crm_help(flag, LSB_EXIT_OK);
+            break;
+        default:
+            ++argerr;
+            break;
+        }
     }
 
     if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
