@@ -3,8 +3,9 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-#include "stonithd-config.h"
-#include "standalone_config.h"
+#include <crm/crm.h>
+#include <stonithd-config.h>
+#include <standalone_config.h>
 
 /* Some distributions can't use the output from flex without help */
 #define ECHO if(fwrite( yytext, yyleng, 1, yyout ))
@@ -74,12 +75,12 @@ _unescape(char *val)
 }
 
 [^ &\|!\t\(\){},;=\"\n\[\]]+ {
-	yylval.sval = strdup(yytext);
+	yylval.sval = crm_strdup(yytext);
 	return T_VAL;
 }
 
 \"(\\\"|[^\"])+\" {
-	yylval.sval = strdup(yytext+1);
+	yylval.sval = crm_strdup(yytext+1);
 	yylval.sval[strlen(yytext)-2] = 0;
 	/* unescape backslash-quote to be quotes */
 	_unescape(yylval.sval);

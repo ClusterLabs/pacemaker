@@ -48,11 +48,6 @@ static struct {
 
 %%
 
-//unfline:
-//	T_UNFENCE T_VAL T_ENDL {
-//		printf("unfence\n");
-//	}
-
 devline:
 	T_DEVICE T_VAL T_VAL T_ENDL {
 		line_val.name = $2;
@@ -87,6 +82,7 @@ prioline:
 			handle_line_value();
 		} else {
 			crm_err("Standalone Config parser error: priority value, %s, on line %d is not a valid positive integer\n", $3, _line_count);
+			reset_line();
 		}
 	}
 	;
@@ -164,12 +160,12 @@ static void
 reset_line()
 {
 	int i;
-	free(line_val.name);
-	free(line_val.agent);
+	crm_free(line_val.name);
+	crm_free(line_val.agent);
 
 	for (i = 0; i < line_val.val_count; i++) {
-		free(line_val.keys[i]);
-		free(line_val.vals[i]);
+		crm_free(line_val.keys[i]);
+		crm_free(line_val.vals[i]);
 	}
 
 	memset(&line_val, 0, sizeof(line_val));
