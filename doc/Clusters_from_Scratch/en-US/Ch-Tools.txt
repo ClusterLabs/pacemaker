@@ -1,4 +1,6 @@
-= Using Pacemaker Tools =
+= Pacemaker Tools =
+
+== Using Pacemaker Tools ==
 
 In the dark past, configuring Pacemaker required the administrator to
 read and write XML. In true UNIX style, there were also a number of

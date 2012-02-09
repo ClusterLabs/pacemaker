@@ -1,0 +1,12 @@
+[appendix]
+= Further Reading =
+
+- Project Website
+http://www.clusterlabs.org
+
+- Cluster Commands
+A comprehensive guide to cluster commands has been written by Novell and can be found at:
+  http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html
+
+- Corosync
+ http://www.corosync.org
