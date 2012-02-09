@@ -1,7 +1,7 @@
 # Using Standalone Configuration
 #
 # The standalone configuration can only be applied to the
-# stonitd process while in standalone mode.  This is achieved
+# stonithd process while in standalone mode.  This is achieved
 # by using the --stand-alone option when launching stonithd.
 # The configuration file path is give to stonithd by using
 # the --stand-alone-cfg option.

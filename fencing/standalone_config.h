@@ -27,8 +27,8 @@
  * \brief Attempts to open a stonith standalone config file
  * and load the config internally.
  *
- * \note standalone_cfg_commit() must be executed before
- * the config will be activated.
+ * \note standalone_cfg_commit() must be executed after
+ * reading in the file before the config will be activated.
  *
  * \retval 0, success
  * \retval -1, failure
