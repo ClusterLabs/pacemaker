@@ -1,0 +1,71 @@
+# Using Standalone Configuration
+#
+# The standalone configuration can only be applied to the
+# stonithd process while in standalone mode.  This is achieved
+# by using the --stand-alone option when launching stonithd.
+# The configuration file path is give to stonithd by using
+# the --stand-alone-cfg option.
+#
+
+# Example 1: Standalone fence_ipmilan configuration
+# for 2 hosts
+
+device stonith-1 fence_ipmilan auth=md5 lanplus=true method=onoff \
+  power_wait=5 ipaddr=v02-a-control login=abc passwd=def
+
+# Since there are no ports in fence_ipmilan, just give it
+# the host(s) that is controlled by stonith-1.  fence_ipmilan
+# happens to only be able to control 1 host at a time.
+ports stonith-1 v02-a
+
+# There is no host checker for ipmilan and there is no host
+# or port argument really, tell stonithd this.
+options stonith-1 host_argument=none
+
+
+#
+# Example 2: fence_apc controlling 4 hosts, 1 port each
+# 
+#  Port assignment implies connection to device
+# 
+device stonith-2 fence_apc ipaddr=north-apc login=apc passwd=apc
+ports stonith-2 north-01=2 north-02=3 north-03=4 north-04=5
+
+
+#
+# Example 3: fence_wti controlling 2 hosts, 2 ports each
+# 
+device stonith-3 fence_wti ipaddr=10.1.1.2 login=admin passwd=admin
+ports stonith-3 v02-a="1,5" v02-b="2,6"
+
+
+#
+# Example 4: fence_xvm with special option
+#
+device stonith-4 fence_xvm
+
+# Non-fencing agent option to give stonithd hints
+options stonith-4 pcmk_arg_map="domain:uname"
+
+
+#
+# Example 5: external/ssh
+#
+device stonith-5 "external/ssh" livedangerously=yes
+ports stonith-5 v02-a v02-b
+
+
+#
+# Example 6: Fence_scsi
+#
+# fence_scsi has no ports and no host list, so all we do is
+# tell stonith what hosts it controls
+#
+device stonith-6 fence_scsi
+ports stonith-6 v02-a v02-b
+
+# Try to fence v02-a using stonith-6 and stonith-3.  If either
+# fails, move on to stonith-5.
+priority v02-a 1 stonith-6 stonith-3
+priority v02-a 2 stonith-5
+
