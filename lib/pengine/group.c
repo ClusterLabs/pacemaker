@@ -136,6 +136,25 @@ group_active(resource_t * rsc, gboolean all)
     return TRUE;
 }
 
+static void
+group_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
+{
+    GListPtr gIter = rsc->children;
+    char *child_text = crm_concat(pre_text, "    ", ' ');
+
+    status_print("%s<group id=\"%s\" ", pre_text, rsc->id);
+    status_print("number_resources=\"%d\" ", g_list_length(rsc->children));
+    status_print(">\n");
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+        child_rsc->fns->print(child_rsc, child_text, options, print_data);
+    }
+
+    status_print("%s</group>\n", pre_text);
+    crm_free(child_text);
+}
+
 void
 group_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
@@ -145,6 +164,12 @@ group_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     if (pre_text == NULL) {
         pre_text = " ";
     }
+
+    if (options & pe_print_xml) {
+        group_print_xml(rsc, pre_text, options, print_data);
+        return;
+    }
+
     child_text = crm_concat(pre_text, "   ", ' ');
 
     status_print("%sResource Group: %s", pre_text ? pre_text : "", rsc->id);
