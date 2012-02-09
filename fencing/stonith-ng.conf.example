@@ -55,21 +55,6 @@ ports stonith-5 v02-a v02-b
 device stonith-6 fence_scsi
 ports stonith-6 v02-a v02-b
 
-# The unfencing directive turns things on when a node joins the
-# cluster after rebooting.
-#
-# When v02-a or v02-b join the cluster, register for each SCSI
-# device using fence_scsi.
-#
-#unfence stonith-6
-#
-# XXX
-# For now, this is not needed -- we need some way to indicate
-# that unfencing needs to be initiated from the node being unfenced
-# sometimes.
-#
-
-
 # Try to fence v02-a using stonith-6 and stonith-3.  If either
 # fails, move on to stonith-5.
 priority v02-a 1 stonith-6 stonith-3
