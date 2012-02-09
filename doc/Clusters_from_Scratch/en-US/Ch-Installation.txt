@@ -18,10 +18,10 @@ language and keyboard layout
 footnote:[http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-langselection-x86.html]
 
 .Installation: Good choice
-image::images/f-13.1-welcome.png[Fedora Installation - Welcome]
+image::images/f-13.1-welcome.png[Welcome]
 
 .Fedora Installation - Storage Devices
-image::images/f-13.2-devices.png[Fedora Installation - Storage Devices]
+image::images/f-13.2-devices.png[Storage Devices]
 
 Assign your machine a host name.
 footnote:[http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html]
@@ -29,7 +29,7 @@ I happen to control the clusterlabs.org domain name, so I will use
 that here.
 
 .Fedora Installation - Hostname
-image::images/f-13.3-hostname.png[Fedora Installation - Hostname]
+image::images/f-13.3-hostname.png[Hostname]
 
 You will then be prompted to indicate the machine's physical location
 and to supply a root password.
@@ -44,14 +44,14 @@ space for DRBD, so I'll check the Review and modify partitioning
 layout box.
 
 .Fedora Installation - Installation Type
-image::images/f-13.4-partition-overview.png[Fedora Installation - Choose Install Type]
+image::images/f-13.4-partition-overview.png[Choose Install Type]
 
 
 By default, Fedora will give all the space to the / (aka. root)
 partition. Wel'll take some back so we can use DRBD.
 
 .Fedora Installation - Default Partitioning
-image::images/f-13.5-partition-default.png[Fedora Installation - Default Partitioning]
+image::images/f-13.5-partition-default.png[Default Partitioning]
 
 
 The finalized partition layout should look something like the diagram
@@ -80,12 +80,12 @@ do that (and install any extra software we need) later. After you click
 next, Fedora will begin installing. 
 
 .Fedora Installation - Software
-image::images/f-13.8-software.png[Fedora Installation - Software selection]
+image::images/f-13.8-software.png[Software selection]
 
 Go grab something to drink, this may take a while
 
 .Fedora Installation - Installing
-image::images/f-13.9-installing.png[Fedora Installation - Installing]
+image::images/f-13.9-installing.png[Installing]
 
 .Fedora Installation - Installation Complete
 image::images/f-13.10-install-complete.png[Stage 1, completed]

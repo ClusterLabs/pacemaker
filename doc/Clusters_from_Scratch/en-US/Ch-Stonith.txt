@@ -1,0 +1,223 @@
+= Configure STONITH =
+
+== What Is STONITH ==
+
+STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and it
+protects your data from being corrupted by rogue nodes or concurrent
+access.
+
+Just because a node is unresponsive, this doesn't mean it isn't
+accessing your data. The only way to be 100% sure that your data is
+safe, is to use STONITH so we can be certain that the node is truly
+offline, before allowing the data to be accessed from another node.
+
+
+STONITH also has a role to play in the event that a clustered service
+cannot be stopped. In this case, the cluster uses STONITH to force the
+whole node offline, thereby making it safe to start the service
+elsewhere.
+
+== What STONITH Device Should You Use ==
+
+It is crucial that the STONITH device can allow the cluster to
+differentiate between a node failure and a network one.
+
+The biggest mistake people make in choosing a STONITH device is to
+use remote power switch (such as many on-board IMPI controllers) that
+shares power with the node it controls. In such cases, the cluster
+cannot be sure if the node is really offline, or active and suffering
+from a network fault.
+
+Likewise, any device that relies on the machine being active (such as
+SSH-based "devices" used during testing) are inappropriate.
+
+== Configuring STONITH ==
+
+. Find the correct driver: +stonith_admin --list-installed+
+
+. Since every device is different, the parameters needed to configure
+  it will vary. To find out the parameters associated with the device,
+  run: +stonith_admin --metadata --agent type+
+
+  The output should be XML formatted text containing additional
+  parameter descriptions. We will endevor to make the output more
+  friendly in a later version.
+
+. Enter the shell crm Create an editable copy of the existing
+  configuration cib new stonith Create a fencing resource containing a
+  primitive resource with a class of stonith, a type of type and a
+  parameter for each of the values returned in step 2: +configure
+  primitive ...+
+
+. If the device does not know how to fence nodes based on their uname,
+  you may also need to set the special +pcmk_host_map+ parameter.  See
+  +man stonithd+ for details.
+
+. If the device does not support the list command, you may also need
+  to set the special +pcmk_host_list+ and/or +pcmk_host_check+
+  parameters.  See +man stonithd+ for details.
+
+. If the device does not expect the victim to be specified with the
+  port parameter, you may also need to set the special
+  +pcmk_host_argument+ parameter. See +man stonithd+ for details.
+
+. Upload it into the CIB from the shell: +cib commit stonith+
+
+. Once the stonith resource is running, you can test it by executing:
+  +stonith_admin --reboot nodename+. Although you might want to stop the
+  cluster on that machine first.
+
+
+== Example ==
+
+Assuming we have an chassis containing four nodes and an IPMI device
+active on 10.0.0.1, then we would chose the fence_ipmilan driver in step
+2 and obtain the following list of parameters
+
+.Obtaining a list of STONITH Parameters
+[source,Bash]
+----
+# stonith_admin --metadata -a fence_ipmilan
+----
+[source,XML]
+----
+<?xml version="1.0" ?>
+<resource-agent name="fence_ipmilan" shortdesc="Fence agent for IPMI over LAN">
+<longdesc>
+fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).
+
+To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)</longdesc>
+<parameters>
+        <parameter name="auth" unique="1">
+                <getopt mixed="-A" />
+                <content type="string" />
+                <shortdesc lang="en">IPMI Lan Auth type (md5, password, or none)</shortdesc>
+        </parameter>
+        <parameter name="ipaddr" unique="1">
+                <getopt mixed="-a" />
+                <content type="string" />
+                <shortdesc lang="en">IPMI Lan IP to talk to</shortdesc>
+        </parameter>
+        <parameter name="passwd" unique="1">
+                <getopt mixed="-p" />
+                <content type="string" />
+                <shortdesc lang="en">Password (if required) to control power on IPMI device</shortdesc>
+        </parameter>
+        <parameter name="passwd_script" unique="1">
+                <getopt mixed="-S" />
+                <content type="string" />
+                <shortdesc lang="en">Script to retrieve password (if required)</shortdesc>
+        </parameter>
+        <parameter name="lanplus" unique="1">
+                <getopt mixed="-P" />
+                <content type="boolean" />
+                <shortdesc lang="en">Use Lanplus</shortdesc>
+        </parameter>
+        <parameter name="login" unique="1">
+                <getopt mixed="-l" />
+                <content type="string" />
+                <shortdesc lang="en">Username/Login (if required) to control power on IPMI device</shortdesc>
+        </parameter>
+        <parameter name="action" unique="1">
+                <getopt mixed="-o" />
+                <content type="string" default="reboot"/>
+                <shortdesc lang="en">Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata</shortdesc>
+        </parameter>
+        <parameter name="timeout" unique="1">
+                <getopt mixed="-t" />
+                <content type="string" />
+                <shortdesc lang="en">Timeout (sec) for IPMI operation</shortdesc>
+        </parameter>
+        <parameter name="cipher" unique="1">
+                <getopt mixed="-C" />
+                <content type="string" />
+                <shortdesc lang="en">Ciphersuite to use (same as ipmitool -C parameter)</shortdesc>
+        </parameter>
+        <parameter name="method" unique="1">
+                <getopt mixed="-M" />
+                <content type="string" default="onoff"/>
+                <shortdesc lang="en">Method to fence (onoff or cycle)</shortdesc>
+        </parameter>
+        <parameter name="power_wait" unique="1">
+                <getopt mixed="-T" />
+                <content type="string" default="2"/>
+                <shortdesc lang="en">Wait X seconds after on/off operation</shortdesc>
+        </parameter>
+        <parameter name="delay" unique="1">
+                <getopt mixed="-f" />
+                <content type="string" />
+                <shortdesc lang="en">Wait X seconds before fencing is started</shortdesc>
+        </parameter>
+        <parameter name="verbose" unique="1">
+                <getopt mixed="-v" />
+                <content type="boolean" />
+                <shortdesc lang="en">Verbose mode</shortdesc>
+        </parameter>
+</parameters>
+<actions>
+        <action name="on" />
+        <action name="off" />
+        <action name="reboot" />
+        <action name="status" />
+        <action name="diag" />
+        <action name="list" />
+        <action name="monitor" />
+        <action name="metadata" />
+</actions>
+</resource-agent>
+----
+
+from which we would create a STONITH resource fragment that might look
+like this
+
+.Sample STONITH Resource
+[source,Bash]
+----
+# crm crm(live)# cib new stonith
+INFO: stonith shadow CIB created
+crm(stonith)# configure primitive impi-fencing stonith::fence_ipmilan \
+ params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \
+ op monitor interval="60s"
+----
+
+And finally, since we disabled it earlier, we need to re-enable STONITH.
+At this point we should have the following configuration..
+
+[source,Bash]
+----
+crm(stonith)# configure property stonith-enabled="true"crm(stonith)# configure shownode pcmk-1
+node pcmk-2
+primitive WebData ocf:linbit:drbd \
+    params drbd_resource="wwwdata" \
+    op monitor interval="60s"
+primitive WebFS ocf:heartbeat:Filesystem \
+    params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
+primitive WebSite ocf:heartbeat:apache \
+    params configfile="/etc/httpd/conf/httpd.conf" \
+    op monitor interval="1min"
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
+    op monitor interval="30s"primitive ipmi-fencing stonith::fence_ipmilan \ params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \ op monitor interval="60s"ms WebDataClone WebData \
+    meta master-max="2" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
+clone WebFSClone WebFS
+clone WebIP ClusterIP \
+    meta globally-unique="true" clone-max="2" clone-node-max="2"
+clone WebSiteClone WebSite
+colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone
+colocation fs_on_drbd inf: WebFSClone WebDataClone:Master
+colocation website-with-ip inf: WebSiteClone WebIP
+order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start
+order WebSite-after-WebFS inf: WebFSClone WebSiteClone
+order apache-after-ip inf: WebIP WebSiteClone
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="true" \
+    no-quorum-policy="ignore"
+rsc_defaults $id="rsc-options" \
+    resource-stickiness="100"
+crm(stonith)# cib commit stonithINFO: commited 'stonith' shadow CIB to the cluster
+crm(stonith)# quit
+bye
+----

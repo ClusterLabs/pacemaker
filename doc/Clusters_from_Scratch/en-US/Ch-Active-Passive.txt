@@ -1,0 +1,418 @@
+= Creating an Active/Passive Cluster =
+
+== Exploring the Existing Configuration ==
+
+When Pacemaker starts up, it automatically records the number and details
+of the nodes in the cluster as well as which stack is being used and the
+version of Pacemaker being used. 
+
+This is what the base configuration should look like.
+
+[source,Bash]
+----
+# crm configure show
+node pcmk-1
+node pcmk-2
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2"
+----
+
+For those that are not of afraid of XML, you can see the raw
+configuration by appending "xml" to the previous command.
+
+.The last XML you'll see in this document
+[source,Bash]
+----
+# crm configure show xml
+<?xml version="1.0" ?>
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="pcmk-1" epoch="13" have-quorum="1" num_updates="7" validate-with="pacemaker-1.0">
+ <configuration>
+  <crm_config>
+   <cluster_property_set id="cib-bootstrap-options">
+    <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f"/>
+    <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+    <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+   </cluster_property_set>
+  </crm_config>
+  <rsc_defaults/>
+  <op_defaults/>
+  <nodes>
+   <node id="pcmk-1" type="normal" uname="pcmk-1"/>
+   <node id="pcmk-2" type="normal" uname="pcmk-2"/>
+  </nodes>
+  <resources/>
+  <constraints/>
+ </configuration>
+</cib>
+----
+
+Before we make any changes, its a good idea to check the validity of
+the configuration.
+
+[source,Bash]
+----
+# crm_verify -L
+crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: Resource start-up disabled since no STONITH resources have been defined
+crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option
+crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Errors found during check: config not valid -V may provide more details
+#
+----
+
+As you can see, the tool has found some errors.
+
+In order to guarantee the safety of your data
+footnote:[If the data is corrupt, there is little point in continuing to make it available]
+, Pacemaker ships with STONITH
+footnote:[A common node fencing mechanism. Used to ensure data integrity by powering off "bad" nodes]
+enabled.  However it also knows when no STONITH configuration has been
+supplied and reports this as a problem (since the cluster would not be
+able to make progress if a situation requiring node fencing arose).
+
+For now, we will disable this feature and configure it later in the
+Configuring STONITH section. It is important to note that the use of
+STONITH is highly encouraged, turning it off tells the cluster to
+simply pretend that failed nodes are safely powered off. Some vendors
+will even refuse to support clusters that have it disabled. 
+
+To disable STONITH, we set the stonith-enabled cluster option to
+false.
+
+[source,Bash]
+----
+# crm configure property stonith-enabled=false
+# crm_verify -L
+----
+
+With the new cluster option set, the configuration is now valid.
+
+[WARNING]
+=========
+
+The use of stonith-enabled=false is completely inappropriate for a
+production cluster. We use it here to defer the discussion of its
+configuration which can differ widely from one installation to the
+next.  See  <<_what_is_stonith>> for information on why STONITH is important
+and details on how to configure it.
+
+=========
+
+== Adding a Resource ==
+
+The first thing we should do is configure an IP address. Regardless of
+where the cluster service(s) are running, we need a consistent address
+to contact them on. Here I will choose and add 192.168.122.101 as the
+floating address, give it the imaginative name ClusterIP and tell the
+cluster to check that its running every 30 seconds.
+
+
+[IMPORTANT]
+===========
+The chosen address must not be one already associated with
+a physical node
+===========
+
+[source,Bash]
+----
+# crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \
+     params ip=192.168.122.101 cidr_netmask=32 \
+     op monitor interval=30s
+----
+
+The other important piece of information here is ocf:heartbeat:IPaddr2.
+
+This tells Pacemaker three things about the resource you want to
+add. The first field, ocf, is the standard to which the resource
+script conforms to and where to find it. The second field is specific
+to OCF resources and tells the cluster which namespace to find the
+resource script in, in this case heartbeat. The last field indicates
+the name of the resource script.
+
+To obtain a list of the available resource classes, run
+
+[source,Bash]
+----
+# crm ra classesheartbeat
+lsb ocf / heartbeat pacemakerstonith
+----
+
+To then find all the OCF resource agents provided by Pacemaker and
+Heartbeat, run
+
+[source,Bash]
+----
+# crm ra list ocf pacemaker
+ClusterMon   Dummy     Stateful    SysInfo    SystemHealth  controld
+ping      pingd     
+# crm ra list ocf heartbeat
+AoEtarget       AudibleAlarm      ClusterMon       Delay
+Dummy         EvmsSCC        Evmsd         Filesystem
+ICP          IPaddr         IPaddr2        IPsrcaddr
+LVM          LinuxSCSI       MailTo         ManageRAID
+ManageVE        Pure-FTPd       Raid1         Route
+SAPDatabase      SAPInstance      SendArp        ServeRAID
+SphinxSearchDaemon   Squid         Stateful        SysInfo
+VIPArip        VirtualDomain     WAS          WAS6
+WinPopup        Xen          Xinetd         anything
+apache         db2          drbd          eDir88
+iSCSILogicalUnit    iSCSITarget      ids          iscsi
+ldirectord       mysql         mysql-proxy      nfsserver
+oracle         oralsnr        pgsql         pingd
+portblock       rsyncd         scsi2reservation    sfex
+tomcat         vmware         
+#
+----
+
+Now verify that the IP resource has been added and display the cluster's
+status to see that it is now active.
+
+[source,Bash]
+----
+# crm configure shownode pcmk-1
+node pcmk-2primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" \
+    op monitor interval="30s"
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="false" \
+# crm_mon
+============
+Last updated: Fri Aug 28 15:23:48 2009
+Stack: openais
+Current DC: pcmk-1 - partition with quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+1 Resources configured.
+============
+
+Online: [ pcmk-1 pcmk-2 ]
+ClusterIP (ocf::heartbeat:IPaddr): Started pcmk-1
+----
+
+== Perform a Failover ==
+
+Being a high-availability cluster, we should test failover of our new
+resource before moving on. 
+
+First, find the node on which the IP address is running.
+
+[source,Bash]
+----
+# crm resource status ClusterIP
+resource ClusterIP is running on: pcmk-1
+#
+----
+
+Shut down Pacemaker and Corosync on that machine.
+
+[source,Bash]
+----
+# ssh pcmk-1 -- /etc/init.d/pacemaker stop
+Signaling Pacemaker Cluster Manager to terminate: [ OK ]
+Waiting for cluster services to unload:. [ OK ]
+# ssh pcmk-1 -- /etc/init.d/corosync stop
+Stopping Corosync Cluster Engine (corosync): [ OK ]
+Waiting for services to unload: [ OK ]
+#
+----
+
+Once Corosync is no longer running, go to the other node and check the
+cluster status with crm_mon.
+
+[source,Bash]
+----
+# crm_mon
+============
+Last updated: Fri Aug 28 15:27:35 2009
+Stack: openais
+Current DC: pcmk-2 - partition WITHOUT quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+1 Resources configured.
+============
+
+Online: [ pcmk-2 ]OFFLINE: [ pcmk-1 ]
+----
+
+There are three things to notice about the cluster's current
+state. The first is that, as expected, pcmk-1 is now offline. However
+we can also see that ClusterIP isn't running anywhere!
+
+
+=== Quorum and Two-Node Clusters ===
+
+This is because the cluster no longer has quorum, as can be seen by
+the text "partition WITHOUT quorum" (emphasised green) in the output
+above.  In order to reduce the possibility of data corruption,
+Pacemaker's default behavior is to stop all resources if the cluster
+does not have quorum.
+
+A cluster is said to have quorum when more than half the known or
+expected nodes are online, or for the mathematically inclined,
+whenever the following equation is true:
+
+....
+total_nodes < 2 * active_nodes
+....
+
+Therefore a two-node cluster only has quorum when both nodes are
+running, which is no longer the case for our cluster. This would
+normally make the creation of a two-node cluster pointless
+footnote:[Actually some would argue that two-node clusters are always pointless, but that is an argument for another time]
+, however it is possible to control how Pacemaker behaves when quorum
+is lost. In particular, we can tell the cluster to simply ignore
+quorum altogether.
+
+[source,Bash]
+----
+# crm configure property no-quorum-policy=ignore
+# crm configure show
+node pcmk-1
+node pcmk-2
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" \
+    op monitor interval="30s"
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="false" \
+    no-quorum-policy="ignore"
+----
+
+After a few moments, the cluster will start the IP address on the
+remaining node. Note that the cluster still does not have quorum.
+
+[source,Bash]
+----
+# crm_mon
+============
+Last updated: Fri Aug 28 15:30:18 2009
+Stack: openais
+Current DC: pcmk-2 - partition WITHOUT quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+1 Resources configured.
+============
+Online: [ pcmk-2 ]
+OFFLINE: [ pcmk-1 ]
+ClusterIP (ocf::heartbeat:IPaddr): Started pcmk-2
+----
+
+Now simulate node recovery by restarting the cluster stack on pcmk-1 and
+check the cluster's status.
+
+[source,Bash]
+----
+# /etc/init.d/corosync start
+Starting Corosync Cluster Engine (corosync): [ OK ]      
+# /etc/init.d/pacemaker start
+Starting Pacemaker Cluster Manager: [ OK ]# crm_mon
+============
+Last updated: Fri Aug 28 15:32:13 2009
+Stack: openais
+Current DC: pcmk-2 - partition with quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+1 Resources configured.
+============
+Online: [ pcmk-1 pcmk-2 ]
+
+ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-1
+----
+
+Here we see something that some may consider surprising, the IP is back
+running at its original location!
+
+
+=== Prevent Resources from Moving after Recovery ===
+
+In some circumstances, it is highly desirable to prevent healthy
+resources from being moved around the cluster. Moving resources almost
+always requires a period of downtime. For complex services like Oracle
+databases, this period can be quite long.
+
+To address this, Pacemaker has the concept of resource stickiness
+which controls how much a service prefers to stay running where it
+is. You may like to think of it as the "cost" of any downtime. By
+default, Pacemaker assumes there is zero cost associated with moving
+resources and will do so to achieve "optimal"
+footnote:[It should be noted that Pacemaker's definition of
+optimal may not always agree with that of a human's. The order in which
+Pacemaker processes lists of resources and nodes creates implicit
+preferences in situations where the administrator has not explicitly
+specified them]
+resource placement. We can specify a different stickiness for every
+resource, but it is often sufficient to change the default.
+
+[source,Bash]
+----
+# crm configure rsc_defaults resource-stickiness=100
+# crm configure show
+node pcmk-1
+node pcmk-2
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" \
+    op monitor interval="30s"
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="false" \
+    no-quorum-policy="ignore"rsc_defaults $id="rsc-options" \
+    resource-stickiness="100"
+----
+
+If we now retry the failover test, we see that as expected ClusterIP
+still moves to pcmk-2 when pcmk-1 is taken offline.
+
+[source,Bash]
+----
+# ssh pcmk-1 -- /etc/init.d/pacemaker stop
+Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]
+Waiting for cluster services to unload:.                   [  OK  ]
+# ssh pcmk-1 -- /etc/init.d/corosync stop
+Stopping Corosync Cluster Engine (corosync):        [ OK ]
+Waiting for services to unload:              [ OK ]
+# ssh pcmk-2 -- crm_mon -1
+============
+Last updated: Fri Aug 28 15:39:38 2009
+Stack: openais
+Current DC: pcmk-2 - partition WITHOUT quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+1 Resources configured.
+============
+
+Online: [ pcmk-2 ]
+OFFLINE: [ pcmk-1 ]
+ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2
+----
+
+However when we bring pcmk-1 back online, ClusterIP now remains running
+on pcmk-2.
+
+[source,Bash]
+----
+# /etc/init.d/corosync start
+Starting Corosync Cluster Engine (corosync): [ OK ]
+# /etc/init.d/pacemaker start
+Starting Pacemaker Cluster Manager: [ OK ]
+# crm_mon
+============
+Last updated: Fri Aug 28 15:41:23 2009
+Stack: openais
+Current DC: pcmk-2 - partition with quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+1 Resources configured.
+============
+
+Online: [ pcmk-1 pcmk-2 ]
+ 
+ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2
+----
