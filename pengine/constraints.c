@@ -1316,7 +1316,7 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
             return FALSE;
 
         } else if (template_rsc_set_first == NULL) {
-            crm_config_warn("Constraint '%s': Template '%s' is not referenced by any resource", id, id_first);
+            crm_config_warn("Constraint '%s': No resource is derived from template '%s'", id, id_first);
             return FALSE;
         }
     }
@@ -1331,7 +1331,7 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
             return FALSE;
 
         } else if (template_rsc_set_then == NULL) {
-            crm_config_warn("Constraint '%s': Template '%s' is not referenced by any resource", id, id_then);
+            crm_config_warn("Constraint '%s': No resource is derived from template '%s'", id, id_then);
             return FALSE;
         }
     }
@@ -1796,7 +1796,7 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
             return FALSE;
 
         } else if (template_rsc_set_lh == NULL) {
-            crm_config_warn("Constraint '%s': Template '%s' is not referenced by any resource", id, id_lh);
+            crm_config_warn("Constraint '%s': No resource is derived from template '%s'", id, id_lh);
             return FALSE;
         }
     }
@@ -1810,7 +1810,7 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
             return FALSE;
 
         } else if (template_rsc_set_rh == NULL) {
-            crm_config_warn("Constraint '%s': Template '%s' is not referenced by any resource", id, id_rh);
+            crm_config_warn("Constraint '%s': No resource is derived from template '%s'", id, id_rh);
             return FALSE;
         }
     }
@@ -2155,7 +2155,7 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
 	return FALSE;
 
     } else if (template_rsc_set_lh == NULL) {
-        crm_config_warn("Constraint '%s': Template '%s' is not referenced by any resource", id, id_lh);
+        crm_config_warn("Constraint '%s': No resource is derived from template '%s'", id, id_lh);
         return FALSE;
     }
 
