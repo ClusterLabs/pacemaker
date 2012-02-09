@@ -1,3 +1,12 @@
+# Using Standalone Configuration
+#
+# The standalone configuration can only be applied to the
+# stonitd process while in standalone mode.  This is achieved
+# by using the --stand-alone option when launching stonithd.
+# The configuration file path is give to stonithd by using
+# the --stand-alone-conf option.
+#
+
 # Example 1: Standalone fence_ipmilan configuration
 # for 2 hosts
 
@@ -7,7 +16,7 @@ device stonith-1 fence_ipmilan auth=md5 lanplus=true method=onoff \
 # Since there are no ports in fence_ipmilan, just give it
 # the host(s) that is controlled by stonith-1.  fence_ipmilan
 # happens to only be able to control 1 host at a time.
-ports stonith-1 v02-a 
+ports stonith-1 v02-a
 
 # There is no host checker for ipmilan and there is no host
 # or port argument really, tell stonithd this.
