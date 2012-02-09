@@ -80,12 +80,26 @@ Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
 # With '%' the test for 'newness' fails 
 CFS_TXT=$(wildcard Clusters_from_Scratch/en-US/*.txt)
 CFS_XML=$(CFS_TXT:%.txt=%.xml)
+
+
+# Build docbook from asciidoc because XML is a PITA to edit
+#
+# Building each chapter as a book (since the numbering isn't right for
+# articles and only books can have appendicies) and then strip out the
+# bits we don't want/need
+#
 %.xml:  %.txt
-	asciidoc -b docbook -d article -o $@ $<
-	sed -i.sed 's/lang="en"//' $@     # Never specify a language here
-	sed -i.sed 's/simpara/para/g' $@  # publican doesn't correctly render footnotes with simpara 
-	sed -i.sed 's///' $@            # Fix line endings
+	asciidoc -b docbook -d book -o $@ $<
+	sed -i.sed 's///' $@                 # Fix line endings
+	sed -i.sed 's/\ lang="en"//' $@        # Never specify a language in the chapters
+	sed -i.sed 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara 
+	sed -i.sed 's/.*<date>.*//g' $@	       # Remove dangling tag
+	sed -i.sed 's/chapter/section/g' $@    # Chapters become sections, so that books can become chapters 
+	sed -i.sed 's/<.*bookinfo.*>//g' $@    # Strip out bookinfo, we don't need it
+	-grep -qis "<appendix" $@ && sed -i.sed 's/.*book>//' $@         # We just want the appendix tag
+	-grep -vqis "<appendix" $@ && sed -i.sed 's/book>/chapter>/g' $@ # Rename to chapter
 	echo Rebuilt $@ from $<
+
 
 Clusters_from_Scratch.txt: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML)
 	@echo Building $(@:%.txt=%) because of $?
