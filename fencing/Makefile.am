@@ -62,7 +62,12 @@ stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
 			$(CRYPTOLIB) $(CLUSTERLIBS)
 
-stonithd_SOURCES	= main.c commands.c remote.c
+stonithd_SOURCES	= main.c commands.c remote.c standalone_config.c config.y config.l
+
+stonithd_BUILT_SOURCES = stonithd-config.h
+
+stonithd_YFLAGS = -d
+stonithd_AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
 stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/cluster/libcrmcluster.la	\

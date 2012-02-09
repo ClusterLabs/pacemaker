@@ -125,7 +125,7 @@ create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set)
         child_rsc = NULL;
         goto bail;
     }
-/* 	child_rsc->globally_unique = rsc->globally_unique; */
+/*  child_rsc->globally_unique = rsc->globally_unique; */
 
     clone_data->total_clones += 1;
     crm_trace("Setting clone attributes for: %s", child_rsc->id);
@@ -356,6 +356,32 @@ short_print(char *list, const char *prefix, const char *type, long options, void
     }
 }
 
+static void
+clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
+{
+    int is_master_slave = rsc->variant == pe_master ? 1 : 0;
+    char *child_text = crm_concat(pre_text, "   ", ' ');
+    GListPtr gIter = rsc->children;
+
+    status_print("%s<clone ", pre_text);
+    status_print("id=\"%s\" ", rsc->id);
+    status_print("multi_state=\"%s\" ", is_master_slave ? "true" : "false");
+    status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
+    status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
+    status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
+    status_print("failure_ignored=\"%s\" ", is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
+    status_print(">\n");
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+
+        child_rsc->fns->print(child_rsc, child_text, options, print_data);
+    }
+
+    status_print("%s</clone>\n", pre_text);
+    crm_free(child_text);
+}
+
 void
 clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
@@ -368,11 +394,17 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
     clone_variant_data_t *clone_data = NULL;
 
-    get_clone_variant_data(clone_data, rsc);
-
     if (pre_text == NULL) {
         pre_text = " ";
     }
+
+    if (options & pe_print_xml) {
+        clone_print_xml(rsc, pre_text, options, print_data);
+        return;
+    }
+
+    get_clone_variant_data(clone_data, rsc);
+
     child_text = crm_concat(pre_text, "   ", ' ');
 
     if (rsc->variant == pe_master) {

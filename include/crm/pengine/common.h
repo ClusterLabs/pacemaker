@@ -95,6 +95,7 @@ enum pe_print_options {
 	pe_print_rsconly	= 0x0080,
 	pe_print_ops		= 0x0100,
 	pe_print_suppres_nl	= 0x0200,
+	pe_print_xml		= 0x0400,
 };
 /* *INDENT-ON* */
 
