@@ -19,10 +19,25 @@
 
 
 #include <stdio.h>
+#include <standalone_config.h>
+
+#include <crm_internal.h>
+
+#include <sys/param.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <stdlib.h>
-#include <crm/crm.h>
+#include <errno.h>
 #include <string.h>
-#include "standalone_config.h"
+
+#include <crm/common/xml.h>
+#include <crm/msg_xml.h>
+#include <crm/stonith-ng.h>
+#include <crm/stonith-ng-internal.h>
+#include <internal.h>
+
 
 struct device {
 	char *name;
@@ -50,15 +65,15 @@ struct topology {
 	struct topology *next;
 };
 
-struct device *device_list;
-struct topology *topology_list;
+static struct device *__device_list;
+static struct topology *__topology_list;
 
 static struct device *
 find_device(const char *name)
 {
 	struct device *dev = NULL;
 
-	for (dev = device_list; dev != NULL; dev = dev->next) {
+	for (dev = __device_list; dev != NULL; dev = dev->next) {
 		if (!strcasecmp(dev->name, name)) {
 			break;
 		}
@@ -72,7 +87,7 @@ find_topology(const char *name)
 {
 	struct topology *topo = NULL;
 
-	for (topo = topology_list; topo != NULL; topo = topo->next) {
+	for (topo = __topology_list; topo != NULL; topo = topo->next) {
 		if (!strcasecmp(topo->node_name, name)) {
 			break;
 		}
@@ -84,15 +99,15 @@ find_topology(const char *name)
 static void
 add_device(struct device *dev)
 {
-	dev->next = device_list;
-	device_list = dev;
+	dev->next = __device_list;
+	__device_list = dev;
 }
 
 static void
 add_topology(struct topology *topo)
 {
-	topo->next = topology_list;
-	topology_list = topo;
+	topo->next = __topology_list;
+	__topology_list = topo;
 }
 
 int
@@ -180,7 +195,7 @@ standalone_cfg_add_node_priority(const char *node, const char *device, unsigned 
 
 	if (!(topo = find_topology(node))) {
 		new = 1;
-	    crm_malloc0(topo, sizeof(*topo));
+		crm_malloc0(topo, sizeof(*topo));
 		topo->node_name = strdup(node);
 	}
 
@@ -201,15 +216,15 @@ destroy_topology(void)
 	struct topology *topo = NULL;
 	int i;
 
-	while (topology_list) {
-		topo = topology_list;
+	while (__topology_list) {
+		topo = __topology_list;
 
 		crm_free(topo->node_name);
 		for (i = 0; i < topo->priority_levels_count; i++) {
 			crm_free(topo->priority_levels[i].device_name);
 		}
 
-		topology_list = topo->next;
+		__topology_list = topo->next;
 		crm_free(topo);
 	}
 	return 0;
@@ -221,8 +236,8 @@ destroy_devices(void)
 	struct device *dev = NULL;
 	int i;
 
-	while (device_list) {
-		dev = device_list;
+	while (__device_list) {
+		dev = __device_list;
 
 		crm_free(dev->name);
 		crm_free(dev->agent);
@@ -232,11 +247,41 @@ destroy_devices(void)
 			crm_free(dev->key_vals[i].key);
 			crm_free(dev->key_vals[i].val);
 		}
-		device_list = dev->next;
+		__device_list = dev->next;
 		crm_free(dev);
 	}
 
 	return 0;
+}
+
+static int
+__standalone_cfg_register_device(struct device *dev)
+{
+	int i;
+	int res;
+	xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
+	xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
+
+	crm_xml_add(data, XML_ATTR_ID, dev->name);
+	crm_xml_add(data, "origin", __FUNCTION__);
+	crm_xml_add(data, "agent", dev->agent);
+	crm_xml_add(data, "namespace", "stonith-ng");
+
+	if (dev->hostlist) {
+		crm_xml_add(args, "pcmk_host_list", dev->hostlist);
+	}
+
+	if (dev->hostmap) {
+		crm_xml_add(args, "pcmk_host_map", dev->hostmap);
+	}
+
+	for (i = 0; i < dev->key_vals_count; i++) {
+		crm_xml_add(args, dev->key_vals[i].key, dev->key_vals[i].val);
+	}
+
+	res = stonith_device_register(data);
+	free_xml(data);
+	return res;
 }
 
 int
@@ -250,23 +295,24 @@ standalone_cfg_commit(void)
 	printf("commit!\n");
 	printf("--- Devices\n");
 
-	for (dev = device_list; dev != NULL; dev = dev->next) {
-		printf("    name: %s\n", dev->name);
-		printf("    agent: %s\n", dev->agent);
-		printf("    hostlist: %s\n", dev->hostlist);
-		printf("    hostmap: %s\n", dev->hostmap);
+	for (dev = __device_list; dev != NULL; dev = dev->next) {
+		printf("	name: %s\n", dev->name);
+		printf("	agent: %s\n", dev->agent);
+		printf("	hostlist: %s\n", dev->hostlist);
+		printf("	hostmap: %s\n", dev->hostmap);
 		for (i = 0; i < dev->key_vals_count; i++) {
-			printf("        %s=%s\n", dev->key_vals[i].key, dev->key_vals[i].val);
+			printf("		%s=%s\n", dev->key_vals[i].key, dev->key_vals[i].val);
 		}
 		printf("\n");
+		__standalone_cfg_register_device(dev);
 	}
 
 	printf("--- Topology\n");
 
-	for (topo = topology_list; topo != NULL; topo = topo->next) {
-		printf("    node: %s\n", topo->node_name);
+	for (topo = __topology_list; topo != NULL; topo = topo->next) {
+		printf("	node: %s\n", topo->node_name);
 		for (i = 0; i < topo->priority_levels_count; i++) {
-			printf("        %d=%s\n",
+			printf("		%d=%s\n",
 				topo->priority_levels[i].level,
 				topo->priority_levels[i].device_name);
 		}
