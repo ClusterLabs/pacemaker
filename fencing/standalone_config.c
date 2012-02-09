@@ -65,15 +65,15 @@ struct topology {
 	struct topology *next;
 };
 
-static struct device *__device_list;
-static struct topology *__topology_list;
+static struct device *dev_list;
+static struct topology *topo_list;
 
 static struct device *
 find_device(const char *name)
 {
 	struct device *dev = NULL;
 
-	for (dev = __device_list; dev != NULL; dev = dev->next) {
+	for (dev = dev_list; dev != NULL; dev = dev->next) {
 		if (!strcasecmp(dev->name, name)) {
 			break;
 		}
@@ -87,7 +87,7 @@ find_topology(const char *name)
 {
 	struct topology *topo = NULL;
 
-	for (topo = __topology_list; topo != NULL; topo = topo->next) {
+	for (topo = topo_list; topo != NULL; topo = topo->next) {
 		if (!strcasecmp(topo->node_name, name)) {
 			break;
 		}
@@ -99,15 +99,15 @@ find_topology(const char *name)
 static void
 add_device(struct device *dev)
 {
-	dev->next = __device_list;
-	__device_list = dev;
+	dev->next = dev_list;
+	dev_list = dev;
 }
 
 static void
 add_topology(struct topology *topo)
 {
-	topo->next = __topology_list;
-	__topology_list = topo;
+	topo->next = topo_list;
+	topo_list = topo;
 }
 
 int
@@ -216,15 +216,15 @@ destroy_topology(void)
 	struct topology *topo = NULL;
 	int i;
 
-	while (__topology_list) {
-		topo = __topology_list;
+	while (topo_list) {
+		topo = topo_list;
 
 		crm_free(topo->node_name);
 		for (i = 0; i < topo->priority_levels_count; i++) {
 			crm_free(topo->priority_levels[i].device_name);
 		}
 
-		__topology_list = topo->next;
+		topo_list = topo->next;
 		crm_free(topo);
 	}
 	return 0;
@@ -236,8 +236,8 @@ destroy_devices(void)
 	struct device *dev = NULL;
 	int i;
 
-	while (__device_list) {
-		dev = __device_list;
+	while (dev_list) {
+		dev = dev_list;
 
 		crm_free(dev->name);
 		crm_free(dev->agent);
@@ -247,11 +247,33 @@ destroy_devices(void)
 			crm_free(dev->key_vals[i].key);
 			crm_free(dev->key_vals[i].val);
 		}
-		__device_list = dev->next;
+		dev_list = dev->next;
 		crm_free(dev);
 	}
 
 	return 0;
+}
+
+static int
+__standalone_cfg_register_topology(struct topology *topo)
+{
+	int i;
+	int res = 0;
+	xmlNode *data;
+	xmlNode *args;
+
+	for (i = 0; i < topo->priority_levels_count; i++) {
+		data = create_xml_node(NULL, F_STONITH_LEVEL);
+		args = create_xml_node(data, XML_TAG_ATTRS);
+		crm_xml_add(data, F_STONITH_TARGET, topo->node_name);
+		crm_xml_add_int(data, XML_ATTR_ID, topo->priority_levels[i].level);
+		crm_xml_add(args, XML_ATTR_ID, topo->priority_levels[i].device_name);
+
+		res |= stonith_level_register(data);
+		free_xml(data);
+	}
+
+	return res;
 }
 
 static int
@@ -289,13 +311,15 @@ standalone_cfg_commit(void)
 {
 	struct device *dev = NULL;
 	struct topology *topo = NULL;
+#ifdef STANDALONE_PRINT
 	int i;
 
-	/* TODO - for now just printing out, but build xml once intergrated with stonith. */
 	printf("commit!\n");
 	printf("--- Devices\n");
+#endif
 
-	for (dev = __device_list; dev != NULL; dev = dev->next) {
+	for (dev = dev_list; dev != NULL; dev = dev->next) {
+#ifdef STANDALONE_PRINT
 		printf("	name: %s\n", dev->name);
 		printf("	agent: %s\n", dev->agent);
 		printf("	hostlist: %s\n", dev->hostlist);
@@ -304,12 +328,16 @@ standalone_cfg_commit(void)
 			printf("		%s=%s\n", dev->key_vals[i].key, dev->key_vals[i].val);
 		}
 		printf("\n");
+#endif
 		__standalone_cfg_register_device(dev);
 	}
 
+#ifdef STANDALONE_PRINT
 	printf("--- Topology\n");
+#endif
 
-	for (topo = __topology_list; topo != NULL; topo = topo->next) {
+	for (topo = topo_list; topo != NULL; topo = topo->next) {
+#ifdef STANDALONE_PRINT
 		printf("	node: %s\n", topo->node_name);
 		for (i = 0; i < topo->priority_levels_count; i++) {
 			printf("		%d=%s\n",
@@ -317,6 +345,8 @@ standalone_cfg_commit(void)
 				topo->priority_levels[i].device_name);
 		}
 		printf("\n");
+#endif
+		__standalone_cfg_register_topology(topo);
 	}
 
 	destroy_devices();

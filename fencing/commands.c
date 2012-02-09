@@ -442,7 +442,7 @@ void free_topology_entry(gpointer data)
     crm_free(tp);
 }
 
-static int stonith_level_register(xmlNode *msg) 
+int stonith_level_register(xmlNode *msg) 
 {
     int id = 0;
     int rc = stonith_ok;
