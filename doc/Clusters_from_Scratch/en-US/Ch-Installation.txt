@@ -531,7 +531,7 @@ remotely. For the purposes of this guide, we will create a key without a
 password (using the -N “” option) so that we can perform remote actions
 without being prompted.
 
-((SSH))
+(((SSH)))
 
 [WARNING]
 =========
