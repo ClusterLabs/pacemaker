@@ -1,0 +1,276 @@
+= Cluster Options =
+
+== Special Options ==
+
+indexterm:[Special Cluster Options]
+indexterm:[Cluster Options,Special Options]
+
+The reason for these fields to be placed at the top level instead of
+with the rest of cluster options is simply a matter of parsing.  These
+options are used by the configuration database which is, by design,
+mostly ignorant of the content it holds.  So the decision was made to
+place them in an easy to find location.
+      
+== Configuration Version ==
+
+indexterm:[Configuration Version, Cluster Option]
+indexterm:[Cluster Options,Configuration Version]
+
+When a node joins the cluster, the cluster will perform a check to see
+who has the best configuration based on the fields below.  It then
+asks the node with the highest (+admin_epoch+, +epoch+, +num_updates+)
+tuple to replace the configuration on all the nodes - which makes
+setting them, and setting them correctly, very important.
+
+.Configuration Version Properties
+[width="95%",cols="1m,5<",options="header",align="center"]
+|=========================================================
+|Field |Description
+
+| admin_epoch |
+indexterm:[admin_epoch Cluster Option]
+indexterm:[Cluster Options,admin_epoch]
+Never modified by the cluster. Use this to make the configurations on
+any inactive nodes obsolete.
+
+_Never set this value to zero_, in such cases the cluster cannot tell
+the difference between your configuration and the "empty" one used
+when nothing is found on disk.
+
+| epoch | 
+indexterm:[epoch Cluster Option]
+indexterm:[Cluster Options,epoch]
+Incremented every time the configuration is updated (usually by the admin)
+
+| num_updates |
+indexterm:[num_updates Cluster Option]
+indexterm:[Cluster Options,num_updates]
+Incremented every time the configuration or status is updated (usually by the cluster)
+  
+|=========================================================
+
+== Other Fields ==
+.Properties Controlling Validation
+[width="95%",cols="1m,5<",options="header",align="center"]
+|=========================================================
+|Field |Description
+      
+| validate-with |
+indexterm:[validate-with Cluster Option]
+indexterm:[Cluster Options,validate-with]
+Determines the type of validation being done on the configuration.  If
+set to "none", the cluster will not verify that updates conform to the
+DTD (nor reject ones that don't). This option can be useful when
+operating a mixed version cluster during an upgrade.
+	
+|=========================================================
+
+== Fields Maintained by the Cluster ==
+
+.Properties Maintained by the Cluster
+[width="95%",cols="1m,5<",options="header",align="center"]
+|=========================================================
+|Field |Description
+
+|crm-debug-origin |
+indexterm:[crm-debug-origin Cluster Fields]
+indexterm:[Cluster Fields,crm-debug-origin]
+Indicates where the last update came from. Informational purposes only.
+
+|cib-last-written | 
+indexterm:[cib-last-written Cluster Fields]
+indexterm:[Cluster Fields,cib-last-written]
+Indicates when the configuration was last written to disk. Informational purposes only.
+
+|dc-uuid |
+indexterm:[dc-uuid Cluster Fields]
+indexterm:[Cluster Fields,dc-uuid]
+Indicates which cluster node is the current leader. Used by the
+cluster when placing resources and determining the order of some
+events.
+
+|have-quorum |
+indexterm:[have-quorum Cluster Fields]
+indexterm:[Cluster Fields,have-quorum]
+Indicates if the cluster has quorum. If false, this may mean that the
+cluster cannot start resources or fence other nodes. See
++no-quorum-policy+ below.
+  
+|=========================================================
+
+Note that although these fields can be written to by the admin, in
+most cases the cluster will overwrite any values specified by the
+admin with the "correct" ones.  To change the +admin_epoch+, for
+example, one would use:
+
+pass:[<command>cibadmin --modify --crm_xml ‘&lt;cib admin_epoch="42"/>'</command>]
+
+A complete set of fields will look something like this:
+
+.An example of the fields set for a cib object
+[source,XML]
+-------
+<cib have-quorum="true" validate-with="pacemaker-1.0"
+  admin_epoch="1" epoch="12" num_updates="65"
+  dc-uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
+-------
+
+== Cluster Options ==
+
+Cluster options, as you might expect, control how the cluster behaves
+when confronted with certain situations.
+
+They are grouped into sets and, in advanced configurations, there may
+be more than one.
+footnote:[This will be described later in the section on <xref
+linkend="ch-rules"/> where we will show how to have the cluster use
+different sets of options during working hours (when downtime is
+usually to be avoided at all costs) than it does during the weekends
+(when resources can be moved to the their preferred hosts without
+bothering end users)]
+For now we will describe the simple case where each option is present at most once.
+
+== Available Cluster Options ==
+.Cluster Options
+[width="95%",cols="5m,2m,13",options="header",align="center"]
+|=========================================================
+|Option |Default |Description
+      
+| batch-limit | 30 |
+indexterm:[batch-limit Cluster Options]
+indexterm:[Cluster Options,batch-limit]
+The number of jobs that the TE is allowed to execute in parallel. The
+"correct" value will depend on the speed and load of your network and
+cluster nodes.
+
+| no-quorum-policy | stop |
+indexterm:[no-quorum-policy Cluster Options]
+indexterm:[Cluster Options,no-quorum-policy]
+What to do when the cluster does not have quorum.  Allowed values:
+
+ * ignore - continue all resource management
+ * freeze - continue resource management, but don't recover resources from nodes not in the affected partition
+ * stop - stop all resources in the affected cluster partition
+ * suicide - fence all nodes in the affected cluster partition
+
+| symmetric-cluster | TRUE | 
+indexterm:[symmetric-cluster Cluster Options]
+indexterm:[Cluster Options,symmetric-cluster]
+Can all resources run on any node by default?
+
+| stonith-enabled | TRUE |
+indexterm:[stonith-enabled Cluster Options]
+indexterm:[Cluster Options,stonith-enabled]
+Should failed nodes and nodes with resources that can't be stopped be
+shot? If you value your data, set up a STONITH device and enable this.
+
+If true, or unset, the cluster will refuse to start resources unless
+one or more STONITH resources have been configured also.
+	
+| stonith-action | reboot |
+indexterm:[stonith-action Cluster Options]
+indexterm:[Cluster Options,stonith-action]
+Action to send to STONITH device. Allowed values: reboot, poweroff.
+
+| cluster-delay | 60s |
+indexterm:[cluster-delay Cluster Options]
+indexterm:[Cluster Options,cluster-delay]
+Round trip delay over the network (excluding action execution). The
+"correct" value will depend on the speed and load of your network and
+cluster nodes.
+
+| stop-orphan-resources | TRUE |
+indexterm:[stop-orphan-resources Cluster Options]
+indexterm:[Cluster Options,stop-orphan-resources]
+Should deleted resources be stopped?
+
+| stop-orphan-actions | TRUE | 
+indexterm:[stop-orphan-actions Cluster Options]
+indexterm:[Cluster Options,stop-orphan-actions]
+Should deleted actions be cancelled?
+
+| start-failure-is-fatal | TRUE | 
+indexterm:[start-failure-is-fatal Cluster Options]
+indexterm:[Cluster Options,start-failure-is-fatal]
+When set to FALSE, the cluster will instead use the resource's
++failcount+ and value for +resource-failure-stickiness+.
+
+| pe-error-series-max | -1 (all) | 
+indexterm:[pe-error-series-max Cluster Options]
+indexterm:[Cluster Options,pe-error-series-max]
+The number of PE inputs resulting in ERRORs to save. Used when reporting problems.
+
+| pe-warn-series-max | -1 (all) | 
+indexterm:[pe-warn-series-max Cluster Options]
+indexterm:[Cluster Options,pe-warn-series-max]
+The number of PE inputs resulting in WARNINGs to save. Used when reporting problems.
+
+| pe-input-series-max | -1 (all) |
+indexterm:[pe-input-series-max Cluster Options]
+indexterm:[Cluster Options,pe-input-series-max]
+The number of "normal" PE inputs to save. Used when reporting problems.
+  
+|=========================================================
+
+You can always obtain an up-to-date list of cluster options, including
+their default values, by running the pass:[<command>pengine
+metadata</command>] command.
+
+== Querying and Setting Cluster Options ==
+
+indexterm:[Querying Cluster Options]
+indexterm:[Setting Cluster Options]
+indexterm:[Cluster Options,Querying]
+indexterm:[Cluster Options,Setting]
+
+Cluster options can be queried and modified using the
+pass:[<command>crm_attribute</command>] tool.  To get the current
+value of +cluster-delay+, simply use:
+
+pass:[<command>crm_attribute --attr-name cluster-delay --get-value</command>]
+
+which is more simply written as
+
+pass:[<command>crm_attribute --get-value -n cluster-delay</command>]
+
+If a value is found, you'll see a result like this:
+=======
+pass:[<command> # crm_attribute --get-value -n cluster-delay</command>]
+
+ name=cluster-delay value=60s
+========
+
+However, if no value is found, the tool will display an error:
+=======
+pass:[<command># crm_attribute --get-value -n clusta-deway</command>]
+
+ name=clusta-deway value=(null)
+ Error performing operation: The object/attribute does not exist
+========
+
+To use a different value, eg. +30+, simply run:
+
+pass:[<command>crm_attribute --attr-name cluster-delay --attr-value 30s</command>]
+
+To go back to the cluster's default value you can delete the value, for example with this command:
+
+pass:[<command>crm_attribute --attr-name cluster-delay --delete-attr</command>]
+
+== When Options are Listed More Than Once ==
+
+If you ever see something like the following, it means that the option you're modifying is present more than once.
+
+.Deleting an option that is listed twice
+=======
+pass:[<command># crm_attribute --attr-name batch-limit --delete-attr</command>]
+
+ Multiple attributes match name=batch-limit in crm_config:
+ Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)
+ Value: 100         (set=custom, id=custom-batch-limit)
+ Please choose from one of the matches above and supply the 'id' with --attr-id
+=======
+
+In such cases follow the on-screen instructions to perform the
+requested action.  To determine which value is currently being used by
+the cluster, please refer to the section on <xref
+linkend="ch-rules"/>.
