@@ -531,7 +531,7 @@ something unique and descriptive and since we haven't specified a
 clustername yet, we will use the default (pcmk).
 
 To specify an alternate name for the cluster, locate the service
-section containing "name: pacemaker" in corosync.conf and insert the
+section containing +name: pacemaker+ in corosync.conf and insert the
 following line anywhere inside the block:
 .....
 clustername: myname
