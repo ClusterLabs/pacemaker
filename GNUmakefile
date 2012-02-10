@@ -199,3 +199,9 @@ indent:
 rel-tags: tags
 	find . -name TAGS -exec sed -i.sed 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
 
+ccc_analyzer=/usr/lib64/clang-analyzer/scan-build/ccc-analyzer
+
+clang:
+	test -e $(ccc_analyzer) || echo "CLang Analyiser not available. Install the clang-analyzer package"
+	test -e $(ccc_analyzer) || false
+	make CC=$(ccc_analyzer) check
