@@ -3,17 +3,12 @@
 # The standalone configuration can only be applied to the
 # stonithd process while in standalone mode.  This is achieved
 # by using the --stand-alone option when launching stonithd.
-<<<<<<< HEAD
 # When in standalone mode, stonithd will look for a config
 # file named stonith-ng.conf in the /etc/pacemaker directory.
 # If the config file is present, it will be applied on startup.
 #
 # Below are examples of how to configure stonithd in standalone
 # mode using this configuration file.
-=======
-# The configuration file path is give to stonithd by using
-# the --stand-alone-cfg option.
->>>>>>> Introducing stonith standalone config
 #
 
 # Example 1: Standalone fence_ipmilan configuration
