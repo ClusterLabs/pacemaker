@@ -23,6 +23,8 @@
 /*! Picking a large number in effort to avoid a dynamic list. */
 #define STANDALONE_CFG_MAX_KEYVALS 100
 
+#define STONITH_NG_CONF_FILE "/etc/pacemaker/stonith-ng.conf"
+
 /*!
  * \brief Attempts to open a stonith standalone config file
  * and load the config internally.

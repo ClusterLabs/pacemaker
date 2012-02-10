@@ -694,7 +694,6 @@ stonith_cleanup(void)
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     {"stand-alone", 0, 0, 's'},
-    {"stand-alone-cfg", 1, 0, 'c'},
     {"verbose",     0, 0, 'V'},
     {"version",     0, 0, '$'},
     {"help",        0, 0, '?'},
@@ -760,7 +759,6 @@ main(int argc, char ** argv)
     int argerr = 0;
     int option_index = 0;
     const char *actions[] = { "reboot", "poweroff", "list", "monitor", "status" };
-    char *standalone_conf = NULL;
 
     crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
@@ -777,9 +775,6 @@ main(int argc, char ** argv)
             break;
         case 's':
             stand_alone = TRUE;
-            break;
-        case 'c':
-            standalone_conf = crm_strdup(optarg);
             break;
         case '$':
         case '?':
@@ -905,13 +900,8 @@ main(int argc, char ** argv)
 	channel1, stonith_client_connect,
 	default_ipc_connection_destroy);
 
-    if (stand_alone == TRUE) {
-        if (standalone_conf && standalone_cfg_read_file(standalone_conf)) {
-            crm_err("Could not read standalone config file located at, %s.", standalone_conf);
-            return -1;
-        } else if (standalone_conf) {
-            standalone_cfg_commit();
-        }
+    if (((stand_alone == TRUE)) && !(standalone_cfg_read_file(STONITH_NG_CONF_FILE))) {
+        standalone_cfg_commit();
     }
 
     channel2 = crm_strdup(stonith_channel_callback);
@@ -940,7 +930,6 @@ main(int argc, char ** argv)
 	
     crm_info("Done");
 
-    crm_free(standalone_conf);
     return rc;
 }
 
