@@ -18,10 +18,10 @@ language and keyboard layout
 footnote:[http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-langselection-x86.html]
 
 .Installation: Good choice
-image::images/f-13.1-welcome.png[Welcome]
+image::images/f-13.1-welcome.png["Welcome",align="center"]
 
 .Fedora Installation - Storage Devices
-image::images/f-13.2-devices.png[Storage Devices]
+image::images/f-13.2-devices.png["Storage Devices",align="center"]
 
 Assign your machine a host name.
 footnote:[http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html]
@@ -29,7 +29,7 @@ I happen to control the clusterlabs.org domain name, so I will use
 that here.
 
 .Fedora Installation - Hostname
-image::images/f-13.3-hostname.png[Hostname]
+image::images/f-13.3-hostname.png["Hostname",align="center"]
 
 You will then be prompted to indicate the machine's physical location
 and to supply a root password.
@@ -44,14 +44,14 @@ space for DRBD, so I'll check the Review and modify partitioning
 layout box.
 
 .Fedora Installation - Installation Type
-image::images/f-13.4-partition-overview.png[Choose Install Type]
+image::images/f-13.4-partition-overview.png["Choose Install Type",align="center"]
 
 
 By default, Fedora will give all the space to the / (aka. root)
 partition. Wel'll take some back so we can use DRBD.
 
 .Fedora Installation - Default Partitioning
-image::images/f-13.5-partition-default.png[Default Partitioning]
+image::images/f-13.5-partition-default.png["Default Partitioning",align="center"]
 
 
 The finalized partition layout should look something like the diagram
@@ -68,10 +68,10 @@ website data
 ===========
 
 .Fedora Installation - Customize Partitioning
-image::images/f-13.6-partition-custom.png[Customize Partitioning]
+image::images/f-13.6-partition-custom.png["Customize Partitioning",align="center"]
 
 .Fedora Installation - Bootloader
-image::images/f-13.7-bootloader.png[Unless you have a strong reason not to, accept the default bootloader location]
+image::images/f-13.7-bootloader.png["Unless you have a strong reason not to, accept the default bootloader location",align="center"]
 
 
 Next choose which software should be installed. Change the selection to
@@ -80,15 +80,15 @@ do that (and install any extra software we need) later. After you click
 next, Fedora will begin installing. 
 
 .Fedora Installation - Software
-image::images/f-13.8-software.png[Software selection]
+image::images/f-13.8-software.png["Software selection",align="center"]
 
 Go grab something to drink, this may take a while
 
 .Fedora Installation - Installing
-image::images/f-13.9-installing.png[Installing]
+image::images/f-13.9-installing.png["Installing",align="center"]
 
 .Fedora Installation - Installation Complete
-image::images/f-13.10-install-complete.png[Stage 1, completed]
+image::images/f-13.10-install-complete.png["Stage 1, completed",align="center"]
 
 
 Once the node reboots, follow the on screen instructions
@@ -96,10 +96,10 @@ footnote:[http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboo
 to create a system user and configure the time. 
 
 .Fedora Installation - First Boot
-image::images/f-13.11-post-welcome.png[First boot]
+image::images/f-13.11-post-welcome.png["First boot",align="center"]
 
 .Fedora Installation - Create Non-privileged User
-image::images/f-13.12-new-user.png[Creating a new user, take note of the password, you'll need it soon]
+image::images/f-13.12-new-user.png["Creating a new user, take note of the password, you'll need it soon",align="center"]
 
 
 [NOTE]
@@ -111,13 +111,13 @@ Installation: Enable NTP to keep the times on all your nodes consistent
 =======
 
 .Fedora Installation - Date and Time
-image::images/f-13.13-date-time.png[Date and time]
+image::images/f-13.13-date-time.png["Date and time",align="center"]
 
 Click through the next screens until you reach the login window. Click on
 the user you created and supply the password you indicated earlier.
 
 .Fedora Installation - Customize Networking
-image::images/f-13.14-networking.png[Click here to configure networking]
+image::images/f-13.14-networking.png["Click here to configure networking",align="center"]
 
 [IMPORTANT]
 ===========
@@ -127,13 +127,13 @@ the internal addresses for the clusterlab.org network.
 ===========
 
 .Fedora Installation - Specify Network Preferences
-image::images/f-13.15-manual-networking.png[Specify network settings for your machine, never choose DHCP]
+image::images/f-13.15-manual-networking.png["Specify network settings for your machine, never choose DHCP",align="center"]
 
 .Fedora Installation - Activate Networking
-image::images/f-13.16-networking-activate.png[Click the big green button to activate your changes]
+image::images/f-13.16-networking-activate.png["Click the big green button to activate your changes",align="center"]
 
 .Fedora Installation - Bring up the Terminal
-image::images/f-13.17-terminal.png[Down to business, fire up the command line]
+image::images/f-13.17-terminal.png["Down to business, fire up the command line",align="center"]
 
 
 [NOTE]

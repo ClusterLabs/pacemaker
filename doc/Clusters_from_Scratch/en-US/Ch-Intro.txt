@@ -70,7 +70,7 @@ At the highest level, the cluster is made up of three pieces:
    red).
 
 .Conceptual Stack Overview
-image::images/pcmk-overview.png[Conceptual overview of the cluster stack]
+image::images/pcmk-overview.png["Conceptual overview of the cluster stack",align="center"]
 
 When combined with Corosync, Pacemaker also supports popular open
 source cluster filesystems.
@@ -86,7 +86,7 @@ Corosync for its messaging capabilities and Pacemaker for its
 membership (which nodes are up/down) and fencing services.  
 
 .The Pacemaker Stack
-image::images/pcmk-stack.png[The Pacemaker StackThe Pacemaker stack when running on Corosync]
+image::images/pcmk-stack.png["The Pacemaker StackThe Pacemaker stack when running on Corosync",align="center"]
 
 === Internal Components ===
 
@@ -99,7 +99,7 @@ the same color scheme as the previous diagram):
  * STONITHd
 
 .Internal Components
-image::images/pcmk-internals.png[Subsystems of a Pacemaker cluster running on Corosync]
+image::images/pcmk-internals.png["Subsystems of a Pacemaker cluster running on Corosync",align="center"]
 
 The CIB uses XML to represent both the cluster's configuration and
 current state of all resources in the cluster. The contents of the CIB
@@ -148,8 +148,8 @@ to store data. Then, we will upgrade this cluster to Active/Active
 using GFS2.
 
 .Active/Passive Redundancy
-image::images/pcmk-active-passive.png[Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations.]
+image::images/pcmk-active-passive.png["Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations",align="center"]
 
 
 .N to N Redundancy
-image::images/pcmk-active-active.png[When shared storage is available, every node can potentially be used for failover. Pacemaker can even run multiple copies of services to spread out the workload.]
+image::images/pcmk-active-active.png["When shared storage is available, every node can potentially be used for failover. Pacemaker can even run multiple copies of services to spread out the workload",align="center"]
