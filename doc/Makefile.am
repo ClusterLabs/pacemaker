@@ -61,10 +61,10 @@ generated_docs	+= $(ascii:%.txt=%.html) $(asciiman:%.txt=%.html)
 generated_mans	+= $(asciiman:%.8.txt=%.8)
 $(generated_mans): $(asciiman)
 man8_MANS	= $(generated_mans)
-endif
 
 if BUILD_DOCBOOK
 publican_docs	+= $(docbook)
+endif
 endif
 
 EXTRA_DIST	= $(docbook:%=%.xml) 
@@ -74,17 +74,9 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 %.8: %.8.txt
 	a2x -L -f manpage $<
 
-Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
-
-# We have to hardcode the book name
-# With '%' the test for 'newness' fails 
-CFS_TXT=$(wildcard Clusters_from_Scratch/en-US/*.txt)
-CFS_XML=$(CFS_TXT:%.txt=%.xml)
-
-
 # Build docbook from asciidoc because XML is a PITA to edit
 #
-# Building each chapter as a book (since the numbering isn't right for
+# Build each chapter as a book (since the numbering isn't right for
 # articles and only books can have appendicies) and then strip out the
 # bits we don't want/need
 #
@@ -100,7 +92,11 @@ CFS_XML=$(CFS_TXT:%.txt=%.xml)
 	-grep -vqis "<appendix" $@ && sed -i.sed 's/book>/chapter>/g' $@ # Rename to chapter
 	echo Rebuilt $@ from $<
 
+CFS_TXT=$(wildcard Clusters_from_Scratch/en-US/*.txt)
+CFS_XML=$(CFS_TXT:%.txt=%.xml)
 
+# We have to hardcode the book name
+# With '%' the test for 'newness' fails 
 Clusters_from_Scratch.txt: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
@@ -108,18 +104,25 @@ Clusters_from_Scratch.txt: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml)
 	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
-Pacemaker_Explained.txt: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml)
+PE_TXT=$(wildcard Pacemaker_Explained/en-US/*.txt)
+PE_XML=$(PE_TXT:%.txt=%.xml)
+
+# We have to hardcode the book name
+# With '%' the test for 'newness' fails 
+Pacemaker_Explained.txt: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
 	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
 	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
+# Update the translation template
 pot:
 	for book in Clusters_from_Scratch; do		 \
 		cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_pot; \
 	done
 
+# Update the actual translations
 po:
 	for book in $(docbook); do 						\
 		cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_po --langs=$(DOCBOOK_LANGS);\
@@ -170,5 +173,8 @@ if BUILD_DOCBOOK
 endif
 
 clean-local:
-	-rm -rf $(generated_docs) $(generated_mans) $(docbook_txt)
+	-rm -rf $(generated_docs) $(generated_mans) $(docbook_txt) $(CFS_XML) $(PE_XML)
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
+
+foo:
+	rm -f $(CFS_XML)
