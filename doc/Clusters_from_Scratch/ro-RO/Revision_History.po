@@ -1,0 +1,33 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Clusters from Scratch 1.1\n"
+"POT-Creation-Date: 2011-12-31T15:15:51\n"
+"PO-Revision-Date: 2011-11-26 13:59+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Revision History"
+msgstr "Istoricul Reviziilor"
+
+#. Tag: firstname
+#, no-c-format
+msgid "Andrew"
+msgstr "Andrew"
+
+#. Tag: surname
+#, no-c-format
+msgid "Beekhof"
+msgstr "Beekhof"
+
+#. Tag: member
+#, no-c-format
+msgid "Import from Pages.app"
+msgstr "Import din Pages.app"

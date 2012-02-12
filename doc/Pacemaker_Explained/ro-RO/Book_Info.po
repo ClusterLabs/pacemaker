@@ -1,64 +1,41 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-02 13:47+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"                                                                                                                
-"X-Poedit-Country: ROMANIA\n"
 
-#. When image changes, this message will be marked fuzzy or untranslated for you.
-#. It doesn't matter what you translate it to: it's not used at all.
-#: Book_Info.xml:31(None)
-msgid "@@image: 'Common_Content/images/title_logo.svg'; md5=THIS FILE DOESN'T EXIST"
-msgstr "@@image: 'Common_Content/images/title_logo.svg'; md5=ACEST FIŞIER NU EXISTĂ"
-
-#: Book_Info.xml:5(title)
+#. Tag: title
+#, no-c-format
 msgid "Configuration Explained"
-msgstr "Configuraţia Explicată"
+msgstr "Configuration Explained"
 
-#: Book_Info.xml:6(subtitle)
+#. Tag: subtitle
+#, no-c-format
 msgid "An A-Z guide to Pacemaker's Configuration Options"
 msgstr "Un ghid de la A la Z despre Opţiunile de Configurare ale Pacemaker"
 
-#: Book_Info.xml:7(productname)
+#. Tag: productname
+#, no-c-format
 msgid "Pacemaker"
 msgstr "Pacemaker"
 
-#: Book_Info.xml:8(productnumber)
-msgid "1.1"
-msgstr "1.1"
-
-#: Book_Info.xml:9(edition)
-msgid "1"
-msgstr "1"
-
-#: Book_Info.xml:10(pubsnumber)
-msgid "0"
-msgstr "0"
-
-#: Book_Info.xml:12(para)
-msgid "The purpose of this document is to definitively explain the concepts used to configure Pacemaker. To achieve this best, it will focus exclusively on the XML syntax used to configure the CIB."
+#. Tag: para
+#, no-c-format
+msgid "The purpose of this document is to definitively explain the concepts used to configure Pacemaker. To achieve this, it will focus exclusively on the XML syntax used to configure the CIB."
 msgstr "Scopul acestui document este de a explica în mod definitiv conceptele folosite pentru a configura Pacemaker. Pentru a reuşi acest lucru în cel mai bun mod, se va concentra în mod exclusiv pe sintaxa XML folosită pentru a configura CIB-ul."
 
-#: Book_Info.xml:19(para)
-msgid "It is hoped however, that having understood the concepts explained here, that the functionality of these tools will also be more readily understood."
-msgstr "Speranţa este totodată, ca odată ce conceptele explicate aici au fost înţelese, ca şi funcţionalitatea acestor utilitare să fie înteleasă mai prompt."
+#. Tag: para
+#, no-c-format
+msgid "For those that are allergic to XML, Pacemaker comes with a cluster shell; a Python based GUI exists, too, however these tools will not be covered at all in this document<footnote> <para>I hope, however, that the concepts explained here make the functionality of these tools more easily understood.</para> </footnote>, precisely because they hide the XML."
+msgstr "Pentru aceeia dintre voi care sunt alergici la XML, Pacemaker vine cu un shell de cluster şi un GUI bazat pe Python există, de asemenea, însă aceste utilitare nu vor fi acoperite în vreun fel în acest document<footnote> <para>Eu sper că, totuși, conceptele explicate aici fac funcţionalitatea acestor utilitare să fie înteleasă mai ușor.</para> </footnote>, întocmai datorită faptului că acestea ascund XML-ul."
 
-#: Book_Info.xml:16(para)
-msgid "For those that are allergic to XML, Pacemaker comes with a cluster shell and a Python based GUI exists, however these tools will not be covered at all in this document <placeholder-1/> , precisely because they hide the XML."
-msgstr "Pentru aceeia dintre voi care sunt alergici la XML, Pacemaker vine cu un shell de cluster şi un GUI bazat pe Python există, însă aceste utilitare nu vor fi acoperite în vreun fel în acest document <placeholder-1/> , întocmai datorită faptului că acestea ascund XML-ul."
-
-#: Book_Info.xml:23(para)
+#. Tag: para
+#, no-c-format
 msgid "Additionally, this document is NOT a step-by-step how-to guide for configuring a specific clustering scenario. Although such guides exist, the purpose of this document is to provide an understanding of the building blocks that can be used to construct any type of Pacemaker cluster."
 msgstr "Pe deasupra, acest document NU este un ghid pas-cu-pas pentru configurarea unui scenariu specific de cluster. Deşi astfel de ghiduri există, scopul acestui document este acela de a furniza o înţelegere a elementelor de bază care pot fi folosite pentru a construi orice tip de cluster Pacemaker."
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Book_Info.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
 

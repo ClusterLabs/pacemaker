@@ -151,7 +151,7 @@ clone Fencing rsa-fencing
 		<section>
 			<title>Service Address</title>
 			<para>
-				Users of the services provided by the cluster require an unchanging address with which to access it. Additionally, we cloned the address so it will be active on both nodes. An iptables rule (created as part of the resource agent) is used to ensure that each request only processed by one of the two clone instances. The additional meta options tell the cluster that we want two instances of the clone (one "request bucket" for each node) and that if one node fails, then the remaining node should hold both.
+				Users of the services provided by the cluster require an unchanging address with which to access it. Additionally, we cloned the address so it will be active on both nodes. An iptables rule (created as part of the resource agent) is used to ensure that each request only gets processed by one of the two clone instances. The additional meta options tell the cluster that we want two instances of the clone (one "request bucket" for each node) and that if one node fails, then the remaining node should hold both.
 			</para>
 			
 <screen>
@@ -203,7 +203,7 @@ order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone
 		<section>
 			<title>Apache</title>
 			<para>
-				Lastly we have the actual service, Apache. We need only tell the cluster where to find it’s main configuration file and restrict it to running on nodes that have the required filesystem mounted and the IP address active.
+				Lastly we have the actual service, Apache. We need only tell the cluster where to find its main configuration file and restrict it to running on nodes that have the required filesystem mounted and the IP address active.
 			</para>
 			
 <screen>

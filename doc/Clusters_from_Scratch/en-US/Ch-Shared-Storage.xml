@@ -7,7 +7,7 @@
   <title>Replicated Storage with DRBD</title>
   <para>
     Even if you’re serving up static websites, having to manually synchronize the contents of that website to all the machines in the cluster is not ideal.
-    For dynamic websites, such as a wiki, its not even an option.
+    For dynamic websites, such as a wiki, it's not even an option.
     Not everyone care afford network-attached storage but somehow the data needs to be kept in sync.
     Enter DRBD which can be thought of as network based RAID-1.
     See <ulink url="http://www.drbd.org/">http://www.drbd.org</ulink>/ for more details.
@@ -117,7 +117,7 @@ Complete!
     <section>
       <title>Write the DRBD Config</title>
       <para>
-	There is no series of commands for build a DRBD configuration, so simply copy the configuration below to /etc/drbd.conf
+	There is no series of commands for building a DRBD configuration, so simply copy the configuration below to /etc/drbd.conf
       </para>
       <para>
 	Detailed information on the directives used in this configuration (and other alternatives) is available from <ulink url="http://www.drbd.org/users-guide/ch-configure.html">http://www.drbd.org/users-guide/ch-configure.html</ulink>
@@ -240,7 +240,7 @@ GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12
       </screen>
       <para>
 	pcmk-1 is now in the Primary state which allows it to be written to.
-	Which means its a good point at which to create a filesystem and populate it with some data to serve up via our WebSite resource.
+	Which means it's a good point at which to create a filesystem and populate it with some data to serve up via our WebSite resource.
       </para>
     </section>
     <section>
@@ -300,9 +300,9 @@ umount /dev/drbd1
 cib crm(live)#
     </screen>
     <para>
-      Next we must create a working copy or the current configuration.
+      Next we must create a working copy of the current configuration.
       This is where all our changes will go.
-      The cluster will not see any of them until we say its ok.
+      The cluster will not see any of them until we say it's ok.
       Notice again how the prompt changes, this time to indicate that we’re no longer looking at the live cluster.
     </para>
     <screen>

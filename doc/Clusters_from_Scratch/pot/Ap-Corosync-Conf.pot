@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-21T11:01:26\n"
-"PO-Revision-Date: 2010-12-21T11:01:26\n"
+"POT-Creation-Date: 2011-12-31T16:43:02\n"
+"PO-Revision-Date: 2011-12-31T16:43:02\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -14,28 +14,20 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Sample Corosync.conf"
+msgid "Sample Corosync Configuration"
 msgstr ""
 
-#. Tag: screen
+#. Tag: title
+#, no-c-format
+msgid "Sample Corosync.conf for a two-node cluster"
+msgstr ""
+
+#. Tag: programlisting
 #, no-c-format
 msgid "\n"
+"	\n"
 "# Please read the Corosync.conf.5 manual page\n"
 "compatibility: whitetank\n"
-"\n"
-"aisexec {\n"
-"        # Run as root - this is necessary to be able to manage resources with Pacemaker\n"
-"        user:        root\n"
-"        group:        root\n"
-"}\n"
-"\n"
-"service {\n"
-"        # Load the Pacemaker Cluster Resource Manager\n"
-"        ver:       0\n"
-"        name:      pacemaker\n"
-"        use_mgmtd: no\n"
-"        use_logd:  no\n"
-"}\n"
 "\n"
 "totem {\n"
 "        version: 2\n"
@@ -96,6 +88,7 @@ msgid "\n"
 "amf {\n"
 "        mode: disabled\n"
 "}\n"
-""
+"	\n"
+"      "
 msgstr ""
 

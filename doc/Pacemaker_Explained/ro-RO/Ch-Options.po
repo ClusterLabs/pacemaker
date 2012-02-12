@@ -1,444 +1,500 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-25 15:18+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ch-Options.xml:2(title)
-#: Ch-Options.xml:118(title)
-#: Ch-Options.xml:126(title)
+#. Tag: title
+#, no-c-format
 msgid "Cluster Options"
 msgstr "Opţiunile Clusterului"
 
-#: Ch-Options.xml:4(title)
-msgid "Special Options"
-msgstr "Opţiuni Speciale"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Special Cluster Options</primary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Options</primary><secondary>Special Options</secondary></indexterm> Special Options"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunile Speciale ale Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Opțiuni Speciale</secondary></indexterm> Opțiuni Speciale"
 
-#: Ch-Options.xml:5(para)
+#. Tag: para
+#, no-c-format
 msgid "The reason for these fields to be placed at the top level instead of with the rest of cluster options is simply a matter of parsing. These options are used by the configuration database which is, by design, mostly ignorant of the content it holds. So the decision was made to place them in an easy to find location."
 msgstr "Motivul pentru care aceste câmpuri să fie plasate la nivelul cel mai înalt în loc să fie cu restul opţiunilor clusterului este pur şi simplu legat de parsare. Aceste opţiuni sunt folosite de către baza de date cu configuraţii care este, prin design, în principal ignorantă faţă de conţinutul pe care îl deţine. Aşa că decizia a fost luată de a le plasa într-o locaţie uşor de găsit."
 
-#: Ch-Options.xml:11(title)
-msgid "Configuration Version"
-msgstr "Versiunea Configuraţiei"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Configuration Version, Cluster Option</primary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Options</primary><secondary>Configuration Version</secondary></indexterm> Configuration Version"
+msgstr "<indexterm significance=\"preferred\"><primary>Versiunea Configurației, Opțiunea Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Versiunea Configurației</secondary></indexterm> Versiunea Configurației"
 
-#: Ch-Options.xml:12(para)
-msgid "When a node joins the cluster, the cluster will perform a check to see who has the best configuration based on the fields below. It then asks the node with the highest (<varname>admin_epoch, epoch, num_updates</varname>) tuple to replace the configuration on all the nodes - which makes setting them and setting them correctly very important."
-msgstr "Când un nod aderă la cluster, clusterul va efectua o verificare pentru a vedea cine are cea mai bună configuraţie bazată pe câmpurile de mai jos. Apoi întreabă nodul cu cea mai mare tuplă (<varname>admin_epoch, epoch, num_updates</varname>) să înlocuiască, configuraţia pe toate nodurile - fapt care face setarea acestora şi setarea lor corectă foarte important."
+#. Tag: para
+#, no-c-format
+msgid "When a node joins the cluster, the cluster will perform a check to see who has the best configuration based on the fields below. It then asks the node with the highest (<varname>admin_epoch</varname>, <varname>epoch</varname>, <varname>num_updates</varname>) tuple to replace the configuration on all the nodes - which makes setting them, and setting them correctly, very important."
+msgstr "Când un nod aderă la cluster, clusterul va efectua o verificare pentru a vedea cine are cea mai bună configuraţie bazată pe câmpurile de mai jos. Apoi întreabă nodul cu cea mai mare tuplă (<varname>admin_epoch, epoch, num_updates</varname>) să înlocuiască configuraţia pe toate nodurile - fapt care face setarea acestora şi setarea lor corectă, foarte importantă."
 
-#: Ch-Options.xml:17(title)
+#. Tag: title
+#, no-c-format
 msgid "Configuration Version Properties"
 msgstr "Proprietăţi ale Versiunii Configuraţiei"
 
-#: Ch-Options.xml:22(entry)
-#: Ch-Options.xml:53(entry)
-#: Ch-Options.xml:76(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Field"
 msgstr "Câmp"
 
-#: Ch-Options.xml:23(entry)
-#: Ch-Options.xml:54(entry)
-#: Ch-Options.xml:77(entry)
-#: Ch-Options.xml:132(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Description"
 msgstr "Descriere"
 
-#: Ch-Options.xml:28(entry)
-msgid "admin_epoch"
-msgstr "admin_epoch"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>admin_epoch Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>admin_epoch</secondary></indexterm> admin_epoch"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului admin_epoch</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>admin_epoch</secondary></indexterm> admin_epoch"
 
-#: Ch-Options.xml:30(para)
+#. Tag: para
+#, no-c-format
 msgid "Never modified by the cluster. Use this to make the configurations on any inactive nodes obsolete."
 msgstr "Niciodată modificat de către cluster. Folosiţi acesta pentru a face configuraţiile pe nodurile inactive să fie învechite."
 
-#: Ch-Options.xml:31(para)
+#. Tag: para
+#, no-c-format
 msgid "<emphasis>Never set this value to zero</emphasis>, in such cases the cluster cannot tell the difference between your configuration and the \"empty\" one used when nothing is found on disk."
 msgstr "<emphasis>Nu setaţi niciodată această valoare la zero</emphasis>, în astfel de cazuri clusterul nu poate face diferenţa între configuraţia voastră şi cea \"goală\" folosită atunci când nu este găsit nimic pe disc."
 
-#: Ch-Options.xml:35(entry)
-msgid "epoch"
-msgstr "epoch"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>epoch Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>epoch</secondary></indexterm> epoch"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului epoch</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>epoch</secondary></indexterm> epoch"
 
-#: Ch-Options.xml:36(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Incremented every time the configuration is updated (usually by the admin)"
 msgstr "Incrementată de fiecare dată când configuraţia este actualizată (de obicei de către administrator)"
 
-#: Ch-Options.xml:39(entry)
-msgid "num_updates"
-msgstr "num_updates"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>num_updates Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>num_updates</secondary></indexterm> num_updates"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului num_updates</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>num_updates</secondary></indexterm> num_updates"
 
-#: Ch-Options.xml:40(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Incremented every time the configuration or status is updated (usually by the cluster)"
-msgstr "Incrementată de fiecare dată când configuraţia sau status-ul este actualizat (de obicei de către cluster)"
+msgstr "Incrementată de fiecare dată când configuraţia sau statusul este actualizat (de obicei de către cluster)"
 
-#: Ch-Options.xml:47(title)
+#. Tag: title
+#, no-c-format
 msgid "Other Fields"
 msgstr "Alte Câmpuri"
 
-#: Ch-Options.xml:49(title)
-msgid "Properties Controling Validation"
+#. Tag: title
+#, no-c-format
+msgid "Properties Controlling Validation"
 msgstr "Proprietăţi care Controlează Validarea"
 
-#: Ch-Options.xml:59(entry)
-msgid "validate-with"
-msgstr "validate-with"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>validate-with Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>validate-with</secondary></indexterm> validate-with"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului validate-with</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>validate-with</secondary></indexterm> validate-with"
 
-#: Ch-Options.xml:60(entry)
-msgid "Determines the type of validation being done on the configuration. If set to \"none\", the cluster will not verify that updates conform the the DTD (nor reject ones that don't). This option can be useful when operating a mixed version cluster during an upgrade."
-msgstr "Determină tipul de validare care este realizat pe configuraţie. Dacă este setat la \"none\", clusterul nu va verifica dacă actualizările sunt conforme cu DTD (nici nu le va respinge pe cele care nu sunt). Această opţiune poate fi utilă când lucraţi cu o versiune combinată a clusterului în timpul unei actualizări."
+#. Tag: entry
+#, no-c-format
+msgid "Determines the type of validation being done on the configuration. If set to \"none\", the cluster will not verify that updates conform to the DTD (nor reject ones that don't). This option can be useful when operating a mixed version cluster during an upgrade."
+msgstr "Determină tipul de validare care este realizat pe configuraţie. Dacă este setat pe \"none\", clusterul nu va verifica dacă actualizările sunt conforme cu DTD (nici nu le va respinge pe cele care nu sunt). Această opţiune poate fi utilă când lucraţi cu o versiune combinată a clusterului în timpul unei actualizări."
 
-#: Ch-Options.xml:70(title)
+#. Tag: title
+#, no-c-format
 msgid "Fields Maintained by the Cluster"
 msgstr "Câmpuri Menţinute de către Cluster"
 
-#: Ch-Options.xml:72(title)
+#. Tag: title
+#, no-c-format
 msgid "Properties Maintained by the Cluster"
 msgstr "Proprietăţi Menţinute de către Cluster"
 
-#: Ch-Options.xml:82(entry)
-msgid "crm-debug-origin"
-msgstr "crm-debug-origin"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>crm-debug-origin Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>crm-debug-origin</secondary></indexterm> crm-debug-origin"
+msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului crm-debug-origin</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>crm-debug-origin</secondary></indexterm> crm-debug-origin"
 
-#: Ch-Options.xml:83(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Indicates where the last update came from. Informational purposes only."
 msgstr "Indică de unde a provenit ultima actualizare. Numai cu scop informaţional."
 
-#: Ch-Options.xml:86(entry)
-msgid "cib-last-written"
-msgstr "cib-last-written"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>cib-last-written Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>cib-last-written</secondary></indexterm> cib-last-written"
+msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului cib-last-written</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>cib-last-written</secondary></indexterm> cib-last-written"
 
-#: Ch-Options.xml:87(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Indicates when the configuration was last written to disk. Informational purposes only."
 msgstr "Indică momentul când configuraţia a fost scrisă ultima oară pe disc. Numai cu scop informaţional."
 
-#: Ch-Options.xml:90(entry)
-msgid "dc-uuid"
-msgstr "dc-uuid"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>dc-uuid Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>dc-uuid</secondary></indexterm> dc-uuid"
+msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului dc-uuid</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>dc-uuid</secondary></indexterm> dc-uuid"
 
-#: Ch-Options.xml:91(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Indicates which cluster node is the current leader. Used by the cluster when placing resources and determining the order of some events."
 msgstr "Arată care dintre nodurile clusterului este conducătorul curent. Folosit de către cluster când plasează resurse şi determină ordinea anumitor evenimente."
 
-#: Ch-Options.xml:94(entry)
-msgid "have-quorum"
-msgstr "have-quorum"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>have-quorum Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>have-quorum</secondary></indexterm> have-quorum"
+msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului have-quorum</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>have-quorum</secondary></indexterm> have-quorum"
 
-#: Ch-Options.xml:95(entry)
-msgid "Indicates if the cluster has quorum. If false, this may mean that the cluster cannot start resources or fence other nodes. See no-quorum-policy below."
-msgstr "Indică dacă clusterul are quorum. Dacă este fals, acest lucru ar putea însemna că, clusterul nu poate porni resurse sau evacua alte noduri. Vedeţi no-quorum-policy mai jos."
+#. Tag: entry
+#, no-c-format
+msgid "Indicates if the cluster has quorum. If false, this may mean that the cluster cannot start resources or fence other nodes. See <literal>no-quorum-policy</literal> below."
+msgstr "Indică dacă clusterul are quorum. Dacă este fals, acest lucru ar putea însemna că, clusterul nu poate porni resurse sau evacua forțat alte noduri. Vedeţi <literal>no-quorum-policy</literal> mai jos."
 
-#: Ch-Options.xml:100(para)
+#. Tag: para
+#, no-c-format
 msgid "Note that although these fields can be written to by the admin, in most cases the cluster will overwrite any values specified by the admin with the \"correct\" ones. To change the <varname>admin_epoch</varname>, for example, one would use:"
 msgstr "Luaţi aminte că deşi aceste câmpuri pot fi scrise de către administrator, în majoritatea cazurilor clusterul va suprascrie orice valoare specificată de către administrator cu cele \"corecte\". Pentru a schimba <varname>admin_epoch</varname> de exemplu, cineva ar putea folosi:"
 
-#: Ch-Options.xml:104(command)
-msgid "cibadmin --modify --crm_xml ‘&lt;cib admin_epoch=\"42\"/&gt;'"
-msgstr "cibadmin --modify --crm_xml ‘&lt;cib admin_epoch=\"42\"/&gt;'"
+#. Tag: para
+#, no-c-format
+msgid "<command>cibadmin --modify --crm_xml ‘&lt;cib admin_epoch=\"42\"/&gt;'</command>"
+msgstr "<command>cibadmin --modify --crm_xml ‘&lt;cib admin_epoch=\"42\"/&gt;'</command>"
 
-#: Ch-Options.xml:105(para)
+#. Tag: para
+#, no-c-format
 msgid "A complete set of fields will look something like this:"
 msgstr "Un set complet de câmpuri ar arăta ceva de genul acesta:"
 
-#: Ch-Options.xml:107(title)
+#. Tag: title
+#, no-c-format
 msgid "An example of the fields set for a cib object"
 msgstr "Un exemplu al câmpurilor setate pentru un obiect CIB"
 
-#: Ch-Options.xml:119(para)
-msgid "Cluster options, as you'd expect, control how the cluster behaves when confronted with certain situations."
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;cib have-quorum=\"true\" validate-with=\"pacemaker-1.0\"\n"
+"  admin_epoch=\"1\" epoch=\"12\" num_updates=\"65\"\n"
+"  dc-uuid=\"ea7d39f4-3b94-4cfa-ba7a-952956daabee\"&gt; \n"
+"	  "
+msgstr ""
+"&lt;cib have-quorum=\"true\" validate-with=\"pacemaker-1.0\"\n"
+"  admin_epoch=\"1\" epoch=\"12\" num_updates=\"65\"\n"
+"  dc-uuid=\"ea7d39f4-3b94-4cfa-ba7a-952956daabee\"&gt; \n"
+"	  "
+
+#. Tag: para
+#, no-c-format
+msgid "Cluster options, as you might expect, control how the cluster behaves when confronted with certain situations."
 msgstr "Opţiunile clusterului, aşa cum v-aţi aştepta, controlează cum se comportă clusterul când se confruntă cu anumite situaţii."
 
-#: Ch-Options.xml:121(para)
-msgid "This will be described later in the section on <xref linkend=\"ch-rules\"/> where we will show how to have the cluster use different sets of options during working hours (when downtime is usually to be avoided at all costs) than it does during the weekends (when resources can be moved to the their preferred hosts without bothering end users)"
-msgstr "Acest aspect va fi descris mai târziu în secţiunea despre <xref linkend=\"ch-rules\"/> unde vă vom arăta cum să punem clusterul să folosească diferite seturi de opţiuni în timpul orelor de lucru (când nefuncţionarea este de evitat cu orice preţ) faţă de cele folosite în timpul weekend-urilor (când resursele pot fi mutate pe gazdele preferate fără să deranjeze utilizatorii finali)"
+#. Tag: para
+#, no-c-format
+msgid "They are grouped into sets and, in advanced configurations, there may be more than one<footnote> <para>This will be described later in the section on <xref linkend=\"ch-rules\" /> where we will show how to have the cluster use different sets of options during working hours (when downtime is usually to be avoided at all costs) than it does during the weekends (when resources can be moved to the their preferred hosts without bothering end users)</para> </footnote>. For now we will describe the simple case where each option is present at most once."
+msgstr "Sunt grupate în seturi şi, în configuraţii avansate, ar putea fi mai mult de una<footnote> <para>Acest aspect va fi descris mai târziu în secţiunea despre <xref linkend=\"ch-rules\" /> unde vă vom arăta cum să punem clusterul să folosească diferite seturi de opţiuni în timpul orelor de lucru (când nefuncţionarea este de evitat cu orice preţ) faţă de cele folosite în timpul weekend-urilor (când resursele pot fi mutate pe gazdele preferate fără să deranjeze utilizatorii finali)</para> </footnote>. Momentan vom descrie cazul simplu în care fiecare opţiune este prezentă cel mult o dată."
 
-#: Ch-Options.xml:120(para)
-msgid "They are grouped into sets and, in advanced configurations, there may be more than one.<placeholder-1/> For now we will describe the simple case where each option is present at most once."
-msgstr "Sunt grupate în seturi şi, în configuraţii avansate, ar putea fi mai mult de una.<placeholder-1/> Momentan vom descrie cazul simplu în care fiecare opţiune este prezentă cel mult o dată."
-
-#: Ch-Options.xml:124(title)
+#. Tag: title
+#, no-c-format
 msgid "Available Cluster Options"
 msgstr "Opţiuni Disponibile ale Clusterului"
 
-#: Ch-Options.xml:130(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Option"
 msgstr "Opţiune"
 
-#: Ch-Options.xml:131(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Default"
 msgstr "Valoare implicită"
 
-#: Ch-Options.xml:137(entry)
-msgid "batch-limit"
-msgstr "batch-limit"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>batch-limit Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>batch-limit</secondary></indexterm> batch-limit"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului batch-limit</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>batch-limit</secondary></indexterm> batch-limit"
 
-#: Ch-Options.xml:138(entry)
+#. Tag: entry
+#, no-c-format
 msgid "30"
 msgstr "30"
 
-#: Ch-Options.xml:139(entry)
+#. Tag: entry
+#, no-c-format
 msgid "The number of jobs that the TE is allowed to execute in parallel. The \"correct\" value will depend on the speed and load of your network and cluster nodes."
 msgstr "Numărul de sarcini pe care TE-ul este permis să le execute în paralel. Valoarea \"corectă\" va depinde de viteza şi de încărcarea reţelei şi a nodurilor voastre din cluster."
 
-#: Ch-Options.xml:142(entry)
-msgid "no-quorum-policy"
-msgstr "no-quorum-policy"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>no-quorum-policy Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>no-quorum-policy</secondary></indexterm> no-quorum-policy"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului no-quorum-policy</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>no-quorum-policy</secondary></indexterm> no-quorum-policy"
 
-#: Ch-Options.xml:143(entry)
+#. Tag: entry
+#, no-c-format
 msgid "stop"
 msgstr "stop"
 
-#: Ch-Options.xml:148(para)
+#. Tag: entry
+#, no-c-format
+msgid "What to do when the cluster does not have quorum. Allowed values:"
+msgstr "Ce este de făcut atunci când clusterul nu are quorum. Valori permise:"
+
+#. Tag: para
+#, no-c-format
 msgid "ignore - continue all resource management"
 msgstr "ignore - continuă toată gestionarea resurselor"
 
-#: Ch-Options.xml:149(para)
+#. Tag: para
+#, no-c-format
 msgid "freeze - continue resource management, but don't recover resources from nodes not in the affected partition"
 msgstr "freeze - continuă gestionarea resurselor, dar nu recupera resurse de pe noduri care nu sunt în partiţia afectată"
 
-#: Ch-Options.xml:150(para)
-msgid "stop - stop all resources in the affected cluster parition"
+#. Tag: para
+#, no-c-format
+msgid "stop - stop all resources in the affected cluster partition"
 msgstr "stop - opreşte toate resursele în partiţia de cluster afectată"
 
-#: Ch-Options.xml:151(para)
+#. Tag: para
+#, no-c-format
 msgid "suicide - fence all nodes in the affected cluster partition"
-msgstr "suicide - evacuează toate nodurile din partiţia de cluster afectată"
+msgstr "suicide - evacuează forțat toate nodurile din partiţia de cluster afectată"
 
-#: Ch-Options.xml:144(entry)
-msgid "What to do when the cluster does not have quorum. Allowed values: <placeholder-1/>"
-msgstr "Ce este de făcut atunci când clusterul nu are quorum. Valori permise: <placeholder-1/>"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>symmetric-cluster Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>symmetric-cluster</secondary></indexterm> symmetric-cluster"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului symmetric-cluster</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>symmetric-cluster</secondary></indexterm> symmetric-cluster"
 
-#: Ch-Options.xml:156(entry)
-msgid "symmetric-cluster"
-msgstr "symmetric-cluster"
-
-#: Ch-Options.xml:157(entry)
-#: Ch-Options.xml:162(entry)
-#: Ch-Options.xml:180(entry)
-#: Ch-Options.xml:185(entry)
-#: Ch-Options.xml:190(entry)
+#. Tag: entry
+#, no-c-format
 msgid "TRUE"
 msgstr "TRUE"
 
-#: Ch-Options.xml:158(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Can all resources run on any node by default?"
 msgstr "Pot rula toate resursele pe orice nod în mod implicit?"
 
-#: Ch-Options.xml:161(entry)
-msgid "stonith-enabled"
-msgstr "stonith-enabled"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>stonith-enabled Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stonith-enabled</secondary></indexterm> stonith-enabled"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stonith-enabled</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stonith-enabled</secondary></indexterm> stonith-enabled"
 
-#: Ch-Options.xml:164(para)
+#. Tag: para
+#, no-c-format
 msgid "Should failed nodes and nodes with resources that can't be stopped be shot? If you value your data, set up a STONITH device and enable this."
 msgstr "Ar trebui nodurile care au eşuat şi nodurile cu resurse care nu pot fi oprite să fie împuşcate? Dacă ţineţi la datele voastre, setaţi un dispozitiv STONITH şi activaţi această opţiune."
 
-#: Ch-Options.xml:165(para)
+#. Tag: para
+#, no-c-format
 msgid "If true, or unset, the cluster will refuse to start resources unless one or more STONITH resources have been configured also."
-msgstr "Dacă este adevărat, sau nu este setată, clusterul va refuza să pornească resurse decât dacă unul sau mai multe dispozitive STONITH au fost configurate de asemenea."
+msgstr "Dacă este true, sau nu este setată, clusterul va refuza să pornească resurse decât dacă unul sau mai multe dispozitive STONITH au fost configurate de asemenea."
 
-#: Ch-Options.xml:169(entry)
-msgid "stonith-action"
-msgstr "stonith-action"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>stonith-action Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stonith-action</secondary></indexterm> stonith-action"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stonith-action</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stonith-action</secondary></indexterm> stonith-action"
 
-#: Ch-Options.xml:170(entry)
+#. Tag: entry
+#, no-c-format
 msgid "reboot"
 msgstr "reboot"
 
-#: Ch-Options.xml:171(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Action to send to STONITH device. Allowed values: reboot, poweroff."
 msgstr "Acţiunea care să fie trimisă către dispozitivul STONITH. Valori permise: reboot, poweroff."
 
-#: Ch-Options.xml:174(entry)
-msgid "cluster-delay"
-msgstr "cluster-delay"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>cluster-delay Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>cluster-delay</secondary></indexterm> cluster-delay"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului cluster-delay</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>cluster-delay</secondary></indexterm> cluster-delay"
 
-#: Ch-Options.xml:175(entry)
+#. Tag: entry
+#, no-c-format
 msgid "60s"
 msgstr "60s"
 
-#: Ch-Options.xml:176(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Round trip delay over the network (excluding action execution). The \"correct\" value will depend on the speed and load of your network and cluster nodes."
 msgstr "Întârzierea dus-întors experimentată pe reţea (excluzând timpul necesar executării acţiunii). Valoarea \"corectă\" va depinde de viteza şi de nivelul de încărcare al reţelei şi al nodurilor voastre din cluster."
 
-#: Ch-Options.xml:179(entry)
-msgid "stop-orphan-resources"
-msgstr "stop-orphan-resources"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>stop-orphan-resources Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stop-orphan-resources</secondary></indexterm> stop-orphan-resources"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stop-orphan-resources</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stop-orphan-resources</secondary></indexterm> stop-orphan-resources"
 
-#: Ch-Options.xml:181(entry)
-msgid "Should deleted resources be stopped"
-msgstr "Ar trebui să fie oprite resursele şterse"
+#. Tag: entry
+#, no-c-format
+msgid "Should deleted resources be stopped?"
+msgstr "Ar trebui să fie oprite resursele şterse?"
 
-#: Ch-Options.xml:184(entry)
-msgid "stop-orphan-actions"
-msgstr "stop-orphan-actions"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>stop-orphan-actions Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stop-orphan-actions</secondary></indexterm> stop-orphan-actions"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stop-orphan-actions</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stop-orphan-actions</secondary></indexterm> stop-orphan-actions"
 
-#: Ch-Options.xml:186(entry)
-msgid "Should deleted actions be cancelled"
-msgstr "Ar trebui anulate acţiunile şterse"
+#. Tag: entry
+#, no-c-format
+msgid "Should deleted actions be cancelled?"
+msgstr "Ar trebui anulate acţiunile şterse?"
 
-#: Ch-Options.xml:189(entry)
-msgid "start-failure-is-fatal"
-msgstr "start-failure-is-fatal"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>start-failure-is-fatal Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>start-failure-is-fatal</secondary></indexterm> start-failure-is-fatal"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului start-failure-is-fatal</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>start-failure-is-fatal</secondary></indexterm> start-failure-is-fatal"
 
-#: Ch-Options.xml:191(entry)
-msgid "When set to FALSE, the cluster will instead use the resource's failcount and value for resource-failure-stickiness"
-msgstr "Când este setat pe FALSE, clusterul va folosi în schimb failcount-ul şi valoarea resursei pentru resource-failure-stickiness"
+#. Tag: entry
+#, no-c-format
+msgid "When set to FALSE, the cluster will instead use the resource's <literal>failcount</literal> and value for <literal>resource-failure-stickiness</literal>."
+msgstr "Când este setat pe FALSE, clusterul va folosi în schimb <literal>failcount</literal>-ul şi valoarea resursei pentru <literal>resource-failure-stickiness</literal>."
 
-#: Ch-Options.xml:194(entry)
-msgid "pe-error-series-max"
-msgstr "pe-error-series-max"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>pe-error-series-max Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>pe-error-series-max</secondary></indexterm> pe-error-series-max"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului pe-error-series-max</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>pe-error-series-max</secondary></indexterm> pe-error-series-max"
 
-#: Ch-Options.xml:195(entry)
-#: Ch-Options.xml:200(entry)
-#: Ch-Options.xml:205(entry)
+#. Tag: entry
+#, no-c-format
 msgid "-1 (all)"
 msgstr "-1 (all)"
 
-#: Ch-Options.xml:196(entry)
+#. Tag: entry
+#, no-c-format
 msgid "The number of PE inputs resulting in ERRORs to save. Used when reporting problems."
 msgstr "Numărul de intrări PE care rezultă în ERROR(i) de a salva. Folosite când se raporteazâ probleme."
 
-#: Ch-Options.xml:199(entry)
-msgid "pe-warn-series-max"
-msgstr "pe-warn-series-max"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>pe-warn-series-max Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>pe-warn-series-max</secondary></indexterm> pe-warn-series-max"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului pe-warn-series-max</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>pe-warn-series-max</secondary></indexterm> pe-warn-series-max"
 
-#: Ch-Options.xml:201(entry)
+#. Tag: entry
+#, no-c-format
 msgid "The number of PE inputs resulting in WARNINGs to save. Used when reporting problems."
 msgstr "Numărul de intrări PE care rezultă în WARNING-uri de a salva. Folosite când se raportează probleme."
 
-#: Ch-Options.xml:204(entry)
-msgid "pe-input-series-max"
-msgstr "pe-input-series-max"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>pe-input-series-max Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>pe-input-series-max</secondary></indexterm> pe-input-series-max"
+msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului pe-input-series-max</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>pe-input-series-max</secondary></indexterm> pe-input-series-max"
 
-#: Ch-Options.xml:206(entry)
+#. Tag: entry
+#, no-c-format
 msgid "The number of \"normal\" PE inputs to save. Used when reporting problems."
 msgstr "Numărul de intrări PE \"normale\" care să fie salvate. Folosite când se raportează probleme."
 
-#: Ch-Options.xml:211(para)
-msgid "You can always obtain an up-to-date list of cluster options, including their default values by running the pengine metadata command."
-msgstr "Puteţi întotdeauna să obţineţi o listă actualizată a opţiunilor clusterului, incluzând valorile implicite ale acestora prin rularea comenzii pengine de metadata."
+#. Tag: para
+#, no-c-format
+msgid "You can always obtain an up-to-date list of cluster options, including their default values, by running the <command>pengine metadata</command> command."
+msgstr "Puteţi întotdeauna să obţineţi o listă actualizată a opţiunilor clusterului, incluzând valorile implicite ale acestora, prin rularea comenzii <command>pengine metadata</command>."
 
-#: Ch-Options.xml:214(title)
-msgid "Querying and Setting Cluster Options"
-msgstr "Interogând şi Setând Opţiunile Clusterului"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Querying Cluster Options</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setting Cluster Options</primary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Options</primary><secondary>Querying</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Options</primary><secondary>Setting</secondary></indexterm> Querying and Setting Cluster Options"
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
 
-#: Ch-Options.xml:215(para)
-msgid "Cluster options can be queried and modified using the crm_attribute tool. To get the current value of cluster-delay, simply use:"
-msgstr "Opţiunile clusterului pot fi interogate şi modificate folosind utilitarul crm_attribute. Pentru a obţine valoarea curentă a cluster-delay, pur şi simplu folosiţi:"
+#. Tag: para
+#, no-c-format
+msgid "Cluster options can be queried and modified using the <command>crm_attribute</command> tool. To get the current value of <literal>cluster-delay</literal>, simply use:"
+msgstr "Opţiunile clusterului pot fi interogate şi modificate folosind utilitarul <command>crm_attribute</command>. Pentru a obţine valoarea curentă a <literal>cluster-delay</literal>, pur şi simplu folosiţi:"
 
-#: Ch-Options.xml:219(command)
-msgid "crm_attribute --attr-name cluster-delay --get-value"
-msgstr "crm_attribute --attr-name cluster-delay --get-value"
+#. Tag: para
+#, no-c-format
+msgid "<command>crm_attribute --attr-name cluster-delay --get-value</command>"
+msgstr "<command>crm_attribute --attr-name cluster-delay --get-value</command>"
 
-#: Ch-Options.xml:220(para)
+#. Tag: para
+#, no-c-format
 msgid "which is more simply written as"
 msgstr "care este scrisă mai simplu ca"
 
-#: Ch-Options.xml:221(command)
-msgid "crm_attribute --get-value -n cluster-delay"
-msgstr "crm_attribute --get-value -n cluster-delay"
+#. Tag: para
+#, no-c-format
+msgid "<command>crm_attribute --get-value -n cluster-delay</command>"
+msgstr "<command>crm_attribute --get-value -n cluster-delay</command>"
 
-#: Ch-Options.xml:222(para)
-msgid "If a value is found, the you'll see a result such as this"
+#. Tag: para
+#, no-c-format
+msgid "If a value is found, you'll see a result like this:"
 msgstr "Dacă o valoare este găsită, atunci veţi vedea un rezultat ca acesta"
 
-#: Ch-Options.xml:224(command)
-msgid "# crm_attribute --get-value -n cluster-delay"
-msgstr "# crm_attribute --get-value -n cluster-delay"
-
-#: Ch-Options.xml:223(screen)
-#, no-wrap
-msgid ""
-"\n"
-" <placeholder-1/>\n"
+#. Tag: screen
+#, no-c-format
+msgid "<command> # crm_attribute --get-value -n cluster-delay</command>\n"
 " name=cluster-delay value=60s"
 msgstr ""
-"\n"
-" <placeholder-1/>\n"
+"<command> # crm_attribute --get-value -n cluster-delay</command>\n"
 " name=cluster-delay value=60s"
 
-#: Ch-Options.xml:226(para)
-msgid "However if no value is found, the tool will display an error:"
+#. Tag: para
+#, no-c-format
+msgid "However, if no value is found, the tool will display an error:"
 msgstr "Însă dacă nici o valoare nu este găsită, utilitarul va arăta o eroare:"
 
-#: Ch-Options.xml:228(command)
-msgid "# crm_attribute --get-value -n clusta-deway"
-msgstr "# crm_attribute --get-value -n clusta-deway"
-
-#: Ch-Options.xml:227(screen)
-#, no-wrap
-msgid ""
-"\n"
-" <placeholder-1/>\n"
+#. Tag: screen
+#, no-c-format
+msgid "<command># crm_attribute --get-value -n clusta-deway</command>\n"
 " name=clusta-deway value=(null)\n"
 " Error performing operation: The object/attribute does not exist"
 msgstr ""
-"\n"
-" <placeholder-1/>\n"
+"<command># crm_attribute --get-value -n clusta-deway</command>\n"
 " name=clusta-deway value=(null)\n"
 " Error performing operation: The object/attribute does not exist"
 
-#: Ch-Options.xml:231(para)
-msgid "To use a different value, eg. 30s, simply run:"
-msgstr "Pentru a folosi o altă valoare, ex. 30s, pur şi simplu rulaţi:"
+#. Tag: para
+#, no-c-format
+msgid "To use a different value, eg. <option>30s</option>, simply run:"
+msgstr "Pentru a folosi o altă valoare, ex. <option>30s</option>, pur şi simplu rulaţi:"
 
-#: Ch-Options.xml:232(command)
-msgid "crm_attribute --attr-name cluster-delay --attr-value 30s"
-msgstr "crm_attribute --attr-name cluster-delay --attr-value 30s"
+#. Tag: para
+#, no-c-format
+msgid "<command>crm_attribute --attr-name cluster-delay --attr-value 30s</command>"
+msgstr "<command>crm_attribute --attr-name cluster-delay --attr-value 30s</command>"
 
-#: Ch-Options.xml:233(para)
-msgid "To go back to the cluster's default value, you can then delete the value with:"
-msgstr "Pentru a reveni la valoarea implicită a clusterului, puteţi ştergeţi ulterior valoarea cu: "
+#. Tag: para
+#, no-c-format
+msgid "To go back to the cluster's default value you can delete the value, for example with this command:"
+msgstr "Pentru a reveni la valoarea implicită a clusterului puteţi ştergeţi valoarea, de exemplu cu această comandă: "
 
-#: Ch-Options.xml:234(command)
-msgid "crm_attribute --attr-name cluster-delay --delete-attr"
-msgstr "crm_attribute --attr-name cluster-delay --delete-attr"
+#. Tag: para
+#, no-c-format
+msgid "<command>crm_attribute --attr-name cluster-delay --delete-attr</command>"
+msgstr "<command>crm_attribute --attr-name cluster-delay --delete-attr</command>"
 
-#: Ch-Options.xml:237(title)
+#. Tag: title
+#, no-c-format
 msgid "When Options are Listed More Than Once"
 msgstr "Când Opţiunile sunt Listate Mai Mult De O Dată"
 
-#: Ch-Options.xml:238(para)
+#. Tag: para
+#, no-c-format
 msgid "If you ever see something like the following, it means that the option you're modifying is present more than once."
 msgstr "Dacă vedeţi vreodată ceva precum următoarele, înseamnă că opţiunea pe care o modificaţi este prezentă mai mult de o dată."
 
-#: Ch-Options.xml:240(title)
+#. Tag: title
+#, no-c-format
 msgid "Deleting an option that is listed twice"
 msgstr "Ştergerea unei opţiuni care este listată de două ori"
 
-#: Ch-Options.xml:242(command)
-msgid "# crm_attribute --attr-name batch-limit --delete-attr"
-msgstr "# crm_attribute --attr-name batch-limit --delete-attr"
-
-#: Ch-Options.xml:241(screen)
-#, no-wrap
-msgid ""
-"\n"
-" <placeholder-1/>\n"
+#. Tag: screen
+#, no-c-format
+msgid "<command># crm_attribute --attr-name batch-limit --delete-attr</command>\n"
 " Multiple attributes match name=batch-limit in crm_config:\n"
 " Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)\n"
 " Value: 100         (set=custom, id=custom-batch-limit)\n"
 " Please choose from one of the matches above and supply the 'id' with --attr-id"
 msgstr ""
-"\n"
-" <placeholder-1/>\n"
+"<command># crm_attribute --attr-name batch-limit --delete-attr</command>\n"
 " Multiple attributes match name=batch-limit in crm_config:\n"
 " Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)\n"
 " Value: 100         (set=custom, id=custom-batch-limit)\n"
 " Please choose from one of the matches above and supply the 'id' with --attr-id"
 
-#: Ch-Options.xml:248(para)
-msgid "In such cases follow the on-screen instructions to perform the requested action. To determine which value is currently being used by the cluster, please refer to the the section on <xref linkend=\"ch-rules\"/>."
-msgstr "În astfel de cazuri urmaţi instrucţiunile de pe ecran pentru a efectua acţiunea cerută. Pentru a determina care valoare este folosită în mod curent de către cluster, vă rugăm să faceţi referinţă la secţiunea despre <xref linkend=\"ch-rules\"/>."
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ch-Options.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
+#. Tag: para
+#, no-c-format
+msgid "In such cases follow the on-screen instructions to perform the requested action. To determine which value is currently being used by the cluster, please refer to the section on <xref linkend=\"ch-rules\" />."
+msgstr "În astfel de cazuri urmaţi instrucţiunile de pe ecran pentru a efectua acţiunea cerută. Pentru a determina care valoare este folosită în mod curent de către cluster, vă rugăm să faceţi referinţă la secţiunea despre <xref linkend=\"ch-rules\" />."
 

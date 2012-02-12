@@ -623,8 +623,7 @@ Complete!
       <figure>
 	<title>Verify Connectivity by IP address</title>
 	<programlisting>
-	  <userinput>ping -c 3 192.168.122.102</userinput>
-[root@pcmk-1 ~]# ping -c 3 192.168.122.102
+[root@pcmk-1 ~]# <userinput>ping -c 3 192.168.122.102</userinput>
 PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.
 64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=0.343 ms
 64 bytes from 192.168.122.102: icmp_seq=2 ttl=64 time=0.402 ms
@@ -644,8 +643,7 @@ rtt min/avg/max/mdev = 0.343/0.434/0.558/0.092 ms
       <figure>
 	<title>Set up /etc/hosts entries</title>
 	<programlisting>
-	  <userinput>grep pcmk /etc/hosts</userinput>
-[root@pcmk-1 ~]# grep pcmk /etc/hosts
+[root@pcmk-1 ~]# <userinput>grep pcmk /etc/hosts</userinput>
 192.168.122.101 pcmk-1.clusterlabs.org pcmk-1
 192.168.122.102 pcmk-2.clusterlabs.org pcmk-2
 	</programlisting>
@@ -656,8 +654,7 @@ rtt min/avg/max/mdev = 0.343/0.434/0.558/0.092 ms
       <figure>
 	<title>Verify Connectivity by Hostname</title>
 	<programlisting>
-	  <userinput>ping -c 3 pcmk-2</userinput>
-[root@pcmk-1 ~]# ping -c 3 pcmk-2
+[root@pcmk-1 ~]# <userinput>ping -c 3 pcmk-2</userinput>
 PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.
 64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=1 ttl=64 time=0.164 ms
 64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=2 ttl=64 time=0.475 ms
@@ -771,7 +768,7 @@ GATEWAY=192.168.122.1
       </screen>
       <para>
 	However we’re not finished.
-	The machine wont normally see the shortened host name until about it reboots, but we can force it to update.
+	The machine won't normally see the shortened host name until about it reboots, but we can force it to update.
       </para>
       <screen>
 [root@pcmk-1 ~]# <userinput>source /etc/sysconfig/network</userinput>
@@ -794,7 +791,7 @@ clusterlabs.org
     <section id="s-configure-corosync">
       <title>Configuring Corosync</title>
       <para>
-	Choose a port number and multi-cast <footnote>
+	Choose a port number and multicast <footnote>
 	  <para>
 	    <ulink url="http://en.wikipedia.org/wiki/Multicast">http://en.wikipedia.org/wiki/Multicast</ulink>
 	  </para>
@@ -806,13 +803,13 @@ clusterlabs.org
       </para>
       <para>
 	Be sure that the values you chose do not conflict with any existing clusters you might have.
-	For advice on choosing a multi-cast address, see
+	For advice on choosing a multicast address, see
 	<ulink url="http://www.29west.com/docs/THPM/multicast-address-assignment.html">
 	  http://www.29west.com/docs/THPM/multicast-address-assignment.html
 	</ulink>
       </para>
       <para>
-	For this document, I have chosen port 4000 and used 226.94.1.1 as the multi-cast address.
+	For this document, I have chosen port 4000 and used 226.94.1.1 as the multicast address.
       </para>
       <important>
 	<para>

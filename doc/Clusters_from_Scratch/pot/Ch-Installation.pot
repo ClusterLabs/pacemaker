@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-21T11:01:27\n"
-"PO-Revision-Date: 2010-12-21T11:01:27\n"
+"POT-Creation-Date: 2011-12-31T16:43:02\n"
+"PO-Revision-Date: 2011-12-31T16:43:02\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -24,7 +24,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Detailed instructions for installing Fedora are available at <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/\">http://docs.fedoraproject.org/install-guide/f&amp;DISTRO_VERSION;/</ulink> in a number of languages. The abbreviated version is as follows..."
+msgid "Detailed instructions for installing Fedora are available at <ulink url=\"http://docs.fedoraproject.org/install-guide/f14/\">http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/</ulink> in a number of languages. The abbreviated version is as follows..."
 msgstr ""
 
 #. Tag: para
@@ -34,7 +34,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Burn the disk image to a DVD <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/readme-burning-isos/en-US.html\"> http://docs.fedoraproject.org/readme-burning-isos/en-US.html </ulink> </para> </footnote> and boot from it. Or use the image to boot a virtual machine as I have done here. After clicking through the welcome screen, select your language and keyboard layout <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-langselection-x86.html\"> http://docs.fedoraproject.org/install-guide/f&amp;DISTRO_VERSION;/en-US/html/s1-langselection-x86.html </ulink> </para> </footnote>"
+msgid "Burn the disk image to a DVD <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/readme-burning-isos/en-US.html\"> http://docs.fedoraproject.org/readme-burning-isos/en-US.html </ulink> </para> </footnote> and boot from it. Or use the image to boot a virtual machine as I have done here. After clicking through the welcome screen, select your language and keyboard layout <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-langselection-x86.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/s1-langselection-x86.html </ulink> </para> </footnote>"
 msgstr ""
 
 #. Tag: title
@@ -59,7 +59,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Assign your machine a host name. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html\"> http://docs.fedoraproject.org/install-guide/f&amp;DISTRO_VERSION;/en-US/html/sn-networkconfig-fedora.html </ulink> </para> </footnote> I happen to control the clusterlabs.org domain name, so I will use that here."
+msgid "Assign your machine a host name. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-networkconfig-fedora.html </ulink> </para> </footnote> I happen to control the clusterlabs.org domain name, so I will use that here."
 msgstr ""
 
 #. Tag: title
@@ -74,7 +74,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "You will then be prompted to indicate the machine’s physical location and to supply a root password. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html\"> http://docs.fedoraproject.org/install-guide/f&amp;DISTRO_VERSION;/en-US/html/sn-account_configuration.html </ulink> </para> </footnote>"
+msgid "You will then be prompted to indicate the machine’s physical location and to supply a root password. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-account_configuration.html </ulink> </para> </footnote>"
 msgstr ""
 
 #. Tag: para
@@ -169,7 +169,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Once the node reboots, follow the on screen instructions <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboot.html\"> http://docs.fedoraproject.org/install-guide/f&amp;DISTRO_VERSION;/en-US/html/ch-firstboot.html </ulink> </para> </footnote> to create a system user and configure the time."
+msgid "Once the node reboots, follow the on screen instructions <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboot.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/ch-firstboot.html </ulink> </para> </footnote> to create a system user and configure the time."
 msgstr ""
 
 #. Tag: title
@@ -405,30 +405,30 @@ msgid "\n"
 "--&gt; Processing Dependency: libcfg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
 "--&gt; Processing Dependency: libtotem_pg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
 "--&gt; Processing Dependency: libpload.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
-"---&gt; Package pacemaker.x86_64 0:1.1.1-1.fc13 set to be updated\n"
-"--&gt; Processing Dependency: heartbeat &gt;= 3.0.0 for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: net-snmp &gt;= 5.4 for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: resource-agents for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: cluster-glue for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libnetsnmp.so.20()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libcrmcluster.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libpengine.so.3()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libnetsnmpagent.so.20()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libesmtp.so.5()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libstonithd.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libhbclient.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libpils.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libpe_status.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libnetsnmpmibs.so.20()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libnetsnmphelpers.so.20()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libcib.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libccmclient.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libstonith.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: liblrm.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libtransitioner.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libpe_rules.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libcrmcommon.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
-"--&gt; Processing Dependency: libplumb.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64\n"
+"---&gt; Package pacemaker.x86_64 0:1.1.5-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: heartbeat &gt;= 3.0.0 for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: net-snmp &gt;= 5.4 for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: resource-agents for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: cluster-glue for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmp.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcrmcluster.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpengine.so.3()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmpagent.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libesmtp.so.5()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libstonithd.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libhbclient.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpils.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpe_status.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmpmibs.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmphelpers.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcib.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libccmclient.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libstonith.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: liblrm.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libtransitioner.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpe_rules.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcrmcommon.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libplumb.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
 "--&gt; Running transaction check\n"
 "---&gt; Package cluster-glue.x86_64 0:1.0.2-1.fc13 set to be updated\n"
 "--&gt; Processing Dependency: perl-TimeDate for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
@@ -450,7 +450,7 @@ msgid "\n"
 "---&gt; Package net-snmp.x86_64 1:5.5-12.fc13 set to be updated\n"
 "--&gt; Processing Dependency: libsensors.so.4()(64bit) for package: 1:net-snmp-5.5-12.fc13.x86_64\n"
 "---&gt; Package net-snmp-libs.x86_64 1:5.5-12.fc13 set to be updated\n"
-"---&gt; Package pacemaker-libs.x86_64 0:1.1.1-1.fc13 set to be updated\n"
+"---&gt; Package pacemaker-libs.x86_64 0:1.1.5-1.fc13 set to be updated\n"
 "---&gt; Package resource-agents.x86_64 0:3.0.10-1.fc13 set to be updated\n"
 "--&gt; Processing Dependency: libnet.so.1()(64bit) for package: resource-agents-3.0.10-1.fc13.x86_64\n"
 "--&gt; Running transaction check\n"
@@ -480,7 +480,7 @@ msgid "\n"
 "==========================================================================================\n"
 "Installing:\n"
 " corosync               x86_64   1.2.1-1.fc13                        fedora         136 k\n"
-" pacemaker              x86_64   1.1.1-1.fc13                        fedora         543 k\n"
+" pacemaker              x86_64   1.1.5-1.fc13                        fedora         543 k\n"
 "Installing for dependencies:\n"
 " OpenIPMI-libs          x86_64   2.0.16-8.fc13                       fedora         474 k\n"
 " PyXML                  x86_64   0.8.4-17.fc13                       fedora         906 k\n"
@@ -498,7 +498,7 @@ msgid "\n"
 " net-snmp               x86_64   1:5.5-12.fc13                       fedora         295 k\n"
 " net-snmp-libs          x86_64   1:5.5-12.fc13                       fedora         1.5 M\n"
 " openhpi-libs           x86_64   2.14.1-3.fc13                       fedora         135 k\n"
-" pacemaker-libs         x86_64   1.1.1-1.fc13                        fedora         264 k\n"
+" pacemaker-libs         x86_64   1.1.5-1.fc13                        fedora         264 k\n"
 " perl-TimeDate          noarch   1:1.20-1.fc13                       fedora          42 k\n"
 " resource-agents        x86_64   3.0.10-1.fc13                       fedora         357 k\n"
 "\n"
@@ -532,8 +532,8 @@ msgid "\n"
 "(15/21): net-snmp-5.5-12.fc13.x86_64.rpm                              | 295 kB     00:00     \n"
 "(16/21): net-snmp-libs-5.5-12.fc13.x86_64.rpm                         | 1.5 MB     00:01     \n"
 "(17/21): openhpi-libs-2.14.1-3.fc13.x86_64.rpm                        | 135 kB     00:00     \n"
-"(18/21): pacemaker-1.1.1-1.fc13.x86_64.rpm                            | 543 kB     00:00     \n"
-"(19/21): pacemaker-libs-1.1.1-1.fc13.x86_64.rpm                       | 264 kB     00:00     \n"
+"(18/21): pacemaker-1.1.5-1.fc13.x86_64.rpm                            | 543 kB     00:00     \n"
+"(19/21): pacemaker-libs-1.1.5-1.fc13.x86_64.rpm                       | 264 kB     00:00     \n"
 "(20/21): perl-TimeDate-1.20-1.fc13.noarch.rpm                         |  42 kB     00:00     \n"
 "(21/21): resource-agents-3.0.10-1.fc13.x86_64.rpm                     | 357 kB     00:00     \n"
 "----------------------------------------------------------------------------------------\n"
@@ -570,11 +570,11 @@ msgid "\n"
 "  Installing     : resource-agents-3.0.10-1.fc13.x86_64                          17/21 \n"
 "  Installing     : heartbeat-libs-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64          18/21 \n"
 "  Installing     : heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64               19/21 \n"
-"  Installing     : pacemaker-1.1.1-1.fc13.x86_64                                 20/21 \n"
-"  Installing     : pacemaker-libs-1.1.1-1.fc13.x86_64                            21/21 \n"
+"  Installing     : pacemaker-1.1.5-1.fc13.x86_64                                 20/21 \n"
+"  Installing     : pacemaker-libs-1.1.5-1.fc13.x86_64                            21/21 \n"
 "\n"
 "Installed:\n"
-"  corosync.x86_64 0:1.2.1-1.fc13                    pacemaker.x86_64 0:1.1.1-1.fc13                   \n"
+"  corosync.x86_64 0:1.2.1-1.fc13                    pacemaker.x86_64 0:1.1.5-1.fc13                   \n"
 "\n"
 "Dependency Installed:\n"
 "  OpenIPMI-libs.x86_64 0:2.0.16-8.fc13                          \n"
@@ -593,7 +593,7 @@ msgid "\n"
 "  net-snmp.x86_64 1:5.5-12.fc13                                 \n"
 "  net-snmp-libs.x86_64 1:5.5-12.fc13                            \n"
 "  openhpi-libs.x86_64 0:2.14.1-3.fc13                           \n"
-"  pacemaker-libs.x86_64 0:1.1.1-1.fc13                          \n"
+"  pacemaker-libs.x86_64 0:1.1.5-1.fc13                          \n"
 "  perl-TimeDate.noarch 1:1.20-1.fc13                            \n"
 "  resource-agents.x86_64 0:3.0.10-1.fc13                        \n"
 "\n"
@@ -640,8 +640,7 @@ msgstr ""
 #. Tag: programlisting
 #, no-c-format
 msgid "\n"
-"	  <userinput>ping -c 3 192.168.122.102</userinput>\n"
-"[root@pcmk-1 ~]# ping -c 3 192.168.122.102\n"
+"[root@pcmk-1 ~]# <userinput>ping -c 3 192.168.122.102</userinput>\n"
 "PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.\n"
 "64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=0.343 ms\n"
 "64 bytes from 192.168.122.102: icmp_seq=2 ttl=64 time=0.402 ms\n"
@@ -655,7 +654,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now we need to make sure we can communicate with the machines by their name. If you have a DNS server, add additional entries for the three machines. Otherwise, you’ll need to add the machines to /etc/hosts . Below are the entries for my cluster nodes:"
+msgid "Now we need to make sure we can communicate with the machines by their name. If you have a DNS server, add additional entries for the two machines. Otherwise, you’ll need to add the machines to /etc/hosts . Below are the entries for my cluster nodes:"
 msgstr ""
 
 #. Tag: title
@@ -666,8 +665,7 @@ msgstr ""
 #. Tag: programlisting
 #, no-c-format
 msgid "\n"
-"	  <userinput>grep pcmk /etc/hosts</userinput>\n"
-"[root@pcmk-1 ~]# grep pcmk /etc/hosts\n"
+"[root@pcmk-1 ~]# <userinput>grep pcmk /etc/hosts</userinput>\n"
 "192.168.122.101 pcmk-1.clusterlabs.org pcmk-1\n"
 "192.168.122.102 pcmk-2.clusterlabs.org pcmk-2\n"
 "	"
@@ -686,8 +684,7 @@ msgstr ""
 #. Tag: programlisting
 #, no-c-format
 msgid "\n"
-"	  <userinput>ping -c 3 pcmk-2</userinput>\n"
-"[root@pcmk-1 ~]# ping -c 3 pcmk-2\n"
+"[root@pcmk-1 ~]# <userinput>ping -c 3 pcmk-2</userinput>\n"
 "PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.\n"
 "64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=1 ttl=64 time=0.164 ms\n"
 "64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=2 ttl=64 time=0.475 ms\n"
@@ -842,7 +839,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "However we’re not finished. The machine wont normally see the shortened host name until about it reboots, but we can force it to update."
+msgid "However we’re not finished. The machine won't normally see the shortened host name until about it reboots, but we can force it to update."
 msgstr ""
 
 #. Tag: screen
@@ -880,17 +877,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Choose a port number and multi-cast <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast\">http://en.wikipedia.org/wiki/Multicast</ulink> </para> </footnote> address. <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast_address\">http://en.wikipedia.org/wiki/Multicast_address</ulink> </para> </footnote>"
+msgid "Choose a port number and multicast <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast\">http://en.wikipedia.org/wiki/Multicast</ulink> </para> </footnote> address. <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast_address\">http://en.wikipedia.org/wiki/Multicast_address</ulink> </para> </footnote>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Be sure that the values you chose do not conflict with any existing clusters you might have. For advice on choosing a multi-cast address, see <ulink url=\"http://www.29west.com/docs/THPM/multicast-address-assignment.html\"> http://www.29west.com/docs/THPM/multicast-address-assignment.html </ulink>"
+msgid "Be sure that the values you chose do not conflict with any existing clusters you might have. For advice on choosing a multicast address, see <ulink url=\"http://www.29west.com/docs/THPM/multicast-address-assignment.html\"> http://www.29west.com/docs/THPM/multicast-address-assignment.html </ulink>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For this document, I have chosen port 4000 and used 226.94.1.1 as the multi-cast address."
+msgid "For this document, I have chosen port 4000 and used 226.94.1.1 as the multicast address."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The instructions below only apply for a machine with a single NIC. If you have a more complicated setup, you should edit the configuration manually."
 msgstr ""
 
 #. Tag: screen
@@ -928,7 +930,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Once you’re happy with the chosen values, update the Corosync configuration"
+msgid "Once you're happy with the chosen values, update the Corosync configuration"
 msgstr ""
 
 #. Tag: screen
@@ -943,7 +945,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Finally, tell Corosync to start Pacemaker"
+msgid "Finally, tell Corosync to load the Pacemaker plugin."
 msgstr ""
 
 #. Tag: screen
@@ -953,7 +955,7 @@ msgid "\n"
 "service {\n"
 "        # Load the Pacemaker Cluster Resource Manager\n"
 "        name: pacemaker\n"
-"        ver:  0\n"
+"        ver:  1\n"
 "}\n"
 "END\n"
 "      "
@@ -961,7 +963,27 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The final configuration should look something like the sample in the appendix."
+msgid "The final configuration should look something like the sample in <xref linkend=\"ap-corosync-conf\" />."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When run in version 1 mode, the plugin does not start the Pacemaker daemons. Instead it just sets up the quorum and messaging interfaces needed by the rest of the stack."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Starting the dameons occurs when the Pacemaker init script is invoked. This resolves two long standing issues:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Forking inside a multi-threaded process like Corosync causes all sorts of pain. This has been problematic for Pacemaker as it needs a number of daemons to be spawned."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Corosync was never designed for staggered shutdown - something previously needed in order to prevent the cluster from leaving before Pacemaker could stop all active resources."
 msgstr ""
 
 #. Tag: title

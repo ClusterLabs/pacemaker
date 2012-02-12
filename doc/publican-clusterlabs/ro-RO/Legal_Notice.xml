@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE legalnotice PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
+%BOOK_ENTITIES;
+]>
+<legalnotice lang="ro-RO">
+	<para>
+		Copyright <trademark class="copyright"></trademark> 2009-&YEAR; &HOLDER;.
+	</para>
+	 <para>
+		The text of and illustrations in this document are licensed under a Creative Commons Attribution–Share Alike 3.0 Unported license ("CC-BY-SA")<footnote>
+		<para>
+			An explanation of CC-BY-SA is available at <ulink url="http://creativecommons.org/licenses/by-sa/3.0/" />
+		</para>
+		</footnote>.
+	</para>
+	 <para>
+		În acord cu CC-BY-SA, dacă distribuiți acest document sau o adaptare a acestuia, trebuie să furnizați URL-ul pentru versiunea originală.
+	</para>
+	 <para>
+		In addition to the requirements of this license, the following activities are looked upon favorably: 
+		<orderedlist>
+			<listitem>
+				<para>
+					Dacă distribuiți lucrări Open Publication ca și copie tipărită sau CD-ROM, veți furniza notificări pe email autorilor despre intenția voastră de a redistribui cu cel puțin treizeci de zile înainte de înghețarea procesului de tipărire sau copiere, pentru a da autorilor timp să furnizeze documente actualizate. Această notificare ar trebui să descrie modificările, dacă există, realizate documentului.
+				</para>
+
+			</listitem>
+			 <listitem>
+				<para>
+					Toate modificările substanțiale (inclusiv ștergerile) trebuie să fie ori marcate în mod clar în document ori descrise în atașamentul la document.
+				</para>
+
+			</listitem>
+			 <listitem>
+				<para>
+					În cele din urmă, în timp ce nu este obligatoriu sub această licență, este considerată o formă bună de a oferi o copie gratuită a oricărei lucrări tipărite sau exprimării pe CD-ROM a muncii autorului(autorilor).
+				</para>
+
+			</listitem>
+
+		</orderedlist>
+
+	</para>
+</legalnotice>
+

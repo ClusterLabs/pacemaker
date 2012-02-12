@@ -16,7 +16,7 @@
       The motivation for wanting to use CMAN for this instead, is to ensure all elements of the cluster stack are making decisions based on the same membership and quorum data.
       <footnote>
 	<para>
-	  A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecssary down-time and/or data corruption.
+	  A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecessary downtime and/or data corruption.
 	</para>
       </footnote>
     </para>
@@ -37,7 +37,7 @@
       <title>Adding CMAN Support - cluster.conf</title>
       <para>
 	The preferred approach for enabling CMAN is to configure <filename>cluster.conf</filename> and use the <filename>/etc/init.d/cman</filename> script to start Corosync.
-	Its far easier to maintain and start automatically starts the necessary pieces for using GFS2.
+	It's far easier to maintain and start automatically starts the necessary pieces for using GFS2.
       </para>
       <para>
 	You can find some documentation on
@@ -84,7 +84,7 @@
 	We recommend you place these directives in <filename>/etc/corosync/service.d/cman</filename> as they will differ between machines.
       </para>
       <para>
-	If you choose this approach, you would continue to start and stop Corosync with it's init script as previously described in this document.
+	If you choose this approach, you would continue to start and stop Corosync with its init script as previously described in this document.
       </para>
       
       <example>

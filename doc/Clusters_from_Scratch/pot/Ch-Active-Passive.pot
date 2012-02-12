@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-21T11:01:27\n"
-"PO-Revision-Date: 2010-12-21T11:01:27\n"
+"POT-Creation-Date: 2011-12-31T16:43:02\n"
+"PO-Revision-Date: 2011-12-31T16:43:02\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -39,7 +39,7 @@ msgid "\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
 "property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
 "        cluster-infrastructure=\"openais\" \\\n"
 "        expected-quorum-votes=\"2\"\n"
 ""
@@ -47,7 +47,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For those that are not of afraid of XML, you can see the raw configuration by appending “xml” to the previous command."
+msgid "For those that are not of afraid of XML, you can see the raw configuration by appending \"xml\" to the previous command."
 msgstr ""
 
 #. Tag: screen
@@ -59,7 +59,7 @@ msgid "\n"
 "  &lt;configuration&gt;\n"
 "    &lt;crm_config&gt;\n"
 "      &lt;cluster_property_set id=\"cib-bootstrap-options\"&gt;\n"
-"        &lt;nvpair id=\"cib-bootstrap-options-dc-version\" name=\"dc-version\" value=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\"/&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-dc-version\" name=\"dc-version\" value=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\"/&gt;\n"
 "        &lt;nvpair id=\"cib-bootstrap-options-cluster-infrastructure\" name=\"cluster-infrastructure\" value=\"openais\"/&gt;\n"
 "        &lt;nvpair id=\"cib-bootstrap-options-expected-quorum-votes\" name=\"expected-quorum-votes\" value=\"2\"/&gt;\n"
 "      &lt;/cluster_property_set&gt;\n"
@@ -84,7 +84,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Before we make any changes, its a good idea to check the validity of the configuration."
+msgid "Before we make any changes, it's a good idea to check the validity of the configuration."
 msgstr ""
 
 #. Tag: screen
@@ -107,7 +107,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In order to guarantee the safety of your data <footnote> <para> If the data is corrupt, there is little point in continuing to make it available </para> </footnote> , Pacemaker ships with STONITH <footnote> <para> A common node fencing mechanism. Used to ensure data integrity by powering off “bad” nodes. </para> </footnote> enabled. However it also knows when no STONITH configuration has been supplied and reports this as a problem (since the cluster would not be able to make progress if a situation requiring node fencing arose)."
+msgid "In order to guarantee the safety of your data <footnote> <para> If the data is corrupt, there is little point in continuing to make it available </para> </footnote> , Pacemaker ships with STONITH <footnote> <para> A common node fencing mechanism. Used to ensure data integrity by powering off \"bad\" nodes. </para> </footnote> enabled. However it also knows when no STONITH configuration has been supplied and reports this as a problem (since the cluster would not be able to make progress if a situation requiring node fencing arose)."
 msgstr ""
 
 #. Tag: para
@@ -135,6 +135,11 @@ msgstr ""
 msgid "With the new cluster option set, the configuration is now valid."
 msgstr ""
 
+#. Tag: para
+#, no-c-format
+msgid "The use of <literal>stonith-enabled=false</literal> is completely inappropriate for a production cluster. We use it here to defer the discussion of its configuration which can differ widely from one installation to the next. See <xref linkend=\"ch-stonith\" /> for information on why STONITH is important and details on how to configure it."
+msgstr ""
+
 #. Tag: title
 #, no-c-format
 msgid "Adding a Resource"
@@ -142,7 +147,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The first thing we should do is configure an IP address. Regardless of where the cluster service(s) are running, we need a consistent address to contact them on. Here I will choose and add 192.168.122.101 as the floating address, give it the imaginative name ClusterIP and tell the cluster to check that its running every 30 seconds."
+msgid "The first thing we should do is configure an IP address. Regardless of where the cluster service(s) are running, we need a consistent address to contact them on. Here I will choose and add 192.168.122.101 as the floating address, give it the imaginative name ClusterIP and tell the cluster to check that it's running every 30 seconds."
 msgstr ""
 
 #. Tag: para
@@ -226,7 +231,7 @@ msgid "\n"
 "<emphasis> params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\</emphasis>\n"
 "<emphasis> op monitor interval=\"30s\"</emphasis>\n"
 "property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
 "        cluster-infrastructure=\"openais\" \\\n"
 "        expected-quorum-votes=\"2\" \\\n"
 "        stonith-enabled=\"false\" \\\n"
@@ -235,7 +240,7 @@ msgid "\n"
 "Last updated: Fri Aug 28 15:23:48 2009\n"
 "Stack: openais\n"
 "Current DC: pcmk-1 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
 "2 Nodes configured, 2 expected votes\n"
 "1 Resources configured.\n"
 "============\n"
@@ -271,12 +276,15 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Shut down Corosync on that machine."
+msgid "Shut down Pacemaker and Corosync on that machine."
 msgstr ""
 
 #. Tag: screen
 #, no-c-format
 msgid "\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>\n"
+"<emphasis>Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]</emphasis>\n"
+"<emphasis>Waiting for cluster services to unload:.                   [  OK  ]</emphasis>\n"
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/corosync stop</userinput>\n"
 "<emphasis>Stopping Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
 "<emphasis>Waiting for services to unload: [ OK ]</emphasis>\n"
@@ -297,7 +305,7 @@ msgid "\n"
 "Last updated: Fri Aug 28 15:27:35 2009\n"
 "Stack: openais\n"
 "Current DC: pcmk-2 - <emphasis>partition WITHOUT quorum</emphasis>\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
 "2 Nodes configured, 2 expected votes\n"
 "1 Resources configured.\n"
 "============\n"
@@ -319,7 +327,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "This is because the cluster no longer has quorum, as can be seen by the text “partition WITHOUT quorum” (emphasised green) in the output above. In order to reduce the possibility of data corruption, Pacemaker’s default behavior is to stop all resources if the cluster does not have quorum."
+msgid "This is because the cluster no longer has quorum, as can be seen by the text \"partition WITHOUT quorum\" (emphasised green) in the output above. In order to reduce the possibility of data corruption, Pacemaker’s default behavior is to stop all resources if the cluster does not have quorum."
 msgstr ""
 
 #. Tag: para
@@ -329,7 +337,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "total_nodes - 1 &lt; 2 * active_nodes"
+msgid "total_nodes &lt; 2 * active_nodes"
 msgstr ""
 
 #. Tag: para
@@ -348,7 +356,7 @@ msgid "\n"
 "        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
 "        op monitor interval=\"30s\"\n"
 "property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
 "        cluster-infrastructure=\"openais\" \\\n"
 "        expected-quorum-votes=\"2\" \\\n"
 "        stonith-enabled=\"false\" \\\n"
@@ -369,7 +377,7 @@ msgid "\n"
 "Last updated: Fri Aug 28 15:30:18 2009\n"
 "Stack: openais\n"
 "Current DC: pcmk-2 - <emphasis>partition WITHOUT quorum</emphasis>\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
 "2 Nodes configured, 2 expected votes\n"
 "1 Resources configured.\n"
 "============\n"
@@ -390,12 +398,14 @@ msgstr ""
 msgid "\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
 "<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>      \n"
+"[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
+"<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
 "Last updated: Fri Aug 28 15:32:13 2009\n"
 "Stack: openais\n"
 "Current DC: pcmk-2 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
 "2 Nodes configured, 2 expected votes\n"
 "1 Resources configured.\n"
 "============\n"
@@ -417,18 +427,18 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In some circumstances it is highly desirable to prevent healthy resources from being moved around the cluster. Move resources almost always requires a period of downtime and for complex services like Oracle databases, this period can be quite long."
+msgid "In some circumstances, it is highly desirable to prevent healthy resources from being moved around the cluster. Moving resources almost always requires a period of downtime. For complex services like Oracle databases, this period can be quite long."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To address this, Pacemaker has the concept of resource stickiness which controls how much a service prefers to stay running where it is. You may like to think of it as the “cost” of any downtime. By default, Pacemaker assumes there is zero cost associated with moving resources and will do so to achieve “optimal<footnote> <para> It should be noted that Pacemaker’s definition of optimal may not always agree with that of a human’s. The order in which Pacemaker processes lists of resources and nodes create implicit preferences (required in order to create a stabile solution) in situations where the administrator had not explicitly specified some. </para> </footnote>” resource placement. We can specify a different stickiness for every resource, but it is often sufficient to change the default."
+msgid "To address this, Pacemaker has the concept of resource stickiness which controls how much a service prefers to stay running where it is. You may like to think of it as the \"cost\" of any downtime. By default, Pacemaker assumes there is zero cost associated with moving resources and will do so to achieve \"optimal<footnote> <para> It should be noted that Pacemaker’s definition of optimal may not always agree with that of a human’s. The order in which Pacemaker processes lists of resources and nodes creates implicit preferences in situations where the administrator has not explicitly specified them. </para> </footnote>\" resource placement. We can specify a different stickiness for every resource, but it is often sufficient to change the default."
 msgstr ""
 
 #. Tag: screen
 #, no-c-format
 msgid "\n"
-"crm configure rsc_defaults resource-stickiness=100\n"
+"[root@pcmk-2 ~]# <userinput>crm configure rsc_defaults resource-stickiness=100</userinput>\n"
 "[root@pcmk-2 ~]# <userinput>crm configure show</userinput>\n"
 "node pcmk-1\n"
 "node pcmk-2\n"
@@ -436,7 +446,7 @@ msgid "\n"
 "        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
 "        op monitor interval=\"30s\"\n"
 "property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
 "        cluster-infrastructure=\"openais\" \\\n"
 "        expected-quorum-votes=\"2\" \\\n"
 "        stonith-enabled=\"false\" \\\n"
@@ -454,6 +464,9 @@ msgstr ""
 #. Tag: screen
 #, no-c-format
 msgid "\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>\n"
+"Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]\n"
+"Waiting for cluster services to unload:.                   [  OK  ]\n"
 "[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/corosync stop</userinput>\n"
 "Stopping Corosync Cluster Engine (corosync):               [  OK  ]\n"
 "Waiting for services to unload:                            [  OK  ]\n"
@@ -462,7 +475,7 @@ msgid "\n"
 "Last updated: Fri Aug 28 15:39:38 2009\n"
 "Stack: openais\n"
 "Current DC: pcmk-2 - partition WITHOUT quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
 "2 Nodes configured, 2 expected votes\n"
 "1 Resources configured.\n"
 "============\n"
@@ -484,12 +497,14 @@ msgstr ""
 msgid "\n"
 "[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
 "<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
+"<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
 "============\n"
 "Last updated: Fri Aug 28 15:41:23 2009\n"
 "Stack: openais\n"
 "Current DC: pcmk-2 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
 "2 Nodes configured, 2 expected votes\n"
 "1 Resources configured.\n"
 "============\n"

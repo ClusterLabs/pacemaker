@@ -1,0 +1,1382 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Clusters from Scratch 1.1\n"
+"POT-Creation-Date: 2011-12-31T15:21:38\n"
+"PO-Revision-Date: 2011-11-24 08:21+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Installation"
+msgstr "Instalare"
+
+#. Tag: title
+#, no-c-format
+msgid "OS Installation"
+msgstr "Instalarea Sistemului de Operare"
+
+#. Tag: para
+#, no-c-format
+msgid "Detailed instructions for installing Fedora are available at <ulink url=\"http://docs.fedoraproject.org/install-guide/f14/\">http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/</ulink> in a number of languages. The abbreviated version is as follows..."
+msgstr "Instrucțiuni detaliate pentru instalarea Fedora sunt disponibile la <ulink url=\"http://docs.fedoraproject.org/install-guide/f14/\">http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/</ulink> într-un număr de limbi. Versiunea abreviată este după cum urmează ..."
+
+#. Tag: para
+#, no-c-format
+msgid "Point your browser to <ulink url=\"http://fedoraproject.org/en/get-fedora-all\">http://fedoraproject.org/en/get-fedora-all</ulink>, locate the <emphasis>Install Media</emphasis> section and download the install DVD that matches your hardware."
+msgstr "Îndreptați browserul vostru către <ulink url=\"http://fedoraproject.org/en/get-fedora-all\">http://fedoraproject.org/en/get-fedora-all</ulink>, localizați secțiunea <emphasis>Install Media</emphasis> și descărcați DVD-ul de instalare care se potrivește cu hardware-ul vostru."
+
+#. Tag: para
+#, no-c-format
+msgid "Burn the disk image to a DVD <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/readme-burning-isos/en-US.html\"> http://docs.fedoraproject.org/readme-burning-isos/en-US.html </ulink> </para> </footnote> and boot from it. Or use the image to boot a virtual machine as I have done here. After clicking through the welcome screen, select your language and keyboard layout <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-langselection-x86.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/s1-langselection-x86.html </ulink> </para> </footnote>"
+msgstr "Scrieți imaginea pe un DVD  <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/readme-burning-isos/en-US.html\"> http://docs.fedoraproject.org/readme-burning-isos/en-US.html </ulink> </para> </footnote> și bootați de pe acesta. Sau folosiți imaginea pentru a boota o mașină virtuală așa cum am făcut aici. După ce ați selectat prin ecranul de început, selectați limba voastră și așezarea tastaturii <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-langselection-x86.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/s1-langselection-x86.html </ulink> </para> </footnote>"
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Welcome"
+msgstr "Instalarea Fedora - Bine ați venit"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Good choice"
+msgstr "Instalarea Fedora: O alegere bună"
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Storage Devices"
+msgstr "Instalarea Fedora - Dispozitive de Stocare"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Storage Devices"
+msgstr "Instalarea Fedora: Dispozitive de Stocare"
+
+#. Tag: para
+#, no-c-format
+msgid "Assign your machine a host name. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-networkconfig-fedora.html </ulink> </para> </footnote> I happen to control the clusterlabs.org domain name, so I will use that here."
+msgstr "Asignați mașinii un nume de gazdă. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-networkconfig-fedora.html </ulink> </para> </footnote> Eu se întâmplă să controlez numele de domeniu clusterlabs.org, așa că îl voi folosi pe acesta aici."
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Hostname"
+msgstr "Instalarea Fedora - Nume de gazdă"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Choose a hostname"
+msgstr "Instalarea Fedora: Alegeți un nume pentru gazdă"
+
+#. Tag: para
+#, no-c-format
+msgid "You will then be prompted to indicate the machine’s physical location and to supply a root password. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-account_configuration.html </ulink> </para> </footnote>"
+msgstr "Vi se va cere ulterior să indicați locația fizică a mașinii și să furnizați o parolă de root. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-account_configuration.html </ulink> </para> </footnote>"
+
+#. Tag: para
+#, no-c-format
+msgid "Now select where you want Fedora installed. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html\">http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html</ulink> </para> </footnote> As I don’t care about any existing data, I will accept the default and allow Fedora to use the complete drive. However I want to reserve some space for DRBD, so I'll check the <literal>Review and modify partitioning layout</literal> box."
+msgstr "Acum selectați unde vreți Fedora să fie instalată. <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html\">http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html</ulink> </para> </footnote> Deoarece nu îmi pasă de orice date existente, voi accepta valorile implicite și voi permite Fedorei să folosească întregul disc. Totuși vreau să rezerv ceva spațiu pentru DRBD, așa că voi bifa caseta <literal>Review and modify partitioning layout</literal>."
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Installation Type"
+msgstr "Instalarea Fedora - Tipul de Instalare"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Choose an installation type"
+msgstr "Instalarea Fedora: Alegeți tipul de instalare"
+
+#. Tag: para
+#, no-c-format
+msgid "By default, Fedora will give all the space to the <literal>/</literal> (aka. root) partition. Wel'll take some back so we can use DRBD."
+msgstr "În mod implicit, Fedora va da tot spațiul către partiția <literal>/</literal> (root). Vom lua ceva din acesta înapoi pentru a putea folosi DRBD. "
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Default Partitioning"
+msgstr "Instalarea Fedora - Partiționarea Implicită"
+
+#. Tag: para
+#, no-c-format
+msgid "The finalized partition layout should look something like the diagram below."
+msgstr "Așezarea finalizată a partițiilor ar trebui să arate asemănător cu diagrama de mai jos. "
+
+#. Tag: para
+#, no-c-format
+msgid "If you plan on following the DRBD or GFS2 portions of this guide, you should reserve at least 1Gb of space on each machine from which to create a shared volume."
+msgstr "Dacă plănuiți să urmați porțiunile referitoare la DRBD sau GFS2 ale acestui ghid, ar trebui să rezervați cel puțin 1Gb de spațiu pe fieare mașină din care să creați un volum partajat."
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Customize Partitioning"
+msgstr "Instalarea Fedora - Customizarea Partiționării"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Create a partition to use (later) for website data"
+msgstr "Instalarea Fedora: Creați o partiție pentru a o folosi (mai târziu) pentru datele website-ului"
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Bootloader"
+msgstr "Instalarea Fedora - Bootloader"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Unless you have a strong reason not to, accept the default bootloader location"
+msgstr "Instalarea Fedora: Decât dacă aveți un motiv puternic împotriva acestui lucru, acceptați locația implicită pentru bootloader"
+
+#. Tag: para
+#, no-c-format
+msgid "Next choose which software should be installed. Change the selection to <literal>Web Server</literal> since we plan on using Apache. Don't enable updates yet, we'll do that (and install any extra software we need) later. After you click next, Fedora will begin installing."
+msgstr "În continuare alegeți ce software ar trebui să fie instalat. Schimbați selecția pe <literal>Web Server</literal> din moment ce plănuim să instalăm Apache. Nu activați încă actualizările, o să facem asta (și vom instala orice software adițional de care avem nevoie) mai târziu. După ce faceți click pe Next, Fedora va începe să se instaleze. "
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Software"
+msgstr "Instalarea Fedora - Software"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Software selection"
+msgstr "Instalarea Fedora: Selecția software-ului"
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Installing"
+msgstr "Instalarea Fedora - Instalează"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Go grab something to drink, this may take a while"
+msgstr "Instalarea Fedora: Mergeți să vă luați ceva de băut, asta ar putea dura o vreme"
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Installation Complete"
+msgstr "Instalarea Fedora - Instalarea a Terminat"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Stage 1, completed"
+msgstr "Instalarea Fedora: Stadiul 1, terminat"
+
+#. Tag: para
+#, no-c-format
+msgid "Once the node reboots, follow the on screen instructions <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboot.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/ch-firstboot.html </ulink> </para> </footnote> to create a system user and configure the time."
+msgstr "Odată ce nodul repornește, urmați instrucțiunile de pe ecran <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboot.html\"> http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/ch-firstboot.html </ulink> </para> </footnote> pentru a crea un utilizator de system și pentru a configura ora."
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - First Boot"
+msgstr "Instalarea Fedora - Primul Boot"
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Create Non-privileged User"
+msgstr "Instalarea Fedora - Creați un Utilizator Neprivilegiat"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Creating a non-privileged user, take note of the password, you'll need it soon"
+msgstr "Instalarea Fedora: Creând un utilizator neprivilegiat, rețineți parola, o să aveți nevoie de ea în curând"
+
+#. Tag: para
+#, no-c-format
+msgid "It is highly recommended to enable NTP on your cluster nodes. Doing so ensures all nodes agree on the current time and makes reading log files significantly easier."
+msgstr "Este foarte recomandat să activați NTP-ul pe nodurile din cluster. Realizând acest lucru asigură câ toate nodurile sunt de acord asupra datei curente și acest lucru face citirea fișierelor de log semnificativ mai ușoară."
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Date and Time"
+msgstr "Instalarea Fedora - Data și Ora"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Enable NTP to keep the times on all your nodes consistent"
+msgstr "Instalarea Fedora: Activați NTP pentru a menține data consistentă pe noate nodurile"
+
+#. Tag: para
+#, no-c-format
+msgid "Click through the next screens until you reach the login window. Click on the user you created and supply the password you indicated earlier."
+msgstr "Selectați cu mouse-ul prin următorul ecran până ajungeți la fereastra de login. Selectați utilizatorul pe care l-ați creat și furnizați parola pe care ați ales-o mai devreme."
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Customize Networking"
+msgstr "Instalarea Fedora - Personalizați Rețeaua"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Click here to configure networking"
+msgstr "Instalarea Fedora: Selectați aici pentru a configura rețeaua"
+
+#. Tag: para
+#, no-c-format
+msgid "Do not accept the default network settings. Cluster machines should <emphasis>never</emphasis> obtain an ip address via DHCP. Here I will use the <emphasis>internal</emphasis> addresses for the clusterlab.org network."
+msgstr "Nu acceptați setările implicite de rețea. Mașinile din cluster nu ar trebui <emphasis>niciodată</emphasis> să obțină o adresă IP via DHCP. Aici voi folosi adresele <emphasis>interne</emphasis> pentru rețeaua clusterlab.org."
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Specify Network Preferences"
+msgstr "Instalarea Fedora - Specificați Preferințele de Rețea"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Specify network settings for your machine, never choose DHCP"
+msgstr "Instalarea Fedora: Specificați setările de rețea pentru mașina voastră, să nu alegeți niciodată DHCP"
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Activate Networking"
+msgstr "Instalarea Fedora - Activați Rețeaua"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Click the big green button to activate your changes"
+msgstr "Instalarea Fedora: Selectați butonul mare verde pentru a activa modificările voastre"
+
+#. Tag: title
+#, no-c-format
+msgid "Fedora Installation - Bring up the Terminal"
+msgstr "Instalarea Fedora - Porniți Terminalul"
+
+#. Tag: caption
+#, no-c-format
+msgid "Fedora Installation: Down to business, fire up the command line"
+msgstr "Instalarea Fedora: Să trecem la afaceri, porniți linia de comandă"
+
+#. Tag: para
+#, no-c-format
+msgid "That was the last screenshot, from here on in we’re going to be working from the terminal."
+msgstr "Aceea a fost ultima captură de ecran, de aici înainte vom lucra de la terminal."
+
+#. Tag: title
+#, no-c-format
+msgid "Cluster Software Installation"
+msgstr "Instalarea Software-ului de Cluster"
+
+#. Tag: para
+#, no-c-format
+msgid "Go to the terminal window you just opened and switch to the super user (aka. \"root\") account with the <command>su</command> command. You will need to supply the password you entered earlier during the installation process."
+msgstr "Mergeți la fereastra de terminal pe care tocmai ați deschis-o și schimbați la contul de super utilizator (adică la \"root\") cu comanda <command>su</command>. Va trebui să furnizați parola pe care ați introdus-o mai devreme în timpul procesului de instalare."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[beekhof@pcmk-1 ~]$ su -\n"
+"Password:\n"
+"[<emphasis>root</emphasis>@pcmk-1 ~]#\n"
+"    "
+msgstr "\n"
+"[beekhof@pcmk-1 ~]$ su -\n"
+"Password:\n"
+"[<emphasis>root</emphasis>@pcmk-1 ~]#\n"
+"    "
+
+#. Tag: para
+#, no-c-format
+msgid "Note that the username (the text before the @ symbol) now indicates we’re running as the super user “root”."
+msgstr "Luați aminte că numele de utilizator (textul dinaintea simbolului @) acum indică faptul că rulăm ca super utilizatorul \"root\"."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>ip addr</userinput>\n"
+"1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 16436 qdisc noqueue state UNKNOWN \n"
+"    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n"
+"    inet 127.0.0.1/8 scope host lo\n"
+"    inet6 ::1/128 scope host \n"
+"       valid_lft forever preferred_lft forever\n"
+"2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UNKNOWN qlen 1000\n"
+"    link/ether 00:0c:29:6f:e1:58 brd ff:ff:ff:ff:ff:ff\n"
+"    inet 192.168.9.41/24 brd 192.168.9.255 scope global eth0\n"
+"    inet6 ::20c:29ff:fe6f:e158/64 scope global dynamic \n"
+"       valid_lft 2591667sec preferred_lft 604467sec\n"
+"    inet6 2002:57ae:43fc:0:20c:29ff:fe6f:e158/64 scope global dynamic \n"
+"       valid_lft 2591990sec preferred_lft 604790sec\n"
+"    inet6 fe80::20c:29ff:fe6f:e158/64 scope link \n"
+"       valid_lft forever preferred_lft forever\n"
+"[root@pcmk-1 ~]# ping -c 1 www.google.com\n"
+"PING www.l.google.com (74.125.39.99) 56(84) bytes of data.\n"
+"64 bytes from fx-in-f99.1e100.net (74.125.39.99): icmp_seq=1 ttl=56 time=16.7 ms\n"
+"\n"
+"--- www.l.google.com ping statistics ---\n"
+"1 packets transmitted, 1 received, 0% packet loss, time 20ms\n"
+"rtt min/avg/max/mdev = 16.713/16.713/16.713/0.000 ms\n"
+"[root@pcmk-1 ~]# <userinput>/sbin/chkconfig network on</userinput>\n"
+"[root@pcmk-1 ~]# \n"
+"    "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>ip addr</userinput>\n"
+"1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 16436 qdisc noqueue state UNKNOWN \n"
+"    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n"
+"    inet 127.0.0.1/8 scope host lo\n"
+"    inet6 ::1/128 scope host \n"
+"       valid_lft forever preferred_lft forever\n"
+"2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UNKNOWN qlen 1000\n"
+"    link/ether 00:0c:29:6f:e1:58 brd ff:ff:ff:ff:ff:ff\n"
+"    inet 192.168.9.41/24 brd 192.168.9.255 scope global eth0\n"
+"    inet6 ::20c:29ff:fe6f:e158/64 scope global dynamic \n"
+"       valid_lft 2591667sec preferred_lft 604467sec\n"
+"    inet6 2002:57ae:43fc:0:20c:29ff:fe6f:e158/64 scope global dynamic \n"
+"       valid_lft 2591990sec preferred_lft 604790sec\n"
+"    inet6 fe80::20c:29ff:fe6f:e158/64 scope link \n"
+"       valid_lft forever preferred_lft forever\n"
+"[root@pcmk-1 ~]# ping -c 1 www.google.com\n"
+"PING www.l.google.com (74.125.39.99) 56(84) bytes of data.\n"
+"64 bytes from fx-in-f99.1e100.net (74.125.39.99): icmp_seq=1 ttl=56 time=16.7 ms\n"
+"\n"
+"--- www.l.google.com ping statistics ---\n"
+"1 packets transmitted, 1 received, 0% packet loss, time 20ms\n"
+"rtt min/avg/max/mdev = 16.713/16.713/16.713/0.000 ms\n"
+"[root@pcmk-1 ~]# <userinput>/sbin/chkconfig network on</userinput>\n"
+"[root@pcmk-1 ~]# \n"
+"    "
+
+#. Tag: title
+#, no-c-format
+msgid "Security Shortcuts"
+msgstr "Scurtături de Securitate"
+
+#. Tag: para
+#, no-c-format
+msgid "To simplify this guide and focus on the aspects directly connected to clustering, we will now disable the machine’s firewall and SELinux installation. Both of these actions create significant security issues and should not be performed on machines that will be exposed to the outside world."
+msgstr "Pentru a simplifica acest ghid și pentru a ne concentra pe aspecte care sunt legate în mod direct de clustering, o să dezactivăm acum firewall-ul mașinii și instalarea de SELinux. Ambele aceste acțiuni creează probleme semnificative de securitate și nu ar trebui să fie efectuate pe mașini care vor fi expuse în mod direct către lumea exterioara. "
+
+#. Tag: para
+#, no-c-format
+msgid "TODO: Create an Appendix that deals with (at least) re-enabling the firewall."
+msgstr "TODO: Crearea unui Apendix care să se ocupe cu (cel puțin) reactivarea firewall-ului."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# sed -i.bak \"s/SELINUX=enforcing/SELINUX=permissive/g\" /etc/selinux/config\n"
+"[root@pcmk-1 ~]# /sbin/chkconfig --del iptables\n"
+"[root@pcmk-1 ~]# service iptables stop\n"
+"iptables: Flushing firewall rules:                         [  OK  ]\n"
+"iptables: Setting chains to policy ACCEPT: filter          [  OK  ]\n"
+"iptables: Unloading modules:                               [  OK  ]\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# sed -i.bak \"s/SELINUX=enforcing/SELINUX=permissive/g\" /etc/selinux/config\n"
+"[root@pcmk-1 ~]# /sbin/chkconfig --del iptables\n"
+"[root@pcmk-1 ~]# service iptables stop\n"
+"iptables: Flushing firewall rules:                         [  OK  ]\n"
+"iptables: Setting chains to policy ACCEPT: filter          [  OK  ]\n"
+"iptables: Unloading modules:                               [  OK  ]\n"
+"      "
+
+#. Tag: para
+#, no-c-format
+msgid "You will need to reboot for the SELinux changes to take effect. Otherwise you will see something like this when you start corosync:"
+msgstr "Va trebui să reporniți pentru ca modificările de SELinux să ia effect. Altfel ați vedea ceva similar cu acesta când veți porni corosync:"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync \"getattr\" access on /. For complete SELinux messages. run sealert -l 6e0d4384-638e-4d55-9aaf-7dac011f29c1\n"
+"May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync \"getattr\" access on /. For complete SELinux messages. run sealert -l 6e0d4384-638e-4d55-9aaf-7dac011f29c1\n"
+"	"
+msgstr "\n"
+"May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync \"getattr\" access on /. For complete SELinux messages. run sealert -l 6e0d4384-638e-4d55-9aaf-7dac011f29c1\n"
+"May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync \"getattr\" access on /. For complete SELinux messages. run sealert -l 6e0d4384-638e-4d55-9aaf-7dac011f29c1\n"
+"	"
+
+#. Tag: title
+#, no-c-format
+msgid "Install the Cluster Software"
+msgstr "Instalați Software-ul de Cluster"
+
+#. Tag: para
+#, no-c-format
+msgid "Since version 12, Fedora comes with recent versions of everything you need, so simply fire up the shell and run:"
+msgstr "Începând cu versiunea 12, Fedora vine cu versiuni recente ale tuturor lucrurilor de care aveți nevoie, așa că pur și simplu porniți shell-ul și rulați:"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora.repo</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora-updates.repo</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>yum install -y pacemaker corosync</userinput>\n"
+"Loaded plugins: presto, refresh-packagekit\n"
+"fedora/metalink                   	                           |  22 kB     00:00     \n"
+"fedora-debuginfo/metalink         	                           |  16 kB     00:00     \n"
+"fedora-debuginfo                  	                           | 3.2 kB     00:00     \n"
+"fedora-debuginfo/primary_db       	                           | 1.4 MB     00:04     \n"
+"fedora-source/metalink            	                           |  22 kB     00:00     \n"
+"fedora-source                     	                           | 3.2 kB     00:00     \n"
+"fedora-source/primary_db          	                           | 3.0 MB     00:05     \n"
+"updates/metalink                  	                           |  26 kB     00:00     \n"
+"updates                           	                           | 2.6 kB     00:00     \n"
+"updates/primary_db                	                           | 1.1 kB     00:00     \n"
+"updates-debuginfo/metalink        	                           |  18 kB     00:00     \n"
+"updates-debuginfo                 	                           | 2.6 kB     00:00     \n"
+"updates-debuginfo/primary_db      	                           | 1.1 kB     00:00     \n"
+"updates-source/metalink           	                           |  25 kB     00:00     \n"
+"updates-source                    	                           | 2.6 kB     00:00     \n"
+"updates-source/primary_db         	                           | 1.1 kB     00:00     \n"
+"Setting up Install Process\n"
+"Resolving Dependencies\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package corosync.x86_64 0:1.2.1-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: corosynclib = 1.2.1-1.fc13 for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libquorum.so.4(COROSYNC_QUORUM_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libvotequorum.so.4(COROSYNC_VOTEQUORUM_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcpg.so.4(COROSYNC_CPG_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libconfdb.so.4(COROSYNC_CONFDB_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcfg.so.4(COROSYNC_CFG_0.82)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpload.so.4(COROSYNC_PLOAD_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: liblogsys.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libconfdb.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcoroipcc.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcpg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libquorum.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcoroipcs.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libvotequorum.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcfg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libtotem_pg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpload.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"---&gt; Package pacemaker.x86_64 0:1.1.5-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: heartbeat &gt;= 3.0.0 for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: net-snmp &gt;= 5.4 for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: resource-agents for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: cluster-glue for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmp.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcrmcluster.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpengine.so.3()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmpagent.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libesmtp.so.5()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libstonithd.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libhbclient.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpils.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpe_status.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmpmibs.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmphelpers.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcib.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libccmclient.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libstonith.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: liblrm.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libtransitioner.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpe_rules.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcrmcommon.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libplumb.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package cluster-glue.x86_64 0:1.0.2-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: perl-TimeDate for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libOpenIPMIutils.so.0()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libOpenIPMIposix.so.0()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libopenhpi.so.2()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libOpenIPMI.so.0()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
+"---&gt; Package cluster-glue-libs.x86_64 0:1.0.2-1.fc13 set to be updated\n"
+"---&gt; Package corosynclib.x86_64 0:1.2.1-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: librdmacm.so.1(RDMACM_1.0)(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libibverbs.so.1(IBVERBS_1.0)(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libibverbs.so.1(IBVERBS_1.1)(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libibverbs.so.1()(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: librdmacm.so.1()(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64\n"
+"---&gt; Package heartbeat.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13 set to be updated\n"
+"--&gt; Processing Dependency: PyXML for package: heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64\n"
+"---&gt; Package heartbeat-libs.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13 set to be updated\n"
+"---&gt; Package libesmtp.x86_64 0:1.0.4-12.fc12 set to be updated\n"
+"---&gt; Package net-snmp.x86_64 1:5.5-12.fc13 set to be updated\n"
+"--&gt; Processing Dependency: libsensors.so.4()(64bit) for package: 1:net-snmp-5.5-12.fc13.x86_64\n"
+"---&gt; Package net-snmp-libs.x86_64 1:5.5-12.fc13 set to be updated\n"
+"---&gt; Package pacemaker-libs.x86_64 0:1.1.5-1.fc13 set to be updated\n"
+"---&gt; Package resource-agents.x86_64 0:3.0.10-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: libnet.so.1()(64bit) for package: resource-agents-3.0.10-1.fc13.x86_64\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package OpenIPMI-libs.x86_64 0:2.0.16-8.fc13 set to be updated\n"
+"---&gt; Package PyXML.x86_64 0:0.8.4-17.fc13 set to be updated\n"
+"---&gt; Package libibverbs.x86_64 0:1.1.3-4.fc13 set to be updated\n"
+"--&gt; Processing Dependency: libibverbs-driver for package: libibverbs-1.1.3-4.fc13.x86_64\n"
+"---&gt; Package libnet.x86_64 0:1.1.4-3.fc12 set to be updated\n"
+"---&gt; Package librdmacm.x86_64 0:1.0.10-2.fc13 set to be updated\n"
+"---&gt; Package lm_sensors-libs.x86_64 0:3.1.2-2.fc13 set to be updated\n"
+"---&gt; Package openhpi-libs.x86_64 0:2.14.1-3.fc13 set to be updated\n"
+"---&gt; Package perl-TimeDate.noarch 1:1.20-1.fc13 set to be updated\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package libmlx4.x86_64 0:1.0.1-5.fc13 set to be updated\n"
+"--&gt; Finished Dependency Resolution\n"
+"\n"
+"Dependencies Resolved\n"
+"\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora.repo</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/enabled=0/enabled=1/g\" /etc/yum.repos.d/fedora-updates.repo</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>yum install -y pacemaker corosync</userinput>\n"
+"Loaded plugins: presto, refresh-packagekit\n"
+"fedora/metalink                   	                           |  22 kB     00:00     \n"
+"fedora-debuginfo/metalink         	                           |  16 kB     00:00     \n"
+"fedora-debuginfo                  	                           | 3.2 kB     00:00     \n"
+"fedora-debuginfo/primary_db       	                           | 1.4 MB     00:04     \n"
+"fedora-source/metalink            	                           |  22 kB     00:00     \n"
+"fedora-source                     	                           | 3.2 kB     00:00     \n"
+"fedora-source/primary_db          	                           | 3.0 MB     00:05     \n"
+"updates/metalink                  	                           |  26 kB     00:00     \n"
+"updates                           	                           | 2.6 kB     00:00     \n"
+"updates/primary_db                	                           | 1.1 kB     00:00     \n"
+"updates-debuginfo/metalink        	                           |  18 kB     00:00     \n"
+"updates-debuginfo                 	                           | 2.6 kB     00:00     \n"
+"updates-debuginfo/primary_db      	                           | 1.1 kB     00:00     \n"
+"updates-source/metalink           	                           |  25 kB     00:00     \n"
+"updates-source                    	                           | 2.6 kB     00:00     \n"
+"updates-source/primary_db         	                           | 1.1 kB     00:00     \n"
+"Setting up Install Process\n"
+"Resolving Dependencies\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package corosync.x86_64 0:1.2.1-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: corosynclib = 1.2.1-1.fc13 for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libquorum.so.4(COROSYNC_QUORUM_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libvotequorum.so.4(COROSYNC_VOTEQUORUM_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcpg.so.4(COROSYNC_CPG_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libconfdb.so.4(COROSYNC_CONFDB_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcfg.so.4(COROSYNC_CFG_0.82)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpload.so.4(COROSYNC_PLOAD_1.0)(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: liblogsys.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libconfdb.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcoroipcc.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcpg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libquorum.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcoroipcs.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libvotequorum.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcfg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libtotem_pg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpload.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64\n"
+"---&gt; Package pacemaker.x86_64 0:1.1.5-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: heartbeat &gt;= 3.0.0 for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: net-snmp &gt;= 5.4 for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: resource-agents for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: cluster-glue for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmp.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcrmcluster.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpengine.so.3()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmpagent.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libesmtp.so.5()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libstonithd.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libhbclient.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpils.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpe_status.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmpmibs.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libnetsnmphelpers.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcib.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libccmclient.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libstonith.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: liblrm.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libtransitioner.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libpe_rules.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libcrmcommon.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libplumb.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package cluster-glue.x86_64 0:1.0.2-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: perl-TimeDate for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libOpenIPMIutils.so.0()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libOpenIPMIposix.so.0()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libopenhpi.so.2()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libOpenIPMI.so.0()(64bit) for package: cluster-glue-1.0.2-1.fc13.x86_64\n"
+"---&gt; Package cluster-glue-libs.x86_64 0:1.0.2-1.fc13 set to be updated\n"
+"---&gt; Package corosynclib.x86_64 0:1.2.1-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: librdmacm.so.1(RDMACM_1.0)(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libibverbs.so.1(IBVERBS_1.0)(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libibverbs.so.1(IBVERBS_1.1)(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: libibverbs.so.1()(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64\n"
+"--&gt; Processing Dependency: librdmacm.so.1()(64bit) for package: corosynclib-1.2.1-1.fc13.x86_64\n"
+"---&gt; Package heartbeat.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13 set to be updated\n"
+"--&gt; Processing Dependency: PyXML for package: heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64\n"
+"---&gt; Package heartbeat-libs.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13 set to be updated\n"
+"---&gt; Package libesmtp.x86_64 0:1.0.4-12.fc12 set to be updated\n"
+"---&gt; Package net-snmp.x86_64 1:5.5-12.fc13 set to be updated\n"
+"--&gt; Processing Dependency: libsensors.so.4()(64bit) for package: 1:net-snmp-5.5-12.fc13.x86_64\n"
+"---&gt; Package net-snmp-libs.x86_64 1:5.5-12.fc13 set to be updated\n"
+"---&gt; Package pacemaker-libs.x86_64 0:1.1.5-1.fc13 set to be updated\n"
+"---&gt; Package resource-agents.x86_64 0:3.0.10-1.fc13 set to be updated\n"
+"--&gt; Processing Dependency: libnet.so.1()(64bit) for package: resource-agents-3.0.10-1.fc13.x86_64\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package OpenIPMI-libs.x86_64 0:2.0.16-8.fc13 set to be updated\n"
+"---&gt; Package PyXML.x86_64 0:0.8.4-17.fc13 set to be updated\n"
+"---&gt; Package libibverbs.x86_64 0:1.1.3-4.fc13 set to be updated\n"
+"--&gt; Processing Dependency: libibverbs-driver for package: libibverbs-1.1.3-4.fc13.x86_64\n"
+"---&gt; Package libnet.x86_64 0:1.1.4-3.fc12 set to be updated\n"
+"---&gt; Package librdmacm.x86_64 0:1.0.10-2.fc13 set to be updated\n"
+"---&gt; Package lm_sensors-libs.x86_64 0:3.1.2-2.fc13 set to be updated\n"
+"---&gt; Package openhpi-libs.x86_64 0:2.14.1-3.fc13 set to be updated\n"
+"---&gt; Package perl-TimeDate.noarch 1:1.20-1.fc13 set to be updated\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package libmlx4.x86_64 0:1.0.1-5.fc13 set to be updated\n"
+"--&gt; Finished Dependency Resolution\n"
+"\n"
+"Dependencies Resolved\n"
+"\n"
+"      "
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"==========================================================================================\n"
+" Package                Arch     Version                             Repository      Size\n"
+"==========================================================================================\n"
+"Installing:\n"
+" corosync               x86_64   1.2.1-1.fc13                        fedora         136 k\n"
+" pacemaker              x86_64   1.1.5-1.fc13                        fedora         543 k\n"
+"Installing for dependencies:\n"
+" OpenIPMI-libs          x86_64   2.0.16-8.fc13                       fedora         474 k\n"
+" PyXML                  x86_64   0.8.4-17.fc13                       fedora         906 k\n"
+" cluster-glue           x86_64   1.0.2-1.fc13                        fedora         230 k\n"
+" cluster-glue-libs      x86_64   1.0.2-1.fc13                        fedora         116 k\n"
+" corosynclib            x86_64   1.2.1-1.fc13                        fedora         145 k\n"
+" heartbeat              x86_64   3.0.0-0.7.0daab7da36a8.hg.fc13      updates        172 k\n"
+" heartbeat-libs         x86_64   3.0.0-0.7.0daab7da36a8.hg.fc13      updates        265 k\n"
+" libesmtp               x86_64   1.0.4-12.fc12                       fedora          54 k\n"
+" libibverbs             x86_64   1.1.3-4.fc13                        fedora          42 k\n"
+" libmlx4                x86_64   1.0.1-5.fc13                        fedora          27 k\n"
+" libnet                 x86_64   1.1.4-3.fc12                        fedora          49 k\n"
+" librdmacm              x86_64   1.0.10-2.fc13                       fedora          22 k\n"
+" lm_sensors-libs        x86_64   3.1.2-2.fc13                        fedora          37 k\n"
+" net-snmp               x86_64   1:5.5-12.fc13                       fedora         295 k\n"
+" net-snmp-libs          x86_64   1:5.5-12.fc13                       fedora         1.5 M\n"
+" openhpi-libs           x86_64   2.14.1-3.fc13                       fedora         135 k\n"
+" pacemaker-libs         x86_64   1.1.5-1.fc13                        fedora         264 k\n"
+" perl-TimeDate          noarch   1:1.20-1.fc13                       fedora          42 k\n"
+" resource-agents        x86_64   3.0.10-1.fc13                       fedora         357 k\n"
+"\n"
+"Transaction Summary\n"
+"=========================================================================================\n"
+"Install      21 Package(s)\n"
+"Upgrade       0 Package(s)\n"
+"\n"
+"Total download size: 5.7 M\n"
+"Installed size: 20 M\n"
+"Downloading Packages:\n"
+"Setting up and reading Presto delta metadata\n"
+"updates-testing/prestodelta                                           | 164 kB     00:00     \n"
+"fedora/prestodelta                                                    |  150 B     00:00     \n"
+"Processing delta metadata\n"
+"Package(s) data still to download: 5.7 M\n"
+"(1/21): OpenIPMI-libs-2.0.16-8.fc13.x86_64.rpm                        | 474 kB     00:00     \n"
+"(2/21): PyXML-0.8.4-17.fc13.x86_64.rpm                                | 906 kB     00:01     \n"
+"(3/21): cluster-glue-1.0.2-1.fc13.x86_64.rpm                          | 230 kB     00:00     \n"
+"(4/21): cluster-glue-libs-1.0.2-1.fc13.x86_64.rpm                     | 116 kB     00:00     \n"
+"(5/21): corosync-1.2.1-1.fc13.x86_64.rpm                              | 136 kB     00:00     \n"
+"(6/21): corosynclib-1.2.1-1.fc13.x86_64.rpm                           | 145 kB     00:00     \n"
+"(7/21): heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64.rpm           | 172 kB     00:00     \n"
+"(8/21): heartbeat-libs-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64.rpm      | 265 kB     00:00     \n"
+"(9/21): libesmtp-1.0.4-12.fc12.x86_64.rpm                             |  54 kB     00:00     \n"
+"(10/21): libibverbs-1.1.3-4.fc13.x86_64.rpm                           |  42 kB     00:00     \n"
+"(11/21): libmlx4-1.0.1-5.fc13.x86_64.rpm                              |  27 kB     00:00     \n"
+"(12/21): libnet-1.1.4-3.fc12.x86_64.rpm                               |  49 kB     00:00     \n"
+"(13/21): librdmacm-1.0.10-2.fc13.x86_64.rpm                           |  22 kB     00:00     \n"
+"(14/21): lm_sensors-libs-3.1.2-2.fc13.x86_64.rpm                      |  37 kB     00:00     \n"
+"(15/21): net-snmp-5.5-12.fc13.x86_64.rpm                              | 295 kB     00:00     \n"
+"(16/21): net-snmp-libs-5.5-12.fc13.x86_64.rpm                         | 1.5 MB     00:01     \n"
+"(17/21): openhpi-libs-2.14.1-3.fc13.x86_64.rpm                        | 135 kB     00:00     \n"
+"(18/21): pacemaker-1.1.5-1.fc13.x86_64.rpm                            | 543 kB     00:00     \n"
+"(19/21): pacemaker-libs-1.1.5-1.fc13.x86_64.rpm                       | 264 kB     00:00     \n"
+"(20/21): perl-TimeDate-1.20-1.fc13.noarch.rpm                         |  42 kB     00:00     \n"
+"(21/21): resource-agents-3.0.10-1.fc13.x86_64.rpm                     | 357 kB     00:00     \n"
+"----------------------------------------------------------------------------------------\n"
+"Total                                                        539 kB/s | 5.7 MB     00:10     \n"
+"warning: rpmts_HdrFromFdno: Header V3 RSA/SHA256 Signature, key ID e8e40fde: NOKEY\n"
+"fedora/gpgkey                                                         | 3.2 kB     00:00 ... \n"
+"Importing GPG key 0xE8E40FDE \"Fedora (13) &lt;fedora@fedoraproject.org%gt;\" from /etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-x86_64\n"
+"      "
+msgstr "\n"
+"==========================================================================================\n"
+" Package                Arch     Version                             Repository      Size\n"
+"==========================================================================================\n"
+"Installing:\n"
+" corosync               x86_64   1.2.1-1.fc13                        fedora         136 k\n"
+" pacemaker              x86_64   1.1.5-1.fc13                        fedora         543 k\n"
+"Installing for dependencies:\n"
+" OpenIPMI-libs          x86_64   2.0.16-8.fc13                       fedora         474 k\n"
+" PyXML                  x86_64   0.8.4-17.fc13                       fedora         906 k\n"
+" cluster-glue           x86_64   1.0.2-1.fc13                        fedora         230 k\n"
+" cluster-glue-libs      x86_64   1.0.2-1.fc13                        fedora         116 k\n"
+" corosynclib            x86_64   1.2.1-1.fc13                        fedora         145 k\n"
+" heartbeat              x86_64   3.0.0-0.7.0daab7da36a8.hg.fc13      updates        172 k\n"
+" heartbeat-libs         x86_64   3.0.0-0.7.0daab7da36a8.hg.fc13      updates        265 k\n"
+" libesmtp               x86_64   1.0.4-12.fc12                       fedora          54 k\n"
+" libibverbs             x86_64   1.1.3-4.fc13                        fedora          42 k\n"
+" libmlx4                x86_64   1.0.1-5.fc13                        fedora          27 k\n"
+" libnet                 x86_64   1.1.4-3.fc12                        fedora          49 k\n"
+" librdmacm              x86_64   1.0.10-2.fc13                       fedora          22 k\n"
+" lm_sensors-libs        x86_64   3.1.2-2.fc13                        fedora          37 k\n"
+" net-snmp               x86_64   1:5.5-12.fc13                       fedora         295 k\n"
+" net-snmp-libs          x86_64   1:5.5-12.fc13                       fedora         1.5 M\n"
+" openhpi-libs           x86_64   2.14.1-3.fc13                       fedora         135 k\n"
+" pacemaker-libs         x86_64   1.1.5-1.fc13                        fedora         264 k\n"
+" perl-TimeDate          noarch   1:1.20-1.fc13                       fedora          42 k\n"
+" resource-agents        x86_64   3.0.10-1.fc13                       fedora         357 k\n"
+"\n"
+"Transaction Summary\n"
+"=========================================================================================\n"
+"Install      21 Package(s)\n"
+"Upgrade       0 Package(s)\n"
+"\n"
+"Total download size: 5.7 M\n"
+"Installed size: 20 M\n"
+"Downloading Packages:\n"
+"Setting up and reading Presto delta metadata\n"
+"updates-testing/prestodelta                                           | 164 kB     00:00     \n"
+"fedora/prestodelta                                                    |  150 B     00:00     \n"
+"Processing delta metadata\n"
+"Package(s) data still to download: 5.7 M\n"
+"(1/21): OpenIPMI-libs-2.0.16-8.fc13.x86_64.rpm                        | 474 kB     00:00     \n"
+"(2/21): PyXML-0.8.4-17.fc13.x86_64.rpm                                | 906 kB     00:01     \n"
+"(3/21): cluster-glue-1.0.2-1.fc13.x86_64.rpm                          | 230 kB     00:00     \n"
+"(4/21): cluster-glue-libs-1.0.2-1.fc13.x86_64.rpm                     | 116 kB     00:00     \n"
+"(5/21): corosync-1.2.1-1.fc13.x86_64.rpm                              | 136 kB     00:00     \n"
+"(6/21): corosynclib-1.2.1-1.fc13.x86_64.rpm                           | 145 kB     00:00     \n"
+"(7/21): heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64.rpm           | 172 kB     00:00     \n"
+"(8/21): heartbeat-libs-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64.rpm      | 265 kB     00:00     \n"
+"(9/21): libesmtp-1.0.4-12.fc12.x86_64.rpm                             |  54 kB     00:00     \n"
+"(10/21): libibverbs-1.1.3-4.fc13.x86_64.rpm                           |  42 kB     00:00     \n"
+"(11/21): libmlx4-1.0.1-5.fc13.x86_64.rpm                              |  27 kB     00:00     \n"
+"(12/21): libnet-1.1.4-3.fc12.x86_64.rpm                               |  49 kB     00:00     \n"
+"(13/21): librdmacm-1.0.10-2.fc13.x86_64.rpm                           |  22 kB     00:00     \n"
+"(14/21): lm_sensors-libs-3.1.2-2.fc13.x86_64.rpm                      |  37 kB     00:00     \n"
+"(15/21): net-snmp-5.5-12.fc13.x86_64.rpm                              | 295 kB     00:00     \n"
+"(16/21): net-snmp-libs-5.5-12.fc13.x86_64.rpm                         | 1.5 MB     00:01     \n"
+"(17/21): openhpi-libs-2.14.1-3.fc13.x86_64.rpm                        | 135 kB     00:00     \n"
+"(18/21): pacemaker-1.1.5-1.fc13.x86_64.rpm                            | 543 kB     00:00     \n"
+"(19/21): pacemaker-libs-1.1.5-1.fc13.x86_64.rpm                       | 264 kB     00:00     \n"
+"(20/21): perl-TimeDate-1.20-1.fc13.noarch.rpm                         |  42 kB     00:00     \n"
+"(21/21): resource-agents-3.0.10-1.fc13.x86_64.rpm                     | 357 kB     00:00     \n"
+"----------------------------------------------------------------------------------------\n"
+"Total                                                        539 kB/s | 5.7 MB     00:10     \n"
+"warning: rpmts_HdrFromFdno: Header V3 RSA/SHA256 Signature, key ID e8e40fde: NOKEY\n"
+"fedora/gpgkey                                                         | 3.2 kB     00:00 ... \n"
+"Importing GPG key 0xE8E40FDE \"Fedora (13) &lt;fedora@fedoraproject.org%gt;\" from /etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-x86_64\n"
+"      "
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"Running rpm_check_debug\n"
+"Running Transaction Test\n"
+"Transaction Test Succeeded\n"
+"Running Transaction\n"
+"  Installing     : lm_sensors-libs-3.1.2-2.fc13.x86_64                            1/21 \n"
+"  Installing     : 1:net-snmp-libs-5.5-12.fc13.x86_64                             2/21 \n"
+"  Installing     : 1:net-snmp-5.5-12.fc13.x86_64                                  3/21 \n"
+"  Installing     : openhpi-libs-2.14.1-3.fc13.x86_64                              4/21 \n"
+"  Installing     : libibverbs-1.1.3-4.fc13.x86_64                                 5/21 \n"
+"  Installing     : libmlx4-1.0.1-5.fc13.x86_64                                    6/21 \n"
+"  Installing     : librdmacm-1.0.10-2.fc13.x86_64                                 7/21 \n"
+"  Installing     : corosync-1.2.1-1.fc13.x86_64                                   8/21 \n"
+"  Installing     : corosynclib-1.2.1-1.fc13.x86_64                                9/21 \n"
+"  Installing     : libesmtp-1.0.4-12.fc12.x86_64                                 10/21 \n"
+"  Installing     : OpenIPMI-libs-2.0.16-8.fc13.x86_64                            11/21 \n"
+"  Installing     : PyXML-0.8.4-17.fc13.x86_64                                    12/21 \n"
+"  Installing     : libnet-1.1.4-3.fc12.x86_64                                    13/21 \n"
+"  Installing     : 1:perl-TimeDate-1.20-1.fc13.noarch                            14/21 \n"
+"  Installing     : cluster-glue-1.0.2-1.fc13.x86_64                              15/21 \n"
+"  Installing     : cluster-glue-libs-1.0.2-1.fc13.x86_64                         16/21 \n"
+"  Installing     : resource-agents-3.0.10-1.fc13.x86_64                          17/21 \n"
+"  Installing     : heartbeat-libs-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64          18/21 \n"
+"  Installing     : heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64               19/21 \n"
+"  Installing     : pacemaker-1.1.5-1.fc13.x86_64                                 20/21 \n"
+"  Installing     : pacemaker-libs-1.1.5-1.fc13.x86_64                            21/21 \n"
+"\n"
+"Installed:\n"
+"  corosync.x86_64 0:1.2.1-1.fc13                    pacemaker.x86_64 0:1.1.5-1.fc13                   \n"
+"\n"
+"Dependency Installed:\n"
+"  OpenIPMI-libs.x86_64 0:2.0.16-8.fc13                          \n"
+"  PyXML.x86_64 0:0.8.4-17.fc13                                  \n"
+"  cluster-glue.x86_64 0:1.0.2-1.fc13                            \n"
+"  cluster-glue-libs.x86_64 0:1.0.2-1.fc13                       \n"
+"  corosynclib.x86_64 0:1.2.1-1.fc13                             \n"
+"  heartbeat.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13             \n"
+"  heartbeat-libs.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13        \n"
+"  libesmtp.x86_64 0:1.0.4-12.fc12                               \n"
+"  libibverbs.x86_64 0:1.1.3-4.fc13                              \n"
+"  libmlx4.x86_64 0:1.0.1-5.fc13                                 \n"
+"  libnet.x86_64 0:1.1.4-3.fc12                                  \n"
+"  librdmacm.x86_64 0:1.0.10-2.fc13                              \n"
+"  lm_sensors-libs.x86_64 0:3.1.2-2.fc13                         \n"
+"  net-snmp.x86_64 1:5.5-12.fc13                                 \n"
+"  net-snmp-libs.x86_64 1:5.5-12.fc13                            \n"
+"  openhpi-libs.x86_64 0:2.14.1-3.fc13                           \n"
+"  pacemaker-libs.x86_64 0:1.1.5-1.fc13                          \n"
+"  perl-TimeDate.noarch 1:1.20-1.fc13                            \n"
+"  resource-agents.x86_64 0:3.0.10-1.fc13                        \n"
+"\n"
+"Complete!\n"
+"[root@pcmk-1 ~]# \n"
+"      "
+msgstr "\n"
+"Running rpm_check_debug\n"
+"Running Transaction Test\n"
+"Transaction Test Succeeded\n"
+"Running Transaction\n"
+"  Installing     : lm_sensors-libs-3.1.2-2.fc13.x86_64                            1/21 \n"
+"  Installing     : 1:net-snmp-libs-5.5-12.fc13.x86_64                             2/21 \n"
+"  Installing     : 1:net-snmp-5.5-12.fc13.x86_64                                  3/21 \n"
+"  Installing     : openhpi-libs-2.14.1-3.fc13.x86_64                              4/21 \n"
+"  Installing     : libibverbs-1.1.3-4.fc13.x86_64                                 5/21 \n"
+"  Installing     : libmlx4-1.0.1-5.fc13.x86_64                                    6/21 \n"
+"  Installing     : librdmacm-1.0.10-2.fc13.x86_64                                 7/21 \n"
+"  Installing     : corosync-1.2.1-1.fc13.x86_64                                   8/21 \n"
+"  Installing     : corosynclib-1.2.1-1.fc13.x86_64                                9/21 \n"
+"  Installing     : libesmtp-1.0.4-12.fc12.x86_64                                 10/21 \n"
+"  Installing     : OpenIPMI-libs-2.0.16-8.fc13.x86_64                            11/21 \n"
+"  Installing     : PyXML-0.8.4-17.fc13.x86_64                                    12/21 \n"
+"  Installing     : libnet-1.1.4-3.fc12.x86_64                                    13/21 \n"
+"  Installing     : 1:perl-TimeDate-1.20-1.fc13.noarch                            14/21 \n"
+"  Installing     : cluster-glue-1.0.2-1.fc13.x86_64                              15/21 \n"
+"  Installing     : cluster-glue-libs-1.0.2-1.fc13.x86_64                         16/21 \n"
+"  Installing     : resource-agents-3.0.10-1.fc13.x86_64                          17/21 \n"
+"  Installing     : heartbeat-libs-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64          18/21 \n"
+"  Installing     : heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64               19/21 \n"
+"  Installing     : pacemaker-1.1.5-1.fc13.x86_64                                 20/21 \n"
+"  Installing     : pacemaker-libs-1.1.5-1.fc13.x86_64                            21/21 \n"
+"\n"
+"Installed:\n"
+"  corosync.x86_64 0:1.2.1-1.fc13                    pacemaker.x86_64 0:1.1.5-1.fc13                   \n"
+"\n"
+"Dependency Installed:\n"
+"  OpenIPMI-libs.x86_64 0:2.0.16-8.fc13                          \n"
+"  PyXML.x86_64 0:0.8.4-17.fc13                                  \n"
+"  cluster-glue.x86_64 0:1.0.2-1.fc13                            \n"
+"  cluster-glue-libs.x86_64 0:1.0.2-1.fc13                       \n"
+"  corosynclib.x86_64 0:1.2.1-1.fc13                             \n"
+"  heartbeat.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13             \n"
+"  heartbeat-libs.x86_64 0:3.0.0-0.7.0daab7da36a8.hg.fc13        \n"
+"  libesmtp.x86_64 0:1.0.4-12.fc12                               \n"
+"  libibverbs.x86_64 0:1.1.3-4.fc13                              \n"
+"  libmlx4.x86_64 0:1.0.1-5.fc13                                 \n"
+"  libnet.x86_64 0:1.1.4-3.fc12                                  \n"
+"  librdmacm.x86_64 0:1.0.10-2.fc13                              \n"
+"  lm_sensors-libs.x86_64 0:3.1.2-2.fc13                         \n"
+"  net-snmp.x86_64 1:5.5-12.fc13                                 \n"
+"  net-snmp-libs.x86_64 1:5.5-12.fc13                            \n"
+"  openhpi-libs.x86_64 0:2.14.1-3.fc13                           \n"
+"  pacemaker-libs.x86_64 0:1.1.5-1.fc13                          \n"
+"  perl-TimeDate.noarch 1:1.20-1.fc13                            \n"
+"  resource-agents.x86_64 0:3.0.10-1.fc13                        \n"
+"\n"
+"Complete!\n"
+"[root@pcmk-1 ~]# \n"
+"      "
+
+#. Tag: title
+#, no-c-format
+msgid "Before You Continue"
+msgstr "Înainte de a Continua"
+
+#. Tag: para
+#, no-c-format
+msgid "Repeat the Installation steps so that you have 2 Fedora nodes with the cluster software installed."
+msgstr "Repetați pașii de Instalare astfel încât să aveți 2 noduri cu Fedora cu software-ul de cluster instalat."
+
+#. Tag: para
+#, no-c-format
+msgid "For the purposes of this document, the additional node is called pcmk-2 with address 192.168.122.42."
+msgstr "Pentru scopurile acestui document, nodul adițional este numit pcmk-2 cu adresa 192.168.122.42."
+
+#. Tag: title
+#, no-c-format
+msgid "Setup"
+msgstr "Setup"
+
+#. Tag: title
+#, no-c-format
+msgid "Finalize Networking"
+msgstr "Finalizați Rețelistica"
+
+#. Tag: para
+#, no-c-format
+msgid "Confirm that you can communicate with the two new nodes:"
+msgstr "Confirmați că puteți comunica cu cele două noi noduri:"
+
+#. Tag: title
+#, no-c-format
+msgid "Verify Connectivity by IP address"
+msgstr "Verificați Conectivitatea după Adresa IP"
+
+#. Tag: programlisting
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>ping -c 3 192.168.122.102</userinput>\n"
+"PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.\n"
+"64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=0.343 ms\n"
+"64 bytes from 192.168.122.102: icmp_seq=2 ttl=64 time=0.402 ms\n"
+"64 bytes from 192.168.122.102: icmp_seq=3 ttl=64 time=0.558 ms\n"
+"\n"
+"--- 192.168.122.102 ping statistics ---\n"
+"<emphasis>3 packets transmitted, 3 received, 0% packet loss</emphasis>, time 2000ms\n"
+"rtt min/avg/max/mdev = 0.343/0.434/0.558/0.092 ms\n"
+"	"
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>ping -c 3 192.168.122.102</userinput>\n"
+"PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.\n"
+"64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=0.343 ms\n"
+"64 bytes from 192.168.122.102: icmp_seq=2 ttl=64 time=0.402 ms\n"
+"64 bytes from 192.168.122.102: icmp_seq=3 ttl=64 time=0.558 ms\n"
+"\n"
+"--- 192.168.122.102 ping statistics ---\n"
+"<emphasis>3 packets transmitted, 3 received, 0% packet loss</emphasis>, time 2000ms\n"
+"rtt min/avg/max/mdev = 0.343/0.434/0.558/0.092 ms\n"
+"	"
+
+#. Tag: para
+#, no-c-format
+msgid "Now we need to make sure we can communicate with the machines by their name. If you have a DNS server, add additional entries for the two machines. Otherwise, you’ll need to add the machines to /etc/hosts . Below are the entries for my cluster nodes:"
+msgstr "Acum trebuie să ne asigurăm că putem comunica cu mașinile după numele acestora. Dacă aveți un server DNS, adăugați intrări adiționale pentru cele două mașini. În caz contrar, va trebui să adăugați mașinile în /etc/hosts. Mai jos sunt intrările pentru nodurile mele de cluster:"
+
+#. Tag: title
+#, no-c-format
+msgid "Set up /etc/hosts entries"
+msgstr "Setați intrările din /etc/hosts"
+
+#. Tag: programlisting
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>grep pcmk /etc/hosts</userinput>\n"
+"192.168.122.101 pcmk-1.clusterlabs.org pcmk-1\n"
+"192.168.122.102 pcmk-2.clusterlabs.org pcmk-2\n"
+"	"
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>grep pcmk /etc/hosts</userinput>\n"
+"192.168.122.101 pcmk-1.clusterlabs.org pcmk-1\n"
+"192.168.122.102 pcmk-2.clusterlabs.org pcmk-2\n"
+"	"
+
+#. Tag: para
+#, no-c-format
+msgid "We can now verify the setup by again using ping:"
+msgstr "Putem verifica setup-ul folosind ping din nou:"
+
+#. Tag: title
+#, no-c-format
+msgid "Verify Connectivity by Hostname"
+msgstr "Verificați Conectivitatea după Numele Gazdei"
+
+#. Tag: programlisting
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>ping -c 3 pcmk-2</userinput>\n"
+"PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.\n"
+"64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=1 ttl=64 time=0.164 ms\n"
+"64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=2 ttl=64 time=0.475 ms\n"
+"64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=3 ttl=64 time=0.186 ms\n"
+"\n"
+"--- pcmk-2.clusterlabs.org ping statistics ---\n"
+"<emphasis>3 packets transmitted, 3 received, 0% packet loss</emphasis>, time 2001ms\n"
+"rtt min/avg/max/mdev = 0.164/0.275/0.475/0.141 ms\n"
+"	"
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>ping -c 3 pcmk-2</userinput>\n"
+"PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.\n"
+"64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=1 ttl=64 time=0.164 ms\n"
+"64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=2 ttl=64 time=0.475 ms\n"
+"64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=3 ttl=64 time=0.186 ms\n"
+"\n"
+"--- pcmk-2.clusterlabs.org ping statistics ---\n"
+"<emphasis>3 packets transmitted, 3 received, 0% packet loss</emphasis>, time 2001ms\n"
+"rtt min/avg/max/mdev = 0.164/0.275/0.475/0.141 ms\n"
+"	"
+
+#. Tag: title
+#, no-c-format
+msgid "Configure SSH"
+msgstr "Configurați SSH"
+
+#. Tag: para
+#, no-c-format
+msgid "SSH is a convenient and secure way to copy files and perform commands remotely. For the purposes of this guide, we will create a key without a password (using the -N “” option) so that we can perform remote actions without being prompted."
+msgstr "SSH este un mod convenabil și sigur de a copia fișierele și de a efectua comenzi pe sisteme la distanță. Pentru scopurile acestui ghid, vom crea o cheie fără parolă (folosind opțiunea -N \"\") astfel încât să putem efectua acțiuni la distanță fără a mai fi întrebați."
+
+#. Tag: para
+#, no-c-format
+msgid "Unprotected SSH keys, those without a password, are not recommended for servers exposed to the outside world."
+msgstr "Chei neprotejate de SSH, precum cele fără parolă, nu sunt recomandate pentru servere expuse la lumea externă."
+
+#. Tag: para
+#, no-c-format
+msgid "Create a new key and allow anyone with that key to log in:"
+msgstr "Creați o cheie nouă și permiteți oricui cu acea cheie să se logheze:"
+
+#. Tag: title
+#, no-c-format
+msgid "Creating and Activating a new SSH Key"
+msgstr "Crearea și Activarea unei Chei noi SSH"
+
+#. Tag: programlisting
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>ssh-keygen -t dsa -f ~/.ssh/id_dsa -N \"\"</userinput>\n"
+"<emphasis>Generating public/private dsa key pair.</emphasis>\n"
+"<emphasis>Your identification has been saved in /root/.ssh/id_dsa.</emphasis>\n"
+"<emphasis>Your public key has been saved in /root/.ssh/id_dsa.pub.</emphasis>\n"
+"The key fingerprint is:\n"
+"91:09:5c:82:5a:6a:50:08:4e:b2:0c:62:de:cc:74:44 root@pcmk-1.clusterlabs.org\n"
+"\n"
+"The key's randomart image is:\n"
+"+--[ DSA 1024]----+\n"
+"|==.ooEo..        |\n"
+"|X O + .o o       |\n"
+"| * A    +        |\n"
+"|  +      .       |\n"
+"| .      S        |\n"
+"|                 |\n"
+"|                 |\n"
+"|                 |\n"
+"|                 |\n"
+"+-----------------+\n"
+"[root@pcmk-1 ~]# <userinput>cp .ssh/id_dsa.pub .ssh/authorized_keys</userinput>\n"
+"[root@pcmk-1 ~]#\n"
+"	"
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>ssh-keygen -t dsa -f ~/.ssh/id_dsa -N \"\"</userinput>\n"
+"<emphasis>Generating public/private dsa key pair.</emphasis>\n"
+"<emphasis>Your identification has been saved in /root/.ssh/id_dsa.</emphasis>\n"
+"<emphasis>Your public key has been saved in /root/.ssh/id_dsa.pub.</emphasis>\n"
+"The key fingerprint is:\n"
+"91:09:5c:82:5a:6a:50:08:4e:b2:0c:62:de:cc:74:44 root@pcmk-1.clusterlabs.org\n"
+"\n"
+"The key's randomart image is:\n"
+"+--[ DSA 1024]----+\n"
+"|==.ooEo..        |\n"
+"|X O + .o o       |\n"
+"| * A    +        |\n"
+"|  +      .       |\n"
+"| .      S        |\n"
+"|                 |\n"
+"|                 |\n"
+"|                 |\n"
+"|                 |\n"
+"+-----------------+\n"
+"[root@pcmk-1 ~]# <userinput>cp .ssh/id_dsa.pub .ssh/authorized_keys</userinput>\n"
+"[root@pcmk-1 ~]#\n"
+"	"
+
+#. Tag: para
+#, no-c-format
+msgid "Install the key on the other nodes and test that you can now run commands remotely, without being prompted"
+msgstr "Instalați cheia pe celelalte noduri și testați că acum puteți rula comenzi de la distanță, fără să mai fiți întrebați"
+
+#. Tag: title
+#, no-c-format
+msgid "Installing the SSH Key on Another Host"
+msgstr "Instalarea Cheii SSH pe o Altă Gazdă"
+
+#. Tag: programlisting
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>scp -r .ssh pcmk-2:</userinput>\n"
+"The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.\n"
+"RSA key fingerprint is b1:2b:55:93:f1:d9:52:2b:0f:f2:8a:4e:ae:c6:7c:9a.\n"
+"Are you sure you want to continue connecting (yes/no)? yes\n"
+"Warning: Permanently added 'pcmk-2,192.168.122.102' (RSA) to the list of known hosts.\n"
+"<emphasis>root@pcmk-2's password:</emphasis> \n"
+"id_dsa.pub                           100%  616     0.6KB/s   00:00    \n"
+"id_dsa                               100%  672     0.7KB/s   00:00    \n"
+"known_hosts                          100%  400     0.4KB/s   00:00    \n"
+"authorized_keys                      100%  616     0.6KB/s   00:00    \n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- uname -n</userinput>\n"
+"pcmk-2\n"
+"[root@pcmk-1 ~]#\n"
+"	"
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>scp -r .ssh pcmk-2:</userinput>\n"
+"The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.\n"
+"RSA key fingerprint is b1:2b:55:93:f1:d9:52:2b:0f:f2:8a:4e:ae:c6:7c:9a.\n"
+"Are you sure you want to continue connecting (yes/no)? yes\n"
+"Warning: Permanently added 'pcmk-2,192.168.122.102' (RSA) to the list of known hosts.\n"
+"<emphasis>root@pcmk-2's password:</emphasis> \n"
+"id_dsa.pub                           100%  616     0.6KB/s   00:00    \n"
+"id_dsa                               100%  672     0.7KB/s   00:00    \n"
+"known_hosts                          100%  400     0.4KB/s   00:00    \n"
+"authorized_keys                      100%  616     0.6KB/s   00:00    \n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- uname -n</userinput>\n"
+"pcmk-2\n"
+"[root@pcmk-1 ~]#\n"
+"	"
+
+#. Tag: title
+#, no-c-format
+msgid "Short Node Names"
+msgstr "Numele Scurte ale Nodurilor"
+
+#. Tag: para
+#, no-c-format
+msgid "During installation, we filled in the machine’s fully qualifier domain name (FQDN) which can be rather long when it appears in cluster logs and status output. See for yourself how the machine identifies itself:"
+msgstr "În timpul instalării, am completat numele complet calificat de domeniu (FQDN) al mașinii care poate fi destul de lung când apare în logurile clusterului sau în rezultatul de ieșire al status-ului. Vedeți pentru voi înșivă cum se identifică singură mașina:"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>uname -n</userinput>\n"
+"pcmk-1<emphasis>.clusterlabs.org</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>dnsdomainname </userinput>\n"
+"clusterlabs.org\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>uname -n</userinput>\n"
+"pcmk-1<emphasis>.clusterlabs.org</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>dnsdomainname </userinput>\n"
+"clusterlabs.org\n"
+"      "
+
+#. Tag: para
+#, no-c-format
+msgid "The output from the second command is fine, but we really don’t need the domain name included in the basic host details. To address this, we need to update /etc/sysconfig/network. This is what it should look like before we start."
+msgstr "Rezultatul de ieșire de la a doua comandă este în regulă, dar nu avem nevoie cu adevărat ca numele de domeniu să fie inclus în detaliile de bază ale gazdei. Pentru a adresa acest lucru, trebuie să actualizăm /etc/sysconfig/network. Așa ar trebui să arate înainte să începem."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>cat /etc/sysconfig/network</userinput>\n"
+"NETWORKING=yes\n"
+"<emphasis>HOSTNAME=pcmk-1.clusterlabs.org</emphasis>\n"
+"GATEWAY=192.168.122.1\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>cat /etc/sysconfig/network</userinput>\n"
+"NETWORKING=yes\n"
+"<emphasis>HOSTNAME=pcmk-1.clusterlabs.org</emphasis>\n"
+"GATEWAY=192.168.122.1\n"
+"      "
+
+#. Tag: para
+#, no-c-format
+msgid "All we need to do now is strip off the domain name portion, which is stored elsewhere anyway."
+msgstr "Tot ceea ce trebuie să facem acum este să scoatem porțiunea de nume de domeniu, care este stocată oricum în altă parte."
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# <userinput>sed -i.bak 's/\\.[a-z].*//g' /etc/sysconfig/network</userinput>"
+msgstr "[root@pcmk-1 ~]# <userinput>sed -i.bak 's/\\.[a-z].*//g' /etc/sysconfig/network</userinput>"
+
+#. Tag: para
+#, no-c-format
+msgid "Now confirm the change was successful. The revised file contents should look something like this."
+msgstr "Acum confirmați că modificarea a fost realizată cu succes. Conținutul fișierului revizuit ar trebui să arate ceva de genul acesta."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>cat /etc/sysconfig/network</userinput>\n"
+"NETWORKING=yes\n"
+"<emphasis>HOSTNAME=pcmk-1</emphasis>\n"
+"GATEWAY=192.168.122.1\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>cat /etc/sysconfig/network</userinput>\n"
+"NETWORKING=yes\n"
+"<emphasis>HOSTNAME=pcmk-1</emphasis>\n"
+"GATEWAY=192.168.122.1\n"
+"      "
+
+#. Tag: para
+#, no-c-format
+msgid "However we’re not finished. The machine won't normally see the shortened host name until about it reboots, but we can force it to update."
+msgstr "Însă nu am terminat. Mașina nu ar vedea în mod normal lista de nume de gazde scurtate până ce nu repornește, dar putem să o forțăm să se actualizeze."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>source /etc/sysconfig/network</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>hostname $HOSTNAME</userinput>\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>source /etc/sysconfig/network</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>hostname $HOSTNAME</userinput>\n"
+"      "
+
+#. Tag: para
+#, no-c-format
+msgid "Now check the machine is using the correct names"
+msgstr "Acum verificați că mașina folosește numele corecte"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>uname -n</userinput>\n"
+"pcmk-1\n"
+"[root@pcmk-1 ~]# <userinput>dnsdomainname </userinput>\n"
+"clusterlabs.org\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>uname -n</userinput>\n"
+"pcmk-1\n"
+"[root@pcmk-1 ~]# <userinput>dnsdomainname </userinput>\n"
+"clusterlabs.org\n"
+"      "
+
+#. Tag: para
+#, no-c-format
+msgid "Now repeat on pcmk-2."
+msgstr "Acum repetați pe pcmk-2."
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring Corosync"
+msgstr "Configurarea Corosync"
+
+#. Tag: para
+#, no-c-format
+msgid "Choose a port number and multicast <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast\">http://en.wikipedia.org/wiki/Multicast</ulink> </para> </footnote> address. <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast_address\">http://en.wikipedia.org/wiki/Multicast_address</ulink> </para> </footnote>"
+msgstr "Alegeți un număr de port și o <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast\">http://en.wikipedia.org/wiki/Multicast</ulink> </para> </footnote> adresă multicast. <footnote> <para> <ulink url=\"http://en.wikipedia.org/wiki/Multicast_address\">http://en.wikipedia.org/wiki/Multicast_address</ulink> </para> </footnote>"
+
+#. Tag: para
+#, no-c-format
+msgid "Be sure that the values you chose do not conflict with any existing clusters you might have. For advice on choosing a multicast address, see <ulink url=\"http://www.29west.com/docs/THPM/multicast-address-assignment.html\"> http://www.29west.com/docs/THPM/multicast-address-assignment.html </ulink>"
+msgstr "Asigurați-vă că valorile pe care le alegeți nu dau conflicte cu alte clustere existente pe care le-ați putea avea. Pentru sfaturi în privința alegerii unei adrese multicast, vedeți <ulink url=\"http://www.29west.com/docs/THPM/multicast-address-assignment.html\"> http://www.29west.com/docs/THPM/multicast-address-assignment.html </ulink>"
+
+#. Tag: para
+#, no-c-format
+msgid "For this document, I have chosen port 4000 and used 226.94.1.1 as the multicast address."
+msgstr "Pentru acest document, am ales portul 4000 și am folosit 226.94.1.1 ca adresă multicast"
+
+#. Tag: para
+#, no-c-format
+msgid "The instructions below only apply for a machine with a single NIC. If you have a more complicated setup, you should edit the configuration manually."
+msgstr "Instrucțiunile de mai jos se aplică numai pentru o mașină cu o singură placă de rețea. Dacă aveți un setup mai complicat, ar trebui să editați configurația manual."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>export ais_port=4000</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>export ais_mcast=226.94.1.1</userinput>\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>export ais_port=4000</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>export ais_mcast=226.94.1.1</userinput>\n"
+"      "
+
+#. Tag: para
+#, no-c-format
+msgid "Next we automatically determine the hosts address. By not using the full address, we make the configuration suitable to be copied to other nodes."
+msgstr "În continuare determinăm în mod automat adresa gazdelor. Nefolosind adresa completă, facem configurația fezabilă pentru a fi copiată pe alte noduri."
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# <userinput>export ais_addr=`ip addr | grep \"inet \" | tail -n 1 | awk '{print $4}' | sed s/255/0/`</userinput>"
+msgstr "[root@pcmk-1 ~]# <userinput>export ais_addr=`ip addr | grep \"inet \" | tail -n 1 | awk '{print $4}' | sed s/255/0/`</userinput>"
+
+#. Tag: para
+#, no-c-format
+msgid "Display and verify the configuration options"
+msgstr "Listați și verificați opțiunile de configurare"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>env | grep ais_</userinput>\n"
+"ais_mcast=226.94.1.1\n"
+"ais_port=4000\n"
+"ais_addr=192.168.122.0\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>env | grep ais_</userinput>\n"
+"ais_mcast=226.94.1.1\n"
+"ais_port=4000\n"
+"ais_addr=192.168.122.0\n"
+"      "
+
+#. Tag: para
+#, no-c-format
+msgid "Once you're happy with the chosen values, update the Corosync configuration"
+msgstr "Odată ce sunteți mulțumiți cu valorile alese, actualizați configurația Corosync"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>cp /etc/corosync/corosync.conf.example  /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*mcastaddr:.*/mcastaddr:\\ $ais_mcast/g\" /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*mcastport:.*/mcastport:\\ $ais_port/g\" /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*bindnetaddr:.*/bindnetaddr:\\ $ais_addr/g\" /etc/corosync/corosync.conf</userinput>\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>cp /etc/corosync/corosync.conf.example  /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*mcastaddr:.*/mcastaddr:\\ $ais_mcast/g\" /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*mcastport:.*/mcastport:\\ $ais_port/g\" /etc/corosync/corosync.conf</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>sed -i.bak \"s/.*bindnetaddr:.*/bindnetaddr:\\ $ais_addr/g\" /etc/corosync/corosync.conf</userinput>\n"
+"      "
+
+#. Tag: para
+#, no-c-format
+msgid "Finally, tell Corosync to load the Pacemaker plugin."
+msgstr "În sfârșit, spuneți Corosync-ului să încarce plugin-ul de Pacemaker."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/pcmk</userinput>\n"
+"service {\n"
+"        # Load the Pacemaker Cluster Resource Manager\n"
+"        name: pacemaker\n"
+"        ver:  1\n"
+"}\n"
+"END\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/pcmk</userinput>\n"
+"service {\n"
+"        # Load the Pacemaker Cluster Resource Manager\n"
+"        name: pacemaker\n"
+"        ver:  1\n"
+"}\n"
+"END\n"
+"      "
+
+#. Tag: para
+#, no-c-format
+msgid "The final configuration should look something like the sample in <xref linkend=\"ap-corosync-conf\" />."
+msgstr "Configurația finală ar trebui să arate ceva similar cu exemplul din <xref linkend=\"ap-corosync-conf\"/>."
+
+#. Tag: para
+#, no-c-format
+msgid "When run in version 1 mode, the plugin does not start the Pacemaker daemons. Instead it just sets up the quorum and messaging interfaces needed by the rest of the stack."
+msgstr "Când rulează în modul versiunea 1, plugin-ul nu pornește daemonii Pacemaker-ului. În schimb doar setează quorum-ul și interfețele de mesagerie necesitate de către restul stivei."
+
+#. Tag: para
+#, no-c-format
+msgid "Starting the dameons occurs when the Pacemaker init script is invoked. This resolves two long standing issues:"
+msgstr "Pornirea daemonilor se întâmplă când scriptul de init al Pacemaker este invocat. Acest lucru rezolvă două probleme existente de mult timp: "
+
+#. Tag: para
+#, no-c-format
+msgid "Forking inside a multi-threaded process like Corosync causes all sorts of pain. This has been problematic for Pacemaker as it needs a number of daemons to be spawned."
+msgstr "Forking-ul înăuntrul unui proces multi-threaded precum Corosync cauzează tot felul de probleme. Acest lucru a fost problematic pentru Pacemaker din moment ce acesta are nevoie de un număr de daemoni să fie lansați în execuție."
+
+#. Tag: para
+#, no-c-format
+msgid "Corosync was never designed for staggered shutdown - something previously needed in order to prevent the cluster from leaving before Pacemaker could stop all active resources."
+msgstr "Corosync nu a fost niciodată conceput pentru închiderea în pași - un aspect necesar anterior pentru a preveni clusterul din a ieși înainte ca Pacemaker să poată opri toate resursele active."
+
+#. Tag: title
+#, no-c-format
+msgid "Propagate the Configuration"
+msgstr "Propagarea Configurației"
+
+#. Tag: para
+#, no-c-format
+msgid "Now we need to copy the changes so far to the other node:"
+msgstr "Acum trebuie să copiem modificările făcute până acum pe celălalt nod:"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>for f in /etc/corosync/corosync.conf /etc/corosync/service.d/pcmk /etc/hosts; do scp $f pcmk-2:$f ; done</userinput>\n"
+"corosync.conf                            100% 1528     1.5KB/s   00:00\n"
+"hosts                                    100%  281     0.3KB/s   00:00\n"
+"[root@pcmk-1 ~]#\n"
+"      "
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>for f in /etc/corosync/corosync.conf /etc/corosync/service.d/pcmk /etc/hosts; do scp $f pcmk-2:$f ; done</userinput>\n"
+"corosync.conf                            100% 1528     1.5KB/s   00:00\n"
+"hosts                                    100%  281     0.3KB/s   00:00\n"
+"[root@pcmk-1 ~]#\n"
+"      "
+

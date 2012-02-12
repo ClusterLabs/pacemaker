@@ -45,7 +45,7 @@ Examples:
 		The primary tool for monitoring the status of the cluster is crm_mon (also available as crm status). It can be run in a variety of modes and has a number of output options. To find out about any of the tools that come with Pacemaker, simply invoke them with the <command>--help</command> option or consult the included man pages. Both sets of output are created from the tool, and so will always be in sync with each other and the tool itself.
 	</para>
 	<para>
-		Additionally, the Pacemaker version and supported cluster stack(s) is available via the <command>--version</command> option.
+		Additionally, the Pacemaker version and supported cluster stack(s) are available via the <command>--version</command> option.
 	</para>
 	
 <screen>

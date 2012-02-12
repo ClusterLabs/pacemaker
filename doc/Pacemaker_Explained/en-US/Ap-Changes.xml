@@ -53,7 +53,7 @@
 	      <para>
 		The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed.
 		This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0.
-		This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary.
+		This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0.0.6 cluster for any longer than absolutely necessary.
 	      </para>
 	    </listitem>
 	  </itemizedlist></para>

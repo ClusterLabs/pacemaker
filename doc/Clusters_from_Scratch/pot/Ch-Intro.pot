@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-21T11:01:27\n"
-"PO-Revision-Date: 2010-12-21T11:01:27\n"
+"POT-Creation-Date: 2011-12-31T16:43:03\n"
+"PO-Revision-Date: 2011-12-31T16:43:03\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -24,17 +24,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The purpose of this document is to definitively explain the concepts used to configure Pacemaker. To achieve this best, it will focus exclusively on the XML syntax used to configure the CIB."
+msgid "Computer clusters can be used to provide highly available services or resources. The redundancy of multiple machines is used to guard against failures of many types."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For those that are allergic to XML, Pacemaker comes with a cluster shell and a Python based GUI exists, however these tools will not be covered at all in this document <footnote> <para>It is hoped however, that having understood the concepts explained here, that the functionality of these tools will also be more readily understood.</para> </footnote> , precisely because they hide the XML."
+msgid "This document will walk through the installation and setup of simple clusters using the Fedora distribution, version 14. The clusters described here will use Pacemaker and Corosync to provide resource management and messaging. Required packages and modifications to their configuration files are described along with the use of the Pacemaker command line tool for generating the XML used for cluster control."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Additionally, this document is NOT a step-by-step how-to guide for configuring a specific clustering scenario. Although such guides exist, the purpose of this document is to provide an understanding of the building blocks that can be used to construct any type of Pacemaker cluster."
+msgid "Pacemaker is a central component and provides the resource management required in these systems. This management includes detecting and recovering from the failure of various nodes, resources and services under its control."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When more in depth information is required and for real world usage, please refer to the <ulink url=\"http://www.clusterlabs.org/doc/\">Pacemaker Explained</ulink> manual."
 msgstr ""
 
 #. Tag: title
@@ -99,7 +104,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Support for advanced services type"
+msgid "Support for advanced service types"
 msgstr ""
 
 #. Tag: para
@@ -119,46 +124,6 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Types of Pacemaker Clusters"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Pacemaker makes no assumptions about your environment, this allows it to support practically any <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">redundancy configuration</ulink> including Active/Active, Active/Passive, N+1, N+M, N-to-1 and N-to-N."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Active/Passive Redundancy"
-msgstr ""
-
-#. Tag: caption
-#, no-c-format
-msgid "Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Shared Failover"
-msgstr ""
-
-#. Tag: caption
-#, no-c-format
-msgid "By supporting many nodes, Pacemaker can dramatically reduce hardware costs by allowing several active/passive clusters to be combined and share a common backup node"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "N to N Redundancy"
-msgstr ""
-
-#. Tag: caption
-#, no-c-format
-msgid "When shared storage is available, every node can potentially be used for failover. Pacemaker can even run multiple copies of services to spread out the workload."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
 msgid "Pacemaker Architecture"
 msgstr ""
 
@@ -169,17 +134,32 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Core cluster infrastructure providing messaging and membership functionality (illustrated in red)"
+msgid "Non-cluster aware components (illustrated in green)."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Non-cluster aware components (illustrated in blue). In a Pacemaker cluster, these pieces include not only the scripts that knows how to start, stop and monitor resources, but also a local daemon that masks the differences between the different standards these scripts implement."
+msgid "These pieces include the resources themselves, scripts that start, stop and monitor them, and also a local daemon that masks the differences between the different standards these scripts implement."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A brain (illustrated in green) that processes and reacts to events from the cluster (nodes leaving or joining) and resources (eg. monitor failures) as well as configuration changes from the administrator. In response to all of these events, Pacemaker will compute the ideal state of the cluster and plot a path to achieve it. This may include moving resources, stopping nodes and even forcing them offline with remote power switches."
+msgid "Resource management"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker provides the brain (illustrated in blue) that processes and reacts to events regarding the cluster. These events include nodes joining or leaving the cluster; resource events caused by failures, maintenance, scheduled activities; and other administrative actions. Pacemaker will compute the ideal state of the cluster and plot a path to achieve it after any of these events. This may include moving resources, stopping nodes and even forcing them offline with remote power switches."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Low level infrastructure"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Corosync provides reliable messaging, membership and quorum information about the cluster (illustrated in red)."
 msgstr ""
 
 #. Tag: title
@@ -265,5 +245,40 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "In some cases, it may be necessary to power off nodes in order to protect shared data or complete resource recovery. For this Pacemaker comes with STONITHd. STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and is usually implemented with a remote power switch. In Pacemaker, STONITH devices are modeled as resources (and configured in the CIB) to enable them to be easily monitored for failure, however STONITHd takes care of understanding the STONITH topology such that its clients simply request a node be fenced and it does the rest."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Types of Pacemaker Clusters"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker makes no assumptions about your environment, this allows it to support practically any <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">redundancy configuration</ulink> including Active/Active, Active/Passive, N+1, N+M, N-to-1 and N-to-N."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In this document we will focus on the setup of a highly available Apache web server with an Active/Passive cluster using DRBD and Ext4 to store data. Then, we will upgrade this cluster to Active/Active using GFS2."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Active/Passive Redundancy"
+msgstr ""
+
+#. Tag: caption
+#, no-c-format
+msgid "Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "N to N Redundancy"
+msgstr ""
+
+#. Tag: caption
+#, no-c-format
+msgid "When shared storage is available, every node can potentially be used for failover. Pacemaker can even run multiple copies of services to spread out the workload."
 msgstr ""
 

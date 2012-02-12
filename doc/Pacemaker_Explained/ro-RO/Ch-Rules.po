@@ -1,492 +1,848 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-11-02 18:46+0100\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ch-Rules.xml:2(title)
+#. Tag: title
+#, no-c-format
 msgid "Rules"
 msgstr "Reguli"
 
-#: Ch-Rules.xml:3(para)
-msgid "Rules can be used to make your configuration more dynamic. One common example is to set one value for resource-stickiness during working hours, to prevent resources from being moved back to their most preferred location, and another on weekends when no-one is around to notice an outage."
-msgstr "Regulile pot fi folosite pentru a face configuraţia voastră mai dinamică. Un exemplu comun este de a seta o valoare pentru resource-stickiness în timpul orelor de program, pentru a împiedica resursele de a fi mutate înapoi la locaţia cea mai preferată a acestora, iar altă valoare în weekend-uri când nu este nimeni în preajmă să detecteze o întrerupere a serviciului."
+#. Tag: para
+#, no-c-format
+msgid "Rules can be used to make your configuration more dynamic. One common example is to set one value for <literal>resource-stickiness</literal> during working hours, to prevent resources from being moved back to their most preferred location, and another on weekends when no-one is around to notice an outage."
+msgstr "Regulile pot fi folosite pentru a face configuraţia voastră mai dinamică. Un exemplu comun este de a seta o valoare pentru <literal>resource-stickiness</literal> în timpul orelor de program, pentru a împiedica resursele de a fi mutate înapoi la locaţia cea mai preferată a acestora, iar altă valoare în weekend-uri când nu este nimeni în preajmă să detecteze o întrerupere a serviciului."
 
-#: Ch-Rules.xml:7(para)
+#. Tag: para
+#, no-c-format
 msgid "Another use of rules might be to assign machines to different processing groups (using a node attribute) based on time and to then use that attribute when creating location constraints."
 msgstr "O altă utilizare a regulilor ar putea fi pentru a asigna maşini la grupuri de procesare diferite (folosind un atribut de nod) bazat pe timp şi mai apoi să folosească acel atribut pentru a crea o restricţie de locaţie."
 
-#: Ch-Rules.xml:8(para)
-msgid "Each rule can contain a number of expressions, date-expressions and even other rules. The results of the expressions are combined based on the rule's boolean-op field to determine if the rule ultimately evaluates to true or false. What happens next depends on the context in which the rule is being used."
-msgstr "Fiecare regulă poate conţine un număr de expresii, expresii de dată şi chiar si alte reguli. Rezultatele expresiilor sunt combinate pe baza câmpului boolean op al regulii pentru a determina dacă regula în ultimă instanţă este evaluată ca adevărat sau fals. Ce se întâmplă mai departe depinde de contextul în care regula este folosită."
+#. Tag: para
+#, no-c-format
+msgid "Each rule can contain a number of expressions, date-expressions and even other rules. The results of the expressions are combined based on the rule's <literal>boolean-op</literal> field to determine if the rule ultimately evaluates to <literal>true</literal> or <literal>false</literal>. What happens next depends on the context in which the rule is being used."
+msgstr "Fiecare regulă poate conţine un număr de expresii, expresii de dată şi chiar si alte reguli. Rezultatele expresiilor sunt combinate pe baza câmpului <literal>boolean-op</literal> al regulii pentru a determina dacă regula în ultimă instanţă este evaluată ca <literal>true</literal> sau <literal>false</literal>. Ce se întâmplă mai departe depinde de contextul în care regula este folosită."
 
-#: Ch-Rules.xml:14(title)
+#. Tag: title
+#, no-c-format
 msgid "Properties of a Rule"
 msgstr "Proprietăţile unei Reguli"
 
-#: Ch-Rules.xml:18(entry)
-#: Ch-Rules.xml:51(entry)
-#: Ch-Rules.xml:97(entry)
-#: Ch-Rules.xml:141(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Field"
 msgstr "Câmp"
 
-#: Ch-Rules.xml:19(entry)
-#: Ch-Rules.xml:52(entry)
-#: Ch-Rules.xml:98(entry)
-#: Ch-Rules.xml:142(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Description"
 msgstr "Descriere"
 
-#: Ch-Rules.xml:24(entry)
-msgid "role"
-msgstr "rol"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>role Rule Property</primary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>role</tertiary></indexterm> role"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii role</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>role</tertiary></indexterm> role"
 
-#: Ch-Rules.xml:25(emphasis)
-msgid "Started"
-msgstr "Pornită"
+#. Tag: entry
+#, no-c-format
+msgid "Limits the rule to apply only when the resource is in that role. Allowed values: <emphasis>Started</emphasis>, <literal>Slave,</literal> and <literal>Master</literal>. NOTE: A rule with <literal>role=\"Master\"</literal> can not determine the initial location of a clone instance. It will only affect which of the active instances will be promoted."
+msgstr "Limitează regula pentru a se aplica numai când resursa se află în acel rol. Valori permise: <emphasis>Started</emphasis>, <literal>Slave,</literal> și <literal>Master</literal>. NOTĂ: O regulă cu <literal>role=\"Master\"</literal> nu poate determina locaţia iniţială a unei instanţe ale unei clone. Va afecta numai care dintre instanţele active va fi promovată."
 
-#: Ch-Rules.xml:25(entry)
-msgid "Limits the rule to only apply when the resource is in that role. Allowed values: <placeholder-1/>, Slave, Master. NOTE: A rule with role=\"Master\" can not determine the initial location of a clone instance. It will only affect which of the active instances will be promoted."
-msgstr "Limitează regula pentru a se aplica numai când resursa se află în acel rol. Valori permise: <placeholder-1/>, Slave, Master. NOTĂ: O regulă cu rolul=\"Master\" nu poate determina locaţia iniţială a unei instanţe ale unei clone. Va afecta numai care dintre instanţele active va fi promovată."
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>score</primary><secondary>Rule Property</secondary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>score</tertiary></indexterm> score"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii score</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>score</tertiary></indexterm> score"
 
-#: Ch-Rules.xml:28(entry)
-msgid "score"
-msgstr "scor"
+#. Tag: entry
+#, no-c-format
+msgid "The score to apply if the rule evaluates to <literal>true</literal>. Limited to use in rules that are part of location constraints."
+msgstr "Scorul pe care să îl aplice în cazul în care regula este evaluată la <literal>true</literal>. Limitată la folosirea în reguli care sunt parte din restricţiile de locaţie."
 
-#: Ch-Rules.xml:29(entry)
-msgid "The score to apply if the rule evaluates to \"true\". Limited to use in rules that are part of location constraints."
-msgstr "Scorul pe care să îl aplice în cazul în care regula este evaluată la \"true\". Limitată la folosirea în reguli care sunt parte din restricţiile de locaţie."
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>score-attribute Rule Property</primary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>score-attribute</tertiary></indexterm> score-attribute"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii score-attribute</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>score-attribute</tertiary></indexterm> score-attribute"
 
-#: Ch-Rules.xml:32(entry)
-msgid "score-attribute"
-msgstr "score-attribute"
+#. Tag: entry
+#, no-c-format
+msgid "The node attribute to look up and use as a score if the rule evaluates to <literal>true</literal>. Limited to use in rules that are part of location constraints."
+msgstr "Atributul nodului pe care să îl caute şi pe care să îl folosească drept scor dacă regula se evaluează la <literal>true</literal>. Limitată la folosirea în reguli care sunt parte din restricţii de locaţie."
 
-#: Ch-Rules.xml:33(entry)
-msgid "The node attribute to look up and use as a score if the rule evaluates to \"true\". Limited to use in rules that are part of location constraints."
-msgstr "Atributul nodului pe care să îl caute şi pe care să îl folosească drept scor dacă regula se evaluează la \"true\". Limitată la folosirea în reguli care sunt parte din restricţii de locaţie."
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>boolean-op Rule Property</primary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>boolean-op</tertiary></indexterm> boolean-op"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii boolean-op</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>boolean-op</tertiary></indexterm> boolean-op"
 
-#: Ch-Rules.xml:36(entry)
-msgid "boolean-op"
-msgstr "boolean-op"
+#. Tag: entry
+#, no-c-format
+msgid "How to combine the result of multiple expression objects. Allowed values: <emphasis>and</emphasis> and <literal>or</literal>."
+msgstr "Cum să combinaţi rezultatul mai multor obiecte de expresii. Valori permise: <emphasis>and</emphasis> și <literal>or</literal>."
 
-#: Ch-Rules.xml:37(emphasis)
-msgid "and"
-msgstr "şi"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Node</primary><secondary>Attribute Expressions</secondary></indexterm>Node Attribute Expressions"
+msgstr "<indexterm significance=\"preferred\"><primary>Expresiile Atributelor</primary><secondary>Nodului</secondary></indexterm>Expresiile Atributelor Nodului"
 
-#: Ch-Rules.xml:37(entry)
-msgid "How to combine the result of multiple expression objects. Allowed values: <placeholder-1/>, or"
-msgstr "Cum să combinaţi rezultatul mai multor obiecte de expresii. Valori permise: <placeholder-1/>, sau"
-
-#: Ch-Rules.xml:43(title)
-msgid "Node Attribute Expressions"
-msgstr "Expresiile Atributelor de Nod"
-
-#: Ch-Rules.xml:44(para)
+#. Tag: para
+#, no-c-format
 msgid "Expression objects are used to control a resource based on the attributes defined by a node or nodes. In addition to any attributes added by the administrator, each node has a built-in node attribute called <literal>#uname</literal> that can also be used."
 msgstr "Obiectele de expresie sunt folosite pentru a controla o resursă pe baza atributelor definite de un nod sau de mai multe noduri. Adiţional la orice atribute adăugate de administrator, fiecare nod are un atribut de nod predefinit numit <literal>#uname</literal> care poate fi folosit de asemenea."
 
-#: Ch-Rules.xml:47(title)
+#. Tag: title
+#, no-c-format
 msgid "Properties of an Expression"
 msgstr "Proprietăţile unei Expresii"
 
-#: Ch-Rules.xml:55(entry)
-msgid "value"
-msgstr "valoarea"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>value Expression Property</primary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>value</secondary></indexterm> value"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei value</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>value</secondary></indexterm> value"
 
-#: Ch-Rules.xml:56(entry)
+#. Tag: entry
+#, no-c-format
 msgid "User supplied value for comparison"
 msgstr "Valorea furnizată de utilizator pentru comparaţie"
 
-#: Ch-Rules.xml:59(entry)
-msgid "attribute"
-msgstr "atributul"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>attribute Expression Property</primary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>attribute</secondary></indexterm> attribute"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei attribute</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>attribute</secondary></indexterm> attribute"
 
-#: Ch-Rules.xml:60(entry)
+#. Tag: entry
+#, no-c-format
 msgid "The node attribute to test"
 msgstr "Atributul nodului care să fie testat"
 
-#: Ch-Rules.xml:63(entry)
-msgid "type"
-msgstr "tipul"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>type</primary><secondary>Expression Property</secondary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>type</secondary></indexterm> type"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei type</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>type</secondary></indexterm> type"
 
-#: Ch-Rules.xml:64(emphasis)
-msgid "string"
-msgstr "şir"
+#. Tag: entry
+#, no-c-format
+msgid "Determines how the value(s) should be tested. Allowed values: <emphasis>string</emphasis>, <literal>integer</literal>, <literal>version</literal>"
+msgstr "Determină cum ar trebui să fie testate valorile. Valori permise: <emphasis>string</emphasis>, <literal>integer</literal>, <literal>version</literal>"
 
-#: Ch-Rules.xml:64(entry)
-msgid "Determines how the value(s) should be tested. Allowed values: integer, <placeholder-1/>, version"
-msgstr "Determină cum ar trebui să fie testate valorile. Valori permise: întreg, <placeholder-1/>, versiune"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>operation Expression Property</primary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>operation</secondary></indexterm> operation"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei operation</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>operation</secondary></indexterm> operation"
 
-#: Ch-Rules.xml:67(entry)
-#: Ch-Rules.xml:109(entry)
-msgid "operation"
-msgstr "operaţiune"
-
-#: Ch-Rules.xml:69(para)
+#. Tag: para
+#, no-c-format
 msgid "The comparison to perform. Allowed values:"
 msgstr "Comparaţia pe care să o efectueze. Valori permise:"
 
-#: Ch-Rules.xml:71(para)
-msgid "lt - True if the node attribute's value is less than value"
-msgstr "lt - Adevărat dacă valoarea atributului nodului este mai mică decât valoare"
+#. Tag: para
+#, no-c-format
+msgid "<literal>lt</literal> - True if the node attribute's value is less than <literal>value</literal>"
+msgstr "<literal>lt</literal> - Adevărat dacă valoarea atributului nodului este mai mică decât <literal>value</literal>"
 
-#: Ch-Rules.xml:72(para)
-msgid "gt - True if the node attribute's value is greater than value"
-msgstr "gt - Adevărat dacă valoarea atributului nodului este mai mare decât valoare"
+#. Tag: para
+#, no-c-format
+msgid "<literal>gt</literal> - True if the node attribute's value is greater than <literal>value</literal>"
+msgstr "<literal>gt</literal> - Adevărat dacă valoarea atributului nodului este mai mare decât <literal>value</literal>"
 
-#: Ch-Rules.xml:73(para)
-msgid "lte - True if the node attribute's value is less than or equal to value"
-msgstr "lte - Adevărat dacă valoarea atributului nodului este mai mică sau egală cu valoare"
+#. Tag: para
+#, no-c-format
+msgid "<literal>lte</literal> - True if the node attribute's value is less than or equal to <literal>value</literal>"
+msgstr "<literal>lte</literal> - Adevărat dacă valoarea atributului nodului este mai mică sau egală cu <literal>value</literal>"
 
-#: Ch-Rules.xml:74(para)
-msgid "gte - True if the node attribute's value is greater than or equal to value"
-msgstr "gte - Adevărat dacă valoarea atributului nodului este mai mare sau egală cu valoare"
+#. Tag: para
+#, no-c-format
+msgid "<literal>gte</literal> - True if the node attribute's value is greater than or equal to <literal>value</literal>"
+msgstr "<literal>gte</literal> - Adevărat dacă valoarea atributului nodului este mai mare sau egală cu <literal>value</literal>"
 
-#: Ch-Rules.xml:75(para)
-msgid "eq - True if the node attribute's value is equal to value"
-msgstr "eq - Adevărat dacă valoarea atributului nodului este egală cu valoare"
+#. Tag: para
+#, no-c-format
+msgid "<literal>eq</literal> - True if the node attribute's value is equal to <literal>value</literal>"
+msgstr "<literal>eq</literal> - Adevărat dacă valoarea atributului nodului este egală cu <literal>value</literal>"
 
-#: Ch-Rules.xml:76(para)
-msgid "ne - True if the node attribute's value is not equal to value"
-msgstr "ne - Adevărat dacă valoarea atributului nodului nu este egală cu valoare"
+#. Tag: para
+#, no-c-format
+msgid "<literal>ne</literal> - True if the node attribute's value is not equal to <literal>value</literal>"
+msgstr "<literal>ne</literal> - Adevărat dacă valoarea atributului nodului nu este egală cu <literal>value</literal>"
 
-#: Ch-Rules.xml:77(para)
-msgid "defined - True if the node has an the named attribute"
-msgstr "defined - Adevărat dacă nodul are un atribut numit"
+#. Tag: para
+#, no-c-format
+msgid "<literal>defined</literal> - True if the node has the named attribute"
+msgstr "<literal>defined</literal> - Adevărat dacă nodul are un atribut numit"
 
-#: Ch-Rules.xml:78(para)
-msgid "not_defined - True if the node does not have the named attribute"
-msgstr "not_defined - Adevărat dacă nodul nu are un atribut numit"
+#. Tag: para
+#, no-c-format
+msgid "<literal>not_defined</literal> - True if the node does not have the named attribute"
+msgstr "<literal>not_defined</literal> - Adevărat dacă nodul nu are un atribut numit"
 
-#: Ch-Rules.xml:87(title)
-msgid "Time/Date Based Expressions"
-msgstr "Expresii Bazate pe Timp/Dată"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Time Based Expressions</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expression</primary><secondary>Time/Date Based</secondary></indexterm> Time/Date Based Expressions"
+msgstr "<indexterm significance=\"preferred\"><primary>Expresii Bazate pe Timp</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expresii</primary><secondary>Bazate pe Timp/Dată</secondary></indexterm> Expresii Bazate pe Timp/Dată"
 
-#: Ch-Rules.xml:88(para)
-msgid "As the name suggests, date_expressions are used to control a resource or cluster option based on the current date/time. They can contain an optional <literal>date_spec</literal> and/or <literal>duration</literal> object depending on the context."
-msgstr "După cum sugerează numele, date_expressions sunt folosite pentru a controla o resursă sau opţiune a clusterului pe baza timpului/dăţii curente. Acestea pot conţine opţional obiecte <literal>date_spec</literal> şi/sau <literal>duration</literal> în funcţie de context."
+#. Tag: para
+#, no-c-format
+msgid "As the name suggests, <literal>date_expressions</literal> are used to control a resource or cluster option based on the current date/time. They can contain an optional <literal>date_spec</literal> and/or <literal>duration</literal> object depending on the context."
+msgstr "După cum sugerează numele, <literal>date_expressions</literal> sunt folosite pentru a controla o resursă sau opţiune a clusterului pe baza timpului/dăţii curente. Acestea pot conţine opţional obiecte <literal>date_spec</literal> şi/sau <literal>duration</literal> în funcţie de context."
 
-#: Ch-Rules.xml:93(title)
+#. Tag: title
+#, no-c-format
 msgid "Properties of a Date Expression"
 msgstr "Proprietăţile unei Expresii de Dată"
 
-#: Ch-Rules.xml:101(entry)
+#. Tag: entry
+#, no-c-format
 msgid "start"
 msgstr "început"
 
-#: Ch-Rules.xml:102(entry)
+#. Tag: entry
+#, no-c-format
 msgid "A date/time conforming to the ISO8601 specification."
 msgstr "O dată/oră conformă cu specificaţia ISO8601."
 
-#: Ch-Rules.xml:105(entry)
+#. Tag: entry
+#, no-c-format
 msgid "end"
 msgstr "sfârşit"
 
-#: Ch-Rules.xml:106(entry)
-msgid "A date/time conforming to the ISO8601 specification. Can be inferred by supplying a value for start and a duration."
-msgstr "O dată/oră conformă cu specificaţia ISO8601. Poate fi omisă dacă se furnizează o valoare pentru început şi o durată."
+#. Tag: entry
+#, no-c-format
+msgid "A date/time conforming to the ISO8601 specification. Can be inferred by supplying a value for <literal>start</literal> and a <literal>duration</literal>."
+msgstr "O dată/oră conformă cu specificaţia ISO8601. Poate fi omisă dacă se furnizează o valoare pentru <literal>start</literal> şi o <literal>duration</literal>."
 
-#: Ch-Rules.xml:111(para)
+#. Tag: entry
+#, no-c-format
+msgid "operation"
+msgstr "operaţiune"
+
+#. Tag: para
+#, no-c-format
 msgid "Compares the current date/time with the start and/or end date, depending on the context. Allowed values:"
 msgstr "Compară data/ora curentă cu data de început şi/sau sfârşit, în funcţie de context. Valori permise:"
 
-#: Ch-Rules.xml:113(para)
-msgid "gt - True if the current date/time is after start"
-msgstr "gt - Adevărat dacă data/ora curentă este după început"
+#. Tag: para
+#, no-c-format
+msgid "<literal>gt</literal> - True if the current date/time is after <literal>start</literal>"
+msgstr "<literal>gt</literal> - Adevărat dacă data/ora curentă este după <literal>start</literal>"
 
-#: Ch-Rules.xml:114(para)
-msgid "lt - True if the current date/time is before end"
-msgstr "lt - Adevărat dacă data/ora curentă este înainte de sfârşit"
+#. Tag: para
+#, no-c-format
+msgid "<literal>lt</literal> - True if the current date/time is before <literal>end</literal>"
+msgstr "<literal>lt</literal> - Adevărat dacă data/ora curentă este înainte de <literal>end</literal>"
 
-#: Ch-Rules.xml:115(para)
-msgid "in-range - True if the current date/time is after start and before end"
-msgstr "in-range - Adevărat dacă data/ora curentă este după început şi înainte de sfârşit"
+#. Tag: para
+#, no-c-format
+msgid "<literal>in-range</literal> - True if the current date/time is after <literal>start</literal> and before <literal>end</literal>"
+msgstr "<literal>in-range</literal> - Adevărat dacă data/ora curentă este după <literal>start</literal> şi înainte de <literal>end</literal>"
 
-#: Ch-Rules.xml:116(para)
-msgid "date-spec - performs a cron-like comparison between the contents of date_spec and now"
-msgstr "date-spec - efectuează o comparaţie similară cron-ului între conţinutul date_spec şi acum"
+#. Tag: para
+#, no-c-format
+msgid "<literal>date-spec</literal> - performs a cron-like comparison to the current date/time"
+msgstr "<literal>date-spec</literal> - efectuează o comparaţie similară cron-ului față de ora/data curentă"
 
-#: Ch-Rules.xml:123(para)
-msgid "Because the comparisons (except for <literal>date_spec</literal>) include the time, the <literal>eq, neq, gte</literal> and <literal>lte</literal> operators have not been implemented."
-msgstr "Deoarece comparaţiile (cu excepţia <literal>date_spec</literal>) includ timpul, operatorii <literal>eq, neq, gte</literal> şi <literal>lte</literal> nu au fost implementaţi."
+#. Tag: para
+#, no-c-format
+msgid "Because the comparisons (except for <literal>date_spec</literal>) include the time, the <literal>eq</literal>, <literal>neq</literal>, <literal>gte</literal> and <literal>lte</literal> operators have not been implemented."
+msgstr "Deoarece comparaţiile (cu excepţia <literal>date_spec</literal>) includ timpul, operatorii <literal>eq</literal>, <literal>neq</literal>, <literal>gte</literal> şi <literal>lte</literal> nu au fost implementaţi."
 
-#: Ch-Rules.xml:125(title)
-msgid "Date Specifications"
-msgstr "Specificaţiile Datei"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Date Specifications</primary></indexterm> Date Specifications"
+msgstr "<indexterm significance=\"preferred\"><primary>Specificațiile Datei</primary></indexterm> Specificațiile Datei"
 
-#: Ch-Rules.xml:126(para)
+#. Tag: para
+#, no-c-format
 msgid "<literal>date_spec</literal> objects are used to create cron-like expressions relating to time. Each field can contain a single number or a single range. Instead of defaulting to zero, any field not supplied is ignored."
 msgstr "Obiectele <literal>date_spec</literal> sunt folosite pentru a crea expresii similare cu cele create de cron în relaţie cu timpul. Fiecare câmp poate conţine un singur număr sau un singur şir. În loc să aibe valoarea implicită zero, orice câmp a cărui valoare nu este furnizată este ignorat."
 
-#: Ch-Rules.xml:131(para)
-msgid "For example, <literal>monthdays=\"1\"</literal> matches the first day of every month and <literal>hours=\"09-17\"</literal> matches the hours between 9am and 5pm inclusive. However at this time one cannot specify <literal>weekdays=\"1,2\"</literal> or <literal>weekdays=\"1-2,5-6\"</literal> since they contain multiple ranges. Depending on demand, this may be implemented in a future release."
-msgstr "De exemplu, <literal>monthdays=\"1\"</literal> se potriveşte pentru prima zi din fiecare lună şi <literal>hours=\"09-17\"</literal> se potriveşte orelor între 9am şi 5pm inclusiv. Însă la acest moment nu se poate specifica <literal>weekdays=\"1,2\"</literal> sau <literal>weekdays=\"1-2,5-6\"</literal> din moment ce conţin şiruri multiple. În funcţie de cerere, acest aspect ar putea fi implementat într-un release viitor."
+#. Tag: para
+#, no-c-format
+msgid "For example, <literal>monthdays=\"1\"</literal> matches the first day of every month and <literal>hours=\"09-17\"</literal> matches the hours between 9am and 5pm (inclusive). However, at this time one cannot specify <literal>weekdays=\"1,2\"</literal> or <literal>weekdays=\"1-2,5-6\"</literal> since they contain multiple ranges. Depending on demand, this may be implemented in a future release."
+msgstr "De exemplu, <literal>monthdays=\"1\"</literal> se potriveşte pentru prima zi din fiecare lună şi <literal>hours=\"09-17\"</literal> se potriveşte orelor între 9am şi 5pm (inclusiv). Însă la acest moment nu se poate specifica <literal>weekdays=\"1,2\"</literal> sau <literal>weekdays=\"1-2,5-6\"</literal> din moment ce conţin şiruri multiple. În funcţie de cerere, acest aspect ar putea fi implementat într-un release viitor."
 
-#: Ch-Rules.xml:137(title)
+#. Tag: title
+#, no-c-format
 msgid "Properties of a Date Spec"
 msgstr "Proprietăţile unei Specificaţii de Dată"
 
-#: Ch-Rules.xml:147(entry)
-msgid "id"
-msgstr "id"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Date Spec Property</secondary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>id</secondary></indexterm> id"
+msgstr "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Proprietatea Specificației de Dată</secondary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>id</secondary></indexterm> id"
 
-#: Ch-Rules.xml:148(entry)
+#. Tag: entry
+#, no-c-format
 msgid "A unique name for the date"
 msgstr "Un nume unic pentru dată"
 
-#: Ch-Rules.xml:151(entry)
-msgid "hours"
-msgstr "hours"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>hours Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>hours</secondary></indexterm> hours"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea hours a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>hours</secondary></indexterm> hours"
 
-#: Ch-Rules.xml:152(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Allowed values: 0-23"
 msgstr "Valori permise: 0-23"
 
-#: Ch-Rules.xml:155(entry)
-msgid "monthdays"
-msgstr "monthdays"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>monthdays Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>monthdays</secondary></indexterm> monthdays"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea monthdays a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>monthdays</secondary></indexterm> monthdays"
 
-#: Ch-Rules.xml:156(entry)
-msgid "Allowed values: 0-31 (depending on current month and year)"
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: 0-31 (depending on month and year)"
 msgstr "Valori permise: 0-31 (în funcţie de luna curentă şi an)"
 
-#: Ch-Rules.xml:159(entry)
-msgid "weekdays"
-msgstr "weekdays"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>weekdays Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>weekdays</secondary></indexterm> weekdays"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea weekdays a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>weekdays</secondary></indexterm> weekdays"
 
-#: Ch-Rules.xml:160(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Allowed values: 1-7 (1=Monday, 7=Sunday)"
 msgstr "Valori permise: 1-7 (1=Luni, 7=Duminică)"
 
-#: Ch-Rules.xml:163(entry)
-msgid "yeardays"
-msgstr "yeardays"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>yeardays Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>yeardays</secondary></indexterm> yeardays"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea yeardays a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>yeardays</secondary></indexterm> yeardays"
 
-#: Ch-Rules.xml:164(entry)
-msgid "Allowed values: 1-366 (depending on the current year)"
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: 1-366 (depending on the year)"
 msgstr "Valori permise: 1-366 (în funcţie de anul curent)"
 
-#: Ch-Rules.xml:167(entry)
-msgid "months"
-msgstr "months"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>months Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>months</secondary></indexterm> months"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea months a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>months</secondary></indexterm> months"
 
-#: Ch-Rules.xml:168(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Allowed values: 1-12"
 msgstr "Valori permise: 1-12"
 
-#: Ch-Rules.xml:171(entry)
-msgid "weeks"
-msgstr "weeks"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>weeks Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>weeks</secondary></indexterm> weeks"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea weeks a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>weeks</secondary></indexterm> weeks"
 
-#: Ch-Rules.xml:172(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Allowed values: 1-53 (depending on weekyear)"
 msgstr "Valori permise: 1-53 (în funcţie câte săptămâni are anul)"
 
-#: Ch-Rules.xml:175(entry)
-msgid "years"
-msgstr "years"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>years Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>years</secondary></indexterm> years"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea years a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>years</secondary></indexterm> years"
 
-#: Ch-Rules.xml:176(entry)
+#. Tag: entry
+#, no-c-format
 msgid "Year according the Gregorian calendar"
 msgstr "Anul conform calendarului Gregorian"
 
-#: Ch-Rules.xml:179(entry)
-msgid "weekyears"
-msgstr "weekyears"
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>weekyears Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>weekyears</secondary></indexterm> weekyears"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea weekyears a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>weekyears</secondary></indexterm> weekyears"
 
-#: Ch-Rules.xml:181(para)
-msgid "May differ from Gregorian years."
-msgstr "Ar putea fi diferit de anii Gregorieni."
+#. Tag: para
+#, no-c-format
+msgid "May differ from Gregorian years; Eg. <literal>2005-001 Ordinal</literal> is also <literal>2005-01-01 Gregorian</literal> is also <literal>2004-W53-6 Weekly</literal>"
+msgstr "Ar putea fi diferit față de anii Gregorieni; Ex. <literal>2005-001 Ordinal</literal> este de asemenea <literal>2005-01-01 Gregorian</literal> şi de asemenea <literal>2004-W53-6 Weekly</literal>"
 
-#: Ch-Rules.xml:182(para)
-msgid "Eg. \"2005-001 Ordinal\" is also \"2005-01-01 Gregorian\" and is also \"2004-W53-6 Weekly\""
-msgstr "Ex. \"2005-001 Ordinal\" este de asemenea \"2005-01-01 Gregorian\" şi de asemenea \"2004-W53-6 Weekly\""
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>moon Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>moon</secondary></indexterm> moon"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea moon a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>moon</secondary></indexterm> moon"
 
-#: Ch-Rules.xml:186(entry)
-msgid "moon"
-msgstr "moon"
-
-#: Ch-Rules.xml:187(entry)
-msgid "Allowed values: 0..7 (0 is new, 4 is full moon). Seriously, you can use this. This was implemented to demonstrate the ease with which new comparisons could be added."
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: 0-7 (0 is new, 4 is full moon). Seriously, you can use this. This was implemented to demonstrate the ease with which new comparisons could be added."
 msgstr "Valori permise: 0..7 (0 este pentru lună nouă, 4 pentru pentru lună plină). Nu glumesc, puteţi folosi asta. Acest lucru a fost implementat ca să demonstreze uşurinţa cu care se pot adăuga comparaţii noi."
 
-#: Ch-Rules.xml:194(title)
-msgid "Durations"
-msgstr "Durate"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Durations Expressions</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expressions</primary><secondary>Durations</secondary></indexterm> Durations"
+msgstr "<indexterm significance=\"preferred\"><primary>Expresii de Durată</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expresii</primary><secondary>de Durată</secondary></indexterm> de Durată"
 
-#: Ch-Rules.xml:195(para)
-msgid "Durations are used to calculate a value for end when one is not supplied to in_range operations. They contain the same fields as <literal>date_spec</literal> objects but without the limitations (ie. you can have a duration of 19 days). Like <literal>date_specs</literal>, any field not supplied is ignored."
-msgstr "Duratele sunt folosite pentru a calcula valoarea pentru sfârşit atunci când una nu este furnizată în operaţiunile in_range. Acestea conţin aceleaşi câmpuri ca şi obiectele <literal>date_spec</literal> dar fără limitări (ex. puteţi avea o durată de 19 zile). Ca şi în cazul <literal>date_specs</literal>, orice câmp care nu este furnizat este ignorat."
+#. Tag: para
+#, no-c-format
+msgid "Durations are used to calculate a value for <literal>end</literal> when one is not supplied to in_range operations. They contain the same fields as <literal>date_spec</literal> objects but without the limitations (ie. you can have a duration of 19 months). Like <literal>date_specs</literal>, any field not supplied is ignored."
+msgstr "Duratele sunt folosite pentru a calcula valoarea pentru <literal>end</literal> atunci când una nu este furnizată în operaţiunile in_range. Acestea conţin aceleaşi câmpuri ca şi obiectele <literal>date_spec</literal> dar fără limitări (ex. puteţi avea o durată de 19 zile). Ca şi în cazul <literal>date_specs</literal>, orice câmp care nu este furnizat este ignorat."
 
-#: Ch-Rules.xml:201(title)
+#. Tag: title
+#, no-c-format
 msgid "Sample Time Based Expressions"
 msgstr "Exemple de Expresii Bazate pe Timp"
 
-#: Ch-Rules.xml:203(title)
+#. Tag: title
+#, no-c-format
 msgid "True if now is any time in the year 2005"
 msgstr "Adevărat dacă acum este oricând în anul 2005"
 
-#: Ch-Rules.xml:215(title)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;rule id=\"rule1\"&gt;\n"
+"   &lt;date_expression id=\"date_expr1\" start=\"2005-001\" operation=\"in_range\"&gt;\n"
+"    &lt;duration years=\"1\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+msgstr ""
+" &lt;rule id=\"rule1\"&gt;\n"
+"   &lt;date_expression id=\"date_expr1\" start=\"2005-001\" operation=\"in_range\"&gt;\n"
+"    &lt;duration years=\"1\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+
+#. Tag: title
+#, no-c-format
 msgid "Equivalent expression."
 msgstr "Expresie echivalentă."
 
-#: Ch-Rules.xml:227(title)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;rule id=\"rule2\"&gt;\n"
+"   &lt;date_expression id=\"date_expr2\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec years=\"2005\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+msgstr ""
+" &lt;rule id=\"rule2\"&gt;\n"
+"   &lt;date_expression id=\"date_expr2\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec years=\"2005\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+
+#. Tag: title
+#, no-c-format
 msgid "9am-5pm, Mon-Friday"
 msgstr "9am-5pm, Lun-Vineri"
 
-#: Ch-Rules.xml:239(title)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;rule id=\"rule3\"&gt;\n"
+"   &lt;date_expression id=\"date_expr3\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec hours=\"9-16\" days=\"1-5\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+msgstr ""
+" &lt;rule id=\"rule3\"&gt;\n"
+"   &lt;date_expression id=\"date_expr3\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec hours=\"9-16\" days=\"1-5\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+
+#. Tag: para
+#, no-c-format
+msgid "Please note that the <literal>16</literal> matches up to <literal>16:59:59</literal>, as the numeric value (hour) still matches!"
+msgstr "Vă rugăm să luați aminte că <literal>16</literal> se potrivește cu <literal>16:59:59</literal>, deoarece valoarea numerică (ora) încă se potrivește!"
+
+#. Tag: title
+#, no-c-format
 msgid "9am-6pm, Mon-Friday, or all day saturday"
 msgstr "9am-6pm, Lun-Vineri sau toată ziua sâmbătă"
 
-#: Ch-Rules.xml:254(title)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;rule id=\"rule4\" boolean_op=\"or\"&gt;\n"
+"   &lt;date_expression id=\"date_expr4-1\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec hours=\"9-16\" days=\"1-5\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"   &lt;date_expression id=\"date_expr4-2\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec days=\"6\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+msgstr ""
+" &lt;rule id=\"rule4\" boolean_op=\"or\"&gt;\n"
+"   &lt;date_expression id=\"date_expr4-1\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec hours=\"9-16\" days=\"1-5\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"   &lt;date_expression id=\"date_expr4-2\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec days=\"6\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+
+#. Tag: title
+#, no-c-format
 msgid "9am-5pm or 9pm-12pm, Mon-Friday"
 msgstr "9am-5pm sau 9pm-12pm, Lun-Vineri"
 
-#: Ch-Rules.xml:274(title)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;rule id=\"rule5\" boolean_op=\"and\"&gt;\n"
+"   &lt;rule id=\"rule5-nested1\" boolean_op=\"or\"&gt;\n"
+"    &lt;date_expression id=\"date_expr5-1\" operation=\"date_spec\"&gt;\n"
+"     &lt;date_spec hours=\"9-16\"/&gt;\n"
+"    &lt;/date_expression&gt;\n"
+"    &lt;date_expression id=\"date_expr5-2\" operation=\"date_spec\"&gt;\n"
+"     &lt;date_spec hours=\"21-23\"/&gt;\n"
+"    &lt;/date_expression&gt;\n"
+"   &lt;/rule&gt;\n"
+"   &lt;date_expression id=\"date_expr5-3\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec days=\"1-5\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+msgstr ""
+" &lt;rule id=\"rule5\" boolean_op=\"and\"&gt;\n"
+"   &lt;rule id=\"rule5-nested1\" boolean_op=\"or\"&gt;\n"
+"    &lt;date_expression id=\"date_expr5-1\" operation=\"date_spec\"&gt;\n"
+"     &lt;date_spec hours=\"9-16\"/&gt;\n"
+"    &lt;/date_expression&gt;\n"
+"    &lt;date_expression id=\"date_expr5-2\" operation=\"date_spec\"&gt;\n"
+"     &lt;date_spec hours=\"21-23\"/&gt;\n"
+"    &lt;/date_expression&gt;\n"
+"   &lt;/rule&gt;\n"
+"   &lt;date_expression id=\"date_expr5-3\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec days=\"1-5\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+
+#. Tag: title
+#, no-c-format
 msgid "Mondays in March 2005"
 msgstr "Zilele de Luni în Martie 2005"
 
-#: Ch-Rules.xml:286(para)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;rule id=\"rule6\" boolean_op=\"and\"&gt;\n"
+"   &lt;date_expression id=\"date_expr6-1\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec weekdays=\"1\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"   &lt;date_expression id=\"date_expr6-2\" operation=\"in_range\"\n"
+"     start=\"2005-03-01\" end=\"2005-04-01\"/&gt;\n"
+"  &lt;/rule&gt;  "
+msgstr ""
+" &lt;rule id=\"rule6\" boolean_op=\"and\"&gt;\n"
+"   &lt;date_expression id=\"date_expr6-1\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec weekdays=\"1\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"   &lt;date_expression id=\"date_expr6-2\" operation=\"in_range\"\n"
+"     start=\"2005-03-01\" end=\"2005-04-01\"/&gt;\n"
+"  &lt;/rule&gt;  "
+
+#. Tag: para
+#, no-c-format
 msgid "NOTE: Because no time is specified, 00:00:00 is implied."
 msgstr "NOTĂ: Pentru că nici un timp nu este specificat, 00:00:00 este subînţeles."
 
-#: Ch-Rules.xml:287(para)
+#. Tag: para
+#, no-c-format
 msgid "This means that the range includes all of 2005-03-01 but none of 2005-04-01."
 msgstr "Acest lucru înseamnă că şirul include tot din 2005-03-01 dar nimic din 2005-04-01."
 
-#: Ch-Rules.xml:288(para)
-msgid "You may wish to write end=\"2005-03-31T23:59:59\" to avoid confusion."
-msgstr "Aţi dori să scrieţi end=\"2005-03-31T23:59:59\" pentru a evita confuzia."
+#. Tag: para
+#, no-c-format
+msgid "You may wish to write <literal>end=\"2005-03-31T23:59:59\"</literal> to avoid confusion."
+msgstr "Aţi dori să scrieţi <literal>end=\"2005-03-31T23:59:59\"</literal> pentru a evita confuzia."
 
-#: Ch-Rules.xml:290(title)
+#. Tag: title
+#, no-c-format
 msgid "A full moon on Friday the 13th"
 msgstr "O lună plină pe data de Vineri 13"
 
-#: Ch-Rules.xml:305(title)
-msgid "Using Rules to Determine Resource Location"
-msgstr "Folosind Reguli pentru a Determina Locaţia Resurselor"
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;rule id=\"rule7\" boolean_op=\"and\"&gt;\n"
+"   &lt;date_expression id=\"date_expr7\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec weekdays=\"5\" monthdays=\"13\" moon=\"4\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
+msgstr ""
+" &lt;rule id=\"rule7\" boolean_op=\"and\"&gt;\n"
+"   &lt;date_expression id=\"date_expr7\" operation=\"date_spec\"&gt;\n"
+"    &lt;date_spec weekdays=\"5\" monthdays=\"13\" moon=\"4\"/&gt;\n"
+"   &lt;/date_expression&gt;\n"
+"  &lt;/rule&gt;  "
 
-#: Ch-Rules.xml:306(para)
-msgid "If the constraint's outer-most rule evaluates to false, the cluster treats the constraint as if it was not there. When the rule evaluates to true, the node's preference for running the resource is updated with the score associated with the rule."
-msgstr "Dacă regula cea mai exterioară a unei restricţii este evaluată la fals, clusterul se poartă cu restricţia ca şi cum nu ar fi fost acolo. Când regula este evaluată ca adevărat, preferinţa nodului pentru rularea resursei este actualizată cu scorul asociat cu această regulă."
+#. Tag: title
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Rule</primary><secondary>Determine Resource Location</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Location, Determine by Rules</secondary></indexterm> Using Rules to Determine Resource Location"
+msgstr "<indexterm significance=\"preferred\"><primary>Regulă</primary><secondary>Determină Locația Resursei</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Locația, Determinată de Reguli</secondary></indexterm> Folosirea de Reguli pentru a Determina Locația Resursei"
 
-#: Ch-Rules.xml:310(para)
+#. Tag: para
+#, no-c-format
+msgid "If the constraint's outer-most rule evaluates to <literal>false</literal>, the cluster treats the constraint as if it was not there. When the rule evaluates to <literal>true</literal>, the node's preference for running the resource is updated with the score associated with the rule."
+msgstr "Dacă regula cea mai exterioară a unei restricţii este evaluată la <literal>false</literal>, clusterul se poartă cu restricţia ca şi cum nu ar fi fost acolo. Când regula este evaluată ca <literal>true</literal>, preferinţa nodului pentru rularea resursei este actualizată cu scorul asociat cu această regulă."
+
+#. Tag: para
+#, no-c-format
 msgid "If this sounds familiar, its because you have been using a simplified syntax for location constraint rules already. Consider the following location constraint:"
 msgstr "Dacă acest lucru sună cunoscut, este datorită faptului că deja folosiţi o sintaxă simplificată pentru regulile de restricţie a locaţiei. Consideraţi următoarea restricţie de locaţie:"
 
-#: Ch-Rules.xml:315(title)
+#. Tag: title
+#, no-c-format
 msgid "Prevent myApacheRsc from running on c001n03"
 msgstr "Împiedică myApacheRsc de a rula pe c001n03"
 
-#: Ch-Rules.xml:316(programlisting)
-#, no-wrap
+#. Tag: programlisting
+#, no-c-format
 msgid ""
-"\n"
-"  &lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\" score=\"-INFINITY\" node=\"c001n03\"/&gt;\n"
-"\t"
+"&lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\"\n"
+"          score=\"-INFINITY\" node=\"c001n03\"/&gt; "
 msgstr ""
-"\n"
-"  &lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\" score=\"-INFINITY\" node=\"c001n03\"/&gt;\n"
-"\t"
+"&lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\"\n"
+"          score=\"-INFINITY\" node=\"c001n03\"/&gt; "
 
-#: Ch-Rules.xml:320(para)
+#. Tag: para
+#, no-c-format
 msgid "This constraint can be more verbosely written as:"
 msgstr "Aceaastă restricţie poate fi scrisă mai elaborat ca:"
 
-#: Ch-Rules.xml:322(title)
+#. Tag: title
+#, no-c-format
 msgid "Prevent myApacheRsc from running on c001n03 - expanded version"
 msgstr "Împiedică myApacheRsc de a rula pe c001n03 - versiunea extinsă"
 
-#: Ch-Rules.xml:333(para)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\"&gt;\n"
+"    &lt;rule id=\"dont-run-apache-rule\" score=\"-INFINITY\"&gt;\n"
+"      &lt;expression id=\"dont-run-apache-expr\" attribute=\"#uname\"\n"
+"        operation=\"eq\" value=\"c00n03\"/&gt;\n"
+"    &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
+msgstr ""
+" &lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\"&gt;\n"
+"    &lt;rule id=\"dont-run-apache-rule\" score=\"-INFINITY\"&gt;\n"
+"      &lt;expression id=\"dont-run-apache-expr\" attribute=\"#uname\"\n"
+"        operation=\"eq\" value=\"c00n03\"/&gt;\n"
+"    &lt;/rule&gt;\n"
+"  &lt;/rsc_location&gt;  "
+
+#. Tag: para
+#, no-c-format
 msgid "The advantage of using the expanded form is that one can then add extra clauses to the rule, such as limiting the rule such that it only applies during certain times of the day or days of the week (this is discussed in subsequent sections)."
 msgstr "Avantajul folosirii formei extinse este că se pot adăuga clauze suplimentare la regulă, cum ar fi limitarea regulii astfel încât să se aplice doar în momente specifice ale zilei sau zilelor săptămânii (acest lucru este discutat în secţiunile următoare)."
 
-#: Ch-Rules.xml:334(para)
+#. Tag: para
+#, no-c-format
 msgid "It also allows us to match on node properties other than its name. If we rated each machine's CPU power such that the cluster had the following nodes section:"
 msgstr "Este folosit de asemenea pentru a realiza potriviri pe proprietăţi ale nodului altele decât numele acestuia. Dacă am apreciat puterea procesorului fiecărei maşini astfel încât clusterul să aibe următoarea secţiune de noduri: "
 
-#: Ch-Rules.xml:339(title)
+#. Tag: title
+#, no-c-format
 msgid "A sample nodes section for use with score-attribute"
 msgstr "Un exemplu de secţiune de noduri pentru utilizarea cu score-attribute"
 
-#: Ch-Rules.xml:357(para)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;nodes&gt;\n"
+"     &lt;node id=\"uuid1\" uname=\"c001n01\" type=\"normal\"&gt;\n"
+"      &lt;instance_attributes id=\"uuid1-custom_attrs\"&gt;\n"
+"        &lt;nvpair id=\"uuid1-cpu_mips\" name=\"cpu_mips\" value=\"1234\"/&gt;\n"
+"      &lt;/instance_attributes&gt;\n"
+"     &lt;/node&gt;\n"
+"     &lt;node id=\"uuid2\" uname=\"c001n02\" type=\"normal\"&gt;\n"
+"      &lt;instance_attributes id=\"uuid2-custom_attrs\"&gt;\n"
+"        &lt;nvpair id=\"uuid2-cpu_mips\" name=\"cpu_mips\" value=\"5678\"/&gt;\n"
+"      &lt;/instance_attributes&gt;\n"
+"     &lt;/node&gt;\n"
+"    &lt;/nodes&gt;  "
+msgstr ""
+" &lt;nodes&gt;\n"
+"     &lt;node id=\"uuid1\" uname=\"c001n01\" type=\"normal\"&gt;\n"
+"      &lt;instance_attributes id=\"uuid1-custom_attrs\"&gt;\n"
+"        &lt;nvpair id=\"uuid1-cpu_mips\" name=\"cpu_mips\" value=\"1234\"/&gt;\n"
+"      &lt;/instance_attributes&gt;\n"
+"     &lt;/node&gt;\n"
+"     &lt;node id=\"uuid2\" uname=\"c001n02\" type=\"normal\"&gt;\n"
+"      &lt;instance_attributes id=\"uuid2-custom_attrs\"&gt;\n"
+"        &lt;nvpair id=\"uuid2-cpu_mips\" name=\"cpu_mips\" value=\"5678\"/&gt;\n"
+"      &lt;/instance_attributes&gt;\n"
+"     &lt;/node&gt;\n"
+"    &lt;/nodes&gt;  "
+
+#. Tag: para
+#, no-c-format
 msgid "then we could prevent resources from running on underpowered machines with the rule"
 msgstr "atunci am putea împiedica resursele de a rula pe maşini fără nivelul de procesare cerut cu această regulă"
 
-#: Ch-Rules.xml:366(title)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;rule id=\"need-more-power-rule\" score=\"-INFINITY\"&gt;\n"
+"        &lt;expression id=\" need-more-power-expr\" attribute=\"cpu_mips\"\n"
+"          operation=\"lt\" value=\"3000\"/&gt;\n"
+"  &lt;/rule&gt;  "
+msgstr ""
+" &lt;rule id=\"need-more-power-rule\" score=\"-INFINITY\"&gt;\n"
+"        &lt;expression id=\" need-more-power-expr\" attribute=\"cpu_mips\"\n"
+"          operation=\"lt\" value=\"3000\"/&gt;\n"
+"  &lt;/rule&gt;  "
+
+#. Tag: title
+#, no-c-format
 msgid "Using <literal>score-attribute</literal> Instead of <literal>score</literal>"
 msgstr "Folosind <literal>score-attribute</literal> în loc de <literal>score</literal>"
 
-#: Ch-Rules.xml:367(para)
-msgid "When using score-attribute instead of score, each node matched by the rule has its score adjusted differently, according to its value for the named node attribute. Thus in the previous example, if a rule used <literal>score-attribute=\"cpu_mips\"</literal>, c001n01 would have its preference to run the resource increased by 1234 whereas c001n02 would have its preference increased by 5678."
-msgstr "Când folosim score-attribute în loc de score, fiecare nod care se potriveşte regulii va avea scorul acestuia ajustat în mod diferit, în funcţie de valoarea sa pentru atributul numit de nod. Prin urmare în exemplul anterior, dacă o regulă folosea <literal>score-attribute=\"cpu_mips\"</literal>, c001n001 ar avea preferinţa proprie de a rula resursa crescută cu 1234 în timp ce c001n02 ar avea preferinţa crescută cu 5678."
+#. Tag: para
+#, no-c-format
+msgid "When using <literal>score-attribute</literal> instead of <literal>score</literal>, each node matched by the rule has its score adjusted differently, according to its value for the named node attribute. Thus, in the previous example, if a rule used <literal>score-attribute=\"cpu_mips\"</literal>, <literal>c001n01</literal> would have its preference to run the resource increased by <literal>1234</literal> whereas <literal>c001n02</literal> would have its preference increased by <literal>5678</literal>."
+msgstr "Când folosim <literal>score-attribute</literal> în loc de <literal>score</literal>, fiecare nod care se potriveşte regulii va avea scorul acestuia ajustat în mod diferit, în funcţie de valoarea sa pentru atributul numit de nod. Prin urmare în exemplul anterior, dacă o regulă folosea <literal>score-attribute=\"cpu_mips\"</literal>, <literal>c001n01</literal> ar avea preferinţa proprie de a rula resursa crescută cu <literal>1234</literal> în timp ce <literal>c001n02</literal> ar avea preferinţa crescută cu <literal>5678</literal>."
 
-#: Ch-Rules.xml:374(title)
+#. Tag: title
+#, no-c-format
 msgid "Using Rules to Control Resource Options"
 msgstr "Folosind Reguli pentru a Controla Opţiunile Resurselor"
 
-#: Ch-Rules.xml:375(para)
-msgid "Often some cluster nodes will be different from their peers, sometimes these differences (the location of a binary or the names of network interfaces) require resources be configured differently depending on the machine they're hosted on."
+#. Tag: para
+#, no-c-format
+msgid "Often some cluster nodes will be different from their peers; sometimes these differences (the location of a binary or the names of network interfaces) require resources to be configured differently depending on the machine they're hosted on."
 msgstr "Adeseori unele noduri din cluster vor fi diferite de altele, câteodată aceste diferenţe (locaţia unui binar sau numele interfeţelor de reţea) necesită ca şi resursele să fie configurate diferit în funcţie de maşina pe care sunt găzduite."
 
-#: Ch-Rules.xml:376(para)
+#. Tag: para
+#, no-c-format
 msgid "By defining multiple <literal>instance_attributes</literal> objects for the resource and adding a rule to each, we can easily handle these special cases."
 msgstr "Prin definirea de obiecte multiple <literal>instance_attributes</literal> pentru resursă şi prin adăugarea unei reguli pentru fiecare, putem gestiona facil aceste cazuri speciale."
 
-#: Ch-Rules.xml:377(para)
-msgid "In the example below, mySpecialRsc will use eth1 and port 9999 when run on node1, eth2 and port 8888 on node2 and default to eth0 and port 9999 for all other nodes."
-msgstr "În exemplul de mai jos, mySpecialRsc va folosi eth1 şi portul 9999 când va rula pe node1, eth2 şi portul 8888 pe node2 şi va avea valorea implicită eth0 şi portul 9999 pentru toate celelalte noduri. "
+#. Tag: para
+#, no-c-format
+msgid "In the example below, <literal>mySpecialRsc</literal> will use eth1 and port 9999 when run on <literal>node1</literal>, eth2 and port 8888 on <literal>node2</literal> and default to eth0 and port 9999 for all other nodes."
+msgstr "În exemplul de mai jos, <literal>mySpecialRsc</literal> va folosi eth1 şi portul 9999 când va rula pe <literal>node1</literal>, eth2 şi portul 8888 pe <literal>node2</literal> şi va avea valorea implicită eth0 şi portul 9999 pentru toate celelalte noduri. "
 
-#: Ch-Rules.xml:379(title)
+#. Tag: title
+#, no-c-format
 msgid "Defining different resource options based on the node name"
 msgstr "Definirea de opţiuni de resursă diferite pe baza numelui nodului"
 
-#: Ch-Rules.xml:404(para)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
+"   &lt;instance_attributes id=\"special-node1\" score=\"3\"&gt;\n"
+"    &lt;rule id=\"node1-special-case\" score=\"INFINITY\" &gt;\n"
+"     &lt;expression id=\"node1-special-case-expr\" attribute=\"#uname\"\n"
+"       operation=\"eq\" value=\"node1\"/&gt;\n"
+"    &lt;/rule&gt;\n"
+"    &lt;nvpair id=\"node1-interface\" name=\"interface\" value=\"eth1\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"   &lt;instance_attributes id=\"special-node2\" score=\"2\" &gt;\n"
+"    &lt;rule id=\"node2-special-case\" score=\"INFINITY\"&gt;\n"
+"     &lt;expression id=\"node2-special-case-expr\" attribute=\"#uname\"\n"
+"       operation=\"eq\" value=\"node2\"/&gt;\n"
+"    &lt;/rule&gt;\n"
+"    &lt;nvpair id=\"node2-interface\" name=\"interface\" value=\"eth2\"/&gt;\n"
+"    &lt;nvpair id=\"node2-port\" name=\"port\" value=\"8888\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"   &lt;instance_attributes id=\"defaults\" score=\"1\" &gt;\n"
+"    &lt;nvpair id=\"default-interface\" name=\"interface\" value=\"eth0\"/&gt;\n"
+"    &lt;nvpair id=\"default-port\" name=\"port\" value=\"9999\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"  &lt;/primitive&gt;  "
+msgstr ""
+" &lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
+"   &lt;instance_attributes id=\"special-node1\" score=\"3\"&gt;\n"
+"    &lt;rule id=\"node1-special-case\" score=\"INFINITY\" &gt;\n"
+"     &lt;expression id=\"node1-special-case-expr\" attribute=\"#uname\"\n"
+"       operation=\"eq\" value=\"node1\"/&gt;\n"
+"    &lt;/rule&gt;\n"
+"    &lt;nvpair id=\"node1-interface\" name=\"interface\" value=\"eth1\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"   &lt;instance_attributes id=\"special-node2\" score=\"2\" &gt;\n"
+"    &lt;rule id=\"node2-special-case\" score=\"INFINITY\"&gt;\n"
+"     &lt;expression id=\"node2-special-case-expr\" attribute=\"#uname\"\n"
+"       operation=\"eq\" value=\"node2\"/&gt;\n"
+"    &lt;/rule&gt;\n"
+"    &lt;nvpair id=\"node2-interface\" name=\"interface\" value=\"eth2\"/&gt;\n"
+"    &lt;nvpair id=\"node2-port\" name=\"port\" value=\"8888\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"   &lt;instance_attributes id=\"defaults\" score=\"1\" &gt;\n"
+"    &lt;nvpair id=\"default-interface\" name=\"interface\" value=\"eth0\"/&gt;\n"
+"    &lt;nvpair id=\"default-port\" name=\"port\" value=\"9999\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"  &lt;/primitive&gt;  "
+
+#. Tag: para
+#, no-c-format
 msgid "The order in which <literal>instance_attributes</literal> objects are evaluated is determined by their score (highest to lowest). If not supplied, score defaults to zero and objects with an equal score are processed in listed order. If the <literal>instance_attributes</literal> object does not have a <literal>rule</literal> or has a <literal>rule</literal> that evaluates to <literal>true</literal>, then for any parameter the resource does not yet have a value for, the resource will use the parameter values defined by the <literal>instance_attributes</literal> object."
 msgstr "Ordinea în care obiectele <literal>instance_attributes</literal> sunt evaluate este determinată de către scorul acestora (cel mai mare la cel mai mic). Dacă nu este furnizat, scorul va avea valoarea implicită zero şi obiectele cu un scor egal sunt procesate în ordinea listată. Dacă obiectul <literal>instance_attributes</literal> nu are o <literal>rule</literal> sau are o <literal>rule</literal> care este evaluată la <literal>true</literal>, atunci pentru orice parametru pentru care resursa nu are înca o valoare, resursa va folosi valorile parametrilor definite de obiectul <literal>instance_attributes</literal>."
 
-#: Ch-Rules.xml:411(title)
-msgid "Using Rules to Control Cluster Options"
-msgstr "Folosind Reguli pentru a Controla Opţiunile Clusterului"
+#. Tag: title
+#, no-c-format
+msgid "<indexterm><primary>Rule</primary><secondary>Controlling Cluster Options</secondary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>Controlled by Rules</secondary></indexterm> Using Rules to Control Cluster Options"
+msgstr "<indexterm><primary>Regula</primary><secondary>Controlarea Opțiunilor Clusterului</secondary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>Controlat de Reguli</secondary></indexterm> Folosirea Regulilor pentru a Controla Opțiunile Clusterului"
 
-#: Ch-Rules.xml:412(para)
+#. Tag: para
+#, no-c-format
 msgid "Controlling cluster options is achieved in much the same manner as specifying different resource options on different nodes."
 msgstr "Controlarea opţiunilor clusterului este reuşită în mare parte prin aceeaşi manieră ca şi specificarea diverselor opţiuni pentru resurse pe noduri diferite."
 
-#: Ch-Rules.xml:413(para)
-msgid "The difference is that because they are cluster options, one cannot (or should not because they won't work) use attribute based expressions. The following example illustrates how to set a different <literal>resource-stickiness</literal> value during and outside of work hours. This allows resources to automatically move back to their most preferred hosts, but at a time that (in theory) does not interfere with business activities."
-msgstr "Diferenţa este că din cauza că sunt opţiuni de cluster, nu ar trebui să puteţi (sau nu ar trebui să pentru că acestea nu funcţionează) să folosiţi expresii bazate pe atribute. Următorul exemplu ilustrează cum să setaţi o valoare <literal>instance_attributes</literal> diferită în timpul şi în afara orelor de lucru. Acest lucru permite resurselor să se mute înapoi în mod automat la gazdele cele mai preferate, dar la un moment în care (teoretic) nu interferează cu activităţile de business."
+#. Tag: para
+#, no-c-format
+msgid "The difference is that because they are cluster options, one cannot (or should not, because they won't work) use attribute based expressions. The following example illustrates how to set a different <literal>resource-stickiness</literal> value during and outside of work hours. This allows resources to automatically move back to their most preferred hosts, but at a time that (in theory) does not interfere with business activities."
+msgstr "Diferenţa este că din cauza că sunt opţiuni de cluster, nu ar trebui să puteţi (sau nu ar trebui să pentru că acestea nu funcţionează) să folosiţi expresii bazate pe atribute. Următorul exemplu ilustrează cum să setaţi o valoare <literal>resource-stickiness</literal> diferită în timpul şi în afara orelor de lucru. Acest lucru permite resurselor să se mute înapoi în mod automat la gazdele cele mai preferate, dar la un moment în care (teoretic) nu interferează cu activităţile de business."
 
-#: Ch-Rules.xml:419(title)
-msgid "Set resource-stickiness=INFINITY Mon-Fri between 9am and 6pm, and resource-stickiness=0 all other times"
-msgstr "Setaţi resource-stickiness=INFINITY Lun-Vin între 9am şi 6pm, iar resource-stickiness=0 în restul timpului"
+#. Tag: title
+#, no-c-format
+msgid "Change <literal>resource-stickiness</literal> during working hours"
+msgstr "Schimbarea <literal>resource-stickiness</literal> în timpul orelor de lucru"
 
-#: Ch-Rules.xml:440(title)
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+" &lt;rsc_defaults&gt;\n"
+"   &lt;meta_attributes id=\"core-hours\" score=\"2\"&gt;\n"
+"    &lt;rule id=\"core-hour-rule\" score=\"0\"&gt;\n"
+"      &lt;date_expression id=\"nine-to-five-Mon-to-Fri\" operation=\"date_spec\"&gt;\n"
+"        &lt;date_spec id=\"nine-to-five-Mon-to-Fri-spec\" hours=\"9-16\" weekdays=\"1-5\"/&gt;\n"
+"      &lt;/date_expression&gt;\n"
+"    &lt;/rule&gt;\n"
+"    &lt;nvpair id=\"core-stickiness\" name=\"resource-stickiness\" value=\"INFINITY\"/&gt;\n"
+"   &lt;/meta_attributes&gt;\n"
+"   &lt;meta_attributes id=\"after-hours\" score=\"1\" &gt;\n"
+"    &lt;nvpair id=\"after-stickiness\" name=\"resource-stickiness\" value=\"0\"/&gt;\n"
+"   &lt;/meta_attributes&gt;\n"
+"  &lt;/rsc_defaults&gt;  "
+msgstr ""
+" &lt;rsc_defaults&gt;\n"
+"   &lt;meta_attributes id=\"core-hours\" score=\"2\"&gt;\n"
+"    &lt;rule id=\"core-hour-rule\" score=\"0\"&gt;\n"
+"      &lt;date_expression id=\"nine-to-five-Mon-to-Fri\" operation=\"date_spec\"&gt;\n"
+"        &lt;date_spec id=\"nine-to-five-Mon-to-Fri-spec\" hours=\"9-16\" weekdays=\"1-5\"/&gt;\n"
+"      &lt;/date_expression&gt;\n"
+"    &lt;/rule&gt;\n"
+"    &lt;nvpair id=\"core-stickiness\" name=\"resource-stickiness\" value=\"INFINITY\"/&gt;\n"
+"   &lt;/meta_attributes&gt;\n"
+"   &lt;meta_attributes id=\"after-hours\" score=\"1\" &gt;\n"
+"    &lt;nvpair id=\"after-stickiness\" name=\"resource-stickiness\" value=\"0\"/&gt;\n"
+"   &lt;/meta_attributes&gt;\n"
+"  &lt;/rsc_defaults&gt;  "
+
+#. Tag: title
+#, no-c-format
 msgid "Ensuring Time Based Rules Take Effect"
 msgstr "Asigurarea că Regulile Bazate pe Timp Iau Efect"
 
-#: Ch-Rules.xml:441(para)
+#. Tag: para
+#, no-c-format
 msgid "A Pacemaker cluster is an event driven system. As such, it won't recalculate the best place for resources to run in unless something (like a resource failure or configuration change) happens. This can mean that a location constraint that only allows resource X to run between 9am and 5pm is not enforced."
 msgstr "Un cluster Pacemaker este un sistem condus de evenimente. Prin urmare, nu va recalcula cel mai bun loc pentru a rula resursele decât dacă ceva (cum ar fi eşecul unei resurse sau modificarea configuraţiei) se întâmplă. Asta poate însemna că o restricţie a locaţiei care permite resursei X să ruleze numai între 9am şi 5pm nu este aplicată în mod obligatoriu."
 
-#: Ch-Rules.xml:446(para)
-msgid "If you rely on time based rules, it is essential that you set the <literal>cluster-recheck-interval</literal> option. This tells the cluster to periodically recalculate the ideal state of the cluster. For example, if you set <literal>cluster-recheck-interval=5m</literal>, then sometime between 9:00 and 9:05 the cluster would notice that it needs to start resource X, and between 17:00 and 17:05 it would realize it needed to be stopped."
+#. Tag: para
+#, no-c-format
+msgid "If you rely on time based rules, it is essential that you set the <literal>cluster-recheck-interval</literal> option. This tells the cluster to periodically recalculate the ideal state of the cluster. For example, if you set <literal>cluster-recheck-interval=5m</literal>, then sometime between 9:00 and 9:05 the cluster would notice that it needs to start resource X, and between 17:00 and 17:05 it would realize that X needed to be stopped."
 msgstr "Dacă vă bazaţi pe reguli bazate pe timp, este esenţial să setaţi opţiunea <literal>cluster-recheck-interval</literal>. Aceasta spune clusterului să recalculeze periodic starea ideală a clusterului. De exemplu, dacă setaţi <literal>cluster-recheck-interval=5m</literal>, atunci cândva între 9:00 şi 9:05 clusterul va detecta că trebuie să pornească resursa X, iar între 17:00 şi 17:05 va realiza că trebuie să o oprească."
 
-#: Ch-Rules.xml:451(para)
+#. Tag: para
+#, no-c-format
 msgid "Note that the timing of the actual start and stop actions depends on what else needs to be performed first."
 msgstr "Ţineţi cont că momentul efectiv de pornire şi oprire al acţiunilor depinde de ce alte lucruri trebuie efectuate mai întâi."
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ch-Rules.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
 

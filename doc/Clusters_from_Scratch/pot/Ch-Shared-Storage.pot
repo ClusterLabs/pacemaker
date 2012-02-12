@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-21T11:01:27\n"
-"PO-Revision-Date: 2010-12-21T11:01:27\n"
+"POT-Creation-Date: 2011-12-31T16:43:03\n"
+"PO-Revision-Date: 2011-12-31T16:43:03\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Even if you’re serving up static websites, having to manually synchronize the contents of that website to all the machines in the cluster is not ideal. For dynamic websites, such as a wiki, its not even an option. Not everyone care afford network-attached storage but somehow the data needs to be kept in sync. Enter DRBD which can be thought of as network based RAID-1. See <ulink url=\"http://www.drbd.org/\">http://www.drbd.org</ulink>/ for more details."
+msgid "Even if you’re serving up static websites, having to manually synchronize the contents of that website to all the machines in the cluster is not ideal. For dynamic websites, such as a wiki, it's not even an option. Not everyone care afford network-attached storage but somehow the data needs to be kept in sync. Enter DRBD which can be thought of as network based RAID-1. See <ulink url=\"http://www.drbd.org/\">http://www.drbd.org</ulink>/ for more details."
 msgstr ""
 
 #. Tag: title
@@ -29,13 +29,13 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Since its inclusion in the upstream 2.6.33 kernel, everything needed to use DRBD ships with &DISTRO; &amp;DISTRO_VERSION;. All you need to do is install it:"
+msgid "Since its inclusion in the upstream 2.6.33 kernel, everything needed to use DRBD ships with &DISTRO; &DISTRO_VERSION;. All you need to do is install it:"
 msgstr ""
 
 #. Tag: screen
 #, no-c-format
 msgid "\n"
-"[root@pcmk-1 ~]# <userinput>yum install -y drbd-pacemaker</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>yum install -y drbd-pacemaker drbd-udev</userinput>\n"
 "Loaded plugins: presto, refresh-packagekit\n"
 "Setting up Install Process\n"
 "Resolving Dependencies\n"
@@ -152,7 +152,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There is no series of commands for build a DRBD configuration, so simply copy the configuration below to /etc/drbd.conf"
+msgid "There is no series of commands for building a DRBD configuration, so simply copy the configuration below to /etc/drbd.conf"
 msgstr ""
 
 #. Tag: para
@@ -300,7 +300,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "pcmk-1 is now in the Primary state which allows it to be written to. Which means its a good point at which to create a filesystem and populate it with some data to serve up via our WebSite resource."
+msgid "pcmk-1 is now in the Primary state which allows it to be written to. Which means it's a good point at which to create a filesystem and populate it with some data to serve up via our WebSite resource."
 msgstr ""
 
 #. Tag: title
@@ -377,7 +377,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Next we must create a working copy or the current configuration. This is where all our changes will go. The cluster will not see any of them until we say its ok. Notice again how the prompt changes, this time to indicate that we’re no longer looking at the live cluster."
+msgid "Next we must create a working copy of the current configuration. This is where all our changes will go. The cluster will not see any of them until we say it's ok. Notice again how the prompt changes, this time to indicate that we’re no longer looking at the live cluster."
 msgstr ""
 
 #. Tag: screen
@@ -419,13 +419,13 @@ msgid "\n"
 "colocation website-with-ip inf: WebSite ClusterIP\n"
 "order apache-after-ip inf: ClusterIP WebSite\n"
 "property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
 "        cluster-infrastructure=\"openais\" \\\n"
-"        expected-quorum-votes=”2” \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
 "        stonith-enabled=\"false\" \\\n"
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
-"        resource-stickiness=”100”\n"
+"        resource-stickiness=\"100\"\n"
 "    "
 msgstr ""
 
@@ -446,7 +446,7 @@ msgid "\n"
 "Last updated: Tue Sep  1 09:37:13 2009\n"
 "Stack: openais\n"
 "Current DC: pcmk-1 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
 "2 Nodes configured, 2 expected votes\n"
 "3 Resources configured.\n"
 "============\n"
@@ -534,13 +534,13 @@ msgid "\n"
 "order WebSite-after-WebFS inf: WebFS WebSite\n"
 "order apache-after-ip inf: ClusterIP WebSite\n"
 "property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
 "        cluster-infrastructure=\"openais\" \\\n"
-"        expected-quorum-votes=”2” \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
 "        stonith-enabled=\"false\" \\\n"
 "        no-quorum-policy=\"ignore\"\n"
 "rsc_defaults $id=\"rsc-options\" \\\n"
-"        resource-stickiness=”100”\n"
+"        resource-stickiness=\"100\"\n"
 "    "
 msgstr ""
 
@@ -561,7 +561,7 @@ msgid "\n"
 "Last updated: Tue Sep  1 10:08:44 2009\n"
 "Stack: openais\n"
 "Current DC: pcmk-1 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
 "2 Nodes configured, 2 expected votes\n"
 "4 Resources configured.\n"
 "============\n"
@@ -584,7 +584,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "We could shut down the active node again, but another way to safely simulate recovery is to put the node into what is called “standby mode”. Nodes in this state tell the cluster that they are not allowed to run resources. Any resources found active there will be moved elsewhere. This feature can be particularly useful when updating the resources’ packages."
+msgid "We could shut down the active node again, but another way to safely simulate recovery is to put the node into what is called \"standby mode\". Nodes in this state tell the cluster that they are not allowed to run resources. Any resources found active there will be moved elsewhere. This feature can be particularly useful when updating the resources’ packages."
 msgstr ""
 
 #. Tag: para
@@ -601,7 +601,7 @@ msgid "\n"
 "Last updated: Tue Sep  1 10:09:57 2009\n"
 "Stack: openais\n"
 "Current DC: pcmk-1 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
 "2 Nodes configured, 2 expected votes\n"
 "4 Resources configured.\n"
 "============\n"
@@ -632,7 +632,7 @@ msgid "\n"
 "Last updated: Tue Sep  1 10:13:25 2009\n"
 "Stack: openais\n"
 "Current DC: pcmk-1 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
 "2 Nodes configured, 2 expected votes\n"
 "4 Resources configured.\n"
 "============\n"

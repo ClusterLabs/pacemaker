@@ -1,0 +1,225 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Clusters from Scratch 1.1\n"
+"POT-Creation-Date: 2011-12-31T15:15:49\n"
+"PO-Revision-Date: 2011-11-20 10:41+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Using CMAN for Cluster Membership and Quorum"
+msgstr "Folosirea CMAN pentru Apartenenţa la Cluster şi Quorum"
+
+#. Tag: title
+#, no-c-format
+msgid "Background"
+msgstr "Informaţii de fond"
+
+#. Tag: para
+#, no-c-format
+msgid "<ulink url=\"http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Suite_Overview/index.html#s2-clumembership-overview-CSO\">CMAN v3</ulink> is a Corsync plugin that monitors the names and number of active cluster nodes in order to deliver membership and quorum information to clients (such as the Pacemaker daemons)."
+msgstr "<ulink url=\"http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Suite_Overview/index.html#s2-clumembership-overview-CSO\">CMAN v3</ulink> este un plugin al Corosync care monitorizează numele și numărul de noduri active din cluster pentru a livra informații de apartenență și quorum clienților (cum ar fi daemonii Pacemaker-ului)."
+
+#. Tag: para
+#, no-c-format
+msgid "In a traditional Corosync-Pacemaker cluster, a Pacemaker plugin is loaded to provide membership and quorum information. The motivation for wanting to use CMAN for this instead, is to ensure all elements of the cluster stack are making decisions based on the same membership and quorum data. <footnote> <para> A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecessary downtime and/or data corruption. </para> </footnote>"
+msgstr "Într-un cluster tradițional Corosync-Pacemaker, un plugin Pacemaker este încărcat pentru a furniza informații de apartenență și quorum. Motivația pentru dorința de a folosi CMAN în schimb, este de a asigura că toate elementele stivei de cluster realizează decizii pe baza acelorași date de apartenență și quorum. <footnote> <para> Un eșec de a realiza acest lucru poate conduce la ceea ce este numit a fi un <literal>split-brain intern</literal> - o situație în care părți diferite ale stivei nu sunt de acord dacă unele noduri sunt funcționale sau nu - fapt care conduce rapid către un downtime inutil și/sau către coruperea datelor. </para> </footnote>"
+
+#. Tag: para
+#, no-c-format
+msgid "CMAN has been around longer than Pacemaker and is part of the Red Hat cluster stack, so it is available and supported by many distributions and other pieces of software (such as OCFS2 and GFS2). For this reason it makes sense to support it."
+msgstr "CMAN a fost prin preajmă mai mult timp decât Pacemaker și este parte din stiva de cluster a Red Hat, așa că este disponibil și suportat de către multe distribuții și de alte componente software (cum ar fi OCFS2 și GFS2). Din acest motiv are logică să îl suportăm."
+
+#. Tag: title
+#, no-c-format
+msgid "Adding CMAN Support"
+msgstr "Adăugarea de Suport pentru CMAN"
+
+#. Tag: para
+#, no-c-format
+msgid "Be sure to disable the Pacemaker plugin before continuing with this section. In most cases, this can be achieved by removing <filename>/etc/corosync/service.d/pcmk</filename> and stopping Corosync."
+msgstr "Asigurați-vă că dezactivați pluginul de Pacemaker înainte de a continua cu această secțiune. În majoritatea cazurilor, acest lucru poate fi realizat prin înlăturarea <filename>/etc/corosync/service.d/pcmk</filename> și prin oprirea Corosync."
+
+#. Tag: title
+#, no-c-format
+msgid "Adding CMAN Support - cluster.conf"
+msgstr "Adăugarea de Suport pentru CMAN - cluster.conf"
+
+#. Tag: para
+#, no-c-format
+msgid "The preferred approach for enabling CMAN is to configure <filename>cluster.conf</filename> and use the <filename>/etc/init.d/cman</filename> script to start Corosync. It's far easier to maintain and start automatically starts the necessary pieces for using GFS2."
+msgstr "Abordarea preferată pentru activarea CMAN este să configurați <filename>cluster.conf</filename> și să folosiți scriptul <filename>/etc/init.d/cman</filename> pentru a porni Corosync. Este mult mai ușor de menținut și pornirea acestuia pornește automat piesele necesare pentru folosirea GFS2."
+
+#. Tag: para
+#, no-c-format
+msgid "You can find some documentation on <ulink url=\"http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Cluster_Administration/s1-creating-cluster-cli-CA.html\">Installing CMAN and Creating a Basic Cluster Configuration File</ulink> at the Red Hat website. However please ignore the parts about <literal>Fencing</literal>, <literal>Failover Domains</literal>, or <literal>HA Services</literal> and anything to do with <literal>rgmanager</literal> and <literal>fenced</literal>. All these continue to be handled by Pacemaker in the normal manner."
+msgstr "Puteți găsi documentație despre <ulink url=\"http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Cluster_Administration/s1-creating-cluster-cli-CA.html\">Instalarea CMAN și Crearea unui Fișier de Bază pentru Configurarea Clusterului</ulink> pe site-ul Red Hat. Totuși vă rugăm să ignorați părțile despre <literal>Evacuare forțată</literal>, <literal>Domenii de Failover</literal> sau <literal>Servicii HA</literal> și orice are de-a face cu <literal>rgmanager</literal> și <literal>fenced</literal>. Toate acestea continuă să fie gestionate de către Pacemaker într-o manieră normală."
+
+#. Tag: title
+#, no-c-format
+msgid "Sample cluster.conf for a two-node cluster"
+msgstr "Exemplu de cluster.conf pentru un cluster format din două noduri"
+
+#. Tag: programlisting
+#, no-c-format
+msgid "\n"
+"	\n"
+"&lt;?xml version=\"1.0\"?&gt;\n"
+"&lt;cluster config_version=\"1\" name=\"east8\"&gt;\n"
+"  &lt;logging debug=\"off\"/&gt;\n"
+"  &lt;clusternodes&gt;\n"
+"    &lt;clusternode name=\"pcmk-1\" nodeid=\"1\"&gt;\n"
+"      &lt;fence&gt;\n"
+"        &lt;method name=\"pcmk-redirect\"&gt;\n"
+"          &lt;device name=\"pcmk\" port=\"pcmk-1\"/&gt;\n"
+"        &lt;/method&gt;\n"
+"      &lt;/fence&gt;\n"
+"    &lt;/clusternode&gt;\n"
+"    &lt;clusternode name=\"pcmk-3\" nodeid=\"2\"&gt;\n"
+"      &lt;fence&gt;\n"
+"        &lt;method name=\"pcmk-redirect\"&gt;\n"
+"          &lt;device name=\"pcmk\" port=\"pcmk-3\"/&gt;\n"
+"        &lt;/method&gt;\n"
+"      &lt;/fence&gt;\n"
+"    &lt;/clusternode&gt;\n"
+"  &lt;/clusternodes&gt;\n"
+"  &lt;fencedevices&gt;\n"
+"    &lt;fencedevice name=\"pcmk\" agent=\"fence_pcmk\"/&gt;\n"
+"  &lt;/fencedevices&gt;\n"
+"&lt;/cluster&gt;\n"
+"	\n"
+"	"
+msgstr "\n"
+"	\n"
+"&lt;?xml version=\"1.0\"?&gt;\n"
+"&lt;cluster config_version=\"1\" name=\"east8\"&gt;\n"
+"  &lt;logging debug=\"off\"/&gt;\n"
+"  &lt;clusternodes&gt;\n"
+"    &lt;clusternode name=\"pcmk-1\" nodeid=\"1\"&gt;\n"
+"      &lt;fence&gt;\n"
+"        &lt;method name=\"pcmk-redirect\"&gt;\n"
+"          &lt;device name=\"pcmk\" port=\"pcmk-1\"/&gt;\n"
+"        &lt;/method&gt;\n"
+"      &lt;/fence&gt;\n"
+"    &lt;/clusternode&gt;\n"
+"    &lt;clusternode name=\"pcmk-3\" nodeid=\"2\"&gt;\n"
+"      &lt;fence&gt;\n"
+"        &lt;method name=\"pcmk-redirect\"&gt;\n"
+"          &lt;device name=\"pcmk\" port=\"pcmk-3\"/&gt;\n"
+"        &lt;/method&gt;\n"
+"      &lt;/fence&gt;\n"
+"    &lt;/clusternode&gt;\n"
+"  &lt;/clusternodes&gt;\n"
+"  &lt;fencedevices&gt;\n"
+"    &lt;fencedevice name=\"pcmk\" agent=\"fence_pcmk\"/&gt;\n"
+"  &lt;/fencedevices&gt;\n"
+"&lt;/cluster&gt;\n"
+"	\n"
+"	"
+
+#. Tag: title
+#, no-c-format
+msgid "Adding CMAN Support - corosync.conf"
+msgstr "Adăugarea de Suport pentru CMAN - corosync.conf"
+
+#. Tag: para
+#, no-c-format
+msgid "The alternative is to add the necessary cman configuration elements to <filename>corosync.conf</filename>. We recommend you place these directives in <filename>/etc/corosync/service.d/cman</filename> as they will differ between machines."
+msgstr "Alternativa este să adăugați elementele necesare pentru configurarea cman în <filename>corosync.conf</filename>. Vă recomandăm să plasați aceste directive în <filename>/etc/corosync/service.d/cman</filename> din moment ce acestea vor fi diferite între mașini."
+
+#. Tag: para
+#, no-c-format
+msgid "If you choose this approach, you would continue to start and stop Corosync with its init script as previously described in this document."
+msgstr "Dacă alegeți această abordare, veți continua să porniți și să opriți Corosync cu scriptul său de init după cum am descris în prealabil în acest document."
+
+#. Tag: title
+#, no-c-format
+msgid "Sample corosync.conf extensions for a two-node cluster"
+msgstr "Exemplu de extensii ale corosync.conf pentru un cluster format din două noduri"
+
+#. Tag: programlisting
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/cman</userinput>\n"
+"cluster {\n"
+"    name: beekhof\n"
+"\n"
+"    clusternodes {\n"
+"            clusternode {\n"
+"                    votes: 1\n"
+"                    nodeid: 1\n"
+"                    name: pcmk-1\n"
+"            }\n"
+"            clusternode {\n"
+"                    votes: 1\n"
+"                    nodeid: 2\n"
+"                    name: pcmk-2\n"
+"            }\n"
+"    }\n"
+"    cman {\n"
+"            expected_votes: 2\n"
+"            cluster_id: 123\n"
+"            nodename: `uname -n`\n"
+"            two_node: 1\n"
+"            max_queued: 10\n"
+"    }\n"
+"}\n"
+"\n"
+"service {\n"
+"    name: corosync_cman\n"
+"    ver: 0\n"
+"}\n"
+"\n"
+"quorum {\n"
+"    provider: quorum_cman\n"
+"}\n"
+"END\n"
+"	"
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/cman</userinput>\n"
+"cluster {\n"
+"    name: beekhof\n"
+"\n"
+"    clusternodes {\n"
+"            clusternode {\n"
+"                    votes: 1\n"
+"                    nodeid: 1\n"
+"                    name: pcmk-1\n"
+"            }\n"
+"            clusternode {\n"
+"                    votes: 1\n"
+"                    nodeid: 2\n"
+"                    name: pcmk-2\n"
+"            }\n"
+"    }\n"
+"    cman {\n"
+"            expected_votes: 2\n"
+"            cluster_id: 123\n"
+"            nodename: `uname -n`\n"
+"            two_node: 1\n"
+"            max_queued: 10\n"
+"    }\n"
+"}\n"
+"\n"
+"service {\n"
+"    name: corosync_cman\n"
+"    ver: 0\n"
+"}\n"
+"\n"
+"quorum {\n"
+"    provider: quorum_cman\n"
+"}\n"
+"END\n"
+"	"
+
+#. Tag: para
+#, no-c-format
+msgid "Verify that <literal>nodename</literal> was set appropriately on each host."
+msgstr "Verificați că <literal>nodename</literal> a fost setat corespunzător pe fiecare gazdă."

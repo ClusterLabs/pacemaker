@@ -1,0 +1,443 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Clusters from Scratch 1.1\n"
+"POT-Creation-Date: 2011-12-31T15:15:50\n"
+"PO-Revision-Date: 2011-11-26 11:16+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Configure STONITH"
+msgstr "Configurarea STONITH"
+
+#. Tag: title
+#, no-c-format
+msgid "Why You Need STONITH"
+msgstr "De Ce Aveți Nevoie de STONITH"
+
+#. Tag: para
+#, no-c-format
+msgid "<ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rogue nodes or concurrent access."
+msgstr "<ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> este un acronim pentru Shoot-The-Other-Node-In-The-Head (împușcă-celălalt-nod-în-cap) şi protejează datele voastre de la a fi corupte de către noduri pribege sau de la acces simultan."
+
+#. Tag: para
+#, no-c-format
+msgid "Just because a node is unresponsive, this doesn't mean it isn't accessing your data. The only way to be 100% sure that your data is safe, is to use STONITH so we can be certain that the node is truly offline, before allowing the data to be accessed from another node."
+msgstr "Doar pentru că un nod nu mai răspunde, acest lucru nu înseamnă că acesta nu mai accesează datele voastre. Singura metodă de a fi 100% siguri că datele voastre sunt în siguranţă, este să folosiţi STONITH pentru a putea fi siguri că nodul este cu adevărat offline, înainte de a permite datelor să fie accesate de pe alt nod."
+
+#. Tag: para
+#, no-c-format
+msgid "STONITH also has a role to play in the event that a clustered service cannot be stopped. In this case, the cluster uses STONITH to force the whole node offline, thereby making it safe to start the service elsewhere."
+msgstr "STONITH mai are un rol pe care îl joacă în cazul în care un serviciu clusterizat nu poate fi oprit. În acest caz, clusterul foloseşte STONITH pentru a forţa întregul nod offline, astfel făcând să fie sigurâ pornirea serviciului în altă parte."
+
+#. Tag: title
+#, no-c-format
+msgid "What STONITH Device Should You Use"
+msgstr "Ce Dispozitiv STONITH Ar Trebui Să Folosiţi"
+
+#. Tag: para
+#, no-c-format
+msgid "It is crucial that the STONITH device can allow the cluster to differentiate between a node failure and a network one."
+msgstr "Este imperativ ca dispozitivul STONITH să permită clusterului să facă diferenţa între o defecţiune a nodului şi una a reţelei."
+
+#. Tag: para
+#, no-c-format
+msgid "The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many on-board IMPI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault."
+msgstr "Cea mai mare greşeală pe care o fac oamenii în alegerea unui dispozitiv STONITH este să folosească un switch de curent cu acces la distanţă (cum ar fi multe controlere IPMI integrate) care partajează curentul cu nodul pe care îl controlează. În astfel de cazuri, clusterul nu poate fi sigur dacă nodul este cu adevărat offline sau inactiv şi suferă din cauza unei probleme de reţea."
+
+#. Tag: para
+#, no-c-format
+msgid "Likewise, any device that relies on the machine being active (such as SSH-based \"devices\" used during testing) are inappropriate."
+msgstr "În mod similar, orice dispozitiv care se bazează pe maşină să fie activă (cum ar fi \"dispozitivele\" bazate pe SSH folosite în timpul testării) sunt nepotrivite."
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring STONITH"
+msgstr "Configurarea STONITH"
+
+#. Tag: para
+#, no-c-format
+msgid "Find the correct driver: <command>stonith_admin --list-installed</command>"
+msgstr "Găsiţi driverul corect: <command>stonith_admin --list-installed</command>"
+
+#. Tag: para
+#, no-c-format
+msgid "Since every device is different, the parameters needed to configure it will vary. To find out the parameters associated with the device, run:"
+msgstr "Din moment ce fiecare dispozitiv este diferit, parametrii necesari să îl configurați vor varia. Pentru a afla parametrii asociaţi dispozitivului, rulaţi:"
+
+#. Tag: para
+#, no-c-format
+msgid "<command>stonith_admin --metadata --agent <replaceable>type</replaceable></command>"
+msgstr "<command>stonith_admin --metadata --agent <replaceable>type</replaceable></command>"
+
+#. Tag: para
+#, no-c-format
+msgid "The output should be XML formatted text containing additional parameter descriptions. We will endevor to make the output more friendly in a later version."
+msgstr "Rezultatul de ieşire ar trebui să fie un text formatat XML conţinând descrierile parametrilor adiţionali. Ne vom aventura să facem rezultatul de ieşire mai prietenos într-o versiune ulterioară."
+
+#. Tag: para
+#, no-c-format
+msgid "Enter the shell <command>crm</command>"
+msgstr "Intrați în shell-ul <command>crm</command>"
+
+#. Tag: para
+#, no-c-format
+msgid "Create an editable copy of the existing configuration <command>cib new stonith</command>"
+msgstr "CreațI o copie editabilă a configurației existente <command>cib new stonith</command>"
+
+#. Tag: para
+#, no-c-format
+msgid "Create a fencing resource containing a primitive resource with a class of stonith, a type of <replaceable>type</replaceable> and a parameter for each of the values returned in step 2: <command>configure primitive ...</command>"
+msgstr "Creați o resursă de evacuare forțată conținând o resursă primitivă cu o clasă stonith, de tipul <replaceable>type</replaceable> și un parametru pentru fiecare din valorile returnate la pasul 2: <command>configure primitive ...</command>"
+
+#. Tag: para
+#, no-c-format
+msgid "If the device does not know how to fence nodes based on their uname, you may also need to set the special <constant>pcmk_host_map</constant> parameter. See <command>man stonithd</command> for details."
+msgstr "Dacă dispozitivul nu știe cum să evacueze forțat nodurile pe baza uname-ului acestora, ar putea fi nevoie să setați parametrul special <constant>pcmk_host_map</constant>. Vedeți <command>man stonithd</command> pentru detalii."
+
+#. Tag: para
+#, no-c-format
+msgid "If the device does not support the <constant>list</constant> command, you may also need to set the special <constant>pcmk_host_list</constant> and/or <constant>pcmk_host_check</constant> parameters. See <command>man stonithd</command> for details."
+msgstr "Dacă dispozitivul nu suportă comanda <constant>list</constant> ar putea fi nevoie să setați parametrii speciali <constant>pcmk_host_list</constant> și/sau <constant>pcmk_host_check</constant>. Vedeți <command>man stonithd</command> pentru detalii."
+
+#. Tag: para
+#, no-c-format
+msgid "If the device does not expect the victim to be specified with the <constant>port</constant> parameter, you may also need to set the special <constant>pcmk_host_argument</constant> parameter. See <command>man stonithd</command> for details."
+msgstr "Dacă dispozitivul nu se așteaptă ca victima să fie specificată cu parametrul <constant>port</constant>, ar putea fi necesar să setați parametrul special <constant>pcmk_host_argument</constant>. Vedeți <command>man stonithd</command> pentru detalii."
+
+#. Tag: para
+#, no-c-format
+msgid "Upload it into the CIB from the shell: <command>cib commit stonith</command>"
+msgstr "Încărcați în CIB din shell: <command>cib commit stonith</command>"
+
+#. Tag: para
+#, no-c-format
+msgid "Once the stonith resource is running, you can test it by executing: <command>stonith_admin --reboot <replaceable>nodename</replaceable></command>. Although you might want to stop the cluster on that machine first."
+msgstr "Odată ce resursa stonith rulează, o puteți testa executând: <command>stonith_admin --reboot <replaceable>nodename</replaceable></command>. Deși ați putea dori să opriți clusterul pe acea mașină mai întâi."
+
+#. Tag: title
+#, no-c-format
+msgid "Example"
+msgstr "Exemplu"
+
+#. Tag: para
+#, no-c-format
+msgid "Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then we would chose the <literal>fence_ipmilan</literal> driver in step 2 and obtain the following list of parameters"
+msgstr "Presupunând că avem un şasiu conţinând patru noduri şi un dispozitiv IPMI activ pe 10.0.0.1, atunci am alege driverul <literal>fence_ipmilan</literal> la pasul 2 şi am obţine următoarea listă de parametri"
+
+#. Tag: title
+#, no-c-format
+msgid "Obtaining a list of STONITH Parameters"
+msgstr "Obţinerea unei liste de Parametri STONITH"
+
+#. Tag: programlisting
+#, no-c-format
+msgid "\n"
+"# stonith_admin --metadata -a fence_ipmilan\n"
+"\n"
+"&lt;?xml version=\"1.0\" ?&gt;\n"
+"&lt;resource-agent name=\"fence_ipmilan\" shortdesc=\"Fence agent for IPMI over LAN\"&gt;\n"
+"&lt;longdesc&gt;\n"
+"fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).\n"
+"\n"
+"To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)&lt;/longdesc&gt;\n"
+"&lt;parameters&gt;\n"
+"	&lt;parameter name=\"auth\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-A\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;IPMI Lan Auth type (md5, password, or none)&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"ipaddr\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-a\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;IPMI Lan IP to talk to&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"passwd\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-p\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Password (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"passwd_script\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-S\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Script to retrieve password (if required)&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"lanplus\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-P\" /&gt;\n"
+"		&lt;content type=\"boolean\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Use Lanplus&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"login\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-l\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Username/Login (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"action\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-o\" /&gt;\n"
+"		&lt;content type=\"string\" default=\"reboot\"/&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"timeout\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-t\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Timeout (sec) for IPMI operation&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"cipher\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-C\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Ciphersuite to use (same as ipmitool -C parameter)&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"method\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-M\" /&gt;\n"
+"		&lt;content type=\"string\" default=\"onoff\"/&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Method to fence (onoff or cycle)&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"power_wait\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-T\" /&gt;\n"
+"		&lt;content type=\"string\" default=\"2\"/&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Wait X seconds after on/off operation&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"delay\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-f\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Wait X seconds before fencing is started&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"verbose\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-v\" /&gt;\n"
+"		&lt;content type=\"boolean\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Verbose mode&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"&lt;/parameters&gt;\n"
+"&lt;actions&gt;\n"
+"	&lt;action name=\"on\" /&gt;\n"
+"	&lt;action name=\"off\" /&gt;\n"
+"	&lt;action name=\"reboot\" /&gt;\n"
+"	&lt;action name=\"status\" /&gt;\n"
+"	&lt;action name=\"diag\" /&gt;\n"
+"	&lt;action name=\"list\" /&gt;\n"
+"	&lt;action name=\"monitor\" /&gt;\n"
+"	&lt;action name=\"metadata\" /&gt;\n"
+"&lt;/actions&gt;\n"
+"&lt;/resource-agent&gt;\n"
+"	"
+msgstr "\n"
+"# stonith_admin --metadata -a fence_ipmilan\n"
+"\n"
+"&lt;?xml version=\"1.0\" ?&gt;\n"
+"&lt;resource-agent name=\"fence_ipmilan\" shortdesc=\"Fence agent for IPMI over LAN\"&gt;\n"
+"&lt;longdesc&gt;\n"
+"fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).\n"
+"\n"
+"To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)&lt;/longdesc&gt;\n"
+"&lt;parameters&gt;\n"
+"	&lt;parameter name=\"auth\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-A\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;IPMI Lan Auth type (md5, password, or none)&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"ipaddr\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-a\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;IPMI Lan IP to talk to&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"passwd\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-p\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Password (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"passwd_script\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-S\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Script to retrieve password (if required)&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"lanplus\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-P\" /&gt;\n"
+"		&lt;content type=\"boolean\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Use Lanplus&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"login\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-l\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Username/Login (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"action\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-o\" /&gt;\n"
+"		&lt;content type=\"string\" default=\"reboot\"/&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"timeout\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-t\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Timeout (sec) for IPMI operation&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"cipher\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-C\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Ciphersuite to use (same as ipmitool -C parameter)&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"method\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-M\" /&gt;\n"
+"		&lt;content type=\"string\" default=\"onoff\"/&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Method to fence (onoff or cycle)&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"power_wait\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-T\" /&gt;\n"
+"		&lt;content type=\"string\" default=\"2\"/&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Wait X seconds after on/off operation&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"delay\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-f\" /&gt;\n"
+"		&lt;content type=\"string\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Wait X seconds before fencing is started&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"	&lt;parameter name=\"verbose\" unique=\"1\"&gt;\n"
+"		&lt;getopt mixed=\"-v\" /&gt;\n"
+"		&lt;content type=\"boolean\" /&gt;\n"
+"		&lt;shortdesc lang=\"en\"&gt;Verbose mode&lt;/shortdesc&gt;\n"
+"	&lt;/parameter&gt;\n"
+"&lt;/parameters&gt;\n"
+"&lt;actions&gt;\n"
+"	&lt;action name=\"on\" /&gt;\n"
+"	&lt;action name=\"off\" /&gt;\n"
+"	&lt;action name=\"reboot\" /&gt;\n"
+"	&lt;action name=\"status\" /&gt;\n"
+"	&lt;action name=\"diag\" /&gt;\n"
+"	&lt;action name=\"list\" /&gt;\n"
+"	&lt;action name=\"monitor\" /&gt;\n"
+"	&lt;action name=\"metadata\" /&gt;\n"
+"&lt;/actions&gt;\n"
+"&lt;/resource-agent&gt;\n"
+"	"
+
+#. Tag: para
+#, no-c-format
+msgid "from which we would create a STONITH resource fragment that might look like this"
+msgstr "din care am crea un fragment de resursă STONITH care ar putea arăta aşa"
+
+#. Tag: title
+#, no-c-format
+msgid "Sample STONITH Resource"
+msgstr "Exemplu de Resursă STONITH"
+
+#. Tag: programlisting
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm </userinput>\n"
+"crm(live)# <userinput>cib new stonith</userinput>\n"
+"INFO: stonith shadow CIB created\n"
+"crm(stonith)# <userinput>configure primitive impi-fencing stonith::fence_ipmilan \\</userinput>\n"
+"<userinput>        params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\</userinput>\n"
+"<userinput>        op monitor interval=\"60s\"</userinput>\n"
+"	"
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>crm </userinput>\n"
+"crm(live)# <userinput>cib new stonith</userinput>\n"
+"INFO: stonith shadow CIB created\n"
+"crm(stonith)# <userinput>configure primitive impi-fencing stonith::fence_ipmilan \\</userinput>\n"
+"<userinput>        params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\</userinput>\n"
+"<userinput>        op monitor interval=\"60s\"</userinput>\n"
+"	"
+
+#. Tag: para
+#, no-c-format
+msgid "And finally, since we disabled it earlier, we need to re-enable STONITH. At this point we should have the following configuration."
+msgstr "Și în sfârșit, din moment ce l-am dezactivat mai devreme, trebuie să reactivăm STONITH. În acest punct ar trebui să avem următoarea configurație."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"crm(stonith)# <userinput>configure property stonith-enabled=\"true\"</userinput>\n"
+"crm(stonith)# <userinput>configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=\"wwwdata\" \\\n"
+"        op monitor interval=\"60s\"\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"gfs2\"\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+"        op monitor interval=\"1min\"\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" clusterip_hash=\"sourceip\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"<emphasis>primitive ipmi-fencing stonith::fence_ipmilan \\</emphasis>\n"
+"<emphasis> params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\</emphasis>\n"
+"<emphasis> op monitor interval=\"60s\"</emphasis>\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+"clone WebFSClone WebFS\n"
+"clone WebIP ClusterIP  \\\n"
+"        meta globally-unique=\"true\" clone-max=\"2\" clone-node-max=\"2\"\n"
+"clone WebSiteClone WebSite\n"
+"colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
+"colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
+"colocation website-with-ip inf: WebSiteClone WebIP\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
+"order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
+"order apache-after-ip inf: WebIP WebSiteClone\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        <emphasis>stonith-enabled=\"true\"</emphasis> \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+"rsc_defaults $id=\"rsc-options\" \\\n"
+"        resource-stickiness=\"100\"\n"
+"crm(stonith)# <userinput>cib commit stonith</userinput>\n"
+"INFO: commited 'stonith' shadow CIB to the cluster\n"
+"crm(stonith)# quit\n"
+"bye\n"
+"      "
+msgstr "\n"
+"crm(stonith)# <userinput>configure property stonith-enabled=\"true\"</userinput>\n"
+"crm(stonith)# <userinput>configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=\"wwwdata\" \\\n"
+"        op monitor interval=\"60s\"\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"gfs2\"\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+"        op monitor interval=\"1min\"\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" clusterip_hash=\"sourceip\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"<emphasis>primitive ipmi-fencing stonith::fence_ipmilan \\</emphasis>\n"
+"<emphasis> params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\</emphasis>\n"
+"<emphasis> op monitor interval=\"60s\"</emphasis>\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+"clone WebFSClone WebFS\n"
+"clone WebIP ClusterIP  \\\n"
+"        meta globally-unique=\"true\" clone-max=\"2\" clone-node-max=\"2\"\n"
+"clone WebSiteClone WebSite\n"
+"colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
+"colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
+"colocation website-with-ip inf: WebSiteClone WebIP\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
+"order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
+"order apache-after-ip inf: WebIP WebSiteClone\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        <emphasis>stonith-enabled=\"true\"</emphasis> \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+"rsc_defaults $id=\"rsc-options\" \\\n"
+"        resource-stickiness=\"100\"\n"
+"crm(stonith)# <userinput>cib commit stonith</userinput>\n"
+"INFO: commited 'stonith' shadow CIB to the cluster\n"
+"crm(stonith)# quit\n"
+"bye\n"
+"      "
+

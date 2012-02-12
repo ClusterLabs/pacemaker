@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-21T11:01:27\n"
-"PO-Revision-Date: 2010-12-21T11:01:27\n"
+"POT-Creation-Date: 2011-12-31T16:43:03\n"
+"PO-Revision-Date: 2011-12-31T16:43:03\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -69,15 +69,14 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Additionally, the Pacemaker version and supported cluster stack(s) is available via the <command>--version</command> option."
+msgid "Additionally, the Pacemaker version and supported cluster stack(s) are available via the <command>--version</command> option."
 msgstr ""
 
 #. Tag: screen
 #, no-c-format
 msgid "\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon --version</userinput>\n"
-"crm_mon 1.0.5 for OpenAIS and Heartbeat (Build: 462f1569a43740667daf7b0f6b521742e9eb8fa7)\n"
-"\n"
+"Pacemaker 1.1.5\n"
 "Written by Andrew Beekhof\n"
 "[root@pcmk-1 ~]# <userinput>crm_mon --help</userinput>\n"
 "crm_mon - Provides a summary of cluster's current state.\n"
@@ -123,7 +122,7 @@ msgid "\n"
 "        # crm_mon\n"
 "\n"
 "Display the cluster´s status on the console just once then exit:\n"
-"        # crm_mon\n"
+"        # crm_mon -1\n"
 "\n"
 "Display your cluster´s status, group resources by node, and include inactive resources in the list:\n"
 "        # crm_mon --group-by-node --inactive\n"

@@ -1,0 +1,364 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2012-01-01T17:48:33\n"
+"PO-Revision-Date: 2012-01-01T17:48:33\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Upgrading Cluster Software"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Version Compatibility"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When releasing newer versions we take care to make sure we are backwards compatible with older versions. While you will always be able to upgrade from version x to x+1, in order to continue to produce high quality software it may occasionally be necessary to drop compatibility with older versions."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "There will always be an upgrade path from any series-2 release to any other series-2 release."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "There are three approaches to upgrading your cluster software:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Complete Cluster Shutdown"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Rolling (node by node)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Disconnect and Reattach"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Each method has advantages and disadvantages, some of which are listed in the table below, and you should chose the one most appropriate to your needs."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Summary of Upgrade Methodologies"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Type"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Available between all software versions"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Service Outage During Upgrade"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Service Recovery During Upgrade"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Exercises Failover Logic/Configuration"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Allows change of cluster stack type<footnote> <para> <indexterm significance=\"preferred\"><primary>Cluster Stack</primary><secondary>switching between</secondary></indexterm> For example, switching from Heartbeat to Corosync. Consult the Heartbeat or Corosync documentation to see if upgrading them to a newer version is also supported. </para> </footnote>"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Shutdown</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Shutdown Upgrade</primary></indexterm> Shutdown"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "yes"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "always"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "N/A"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "no"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Rolling</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Rolling Upgrade</primary></indexterm> Rolling"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Reattach</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Reattach Upgrade</primary></indexterm> Reattach"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "only due to failure"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In this scenario one shuts down all cluster nodes and resources and upgrades all the nodes before restarting the cluster."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Procedure"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "On each node:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Shutdown the cluster stack (Heartbeat or Corosync)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Upgrade the Pacemaker software. This may also include upgrading the cluster stack and/or the underlying operating system."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Check the configuration manually or with the <command>crm_verify</command> tool if available."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start the cluster stack. This can be either Corosync or Heartbeat and does not need to be the same as the previous cluster stack."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In this scenario each node is removed from the cluster, upgraded and then brought back online until all nodes are running the newest version."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This method is currently broken between Pacemaker 0.6.x and 1.0.x."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Measures have been put into place to ensure rolling upgrades always work for versions after 1.0.0. If there is sufficient demand, the work to repair 0.6 -&gt; 1.0 compatibility will be carried out. Otherwise, please try one of the other upgrade strategies. Detach/Reattach is a particularly good option for most people."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "On the first node, check the configuration manually or with the <command>crm_verify</command> tool if available."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start the cluster stack. This must be the same type of cluster stack (Corosync or Heartbeat) that the rest of the cluster is using. Upgrading Corosync/Heartbeat may also be possible, please consult the documentation for those projects to see if the two versions will be compatible."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Repeat for each node in the cluster."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Version Compatibility Table"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Version being Installed"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Oldest Compatible Version"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Pacemaker 1.0.x"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Pacemaker 1.0.0"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Pacemaker 0.7.x"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Pacemaker 0.6 or Heartbeat 2.1.3"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Pacemaker 0.6.x"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Heartbeat 2.0.8"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Heartbeat 2.1.3 (or less)"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Heartbeat 2.0.4"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Heartbeat 2.0.4 (or less)"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Heartbeat 2.0.0"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "None. Use an alternate upgrade strategy."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Crossing Compatibility Boundaries"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Rolling upgrades that cross compatibility boundaries must be preformed in multiple steps. For example, to perform a rolling update from Heartbeat 2.0.1 to Pacemaker 0.6.6 one must:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Perform a rolling upgrade from Heartbeat 2.0.1 to Heartbeat 2.0.4"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Perform a rolling upgrade from Heartbeat 2.0.4 to Heartbeat 2.1.3"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Perform a rolling upgrade from Heartbeat 2.1.3 to Pacemaker 0.6.6"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A variant of a complete cluster shutdown, but the resources are left active and get re-detected when the cluster is restarted."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Tell the cluster to stop managing services. This is required to allow the services to remain active after the cluster shuts down."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_attribute -t crm_config -n is-managed-default -v false </command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For any resource that has a value for <literal>is-managed</literal>, make sure it is set to <literal>false</literal> (so that the cluster will not stop it)"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false </command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Upgrade the cluster stack program - This may also include upgrading the underlying operating system."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Verify that the cluster re-detected all resources correctly."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allow the cluster to resume managing resources again:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_attribute -t crm_config -n is-managed-default -v true </command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For any resource that has a value for <literal>is-managed</literal> reset it to <literal>true</literal> (so the cluster can recover the service if it fails) if desired:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false</command>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Notes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Always check your existing configuration is still compatible with the version you are installing before starting the cluster."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The oldest version of the CRM to support this upgrade type was in Heartbeat 2.0.4"
+msgstr ""
+

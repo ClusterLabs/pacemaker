@@ -1,0 +1,735 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Clusters from Scratch 1.1\n"
+"POT-Creation-Date: 2011-12-31T15:15:50\n"
+"PO-Revision-Date: 2011-11-22 23:24+0200\n"
+"Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Creating an Active/Passive Cluster"
+msgstr "Crearea unui Cluster Activ/Pasiv"
+
+#. Tag: title
+#, no-c-format
+msgid "Exploring the Existing Configuration"
+msgstr "Explorarea Configurației Existente"
+
+#. Tag: para
+#, no-c-format
+msgid "When Pacemaker starts up, it automatically records the number and details of the nodes in the cluster as well as which stack is being used and the version of Pacemaker being used."
+msgstr "Când Pacemaker pornește, înregistrează în mod automat numărul și detaliile nodurilor din cluster la fel ca și care stivă este folosită și care versiune de Pacemaker este folosită."
+
+#. Tag: para
+#, no-c-format
+msgid "This is what the base configuration should look like."
+msgstr "Așa ar trebui să arate configurația de bază."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-2 ~]# <userinput>crm configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\"\n"
+""
+msgstr "\n"
+"[root@pcmk-2 ~]# <userinput>crm configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\"\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "For those that are not of afraid of XML, you can see the raw configuration by appending \"xml\" to the previous command."
+msgstr "Pentru cei care nu se tem de XML, puteți vedea configurația în stare brută adăugând \"xml\" la comanda anterioară."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-2 ~]# <userinput>crm configure show xml</userinput>\n"
+"&lt;?xml version=\"1.0\" ?&gt;\n"
+"&lt;cib admin_epoch=\"0\" crm_feature_set=\"3.0.1\" dc-uuid=\"pcmk-1\" epoch=\"13\" have-quorum=\"1\" num_updates=\"7\" validate-with=\"pacemaker-1.0\"&gt;\n"
+"  &lt;configuration&gt;\n"
+"    &lt;crm_config&gt;\n"
+"      &lt;cluster_property_set id=\"cib-bootstrap-options\"&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-dc-version\" name=\"dc-version\" value=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\"/&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-cluster-infrastructure\" name=\"cluster-infrastructure\" value=\"openais\"/&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-expected-quorum-votes\" name=\"expected-quorum-votes\" value=\"2\"/&gt;\n"
+"      &lt;/cluster_property_set&gt;\n"
+"    &lt;/crm_config&gt;\n"
+"    &lt;rsc_defaults/&gt;\n"
+"    &lt;op_defaults/&gt;\n"
+"    &lt;nodes&gt;\n"
+"      &lt;node id=\"pcmk-1\" type=\"normal\" uname=\"pcmk-1\"/&gt;\n"
+"      &lt;node id=\"pcmk-2\" type=\"normal\" uname=\"pcmk-2\"/&gt;\n"
+"    &lt;/nodes&gt;\n"
+"    &lt;resources/&gt;\n"
+"    &lt;constraints/&gt;\n"
+"  &lt;/configuration&gt;\n"
+"&lt;/cib&gt;\n"
+""
+msgstr "\n"
+"[root@pcmk-2 ~]# <userinput>crm configure show xml</userinput>\n"
+"&lt;?xml version=\"1.0\" ?&gt;\n"
+"&lt;cib admin_epoch=\"0\" crm_feature_set=\"3.0.1\" dc-uuid=\"pcmk-1\" epoch=\"13\" have-quorum=\"1\" num_updates=\"7\" validate-with=\"pacemaker-1.0\"&gt;\n"
+"  &lt;configuration&gt;\n"
+"    &lt;crm_config&gt;\n"
+"      &lt;cluster_property_set id=\"cib-bootstrap-options\"&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-dc-version\" name=\"dc-version\" value=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\"/&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-cluster-infrastructure\" name=\"cluster-infrastructure\" value=\"openais\"/&gt;\n"
+"        &lt;nvpair id=\"cib-bootstrap-options-expected-quorum-votes\" name=\"expected-quorum-votes\" value=\"2\"/&gt;\n"
+"      &lt;/cluster_property_set&gt;\n"
+"    &lt;/crm_config&gt;\n"
+"    &lt;rsc_defaults/&gt;\n"
+"    &lt;op_defaults/&gt;\n"
+"    &lt;nodes&gt;\n"
+"      &lt;node id=\"pcmk-1\" type=\"normal\" uname=\"pcmk-1\"/&gt;\n"
+"      &lt;node id=\"pcmk-2\" type=\"normal\" uname=\"pcmk-2\"/&gt;\n"
+"    &lt;/nodes&gt;\n"
+"    &lt;resources/&gt;\n"
+"    &lt;constraints/&gt;\n"
+"  &lt;/configuration&gt;\n"
+"&lt;/cib&gt;\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "The last XML you’ll see in this document"
+msgstr "Ultimul XML pe care îl veți vedea în acest document."
+
+#. Tag: para
+#, no-c-format
+msgid "Before we make any changes, it's a good idea to check the validity of the configuration."
+msgstr "Înainte de a realiza orice modificări, este o idee bună să verificați validitatea configurației."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm_verify -L</userinput>\n"
+"crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: <emphasis>Resource start-up disabled since no STONITH resources have been defined</emphasis>\n"
+"crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option\n"
+"crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: NOTE: Clusters with shared data need STONITH to ensure data integrity\n"
+"<emphasis>Errors found during check: config not valid</emphasis>\n"
+"  -V may provide more details\n"
+"[root@pcmk-1 ~]#\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>crm_verify -L</userinput>\n"
+"crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: <emphasis>Resource start-up disabled since no STONITH resources have been defined</emphasis>\n"
+"crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option\n"
+"crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: NOTE: Clusters with shared data need STONITH to ensure data integrity\n"
+"<emphasis>Errors found during check: config not valid</emphasis>\n"
+"  -V may provide more details\n"
+"[root@pcmk-1 ~]#\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "As you can see, the tool has found some errors."
+msgstr "După cum puteți vedea, utilitarul a găsit câteva erori."
+
+#. Tag: para
+#, no-c-format
+msgid "In order to guarantee the safety of your data <footnote> <para> If the data is corrupt, there is little point in continuing to make it available </para> </footnote> , Pacemaker ships with STONITH <footnote> <para> A common node fencing mechanism. Used to ensure data integrity by powering off \"bad\" nodes. </para> </footnote> enabled. However it also knows when no STONITH configuration has been supplied and reports this as a problem (since the cluster would not be able to make progress if a situation requiring node fencing arose)."
+msgstr "Pentru a garanta siguranța datelor voastre <footnote> <para> Dacă datele sunt corupte, nu are sens să continuăm să le facem disponibile </para> </footnote> , Pacemaker este livrat cu STONITH <footnote> <para> Un mecanism comun de evacuare forțată a nodului. Folosit pentru a asigura integritatea datelor prin închiderea nodurilor \"rele\". </para> </footnote> activat. Oricum acesta știe de asemenea când nici o configurație STONITH nu a fost furnizată și raportează acest lucru ca pe o problemă (din moment ce clusterul nu ar fi capabil să realizeze progrese dacă ar fi apărut o situație care ar fi necesitat evacuarea forțată a nodului)."
+
+#. Tag: para
+#, no-c-format
+msgid "For now, we will disable this feature and configure it later in the Configuring STONITH section. It is important to note that the use of STONITH is highly encouraged, turning it off tells the cluster to simply pretend that failed nodes are safely powered off. Some vendors will even refuse to support clusters that have it disabled."
+msgstr "Momentan, vom dezactiva această funcționalitate și o vom configura mai târziu în secțiunea Configurarea STONITH. Este important de reținut că utilizarea STONITH este puternic încurajată, oprirea acestuia îi spune clusterului să se prefacă pur și simplu că nodurile care au eșuat sunt oprite în siguranță. Unii comercianți vor refuza chiar să ofere suport pentru clustere care îl au dezactivat."
+
+#. Tag: para
+#, no-c-format
+msgid "To disable STONITH, we set the stonith-enabled cluster option to false."
+msgstr "Pentru a dezactiva STONITH, setăm opțiunea clusterului stonith-enabled pe false."
+
+#. Tag: para
+#, no-c-format
+msgid "<userinput>crm configure property stonith-enabled=false</userinput>"
+msgstr "<userinput>crm configure property stonith-enabled=false</userinput>"
+
+#. Tag: para
+#, no-c-format
+msgid "<userinput>crm_verify -L</userinput>"
+msgstr "<userinput>crm_verify -L</userinput>"
+
+#. Tag: para
+#, no-c-format
+msgid "With the new cluster option set, the configuration is now valid."
+msgstr "Cu noua opțiune a clusterului setată, configurația este acum validă."
+
+#. Tag: para
+#, no-c-format
+msgid "The use of <literal>stonith-enabled=false</literal> is completely inappropriate for a production cluster. We use it here to defer the discussion of its configuration which can differ widely from one installation to the next. See <xref linkend=\"ch-stonith\" /> for information on why STONITH is important and details on how to configure it."
+msgstr "Utilizarea <literal>stonith-enabled=false</literal> este complet nepotrivită pentru un cluster de producție. O folosim aici pentru a face referință la configurarea acestuia care poate fi foarte diferită de la o instalare la alta. Vedeți <xref linkend=\"ch-stonith\"/> pentru informații despre de ce este important STONITH și detalii despre cum să îl configurați."
+
+#. Tag: title
+#, no-c-format
+msgid "Adding a Resource"
+msgstr "Adăugarea unei Resurse"
+
+#. Tag: para
+#, no-c-format
+msgid "The first thing we should do is configure an IP address. Regardless of where the cluster service(s) are running, we need a consistent address to contact them on. Here I will choose and add 192.168.122.101 as the floating address, give it the imaginative name ClusterIP and tell the cluster to check that it's running every 30 seconds."
+msgstr "Primul lucru pe care ar trebui să îl facem este să configurăm o adresă IP. Indiferent de unde rulează serviciul/serviciile de cluster, avem nevoie de o adresa consistentă pe care să le contactăm. Aici voi alege și adăuga 192.168.122.101 ca adresa virtuală, îi vom da numele plin de imaginație ClusterIP și vom spune clusterului să verifice că aceasta rulează la fiecare 30 de secunde."
+
+#. Tag: para
+#, no-c-format
+msgid "The chosen address must not be one already associated with a physical node"
+msgstr "Adresa aleasă nu trebuie să fie una deja asociată cu un nod fizic"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"<userinput>crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \\ </userinput>\n"
+"        <userinput>params ip=192.168.122.101 cidr_netmask=32 \\ </userinput>\n"
+"        <userinput>op monitor interval=30s</userinput>\n"
+""
+msgstr "\n"
+"<userinput>crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \\ </userinput>\n"
+"        <userinput>params ip=192.168.122.101 cidr_netmask=32 \\ </userinput>\n"
+"        <userinput>op monitor interval=30s</userinput>\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "The other important piece of information here is ocf:heartbeat:IPaddr2. This tells Pacemaker three things about the resource you want to add. The first field, ocf, is the standard to which the resource script conforms to and where to find it. The second field is specific to OCF resources and tells the cluster which namespace to find the resource script in, in this case heartbeat. The last field indicates the name of the resource script."
+msgstr "Cealaltă parte importantă de informație de aici este ocf:heartbeat:IPaddr2. Aceasta îi spune Pacemaker-ului trei lucruri despre resursa pe care doriți să o adăugați. Primul câmp, ocf, este standardul la care aderă scriptul resursei și unde să-l găsiți. Al doilea câmp este specific resurselor OCF și spune clusterului în care namespace să găsească scriptul de resursă, în acest caz heartbeat. Ultimul câmp indică numele scriptului de resursă."
+
+#. Tag: para
+#, no-c-format
+msgid "To obtain a list of the available resource classes, run"
+msgstr "Pentru a obține o listă a claselor de resurse disponibile, rulați"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm ra classes</userinput>\n"
+"heartbeat\n"
+"lsb\n"
+"<emphasis>ocf / heartbeat pacemaker</emphasis>\n"
+"stonith\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>crm ra classes</userinput>\n"
+"heartbeat\n"
+"lsb\n"
+"<emphasis>ocf / heartbeat pacemaker</emphasis>\n"
+"stonith\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "To then find all the OCF resource agents provided by Pacemaker and Heartbeat, run"
+msgstr "Pentru a găsi mai apoi toți agenții de resursă OCF furnizați de Pacemaker și Heartbeat, rulați"
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm ra list ocf pacemaker</userinput>\n"
+"ClusterMon     Dummy          Stateful       SysInfo        SystemHealth   controld\n"
+"ping           pingd          \n"
+"[root@pcmk-1 ~]# <userinput>crm ra list ocf heartbeat</userinput>\n"
+"AoEtarget              AudibleAlarm           ClusterMon             Delay\n"
+"Dummy                  EvmsSCC                Evmsd                  Filesystem\n"
+"ICP                    IPaddr                 IPaddr2                IPsrcaddr\n"
+"LVM                    LinuxSCSI              MailTo                 ManageRAID\n"
+"ManageVE               Pure-FTPd              Raid1                  Route\n"
+"SAPDatabase            SAPInstance            SendArp                ServeRAID\n"
+"SphinxSearchDaemon     Squid                  Stateful               SysInfo\n"
+"VIPArip                VirtualDomain          WAS                    WAS6\n"
+"WinPopup               Xen                    Xinetd                 anything\n"
+"apache                 db2                    drbd                   eDir88\n"
+"iSCSILogicalUnit       iSCSITarget            ids                    iscsi\n"
+"ldirectord             mysql                  mysql-proxy            nfsserver\n"
+"oracle                 oralsnr                pgsql                  pingd\n"
+"portblock              rsyncd                 scsi2reservation       sfex\n"
+"tomcat                 vmware                 \n"
+"[root@pcmk-1 ~]#\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>crm ra list ocf pacemaker</userinput>\n"
+"ClusterMon     Dummy          Stateful       SysInfo        SystemHealth   controld\n"
+"ping           pingd          \n"
+"[root@pcmk-1 ~]# <userinput>crm ra list ocf heartbeat</userinput>\n"
+"AoEtarget              AudibleAlarm           ClusterMon             Delay\n"
+"Dummy                  EvmsSCC                Evmsd                  Filesystem\n"
+"ICP                    IPaddr                 IPaddr2                IPsrcaddr\n"
+"LVM                    LinuxSCSI              MailTo                 ManageRAID\n"
+"ManageVE               Pure-FTPd              Raid1                  Route\n"
+"SAPDatabase            SAPInstance            SendArp                ServeRAID\n"
+"SphinxSearchDaemon     Squid                  Stateful               SysInfo\n"
+"VIPArip                VirtualDomain          WAS                    WAS6\n"
+"WinPopup               Xen                    Xinetd                 anything\n"
+"apache                 db2                    drbd                   eDir88\n"
+"iSCSILogicalUnit       iSCSITarget            ids                    iscsi\n"
+"ldirectord             mysql                  mysql-proxy            nfsserver\n"
+"oracle                 oralsnr                pgsql                  pingd\n"
+"portblock              rsyncd                 scsi2reservation       sfex\n"
+"tomcat                 vmware                 \n"
+"[root@pcmk-1 ~]#\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "Now verify that the IP resource has been added and display the cluster’s status to see that it is now active."
+msgstr "Acum verificați că resursa IP a fost adăugată și listați status-ul clusterului pentru a vedea că acum este activă."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"<emphasis>primitive ClusterIP ocf:heartbeat:IPaddr2 \\</emphasis>\n"
+"<emphasis> params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\</emphasis>\n"
+"<emphasis> op monitor interval=\"30s\"</emphasis>\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"false\" \\\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:23:48 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"<emphasis>ClusterIP (ocf::heartbeat:IPaddr): Started</emphasis> pcmk-1\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"<emphasis>primitive ClusterIP ocf:heartbeat:IPaddr2 \\</emphasis>\n"
+"<emphasis> params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\</emphasis>\n"
+"<emphasis> op monitor interval=\"30s\"</emphasis>\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"false\" \\\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:23:48 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"<emphasis>ClusterIP (ocf::heartbeat:IPaddr): Started</emphasis> pcmk-1\n"
+""
+
+#. Tag: title
+#, no-c-format
+msgid "Perform a Failover"
+msgstr "Efectuați un Failover"
+
+#. Tag: para
+#, no-c-format
+msgid "Being a high-availability cluster, we should test failover of our new resource before moving on."
+msgstr "Fiind un cluster de tip high-availability, ar trebui să testăm failover-ul noii noastre resurse înainte de a merge mai departe."
+
+#. Tag: para
+#, no-c-format
+msgid "First, find the node on which the IP address is running."
+msgstr "Întâi, găsiți nodul pe care rulează adresa IP."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm resource status ClusterIP</userinput>\n"
+"resource ClusterIP is running on: pcmk-1\n"
+"[root@pcmk-1 ~]#\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>crm resource status ClusterIP</userinput>\n"
+"resource ClusterIP is running on: pcmk-1\n"
+"[root@pcmk-1 ~]#\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "Shut down Pacemaker and Corosync on that machine."
+msgstr "Opriți Pacemaker și Corosync pe acea mașină."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>\n"
+"<emphasis>Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]</emphasis>\n"
+"<emphasis>Waiting for cluster services to unload:.                   [  OK  ]</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/corosync stop</userinput>\n"
+"<emphasis>Stopping Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
+"<emphasis>Waiting for services to unload: [ OK ]</emphasis>\n"
+"[root@pcmk-1 ~]#\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>\n"
+"<emphasis>Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]</emphasis>\n"
+"<emphasis>Waiting for cluster services to unload:.                   [  OK  ]</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/corosync stop</userinput>\n"
+"<emphasis>Stopping Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
+"<emphasis>Waiting for services to unload: [ OK ]</emphasis>\n"
+"[root@pcmk-1 ~]#\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "Once Corosync is no longer running, go to the other node and check the cluster status with crm_mon."
+msgstr "Odată ce Corosync nu mai rulează, mergeți pe celălalt nod și verificați status-ul clusterului cu crm_mon."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-2 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:27:35 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - <emphasis>partition WITHOUT quorum</emphasis>\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-2 ]\n"
+"<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
+""
+msgstr "\n"
+"[root@pcmk-2 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:27:35 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - <emphasis>partition WITHOUT quorum</emphasis>\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-2 ]\n"
+"<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "There are three things to notice about the cluster’s current state. The first is that, as expected, pcmk-1 is now offline. However we can also see that ClusterIP isn’t running anywhere!"
+msgstr "Sunt trei aspecte de ținut cont în legătură cu starea curentă a clusterului. Primul este acela că, așa cum ne așteptam, pcmk-1 este acum offline. Totodată putem vedea că, ClusterIP nu rulează nicăieri!"
+
+#. Tag: title
+#, no-c-format
+msgid "Quorum and Two-Node Clusters"
+msgstr "Quorum și Clusterele Formate din Două Noduri"
+
+#. Tag: para
+#, no-c-format
+msgid "This is because the cluster no longer has quorum, as can be seen by the text \"partition WITHOUT quorum\" (emphasised green) in the output above. In order to reduce the possibility of data corruption, Pacemaker’s default behavior is to stop all resources if the cluster does not have quorum."
+msgstr "Acest lucru este datorită faptului că, clusterul nu mai are quorum, după cum poate fi observat din textul \"partition WITHOUT quorum\" (ieșind în evidență în verde) în rezultatul de ieșire de mai sus. Pentru a reduce posibilitatea coruperii datelor, comportamentul implicit al Pacemaker-ului este să oprească toate resursele dacă clusterul nu are quorum."
+
+#. Tag: para
+#, no-c-format
+msgid "A cluster is said to have quorum when more than half the known or expected nodes are online, or for the mathematically inclined, whenever the following equation is true:"
+msgstr "Un cluster este considerat că are quorum când mai mult de jumătate din nodurile cunoscute sau așteptate sunt online, sau pentru cei cu înclinație către matematică, în orice moment în care ecuația următoare este adevărată:"
+
+#. Tag: para
+#, no-c-format
+msgid "total_nodes &lt; 2 * active_nodes"
+msgstr "numărul_total_de_noduri &lt; 2 * numărul_de_noduri_active"
+
+#. Tag: para
+#, no-c-format
+msgid "Therefore a two-node cluster only has quorum when both nodes are running, which is no longer the case for our cluster. This would normally make the creation of a two-node cluster pointless<footnote> <para> Actually some would argue that two-node clusters are always pointless, but that is an argument for another time. </para> </footnote>, however it is possible to control how Pacemaker behaves when quorum is lost. In particular, we can tell the cluster to simply ignore quorum altogether."
+msgstr "Prin urmare un cluster format din două noduri are quorum numai când ambele noduri rulează, ceea ce nu mai este cazul pentru clusterul nostru. Acest lucru ar face în mod normal crearea de clustere formate din două noduri lipsită de sens <footnote> <para> De altfel, unii ar argumenta că clusterele formate din două noduri sunt întotdeauna lipsite de sens, dar acela este un argument pentru o dată ulterioară. </para> </footnote>, totuși este posibil să controlăm cum se comportă Pacemaker când quorum-ul este pierdut. În mod particular, putem spune clusterului să ignore pur și simplu quorum-ul în întregime."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm configure property no-quorum-policy=ignore</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>crm configure show </userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"false\" \\\n"
+"        <emphasis>no-quorum-policy=\"ignore\"</emphasis>\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>crm configure property no-quorum-policy=ignore</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>crm configure show </userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"false\" \\\n"
+"        <emphasis>no-quorum-policy=\"ignore\"</emphasis>\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "After a few moments, the cluster will start the IP address on the remaining node. Note that the cluster still does not have quorum."
+msgstr "După câteva momente, clusterul va porni adresa IP pe nodul rămas. Luați aminte, clusterul încă nu are quorum."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-2 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:30:18 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - <emphasis>partition WITHOUT quorum</emphasis>\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"Online: [ pcmk-2 ]\n"
+"<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
+"\n"
+"<emphasis>ClusterIP (ocf::heartbeat:IPaddr): Started pcmk-2</emphasis>\n"
+""
+msgstr "\n"
+"[root@pcmk-2 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:30:18 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - <emphasis>partition WITHOUT quorum</emphasis>\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"Online: [ pcmk-2 ]\n"
+"<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
+"\n"
+"<emphasis>ClusterIP (ocf::heartbeat:IPaddr): Started pcmk-2</emphasis>\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "Now simulate node recovery by restarting the cluster stack on pcmk-1 and check the cluster’s status."
+msgstr "Acum simulați recuperarea nodului restartând stiva de cluster pe pcmk-1 și verificați status-ul clusterului."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
+"<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>      \n"
+"[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
+"<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:32:13 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"Online: [ <emphasis>pcmk-1</emphasis> pcmk-2 ]\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-1</emphasis>\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
+"<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>      \n"
+"[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
+"<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:32:13 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"Online: [ <emphasis>pcmk-1</emphasis> pcmk-2 ]\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-1</emphasis>\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "Here we see something that some may consider surprising, the IP is back running at its original location!"
+msgstr "Aici putem vedea ceva ce unii ar putea considera surprinzător, IP-ul rulează înapoi pe locația sa originală!"
+
+#. Tag: title
+#, no-c-format
+msgid "Prevent Resources from Moving after Recovery"
+msgstr "Prevenirea Mutării Resurselor după Recuperare"
+
+#. Tag: para
+#, no-c-format
+msgid "In some circumstances, it is highly desirable to prevent healthy resources from being moved around the cluster. Moving resources almost always requires a period of downtime. For complex services like Oracle databases, this period can be quite long."
+msgstr "În anumite circumstanțe, este foarte de dorit să se prevină ca resursele sănătoase din a fi mutate prin cluster. Mutarea resurselor necesită aproape întotdeauna o perioadă de nefuncționare. Pentru servicii complexe precum bazele de date Oracle, această perioadă poate fi destul de lungă."
+
+#. Tag: para
+#, no-c-format
+msgid "To address this, Pacemaker has the concept of resource stickiness which controls how much a service prefers to stay running where it is. You may like to think of it as the \"cost\" of any downtime. By default, Pacemaker assumes there is zero cost associated with moving resources and will do so to achieve \"optimal<footnote> <para> It should be noted that Pacemaker’s definition of optimal may not always agree with that of a human’s. The order in which Pacemaker processes lists of resources and nodes creates implicit preferences in situations where the administrator has not explicitly specified them. </para> </footnote>\" resource placement. We can specify a different stickiness for every resource, but it is often sufficient to change the default."
+msgstr "Pentru a adresa acest aspect, Pacemaker are conceptul de adezivitate a resursei care controleaza cât de mult preferă un serviciu să rămână funcțional acolo unde este. Vă puteți gândi la acest aspect ca fiind \"costul\" nefuncționării. În mod implicit, Pacemaker presupune că este un cost zero asociat cu mutarea resurselor și va face acest lucru pentru a atinge plasamentul \"optim<footnote> <para> Ar trebui să fie notat faptul că definiția Pacemaker-ului pentru optim ar putea să nu fie de acord întotdeauna cu cea a unui om. Ordinea în care Pacemaker procesează listele de resurse și noduri creează preferințe implicite în situații unde administratorul nu le-a specificat în mod explicit. </para> </footnote>\" al resurselor. Putem specifica o adezivitate diferită pentru fiecare resursă, dar este adeseori suficient să schimbați valoarea implicită."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-2 ~]# <userinput>crm configure rsc_defaults resource-stickiness=100</userinput>\n"
+"[root@pcmk-2 ~]# <userinput>crm configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"false\" \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+"<emphasis>rsc_defaults $id=\"rsc-options\" \\</emphasis>\n"
+"<emphasis> resource-stickiness=\"100\"</emphasis>\n"
+""
+msgstr "\n"
+"[root@pcmk-2 ~]# <userinput>crm configure rsc_defaults resource-stickiness=100</userinput>\n"
+"[root@pcmk-2 ~]# <userinput>crm configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
+"        op monitor interval=\"30s\"\n"
+"property $id=\"cib-bootstrap-options\" \\\n"
+"        dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
+"        cluster-infrastructure=\"openais\" \\\n"
+"        expected-quorum-votes=\"2\" \\\n"
+"        stonith-enabled=\"false\" \\\n"
+"        no-quorum-policy=\"ignore\"\n"
+"<emphasis>rsc_defaults $id=\"rsc-options\" \\</emphasis>\n"
+"<emphasis> resource-stickiness=\"100\"</emphasis>\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "If we now retry the failover test, we see that as expected ClusterIP still moves to pcmk-2 when pcmk-1 is taken offline."
+msgstr "Dacă încercăm din nou acum testul de failover, vedem că așa cum este de așteptat ClusterIP se mută în continuare pe pcmk-2 când pcmk-1 este trecut offline."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>\n"
+"Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]\n"
+"Waiting for cluster services to unload:.                   [  OK  ]\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/corosync stop</userinput>\n"
+"Stopping Corosync Cluster Engine (corosync):               [  OK  ]\n"
+"Waiting for services to unload:                            [  OK  ]\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- crm_mon -1</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:39:38 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - partition WITHOUT quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-2 ]\n"
+"<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-2</emphasis>\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>\n"
+"Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]\n"
+"Waiting for cluster services to unload:.                   [  OK  ]\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/corosync stop</userinput>\n"
+"Stopping Corosync Cluster Engine (corosync):               [  OK  ]\n"
+"Waiting for services to unload:                            [  OK  ]\n"
+"[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- crm_mon -1</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:39:38 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - partition WITHOUT quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-2 ]\n"
+"<emphasis>OFFLINE: [ pcmk-1 ]</emphasis>\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-2</emphasis>\n"
+""
+
+#. Tag: para
+#, no-c-format
+msgid "However when we bring pcmk-1 back online, ClusterIP now remains running on pcmk-2."
+msgstr "Însă când aducem pcmk-1 înapoi online, ClusterIP acum rămâne în funcționare pe pcmk-2."
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
+"<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
+"<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:41:23 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ <emphasis>pcmk-1</emphasis> pcmk-2 ]\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started <emphasis>pcmk-2</emphasis>\n"
+""
+msgstr "\n"
+"[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
+"<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>\n"
+"<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Fri Aug 28 15:41:23 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"1 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ <emphasis>pcmk-1</emphasis> pcmk-2 ]\n"
+"\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started <emphasis>pcmk-2</emphasis>\n"
+""
+

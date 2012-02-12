@@ -1,135 +1,156 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2011-09-24 23:25+0300\n"
-"PO-Revision-Date: 2011-10-19 07:37+0200\n"
+"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
-"Language-Team: Dan Frîncu <df.cluster@gmail.com>\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Romanian\n"
-"X-Poedit-Country: ROMANIA\n"
 
-#: Ap-FAQ.xml:2(title)
+#. Tag: title
+#, no-c-format
 msgid "FAQ"
 msgstr "FAQ"
 
-#: Ap-FAQ.xml:5(title)
+#. Tag: title
+#, no-c-format
 msgid "History"
 msgstr "Istoric"
 
-#: Ap-FAQ.xml:8(para)
-msgid "Why is the Project Called Pacemaker?"
-msgstr "De ce este Proiectul Numit Pacemaker?"
+#. Tag: para
+#, no-c-format
+msgid "Why is the Project Called <indexterm significance=\"preferred\"><primary>Pacemaker</primary><secondary>naming</secondary></indexterm>Pacemaker?"
+msgstr "De ce este Proiectul Numit <indexterm significance=\"preferred\"><primary>Pacemaker</primary><secondary>denumire</secondary></indexterm>Pacemaker?"
 
-#: Ap-FAQ.xml:11(para)
-msgid "First of all, the reason its not called the CRM is because of the abundance of <ulink url=\"http://en.wikipedia.org/wiki/CRM\">terms</ulink> that are commonly abbreviated to those three letters."
-msgstr "În primul rând, motivul pentru care nu este denumit CRM este datorită abundenţei de <ulink url=\"http://en.wikipedia.org/wiki/CRM\">termeni</ulink> care sunt asociaţi în mod obişnuit cu acele trei litere."
+#. Tag: para
+#, no-c-format
+msgid "First of all, the reason its not called the CRM is because of the abundance of terms<footnote><para><ulink url=\"http://en.wikipedia.org/wiki/CRM\" /></para></footnote> that are commonly abbreviated to those three letters."
+msgstr "În primul rând, motivul pentru care nu este denumit CRM este datorită abundenţei de <footnote><para><ulink url=\"http://en.wikipedia.org/wiki/CRM\">termeni</ulink></para></footnote> care sunt asociaţi în mod obişnuit cu acele trei litere."
 
-#: Ap-FAQ.xml:12(para)
-msgid "The Pacemaker name came from <ulink url=\"http://khamsouk.souvanlasy.com/\">Kham</ulink>, a good friend of mine, and was originally used by a Java GUI that I was prototyping in early 2007. Alas other commitments have prevented the GUI from progressing much and, when it came time to choose a name for this project, Lars suggested it was an even better fit for an independent CRM."
-msgstr "Numele de Pacemaker a provenit de la <ulink url=\"http://khamsouk.souvanlasy.com/\">Kham</ulink>, un bun prieten de-al meu, şi a fost folosit iniţial de către un GUI Java pentru care am creat prototipul în prima parte a anului 2007. Alte angajamente au împiedicat progresul semnificativ al GUI-ului şi când a venit momentul să alegem un nume pentru acest proiect, Lars a sugerat că ar fi o potrivire şi mai bună pentru un CRM independent."
+#. Tag: para
+#, no-c-format
+msgid "The Pacemaker name came from Kham<footnote><para><ulink url=\"http://khamsouk.souvanlasy.com/\" /></para></footnote>, a good friend of mine, and was originally used by a Java GUI that I was prototyping in early 2007. Alas other commitments have prevented the GUI from progressing much and, when it came time to choose a name for this project, Lars suggested it was an even better fit for an independent CRM."
+msgstr "Numele de Pacemaker a provenit de la <footnote><para><ulink url=\"http://khamsouk.souvanlasy.com/\">Kham</ulink></para></footnote>, un bun prieten de-al meu, şi a fost folosit iniţial de către un GUI Java pentru care am creat prototipul în prima parte a anului 2007. Alte angajamente au împiedicat progresul semnificativ al GUI-ului şi când a venit momentul să alegem un nume pentru acest proiect, Lars a sugerat că ar fi o potrivire şi mai bună pentru un CRM independent."
 
-#: Ap-FAQ.xml:16(para)
+#. Tag: para
+#, no-c-format
 msgid "The idea stems from the analogy between the role of this software and that of the little device that keeps the human heart pumping. Pacemaker monitors the cluster and intervenes when necessary to ensure the smooth operation of the services it provides."
 msgstr "Ideea provine din analogia dintre rolul acestui software şi acela al micului dispozitiv care menţine inima umană pompând. Pacemaker monitorizează clusterul şi intervine când este necesar pentru a asigura operarea fluentă a serviciilor pe care le furnizează."
 
-#: Ap-FAQ.xml:20(para)
+#. Tag: para
+#, no-c-format
 msgid "There were a number of other names (and acronyms) tossed around, but suffice to say \"Pacemaker\" was the best"
 msgstr "Au existat un număr de alte nume (şi acronime) aruncate de colo, colo, dar este suficient să spun că \"Pacemaker\" a fost cel mai bun"
 
-#: Ap-FAQ.xml:25(para)
+#. Tag: para
+#, no-c-format
 msgid "Why was the Pacemaker Project Created?"
 msgstr "De ce a fost Creat Proiectul Pacemaker?"
 
-#: Ap-FAQ.xml:28(para)
+#. Tag: para
+#, no-c-format
 msgid "The decision was made to spin-off the CRM into its own project after the 2.1.3 Heartbeat release in order to"
 msgstr "Decizia a fost luată de a crea un produs secundar din CRM prin a avea proiectul propriu după lansarea Heartbeat 2.1.3 pentru a"
 
-#: Ap-FAQ.xml:30(para)
+#. Tag: para
+#, no-c-format
 msgid "support both the Corosync and Heartbeat cluster stacks equally"
 msgstr "suporta ambele stive de cluster, Corosync şi Heartbeat, în mod egal"
 
-#: Ap-FAQ.xml:31(para)
+#. Tag: para
+#, no-c-format
 msgid "decouple the release cycles of two projects at very different stages of their life-cycles"
 msgstr "decupla ciclurile de lansare ale celor două proiecte aflate la stadii foarte diferite ale ciclului vieţii acestora"
 
-#: Ap-FAQ.xml:32(para)
+#. Tag: para
+#, no-c-format
 msgid "foster the clearer package boundaries, thus leading to"
 msgstr "adopta graniţe mai clare legate de pachete, tinzând către"
 
-#: Ap-FAQ.xml:33(para)
+#. Tag: para
+#, no-c-format
 msgid "better and more stable interfaces"
 msgstr "interfeţe mai bune şi mai stabile"
 
-#: Ap-FAQ.xml:39(title)
+#. Tag: title
+#, no-c-format
 msgid "Setup"
-msgstr "Instalare"
+msgstr "Setup"
 
-#: Ap-FAQ.xml:42(para)
-msgid "What Messaging Layers are Supported?"
-msgstr "Care Straturi de Mesagerie sunt Suportate?"
+#. Tag: para
+#, no-c-format
+msgid "What <indexterm significance=\"preferred\"><primary>Messaging Layers </primary></indexterm>Messaging Layers are Supported?"
+msgstr "Care <indexterm significance=\"preferred\"><primary>Straturi de Mesagerie </primary></indexterm>Straturi de Mesagerie sunt Suportate?"
 
-#: Ap-FAQ.xml:46(para)
-msgid "Corosync (<ulink url=\"http://www.corosync.org/\"/>)"
-msgstr "Corosync (<ulink url=\"http://www.corosync.org/\"/>)"
+#. Tag: para
+#, no-c-format
+msgid "Corosync (<ulink url=\"http://www.corosync.org/\" />)"
+msgstr "Corosync (<ulink url=\"http://www.corosync.org/\" />)"
 
-#: Ap-FAQ.xml:47(para)
-msgid "Heartbeat (<ulink url=\"http://linux-ha.org/\"/>)"
-msgstr "Heartbeat (<ulink url=\"http://linux-ha.org/\"/>)"
+#. Tag: para
+#, no-c-format
+msgid "Heartbeat (<ulink url=\"http://linux-ha.org/\" />)"
+msgstr "Heartbeat (<ulink url=\"http://linux-ha.org/\" />)"
 
-#: Ap-FAQ.xml:53(para)
+#. Tag: para
+#, no-c-format
 msgid "Can I Choose which Messaging Layer to use at Run Time?"
 msgstr "Pot Alege care Strat de Mesagerie să îl Folosesc la Momentul Rulării?"
 
-#: Ap-FAQ.xml:56(para)
-msgid "Yes. The CRM will automatically detect who started it and behave accordingly."
+#. Tag: para
+#, no-c-format
+msgid "Yes. The CRM will automatically detect which started it and behave accordingly."
 msgstr "Da. CRM-ul va detecta în mod automat cine l-a pornit şi se va comporta în concordanţă."
 
-#: Ap-FAQ.xml:61(para)
+#. Tag: para
+#, no-c-format
 msgid "Can I Have a Mixed Heartbeat-Corosync Cluster?"
 msgstr "Pot Avea un Cluster Mixt Heartbeat-Corosync?"
 
-#: Ap-FAQ.xml:64(para)
+#. Tag: para
+#, no-c-format
 msgid "No."
 msgstr "Nu."
 
-#: Ap-FAQ.xml:69(para)
+#. Tag: para
+#, no-c-format
 msgid "Which Messaging Layer Should I Choose?"
 msgstr "Care Strat de Mesagerie ar trebui să îl aleg?"
 
-#: Ap-FAQ.xml:72(para)
-msgid "This is discussed in <xref linkend=\"ap-install\"/>."
-msgstr "Acest lucru este dscutat în <xref linkend=\"ap-install\"/>."
+#. Tag: para
+#, no-c-format
+msgid "This is discussed in <xref linkend=\"ap-install\" />."
+msgstr "Acest lucru este dscutat în <xref linkend=\"ap-install\" />."
 
-#: Ap-FAQ.xml:77(para)
+#. Tag: para
+#, no-c-format
 msgid "Where Can I Get Pre-built Packages?"
 msgstr "De Unde Pot Obţine Pachete Pre-Compilate?"
 
-#: Ap-FAQ.xml:80(para)
-msgid "Official packages for most major .rpm and based distributions are available from:"
-msgstr "Pachete oficiale pentru majoritatea distribuţiilor bazate pe .rpm sunt disponibile la:"
+#. Tag: para
+#, no-c-format
+msgid "Official packages for most major .rpm and based distributions are available from the ClusterLabs Website<footnote><para><ulink url=\"http://www.clusterlabs.org/rpm\" /></para></footnote>."
+msgstr "Pachete oficiale pentru majoritatea distribuţiilor majore bazate pe .rpm sunt disponibile de pe WebSite-ul ClusterLabs<footnote><para><ulink url=\"http://www.clusterlabs.org/rpm\" /></para></footnote>."
 
-#: Ap-FAQ.xml:82(para)
-msgid "For Debian packages, building from source and details on using the above repositories, see our <ulink url=\"http://clusterlabs.org/wiki/Install\">installation page</ulink>."
-msgstr "Pentru pachete Debian, compilarea din sursă şi detalii asupra folosirii repositoarelor de mai sus, uitaţi-vă la <ulink url=\"http://clusterlabs.org/wiki/Install\">pagina de instalare</ulink>."
+#. Tag: para
+#, no-c-format
+msgid "For Debian packages, building from source and details on using the above repositories, see our installation page<footnote><para><ulink url=\"http://clusterlabs.org/wiki/Install\" /></para></footnote>."
+msgstr "Pentru pachete Debian, compilarea din sursă şi detalii asupra folosirii repositoarelor de mai sus, vedeți pagina noastră de instalare<footnote><para><ulink url=\"http://clusterlabs.org/wiki/Install\"></ulink></para></footnote>."
 
-#: Ap-FAQ.xml:87(para)
+#. Tag: para
+#, no-c-format
 msgid "What Versions of Pacemaker Are Supported?"
 msgstr "Care Versiuni de Pacemaker sunt Suportate?"
 
-#: Ap-FAQ.xml:90(para)
-#, fuzzy
-msgid "Please refer to the <ulink url=\"http://clusterlabs.org/wiki/Releases\">Releases</ulink> page for an up-to-date list of versions supported directly by the project."
-msgstr "Vă rugam să consultaţi pagina de <ulink url=\"http://clusterlabs.org/wiki/Releases\">Releases</ulink> pentru o listă la zi a versiunilor suportate în mod direct de către proiect."
+#. Tag: para
+#, no-c-format
+msgid "Please refer to the Releases page<footnote><para><ulink url=\"http://clusterlabs.org/wiki/Releases\" /></para></footnote> for an up-to-date list of versions supported directly by the project."
+msgstr "Vă rugam să consultaţi pagina de Releases<footnote><para><ulink url=\"http://clusterlabs.org/wiki/Releases\"></ulink></para></footnote> pentru o listă la zi a versiunilor suportate în mod direct de către proiect."
 
-#: Ap-FAQ.xml:91(para)
+#. Tag: para
+#, no-c-format
 msgid "When seeking assistance, please try to ensure you have one of these versions."
 msgstr "Când căutaţi asistenţă, vă rugăm să vă asiguraţi că aveţi una din versiunile acestea."
-
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
-#: Ap-FAQ.xml:0(None)
-msgid "translator-credits"
-msgstr "genericul-traducătorului"
 
