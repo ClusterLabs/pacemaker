@@ -382,6 +382,13 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         resource_t *new_rsc = NULL;
 
         if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, TRUE)) {
+            const char *template_id = ID(xml_obj);
+
+            if (template_id && g_hash_table_lookup_extended(data_set->template_rsc_sets,
+                                                            template_id, NULL, NULL) == FALSE) {
+                /* Record the template's ID for the knowledge of its existence anyway. */
+                g_hash_table_insert(data_set->template_rsc_sets, crm_strdup(template_id), NULL);
+            }
             continue;
         }
 
