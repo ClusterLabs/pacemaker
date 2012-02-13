@@ -180,7 +180,7 @@ if [ ! -z $rpm_repo ]; then
     REPO=$rpm_repo/$distro
 fi
 
-pkgs="corosync fence-virt qarsh-server xinetd nmap"
+pkgs="corosync fence-virt qarsh-server xinetd nmap abrt-cli gdb"
 if [ $do_heartbeat = 1 ]; then
     pkgs="$pkgs heartbeat"
 fi
