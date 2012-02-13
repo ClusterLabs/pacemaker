@@ -624,6 +624,12 @@ case $cluster in
 	    corosync-blackbox > corosync-blackbox-live.txt
 	fi
 	corosync-fplay > corosync-blackbox.txt
+
+	tool=`pickfirst corosync-objctl corosync-cmapctl`
+	case $tool in
+	    *objctl)  $tool -a > corosync.dump;;
+	    *cmapctl) $tool    > corosync.dump;;
+	esac
 	;;
 esac
 
