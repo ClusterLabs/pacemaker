@@ -522,24 +522,25 @@ main(int argc, char ** argv)
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
-        if (flag == -1)
-            break;
-        switch(flag) {
-        case 'V':
-            crm_bump_log_level();
-            break;
-        case 's':
-            stand_alone = TRUE;
-            break;
-        case '$':
-        case '?':
-            crm_help(flag, LSB_EXIT_OK);
-            break;
-        default:
-            ++argerr;
-            break;
-        }
+	flag = crm_get_option(argc, argv, &option_index);
+	if (flag == -1)
+	    break;
+		
+	switch(flag) {
+	    case 'V':
+		crm_bump_log_level();
+		break;
+	    case 's':
+		stand_alone = TRUE;
+		break;
+	    case '$':
+	    case '?':
+		crm_help(flag, LSB_EXIT_OK);
+		break;
+	    default:
+		++argerr;
+		break;
+	}
     }
 
     if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
