@@ -5,6 +5,13 @@
   <author>
     <firstname>Andrew</firstname><surname>Beekhof</surname>
     <affiliation><orgname>Red Hat</orgname></affiliation>
+    <contrib>Primary author</contrib>
     <email>andrew@beekhof.net</email>
   </author>
+  <othercredit>
+    <firstname>Philipp</firstname><surname>Marek</surname>
+    <affiliation><orgname>LINBit</orgname></affiliation>
+    <contrib>Style and formatting updates. Indexing.</contrib>
+    <email>philipp.marek@linbit.com</email>
+  </othercredit>
 </authorgroup>
