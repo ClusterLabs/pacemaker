@@ -108,6 +108,21 @@ xml/pacemaker.rng
 extra/rgmanager/ccs2cib
 extra/rgmanager/ccs_flatten
 extra/rgmanager/disable_rgmanager
+doc/Clusters_from_Scratch/en-US/Ap-Configuration.xml
+doc/Clusters_from_Scratch/en-US/Ap-Corosync-Conf.xml
+doc/Clusters_from_Scratch/en-US/Ap-Reading.xml
+doc/Clusters_from_Scratch/en-US/Ch-Active-Active.xml
+doc/Clusters_from_Scratch/en-US/Ch-Active-Passive.xml
+doc/Clusters_from_Scratch/en-US/Ch-Apache.xml
+doc/Clusters_from_Scratch/en-US/Ch-Installation.xml
+doc/Clusters_from_Scratch/en-US/Ch-Intro.xml
+doc/Clusters_from_Scratch/en-US/Ch-Shared-Storage.xml
+doc/Clusters_from_Scratch/en-US/Ch-Stonith.xml
+doc/Clusters_from_Scratch/en-US/Ch-Tools.xml
+doc/Clusters_from_Scratch/en-US/Ch-Verification.xml
+doc/Pacemaker_Explained/en-US/Ch-Basics.xml
+doc/Pacemaker_Explained/en-US/Ch-Options.xml
+
 
 #Other 
 mock
