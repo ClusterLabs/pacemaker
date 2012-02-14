@@ -1,19 +1,16 @@
-                                             
 = Utilization and Placement Strategy =
-
-== Background ==
 
 Pacemaker decides where to place a resource according to the resource
 allocation scores on every node. The resource will be allocated to the
 node where the resource has the highest score. If the resource allocation
-scores on all the nodes are equal, by the default placement strategy,
+scores on all the nodes are equal, by the `default` placement strategy,
 Pacemaker will choose a node with the least number of allocated resources
 for balancing the load. If the number of resources on each node is equal,
-the node with the lowest node id will be chosen to run the resource.
+the first eligible node listed in cib will be chosen to run the resource.
 
 Though resources are different. They may consume different amounts of the
 capacities of the nodes. Actually, we cannot ideally balance the load just
-according to the number of resources allocated to a node. Besides, If
+according to the number of resources allocated to a node. Besides, if
 resources are placed such that their combined requirements exceed the
 provided capacity, they may fail to start completely or run with degraded
 performance.
@@ -21,22 +18,24 @@ performance.
 To take these into account, Pacemaker allows you to specify the following
 configurations:
 
-    - The capacity a certain node provides.
+. The `capacity` a certain `node provides`.
 
-    - The capacity a certain resource requires.
+. The `capacity` a certain `resource requires`.
 
-    - An overall strategy for placement of resources. 
+. An overall `strategy` for placement of resources.
 
 
-== Utilization attributes
+== Utilization attributes ==
 
 To configure the capacity a node provides and the resource's requirements,
-use utilization attributes. You can name the utilization attributes
-according to your preferences and define as many name/value pairs as your
-configuration needs. However, the attribute's values must be integers.
+use `utilization` attributes. You can name the `utilization` attributes
+according to your preferences and define as many `name/value` pairs as your
+configuration needs. However, the attribute's values must be `integers`.
 
 First, specify the capacities the nodes provide:
 
+[source,Bash]
+----
       <node id="node1" type="normal" uname="node1">
         <utilization id="node1-utilization">
           <nvpair id="node1-utilization-cpu" name="cpu" value="2"/>
@@ -49,29 +48,31 @@ First, specify the capacities the nodes provide:
           <nvpair id="node2-utilization-memory" name="memory" value="4096"/>
         </utilization>
       </node>
-
+----
 
 Then, specify the capacities the resources require:
 
-      <primitive id="rsc-small" class="ocf" provider="Pacemaker" type="Dummy">
+[source,Bash]
+----
+      <primitive id="rsc-small" class="ocf" provider="pacemaker" type="Dummy">
         <utilization id="rsc-small-utilization">
           <nvpair id="rsc-small-utilization-cpu" name="cpu" value="1"/>
           <nvpair id="rsc-small-utilization-memory" name="memory" value="1024"/>
         </utilization>
       </primitive>
-      <primitive id="rsc-medium" class="ocf" provider="Pacemaker" type="Dummy">
+      <primitive id="rsc-medium" class="ocf" provider="pacemaker" type="Dummy">
         <utilization id="rsc-medium-utilization">
           <nvpair id="rsc-medium-utilization-cpu" name="cpu" value="2"/>
           <nvpair id="rsc-medium-utilization-memory" name="memory" value="2048"/>
         </utilization>
       </primitive>
-      <primitive id="rsc-large" class="ocf" provider="Pacemaker" type="Dummy">
+      <primitive id="rsc-large" class="ocf" provider="pacemaker" type="Dummy">
         <utilization id="rsc-large-utilization">
           <nvpair id="rsc-large-utilization-cpu" name="cpu" value="3"/>
           <nvpair id="rsc-large-utilization-memory" name="memory" value="3072"/>
         </utilization>
       </primitive>
-
+----
 
 A node is considered eligible for a resource if it has sufficient free
 capacity to satisfy the resource's requirements. The nature of the required
@@ -80,84 +81,87 @@ sure that all capacity requirements of a resource are satisfied before placing
 a resource to a node.
 
 
-== Placement Strategy
+== Placement Strategy ==
 
 After you have configured the capacities your nodes provide and the
-capacities your resources require, you need to set the placement-strategy
+capacities your resources require, you need to set the `placement-strategy`
 in the global cluster options, otherwise the capacity configurations have
-no effect.
+`no effect`.
 
-Four values are available for the placement-strategy: 
+Four values are available for the `placement-strategy`: 
 
-    - default
+`default`::
 
-    Utilization values are not taken into account at all, per default.
+Utilization values are not taken into account at all, per default.
 Resources are allocated according to allocation scores. If scores are equal,
 resources are evenly distributed across nodes.
 
-    - utilization
+`utilization`::
 
-    Utilization values are taken into account when deciding whether a node
+Utilization values are taken into account when deciding whether a node
 is considered eligible if it has sufficient free capacity to satisfy the
 resource's requirements. However, load-balancing is still done based on the
 number of resources allocated to a node. 
 
-    - balanced
+`balanced`::
 
-    Utilization values are taken into account when deciding whether a node
+Utilization values are taken into account when deciding whether a node
 is eligible to serve a resource; an attempt is made to spread the resources
 evenly, optimizing resource performance.
 
-    - minimal
+`minimal`::
 
-    Utilization values are taken into account when deciding whether a node
+Utilization values are taken into account when deciding whether a node
 is eligible to serve a resource; an attempt is made to concentrate the
 resources on as few nodes as possible, thereby enabling possible power savings
 on the remaining nodes. 
 
 
-Set placement-strategy with crm_attribute:
-crm_attribute --attr-name placement-strategy --attr-value balanced
+Set `placement-strategy` with `crm_attribute`:
+[source,Bash]
+----
+# crm_attribute --attr-name placement-strategy --attr-value balanced
+----
 
-Now Pacemaker will ensure the load from your resources will be
-distributed "'evenly" throughout the cluster - without the need for
-convoluted sets of colocation constraints.
-
-
-== Allocation Details
-
-=== Which node is preferred to be chosen to get consumed first on allocating
-resources?
-
-- The node that is most healthy (which has the highest node weight) gets consumed first.
-
-* If their weights are equal:
-  * If placement-strategy = "default | utilization"
-    - The node that has the least number of allocated resources gets consumed first.
-    * If their numbers of allocated resources are equal:
-      - The first node listed in cib gets consumed first.
-
-  * If placement-strategy = "balanced":
-    - The node that has more free capacity gets consumed first.
-    * If the free capacities of the nodes are equal:
-      - The node that has the least number of allocated resources gets consumed first.
-      * If their numbers of allocated resources are equal:
-        - The first node listed in cib gets consumed first.
-
-  * If placement-strategy = "minimal":
-    - The first node listed in cib gets consumed first.
+Now Pacemaker will ensure the load from your resources will be distributed
+evenly throughout the cluster - without the need for convoluted sets of
+colocation constraints.
 
 
-==== Which node has more free capacity?
+== Allocation Details ==
 
-This will be quite clear if we only define one type of "capacity". While if we
-define multiple types of "capacity", for example:
+=== Which node is preferred to be chosen to get consumed first on allocating resources? ===
 
-If nodeA has more free cpus, nodeB has more free memory,
--- their free capacities are equal.
+- The node that is most healthy (which has the highest node weight) gets
+consumed first.
 
-If nodeA has more free cpus, while nodeB has more free memory and storage,
--- nodeB has more free capacity.
+- If their weights are equal:
+  * If `placement-strategy="default|utilization"`,
+    the node that has the least number of allocated resources gets consumed first.
+    ** If their numbers of allocated resources are equal,
+       the first eligible node listed in cib gets consumed first.
+
+  * If `placement-strategy="balanced"`,
+    the node that has more free capacity gets consumed first.
+    ** If the free capacities of the nodes are equal,
+       the node that has the least number of allocated resources gets consumed first.
+      *** If their numbers of allocated resources are equal,
+          the first eligible node listed in cib gets consumed first.
+
+  * If `placement-strategy="minimal"`,
+    the first eligible node listed in cib gets consumed first.
+
+
+==== Which node has more free capacity? ====
+
+This will be quite clear if we only define one type of `capacity`. While if we
+define multiple types of `capacity`, for example:
+
+- If `nodeA` has more free `cpus`, `nodeB` has more free `memory`,
+  their free capacities are equal.
+
+- If `nodeA` has more free `cpus`, while `nodeB` has more free `memory` and `storage`,
+  `nodeB` has more free capacity.
 
 
 === Which resource is preferred to be chosen to get assigned first?
@@ -171,11 +175,14 @@ first (to prevent resource shuffling).
 - If the scores above are equal or they are not running, the resource has
   the highest score on the preferred node gets allocated first.
 
+- If the scores above are equal, the first runnable resource listed in cib gets allocated first.
+
 
 == Limitations
 
 This type of problem Pacemaker is dealing with here is known as the
-"knapsack problem" and falls into the "NP-complete" category of computer
+http://en.wikipedia.org/wiki/Knapsack_problem[knapsack problem] and falls into
+the http://en.wikipedia.org/wiki/NP-complete[NP-complete] category of computer
 science problems - which is fancy way of saying "it takes a really long time
 to solve".
 
@@ -183,34 +190,34 @@ Clearly in a HA cluster, it's not acceptable to spend minutes, let alone hours
 or days, finding an optional solution while services remain unavailable.
 
 So instead of trying to solve the problem completely, Pacemaker uses a
-"best effort" algorithm for determining which node should host a particular
-service. This means it arrives at a "solution" much faster than traditional
+'best effort' algorithm for determining which node should host a particular
+service. This means it arrives at a solution much faster than traditional
 linear programming algorithms, but by doing so at the price of leaving some
 services stopped.
 
 In the contrived example above:
 
-    rsc-small would be allocated to node1
-    rsc-medium would be allocated to node2
-    rsc-large would remain inactive
+- `rsc-small` would be allocated to `node1`
+- `rsc-medium` would be allocated to `node2`
+- `rsc-large` would remain inactive
 
 Which is not ideal.
 
 
 == Strategies for Dealing with the Limitations
 
-- Ensure you have sufficient physical capacity. It might sounds obvious, but
-if the physical capacity of your nodes is (close to) maxed out by the cluster
-under normal conditions, then failover isn't going to go well. Even without
-the Utilization feature, you'll start hitting timeouts and getting secondary
-"failures".
+- Ensure you have sufficient physical capacity.
+It might sounds obvious, but if the physical capacity of your nodes is (close to)
+maxed out by the cluster under normal conditions, then failover isn't going to
+go well. Even without the Utilization feature, you'll start hitting timeouts and
+getting secondary failures'.
 
-- Build some buffer into the capabilities advertised by the nodes. Advertise
-slightly more resources than we physically have on the (usually valid)
+- Build some buffer into the capabilities advertised by the nodes.
+Advertise slightly more resources than we physically have on the (usually valid)
 assumption that a resource will not use 100% of the configured number of
-cpu/memory/etc all the time. This practice is also known as "over commit".
+cpu/memory/etc `all` the time. This practice is also known as 'over commit'.
 
-- Specify resource priorities. If the cluster is going to sacrifice services,
-it should be the ones you care (comparatively) about the least.  Ensure that
-resource priorities are properly set so that your most important resources
-are scheduled first. 
+- Specify resource priorities.
+If the cluster is going to sacrifice services, it should be the ones you care
+(comparatively) about the least. Ensure that resource priorities are properly set
+so that your most important resources are scheduled first. 
