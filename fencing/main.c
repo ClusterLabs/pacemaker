@@ -516,15 +516,7 @@ static void topology_remove_helper(const char *node, int level)
 
 static void topology_register_helper(const char *node, int level, stonith_key_value_t *device_list) 
 {
-    xmlNode *data = create_xml_node(NULL, F_STONITH_LEVEL);
-    crm_xml_add(data, "origin", __FUNCTION__);
-    crm_xml_add_int(data, XML_ATTR_ID, level);
-    crm_xml_add(data, F_STONITH_TARGET, node);
-
-    for (; device_list; device_list = device_list->next) {
-        xmlNode *dev = create_xml_node(data, F_STONITH_DEVICE);
-        crm_xml_add(dev, XML_ATTR_ID, device_list->value);
-    }
+    xmlNode *data = create_level_registration_xml(node, level, device_list);
 
     stonith_level_register(data);
     free_xml(data);

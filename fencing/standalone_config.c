@@ -264,18 +264,18 @@ destroy_devices(void)
 static int
 cfg_register_topology(struct topology *topo)
 {
+    stonith_key_value_t *devices = NULL;
+	xmlNode *data;
+	char *dump;
 	int i;
 	int res = 0;
-	char *dump;
-	xmlNode *data;
-	xmlNode *args;
 
 	for (i = 0; i < topo->priority_levels_count; i++) {
-		data = create_xml_node(NULL, F_STONITH_LEVEL);
-		args = create_xml_node(data, XML_TAG_ATTRS);
-		crm_xml_add(data, F_STONITH_TARGET, topo->node_name);
-		crm_xml_add_int(data, XML_ATTR_ID, topo->priority_levels[i].level);
-		crm_xml_add(args, XML_ATTR_ID, topo->priority_levels[i].device_name);
+		devices = stonith_key_value_add(devices, NULL, topo->priority_levels[i].device_name);
+
+		data = create_level_registration_xml(topo->node_name,
+			topo->priority_levels[i].level,
+			devices);
 
 		dump = dump_xml_formatted(data);
 		crm_info("Standalone config level being added:\n%s", dump);
@@ -283,6 +283,7 @@ cfg_register_topology(struct topology *topo)
 		res |= stonith_level_register(data);
 		crm_free(dump);
 		free_xml(data);
+		stonith_key_value_freeall(devices, 1, 1);
 	}
 
 	return res;
@@ -291,28 +292,28 @@ cfg_register_topology(struct topology *topo)
 static int
 cfg_register_device(struct device *dev)
 {
+	stonith_key_value_t *params = NULL;
+	xmlNode *data;
+	char *dump;
 	int i;
 	int res;
-	char *dump;
-	xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
-	xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
 
-	crm_xml_add(data, XML_ATTR_ID, dev->name);
-	crm_xml_add(data, "origin", __FUNCTION__);
-	crm_xml_add(data, "agent", dev->agent);
-	crm_xml_add(data, "namespace", "stonith-ng");
-
+	/* create the parameter list */
 	if (dev->hostlist) {
-		crm_xml_add(args, STONITH_ATTR_HOSTLIST, dev->hostlist);
+		stonith_key_value_add(params, STONITH_ATTR_HOSTLIST, dev->hostlist);
 	}
-
 	if (dev->hostmap) {
-		crm_xml_add(args, STONITH_ATTR_HOSTMAP, dev->hostmap);
+		stonith_key_value_add(params, STONITH_ATTR_HOSTMAP, dev->hostmap);
+	}
+	for (i = 0; i < dev->key_vals_count; i++) {
+		stonith_key_value_add(params, dev->key_vals[i].key, dev->key_vals[i].val);
 	}
 
-	for (i = 0; i < dev->key_vals_count; i++) {
-		crm_xml_add(args, dev->key_vals[i].key, dev->key_vals[i].val);
-	}
+	/* generate xml */
+	data = create_device_registration_xml(dev->name,
+		__FUNCTION__,
+		dev->agent,
+		params);
 
 	dump = dump_xml_formatted(data);
 	crm_info("Standalone device being added:\n%s", dump);
@@ -321,6 +322,7 @@ cfg_register_device(struct device *dev)
 
 	crm_free(dump);
 	free_xml(data);
+	stonith_key_value_freeall(params, 1, 1);
 	return res;
 }
 
