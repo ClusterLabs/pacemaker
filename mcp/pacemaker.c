@@ -72,13 +72,13 @@ static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,		  NULL },
     { 0, crm_proc_ais,        0, 0, FALSE, "ais",        NULL,		  NULL },
     { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL,		  HB_DAEMON_DIR"/lrmd" },
-    { 0, crm_proc_cib,        2, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
+    { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
     { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
     { 0, crm_proc_attrd,      4, 0, TRUE,  "attrd",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd" },
     { 0, crm_proc_stonithd,   0, 0, TRUE,  "stonithd",   NULL,		  NULL },
     { 0, crm_proc_pe,         5, 0, TRUE,  "pengine",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine" },
     { 0, crm_proc_mgmtd,      0, 0, TRUE,  "mgmtd",      NULL,		  HB_DAEMON_DIR"/mgmtd" },
-    { 0, crm_proc_stonith_ng, 1, 0, TRUE,  "stonith-ng", NULL,		  CRM_DAEMON_DIR"/stonithd" },
+    { 0, crm_proc_stonith_ng, 2, 0, TRUE,  "stonith-ng", NULL,		  CRM_DAEMON_DIR"/stonithd" },
 };
 /* *INDENT-ON* */
 
