@@ -37,8 +37,8 @@ function ip_for_node() {
     if [ $do_raw = 1 ]; then
 	echo $1
     else
-	host $1  | awk '{print $4}' | head -n 1
-    fi    
+	host $1 | grep "has address" | head -n 1 | awk '{print $NF}' | sed 's:(::' | sed 's:)::'
+    fi
 }
 function id_for_node() {
     ip_for_node $* | tr '.' ' ' | awk '{print $4}'
@@ -92,7 +92,7 @@ while true; do
 	-R|--repo) rpm_repo=$2; shift; shift;;
 	-I|--install) INSTALL=Yes; shift;;
 
-	cman|--cman) CMAN=1; shift;;
+	cman|--cman) CMAN=1; cs_conf=/etc/cluster/cluster.conf; shift;;
 	-h|--heartbeat) do_heartbeat=1; shift;;
 	-c|--corosync) cs_conf=/etc/corosync/corosync.conf; shift;;
 	-o|--openais) cs_conf=/etc/ais/openais.conf; shift;;
@@ -144,7 +144,7 @@ if [ $accept_defaults = 0 ]; then
 	read -p "Shall I set one? [No] (domain) " -t 60 DOMAIN
     fi
     echo ""
-    read -p "Shall I install/update the relevant packages? [Yes] "  -t 60 INSTALL
+    read -p "Shall I install/update the relevant packages? [No] "  -t 60 INSTALL
 fi
 
 if [ -z $SSH ]; then
@@ -163,7 +163,7 @@ if [ -z $DOMAIN ]; then
     DOMAIN="No"
 fi
 if [ -z $INSTALL ]; then
-    INSTALL="Yes"
+    INSTALL="No"
 fi
 
 case $SSH in
@@ -563,6 +563,12 @@ for host in $host_list; do
     cs_short_host=`name_for_node $host`
     ip=`ip_for_node $host`
     id=`id_for_node $host`
+
+    echo $ip | grep -qis NXDOMAIN
+    if [ $? = 0 ]; then
+	echo "Couldn't find resolve $host to an IP address"
+	exit 1
+    fi
 
     if [ `uname -n` = $host ]; then
 	bash $init
