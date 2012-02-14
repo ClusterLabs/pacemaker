@@ -26,7 +26,7 @@ RNG_FILES		= $(VERSIONED_RNG_FILES:%.rng=%-1.0.rng)	\
 			  $(VERSIONED_RNG_FILES:%.rng=%-1.1.rng)	\
 			  $(VERSIONED_RNG_FILES:%.rng=%-1.2.rng)	\
 			  pacemaker.rng versions.rng score.rng rule.rng nvset.rng \
-			  acls-1.1.rng acls-1.2.rng
+			  acls-1.1.rng acls-1.2.rng fencing.rng
 
 EXTRA_DIST		= crm-1.0.dtd $(dtd_SCRIPTS)
 dtd_SCRIPTS		= crm.dtd $(RNG_FILES) upgrade06.xsl crm-transitional.dtd

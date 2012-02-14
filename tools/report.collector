@@ -297,16 +297,6 @@ sanitize() {
 	trap "" 0
 }
 
-pickfirst() {
-    for x; do
-	which $x >/dev/null 2>&1 && {
-	    echo $x
-	    return 0
-	}
-    done
-    return 1
-}
-
 #
 # get some system info
 #
@@ -516,7 +506,7 @@ uselogd() {
     esac
 }
 
-get_logfile() {
+get_logfiles() {
     cf_type=$1
     cf_file="$2"
     cf_logd="$3"
@@ -535,8 +525,9 @@ get_logfile() {
 	    debug "Reading log settings from $cf_file"
 	    if iscfvartrue $cf_type to_syslog $cf_file; then
 		facility_var=syslog_facility
-	    elif iscfvartrue $cf_type to_file $cf_file; then
-		logfile=`getcfvar $cf_type logfile $cf_file syslog_facility`
+	    fi
+	    if iscfvartrue $cf_type to_logfile $cf_file; then
+		logfile=`getcfvar $cf_type logfile $cf_file`
 	    fi
 	    ;;
 	heartbeat|logd)
@@ -556,8 +547,8 @@ get_logfile() {
 
     if [ "x$logfile" != "x" -a -f "$logfile" ]; then
 	echo $logfile
-
-    else
+    fi
+    if [ "x$facility" = x ]; then
 	facility=`getcfvar $cf_type $facility_var $cf_file`
 	[ "" = "$facility" ] && facility="daemon"
 	if [ "none" = "$facility" ]; then
@@ -610,13 +601,13 @@ if [ -z $cluster_cf ]; then
 fi
 
 if [ $SEARCH_LOGS = 1 ]; then
-    logfile=`get_logfile $cluster "$cluster_cf" "$logd_cf"`
+    logfiles=`get_logfiles $cluster "$cluster_cf" "$logd_cf"`
 fi
 
-if [ -z $logfile ]; then
+if [ -z "$logfiles" ]; then
    fatal "Could not determine the location of your cluster logs, try specifying --logfile /some/path"
 fi
-debug "Config: $cluster $cluster_cf $logd_cf $logfile"
+debug "Config: $cluster $cluster_cf $logd_cf $logfiles"
 
 sys_info $cluster $PACKAGES > $SYSINFO_F
 essential_files $cluster | check_perms  > $PERMISSIONS_F 2>&1
@@ -633,6 +624,12 @@ case $cluster in
 	    corosync-blackbox > corosync-blackbox-live.txt
 	fi
 	corosync-fplay > corosync-blackbox.txt
+
+	tool=`pickfirst corosync-objctl corosync-cmapctl`
+	case $tool in
+	    *objctl)  $tool -a > corosync.dump;;
+	    *cmapctl) $tool    > corosync.dump;;
+	esac
 	;;
 esac
 
@@ -659,14 +656,14 @@ for f in $cf $CIB_F $CIB_TXT_F $CIB_F.live pengine/*; do
 done
 
 # Grab logs
-#debug "Gathering logs: $logfile $EXTRA_LOGS"
+#debug "Gathering logs: $logfiles $EXTRA_LOGS"
 trap '[ -z "$pattfile" ] || rm -f "$pattfile"' 0
 pattfile=`mktemp` || fatal "cannot create temporary files"
 for p in $LOG_PATTERNS; do
     echo "$p"
 done > $pattfile
 
-for l in $logfile $EXTRA_LOGS; do
+for l in $logfiles $EXTRA_LOGS; do
     b=`basename $l`
     if [ ! -f "$l" ]; then
 	# Not a file
@@ -699,8 +696,8 @@ for f in `ls -1`; do
 done
 
 # Parse for events
-for l in $logfile $EXTRA_LOGS; do
-    node_events `basename $logfile` > $EVENTS_F
+for l in $logfiles $EXTRA_LOGS; do
+    node_events `basename $l` > $EVENTS_F
 
     # Link the first logfile to a standard name if it doesn't yet exist
     if [ ! -e $HALOG_F ]; then

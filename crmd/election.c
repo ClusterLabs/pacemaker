@@ -57,7 +57,6 @@ crm_uptime(struct timeval *output)
 static int
 crm_compare_age(struct timeval your_age)
 {
-    int fuzz = 10000;
     struct timeval our_age;
 
     if (crm_uptime(&our_age) < 0) {
@@ -72,11 +71,11 @@ crm_compare_age(struct timeval your_age)
     } else if (our_age.tv_sec < your_age.tv_sec) {
         crm_debug("Loose: %ld vs %ld (seconds)", (long)our_age.tv_sec, (long)your_age.tv_sec);
         return -1;
-    } else if (our_age.tv_usec > (your_age.tv_usec + fuzz)) {
-        crm_debug("Win: %ld vs %ld  (nano seconds)", (long)our_age.tv_usec, (long)your_age.tv_usec);
+    } else if (our_age.tv_usec > your_age.tv_usec) {
+        crm_debug("Win: %ld vs %ld  (usec)", (long)our_age.tv_usec, (long)your_age.tv_usec);
         return 1;
-    } else if (our_age.tv_usec < (your_age.tv_usec - fuzz)) {
-        crm_debug("Loose: %ld vs %ld(nano seconds)", (long)our_age.tv_usec, (long)your_age.tv_usec);
+    } else if (our_age.tv_usec < your_age.tv_usec) {
+        crm_debug("Loose: %ld vs %ld (usec)", (long)our_age.tv_usec, (long)your_age.tv_usec);
         return -1;
     }
 
@@ -240,6 +239,7 @@ do_election_count_vote(long long action,
                        enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     struct timeval your_age;
+    int age;
     int election_id = -1;
     int log_level = LOG_INFO;
     gboolean use_born_on = FALSE;
@@ -293,6 +293,8 @@ do_election_count_vote(long long action,
         use_born_on = TRUE;
     }
 
+    age = crm_compare_age(your_age);
+
     if (cur_state == S_STARTING) {
         reason = "Still starting";
         we_loose = TRUE;
@@ -341,11 +343,11 @@ do_election_count_vote(long long action,
     } else if (compare_version(your_version, CRM_FEATURE_SET) > 0) {
         reason = "Version";
 
-    } else if (crm_compare_age(your_age) < 0) {
+    } else if (age < 0) {
         reason = "Uptime";
         we_loose = TRUE;
 
-    } else if (crm_compare_age(your_age) > 0) {
+    } else if (age > 0) {
         reason = "Uptime";
 
         /* TODO: Check for y(our) born < 0 */

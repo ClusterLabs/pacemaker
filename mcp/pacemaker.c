@@ -25,6 +25,7 @@
 #include <crm/common/ipc.h>
 #include <clplumbing/proctrack.h>
 
+gboolean fatal_error = FALSE;
 GMainLoop *mainloop = NULL;
 GHashTable *client_list = NULL;
 GHashTable *peers = NULL;
@@ -71,13 +72,13 @@ static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,		  NULL },
     { 0, crm_proc_ais,        0, 0, FALSE, "ais",        NULL,		  NULL },
     { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL,		  HB_DAEMON_DIR"/lrmd" },
-    { 0, crm_proc_cib,        2, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
+    { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
     { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
     { 0, crm_proc_attrd,      4, 0, TRUE,  "attrd",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd" },
     { 0, crm_proc_stonithd,   0, 0, TRUE,  "stonithd",   NULL,		  NULL },
     { 0, crm_proc_pe,         5, 0, TRUE,  "pengine",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine" },
     { 0, crm_proc_mgmtd,      0, 0, TRUE,  "mgmtd",      NULL,		  HB_DAEMON_DIR"/mgmtd" },
-    { 0, crm_proc_stonith_ng, 1, 0, TRUE,  "stonith-ng", NULL,		  CRM_DAEMON_DIR"/stonithd" },
+    { 0, crm_proc_stonith_ng, 2, 0, TRUE,  "stonith-ng", NULL,		  CRM_DAEMON_DIR"/stonithd" },
 };
 /* *INDENT-ON* */
 
@@ -156,14 +157,17 @@ pcmk_child_exit(ProcTrack * p, int status, int signo, int exitcode, int waslogge
         crm_notice("Child process %s terminated with signal %d (pid=%d, rc=%d)",
                    child->name, signo, child->pid, exitcode);
     } else {
-        do_crm_log(exitcode == 0 ? LOG_NOTICE : LOG_ERR,
+        do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
                    "Child process %s exited (pid=%d, rc=%d)", child->name, child->pid, exitcode);
     }
 
     child->pid = 0;
     if (exitcode == 100) {
-        crm_notice("Child process %s no longer wishes" " to be respawned", child->name);
+        crm_warn("Pacemaker child process %s no longer wishes to be respawned. "
+                 "Shutting ourselves down.", child->name);
         child->respawn = FALSE;
+        fatal_error = TRUE;
+        pcmk_shutdown(15);
     }
 
     /* Broadcast the fact that one of our processes died ASAP
@@ -411,7 +415,7 @@ pcmk_shutdown_worker(gpointer user_data)
             }
 
             /* cleanup */
-            crm_notice("%s confirmed stopped", child->name);
+            crm_debug("%s confirmed stopped", child->name);
             child->pid = 0;
         }
     }
@@ -419,6 +423,12 @@ pcmk_shutdown_worker(gpointer user_data)
     /* send_cluster_id(); */
     crm_notice("Shutdown complete");
     g_main_loop_quit(mainloop);
+
+    if(fatal_error) {
+        crm_notice("Attempting to inhibit respawning after fatal error");
+        exit(100);
+    }
+    
     return TRUE;
 }
 
@@ -604,7 +614,8 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
 
     if (uname != NULL) {
         if (node->uname == NULL || safe_str_eq(node->uname, uname) == FALSE) {
-            crm_info("%p Node %u now known as %s (was: %s)", node, id, uname, node->uname);
+            crm_notice("%p Node %u now known as %s%s%s", node, id, uname,
+                     node->uname?node->uname:", was: ", node->uname?node->uname:"");
             crm_free(node->uname);
             node->uname = crm_strdup(uname);
             changed = TRUE;
@@ -758,7 +769,8 @@ main(int argc, char **argv)
         crm_log_init(NULL, LOG_INFO, TRUE, FALSE, 0, NULL);
     }
 
-    crm_info("Starting Pacemaker %s (Build: %s): %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);
+    crm_notice("Starting Pacemaker %s (Build: %s): %s\n",
+               VERSION, BUILD_VERSION, CRM_FEATURES);
     mainloop = g_main_new(FALSE);
 
     rc = getrlimit(RLIMIT_CORE, &cores);

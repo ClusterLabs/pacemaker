@@ -78,7 +78,7 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
 
-    crm_info("CRM Hg Version: %s\n", BUILD_VERSION);
+    crm_notice("CRM Hg Version: %s\n", BUILD_VERSION);
 
     if (optind > argc) {
         ++argerr;
@@ -115,7 +115,7 @@ crmd_init(void)
     fsa_input_register = 0;     /* zero out the regester */
 
     init_dotfile();
-    crm_info("Starting %s", crm_system_name);
+    crm_debug("Starting %s", crm_system_name);
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
 
     crm_peer_init();
@@ -124,7 +124,7 @@ crmd_init(void)
     if (state == S_PENDING || state == S_STARTING) {
         /* Create the mainloop and run it... */
         crmd_mainloop = g_main_new(FALSE);
-        crm_info("Starting %s's mainloop", crm_system_name);
+        crm_trace("Starting %s's mainloop", crm_system_name);
 
 #ifdef REALTIME_SUPPORT
         static int crm_realtime = 1;

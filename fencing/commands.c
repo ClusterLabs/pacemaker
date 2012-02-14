@@ -442,7 +442,7 @@ void free_topology_entry(gpointer data)
     crm_free(tp);
 }
 
-static int stonith_level_register(xmlNode *msg) 
+int stonith_level_register(xmlNode *msg) 
 {
     int id = 0;
     int rc = stonith_ok;
@@ -478,10 +478,10 @@ static int stonith_level_register(xmlNode *msg)
     return rc;
 }
 
-static int stonith_level_remove(xmlNode *msg) 
+int stonith_level_remove(xmlNode *msg) 
 {
     int id = 0;
-    xmlNode *level = get_xpath_object("//@"F_STONITH_LEVEL, msg, LOG_ERR);
+    xmlNode *level = get_xpath_object("//"F_STONITH_LEVEL, msg, LOG_ERR);
     const char *node = crm_element_value(level, F_STONITH_TARGET);
     stonith_topology_t *tp = g_hash_table_lookup(topology, node);
 
@@ -768,7 +768,7 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
     }
     
     if(cmd->victim != NULL) {
-	do_crm_log(rc==0?LOG_INFO:LOG_ERR,
+	do_crm_log(rc==0?LOG_NOTICE:LOG_ERR,
 		   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned: %d%s%s",
 		   cmd->action, pid, cmd->id, cmd->client, cmd->victim, cmd->device, rc,
 		   next?". Trying: ":"", next?next:"");

@@ -1,0 +1,492 @@
+= Apache - Adding More Services = 
+
+== Forward ==
+Now that we have a basic but functional active/passive two-node cluster,
+we're ready to add some real services. We're going to start with Apache
+because its a feature of many clusters and relatively simple to
+configure.
+
+== Installation ==
+
+Before continuing, we need to make sure Apache is installed on both
+hosts.
+
+[source,Bash]
+-----
+# yum install -y httpdSetting up Install Process
+Resolving Dependencies
+--> Running transaction check
+---> Package httpd.x86_64 0:2.2.13-2.fc12 set to be updated
+--> Processing Dependency: httpd-tools = 2.2.13-2.fc12 for package: httpd-2.2.13-2.fc12.x86_64
+--> Processing Dependency: apr-util-ldap for package: httpd-2.2.13-2.fc12.x86_64
+--> Processing Dependency: /etc/mime.types for package: httpd-2.2.13-2.fc12.x86_64
+--> Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.2.13-2.fc12.x86_64
+--> Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.2.13-2.fc12.x86_64
+--> Running transaction check
+---> Package apr.x86_64 0:1.3.9-2.fc12 set to be updated
+---> Package apr-util.x86_64 0:1.3.9-2.fc12 set to be updated
+---> Package apr-util-ldap.x86_64 0:1.3.9-2.fc12 set to be updated
+---> Package httpd-tools.x86_64 0:2.2.13-2.fc12 set to be updated
+---> Package mailcap.noarch 0:2.1.30-1.fc12 set to be updated
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=======================================================================================
+Package        Arch       Version        Repository     Size
+=======================================================================================
+Installing:
+httpd        x86_64      2.2.13-2.fc12      rawhide      735 k
+Installing for dependencies:
+apr         x86_64      1.3.9-2.fc12       rawhide      117 k
+apr-util      x86_64      1.3.9-2.fc12       rawhide      84 k
+apr-util-ldap    x86_64      1.3.9-2.fc12       rawhide      15 k
+httpd-tools     x86_64      2.2.13-2.fc12      rawhide      63 k
+mailcap       noarch      2.1.30-1.fc12      rawhide      25 k
+
+Transaction Summary
+=======================================================================================
+Install    6 Package(s)
+Upgrade    0 Package(s)
+
+Total download size: 1.0 M
+Downloading Packages:
+(1/6): apr-1.3.9-2.fc12.x86_64.rpm                 | 117 kB   00:00   
+(2/6): apr-util-1.3.9-2.fc12.x86_64.rpm                | 84 kB   00:00   
+(3/6): apr-util-ldap-1.3.9-2.fc12.x86_64.rpm            | 15 kB   00:00   
+(4/6): httpd-2.2.13-2.fc12.x86_64.rpm                 | 735 kB   00:00   
+(5/6): httpd-tools-2.2.13-2.fc12.x86_64.rpm              | 63 kB   00:00   
+(6/6): mailcap-2.1.30-1.fc12.noarch.rpm                | 25 kB   00:00   
+ ----------------------------------------------------------------------------------------
+Total                           875 kB/s | 1.0 MB   00:01   
+Running rpm_check_debug
+Running Transaction Test
+Finished Transaction Test
+Transaction Test Succeeded
+Running Transaction
+ Installing   : apr-1.3.9-2.fc12.x86_64                      1/6 
+ Installing   : apr-util-1.3.9-2.fc12.x86_64                  2/6 
+ Installing   : apr-util-ldap-1.3.9-2.fc12.x86_64                 3/6 
+ Installing   : httpd-tools-2.2.13-2.fc12.x86_64                4/6 
+ Installing   : mailcap-2.1.30-1.fc12.noarch                  5/6 
+ Installing   : httpd-2.2.13-2.fc12.x86_64                   6/6 
+
+Installed:
+ httpd.x86_64 0:2.2.13-2.fc12                              
+
+Dependency Installed:
+ apr.x86_64 0:1.3.9-2.fc12      apr-util.x86_64 0:1.3.9-2.fc12
+ apr-util-ldap.x86_64 0:1.3.9-2.fc12 httpd-tools.x86_64 0:2.2.13-2.fc12
+ mailcap.noarch 0:2.1.30-1.fc12 
+
+Complete!
+-----
+
+Also, we need the wget tool in order for the cluster to be able to check
+the status of the Apache server.
+
+[source,Bash]
+-----
+# yum install -y wgetSetting up Install Process
+Resolving Dependencies
+--> Running transaction check
+---> Package wget.x86_64 0:1.11.4-5.fc12 set to be updated
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+===========================================================================================
+Package    Arch       Version           Repository        Size
+===========================================================================================
+Installing:
+wget      x86_64     1.11.4-5.fc12         rawhide        393 k
+
+Transaction Summary
+===========================================================================================
+Install    1 Package(s)
+Upgrade    0 Package(s)
+
+Total download size: 393 k
+Downloading Packages:
+wget-1.11.4-5.fc12.x86_64.rpm                      | 393 kB   00:00   
+Running rpm_check_debug
+Running Transaction Test
+Finished Transaction Test
+Transaction Test Succeeded
+Running Transaction
+ Installing   : wget-1.11.4-5.fc12.x86_64                      1/1 
+
+Installed:
+ wget.x86_64 0:1.11.4-5.fc12
+
+Complete!
+-----
+
+
+== Preparation ==
+
+First we need to create a page for Apache to serve up. On Fedora the
+default Apache docroot is /var/www/html, so we'll create an index file
+there.
+
+[source,Bash]
+-----
+[root@pcmk-1 ~]# cat <<-END >/var/www/html/index.html <html>
+ <body>My Test Site - pcmk-1</body>
+ </html>
+ END
+-----
+
+For the moment, we will simplify things by serving up only a static site
+and manually sync the data between the two nodes. So run the command
+again on pcmk-2.
+
+[source,Bash]
+-----
+[root@pcmk-2 ~]# cat <<-END >/var/www/html/index.html <html>
+ <body>My Test Site - pcmk-2</body>
+ </html>
+ END
+-----
+
+== Enable the Apache status URL ==
+
+In order to monitor the health of your Apache instance, and recover it if
+it fails, the resource agent used by Pacemaker assumes the server-status
+URL is available. Look for the following in /etc/httpd/conf/httpd.conf
+and make sure it is not disabled or commented out:
+
+.....
+<Location /server-status>
+   SetHandler server-status
+   Order deny,allow
+   Deny from all
+   Allow from 127.0.0.1
+</Location>
+.....
+
+== Update the Configuration ==
+
+At this point, Apache is ready to go, all that needs to be done is to
+add it to the cluster. Lets call the resource WebSite. We need to use
+an OCF script called apache in the heartbeat namespace
+footnote:[Compare the key used here ocf:heartbeat:apache with the one we used earlier for the IP address: ocf:heartbeat:IPaddr2]
+, the only required parameter is the path to the main Apache
+configuration file and we'll tell the cluster to check once a
+minute that apache is still running.
+
+[source,Bash]
+-----
+# crm configure primitive WebSite ocf:heartbeat:apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=1min
+# crm configure show
+node pcmk-1
+node pcmk-2primitive WebSite ocf:heartbeat:apache \ params configfile="/etc/httpd/conf/httpd.conf" \ op monitor interval="1min"primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" \
+    op monitor interval="30s"
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="false" \
+    no-quorum-policy="ignore"
+rsc_defaults $id="rsc-options" \
+    resource-stickiness="100"
+-----
+
+After a short delay, we should see the cluster start apache
+
+[source,Bash]
+-----
+# crm_mon
+============
+Last updated: Fri Aug 28 16:12:49 2009
+Stack: openais
+Current DC: pcmk-2 - partition with quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+2 Resources configured.
+============
+
+Online: [ pcmk-1 pcmk-2 ]
+
+ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2
+WebSite    (ocf::heartbeat:apache):    Started pcmk-1
+-----
+
+Wait a moment, the WebSite resource isn't running on the same host as our
+IP address!
+
+
+== Ensuring Resources Run on the Same Host ==
+
+To reduce the load on any one machine, Pacemaker will generally try to
+spread the configured resources across the cluster nodes. However we
+can tell the cluster that two resources are related and need to run on
+the same host (or not at all). Here we instruct the cluster that
+WebSite can only run on the host that ClusterIP is active on.
+
+For the constraint, we need a name (choose something descriptive like
+website-with-ip), indicate that its mandatory (so that if ClusterIP is
+not active anywhere, WebSite will not be permitted to run anywhere
+either) by specifying a score of INFINITY and finally list the two
+resources.
+
+[NOTE]
+=======
+If ClusterIP is not active anywhere, WebSite will not be permitted to run
+anywhere.
+=======
+
+[IMPORTANT]
+===========
+
+Colocation constraints are "directional", in that they imply certain
+things about the order in which the two resources will have a location
+chosen. In this case we're saying +WebSite+ needs to be placed on the
+same machine as +ClusterIP+, this implies that we must know the
+location of +ClusterIP+ before choosing a location for +WebSite+.
+
+===========
+
+[source,Bash]
+-----
+# crm configure colocation website-with-ip INFINITY: WebSite ClusterIP
+# crm configure show
+node pcmk-1
+node pcmk-2
+primitive WebSite ocf:heartbeat:apache \
+    params configfile="/etc/httpd/conf/httpd.conf" \
+    op monitor interval="1min"
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" \
+    op monitor interval="30s"colocation website-with-ip inf: WebSite ClusterIPproperty $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="false" \
+    no-quorum-policy="ignore"
+rsc_defaults $id="rsc-options" \
+    resource-stickiness="100"
+# crm_mon
+============
+Last updated: Fri Aug 28 16:14:34 2009
+Stack: openais
+Current DC: pcmk-2 - partition with quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+2 Resources configured.
+============
+
+Online: [ pcmk-1 pcmk-2 ]
+
+ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2
+WebSite    (ocf::heartbeat:apache):    Started pcmk-2
+-----
+
+== Controlling Resource Start/Stop Ordering ==
+
+When Apache starts, it binds to the available IP addresses. It doesn't
+know about any addresses we add afterwards, so not only do they need to
+run on the same node, but we need to make sure ClusterIP is already
+active before we start WebSite. We do this by adding an ordering
+constraint. We need to give it a name (choose something descriptive like
+apache-after-ip), indicate that its mandatory (so that any recovery for
+ClusterIP will also trigger recovery of WebSite) and list the two
+resources in the order we need them to start.
+
+[source,Bash]
+-----
+# crm configure order apache-after-ip mandatory: ClusterIP WebSite
+# crm configure show
+node pcmk-1
+node pcmk-2
+primitive WebSite ocf:heartbeat:apache \
+    params configfile="/etc/httpd/conf/httpd.conf" \
+    op monitor interval="1min"
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" \
+    op monitor interval="30s"
+colocation website-with-ip inf: WebSite ClusterIPorder apache-after-ip inf: ClusterIP WebSiteproperty $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="false" \
+    no-quorum-policy="ignore"
+rsc_defaults $id="rsc-options" \
+    resource-stickiness="100"
+-----
+
+== Specifying a Preferred Location ==
+
+Pacemaker does not rely on any sort of hardware symmetry between nodes,
+so it may well be that one machine is more powerful than the other. In
+such cases it makes sense to host the resources there if it is available.
+To do this we create a location constraint. Again we give it a
+descriptive name (prefer-pcmk-1), specify the resource we want to run
+there (WebSite), how badly we'd like it to run there (we'll use 50 for
+now, but in a two-node situation almost any value above 0 will do) and
+the host's name.
+
+[source,Bash]
+-----
+# crm configure location prefer-pcmk-1 WebSite 50: pcmk-1
+# crm configure show
+node pcmk-1
+node pcmk-2
+primitive WebSite ocf:heartbeat:apache \
+    params configfile="/etc/httpd/conf/httpd.conf" \
+    op monitor interval="1min"
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" \
+    op monitor interval="30s"location prefer-pcmk-1 WebSite 50: pcmk-1colocation website-with-ip inf: WebSite ClusterIP
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="false" \
+    no-quorum-policy="ignore"
+rsc_defaults $id="rsc-options" \
+    resource-stickiness="100"
+# crm_mon
+============
+Last updated: Fri Aug 28 16:17:35 2009
+Stack: openais
+Current DC: pcmk-2 - partition with quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+2 Resources configured.
+============
+
+Online: [ pcmk-1 pcmk-2 ]
+
+ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2WebSite    (ocf::heartbeat:apache):    Started pcmk-2
+-----
+
+Wait a minute, the resources are still on pcmk-2! 
+
+Even though we now prefer pcmk-1 over pcmk-2, that preference is
+(intentionally) less than the resource stickiness (how much we
+preferred not to have unnecessary downtime). 
+
+To see the current placement scores, you can use a tool called ptest
+
+....
+ptest -sL
+....
+
+[NOTE]
+=======
+Include output There is a way to force them to move though...
+=======
+
+== Manually Moving Resources Around the Cluster ==
+
+There are always times when an administrator needs to override the
+cluster and force resources to move to a specific location. Underneath we
+use location constraints like the one we created above, happily you don't
+need to care. Just provide the name of the resource and the intended
+location, we'll do the rest.
+
+[source,Bash]
+-----
+# crm resource move WebSite pcmk-1
+# crm_mon
+============
+Last updated: Fri Aug 28 16:19:24 2009
+Stack: openais
+Current DC: pcmk-2 - partition with quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+2 Resources configured.
+============
+
+Online: [ pcmk-1 pcmk-2 ]
+
+ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-1
+WebSite    (ocf::heartbeat:apache):    Started pcmk-1
+-----
+
+Notice how the colocation rule we created has ensured that ClusterIP was also moved to pcmk-1.
+For the curious, we can see the effect of this command by examining the configuration
+
+[source,Bash]
+-----
+# crm configure show
+node pcmk-1
+node pcmk-2
+primitive WebSite ocf:heartbeat:apache \
+    params configfile="/etc/httpd/conf/httpd.conf" \
+    op monitor interval="1min"
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" \
+    op monitor interval="30s"
+location cli-prefer-WebSite WebSite \
+    rule $id="cli-prefer-rule-WebSite" inf: #uname eq pcmk-1
+location prefer-pcmk-1 WebSite 50: pcmk-1
+colocation website-with-ip inf: WebSite ClusterIP
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="false" \
+    no-quorum-policy="ignore"
+rsc_defaults $id="rsc-options" \
+    resource-stickiness="100"
+-----
+
+Highlighted is the automated constraint used to move the resources to
+pcmk-1
+
+
+=== Giving Control Back to the Cluster ===
+
+Once we've finished whatever activity that required us to move the
+resources to pcmk-1, in our case nothing, we can then allow the cluster
+to resume normal operation with the unmove command. Since we previously
+configured a default stickiness, the resources will remain on pcmk-1.
+
+[source,Bash]
+-----
+# crm resource unmove WebSite
+# crm configure show
+node pcmk-1
+node pcmk-2
+primitive WebSite ocf:heartbeat:apache \
+    params configfile="/etc/httpd/conf/httpd.conf" \
+    op monitor interval="1min"
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" \
+    op monitor interval="30s"
+location prefer-pcmk-1 WebSite 50: pcmk-1
+colocation website-with-ip inf: WebSite ClusterIP
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="false" \
+    no-quorum-policy="ignore"
+rsc_defaults $id="rsc-options" \
+    resource-stickiness="100"
+-----
+
+Note that the automated constraint is now gone. If we check the cluster
+status, we can also see that as expected the resources are still active
+on pcmk-1.
+
+[source,Bash]
+-----
+# crm_mon
+============
+Last updated: Fri Aug 28 16:20:53 2009
+Stack: openais
+Current DC: pcmk-2 - partition with quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+2 Nodes configured, 2 expected votes
+2 Resources configured.
+============
+
+Online: [ pcmk-1 pcmk-2 ]
+
+ ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-1 
+ WebSite    (ocf::heartbeat:apache):    Started pcmk-1
+-----

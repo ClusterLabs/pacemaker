@@ -264,8 +264,18 @@ echo Our Host OS: $host_os/$host
 
 AC_MSG_NOTICE(Sanitizing prefix: ${prefix})
 case $prefix in
-  NONE)	prefix=/usr;;
+  NONE)
+	prefix=/usr
+	dnl Fix default variables - "prefix" variable if not specified
+	if test "$localstatedir" = "\${prefix}/var"; then
+		localstatedir="/var"
+	fi
+	if test "$sysconfdir" = "\${prefix}/etc"; then
+		sysconfdir="/etc"
+	fi
+	;;
 esac
+
 
 AC_MSG_NOTICE(Sanitizing exec_prefix: ${exec_prefix})
 case $exec_prefix in

@@ -660,7 +660,8 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
         crm_system_name = entity;
 
     } else if (argc > 0 && argv != NULL) {
-        crm_system_name = basename(argv[0]);
+        char *mutable = crm_strdup(argv[0]);
+        crm_system_name = basename(mutable);
         if (strstr(crm_system_name, "lt-") == crm_system_name) {
             crm_system_name += 3;
         }
@@ -814,6 +815,9 @@ crm_enable_stderr(int enable)
  	qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", crm_log_level);
         set_format_string(QB_LOG_STDERR, crm_system_name, crm_log_level > LOG_DEBUG);
 	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_TRUE);
+
+        /* Need to reprocess now that a new target is active */
+        update_all_trace_data();
 
     } else if(enable == FALSE) {
 	qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_FALSE);

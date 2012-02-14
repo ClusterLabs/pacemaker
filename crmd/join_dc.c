@@ -419,7 +419,7 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
     clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
     if (rc != cib_ok) {
         do_crm_log((rc == cib_old_data ? LOG_WARNING : LOG_ERR),
-                   "Sync from %s resulted in an error: %s",
+                   "Sync from %s failed: %s",
                    (char *)user_data, cib_error2string(rc));
 
         /* restart the whole join process */

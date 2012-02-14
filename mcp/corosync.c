@@ -106,12 +106,14 @@ cluster_disconnect_cfg(void)
 
 #define cs_repeat(counter, max, code) do {		\
 	code;						\
-	if(rc == CS_ERR_TRY_AGAIN) {			\
+	if(rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {  \
 	    counter++;					\
 	    crm_debug("Retrying operation after %ds", counter);	\
 	    sleep(counter);				\
+	} else {                                        \
+            break;                                      \
 	}						\
-    } while(rc == CS_ERR_TRY_AGAIN && counter < max)
+    } while(counter < max)
 
 gboolean
 cluster_connect_cfg(uint32_t * nodeid)
@@ -289,7 +291,7 @@ send_cpg_message(struct iovec * iov)
 
     do {
         rc = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 1);
-        if (rc == CS_ERR_TRY_AGAIN) {
+        if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
             cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;
             int rc2 = cpg_flow_control_state_get(cpg_handle, &fc_state);
 
@@ -307,10 +309,12 @@ send_cpg_message(struct iovec * iov)
                 crm_debug("Retrying operation after %ds", retries);
                 sleep(retries);
             }
+        } else {
+            break;
         }
 
         /* 5 retires is plenty, we'll resend once the membership reforms anyway */
-    } while (rc == CS_ERR_TRY_AGAIN && retries < 5);
+    } while (retries < 5);
 
   bail:
     if (rc != CS_OK) {
@@ -408,14 +412,18 @@ config_find_next(confdb_handle_t config, const char *name, confdb_handle_t top_h
 static int
 get_config_opt(cmap_handle_t object_handle, const char *key, char **value, const char *fallback)
 {
-    int rc = cmap_get_string(object_handle, key, value);
+    int rc = 0, retries = 0;
+
+    cs_repeat(retries, 5, rc = cmap_get_string(object_handle, key, value));
     if(rc != CS_OK) {
+        crm_trace("Search for %s failed %d, defaulting to %s", key, rc, fallback);
         if(fallback) {
             *value = crm_strdup(fallback);
         } else {
             *value = NULL;
         }
     }
+    crm_trace("%s: %s", key, *value);
     return rc;
 }
 
@@ -461,6 +469,7 @@ gboolean
 read_config(void)
 {
     int rc = CS_OK;
+    int retries = 0;
     gboolean have_log = FALSE;
 
     char *logging_debug = NULL;
@@ -469,7 +478,7 @@ read_config(void)
     char *logging_to_syslog = NULL;
     char *logging_syslog_facility = NULL;    
 
-    enum cluster_type_e stack = get_cluster_type();
+    enum cluster_type_e stack = pcmk_cluster_unknown;
 
 #if HAVE_CONFDB
     char *value = NULL;
@@ -478,21 +487,45 @@ read_config(void)
     hdb_handle_t local_handle;
     static confdb_callbacks_t callbacks = { };
 
-    rc = confdb_initialize(&config, &callbacks);
+    do {
+        rc = confdb_initialize(&config, &callbacks);
+	if(rc < 0) {
+	    retries++;
+	    printf("Connection setup failed: %d.  Retrying in %ds\n", rc, retries);
+	    sleep(retries);
+
+	} else {
+            break;
+        }
+
+    } while(retries < 5);
 #endif
 
 #if HAVE_CMAP
     cmap_handle_t local_handle;
 
     /* There can be only one (possibility if confdb isn't around) */
-    rc = cmap_initialize(&local_handle);
+    do {
+        rc = cmap_initialize(&local_handle);
+	if(rc < 0) {
+	    retries++;
+	    printf("Connection setup failed: %s.  Retrying in %ds\n",
+                   cs_strerror(rc), retries);
+	    sleep(retries);
+
+	} else {
+            break;
+        }
+
+    } while(retries < 5);
 #endif
 
-if (rc != CS_OK) {
+    if (rc != CS_OK) {
         printf("Could not initialize Cluster Configuration Database API instance, error %d\n", rc);
         return FALSE;
     }
 
+    stack = get_cluster_type();
     crm_info("Reading configure for stack: %s", name_for_cluster_type(stack));
     
     /* =::=::= Should we be here =::=::= */
@@ -656,7 +689,7 @@ if (rc != CS_OK) {
     } else {
         if (crm_is_true(logging_to_syslog) == FALSE) {
             crm_err
-                ("Please enable some sort of logging, either 'to_file: on' or  'to_syslog: on'.");
+                ("Please enable some sort of logging, either 'to_logfile: on' or  'to_syslog: on'.");
             crm_err("If you use file logging, be sure to also define a value for 'logfile'");
         }
     }

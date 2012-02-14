@@ -1739,7 +1739,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
             if (is_probe) {
                 task_status_i = LRM_OP_DONE;
                 crm_notice("Operation %s found resource %s active in master mode on %s",
-                           id, rsc->id, node->details->uname);
+                           task, rsc->id, node->details->uname);
 
             } else if (target_rc == actual_rc_i) {
                 /* nothing to do */
@@ -1806,7 +1806,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
             if (is_probe && target_rc == 7) {
                 task_status_i = LRM_OP_DONE;
                 crm_notice("Operation %s found resource %s active on %s",
-                           id, rsc->id, node->details->uname);
+                           task, rsc->id, node->details->uname);
 
                 /* legacy code for pre-0.6.5 operations */
             } else if (target_rc < 0 && interval > 0 && rsc->role == RSC_ROLE_MASTER) {

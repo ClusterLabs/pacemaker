@@ -1,0 +1,192 @@
+[appendix]
+= Configuration Recap =
+
+== Final Cluster Configuration ==
+
+.....
+# crm configure show
+node pcmk-1
+node pcmk-2
+primitive WebData ocf:linbit:drbd \
+    params drbd_resource="wwwdata" \
+    op monitor interval="60s"
+primitive WebFS ocf:heartbeat:Filesystem \
+    params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
+primitive WebSite ocf:heartbeat:apache \
+    params configfile="/etc/httpd/conf/httpd.conf" \
+    op monitor interval="1min"
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
+    op monitor interval="30s"
+primitive ipmi-fencing stonith::fence_ipmilan \
+    params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \
+    op monitor interval="60s"
+ms WebDataClone WebData \
+    meta master-max="2" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
+clone WebFSClone WebFS
+clone WebIP ClusterIP \
+    meta globally-unique="true" clone-max="2" clone-node-max="2"
+clone WebSiteClone WebSite
+colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone
+colocation fs_on_drbd inf: WebFSClone WebDataClone:Master
+colocation website-with-ip inf: WebSiteClone WebIP
+order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start
+order WebSite-after-WebFS inf: WebFSClone WebSiteClone
+order apache-after-ip inf: WebIP WebSiteClone
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="true" \
+    no-quorum-policy="ignore"
+rsc_defaults $id="rsc-options" \
+    resource-stickiness="100"
+.....
+
+
+== Node List ==
+
+The list of cluster nodes is automatically populated by the cluster.
+
+.....
+node pcmk-1
+node pcmk-2
+.....
+
+
+== Cluster Options ==
+
+This is where the cluster automatically stores some information about
+the cluster
+
+* dc-version - the version (including upstream source-code hash) of Pacemaker used on the DC
+
+* cluster-infrastructure - the cluster infrastructure being used (heartbeat or openais)
+
+* expected-quorum-votes - the maximum number of nodes expected to be part of the cluster
+
+and where the admin can set options that control the way the cluster
+operates
+
+* stonith-enabled=true - Make use of STONITH
+
+* no-quorum-policy=ignore - Ignore loss of quorum and continue to host resources.
+
+.....
+property $id="cib-bootstrap-options" \
+    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
+    cluster-infrastructure="openais" \
+    expected-quorum-votes="2" \
+    stonith-enabled="true" \
+    no-quorum-policy="ignore"
+.....
+
+
+== Resources ==
+
+
+=== Default Options ===
+
+Here we configure cluster options that apply to every resource.
+
+* resource-stickiness - Specify the aversion to moving resources to other machines
+
+.....
+rsc_defaults $id="rsc-options" \
+    resource-stickiness="100"
+.....
+
+=== Fencing ===
+
+
+[NOTE]
+=======
+TODO: Add text here
+=======
+
+.....
+primitive ipmi-fencing stonith::fence_ipmilan \
+    params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \
+    op monitor interval="60s"
+clone Fencing rsa-fencing
+.....
+
+=== Service Address ===
+
+Users of the services provided by the cluster require an unchanging
+address with which to access it. Additionally, we cloned the address so
+it will be active on both nodes. An iptables rule (created as part of the
+resource agent) is used to ensure that each request only processed by one
+of the two clone instances. The additional meta options tell the cluster
+that we want two instances of the clone (one "request bucket" for each
+node) and that if one node fails, then the remaining node should hold
+both.
+
+.....
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+    params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
+    op monitor interval="30s"
+clone WebIP ClusterIP 
+    meta globally-unique="true" clone-max="2" clone-node-max="2"
+.....
+
+
+[NOTE]
+=======
+TODO: The RA should check for globally-unique=true when cloned
+=======
+
+=== DRBD - Shared Storage ===
+
+Here we define the DRBD service and specify which DRBD resource (from
+drbd.conf) it should manage. We make it a master/slave resource and, in
+order to have an active/active setup, allow both instances to be promoted
+by specifying master-max=2. We also set the notify option so that the
+cluster will tell DRBD agent when it's peer changes state.
+
+.....
+primitive WebData ocf:linbit:drbd \
+    params drbd_resource="wwwdata" \
+    op monitor interval="60s"
+ms WebDataClone WebData \
+    meta master-max="2" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
+.....
+
+
+=== Cluster Filesystem ===
+
+The cluster filesystem ensures that files are read and written correctly.
+We need to specify the block device (provided by DRBD), where we want it
+mounted and that we are using GFS2. Again it is a clone because it is
+intended to be active on both nodes. The additional constraints ensure
+that it can only be started on nodes with active gfs-control and drbd
+instances.
+
+.....
+primitive WebFS ocf:heartbeat:Filesystem \
+    params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
+clone WebFSClone WebFS
+colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone
+colocation fs_on_drbd inf: WebFSClone WebDataClone:Master
+order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start
+order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone
+.....
+
+=== Apache ===
+
+Lastly we have the actual service, Apache. We need only tell the cluster
+where to find it's main configuration file and restrict it to running on
+nodes that have the required filesystem mounted and the IP address
+active.
+
+.....
+primitive WebSite ocf:heartbeat:apache \
+    params configfile="/etc/httpd/conf/httpd.conf" \
+    op monitor interval="1min"
+clone WebSiteClone WebSite
+colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone
+colocation website-with-ip inf: WebSiteClone WebIP
+order apache-after-ip inf: WebIP WebSiteClone
+order WebSite-after-WebFS inf: WebFSClone WebSiteClone
+.....
+

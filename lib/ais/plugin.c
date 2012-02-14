@@ -97,13 +97,13 @@ static crm_child_t pcmk_children[] = {
     { 0, crm_proc_none,     crm_flag_none,    0, 0, FALSE, "none",     NULL,		NULL,			   NULL, NULL },
     { 0, crm_proc_ais,      crm_flag_none,    0, 0, FALSE, "ais",      NULL,		NULL,			   NULL, NULL },
     { 0, crm_proc_lrmd,     crm_flag_none,    3, 0, TRUE,  "lrmd",     NULL,		HB_DAEMON_DIR"/lrmd",      NULL, NULL },
-    { 0, crm_proc_cib,      crm_flag_members, 2, 0, TRUE,  "cib",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib",      NULL, NULL },
+    { 0, crm_proc_cib,      crm_flag_members, 1, 0, TRUE,  "cib",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib",      NULL, NULL },
     { 0, crm_proc_crmd,     crm_flag_members, 6, 0, TRUE,  "crmd",     CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd",     NULL, NULL },
     { 0, crm_proc_attrd,    crm_flag_none,    4, 0, TRUE,  "attrd",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd",    NULL, NULL },
     { 0, crm_proc_stonithd, crm_flag_none,    0, 0, TRUE,  "stonithd", NULL,		"/bin/false",		   NULL, NULL },
     { 0, crm_proc_pe,       crm_flag_none,    5, 0, TRUE,  "pengine",  CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine",  NULL, NULL },
     { 0, crm_proc_mgmtd,    crm_flag_none,    7, 0, TRUE,  "mgmtd",    NULL,		HB_DAEMON_DIR"/mgmtd",     NULL, NULL },
-    { 0, crm_proc_stonith_ng, crm_flag_none,  1, 0, TRUE,  "stonith-ng", NULL,		CRM_DAEMON_DIR"/stonithd", NULL, NULL },
+    { 0, crm_proc_stonith_ng, crm_flag_none,  2, 0, TRUE,  "stonith-ng", NULL,		CRM_DAEMON_DIR"/stonithd", NULL, NULL },
 };
 /* *INDENT-ON* */
 

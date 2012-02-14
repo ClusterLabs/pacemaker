@@ -450,7 +450,7 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
 
         action->failed = TRUE;
         if (crm_is_true(allow_fail) == FALSE) {
-            crm_err("Stonith operation %d for %s failed (%s)... aborting transition.", call_id, target, stonith_error2string(rc));
+            crm_notice("Stonith operation %d for %s failed (%s): aborting transition.", call_id, target, stonith_error2string(rc));
             abort_transition(INFINITY, tg_restart, "Stonith failed", NULL);
         }
     }

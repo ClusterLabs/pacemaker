@@ -13,6 +13,30 @@
 			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
 			  <revdescription><simplelist><member>Import from Pages.app</member></simplelist></revdescription>
 			</revision>
+			<revision>
+			  <revnumber>2</revnumber>
+			  <date>Wed Sep 22 2010</date>
+			  <author><firstname>Raoul</firstname><surname>Scarazzini</surname><email>rasca@miamammausalinux.org</email></author>
+			  <revdescription><simplelist><member>Italian translation</member></simplelist></revdescription>
+			</revision>
+			<revision>
+			  <revnumber>3</revnumber>
+			  <date>Wed Feb 9 2011</date>
+			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
+			  <revdescription><simplelist><member>Updated for Fedora 13</member></simplelist></revdescription>
+			</revision>
+			<revision>
+			  <revnumber>4</revnumber>
+			  <date>Wed Oct 5 2011</date>
+			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
+			  <revdescription><simplelist><member>Update the GFS2 section to use CMAN</member></simplelist></revdescription>
+			</revision>
+			<revision>
+			  <revnumber>5</revnumber>
+			  <date>Fri Feb 10 2012</date>
+			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
+			  <revdescription><simplelist><member>Generate docbook content from asciidoc sources</member></simplelist></revdescription>
+			</revision>
 		</revhistory>
 	</simpara>
 </appendix>

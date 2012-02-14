@@ -307,4 +307,6 @@ extern void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 #  include <crm/cib_util.h>
 #  include <crm/cib_ops.h>
 
+#  define CIB_LIBRARY "libcib.so.1"
+
 #endif
