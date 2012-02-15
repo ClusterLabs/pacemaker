@@ -28,7 +28,7 @@ service_crm_la_LDFLAGS	= -export-dynamic -module -avoid-version
 service_crm_la_LIBADD	= 
 
 # OpenAIS's logging violates -Wwrite-strings all over the place
-TMP_ANSI	= $(CFLAGS_COPY:-ansi) 
+TMP_ANSI	= $(CFLAGS_COPY:-ansi=)
 TMP_STR		= $(TMP_ANSI:-Wwrite-strings=)
 CFLAGS		= $(TMP_STR:-Wcast-qual=)
 
