@@ -281,7 +281,7 @@ crm_get_peer(unsigned int id, const char *uname)
         const char *uuid = get_node_uuid(id, node->uname);
         if(node->uuid) {
             crm_info("Node %u has uuid %s", id, node->uuid);
-        } else {
+        } else if(uuid) {
             node->uuid = crm_strdup(uuid);
         }
     }

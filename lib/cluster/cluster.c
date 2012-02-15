@@ -132,8 +132,6 @@ get_node_uuid(uint32_t id, const char *uname)
     char *uuid = NULL;
     enum cluster_type_e type = get_cluster_type();
 
-    CRM_CHECK(uname != NULL, return NULL);
-
     if (crm_uuid_cache == NULL) {
         crm_uuid_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                                g_hash_destroy_str, g_hash_destroy_str);
@@ -152,7 +150,9 @@ get_node_uuid(uint32_t id, const char *uname)
 
         case pcmk_cluster_cman:
         case pcmk_cluster_classic_ais:
-            uuid = crm_strdup(uname);
+            if(uname) {
+                uuid = crm_strdup(uname);
+            }
             break;
             
         case pcmk_cluster_heartbeat:
