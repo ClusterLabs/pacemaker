@@ -104,7 +104,6 @@ spawn_child(crm_child_t * child)
     int lpc = 0;
     uid_t uid = 0;
     struct rlimit oflimits;
-    struct passwd *pwentry = NULL;
     gboolean use_valgrind = FALSE;
     gboolean use_callgrind = FALSE;
     const char *devnull = "/dev/null";
@@ -589,7 +588,7 @@ config_find_init(struct corosync_api_v1 * config, char *name)
 
 #if SUPPORT_COROSYNC
     config->object_find_create(OBJECT_PARENT_HANDLE, name, strlen(name), &local_handle);
-    ais_info("Local handle: %lld for %s", local_handle, name);
+    ais_info("Local handle: %lld for %s", (long long)local_handle, name);
 #endif
 
     return local_handle;
