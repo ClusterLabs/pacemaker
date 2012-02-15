@@ -1195,13 +1195,13 @@ update_attrd(const char *host, const char *name, const char *value, const char *
     
     if (rc == FALSE) {
         crm_err("Could not send %s %s %s (%d)", T_ATTRD, name ? "update" : "refresh",
-                is_set(fsa_input_register, R_SHUTDOWN), name?name:"");
+                name?name:"", is_set(fsa_input_register, R_SHUTDOWN));
 
         if(is_set(fsa_input_register, R_SHUTDOWN)) {
             register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
         }
 
     } else if(retries) {
-        crm_debug("Needed %d retries to send %s %s %s", T_ATTRD, name ? "update" : "refresh", name?name:"");
+        crm_debug("Needed %d retries to send %s %s %s", retries, T_ATTRD, name ? "update" : "refresh", name?name:"");
     }
 }
