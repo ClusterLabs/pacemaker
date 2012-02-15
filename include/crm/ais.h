@@ -28,8 +28,28 @@
 
 #  define AIS_IPC_MESSAGE_SIZE 8192*128
 
-#  if HAVE_QB_QBIPC_COMMON_H
-#     include <qb/qbipc_common.h>
+#  if SUPPORT_COROSYNC
+#    if CS_USES_LIBQB
+#      include <qb/qbipc_common.h>
+#      include <corosync/corotypes.h>
+#    else
+
+struct qb_ipc_request_header {
+	int size __attribute__((aligned(8)));
+	int id __attribute__((aligned(8)));
+} __attribute__((aligned(8)));
+
+struct qb_ipc_response_header {
+	int size __attribute__((aligned(8)));
+	int id __attribute__((aligned(8)));
+	int error __attribute__((aligned(8)));
+} __attribute__((aligned(8)));
+
+#      include <corosync/corodefs.h>
+#      include <corosync/coroipcc.h>
+#      include <corosync/coroipc_types.h>
+static inline int qb_to_cs_error(int a) { return a; }
+#    endif
 #  else
 struct qb_ipc_request_header {
 	int size __attribute__((aligned(8)));
@@ -41,17 +61,6 @@ struct qb_ipc_response_header {
 	int id __attribute__((aligned(8)));
 	int error __attribute__((aligned(8)));
 } __attribute__((aligned(8)));
-#  endif
-
-#  if SUPPORT_COROSYNC
-#    if CS_USES_LIBQB
-#      include <corosync/corotypes.h>
-#    else
-#      include <corosync/corodefs.h>
-#      include <corosync/coroipcc.h>
-#      include <corosync/coroipc_types.h>
-static inline int qb_to_cs_error(int a) { return a; }
-#    endif
 #  endif
 
 #  define CRM_MESSAGE_IPC_ACK	0
