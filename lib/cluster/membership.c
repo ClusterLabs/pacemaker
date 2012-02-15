@@ -207,7 +207,6 @@ crm_new_peer(unsigned int id, const char *uname)
 {
     crm_node_t *node = NULL;
 
-    CRM_CHECK(id > 0, return NULL);
     CRM_CHECK(uname != NULL || id > 0, return NULL);
 
     crm_debug("Creating entry for node %s/%u", uname, id);
