@@ -82,7 +82,7 @@ GHashTable *membership_notify_list = NULL;
 #define crm_flag_members	0x00000001
 
 struct crm_identify_msg_s {
-    struct qb_ipc_request_header	header __attribute__((aligned(8)));
+    cs_ipc_header_request_t	header __attribute__((aligned(8)));
     uint32_t id;
     uint32_t pid;
     int32_t votes;
@@ -963,7 +963,7 @@ pcmk_cluster_id_callback(ais_void_ptr * message, unsigned int nodeid)
 }
 
 struct res_overlay {
-    struct qb_ipc_response_header header __attribute((aligned(8)));
+    cs_ipc_header_response_t header __attribute((aligned(8)));
     char buf[4096];
 };
 
@@ -977,7 +977,7 @@ send_ipc_ack(void *conn)
     }
 
     res_overlay->header.id = CRM_MESSAGE_IPC_ACK;
-    res_overlay->header.size = sizeof (struct qb_ipc_response_header);
+    res_overlay->header.size = sizeof (cs_ipc_header_response_t);
     res_overlay->header.error = CS_OK;
     pcmk_api->ipc_response_send(conn, res_overlay, res_overlay->header.size);
 }

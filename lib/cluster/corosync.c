@@ -170,12 +170,12 @@ get_ais_nodeid(uint32_t * id, char **uname)
     struct iovec iov;
     int retries = 0;
     int rc = CS_OK;
-    struct qb_ipc_response_header header;
+    cs_ipc_header_response_t header;
     struct crm_ais_nodeid_resp_s answer;
 
     header.error = CS_OK;
     header.id = crm_class_nodeid;
-    header.size = sizeof(struct qb_ipc_response_header);
+    header.size = sizeof(cs_ipc_header_response_t);
 
     CRM_CHECK(id != NULL, return FALSE);
     CRM_CHECK(uname != NULL, return FALSE);
@@ -244,12 +244,12 @@ send_ais_text(int class, const char *data,
 
     int retries = 0;
     int rc = CS_OK;
-    int buf_len = sizeof(struct qb_ipc_response_header);
+    int buf_len = sizeof(cs_ipc_header_response_t);
 
     char *buf = NULL;
     struct iovec iov;
     const char *transport = "pcmk";
-    struct qb_ipc_response_header *header = NULL;
+    cs_ipc_header_response_t *header = NULL;
     AIS_Message *ais_msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
@@ -360,9 +360,9 @@ send_ais_text(int class, const char *data,
 #else
                 rc = coroipcc_msg_send_reply_receive(ais_ipc_handle, &iov, 1, buf, buf_len);
 #endif
-                header = (struct qb_ipc_response_header *)buf;
+                header = (cs_ipc_header_response_t *)buf;
                 if (rc == CS_OK) {
-                    CRM_CHECK(header->size == sizeof (struct qb_ipc_response_header),
+                    CRM_CHECK(header->size == sizeof (cs_ipc_header_response_t),
                               crm_err("Odd message: id=%d, size=%d, class=%d, error=%d",
                                       header->id, header->size, class, header->error));
 
