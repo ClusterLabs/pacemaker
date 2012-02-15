@@ -433,7 +433,7 @@ send_ais_message(xmlNode * msg, gboolean local, const char *node, enum crm_ais_m
     }
 
     data = dump_xml_unformatted(msg);
-    rc = send_ais_text(0, data, local, node, dest);
+    rc = send_ais_text(crm_class_cluster, data, local, node, dest);
     crm_free(data);
     return rc;
 }
@@ -517,7 +517,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
         int pid = getpid();
         char *pid_s = crm_itoa(pid);
 
-        send_ais_text(0, pid_s, TRUE, NULL, crm_msg_ais);
+        send_ais_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
         crm_free(pid_s);
         goto done;
     }
@@ -1146,7 +1146,7 @@ init_ais_connection_classic(gboolean(*dispatch) (AIS_Message *, char *, int),
 
     pid = getpid();
     pid_s = crm_itoa(pid);
-    send_ais_text(0, pid_s, TRUE, NULL, crm_msg_ais);
+    send_ais_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
     crm_free(pid_s);
 
     if (uname(&name) < 0) {
