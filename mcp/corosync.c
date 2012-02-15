@@ -499,9 +499,7 @@ read_config(void)
         }
 
     } while(retries < 5);
-#endif
-
-#if HAVE_CMAP
+#elif HAVE_CMAP
     cmap_handle_t local_handle;
 
     /* There can be only one (possibility if confdb isn't around) */
@@ -581,17 +579,6 @@ read_config(void)
         return FALSE;
     }
 
-#if HAVE_CMAP
-    /* =::=::= Logging =::=::= */
-    get_config_opt(local_handle, "logging.debug", &logging_debug, "on");
-    get_config_opt(local_handle, "logging.logfile", &logging_logfile, "/var/log/pacemaker");
-    get_config_opt(local_handle, "logging.to_logfile", &logging_to_logfile, "off");
-    get_config_opt(local_handle, "logging.to_syslog", &logging_to_syslog, "on");
-    get_config_opt(local_handle, "logging.syslog_facility", &logging_syslog_facility, "daemon");
-
-    cmap_finalize(local_handle); 
-#endif
-
 #if HAVE_CONFDB
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "logging", top_handle);
@@ -603,6 +590,15 @@ read_config(void)
     get_config_opt(config, local_handle, "syslog_facility", &logging_syslog_facility, "daemon");
 
     confdb_finalize(config);    
+#elif HAVE_CMAP
+    /* =::=::= Logging =::=::= */
+    get_config_opt(local_handle, "logging.debug", &logging_debug, "on");
+    get_config_opt(local_handle, "logging.logfile", &logging_logfile, "/var/log/pacemaker");
+    get_config_opt(local_handle, "logging.to_logfile", &logging_to_logfile, "off");
+    get_config_opt(local_handle, "logging.to_syslog", &logging_to_syslog, "on");
+    get_config_opt(local_handle, "logging.syslog_facility", &logging_syslog_facility, "daemon");
+
+    cmap_finalize(local_handle); 
 #endif
     
     if (crm_is_true(logging_debug) && get_crm_log_level() < LOG_DEBUG) {

@@ -1168,8 +1168,10 @@ else
     AC_DEFINE_UNQUOTED(HAVE_CMAP, $HAVE_cmap, Have the new non-herarchial Corosync config API)
 fi
 
-if test $SUPPORT_CS = 1 -a x$HAVE_cmap = x1; then
-    dnl Support for plugins was removed about the time the cmap API was added
+
+if test $SUPPORT_CS = 1 -a x$HAVE_oldipc = x0 ; then
+    dnl Support for plugins was removed about the time the IPC was
+    dnl moved to libqb.
     dnl The only option now is the built-in quorum API
     CFLAGS="$CFLAGS $cmap_CFLAGS $quorum_CFLAGS"
     COROSYNC_LIBS="$COROSYNC_LIBS $cmap_LIBS $quorum_LIBS"
