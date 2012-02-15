@@ -138,7 +138,9 @@ get_node_uuid(uint32_t id, const char *uname)
     }
 
     /* avoid blocking heartbeat calls where possible */
-    uuid = g_hash_table_lookup(crm_uuid_cache, uname);
+    if(uname) {
+        uuid = g_hash_table_lookup(crm_uuid_cache, uname);
+    }
     if (uuid != NULL) {
         return uuid;
     }
@@ -167,9 +169,15 @@ get_node_uuid(uint32_t id, const char *uname)
     if(uuid == NULL) {
         return NULL;
     }
-    
-    g_hash_table_insert(crm_uuid_cache, crm_strdup(uname), uuid);
-    return g_hash_table_lookup(crm_uuid_cache, uname);
+
+    if(uname) {
+        g_hash_table_insert(crm_uuid_cache, crm_strdup(uname), uuid);
+        return g_hash_table_lookup(crm_uuid_cache, uname);
+    }
+
+    /* Memory leak! */
+    CRM_LOG_ASSERT(uname != NULL);
+    return uuid;
 }
 
 gboolean
