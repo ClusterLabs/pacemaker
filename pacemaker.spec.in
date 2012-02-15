@@ -281,11 +281,11 @@ docdir=%{pcmk_docdir} %{configure}                 \
         --with-version=%{version}-%{release}       \
         --enable-fatal-warnings=no
 
-make %{_smp_mflags} docdir=%{pcmk_docdir}
+make %{_smp_mflags} V=1 docdir=%{pcmk_docdir}
 
 %install
 rm -rf %{buildroot}
-make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} install
+make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} V=1 install
 
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
