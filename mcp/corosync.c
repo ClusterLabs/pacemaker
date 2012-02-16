@@ -67,7 +67,6 @@ cfg_shutdown_callback(corosync_cfg_handle_t h, corosync_cfg_shutdown_flags_t fla
 
 static corosync_cfg_callbacks_t cfg_callbacks = {
     .corosync_cfg_shutdown_callback = cfg_shutdown_callback,
-    .corosync_cfg_state_track_callback = NULL,
 };
 
 static gboolean
