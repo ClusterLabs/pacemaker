@@ -700,10 +700,9 @@ for l in $logfiles $EXTRA_LOGS; do
     node_events `basename $l` > $EVENTS_F
 
     # Link the first logfile to a standard name if it doesn't yet exist
-    if [ -e $HALOG_F ]; then
-        : nothing
-    else
-	ln -s `basename $l` $HALOG_F 
+    f=`basename $l`
+    if [ -e $f -a ! -e $HALOG_F ]; then
+	ln -s $f $HALOG_F 
     fi
 done
 
