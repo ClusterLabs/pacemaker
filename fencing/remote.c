@@ -309,8 +309,10 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
 	/* Local request */
 	op->originator = crm_strdup(stonith_our_uname);
     }
-    
-    op->client_id = crm_strdup(client);
+
+    if(client) {
+        op->client_id = crm_strdup(client);
+    }
     op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
     op->request = copy_xml(request); /* TODO: Figure out how to avoid this */
     crm_element_value_int(request, F_STONITH_CALLOPTS, (int*)&(op->call_options));
@@ -435,6 +437,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         crm_xml_add(query, F_STONITH_REMOTE, op->id);
         crm_xml_add(query, F_STONITH_TARGET, op->target);    
         crm_xml_add(query, F_STONITH_ACTION, op->action);    
+        crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
         crm_xml_add_int(query, F_STONITH_TIMEOUT, 900*op->base_timeout);
 
         if(device) {

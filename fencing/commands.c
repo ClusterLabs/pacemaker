@@ -84,6 +84,7 @@ static async_command_t *create_async_command(xmlNode *msg)
 
     CRM_CHECK(action != NULL, crm_log_xml_warn(msg, "NoAction"); return NULL);
 
+    crm_log_xml_trace(msg, "Command");
     crm_malloc0(cmd, sizeof(async_command_t));
     crm_element_value_int(msg, F_STONITH_CALLID,   &(cmd->id));
     crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
@@ -99,7 +100,7 @@ static async_command_t *create_async_command(xmlNode *msg)
     cmd->pt_ops = &StonithdProcessTrackOps;
 
     CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
-    CRM_CHECK(cmd->client != NULL || cmd->remote != NULL, crm_log_xml_warn(msg, "NoClient"));
+    CRM_CHECK(cmd->client != NULL, crm_log_xml_warn(msg, "NoClient"));
     return cmd;
 }
 
@@ -1030,6 +1031,8 @@ xmlNode *stonith_construct_async_reply(async_command_t *cmd, char *output, xmlNo
     crm_xml_add(reply, F_STONITH_OPERATION, cmd->op);
     crm_xml_add(reply, F_STONITH_REMOTE, cmd->remote);
     crm_xml_add(reply, F_STONITH_CLIENTID, cmd->client);
+    crm_xml_add(reply, F_STONITH_TARGET, cmd->victim);
+    crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
     crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
     crm_xml_add_int(reply, F_STONITH_CALLOPTS, cmd->options);
     
