@@ -50,7 +50,6 @@ static struct cpg_name cpg_group = {
 gboolean use_cman = FALSE;
 static cpg_handle_t cpg_handle;
 static corosync_cfg_handle_t cfg_handle;
-static corosync_cfg_state_notification_t cfg_buffer;
 
 /* =::=::=::= CFG - Shutdown stuff =::=::=::= */
 
@@ -142,14 +141,6 @@ cluster_connect_cfg(uint32_t * nodeid)
     }
 
     crm_debug("Our nodeid: %d", *nodeid);
-
-    retries = 0;
-    cs_repeat(retries, 30, rc = corosync_cfg_state_track(cfg_handle, 0, &cfg_buffer));
-
-    if (rc != CS_OK) {
-        crm_err("corosync cfg stack_track error %d", rc);
-        goto bail;
-    }
 
     crm_debug("Adding fd=%d to mainloop", fd);
     G_main_add_fd(G_PRIORITY_HIGH, fd, FALSE, pcmk_cfg_dispatch, &cfg_handle,
