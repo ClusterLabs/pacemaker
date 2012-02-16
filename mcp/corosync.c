@@ -643,6 +643,9 @@ read_config(void)
             crm_err
                 ("Daemons running as %s do not have permission to access '%s'. Logging to '%s' is disabled",
                  CRM_DAEMON_USER, parent_dir, logging_logfile);
+            crm_err
+                ("Either %s must be owned by %s with rwx permissions, or have rwx permissions for group %d",
+                 parent_dir, CRM_DAEMON_USER, pcmk_gid);
         }
 
         if (logfile) {
