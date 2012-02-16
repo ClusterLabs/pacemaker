@@ -900,7 +900,7 @@ delete_rsc_status(const char *rsc_id, int call_options, const char *user_name)
 }
 
 static void
-delete_rsc_entry(ha_msg_input_t * input, const char *rsc_id, int rc, const char *user_name)
+delete_rsc_entry(ha_msg_input_t * input, const char *rsc_id, GHashTableIter *rsc_gIter, int rc, const char *user_name)
 {
     struct delete_event_s event;
 
@@ -909,9 +909,12 @@ delete_rsc_entry(ha_msg_input_t * input, const char *rsc_id, int rc, const char 
     if (rc == HA_OK) {
         char *rsc_id_copy = crm_strdup(rsc_id);
 
-        g_hash_table_remove(resource_history, rsc_id);
-        crm_debug("sync: Sending delete op for %s", rsc_id);
-        delete_rsc_status(rsc_id, cib_quorum_override, user_name);
+        if (rsc_gIter)
+            g_hash_table_iter_remove(rsc_gIter);
+        else
+            g_hash_table_remove(resource_history, rsc_id_copy);
+        crm_debug("sync: Sending delete op for %s", rsc_id_copy);
+        delete_rsc_status(rsc_id_copy, cib_quorum_override, user_name);
 
         g_hash_table_foreach_remove(pending_ops, lrm_remove_deleted_op, rsc_id_copy);
 
@@ -1144,7 +1147,7 @@ get_lrm_resource(xmlNode * resource, xmlNode * op_msg, gboolean do_create)
 }
 
 static void
-delete_resource(const char *id, lrm_rsc_t * rsc,
+delete_resource(const char *id, lrm_rsc_t * rsc, GHashTableIter *gIter,
                 const char *sys, const char *host, const char *user, ha_msg_input_t * request)
 {
     int rc = HA_OK;
@@ -1178,7 +1181,7 @@ delete_resource(const char *id, lrm_rsc_t * rsc,
                  id, sys, user ? user : "internal", host, rc);
     }
 
-    delete_rsc_entry(request, id, rc, user);
+    delete_rsc_entry(request, id, gIter, rc, user);
 }
 
 /*	 A_LRM_INVOKE	*/
@@ -1305,7 +1308,7 @@ do_lrm_invoke(long long action,
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
             lrm_rsc_t *rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, entry->id);
 
-            delete_resource(entry->id, rsc, from_sys, from_host, user_name, NULL);
+            delete_resource(entry->id, rsc, &gIter, from_sys, from_host, user_name, NULL);
             lrm_free_rsc(rsc);
         }
 
@@ -1341,7 +1344,7 @@ do_lrm_invoke(long long action,
             lrm_op_t *op = NULL;
 
             crm_notice("Not creating resource for a %s event: %s", operation, ID(input->xml));
-            delete_rsc_entry(input, ID(xml_rsc), HA_OK, user_name);
+            delete_rsc_entry(input, ID(xml_rsc), NULL, HA_OK, user_name);
 
             op = construct_op(input->xml, ID(xml_rsc), operation);
             op->op_status = LRM_OP_DONE;
@@ -1439,7 +1442,7 @@ do_lrm_invoke(long long action,
                 return;
             }
 
-            delete_resource(rsc->id, rsc, from_sys, from_host, user_name, input);
+            delete_resource(rsc->id, rsc, NULL, from_sys, from_host, user_name, input);
 
         } else if (rsc != NULL) {
             do_lrm_rsc_op(rsc, operation, input->xml, input->msg);
@@ -2033,7 +2036,7 @@ process_lrm_event(lrm_op_t * op)
 #ifdef HAVE_LRM_OP_T_RSC_DELETED
     if (op->rsc_deleted) {
         crm_info("Deletion of resource '%s' complete after %s", op->rsc_id, op_key);
-        delete_rsc_entry(NULL, op->rsc_id, HA_OK, NULL);
+        delete_rsc_entry(NULL, op->rsc_id, NULL, HA_OK, NULL);
     }
 #endif
 
