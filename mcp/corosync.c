@@ -613,7 +613,6 @@ read_config(void)
         struct stat parent;
         uid_t pcmk_uid = 0;
         uid_t pcmk_gid = getegid();
-
         FILE *logfile = NULL;
         char *parent_dir = NULL;
         struct passwd *pcmk_user = getpwnam(CRM_DAEMON_USER);
@@ -631,45 +630,43 @@ read_config(void)
 
         if (rc != 0) {
             crm_err("Directory '%s' does not exist for logfile '%s'", parent_dir, logging_logfile);
-
-        } else if (parent.st_uid == pcmk_uid && (parent.st_mode & (S_IRUSR | S_IWUSR))) {
-            /* all good - user */
-            logfile = fopen(logging_logfile, "a");
-
-        } else if (parent.st_gid == pcmk_gid && (parent.st_mode & S_IXGRP)) {
-            /* all good - group */
-            logfile = fopen(logging_logfile, "a");
-
-        } else {
-            crm_err
-                ("Daemons running as %s do not have permission to access '%s'. Logging to '%s' is disabled",
-                 CRM_DAEMON_USER, parent_dir, logging_logfile);
+        } else if (!(logfile = fopen(logging_logfile, "a"))) {
+            crm_err("Unable to access directory %s. Logging in file %s is disabled for Daemons running as %s.",
+                parent_dir, logging_logfile, CRM_DAEMON_USER);
         }
 
         if (logfile) {
+            int permissions_set = 1;
             int logfd = fileno(logfile);
 
-            setenv("HA_debugfile", logging_logfile, 1);
-            setenv("HA_DEBUGLOG", logging_logfile, 1);
-            setenv("HA_LOGFILE", logging_logfile, 1);
-
-            /* Ensure the file has the correct permissions */
+            /* Ensure the file has the correct ownership. */
             rc = fchown(logfd, pcmk_uid, pcmk_gid);
             if(rc < 0) {
                 crm_warn("Cannot change the ownership of %s to user %s and gid %d",
                          logging_logfile, CRM_DAEMON_USER, pcmk_gid);
+                permissions_set = 0;
             }
+
+            /* Ensure the file has the correct permissions. */
             rc = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
             if(rc < 0) {
                 crm_warn("Cannot change the mode of %s to rw-rw----", logging_logfile);
+                permissions_set = 0;
+            } else {
+                fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
+                    pcmk_uid, pcmk_gid, logging_logfile);
             }
 
-            fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
-                    pcmk_uid, pcmk_gid, logging_logfile);
             fflush(logfile);
             fsync(logfd);
             fclose(logfile);
-            have_log = TRUE;
+
+            if (permissions_set) {
+                setenv("HA_debugfile", logging_logfile, 1);
+                setenv("HA_DEBUGLOG", logging_logfile, 1);
+                setenv("HA_LOGFILE", logging_logfile, 1);
+                have_log = TRUE;
+            }
 
         } else {
             crm_err("Couldn't create logfile: %s", logging_logfile);
