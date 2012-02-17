@@ -28,7 +28,7 @@
 # to disable or enable specific features
 
 # Supported cluster stacks, must support at least one
-%bcond_with cman
+%bcond_without cman
 %bcond_without corosync
 %bcond_with heartbeat
 
@@ -114,7 +114,11 @@ BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl re
 
 
 %if %{with cman}
+%if 0%{?fedora} > 0
+%if 0%{?fedora} < 17
 BuildRequires: clusterlib-devel
+%endif
+%endif
 %endif
 
 %if %{with esmtp}
