@@ -70,14 +70,13 @@ stonithd_SOURCES	+= standalone_config.c config.y config.l
 stonithd_AM_LFLAGS 	= -o$(LEX_OUTPUT_ROOT).c
 
 # lex/yacc issues: 
-CFLAGS			= $(CFLAGS_COPY:-Werror=)
 
 endif
 stonithd_YFLAGS 	= -d
-
-
 
 stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/cluster/libcrmcluster.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
 			$(CRYPTOLIB) $(CLUSTERLIBS)
+
+CFLAGS			= $(CFLAGS_COPY:-Werror=)
