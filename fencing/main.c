@@ -893,9 +893,11 @@ main(int argc, char ** argv)
 	channel1, stonith_client_connect,
 	default_ipc_connection_destroy);
 
+#if SUPPORT_STONITH_CONFIG
     if (((stand_alone == TRUE)) && !(standalone_cfg_read_file(STONITH_NG_CONF_FILE))) {
         standalone_cfg_commit();
     }
+#endif
 
     channel2 = crm_strdup(stonith_channel_callback);
     rc = init_server_ipc_comms(

@@ -8,7 +8,9 @@
 #include <standalone_config.h>
 
 /* Some distributions can't use the output from flex without help */
-#define ECHO if(fwrite( yytext, yyleng, 1, yyout ))
+#ifndef ECHO
+#  define ECHO if(fwrite( yytext, yyleng, 1, yyout ))*/
+#endif
 
 int _line_count = 1;
 

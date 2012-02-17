@@ -62,12 +62,20 @@ stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
 			$(CRYPTOLIB) $(CLUSTERLIBS)
 
-stonithd_SOURCES	= main.c commands.c remote.c standalone_config.c config.y config.l
+stonithd_SOURCES	= main.c commands.c remote.c
+if BUILD_STONITH_CONFIG
+BUILT_SOURCES 		= standalone_config.h
 
-stonithd_BUILT_SOURCES = stonithd-config.h
+stonithd_SOURCES	+= standalone_config.c config.y config.l
+stonithd_AM_LFLAGS 	= -o$(LEX_OUTPUT_ROOT).c
 
-stonithd_YFLAGS = -d
-stonithd_AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
+# lex/yacc issues: 
+CFLAGS			= $(CFLAGS_COPY:-Werror=)
+
+endif
+stonithd_YFLAGS 	= -d
+
+
 
 stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/cluster/libcrmcluster.la	\

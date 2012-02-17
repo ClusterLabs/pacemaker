@@ -465,6 +465,7 @@ AC_PATH_PROGS(INKSCAPE, inkscape)
 AC_PATH_PROGS(XSLTPROC, xsltproc)
 AC_PATH_PROGS(BISON, bison)
 AC_PATH_PROGS(FLEX, flex)
+AC_PATH_PROGS(HAVE_YACC, $YACC)
 AC_PATH_PROGS(FOP, fop)
 AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
 AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
@@ -513,6 +514,15 @@ AM_CONDITIONAL(BUILD_ASCIIDOC, test x"${ASCIIDOC}" != x"")
 if test x"${ASCIIDOC}" != x""; then
    PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
 fi
+
+SUPPORT_STONITH_CONFIG=0
+if test x"${HAVE_YACC}" != x"" -a x"${FLEX}" != x"" -a x"${BISON}" != x""; then
+   SUPPORT_STONITH_CONFIG=1
+   PCMK_FEATURES="$PCMK_FEATURES st-conf"
+fi
+
+AM_CONDITIONAL(BUILD_STONITH_CONFIG, test $SUPPORT_STONITH_CONFIG = 1)
+AC_DEFINE_UNQUOTED(SUPPORT_STONITH_CONFIG, $SUPPORT_STONITH_CONFIG, Support a stand-alone stonith config file in addition to the CIB)
 
 AM_CONDITIONAL(BUILD_DOCBOOK, test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x"")
 if test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x""; then

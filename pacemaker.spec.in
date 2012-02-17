@@ -111,7 +111,7 @@ BuildRequires:  gnutls-devel
 
 # Enables optional functionality
 BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents libqb-devel
-
+BuildRequires: bison byacc flex
 
 %if %{with cman}
 %if 0%{?fedora} > 0
