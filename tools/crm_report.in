@@ -374,10 +374,24 @@ getnodes() {
     cluster_cf=`find_cluster_cf $cluster`
     # 1. Live
     if 
-	ps -ef | egrep -qs [c]rmd
+	ps -ef | egrep -qs "[c]ib"
     then
-	debug "Querying CRM for nodes"
-	cibadmin -Ql -o nodes |	awk '
+	debug "Querying CIB for nodes"
+	cibadmin -Ql -o nodes | awk '
+	  /type="normal"/ {
+		for( i=1; i<=NF; i++ )
+			if( $i~/^uname=/ ) {
+				sub("uname=.","",$i);
+				sub("\".*","",$i);
+				print $i;
+				next;
+			}
+	  }
+	' | tr '\n' ' '
+    # 2. Saved
+    elif [ -f @CRM_CONFIG_DIR@/cib.xml ]; then
+	debug "Querying on-disk CIB for nodes"
+	CIB_file=@CRM_CONFIG_DIR@/cib.xml cibadmin -Ql -o nodes | awk '
 	  /type="normal"/ {
 		for( i=1; i<=NF; i++ )
 			if( $i~/^uname=/ ) {
@@ -389,16 +403,17 @@ getnodes() {
 	  }
 	' | tr '\n' ' '
 
-    # 2. hostcache
+    # 3. hostcache
     elif [ -f $HA_STATE_DIR/hostcache ]; then
 	debug "Reading nodes from $HA_STATE_DIR/hostcache"
 	awk '{print $1}' $HA_STATE_DIR/hostcache
 
-    # 3. ha.cf
+    # 4. ha.cf
     elif [ "x$cluster" = "xheartbeat" ]; then
 	debug "Reading nodes from $cluster_cf"
 	getcfvar $cluster node $cluster_cf
 
+    # 5. logs
     else
 	# Look in the logs...
 	logfile=`findmsg 1 "crm_update_peer"`
