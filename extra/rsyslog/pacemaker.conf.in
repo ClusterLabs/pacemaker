@@ -1,0 +1,39 @@
+# rsyslog configuration snippet for Pacemaker daemons
+#
+# Include this file in your rsyslog configuration file,
+# _before_ your default log processing rules.
+#
+# If you want Pacemaker log entries in individual log
+# files _and_ your catch-all syslog file, remove the
+# "&v~" lines.
+
+$template PacemakerDaemonLog,"@localstatedir@/log/@PACKAGE_TARNAME@/%programname%.log"
+
+# Entries from the crm_attribute binary and attrd go
+# to one log file.
+:programname,isequal,"crm_attribute" @localstatedir@/log/@PACKAGE_TARNAME@/attrd.log
+& ~
+:programname,isequal,"attrd" ?PacemakerDaemonLog
+& ~
+
+# CIB status messages
+:programname,isequal,"cib" ?PacemakerDaemonLog
+& ~
+
+# Messages from crmd
+:programname,isequal,"crmd" ?PacemakerDaemonLog
+& ~
+
+# Messages from lrmd, including stdout and stderr
+# from poorly-written resource agents that don't
+# use ocf_log and/or ocf_run
+:programname,isequal,"lrmd" ?PacemakerDaemonLog
+& ~
+
+# Policy Engine messages
+:programname,isequal,"pengine" ?PacemakerDaemonLog
+& ~
+
+# Messages from the fencing daemons
+:programname,startswith,"stonith" ?PacemakerDaemonLog
+& ~
