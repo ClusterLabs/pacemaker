@@ -87,6 +87,9 @@ AC_LIBTOOL_DLOPEN               dnl Enable dlopen support...
 AC_LIBLTDL_CONVENIENCE          dnl make libltdl a convenience lib
 AC_PROG_LIBTOOL
 
+AC_PROG_YACC
+AM_PROG_LEX
+
 AC_C_STRINGIZE
 AC_TYPE_SIZE_T
 AC_CHECK_SIZEOF(char)
@@ -460,6 +463,8 @@ AC_PATH_PROGS(ASCIIDOC, asciidoc)
 AC_PATH_PROGS(PUBLICAN, publican)
 AC_PATH_PROGS(INKSCAPE, inkscape)
 AC_PATH_PROGS(XSLTPROC, xsltproc)
+AC_PATH_PROGS(BISON, bison)
+AC_PATH_PROGS(FLEX, flex)
 AC_PATH_PROGS(FOP, fop)
 AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
 AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
