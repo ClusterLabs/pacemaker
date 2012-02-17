@@ -21,7 +21,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 helpdir		= $(datadir)/$(PACKAGE)
 
-ascii		= crm_fencing.txt acls.txt stonith-ng.conf.example
+ascii		= crm_fencing.txt acls.txt
 asciiman	= crm.8.txt
 help_DATA	= crm.8.txt
 docbook		= Pacemaker_Explained Clusters_from_Scratch
