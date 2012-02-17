@@ -382,7 +382,7 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     return device;
 }
 
-static int stonith_device_register(xmlNode *msg) 
+int stonith_device_register(xmlNode *msg) 
 {
     const char *value = NULL;
     stonith_device_t *device = build_device_from_xml(msg);

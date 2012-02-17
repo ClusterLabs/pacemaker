@@ -138,12 +138,9 @@ stonith_connection_destroy(gpointer user_data)
     free_xml(blob.xml);
 }
 
-static int
-stonith_api_register_device(stonith_t * st, int call_options,
-                            const char *id, const char *namespace, const char *agent,
-                            stonith_key_value_t * params)
+xmlNode *
+create_device_registration_xml(const char *id, const char *namespace, const char *agent, stonith_key_value_t *params)
 {
-    int rc = 0;
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
 
@@ -155,6 +152,17 @@ stonith_api_register_device(stonith_t * st, int call_options,
     for (; params; params = params->next) {
         hash2field((gpointer) params->key, (gpointer) params->value, args);
     }
+
+    return data;
+}
+
+static int
+stonith_api_register_device(stonith_t * st, int call_options,
+                            const char *id, const char *namespace, const char *agent,
+                            stonith_key_value_t * params)
+{
+    int rc = 0;
+    xmlNode *data = create_device_registration_xml(id, namespace, agent, params);
 
     rc = stonith_send_command(st, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
     free_xml(data);
@@ -192,12 +200,11 @@ static int stonith_api_remove_level(stonith_t *st, int options, const char *node
     return rc;
 }
 
-static int stonith_api_register_level(stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list)
+xmlNode *
+create_level_registration_xml(const char *node, int level, stonith_key_value_t *device_list)
 {
-    int rc = 0;
-    xmlNode *data = NULL;
+    xmlNode *data = create_xml_node(NULL, F_STONITH_LEVEL);
 
-    data = create_xml_node(NULL, F_STONITH_LEVEL);
     crm_xml_add_int(data, XML_ATTR_ID, level);
     crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add(data, "origin", __FUNCTION__);
@@ -206,6 +213,14 @@ static int stonith_api_register_level(stonith_t *st, int options, const char *no
         xmlNode *dev = create_xml_node(data, F_STONITH_DEVICE);
         crm_xml_add(dev, XML_ATTR_ID, device_list->value);
     }
+
+    return data;
+}
+
+static int stonith_api_register_level(stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list)
+{
+    int rc = 0;
+    xmlNode *data = create_level_registration_xml(node, level, device_list);
 
     rc = stonith_send_command(st, STONITH_OP_LEVEL_ADD, data, NULL, options, 0);
     free_xml(data);
@@ -2024,3 +2039,4 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
     crm_free(name);
     return when;
 }
+
