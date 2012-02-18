@@ -92,8 +92,12 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	sed -i.sed s:\#global\ py_sitedir:\%global\ py_sitedir:g $@
 	sed -i.sed s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
 	sed -i.sed s:libtool-ltdl-devel::g $@
+	sed -i.sed s:byacc::g $@
 	sed -i.sed s:libqb-devel::g $@
 	sed -i.sed s:without\ cman:with\ cman:g $@
+	sed -i.sed s:.*pacemaker.service.*::g $@
+	sed -i.sed s:global\ cs_major.*:global\ cs_major\ 1:g $@
+	sed -i.sed s:global\ cs_minor.*:global\ cs_minor\ 4:g $@
 	@echo Rebuilt $@
 
 # Works for all fedora based distros
