@@ -425,7 +425,7 @@ get_ticket_state(gpointer key, gpointer value, gpointer user_data)
     const char *attr_key = key;
 
     const char *granted_prefix = "granted-ticket-";
-    const char *last_granted_prefix = "last-granted-ticket-";
+    const char *last_granted_prefix = "last-granted-";
     static int granted_prefix_strlen = 0;
     static int last_granted_prefix_strlen = 0;
 
