@@ -22,6 +22,7 @@
   <xi:include href="Ch-Utilization.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Stonith.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Status.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Multi-site-Clusters.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
   <xi:include href="Ap-FAQ.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ap-OCF.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
