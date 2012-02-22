@@ -391,7 +391,9 @@ do_test bug-lf-2551 "STONITH ordering for stop"
 do_test bug-lf-2606 "Stonith implies demote"
 do_test bug-lf-2474 "Ensure resource op timeout takes precedence over op_defaults"
 do_test bug-suse-707150 "Prevent vm-01 from starting due to colocation/ordering"
-
+do_test bug-1514-A-start-B-start "Issue #1514 - Order constraint with symmetric=false. Verify when A starts B starts."
+do_test bug-1514-A-stop-B-started "Issue #1514 - Order constraint with symmetric=false. Verify when A stops B does not stop if it has already started."
+do_test bug-1514-A-stopped-B-stopped "Issue #1514 - Order constraint with symmetric=false. Verify when A is stopped and B has not started, B does not start before A."
 
 echo ""
 do_test systemhealth1  "System Health ()               #1"

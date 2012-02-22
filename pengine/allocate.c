@@ -1497,6 +1497,36 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
 
 extern gboolean update_action(action_t * action);
 
+static int
+handle_non_symmetrical_order(order_constraint_t *order)
+{
+    resource_t *lh_rsc = order->lh_rsc;
+    resource_t *rh_rsc = order->rh_rsc;
+    enum rsc_role_e lh_rsc_role_next;
+    enum rsc_role_e rh_rsc_role;
+    char *op_type = NULL;
+    char *rsc_id = NULL;
+    int interval = 0;
+    int res = 0;
+
+    if (!lh_rsc || !rh_rsc) {
+        return res;
+    }
+
+    lh_rsc_role_next = lh_rsc->fns->state(lh_rsc, FALSE);
+    rh_rsc_role = rh_rsc->fns->state(lh_rsc, TRUE);
+    parse_op_key(order->lh_action_task, &rsc_id, &op_type, &interval);
+
+    if (safe_str_eq(op_type, RSC_STOP) && (rh_rsc_role == RSC_ROLE_STOPPED) && (lh_rsc_role_next == RSC_ROLE_STARTED)) {
+        res = 1;
+    } else if (safe_str_eq(op_type, RSC_START) && (rh_rsc_role == RSC_ROLE_STARTED) && (lh_rsc_role_next == RSC_ROLE_STOPPED)) {
+        res = 1;
+    }
+
+    crm_free(op_type);
+    return res;
+}
+
 gboolean
 stage7(pe_working_set_t * data_set)
 {
@@ -1518,6 +1548,11 @@ stage7(pe_working_set_t * data_set)
         resource_t *rsc = order->lh_rsc;
 
         crm_trace("Applying ordering constraint: %d", order->id);
+
+        if ((order->type & pe_order_non_symmetrical) && handle_non_symmetrical_order(order)) {
+            crm_trace("Skipping non-symmetrical order constraint: %d", order->id);
+            continue;
+        }
 
         if (rsc != NULL) {
             crm_trace("rsc_action-to-*");

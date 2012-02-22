@@ -1,0 +1,5 @@
+digraph "g" {
+"ClusterIP_stop_0 fc16-builder" -> "all_stopped" [ style = bold]
+"ClusterIP_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+}

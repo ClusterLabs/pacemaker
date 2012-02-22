@@ -304,6 +304,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         cons_weight |= pe_order_implies_then;
     }
 
+    cons_weight |= invert_bool == FALSE ? pe_order_non_symmetrical : 0;
     cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
     order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
 
@@ -830,6 +831,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
 
     sequential = crm_is_true(sequential_s);
     flags = get_flags(id, local_kind, action, action, FALSE);
+    flags |= crm_is_true(symmetrical) ? 0 : pe_order_non_symmetrical;
 
     for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
         if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
@@ -986,6 +988,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
 
     if (invert == FALSE) {
         flags = get_flags(id, kind, action_1, action_2, FALSE);
+        flags |= pe_order_non_symmetrical;
     } else {
         action_1 = invert_action(action_1);
         action_2 = invert_action(action_2);
