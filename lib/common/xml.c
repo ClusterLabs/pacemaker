@@ -710,8 +710,7 @@ filename2xml(const char *filename)
 	crm_free(input);
     }
 
-    if(output) {
-	xml = xmlDocGetRootElement(output);
+    if(output && (xml = xmlDocGetRootElement(output))) {
         strip_text_nodes(xml);
     }
     
