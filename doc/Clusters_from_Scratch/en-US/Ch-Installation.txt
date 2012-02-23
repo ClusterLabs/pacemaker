@@ -469,7 +469,7 @@ Repeat the Installation steps so that you have 2 Fedora nodes with the
 cluster software installed.
 
 For the purposes of this document, the additional node is called
-pcmk-2 with address 192.168.122.42.
+pcmk-2 with address 192.168.122.102.
 
 == Setup ==
 
