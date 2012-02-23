@@ -1556,6 +1556,8 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
              * 'then' has not yet occurred. */
             clear_bit_inplace(then->flags, pe_action_runnable);
             clear_bit_inplace(then->flags, pe_action_optional);
+        } else {
+            /* ignore... then is allowed to start/stop if it wants to. */
         }
     }
 
