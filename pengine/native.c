@@ -1539,6 +1539,26 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
 
+    if (type & pe_order_non_symmetrical) {
+        resource_t *then_rsc = then->rsc;
+        enum rsc_role_e then_rsc_role = then_rsc ? then_rsc->fns->state(then_rsc, TRUE) : 0;
+
+        if (!then_rsc) {
+            /* ignore */
+        } else if ((then_rsc_role == RSC_ROLE_STOPPED) && safe_str_eq(then->task, RSC_STOP)) {
+            /* ignore... if 'then' is supposed to be stopped after 'first', but
+             * then is already stopped, there is nothing to be done when non-symmetrical.  */
+        } else if ((then_rsc_role == RSC_ROLE_STARTED) && safe_str_eq(then->task, RSC_START)) {
+            /* ignore... if 'then' is supposed to be started after 'first', but
+             * then is already started, there is nothing to be done when non-symmetrical.  */
+        } else if (!(first_flags & pe_action_runnable)) {
+            /* prevent 'then' action from happening if 'first' is not runnable and
+             * 'then' has not yet occurred. */
+            clear_bit_inplace(then->flags, pe_action_runnable);
+            clear_bit_inplace(then->flags, pe_action_optional);
+        }
+    }
+
     if (type & pe_order_implies_first) {
         if ((filter & pe_action_optional) && (flags & pe_action_optional) == 0) {
             clear_bit_inplace(first->flags, pe_action_optional);

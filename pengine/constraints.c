@@ -51,6 +51,7 @@ enum pe_order_kind {
 
 enum pe_ordering get_flags(const char *id, enum pe_order_kind kind,
                            const char *action_first, const char *action_then, gboolean invert);
+enum pe_ordering get_non_symmetrical_flags(enum pe_order_kind kind);
 
 gboolean
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
@@ -304,8 +305,11 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         cons_weight |= pe_order_implies_then;
     }
 
-    cons_weight |= invert_bool == FALSE ? pe_order_non_symmetrical : 0;
-    cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
+    if (invert_bool == FALSE) {
+        cons_weight |= get_non_symmetrical_flags(kind);
+    } else {
+        cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
+    }
     order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
 
     crm_trace("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
@@ -765,6 +769,19 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
 }
 
 enum pe_ordering
+get_non_symmetrical_flags(enum pe_order_kind kind)
+{
+    enum pe_ordering flags = pe_order_optional;
+
+    if (kind == pe_order_kind_mandatory) {
+        flags |= pe_order_non_symmetrical;
+    } else if (kind == pe_order_kind_serialize) {
+        flags |= pe_order_serialize_only;
+    }
+    return flags;
+}
+
+enum pe_ordering
 get_flags(const char *id, enum pe_order_kind kind,
           const char *action_first, const char *action_then, gboolean invert)
 {
@@ -830,8 +847,11 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
     }
 
     sequential = crm_is_true(sequential_s);
-    flags = get_flags(id, local_kind, action, action, FALSE);
-    flags |= crm_is_true(symmetrical) ? 0 : pe_order_non_symmetrical;
+    if (crm_is_true(symmetrical)) {
+        flags = get_flags(id, local_kind, action, action, FALSE);
+    } else {
+        flags = get_non_symmetrical_flags(local_kind);
+    }
 
     for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
         if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
@@ -987,8 +1007,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     };
 
     if (invert == FALSE) {
-        flags = get_flags(id, kind, action_1, action_2, FALSE);
-        flags |= pe_order_non_symmetrical;
+        flags = get_non_symmetrical_flags(kind);
     } else {
         action_1 = invert_action(action_1);
         action_2 = invert_action(action_2);
