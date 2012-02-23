@@ -51,7 +51,7 @@ enum pe_order_kind {
 
 enum pe_ordering get_flags(const char *id, enum pe_order_kind kind,
                            const char *action_first, const char *action_then, gboolean invert);
-enum pe_ordering get_non_symmetrical_flags(enum pe_order_kind kind);
+enum pe_ordering get_asymmetrical_flags(enum pe_order_kind kind);
 
 gboolean
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
@@ -306,7 +306,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     if (invert_bool == FALSE) {
-        cons_weight |= get_non_symmetrical_flags(kind);
+        cons_weight |= get_asymmetrical_flags(kind);
     } else {
         cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
     }
@@ -769,12 +769,12 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
 }
 
 enum pe_ordering
-get_non_symmetrical_flags(enum pe_order_kind kind)
+get_asymmetrical_flags(enum pe_order_kind kind)
 {
     enum pe_ordering flags = pe_order_optional;
 
     if (kind == pe_order_kind_mandatory) {
-        flags |= pe_order_non_symmetrical;
+        flags |= pe_order_asymmetrical;
     } else if (kind == pe_order_kind_serialize) {
         flags |= pe_order_serialize_only;
     }
@@ -850,7 +850,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
     if (crm_is_true(symmetrical)) {
         flags = get_flags(id, local_kind, action, action, FALSE);
     } else {
-        flags = get_non_symmetrical_flags(local_kind);
+        flags = get_asymmetrical_flags(local_kind);
     }
 
     for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
@@ -1007,7 +1007,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     };
 
     if (invert == FALSE) {
-        flags = get_non_symmetrical_flags(kind);
+        flags = get_asymmetrical_flags(kind);
     } else {
         action_1 = invert_action(action_1);
         action_2 = invert_action(action_2);

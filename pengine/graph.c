@@ -248,13 +248,13 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         }
     }
 
-    if (type & pe_order_non_symmetrical) {
-        crm_trace("non_symmetrical: %s then %s", first->uuid, then->uuid);
+    if (type & pe_order_asymmetrical) {
+        crm_trace("asymmetrical: %s then %s", first->uuid, then->uuid);
         processed = TRUE;
         if (then->rsc) {
             changed |=
                 then->rsc->cmds->update_actions(first, then, node, flags & pe_action_runnable,
-                                                pe_action_runnable, pe_order_non_symmetrical);
+                                                pe_action_runnable, pe_order_asymmetrical);
         }
     }
 

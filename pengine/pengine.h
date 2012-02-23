@@ -64,7 +64,7 @@ enum pe_ordering {
     pe_order_implies_first_printed = 0x10000,   /* Like ..implies_first but only ensures 'first' is printed, not manditory */
     pe_order_implies_then_printed = 0x20000,    /* Like ..implies_then but only ensures 'then' is printed, not manditory */
 
-    pe_order_non_symmetrical = 0x100000,    /* Indicates non-symmetrical ordering constraint. */
+    pe_order_asymmetrical = 0x100000,    /* Indicates asymmetrical one way ordering constraint. */
 
     pe_order_trace = 0x4000000  /* test marker */
 };

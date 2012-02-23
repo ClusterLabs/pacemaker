@@ -1539,7 +1539,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
 
-    if (type & pe_order_non_symmetrical) {
+    if (type & pe_order_asymmetrical) {
         resource_t *then_rsc = then->rsc;
         enum rsc_role_e then_rsc_role = then_rsc ? then_rsc->fns->state(then_rsc, TRUE) : 0;
 
