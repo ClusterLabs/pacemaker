@@ -395,6 +395,11 @@ do_test bug-1514-A-start-B-start "Issue #1514 - symmetric=false. Verify when A s
 do_test bug-1514-A-stop-B-started "Issue #1514 - symmetric=false. Verify when A stops B does not stop if it has already started."
 do_test bug-1514-A-stopped-B-stopped "Issue #1514 - symmetric=false. Verify when A is stopped and B has not started, B does not start before A."
 do_test bug-1514-CthenAthenB-C-stopped " #1514 Verify when C then A is symmetrical=true, A then B is symmetrical=false, and C is stopped that nothing starts."
+do_test bug-1514-CLONE-A-start-B-start "Issue #1514 - symmetric=false. Verify when A starts B starts."
+do_test bug-1514-CLONE-A-stop-B-started "Issue #1514 - symmetric=false. Verify when A stops B does not stop if it has already started."
+do_test bug-1514-GROUP-A-start-B-start "Issue #1514 - symmetric=false. Verify when A starts B starts."
+do_test bug-1514-GROUP-A-stopped-B-started "Issue #1514 - symmetric=false. Verify when A stops B does not stop if it has already started."
+do_test bug-1514-GROUP-A-stopped-B-stopped "Issue #1514 - symmetric=false. Verify when A is stopped and B has not started, B does not start before A."
 
 echo ""
 do_test systemhealth1  "System Health ()               #1"
