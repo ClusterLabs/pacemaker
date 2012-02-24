@@ -39,6 +39,17 @@
 #  include <bzlib.h>
 #endif
 
+#if HAVE_LIBXML2
+#  include <libxml/parser.h>
+#  include <libxml/tree.h>
+#  include <libxml/relaxng.h>
+#endif
+
+#if HAVE_LIBXSLT
+#  include <libxslt/xslt.h>
+#  include <libxslt/transform.h>
+#endif
+
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
 #define BEST_EFFORT_STATUS 0
@@ -2373,16 +2384,6 @@ calculate_xml_versioned_digest(xmlNode *input, gboolean sort, gboolean do_filter
     return calculate_xml_digest_v2(input, do_filter);
 }
 
-
-
-#if HAVE_LIBXML2
-#  include <libxml/parser.h>
-#  include <libxml/tree.h>
-#  include <libxml/relaxng.h>
-#  include <libxslt/xslt.h>
-#  include <libxslt/transform.h>
-#endif
-
 static gboolean
 validate_with_dtd(
     xmlDocPtr doc, gboolean to_logs, const char *dtd_file) 
@@ -2707,6 +2708,7 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
     return FALSE;
 }
 
+#if HAVE_LIBXSLT
 static xmlNode *apply_transformation(xmlNode *xml, const char *transform) 
 {
     xmlNode *out = NULL;
@@ -2738,6 +2740,7 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
     
     return out;
 }
+#endif
 
 const char *get_schema_name(int version)
 {
@@ -2826,8 +2829,9 @@ int update_validation(
 		}
 		
 	    } else {
+#if HAVE_LIBXSLT
 		upgrade = apply_transformation(xml, known_schemas[lpc].transform);
-
+#endif
 		if(upgrade == NULL) {
 		    crm_err("Transformation %s failed", known_schemas[lpc].transform);
 		    rc = cib_transform_failed;

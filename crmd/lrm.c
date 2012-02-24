@@ -694,6 +694,10 @@ is_rsc_active(const char *rsc_id)
 
     } else if (entry->last->rc == EXECRA_NOT_RUNNING) {
         return FALSE;
+
+    } else if (entry->last->interval == 0 && entry->last->rc == EXECRA_NOT_CONFIGURED) {
+        /* Badly configured resources can't be reliably stopped */
+        return FALSE;
     }
 
     return TRUE;

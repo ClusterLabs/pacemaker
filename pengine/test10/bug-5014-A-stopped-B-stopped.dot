@@ -1,0 +1,13 @@
+digraph "g" {
+"ClusterIP2_monitor_0 fc16-builder" -> "probe_complete fc16-builder" [ style = bold]
+"ClusterIP2_monitor_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"ClusterIP2_monitor_30000 fc16-builder" [ style=dashed color="red" fontcolor="black"]
+"ClusterIP2_start_0 fc16-builder" -> "ClusterIP2_monitor_30000 fc16-builder" [ style = dashed]
+"ClusterIP2_start_0 fc16-builder" [ style=dashed color="red" fontcolor="black"]
+"ClusterIP_monitor_0 fc16-builder" -> "probe_complete fc16-builder" [ style = bold]
+"ClusterIP_monitor_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"probe_complete fc16-builder" -> "probe_complete" [ style = bold]
+"probe_complete fc16-builder" [ style=bold color="green" fontcolor="black"]
+"probe_complete" -> "ClusterIP2_start_0 fc16-builder" [ style = dashed]
+"probe_complete" [ style=bold color="green" fontcolor="orange"]
+}

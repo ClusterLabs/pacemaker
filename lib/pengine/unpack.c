@@ -1782,10 +1782,12 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
             }
 
             do_crm_log(actual_rc_i == EXECRA_NOT_INSTALLED ? LOG_NOTICE : LOG_ERR,
-                       "Hard error - %s failed with rc=%d: Preventing %s from re-starting %s %s",
-                       id, actual_rc_i, failed->id,
-                       effective_node ? "on" : "anywhere",
-                       effective_node ? effective_node->details->uname : "in the cluster");
+                       "Preventing %s from re-starting %s %s: operation %s failed '%s' (rc=%d)",
+                       failed->id,
+                       effective_node ? "on" : "anywhere in the cluster",
+                       effective_node ? effective_node->details->uname : "",
+                       task,
+                       execra_code2string(actual_rc_i), actual_rc_i);
 
             resource_location(failed, effective_node, -INFINITY, "hard-error", data_set);
             if (is_probe) {
