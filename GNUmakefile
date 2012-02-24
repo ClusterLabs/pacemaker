@@ -38,7 +38,9 @@ MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
 # openSUSE: /etc/SuSE-release
 # RHEL:     /etc/redhat-release
 # Fedora:   /etc/fedora-release, /etc/redhat-release, /etc/system-release
-PROFILE ?= $(shell test -e /etc/fedora-release && rpm --eval fedora-%{fedora}-%{_arch})
+F       ?= $(shell test -e /etc/fedora-release && rpm --eval %{fedora})
+ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
+MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 TAG     ?= $(shell git log --pretty="format:%h" -n 1)
 WITH    ?= 
@@ -131,7 +133,8 @@ mock-%:
 
 srpm:	srpm-$(DISTRO)
 
-mock:   mock-$(PROFILE)
+mock:   mock-$(MOCK_CFG)
+mock-next: mock-fedora-$(shell expr 1 + $(F))-$(ARCH)
 
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
