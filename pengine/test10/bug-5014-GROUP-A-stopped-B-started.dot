@@ -1,0 +1,10 @@
+digraph "g" {
+"ClusterIP_stop_0 fc16-builder" -> "all_stopped" [ style = bold]
+"ClusterIP_stop_0 fc16-builder" -> "group1_stopped_0" [ style = bold]
+"ClusterIP_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"group1_stop_0" -> "ClusterIP_stop_0 fc16-builder" [ style = bold]
+"group1_stop_0" -> "group1_stopped_0" [ style = bold]
+"group1_stop_0" [ style=bold color="green" fontcolor="orange"]
+"group1_stopped_0" [ style=bold color="green" fontcolor="orange"]
+}
