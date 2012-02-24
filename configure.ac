@@ -1174,6 +1174,7 @@ else
         CS_USES_LIBQB=1
 	CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS"
         COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS"
+        AC_CHECK_LIB(corosync_common, cs_strerror) 
 
     else
         aisreason="corosync/libqb IPC libraries not found by pkg_config"
