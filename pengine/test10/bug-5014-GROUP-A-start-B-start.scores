@@ -1,0 +1,7 @@
+Allocation scores:
+group_color: ClusterIP allocation score on fc16-builder: 0
+group_color: ClusterIP2 allocation score on fc16-builder: 0
+group_color: group1 allocation score on fc16-builder: 0
+group_color: group2 allocation score on fc16-builder: 0
+native_color: ClusterIP allocation score on fc16-builder: 0
+native_color: ClusterIP2 allocation score on fc16-builder: 0

@@ -1,0 +1,7 @@
+Allocation scores:
+clone_color: ClusterIP2:0 allocation score on fc16-builder: 0
+clone_color: ClusterIP:0 allocation score on fc16-builder: 0
+clone_color: clone1 allocation score on fc16-builder: 0
+clone_color: clone2 allocation score on fc16-builder: 0
+native_color: ClusterIP2:0 allocation score on fc16-builder: 0
+native_color: ClusterIP:0 allocation score on fc16-builder: 0

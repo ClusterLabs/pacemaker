@@ -1,0 +1,76 @@
+<cib epoch="59" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Wed Feb 22 10:43:45 2012" have-quorum="0" dc-uuid="fc16-builder">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-148fccf"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="fc16-builder" type="normal" uname="fc16-builder"/>
+    </nodes>
+    <resources>
+      <group id="group1">
+        <primitive class="ocf" id="ClusterIP" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ClusterIP-instance_attributes">
+            <nvpair id="ClusterIP-instance_attributes-ip" name="ip" value="192.168.122.101"/>
+            <nvpair id="ClusterIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          </instance_attributes>
+          <operations>
+            <op id="ClusterIP-monitor-30s" interval="30s" name="monitor"/>
+          </operations>
+          <meta_attributes id="ClusterIP-meta_attributes">
+        
+      </meta_attributes>
+        </primitive>
+        <meta_attributes id="group1-meta_attributes">
+          <nvpair id="group1-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+      </group>
+      <group id="group2">
+        <primitive class="ocf" id="ClusterIP2" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ClusterIP2-instance_attributes">
+            <nvpair id="ClusterIP2-instance_attributes-ip" name="ip" value="192.168.122.102"/>
+            <nvpair id="ClusterIP2-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          </instance_attributes>
+          <operations>
+            <op id="ClusterIP2-monitor-30s" interval="30s" name="monitor"/>
+          </operations>
+          <meta_attributes id="ClusterIP2-meta_attributes">
+        
+      </meta_attributes>
+        </primitive>
+        <meta_attributes id="group2-meta_attributes">
+          <nvpair id="group2-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_order first="group1" first-action="start" id="after1then2" score="INFINITY" symmetrical="false" then="group2" then-action="start"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="fc16-builder" uname="fc16-builder" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="fc16-builder">
+        <instance_attributes id="status-fc16-builder">
+          <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="fc16-builder">
+        <lrm_resources>
+          <lrm_resource id="ClusterIP2" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP2_last_0" operation_key="ClusterIP2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="11:4:0:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" transition-magic="0:0;11:4:0:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" call-id="6" rc-code="0" op-status="0" interval="0" op-digest="db8ed0d5f246c9076190133e86a498c8" last-run="1329929024" last-rc-change="1329929024" exec-time="40" queue-time="0"/>
+            <lrm_rsc_op id="ClusterIP2_monitor_30000" operation_key="ClusterIP2_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="12:4:0:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" transition-magic="0:0;12:4:0:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" call-id="7" rc-code="0" op-status="0" interval="30000" last-rc-change="1329929024" exec-time="30" queue-time="0" op-digest="fadce8a5a0ed18f251eae32d9c25699b"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP_last_0" operation_key="ClusterIP_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="4:3:0:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" transition-magic="0:0;4:3:0:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" call-id="4" rc-code="0" op-status="0" interval="0" op-digest="aa23ce1258f88c74b84a630cb3427eea" last-run="1329928934" last-rc-change="1329928934" exec-time="40" queue-time="0"/>
+            <lrm_rsc_op id="ClusterIP_monitor_30000" operation_key="ClusterIP_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="5:3:0:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" transition-magic="0:0;5:3:0:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" call-id="5" rc-code="0" op-status="0" interval="30000" last-rc-change="1329928934" exec-time="20" queue-time="0" op-digest="ca113bf5fb88ca21b009aca87e3c8fa1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
