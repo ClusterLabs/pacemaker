@@ -1,0 +1,11 @@
+digraph "g" {
+"MASTER_IP_start_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"MASTER_IP_stop_0 fc16-builder2" -> "MASTER_IP_start_0 fc16-builder" [ style = bold]
+"MASTER_IP_stop_0 fc16-builder2" -> "all_stopped" [ style = bold]
+"MASTER_IP_stop_0 fc16-builder2" [ style=bold color="green" fontcolor="black"]
+"SLAVE_IP_start_0 fc16-builder2" [ style=bold color="green" fontcolor="black"]
+"SLAVE_IP_stop_0 fc16-builder" -> "SLAVE_IP_start_0 fc16-builder2" [ style = bold]
+"SLAVE_IP_stop_0 fc16-builder" -> "all_stopped" [ style = bold]
+"SLAVE_IP_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+}
