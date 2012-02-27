@@ -1,0 +1,17 @@
+Allocation scores:
+DUMMY:0 promotion score on fc16-builder: 10
+DUMMY:1 promotion score on fc16-builder2: 5
+clone_color: DUMMY:0 allocation score on fc16-builder2: 0
+clone_color: DUMMY:0 allocation score on fc16-builder: 11
+clone_color: DUMMY:1 allocation score on fc16-builder2: 6
+clone_color: DUMMY:1 allocation score on fc16-builder: 0
+clone_color: MS_DUMMY allocation score on fc16-builder2: 0
+clone_color: MS_DUMMY allocation score on fc16-builder: 0
+native_color: DUMMY:0 allocation score on fc16-builder2: 0
+native_color: DUMMY:0 allocation score on fc16-builder: 11
+native_color: DUMMY:1 allocation score on fc16-builder2: 6
+native_color: DUMMY:1 allocation score on fc16-builder: -INFINITY
+native_color: MASTER_IP allocation score on fc16-builder2: -INFINITY
+native_color: MASTER_IP allocation score on fc16-builder: 11
+native_color: SLAVE_IP allocation score on fc16-builder2: 1000
+native_color: SLAVE_IP allocation score on fc16-builder: 101
