@@ -118,14 +118,16 @@ Pacemaker_Explained.txt: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(P
 
 # Update the translation template
 pot:
-	for book in Clusters_from_Scratch; do		 \
-		cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_pot; \
+	for book in $(docbook); do 				      \
+		echo "Updating translation templates in: $$book";     \
+		( cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_pot ); \
 	done
 
 # Update the actual translations
 po:
-	for book in $(docbook); do 						\
-		cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_po --langs=$(DOCBOOK_LANGS);\
+	for book in $(docbook); do 				      \
+		echo "Updating translations in: $$book";     \
+		( cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_po --langs=$(DOCBOOK_LANGS) );\
 	done
 
 if BUILD_DOCBOOK
