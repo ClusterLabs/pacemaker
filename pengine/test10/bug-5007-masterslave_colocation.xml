@@ -1,0 +1,88 @@
+<cib epoch="146" num_updates="33" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Sat Feb 25 18:09:20 2012" have-quorum="1" dc-uuid="fc16-builder">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-3119df0"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="fc16-builder" type="normal" uname="fc16-builder"/>
+      <node id="fc16-builder2" type="normal" uname="fc16-builder2"/>
+    </nodes>
+    <resources>
+      <master id="MS_DUMMY">
+        <meta_attributes id="MS_DUMMY-meta_attributes">
+          <nvpair id="MS_DUMMY-meta_attributes-target-role" name="target-role" value="Master"/>
+          <nvpair id="MS_DUMMY-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="MS_DUMMY-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="MS_DUMMY-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="MS_DUMMY-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="MS_DUMMY-meta_attributes-notify" name="notify" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="DUMMY" provider="pacemaker" type="Stateful">
+          <operations>
+            <op id="DUMMY-monitor-15s" interval="15" name="monitor" role="Slave" timeout="60s"/>
+            <op id="DUNNY-monitor-30s" interval="30" name="monitor" role="Master" timeout="60s"/>
+          </operations>
+        </primitive>
+      </master>
+      <primitive class="ocf" id="SLAVE_IP" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="MASTER_IP" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_colocation id="master_ip_colocation" rsc="MASTER_IP" score="INFINITY" with-rsc="MS_DUMMY" with-rsc-role="Master"/>
+      <rsc_colocation id="slave_ip_primary" rsc="SLAVE_IP" score="101" with-rsc="MS_DUMMY" with-rsc-role="Master"/>
+      <rsc_colocation id="slave_ip_secondary" rsc="SLAVE_IP" score="1000" with-rsc="MS_DUMMY" with-rsc-role="Slave"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="fc16-builder" uname="fc16-builder" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="fc16-builder">
+        <instance_attributes id="status-fc16-builder">
+          <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-fc16-builder-master-DUMMY.0" name="master-DUMMY:0" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="fc16-builder">
+        <lrm_resources>
+          <lrm_resource id="DUMMY:0" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="DUMMY:0_last_0" operation_key="DUMMY:0_promote_0" operation="promote" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="7:3:0:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" transition-magic="0:0;7:3:0:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" call-id="12" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="DUMMY:0_monitor_30000" operation_key="DUMMY:0_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="8:4:8:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" transition-magic="0:8;8:4:8:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" call-id="14" rc-code="8" op-status="0" interval="30000" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="SLAVE_IP" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="SLAVE_IP_last_0" operation_key="SLAVE_IP_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="42:7:0:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" transition-magic="0:0;42:7:0:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" call-id="19" rc-code="0" op-status="0" interval="0" last-run="1330214959" last-rc-change="1330214959" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="MASTER_IP" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="MASTER_IP_last_0" operation_key="MASTER_IP_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="7:7:7:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" transition-magic="0:7;7:7:7:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1330214959" last-rc-change="1330214959" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="fc16-builder2" uname="fc16-builder2" ha="active" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" expected="member" shutdown="0">
+      <transient_attributes id="fc16-builder2">
+        <instance_attributes id="status-fc16-builder2">
+          <nvpair id="status-fc16-builder2-master-DUMMY.1" name="master-DUMMY:1" value="5"/>
+          <nvpair id="status-fc16-builder2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="fc16-builder2">
+        <lrm_resources>
+          <lrm_resource id="DUMMY:1" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="DUMMY:1_last_0" operation_key="DUMMY:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="11:5:0:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" transition-magic="0:0;11:5:0:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" call-id="3" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="DUMMY:1_monitor_15000" operation_key="DUMMY:1_monitor_15000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="12:5:0:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" transition-magic="0:0;12:5:0:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" call-id="5" rc-code="0" op-status="0" interval="15000" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="SLAVE_IP" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="SLAVE_IP_last_0" operation_key="SLAVE_IP_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:7:7:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" transition-magic="0:7;9:7:7:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1330214959" last-rc-change="1330214959" exec-time="150" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="MASTER_IP" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="MASTER_IP_last_0" operation_key="MASTER_IP_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="43:7:0:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" transition-magic="0:0;43:7:0:28b3ec3e-1bd8-4fa4-b026-c4e028a0be52" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1330214959" last-rc-change="1330214959" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
