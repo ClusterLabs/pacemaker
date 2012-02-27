@@ -120,7 +120,7 @@ on the remaining nodes.
 
 
 Set `placement-strategy` with `crm_attribute`:
-[source,XML]
+[source,Bash]
 ----
 # crm_attribute --attr-name placement-strategy --attr-value balanced
 ----
