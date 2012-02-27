@@ -9,6 +9,7 @@
       <zeroOrMore>
 	<choice>
 	  <ref name="element-primitive"/>
+	  <ref name="element-template"/>
 	  <ref name="element-group"/>
 	  <ref name="element-clone"/>
 	  <ref name="element-master"/>
@@ -18,6 +19,44 @@
 
   <define name="element-primitive">
     <element name="primitive">
+      <interleave>
+	<attribute name="id"><data type="ID"/></attribute>
+	<choice>
+	  <group>
+	    <choice>
+	      <group>
+		<attribute name="class"><value>ocf</value></attribute>
+		<attribute name="provider"><text/></attribute>
+	      </group>
+	      <attribute name="class">
+		<choice>
+		  <value>lsb</value>
+		  <value>heartbeat</value>
+		  <value>stonith</value>
+		  <value>upstart</value>
+		</choice>
+	      </attribute>
+	    </choice>
+	    <attribute name="type"><text/></attribute>
+	  </group>
+	  <attribute name="template"><data type="IDREF"/></attribute>
+	</choice>
+	<optional>
+	  <attribute name="description"><text/></attribute>
+	</optional>
+	<ref name="element-resource-extra"/>
+	<ref name="element-operations"/>
+      	<zeroOrMore>
+	  <element name="utilization">
+	    <externalRef href="nvset.rng"/>
+	  </element>
+      	</zeroOrMore>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-template">
+    <element name="template">
       <interleave>
 	<attribute name="id"><data type="ID"/></attribute>
 	<choice>
