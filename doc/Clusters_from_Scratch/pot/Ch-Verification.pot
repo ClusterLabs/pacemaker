@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-21T11:01:27\n"
-"PO-Revision-Date: 2010-12-21T11:01:27\n"
+"POT-Creation-Date: 2012-02-27T09:17:57\n"
+"PO-Revision-Date: 2012-02-27T09:17:57\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -27,12 +27,10 @@ msgstr ""
 msgid "Start Corosync on the first node"
 msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
-msgid "\n"
-"[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
-"<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
-""
+msgid "# /etc/init.d/corosync start\n"
+"Starting Corosync Cluster Engine (corosync): [ OK ]"
 msgstr ""
 
 #. Tag: para
@@ -40,18 +38,16 @@ msgstr ""
 msgid "Check the cluster started correctly and that an initial membership was able to form"
 msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
-msgid "\n"
-"[root@pcmk-1 ~]# <userinput>grep -e \"corosync.*network interface\" -e \"Corosync Cluster Engine\" -e \"Successfully read main configuration file\" /var/log/messages</userinput>\n"
-"Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN  ] Corosync Cluster Engine ('1.1.0'): started and ready to provide service.\n"
-"Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN  ] Successfully read main configuration file '/etc/corosync/corosync.conf'.\n"
-"[root@pcmk-1 ~]# <userinput>grep TOTEM /var/log/messages</userinput>\n"
+msgid "# grep -e \"corosync.*network interface\" -e \"Corosync Cluster Engine\" -e \"Successfully read main configuration file\" /var/log/messages\n"
+"Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN ] Corosync Cluster Engine ('1.1.0'): started and ready to provide service.\n"
+"Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN ] Successfully read main configuration file '/etc/corosync/corosync.conf'.\n"
+"# grep TOTEM /var/log/messages\n"
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transport (UDP/IP).\n"
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>The network interface [192.168.122.101] is now up.</emphasis>\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed.</emphasis>\n"
-""
+"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] The network interface [192.168.122.101] is now up.\n"
+"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] A processor joined or left the membership and a new membership was formed."
 msgstr ""
 
 #. Tag: para
@@ -59,13 +55,11 @@ msgstr ""
 msgid "With one node functional, its now safe to start Corosync on the second node as well."
 msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
-msgid "\n"
-"[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- /etc/init.d/corosync start</userinput>\n"
-"<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
-"[root@pcmk-1 ~]#\n"
-""
+msgid "# ssh pcmk-2 -- /etc/init.d/corosync start\n"
+"Starting Corosync Cluster Engine (corosync): [ OK ]\n"
+"#"
 msgstr ""
 
 #. Tag: para
@@ -73,16 +67,14 @@ msgstr ""
 msgid "Check the cluster formed correctly"
 msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
-msgid "\n"
-"[root@pcmk-1 ~]# <userinput>grep TOTEM /var/log/messages</userinput>\n"
+msgid "# grep TOTEM /var/log/messages\n"
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transport (UDP/IP).\n"
 "Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>The network interface [192.168.122.101] is now up.</emphasis>\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed.</emphasis>\n"
-"Aug 27 09:12:11 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed</emphasis>.\n"
-""
+"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] The network interface [192.168.122.101] is now up.\n"
+"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] A processor joined or left the membership and a new membership was formed.\n"
+"Aug 27 09:12:11 pcmk-1 corosync[1540]: [TOTEM ] A processor joined or left the membership and a new membership was formed."
 msgstr ""
 
 #. Tag: title
@@ -95,61 +87,83 @@ msgstr ""
 msgid "Now that we have confirmed that Corosync is functional we can check the rest of the stack."
 msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
-msgid "\n"
-"[root@pcmk-1 ~]# <userinput>grep pcmk_startup /var/log/messages</userinput>\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>CRM: Initialized</emphasis>\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] Logging: Initialized pcmk_startup\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: Maximum core file size is: 18446744073709551615\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>Service: 9</emphasis>\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>Local hostname: pcmk-1</emphasis>\n"
-""
+msgid "# grep pcmk_startup /var/log/messages\n"
+"Aug 27 09:05:35 pcmk-1 corosync[1540]:  [pcmk ] info: pcmk_startup: CRM: InitializedAug 27 09:05:35 pcmk-1 corosync[1540]:  [pcmk ] Logging: Initialized pcmk_startup\n"
+"Aug 27 09:05:35 pcmk-1 corosync[1540]:  [pcmk ] info: pcmk_startup: Maximum core file size is: 18446744073709551615\n"
+"Aug 27 09:05:35 pcmk-1 corosync[1540]:  [pcmk ] info: pcmk_startup: Service: 9Aug 27 09:05:35 pcmk-1 corosync[1540]:  [pcmk ] info: pcmk_startup: Local hostname: pcmk-1"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now verify the Pacemaker processes have been started"
+msgid "Now try starting Pacemaker and check the necessary processes have been started"
 msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
-msgid "\n"
-"[root@pcmk-1 ~]# <userinput>ps axf</userinput>\n"
-"  PID TTY      STAT   TIME COMMAND\n"
-"    2 ?        S&lt;     0:00 [kthreadd]\n"
-"    3 ?        S&lt;     0:00  \\_ [migration/0]\n"
-"... lots of processes ...\n"
-" 2166 pts/0    SLl    0:01 <emphasis>/usr/sbin/corosync</emphasis>\n"
-" 2172 ?        SLs    0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>stonithd</emphasis>\n"
-" 2173 pts/0    S      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>cib</emphasis>\n"
-" 2174 pts/0    S      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>lrmd</emphasis>\n"
-" 2175 pts/0    S      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>attrd</emphasis>\n"
-" 2176 pts/0    S      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>pengine</emphasis>\n"
-" 2177 pts/0    S      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>crmd</emphasis>\n"
-""
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "And finally, check for any ERRORs during startup, there shouldn’t be any, and display the cluster’s status."
-msgstr ""
-
-#. Tag: screen
-#, no-c-format
-msgid "\n"
-"[root@pcmk-1 ~]# <userinput>grep ERROR: /var/log/messages | grep -v unpack_resources</userinput>\n"
-"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
-"============\n"
-"Last updated: Thu Aug 27 16:54:55 2009\n"
-"<emphasis>Stack: openais</emphasis>\n"
-"Current DC: pcmk-1 - <emphasis>partition with quorum</emphasis>\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
-"<emphasis>2 Nodes configured, 2 expected votes</emphasis>\n"
-"<emphasis>0 Resources configured</emphasis>.\n"
-"============\n"
+msgid "# /etc/init.d/pacemaker start\n"
+"Starting Pacemaker Cluster Manager: [ OK ]\n"
 "\n"
-"<emphasis>Online: [ pcmk-1 pcmk-2 ]</emphasis>\n"
-""
+"# grep -e pacemakerd.*get_config_opt -e pacemakerd.*start_child -e \"Starting Pacemaker\" /var/log/messages\n"
+"Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'pacemaker' for option: name\n"
+"Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found '1' for option: ver\n"
+"Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Defaulting to 'no' for option: use_logd\n"
+"Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Defaulting to 'no' for option: use_mgmtd\n"
+"Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'on' for option: debug\n"
+"Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'yes' for option: to_logfile\n"
+"Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found '/var/log/corosync.log' for option: logfile\n"
+"Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'yes' for option: to_syslog\n"
+"Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'daemon' for option: syslog_facility\n"
+"Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: main: Starting Pacemaker 1.1.5 (Build: 31f088949239+):  docbook-manpages publican ncurses trace-logging cman cs-quorum heartbeat corosync snmp libesmtp\n"
+"Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14022 for process stonith-ng\n"
+"Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14023 for process cib\n"
+"Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14024 for process lrmd\n"
+"Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14025 for process attrd\n"
+"Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14026 for process pengine\n"
+"Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14027 for process crmd\n"
+"\n"
+"# ps axf PID TTY   STAT  TIME COMMAND\n"
+"  2 ?    S&lt;   0:00 [kthreadd]\n"
+"  3 ?    S&lt;   0:00 \\_ [migration/0]\n"
+"... lots of processes ...\n"
+"13990 ?  S    0:01 pacemakerd\n"
+"14022 ?  Sa   0:00 \\_ /usr/lib64/heartbeat/stonithd\n"
+"14023 ?  Sa   0:00 \\_ /usr/lib64/heartbeat/cib\n"
+"14024 ?  Sa   0:00 \\_ /usr/lib64/heartbeat/lrmd\n"
+"14025 ?  Sa   0:00 \\_ /usr/lib64/heartbeat/attrd\n"
+"14026 ?  Sa   0:00 \\_ /usr/lib64/heartbeat/pengine\n"
+"14027 ?  Sa   0:00 \\_ /usr/lib64/heartbeat/crmd"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Next, check for any ERRORs during startup - there shouldn’t be any."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "# grep ERROR: /var/log/messages | grep -v unpack_resources\n"
+"#"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Repeat on the other node and display the cluster’s status."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "# ssh pcmk-2 -- /etc/init.d/pacemaker start\n"
+"Starting Pacemaker Cluster Manager: [ OK ]\n"
+"# crm_mon\n"
+"============\n"
+"Last updated: Thu Aug 27 16:54:55 2009Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\n"
+"2 Nodes configured, 2 expected votes\n"
+"0 Resources configured.\n"
+"============\n"
+"Online: [ pcmk-1 pcmk-2 ]"
 msgstr ""
 

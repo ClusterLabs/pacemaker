@@ -1,0 +1,144 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2012-02-27T09:17:56\n"
+"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "init-Script LSB Compliance"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The relevant part of <indexterm significance=\"preferred\"><primary>LSB init scripts</primary></indexterm><indexterm><primary>init scripts</primary><secondary>compatibility</secondary></indexterm>LSB spec<footnote><para> <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\" /></para></footnote> includes a description of all the return codes listed here."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Assuming <literal>some_service</literal> is configured correctly and currently not active, the following sequence will help you determine if it is LSB compatible:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start (stopped):"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>/etc/init.d/some_service start ; echo \"result: $?\"</command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the service start?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the command print result: 0 (in addition to the regular output)?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Status (running):"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>/etc/init.d/some_service status ; echo \"result: $?\" </command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the script accept the command?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the script indicate the service was running?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start (running):"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command> /etc/init.d/some_service start ; echo \"result: $?\" </command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Is the service still running?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Stop (running):"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>/etc/init.d/some_service stop ; echo \"result: $?\" </command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Was the service stopped?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Status (stopped):"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the script indicate the service was not running?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the command print result: 3 (in addition to the regular output)?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Stop (stopped):"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Is the service still stopped?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Status (failed):"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This step is not readily testable and relies on manual inspection of the script."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The script can use one of the error codes (other than 3) listed in the LSB spec to indicate that it is active but failed. This tells the cluster that before moving the resource to another node, it needs to stop it on the existing one first."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the answer to any of the above questions is no, then the script is not LSB compliant. Your options are then to either fix the script or write an OCF agent based on the existing script."
+msgstr ""
+

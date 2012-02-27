@@ -1,0 +1,189 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2012-02-27T09:17:56\n"
+"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Debugging Cluster Startup"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Corosync"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Prerequisites"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Minimum logging configuration"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<userinput>\n"
+"  # /etc/init.d/openais start\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
+"  logging {\n"
+"      to_syslog: yes\n"
+"      syslog_facility: daemon\n"
+"  }\n"
+"	    </computeroutput>\n"
+"	  "
+msgstr ""
+
+#. Tag: caption
+#, no-c-format
+msgid "Whatever other logging you have, these two lines are required for Pacemaker clusters"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Confirm Corosync Started"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Expected output when starting openais"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "<userinput>\n"
+"  # /etc/init.d/openais start\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
+"  Starting Corosync daemon (aisexec): starting... rc=0: OK\n"
+"	    </computeroutput>\n"
+"	  "
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Expected log messages - startup"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "<userinput>\n"
+"  # grep -e \"openais.*network interface\" -e \"AIS Executive Service\" /var/log/messages\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
+"  Aug 27 16:23:37 test1 openais[26337]: [MAIN ] AIS Executive Service RELEASE 'subrev 1152 version 0.80'\n"
+"  Aug 27 16:23:38 test1 openais[26337]: [MAIN ] AIS Executive Service: started and ready to provide service.\n"
+"  Aug 27 16:23:38 test1 openais[26337]: [TOTEM] The network interface [192.168.9.41] is now up.\n"
+"	    </computeroutput>\n"
+"	  "
+msgstr ""
+
+#. Tag: caption
+#, no-c-format
+msgid "The versions may differ, but you should see Corosync indicate it started and sucessfully attached to the machine's network interface"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Expected log messages - membership"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "<userinput>\n"
+"  # grep CLM /var/log/messages\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] CLM CONFIGURATION CHANGE\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] New Configuration:\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Left:\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Joined:\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] CLM CONFIGURATION CHANGE\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] New Configuration:\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ]     r(0) ip(192.168.9.41) \n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Left:\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Joined:\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ]     r(0) ip(192.168.9.41) \n"
+"  Aug 27 16:53:15 test1 openais[2166]: [CLM  ] got nodejoin message 192.168.9.41\n"
+"	    </computeroutput>\n"
+"	  "
+msgstr ""
+
+#. Tag: caption
+#, no-c-format
+msgid "The exact messages will differ, but you should see a new membership formed with the real IP address of your node"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Checking Pacemaker"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now that we have confirmed that Corosync is functional we can check the rest of the stack."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Expected Pacemaker startup logging for Corosync"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "<userinput>\n"
+"  # grep pcmk_plugin_init /var/log/messages\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: CRM: Initialized\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] Logging: Initialized pcmk_plugin_init\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: Service: 9\n"
+"  Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: Local hostname: test1\n"
+"	    </computeroutput>\n"
+"	  "
+msgstr ""
+
+#. Tag: caption
+#, no-c-format
+msgid "If you don't see these messages, or some like them, there is likely a problem finding or loading the pacemaker plugin."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Expected process listing on a 64-bit machine"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "<userinput>\n"
+"  # ps axf\n"
+"	    </userinput>\n"
+"	    <computeroutput>\n"
+"  3718 ?        Ssl    0:05 /usr/sbin/aisexec\n"
+"  3723 ?        SLs    0:00  \\_ /usr/lib64/heartbeat/stonithd\n"
+"  3724 ?        S      0:05  \\_ /usr/lib64/heartbeat/cib\n"
+"  3725 ?        S      0:21  \\_ /usr/lib64/heartbeat/lrmd\n"
+"  3726 ?        S      0:01  \\_ /usr/lib64/heartbeat/attrd\n"
+"  3727 ?        S      0:00  \\_ /usr/lib64/heartbeat/pengine\n"
+"  3728 ?        S      0:01  \\_ /usr/lib64/heartbeat/crmd\n"
+"	    </computeroutput>\n"
+"	  "
+msgstr ""
+
+#. Tag: caption
+#, no-c-format
+msgid "On 32-bit systems the exact path may differ, but all the above processes should be listed."
+msgstr ""
+

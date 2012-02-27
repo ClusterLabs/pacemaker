@@ -1,0 +1,204 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2012-02-27T09:17:56\n"
+"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Installation"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Choosing a <indexterm significance=\"preferred\"><primary>Cluster Stack</primary><secondary>choosing one</secondary></indexterm>Cluster Stack"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Ultimately the choice of cluster stack is a personal decision that must be made in the context of you or your company's needs and strategic direction. Pacemaker currently functions equally well with both stacks."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Here are some factors that may influence the decision:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "SUSE/Novell, Red Hat and Oracle are all putting their collective weight behind the Corosync cluster stack."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Cluster Stack</primary><secondary>Corosync</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Corosync</primary></indexterm>Corosync is an OSI Certified implementation of an industry standard (the Service Availability Forum Application Interface Specification)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Using Corosync gives your applications access to the following additional cluster services"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "checkpoint service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "distributed locking service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "extended virtual synchronization service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "cluster closed process group service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "It is likely that Pacemaker, at some point in the future, will make use of some of these additional services not provided by Heartbeat"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To date, Pacemaker has received less real-world testing on Corosync than it has on <indexterm significance=\"preferred\"><primary>Cluster Stack</primary><secondary>Heartbeat</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Heartbeat</primary></indexterm>Heartbeat."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Enabling Pacemaker"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "For Corosync"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The Corosync configuration is normally located in <filename>/etc/corosync/corosync.conf</filename> and an example for a machine with an address of <literal>1.2.3.4</literal> in a cluster communicating on port 1234 (without peer authentication and message encryption) is shown below."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "An example Corosync configuration file"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "totem {\n"
+"      version: 2\n"
+"      secauth: off\n"
+"      threads: 0\n"
+"      interface {\n"
+"          ringnumber: 0\n"
+"          bindnetaddr: 1.2.3.4\n"
+"          mcastaddr: 226.94.1.1\n"
+"          mcastport: 1234\n"
+"      }\n"
+"  }\n"
+"  logging {\n"
+"      fileline: off\n"
+"      to_syslog: yes\n"
+"      syslog_facility: daemon\n"
+"  }\n"
+"  amf {\n"
+"      mode: disabled\n"
+"  }\n"
+"	"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The logging should be mostly obvious and the amf section refers to the Availability Management Framework and is not covered in this document."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The interesting part of the configuration is the totem section. This is where we define how the node can communicate with the rest of the cluster and what protocol version and options (including encryption<footnote> <para>Please consult the <ulink url=\"http://www.corosync.org/\">Corosync website</ulink> and documentation for details on enabling encryption and peer authentication for the cluster.</para> </footnote>) it should use. Beginners are encouraged to use the values shown and modify the interface section based on their network."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "It is also possible to configure Corosync for an IPv6 based environment. Simply configure <literal>bindnetaddr</literal> and <literal>mcastaddr</literal> with their IPv6 equivalents, eg."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Example options for an IPv6 environment"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "bindnetaddr: fec0::1:a800:4ff:fe00:20 \n"
+"  mcastaddr: ff05::1\n"
+"	  "
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To tell Corosync to use the Pacemaker cluster manager, add the following fragment to a functional Corosync configuration and restart the cluster."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configuration fragment for enabling Pacemaker under Corosync"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "aisexec {\n"
+"    user:  root\n"
+"    group: root\n"
+"}\n"
+"service {\n"
+"    name: pacemaker\n"
+"    ver: 0\n"
+"}\n"
+"	  "
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster needs to be run as root so that its child processes (the <literal>lrmd</literal> in particular) have sufficient privileges to perform the actions requested of it. After all, a cluster manager that can't add an IP address or start apache is of little use."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The second directive is the one that actually instructs the cluster to run Pacemaker."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "For Heartbeat"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Add the following to a functional <filename>ha.cf</filename> configuration file and restart Heartbeat:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configuration fragment for enabling Pacemaker under Heartbeat"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "crm respawn\n"
+"	  "
+msgstr ""
+

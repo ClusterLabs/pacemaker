@@ -1,0 +1,179 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2012-02-27T09:17:56\n"
+"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "What Changed in 1.0"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "New"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Failure timeouts. See <xref linkend=\"s-failure-migration\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "New section for resource and operation defaults. See <xref linkend=\"s-resource-defaults\" /> and <xref linkend=\"s-operation-defaults\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Tool for making offline configuration changes. See <xref linkend=\"s-config-sandboxes\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>Rules, instance_attributes, meta_attributes</literal> and sets of operations can be defined once and referenced in multiple places. See <xref linkend=\"s-reusing-config-elements\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The CIB now accepts XPath-based create/modify/delete operations. See the <command>cibadmin</command> help text."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Multi-dimensional colocation and ordering constraints. See <xref linkend=\"s-resource-sets-ordering\" /> and <xref linkend=\"s-resource-sets-collocation\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The ability to connect to the CIB from non-cluster machines. See <xref linkend=\"s-remote-connection\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allow recurring actions to be triggered at known times. See <xref linkend=\"s-recurring-start\" />"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Changed"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Syntax"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All resource and cluster options now use dashes (-) instead of underscores (_)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>master_slave</literal> was renamed to <literal>master</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>attributes</literal> container tag was removed"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The operation field <literal>pre-req</literal> has been renamed <literal>requires</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All operations must have an <literal>interval</literal>, <literal>start</literal>/<literal>stop</literal> must have it set to zero"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>stonith-enabled</literal> option now defaults to true."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster will refuse to start resources if <literal>stonith-enabled</literal> is true (or unset) and no STONITH resources have been defined"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The attributes of colocation and ordering constraints were renamed for clarity. See <xref linkend=\"s-resource-ordering\" /> and <xref linkend=\"s-resource-colocation\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>resource-failure-stickiness</literal> has been replaced by <literal>migration-threshold</literal>. See <xref linkend=\"s-failure-migration\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The parameters for command-line tools have been made consistent"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Switched to <indexterm><primary>RelaxNG</primary></indexterm>RelaxNG schema validation and <indexterm><primary>libxml2</primary></indexterm><filename>libxml2</filename> parser"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "id fields are now XML IDs which have the following limitations:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "id's cannot contain colons (:)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "id's cannot begin with a number"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "id's must be globally unique (not just unique for that tag)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Some fields (such as those in constraints that refer to resources) are IDREFs. This means that they must reference existing resources or objects in order for the configuration to be valid. Removing an object which is referenced elsewhere will therefore fail."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed. This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0. This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Ping node information no longer needs to be added to <filename>ha.cf</filename>. Simply include the lists of hosts in your ping resource(s)."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Removed"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "It is no longer possible to set resource meta options as top-level attributes. Use meta attributes instead."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resource and operation defaults are no longer read from <literal>crm_config</literal>. See <xref linkend=\"s-resource-defaults\" /> and <xref linkend=\"s-operation-defaults\" /> instead."
+msgstr ""
+

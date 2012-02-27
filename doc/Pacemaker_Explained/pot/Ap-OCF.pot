@@ -1,0 +1,529 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2012-02-27T09:17:56\n"
+"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "More About OCF Resource Agents"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Location of Custom Scripts"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF Resource Agents</primary></indexterm>OCF Resource Agents are found in <filename>/usr/lib/ocf/resource.d/<replaceable>provider</replaceable></filename>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When creating your own agents, you are encouraged to create a new directory under <filename>/usr/lib/ocf/resource.d/</filename> so that they are not confused with (or overwritten by) the agents shipped with Heartbeat. So, for example, if you chose the provider name of bigCorp and wanted a new resource named bigApp, you would create a script called <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> and define a resource:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;primitive id=\"custom-app\" class=\"ocf\" provider=\"bigCorp\" type=\"bigApp\"/&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Actions"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All OCF Resource Agents are required to implement the following actions"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Required Actions for OCF Agents"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Action"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Instructions"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>start action</primary></indexterm> <indexterm><primary>action</primary><secondary>start</secondary></indexterm>start"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Start the resource"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully active."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>stop action</primary></indexterm> <indexterm><primary>action</primary><secondary>stop</secondary></indexterm>stop"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Stop the resource"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully stopped."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>monitor action</primary></indexterm> <indexterm><primary>action</primary><secondary>monitor</secondary></indexterm>monitor"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Check the resource's state"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Exit 0 if the resource is running, 7 if it is stopped, and anything else if it is failed."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "NOTE: The monitor script should test the state of the resource on the local machine only."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>meta-data action</primary></indexterm> <indexterm><primary>action</primary><secondary>meta-data</secondary></indexterm>meta-data"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Describe the resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Provide information about this resource as an XML snippet. Exit with 0."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "NOTE: This is <emphasis>not</emphasis> performed as root."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>validate-all action</primary></indexterm> <indexterm><primary>action</primary><secondary>validate-all</secondary></indexterm>validate-all"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Verify the supplied parameters"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Exit with 0 if parameters are valid, 2 if not valid, 6 if resource is not configured."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Additional requirements (not part of the OCF specs) are placed on agents that will be used for advanced concepts like <link linkend=\"s-resource-clone\">clones</link> and <link linkend=\"s-resource-multistate\">multi-state</link> resources."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Optional Actions for OCF Agents"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>promote action</primary></indexterm> <indexterm><primary>action</primary><secondary>promote</secondary></indexterm>promote"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Promote the local instance of a multi-state resource to the master/primary state."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Return 0 on success."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>demote action</primary></indexterm> <indexterm><primary>action</primary><secondary>demote</secondary></indexterm>demote"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Demote the local instance of a multi-state resource to the slave/secondary state."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>notify action</primary></indexterm> <indexterm><primary>action</primary><secondary>notify</secondary></indexterm>notify"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Used by the cluster to send the agent pre and post notification events telling the resource what has happened and will happen."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Must not fail. Must exit with 0."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "One action specified in the OCF specs is not currently used by the cluster:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>recover</literal> - a variant of the <literal>start</literal> action, this should try to recover a resource locally."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Remember to use <indexterm significance=\"preferred\"><primary>ocf-tester</primary></indexterm><filename>ocf-tester</filename> to verify that your new agent complies with the OCF standard properly."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "How are OCF Return Codes Interpreted?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The first thing the cluster does is to check the return code against the expected result. If the result does not match the expected value, then the operation is considered to have failed and recovery action is initiated."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "There are three types of failure recovery:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Types of recovery performed by the cluster"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Type"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Action Taken by the Cluster"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>soft error type</primary></indexterm> <indexterm><primary>error type</primary><secondary>soft</secondary></indexterm>soft"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "A transient error occurred"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Restart the resource or move it to a new location"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>hard error type</primary></indexterm> <indexterm><primary>error type</primary><secondary>hard</secondary></indexterm>hard"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "A non-transient error that may be specific to the current node occurred"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Move the resource elsewhere and prevent it from being retried on the current node"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>fatal error type</primary></indexterm> <indexterm><primary>error type</primary><secondary>fatal</secondary></indexterm>fatal"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "A non-transient error that will be common to all cluster nodes (eg. a bad configuration was specified)"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Stop the resource and prevent it from being started on any cluster node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Assuming an action is considered to have failed, the following table outlines the different OCF return codes and the type of recovery the cluster will initiate when it is received."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "OCF Return Codes and their Recovery Types"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "RC"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF Alias"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "RT"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>0</secondary></indexterm>0"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_SUCCESS</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_SUCCESS</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_SUCCESS</secondary></indexterm>OCF_SUCCESS"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Success. The command completed successfully. This is the expected result for all start, stop, promote and demote commands."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "soft"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>1</secondary></indexterm>1"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>GENERIC</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>GENERIC</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>GENERIC</tertiary></indexterm> OCF_ERR_GENERIC"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Generic \"there was a problem\" error code."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>2</secondary></indexterm>2"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>ARGS</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>ARGS</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>ARGS</tertiary></indexterm>OCF_ERR_ARGS"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource's configuration is not valid on this machine. Eg. refers to a location/tool not found on the node."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "hard"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>3</secondary></indexterm>3"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>UNIMPLEMENTED</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>UNIMPLEMENTED</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>UNIMPLEMENTED</tertiary></indexterm>OCF_ERR_UNIMPLEMENTED"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "The requested action is not implemented."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>4</secondary></indexterm>4"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>PERM</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>PERM</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>PERM</tertiary></indexterm>OCF_ERR_PERM"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource agent does not have sufficient privileges to complete the task."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>5</secondary></indexterm>5"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>INSTALLED</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>INSTALLED</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>INSTALLED</tertiary></indexterm>OCF_ERR_INSTALLED"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "The tools required by the resource are not installed on this machine."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>6</secondary></indexterm>6"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_ERR_</primary><secondary>CONFIGURED</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_ERR_</secondary><tertiary>CONFIGURED</tertiary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_ERR_</secondary><tertiary>CONFIGURED</tertiary></indexterm>OCF_ERR_CONFIGURED"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource's configuration is invalid. Eg. required parameters are missing."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "fatal"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>7</secondary></indexterm>7"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_NOT_RUNNING</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm>OCF_NOT_RUNNING"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource is safely stopped. The cluster will not attempt to stop a resource that returns this for any action."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "N/A"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>8</secondary></indexterm>8"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_RUNNING_MASTER</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm>OCF_RUNNING_MASTER"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource is running in <literal>Master</literal> mode."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm><primary>return code</primary><secondary>9</secondary></indexterm>9"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>OCF_FAILED_MASTER</primary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm> <indexterm><primary>return code</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm>OCF_FAILED_MASTER"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource is in <literal>Master</literal> mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>other return codes</primary></indexterm> <indexterm><primary>return code</primary><secondary>other</secondary></indexterm>other"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "NA"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Custom error code."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Although counterintuitive, even actions that return 0 (aka. <envar>OCF_SUCCESS</envar>) can be considered to have failed. This can happen when a resource that is expected to be in the Master state is found running as a Slave, or when a resource is found active on multiple machines."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Exceptions"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Non-recurring monitor actions (probes) that find a resource active (or in Master mode) will not result in recovery action unless it is also found active elsewhere"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The recovery action taken when a resource is found active more than once is determined by the <literal>multiple-active</literal> property of the resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Recurring actions that return <envar>OCF_ERR_UNIMPLEMENTED</envar> do not cause any type of recovery"
+msgstr ""
+

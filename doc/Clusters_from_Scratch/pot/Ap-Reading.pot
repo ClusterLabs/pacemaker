@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-21T11:01:26\n"
-"PO-Revision-Date: 2010-12-21T11:01:26\n"
+"POT-Creation-Date: 2012-02-27T09:17:57\n"
+"PO-Revision-Date: 2012-02-27T09:17:57\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -19,36 +19,16 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<emphasis>Project Website</emphasis>"
+msgid "Project Website <ulink url=\"http://www.clusterlabs.org\">http://www.clusterlabs.org</ulink>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<ulink url=\"http://www.clusterlabs.org/\">http://www.clusterlabs.org</ulink>"
+msgid "Cluster Commands A comprehensive guide to cluster commands has been written by Novell and can be found at: <ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\">http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html</ulink>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<emphasis>Cluster Commands</emphasis>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "A comprehensive guide to cluster commands has been written by Novell and can be found at:"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\">http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html</ulink>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<emphasis>Corosync</emphasis>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<ulink url=\"http://www.corosync.org/\">http://www.corosync.org</ulink>"
+msgid "Corosync <ulink url=\"http://www.corosync.org\">http://www.corosync.org</ulink>"
 msgstr ""
 

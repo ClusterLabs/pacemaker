@@ -1,0 +1,173 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2012-02-27T09:17:56\n"
+"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Sample Configurations"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "An Empty Configuration"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "An <indexterm significance=\"preferred\"><primary>Empty Configuration</primary></indexterm><indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Empty</secondary></indexterm>empty configuration"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;cib admin_epoch=\"0\" epoch=\"0\" num_updates=\"0\" have-quorum=\"false\"&gt;\n"
+"  &lt;configuration&gt;\n"
+"    &lt;crm_config/&gt;\n"
+"    &lt;nodes/&gt;\n"
+"    &lt;resources/&gt;\n"
+"    &lt;constraints/&gt;\n"
+"  &lt;/configuration&gt;\n"
+"  &lt;status/&gt;\n"
+"&lt;/cib&gt;  "
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "A <indexterm significance=\"preferred\"><primary>Simple</primary><secondary>Configuration</secondary></indexterm><indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Simple</secondary></indexterm>Simple Configuration"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "2 nodes, some cluster options and a resource"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;cib admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\" have-quorum=\"false\"\n"
+"    validate-with=\"pacemaker-1.0\"&gt;\n"
+"  &lt;configuration&gt;\n"
+"    &lt;crm_config&gt;\n"
+"      &lt;nvpair id=\"option-1\" name=\"symmetric-cluster\" value=\"true\"/&gt;\n"
+"      &lt;nvpair id=\"option-2\" name=\"no-quorum-policy\" value=\"stop\"/&gt;\n"
+"    &lt;/crm_config&gt;\n"
+"    &lt;op_defaults&gt;\n"
+"      &lt;nvpair id=\"op-default-1\" name=\"timeout\" value=\"30s\"/&gt;\n"
+"    &lt;/op_defaults&gt;\n"
+"    &lt;rsc_defaults&gt;\n"
+"      &lt;nvpair id=\"rsc-default-1\" name=\"resource-stickiness\" value=\"100\"/&gt;\n"
+"      &lt;nvpair id=\"rsc-default-2\" name=\"migration-threshold\" value=\"10\"/&gt;\n"
+"    &lt;/rsc_defaults&gt;\n"
+"    &lt;nodes&gt;\n"
+"      &lt;node id=\"xxx\" uname=\"c001n01\" type=\"normal\"/&gt;\n"
+"      &lt;node id=\"yyy\" uname=\"c001n02\" type=\"normal\"/&gt;\n"
+"    &lt;/nodes&gt;\n"
+"    &lt;resources&gt;\n"
+"      &lt;primitive id=\"myAddr\" class=\"ocf\" provider=\"heartbeat\" type=\"IPaddr\"&gt;\n"
+"        &lt;operations&gt;\n"
+"          &lt;op id=\"myAddr-monitor\" name=\"monitor\" interval=\"300s\"/&gt;\n"
+"        &lt;/operations&gt;\n"
+"        &lt;instance_attributes&gt;\n"
+"          &lt;nvpair name=\"ip\" value=\"10.0.200.30\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"      &lt;/primitive&gt;\n"
+"    &lt;/resources&gt;\n"
+"    &lt;constraints&gt;\n"
+"      &lt;rsc_location id=\"myAddr-prefer\" rsc=\"myAddr\" node=\"c001n01\" score=\"INFINITY\"/&gt;\n"
+"    &lt;/constraints&gt;\n"
+"  &lt;/configuration&gt;\n"
+"  &lt;status/&gt;\n"
+"&lt;/cib&gt;  "
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In this example, we have one resource (an IP address) that we check every five minutes and will run on host <literal>c001n01</literal> until either the resource fails 10 times or the host shuts down."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "An <indexterm significance=\"preferred\"><primary>Advanced</primary><secondary>Configuration</secondary></indexterm><indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Advanced</secondary></indexterm>Advanced Configuration"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "groups and clones with stonith"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid " &lt;cib admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\" have-quorum=\"false\"\n"
+"    validate-with=\"pacemaker-1.0\"&gt;\n"
+"  &lt;configuration&gt;\n"
+"    &lt;crm_config&gt;\n"
+"      &lt;nvpair id=\"option-1\" name=\"symmetric-cluster\" value=\"true\"/&gt;\n"
+"      &lt;nvpair id=\"option-2\" name=\"no-quorum-policy\" value=\"stop\"/&gt;\n"
+"      &lt;nvpair id=\"option-3\" name=\"stonith-enabled\" value=\"true\"/&gt;\n"
+"    &lt;/crm_config&gt;\n"
+"    &lt;op_defaults&gt;\n"
+"      &lt;nvpair id=\"op-default-1\" name=\"timeout\" value=\"30s\"/&gt;\n"
+"    &lt;/op_defaults&gt;\n"
+"    &lt;rsc_defaults&gt;\n"
+"      &lt;nvpair id=\"rsc-default-1\" name=\"resource-stickiness\" value=\"100\"/&gt;\n"
+"      &lt;nvpair id=\"rsc-default-2\" name=\"migration-threshold\" value=\"10\"/&gt;\n"
+"    &lt;/rsc_defaults&gt;\n"
+"    &lt;nodes&gt;\n"
+"      &lt;node id=\"xxx\" uname=\"c001n01\" type=\"normal\"/&gt;\n"
+"      &lt;node id=\"yyy\" uname=\"c001n02\" type=\"normal\"/&gt;\n"
+"      &lt;node id=\"zzz\" uname=\"c001n03\" type=\"normal\"/&gt;\n"
+"    &lt;/nodes&gt;\n"
+"    &lt;resources&gt;\n"
+"      &lt;primitive id=\"myAddr\" class=\"ocf\" provider=\"heartbeat\" type=\"IPaddr\"&gt;\n"
+"        &lt;operations&gt;\n"
+"          &lt;op id=\"myAddr-monitor\" name=\"monitor\" interval=\"300s\"/&gt;\n"
+"        &lt;/operations&gt;\n"
+"        &lt;instance_attributes&gt;\n"
+"          &lt;nvpair name=\"ip\" value=\"10.0.200.30\"/&gt;\n"
+"        &lt;/instance_attributes&gt;\n"
+"      &lt;/primitive&gt;\n"
+"      &lt;group id=\"myGroup\"&gt;\n"
+"        &lt;primitive id=\"database\" class=\"lsb\" type=\"oracle\"&gt;\n"
+"          &lt;operations&gt;\n"
+"            &lt;op id=\"database-monitor\" name=\"monitor\" interval=\"300s\"/&gt;\n"
+"          &lt;/operations&gt;\n"
+"        &lt;/primitive&gt;\n"
+"        &lt;primitive id=\"webserver\" class=\"lsb\" type=\"apache\"&gt;\n"
+"          &lt;operations&gt;\n"
+"            &lt;op id=\"webserver-monitor\" name=\"monitor\" interval=\"300s\"/&gt;\n"
+"          &lt;/operations&gt;\n"
+"        &lt;/primitive&gt;\n"
+"      &lt;/group&gt;\n"
+"      &lt;clone id=\"STONITH\"&gt;\n"
+"        &lt;meta_attributes id=\"stonith-options\"&gt;\n"
+"          &lt;nvpair id=\"stonith-option-1\" name=\"globally-unique\" value=\"false\"/&gt;\n"
+"        &lt;/meta_attributes&gt;\n"
+"        &lt;primitive id=\"stonithclone\" class=\"stonith\" type=\"external/ssh\"&gt;\n"
+"          &lt;operations&gt;\n"
+"            &lt;op id=\"stonith-op-mon\" name=\"monitor\" interval=\"5s\"/&gt;\n"
+"          &lt;/operations&gt;\n"
+"          &lt;instance_attributes id=\"stonith-attrs\"&gt;\n"
+"            &lt;nvpair id=\"stonith-attr-1\" name=\"hostlist\" value=\"c001n01,c001n02\"/&gt;\n"
+"          &lt;/instance_attributes&gt;\n"
+"        &lt;/primitive&gt;\n"
+"      &lt;/clone&gt;\n"
+"    &lt;/resources&gt;\n"
+"    &lt;constraints&gt;\n"
+"      &lt;rsc_location id=\"myAddr-prefer\" rsc=\"myAddr\" node=\"c001n01\"\n"
+"        score=\"INFINITY\"/&gt;\n"
+"      &lt;rsc_colocation id=\"group-with-ip\" rsc=\"myGroup\" with-rsc=\"myAddr\"\n"
+"        score=\"INFINITY\"/&gt;\n"
+"    &lt;/constraints&gt;\n"
+"  &lt;/configuration&gt;\n"
+"  &lt;status/&gt;\n"
+"&lt;/cib&gt;  "
+msgstr ""
+

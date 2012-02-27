@@ -1,0 +1,245 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2012-02-27T09:17:56\n"
+"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Upgrading the Configuration from 0.6"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Preparation"
+msgstr ""
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Upgrading the Configuration</primary>"
+msgstr ""
+
+#. Tag: indexterm
+#, no-c-format
+msgid "<primary>Configuration</primary><secondary>Upgrading</secondary>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm significance=\"preferred\"><primary>Download</primary><secondary>DTD</secondary></indexterm> <indexterm significance=\"preferred\"><primary>DTD</primary><secondary>Download</secondary></indexterm> Download the latest DTD<footnote><para><ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\" /></para></footnote> and ensure your configuration validates."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Perform the upgrade"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Upgrade the software"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Refer to the appendix: <xref linkend=\"ap-upgrade\" />"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Upgrade the Configuration"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "As XML is not the friendliest of languages, it is common for cluster administrators to have scripted some of their activities. In such cases, it is likely that those scripts will not work with the new 1.0 syntax."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In order to support such environments, it is actually possible to continue using the old 0.6 syntax."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The downside is, however, that not all the new features will be available and there is a performance impact since the cluster must do a non-persistent configuration upgrade before each transition. So while using the old syntax is possible, it is not advisable to continue using it indefinitely."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Even if you wish to continue using the old syntax, it is advisable to follow the upgrade procedure to ensure that the cluster is able to use your existing configuration (since it will perform much the same task internally)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Create a <indexterm><primary>shadow copy</primary><secondary>example for upgrading</secondary></indexterm>shadow copy to work with"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_shadow --create upgrade06</command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Verify the <indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Verify</secondary></indexterm><indexterm significance=\"preferred\"><primary>Verify</primary><secondary>Configuration</secondary></indexterm>configuration is valid"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_verify --live-check</command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Fix any errors or warnings"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Perform the upgrade:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>cibadmin --upgrade</command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If this step fails, there are three main possibilities:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The configuration was not valid to start with - go back to step 2"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The transformation failed - report a bug or email the project<footnote><para><ulink url=\"mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\" /></para></footnote>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The transformation was successful but produced an invalid result<footnote> <para>The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation.</para> </footnote>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\" /> and/or try the procedure described below under <xref linkend=\"s-upgrade-config-manual\" />."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Check the changes"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_shadow --diff</command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_shadow --edit</command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This will open the configuration in your favorite editor (whichever is specified by the standard <envar>$EDITOR</envar> environment variable)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Preview how the cluster will react"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Test what the cluster will do when you upload the new configuration"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "# <command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>\n"
+"# <command>graphviz upgrade06.dot</command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Verify that either no resource actions will occur or that you are happy with any that are scheduled. If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes. See <xref linkend=\"s-config-testing-changes\" /> for further details on how to interpret the output of ptest."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Upload the changes"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>crm_shadow --commit upgrade06 --force</command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If this step fails, something really strange has occurred. You should report a bug."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Manually Upgrading the Configuration"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "It is also possible to perform the <indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Upgrade manually</secondary></indexterm>configuration upgrade steps manually. To do this"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Locate the <filename>upgrade06.xsl</filename> conversion script or download the latest version from <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/xml/upgrade06.xsl\">version control</ulink>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Convert the <indexterm><primary>XML</primary><secondary>Convert</secondary></indexterm>XML blob:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>xsltproc <filename>/path/to/upgrade06.xsl</filename> <filename>config06.xml</filename> &gt; <filename>config10.xml</filename></command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Locate the <filename>pacemaker.rng</filename> script."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Check the <indexterm significance=\"preferred\"><primary>Validate</primary><secondary>XML</secondary></indexterm><indexterm><primary>xmllint</primary><secondary>Validate XML</secondary></indexterm>XML validity:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "<command>xmllint --relaxng <filename>/path/to/pacemaker.rng</filename> <filename>config10.xml</filename></command>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The advantage of this method is that it can be performed without the cluster running and any validation errors should be more informative (despite being generated by the same library!) since they include line numbers."
+msgstr ""
+

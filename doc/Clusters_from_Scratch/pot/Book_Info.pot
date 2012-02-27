@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-21T11:01:26\n"
-"PO-Revision-Date: 2010-12-21T11:01:26\n"
+"POT-Creation-Date: 2012-02-27T09:17:57\n"
+"PO-Revision-Date: 2012-02-27T09:17:57\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -39,7 +39,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "&DISTRO; &amp;DISTRO_VERSION; as the host operating system"
+msgid "&DISTRO; &DISTRO_VERSION; as the host operating system"
 msgstr ""
 
 #. Tag: para

@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:57\n"
-"PO-Revision-Date: 2012-02-27T09:17:57\n"
+"POT-Creation-Date: 2012-02-27T09:17:56\n"
+"PO-Revision-Date: 2012-02-27T09:17:56\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -32,33 +32,18 @@ msgstr ""
 msgid "Import from Pages.app"
 msgstr ""
 
-#. Tag: firstname
+#. Tag: member
 #, no-c-format
-msgid "Raoul"
-msgstr ""
-
-#. Tag: surname
-#, no-c-format
-msgid "Scarazzini"
+msgid "Cleanup and reformatting of docbook xml complete"
 msgstr ""
 
 #. Tag: member
 #, no-c-format
-msgid "Italian translation"
+msgid "Split book into chapters and pass validation"
 msgstr ""
 
 #. Tag: member
 #, no-c-format
-msgid "Updated for Fedora 13"
-msgstr ""
-
-#. Tag: member
-#, no-c-format
-msgid "Update the GFS2 section to use CMAN"
-msgstr ""
-
-#. Tag: member
-#, no-c-format
-msgid "Generate docbook content from asciidoc sources"
+msgid "Re-organize book for use with <ulink url=\"https://fedorahosted.org/publican/\">Publican</ulink>"
 msgstr ""
 

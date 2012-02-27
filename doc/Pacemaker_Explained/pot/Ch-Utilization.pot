@@ -1,0 +1,342 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2012-02-27T09:17:56\n"
+"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Utilization and Placement Strategy"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Background"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker decides where to place a resource according to the resource allocation scores on every node. The resource will be allocated to the node where the resource has the highest score. If the resource allocation scores on all the nodes are equal, by the <literal>default</literal> placement strategy, Pacemaker will choose a node with the least number of allocated resources for balancing the load. If the number of resources on each node is equal, the first eligible node listed in cib will be chosen to run the resource."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Though resources are different. They may consume different amounts of the capacities of the nodes. Actually, we cannot ideally balance the load just according to the number of resources allocated to a node. Besides, if resources are placed such that their combined requirements exceed the provided capacity, they may fail to start completely or run with degraded performance."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To take these into account, Pacemaker allows you to specify the following configurations:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>capacity</literal> a certain <literal>node provides</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>capacity</literal> a certain <literal>resource requires</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "An overall <literal>strategy</literal> for placement of resources."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Utilization attributes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To configure the capacity a node provides and the resource’s requirements, use <literal>utilization</literal> attributes. You can name the <literal>utilization</literal> attributes according to your preferences and define as many <literal>name/value</literal> pairs as your configuration needs. However, the attribute’s values must be <literal>integers</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "First, specify the capacities the nodes provide:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "      &lt;node id=\"node1\" type=\"normal\" uname=\"node1\"&gt;\n"
+"        &lt;utilization id=\"node1-utilization\"&gt;\n"
+"          &lt;nvpair id=\"node1-utilization-cpu\" name=\"cpu\" value=\"2\"/&gt;\n"
+"          &lt;nvpair id=\"node1-utilization-memory\" name=\"memory\" value=\"2048\"/&gt;\n"
+"        &lt;/utilization&gt;\n"
+"      &lt;/node&gt;\n"
+"      &lt;node id=\"node2\" type=\"normal\" uname=\"node2\"&gt;\n"
+"        &lt;utilization id=\"node2-utilization\"&gt;\n"
+"          &lt;nvpair id=\"node2-utilization-cpu\" name=\"cpu\" value=\"4\"/&gt;\n"
+"          &lt;nvpair id=\"node2-utilization-memory\" name=\"memory\" value=\"4096\"/&gt;\n"
+"        &lt;/utilization&gt;\n"
+"      &lt;/node&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Then, specify the capacities the resources require:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "      &lt;primitive id=\"rsc-small\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"&gt;\n"
+"        &lt;utilization id=\"rsc-small-utilization\"&gt;\n"
+"          &lt;nvpair id=\"rsc-small-utilization-cpu\" name=\"cpu\" value=\"1\"/&gt;\n"
+"          &lt;nvpair id=\"rsc-small-utilization-memory\" name=\"memory\" value=\"1024\"/&gt;\n"
+"        &lt;/utilization&gt;\n"
+"      &lt;/primitive&gt;\n"
+"      &lt;primitive id=\"rsc-medium\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"&gt;\n"
+"        &lt;utilization id=\"rsc-medium-utilization\"&gt;\n"
+"          &lt;nvpair id=\"rsc-medium-utilization-cpu\" name=\"cpu\" value=\"2\"/&gt;\n"
+"          &lt;nvpair id=\"rsc-medium-utilization-memory\" name=\"memory\" value=\"2048\"/&gt;\n"
+"        &lt;/utilization&gt;\n"
+"      &lt;/primitive&gt;\n"
+"      &lt;primitive id=\"rsc-large\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"&gt;\n"
+"        &lt;utilization id=\"rsc-large-utilization\"&gt;\n"
+"          &lt;nvpair id=\"rsc-large-utilization-cpu\" name=\"cpu\" value=\"3\"/&gt;\n"
+"          &lt;nvpair id=\"rsc-large-utilization-memory\" name=\"memory\" value=\"3072\"/&gt;\n"
+"        &lt;/utilization&gt;\n"
+"      &lt;/primitive&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A node is considered eligible for a resource if it has sufficient free capacity to satisfy the resource’s requirements. The nature of the required or provided capacities is completely irrelevant for Pacemaker, it just makes sure that all capacity requirements of a resource are satisfied before placing a resource to a node."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Placement Strategy"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "After you have configured the capacities your nodes provide and the capacities your resources require, you need to set the <literal>placement-strategy</literal> in the global cluster options, otherwise the capacity configurations have <literal>no effect</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Four values are available for the <literal>placement-strategy</literal>:"
+msgstr ""
+
+#. Tag: term
+#, no-c-format
+msgid "<literal>default</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Utilization values are not taken into account at all, per default. Resources are allocated according to allocation scores. If scores are equal, resources are evenly distributed across nodes."
+msgstr ""
+
+#. Tag: term
+#, no-c-format
+msgid "<literal>utilization</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Utilization values are taken into account when deciding whether a node is considered eligible if it has sufficient free capacity to satisfy the resource’s requirements. However, load-balancing is still done based on the number of resources allocated to a node."
+msgstr ""
+
+#. Tag: term
+#, no-c-format
+msgid "<literal>balanced</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Utilization values are taken into account when deciding whether a node is eligible to serve a resource; an attempt is made to spread the resources evenly, optimizing resource performance."
+msgstr ""
+
+#. Tag: term
+#, no-c-format
+msgid "<literal>minimal</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Utilization values are taken into account when deciding whether a node is eligible to serve a resource; an attempt is made to concentrate the resources on as few nodes as possible, thereby enabling possible power savings on the remaining nodes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Set <literal>placement-strategy</literal> with <literal>crm_attribute</literal>:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "# crm_attribute --attr-name placement-strategy --attr-value balanced"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now Pacemaker will ensure the load from your resources will be distributed evenly throughout the cluster - without the need for convoluted sets of colocation constraints."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Allocation Details"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Which node is preferred to be chosen to get consumed first on allocating resources?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The node that is most healthy (which has the highest node weight) gets consumed first."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If their weights are equal:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If <literal>placement-strategy=\"default|utilization\"</literal>, the node that has the least number of allocated resources gets consumed first."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If their numbers of allocated resources are equal, the first eligible node listed in cib gets consumed first."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If <literal>placement-strategy=\"balanced\"</literal>, the node that has more free capacity gets consumed first."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the free capacities of the nodes are equal, the node that has the least number of allocated resources gets consumed first."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If <literal>placement-strategy=\"minimal\"</literal>, the first eligible node listed in cib gets consumed first."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Which node has more free capacity?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This will be quite clear if we only define one type of <literal>capacity</literal>. While if we define multiple types of <literal>capacity</literal>, for example:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If <literal>nodeA</literal> has more free <literal>cpus</literal>, <literal>nodeB</literal> has more free <literal>memory</literal>, their free capacities are equal."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If <literal>nodeA</literal> has more free <literal>cpus</literal>, while <literal>nodeB</literal> has more free <literal>memory</literal> and <literal>storage</literal>, <literal>nodeB</literal> has more free capacity."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Which resource is preferred to be chosen to get assigned first?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The resource that has the highest priority gets allocated first."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If their priorities are equal, check if they are already running. The resource that has the highest score on the node where it’s running gets allocated first (to prevent resource shuffling)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the scores above are equal or they are not running, the resource has the highest score on the preferred node gets allocated first."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the scores above are equal, the first runnable resource listed in cib gets allocated first."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Limitations"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This type of problem Pacemaker is dealing with here is known as the <ulink url=\"http://en.wikipedia.org/wiki/Knapsack_problem\">knapsack problem</ulink> and falls into the <ulink url=\"http://en.wikipedia.org/wiki/NP-complete\">NP-complete</ulink> category of computer science problems - which is fancy way of saying \"it takes a really long time to solve\"."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Clearly in a HA cluster, it’s not acceptable to spend minutes, let alone hours or days, finding an optional solution while services remain unavailable."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "So instead of trying to solve the problem completely, Pacemaker uses a <emphasis>best effort</emphasis> algorithm for determining which node should host a particular service. This means it arrives at a solution much faster than traditional linear programming algorithms, but by doing so at the price of leaving some services stopped."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the contrived example above:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>rsc-small</literal> would be allocated to <literal>node1</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>rsc-medium</literal> would be allocated to <literal>node2</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>rsc-large</literal> would remain inactive"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Which is not ideal."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Strategies for Dealing with the Limitations"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Ensure you have sufficient physical capacity. It might sounds obvious, but if the physical capacity of your nodes is (close to) maxed out by the cluster under normal conditions, then failover isn’t going to go well. Even without the Utilization feature, you’ll start hitting timeouts and getting secondary failures'."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Build some buffer into the capabilities advertised by the nodes. Advertise slightly more resources than we physically have on the (usually valid) assumption that a resource will not use 100% of the configured number of cpu/memory/etc <literal>all</literal> the time. This practice is also known as <emphasis>over commit</emphasis>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Specify resource priorities. If the cluster is going to sacrifice services, it should be the ones you care (comparatively) about the least. Ensure that resource priorities are properly set so that your most important resources are scheduled first."
+msgstr ""
+
