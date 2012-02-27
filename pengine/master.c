@@ -954,7 +954,7 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
          * Doing this unconditionally would prevent the slaves from being started
          */
         if (constraint->role_lh != RSC_ROLE_MASTER || constraint->role_rh != RSC_ROLE_MASTER) {
-            if (constraint->score > 0) {
+            if (constraint->score >= INFINITY) {
                 node_list_exclude(rsc_lh->allowed_nodes, rhs, TRUE);
             }
         }
