@@ -1,5 +1,6 @@
 [appendix]
-= Further Reading =
+Further Reading
+---------------
 
 - Project Website
 http://www.clusterlabs.org
