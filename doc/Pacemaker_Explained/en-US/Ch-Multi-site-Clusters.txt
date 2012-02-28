@@ -1,6 +1,7 @@
 = Multi-Site Clusters and Tickets =
 
 == Abstract ==
+[[Multi-site]]
 Apart from local clusters, Pacemaker also supports multi-site clusters.
 That means you can have multiple, geographically dispersed sites with a
 local cluster each. Failover between these clusters can be coordinated
@@ -271,7 +272,7 @@ http://en.wikipedia.org/wiki/Paxos_algorithm['Paxos'] and 'Paxos Lease'
 algorithm, which guarantees the distributed consensus among different
 cluster sites. 
 
-[TIP]
+[NOTE]
 ====
 `Arbitrator`
 
