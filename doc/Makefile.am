@@ -86,6 +86,8 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 	sed -i.sed 's/\ lang="en"//' $@        # Never specify a language in the chapters
 	sed -i.sed 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara 
 	sed -i.sed 's/.*<date>.*//g' $@	       # Remove dangling tag
+	sed -i.sed 's/.*preface>//g' $@        # Remove preface elements
+	sed -i.sed 's:<title></title>::g' $@   # Remove empty title
 	sed -i.sed 's/chapter/section/g' $@    # Chapters become sections, so that books can become chapters 
 	sed -i.sed 's/<.*bookinfo.*>//g' $@    # Strip out bookinfo, we don't need it
 	-grep -qis "<appendix" $@ && sed -i.sed 's/.*book>//' $@         # We just want the appendix tag
