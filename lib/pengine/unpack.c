@@ -1038,7 +1038,7 @@ find_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent, cons
     int len = 0;
     resource_t *rsc = NULL;
     char *base = clone_zero(rsc_id);
-    char *alt_rsc_id = crm_strdup(rsc_id);
+    char *alt_rsc_id = NULL;
 
     CRM_ASSERT(parent != NULL);
     CRM_ASSERT(parent->variant == pe_clone || parent->variant == pe_master);
@@ -1108,6 +1108,12 @@ find_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent, cons
                               ((node_t *) peer->running_on->data)->details->uname, buffer);
                 }
             }
+        }
+
+        if(parent->fns->find_rsc(parent, rsc_id, NULL, pe_find_current)) {
+            alt_rsc_id = crm_strdup(rsc_id);
+        } else {
+            alt_rsc_id = clone_zero(rsc_id);
         }
 
         while (rsc == NULL) {
