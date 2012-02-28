@@ -36,7 +36,7 @@ configuration needs. However, the attribute's values must be `integers`.
 
 First, specify the capacities the nodes provide:
 
-[source,Bash]
+[source,XML]
 ----
       <node id="node1" type="normal" uname="node1">
         <utilization id="node1-utilization">
@@ -54,7 +54,7 @@ First, specify the capacities the nodes provide:
 
 Then, specify the capacities the resources require:
 
-[source,Bash]
+[source,XML]
 ----
       <primitive id="rsc-small" class="ocf" provider="pacemaker" type="Dummy">
         <utilization id="rsc-small-utilization">
@@ -166,7 +166,7 @@ define multiple types of `capacity`, for example:
   `nodeB` has more free capacity.
 
 
-=== Which resource is preferred to be chosen to get assigned first?
+=== Which resource is preferred to be chosen to get assigned first? ===
 
 - The resource that has the highest priority gets allocated first.
 
@@ -180,7 +180,7 @@ first (to prevent resource shuffling).
 - If the scores above are equal, the first runnable resource listed in cib gets allocated first.
 
 
-== Limitations
+== Limitations ==
 
 This type of problem Pacemaker is dealing with here is known as the
 http://en.wikipedia.org/wiki/Knapsack_problem[knapsack problem] and falls into
@@ -206,7 +206,7 @@ In the contrived example above:
 Which is not ideal.
 
 
-== Strategies for Dealing with the Limitations
+== Strategies for Dealing with the Limitations ==
 
 - Ensure you have sufficient physical capacity.
 It might sounds obvious, but if the physical capacity of your nodes is (close to)

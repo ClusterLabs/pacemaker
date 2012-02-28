@@ -23,8 +23,9 @@
     <firstname>Tanja</firstname><surname>Roth</surname>
     <affiliation><orgname>SUSE</orgname></affiliation>
     <contrib>Utilization chapter</contrib>
+    <contrib>Resource Templates chapter</contrib>
     <contrib>Multi-Site Clusters chapter</contrib>
-    <email>troth@suse.com</email>
+    <email>taroth@suse.com</email>
   </othercredit>
   <othercredit>
     <firstname>Lars</firstname><surname>Marowsky-Bree</surname>
@@ -36,6 +37,7 @@
     <firstname>Yan</firstname><surname>Gao</surname>
     <affiliation><orgname>SUSE</orgname></affiliation>
     <contrib>Utilization chapter</contrib>
+    <contrib>Resource Templates chapter</contrib>
     <contrib>Multi-Site Clusters chapter</contrib>
     <email>ygao@suse.com</email>
   </othercredit>
@@ -43,7 +45,14 @@
     <firstname>Thomas</firstname><surname>Schraitle</surname>
     <affiliation><orgname>SUSE</orgname></affiliation>
     <contrib>Utilization chapter</contrib>
+    <contrib>Resource Templates chapter</contrib>
     <contrib>Multi-Site Clusters chapter</contrib>
     <email>toms@suse.com</email>
+  </othercredit>
+  <othercredit>
+    <firstname>Dejan</firstname><surname>Muhamedagic</surname>
+    <affiliation><orgname>SUSE</orgname></affiliation>
+    <contrib>Resource Templates chapter</contrib>
+    <email>dmuhamedagic@suse.com</email>
   </othercredit>
 </authorgroup>

@@ -1,0 +1,222 @@
+= Resource Templates =
+
+== Abstract ==
+
+If you want to create lots of resources with similar configurations, defining a 
+resource template simplifies the task. Once defined, it can be referenced in 
+primitives or in certain types of constraints.
+
+   
+== Configuring Resources with Templates ==
+
+The primitives referencing the template will inherit all meta 
+attributes, instance attributes, utilization attributes and operations defined 
+in the template. And you can define specific attributes and operations for any 
+of the primitives. If any of these are defined in both the template and the 
+primitive, the values defined in the primitive will take precedence over the 
+ones defined in the template. 
+
+Hence, resource templates help to reduce the amount of configuration work. 
+If any changes are needed, they can be done to the template definition and 
+will take effect globally in all resource definitions referencing that
+template.
+
+Resource templates have a similar syntax like primitives. For example:
+
+[source,XML]
+----
+      <template id="vm-template" class="ocf" provider="heartbeat" type="Xen">
+        <meta_attributes id="vm-template-meta_attributes">
+          <nvpair id="vm-template-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+        </meta_attributes>
+        <utilization id="vm-template-utilization">
+          <nvpair id="vm-template-utilization-memory" name="memory" value="512"/>
+        </utilization>
+        <operations>
+          <op id="vm-template-monitor-15s" interval="15s" name="monitor" timeout="60s"/>
+          <op id="vm-template-start-0" interval="0" name="start" timeout="60s"/>
+        </operations>
+      </template>
+----
+
+Once you defined the new resource template, you can use it in primitives:
+
+[source,XML]
+----
+      <primitive id="vm1" template="vm-template">
+        <instance_attributes id="vm1-instance_attributes">
+          <nvpair id="vm1-instance_attributes-name" name="name" value="vm1"/>
+          <nvpair id="vm1-instance_attributes-xmfile" name="xmfile" value="/etc/xen/shared-vm/vm1"/>
+        </instance_attributes>
+      </primitive>
+----
+    
+The new primitive `vm1` is going to inherit everything from the `vm-template`. For 
+example, the equivalent of the above two would be:
+
+[source,XML]
+----
+<primitive id="vm1" class="ocf" provider="heartbeat" type="Xen">
+  <meta_attributes id="vm-template-meta_attributes">
+    <nvpair id="vm-template-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+  </meta_attributes>
+  <utilization id="vm-template-utilization">
+    <nvpair id="vm-template-utilization-memory" name="memory" value="512"/>
+  </utilization>
+  <operations>
+    <op id="vm-template-monitor-15s" interval="15s" name="monitor" timeout="60s"/>
+    <op id="vm-template-start-0" interval="0" name="start" timeout="60s"/>
+  </operations>
+  <instance_attributes id="vm1-instance_attributes">
+    <nvpair id="vm1-instance_attributes-name" name="name" value="vm1"/>
+    <nvpair id="vm1-instance_attributes-xmfile" name="xmfile" value="/etc/xen/shared-vm/vm1"/>
+  </instance_attributes>
+</primitive>
+----
+    
+If you want to overwrite some attributes or operations, add them to the 
+particular primitive's definition. 
+
+For instance, the following new primitive `vm2` has special 
+attribute values. Its `monitor` operation has a longer `timeout` and `interval`, and 
+the primitive has an additional `stop` operation.
+
+[source,XML]
+----
+      <primitive id="vm2" template="vm-template">
+        <meta_attributes id="vm2-meta_attributes">
+          <nvpair id="vm2-meta_attributes-allow-migrate" name="allow-migrate" value="false"/>
+        </meta_attributes>
+        <utilization id="vm2-utilization">
+          <nvpair id="vm2-utilization-memory" name="memory" value="1024"/>
+        </utilization>
+        <instance_attributes id="vm2-instance_attributes">
+          <nvpair id="vm2-instance_attributes-name" name="name" value="vm2"/>
+          <nvpair id="vm2-instance_attributes-xmfile" name="xmfile" value="/etc/xen/shared-vm/vm2"/>
+        </instance_attributes>
+        <operations>
+          <op id="vm2-monitor-30s" interval="30s" name="monitor" timeout="120s"/>
+          <op id="vm2-stop-0" interval="0" name="stop" timeout="60s"/>
+        </operations>
+      </primitive>
+----
+    
+The following command shows the resulting definition of a resource:
+    
+[source,Bash]
+----
+# crm_resource --query-xml --resource vm2
+----
+    
+The following command shows its raw definition in cib:
+    
+[source,Bash]
+----
+# crm_resource --query-xml-raw --resource vm2
+----
+
+== Referencing Templates in Constraints ==
+   
+A resource template can be referenced in the following types of constraints:
+
+- `order` constraints
+- `colocation` constraints,
+- `rsc_ticket` constraints (for multi-site clusters).
+
+Resource templates referenced in constraints stand for all primitives which are 
+derived from that template. This means, the constraint applies to all primitive 
+resources referencing the resource template. Referencing resource templates in 
+constraints is an alternative to resource sets and can simplify the cluster 
+configuration considerably.
+
+For example:
+
+[source,XML]
+----
+<rsc_colocation id="vm-template-colo-base-rsc" rsc="vm-template" rsc-role="Started" with-rsc="base-rsc" score="INFINITY"/>
+----
+
+is the equivalent of the following constraint configuration:
+
+[source,XML]
+----
+      <rsc_colocation id="vm-colo-base-rsc" score="INFINITY">
+        <resource_set id="vm-colo-base-rsc-0" sequential="false" role="Started">
+          <resource_ref id="vm1"/>
+          <resource_ref id="vm2"/>
+        </resource_set>
+        <resource_set id="vm-colo-base-rsc-1">
+          <resource_ref id="base-rsc"/>
+        </resource_set>
+      </rsc_colocation>
+----
+
+[NOTE]
+======
+In a colocation constraint, only one template may be referenced from either
+`rsc` or `with-rsc`, and the other reference must be a regular resource.
+======
+
+Resource templates can also be referenced in resource sets.
+
+For example:
+
+[source,XML]
+----
+      <rsc_order id="order1" score="INFINITY">
+        <resource_set id="order1-0">
+          <resource_ref id="base-rsc"/>
+          <resource_ref id="vm-template"/>
+          <resource_ref id="top-rsc"/>
+        </resource_set>
+      </rsc_order>
+----
+
+is the equivalent of the following constraint configuration:
+
+[source,XML]
+----
+      <rsc_order id="order1" score="INFINITY">
+        <resource_set id="order1-0">
+          <resource_ref id="base-rsc"/>
+          <resource_ref id="vm1"/>
+          <resource_ref id="vm2"/>
+          <resource_ref id="top-rsc"/>
+        </resource_set>
+      </rsc_order>
+----
+
+If the resources referencing the template can run in parallel:
+
+[source,XML]
+----
+      <rsc_order id="order2" score="INFINITY">
+        <resource_set id="order2-0">
+          <resource_ref id="base-rsc"/>
+        </resource_set>
+        <resource_set id="order2-1" sequential="false">
+          <resource_ref id="vm-template"/>
+        </resource_set>
+        <resource_set id="order2-2">
+          <resource_ref id="top-rsc"/>
+        </resource_set>
+      </rsc_order>
+----
+
+is the equivalent of the following constraint configuration:
+
+[source,XML]
+----
+      <rsc_order id="order2" score="INFINITY">
+        <resource_set id="order2-0">
+          <resource_ref id="base-rsc"/>
+        </resource_set>
+        <resource_set id="order2-1" sequential="false">
+          <resource_ref id="vm1"/>
+          <resource_ref id="vm2"/>
+        </resource_set>
+        <resource_set id="order2-2">
+          <resource_ref id="top-rsc"/>
+        </resource_set>
+      </rsc_order>
+----

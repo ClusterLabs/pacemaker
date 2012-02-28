@@ -143,6 +143,12 @@ The number of jobs that the TE is allowed to execute in parallel. The
 "correct" value will depend on the speed and load of your network and
 cluster nodes.
 
+| migration-limit | -1 (unlimited) |
+indexterm:[migration-limit Cluster Options]
+indexterm:[Cluster Options,migration-limit]
+The number of migration jobs that the TE is allowed to execute in
+parallel on a node.
+
 | no-quorum-policy | stop |
 indexterm:[no-quorum-policy Cluster Options]
 indexterm:[Cluster Options,no-quorum-policy]
