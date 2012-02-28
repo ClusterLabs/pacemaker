@@ -54,7 +54,7 @@ int cib_connect(gboolean full);
 
 char *xml_file = NULL;
 char *as_html_file = NULL;
-char *as_xml_file = NULL;
+int as_xml = 0;
 char *pid_file = NULL;
 char *snmp_target = NULL;
 char *snmp_community = NULL;
@@ -287,7 +287,7 @@ static struct crm_option long_options[] = {
 
     {"-spacer-",	1, 0, '-', "\nModes:"},
     {"as-html",        1, 0, 'h', "Write cluster status to the named html file"},
-    {"as-xml",         1, 0, 'X', "Write cluster status to the named xml file"},
+    {"as-xml",         0, 0, 'X', "Write cluster status to the named xml file"},
     {"web-cgi",        0, 0, 'w', "\tWeb mode with output suitable for cgi"},
     {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)"},
     {"snmp-traps",     1, 0, 'S', "Send SNMP traps to this station", !ENABLE_SNMP},
@@ -412,7 +412,7 @@ main(int argc, char **argv)
                 as_html_file = crm_strdup(optarg);
                 break;
             case 'X':
-                as_xml_file = crm_strdup(optarg);
+                as_xml = TRUE;
                 break;
             case 'w':
                 web_cgi = TRUE;
@@ -480,7 +480,7 @@ main(int argc, char **argv)
         as_console = FALSE;
         crm_enable_stderr(FALSE);
 
-        if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent && !as_xml_file) {
+        if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent && !as_xml) {
             printf
                 ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --mail-to, --snmp-target, --external-agent\n");
             crm_help('?', LSB_EXIT_GENERIC);
@@ -1218,23 +1218,14 @@ print_status(pe_working_set_t * data_set)
 }
 
 static int
-print_xml_status(pe_working_set_t * data_set, const char *filename)
+print_xml_status(pe_working_set_t * data_set)
 {
-    FILE *stream;
+    FILE *stream = stdout;
     GListPtr gIter = NULL;
     node_t *dc = NULL;
     xmlNode *stack = NULL;
     xmlNode *quorum_node = NULL;
-    char *filename_tmp = NULL;
     const char *quorum_votes = "unknown";
-
-    filename_tmp = crm_concat(filename, "tmp", '.');
-    stream = fopen(filename_tmp, "w");
-    if (stream == NULL) {
-        crm_perror(LOG_ERR, "Cannot open %s for writing", filename_tmp);
-        crm_free(filename_tmp);
-        return -1;
-    }
 
     dc = data_set->dc_node;
 
@@ -1373,11 +1364,6 @@ print_xml_status(pe_working_set_t * data_set, const char *filename)
     fflush(stream);
     fclose(stream);
 
-    /* rename tmp file */
-    if (rename(filename_tmp, filename) != 0) {
-        crm_perror(LOG_ERR, "Unable to rename %s->%s", filename_tmp, filename);
-    }
-    crm_free(filename_tmp);
     return 0;
 }
 
@@ -2195,8 +2181,8 @@ mon_refresh_display(gpointer user_data)
             fprintf(stderr, "Critical: Unable to output html file\n");
             clean_up(LSB_EXIT_GENERIC);
         }
-    } else if (as_xml_file) {
-        if (print_xml_status(&data_set, as_xml_file) != 0) {
+    } else if (as_xml) {
+        if (print_xml_status(&data_set) != 0) {
             fprintf(stderr, "Critical: Unable to output xml file\n");
             clean_up(LSB_EXIT_GENERIC);
         }
@@ -2248,7 +2234,6 @@ clean_up(int rc)
     }
 
     crm_free(as_html_file);
-    crm_free(as_xml_file);
     crm_free(xml_file);
     crm_free(pid_file);
 
