@@ -1,0 +1,99 @@
+<cib crm_feature_set="3.0.1" admin_epoch="0" epoch="38" num_updates="1" dc-uuid="26054162-312b-481a-ab8e-6373117ee590" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Sun Feb 19 16:01:12 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="true"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.12-unknown"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="26054162-312b-481a-ab8e-6373117ee590" uname="node-0" type="normal"/>
+      <node id="6cd6c3a1-3c0e-45c4-b1c7-8a02db15b9a7" uname="node-2" type="normal"/>
+    </nodes>
+    <resources>
+      <clone id="clone-node-app-rsc">
+        <primitive class="lsb" id="node-app-rsc" type="cluster-node">
+          <operations>
+            <op id="node-app-rsc-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+      </clone>
+      <group id="group-dc">
+        <primitive class="ocf" id="failover-ip" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="failover-ip-instance_attributes">
+            <nvpair id="failover-ip-instance_attributes-ip" name="ip" value="10.10.5.218"/>
+          </instance_attributes>
+          <operations>
+            <op id="failover-ip-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive class="lsb" id="master-app-rsc" type="cluster-master">
+          <operations>
+            <op id="master-app-rsc-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_location id="rule-group-dc" rsc="group-dc">
+        <rule id="rule-group-dc-rule" score="-INFINITY">
+          <expression attribute="#is_dc" id="rule-group-dc-expression" operation="eq" value="false"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="26054162-312b-481a-ab8e-6373117ee590" uname="node-0" ha="active" in_ccm="true" crmd="online" join="member" expected="member" shutdown="0" crm-debug-origin="post_cache_update">
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id875597">
+          <nvpair id="nvpair.id875603" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="26054162-312b-481a-ab8e-6373117ee590">
+        <lrm_resources>
+          <lrm_resource id="master-app-rsc" type="cluster-master" class="lsb">
+            <lrm_rsc_op id="master-app-rsc_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="6:2:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:7;6:2:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1329638286" last-rc-change="1329638286" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="master-app-rsc_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="15:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:0;15:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="9" rc-code="0" op-status="0" interval="0" last-run="1329638287" last-rc-change="1329638287" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="master-app-rsc_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="16:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:0;16:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="10" rc-code="0" op-status="0" interval="10000" last-rc-change="1329638286" exec-time="30" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="node-app-rsc:0" type="cluster-node" class="lsb">
+            <lrm_rsc_op id="node-app-rsc:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="4:2:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:7;4:2:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1329638286" last-rc-change="1329638286" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="node-app-rsc:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="7:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:0;7:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1329638286" last-rc-change="1329638286" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="node-app-rsc:0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="8:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:0;8:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="7" rc-code="0" op-status="0" interval="10000" last-rc-change="1329638286" exec-time="60" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="failover-ip" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="failover-ip_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="5:2:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:7;5:2:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1329638286" last-rc-change="1329638286" exec-time="30" queue-time="0" op-digest="ec77ee732aa84509b41c7c2b0b4657cf"/>
+            <lrm_rsc_op id="failover-ip_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="13:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:0;13:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1329638286" last-rc-change="1329638286" exec-time="50" queue-time="0" op-digest="ec77ee732aa84509b41c7c2b0b4657cf"/>
+            <lrm_rsc_op id="failover-ip_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="14:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:0;14:2:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="8" rc-code="0" op-status="0" interval="10000" last-rc-change="1329638286" exec-time="30" queue-time="0" op-digest="f0cd9eb5a37c40e937f4811d24b7fa8c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="6cd6c3a1-3c0e-45c4-b1c7-8a02db15b9a7" uname="node-2" ha="active" join="member" crm-debug-origin="post_cache_update" crmd="online" shutdown="0" in_ccm="true" expected="member">
+      <lrm id="6cd6c3a1-3c0e-45c4-b1c7-8a02db15b9a7">
+        <lrm_resources>
+          <lrm_resource id="failover-ip" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="failover-ip_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="11:6:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:7;11:6:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1329638190" last-rc-change="1329638190" exec-time="30" queue-time="0" op-digest="ec77ee732aa84509b41c7c2b0b4657cf"/>
+          </lrm_resource>
+          <lrm_resource id="master-app-rsc" type="cluster-master" class="lsb">
+            <lrm_rsc_op id="master-app-rsc_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="12:6:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:7;12:6:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1329638190" last-rc-change="1329638190" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="node-app-rsc:2" type="cluster-node" class="lsb">
+            <lrm_rsc_op id="node-app-rsc:2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:6:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:7;10:6:7:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1329638190" last-rc-change="1329638190" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="node-app-rsc:2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="17:6:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:0;17:6:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1329638192" last-rc-change="1329638192" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="node-app-rsc:2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="18:6:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" transition-magic="0:0;18:6:0:7011fb44-fce6-4103-b7df-5bcb3099bf03" call-id="6" rc-code="0" op-status="0" interval="10000" last-rc-change="1329638194" exec-time="60" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="6cd6c3a1-3c0e-45c4-b1c7-8a02db15b9a7">
+        <instance_attributes id="status-6cd6c3a1-3c0e-45c4-b1c7-8a02db15b9a7">
+          <nvpair id="status-6cd6c3a1-3c0e-45c4-b1c7-8a02db15b9a7-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

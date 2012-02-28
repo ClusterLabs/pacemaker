@@ -1,0 +1,21 @@
+Allocation scores:
+clone_color: clone-node-app-rsc allocation score on node-0: 0
+clone_color: clone-node-app-rsc allocation score on node-2: 0
+clone_color: node-app-rsc:0 allocation score on node-0: 1
+clone_color: node-app-rsc:0 allocation score on node-2: 0
+clone_color: node-app-rsc:1 allocation score on node-0: 0
+clone_color: node-app-rsc:1 allocation score on node-2: 1
+group_color: failover-ip allocation score on node-0: 0
+group_color: failover-ip allocation score on node-2: -INFINITY
+group_color: group-dc allocation score on node-0: 0
+group_color: group-dc allocation score on node-2: -INFINITY
+group_color: master-app-rsc allocation score on node-0: 0
+group_color: master-app-rsc allocation score on node-2: 0
+native_color: failover-ip allocation score on node-0: 0
+native_color: failover-ip allocation score on node-2: -INFINITY
+native_color: master-app-rsc allocation score on node-0: 0
+native_color: master-app-rsc allocation score on node-2: -INFINITY
+native_color: node-app-rsc:0 allocation score on node-0: 1
+native_color: node-app-rsc:0 allocation score on node-2: -INFINITY
+native_color: node-app-rsc:1 allocation score on node-0: 0
+native_color: node-app-rsc:1 allocation score on node-2: 1
