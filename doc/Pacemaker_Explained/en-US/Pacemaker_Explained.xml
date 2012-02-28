@@ -20,6 +20,7 @@
   <xi:include href="Ch-Advanced-Options.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Advanced-Resources.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Utilization.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Resource-Templates.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Stonith.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Status.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Multi-site-Clusters.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>

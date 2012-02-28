@@ -159,10 +159,9 @@ demoted to slave mode if `ticketA` is revoked:
 <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" rsc-role="Master" ticket="ticketA" loss-policy="demote"/>
 -------
 
-If you want other resources to depend on further tickets, create as many
-constraints as necessary with `rsc_ticket`.
-
-
+You can create more `rsc_ticket` constraints to let multiple resources
+depend on the same ticket.
+ 
 `rsc_ticket` also supports resource sets. So one can easily list all the
 resources in one `rsc_ticket` constraint. For example:
 
@@ -179,6 +178,9 @@ resources in one `rsc_ticket` constraint. For example:
         </resource_set>
       </rsc_ticket>
 -------
+
+If you want other resources to depend on further tickets, create as many
+constraints as necessary with `rsc_ticket`.
 
 
 == Managing Multi-Site Clusters ==
