@@ -673,7 +673,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
     Stonith *stonith_obj = NULL;
     static const char *no_parameter_info = "<!-- no value -->";
 
-    crm_info("looking up %s/%s metadata", agent, provider);
+    crm_trace("looking up %s/%s metadata", agent, provider);
 
     /* By having this in a library, we can access it from stonith_admin
      *  when neither lrmd or stonith-ng are running
@@ -699,6 +699,35 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
                                     "    </parameter>\n" "  </parameters>");
 
             goto build;
+
+        } else {
+
+            xmlNode *xml = string2xml(buffer);
+            xmlNode *actions = NULL;
+            xmlXPathObject *xpathObj = NULL;
+
+            xpathObj = xpath_search(xml, "//actions");
+            if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+                actions = getXpathResult(xpathObj, 0);
+            }
+
+            /* Now fudge the metadata so that the start/stop actions appear */
+            xpathObj = xpath_search(xml, "//action[@name='stop']");
+            if (xpathObj == NULL || xpathObj->nodesetval->nodeNr <= 0) {
+                xmlNode *tmp = NULL;
+
+                tmp = create_xml_node(actions, "action");
+                crm_xml_add(tmp, "name", "stop");
+                crm_xml_add(tmp, "timeout", "20s");
+
+                tmp = create_xml_node(actions, "action");
+                crm_xml_add(tmp, "name", "start");
+                crm_xml_add(tmp, "timeout", "20s");
+            }
+
+            crm_free(buffer);
+            buffer = dump_xml_formatted(xml);
+            free_xml(xml);
         }
 
     } else {
