@@ -48,28 +48,6 @@ enum pe_weights {
     pe_weights_rollback = 0x10,
 };
 
-enum pe_ordering {
-    pe_order_none = 0x0,        /* deleted */
-    pe_order_optional = 0x1,    /* pure ordering, nothing implied */
-
-    pe_order_implies_first = 0x10,      /* If 'first' is required, ensure 'then' is too */
-    pe_order_implies_then = 0x20,       /* If 'then' is required, ensure 'first' is too */
-
-    pe_order_runnable_left = 0x100,     /* 'then' requires 'first' to be runnable */
-
-    pe_order_restart = 0x1000,  /* stop-start constraint */
-    pe_order_stonith_stop = 0x2000,     /* only applies if the action is non-pseudo */
-    pe_order_serialize_only = 0x4000,   /* serialize */
-
-    pe_order_implies_first_printed = 0x10000,   /* Like ..implies_first but only ensures 'first' is printed, not manditory */
-    pe_order_implies_then_printed = 0x20000,    /* Like ..implies_then but only ensures 'then' is printed, not manditory */
-
-    pe_order_asymmetrical = 0x100000,    /* Indicates asymmetrical one way ordering constraint. */
-    pe_order_load         = 0x200000,    /* Only relevant if... */
-
-    pe_order_trace = 0x4000000  /* test marker */
-};
-
 struct rsc_colocation_s {
     const char *id;
     const char *node_attribute;
@@ -125,18 +103,6 @@ struct order_constraint_s {
 /* 		int   rh_rsc_incarnation; */
 };
 
-enum pe_link_state {
-    pe_link_not_dumped,
-    pe_link_dumped,
-    pe_link_dup,
-};
-
-typedef struct action_wrapper_s action_wrapper_t;
-struct action_wrapper_s {
-    enum pe_ordering type;
-    enum pe_link_state state;
-    action_t *action;
-};
 
 extern gboolean stage0(pe_working_set_t * data_set);
 extern gboolean probe_resources(pe_working_set_t * data_set);

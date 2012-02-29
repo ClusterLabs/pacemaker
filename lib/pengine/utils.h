@@ -42,6 +42,9 @@ pe_hash_table_lookup(GHashTable * hash, gconstpointer key)
     return NULL;
 }
 
+extern action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);
+extern gboolean order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order);
+
 extern GListPtr node_list_and(GListPtr list1, GListPtr list2, gboolean filter);
 
 extern GListPtr node_list_xor(GListPtr list1, GListPtr list2, gboolean filter);

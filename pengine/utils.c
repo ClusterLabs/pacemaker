@@ -395,57 +395,6 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
     return TRUE;
 }
 
-gboolean
-order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order)
-{
-    GListPtr gIter = NULL;
-    action_wrapper_t *wrapper = NULL;
-    GListPtr list = NULL;
-
-    if (order == pe_order_none) {
-        return FALSE;
-    }
-
-    if (lh_action == NULL || rh_action == NULL) {
-        return FALSE;
-    }
-
-    crm_trace("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
-
-    log_action(LOG_DEBUG_4, "LH (order_actions)", lh_action, FALSE);
-    log_action(LOG_DEBUG_4, "RH (order_actions)", rh_action, FALSE);
-
-    /* Filter dups, otherwise update_action_states() has too much work to do */
-    gIter = lh_action->actions_after;
-    for (; gIter != NULL; gIter = gIter->next) {
-        action_wrapper_t *after = (action_wrapper_t *) gIter->data;
-
-        if (after->action == rh_action && (after->type & order)) {
-            return FALSE;
-        }
-    }
-
-    crm_malloc0(wrapper, sizeof(action_wrapper_t));
-    wrapper->action = rh_action;
-    wrapper->type = order;
-
-    list = lh_action->actions_after;
-    list = g_list_prepend(list, wrapper);
-    lh_action->actions_after = list;
-
-    wrapper = NULL;
-
-/* 	order |= pe_order_implies_then; */
-/* 	order ^= pe_order_implies_then; */
-
-    crm_malloc0(wrapper, sizeof(action_wrapper_t));
-    wrapper->action = lh_action;
-    wrapper->type = order;
-    list = rh_action->actions_before;
-    list = g_list_prepend(list, wrapper);
-    rh_action->actions_before = list;
-    return TRUE;
-}
 
 void
 log_action(unsigned int log_level, const char *pre_text, action_t * action, gboolean details)
@@ -539,31 +488,6 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
                             g_list_length(action->actions_before),
                             g_list_length(action->actions_after));
     }
-}
-
-action_t *
-get_pseudo_op(const char *name, pe_working_set_t * data_set)
-{
-    action_t *op = NULL;
-    const char *op_s = name;
-    GListPtr possible_matches = NULL;
-
-    possible_matches = find_actions(data_set->actions, name, NULL);
-    if (possible_matches != NULL) {
-        if (g_list_length(possible_matches) > 1) {
-            pe_warn("Action %s exists %d times", name, g_list_length(possible_matches));
-        }
-
-        op = g_list_nth_data(possible_matches, 0);
-        g_list_free(possible_matches);
-
-    } else {
-        op = custom_action(NULL, crm_strdup(op_s), op_s, NULL, TRUE, TRUE, data_set);
-        update_action_flags(op, pe_action_pseudo);
-        update_action_flags(op, pe_action_runnable);
-    }
-
-    return op;
 }
 
 gboolean
