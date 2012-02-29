@@ -40,7 +40,6 @@ digraph "g" {
 "load_stopped_hex-0 hex-0" [ style=bold color="green" fontcolor="orange"]
 "load_stopped_hex-7 hex-7" [ style=bold color="green" fontcolor="orange"]
 "load_stopped_hex-8 hex-8" [ style=bold color="green" fontcolor="orange"]
-"load_stopped_hex-9 hex-9" -> "vm-01_start_0 hex-9" [ style = dashed]
 "load_stopped_hex-9 hex-9" [ style=bold color="green" fontcolor="orange"]
 "o2cb:0_start_0 hex-0" -> "base-group:0_running_0" [ style = dashed]
 "o2cb:0_start_0 hex-0" -> "clvm:0_start_0 hex-0" [ style = bold]

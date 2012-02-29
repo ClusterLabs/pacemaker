@@ -721,7 +721,8 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
             } else if (before->type == pe_order_none) {
                 continue;
             } else if (is_set(before->action->flags, pe_action_dumped)
-                       && is_set(action->flags, pe_action_dumped)) {
+                       && is_set(action->flags, pe_action_dumped)
+                       && before->type != pe_order_load) {
                 optional = FALSE;
             }
 

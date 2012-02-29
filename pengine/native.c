@@ -1179,7 +1179,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             }
 
             custom_action_order(rsc, stop_key(rsc), NULL,
-                                NULL, load_stopped_task, load_stopped, pe_order_optional, data_set);
+                                NULL, load_stopped_task, load_stopped, pe_order_load, data_set);
         }
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -1193,11 +1193,11 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             }
 
             custom_action_order(NULL, crm_strdup(load_stopped_task), load_stopped,
-                                rsc, start_key(rsc), NULL, pe_order_optional, data_set);
+                                rsc, start_key(rsc), NULL, pe_order_load, data_set);
 
             custom_action_order(NULL, crm_strdup(load_stopped_task), load_stopped,
                                 rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL,
-                                pe_order_optional, data_set);
+                                pe_order_load, data_set);
 
             crm_free(load_stopped_task);
         }

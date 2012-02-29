@@ -401,7 +401,6 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
     GListPtr gIter = NULL;
     action_wrapper_t *wrapper = NULL;
     GListPtr list = NULL;
-    static int load_stopped_strlen = 0;
 
     if (order == pe_order_none) {
         return FALSE;
@@ -409,29 +408,6 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
 
     if (lh_action == NULL || rh_action == NULL) {
         return FALSE;
-    }
-
-    if (!load_stopped_strlen) {
-        load_stopped_strlen = strlen(LOAD_STOPPED);
-    }
-
-    if (strncmp(lh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0
-        || strncmp(rh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0) {
-
-        if (safe_str_eq(rh_action->task, RSC_MIGRATE)) {
-            /* A live migration: rh_action is a migrate_to */
-
-            if (lh_action->node == NULL || rh_action->rsc->allocated_to == NULL
-                /* Ignore the order: The load_stopped is not on the node where the resource will be migrated to. */
-                || lh_action->node->details != rh_action->rsc->allocated_to->details) {
-                return FALSE;
-            }
-
-        } else if (lh_action->node == NULL || rh_action->node == NULL
-                   /* Ignore the order: The load_stopped is not on the node where the other action will be executed. */
-                   || lh_action->node->details != rh_action->node->details) {
-            return FALSE;
-        }
     }
 
     crm_trace("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
