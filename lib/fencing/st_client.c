@@ -725,6 +725,14 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
                 crm_xml_add(tmp, "timeout", "20s");
             }
 
+            /* Now fudge the metadata so that the port isn't required in the configuration */
+            xpathObj = xpath_search(xml, "//parameter[@name='port']");
+            if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+                /* We'll fill this in */
+                xmlNode *tmp = getXpathResult(xpathObj, 0);
+                crm_xml_add(tmp, "required", "0");
+            }
+
             crm_free(buffer);
             buffer = dump_xml_formatted(xml);
             free_xml(xml);
