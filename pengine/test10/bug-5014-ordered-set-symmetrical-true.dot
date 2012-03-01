@@ -1,0 +1,13 @@
+digraph "g" {
+"A_start_0 fc16-builder" [ style=dashed color="red" fontcolor="black"]
+"A_stop_0 fc16-builder" -> "A_start_0 fc16-builder" [ style = dashed]
+"A_stop_0 fc16-builder" -> "C_stop_0 fc16-builder" [ style = bold]
+"A_stop_0 fc16-builder" -> "all_stopped" [ style = bold]
+"A_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"C_start_0 <none>" -> "A_start_0 fc16-builder" [ style = dashed]
+"C_start_0 <none>" [ style=dashed color="red" fontcolor="black"]
+"C_stop_0 fc16-builder" -> "C_start_0 <none>" [ style = dashed]
+"C_stop_0 fc16-builder" -> "all_stopped" [ style = bold]
+"C_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+}
