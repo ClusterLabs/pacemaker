@@ -400,6 +400,8 @@ do_test bug-5014-CLONE-A-stop-B-started "Verify when A stops B does not stop if 
 do_test bug-5014-GROUP-A-start-B-start "Verify when A starts B starts when using group resources with symmetric=false."
 do_test bug-5014-GROUP-A-stopped-B-started "Verify when A stops B does not stop if it has already started using group resources with symmetric=false."
 do_test bug-5014-GROUP-A-stopped-B-stopped "Verify when A is stopped and B has not started, B does not start before A using group resources with symmetric=false."
+do_test bug-5014-ordered-set-symmetrical-false "Verify ordered sets work with symmetrical=false"
+do_test bug-5014-ordered-set-symmetrical-true "Verify ordered sets work with symmetrical=true"
 
 echo ""
 do_test systemhealth1  "System Health ()               #1"
