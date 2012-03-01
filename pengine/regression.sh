@@ -79,6 +79,7 @@ do_test asymmetric "Asymmetric - require explicit location constraints"
 echo ""
 do_test orphan-0 "Orphan ignore"
 do_test orphan-1 "Orphan stop"
+do_test orphan-2 "Orphan stop, remove failcount"
 
 echo ""
 do_test params-0 "Params: No change"
