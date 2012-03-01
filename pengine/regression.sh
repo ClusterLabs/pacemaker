@@ -131,6 +131,10 @@ do_test clone-order-primitive "Order clone start after a primitive"
 do_test order-optional-keyword "Order (optional keyword)"
 do_test order-mandatory "Order (mandatory keyword)"
 do_test bug-lf-2493 "Don't imply colocation requirements when applying ordering constraints with clones"
+do_test ordered-set-basic-startup "Constraint set with default order settings."
+do_test unordered-set-basic-startup "Constraint set with ordered=false option enabled."
+do_test unordered-set-stop-b-asymmetrical "Constraint set with ordered=false option enabled. Stopping b resource of set 1"
+do_test unordered-set-stop-c-asymmetrical "Constraint set with ordered=false option enabled. Stopping c resource of set 1"
 # This test emits an error log and thus upsets the test suite; even
 # though it explicitly aims to test an error leg. FIXME
 # do_test order-wrong-kind "Order (error)"
