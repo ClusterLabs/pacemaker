@@ -1206,10 +1206,28 @@ process_orphan_resource(xmlNode * rsc_entry, node_t * node, pe_working_set_t * d
         clear_bit(rsc->flags, pe_rsc_managed);
 
     } else {
+        GListPtr gIter = NULL;
         print_resource(LOG_DEBUG_3, "Added orphan", rsc, FALSE);
 
         CRM_CHECK(rsc != NULL, return NULL);
         resource_location(rsc, NULL, -INFINITY, "__orphan_dont_run__", data_set);
+
+        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+            node_t *node = (node_t *) gIter->data;
+
+            if(node->details->online && get_failcount(node, rsc, NULL, data_set)) {
+                action_t *clear_op = NULL;
+                action_t *ready = get_pseudo_op(CRM_OP_PROBED, data_set);
+                clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
+                                         CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
+
+                add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+                crm_info("Clearing failcount (%d) for orphaned resource %s on %s (%s)",
+                         get_failcount(node, rsc, NULL, data_set), rsc->id, node->details->uname, clear_op->uuid);
+
+                order_actions(clear_op, ready, pe_order_optional);
+            }
+        }
     }
     return rsc;
 }
