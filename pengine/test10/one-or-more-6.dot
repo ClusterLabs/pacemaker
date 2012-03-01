@@ -1,0 +1,7 @@
+digraph "g" {
+"B_start_0 <none>" [ style=dashed color="red" fontcolor="black"]
+"B_stop_0 fc16-builder" -> "B_start_0 <none>" [ style = dashed]
+"B_stop_0 fc16-builder" -> "all_stopped" [ style = bold]
+"B_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+}
