@@ -45,6 +45,9 @@
 	    <attribute name="sequential"><data type="boolean"/></attribute>
 	  </optional>
 	  <optional>
+	    <attribute name="ordered"><data type="boolean"/></attribute>
+	  </optional>
+	  <optional>
 	    <attribute name="action">
 	      <ref name="attribute-actions"/>
 	    </attribute>

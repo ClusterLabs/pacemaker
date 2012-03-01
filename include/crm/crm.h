@@ -142,6 +142,7 @@ extern const char *crm_system_name;
 #  define CRM_OP_PROBED		"probe_complete"
 #  define CRM_OP_REPROBE		"probe_again"
 #  define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
+#  define CRM_OP_UNORDERED_SET  "unordered_set"
 
 #  define CRMD_STATE_ACTIVE	"member"
 #  define CRMD_STATE_INACTIVE	"down"

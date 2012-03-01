@@ -223,6 +223,21 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         }
     }
 
+    if (type & pe_order_runnable_left_optional) {
+        crm_trace("runnable_left_optional: %s then %s", first->uuid, then->uuid);
+        processed = TRUE;
+        if (then->rsc) {
+            changed |=
+                then->rsc->cmds->update_actions(first, then, node, flags & pe_action_runnable,
+                                                pe_action_runnable, pe_order_runnable_left_optional);
+
+        } else if (is_set(flags, pe_action_runnable)) {
+            if (update_action_flags(then, pe_action_runnable)) {
+                changed |= pe_graph_updated_then;
+            }
+        }
+    }
+
     if (type & pe_order_runnable_left) {
         crm_trace("runnable: %s then %s", first->uuid, then->uuid);
         processed = TRUE;
@@ -282,6 +297,8 @@ update_action(action_t * then)
 {
     GListPtr lpc = NULL;
     enum pe_graph_flags changed = pe_graph_none;
+    int last_flags = then->flags;
+    int compare_last_flags = 0;
 
     crm_trace("Processing %s (%s %s %s)",
               then->uuid,
@@ -289,6 +306,15 @@ update_action(action_t * then)
               is_set(then->flags, pe_action_runnable) ? "runnable" : "unrunnable",
               is_set(then->flags,
                      pe_action_pseudo) ? "pseudo" : then->node ? then->node->details->uname : "");
+
+
+    if (is_set(then->flags, pe_action_reset_runnable_on_update)) {
+        if (is_set(then->flags, pe_action_runnable)) {
+            clear_bit_inplace(then->flags, pe_action_runnable);
+            compare_last_flags = 1;
+        }
+    }
+
     for (lpc = then->actions_before; lpc != NULL; lpc = lpc->next) {
         action_wrapper_t *other = (action_wrapper_t *) lpc->data;
         action_t *first = other->action;
@@ -371,6 +397,14 @@ update_action(action_t * then)
                 update_action(other->action);
             }
             update_action(first);
+        }
+    }
+
+    if (compare_last_flags) {
+        if (last_flags != then->flags) {
+            changed |= pe_graph_updated_then;
+        } else {
+            changed &= ~pe_graph_updated_then;
         }
     }
 
