@@ -1098,7 +1098,7 @@ else
    # The current directory name make a reasonable default
    # Most generated archives will include the hash or tag 
    BASE=`basename $PWD`
-   BUILD_VERSION=`echo $BASE | sed s:.*[Pp]acemaker-::`
+   BUILD_VERSION=`echo $BASE | sed s:.*[[Pp]]acemaker-::`
    AC_MSG_RESULT(directory based hash: $BUILD_VERSION)
 fi
 
