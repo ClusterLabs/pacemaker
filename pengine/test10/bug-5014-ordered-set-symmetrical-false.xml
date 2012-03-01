@@ -1,0 +1,59 @@
+<cib epoch="150" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Tue Feb 28 10:54:21 2012" have-quorum="0" dc-uuid="fc16-builder">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-d60ebd5"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="fc16-builder" type="normal" uname="fc16-builder"/>
+      <node id="fc16-builder2" type="normal" uname="fc16-builder2"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="A" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="B" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="C" provider="pacemaker" type="Dummy">
+        <meta_attributes id="C-meta_attributes">
+          <nvpair id="C-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+    <rsc_order id="order-1" symmetrical="false">
+      <resource_set id="ordered-set-1">
+        <resource_ref id="B"/>
+        <resource_ref id="C"/>
+      </resource_set>
+      <resource_set id="ordered-set-2">
+        <resource_ref id="A"/>
+      </resource_set>
+    </rsc_order>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="fc16-builder" uname="fc16-builder" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="fc16-builder">
+        <lrm_resources>
+          <lrm_resource id="A" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="A_last_0" operation_key="A_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="7:0:0:63e36ef0-cc16-4f1c-a058-c1d85188901a" transition-magic="0:0;7:0:0:63e36ef0-cc16-4f1c-a058-c1d85188901a" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1330629142" last-rc-change="1330629142" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="B" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="B_last_0" operation_key="B_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="8:0:0:63e36ef0-cc16-4f1c-a058-c1d85188901a" transition-magic="0:0;8:0:0:63e36ef0-cc16-4f1c-a058-c1d85188901a" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1330629142" last-rc-change="1330629142" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="C" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="C_last_0" operation_key="C_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:0:0:63e36ef0-cc16-4f1c-a058-c1d85188901a" transition-magic="0:0;9:0:0:63e36ef0-cc16-4f1c-a058-c1d85188901a" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1330629142" last-rc-change="1330629142" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="fc16-builder">
+        <instance_attributes id="status-fc16-builder">
+          <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
