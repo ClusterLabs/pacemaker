@@ -176,6 +176,7 @@ enum pe_graph_flags {
     pe_graph_disable = 0x00004,
 };
 
+/* *INDENT-OFF* */
 enum pe_action_flags {
     pe_action_pseudo = 0x00001,
     pe_action_runnable = 0x00002,
@@ -190,7 +191,12 @@ enum pe_action_flags {
     pe_action_processed = 0x00200,
     pe_action_clear = 0x00400,
     pe_action_dangle = 0x00800,
+
+    pe_action_requires_any = 0x01000, /* This action requires one or mre of its dependancies to be runnable
+                                       * We use this to clear the runnable flag before checking dependancies
+                                       */
 };
+/* *INDENT-ON* */
 
 struct resource_s {
     char *id;
@@ -322,6 +328,7 @@ enum pe_ordering {
 
     pe_order_asymmetrical          = 0x100000,    /* Indicates asymmetrical one way ordering constraint. */
     pe_order_load                  = 0x200000,    /* Only relevant if... */
+    pe_order_one_or_more           = 0x400000,    /* 'then' is only runnable if one or more of it's dependancies are too */
 
     pe_order_trace                 = 0x4000000  /* test marker */
 };

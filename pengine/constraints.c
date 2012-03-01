@@ -996,6 +996,9 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     const char *sequential_1 = crm_element_value(set1, "sequential");
     const char *sequential_2 = crm_element_value(set2, "sequential");
 
+    const char *require_all_s = crm_element_value(set1, "require-all");
+    gboolean require_all = require_all_s ? crm_is_true(require_all_s) : TRUE;
+
     enum pe_ordering flags = pe_order_none;
 
     if (action_1 == NULL) {
@@ -1015,6 +1018,44 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         flags = get_asymmetrical_flags(kind);
     } else {
         flags = get_flags(id, kind, action_2, action_1, invert);
+    }
+
+    /* If we have an un-ordered set1, whether it is sequential or not is irrelevant in regards to set2. */
+    if (!require_all) {
+        action_t *unordered_action = get_pseudo_op(crm_concat(CRM_OP_RELAXED_SET, ID(set1), ':'), data_set);
+
+        update_action_flags(unordered_action, pe_action_requires_any);
+
+        for (xml_rsc = __xml_first_child(set1); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
+            xmlNode *xml_rsc_2 = NULL;
+            if (!crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+                continue;
+            }
+
+            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+
+            /* Add an ordering constraint between every element in set1 and the pseudo action.
+             * If any action in set1 is runnable the pseudo action will be runnable. */
+            custom_action_order(rsc_1, generate_op_key(rsc_1->id, action_1, 0), NULL,
+                                NULL,NULL, unordered_action,
+                                pe_order_one_or_more, data_set);
+
+            for (xml_rsc_2 = __xml_first_child(set2); xml_rsc_2 != NULL; xml_rsc_2 = __xml_next(xml_rsc_2)) {
+                if (!crm_str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, TRUE)) {
+                    continue;
+                }
+
+                EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
+
+                /* Add an ordering constraint between the pseudo action and every element in set2.
+                 * If the pseudo action is runnable, every action in set2 will be runnable */
+                custom_action_order(NULL, NULL, unordered_action,
+                    rsc_2, generate_op_key(rsc_2->id, action_2, 0), NULL,
+                    flags, data_set);
+            }
+        }
+
+        return TRUE;
     }
 
     if (crm_is_true(sequential_1)) {
@@ -1101,6 +1142,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
             }
         }
     }
+
     return TRUE;
 }
 

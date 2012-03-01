@@ -74,6 +74,8 @@ extern int log_data_element(int log_level, const char *file, const char *functio
 
 extern const char *crm_system_name;
 
+/* *INDENT-OFF* */
+
 /* Clean these up at some point, some probably should be runtime options */
 #  define SOCKET_LEN	1024
 #  define APPNAME_LEN	256
@@ -142,6 +144,7 @@ extern const char *crm_system_name;
 #  define CRM_OP_PROBED		"probe_complete"
 #  define CRM_OP_REPROBE		"probe_again"
 #  define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
+#  define CRM_OP_RELAXED_SET  "one-or-more"
 
 #  define CRMD_STATE_ACTIVE	"member"
 #  define CRMD_STATE_INACTIVE	"down"
@@ -195,6 +198,7 @@ extern const char *crm_system_name;
 #  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
 
 #  define RSC_STATUS	CRMD_ACTION_STATUS
+/* *INDENT-ON* */
 
 typedef GList *GListPtr;
 
