@@ -982,7 +982,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
 
 static gboolean
 order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kind kind,
-               pe_working_set_t * data_set, gboolean invert)
+               pe_working_set_t * data_set, gboolean invert, gboolean symmetrical)
 {
 
     xmlNode *xml_rsc = NULL;
@@ -1006,12 +1006,15 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         action_2 = RSC_START;
     };
 
-    if (invert == FALSE) {
-        flags = get_asymmetrical_flags(kind);
-    } else {
+    if (invert) {
         action_1 = invert_action(action_1);
         action_2 = invert_action(action_2);
-        flags = get_flags(id, kind, action_2, action_1, TRUE);
+    }
+
+    if (symmetrical == FALSE) {
+        flags = get_asymmetrical_flags(kind);
+    } else {
+        flags = get_flags(id, kind, action_2, action_1, invert);
     }
 
     if (crm_is_true(sequential_1)) {
@@ -1441,11 +1444,14 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 
+    gboolean invert_bool = TRUE;
     gboolean rc = TRUE;
 
     if (invert == NULL) {
         invert = "true";
     }
+
+    invert_bool = crm_is_true(invert);
 
     rc = unpack_order_template(xml_obj, &expanded_xml, data_set);
     if(expanded_xml) {
@@ -1502,12 +1508,11 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
             } else if ( /* never called -- Now call it for supporting clones in resource sets */
                        last) {
-                if (order_rsc_sets(id, last, set, kind, data_set, FALSE) == FALSE) {
+                if (order_rsc_sets(id, last, set, kind, data_set, FALSE, invert_bool) == FALSE) {
                     return FALSE;
                 }
 
-                if (crm_is_true(invert)
-                    && order_rsc_sets(id, set, last, kind, data_set, TRUE) == FALSE) {
+                if (invert_bool && order_rsc_sets(id, set, last, kind, data_set, TRUE, invert_bool) == FALSE) {
                     return FALSE;
                 }
 
