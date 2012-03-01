@@ -332,7 +332,11 @@ update_failcounts(xmlNode * cib_node, const char *resource, int interval, int rc
 static gboolean
 exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
 {
+    const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     action->confirmed = TRUE;
+
+    quiet_log(" * Pseudo action:   %s%s%s\n", task, node?" on ":"", node?node:"");
     update_graph(graph, action);
     return TRUE;
 }
@@ -387,8 +391,11 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     CRM_ASSERT(cib_resource != NULL);
 
     op = convert_graph_action(cib_resource, action, 0, target_outcome);
-    quiet_log(" * Executing action %d: %s_%s_%d on %s\n", action->id, resource, op->op_type,
-              op->interval, node);
+    if(op->interval) {
+        quiet_log(" * Resource action: %s %s=%d on %s\n", resource, op->op_type, op->interval, node);
+    } else {
+        quiet_log(" * Resource action: %s %s on %s\n", resource, op->op_type, node);
+    }
 
     for (gIter = op_fail; gIter != NULL; gIter = gIter->next) {
         char *spec = (char *)gIter->data;
@@ -428,7 +435,11 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 static gboolean
 exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
 {
+    const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     action->confirmed = TRUE;
+
+    quiet_log(" * Cluster action:  %s on %s\n", task, node);
     update_graph(graph, action);
     return TRUE;
 }
