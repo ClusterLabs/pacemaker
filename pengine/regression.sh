@@ -112,6 +112,15 @@ do_test probe-4 "Probe (pending node + stopped resource)" --rc 4
 do_test standby "Standby"
 do_test comments "Comments"
 
+echo ""
+do_test one-or-more-0 "Everything starts"
+do_test one-or-more-1 "Nothing starts because of A"
+do_test one-or-more-2 "D can start because of C"
+do_test one-or-more-3 "D cannot start because of B and C"
+do_test one-or-more-4 "D cannot start because of target-role"
+do_test one-or-more-5 "Start A and F even though C and D are stopped"
+do_test one-or-more-6 "Leave A running even though B is stopped"
+do_test one-or-more-7 "Leave A running even though C is stopped"
 
 echo ""
 do_test order1 "Order start 1     "
@@ -133,9 +142,6 @@ do_test order-optional-keyword "Order (optional keyword)"
 do_test order-mandatory "Order (mandatory keyword)"
 do_test bug-lf-2493 "Don't imply colocation requirements when applying ordering constraints with clones"
 do_test ordered-set-basic-startup "Constraint set with default order settings."
-do_test one-or-more-5 "Start A and F even though C and D are stopped"
-do_test one-or-more-6 "Leave A running even though B is stopped"
-do_test one-or-more-7 "Leave A running even though C is stopped"
 # This test emits an error log and thus upsets the test suite; even
 # though it explicitly aims to test an error leg. FIXME
 # do_test order-wrong-kind "Order (error)"

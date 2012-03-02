@@ -1,0 +1,50 @@
+<cib epoch="150" num_updates="31" admin_epoch="0" validate-with="pacemaker-1.1" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Tue Feb 28 10:54:21 2012" have-quorum="0" dc-uuid="fc16-builder">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-d60ebd5"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="fc16-builder" type="normal" uname="fc16-builder"/>
+      <node id="fc16-builder2" type="normal" uname="fc16-builder2"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="A" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="B" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="C" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="D" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints>
+    <rsc_order id="order-1">
+      <resource_set id="require-all-set-2">
+        <resource_ref id="A"/>
+      </resource_set>
+      <resource_set id="require-all-set-1" sequential="false" require-all="false">
+        <resource_ref id="B"/>
+        <resource_ref id="C"/>
+      </resource_set>
+      <resource_set id="require-all-set-4">
+        <resource_ref id="D"/>
+      </resource_set>
+    </rsc_order>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="fc16-builder" uname="fc16-builder" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="fc16-builder">
+        <instance_attributes id="status-fc16-builder">
+          <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="fc16-builder">
+        <lrm_resources>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
