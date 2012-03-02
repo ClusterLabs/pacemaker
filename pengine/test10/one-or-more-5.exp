@@ -8,6 +8,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <pseudo_event id="1" operation="one-or-more:require-all-set-1" operation_key="one-or-more:require-all-set-1"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
     </inputs>
@@ -95,6 +98,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <pseudo_event id="2" operation="one-or-more:require-all-set-3" operation_key="one-or-more:require-all-set-3"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
     </inputs>
@@ -144,6 +150,30 @@
     <inputs>
       <trigger>
         <rsc_op id="6" operation="probe_complete" operation_key="probe_complete" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <pseudo_event id="2" operation="one-or-more:require-all-set-3" operation_key="one-or-more:require-all-set-3">
+        <attributes crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="15" operation="start" operation_key="E_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <pseudo_event id="1" operation="one-or-more:require-all-set-1" operation_key="one-or-more:require-all-set-1">
+        <attributes crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="B_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>

@@ -1038,7 +1038,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
              * If any action in set1 is runnable the pseudo action will be runnable. */
             custom_action_order(rsc_1, generate_op_key(rsc_1->id, action_1, 0), NULL,
                                 NULL,NULL, unordered_action,
-                                pe_order_one_or_more, data_set);
+                                pe_order_one_or_more|pe_order_implies_then_printed, data_set);
 
             for (xml_rsc_2 = __xml_first_child(set2); xml_rsc_2 != NULL; xml_rsc_2 = __xml_next(xml_rsc_2)) {
                 if (!crm_str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, TRUE)) {
@@ -1051,7 +1051,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
                  * If the pseudo action is runnable, every action in set2 will be runnable */
                 custom_action_order(NULL, NULL, unordered_action,
                     rsc_2, generate_op_key(rsc_2->id, action_2, 0), NULL,
-                    flags, data_set);
+                    flags|pe_order_runnable_left, data_set);
             }
         }
 

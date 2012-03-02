@@ -273,7 +273,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         }
     }
 
-    if ((type & pe_order_implies_then_printed) && (flags & pe_action_optional) == 0) {
+    if ((first->flags & pe_action_runnable) && (type & pe_order_implies_then_printed) && (flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", first->uuid, then->uuid);
         update_action_flags(then, pe_action_print_always);      /* dont care about changed */
