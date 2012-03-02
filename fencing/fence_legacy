@@ -176,8 +176,8 @@ if ( $pid=fork() == 0 )
    }
    elsif ( $opt_o eq "monitor" || $opt_o eq "stat" || $opt_o eq "status" ) 
    {
-       print "Performing: $opt_s -t $opt_t -S $opt_n\n" unless defined $opt_q;
-       exec "$opt_s -t $opt_t $extra_args -S $opt_n" or die "failed to exec \"$opt_s\"\n";
+       print "Performing: $opt_s -t $opt_t -S\n" unless defined $opt_q;
+       exec "$opt_s -t $opt_t $extra_args -S" or die "failed to exec \"$opt_s\"\n";
    }
    else
    {
