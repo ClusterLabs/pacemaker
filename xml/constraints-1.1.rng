@@ -55,9 +55,6 @@
 	    <attribute name="sequential"><data type="boolean"/></attribute>
 	  </optional>
 	  <optional>
-	    <attribute name="require-all"><data type="boolean"/></attribute>
-	  </optional>
-	  <optional>
 	    <attribute name="action">
 	      <ref name="attribute-actions"/>
 	    </attribute>

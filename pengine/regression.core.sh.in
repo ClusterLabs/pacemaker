@@ -44,6 +44,7 @@ function show_test() {
 
 info "Test home is:\t$test_home"
 test_binary=@abs_top_builddir@/tools/crm_simulate
+PCMK_schema_directory=@abs_top_builddir@/xml
 
 failed=$test_home/.regression.failed.diff
 
@@ -56,16 +57,16 @@ while true ; do
 	-v|--valgrind) 
 	    export G_SLICE=always-malloc
 	    VALGRIND_CMD="valgrind -q --log-file=%q{valgrind_output} --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=$test_home/ptest.supp"
-	    test_binary=`which crm_simulate`
+	    test_binary=
 	    shift;;
 	--valgrind-dhat) 
 	    VALGRIND_CMD="valgrind --log-file=%q{valgrind_output} --show-top-n=100 --num-callers=4 --time-stamp=yes --trace-children=no --tool=exp-dhat --suppressions=$test_home/ptest.supp"
-	    test_binary=`which crm_simulate`
+	    test_binary=
 	    shift;;
 	--valgrind-skip-output)
 	    VALGRIND_SKIP_OUTPUT=1
 	    shift;;
-	-b|--binary) test_binary=$2; shift; shift;;
+	-b|--binary) test_binary=$2; PCMK_schema_directory=""; shift; shift;;
 	-?|--help) echo "$0 [--binary name] [--force-local]"; shift; exit 0;;
 	--) shift ; break ;;
 	"") break;;
@@ -75,7 +76,10 @@ done
 
 if [ ! -x $test_binary ]; then
     test_binary=`which crm_simulate`
+    PCMK_schema_directory=""
 fi
+
+export PCMK_schema_directory
 
 if [ "x$test_binary" = "x" ]; then
     info "crm_simulate not installed. Aborting."

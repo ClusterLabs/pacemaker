@@ -87,12 +87,12 @@ struct schema_s
 
 struct schema_s known_schemas[] = {
     /* 0 */    { 0, NULL, NULL, NULL, 1 },
-    /* 1 */    { 1, "pacemaker-0.6",    CRM_DTD_DIRECTORY"/crm.dtd",		CRM_DTD_DIRECTORY"/upgrade06.xsl", 4, NULL },
-    /* 2 */    { 1, "transitional-0.6", CRM_DTD_DIRECTORY"/crm-transitional.dtd",	CRM_DTD_DIRECTORY"/upgrade06.xsl", 4, NULL },
-    /* 3 */    { 2, "pacemaker-0.7",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0, NULL },
-    /* 4 */    { 2, "pacemaker-1.0",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 6, NULL },
-    /* 5 */    { 2, "pacemaker-1.1",    CRM_DTD_DIRECTORY"/pacemaker-1.1.rng",	NULL, 6, NULL },
-    /* 6 */    { 2, "pacemaker-1.2",    CRM_DTD_DIRECTORY"/pacemaker-1.2.rng",	NULL, 0, NULL },
+    /* 1 */    { 1, "pacemaker-0.6",    "crm.dtd",		"upgrade06.xsl", 4, NULL },
+    /* 2 */    { 1, "transitional-0.6", "crm-transitional.dtd",	"upgrade06.xsl", 4, NULL },
+    /* 3 */    { 2, "pacemaker-0.7",    "pacemaker-1.0.rng",	NULL, 0, NULL },
+    /* 4 */    { 2, "pacemaker-1.0",    "pacemaker-1.0.rng",	NULL, 6, NULL },
+    /* 5 */    { 2, "pacemaker-1.1",    "pacemaker-1.1.rng",	NULL, 6, NULL },
+    /* 6 */    { 2, "pacemaker-1.2",    "pacemaker-1.2.rng",	NULL, 0, NULL },
     /* 7 */    { 0, "none", NULL, NULL, 0, NULL },
 };
 
@@ -128,6 +128,18 @@ static void add_ha_nocopy(HA_Message *parent, HA_Message *child, const char *fie
     parent->vlens[next] = sizeof(HA_Message);
     parent->types[next] = FT_UNCOMPRESS;
     parent->nfields++;	
+}
+
+static char *get_schema_path(const char *file) 
+{
+    static const char *base = NULL;
+    if(base == NULL) {
+        base = getenv("PCMK_schema_directory");
+    }
+    if(base == NULL) {
+        base = CRM_DTD_DIRECTORY;
+    }
+    return crm_concat(base, file, '/');
 }
 
 int print_spaces(char *buffer, int spaces, int max);
@@ -2600,7 +2612,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
     xmlDocPtr doc = NULL;
     gboolean valid = FALSE;
     int type = known_schemas[method].type;
-    const char *file = known_schemas[method].location;    
+    char *file = get_schema_path(known_schemas[method].location);
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
@@ -2621,6 +2633,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
 	    break;
     }
 
+    crm_free(file);
     return valid;
 }
 
@@ -2716,13 +2729,15 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
     xmlDocPtr doc = NULL;
     xsltStylesheet *xslt = NULL;
 
+    char *xform = get_schema_path(transform);
+
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
 
     xmlLoadExtDtdDefaultValue = 1;
     xmlSubstituteEntitiesDefault(1);
     
-    xslt = xsltParseStylesheetFile((const xmlChar *)transform);
+    xslt = xsltParseStylesheetFile((const xmlChar *)xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
     
     res = xsltApplyStylesheet(xslt, doc, NULL);
@@ -2737,7 +2752,8 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
 
     xsltCleanupGlobals();
     xmlCleanupParser();
-    
+    crm_free(xform);
+
     return out;
 }
 #endif
