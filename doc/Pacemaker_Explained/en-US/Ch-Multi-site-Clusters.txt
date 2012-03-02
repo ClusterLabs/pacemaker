@@ -180,6 +180,15 @@ resources in one `rsc_ticket` constraint. For example:
       </rsc_ticket>
 -------
 
+In the example, there are two resource sets for listing the resources with
+different `roles` in one `rsc_ticket` constraint. There's no dependency
+between the two resource sets. And there's no dependency among the
+resources within a resource set. Each of the resources just depends on
+`ticketA`.
+
+Referencing resource templates in `rsc_ticket` constraints, and even
+referencing them within resource sets, is also supported. 
+
 If you want other resources to depend on further tickets, create as many
 constraints as necessary with `rsc_ticket`.
 
