@@ -1846,9 +1846,17 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (rsc->role == RSC_ROLE_STOPPED) {
+        gboolean allowed = FALSE;
+        if(start && (start->flags & pe_action_runnable)) {
+            allowed = TRUE;
+        }
+
         CRM_CHECK(next != NULL,);
         if (next != NULL) {
-            crm_notice("Start   %s\t(%s)", rsc->id, next->details->uname);
+            crm_notice("Start   %s\t(%s%s)", rsc->id, next->details->uname, allowed?"":" - blocked");
+        }
+        if(allowed == FALSE) {
+            return;
         }
     }
 
