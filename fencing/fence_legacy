@@ -105,6 +105,7 @@ sub get_options_stdin
 	elsif ($name eq "port" ) 
 	{
             $opt_n = $val;
+	    $ENV{$name} = $val;
         } 
 	elsif ($name eq "stonith" ) 
 	{
