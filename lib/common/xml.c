@@ -2326,8 +2326,11 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
 
 #if LIBQB_LOGGING
     {
-        static struct qb_log_callsite digest_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, "digest-block", LOG_TRACE, __LINE__, 0, 0 };
-        if (digest_cs.targets) {
+        static struct qb_log_callsite *digest_cs = NULL;
+        if(digest_cs == NULL) {
+            qb_log_callsite_get(__func__, __FILE__, "xml-blog", LOG_TRACE, __LINE__, 0);
+        }
+        if (digest_cs && digest_cs->targets) {
             FILE *st = NULL;
             char *trace_file = crm_concat("/tmp/cib-digest", digest, '-');
             crm_trace("Saving %s.%s.%s to %s",

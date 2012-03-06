@@ -973,12 +973,16 @@ fi
 
 PKG_CHECK_MODULES(libqb, libqb, HAVE_libqb=1, HAVE_libqb=0)
 AC_CHECK_HEADERS(qb/qbipc_common.h)
+AC_CHECK_LIB(qb, qb_log_callsite_get)
+AC_CHECK_FUNCS(qb_log_callsite_get)
 
-if test $HAVE_libqb = 1; then
-   PCMK_FEATURES="$PCMK_FEATURES libqb"
+LIBQB_LOG=0
+if test $ac_cv_lib_qb_qb_log_callsite_get = yes; then
+   LIBQB_LOG=1
+   PCMK_FEATURES="$PCMK_FEATURES libqb-logging"
 fi
 
-AC_DEFINE_UNQUOTED(LIBQB_LOGGING, $HAVE_libqb, Use libqb for logging)
+AC_DEFINE_UNQUOTED(LIBQB_LOGGING, $LIBQB_LOG, Use libqb for logging)
 AC_DEFINE_UNQUOTED(LIBQB_IPC, 0, Use libqb for IPC)
 
 LIBS="$LIBS $libqb_LIBS"

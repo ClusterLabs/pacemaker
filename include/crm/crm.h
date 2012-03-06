@@ -233,16 +233,45 @@ typedef GList *GListPtr;
 
 /* level /MUST/ be a constant or compilation will fail */
 #    define do_crm_log_unlikely(level, fmt, args...) do {               \
-        static struct qb_log_callsite trace_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, fmt, level, __LINE__, 0, 0 }; \
-        if (trace_cs.targets) {                                         \
+        static struct qb_log_callsite *trace_cs = NULL;                 \
+        if(trace_cs == NULL) {                                          \
+            trace_cs = qb_log_callsite_get(__func__, __FILE__, fmt, level, __LINE__, 0); \
+        }                                                               \
+        if (trace_cs && trace_cs->targets) {                            \
             qb_log_from_external_source(                                \
                 __func__, __FILE__, fmt, level, __LINE__, 0,  ##args);  \
         }                                                               \
     } while(0)
 
+#    define CRM_LOG_ASSERT(expr) do {					\
+        if(__unlikely((expr) == FALSE)) {				\
+            static struct qb_log_callsite *core_cs = NULL;              \
+            if(core_cs == NULL) {                                       \
+                qb_log_callsite_get(__func__, __FILE__, "log-assert", LOG_TRACE, __LINE__, 0); \
+            }                                                           \
+            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,   \
+                      core_cs?core_cs->targets:FALSE, TRUE);            \
+        }                                                               \
+    } while(0)
+
+#    define CRM_CHECK(expr, failure_action) do {				\
+	if(__unlikely((expr) == FALSE)) {				\
+            static struct qb_log_callsite *core_cs = NULL;              \
+            if(core_cs == NULL) {                                       \
+                qb_log_callsite_get(__func__, __FILE__, "check-assert", LOG_TRACE, __LINE__, 0); \
+            }                                                           \
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
+		      core_cs?core_cs->targets:FALSE, TRUE);            \
+	    failure_action;						\
+	}								\
+    } while(0)
+
 #    define do_crm_log_xml(level, text, xml) do {                       \
-        static struct qb_log_callsite xml_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, "xml-block", level, __LINE__, 0, 0 }; \
-        if (xml_cs.targets) {                                            \
+        static struct qb_log_callsite *xml_cs = NULL;                   \
+        if(xml_cs == NULL) {                                            \
+            qb_log_callsite_get(__func__, __FILE__, "xml-blog", LOG_TRACE, __LINE__, 0); \
+        }                                                               \
+        if (xml_cs && xml_cs->targets) {                                            \
             log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
         }                                                               \
     } while(0)
@@ -260,23 +289,6 @@ typedef GList *GListPtr;
 #    define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
 #    define crm_debug(fmt, args...)   qb_logt(LOG_DEBUG,   0, fmt , ##args)
 #    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
-
-#    define CRM_LOG_ASSERT(expr) do {					\
-        static struct qb_log_callsite core_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, "assert-block", LOG_TRACE, __LINE__, 0, 0 }; \
-        if(__unlikely((expr) == FALSE)) {				\
-            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,   \
-                      core_cs.targets, TRUE);                           \
-        }                                                               \
-    } while(0)
-
-#    define CRM_CHECK(expr, failure_action) do {				\
-        static struct qb_log_callsite core_cs __attribute__((section("__verbose"), aligned(8))) = {__func__, __FILE__, "assert-block", LOG_TRACE, __LINE__, 0, 0 }; \
-	if(__unlikely((expr) == FALSE)) {				\
-	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
-		      core_cs.targets, TRUE);                                     \
-	    failure_action;						\
-	}								\
-    } while(0)
 
 #  else
 #    define CRM_TRACE_INIT_DATA(name)
