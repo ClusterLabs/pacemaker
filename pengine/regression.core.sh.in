@@ -87,6 +87,7 @@ if [ "x$test_binary" = "x" ]; then
 fi
 
 info "Test binary is:\t$test_binary"
+info "Schema home is:\t$PCMK_schema_directory"
 if [ "x$VALGRIND_CMD" != "x" ]; then
     info "Activating memory testing with valgrind";
 fi
