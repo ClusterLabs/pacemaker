@@ -2339,10 +2339,12 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
                       crm_element_value(input, XML_ATTR_NUMUPDATES),
                       trace_file);
             st = fopen(trace_file, "w");
-            fprintf(st, "%s", xml_buffer->content);
-            /* fflush(st); */
-            /* fsync(fileno(st)); */
-            fclose(st);
+            if(st) {
+                fprintf(st, "%s", xml_buffer->content);
+                /* fflush(st); */
+                /* fsync(fileno(st)); */
+                fclose(st);
+            }
             crm_free(trace_file);
         }
     }
