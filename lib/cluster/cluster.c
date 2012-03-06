@@ -159,6 +159,7 @@ get_node_uuid(uint32_t id, const char *uname)
             
         case pcmk_cluster_heartbeat:
             uuid = get_heartbeat_uuid(id, uname);
+            break;
 
         case pcmk_cluster_unknown:
         case pcmk_cluster_invalid:
