@@ -2343,6 +2343,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
             /* fflush(st); */
             /* fsync(fileno(st)); */
             fclose(st);
+            crm_free(trace_file);
         }
     }
 #endif
