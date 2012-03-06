@@ -513,6 +513,7 @@ crm_log_init_quiet(const char *entity, int level, gboolean coredir, gboolean to_
 void set_format_string(int method, const char *daemon, gboolean trace) 
 {
 #if LIBQB_LOGGING
+    static gboolean local_trace = FALSE;
     int offset = 0;
     char fmt[FMT_MAX];
     if(method > QB_LOG_STDERR) {
@@ -524,8 +525,9 @@ void set_format_string(int method, const char *daemon, gboolean trace)
             offset += snprintf(fmt+offset, FMT_MAX-offset, "%%t [%d] %10s: ", getpid(), daemon);
         }
     }
-    
-    if(trace) {
+
+    local_trace |= trace;
+    if(local_trace && method >= QB_LOG_STDERR) {
         offset += snprintf(fmt+offset, FMT_MAX-offset, "(%%-12f:%%5l %%g) %%-7p: %%n: ");
     } else {
         offset += snprintf(fmt+offset, FMT_MAX-offset, "%%g %%-7p: %%n: ");
