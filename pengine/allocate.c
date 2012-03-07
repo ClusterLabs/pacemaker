@@ -2208,6 +2208,20 @@ stage8(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
+        if (action->rsc
+            && action->node
+            && action->node->details->shutdown
+            && is_not_set(data_set->flags, pe_flag_maintenance_mode)
+            && is_not_set(action->flags, pe_action_optional)
+            && is_not_set(action->flags, pe_action_runnable)
+            && crm_str_eq(action->task, RSC_STOP, TRUE)
+            ) {
+            crm_crit("Cannot shut down node '%s' because of %s:%s%s",
+                     action->node->details->uname, action->rsc->id,
+                     is_not_set(action->rsc->flags, pe_rsc_managed)?" unmanaged":" blocked",
+                     is_set(action->rsc->flags, pe_rsc_failed)?" failed":"");
+        }
+
         graph_element_from_action(action, data_set);
     }
 
