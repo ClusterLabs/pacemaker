@@ -1551,7 +1551,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         } else if ((then_rsc_role == RSC_ROLE_STARTED) && safe_str_eq(then->task, RSC_START)) {
             /* ignore... if 'then' is supposed to be started after 'first', but
              * then is already started, there is nothing to be done when non-symmetrical.  */
-        } else if (!(first_flags & pe_action_runnable)) {
+        } else if (!(first->flags & pe_action_runnable)) {
             /* prevent 'then' action from happening if 'first' is not runnable and
              * 'then' has not yet occurred. */
             clear_bit_inplace(then->flags, pe_action_runnable);
