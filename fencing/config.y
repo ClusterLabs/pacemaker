@@ -1,4 +1,6 @@
 %{
+#include <crm_internal.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
