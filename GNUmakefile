@@ -38,7 +38,7 @@ MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
 # openSUSE: /etc/SuSE-release
 # RHEL:     /etc/redhat-release
 # Fedora:   /etc/fedora-release, /etc/redhat-release, /etc/system-release
-F       ?= $(shell test -e /etc/fedora-release && rpm --eval %{fedora})
+F       ?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-release && rpm --eval %{fedora})
 ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
