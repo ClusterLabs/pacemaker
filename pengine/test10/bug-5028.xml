@@ -1,0 +1,85 @@
+<cib epoch="5" num_updates="37" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="bl460g6a" update-client="cibadmin" cib-last-written="Fri Mar  2 14:46:27 2012" have-quorum="1" dc-uuid="22222222-2222-2222-2222-222222222222">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-b7534bd"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-crmd-transition-delay" name="crmd-transition-delay" value="2s"/>
+        <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="60s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="11111111-1111-1111-1111-111111111111" type="normal" uname="bl460g6a"/>
+      <node id="22222222-2222-2222-2222-222222222222" type="normal" uname="bl460g6b"/>
+    </nodes>
+    <resources>
+      <group id="dummy-g">
+        <primitive class="ocf" id="dummy01" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="dummy01-start-0s" interval="0s" name="start" on-fail="restart" timeout="60s"/>
+            <op id="dummy01-monitor-7s" interval="7s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="dummy01-stop-0s" interval="0s" name="stop" on-fail="block" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="dummy02" provider="heartbeat" type="Dummy-stop-NG">
+          <operations>
+            <op id="dummy02-start-0s" interval="0s" name="start" on-fail="restart" timeout="60s"/>
+            <op id="dummy02-monitor-7s" interval="7s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="dummy02-stop-0s" interval="0s" name="stop" on-fail="block" timeout="60s"/>
+          </operations>
+        </primitive>
+      </group>
+    </resources>
+    <constraints/>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair id="rsc-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+        <nvpair id="rsc-options-migration-threshold" name="migration-threshold" value="1"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="22222222-2222-2222-2222-222222222222" uname="bl460g6b" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="22222222-2222-2222-2222-222222222222">
+        <instance_attributes id="status-22222222-2222-2222-2222-222222222222">
+          <nvpair id="status-22222222-2222-2222-2222-222222222222-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="22222222-2222-2222-2222-222222222222">
+        <lrm_resources>
+          <lrm_resource id="dummy02" type="Dummy-stop-NG" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dummy02_last_0" operation_key="dummy02_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="8:1:7:02f08202-4db7-4748-8dc9-958b2ba6dc49" transition-magic="0:7;8:1:7:02f08202-4db7-4748-8dc9-958b2ba6dc49" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1330667157" last-rc-change="1330667157" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy01" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dummy01_last_0" operation_key="dummy01_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="7:1:7:02f08202-4db7-4748-8dc9-958b2ba6dc49" transition-magic="0:7;7:1:7:02f08202-4db7-4748-8dc9-958b2ba6dc49" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1330667157" last-rc-change="1330667157" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="11111111-1111-1111-1111-111111111111" uname="bl460g6a" ha="active" in_ccm="true" crmd="online" join="member" expected="down" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="11111111-1111-1111-1111-111111111111">
+        <instance_attributes id="status-11111111-1111-1111-1111-111111111111">
+          <nvpair id="status-11111111-1111-1111-1111-111111111111-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-11111111-1111-1111-1111-111111111111-shutdown" name="shutdown" value="1330667179"/>
+          <nvpair id="status-11111111-1111-1111-1111-111111111111-fail-count-dummy02" name="fail-count-dummy02" value="INFINITY"/>
+          <nvpair id="status-11111111-1111-1111-1111-111111111111-last-failure-dummy02" name="last-failure-dummy02" value="1330667185"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="11111111-1111-1111-1111-111111111111">
+        <lrm_resources>
+          <lrm_resource id="dummy01" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dummy01_last_0" operation_key="dummy01_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:1:0:02f08202-4db7-4748-8dc9-958b2ba6dc49" transition-magic="0:0;9:1:0:02f08202-4db7-4748-8dc9-958b2ba6dc49" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1330667161" last-rc-change="1330667161" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy01_monitor_7000" operation_key="dummy01_monitor_7000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="10:1:0:02f08202-4db7-4748-8dc9-958b2ba6dc49" transition-magic="0:0;10:1:0:02f08202-4db7-4748-8dc9-958b2ba6dc49" call-id="5" rc-code="0" op-status="0" interval="7000" last-rc-change="1330667162" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="dummy02" type="Dummy-stop-NG" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dummy02_last_0" operation_key="dummy02_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="11:1:0:02f08202-4db7-4748-8dc9-958b2ba6dc49" transition-magic="0:0;11:1:0:02f08202-4db7-4748-8dc9-958b2ba6dc49" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1330667162" last-rc-change="1330667162" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy02_monitor_7000" operation_key="dummy02_monitor_7000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="12:1:0:02f08202-4db7-4748-8dc9-958b2ba6dc49" transition-magic="0:0;12:1:0:02f08202-4db7-4748-8dc9-958b2ba6dc49" call-id="7" rc-code="0" op-status="0" interval="7000" last-rc-change="1330667164" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="dummy02_last_failure_0" operation_key="dummy02_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="10:2:0:02f08202-4db7-4748-8dc9-958b2ba6dc49" transition-magic="0:1;10:2:0:02f08202-4db7-4748-8dc9-958b2ba6dc49" call-id="8" rc-code="1" op-status="0" interval="0" last-run="1330667183" last-rc-change="1330667183" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -1,0 +1,11 @@
+Allocation scores:
+group_color: dummy-g allocation score on bl460g6a: 0
+group_color: dummy-g allocation score on bl460g6b: 0
+group_color: dummy01 allocation score on bl460g6a: INFINITY
+group_color: dummy01 allocation score on bl460g6b: 0
+group_color: dummy02 allocation score on bl460g6a: -INFINITY
+group_color: dummy02 allocation score on bl460g6b: 0
+native_color: dummy01 allocation score on bl460g6a: -INFINITY
+native_color: dummy01 allocation score on bl460g6b: 0
+native_color: dummy02 allocation score on bl460g6a: -INFINITY
+native_color: dummy02 allocation score on bl460g6b: -INFINITY
