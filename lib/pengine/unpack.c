@@ -1286,6 +1286,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
              * actions being sent for the resource
              */
             clear_bit(rsc->flags, pe_rsc_managed);
+            set_bit(rsc->flags, pe_rsc_block);
             break;
 
         case action_fail_migrate:

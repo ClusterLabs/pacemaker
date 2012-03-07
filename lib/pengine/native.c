@@ -77,6 +77,7 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
                 break;
             case recovery_block:
                 clear_bit(rsc->flags, pe_rsc_managed);
+                set_bit(rsc->flags, pe_rsc_block);
                 break;
         }
         crm_debug("%s is active on %d nodes including %s: %s",

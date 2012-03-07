@@ -437,22 +437,27 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
 
         if (action->rsc == NULL || action->node == NULL) {
             continue;
-        } else if(is_not_set(action->rsc->flags, pe_rsc_managed)) {
-            /* Ignore unmanaged resources
-             * However if someone depends on those unmanaged resources,
-             *  we will still end up blocking
-             */
-            continue;
         } else if(action->node->details != node->details) {
             continue;
+        } else if(is_set(data_set->flags, pe_flag_maintenance_mode)) {
+            crm_trace("Skipping %s: maintainence mode", action->uuid);
+            continue;
         } else if(safe_str_neq(action->task, RSC_STOP)) {
+            continue;
+        } else if(is_not_set(action->rsc->flags, pe_rsc_managed)
+                  && is_not_set(action->rsc->flags, pe_rsc_block)) {
+            /*
+             * If another action depends on this one, we may still end up blocking
+             */
+            crm_trace("Skipping %s: unmanaged", action->uuid);
             continue;
         }
 
         crm_trace("Ordering %s before shutdown on %s", action->uuid, node->details->uname);
+        clear_bit_inplace(action->flags, pe_action_optional);
         custom_action_order(action->rsc, NULL, action,
                             NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
-                            pe_order_optional, data_set);
+                            pe_order_optional|pe_order_runnable_left, data_set);
     }
 
     return TRUE;

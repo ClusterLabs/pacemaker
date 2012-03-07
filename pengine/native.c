@@ -1453,6 +1453,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 }
                 if (g_list_length(rsc_lh->running_on) > 0) {
                     clear_bit(rsc_lh->flags, pe_rsc_managed);
+                    set_bit(rsc_lh->flags, pe_rsc_block);
                 }
                 break;
         }
@@ -1582,7 +1583,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
     if (is_set(type, pe_order_restart)) {
         const char *reason = NULL;
 
-        CRM_ASSERT(then->rsc == first->rsc);
+        CRM_ASSERT(first->rsc->variant == pe_native);
         CRM_ASSERT(then->rsc->variant == pe_native);
 
         if ((filter & pe_action_runnable) && (then->flags & pe_action_runnable) == 0) {
@@ -1597,6 +1598,12 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
             && is_set(first->flags, pe_action_runnable)) {
             crm_trace("Handling %s: %s -> %s", reason, first->uuid, then->uuid);
             clear_bit_inplace(first->flags, pe_action_optional);
+        }
+
+        if (reason && is_not_set(first->flags, pe_action_optional)
+            && is_not_set(first->flags, pe_action_runnable)) {
+            crm_trace("Handling %s: %s -> %s", reason, first->uuid, then->uuid);
+            clear_bit_inplace(then->flags, pe_action_runnable);
         }
     }
 
@@ -1981,7 +1988,10 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         node_t *current = (node_t *) gIter->data;
 
-        stop_action(rsc, current, optional);
+        action_t *stop = stop_action(rsc, current, optional);
+        if(is_not_set(rsc->flags, pe_rsc_managed)) {
+            update_action_flags(stop, pe_action_runnable|pe_action_clear);
+        }
 
         if (is_set(data_set->flags, pe_flag_remove_after_stop)) {
             DeleteRsc(rsc, current, optional, data_set);
