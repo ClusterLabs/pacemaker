@@ -943,7 +943,7 @@ delete_rsc_entry(ha_msg_input_t * input, const char *rsc_id, GHashTableIter *rsc
 #define op_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s']"
 #define op_call_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s' and @"XML_LRM_ATTR_CALLID"='%d']"
 
-void
+static void
 delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id)
 {
     xmlNode *xml_top = NULL;
@@ -992,6 +992,29 @@ delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id)
 
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
+}
+
+void lrm_clear_last_failure(const char *rsc_id)
+{
+    char *attr = NULL;
+    GHashTableIter iter;
+    rsc_history_t *entry = NULL;
+
+    attr = generate_op_key(rsc_id, "last_failure", 0);
+    delete_op_entry(NULL, rsc_id, attr, 0);
+    crm_free(attr);
+
+    if (!resource_history) {
+        return;
+    }
+
+    g_hash_table_iter_init(&iter, resource_history);
+    while (g_hash_table_iter_next(&iter, NULL, (void **)&entry)) {
+        if (safe_str_eq(rsc_id, entry->id)) {
+            free_lrm_op(entry->failed);
+            entry->failed = NULL;
+        }
+    }
 }
 
 static gboolean

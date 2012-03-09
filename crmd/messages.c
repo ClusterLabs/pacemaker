@@ -669,10 +669,7 @@ handle_failcount_op(xmlNode * stored_msg)
         update_attrd(NULL, attr, NULL, NULL);
         crm_free(attr);
 
-        attr = generate_op_key(rsc, "last_failure", 0);
-        delete_op_entry(NULL, rsc, attr, 0);
-        crm_free(attr);
-
+        lrm_clear_last_failure(rsc);
     } else {
         crm_log_xml_warn(stored_msg, "invalid failcount op");
     }
