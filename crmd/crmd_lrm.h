@@ -18,4 +18,4 @@
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 extern void lrm_connection_destroy(gpointer user_data);
-extern void delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id);
+extern void lrm_clear_last_failure(const char *rsc_id);
