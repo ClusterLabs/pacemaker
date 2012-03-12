@@ -43,6 +43,24 @@
 		crm_trace("Result: %d", atime->field);		\
 	}
 
+#define do_add_days_field(atime, field, extra, overflow)		\
+	{								\
+		int __limit = days_per_month(atime->months, atime->years);	\
+		crm_trace("Adding %d to %d (limit=%d)",		\
+			    extra, atime->field, __limit);		\
+		atime->field += extra;					\
+		if(__limit > 0) {						\
+			while(__limit < atime->field) {			\
+				crm_trace("Overflowing: %d", atime->field); \
+				overflow(atime, 1);			\
+				__limit = days_per_month(atime->months, atime->years);	\
+				atime->field -= __limit;			\
+			}						\
+		}							\
+		atime->field = atime->field;				\
+		crm_trace("Result: %d", atime->field);		\
+	}
+
 #define do_add_time_field(atime, field, extra, limit, overflow)		\
 	{								\
 		crm_trace("Adding %d to %d (limit=%d)",		\
@@ -64,7 +82,7 @@
 		crm_trace("Subtracting %d from %d (limit=%d)",	\
 			    extra, atime->field, limit);		\
 		atime->field -= extra;					\
-		while(atime->field <= 1) {				\
+		while(atime->field < 1) {				\
 			crm_trace("Underflowing: %d", atime->field);	\
 			atime->field += limit;				\
 			overflow(atime, 1);				\
@@ -72,6 +90,20 @@
 		crm_trace("Result: %d", atime->field);		\
 	}
 
+#define do_sub_days_field(atime, field, extra, overflow)		\
+	{								\
+		int __limit = days_per_month(atime->months, atime->years);	\
+		crm_trace("Subtracting %d from %d (__limit=%d)",	\
+			    extra, atime->field, __limit);		\
+		atime->field -= extra;					\
+		while(atime->field < 1) {				\
+			crm_trace("Underflowing: %d", atime->field);	\
+			overflow(atime, 1);				\
+			__limit = days_per_month(atime->months, atime->years);	\
+			atime->field += __limit;				\
+		}							\
+		crm_trace("Result: %d", atime->field);		\
+	}
 #define do_sub_time_field(atime, field, extra, limit, overflow)		\
 	{								\
 		crm_trace("Subtracting %d from %d (limit=%d)",	\
@@ -125,8 +157,7 @@ add_days(ha_time_t * a_time, int extra)
     if (extra < 0) {
         sub_days(a_time, -extra);
     } else {
-        do_add_field(a_time, days, extra,
-                     days_per_month(a_time->months, a_time->years), add_months);
+        do_add_days_field(a_time, days, extra, add_months);
     }
 
     convert_from_gregorian(a_time);
@@ -280,8 +311,7 @@ sub_days(ha_time_t * a_time, int extra)
     if (extra < 0) {
         add_days(a_time, -extra);
     } else {
-        do_sub_field(a_time, days, extra,
-                     days_per_month(a_time->months, a_time->years), sub_months);
+        do_sub_days_field(a_time, days, extra, sub_months);
     }
 
     convert_from_gregorian(a_time);
