@@ -758,7 +758,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
 static void
 modify_configuration(pe_working_set_t * data_set,
                      const char *quorum, GListPtr node_up, GListPtr node_down, GListPtr node_fail,
-                     GListPtr op_inject)
+                     GListPtr op_inject, GListPtr ticket_grant, GListPtr ticket_revoke)
 {
     int rc = cib_ok;
     GListPtr gIter = NULL;
@@ -814,6 +814,34 @@ modify_configuration(pe_working_set_t * data_set,
 
         rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                       cib_sync_call | cib_scope_local);
+        CRM_ASSERT(rc == cib_ok);
+    }
+
+    for (gIter = ticket_grant; gIter != NULL; gIter = gIter->next) {
+        char *ticket = (char *)gIter->data;
+        char *attr_name = crm_concat("granted-ticket", ticket, '-');
+
+        quiet_log(" + Granting ticket %s\n", ticket);
+        rc = update_attr(global_cib, cib_sync_call | cib_scope_local,
+                         XML_CIB_TAG_TICKETS, NULL, NULL, NULL, NULL,
+                         attr_name, "true", TRUE);
+
+        crm_free(attr_name);
+
+        CRM_ASSERT(rc == cib_ok);
+    }
+
+    for (gIter = ticket_revoke; gIter != NULL; gIter = gIter->next) {
+        char *ticket = (char *)gIter->data;
+        char *attr_name = crm_concat("granted-ticket", ticket, '-');
+
+        quiet_log(" + Revoking ticket %s\n", ticket);
+        rc = update_attr(global_cib, cib_sync_call | cib_scope_local,
+                         XML_CIB_TAG_TICKETS, NULL, NULL, NULL, NULL,
+                         attr_name, "false", TRUE);
+
+        crm_free(attr_name);
+
         CRM_ASSERT(rc == cib_ok);
     }
 
@@ -971,6 +999,8 @@ static struct crm_option long_options[] = {
     {"op-fail",      1, 0, 'F', "\t$rsc_$task_$interval@$node=$rc - Fail the specified task while running the simulation"},
     {"set-datetime", 1, 0, 't', "Set date/time"},
     {"quorum",       1, 0, 'q', "\tSpecify a value for quorum"},
+    {"ticket-grant", 1, 0, 'g', "Grant a ticket"},
+    {"ticket-revoke",1, 0, 'r', "Revoke a ticket"},
 
     {"-spacer-",     0, 0, '-', "\nOutput Options:"},
     
@@ -1090,6 +1120,8 @@ main(int argc, char **argv)
     GListPtr node_down = NULL;
     GListPtr node_fail = NULL;
     GListPtr op_inject = NULL;
+    GListPtr ticket_grant = NULL;
+    GListPtr ticket_revoke = NULL;
 
     xmlNode *input = NULL;
 
@@ -1162,6 +1194,14 @@ main(int argc, char **argv)
             case 'q':
                 modified++;
                 quorum = optarg;
+                break;
+            case 'g':
+                modified++;
+                ticket_grant = g_list_append(ticket_grant, optarg);
+                break;
+            case 'r':
+                modified++;
+                ticket_revoke = g_list_append(ticket_revoke, optarg);
                 break;
             case 'a':
                 all_actions = TRUE;
@@ -1249,7 +1289,8 @@ main(int argc, char **argv)
 
     if (modified) {
         quiet_log("Performing requested modifications\n");
-        modify_configuration(&data_set, quorum, node_up, node_down, node_fail, op_inject);
+        modify_configuration(&data_set, quorum, node_up, node_down, node_fail, op_inject,
+                             ticket_grant, ticket_revoke);
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
         if (rc != cib_ok) {
