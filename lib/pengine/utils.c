@@ -185,10 +185,10 @@ dump_node_scores_worker(int level, const char *file, const char *function, int l
             char *score = score2char(node->weight);
 
             if (rsc) {
-                do_crm_log_alias(level, file, function, line, "%s: %s allocation score on %s: %s",
+                do_crm_log_alias(LOG_TRACE, file, function, line, "%s: %s allocation score on %s: %s",
                                  comment, rsc->id, node->details->uname, score);
             } else {
-                do_crm_log_alias(level, file, function, line, "%s: %s = %s", comment,
+                do_crm_log_alias(LOG_TRACE, file, function, line+1, "%s: %s = %s", comment,
                                  node->details->uname, score);
             }
             crm_free(score);

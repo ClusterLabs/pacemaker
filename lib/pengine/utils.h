@@ -69,9 +69,7 @@ extern void dump_node_capacity(int level, const char *comment, node_t * node);
 extern void dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * node);
 
 #    define dump_node_scores(level, rsc, text, nodes) do {		\
-	if((level) == 0 || __unlikely((level) < crm_log_level)) {	\
-	    dump_node_scores_worker(level, __FILE__, NULL, 0, rsc, text, nodes); \
-	}								\
+        dump_node_scores_worker(level, __FILE__, __FUNCTION__, __LINE__, rsc, text, nodes); \
     } while(0)
 
 /* Sorting functions */
