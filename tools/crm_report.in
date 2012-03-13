@@ -49,7 +49,9 @@ crm_report - Create a tarball containing everything needed when reporting cluste
 Usage: `basename $0` -f "YYYY-M-D H:M:S" [-t "YYYY-M-D H:M:S"] [additional options] [dest]
 
 Options:
-  -v			increase verbosity
+  -V			increase verbosity
+  -v,--version          software version
+     --features         software features
   -f, --from time	time to start from: "YYYY-M-D H:M:S"  (do not forget the quotes)
   -t, --to time		time to finish at (default: now)
   -T, --cts test	CTS test or set of tests to extract
