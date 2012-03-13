@@ -257,10 +257,11 @@ native_active(resource_t * rsc, gboolean all)
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *a_node = (node_t *) gIter->data;
 
-        if (a_node->details->online == FALSE) {
-            crm_debug("Resource %s: node %s is offline", rsc->id, a_node->details->uname);
-        } else if (a_node->details->unclean) {
+        if (a_node->details->unclean) {
             crm_debug("Resource %s: node %s is unclean", rsc->id, a_node->details->uname);
+            return TRUE;
+        } else if (a_node->details->online == FALSE) {
+            crm_debug("Resource %s: node %s is offline", rsc->id, a_node->details->uname);
         } else {
             crm_debug("Resource %s active on %s", rsc->id, a_node->details->uname);
             return TRUE;
