@@ -198,7 +198,8 @@ class CIB10(CibBase):
         self._create('''order lsb-after-group mandatory: group-1 lsb-dummy symmetrical=true''')
 
         # Migrator
-        self._create('''primitive migrator ocf:pacemaker:Dummy meta allow-migrate=1 op monitor interval=P10S''')
+        # Make this slightly sticky (since we have no other location constraints) to avoid relocation during Reattach 
+        self._create('''primitive migrator ocf:pacemaker:Dummy meta resource-stickiness=1 allow-migrate=1 op monitor interval=P10S''')
 
         # Ping the test master
         self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=60s''' % self.CM.Env["cts-master"])
