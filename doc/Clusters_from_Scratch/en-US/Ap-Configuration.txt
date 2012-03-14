@@ -1,7 +1,7 @@
 [appendix]
-= Configuration Recap =
+== Configuration Recap ==
 
-== Final Cluster Configuration ==
+=== Final Cluster Configuration ===
 
 .....
 # crm configure show
@@ -44,7 +44,7 @@ rsc_defaults $id="rsc-options" \
 .....
 
 
-== Node List ==
+=== Node List ===
 
 The list of cluster nodes is automatically populated by the cluster.
 
@@ -54,7 +54,7 @@ node pcmk-2
 .....
 
 
-== Cluster Options ==
+=== Cluster Options ===
 
 This is where the cluster automatically stores some information about
 the cluster
@@ -82,10 +82,10 @@ property $id="cib-bootstrap-options" \
 .....
 
 
-== Resources ==
+=== Resources ===
 
 
-=== Default Options ===
+==== Default Options ====
 
 Here we configure cluster options that apply to every resource.
 
@@ -96,7 +96,7 @@ rsc_defaults $id="rsc-options" \
     resource-stickiness="100"
 .....
 
-=== Fencing ===
+==== Fencing ====
 
 
 [NOTE]
@@ -111,7 +111,7 @@ primitive ipmi-fencing stonith::fence_ipmilan \
 clone Fencing rsa-fencing
 .....
 
-=== Service Address ===
+==== Service Address ====
 
 Users of the services provided by the cluster require an unchanging
 address with which to access it. Additionally, we cloned the address so
@@ -136,7 +136,7 @@ clone WebIP ClusterIP
 TODO: The RA should check for globally-unique=true when cloned
 =======
 
-=== DRBD - Shared Storage ===
+==== DRBD - Shared Storage ====
 
 Here we define the DRBD service and specify which DRBD resource (from
 drbd.conf) it should manage. We make it a master/slave resource and, in
@@ -153,7 +153,7 @@ ms WebDataClone WebData \
 .....
 
 
-=== Cluster Filesystem ===
+==== Cluster Filesystem ====
 
 The cluster filesystem ensures that files are read and written correctly.
 We need to specify the block device (provided by DRBD), where we want it
@@ -172,7 +172,7 @@ order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start
 order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone
 .....
 
-=== Apache ===
+==== Apache ====
 
 Lastly we have the actual service, Apache. We need only tell the cluster
 where to find it's main configuration file and restrict it to running on

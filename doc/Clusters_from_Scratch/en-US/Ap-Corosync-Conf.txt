@@ -1,5 +1,5 @@
 [appendix]
-= Sample Corosync Configuration =
+== Sample Corosync Configuration ==
 
 .Sample Corosync.conf for a two-node cluster
 .....
