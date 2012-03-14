@@ -46,6 +46,7 @@
 
 GHashTable *device_list = NULL;
 GHashTable *topology = NULL;
+GList *cmd_list = NULL;
 
 static int active_children = 0;
 
@@ -64,7 +65,7 @@ static ProcTrack_ops StonithdProcessTrackOps = {
 };
 
 
-static void free_async_command(async_command_t *cmd) 
+static void free_async_command(async_command_t *cmd, gboolean list_remove)
 {
     crm_free(cmd->device);
     crm_free(cmd->action);
@@ -73,6 +74,10 @@ static void free_async_command(async_command_t *cmd)
     crm_free(cmd->client);
     crm_free(cmd->origin);
     crm_free(cmd->op);
+    crm_free(cmd->scheduled);
+    if (list_remove) {
+        cmd_list = g_list_remove(cmd_list, cmd);
+    }
     crm_free(cmd);    
 }
 
@@ -99,8 +104,10 @@ static async_command_t *create_async_command(xmlNode *msg)
     cmd->victim = crm_element_value_copy(op, F_STONITH_TARGET);
     cmd->pt_ops = &StonithdProcessTrackOps;
 
-    CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
+    CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd, FALSE); return NULL);
     CRM_CHECK(cmd->client != NULL, crm_log_xml_warn(msg, "NoClient"));
+
+    cmd_list = g_list_append(cmd_list, cmd);
     return cmd;
 }
 
@@ -179,12 +186,27 @@ static gboolean stonith_device_dispatch(gpointer user_data)
     return stonith_device_execute(user_data);
 }
 
+static void cancel_stonith_command(async_command_t *cmd)
+{
+    stonith_device_t *device;
+
+    CRM_CHECK(cmd != NULL, return);
+
+    if (cmd->scheduled && (device = g_hash_table_lookup(device_list, cmd->scheduled))) {
+        crm_trace("Cancel scheduled %s on %s", cmd->action, device->id);
+        device->pending_ops = g_list_remove(device->pending_ops, cmd);
+    }
+    crm_free(cmd->scheduled);
+}
+
 static void schedule_stonith_command(async_command_t *cmd, stonith_device_t *device)
 {
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(device != NULL, return);
 
     crm_trace("Scheduling %s on %s", cmd->action, device->id);
+    crm_free(cmd->scheduled);
+    cmd->scheduled = crm_strdup(device->id);
     device->pending_ops = g_list_append(device->pending_ops, cmd);
     mainloop_set_trigger(device->work);
 }
@@ -206,7 +228,7 @@ void free_device(gpointer data)
 	
 	crm_warn("Removal of device '%s' purged operation %s", device->id, cmd->action);
 	exec_child_done(&p, 0, 0, st_err_unknown_device, 0);
-	free_async_command(cmd);
+	free_async_command(cmd, TRUE);
     }
     g_list_free(device->pending_ops);
 
@@ -796,22 +818,52 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
     }
 }
 
+static void
+stonith_send_async_reply(xmlNode *reply, async_command_t *cmd)
+{
+    gboolean bcast = FALSE;
+
+    if (crm_str_eq(cmd->action, "reboot", TRUE)
+        || crm_str_eq(cmd->action, "poweroff", TRUE)
+        || crm_str_eq(cmd->action, "poweron", TRUE)
+        || crm_str_eq(cmd->action, "off", TRUE)
+        || crm_str_eq(cmd->action, "on", TRUE)) {
+        /* TODO: Invert this logic */
+        bcast = TRUE;
+    }
+
+    crm_log_xml_trace(reply, "Reply");
+
+    if (bcast && !stand_alone) {
+        /* Send reply as T_STONITH_NOTIFY so everyone does notifications
+         * Potentially limit to unsucessful operations to the originator?
+         */
+        crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+        send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
+    } else if(cmd->origin) {
+        send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
+    } else {
+        do_local_reply(reply, cmd->client, cmd->options & st_opt_sync_call, FALSE);
+    }
+}
+
 #define READ_MAX 500
 static void
 exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 {
     int len = 0;
     int more = 0;
-    gboolean bcast = FALSE;
     
     char *output = NULL;  
-    xmlNode *data = NULL;
     xmlNode *reply = NULL;
 
     int pid = proctrack_pid(proc);
     stonith_device_t *device = NULL;
     async_command_t *cmd = proctrack_data(proc);
-    
+
+    GListPtr gIter = NULL;
+    GListPtr gIterNext = NULL;
+
     CRM_CHECK(cmd != NULL, return);
     active_children--;
 
@@ -870,45 +922,45 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     if(rc > 0) {
 	rc = st_err_generic;
     }
-    
-    reply = stonith_construct_async_reply(cmd, output, data, rc);
+
+    reply = stonith_construct_async_reply(cmd, output, NULL, rc);
+    stonith_send_async_reply(reply, cmd);
+    free_xml(reply);
+
+    /* Check to see if any operations were scheduled to do the exact
+     * same thing that just completed.  If so, rather than
+     * performing the same fencing operation twice, return the result
+     * of this operation for all pending commands it matches. */
+    for (gIter = cmd_list; gIter != NULL; gIter = gIterNext) {
+        async_command_t *cmd_other = gIter->data;
+        gIterNext = gIter->next;
+        if ((cmd == cmd_other) ||
+            safe_str_neq(cmd->victim, cmd_other->victim) ||
+            safe_str_neq(cmd->action, cmd_other->action)) {
+            continue;
+        }
+        cmd_list = g_list_remove_link(cmd_list, gIter);
+
+        reply = stonith_construct_async_reply(cmd_other, output, NULL, rc);
+        stonith_send_async_reply(reply, cmd_other);
+
+        cancel_stonith_command(cmd_other);
+        free_xml(reply);
+        free_async_command(cmd_other, FALSE);
+        g_list_free_1(gIter);
+    }
+
     if(safe_str_eq(cmd->action, "metadata")) {
 	/* Too verbose to log */
 	crm_free(output); output = NULL;
-
-    } else if(crm_str_eq(cmd->action, "reboot", TRUE)
-	   || crm_str_eq(cmd->action, "poweroff", TRUE)
-	   || crm_str_eq(cmd->action, "poweron", TRUE)
-	   || crm_str_eq(cmd->action, "off", TRUE)
-	   || crm_str_eq(cmd->action, "on", TRUE)) {
-        /* TODO: Invert this logic */
-	bcast = TRUE;
     }
-
     log_operation(cmd, rc, pid, NULL, output);
-    crm_log_xml_trace(reply, "Reply");
-    
-    if(bcast && !stand_alone) {
-	/* Send reply as T_STONITH_NOTIFY so everyone does notifications
-	 * Potentially limit to unsucessful operations to the originator?
-	 */
-	crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-	send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
 
-    } else if(cmd->origin) {
-	send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
-
-    } else {
-	do_local_reply(reply, cmd->client, cmd->options & st_opt_sync_call, FALSE);
-    }
-    
-    free_async_command(cmd);
+    free_async_command(cmd, TRUE);
   done:
 
     reset_proctrack_data(proc);
     crm_free(output);
-    free_xml(reply);
-    free_xml(data);
 }
 
 static gint sort_device_priority(gconstpointer a, gconstpointer b)
@@ -977,7 +1029,7 @@ static int stonith_fence(xmlNode *msg)
         return stonith_pending;
     }
 
-    free_async_command(cmd);	
+    free_async_command(cmd, TRUE);
     return st_err_none_available;
 }
 
@@ -1163,7 +1215,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	crm_notice("Broadcasting manual fencing confirmation for node %s", cmd->victim);
 	send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
 
-	free_async_command(cmd);
+	free_async_command(cmd, TRUE);
 	free_xml(reply);
 
     } else {
