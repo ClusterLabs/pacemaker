@@ -286,6 +286,10 @@ class StopTest(CTSTest):
             for line in output:
                 self.CM.debug(line)
                 
+            (rc, output) = self.CM.rsh(node, "/usr/sbin/dlm_tool dump", None)
+            for line in output:
+                self.CM.debug(line)
+
             for regex in watch.unmatched:
                 self.CM.log ("ERROR: Shutdown pattern not found: %s" % (regex))
                 UnmatchedList +=  regex + "||";
