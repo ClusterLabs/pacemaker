@@ -613,8 +613,7 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     clear_bit(rsc->flags, pe_rsc_provisional);
     clear_bit(rsc->flags, pe_rsc_allocating);
 
-    do_crm_log_alias(LOG_TRACE, __FILE__, "clone_color_foo", __LINE__, "Done allocating %s", rsc->id);
-    
+    crm_trace("Done allocating %s", rsc->id);
     return NULL;
 }
 
