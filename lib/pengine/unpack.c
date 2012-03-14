@@ -1832,7 +1832,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
         case EXECRA_OK:
             if (is_probe && target_rc == 7) {
                 task_status_i = LRM_OP_DONE;
-                crm_notice("Operation %s found resource %s active on %s",
+                crm_info("Operation %s found resource %s active on %s",
                            task, rsc->id, node->details->uname);
 
                 /* legacy code for pre-0.6.5 operations */
