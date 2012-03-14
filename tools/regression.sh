@@ -173,13 +173,13 @@ function test_tools() {
     crm_ticket -t ticketA -G
     assert $? 0 crm_ticket "Default granted-ticket value"
 
-    crm_ticket -t ticketA -v false
+    crm_ticket -t ticketA -v false --force
     assert $? 0 crm_ticket "Set granted-ticket value"
 
     crm_ticket -t ticketA -G
     assert $? 0 crm_ticket "Query granted-ticket value"
     
-    crm_ticket -t ticketA -D
+    crm_ticket -t ticketA -D --force
     assert $? 0 crm_ticket "Delete granted-ticket value"
  }
 
