@@ -78,7 +78,7 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
 
-    crm_notice("CRM Hg Version: %s\n", BUILD_VERSION);
+    crm_notice("CRM Git Version: %s\n", BUILD_VERSION);
 
     if (optind > argc) {
         ++argerr;
