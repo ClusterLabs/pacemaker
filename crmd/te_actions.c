@@ -131,7 +131,7 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
     /* Passing NULL means block until we can connect... */
     te_connect_stonith(NULL);
 
-    if (finalized_nodes && g_hash_table_size(finalized_nodes) == 1) {
+    if (confirmed_nodes && g_hash_table_size(confirmed_nodes) == 1) {
         options |= st_opt_allow_suicide;
     }
 
