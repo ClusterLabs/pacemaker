@@ -1117,6 +1117,7 @@ erase_status_tag(const char *uname, const char *tag, int options)
 
     if (fsa_cib_conn && uname) {
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", uname, tag);
+        crm_info("Deleting xpath: %s", xpath);
         rc = fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
         add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(xpath), erase_xpath_callback);
     }
