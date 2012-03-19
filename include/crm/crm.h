@@ -295,25 +295,27 @@ typedef GList *GListPtr;
 
 #    define do_crm_log(level, fmt, args...) do {				\
 	if(__likely((level) <= crm_log_level)) {			\
-	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	    cl_log((level)>LOG_DEBUG?LOG_DEBUG:(level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	}								\
     } while(0)
 
 #    define do_crm_log_unlikely(level, fmt, args...) do {			\
 	if(__unlikely((level) <= crm_log_level)) {			\
-	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	    cl_log((level)>LOG_DEBUG?LOG_DEBUG:(level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args); \
 	}								\
     } while(0)
 
 #    define do_crm_log_xml(level, text, xml) do {				\
 	if(xml == NULL) {						\
 	} else if(__unlikely((level) <= crm_log_level)) {		\
-	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
+	    log_data_element((level)>LOG_DEBUG?LOG_DEBUG:(level), __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
 	}								\
     } while(0)
 
 #    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
-	cl_log(level, "%s: "fmt, function, ##args);			\
+        if((level) <= crm_log_level) {                                  \
+            cl_log((level)>LOG_DEBUG?LOG_DEBUG:(level), "%s: "fmt, function, ##args); \
+        }                                                               \
     } while(0)
 
 #    define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
