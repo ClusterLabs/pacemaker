@@ -114,11 +114,19 @@ BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl re
 BuildRequires: bison byacc flex
 
 %if %{with cman}
+
 %if 0%{?fedora} > 0
 %if 0%{?fedora} < 17
 BuildRequires: clusterlib-devel
 %endif
 %endif
+
+%if 0%{?rhel} > 0
+%if 0%{?rhel} < 7
+BuildRequires: clusterlib-devel
+%endif
+%endif
+
 %endif
 
 %if %{with esmtp}
