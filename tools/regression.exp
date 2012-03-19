@@ -926,8 +926,6 @@ scope=tickets  name=granted-ticket-ticketA value=false
   </status>
 </cib>
 * Passed: crm_ticket     - Query granted-ticket value
-Deleted tickets option: id=status-tickets-granted-ticket-ticketA name=granted-ticket-ticketA
-
 <cib epoch="18" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>

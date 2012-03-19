@@ -2,10 +2,12 @@
 
 options=""
 ticket=""
-granted=""
+update_value=""
 last_granted=""
+delete_attr="false"
+force="false"
 
-TEMP=`getopt -o DGQVThU:v:i:t: --long help,version,ticket:,attr-value:,delete-attr,get-value,attr-id:,quiet,time \
+TEMP=`getopt -o DGQVThfv:i:t: --long help,version,ticket:,attr-value:,delete-attr,get-value,attr-id:,force,quiet,time \
      -n 'crm_ticket' -- "$@"`
 
 if [ $? != 0 ] ; then echo "crm_ticket - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1 ; fi
@@ -13,13 +15,39 @@ if [ $? != 0 ] ; then echo "crm_ticket - A convenience wrapper for crm_attribute
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
 
+confirm() {
+	action=$1
+	ticket=$2
+
+	if [ X$action = X"grant" ]; then
+	    warning="The crm_ticket command cannot help you verify if '$ticket' is already granted elsewhere."
+	    word="to"
+	else
+	    warning="Revoking '$ticket' will trigger the specified 'loss-policy' relating to '$ticket'."
+	    word="from"
+	fi
+
+	while :; do
+	    printf "$warning\nAre you sure you want to $action '$ticket' $word this site? (y/n)"
+	    read ans
+	    if echo $ans | grep -iqs '^[yn]'; then
+		echo $ans | grep -iqs '^y'
+		return $?
+	    else
+		echo Please answer with y or n
+	    fi
+	done
+}
+
 while true ; do
     case "$1" in
-	-v|--attr-value) options="$options $1 $2"; granted=$2; shift; shift;;
+	-v|--attr-value) options="$options $1 $2"; update_value=$2; shift; shift;;
 	-i|--attr-id) options="$options $1 $2"; shift; shift;;
-	-Q|--quiet|-D|--delete-attr|-G|--get-value|-V) options="$options $1"; shift;;
+	-D|--delete-attr) options="$options $1"; delete_attr="true"; shift;;
+	-Q|--quiet|-G|--get-value|-V) options="$options $1"; shift;;
 	-t|--ticket-id) ticket=$2; shift; shift;;
 	-T|--time) last_granted="time"; shift;;
+	-f|--force) force="true"; shift;;
 	--version) crm_attribute --version; exit 0;;
 	-h|--help) 
 	    echo "crm_ticket - A convenience wrapper for crm_attribute"; 
@@ -43,6 +71,7 @@ while true ; do
 	    echo ""
 	    echo "Additional Options:"
 	    echo " -i, --id=value		(Advanced) The ID used to identify the attribute"
+	    echo " -f, --force 		(Advanced) Force the action to be performed"
 	    exit 0;;
 	--) shift ; break ;;
 	*) echo "Unknown option: $1. See --help for details." exit 1;;
@@ -58,8 +87,12 @@ else
     options="$options -n granted-ticket-$ticket"
 fi
 
-case "$granted" in
+case "$update_value" in
     true|yes|1)
+	if [ X$force != X"true" ]; then
+	    confirm "grant" $ticket || exit 1 
+	fi
+
 	crm_attribute $options -t tickets >/dev/null 2>&1
 	rc=$?
 	if [ $rc = 0 ]; then
@@ -73,8 +106,17 @@ case "$granted" in
 	fi
 	;;
     *)
-	crm_attribute $options -t tickets -d false
-	rc=$?
-	exit $rc
+	if [ X$update_value != X -o X$delete_attr = X"true" ]; then
+	    if [ X$force != X"true" ]; then
+		confirm "revoke" $ticket || exit 1 
+	    fi
+	    crm_attribute $options -t tickets >/dev/null 2>&1
+	    rc=$?
+	    exit $rc
+	else
+	    crm_attribute $options -t tickets -d false
+	    rc=$?
+	    exit $rc
+	fi
 	;;
 esac
