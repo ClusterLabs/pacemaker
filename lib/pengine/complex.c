@@ -547,6 +547,11 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         (*rsc)->failure_timeout = (crm_get_msec(value) / 1000);
     }
 
+    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_AUTO_FAIL_CLEANUP);
+    if (crm_is_true(value)) {
+        (*rsc)->auto_failure_cleanup = 1;
+    }
+
     get_target_role(*rsc, &((*rsc)->next_role));
     crm_trace("\tDesired next state: %s",
                 (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");

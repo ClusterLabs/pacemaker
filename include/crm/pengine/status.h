@@ -220,6 +220,7 @@ struct resource_s {
     int stickiness;
     int sort_index;
     int failure_timeout;
+    int auto_failure_cleanup;
     int effective_priority;
     int migration_threshold;
 

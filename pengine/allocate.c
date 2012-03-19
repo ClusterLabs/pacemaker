@@ -328,6 +328,12 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     }
 
   cleanup:
+    if (did_change && rsc->auto_failure_cleanup) {
+        action_t *action_clear = NULL;
+        key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
+        action_clear = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, active_node, FALSE, TRUE, data_set);
+        set_bit_inplace(action_clear->flags, pe_action_runnable);
+    }
     free_xml(params_all);
     free_xml(params_restart);
     crm_free(digest_all_calc);

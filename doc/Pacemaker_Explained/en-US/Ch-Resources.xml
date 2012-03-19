@@ -249,6 +249,14 @@
             </row>
             <row>
               <entry>
+                <indexterm significance="preferred"><primary>auto-failure-cleanup</primary><secondary>Resource Option</secondary></indexterm>
+                <indexterm significance="preferred"><primary>Resource</primary><secondary>Option</secondary><tertiary>auto-failure-cleanup</tertiary></indexterm>
+                auto-failure-cleanup</entry>
+              <entry><literal>false</literal> (disabled)</entry>
+              <entry>Should the resource's failure count be automatically cleared when it's instance attributes change?</entry>
+            </row>
+            <row>
+              <entry>
                 <indexterm significance="preferred"><primary>multiple-active</primary><secondary>Resource Option</secondary></indexterm>
                 <indexterm significance="preferred"><primary>Resource</primary><secondary>Option</secondary><tertiary>multiple-active</tertiary></indexterm>
                 multiple-active</entry>
