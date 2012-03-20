@@ -370,6 +370,12 @@ do_test novell-239079 "Notification priority"
 #do_test notify-2 "Notify - 764"
 
 echo ""
+do_test auto_failure_cleanup_off_with_change "cl#5025 - Default auto-failure-cleanup option with a rsc config change."
+do_test auto_failure_cleanup_off_no_change   "cl#5025 - Default auto-failure-cleanup option with no rsc config change."
+do_test auto_failure_cleanup_on_with_change  "cl#5025 - auto-failure-cleanup enabled with a rsc config change."
+do_test auto_failure_cleanup_on_no_change    "cl#5025 - auto-failure-cleanup with out a rsc config change."
+
+echo ""
 do_test 594 "OSDL #594"
 do_test 662 "OSDL #662"
 do_test 696 "OSDL #696"

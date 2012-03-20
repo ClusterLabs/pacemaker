@@ -165,6 +165,7 @@
 #  define XML_RSC_ATTR_STICKINESS		"resource-stickiness"
 #  define XML_RSC_ATTR_FAIL_STICKINESS	"migration-threshold"
 #  define XML_RSC_ATTR_FAIL_TIMEOUT	"failure-timeout"
+#  define XML_RSC_ATTR_AUTO_FAIL_CLEANUP    "auto-failure-cleanup"
 #  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
 #  define XML_RSC_ATTR_PRIORITY		"priority"
 #  define XML_OP_ATTR_ON_FAIL		"on-fail"
