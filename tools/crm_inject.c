@@ -333,7 +333,7 @@ static gboolean
 exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
     action->confirmed = TRUE;
 
     quiet_log(" * Pseudo action:   %s%s%s\n", task, node?" on ":"", node?node:"");
@@ -392,9 +392,9 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 
     op = convert_graph_action(cib_resource, action, 0, target_outcome);
     if(op->interval) {
-        quiet_log(" * Resource action: %s %s=%d on %s\n", resource, op->op_type, op->interval, node);
+        quiet_log(" * Resource action: %-15s %s=%d on %s\n", resource, op->op_type, op->interval, node);
     } else {
-        quiet_log(" * Resource action: %s %s on %s\n", resource, op->op_type, node);
+        quiet_log(" * Resource action: %-15s %s on %s\n", resource, op->op_type, node);
     }
 
     for (gIter = op_fail; gIter != NULL; gIter = gIter->next) {
