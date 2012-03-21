@@ -1146,7 +1146,6 @@ cib_ha_peer_callback(HA_Message * msg, void *private_data)
 void
 cib_peer_callback(xmlNode * msg, void *private_data)
 {
-    crm_node_t *node = NULL;
     const char *reason = NULL;
     const char *originator = crm_element_value(msg, F_ORIG);
 
@@ -1156,12 +1155,6 @@ cib_peer_callback(xmlNode * msg, void *private_data)
 
     } else if (crm_peer_cache == NULL) {
         reason = "membership not established";
-        goto bail;
-    }
-
-    node = crm_get_peer(0, originator);
-    if (node == NULL || (node->processes & crm_proc_cib) == 0) {
-        reason = "not in our membership";
         goto bail;
     }
 
