@@ -86,6 +86,7 @@ gboolean print_failcount = FALSE;
 gboolean print_operations = FALSE;
 gboolean print_timing = FALSE;
 gboolean print_nodes_attr = FALSE;
+gboolean print_ticket = FALSE;
 gboolean print_last_updated = TRUE;
 gboolean print_last_change = TRUE;
 
@@ -300,7 +301,8 @@ static struct crm_option long_options[] = {
     {"failcounts",     0, 0, 'f', "\tDisplay resource fail counts"},
     {"operations",     0, 0, 'o', "\tDisplay resource operation history" },
     {"timing-details", 0, 0, 't', "\tDisplay resource operation history with timing details" },
-    {"show-node-attributes", 0, 0, 'A', "Display node attributes\n" },
+    {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
+    {"show-tickets",   0, 0, 'c', "\tDisplay cluster tickets" },
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
@@ -399,6 +401,9 @@ main(int argc, char **argv)
                 break;
             case 'A':
                 print_nodes_attr = TRUE;
+                break;
+            case 'c':
+                print_ticket = TRUE;
                 break;
             case 'p':
                 crm_free(pid_file);
@@ -868,6 +873,19 @@ compare_attribute(gconstpointer a, gconstpointer b)
 }
 
 static void
+print_tickets(gpointer name, gpointer value, gpointer data)
+{
+    ticket_t *ticket = (ticket_t *)value;
+
+    print_as("* %-32s\t: ", ticket->id);
+    print_as("%-s\t", ticket->granted ? "granted":"revoked");
+    print_date(ticket->last_granted);
+    print_as("\n");
+
+    return;
+}
+
+static void
 create_attr_list(gpointer name, gpointer value, gpointer data)
 {
     int i;
@@ -1156,6 +1174,11 @@ print_status(pe_working_set_t * data_set)
                 rsc->fns->print(rsc, NULL, print_opts, stdout);
             }
         }
+    }
+
+    if (print_ticket) {
+        print_as("\n%-32s\t: %s\t%s\n", "Cluster Tickets", "Status", "'Last granted time'");
+        g_hash_table_foreach(data_set->tickets, print_tickets, NULL);
     }
 
     if (print_nodes_attr) {
