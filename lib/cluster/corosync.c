@@ -625,11 +625,12 @@ ais_dispatch(int sender, gpointer user_data)
             crm_perror(LOG_ERR, "Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
             goto bail;
         }
+#  if !CS_USES_LIBQB
         if (buffer == NULL) {
             /* NULL is a legal "no message afterall" value */
             return TRUE;
         }
-
+#  endif
         good = ais_dispatch_message((AIS_Message *) buffer, dispatch);
 #  if !CS_USES_LIBQB
         coroipcc_dispatch_put(ais_ipc_handle);
