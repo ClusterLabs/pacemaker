@@ -68,7 +68,7 @@ extern void dump_node_scores_worker(int level, const char *file, const char *fun
 extern void dump_node_capacity(int level, const char *comment, node_t * node);
 extern void dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * node);
 
-#    define dump_node_scores(level, rsc, text, nodes) do {		\
+#  define dump_node_scores(level, rsc, text, nodes) do {		\
         dump_node_scores_worker(level, __FILE__, __FUNCTION__, __LINE__, rsc, text, nodes); \
     } while(0)
 
@@ -138,6 +138,7 @@ extern GListPtr find_recurring_actions(GListPtr input, node_t * not_on_node);
 extern void pe_free_action(action_t * action);
 
 extern void
+
 
 resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
                   pe_working_set_t * data_set);

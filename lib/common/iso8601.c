@@ -212,8 +212,7 @@ parse_time(char **time_str, ha_time_t * a_time, gboolean with_offset)
     }
 
     CRM_CHECK(new_time != NULL, return NULL);
-    CRM_CHECK(new_time->has != NULL, free_ha_date(new_time);
-              return NULL);
+    CRM_CHECK(new_time->has != NULL, free_ha_date(new_time); return NULL);
 
     /* reset the time fields */
     new_time->hours = 0;
@@ -317,8 +316,7 @@ parse_date(char **date_str)
             break;
 
         } else if (ch == 'W') {
-            CRM_CHECK(new_time->has->weeks == FALSE,;
-                );
+            CRM_CHECK(new_time->has->weeks == FALSE,;);
             (*date_str)++;
             if (parse_int(date_str, 2, 53, &new_time->weeks)) {
                 new_time->has->weeks = TRUE;
@@ -515,8 +513,7 @@ parse_time_period(char **period_str)
     }
 
     if ((*period_str)[0] != 0) {
-        CRM_CHECK((*period_str)[0] == '/', invalid = TRUE;
-                  goto bail);
+        CRM_CHECK((*period_str)[0] == '/', invalid = TRUE; goto bail);
         (*period_str)++;
 
         if ((*period_str)[0] == 'P') {
@@ -645,7 +642,7 @@ gregorian_to_ordinal(ha_time_t * a_date)
         (a_date->yeardays)++;
     }
     crm_trace("Converted %.4d-%.2d-%.2d to %.4d-%.3d",
-                a_date->years, a_date->months, a_date->days, a_date->years, a_date->yeardays);
+              a_date->years, a_date->months, a_date->days, a_date->years, a_date->yeardays);
 
     return TRUE;
 }
@@ -686,7 +683,7 @@ ordinal_to_gregorian(ha_time_t * a_date)
         a_date->days -= days_per_month(a_date->months - 1, a_date->years);
 
         crm_trace("month %d: %d vs. %d - current day: %d",
-                    a_date->months, a_date->yeardays, m_end, a_date->days);
+                  a_date->months, a_date->yeardays, m_end, a_date->days);
     } while (a_date->months < 12 && m_end < a_date->yeardays);
 
     CRM_CHECK(a_date->months > 0, return FALSE);
@@ -697,7 +694,7 @@ ordinal_to_gregorian(ha_time_t * a_date)
     a_date->has->years = TRUE;
 
     crm_trace("Converted %.4d-%.3d to %.4d-%.2d-%.2d",
-                a_date->years, a_date->yeardays, a_date->years, a_date->months, a_date->days);
+              a_date->years, a_date->yeardays, a_date->years, a_date->months, a_date->days);
 
     return TRUE;
 }
@@ -752,8 +749,7 @@ ordinal_to_weekdays(ha_time_t * a_date)
     a_date->weekyears = year_num;
     a_date->has->weekyears = TRUE;
     crm_trace("Converted %.4d-%.3d to %.4dW%.2d-%d",
-                a_date->years, a_date->yeardays,
-                a_date->weekyears, a_date->weeks, a_date->weekdays);
+              a_date->years, a_date->yeardays, a_date->weekyears, a_date->weeks, a_date->weekdays);
     return TRUE;
 }
 
@@ -785,8 +781,7 @@ convert_from_weekdays(ha_time_t * a_date)
     }
 
     crm_trace("Pre-conversion: %dW%d-%d to %.4d-%.3d",
-                a_date->weekyears, a_date->weeks, a_date->weekdays,
-                a_date->years, a_date->yeardays);
+              a_date->weekyears, a_date->weeks, a_date->weekdays, a_date->years, a_date->yeardays);
 
     conversion = ordinal_to_gregorian(a_date);
 

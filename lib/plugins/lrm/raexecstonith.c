@@ -133,11 +133,11 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 
     provider = get_stonith_provider(rsc_type, provider);
 
-    if(log_init == FALSE) {
+    if (log_init == FALSE) {
         log_init = TRUE;
         crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL);
     }
-    
+
     if (0 == STRNCMP_CONST(op_type, "meta-data")) {
         char *meta = get_resource_meta(rsc_type, provider);
 
@@ -174,7 +174,8 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
         rc = stonith_api->cmds->register_device(stonith_api, st_opt_sync_call, rsc_id, provider,
                                                 agent, device_params);
         if (rc == 0) {
-            rc = stonith_api->cmds->call(stonith_api, st_opt_sync_call, rsc_id, "monitor", NULL, timeout);
+            rc = stonith_api->cmds->call(stonith_api, st_opt_sync_call, rsc_id, "monitor", NULL,
+                                         timeout);
         }
 
     } else if (0 == STRNCMP_CONST(op_type, "stop")) {

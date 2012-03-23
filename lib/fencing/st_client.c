@@ -139,7 +139,8 @@ stonith_connection_destroy(gpointer user_data)
 }
 
 xmlNode *
-create_device_registration_xml(const char *id, const char *namespace, const char *agent, stonith_key_value_t *params)
+create_device_registration_xml(const char *id, const char *namespace, const char *agent,
+                               stonith_key_value_t * params)
 {
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
@@ -185,7 +186,8 @@ stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
     return rc;
 }
 
-static int stonith_api_remove_level(stonith_t *st, int options, const char *node, int level) 
+static int
+stonith_api_remove_level(stonith_t * st, int options, const char *node, int level)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -201,7 +203,7 @@ static int stonith_api_remove_level(stonith_t *st, int options, const char *node
 }
 
 xmlNode *
-create_level_registration_xml(const char *node, int level, stonith_key_value_t *device_list)
+create_level_registration_xml(const char *node, int level, stonith_key_value_t * device_list)
 {
     xmlNode *data = create_xml_node(NULL, F_STONITH_LEVEL);
 
@@ -211,13 +213,16 @@ create_level_registration_xml(const char *node, int level, stonith_key_value_t *
 
     for (; device_list; device_list = device_list->next) {
         xmlNode *dev = create_xml_node(data, F_STONITH_DEVICE);
+
         crm_xml_add(dev, XML_ATTR_ID, device_list->value);
     }
 
     return data;
 }
 
-static int stonith_api_register_level(stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list)
+static int
+stonith_api_register_level(stonith_t * st, int options, const char *node, int level,
+                           stonith_key_value_t * device_list)
 {
     int rc = 0;
     xmlNode *data = create_level_registration_xml(node, level, device_list);
@@ -226,7 +231,7 @@ static int stonith_api_register_level(stonith_t *st, int options, const char *no
     free_xml(data);
 
     return rc;
-}       
+}
 
 static void
 append_arg(gpointer key, gpointer value, gpointer user_data)
@@ -408,7 +413,8 @@ make_args(const char *action, const char *victim, GHashTable * device_args, GHas
 
         /* Don't overwrite explictly set values for $param */
         if (value == NULL || safe_str_eq(value, "dynamic")) {
-            crm_debug("Performing %s action for node '%s' as '%s=%s'", action, victim, param, alias);
+            crm_debug("Performing %s action for node '%s' as '%s=%s'", action, victim, param,
+                      alias);
             append_const_arg(param, alias, &arg_list);
         }
     }
@@ -508,12 +514,12 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
 
             do {
                 p = waitpid(pid, &status, 0);
-            } while(p < 0 && errno == EINTR);
+            } while (p < 0 && errno == EINTR);
 
-            if(p < 0) {
+            if (p < 0) {
                 crm_perror(LOG_ERR, "waitpid(%d)", pid);
 
-            } else if(p != pid) {
+            } else if (p != pid) {
                 crm_err("Waited for %d, got %d", pid, p);
             }
 
@@ -541,9 +547,8 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
                 *agent_result = -WEXITSTATUS(status);
                 rc = 0;
 
-            } else if(WIFSIGNALED(status)) {
-                crm_err("call %s for %s exited due to signal %d",
-                         action, agent, WTERMSIG(status));
+            } else if (WIFSIGNALED(status)) {
+                crm_err("call %s for %s exited due to signal %d", action, agent, WTERMSIG(status));
 
             } else {
                 crm_err("call %s for %s exited abnormally. stopped=%d, continued=%d",
@@ -730,6 +735,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
                 /* We'll fill this in */
                 xmlNode *tmp = getXpathResult(xpathObj, 0);
+
                 crm_xml_add(tmp, "required", "0");
             }
 
@@ -875,7 +881,7 @@ stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const
 static int
 stonith_api_confirm(stonith_t * stonith, int call_options, const char *target)
 {
-    return stonith_api_fence(stonith, call_options|st_opt_manual_ack, target, "off", 0);
+    return stonith_api_fence(stonith, call_options | st_opt_manual_ack, target, "off", 0);
 }
 
 static int
@@ -1244,8 +1250,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     }
 
     if (rc == stonith_ok) {
-        CRM_CHECK(native->token != NULL,;
-            );
+        CRM_CHECK(native->token != NULL,;);
         hello = stonith_create_op(0, native->token, CRM_OP_REGISTER, NULL, 0);
         crm_xml_add(hello, F_STONITH_CLIENTNAME, name);
 
@@ -1606,8 +1611,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         stonith->call_id = 1;
     }
 
-    CRM_CHECK(native->token != NULL,;
-        );
+    CRM_CHECK(native->token != NULL,;);
     op_msg = stonith_create_op(stonith->call_id, native->token, op, data, call_options);
     if (op_msg == NULL) {
         return st_err_missing;
@@ -1741,7 +1745,7 @@ stonith_msgready(stonith_t * stonith)
 
     } else if (private->callback_channel->ops->is_message_pending(private->callback_channel)) {
         crm_trace("Message pending on command channel [%d]",
-                    private->callback_channel->farside_pid);
+                  private->callback_channel->farside_pid);
         return TRUE;
     }
 
@@ -1944,19 +1948,19 @@ stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *v
     stonith_key_value_t *p, *end;
 
     crm_malloc0(p, sizeof(stonith_key_value_t));
-    if(key) {
+    if (key) {
         p->key = crm_strdup(key);
     }
-    if(value) {
+    if (value) {
         p->value = crm_strdup(value);
     }
 
     end = head;
-    while(end && end->next) {
+    while (end && end->next) {
         end = end->next;
     }
 
-    if(end) {
+    if (end) {
         end->next = p;
     } else {
         head = p;
@@ -1983,7 +1987,6 @@ stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
     }
 }
 
-
 int
 stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
 {
@@ -1992,30 +1995,30 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
 
     int rc = st_err_internal;
     stonith_t *st = NULL;
-    enum stonith_call_options opts = st_opt_sync_call|st_opt_allow_suicide;
+    enum stonith_call_options opts = st_opt_sync_call | st_opt_allow_suicide;
 
     st = stonith_api_new();
-    if(st) {
-	rc = st->cmds->connect(st, "stonith-api", NULL);
+    if (st) {
+        rc = st->cmds->connect(st, "stonith-api", NULL);
     }
 
-    if(uname != NULL) {
+    if (uname != NULL) {
         name = strdup(uname);
 
-    } else if(nodeid > 0) {
+    } else if (nodeid > 0) {
         opts |= st_opt_cs_nodeid;
         name = crm_itoa(nodeid);
     }
 
-    if(off) {
+    if (off) {
         action = "off";
     }
 
-    if(rc == stonith_ok) {
+    if (rc == stonith_ok) {
         rc = st->cmds->fence(st, opts, name, action, timeout);
     }
 
-    if(st) {
+    if (st) {
         st->cmds->disconnect(st);
         stonith_api_delete(st);
     }
@@ -2037,38 +2040,38 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
     enum stonith_call_options opts = st_opt_sync_call;
 
     st = stonith_api_new();
-    if(st) {
-	rc = st->cmds->connect(st, "stonith-api", NULL);
+    if (st) {
+        rc = st->cmds->connect(st, "stonith-api", NULL);
     }
 
-    if(uname != NULL) {
+    if (uname != NULL) {
         name = strdup(uname);
 
-    } else if(nodeid > 0) {
+    } else if (nodeid > 0) {
         opts |= st_opt_cs_nodeid;
         name = crm_itoa(nodeid);
     }
 
-    if(st && rc == stonith_ok) {
-        st->cmds->history(st, st_opt_sync_call|st_opt_cs_nodeid, name, &history, 120);
+    if (st && rc == stonith_ok) {
+        st->cmds->history(st, st_opt_sync_call | st_opt_cs_nodeid, name, &history, 120);
 
-        for(hp = history; hp; hp = hp->next) {
-            if(in_progress) {
-                if(hp->state != st_done && hp->state != st_failed) {
+        for (hp = history; hp; hp = hp->next) {
+            if (in_progress) {
+                if (hp->state != st_done && hp->state != st_failed) {
                     progress = time(NULL);
                 }
-                
-            } else if(hp->state == st_done) {
+
+            } else if (hp->state == st_done) {
                 when = hp->completed;
             }
         }
     }
 
-    if(progress) {
+    if (progress) {
         when = progress;
     }
 
-    if(st) {
+    if (st) {
         st->cmds->disconnect(st);
         stonith_api_delete(st);
     }
@@ -2076,4 +2079,3 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
     crm_free(name);
     return when;
 }
-

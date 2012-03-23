@@ -109,7 +109,7 @@ enum crm_status_type {
 
 enum crm_ais_msg_types text2msg_type(const char *text);
 extern void
-crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
+ crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
 
 /* *INDENT-OFF* */
 enum cluster_type_e 

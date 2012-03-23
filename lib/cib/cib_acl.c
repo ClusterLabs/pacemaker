@@ -364,7 +364,7 @@ acl_append(xmlNode * acl_child, GListPtr * acl)
     *acl = g_list_append(*acl, acl_obj);
 
     crm_trace("ACL object appended: mode=%s, tag=%s, ref=%s, xpath=%s, attribute=%s",
-                acl_obj->mode, acl_obj->tag, acl_obj->ref, acl_obj->xpath, acl_obj->attribute);
+              acl_obj->mode, acl_obj->tag, acl_obj->ref, acl_obj->xpath, acl_obj->attribute);
 
     return TRUE;
 }
@@ -405,8 +405,8 @@ parse_acl_xpath(xmlNode * xml, GListPtr acl, GListPtr * parsed_acl)
             *parsed_acl = g_list_append(*parsed_acl, new_acl_obj);
 
             crm_trace("Copied ACL object: mode=%s, tag=%s, ref=%s, xpath=%s, attribute=%s",
-                        new_acl_obj->mode, new_acl_obj->tag, new_acl_obj->ref,
-                        new_acl_obj->xpath, new_acl_obj->attribute);
+                      new_acl_obj->mode, new_acl_obj->tag, new_acl_obj->ref,
+                      new_acl_obj->xpath, new_acl_obj->attribute);
 
         } else if (acl_obj->xpath) {
             GListPtr children = NULL;
@@ -572,7 +572,7 @@ update_xml_perms(xmlNode * xml, acl_obj_t * acl_obj, GHashTable * xml_perms)
 
         perm->mode = acl_obj->mode;
         crm_trace("Permission for element: element_mode=%s, tag=%s, id=%s",
-                    perm->mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
+                  perm->mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
 
         for (child = __xml_first_child(xml); child; child = __xml_next(child)) {
             update_xml_children_perms(child, perm->mode, xml_perms);
@@ -592,8 +592,8 @@ update_xml_perms(xmlNode * xml, acl_obj_t * acl_obj, GHashTable * xml_perms)
             g_hash_table_insert(perm->attribute_perms,
                                 crm_strdup(acl_obj->attribute), crm_strdup(acl_obj->mode));
             crm_trace("Permission for attribute: attribute_mode=%s, tag=%s, id=%s attribute=%s",
-                        acl_obj->mode, crm_element_name(xml),
-                        crm_element_value(xml, XML_ATTR_ID), acl_obj->attribute);
+                      acl_obj->mode, crm_element_name(xml),
+                      crm_element_value(xml, XML_ATTR_ID), acl_obj->attribute);
         }
     }
 
@@ -620,7 +620,7 @@ update_xml_children_perms(xmlNode * xml, const char *mode, GHashTable * xml_perm
 
     perm->mode = mode;
     crm_trace("Permission for child element: element_mode=%s, tag=%s, id=%s",
-                mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
+              mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
 
     for (child = __xml_first_child(xml); child; child = __xml_next(child)) {
         update_xml_children_perms(child, mode, xml_perms);
@@ -669,7 +669,7 @@ acl_filter_xml(xmlNode * xml, GHashTable * xml_perms)
 
     if (perm == NULL) {
         crm_trace("No ACL defined to read the element: tag=%s, id=%s",
-                    crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
+                  crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
         goto end_filter;
     }
 
@@ -678,7 +678,7 @@ acl_filter_xml(xmlNode * xml, GHashTable * xml_perms)
             return FALSE;
         } else {
             crm_trace("No enough permission to read the element: element_mode=%s, tag=%s, id=%s",
-                        perm->mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
+                      perm->mode, crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
             goto end_filter;
         }
     }
@@ -733,7 +733,7 @@ acl_filter_xml(xmlNode * xml, GHashTable * xml_perms)
 
     free_xml_from_parent(NULL, xml);
     crm_trace("Filtered out the element: tag=%s, id=%s",
-                crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
+              crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
     return TRUE;
 }
 

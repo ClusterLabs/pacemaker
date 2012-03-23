@@ -45,9 +45,11 @@ static GHashTable *crm_uname_cache = NULL;
 
 xmlNode *create_common_message(xmlNode * original_request, xmlNode * xml_response_data);
 
-static char *get_heartbeat_uuid(uint32_t unused, const char *uname) 
+static char *
+get_heartbeat_uuid(uint32_t unused, const char *uname)
 {
     char *uuid_calc = NULL;
+
 #if SUPPORT_HEARTBEAT
     cl_uuid_t uuid_raw;
     const char *unknown = "00000000-0000-0000-0000-000000000000";
@@ -76,15 +78,16 @@ static char *get_heartbeat_uuid(uint32_t unused, const char *uname)
     return uuid_calc;
 }
 
-static gboolean uname_is_uuid(void) 
+static gboolean
+uname_is_uuid(void)
 {
     static const char *uuid_pref = NULL;
 
-    if(uuid_pref == NULL) {
+    if (uuid_pref == NULL) {
         uuid_pref = getenv("PCMK_uname_is_uuid");
     }
 
-    if(uuid_pref == NULL) {
+    if (uuid_pref == NULL) {
         /* true is legacy mode */
         uuid_pref = "false";
     }
@@ -92,34 +95,36 @@ static gboolean uname_is_uuid(void)
     return crm_is_true(uuid_pref);
 }
 
-int get_corosync_id(int id, const char *uuid) 
+int
+get_corosync_id(int id, const char *uuid)
 {
-    if(id == 0 && !uname_is_uuid() && is_corosync_cluster()) {
+    if (id == 0 && !uname_is_uuid() && is_corosync_cluster()) {
         id = crm_atoi(uuid, "0");
     }
-    
+
     return id;
 }
 
 char *
-get_corosync_uuid(uint32_t id, const char *uname) 
+get_corosync_uuid(uint32_t id, const char *uname)
 {
-    if(!uname_is_uuid() && is_corosync_cluster()) {
-        if(id <= 0) {
+    if (!uname_is_uuid() && is_corosync_cluster()) {
+        if (id <= 0) {
             /* Try the membership cache... */
             crm_node_t *node = g_hash_table_lookup(crm_peer_cache, uname);
-            if(node != NULL) {
+
+            if (node != NULL) {
                 id = node->id;
             }
         }
 
-        if(id > 0) {
+        if (id > 0) {
             return crm_itoa(id);
         } else {
             crm_warn("Node %s is not yet known by corosync", uname);
         }
 
-    } else if(uname != NULL) {
+    } else if (uname != NULL) {
         return crm_strdup(uname);
     }
 
@@ -127,7 +132,7 @@ get_corosync_uuid(uint32_t id, const char *uname)
 }
 
 const char *
-get_node_uuid(uint32_t id, const char *uname) 
+get_node_uuid(uint32_t id, const char *uname)
 {
     char *uuid = NULL;
     enum cluster_type_e type = get_cluster_type();
@@ -138,7 +143,7 @@ get_node_uuid(uint32_t id, const char *uname)
     }
 
     /* avoid blocking heartbeat calls where possible */
-    if(uname) {
+    if (uname) {
         uuid = g_hash_table_lookup(crm_uuid_cache, uname);
     }
     if (uuid != NULL) {
@@ -152,11 +157,11 @@ get_node_uuid(uint32_t id, const char *uname)
 
         case pcmk_cluster_cman:
         case pcmk_cluster_classic_ais:
-            if(uname) {
+            if (uname) {
                 uuid = crm_strdup(uname);
             }
             break;
-            
+
         case pcmk_cluster_heartbeat:
             uuid = get_heartbeat_uuid(id, uname);
             break;
@@ -167,11 +172,11 @@ get_node_uuid(uint32_t id, const char *uname)
             break;
     }
 
-    if(uuid == NULL) {
+    if (uuid == NULL) {
         return NULL;
     }
 
-    if(uname) {
+    if (uname) {
         g_hash_table_insert(crm_uuid_cache, crm_strdup(uname), uuid);
         return g_hash_table_lookup(crm_uuid_cache, uname);
     }

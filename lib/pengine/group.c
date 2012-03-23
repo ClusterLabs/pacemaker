@@ -148,6 +148,7 @@ group_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
+
         child_rsc->fns->print(child_rsc, child_text, options, print_data);
     }
 

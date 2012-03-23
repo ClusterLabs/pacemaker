@@ -38,21 +38,26 @@ typedef struct qb_ipc_response_header cs_ipc_header_response_t;
 #      include <corosync/corodefs.h>
 #      include <corosync/coroipcc.h>
 #      include <corosync/coroipc_types.h>
-static inline int qb_to_cs_error(int a) { return a; }
+static inline int
+qb_to_cs_error(int a)
+{
+    return a;
+}
+
 typedef coroipc_request_header_t cs_ipc_header_request_t;
 typedef coroipc_response_header_t cs_ipc_header_response_t;
 #    endif
 #  else
 typedef struct {
-	int size __attribute__((aligned(8)));
-	int id __attribute__((aligned(8)));
-} __attribute__((aligned(8))) cs_ipc_header_request_t;
+    int size __attribute__ ((aligned(8)));
+    int id __attribute__ ((aligned(8)));
+} __attribute__ ((aligned(8))) cs_ipc_header_request_t;
 
 typedef struct {
-	int size __attribute__((aligned(8)));
-	int id __attribute__((aligned(8)));
-	int error __attribute__((aligned(8)));
-} __attribute__((aligned(8))) cs_ipc_header_response_t;
+    int size __attribute__ ((aligned(8)));
+    int id __attribute__ ((aligned(8)));
+    int error __attribute__ ((aligned(8)));
+} __attribute__ ((aligned(8))) cs_ipc_header_response_t;
 
 #  endif
 

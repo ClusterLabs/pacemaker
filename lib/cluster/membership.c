@@ -226,9 +226,10 @@ crm_new_peer(unsigned int id, const char *uname)
         crm_info("Node %u is now known as %s", id, node->uname);
         g_hash_table_replace(crm_peer_cache, node->uname, node);
 
-        if(node->uuid == NULL) {
+        if (node->uuid == NULL) {
             const char *uuid = get_node_uuid(id, node->uname);
-            if(node->uuid) {
+
+            if (node->uuid) {
                 crm_info("Node %u has uuid %s", id, node->uuid);
             } else {
                 node->uuid = crm_strdup(uuid);
@@ -276,11 +277,12 @@ crm_get_peer(unsigned int id, const char *uname)
         }
     }
 
-    if(node && node->uuid == NULL) {
+    if (node && node->uuid == NULL) {
         const char *uuid = get_node_uuid(id, node->uname);
-        if(node->uuid) {
+
+        if (node->uuid) {
             crm_info("Node %u has uuid %s", id, node->uuid);
-        } else if(uuid) {
+        } else if (uuid) {
             node->uuid = crm_strdup(uuid);
         }
     }
@@ -318,7 +320,7 @@ crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, ui
         node = crm_new_peer(id, uname);
 
         CRM_LOG_ASSERT(node != NULL);
-        if(node == NULL) {
+        if (node == NULL) {
             crm_err("Insufficient information to create node %d/%s", id, uname);
             return NULL;
         }
@@ -392,7 +394,7 @@ crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, ui
                  votes_changed ? " (new)" : "", node->born, node->last_seen, node->processes,
                  procs_changed ? " (new)" : "");
 
-    } else if(procs_changed) {
+    } else if (procs_changed) {
         crm_debug("Node %s: id=%u seen=" U64T
                   " proc=%.32x (new)", node->uname, node->id, node->last_seen, node->processes);
     }
@@ -498,7 +500,7 @@ crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
 int
 crm_terminate_member(int nodeid, const char *uname, IPC_Channel * cluster)
 {
-    /* Always use the synchronous, non-mainloop version */ 
+    /* Always use the synchronous, non-mainloop version */
     return stonith_api_kick(nodeid, uname, 120, TRUE);
 }
 

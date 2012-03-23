@@ -122,7 +122,7 @@ cib_process_bump(const char *op, int options, const char *section, xmlNode * req
     enum cib_errors result = cib_ok;
 
     crm_trace("Processing \"%s\" event for epoch=%s",
-                op, crm_str(crm_element_value(existing_cib, XML_ATTR_GENERATION)));
+              op, crm_str(crm_element_value(existing_cib, XML_ATTR_GENERATION)));
 
     *answer = NULL;
     cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
@@ -382,7 +382,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                 remove = find_xml_node(target, replace_item, FALSE);
                 if (remove != NULL) {
                     crm_trace("Replacing node <%s> in <%s>",
-                                replace_item, crm_element_name(target));
+                              replace_item, crm_element_name(target));
                     zap_xml_from_parent(target, remove);
                 }
                 crm_free(replace_item);
@@ -653,9 +653,9 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 
     } else if (apply_diff) {
         crm_trace("Diff %d.%d.%d -> %d.%d.%d was applied to %d.%d.%d",
-                    diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
-                    diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
-                    this_admin_epoch, this_epoch, this_updates);
+                  diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
+                  diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
+                  this_admin_epoch, this_epoch, this_updates);
 
     }
     return result;
@@ -808,14 +808,14 @@ diff_cib_object(xmlNode * old_cib, xmlNode * new_cib, gboolean suppress)
     xmlNode *diff = NULL;
     const char *version = crm_element_value(new_cib, XML_ATTR_CRM_VERSION);
     gboolean changed = cib_config_changed(old_cib, new_cib, &diff);
-    
+
     fix_cib_diff(old_cib, new_cib, diff, changed);
 
     digest = calculate_xml_versioned_digest(new_cib, FALSE, TRUE, version);
     crm_xml_add(diff, XML_ATTR_DIGEST, digest);
 
     crm_free(digest);
-    
+
     return diff;
 }
 

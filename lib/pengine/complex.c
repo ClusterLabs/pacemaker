@@ -291,45 +291,45 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
 }
 
 static gboolean
-add_template_rsc(xmlNode *xml_obj, pe_working_set_t *data_set)
+add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
-    const char* template_ref = NULL;
-    const char* id = NULL;
+    const char *template_ref = NULL;
+    const char *id = NULL;
     xmlNode *rsc_set = NULL;
     xmlNode *rsc_ref = NULL;
 
-    if(xml_obj == NULL) {
-	pe_err("No resource object for processing resource list of template");
-	return FALSE;
+    if (xml_obj == NULL) {
+        pe_err("No resource object for processing resource list of template");
+        return FALSE;
     }
 
     template_ref = crm_element_value(xml_obj, XML_CIB_TAG_RSC_TEMPLATE);
-    if(template_ref == NULL) {
-	return TRUE;
+    if (template_ref == NULL) {
+        return TRUE;
     }
 
     id = ID(xml_obj);
-    if(id == NULL) {
-	pe_err("'%s' object must have a id", crm_element_name(xml_obj));
-	return FALSE;
+    if (id == NULL) {
+        pe_err("'%s' object must have a id", crm_element_name(xml_obj));
+        return FALSE;
     }
 
-    if(crm_str_eq(template_ref, id, TRUE)) {
-	pe_err("The resource object '%s' should not reference itself", id);
-	return FALSE;
+    if (crm_str_eq(template_ref, id, TRUE)) {
+        pe_err("The resource object '%s' should not reference itself", id);
+        return FALSE;
     }
 
     rsc_set = g_hash_table_lookup(data_set->template_rsc_sets, template_ref);
-    if(rsc_set == NULL) {
-	rsc_set = create_xml_node(NULL, XML_CONS_TAG_RSC_SET);
-	crm_xml_add(rsc_set, XML_ATTR_ID, template_ref);
-	
-	g_hash_table_insert(data_set->template_rsc_sets, crm_strdup(template_ref), rsc_set);
+    if (rsc_set == NULL) {
+        rsc_set = create_xml_node(NULL, XML_CONS_TAG_RSC_SET);
+        crm_xml_add(rsc_set, XML_ATTR_ID, template_ref);
+
+        g_hash_table_insert(data_set->template_rsc_sets, crm_strdup(template_ref), rsc_set);
     }
 
     rsc_ref = create_xml_node(rsc_set, XML_TAG_RESOURCE_REF);
     crm_xml_add(rsc_ref, XML_ATTR_ID, id);
-    
+
     return TRUE;
 }
 
@@ -549,7 +549,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     get_target_role(*rsc, &((*rsc)->next_role));
     crm_trace("\tDesired next state: %s",
-                (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");
+              (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");
 
     if ((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
         return FALSE;
@@ -560,7 +560,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     crm_trace("\tAction notification: %s",
-                is_set((*rsc)->flags, pe_rsc_notify) ? "required" : "not required");
+              is_set((*rsc)->flags, pe_rsc_notify) ? "required" : "not required");
 
     if (safe_str_eq(class, "stonith")) {
         set_bit_inplace(data_set->flags, pe_flag_have_stonith_resource);
@@ -574,10 +574,10 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
 /* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */
 
-    if(expanded_xml) {
-	if(add_template_rsc(xml_obj, data_set) == FALSE) {
-	   return FALSE; 
-	}
+    if (expanded_xml) {
+        if (add_template_rsc(xml_obj, data_set) == FALSE) {
+            return FALSE;
+        }
     }
     return TRUE;
 }

@@ -272,7 +272,6 @@ extern time_t stonith_api_time(int nodeid, const char *uname, bool in_progress);
      return 0;
  }
 
-
  */
 
 #  define STONITH_LIBRARY "libstonithd.so.1"
@@ -281,38 +280,38 @@ static inline int
 stonith_api_kick_helper(int nodeid, int timeout, bool off)
 {
     static void *st_library = NULL;
-    static int(*st_kick_fn)(int nodeid, const char *uname, int timeout, bool off) = NULL;
+    static int (*st_kick_fn) (int nodeid, const char *uname, int timeout, bool off) = NULL;
 
-    if(st_library == NULL) {
+    if (st_library == NULL) {
         st_library = dlopen(STONITH_LIBRARY, RTLD_LAZY);
     }
-    if(st_library && st_kick_fn == NULL) {
+    if (st_library && st_kick_fn == NULL) {
         st_kick_fn = dlsym(st_library, "stonith_api_kick");
     }
-    if(st_kick_fn == NULL) {
+    if (st_kick_fn == NULL) {
         return st_err_not_supported;
     }
 
-    return (*st_kick_fn)(nodeid, NULL, timeout, off);
+    return (*st_kick_fn) (nodeid, NULL, timeout, off);
 }
 
 static inline time_t
 stonith_api_time_helper(int nodeid, bool in_progress)
 {
     static void *st_library = NULL;
-    static time_t(*st_time_fn)(int nodeid, const char *uname, bool in_progress) = NULL;
+    static time_t(*st_time_fn) (int nodeid, const char *uname, bool in_progress) = NULL;
 
-    if(st_library == NULL) {
+    if (st_library == NULL) {
         st_library = dlopen(STONITH_LIBRARY, RTLD_LAZY);
     }
-    if(st_library && st_time_fn == NULL) {
+    if (st_library && st_time_fn == NULL) {
         st_time_fn = dlsym(st_library, "stonith_api_time");
     }
-    if(st_time_fn == NULL) {
+    if (st_time_fn == NULL) {
         return 0;
     }
 
-    return (*st_time_fn)(nodeid, NULL, in_progress);
+    return (*st_time_fn) (nodeid, NULL, in_progress);
 }
 
 #endif

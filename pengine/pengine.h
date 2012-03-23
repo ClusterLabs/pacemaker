@@ -103,7 +103,6 @@ struct order_constraint_s {
 /* 		int   rh_rsc_incarnation; */
 };
 
-
 extern gboolean stage0(pe_working_set_t * data_set);
 extern gboolean probe_resources(pe_working_set_t * data_set);
 extern gboolean stage2(pe_working_set_t * data_set);

@@ -273,7 +273,7 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     crm_trace("\tClone is unique (fixed): %s",
-                is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
+              is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
     clone_data->notify_confirm = is_set(rsc->flags, pe_rsc_notify);
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
                    is_set(rsc->flags, pe_rsc_unique) ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
@@ -369,7 +369,8 @@ clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
     status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
     status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
-    status_print("failure_ignored=\"%s\" ", is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
+    status_print("failure_ignored=\"%s\" ",
+                 is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
     status_print(">\n");
 
     for (; gIter != NULL; gIter = gIter->next) {

@@ -82,7 +82,7 @@ GHashTable *membership_notify_list = NULL;
 #define crm_flag_members	0x00000001
 
 struct crm_identify_msg_s {
-    cs_ipc_header_request_t	header __attribute__((aligned(8)));
+    cs_ipc_header_request_t header __attribute__ ((aligned(8)));
     uint32_t id;
     uint32_t pid;
     int32_t votes;
@@ -854,11 +854,10 @@ pcmk_ipc_exit(void *conn)
     g_hash_table_remove(ipc_client_list, async_conn);
 
     if (client) {
-	    do_ais_log(LOG_INFO, "Client %s (conn=%p, async-conn=%p) left",
-		       client, conn, async_conn);
+        do_ais_log(LOG_INFO, "Client %s (conn=%p, async-conn=%p) left", client, conn, async_conn);
     } else {
-	    do_ais_log((LOG_DEBUG+1), "Client %s (conn=%p, async-conn=%p) left",
-		       "unknown-transient", conn, async_conn);
+        do_ais_log((LOG_DEBUG + 1), "Client %s (conn=%p, async-conn=%p) left",
+                   "unknown-transient", conn, async_conn);
     }
 
     return (0);
@@ -977,7 +976,7 @@ send_ipc_ack(void *conn)
     }
 
     res_overlay->header.id = CRM_MESSAGE_IPC_ACK;
-    res_overlay->header.size = sizeof (cs_ipc_header_response_t);
+    res_overlay->header.size = sizeof(cs_ipc_header_response_t);
     res_overlay->header.error = CS_OK;
     pcmk_api->ipc_response_send(conn, res_overlay, res_overlay->header.size);
 }
@@ -1029,9 +1028,7 @@ pcmk_ipc(void *conn, ais_void_ptr * msg)
      */
     AIS_CHECK(transient || mutable->sender.pid == pcmk_children[type].pid,
               ais_err("Sender: %d, child[%d]: %d", mutable->sender.pid, type,
-                      pcmk_children[type].pid);
-              ais_free(mutable);
-              return);
+                      pcmk_children[type].pid); ais_free(mutable); return);
 #endif
 
     if (transient == FALSE
@@ -1385,8 +1382,7 @@ check_message_sanity(const AIS_Message * msg, const char *data)
 
     AIS_CHECK(msg->header.size > sizeof(AIS_Message),
               ais_err("Message %d size too small: %d < %zu",
-                      msg->header.id, msg->header.size, sizeof(AIS_Message));
-              return FALSE);
+                      msg->header.id, msg->header.size, sizeof(AIS_Message)); return FALSE);
 
     if (sane && ais_data_len(msg) != tmp_size) {
         ais_warn("Message payload size is incorrect: expected %d, got %d", ais_data_len(msg),
@@ -1576,7 +1572,8 @@ send_cluster_msg_raw(const AIS_Message * ais_msg)
     if (mutable->id == 0) {
         msg_id++;
         AIS_CHECK(msg_id != 0 /* detect wrap-around */ ,
-                  msg_id++; ais_err("Message ID wrapped around"));
+                  msg_id++;
+                  ais_err("Message ID wrapped around"));
         mutable->id = msg_id;
     }
 

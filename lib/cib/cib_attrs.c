@@ -130,10 +130,9 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
                                              user_name);
 
     if (rc != cib_ok) {
-        crm_trace(
-                   "Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
-                   attr_name, section, crm_str(node_uuid), crm_str(set_name), xpath_string,
-                   cib_error2string(rc));
+        crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
+                  attr_name, section, crm_str(node_uuid), crm_str(set_name), xpath_string,
+                  cib_error2string(rc));
         goto done;
     }
 
@@ -369,7 +368,7 @@ read_attr_delegate(cib_t * the_cib,
                                    set_name, attr_id, attr_name, to_console, attr_value, user_name);
     if (rc != cib_ok) {
         crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
-                   attr_name, section, crm_str(set_name), crm_str(node_uuid), cib_error2string(rc));
+                  attr_name, section, crm_str(set_name), crm_str(node_uuid), cib_error2string(rc));
     }
     return rc;
 }

@@ -39,6 +39,7 @@
 #  endif
 #  include <corosync/cpg.h>
 cpg_handle_t pcmk_cpg_handle = 0;
+
 struct cpg_name pcmk_cpg_group = {
     .length = 0,
     .value[0] = 0,
@@ -152,11 +153,12 @@ get_ais_data(const AIS_Message * msg)
 int ais_fd_sync = -1;
 int ais_fd_async = -1;          /* never send messages via this channel */
 void *ais_ipc_ctx = NULL;
-#if CS_USES_LIBQB
+
+#  if CS_USES_LIBQB
 qb_ipcc_connection_t *ais_ipc_handle = NULL;
-#else
+#  else
 hdb_handle_t ais_ipc_handle = 0;
-#endif
+#  endif
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
 GFDSource *cman_source = NULL;
@@ -185,11 +187,11 @@ get_ais_nodeid(uint32_t * id, char **uname)
 
   retry:
     errno = 0;
-#if CS_USES_LIBQB
-    rc = qb_to_cs_error(qb_ipcc_sendv_recv(ais_ipc_handle, &iov, 1, &answer, sizeof (answer), -1));
-#else
+#  if CS_USES_LIBQB
+    rc = qb_to_cs_error(qb_ipcc_sendv_recv(ais_ipc_handle, &iov, 1, &answer, sizeof(answer), -1));
+#  else
     rc = coroipcc_msg_send_reply_receive(ais_ipc_handle, &iov, 1, &answer, sizeof(answer));
-#endif
+#  endif
     if (rc == CS_OK) {
         CRM_CHECK(answer.header.size == sizeof(struct crm_ais_nodeid_resp_s),
                   crm_err("Odd message: id=%d, size=%d, error=%d",
@@ -254,8 +256,7 @@ send_ais_text(int class, const char *data,
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
     /* There are only 6 handlers registered to crm_lib_service in plugin.c */
-    CRM_CHECK(class < 6, crm_err("Invalid message class: %d", class);
-              return FALSE);
+    CRM_CHECK(class < 6, crm_err("Invalid message class: %d", class); return FALSE);
 
     if (data == NULL) {
         data = "";
@@ -336,9 +337,9 @@ send_ais_text(int class, const char *data,
     ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
 
     crm_trace("Sending%s message %d to %s.%s (data=%d, total=%d)",
-                ais_msg->is_compressed ? " compressed" : "",
-                ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
-                ais_data_len(ais_msg), ais_msg->header.size);
+              ais_msg->is_compressed ? " compressed" : "",
+              ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
+              ais_data_len(ais_msg), ais_msg->header.size);
 
     iov.iov_base = ais_msg;
     iov.iov_len = ais_msg->header.size;
@@ -355,14 +356,14 @@ send_ais_text(int class, const char *data,
         errno = 0;
         switch (cluster_type) {
             case pcmk_cluster_classic_ais:
-#if CS_USES_LIBQB
+#  if CS_USES_LIBQB
                 rc = qb_to_cs_error(qb_ipcc_sendv_recv(ais_ipc_handle, &iov, 1, buf, buf_len, -1));
-#else
+#  else
                 rc = coroipcc_msg_send_reply_receive(ais_ipc_handle, &iov, 1, buf, buf_len);
-#endif
-                header = (cs_ipc_header_response_t *)buf;
+#  endif
+                header = (cs_ipc_header_response_t *) buf;
                 if (rc == CS_OK) {
-                    CRM_CHECK(header->size == sizeof (cs_ipc_header_response_t),
+                    CRM_CHECK(header->size == sizeof(cs_ipc_header_response_t),
                               crm_err("Odd message: id=%d, size=%d, class=%d, error=%d",
                                       header->id, header->size, class, header->error));
 
@@ -377,8 +378,7 @@ send_ais_text(int class, const char *data,
             case pcmk_cluster_corosync:
             case pcmk_cluster_cman:
                 transport = "cpg";
-                CRM_CHECK(dest != crm_msg_ais, rc = CS_ERR_MESSAGE_ERROR;
-                          goto bail);
+                CRM_CHECK(dest != crm_msg_ais, rc = CS_ERR_MESSAGE_ERROR; goto bail);
                 rc = cpg_mcast_joined(pcmk_cpg_handle, CPG_TYPE_AGREED, &iov, 1);
                 if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
                     cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;
@@ -447,27 +447,27 @@ terminate_ais_connection(void)
 /*     G_main_del_fd(ais_source_sync);     */
 
     if (is_classic_ais_cluster() == FALSE) {
-#if CS_USES_LIBQB
+#  if CS_USES_LIBQB
         qb_ipcc_disconnect(ais_ipc_handle);
-#else
+#  else
         coroipcc_service_disconnect(ais_ipc_handle);
-#endif
+#  endif
 
     } else {
         cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group);
     }
 
-#ifdef SUPPORT_CS_QUORUM
+#  ifdef SUPPORT_CS_QUORUM
     if (is_corosync_cluster()) {
         quorum_finalize(pcmk_quorum_handle);
     }
-#endif
-#if SUPPORT_CMAN
+#  endif
+#  if SUPPORT_CMAN
     if (is_cman_cluster()) {
         cman_stop_notification(pcmk_cman_handle);
         cman_finish(pcmk_cman_handle);
     }
-#endif
+#  endif
 }
 
 int ais_membership_timer = 0;
@@ -484,8 +484,8 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
     CRM_ASSERT(msg != NULL);
 
     crm_trace("Got new%s message (size=%d, %d, %d)",
-                msg->is_compressed ? " compressed" : "",
-                ais_data_len(msg), msg->size, msg->compressed_size);
+              msg->is_compressed ? " compressed" : "",
+              ais_data_len(msg), msg->size, msg->compressed_size);
 
     data = msg->data;
     if (msg->is_compressed && msg->size > 0) {
@@ -555,15 +555,13 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
             gboolean quorate = FALSE;
 
             value = crm_element_value(xml, "quorate");
-            CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No quorum value:");
-                      goto badmsg);
+            CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No quorum value:"); goto badmsg);
             if (crm_is_true(value)) {
                 quorate = TRUE;
             }
 
             value = crm_element_value(xml, "id");
-            CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No membership id");
-                      goto badmsg);
+            CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No membership id"); goto badmsg);
             crm_peer_seq = crm_int_helper(value, NULL);
 
             if (quorate != crm_have_quorum) {
@@ -609,14 +607,16 @@ ais_dispatch(int sender, gpointer user_data)
     gboolean(*dispatch) (AIS_Message *, char *, int) = user_data;
 
     do {
-#if CS_USES_LIBQB
+#  if CS_USES_LIBQB
         char buffer[AIS_IPC_MESSAGE_SIZE];
-        rc = qb_to_cs_error(qb_ipcc_event_recv(ais_ipc_handle, (void*)buffer,
-                            AIS_IPC_MESSAGE_SIZE, 100));
-#else
+
+        rc = qb_to_cs_error(qb_ipcc_event_recv(ais_ipc_handle, (void *)buffer,
+                                               AIS_IPC_MESSAGE_SIZE, 100));
+#  else
         char *buffer = NULL;
+
         rc = coroipcc_dispatch_get(ais_ipc_handle, (void **)&buffer, 0);
-#endif
+#  endif
 
         if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
             return TRUE;
@@ -631,9 +631,9 @@ ais_dispatch(int sender, gpointer user_data)
         }
 
         good = ais_dispatch_message((AIS_Message *) buffer, dispatch);
-#if !CS_USES_LIBQB
+#  if !CS_USES_LIBQB
         coroipcc_dispatch_put(ais_ipc_handle);
-#endif
+#  endif
 
     } while (good);
 
@@ -675,7 +675,7 @@ pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
 
                 crm_element_value_int(node, "id", &id);
                 crm_element_value_int(node, "processes", &children);
-                if(id == 0) {
+                if (id == 0) {
                     crm_log_xml_err(msg, "Bad Update");
                 } else {
                     crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
@@ -926,10 +926,8 @@ corosync_mark_unseen_peer_dead(gpointer key, gpointer value, gpointer user_data)
     int *seq = user_data;
     crm_node_t *node = value;
 
-    if (node->last_seen != *seq
-        && crm_str_eq(CRM_NODE_LOST, node->state, TRUE) == FALSE) {
-        crm_notice("Node %d/%s was not seen in the previous transition",
-                   node->id, node->uname);
+    if (node->last_seen != *seq && crm_str_eq(CRM_NODE_LOST, node->state, TRUE) == FALSE) {
+        crm_notice("Node %d/%s was not seen in the previous transition", node->id, node->uname);
         crm_update_peer(node->id, 0, 0, 0, 0, NULL, NULL, NULL, CRM_NODE_LOST);
     }
 }
@@ -938,6 +936,7 @@ static void
 corosync_mark_node_unseen(gpointer key, gpointer value, gpointer user_data)
 {
     crm_node_t *node = value;
+
     node->last_seen = 0;
 }
 
@@ -961,17 +960,17 @@ pcmk_quorum_notification(quorum_handle_t handle,
     g_hash_table_foreach(crm_peer_cache, corosync_mark_node_unseen, NULL);
 
     for (i = 0; i < view_list_entries; i++) {
-        char *uuid = get_corosync_uuid(view_list[i], NULL); 
+        char *uuid = get_corosync_uuid(view_list[i], NULL);
+
         crm_debug("Member[%d] %d ", i, view_list[i]);
 
-        crm_update_peer(view_list[i], 0, ring_id, 0, 0,
-                        uuid, NULL, NULL, CRM_NODE_MEMBER);
+        crm_update_peer(view_list[i], 0, ring_id, 0, 0, uuid, NULL, NULL, CRM_NODE_MEMBER);
     }
 
     crm_trace("Reaping unseen nodes...");
     g_hash_table_foreach(crm_peer_cache, corosync_mark_unseen_peer_dead, &ring_id);
 
-    if(quorum_app_callback) {
+    if (quorum_app_callback) {
         quorum_app_callback(ring_id, quorate);
     }
 }
@@ -1044,7 +1043,7 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
     int fd = 0;
     int quorate = 0;
     uint32_t quorum_type = 0;
-    
+
     crm_debug("Configuring Pacemaker to obtain quorum from Corosync");
 
     rc = quorum_initialize(&pcmk_quorum_handle, &quorum_callbacks, &quorum_type);
@@ -1100,20 +1099,20 @@ init_ais_connection_classic(gboolean(*dispatch) (AIS_Message *, char *, int),
     struct utsname name;
 
     crm_info("Creating connection to our Corosync plugin");
-#if CS_USES_LIBQB
+#  if CS_USES_LIBQB
     rc = CS_OK;
     ais_ipc_handle = qb_ipcc_connect("pacemaker.engine", AIS_IPC_MESSAGE_SIZE);
-#else
+#  else
     rc = coroipcc_service_connect(COROSYNC_SOCKET_NAME, PCMK_SERVICE_ID,
                                   AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE,
                                   &ais_ipc_handle);
-#endif
+#  endif
     if (ais_ipc_handle) {
-#if CS_USES_LIBQB
+#  if CS_USES_LIBQB
         qb_ipcc_fd_get(ais_ipc_handle, &ais_fd_async);
-#else
+#  else
         coroipcc_fd_get(ais_ipc_handle, &ais_fd_async);
-#endif
+#  endif
     } else {
         crm_info("Connection to our AIS plugin (%d) failed: %s (%d)",
                  PCMK_SERVICE_ID, strerror(errno), errno);

@@ -89,7 +89,7 @@ for arg in $*; do
     extract $T $V
 done
 
-if [ $# = 2 ]; then
+if [ $# -gte 2 ]; then
     V1=`version $1`
     V2=`version $2`
 

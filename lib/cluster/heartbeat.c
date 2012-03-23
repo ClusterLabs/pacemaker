@@ -88,12 +88,11 @@ send_ha_message(ll_cluster_t * hb_conn, xmlNode * xml, const char *node, gboolea
             send_q = ipc->send_queue;
         }
         if (send_q != NULL) {
-            CRM_CHECK(send_q->current_qlen < send_q->max_qlen,;
-                );
+            CRM_CHECK(send_q->current_qlen < send_q->max_qlen,;);
         }
     }
 
-    if(all_is_good) {
+    if (all_is_good) {
         crm_log_xml_trace(xml, "outbound");
     } else {
         crm_log_xml_warn(xml, "outbound");

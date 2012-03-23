@@ -306,7 +306,7 @@ sub_days(ha_time_t * a_time, int extra)
     }
 
     crm_trace("Subtracting %d days from %.4d-%.2d-%.2d",
-                extra, a_time->years, a_time->months, a_time->days);
+              extra, a_time->years, a_time->months, a_time->days);
 
     if (extra < 0) {
         add_days(a_time, -extra);
@@ -326,7 +326,7 @@ sub_weekdays(ha_time_t * a_time, int extra)
     }
 
     crm_trace("Subtracting %d days from %.4d-%.2d-%.2d",
-                extra, a_time->years, a_time->months, a_time->days);
+              extra, a_time->years, a_time->months, a_time->days);
 
     if (extra < 0) {
         add_weekdays(a_time, -extra);

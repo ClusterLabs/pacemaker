@@ -18,12 +18,12 @@
  */
 
 #ifndef STANDALONE_CONFIG__H
-#define STANDALONE_CONFIG__H
+#  define STANDALONE_CONFIG__H
 
 /*! Picking a large number in effort to avoid a dynamic list. */
-#define STANDALONE_CFG_MAX_KEYVALS 100
+#  define STANDALONE_CFG_MAX_KEYVALS 100
 
-#define STONITH_NG_CONF_FILE "/etc/pacemaker/stonith-ng.conf"
+#  define STONITH_NG_CONF_FILE "/etc/pacemaker/stonith-ng.conf"
 
 /*!
  * \brief Attempts to open a stonith standalone config file

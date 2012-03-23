@@ -185,7 +185,7 @@ cleanup_calculations(pe_working_set_t * data_set)
         g_hash_table_destroy(data_set->tickets);
     }
 
-    if(data_set->template_rsc_sets) {
+    if (data_set->template_rsc_sets) {
         g_hash_table_destroy(data_set->template_rsc_sets);
     }
 
@@ -211,10 +211,8 @@ cleanup_calculations(pe_working_set_t * data_set)
 
     set_working_set_defaults(data_set);
 
-    CRM_CHECK(data_set->ordering_constraints == NULL,;
-        );
-    CRM_CHECK(data_set->placement_constraints == NULL,;
-        );
+    CRM_CHECK(data_set->ordering_constraints == NULL,;);
+    CRM_CHECK(data_set->placement_constraints == NULL,;);
 }
 
 void

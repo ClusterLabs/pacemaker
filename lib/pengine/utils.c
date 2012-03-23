@@ -185,10 +185,11 @@ dump_node_scores_worker(int level, const char *file, const char *function, int l
             char *score = score2char(node->weight);
 
             if (rsc) {
-                do_crm_log_alias(LOG_TRACE, file, function, line, "%s: %s allocation score on %s: %s",
-                                 comment, rsc->id, node->details->uname, score);
+                do_crm_log_alias(LOG_TRACE, file, function, line,
+                                 "%s: %s allocation score on %s: %s", comment, rsc->id,
+                                 node->details->uname, score);
             } else {
-                do_crm_log_alias(LOG_TRACE, file, function, line+1, "%s: %s = %s", comment,
+                do_crm_log_alias(LOG_TRACE, file, function, line + 1, "%s: %s = %s", comment,
                                  node->details->uname, score);
             }
             crm_free(score);
@@ -237,7 +238,7 @@ dump_node_capacity(int level, const char *comment, node_t * node)
     if (level == 0) {
         fprintf(stdout, "%s\n", dump_text);
     } else {
-        crm_trace( "%s", dump_text);
+        crm_trace("%s", dump_text);
     }
 
     crm_free(dump_text);
@@ -259,7 +260,7 @@ dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * 
     if (level == 0) {
         fprintf(stdout, "%s\n", dump_text);
     } else {
-        crm_trace( "%s", dump_text);
+        crm_trace("%s", dump_text);
     }
 
     crm_free(dump_text);
@@ -345,16 +346,16 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         action = g_list_nth_data(possible_matches, 0);
         crm_trace("Found existing action (%d) %s for %s on %s",
-                    action->id, task, rsc ? rsc->id : "<NULL>",
-                    on_node ? on_node->details->uname : "<NULL>");
+                  action->id, task, rsc ? rsc->id : "<NULL>",
+                  on_node ? on_node->details->uname : "<NULL>");
         g_list_free(possible_matches);
     }
 
     if (action == NULL) {
         if (save_action) {
             crm_trace("Creating%s action %d: %s for %s on %s",
-                        optional ? "" : " manditory", data_set->action_id, key,
-                        rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>");
+                      optional ? "" : " manditory", data_set->action_id, key,
+                      rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>");
         }
 
         crm_malloc0(action, sizeof(action_t));
@@ -442,7 +443,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (is_not_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
-            crm_debug( "Action %s (unmanaged)", action->uuid);
+            crm_debug("Action %s (unmanaged)", action->uuid);
             set_bit_inplace(action->flags, pe_action_optional);
 /*   			action->runnable = FALSE; */
 
@@ -826,11 +827,11 @@ print_node(const char *pre_text, node_t * node, gboolean details)
     }
 
     crm_trace("%s%s%sNode %s: (weight=%d, fixed=%s)",
-                pre_text == NULL ? "" : pre_text,
-                pre_text == NULL ? "" : ": ",
-                node->details ==
-                NULL ? "error " : node->details->online ? "" : "Unavailable/Unclean ",
-                node->details->uname, node->weight, node->fixed ? "True" : "False");
+              pre_text == NULL ? "" : pre_text,
+              pre_text == NULL ? "" : ": ",
+              node->details ==
+              NULL ? "error " : node->details->online ? "" : "Unavailable/Unclean ",
+              node->details->uname, node->weight, node->fixed ? "True" : "False");
 
     if (details && node != NULL && node->details != NULL) {
         char *pe_mutable = crm_strdup("\t\t");
@@ -857,8 +858,8 @@ void
 print_str_str(gpointer key, gpointer value, gpointer user_data)
 {
     crm_trace("%s%s %s ==> %s",
-                user_data == NULL ? "" : (char *)user_data,
-                user_data == NULL ? "" : ": ", (char *)key, (char *)value);
+              user_data == NULL ? "" : (char *)user_data,
+              user_data == NULL ? "" : ": ", (char *)key, (char *)value);
 }
 
 void
@@ -1006,8 +1007,8 @@ find_actions(GListPtr input, const char *key, node_t * on_node)
         } else if (action->node == NULL) {
             /* skip */
             crm_trace("While looking for %s action on %s, "
-                        "found an unallocated one.  Assigning"
-                        " it to the requested node...", key, on_node->details->uname);
+                      "found an unallocated one.  Assigning"
+                      " it to the requested node...", key, on_node->details->uname);
 
             action->node = node_copy(on_node);
             result = g_list_prepend(result, action);
@@ -1126,14 +1127,13 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
     char *a_uuid = NULL;
     char *b_uuid = NULL;
-    
+
     const xmlNode *xml_a = a;
     const xmlNode *xml_b = b;
 
     const char *a_xml_id = crm_element_value_const(xml_a, XML_ATTR_ID);
     const char *b_xml_id = crm_element_value_const(xml_b, XML_ATTR_ID);
 
-    
     if (safe_str_eq(a_xml_id, b_xml_id)) {
         /* We have duplicate lrm_rsc_op entries in the status
          *    section which is unliklely to be a good thing
@@ -1195,7 +1195,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
                   sort_return(0, "bad magic a"));
         CRM_CHECK(decode_transition_magic(b_magic, &b_uuid, &b_id, &dummy, &dummy, &dummy, &dummy),
                   sort_return(0, "bad magic b"));
-    
+
         /* try and determin the relative age of the operation...
          * some pending operations (ie. a start) may have been supuerceeded
          *   by a subsequent stop
@@ -1226,7 +1226,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
             sort_return(1, "transition");
         }
     }
-    
+
     /* we should never end up here */
     CRM_CHECK(FALSE, sort_return(0, "default"));
 
@@ -1334,10 +1334,10 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
     }
 
     if (search.count != 0) {
-	char *score = score2char(search.count);
-        crm_info("%s has failed %s times on %s",
-                 search.rsc->id, score, node->details->uname);
-	crm_free(score);
+        char *score = score2char(search.count);
+
+        crm_info("%s has failed %s times on %s", search.rsc->id, score, node->details->uname);
+        crm_free(score);
     }
 
     crm_free(search.key);

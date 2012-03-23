@@ -385,7 +385,7 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
         rc = scanf("%s", private->passwd);
         fprintf(stdout, "\n");
         /* fprintf(stderr, "entered: '%s'\n", buffer); */
-        if(rc < 1) {
+        if (rc < 1) {
             private->passwd = NULL;
         }
 
@@ -562,7 +562,8 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         }
 
         crm_element_value_int(op_reply, F_CIB_CALLID, &reply_id);
-        CRM_CHECK(reply_id > 0, free_xml(op_reply); if (sync_timer->ref > 0) {
+        CRM_CHECK(reply_id > 0, free_xml(op_reply);
+                  if (sync_timer->ref > 0) {
                   g_source_remove(sync_timer->ref); sync_timer->ref = 0;}
                   return cib_reply_failed) ;
 

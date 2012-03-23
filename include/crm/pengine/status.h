@@ -148,7 +148,7 @@ struct node_s {
 
 #  define pe_rsc_orphan		0x00000001ULL
 #  define pe_rsc_managed	0x00000002ULL
-#  define pe_rsc_block          0x00000004ULL /* Further operations are prohibited due to failure policy */
+#  define pe_rsc_block          0x00000004ULL   /* Further operations are prohibited due to failure policy */
 
 #  define pe_rsc_notify		0x00000010ULL
 #  define pe_rsc_unique		0x00000020ULL

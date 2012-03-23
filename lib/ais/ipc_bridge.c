@@ -91,7 +91,7 @@ ais_process_disconnect(IPC_Channel * channel, ais_client_t * ais_client)
     } else {
         CRM_LOG_ASSERT(channel->ch_status != IPC_CONNECT);
         crm_trace("Cleaning up after client disconnect: %s/%s/%s",
-                    crm_str(ais_client->name), ais_client->channel_name, ais_client->id);
+                  crm_str(ais_client->name), ais_client->channel_name, ais_client->id);
 
         if (ais_client->id != NULL) {
             if (!g_hash_table_remove(ipc_client_list, ais_client->id)) {

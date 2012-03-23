@@ -530,7 +530,8 @@ createEmptyCib(void)
 
 static unsigned int dtd_throttle = 0;
 
-void fix_cib_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff, gboolean changed)
+void
+fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean changed)
 {
     xmlNode *cib = NULL;
     xmlNode *diff_child = NULL;

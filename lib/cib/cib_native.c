@@ -155,8 +155,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
     }
 
     if (rc == cib_ok) {
-        CRM_CHECK(native->token != NULL,;
-            );
+        CRM_CHECK(native->token != NULL,;);
         hello = cib_create_op(0, native->token, CRM_OP_REGISTER, NULL, NULL, NULL, 0, NULL);
         crm_xml_add(hello, F_CIB_CLIENTNAME, name);
 
@@ -347,8 +346,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
         cib->call_id = 1;
     }
 
-    CRM_CHECK(native->token != NULL,;
-        );
+    CRM_CHECK(native->token != NULL,;);
     op_msg =
         cib_create_op(cib->call_id, native->token, op, host, section, data, call_options,
                       user_name);
@@ -524,8 +522,7 @@ cib_native_msgready(cib_t * cib)
         return FALSE;
 
     } else if (native->callback_channel->ops->is_message_pending(native->callback_channel)) {
-        crm_trace("Message pending on command channel [%d]",
-                    native->callback_channel->farside_pid);
+        crm_trace("Message pending on command channel [%d]", native->callback_channel->farside_pid);
         return TRUE;
     }
 

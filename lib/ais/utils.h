@@ -48,14 +48,13 @@ extern int openais_dispatch_send(void *conn, void *msg, int mlen);
 
 #  endif
 
-#if !CS_USES_LIBQB
-#  include <corosync/coroipc_types.h>
-#endif
+#  if !CS_USES_LIBQB
+#    include <corosync/coroipc_types.h>
+#  endif
 
 #  if LIBQB_LOGGING
 #    include <qb/qblog.h>
 #  endif
-
 
 #  ifdef SUPPORT_COROSYNC
 #    include <corosync/corodefs.h>
@@ -150,8 +149,8 @@ level2char(int level)
     return "debug";
 }
 
-#if LIBQB_LOGGING
-#  define do_ais_log(level, fmt, args...) do {				\
+#  if LIBQB_LOGGING
+#    define do_ais_log(level, fmt, args...) do {				\
 	if(plugin_log_level < (level)) {				\
 	    continue;							\
 	} else if((level) > LOG_DEBUG) {				\
@@ -163,8 +162,8 @@ level2char(int level)
 	}								\
     } while(0)
 
-#else
-#  define do_ais_log(level, fmt, args...) do {				\
+#  else
+#    define do_ais_log(level, fmt, args...) do {				\
 	if(plugin_log_level < (level)) {				\
 	    continue;							\
 	} else if((level) > LOG_DEBUG) {				\
@@ -176,7 +175,7 @@ level2char(int level)
 	}								\
     } while(0)
 
-#endif
+#  endif
 
 #  define ais_perror(fmt, args...) log_printf(				\
 	LOG_ERR, "%s: " fmt ": (%d) %s",				\

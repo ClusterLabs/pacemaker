@@ -33,7 +33,7 @@ extern int cib_section2enum(const char *a_section);
 
 #  define create_cib_fragment(update,cib_section) create_cib_fragment_adv(update, cib_section, __FUNCTION__)
 
-extern void fix_cib_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff, gboolean changed);
+extern void fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean changed);
 
 extern xmlNode *diff_cib_object(xmlNode * old, xmlNode * new, gboolean suppress);
 

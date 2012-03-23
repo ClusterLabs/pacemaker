@@ -204,7 +204,7 @@ typedef GList *GListPtr;
 
 /* LOG_DEBUG = 7, make LOG_TRACE ::= -VVVVV */
 #  ifdef LOG_TRACE
-#  undef LOG_TRACE
+#    undef LOG_TRACE
 #  endif
 
 #  ifndef LOG_TRACE

@@ -52,6 +52,7 @@ extern cib_t *cib_new_variant(void);
 
 enum cib_errors
 
+
 cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_query,
                const char *section, xmlNode * req, xmlNode * input,
                gboolean manage_counters, gboolean * config_changed,

@@ -274,7 +274,7 @@ update_abort_priority(crm_graph_t * graph, int priority,
 
     if (graph->completion_action < action) {
         crm_debug("Abort action %s superceeded by %s",
-                 abort2text(graph->completion_action), abort2text(action));
+                  abort2text(graph->completion_action), abort2text(action));
         graph->completion_action = action;
     }
 }

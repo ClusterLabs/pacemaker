@@ -291,25 +291,24 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 
-
     /* resource information. */
     status_print("%s<resource ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
     status_print("resource_agent=\"%s%s%s:%s\" ",
-        class,
-        prov ? "::" : "",
-        prov ? prov : "",
-        crm_element_value(rsc->xml, XML_ATTR_TYPE));
+                 class,
+                 prov ? "::" : "", prov ? prov : "", crm_element_value(rsc->xml, XML_ATTR_TYPE));
     status_print("role=\"%s\" ", role2text(rsc->role));
     status_print("active=\"%s\" ", rsc->fns->active(rsc, TRUE) ? "true" : "false");
     status_print("orphaned=\"%s\" ", is_set(rsc->flags, pe_rsc_orphan) ? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
     status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
-    status_print("failure_ignored=\"%s\" ", is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
+    status_print("failure_ignored=\"%s\" ",
+                 is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
     status_print("nodes_running_on=\"%d\" ", g_list_length(rsc->running_on));
 
     if (options & pe_print_dev) {
-        status_print("provisional=\"%s\" ", is_set(rsc->flags, pe_rsc_provisional) ? "true" : "false");
+        status_print("provisional=\"%s\" ",
+                     is_set(rsc->flags, pe_rsc_provisional) ? "true" : "false");
         status_print("runnable=\"%s\" ", is_set(rsc->flags, pe_rsc_runnable) ? "true" : "false");
         status_print("priority=\"%f\" ", (double)rsc->priority);
         status_print("variant=\"%s\" ", crm_element_name(rsc->xml));
@@ -325,7 +324,9 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
         status_print(">\n");
         for (; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
-            status_print("%s    <node name=\"%s\" id=\"%s\" />\n", pre_text, node->details->uname, node->details->id);
+
+            status_print("%s    <node name=\"%s\" id=\"%s\" />\n", pre_text, node->details->uname,
+                         node->details->id);
         }
         status_print("%s</resource>\n", pre_text);
     } else {

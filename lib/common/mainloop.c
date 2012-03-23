@@ -51,7 +51,7 @@ crm_trigger_prepare(GSource * source, gint * timeout)
      * we're in constant motion, which will act as an upper bound on
      * how long the signal handling might be delayed for.
      */
-    *timeout = 500; /* Timeout in ms */
+    *timeout = 500;             /* Timeout in ms */
 
     return trig->trigger;
 }
@@ -238,14 +238,13 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
         mainloop_destroy_trigger((crm_trigger_t *) tmp);
         return FALSE;
     }
-
 #if 0
     /* If we want signals to interrupt mainloop's poll(), instead of waiting for
      * the timeout, then we should call siginterrupt() below
      *
      * For now, just enforce a low timeout
      */
-    if(siginterrupt(sig, 1) < 0) {
+    if (siginterrupt(sig, 1) < 0) {
         crm_perror(LOG_INFO, "Could not enable system call interruptions for signal %d", sig);
     }
 #endif
