@@ -206,7 +206,7 @@ changes:
 indent:
 	find . -name "*.h" -exec ./p-indent \{\} \;
 	find lib -name "*.c" -exec ./p-indent \{\} \;
-	git diff lib/common/xml.c | patch -p1 -R
+	git co - lib/common/xml.c include/crm/cib_ops.h crmd/fsa_proto.h
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i.sed 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
