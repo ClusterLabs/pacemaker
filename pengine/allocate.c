@@ -358,6 +358,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     GListPtr op_list = NULL;
     GListPtr sorted_op_list = NULL;
     gboolean is_probe = FALSE;
+    gboolean did_change = FALSE;
 
     CRM_CHECK(node != NULL, return);
 
@@ -400,6 +401,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
         }
 
         is_probe = FALSE;
+        did_change = FALSE;
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 
         interval_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL);
@@ -413,7 +415,16 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
         } else if (is_probe || safe_str_eq(task, RSC_START) || interval > 0 || safe_str_eq(task, RSC_MIGRATED)) {
-            check_action_definition(rsc, node, rsc_op, data_set);
+            did_change = check_action_definition(rsc, node, rsc_op, data_set);
+        }
+
+        if (did_change && get_failcount(node, rsc, NULL, data_set)) {
+            char *key = NULL;
+            action_t *action_clear = NULL;
+
+            key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
+            action_clear = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
+            set_bit_inplace(action_clear->flags, pe_action_runnable);
         }
     }
 
