@@ -213,7 +213,7 @@ crm_cluster_connect(char **our_uname, char **our_uuid, void *dispatch, void *des
         int rv;
 
         CRM_ASSERT(hb_conn != NULL);
-
+        /* coverity[var_deref_op] False positive */
         if (*hb_conn == NULL) {
             /* No object passed in, create a new one. */
             ll_cluster_t *(*new_cluster) (const char *llctype) =
