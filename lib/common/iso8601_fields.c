@@ -189,6 +189,7 @@ add_yeardays(ha_time_t * a_time, int extra)
     if (extra < 0) {
         sub_yeardays(a_time, -extra);
     } else {
+        /* coverity[result_independent_of_operands] Not interesting */
         do_add_field(a_time, yeardays, extra,
                      (is_leap_year(a_time->years) ? 366 : 365), add_ordinalyears);
     }
