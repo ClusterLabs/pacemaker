@@ -1852,6 +1852,8 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     char crm_mail_body[BODY_MAX];
     char *crm_mail_subject = NULL;
 
+    memset(&sa, 0, sizeof(struct sigaction));
+
     if (node == NULL) {
         node = "-";
     }
