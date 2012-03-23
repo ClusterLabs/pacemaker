@@ -463,9 +463,6 @@ AC_PATH_PROGS(ASCIIDOC, asciidoc)
 AC_PATH_PROGS(PUBLICAN, publican)
 AC_PATH_PROGS(INKSCAPE, inkscape)
 AC_PATH_PROGS(XSLTPROC, xsltproc)
-AC_PATH_PROGS(BISON, bison)
-AC_PATH_PROGS(FLEX, flex)
-AC_PATH_PROGS(HAVE_YACC, $YACC)
 AC_PATH_PROGS(FOP, fop)
 AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
 AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
@@ -476,6 +473,11 @@ AC_PATH_PROGS(PKGCONFIG, pkg-config)
 AC_PATH_PROGS(XML2CONFIG, xml2-config)
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
+
+dnl Disable these until we decide if the stonith config file should be supported
+dnl AC_PATH_PROGS(BISON, bison)
+dnl AC_PATH_PROGS(FLEX, flex)
+dnl AC_PATH_PROGS(HAVE_YACC, $YACC)
 
 if test x"${LIBTOOL}" = x""; then
    AC_MSG_ERROR(You need (g)libtool installed in order to build ${PACKAGE})
