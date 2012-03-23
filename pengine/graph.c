@@ -747,7 +747,7 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
                             wrapper->action->id, wrapper->action->uuid, action->uuid);
         return FALSE;
 
-    } else if (wrapper->type == pe_order_load) {
+    } else if (wrapper->type == pe_order_load && action->rsc) {
         crm_trace("check load filter %s.%s -> %s.%s", wrapper->action->uuid, wrapper->action->node->details->uname, action->uuid, action->node->details->uname);
 
         if (safe_str_eq(action->task, RSC_MIGRATE)) {
