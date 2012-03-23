@@ -806,7 +806,7 @@ Error performing operation: The object/attribute does not exist
   </status>
 </cib>
 * Passed: crm_resource   - Un-migrate a resource
-scope=tickets  name=granted-ticket-ticketA value=false
+false
 <cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
@@ -877,14 +877,12 @@ scope=tickets  name=granted-ticket-ticketA value=false
       </transient_attributes>
     </node_state>
     <tickets>
-      <instance_attributes id="status-tickets">
-        <nvpair id="status-tickets-granted-ticket-ticketA" name="granted-ticket-ticketA" value="false"/>
-      </instance_attributes>
+      <ticket_state id="ticketA" granted="false"/>
     </tickets>
   </status>
 </cib>
 * Passed: crm_ticket     - Set granted-ticket value
-scope=tickets  name=granted-ticket-ticketA value=false
+false
 <cib epoch="18" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
@@ -919,13 +917,12 @@ scope=tickets  name=granted-ticket-ticketA value=false
       </transient_attributes>
     </node_state>
     <tickets>
-      <instance_attributes id="status-tickets">
-        <nvpair id="status-tickets-granted-ticket-ticketA" name="granted-ticket-ticketA" value="false"/>
-      </instance_attributes>
+      <ticket_state id="ticketA" granted="false"/>
     </tickets>
   </status>
 </cib>
 * Passed: crm_ticket     - Query granted-ticket value
+Deleted ticketA state attribute:  name=granted
 <cib epoch="18" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
@@ -960,7 +957,7 @@ scope=tickets  name=granted-ticket-ticketA value=false
       </transient_attributes>
     </node_state>
     <tickets>
-      <instance_attributes id="status-tickets"/>
+      <ticket_state id="ticketA"/>
     </tickets>
   </status>
 </cib>
