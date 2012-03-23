@@ -142,10 +142,12 @@ init_remote_listener(int port, gboolean encrypted)
     saddr.sin_port = htons(port);
     if (bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
         crm_perror(LOG_ERR, "Can not bind server socket." ERROR_SUFFIX);
+        close(ssock);
         return -2;
     }
     if (listen(ssock, 10) == -1) {
         crm_perror(LOG_ERR, "Can not start listen." ERROR_SUFFIX);
+        close(ssock);
         return -3;
     }
 

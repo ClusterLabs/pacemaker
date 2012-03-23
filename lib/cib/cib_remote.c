@@ -222,6 +222,7 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection)
     ret_ga = getaddrinfo(server, NULL, &hints, &res);
     if (ret_ga) {
         crm_err("getaddrinfo: %s", gai_strerror(ret_ga));
+        close(sock);
         return -1;
     }
 
