@@ -560,12 +560,15 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
         /* child */
 
         close(1);
+        /* coverity[leaked_handle] False positive */
         if (dup(c_write_fd) < 0)
             goto fail;
         close(2);
+        /* coverity[leaked_handle] False positive */
         if (dup(c_write_fd) < 0)
             goto fail;
         close(0);
+        /* coverity[leaked_handle] False positive */
         if (dup(c_read_fd) < 0)
             goto fail;
 
