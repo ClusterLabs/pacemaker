@@ -408,7 +408,8 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
 
 #if CURSES_ENABLED
         if (options & pe_print_ncurses) {
-            move(-1, 0);        /* Coverity: False positive */
+            /* coverity[negative_returns] False positive */
+            move(-1, 0);
         }
 #endif
     }
