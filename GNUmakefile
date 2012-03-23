@@ -175,8 +175,10 @@ global: clean-generic
 	groff -mandoc `man -w ./$<` -T html > $@
 	rsync -azxlSD --progress $@ root@www.clusterlabs.org:/var/www/html/man/
 
-abi:	abi-check $(LAST_RELEASE) $(TAG)
-abi-www:	abi-check -u $(LAST_RELEASE) $(TAG)
+abi:
+	abi-check pacemaker $(LAST_RELEASE) $(TAG)
+abi-www:
+	abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
 
 www:	global
 	make all
