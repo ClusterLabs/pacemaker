@@ -188,15 +188,18 @@ www:	global
 	make coverity
 
 changes:
-	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(VERSION)-1"
-	@printf "\n- Update source tarball to revision: `hg id`"
-	@printf "\n- Statistics:\n"
-	@printf "  Changesets: `hg log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
-	@printf "  Diff:      "
-	@hg diff -r $(LAST_RELEASE):tip | diffstat | tail -n 1
-	@printf "\n- Changes since $(LAST_RELEASE)\n"
-	@hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v -e Dev: -e Low: -e Hg: -e "Added tag.*for changeset" | sort -uf 
-	@printf "\n"
+	git co - ChangeLog
+	mv ChangeLog ChangeLog.last 
+	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(NEXT_RELEASE)-1" > ChangeLog 
+	@printf "\n- Update source tarball to revision: `git id`" >> ChangeLog 
+	@printf "\n- Statistics:\n">> ChangeLog 
+	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n" >> ChangeLog 
+	@printf "  Diff:      " >> ChangeLog 
+	@git diff -r $(LAST_RELEASE)..HEAD | diffstat | tail -n 1 >> ChangeLog 
+	@printf "\n- Changes since $(LAST_RELEASE)\n" >> ChangeLog 
+	@git log --pretty=format:'%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: | sort -uf >> ChangeLog 
+	@printf "\n">> ChangeLog 
+	cat ChangeLog.last >> ChangeLog 
 
 indent:
 	find . -name "*.h" -exec ./p-indent \{\} \;
