@@ -1583,8 +1583,8 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
     if (is_set(type, pe_order_restart)) {
         const char *reason = NULL;
 
-        CRM_ASSERT(first->rsc->variant == pe_native);
-        CRM_ASSERT(then->rsc->variant == pe_native);
+        CRM_ASSERT(first->rsc && first->rsc->variant == pe_native);
+        CRM_ASSERT(then->rsc && then->rsc->variant == pe_native);
 
         if ((filter & pe_action_runnable) && (then->flags & pe_action_runnable) == 0) {
             reason = "shutdown";
