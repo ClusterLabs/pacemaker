@@ -494,7 +494,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     for (gIter = rsc->rsc_tickets; gIter != NULL; gIter = gIter->next) {
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) gIter->data;
 
-        if (rsc_ticket->ticket->granted == FALSE) {
+        if (rsc_ticket->ticket->granted == FALSE || rsc_ticket->ticket->standby) {
             rsc_ticket_constraint(rsc, rsc_ticket, data_set);
         }
     }
@@ -1397,7 +1397,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
         return;
     }
 
-    if (rsc_ticket->ticket->granted == TRUE) {
+    if (rsc_ticket->ticket->granted && rsc_ticket->ticket->standby == FALSE) {
         return;
     }
 
@@ -1417,7 +1417,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
     crm_trace("%s: Processing ticket dependency on %s (%s, %s)",
                 rsc_lh->id, rsc_ticket->ticket->id, rsc_ticket->id, role2text(rsc_ticket->role_lh));
 
-    if (g_list_length(rsc_lh->running_on) > 0) {
+    if (rsc_ticket->ticket->granted == FALSE && g_list_length(rsc_lh->running_on) > 0) {
         GListPtr gIter = NULL;
 
         switch (rsc_ticket->loss_policy) {
@@ -1458,10 +1458,16 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 break;
         }
 
-    } else {
+    } else if (rsc_ticket->ticket->granted == FALSE){
 
         if (rsc_ticket->role_lh != RSC_ROLE_MASTER || rsc_ticket->loss_policy == loss_ticket_stop) {
             resource_location(rsc_lh, NULL, -INFINITY, "__no_ticket__", data_set);
+        }
+
+    } else if (rsc_ticket->ticket->standby) {
+
+        if (rsc_ticket->role_lh != RSC_ROLE_MASTER || rsc_ticket->loss_policy == loss_ticket_stop) {
+            resource_location(rsc_lh, NULL, -INFINITY, "__ticket_standby__", data_set);
         }
     }
 }
