@@ -1510,6 +1510,7 @@ main(int argc, char **argv)
             rc = cib_NOTEXISTS;
             goto bail;
         }
+        /* coverity[var_deref_model] False positive */
         rc = move_resource(rsc_id, NULL, NULL, cib_conn);
 
     } else if (rsc_cmd == 'M') {
@@ -1544,9 +1545,11 @@ main(int argc, char **argv)
                     "%s is already active on %s\n", rsc_id, host_uname);
 
         } else if (current_uname != NULL && (do_force || host_uname == NULL)) {
+            /* coverity[var_deref_model] False positive */
             rc = move_resource(rsc_id, current_uname, host_uname, cib_conn);
 
         } else if (host_uname != NULL) {
+            /* coverity[var_deref_model] False positive */
             rc = move_resource(rsc_id, NULL, host_uname, cib_conn);
 
         } else {
@@ -1611,6 +1614,7 @@ main(int argc, char **argv)
             rc = CIBRES_MISSING_FIELD;
             goto bail;
         }
+        /* coverity[var_deref_model] False positive */
         rc = set_resource_attr(rsc_id, prop_set, prop_id, prop_name,
                                prop_value, cib_conn, &data_set);
 
@@ -1620,6 +1624,7 @@ main(int argc, char **argv)
             rc = cib_NOTEXISTS;
             goto bail;
         }
+        /* coverity[var_deref_model] False positive */
         rc = delete_resource_attr(rsc_id, prop_set, prop_id, prop_name, cib_conn, &data_set);
 
     } else if (rsc_cmd == 'P') {
