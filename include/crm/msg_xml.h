@@ -297,7 +297,8 @@
 #  define XML_ACL_ATTR_XPATH		"xpath"
 #  define XML_ACL_ATTR_ATTRIBUTE		"attribute"
 
-#  define XML_CIB_TAG_TICKETS   		"tickets"
+#  define XML_CIB_TAG_TICKETS		"tickets"
+#  define XML_CIB_TAG_TICKET_STATE	"ticket_state"
 
 #  define XML_TAG_FENCING_TOPOLOGY      "fencing-topology"
 #  define XML_TAG_FENCING_LEVEL         "fencing-level"

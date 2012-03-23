@@ -2294,17 +2294,10 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     if (ticket == NULL) {
-        crm_malloc0(ticket, sizeof(ticket_t));
+        ticket = ticket_new(ticket_str, data_set);
         if (ticket == NULL) {
-            crm_config_err("Cannot allocate ticket '%s'", ticket_str);
             return FALSE;
         }
-
-        ticket->id = crm_strdup(ticket_str);
-        ticket->granted = FALSE;
-        ticket->last_granted = -1;
-
-        g_hash_table_insert(data_set->tickets, crm_strdup(ticket->id), ticket);
     }
 
     rc = unpack_rsc_ticket_template(xml_obj, &expanded_xml, data_set);
