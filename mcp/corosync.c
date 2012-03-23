@@ -657,12 +657,14 @@ read_config(void)
                 crm_warn("Cannot change the mode of %s to rw-rw----", logging_logfile);
             }
 
+            have_log = TRUE;
             fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
                     pcmk_uid, pcmk_gid, logging_logfile);
-            fflush(logfile);
-            fsync(logfd);
+            if(fflush(logfile) < 0 || fsync(logfd) < 0) {
+                crm_err("Couldn't write out logfile: %s", logging_logfile);
+                have_log = FALSE;
+            }
             fclose(logfile);
-            have_log = TRUE;
 
         } else {
             crm_err("Couldn't create logfile: %s", logging_logfile);
