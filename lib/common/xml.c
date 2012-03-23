@@ -2618,10 +2618,11 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
     xmlDocPtr doc = NULL;
     gboolean valid = FALSE;
     int type = known_schemas[method].type;
-    char *file = get_schema_path(known_schemas[method].location);
+    char *file = NULL;
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
+    file = get_schema_path(known_schemas[method].location);
     
     crm_trace("Validating with: %s (type=%d)", crm_str(file), type);
     switch(type) {
@@ -2730,15 +2731,15 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 #if HAVE_LIBXSLT
 static xmlNode *apply_transformation(xmlNode *xml, const char *transform) 
 {
+    char *xform = NULL;
     xmlNode *out = NULL;
     xmlDocPtr res = NULL;
     xmlDocPtr doc = NULL;
     xsltStylesheet *xslt = NULL;
 
-    char *xform = get_schema_path(transform);
-
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
+    xform = get_schema_path(transform);
 
     xmlLoadExtDtdDefaultValue = 1;
     xmlSubstituteEntitiesDefault(1);
