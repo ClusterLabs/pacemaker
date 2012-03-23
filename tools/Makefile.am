@@ -31,7 +31,7 @@ header_HEADERS		= attrd.h
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
 
-sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount crm_ticket
+sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
 EXTRA_DIST		= $(sbin_SCRIPTS)
 
 halibdir		= $(CRM_DAEMON_DIR)
@@ -40,7 +40,7 @@ halib_PROGRAMS		= attrd
 halib_PYTHON		= crm_primitive.py hb2openais-helper.py
 
 sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
-			 crm_uuid crm_shadow attrd_updater crm_diff crm_mon iso8601
+			 crm_uuid crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket
 
 testdir			= $(datadir)/$(PACKAGE)/tests
 test_SCRIPTS		= coverage.sh
@@ -123,6 +123,12 @@ attrd_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS)
 
 attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_LDADD	= $(COMMONLIBS)
+
+crm_ticket_SOURCES	= crm_ticket.c
+crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \
+			$(top_builddir)/lib/pengine/libpe_status.la \
+			$(top_builddir)/pengine/libpengine.la \
+			$(COMMONLIBS)
 
 if BUILD_SERVICELOG
 notifyServicelogEvent_SOURCES	= notifyServicelogEvent.c
