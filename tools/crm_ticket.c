@@ -40,6 +40,8 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 
+#include <../pengine/pengine.h>
+
 gboolean do_force = FALSE;
 gboolean BE_QUIET = FALSE;
 const char *ticket_id = NULL;
@@ -653,6 +655,7 @@ main(int argc, char **argv)
 {
     pe_working_set_t data_set;
     xmlNode *cib_xml_copy = NULL;
+    xmlNode *cib_constraints = NULL;
 
     cib_t *cib_conn = NULL;
     enum cib_errors rc = cib_ok;
@@ -782,6 +785,11 @@ main(int argc, char **argv)
     data_set.now = new_ha_date(TRUE);
 
     cluster_status(&data_set);
+
+    /* For recording the tickets that are referenced in rsc_ticket constraints
+     * but have never been granted yet. */
+    cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
+    unpack_constraints(cib_constraints, &data_set);
 
     if (ticket_cmd == 'l' || ticket_cmd == 'L' || ticket_cmd == 'w') {
         gboolean raw = FALSE;
