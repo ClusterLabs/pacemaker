@@ -352,7 +352,8 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) gIter->data;
 
-        if (rsc_ticket->role_lh == RSC_ROLE_MASTER && rsc_ticket->ticket->granted == FALSE) {
+        if (rsc_ticket->role_lh == RSC_ROLE_MASTER 
+            && (rsc_ticket->ticket->granted == FALSE || rsc_ticket->ticket->standby)) {
             resource_location(rsc, NULL, -INFINITY, "__stateful_without_ticket__", data_set);
         }
     }

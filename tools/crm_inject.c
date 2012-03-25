@@ -755,10 +755,91 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     }
 }
 
+static int
+find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_state_xml)
+{
+    int offset = 0;
+    static int xpath_max = 1024;
+    enum cib_errors rc = cib_ok;
+    xmlNode *xml_search = NULL;
+
+    char *xpath_string = NULL;
+
+    CRM_ASSERT(ticket_state_xml != NULL);
+    *ticket_state_xml = NULL;
+
+    crm_malloc0(xpath_string, xpath_max);
+    offset +=
+        snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+
+    if (ticket_id) {
+        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
+                       XML_CIB_TAG_TICKET_STATE, ticket_id);
+    }
+
+    rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
+                              cib_sync_call | cib_scope_local | cib_xpath);
+
+    if (rc != cib_ok) {
+        goto bail;
+    }
+
+    crm_log_xml_debug(xml_search, "Match");
+    if (xml_has_children(xml_search)) {
+        if (ticket_id) {
+            fprintf(stdout, "Multiple ticket_states match ticket_id=%s\n", ticket_id);
+        }
+        *ticket_state_xml = xml_search;
+    } else {
+        *ticket_state_xml = xml_search;
+    }
+
+  bail:
+    crm_free(xpath_string);
+    return rc;
+}
+
+static int
+set_ticket_state_attr(const char *ticket_id, const char *attr_name,
+                      const char *attr_value, cib_t * cib, int cib_options)
+{
+    enum cib_errors rc = cib_ok;
+    xmlNode *xml_top = NULL;
+    xmlNode *ticket_state_xml = NULL;
+
+    rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
+    if (rc == cib_ok) {
+        crm_debug("Found a match state for ticket: id=%s", ticket_id);
+        xml_top = ticket_state_xml;
+
+    } else if (rc != cib_NOTEXISTS) {
+        return rc;
+
+    } else {
+        xmlNode *xml_obj = NULL;
+
+        xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+        xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
+        ticket_state_xml = create_xml_node(xml_obj, XML_CIB_TAG_TICKET_STATE);
+        crm_xml_add(ticket_state_xml, XML_ATTR_ID, ticket_id);
+    }
+
+    crm_xml_add(ticket_state_xml, attr_name, attr_value);
+
+    crm_log_xml_debug(xml_top, "Update");
+
+    rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, xml_top, cib_options);
+
+    free_xml(xml_top);
+
+    return rc;
+}
+
 static void
 modify_configuration(pe_working_set_t * data_set,
                      const char *quorum, GListPtr node_up, GListPtr node_down, GListPtr node_fail,
-                     GListPtr op_inject, GListPtr ticket_grant, GListPtr ticket_revoke)
+                     GListPtr op_inject, GListPtr ticket_grant, GListPtr ticket_revoke,
+                     GListPtr ticket_standby, GListPtr ticket_activate)
 {
     int rc = cib_ok;
     GListPtr gIter = NULL;
@@ -818,29 +899,41 @@ modify_configuration(pe_working_set_t * data_set,
     }
 
     for (gIter = ticket_grant; gIter != NULL; gIter = gIter->next) {
-        char *ticket = (char *)gIter->data;
-        char *attr_name = crm_concat("granted-ticket", ticket, '-');
+        char *ticket_id = (char *)gIter->data;
 
-        quiet_log(" + Granting ticket %s\n", ticket);
-        rc = update_attr(global_cib, cib_sync_call | cib_scope_local,
-                         XML_CIB_TAG_TICKETS, NULL, NULL, NULL, NULL,
-                         attr_name, "true", TRUE);
-
-        crm_free(attr_name);
+        quiet_log(" + Granting ticket %s\n", ticket_id);
+        rc = set_ticket_state_attr(ticket_id, "granted", "true",
+                                  global_cib, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == cib_ok);
     }
 
     for (gIter = ticket_revoke; gIter != NULL; gIter = gIter->next) {
-        char *ticket = (char *)gIter->data;
-        char *attr_name = crm_concat("granted-ticket", ticket, '-');
+        char *ticket_id = (char *)gIter->data;
 
-        quiet_log(" + Revoking ticket %s\n", ticket);
-        rc = update_attr(global_cib, cib_sync_call | cib_scope_local,
-                         XML_CIB_TAG_TICKETS, NULL, NULL, NULL, NULL,
-                         attr_name, "false", TRUE);
+        quiet_log(" + Revoking ticket %s\n", ticket_id);
+        rc = set_ticket_state_attr(ticket_id, "granted", "false",
+                                  global_cib, cib_sync_call | cib_scope_local);
 
-        crm_free(attr_name);
+        CRM_ASSERT(rc == cib_ok);
+    }
+
+    for (gIter = ticket_standby; gIter != NULL; gIter = gIter->next) {
+        char *ticket_id = (char *)gIter->data;
+
+        quiet_log(" + Making ticket %s standby\n", ticket_id);
+        rc = set_ticket_state_attr(ticket_id, "standby", "true",
+                                  global_cib, cib_sync_call | cib_scope_local);
+
+        CRM_ASSERT(rc == cib_ok);
+    }
+
+    for (gIter = ticket_activate; gIter != NULL; gIter = gIter->next) {
+        char *ticket_id = (char *)gIter->data;
+
+        quiet_log(" + Activating ticket %s\n", ticket_id);
+        rc = set_ticket_state_attr(ticket_id, "standby", "false",
+                                  global_cib, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == cib_ok);
     }
@@ -999,8 +1092,10 @@ static struct crm_option long_options[] = {
     {"op-fail",      1, 0, 'F', "\t$rsc_$task_$interval@$node=$rc - Fail the specified task while running the simulation"},
     {"set-datetime", 1, 0, 't', "Set date/time"},
     {"quorum",       1, 0, 'q', "\tSpecify a value for quorum"},
-    {"ticket-grant", 1, 0, 'g', "Grant a ticket"},
-    {"ticket-revoke",1, 0, 'r', "Revoke a ticket"},
+    {"ticket-grant",     1, 0, 'g', "Grant a ticket"},
+    {"ticket-revoke",    1, 0, 'r', "Revoke a ticket"},
+    {"ticket-standby",   1, 0, 'b', "Make a ticket standby"},
+    {"ticket-activate",  1, 0, 'e', "Activate a ticket"},
 
     {"-spacer-",     0, 0, '-', "\nOutput Options:"},
     
@@ -1122,6 +1217,8 @@ main(int argc, char **argv)
     GListPtr op_inject = NULL;
     GListPtr ticket_grant = NULL;
     GListPtr ticket_revoke = NULL;
+    GListPtr ticket_standby = NULL;
+    GListPtr ticket_activate = NULL;
 
     xmlNode *input = NULL;
 
@@ -1202,6 +1299,14 @@ main(int argc, char **argv)
             case 'r':
                 modified++;
                 ticket_revoke = g_list_append(ticket_revoke, optarg);
+                break;
+            case 'b':
+                modified++;
+                ticket_standby = g_list_append(ticket_standby, optarg);
+                break;
+            case 'e':
+                modified++;
+                ticket_activate = g_list_append(ticket_activate, optarg);
                 break;
             case 'a':
                 all_actions = TRUE;
@@ -1290,7 +1395,7 @@ main(int argc, char **argv)
     if (modified) {
         quiet_log("Performing requested modifications\n");
         modify_configuration(&data_set, quorum, node_up, node_down, node_fail, op_inject,
-                             ticket_grant, ticket_revoke);
+                             ticket_grant, ticket_revoke, ticket_standby, ticket_activate);
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
         if (rc != cib_ok) {

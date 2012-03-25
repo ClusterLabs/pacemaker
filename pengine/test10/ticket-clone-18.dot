@@ -1,0 +1,16 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"clone1_stop_0" -> "clone1_stopped_0" [ style = bold]
+"clone1_stop_0" -> "rsc1:0_stop_0 node2" [ style = bold]
+"clone1_stop_0" -> "rsc1:1_stop_0 node1" [ style = bold]
+"clone1_stop_0" [ style=bold color="green" fontcolor="orange"]
+"clone1_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"probe_complete node1" [ style=bold color="green" fontcolor="black"]
+"probe_complete node2" [ style=bold color="green" fontcolor="black"]
+"rsc1:0_stop_0 node2" -> "all_stopped" [ style = bold]
+"rsc1:0_stop_0 node2" -> "clone1_stopped_0" [ style = bold]
+"rsc1:0_stop_0 node2" [ style=bold color="green" fontcolor="black"]
+"rsc1:1_stop_0 node1" -> "all_stopped" [ style = bold]
+"rsc1:1_stop_0 node1" -> "clone1_stopped_0" [ style = bold]
+"rsc1:1_stop_0 node1" [ style=bold color="green" fontcolor="black"]
+}

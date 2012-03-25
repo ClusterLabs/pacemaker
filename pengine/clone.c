@@ -521,7 +521,7 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) gIter->data;
 
-        if (rsc_ticket->ticket->granted == FALSE) {
+        if (rsc_ticket->ticket->granted == FALSE || rsc_ticket->ticket->standby) {
             rsc_ticket_constraint(rsc, rsc_ticket, data_set);
         }
     }
