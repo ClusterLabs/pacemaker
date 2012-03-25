@@ -170,28 +170,28 @@ function test_tools() {
     $VALGRIND_CMD crm_resource -r dummy -U
     assert $? 0 crm_resource "Un-migrate a resource"
 
-    crm_ticket -t ticketA -G granted -d false
+    $VALGRIND_CMD crm_ticket -t ticketA -G granted -d false
     assert $? 0 crm_ticket "Default ticket granted state"
 
-    crm_ticket -t ticketA -r --force
+    $VALGRIND_CMD crm_ticket -t ticketA -r --force
     assert $? 0 crm_ticket "Set ticket granted state"
 
-    crm_ticket -t ticketA -G granted
+    $VALGRIND_CMD crm_ticket -t ticketA -G granted
     assert $? 0 crm_ticket "Query ticket granted state"
     
-    crm_ticket -t ticketA -D granted --force
+    $VALGRIND_CMD crm_ticket -t ticketA -D granted --force
     assert $? 0 crm_ticket "Delete ticket granted state"
 
-    crm_ticket -t ticketA -s
+    $VALGRIND_CMD crm_ticket -t ticketA -s
     assert $? 0 crm_ticket "Make a ticket standby"
 
-    crm_ticket -t ticketA -G standby
+    $VALGRIND_CMD crm_ticket -t ticketA -G standby
     assert $? 0 crm_ticket "Query ticket standby state"
     
-    crm_ticket -t ticketA -a
+    $VALGRIND_CMD crm_ticket -t ticketA -a
     assert $? 0 crm_ticket "Activate a ticket"
 
-    crm_ticket -t ticketA -D standby
+    $VALGRIND_CMD crm_ticket -t ticketA -D standby
     assert $? 0 crm_ticket "Delete ticket standby state"
  }
 
