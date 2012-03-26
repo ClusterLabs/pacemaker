@@ -57,7 +57,7 @@ sbin_PROGRAMS		+= ipmiservicelogd
 endif
 
 if BUILD_HELP
-man8_MANS =	$(sbin_PROGRAMS:%=%.8) crm_report.8 crm_failcount.8 crm_master.8 crm_standby.8 crm_ticket.8
+man8_MANS =		$(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
 endif
 
 ## SOURCES
