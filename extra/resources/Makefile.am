@@ -38,7 +38,8 @@ if BUILD_XML_HELP
 man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7)
 
 %.xml:	%
-	OCF_ROOT=$(OCF_ROOT_DIR) sh $(top_srcdir)/extra/resources/$< meta-data | $(XSLTPROC) --nonet --novalid --stringparam command.prefix ocf_pacemaker_ --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7 $(top_srcdir)/xml/ocf-meta2man.xsl - > $@
+	echo Building $< manpage
+	OCF_FUNCTIONS=/dev/null OCF_ROOT=$(OCF_ROOT_DIR) sh $(top_srcdir)/extra/resources/$< meta-data | $(XSLTPROC) --nonet --novalid --stringparam command.prefix ocf_pacemaker_ --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7 $(top_srcdir)/xml/ocf-meta2man.xsl - > $@
 
 ocf_pacemaker_%.7:	%.xml
 	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/extra/resources/$<

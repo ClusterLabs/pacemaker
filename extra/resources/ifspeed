@@ -18,8 +18,9 @@
 #
 # Initialization:
 
-: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/lib/heartbeat}
-. ${OCF_FUNCTIONS_DIR}/ocf-shellfuncs
+: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
+. ${OCF_FUNCTIONS}
+: ${__OCF_ACTION=$1}
 
 # Defaults
 OCF_RESKEY_name_default="ifspeed"
