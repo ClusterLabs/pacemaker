@@ -1452,22 +1452,18 @@ main(int argc, char **argv)
             create_dotfile(&data_set, dot_file, all_actions);
         }
 
-        if (quiet == FALSE && verbose == FALSE) {
+        if (quiet == FALSE) {
             GListPtr gIter = NULL;
 
             quiet_log("%sTransition Summary:\n", show_scores || show_utilization
                       || modified ? "\n" : "");
             fflush(stdout);
 
-            set_crm_log_level(LOG_NOTICE);
-            crm_enable_stderr(TRUE);
             for (gIter = data_set.resources; gIter != NULL; gIter = gIter->next) {
                 resource_t *rsc = (resource_t *) gIter->data;
 
-                LogActions(rsc, &data_set);
+                LogActions(rsc, &data_set, TRUE);
             }
-
-            crm_enable_stderr(FALSE);
         }
     }
 

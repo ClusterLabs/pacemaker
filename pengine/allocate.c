@@ -1552,7 +1552,7 @@ stage7(pe_working_set_t * data_set)
         resource_t *rsc = (resource_t *) gIter->data;
 
         rsc_migrate_reload(rsc, data_set);
-        LogActions(rsc, data_set);
+        LogActions(rsc, data_set, FALSE);
     }
 
     return TRUE;
