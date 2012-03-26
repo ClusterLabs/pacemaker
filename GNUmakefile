@@ -134,7 +134,10 @@ mock-%:
 srpm:	srpm-$(DISTRO)
 
 mock:   mock-$(MOCK_CFG)
-mock-next: mock-fedora-$(shell expr 1 + $(F))-$(ARCH)
+mock-next: 
+	make F=$(shell expr 1 + $(F)) mock
+mock-rawhide:
+	make F=rawhide mock
 
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first

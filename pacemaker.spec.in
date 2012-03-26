@@ -22,6 +22,7 @@
 
 %global cs_major %(pkg-config corosync --modversion  | awk -F . '{print $1}')
 %global cs_minor %(pkg-config corosync --modversion  | awk -F . '{print $2}')
+%global rawhide  %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
 
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
@@ -44,9 +45,8 @@
 # Support additional trace logging
 %bcond_without tracedata
 
+# We generate docs using Publican, Asciidoc and Inkscape, but they're not available everywhere
 %bcond_without doc
-# We generate some docs using Publican, but its not available everywhere
-%bcond_without publican
 
 # Use a different versioning scheme
 %bcond_with pre_release
@@ -110,8 +110,8 @@ BuildRequires:  gnutls-devel
 
 
 # Enables optional functionality
-BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents libqb-devel
-BuildRequires: bison byacc flex
+BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl libqb-devel
+BuildRequires: bison byacc flex help2man
 
 %if %{with cman}
 
@@ -151,14 +151,15 @@ BuildRequires: corosynclib-devel
 BuildRequires: heartbeat-devel heartbeat-libs >= 3.0.0
 %endif
 
-%if %{with doc}
-BuildRequires: asciidoc help2man
+%if !%{rawhide}
+# More often than not, inkscape is busted on rawhide, don't even bother
 
-%if %{with publican}
+%if %{with doc}
 %ifarch %{ix86} x86_64
-BuildRequires: publican inkscape
+BuildRequires: publican inkscape asciidoc
 %endif
 %endif
+
 %endif
 
 %description
