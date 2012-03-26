@@ -1,0 +1,1188 @@
+<cib epoch="365" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.1" crm_feature_set="3.0.6" update-origin="lustre01-left" update-client="cibadmin" cib-last-written="Wed Mar 14 07:10:17 2012" have-quorum="1" dc-uuid="lustre02-left">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="100"/>
+        <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="100"/>
+        <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="100"/>
+        <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="10m"/>
+        <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="true"/>
+        <nvpair id="cib-bootstrap-options-stop-all-resources" name="stop-all-resources" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-0.20.el6-1e8a96ae55d6022f7036434b537938a1fa75a700"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1331649645"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="lustre02-left" type="normal" uname="lustre02-left">
+        <instance_attributes id="lustre02-left-instance_attributes">
+          <nvpair id="lustre02-left-instance_attributes-mgs-placement" name="mgs-placement" value="true"/>
+          <nvpair id="lustre02-left-instance_attributes-testfs-mdt0000-placement" name="testfs-mdt0000-placement" value="true"/>
+          <nvpair id="lustre02-left-instance_attributes-testfs-ost0000-placement" name="testfs-ost0000-placement" value="true"/>
+          <nvpair id="lustre02-left-instance_attributes-testfs-ost0001-placement" name="testfs-ost0001-placement" value="true"/>
+          <nvpair id="lustre02-left-instance_attributes-testfs-ost0001-primary" name="testfs-ost0001-primary" value="true"/>
+          <nvpair id="lustre02-left-instance_attributes-booth-placement" name="booth-placement" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="lustre01-left" type="normal" uname="lustre01-left">
+        <instance_attributes id="lustre01-left-instance_attributes">
+          <nvpair id="lustre01-left-instance_attributes-mgs-placement" name="mgs-placement" value="true"/>
+          <nvpair id="lustre01-left-instance_attributes-mgs-primary" name="mgs-primary" value="true"/>
+          <nvpair id="lustre01-left-instance_attributes-testfs-mdt0000-placement" name="testfs-mdt0000-placement" value="true"/>
+          <nvpair id="lustre01-left-instance_attributes-testfs-mdt0000-primary" name="testfs-mdt0000-primary" value="true"/>
+          <nvpair id="lustre01-left-instance_attributes-testfs-ost0000-placement" name="testfs-ost0000-placement" value="true"/>
+          <nvpair id="lustre01-left-instance_attributes-testfs-ost0000-primary" name="testfs-ost0000-primary" value="true"/>
+          <nvpair id="lustre01-left-instance_attributes-testfs-ost0001-placement" name="testfs-ost0001-placement" value="true"/>
+          <nvpair id="lustre01-left-instance_attributes-booth-placement" name="booth-placement" value="true"/>
+        </instance_attributes>
+        <instance_attributes id="nodes-lustre01-left">
+          <nvpair id="nodes-lustre01-left-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="lustre03-left" type="normal" uname="lustre03-left">
+        <instance_attributes id="lustre03-left-instance_attributes">
+          <nvpair id="lustre03-left-instance_attributes-testfs-ost0002-placement" name="testfs-ost0002-placement" value="true"/>
+          <nvpair id="lustre03-left-instance_attributes-testfs-ost0002-primary" name="testfs-ost0002-primary" value="true"/>
+          <nvpair id="lustre03-left-instance_attributes-testfs-ost0003-placement" name="testfs-ost0003-placement" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="lustre04-left" type="normal" uname="lustre04-left">
+        <instance_attributes id="lustre04-left-instance_attributes">
+          <nvpair id="lustre04-left-instance_attributes-testfs-ost0002-placement" name="testfs-ost0002-placement" value="true"/>
+          <nvpair id="lustre04-left-instance_attributes-testfs-ost0003-placement" name="testfs-ost0003-placement" value="true"/>
+          <nvpair id="lustre04-left-instance_attributes-testfs-ost0003-primary" name="testfs-ost0003-primary" value="true"/>
+        </instance_attributes>
+        <instance_attributes id="nodes-lustre04-left">
+          <nvpair id="nodes-lustre04-left-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="drbd-local" provider="vds-ok" type="Ticketer">
+        <instance_attributes id="drbd-local-instance_attributes">
+          <nvpair id="drbd-local-instance_attributes-name" name="name" value="drbd-local"/>
+        </instance_attributes>
+        <operations>
+          <op id="drbd-local-start-0" interval="0" name="start" timeout="30"/>
+          <op id="drbd-local-stop-0" interval="0" name="stop" timeout="30"/>
+        </operations>
+        <meta_attributes id="drbd-local-meta_attributes">
+          <nvpair id="drbd-local-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="drbd-local-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="drbd-stacked" provider="vds-ok" type="Ticketer">
+        <instance_attributes id="drbd-stacked-instance_attributes">
+          <nvpair id="drbd-stacked-instance_attributes-name" name="name" value="drbd-stacked"/>
+        </instance_attributes>
+        <operations>
+          <op id="drbd-stacked-start-0" interval="0" name="start" timeout="30"/>
+          <op id="drbd-stacked-stop-0" interval="0" name="stop" timeout="30"/>
+        </operations>
+        <meta_attributes id="drbd-stacked-meta_attributes">
+          <nvpair id="drbd-stacked-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="drbd-stacked-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="drbd-testfs-local" provider="vds-ok" type="Ticketer">
+        <instance_attributes id="drbd-testfs-local-instance_attributes">
+          <nvpair id="drbd-testfs-local-instance_attributes-name" name="name" value="drbd-testfs-local"/>
+        </instance_attributes>
+        <operations>
+          <op id="drbd-testfs-local-start-0" interval="0" name="start" timeout="30"/>
+          <op id="drbd-testfs-local-stop-0" interval="0" name="stop" timeout="30"/>
+        </operations>
+        <meta_attributes id="drbd-testfs-local-meta_attributes">
+          <nvpair id="drbd-testfs-local-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="drbd-testfs-local-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="drbd-testfs-stacked" provider="vds-ok" type="Ticketer">
+        <instance_attributes id="drbd-testfs-stacked-instance_attributes">
+          <nvpair id="drbd-testfs-stacked-instance_attributes-name" name="name" value="drbd-testfs-stacked"/>
+        </instance_attributes>
+        <operations>
+          <op id="drbd-testfs-stacked-start-0" interval="0" name="start" timeout="30"/>
+          <op id="drbd-testfs-stacked-stop-0" interval="0" name="stop" timeout="30"/>
+        </operations>
+        <meta_attributes id="drbd-testfs-stacked-meta_attributes">
+          <nvpair id="drbd-testfs-stacked-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="drbd-testfs-stacked-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="ip-testfs-mdt0000-left" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-testfs-mdt0000-left-instance_attributes">
+          <nvpair id="ip-testfs-mdt0000-left-instance_attributes-ip" name="ip" value="10.5.0.95"/>
+          <nvpair id="ip-testfs-mdt0000-left-instance_attributes-nic" name="nic" value="eth0"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-testfs-mdt0000-left-monitor-30" interval="30" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-testfs-ost0000-left" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-testfs-ost0000-left-instance_attributes">
+          <nvpair id="ip-testfs-ost0000-left-instance_attributes-ip" name="ip" value="10.5.0.96"/>
+          <nvpair id="ip-testfs-ost0000-left-instance_attributes-nic" name="nic" value="eth0"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-testfs-ost0000-left-monitor-30" interval="30" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-testfs-ost0001-left" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-testfs-ost0001-left-instance_attributes">
+          <nvpair id="ip-testfs-ost0001-left-instance_attributes-ip" name="ip" value="10.5.0.97"/>
+          <nvpair id="ip-testfs-ost0001-left-instance_attributes-nic" name="nic" value="eth0"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-testfs-ost0001-left-monitor-30" interval="30" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-testfs-ost0002-left" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-testfs-ost0002-left-instance_attributes">
+          <nvpair id="ip-testfs-ost0002-left-instance_attributes-ip" name="ip" value="10.5.0.98"/>
+          <nvpair id="ip-testfs-ost0002-left-instance_attributes-nic" name="nic" value="eth0"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-testfs-ost0002-left-monitor-30" interval="30" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-testfs-ost0003-left" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-testfs-ost0003-left-instance_attributes">
+          <nvpair id="ip-testfs-ost0003-left-instance_attributes-ip" name="ip" value="10.5.0.99"/>
+          <nvpair id="ip-testfs-ost0003-left-instance_attributes-nic" name="nic" value="eth0"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-testfs-ost0003-left-monitor-30" interval="30" name="monitor"/>
+        </operations>
+        <meta_attributes id="ip-testfs-ost0003-left-meta_attributes">
+          <nvpair id="ip-testfs-ost0003-left-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="lustre" provider="vds-ok" type="Ticketer">
+        <instance_attributes id="lustre-instance_attributes">
+          <nvpair id="lustre-instance_attributes-name" name="name" value="lustre"/>
+        </instance_attributes>
+        <operations>
+          <op id="lustre-start-0" interval="0" name="start" timeout="30"/>
+          <op id="lustre-stop-0" interval="0" name="stop" timeout="30"/>
+        </operations>
+        <meta_attributes id="lustre-meta_attributes">
+          <nvpair id="lustre-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="lustre-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="mgs" provider="vds-ok" type="lustre-server">
+        <instance_attributes id="mgs-instance_attributes">
+          <nvpair id="mgs-instance_attributes-device" name="device" value="/dev/drbd/by-res/mgs-left"/>
+          <nvpair id="mgs-instance_attributes-directory" name="directory" value="/lustre/mgs"/>
+          <nvpair id="mgs-instance_attributes-lustre_resource_type" name="lustre_resource_type" value="mgs"/>
+          <nvpair id="mgs-instance_attributes-manage_directory" name="manage_directory" value="1"/>
+          <nvpair id="mgs-instance_attributes-service_nodes" name="service_nodes" value="10.5.0.90@tcp 10.5.0.91@tcp"/>
+        </instance_attributes>
+        <operations>
+          <op id="mgs-start-0" interval="0" name="start" timeout="300"/>
+          <op id="mgs-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="mgs-monitor-120" interval="120" name="monitor" timeout="300"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="testfs" provider="vds-ok" type="Ticketer">
+        <instance_attributes id="testfs-instance_attributes">
+          <nvpair id="testfs-instance_attributes-name" name="name" value="testfs-operational"/>
+        </instance_attributes>
+        <operations>
+          <op id="testfs-start-0" interval="0" name="start" timeout="30"/>
+          <op id="testfs-stop-0" interval="0" name="stop" timeout="30"/>
+        </operations>
+        <meta_attributes id="testfs-meta_attributes">
+          <nvpair id="testfs-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="testfs-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="testfs-mdt0000" provider="vds-ok" type="lustre-server">
+        <instance_attributes id="testfs-mdt0000-instance_attributes">
+          <nvpair id="testfs-mdt0000-instance_attributes-device" name="device" value="/dev/drbd/by-res/testfs-mdt0000"/>
+          <nvpair id="testfs-mdt0000-instance_attributes-directory" name="directory" value="/lustre/testfs-mdt0000"/>
+          <nvpair id="testfs-mdt0000-instance_attributes-lustre_resource_type" name="lustre_resource_type" value="mdt"/>
+          <nvpair id="testfs-mdt0000-instance_attributes-manage_directory" name="manage_directory" value="1"/>
+          <nvpair id="testfs-mdt0000-instance_attributes-mgs_nodes" name="mgs_nodes" value="10.5.0.90@tcp 10.5.0.91@tcp"/>
+          <nvpair id="testfs-mdt0000-instance_attributes-service_nodes" name="service_nodes" value="10.5.0.90@tcp 10.5.0.91@tcp"/>
+          <nvpair id="testfs-mdt0000-instance_attributes-op_ticket" name="op_ticket" value="testfs-operational"/>
+        </instance_attributes>
+        <operations>
+          <op id="testfs-mdt0000-start-0" interval="0" name="start" timeout="300"/>
+          <op id="testfs-mdt0000-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="testfs-mdt0000-monitor-120" interval="120" name="monitor" timeout="300"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="testfs-ost0000" provider="vds-ok" type="lustre-server">
+        <instance_attributes id="testfs-ost0000-instance_attributes">
+          <nvpair id="testfs-ost0000-instance_attributes-device" name="device" value="/dev/drbd/by-res/testfs-ost0000"/>
+          <nvpair id="testfs-ost0000-instance_attributes-directory" name="directory" value="/lustre/testfs-ost0000"/>
+          <nvpair id="testfs-ost0000-instance_attributes-lustre_resource_type" name="lustre_resource_type" value="ost"/>
+          <nvpair id="testfs-ost0000-instance_attributes-manage_directory" name="manage_directory" value="1"/>
+          <nvpair id="testfs-ost0000-instance_attributes-mgs_nodes" name="mgs_nodes" value="10.5.0.90@tcp 10.5.0.91@tcp"/>
+          <nvpair id="testfs-ost0000-instance_attributes-service_nodes" name="service_nodes" value="10.5.0.90@tcp 10.5.0.91@tcp"/>
+          <nvpair id="testfs-ost0000-instance_attributes-op_ticket" name="op_ticket" value="testfs-operational"/>
+        </instance_attributes>
+        <operations>
+          <op id="testfs-ost0000-start-0" interval="0" name="start" timeout="300"/>
+          <op id="testfs-ost0000-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="testfs-ost0000-monitor-120" interval="120" name="monitor" timeout="300"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="testfs-ost0001" provider="vds-ok" type="lustre-server">
+        <instance_attributes id="testfs-ost0001-instance_attributes">
+          <nvpair id="testfs-ost0001-instance_attributes-device" name="device" value="/dev/drbd/by-res/testfs-ost0001"/>
+          <nvpair id="testfs-ost0001-instance_attributes-directory" name="directory" value="/lustre/testfs-ost0001"/>
+          <nvpair id="testfs-ost0001-instance_attributes-lustre_resource_type" name="lustre_resource_type" value="ost"/>
+          <nvpair id="testfs-ost0001-instance_attributes-manage_directory" name="manage_directory" value="1"/>
+          <nvpair id="testfs-ost0001-instance_attributes-mgs_nodes" name="mgs_nodes" value="10.5.0.90@tcp 10.5.0.91@tcp"/>
+          <nvpair id="testfs-ost0001-instance_attributes-service_nodes" name="service_nodes" value="10.5.0.90@tcp 10.5.0.91@tcp"/>
+          <nvpair id="testfs-ost0001-instance_attributes-op_ticket" name="op_ticket" value="testfs-operational"/>
+        </instance_attributes>
+        <operations>
+          <op id="testfs-ost0001-start-0" interval="0" name="start" timeout="300"/>
+          <op id="testfs-ost0001-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="testfs-ost0001-monitor-120" interval="120" name="monitor" timeout="300"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="testfs-ost0002" provider="vds-ok" type="lustre-server">
+        <instance_attributes id="testfs-ost0002-instance_attributes">
+          <nvpair id="testfs-ost0002-instance_attributes-device" name="device" value="/dev/drbd/by-res/testfs-ost0002"/>
+          <nvpair id="testfs-ost0002-instance_attributes-directory" name="directory" value="/lustre/testfs-ost0002"/>
+          <nvpair id="testfs-ost0002-instance_attributes-lustre_resource_type" name="lustre_resource_type" value="ost"/>
+          <nvpair id="testfs-ost0002-instance_attributes-manage_directory" name="manage_directory" value="1"/>
+          <nvpair id="testfs-ost0002-instance_attributes-mgs_nodes" name="mgs_nodes" value="10.5.0.90@tcp 10.5.0.91@tcp"/>
+          <nvpair id="testfs-ost0002-instance_attributes-service_nodes" name="service_nodes" value="10.5.0.92@tcp 10.5.0.93@tcp"/>
+          <nvpair id="testfs-ost0002-instance_attributes-op_ticket" name="op_ticket" value="testfs-operational"/>
+        </instance_attributes>
+        <operations>
+          <op id="testfs-ost0002-start-0" interval="0" name="start" timeout="300"/>
+          <op id="testfs-ost0002-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="testfs-ost0002-monitor-120" interval="120" name="monitor" timeout="300"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="testfs-ost0003" provider="vds-ok" type="lustre-server">
+        <instance_attributes id="testfs-ost0003-instance_attributes">
+          <nvpair id="testfs-ost0003-instance_attributes-device" name="device" value="/dev/drbd/by-res/testfs-ost0003"/>
+          <nvpair id="testfs-ost0003-instance_attributes-directory" name="directory" value="/lustre/testfs-ost0003"/>
+          <nvpair id="testfs-ost0003-instance_attributes-lustre_resource_type" name="lustre_resource_type" value="ost"/>
+          <nvpair id="testfs-ost0003-instance_attributes-manage_directory" name="manage_directory" value="1"/>
+          <nvpair id="testfs-ost0003-instance_attributes-mgs_nodes" name="mgs_nodes" value="10.5.0.90@tcp 10.5.0.91@tcp"/>
+          <nvpair id="testfs-ost0003-instance_attributes-service_nodes" name="service_nodes" value="10.5.0.92@tcp 10.5.0.93@tcp"/>
+          <nvpair id="testfs-ost0003-instance_attributes-op_ticket" name="op_ticket" value="testfs-operational"/>
+        </instance_attributes>
+        <operations>
+          <op id="testfs-ost0003-start-0" interval="0" name="start" timeout="300"/>
+          <op id="testfs-ost0003-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="testfs-ost0003-monitor-120" interval="120" name="monitor" timeout="300"/>
+        </operations>
+      </primitive>
+      <group id="booth">
+        <primitive class="ocf" id="ip-booth" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ip-booth-instance_attributes">
+            <nvpair id="ip-booth-instance_attributes-ip" name="ip" value="10.5.0.94"/>
+            <nvpair id="ip-booth-instance_attributes-nic" name="nic" value="eth0"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip-booth-monitor-30" interval="30" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="boothd" provider="pacemaker" type="booth-site">
+          <operations>
+            <op id="boothd-start-0" interval="0" name="start" timeout="90"/>
+            <op id="boothd-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="boothd-monitor-20" interval="20" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+      </group>
+      <master id="ms-drbd-mgs">
+        <meta_attributes id="ms-drbd-mgs-meta_attributes">
+          <nvpair id="ms-drbd-mgs-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-mgs-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-mgs-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-drbd-mgs-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-mgs-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-mgs-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-mgs" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-mgs-instance_attributes">
+            <nvpair id="drbd-mgs-instance_attributes-drbd_resource" name="drbd_resource" value="mgs-left"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-mgs-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-mgs-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-mgs-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-mgs-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <master id="ms-drbd-testfs-mdt0000">
+        <meta_attributes id="ms-drbd-testfs-mdt0000-meta_attributes">
+          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-clone-max" name="clone-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-testfs-mdt0000" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-testfs-mdt0000-instance_attributes">
+            <nvpair id="drbd-testfs-mdt0000-instance_attributes-drbd_resource" name="drbd_resource" value="testfs-mdt0000"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-testfs-mdt0000-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-testfs-mdt0000-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-testfs-mdt0000-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-testfs-mdt0000-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <master id="ms-drbd-testfs-mdt0000-left">
+        <meta_attributes id="ms-drbd-testfs-mdt0000-left-meta_attributes">
+          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-testfs-mdt0000-left" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-testfs-mdt0000-left-instance_attributes">
+            <nvpair id="drbd-testfs-mdt0000-left-instance_attributes-drbd_resource" name="drbd_resource" value="testfs-mdt0000-left"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-testfs-mdt0000-left-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-testfs-mdt0000-left-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-testfs-mdt0000-left-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-testfs-mdt0000-left-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <master id="ms-drbd-testfs-ost0000">
+        <meta_attributes id="ms-drbd-testfs-ost0000-meta_attributes">
+          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-clone-max" name="clone-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-testfs-ost0000" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-testfs-ost0000-instance_attributes">
+            <nvpair id="drbd-testfs-ost0000-instance_attributes-drbd_resource" name="drbd_resource" value="testfs-ost0000"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-testfs-ost0000-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-testfs-ost0000-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-testfs-ost0000-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-testfs-ost0000-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <master id="ms-drbd-testfs-ost0000-left">
+        <meta_attributes id="ms-drbd-testfs-ost0000-left-meta_attributes">
+          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-testfs-ost0000-left" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-testfs-ost0000-left-instance_attributes">
+            <nvpair id="drbd-testfs-ost0000-left-instance_attributes-drbd_resource" name="drbd_resource" value="testfs-ost0000-left"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-testfs-ost0000-left-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-testfs-ost0000-left-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-testfs-ost0000-left-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-testfs-ost0000-left-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <master id="ms-drbd-testfs-ost0001">
+        <meta_attributes id="ms-drbd-testfs-ost0001-meta_attributes">
+          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-clone-max" name="clone-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-testfs-ost0001" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-testfs-ost0001-instance_attributes">
+            <nvpair id="drbd-testfs-ost0001-instance_attributes-drbd_resource" name="drbd_resource" value="testfs-ost0001"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-testfs-ost0001-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-testfs-ost0001-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-testfs-ost0001-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-testfs-ost0001-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <master id="ms-drbd-testfs-ost0001-left">
+        <meta_attributes id="ms-drbd-testfs-ost0001-left-meta_attributes">
+          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-testfs-ost0001-left" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-testfs-ost0001-left-instance_attributes">
+            <nvpair id="drbd-testfs-ost0001-left-instance_attributes-drbd_resource" name="drbd_resource" value="testfs-ost0001-left"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-testfs-ost0001-left-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-testfs-ost0001-left-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-testfs-ost0001-left-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-testfs-ost0001-left-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <master id="ms-drbd-testfs-ost0002">
+        <meta_attributes id="ms-drbd-testfs-ost0002-meta_attributes">
+          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-clone-max" name="clone-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-testfs-ost0002" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-testfs-ost0002-instance_attributes">
+            <nvpair id="drbd-testfs-ost0002-instance_attributes-drbd_resource" name="drbd_resource" value="testfs-ost0002"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-testfs-ost0002-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-testfs-ost0002-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-testfs-ost0002-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-testfs-ost0002-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <master id="ms-drbd-testfs-ost0002-left">
+        <meta_attributes id="ms-drbd-testfs-ost0002-left-meta_attributes">
+          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-testfs-ost0002-left" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-testfs-ost0002-left-instance_attributes">
+            <nvpair id="drbd-testfs-ost0002-left-instance_attributes-drbd_resource" name="drbd_resource" value="testfs-ost0002-left"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-testfs-ost0002-left-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-testfs-ost0002-left-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-testfs-ost0002-left-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-testfs-ost0002-left-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <master id="ms-drbd-testfs-ost0003">
+        <meta_attributes id="ms-drbd-testfs-ost0003-meta_attributes">
+          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-clone-max" name="clone-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-testfs-ost0003" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-testfs-ost0003-instance_attributes">
+            <nvpair id="drbd-testfs-ost0003-instance_attributes-drbd_resource" name="drbd_resource" value="testfs-ost0003"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-testfs-ost0003-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-testfs-ost0003-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-testfs-ost0003-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-testfs-ost0003-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <master id="ms-drbd-testfs-ost0003-left">
+        <meta_attributes id="ms-drbd-testfs-ost0003-left-meta_attributes">
+          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-testfs-ost0003-left" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-testfs-ost0003-left-instance_attributes">
+            <nvpair id="drbd-testfs-ost0003-left-instance_attributes-drbd_resource" name="drbd_resource" value="testfs-ost0003-left"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-testfs-ost0003-left-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd-testfs-ost0003-left-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd-testfs-ost0003-left-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="drbd-testfs-ost0003-left-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+    </resources>
+    <constraints>
+      <rsc_location id="booth-placement" rsc="booth">
+        <rule boolean-op="or" id="rule-booth-placement" score="-INFINITY">
+          <expression attribute="booth-placement" id="booth-placement-expression" operation="not_defined"/>
+          <expression attribute="booth-placement" id="booth-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="drbd-mgs-placement" rsc="ms-drbd-mgs">
+        <rule boolean-op="or" id="rule-drbd-mgs-placement" score="-INFINITY">
+          <expression attribute="mgs-placement" id="drbd-mgs-placement-expression" operation="not_defined"/>
+          <expression attribute="mgs-placement" id="drbd-mgs-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="drbd-testfs-mdt0000-left-placement" rsc="ms-drbd-testfs-mdt0000-left">
+        <rule boolean-op="or" id="rule-drbd-testfs-mdt0000-left-placement" score="-INFINITY">
+          <expression attribute="testfs-mdt0000-placement" id="drbd-testfs-mdt0000-left-placement-expression" operation="not_defined"/>
+          <expression attribute="testfs-mdt0000-placement" id="drbd-testfs-mdt0000-left-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="drbd-testfs-ost0000-left-placement" rsc="ms-drbd-testfs-ost0000-left">
+        <rule boolean-op="or" id="rule-drbd-testfs-ost0000-left-placement" score="-INFINITY">
+          <expression attribute="testfs-ost0000-placement" id="drbd-testfs-ost0000-left-placement-expression" operation="not_defined"/>
+          <expression attribute="testfs-ost0000-placement" id="drbd-testfs-ost0000-left-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="drbd-testfs-ost0001-left-placement" rsc="ms-drbd-testfs-ost0001-left">
+        <rule boolean-op="or" id="rule-drbd-testfs-ost0001-left-placement" score="-INFINITY">
+          <expression attribute="testfs-ost0001-placement" id="drbd-testfs-ost0001-left-placement-expression" operation="not_defined"/>
+          <expression attribute="testfs-ost0001-placement" id="drbd-testfs-ost0001-left-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="drbd-testfs-ost0002-left-placement" rsc="ms-drbd-testfs-ost0002-left">
+        <rule boolean-op="or" id="rule-drbd-testfs-ost0002-left-placement" score="-INFINITY">
+          <expression attribute="testfs-ost0002-placement" id="drbd-testfs-ost0002-left-placement-expression" operation="not_defined"/>
+          <expression attribute="testfs-ost0002-placement" id="drbd-testfs-ost0002-left-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="drbd-testfs-ost0003-left-placement" rsc="ms-drbd-testfs-ost0003-left">
+        <rule boolean-op="or" id="rule-drbd-testfs-ost0003-left-placement" score="-INFINITY">
+          <expression attribute="testfs-ost0003-placement" id="drbd-testfs-ost0003-left-placement-expression" operation="not_defined"/>
+          <expression attribute="testfs-ost0003-placement" id="drbd-testfs-ost0003-left-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="mgs-placement" rsc="mgs">
+        <rule boolean-op="or" id="rule-mgs-placement" score="-INFINITY">
+          <expression attribute="mgs-placement" id="mgs-placement-expression" operation="not_defined"/>
+          <expression attribute="mgs-placement" id="mgs-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="mgs-primary" rsc="mgs">
+        <rule id="rule-mgs-primary" score="2000">
+          <expression attribute="mgs-primary" id="mgs-primary-expression" operation="defined"/>
+          <expression attribute="mgs-primary" id="mgs-primary-expression-0" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="testfs-mdt0000-placement" rsc="testfs-mdt0000">
+        <rule boolean-op="or" id="rule-testfs-mdt0000-placement" score="-INFINITY">
+          <expression attribute="testfs-mdt0000-placement" id="testfs-mdt0000-placement-expression" operation="not_defined"/>
+          <expression attribute="testfs-mdt0000-placement" id="testfs-mdt0000-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="testfs-mdt0000-primary" rsc="testfs-mdt0000">
+        <rule id="rule-testfs-mdt0000-primary" score="2000">
+          <expression attribute="testfs-mdt0000-primary" id="testfs-mdt0000-primary-expression" operation="defined"/>
+          <expression attribute="testfs-mdt0000-primary" id="testfs-mdt0000-primary-expression-0" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="testfs-ost0000-placement" rsc="testfs-ost0000">
+        <rule boolean-op="or" id="rule-testfs-ost0000-placement" score="-INFINITY">
+          <expression attribute="testfs-ost0000-placement" id="testfs-ost0000-placement-expression" operation="not_defined"/>
+          <expression attribute="testfs-ost0000-placement" id="testfs-ost0000-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="testfs-ost0000-primary" rsc="testfs-ost0000">
+        <rule id="rule-testfs-ost0000-primary" score="2000">
+          <expression attribute="testfs-ost0000-primary" id="testfs-ost0000-primary-expression" operation="defined"/>
+          <expression attribute="testfs-ost0000-primary" id="testfs-ost0000-primary-expression-0" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="testfs-ost0001-placement" rsc="testfs-ost0001">
+        <rule boolean-op="or" id="rule-testfs-ost0001-placement" score="-INFINITY">
+          <expression attribute="testfs-ost0001-placement" id="testfs-ost0001-placement-expression" operation="not_defined"/>
+          <expression attribute="testfs-ost0001-placement" id="testfs-ost0001-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="testfs-ost0001-primary" rsc="testfs-ost0001">
+        <rule id="rule-testfs-ost0001-primary" score="2000">
+          <expression attribute="testfs-ost0001-primary" id="testfs-ost0001-primary-expression" operation="defined"/>
+          <expression attribute="testfs-ost0001-primary" id="testfs-ost0001-primary-expression-0" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="testfs-ost0002-placement" rsc="testfs-ost0002">
+        <rule boolean-op="or" id="rule-testfs-ost0002-placement" score="-INFINITY">
+          <expression attribute="testfs-ost0002-placement" id="testfs-ost0002-placement-expression" operation="not_defined"/>
+          <expression attribute="testfs-ost0002-placement" id="testfs-ost0002-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="testfs-ost0002-primary" rsc="testfs-ost0002">
+        <rule id="rule-testfs-ost0002-primary" score="2000">
+          <expression attribute="testfs-ost0002-primary" id="testfs-ost0002-primary-expression" operation="defined"/>
+          <expression attribute="testfs-ost0002-primary" id="testfs-ost0002-primary-expression-0" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="testfs-ost0003-placement" rsc="testfs-ost0003">
+        <rule boolean-op="or" id="rule-testfs-ost0003-placement" score="-INFINITY">
+          <expression attribute="testfs-ost0003-placement" id="testfs-ost0003-placement-expression" operation="not_defined"/>
+          <expression attribute="testfs-ost0003-placement" id="testfs-ost0003-placement-expression-0" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="testfs-ost0003-primary" rsc="testfs-ost0003">
+        <rule id="rule-testfs-ost0003-primary" score="2000">
+          <expression attribute="testfs-ost0003-primary" id="testfs-ost0003-primary-expression" operation="defined"/>
+          <expression attribute="testfs-ost0003-primary" id="testfs-ost0003-primary-expression-0" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="drbd-testfs-mdt0000-with-drbd-testfs-mdt0000-left" rsc="ms-drbd-testfs-mdt0000" score="INFINITY" with-rsc="ms-drbd-testfs-mdt0000-left" with-rsc-role="Master"/>
+      <rsc_colocation id="drbd-testfs-mdt0000-with-ip-testfs-mdt0000-left" rsc="ms-drbd-testfs-mdt0000" score="INFINITY" with-rsc="ip-testfs-mdt0000-left"/>
+      <rsc_colocation id="drbd-testfs-ost0000-with-drbd-testfs-ost0000-left" rsc="ms-drbd-testfs-ost0000" score="INFINITY" with-rsc="ms-drbd-testfs-ost0000-left" with-rsc-role="Master"/>
+      <rsc_colocation id="drbd-testfs-ost0000-with-ip-testfs-ost0000-left" rsc="ms-drbd-testfs-ost0000" score="INFINITY" with-rsc="ip-testfs-ost0000-left"/>
+      <rsc_colocation id="drbd-testfs-ost0001-with-drbd-testfs-ost0001-left" rsc="ms-drbd-testfs-ost0001" score="INFINITY" with-rsc="ms-drbd-testfs-ost0001-left" with-rsc-role="Master"/>
+      <rsc_colocation id="drbd-testfs-ost0001-with-ip-testfs-ost0001-left" rsc="ms-drbd-testfs-ost0001" score="INFINITY" with-rsc="ip-testfs-ost0001-left"/>
+      <rsc_colocation id="drbd-testfs-ost0002-with-drbd-testfs-ost0002-left" rsc="ms-drbd-testfs-ost0002" score="INFINITY" with-rsc="ms-drbd-testfs-ost0002-left" with-rsc-role="Master"/>
+      <rsc_colocation id="drbd-testfs-ost0002-with-ip-testfs-ost0002-left" rsc="ms-drbd-testfs-ost0002" score="INFINITY" with-rsc="ip-testfs-ost0002-left"/>
+      <rsc_colocation id="drbd-testfs-ost0003-with-drbd-testfs-ost0003-left" rsc="ms-drbd-testfs-ost0003" score="INFINITY" with-rsc="ms-drbd-testfs-ost0003-left" with-rsc-role="Master"/>
+      <rsc_colocation id="drbd-testfs-ost0003-with-ip-testfs-ost0003-left" rsc="ms-drbd-testfs-ost0003" score="INFINITY" with-rsc="ip-testfs-ost0003-left"/>
+      <rsc_colocation id="ip-testfs-mdt0000-left-with-drbd-testfs-mdt0000-left-master" rsc="ip-testfs-mdt0000-left" score="INFINITY" with-rsc="ms-drbd-testfs-mdt0000-left" with-rsc-role="Master"/>
+      <rsc_colocation id="ip-testfs-ost0000-left-with-drbd-testfs-ost0000-left-master" rsc="ip-testfs-ost0000-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0000-left" with-rsc-role="Master"/>
+      <rsc_colocation id="ip-testfs-ost0001-left-with-drbd-testfs-ost0001-left-master" rsc="ip-testfs-ost0001-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0001-left" with-rsc-role="Master"/>
+      <rsc_colocation id="ip-testfs-ost0002-left-with-drbd-testfs-ost0002-left-master" rsc="ip-testfs-ost0002-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0002-left" with-rsc-role="Master"/>
+      <rsc_colocation id="ip-testfs-ost0003-left-with-drbd-testfs-ost0003-left-master" rsc="ip-testfs-ost0003-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0003-left" with-rsc-role="Master"/>
+      <rsc_colocation id="mgs-with-drbd-mgs" rsc="mgs" score="INFINITY" with-rsc="ms-drbd-mgs" with-rsc-role="Master"/>
+      <rsc_colocation id="testfs-mdt0000-with-drbd-testfs-mdt0000" rsc="testfs-mdt0000" score="INFINITY" with-rsc="ms-drbd-testfs-mdt0000" with-rsc-role="Master"/>
+      <rsc_colocation id="testfs-ost0000-with-drbd-testfs-ost0000" rsc="testfs-ost0000" score="INFINITY" with-rsc="ms-drbd-testfs-ost0000" with-rsc-role="Master"/>
+      <rsc_colocation id="testfs-ost0001-with-drbd-testfs-ost0001" rsc="testfs-ost0001" score="INFINITY" with-rsc="ms-drbd-testfs-ost0001" with-rsc-role="Master"/>
+      <rsc_colocation id="testfs-ost0002-with-drbd-testfs-ost0002" rsc="testfs-ost0002" score="INFINITY" with-rsc="ms-drbd-testfs-ost0002" with-rsc-role="Master"/>
+      <rsc_colocation id="testfs-ost0003-with-drbd-testfs-ost0003" rsc="testfs-ost0003" score="INFINITY" with-rsc="ms-drbd-testfs-ost0003" with-rsc-role="Master"/>
+      <rsc_order first="ms-drbd-testfs-mdt0000-left" first-action="promote" id="drbd-testfs-mdt0000-after-drbd-testfs-mdt0000-left" score="INFINITY" then="ms-drbd-testfs-mdt0000" then-action="start"/>
+      <rsc_order first="ip-testfs-mdt0000-left" id="drbd-testfs-mdt0000-after-ip-testfs-mdt0000-left" score="INFINITY" then="ms-drbd-testfs-mdt0000" then-action="start"/>
+      <rsc_order first="ms-drbd-testfs-ost0000-left" first-action="promote" id="drbd-testfs-ost0000-after-drbd-testfs-ost0000-left" score="INFINITY" then="ms-drbd-testfs-ost0000" then-action="start"/>
+      <rsc_order first="ip-testfs-ost0000-left" id="drbd-testfs-ost0000-after-ip-testfs-ost0000-left" score="INFINITY" then="ms-drbd-testfs-ost0000" then-action="start"/>
+      <rsc_order first="ms-drbd-testfs-ost0001-left" first-action="promote" id="drbd-testfs-ost0001-after-drbd-testfs-ost0001-left" score="INFINITY" then="ms-drbd-testfs-ost0001" then-action="start"/>
+      <rsc_order first="ip-testfs-ost0001-left" id="drbd-testfs-ost0001-after-ip-testfs-ost0001-left" score="INFINITY" then="ms-drbd-testfs-ost0001" then-action="start"/>
+      <rsc_order first="ms-drbd-testfs-ost0002-left" first-action="promote" id="drbd-testfs-ost0002-after-drbd-testfs-ost0002-left" score="INFINITY" then="ms-drbd-testfs-ost0002" then-action="start"/>
+      <rsc_order first="ip-testfs-ost0002-left" id="drbd-testfs-ost0002-after-ip-testfs-ost0002-left" score="INFINITY" then="ms-drbd-testfs-ost0002" then-action="start"/>
+      <rsc_order first="ms-drbd-testfs-ost0003-left" first-action="promote" id="drbd-testfs-ost0003-after-drbd-testfs-ost0003-left" score="INFINITY" then="ms-drbd-testfs-ost0003" then-action="start"/>
+      <rsc_order first="ip-testfs-ost0003-left" id="drbd-testfs-ost0003-after-ip-testfs-ost0003-left" score="INFINITY" then="ms-drbd-testfs-ost0003" then-action="start"/>
+      <rsc_order first="ms-drbd-mgs" first-action="promote" id="mgs-after-drbd-mgs" score="INFINITY" then="mgs" then-action="start"/>
+      <rsc_order first="ms-drbd-testfs-mdt0000" first-action="promote" id="testfs-mdt0000-after-drbd-testfs-mdt0000" score="INFINITY" then="testfs-mdt0000" then-action="start"/>
+      <rsc_order first="mgs" first-action="start" id="testfs-mdt0000-after-mgs" score="0" then="testfs-mdt0000" then-action="start"/>
+      <rsc_order first="ms-drbd-testfs-ost0000" first-action="promote" id="testfs-ost0000-after-drbd-testfs-ost0000" score="INFINITY" then="testfs-ost0000" then-action="start"/>
+      <rsc_order first="testfs-mdt0000" first-action="start" id="testfs-ost0000-after-testfs-mdt0000" score="0" then="testfs-ost0000" then-action="start"/>
+      <rsc_order first="ms-drbd-testfs-ost0001" first-action="promote" id="testfs-ost0001-after-drbd-testfs-ost0001" score="INFINITY" then="testfs-ost0001" then-action="start"/>
+      <rsc_order first="testfs-mdt0000" first-action="start" id="testfs-ost0001-after-testfs-mdt0000" score="0" then="testfs-ost0001" then-action="start"/>
+      <rsc_order first="ms-drbd-testfs-ost0002" first-action="promote" id="testfs-ost0002-after-drbd-testfs-ost0002" score="INFINITY" then="testfs-ost0002" then-action="start"/>
+      <rsc_order first="testfs-mdt0000" first-action="start" id="testfs-ost0002-after-testfs-mdt0000" score="0" then="testfs-ost0002" then-action="start"/>
+      <rsc_order first="ms-drbd-testfs-ost0003" first-action="promote" id="testfs-ost0003-after-drbd-testfs-ost0003" score="INFINITY" then="testfs-ost0003" then-action="start"/>
+      <rsc_order first="testfs-mdt0000" first-action="start" id="testfs-ost0003-after-testfs-mdt0000" score="0" then="testfs-ost0003" then-action="start"/>
+      <rsc_ticket id="ticket-drbd-local-drbd-mgs" loss-policy="stop" rsc="ms-drbd-mgs" ticket="drbd-local"/>
+      <rsc_ticket id="ticket-drbd-local-drbd-stacked" loss-policy="stop" rsc="drbd-stacked" ticket="drbd-local"/>
+      <rsc_ticket id="ticket-drbd-local-drbd-testfs-local" loss-policy="stop" rsc="drbd-testfs-local" ticket="drbd-local"/>
+      <rsc_ticket id="ticket-drbd-stacked-drbd-testfs-stacked" loss-policy="stop" rsc="drbd-testfs-stacked" ticket="drbd-stacked"/>
+      <rsc_ticket id="ticket-drbd-testfs-local-drbd-testfs-mdt0000-left" loss-policy="stop" rsc="ms-drbd-testfs-mdt0000-left" ticket="drbd-testfs-local"/>
+      <rsc_ticket id="ticket-drbd-testfs-local-drbd-testfs-ost0000-left" loss-policy="stop" rsc="ms-drbd-testfs-ost0000-left" ticket="drbd-testfs-local"/>
+      <rsc_ticket id="ticket-drbd-testfs-local-drbd-testfs-ost0001-left" loss-policy="stop" rsc="ms-drbd-testfs-ost0001-left" ticket="drbd-testfs-local"/>
+      <rsc_ticket id="ticket-drbd-testfs-local-drbd-testfs-ost0002-left" loss-policy="stop" rsc="ms-drbd-testfs-ost0002-left" ticket="drbd-testfs-local"/>
+      <rsc_ticket id="ticket-drbd-testfs-local-drbd-testfs-ost0003-left" loss-policy="stop" rsc="ms-drbd-testfs-ost0003-left" ticket="drbd-testfs-local"/>
+      <rsc_ticket id="ticket-drbd-testfs-local-drbd-testfs-stacked" loss-policy="stop" rsc="drbd-testfs-stacked" ticket="drbd-testfs-local"/>
+      <rsc_ticket id="ticket-drbd-testfs-stacked-drbd-testfs-mdt0000" loss-policy="stop" rsc="ms-drbd-testfs-mdt0000" ticket="drbd-testfs-stacked"/>
+      <rsc_ticket id="ticket-drbd-testfs-stacked-drbd-testfs-ost0000" loss-policy="stop" rsc="ms-drbd-testfs-ost0000" ticket="drbd-testfs-stacked"/>
+      <rsc_ticket id="ticket-drbd-testfs-stacked-drbd-testfs-ost0001" loss-policy="stop" rsc="ms-drbd-testfs-ost0001" ticket="drbd-testfs-stacked"/>
+      <rsc_ticket id="ticket-drbd-testfs-stacked-drbd-testfs-ost0002" loss-policy="stop" rsc="ms-drbd-testfs-ost0002" ticket="drbd-testfs-stacked"/>
+      <rsc_ticket id="ticket-drbd-testfs-stacked-drbd-testfs-ost0003" loss-policy="stop" rsc="ms-drbd-testfs-ost0003" ticket="drbd-testfs-stacked"/>
+      <rsc_ticket id="ticket-lustre-mgs" loss-policy="stop" rsc="mgs" ticket="lustre"/>
+      <rsc_ticket id="ticket-lustre-testfs" loss-policy="stop" rsc="testfs" ticket="lustre"/>
+      <rsc_ticket id="ticket-lustre-testfs-mdt0000" loss-policy="stop" rsc="testfs-mdt0000" ticket="lustre"/>
+      <rsc_ticket id="ticket-lustre-testfs-ost0000" loss-policy="stop" rsc="testfs-ost0000" ticket="lustre"/>
+      <rsc_ticket id="ticket-lustre-testfs-ost0001" loss-policy="stop" rsc="testfs-ost0001" ticket="lustre"/>
+      <rsc_ticket id="ticket-lustre-testfs-ost0002" loss-policy="stop" rsc="testfs-ost0002" ticket="lustre"/>
+      <rsc_ticket id="ticket-lustre-testfs-ost0003" loss-policy="stop" rsc="testfs-ost0003" ticket="lustre"/>
+      <rsc_ticket id="ticket-testfs-allocated-drbd-mdt0000" loss-policy="demote" rsc="ms-drbd-testfs-mdt0000" rsc-role="Master" ticket="testfs-allocated"/>
+      <rsc_ticket id="ticket-testfs-allocated-drbd-ost0000" loss-policy="demote" rsc="ms-drbd-testfs-ost0000" rsc-role="Master" ticket="testfs-allocated"/>
+      <rsc_ticket id="ticket-testfs-allocated-drbd-ost0001" loss-policy="demote" rsc="ms-drbd-testfs-ost0001" rsc-role="Master" ticket="testfs-allocated"/>
+      <rsc_ticket id="ticket-testfs-allocated-drbd-ost0002" loss-policy="demote" rsc="ms-drbd-testfs-ost0002" rsc-role="Master" ticket="testfs-allocated"/>
+      <rsc_ticket id="ticket-testfs-allocated-drbd-ost0003" loss-policy="demote" rsc="ms-drbd-testfs-ost0003" rsc-role="Master" ticket="testfs-allocated"/>
+      <rsc_ticket id="ticket-testfs-allocated-mdt0000" loss-policy="stop" rsc="testfs-mdt0000" ticket="testfs-allocated"/>
+      <rsc_ticket id="ticket-testfs-allocated-ost0000" loss-policy="stop" rsc="testfs-ost0000" ticket="testfs-allocated"/>
+      <rsc_ticket id="ticket-testfs-allocated-ost0001" loss-policy="stop" rsc="testfs-ost0001" ticket="testfs-allocated"/>
+      <rsc_ticket id="ticket-testfs-allocated-ost0002" loss-policy="stop" rsc="testfs-ost0002" ticket="testfs-allocated"/>
+      <rsc_ticket id="ticket-testfs-allocated-ost0003" loss-policy="stop" rsc="testfs-ost0003" ticket="testfs-allocated"/>
+      <rsc_ticket id="ticket-testfs-operational-mdt0000" loss-policy="stop" rsc="testfs-mdt0000" ticket="testfs-operational"/>
+      <rsc_ticket id="ticket-testfs-operational-ost0000" loss-policy="stop" rsc="testfs-ost0000" ticket="testfs-operational"/>
+      <rsc_ticket id="ticket-testfs-operational-ost0001" loss-policy="stop" rsc="testfs-ost0001" ticket="testfs-operational"/>
+      <rsc_ticket id="ticket-testfs-operational-ost0002" loss-policy="stop" rsc="testfs-ost0002" ticket="testfs-operational"/>
+      <rsc_ticket id="ticket-testfs-operational-ost0003" loss-policy="stop" rsc="testfs-ost0003" ticket="testfs-operational"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair id="rsc-options-failure-timeout" name="failure-timeout" value="10m"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="lustre02-left" uname="lustre02-left" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="lustre02-left">
+        <instance_attributes id="status-lustre02-left">
+          <nvpair id="status-lustre02-left-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lustre02-left">
+        <lrm_resources>
+          <lrm_resource id="ip-booth" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-booth_last_0" operation_key="ip-booth_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="33:46:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;33:46:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="255" rc-code="0" op-status="0" interval="0" op-digest="c6c165578f762fbafec1b948b03fbde8" last-run="1331665812" last-rc-change="1331665812" exec-time="40" queue-time="0"/>
+            <lrm_rsc_op id="ip-booth_monitor_30000" operation_key="ip-booth_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="34:46:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;34:46:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="257" rc-code="0" op-status="0" interval="30000" last-rc-change="1331665812" exec-time="60" queue-time="0" op-digest="bb85acad5ec18a5d91f0605676a5c66b"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0000:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0000:0_last_0" operation_key="drbd-testfs-ost0000:0_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="164:11:0:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:0;164:11:0:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="160" rc-code="0" op-status="0" interval="0" op-digest="d319f39c5a395c6957be543c16b01220"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0002:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0002:0_last_0" operation_key="drbd-testfs-ost0002:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="56:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;56:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="28" rc-code="7" op-status="0" interval="0" op-digest="06b730dc901f3b5a6a4498b634bf0dca"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-local" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-local_last_0" operation_key="drbd-local_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="37:34:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;37:34:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="191" rc-code="0" op-status="0" interval="0" op-digest="1b32d5e9eb9d0fc7cb9f23a9a2aee090"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0003:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0003:0_last_0" operation_key="drbd-testfs-ost0003:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="58:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;58:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="30" rc-code="7" op-status="0" interval="0" op-digest="e68b0009e7491da1e5eff94a6b0ac0a3"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-mdt0000:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-mdt0000:0_last_0" operation_key="drbd-testfs-mdt0000:0_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="101:12:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;101:12:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="182" rc-code="0" op-status="0" interval="0" op-digest="ca40e48d941a8a4a345898e75ae928b8"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-mgs:1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-mgs:1_last_0" operation_key="drbd-mgs:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="52:209:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;52:209:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="544" rc-code="0" op-status="0" interval="0" op-digest="e0054c1d172573e469a98b78ad4f03cc" last-run="1331708981" last-rc-change="1331708981" exec-time="70" queue-time="0"/>
+            <lrm_rsc_op id="drbd-mgs:1_monitor_30000" operation_key="drbd-mgs:1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="57:136:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;57:136:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="514" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669738" exec-time="90" queue-time="0" op-digest="c22083d27e3807682b1c7f162ff15670"/>
+          </lrm_resource>
+          <lrm_resource id="boothd" type="booth-site" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="boothd_last_0" operation_key="boothd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="35:46:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;35:46:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="258" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1331665812" last-rc-change="1331665812" exec-time="1040" queue-time="0"/>
+            <lrm_rsc_op id="boothd_monitor_20000" operation_key="boothd_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="41:47:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;41:47:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="260" rc-code="0" op-status="0" interval="20000" last-rc-change="1331665813" exec-time="60" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="lustre" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="lustre_last_0" operation_key="lustre_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="15:45:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;15:45:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="242" rc-code="0" op-status="0" interval="0" op-digest="21fdcddb64005ccf675d9e0f90a63ef5" last-run="1331665810" last-rc-change="1331665810" exec-time="40" queue-time="0" migrate_source="lustre02-left" migrate_target="lustre04-left"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0000-left:1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0000-left:1_last_0" operation_key="drbd-testfs-ost0000-left:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="126:213:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;126:213:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="563" rc-code="0" op-status="0" interval="0" op-digest="61b71be045851834b286e6507173373e" last-run="1331708999" last-rc-change="1331708999" exec-time="120" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0000-left:1_monitor_30000" operation_key="drbd-testfs-ost0000-left:1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="181:137:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;181:137:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="521" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669738" exec-time="50" queue-time="0" op-digest="df8362b3cd6cac503f2046a086513da2"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0002-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0002-left:0_last_0" operation_key="drbd-testfs-ost0002-left:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="57:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;57:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="29" rc-code="7" op-status="0" interval="0" op-digest="cb9a16dd3e6ee7f2bbddc5d0b7785510"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-mdt0000-left:1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-mdt0000-left:1_last_0" operation_key="drbd-testfs-mdt0000-left:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="76:213:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;76:213:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="564" rc-code="0" op-status="0" interval="0" op-digest="4c3b1a997518dc4d8bc2f3a787b16b27" last-run="1331708999" last-rc-change="1331708999" exec-time="110" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-mdt0000-left:1_monitor_30000" operation_key="drbd-testfs-mdt0000-left:1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="115:136:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;115:136:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="515" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669738" exec-time="120" queue-time="0" op-digest="294516760f216ae31d39ad9c65deac36"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0001-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0001-left:0_last_0" operation_key="drbd-testfs-ost0001-left:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="167:214:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;167:214:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="568" rc-code="0" op-status="0" interval="0" op-digest="a93ec3f6ce2703105d70e0c7594b5c50" last-run="1331708999" last-rc-change="1331708999" exec-time="50" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0001-left:0_monitor_20000" operation_key="drbd-testfs-ost0001-left:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="246:49:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;246:49:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="272" rc-code="8" op-status="0" interval="20000" last-rc-change="1331665816" exec-time="90" queue-time="0" op-digest="bbcdfd06282d4d9c87ef0aaf252b3709"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0003-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0003-left:0_last_0" operation_key="drbd-testfs-ost0003-left:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="59:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;59:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="31" rc-code="7" op-status="0" interval="0" op-digest="7cfc4a28e83411df0a49c55349ee3225"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-mdt0000-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-mdt0000-left_last_0" operation_key="ip-testfs-mdt0000-left_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="36:13:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;36:13:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="183" rc-code="0" op-status="0" interval="0" op-digest="2f12e214102aee0ff59f1243eae560db"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-local" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-testfs-local_last_0" operation_key="drbd-testfs-local_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="32:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;32:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="4" rc-code="7" op-status="0" interval="0" op-digest="d085fb829c3b1a6851e92ada1bbf2db0"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0001-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0001-left_last_0" operation_key="ip-testfs-ost0001-left_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="28:211:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;28:211:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="551" rc-code="0" op-status="0" interval="0" op-digest="b298ff83d48fc5c4402d5454dd3123c4" last-run="1331708996" last-rc-change="1331708996" exec-time="80" queue-time="0"/>
+            <lrm_rsc_op id="ip-testfs-ost0001-left_monitor_30000" operation_key="ip-testfs-ost0001-left_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="22:135:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;22:135:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="511" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669737" exec-time="30" queue-time="0" op-digest="ed0071b0926d9092193a8c9871e03897"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0000-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0000-left_last_0" operation_key="ip-testfs-ost0000-left_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="37:12:0:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:0;37:12:0:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="162" rc-code="0" op-status="0" interval="0" op-digest="7fde70ef5feb1ad3bf510fc235a7ba74"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0000" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0000_last_0" operation_key="testfs-ost0000_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="65:9:0:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:0;65:9:0:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="146" rc-code="0" op-status="0" interval="0" op-digest="dd17f41fb8b02fdc68d7f0867d602be5"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0002-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0002-left_last_0" operation_key="ip-testfs-ost0002-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="37:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;37:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="9" rc-code="7" op-status="0" interval="0" op-digest="5eeffb3502f6f3f92def90c0f555d7a3"/>
+          </lrm_resource>
+          <lrm_resource id="testfs" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs_last_0" operation_key="testfs_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="347:216:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;347:216:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="569" rc-code="0" op-status="0" interval="0" op-digest="beb4785cb04da7c522926154d13e728c" last-run="1331709016" last-rc-change="1331709016" exec-time="20" queue-time="0" migrate_source="lustre01-left" migrate_target="lustre02-left"/>
+          </lrm_resource>
+          <lrm_resource id="mgs" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="mgs_last_0" operation_key="mgs_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="58:9:0:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:0;58:9:0:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="145" rc-code="0" op-status="0" interval="0" op-digest="7529124b6ce046e56452ad6a973cb426"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0003-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0003-left_last_0" operation_key="ip-testfs-ost0003-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="38:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;38:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="10" rc-code="7" op-status="0" interval="0" op-digest="b8935e209eaeddf5f522d5be8b2b65aa"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-stacked" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-testfs-stacked_last_0" operation_key="drbd-testfs-stacked_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="38:5:0:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:0;38:5:0:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="143" rc-code="0" op-status="0" interval="0" op-digest="8edf6a68bb102e10d503a28e3a045434"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-stacked" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-stacked_last_0" operation_key="drbd-stacked_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="37:207:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;37:207:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="529" rc-code="0" op-status="0" interval="0" op-digest="888c68a2a071dcc2cb08e4ef9ecf9394" last-run="1331708970" last-rc-change="1331708970" exec-time="70" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0002" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0002_last_0" operation_key="testfs-ost0002_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="45:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;45:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="17" rc-code="7" op-status="0" interval="0" op-digest="387a4f661b753617418d8e7da65573e2"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0003" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0003_last_0" operation_key="testfs-ost0003_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="46:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;46:76:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="18" rc-code="7" op-status="0" interval="0" op-digest="1d97a5eeac7e8b3da58ea8a122059ab6"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-mdt0000" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-mdt0000_last_0" operation_key="testfs-mdt0000_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="62:10:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;62:10:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="170" rc-code="0" op-status="0" interval="0" op-digest="0df74928b7e6c05531c7f16f511db691"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0001" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0001_last_0" operation_key="testfs-ost0001_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="49:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;49:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="531" rc-code="0" op-status="0" interval="0" op-digest="878f3c7cb08e7d6b4c0e415bdab947c2" last-run="1331708974" last-rc-change="1331708974" exec-time="7900" queue-time="0"/>
+            <lrm_rsc_op id="testfs-ost0001_monitor_120000" operation_key="testfs-ost0001_monitor_120000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="61:142:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;61:142:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="528" rc-code="0" op-status="0" interval="120000" last-rc-change="1331670761" exec-time="40" queue-time="0" op-digest="ce2c6f4b99f7c189bcbdeb9fc564f377"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0001:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0001:0_last_0" operation_key="drbd-testfs-ost0001:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="176:210:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;176:210:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="550" rc-code="0" op-status="0" interval="0" op-digest="0053349ff20c0c790abb1fbd378e279b" last-run="1331708995" last-rc-change="1331708995" exec-time="120" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0001:0_monitor_20000" operation_key="drbd-testfs-ost0001:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="224:83:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;224:83:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="316" rc-code="8" op-status="0" interval="20000" last-rc-change="1331668351" exec-time="40" queue-time="0" op-digest="3c7c0d38dd32b4408584d40f8ae9ff4a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="lustre03-left" uname="lustre03-left" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="lustre03-left">
+        <instance_attributes id="status-lustre03-left">
+          <nvpair id="status-lustre03-left-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lustre03-left">
+        <lrm_resources>
+          <lrm_resource id="ip-booth" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-booth_last_0" operation_key="ip-booth_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="47:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;47:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="19" rc-code="7" op-status="0" interval="0" op-digest="c6c165578f762fbafec1b948b03fbde8"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-mdt0000" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-mdt0000_last_0" operation_key="testfs-mdt0000_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="42:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;42:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="14" rc-code="7" op-status="0" interval="0" op-digest="0df74928b7e6c05531c7f16f511db691"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0002-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0002-left:0_last_0" operation_key="drbd-testfs-ost0002-left:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="236:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;236:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="384" rc-code="0" op-status="0" interval="0" op-digest="cb9a16dd3e6ee7f2bbddc5d0b7785510" last-run="1331708997" last-rc-change="1331708997" exec-time="50" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0002-left:0_monitor_20000" operation_key="drbd-testfs-ost0002-left:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="283:95:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;283:95:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="246" rc-code="8" op-status="0" interval="20000" last-rc-change="1331668476" exec-time="260" queue-time="0" op-digest="719a03d33f91a5cb8b1f01c723c9d547"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-local" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-local_last_0" operation_key="drbd-local_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="30:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;30:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="2" rc-code="7" op-status="0" interval="0" op-digest="1b32d5e9eb9d0fc7cb9f23a9a2aee090"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0001:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0001:0_last_0" operation_key="drbd-testfs-ost0001:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="54:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;54:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="26" rc-code="7" op-status="0" interval="0" op-digest="0053349ff20c0c790abb1fbd378e279b"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-mgs:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-mgs:0_last_0" operation_key="drbd-mgs:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="49:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;49:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="21" rc-code="7" op-status="0" interval="0" op-digest="e0054c1d172573e469a98b78ad4f03cc"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0003-left:1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0003-left:1_last_0" operation_key="drbd-testfs-ost0003-left:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="287:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;287:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="385" rc-code="0" op-status="0" interval="0" op-digest="7cfc4a28e83411df0a49c55349ee3225" last-run="1331708997" last-rc-change="1331708997" exec-time="50" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0003-left:1_monitor_30000" operation_key="drbd-testfs-ost0003-left:1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="349:136:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;349:136:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="350" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669738" exec-time="40" queue-time="0" op-digest="126c45dac8aeb8c1334a96c435f6f178"/>
+          </lrm_resource>
+          <lrm_resource id="boothd" type="booth-site" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="boothd_last_0" operation_key="boothd_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="48:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;48:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="20" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="lustre" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="lustre_last_0" operation_key="lustre_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="425:207:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;425:207:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="360" rc-code="0" op-status="0" interval="0" op-digest="21fdcddb64005ccf675d9e0f90a63ef5" last-run="1331708970" last-rc-change="1331708970" exec-time="10" queue-time="0" migrate_source="lustre04-left" migrate_target="lustre03-left"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0000-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0000-left:0_last_0" operation_key="drbd-testfs-ost0000-left:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="53:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;53:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="25" rc-code="7" op-status="0" interval="0" op-digest="61b71be045851834b286e6507173373e"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-mdt0000:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-mdt0000:0_last_0" operation_key="drbd-testfs-mdt0000:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="50:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;50:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="22" rc-code="7" op-status="0" interval="0" op-digest="ca40e48d941a8a4a345898e75ae928b8"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0003:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0003:0_last_0" operation_key="drbd-testfs-ost0003:0_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="343:11:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;343:11:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="104" rc-code="0" op-status="0" interval="0" op-digest="e68b0009e7491da1e5eff94a6b0ac0a3"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0002:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0002:0_last_0" operation_key="drbd-testfs-ost0002:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="228:210:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;228:210:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="375" rc-code="0" op-status="0" interval="0" op-digest="06b730dc901f3b5a6a4498b634bf0dca" last-run="1331708995" last-rc-change="1331708995" exec-time="50" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0002:0_monitor_20000" operation_key="drbd-testfs-ost0002:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="268:137:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;268:137:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="356" rc-code="8" op-status="0" interval="20000" last-rc-change="1331669739" exec-time="80" queue-time="0" op-digest="bf5bdf7a6ddc1bc21860b729357acff5"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0001-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0001-left:0_last_0" operation_key="drbd-testfs-ost0001-left:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="55:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;55:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="27" rc-code="7" op-status="0" interval="0" op-digest="a93ec3f6ce2703105d70e0c7594b5c50"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-mdt0000-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-mdt0000-left_last_0" operation_key="ip-testfs-mdt0000-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="34:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;34:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="6" rc-code="7" op-status="0" interval="0" op-digest="2f12e214102aee0ff59f1243eae560db"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-local" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-testfs-local_last_0" operation_key="drbd-testfs-local_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="38:207:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;38:207:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="359" rc-code="0" op-status="0" interval="0" op-digest="d085fb829c3b1a6851e92ada1bbf2db0" last-run="1331708970" last-rc-change="1331708970" exec-time="80" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0001-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0001-left_last_0" operation_key="ip-testfs-ost0001-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="36:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;36:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="8" rc-code="7" op-status="0" interval="0" op-digest="b298ff83d48fc5c4402d5454dd3123c4"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0000-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0000-left_last_0" operation_key="ip-testfs-ost0000-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="35:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;35:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="7" rc-code="7" op-status="0" interval="0" op-digest="7fde70ef5feb1ad3bf510fc235a7ba74"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0001" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0001_last_0" operation_key="testfs-ost0001_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="44:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;44:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="16" rc-code="7" op-status="0" interval="0" op-digest="878f3c7cb08e7d6b4c0e415bdab947c2"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0002-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0002-left_last_0" operation_key="ip-testfs-ost0002-left_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="29:211:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;29:211:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="376" rc-code="0" op-status="0" interval="0" op-digest="5eeffb3502f6f3f92def90c0f555d7a3" last-run="1331708996" last-rc-change="1331708996" exec-time="50" queue-time="0"/>
+            <lrm_rsc_op id="ip-testfs-ost0002-left_monitor_30000" operation_key="ip-testfs-ost0002-left_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="24:135:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;24:135:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="347" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669737" exec-time="60" queue-time="0" op-digest="9aaa2793c347508f23edd30b843a37d0"/>
+          </lrm_resource>
+          <lrm_resource id="testfs" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs_last_0" operation_key="testfs_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="39:209:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;39:209:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="366" rc-code="0" op-status="0" interval="0" op-digest="beb4785cb04da7c522926154d13e728c" last-run="1331708981" last-rc-change="1331708981" exec-time="30" queue-time="0" migrate_source="lustre03-left" migrate_target="lustre01-left"/>
+          </lrm_resource>
+          <lrm_resource id="mgs" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="mgs_last_0" operation_key="mgs_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="40:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;40:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="12" rc-code="7" op-status="0" interval="0" op-digest="7529124b6ce046e56452ad6a973cb426"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0003-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0003-left_last_0" operation_key="ip-testfs-ost0003-left_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="45:12:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;45:12:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="105" rc-code="0" op-status="0" interval="0" op-digest="b8935e209eaeddf5f522d5be8b2b65aa"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-stacked" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-testfs-stacked_last_0" operation_key="drbd-testfs-stacked_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="33:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;33:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="5" rc-code="7" op-status="0" interval="0" op-digest="8edf6a68bb102e10d503a28e3a045434"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-stacked" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-stacked_last_0" operation_key="drbd-stacked_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="31:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;31:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="3" rc-code="7" op-status="0" interval="0" op-digest="888c68a2a071dcc2cb08e4ef9ecf9394"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0002" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0002_last_0" operation_key="testfs-ost0002_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="50:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;50:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="362" rc-code="0" op-status="0" interval="0" op-digest="387a4f661b753617418d8e7da65573e2" last-run="1331708974" last-rc-change="1331708974" exec-time="7950" queue-time="0"/>
+            <lrm_rsc_op id="testfs-ost0002_monitor_120000" operation_key="testfs-ost0002_monitor_120000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="63:142:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;63:142:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="358" rc-code="0" op-status="0" interval="120000" last-rc-change="1331670761" exec-time="30" queue-time="0" op-digest="a5eb66bd3280ac086bad7ce37045cce0"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0003" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0003_last_0" operation_key="testfs-ost0003_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="70:9:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;70:9:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="93" rc-code="0" op-status="0" interval="0" op-digest="1d97a5eeac7e8b3da58ea8a122059ab6"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0000" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0000_last_0" operation_key="testfs-ost0000_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="43:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;43:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="15" rc-code="7" op-status="0" interval="0" op-digest="dd17f41fb8b02fdc68d7f0867d602be5"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0000:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0000:0_last_0" operation_key="drbd-testfs-ost0000:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="52:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;52:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="24" rc-code="7" op-status="0" interval="0" op-digest="d319f39c5a395c6957be543c16b01220"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-mdt0000-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-mdt0000-left:0_last_0" operation_key="drbd-testfs-mdt0000-left:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="51:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" transition-magic="0:7;51:100:7:7d4a7cd9-7ecf-4629-b70a-8ffd71775814" call-id="23" rc-code="7" op-status="0" interval="0" op-digest="4c3b1a997518dc4d8bc2f3a787b16b27"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="lustre04-left" uname="lustre04-left" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="lustre04-left">
+        <instance_attributes id="status-lustre04-left">
+          <nvpair id="status-lustre04-left-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lustre04-left">
+        <lrm_resources>
+          <lrm_resource id="ip-booth" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-booth_last_0" operation_key="ip-booth_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="52:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;52:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="19" rc-code="7" op-status="0" interval="0" op-digest="c6c165578f762fbafec1b948b03fbde8"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0001:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0001:0_last_0" operation_key="drbd-testfs-ost0001:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="59:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;59:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="26" rc-code="7" op-status="0" interval="0" op-digest="0053349ff20c0c790abb1fbd378e279b"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0000" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0000_last_0" operation_key="testfs-ost0000_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="48:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;48:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="15" rc-code="7" op-status="0" interval="0" op-digest="dd17f41fb8b02fdc68d7f0867d602be5"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-local" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-local_last_0" operation_key="drbd-local_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="35:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;35:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="2" rc-code="7" op-status="0" interval="0" op-digest="1b32d5e9eb9d0fc7cb9f23a9a2aee090"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0002:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0002:0_last_0" operation_key="drbd-testfs-ost0002:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="61:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;61:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="28" rc-code="7" op-status="0" interval="0" op-digest="06b730dc901f3b5a6a4498b634bf0dca"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-mgs:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-mgs:0_last_0" operation_key="drbd-mgs:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="54:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;54:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="21" rc-code="7" op-status="0" interval="0" op-digest="e0054c1d172573e469a98b78ad4f03cc"/>
+          </lrm_resource>
+          <lrm_resource id="boothd" type="booth-site" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="boothd_last_0" operation_key="boothd_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="53:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;53:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="20" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="lustre" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="lustre_last_0" operation_key="lustre_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="42:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;42:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="303" rc-code="0" op-status="0" interval="0" op-digest="21fdcddb64005ccf675d9e0f90a63ef5" last-run="1331708974" last-rc-change="1331708974" exec-time="30" queue-time="0" migrate_source="lustre04-left" migrate_target="lustre03-left"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0000-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0000-left:0_last_0" operation_key="drbd-testfs-ost0000-left:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="58:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;58:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="25" rc-code="7" op-status="0" interval="0" op-digest="61b71be045851834b286e6507173373e"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-mdt0000:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-mdt0000:0_last_0" operation_key="drbd-testfs-mdt0000:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="55:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;55:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="22" rc-code="7" op-status="0" interval="0" op-digest="ca40e48d941a8a4a345898e75ae928b8"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0003:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0003:0_last_0" operation_key="drbd-testfs-ost0003:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="280:210:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;280:210:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="316" rc-code="0" op-status="0" interval="0" op-digest="e68b0009e7491da1e5eff94a6b0ac0a3" last-run="1331708995" last-rc-change="1331708995" exec-time="50" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0003:0_monitor_20000" operation_key="drbd-testfs-ost0003:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="339:49:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;339:49:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="108" rc-code="8" op-status="0" interval="20000" last-rc-change="1331665816" exec-time="40" queue-time="0" op-digest="9aa8be425b0a314d98c7277ddc601e31"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0002-left:1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0002-left:1_last_0" operation_key="drbd-testfs-ost0002-left:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="237:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;237:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="325" rc-code="0" op-status="0" interval="0" op-digest="cb9a16dd3e6ee7f2bbddc5d0b7785510" last-run="1331708998" last-rc-change="1331708998" exec-time="50" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0002-left:1_monitor_30000" operation_key="drbd-testfs-ost0002-left:1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="291:136:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;291:136:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="293" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669738" exec-time="50" queue-time="0" op-digest="719a03d33f91a5cb8b1f01c723c9d547"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0001-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0001-left:0_last_0" operation_key="drbd-testfs-ost0001-left:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="60:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;60:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="27" rc-code="7" op-status="0" interval="0" op-digest="a93ec3f6ce2703105d70e0c7594b5c50"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0003-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0003-left:0_last_0" operation_key="drbd-testfs-ost0003-left:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="286:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;286:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="326" rc-code="0" op-status="0" interval="0" op-digest="7cfc4a28e83411df0a49c55349ee3225" last-run="1331708998" last-rc-change="1331708998" exec-time="40" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0003-left:0_monitor_20000" operation_key="drbd-testfs-ost0003-left:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="342:95:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;342:95:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="197" rc-code="8" op-status="0" interval="20000" last-rc-change="1331668477" exec-time="260" queue-time="0" op-digest="126c45dac8aeb8c1334a96c435f6f178"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-mdt0000-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-mdt0000-left_last_0" operation_key="ip-testfs-mdt0000-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="39:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;39:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="6" rc-code="7" op-status="0" interval="0" op-digest="2f12e214102aee0ff59f1243eae560db"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-local" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-testfs-local_last_0" operation_key="drbd-testfs-local_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="37:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;37:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="4" rc-code="7" op-status="0" interval="0" op-digest="d085fb829c3b1a6851e92ada1bbf2db0"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0001-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0001-left_last_0" operation_key="ip-testfs-ost0001-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="41:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;41:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="8" rc-code="7" op-status="0" interval="0" op-digest="b298ff83d48fc5c4402d5454dd3123c4"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0000-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0000-left_last_0" operation_key="ip-testfs-ost0000-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="40:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;40:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="7" rc-code="7" op-status="0" interval="0" op-digest="7fde70ef5feb1ad3bf510fc235a7ba74"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0001" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0001_last_0" operation_key="testfs-ost0001_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="49:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;49:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="16" rc-code="7" op-status="0" interval="0" op-digest="878f3c7cb08e7d6b4c0e415bdab947c2"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0002-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0002-left_last_0" operation_key="ip-testfs-ost0002-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="42:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;42:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="9" rc-code="7" op-status="0" interval="0" op-digest="5eeffb3502f6f3f92def90c0f555d7a3"/>
+          </lrm_resource>
+          <lrm_resource id="testfs" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs_last_0" operation_key="testfs_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="34:95:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;34:95:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="190" rc-code="0" op-status="0" interval="0" op-digest="beb4785cb04da7c522926154d13e728c" last-run="1331668476" last-rc-change="1331668476" exec-time="10" queue-time="0" migrate_source="lustre04-left" migrate_target="lustre03-left"/>
+          </lrm_resource>
+          <lrm_resource id="mgs" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="mgs_last_0" operation_key="mgs_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="45:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;45:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="12" rc-code="7" op-status="0" interval="0" op-digest="7529124b6ce046e56452ad6a973cb426"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0003-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0003-left_last_0" operation_key="ip-testfs-ost0003-left_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="30:211:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;30:211:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="317" rc-code="0" op-status="0" interval="0" op-digest="b8935e209eaeddf5f522d5be8b2b65aa" last-run="1331708997" last-rc-change="1331708997" exec-time="60" queue-time="0"/>
+            <lrm_rsc_op id="ip-testfs-ost0003-left_monitor_30000" operation_key="ip-testfs-ost0003-left_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="26:135:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;26:135:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="290" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669737" exec-time="40" queue-time="0" op-digest="b73db79e3ae6d19784e63e37cdd06696"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-stacked" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-testfs-stacked_last_0" operation_key="drbd-testfs-stacked_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="36:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;36:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="302" rc-code="0" op-status="0" interval="0" op-digest="8edf6a68bb102e10d503a28e3a045434" last-run="1331708974" last-rc-change="1331708974" exec-time="140" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-stacked" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-stacked_last_0" operation_key="drbd-stacked_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="36:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;36:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="3" rc-code="7" op-status="0" interval="0" op-digest="888c68a2a071dcc2cb08e4ef9ecf9394"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0002" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0002_last_0" operation_key="testfs-ost0002_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="50:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;50:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="17" rc-code="7" op-status="0" interval="0" op-digest="387a4f661b753617418d8e7da65573e2"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0003" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0003_last_0" operation_key="testfs-ost0003_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="51:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;51:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="304" rc-code="0" op-status="0" interval="0" op-digest="1d97a5eeac7e8b3da58ea8a122059ab6" last-run="1331708974" last-rc-change="1331708974" exec-time="7950" queue-time="0"/>
+            <lrm_rsc_op id="testfs-ost0003_monitor_120000" operation_key="testfs-ost0003_monitor_120000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="65:142:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;65:142:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="300" rc-code="0" op-status="0" interval="120000" last-rc-change="1331670762" exec-time="40" queue-time="0" op-digest="929d6be3874bf40a6fe653128dc3c834"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-mdt0000" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-mdt0000_last_0" operation_key="testfs-mdt0000_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="47:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;47:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="14" rc-code="7" op-status="0" interval="0" op-digest="0df74928b7e6c05531c7f16f511db691"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0000:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0000:0_last_0" operation_key="drbd-testfs-ost0000:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="57:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;57:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="24" rc-code="7" op-status="0" interval="0" op-digest="d319f39c5a395c6957be543c16b01220"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-mdt0000-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-mdt0000-left:0_last_0" operation_key="drbd-testfs-mdt0000-left:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="56:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:7;56:4:7:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="23" rc-code="7" op-status="0" interval="0" op-digest="4c3b1a997518dc4d8bc2f3a787b16b27"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="lustre01-left" uname="lustre01-left" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="lustre01-left">
+        <instance_attributes id="status-lustre01-left">
+          <nvpair id="status-lustre01-left-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lustre01-left">
+        <lrm_resources>
+          <lrm_resource id="ip-booth" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-booth_last_0" operation_key="ip-booth_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="32:46:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;32:46:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="175" rc-code="0" op-status="0" interval="0" op-digest="c6c165578f762fbafec1b948b03fbde8" last-run="1331665813" last-rc-change="1331665813" exec-time="80" queue-time="0"/>
+            <lrm_rsc_op id="ip-booth_monitor_30000" operation_key="ip-booth_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="16:44:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;16:44:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="161" rc-code="0" op-status="0" interval="30000" last-rc-change="1331665810" exec-time="50" queue-time="0" op-digest="bb85acad5ec18a5d91f0605676a5c66b"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-mdt0000" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-mdt0000_last_0" operation_key="testfs-mdt0000_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="42:209:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;42:209:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="578" rc-code="0" op-status="0" interval="0" op-digest="0df74928b7e6c05531c7f16f511db691" last-run="1331708982" last-rc-change="1331708982" exec-time="13210" queue-time="0"/>
+            <lrm_rsc_op id="testfs-mdt0000_monitor_120000" operation_key="testfs-mdt0000_monitor_120000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="57:142:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;57:142:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="562" rc-code="0" op-status="0" interval="120000" last-rc-change="1331670761" exec-time="50" queue-time="0" op-digest="a570650b917d2579fbcbc4c5e0830be3"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0002-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0002-left:0_last_0" operation_key="drbd-testfs-ost0002-left:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="58:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;58:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="29" rc-code="7" op-status="0" interval="0" op-digest="cb9a16dd3e6ee7f2bbddc5d0b7785510"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-local" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-local_last_0" operation_key="drbd-local_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:216:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;9:216:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="619" rc-code="0" op-status="0" interval="0" op-digest="1b32d5e9eb9d0fc7cb9f23a9a2aee090" last-run="1331709017" last-rc-change="1331709017" exec-time="150" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0002:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0002:0_last_0" operation_key="drbd-testfs-ost0002:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="57:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;57:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="28" rc-code="7" op-status="0" interval="0" op-digest="06b730dc901f3b5a6a4498b634bf0dca"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-mgs:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-mgs:0_last_0" operation_key="drbd-mgs:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="51:209:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;51:209:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="585" rc-code="0" op-status="0" interval="0" op-digest="e0054c1d172573e469a98b78ad4f03cc" last-run="1331708982" last-rc-change="1331708982" exec-time="150" queue-time="0"/>
+            <lrm_rsc_op id="drbd-mgs:0_monitor_20000" operation_key="drbd-mgs:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="50:47:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;50:47:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="185" rc-code="8" op-status="0" interval="20000" last-rc-change="1331665814" exec-time="60" queue-time="0" op-digest="c22083d27e3807682b1c7f162ff15670"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0003-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0003-left:0_last_0" operation_key="drbd-testfs-ost0003-left:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="60:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;60:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="31" rc-code="7" op-status="0" interval="0" op-digest="7cfc4a28e83411df0a49c55349ee3225"/>
+          </lrm_resource>
+          <lrm_resource id="boothd" type="booth-site" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="boothd_last_0" operation_key="boothd_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="25:45:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;25:45:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="165" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1331665811" last-rc-change="1331665811" exec-time="1030" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="lustre" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="lustre_last_0" operation_key="lustre_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="40:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;40:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="11" rc-code="7" op-status="0" interval="0" op-digest="21fdcddb64005ccf675d9e0f90a63ef5"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0000-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0000-left:0_last_0" operation_key="drbd-testfs-ost0000-left:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="125:213:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;125:213:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="614" rc-code="0" op-status="0" interval="0" op-digest="61b71be045851834b286e6507173373e" last-run="1331708999" last-rc-change="1331708999" exec-time="50" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0000-left:0_monitor_20000" operation_key="drbd-testfs-ost0000-left:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="177:48:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;177:48:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="195" rc-code="8" op-status="0" interval="20000" last-rc-change="1331665815" exec-time="70" queue-time="0" op-digest="df8362b3cd6cac503f2046a086513da2"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-mdt0000:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-mdt0000:0_last_0" operation_key="drbd-testfs-mdt0000:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="67:211:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;67:211:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="600" rc-code="0" op-status="0" interval="0" op-digest="ca40e48d941a8a4a345898e75ae928b8" last-run="1331708997" last-rc-change="1331708997" exec-time="100" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-mdt0000:0_monitor_20000" operation_key="drbd-testfs-mdt0000:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="104:71:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;104:71:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="254" rc-code="8" op-status="0" interval="20000" last-rc-change="1331667550" exec-time="200" queue-time="0" op-digest="89831051986a5daf85af91d5f3bb08a1"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0003:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0003:0_last_0" operation_key="drbd-testfs-ost0003:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="59:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;59:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="30" rc-code="7" op-status="0" interval="0" op-digest="e68b0009e7491da1e5eff94a6b0ac0a3"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0001:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0001:0_last_0" operation_key="drbd-testfs-ost0001:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="55:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;55:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="26" rc-code="7" op-status="0" interval="0" op-digest="0053349ff20c0c790abb1fbd378e279b"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0001-left:1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0001-left:1_last_0" operation_key="drbd-testfs-ost0001-left:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="168:214:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;168:214:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="618" rc-code="0" op-status="0" interval="0" op-digest="a93ec3f6ce2703105d70e0c7594b5c50" last-run="1331709000" last-rc-change="1331709000" exec-time="50" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0001-left:1_monitor_30000" operation_key="drbd-testfs-ost0001-left:1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="239:137:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;239:137:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="552" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669739" exec-time="110" queue-time="0" op-digest="bbcdfd06282d4d9c87ef0aaf252b3709"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-mdt0000-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-mdt0000-left_last_0" operation_key="ip-testfs-mdt0000-left_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="21:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;21:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="602" rc-code="0" op-status="0" interval="0" op-digest="2f12e214102aee0ff59f1243eae560db" last-run="1331708998" last-rc-change="1331708998" exec-time="80" queue-time="0"/>
+            <lrm_rsc_op id="ip-testfs-mdt0000-left_monitor_30000" operation_key="ip-testfs-mdt0000-left_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="18:135:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;18:135:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="539" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669737" exec-time="90" queue-time="0" op-digest="eb1dd890bee207def257f4987942f37c"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-local" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-testfs-local_last_0" operation_key="drbd-testfs-local_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="33:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;33:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="4" rc-code="7" op-status="0" interval="0" op-digest="d085fb829c3b1a6851e92ada1bbf2db0"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0001-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0001-left_last_0" operation_key="ip-testfs-ost0001-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="37:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;37:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="8" rc-code="7" op-status="0" interval="0" op-digest="b298ff83d48fc5c4402d5454dd3123c4"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0000-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0000-left_last_0" operation_key="ip-testfs-ost0000-left_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="22:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;22:212:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="603" rc-code="0" op-status="0" interval="0" op-digest="7fde70ef5feb1ad3bf510fc235a7ba74" last-run="1331708998" last-rc-change="1331708998" exec-time="90" queue-time="0"/>
+            <lrm_rsc_op id="ip-testfs-ost0000-left_monitor_30000" operation_key="ip-testfs-ost0000-left_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="20:135:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;20:135:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="540" rc-code="0" op-status="0" interval="30000" last-rc-change="1331669737" exec-time="70" queue-time="0" op-digest="a86c01904b514c373aef3e3bf7afd1c5"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0001" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0001_last_0" operation_key="testfs-ost0001_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="45:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;45:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="16" rc-code="7" op-status="0" interval="0" op-digest="878f3c7cb08e7d6b4c0e415bdab947c2"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0002-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0002-left_last_0" operation_key="ip-testfs-ost0002-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="38:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;38:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="9" rc-code="7" op-status="0" interval="0" op-digest="5eeffb3502f6f3f92def90c0f555d7a3"/>
+          </lrm_resource>
+          <lrm_resource id="testfs" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs_last_0" operation_key="testfs_migrate_to_0" operation="migrate_to" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="346:216:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;346:216:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="620" rc-code="0" op-status="0" interval="0" op-digest="beb4785cb04da7c522926154d13e728c" last-run="1331709017" last-rc-change="1331709017" exec-time="20" queue-time="0" migrate_source="lustre01-left" migrate_target="lustre02-left"/>
+          </lrm_resource>
+          <lrm_resource id="mgs" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="mgs_last_0" operation_key="mgs_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="53:207:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;53:207:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="566" rc-code="0" op-status="0" interval="0" op-digest="7529124b6ce046e56452ad6a973cb426" last-run="1331708970" last-rc-change="1331708970" exec-time="3060" queue-time="0"/>
+            <lrm_rsc_op id="mgs_monitor_120000" operation_key="mgs_monitor_120000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="46:137:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;46:137:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="551" rc-code="0" op-status="0" interval="120000" last-rc-change="1331669739" exec-time="120" queue-time="0" op-digest="ba7e145b5591926c5574082d50c87838"/>
+          </lrm_resource>
+          <lrm_resource id="ip-testfs-ost0003-left" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-testfs-ost0003-left_last_0" operation_key="ip-testfs-ost0003-left_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="39:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;39:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="10" rc-code="7" op-status="0" interval="0" op-digest="b8935e209eaeddf5f522d5be8b2b65aa"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-stacked" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-testfs-stacked_last_0" operation_key="drbd-testfs-stacked_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="71:4:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;71:4:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="80" rc-code="0" op-status="0" interval="0" op-digest="8edf6a68bb102e10d503a28e3a045434"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-stacked" type="Ticketer" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="drbd-stacked_last_0" operation_key="drbd-stacked_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="38:34:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;38:34:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="102" rc-code="0" op-status="0" interval="0" op-digest="888c68a2a071dcc2cb08e4ef9ecf9394"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0002" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0002_last_0" operation_key="testfs-ost0002_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="46:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;46:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="17" rc-code="7" op-status="0" interval="0" op-digest="387a4f661b753617418d8e7da65573e2"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0003" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0003_last_0" operation_key="testfs-ost0003_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="47:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" transition-magic="0:7;47:4:7:2215e35b-58a4-4eec-8da0-f5f6438259de" call-id="18" rc-code="7" op-status="0" interval="0" op-digest="1d97a5eeac7e8b3da58ea8a122059ab6"/>
+          </lrm_resource>
+          <lrm_resource id="testfs-ost0000" type="lustre-server" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="testfs-ost0000_last_0" operation_key="testfs-ost0000_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="48:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;48:208:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="568" rc-code="0" op-status="0" interval="0" op-digest="dd17f41fb8b02fdc68d7f0867d602be5" last-run="1331708975" last-rc-change="1331708975" exec-time="4970" queue-time="0"/>
+            <lrm_rsc_op id="testfs-ost0000_monitor_120000" operation_key="testfs-ost0000_monitor_120000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="59:142:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;59:142:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="564" rc-code="0" op-status="0" interval="120000" last-rc-change="1331670762" exec-time="40" queue-time="0" op-digest="9f72c791f4737f1dd27240c14a8f67c8"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-ost0000:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-ost0000:0_last_0" operation_key="drbd-testfs-ost0000:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="119:211:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;119:211:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="601" rc-code="0" op-status="0" interval="0" op-digest="d319f39c5a395c6957be543c16b01220" last-run="1331708997" last-rc-change="1331708997" exec-time="90" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-ost0000:0_monitor_20000" operation_key="drbd-testfs-ost0000:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="166:50:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;166:50:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="211" rc-code="8" op-status="0" interval="20000" last-rc-change="1331665817" exec-time="50" queue-time="0" op-digest="b7fbb95e14e098793c54e201a3c2f454"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-testfs-mdt0000-left:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-testfs-mdt0000-left:0_last_0" operation_key="drbd-testfs-mdt0000-left:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="75:213:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:0;75:213:0:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="615" rc-code="0" op-status="0" interval="0" op-digest="4c3b1a997518dc4d8bc2f3a787b16b27" last-run="1331708999" last-rc-change="1331708999" exec-time="280" queue-time="0"/>
+            <lrm_rsc_op id="drbd-testfs-mdt0000-left:0_monitor_20000" operation_key="drbd-testfs-mdt0000-left:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="118:48:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" transition-magic="0:8;118:48:8:318233b3-213b-43ff-8a4f-9ace1b7c1ff7" call-id="194" rc-code="8" op-status="0" interval="20000" last-rc-change="1331665815" exec-time="70" queue-time="0" op-digest="294516760f216ae31d39ad9c65deac36"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <tickets>
+      <instance_attributes id="status-tickets">
+        <nvpair id="status-tickets-last-granted-lustre" name="last-granted-lustre" value="1331666075"/>
+        <nvpair id="status-tickets-last-granted-drbd-local" name="last-granted-drbd-local" value="1331709018"/>
+        <nvpair id="status-tickets-last-granted-drbd-stacked" name="last-granted-drbd-stacked" value="1331669736"/>
+        <nvpair id="status-tickets-last-granted-testfs-operational" name="last-granted-testfs-operational" value="1331670761"/>
+        <nvpair id="status-tickets-last-granted-drbd-testfs-local" name="last-granted-drbd-testfs-local" value="1331669736"/>
+        <nvpair id="status-tickets-last-granted-drbd-testfs-stacked" name="last-granted-drbd-testfs-stacked" value="1331669737"/>
+        <nvpair id="status-tickets-granted-ticket-testfs-allocated" name="granted-ticket-testfs-allocated" value="true"/>
+        <nvpair id="status-tickets-last-granted-testfs-allocated" name="last-granted-testfs-allocated" value="1331650620"/>
+        <nvpair id="status-tickets-granted-ticket-lustre" name="granted-ticket-lustre" value="true"/>
+        <nvpair id="status-tickets-granted-ticket-testfs-operational" name="granted-ticket-testfs-operational" value="true"/>
+        <nvpair id="status-tickets-granted-ticket-drbd-local" name="granted-ticket-drbd-local" value="true"/>
+      </instance_attributes>
+    </tickets>
+  </status>
+</cib>
