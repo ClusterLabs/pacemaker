@@ -36,9 +36,7 @@
   </configuration>
   <status>
     <tickets>
-      <instance_attributes id="status-tickets">
-        <nvpair id="status-tickets-granted-ticket-ticketA" name="granted-ticket-ticketA" value="false"/>
-      </instance_attributes>
+      <ticket_state id="ticketA" granted="false"/>
     </tickets>
     <node_state id="node1" uname="node1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <lrm id="node1">

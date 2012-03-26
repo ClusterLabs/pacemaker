@@ -420,10 +420,95 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
     return TRUE;
 }
 
-static void
-get_ticket_state(gpointer key, gpointer value, gpointer user_data)
+/* The ticket state section:
+ * "/cib/status/tickets/ticket_state" */
+static gboolean
+unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
 {
-    const char *attr_key = key;
+    const char *ticket_id = NULL;
+    const char *granted = NULL;
+    const char *last_granted = NULL;
+    const char *standby = NULL;
+    xmlAttrPtr xIter = NULL;
+
+    ticket_t *ticket = NULL;
+
+    ticket_id = ID(xml_ticket);
+    if (ticket_id == NULL || strlen(ticket_id) == 0) {
+        return FALSE;
+    }
+
+    crm_trace("Processing ticket state for %s", ticket_id);
+
+    ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
+    if (ticket == NULL) {
+        ticket = ticket_new(ticket_id, data_set);
+        if (ticket == NULL) {
+            return FALSE;
+        }
+    }
+
+    for (xIter = xml_ticket->properties; xIter; xIter = xIter->next) {
+        const char *prop_name = (const char *)xIter->name;
+        const char *prop_value = crm_element_value(xml_ticket, prop_name);
+        
+        if(crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
+            continue;
+        }
+        g_hash_table_replace(ticket->state, crm_strdup(prop_name), crm_strdup(prop_value));
+    }
+
+    granted = g_hash_table_lookup(ticket->state, "granted");
+    if (granted && crm_is_true(granted)) {
+        ticket->granted = TRUE;
+        crm_info("We have ticket '%s'", ticket->id);
+    } else {
+        ticket->granted = FALSE;
+        crm_info("We do not have ticket '%s'", ticket->id);
+    }
+
+    last_granted = g_hash_table_lookup(ticket->state, "last-granted");
+    if (last_granted) {
+        ticket->last_granted = crm_parse_int(last_granted, 0);
+    }
+
+    standby = g_hash_table_lookup(ticket->state, "standby");
+    if (standby && crm_is_true(standby)) {
+        ticket->standby = TRUE;
+        if (ticket->granted) {
+            crm_info("Granted ticket '%s' is in standby-mode", ticket->id);
+        }
+    } else {
+        ticket->standby = FALSE;
+    }
+
+    crm_trace("Done with ticket state for %s", ticket_id);
+
+    return TRUE;
+}
+
+static gboolean
+unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
+{
+    xmlNode *xml_obj = NULL;
+
+    for (xml_obj = __xml_first_child(xml_tickets); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
+        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_TICKET_STATE, TRUE) == FALSE) {
+            continue;
+        }
+        unpack_ticket_state(xml_obj, data_set);
+    }
+
+    return TRUE;
+}
+
+/* Compatibility with the deprecated ticket state section:
+ * "/cib/status/tickets/instance_attributes" */
+static void
+get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
+{
+    const char *long_key = key;
+    char *state_key = NULL;
 
     const char *granted_prefix = "granted-ticket-";
     const char *last_granted_prefix = "last-granted-";
@@ -433,9 +518,10 @@ get_ticket_state(gpointer key, gpointer value, gpointer user_data)
     const char *ticket_id = NULL;
     const char *is_granted = NULL;
     const char *last_granted = NULL;
+    const char *sep = NULL;
 
     ticket_t *ticket = NULL;
-    GHashTable *tickets = user_data;
+    pe_working_set_t *data_set = user_data;
 
     if (granted_prefix_strlen == 0) {
         granted_prefix_strlen = strlen(granted_prefix);
@@ -445,36 +531,40 @@ get_ticket_state(gpointer key, gpointer value, gpointer user_data)
         last_granted_prefix_strlen = strlen(last_granted_prefix);
     }
 
-    if (strstr(attr_key, granted_prefix) == attr_key) {
-        ticket_id = attr_key + granted_prefix_strlen;
+    if (strstr(long_key, granted_prefix) == long_key) {
+        ticket_id = long_key + granted_prefix_strlen;
         if (strlen(ticket_id)) {
+            state_key = crm_strdup("granted");
             is_granted = value;
         }
-    } else if (strstr(attr_key, last_granted_prefix) == attr_key) {
-        ticket_id = attr_key + last_granted_prefix_strlen;
+    } else if (strstr(long_key, last_granted_prefix) == long_key) {
+        ticket_id = long_key + last_granted_prefix_strlen;
         if (strlen(ticket_id)) {
+            state_key = crm_strdup("last-granted");
             last_granted = value;
         }
+    } else if ((sep = strrchr(long_key, '-'))) {
+        ticket_id = sep + 1;
+        state_key = strndup(long_key, strlen(long_key) - strlen(sep));
     }
 
     if (ticket_id == NULL || strlen(ticket_id) == 0) {
         return;
     }
 
-    ticket = g_hash_table_lookup(tickets, ticket_id);
+    if (state_key == NULL || strlen(state_key) == 0) {
+        return;
+    }
+
+    ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
     if (ticket == NULL) {
-        crm_malloc0(ticket, sizeof(ticket_t));
+        ticket = ticket_new(ticket_id, data_set);
         if (ticket == NULL) {
-            crm_config_err("Cannot allocate ticket '%s'", ticket_id);
             return;
         }
-
-        ticket->id = crm_strdup(ticket_id);
-        ticket->granted = FALSE;
-        ticket->last_granted = -1;
-
-        g_hash_table_insert(tickets, crm_strdup(ticket->id), ticket);
     }
+
+    g_hash_table_replace(ticket->state, state_key, crm_strdup(value));
 
     if (is_granted) {
         if (crm_is_true(is_granted)) {
@@ -488,15 +578,6 @@ get_ticket_state(gpointer key, gpointer value, gpointer user_data)
     } else if (last_granted) {
         ticket->last_granted = crm_parse_int(last_granted, 0);
     }
-}
-
-static void
-destroy_ticket(gpointer data)
-{
-    ticket_t *ticket = data;
-
-    crm_free(ticket->id);
-    crm_free(ticket);
 }
 
 /* remove nodes that are down, stopping */
@@ -516,24 +597,32 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
     crm_trace("Beginning unpack");
 
-    data_set->tickets =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+    if (data_set->tickets == NULL)  {
+        data_set->tickets =
+            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+    }
 
     for (state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, TRUE)) {
-            xmlNode *tickets = state;
-            GHashTable *attrs_hash =
-                g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
+            xmlNode *xml_tickets = state;
+            GHashTable *state_hash = NULL;
+
+            /* Compatibility with the deprecated ticket state section:
+             * Unpack the attributes in the deprecated "/cib/status/tickets/instance_attributes" if it exists. */
+            state_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
                                       g_hash_destroy_str);
 
-            unpack_instance_attributes(data_set->input, tickets, XML_TAG_ATTR_SETS, NULL,
-                                       attrs_hash, NULL, TRUE, data_set->now);
+            unpack_instance_attributes(data_set->input, xml_tickets, XML_TAG_ATTR_SETS, NULL,
+                                       state_hash, NULL, TRUE, data_set->now);
 
-            g_hash_table_foreach(attrs_hash, get_ticket_state, data_set->tickets);
+            g_hash_table_foreach(state_hash, get_ticket_state_legacy, data_set);
 
-            if (attrs_hash) {
-                g_hash_table_destroy(attrs_hash);
+            if (state_hash) {
+                g_hash_table_destroy(state_hash);
             }
+
+            /* Unpack the new "/cib/status/tickets/ticket_state"s */
+            unpack_tickets_state(xml_tickets, data_set);
         }
 
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {

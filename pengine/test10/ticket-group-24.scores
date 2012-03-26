@@ -1,0 +1,13 @@
+Allocation scores:
+group_color: group1 allocation score on node1: 0
+group_color: group1 allocation score on node2: 0
+group_color: rsc1 allocation score on node1: 0
+group_color: rsc1 allocation score on node2: 0
+group_color: rsc2 allocation score on node1: 0
+group_color: rsc2 allocation score on node2: 0
+native_color: rsc1 allocation score on node1: 0
+native_color: rsc1 allocation score on node2: 0
+native_color: rsc2 allocation score on node1: -INFINITY
+native_color: rsc2 allocation score on node2: 0
+native_color: rsc_stonith allocation score on node1: 0
+native_color: rsc_stonith allocation score on node2: 0

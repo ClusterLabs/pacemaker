@@ -1453,3 +1453,53 @@ get_pseudo_op(const char *name, pe_working_set_t * data_set)
 
     return op;
 }
+
+void
+destroy_ticket(gpointer data)
+{
+    ticket_t *ticket = data;
+
+    if (ticket->state) {
+        g_hash_table_destroy(ticket->state);
+    }
+    crm_free(ticket->id);
+    crm_free(ticket);
+}
+
+ticket_t *
+ticket_new(const char *ticket_id, pe_working_set_t * data_set)
+{
+    ticket_t *ticket = NULL;
+
+    if (ticket_id == NULL || strlen(ticket_id) == 0) {
+        return NULL;
+    }
+
+    if (data_set->tickets == NULL) {
+        data_set->tickets =
+            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+    }
+
+    ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
+    if (ticket == NULL) {
+
+        crm_malloc0(ticket, sizeof(ticket_t));
+        if (ticket == NULL) {
+            crm_err("Cannot allocate ticket '%s'", ticket_id);
+            return NULL;
+        }
+
+        crm_trace("Creaing ticket entry for %s", ticket_id);
+
+        ticket->id = crm_strdup(ticket_id);
+        ticket->granted = FALSE;
+        ticket->last_granted = -1;
+        ticket->standby = FALSE;
+        ticket->state = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                              g_hash_destroy_str, g_hash_destroy_str);
+
+        g_hash_table_insert(data_set->tickets, crm_strdup(ticket->id), ticket);
+    }
+
+    return ticket;
+}

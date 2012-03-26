@@ -43,6 +43,7 @@
 #include <crm/cib.h>
 #include <crm/pengine/status.h>
 #include <../lib/pengine/unpack.h>
+#include <../pengine/pengine.h>
 
 /* GMainLoop *mainloop = NULL; */
 
@@ -88,6 +89,7 @@ gboolean print_timing = FALSE;
 gboolean print_nodes_attr = FALSE;
 gboolean print_last_updated = TRUE;
 gboolean print_last_change = TRUE;
+gboolean print_tickets = FALSE;
 
 #define FILTER_STR {"shutdown", "terminate", "standby", "fail-count",	\
 	    "last-failure", "probe_complete", "#id", "#uname",		\
@@ -300,7 +302,8 @@ static struct crm_option long_options[] = {
     {"failcounts",     0, 0, 'f', "\tDisplay resource fail counts"},
     {"operations",     0, 0, 'o', "\tDisplay resource operation history" },
     {"timing-details", 0, 0, 't', "\tDisplay resource operation history with timing details" },
-    {"show-node-attributes", 0, 0, 'A', "Display node attributes\n" },
+    {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
+    {"tickets",        0, 0, 'c', "\t\tDisplay cluster tickets"},
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
@@ -399,6 +402,9 @@ main(int argc, char **argv)
                 break;
             case 'A':
                 print_nodes_attr = TRUE;
+                break;
+            case 'c':
+                print_tickets = TRUE;
                 break;
             case 'p':
                 crm_free(pid_file);
@@ -948,6 +954,38 @@ print_node_summary(pe_working_set_t * data_set, gboolean operations)
     }
 }
 
+static void
+print_ticket(gpointer name, gpointer value, gpointer data)
+{
+    ticket_t *ticket = (ticket_t *) value;
+
+    print_as(" %s\t%s%10s", ticket->id,
+             ticket->granted ? "granted":"revoked",
+             ticket->standby ? " [standby]":"");
+    if (ticket->last_granted > -1) {
+        print_as(" last-granted=");
+        print_date(ticket->last_granted);
+    }
+    print_as("\n");
+
+    return;
+}
+
+static void
+print_cluster_tickets(pe_working_set_t * data_set)
+{
+    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
+
+    /* For recording the tickets that are referenced in rsc_ticket constraints
+     * but have never been granted yet. */
+    unpack_constraints(cib_constraints, data_set);
+
+    print_as("\nTickets:\n");
+    g_hash_table_foreach(data_set->tickets, print_ticket, NULL);
+
+    return;
+}
+
 static char *
 add_list_element(char *list, const char *value)
 {
@@ -1209,6 +1247,11 @@ print_status(pe_working_set_t * data_set)
             print_as("): %s\n", execra_code2string(val));
         }
     }
+
+    if (print_tickets) {
+        print_cluster_tickets(data_set);
+    }
+
 #if CURSES_ENABLED
     if (as_console) {
         refresh();

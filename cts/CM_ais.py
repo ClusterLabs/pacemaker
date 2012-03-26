@@ -82,6 +82,7 @@ class crm_ais(crm_lha):
                 r"Child process .* terminated with signal 11",
                 r"Executing .* fencing operation",
                 r"LogActions: Recover",
+                r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
 
                 # Not inherently bad, but worth tracking
                 #r"No need to invoke the TE",
