@@ -19,7 +19,7 @@ of our Corosync plugin.
 
 == Adding CMAN Support ==
 
-http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Suite_Overview/index.html#s2-clumembership-overview-CSO[CMAN v3] is a Corsync plugin that monitors the names and number of active
+http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Suite_Overview/index.html#s2-clumembership-overview-CSO[CMAN v3] is a Corosync plugin that monitors the names and number of active
 cluster nodes in order to deliver membership and quorum information to
 clients (such as the Pacemaker daemons).
 
