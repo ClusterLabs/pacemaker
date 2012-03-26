@@ -548,10 +548,12 @@ get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
     }
 
     if (ticket_id == NULL || strlen(ticket_id) == 0) {
+        crm_free(state_key);
         return;
     }
 
     if (state_key == NULL || strlen(state_key) == 0) {
+        crm_free(state_key);
         return;
     }
 
@@ -559,6 +561,7 @@ get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
     if (ticket == NULL) {
         ticket = ticket_new(ticket_id, data_set);
         if (ticket == NULL) {
+            crm_free(state_key);
             return;
         }
     }
