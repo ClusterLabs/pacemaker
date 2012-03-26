@@ -2703,11 +2703,17 @@ at_stack_bottom(resource_t * rsc)
 }
 
 static action_t *
-get_first_named_action(resource_t *rsc, const char *action, gboolean only_valid) 
+get_first_named_action(resource_t *rsc, const char *action, gboolean only_valid, gboolean stop) 
 {
     action_t *a = NULL;
+    node_t *current = NULL;
+    GListPtr action_list = NULL;
     char *key = generate_op_key(rsc->id, action, 0);
-    GListPtr action_list = find_actions(rsc->actions, key, NULL);
+
+    if(stop && rsc->running_on) {
+        current = rsc->running_on->data;
+    }
+    action_list = find_actions(rsc->actions, key, current);
 
     crm_free(key);
     if (action_list == NULL || action_list->data == NULL) {
@@ -2938,12 +2944,12 @@ ReloadRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t * 
         return;
     }
 
-    action = get_first_named_action(rsc, RSC_PROMOTE, TRUE);
+    action = get_first_named_action(rsc, RSC_PROMOTE, TRUE, FALSE);
     if (action && is_set(action->flags, pe_action_optional) == FALSE) {
         update_action_flags(action, pe_action_pseudo);
     }
 
-    action = get_first_named_action(rsc, RSC_DEMOTE, TRUE);
+    action = get_first_named_action(rsc, RSC_DEMOTE, TRUE, FALSE);
     if (action && is_set(action->flags, pe_action_optional) == FALSE) {
         rewrite = action;
         update_action_flags(stop, pe_action_pseudo);
@@ -2992,8 +2998,8 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
         return;
     }
 
-    start = get_first_named_action(rsc, RSC_START, TRUE);
-    stop = get_first_named_action(rsc, RSC_STOP, TRUE);
+    start = get_first_named_action(rsc, RSC_START, TRUE, FALSE);
+    stop = get_first_named_action(rsc, RSC_STOP, TRUE, TRUE);
 
     if(stop == NULL) {
         return;
