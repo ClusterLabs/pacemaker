@@ -308,7 +308,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
 
     if (attr_name) {
         const char *attr_prefix = NULL;
-        const char *long_key = NULL;
+        char *long_key = NULL;
 
         if (crm_str_eq(attr_name, "granted", TRUE)) {
             attr_prefix = "granted-ticket";
@@ -321,6 +321,8 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
             offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
         }
         offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", long_key);
+
+        crm_free(long_key);
     }
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
 
@@ -763,6 +765,13 @@ main(int argc, char **argv)
     set_working_set_defaults(&data_set);
 
     cib_conn = cib_new();
+    if (cib_conn == NULL) {
+        rc = cib_connection;
+        CMD_ERR("Error initiating the connection to the CIB service: %s\n",
+                cib_error2string(rc));
+        return rc;
+    }
+
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != cib_ok) {
         CMD_ERR("Error signing on to the CIB service: %s\n", cib_error2string(rc));
@@ -933,7 +942,7 @@ main(int argc, char **argv)
 
             ticket = find_ticket(ticket_id, &data_set);
             if (ticket == NULL) {
-                return cib_NOTEXISTS;
+                rc = cib_NOTEXISTS;
                 goto bail;
             }
 
