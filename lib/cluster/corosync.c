@@ -447,27 +447,57 @@ terminate_ais_connection(void)
 /*     G_main_del_fd(ais_source_sync);     */
 
     if (is_classic_ais_cluster() == FALSE) {
+        if(ais_ipc_handle) {
+            crm_trace("Disconnecting plugin");
 #  if CS_USES_LIBQB
-        qb_ipcc_disconnect(ais_ipc_handle);
+            qb_ipcc_disconnect(ais_ipc_handle);
+            ais_ipc_handle = NULL;
 #  else
-        coroipcc_service_disconnect(ais_ipc_handle);
+            coroipcc_service_disconnect(ais_ipc_handle);
+            ais_ipc_handle = 0;
 #  endif
+        } else {
+            crm_info("No plugin connection");
+        }
 
     } else {
-        cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group);
+        if(pcmk_cpg_handle) {
+            crm_trace("Disconnecting CPG");
+            cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group);
+            cpg_finalize(pcmk_cpg_handle);
+            pcmk_cpg_handle = 0;
+
+        } else {
+            crm_info("No CPG connection");
+        }
     }
 
 #  ifdef SUPPORT_CS_QUORUM
     if (is_corosync_cluster()) {
-        quorum_finalize(pcmk_quorum_handle);
+        if(pcmk_quorum_handle) {
+            crm_trace("Disconnecting quorum");
+            quorum_finalize(pcmk_quorum_handle);
+            pcmk_quorum_handle = 0;
+
+        } else {
+            crm_info("No Quorum connection");
+        }
     }
 #  endif
 #  if SUPPORT_CMAN
     if (is_cman_cluster()) {
-        cman_stop_notification(pcmk_cman_handle);
-        cman_finish(pcmk_cman_handle);
+        if(pcmk_cman_handle) {
+            crm_trace("Disconnecting cman");
+            cman_stop_notification(pcmk_cman_handle);
+            cman_finish(pcmk_cman_handle);
+
+        } else {
+            crm_info("No cman connection");
+        }
     }
 #  endif
+    ais_fd_async = -1;
+    ais_fd_sync = -1;
 }
 
 int ais_membership_timer = 0;
