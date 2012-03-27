@@ -1022,8 +1022,10 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
 
     /* If we have an un-ordered set1, whether it is sequential or not is irrelevant in regards to set2. */
     if (!require_all) {
-        action_t *unordered_action = get_pseudo_op(crm_concat(CRM_OP_RELAXED_SET, ID(set1), ':'), data_set);
+        char *task = crm_concat(CRM_OP_RELAXED_SET, ID(set1), ':');
+        action_t *unordered_action = get_pseudo_op(task, data_set);
 
+        crm_free(task);
         update_action_flags(unordered_action, pe_action_requires_any);
 
         for (xml_rsc = __xml_first_child(set1); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
