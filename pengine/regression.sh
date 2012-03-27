@@ -418,8 +418,9 @@ do_test bug-5014-ordered-set-symmetrical-false "Verify ordered sets work with sy
 do_test bug-5014-ordered-set-symmetrical-true "Verify ordered sets work with symmetrical=true"
 do_test bug-5007-masterslave_colocation "Verify use of colocation scores other than INFINITY and -INFINITY work on multi-state resources."
 do_test bug-5038 "Prevent restart of anonymous clones when clone-max decreases"
-do_test bug-5025-1 "Automatically clean up failcount after resource config change."
+do_test bug-5025-1 "Automatically clean up failcount after resource config change with reload"
 do_test bug-5025-2 "Make sure clear failcount action isn't set when config does not change."
+do_test bug-5025-3 "Automatically clean up failcount after resource config change with restart"
 
 echo ""
 do_test systemhealth1  "System Health ()               #1"
