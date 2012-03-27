@@ -1479,5 +1479,8 @@ main(int argc, char **argv)
     crm_free(use_date);
     crm_xml_cleanup();
     fflush(stderr);
+#ifdef LIBQB_LOGGING
+    qb_log_fini();
+#endif
     return rc;
 }
