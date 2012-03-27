@@ -74,9 +74,12 @@ while true ; do
     esac
 done
 
-if [ ! -x $test_binary ]; then
-    test_binary=`which crm_simulate`
-    PCMK_schema_directory=""
+if [ "x$test_binary" = "x" ]; then
+    test_binary=@sbindir@/crm_simulate
+    PCMK_schema_directory=@CRM_DTD_DIRECTORY@
+elif [ ! -x $test_binary ]; then
+    test_binary=@sbindir@/crm_simulate
+    PCMK_schema_directory=@CRM_DTD_DIRECTORY@
 fi
 
 export PCMK_schema_directory
