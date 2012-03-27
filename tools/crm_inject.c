@@ -215,6 +215,7 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
     xmlNode *lrm = NULL;
     xmlNode *container = NULL;
     xmlNode *cib_resource = NULL;
+    char *xpath = NULL;
 
     cib_resource = find_resource(cib_node, resource);
     if (cib_resource != NULL) {
@@ -240,8 +241,9 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
         return NULL;
     }
 
-    crm_info("Injecting new resource %s into %s '%s'", resource, xmlGetNodePath(cib_node),
-             ID(cib_node));
+    xpath = (char *)xmlGetNodePath(cib_node);
+    crm_info("Injecting new resource %s into %s '%s'", resource, xpath, ID(cib_node));
+    crm_free(xpath);
 
     lrm = first_named_child(cib_node, XML_CIB_TAG_LRM);
     if (lrm == NULL) {
