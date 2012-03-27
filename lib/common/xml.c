@@ -136,7 +136,7 @@ static char *get_schema_path(const char *file)
     if(base == NULL) {
         base = getenv("PCMK_schema_directory");
     }
-    if(base == NULL) {
+    if(base == NULL || strlen(base) == 0) {
         base = CRM_DTD_DIRECTORY;
     }
     return crm_concat(base, file, '/');
