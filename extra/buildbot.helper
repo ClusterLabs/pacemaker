@@ -4,9 +4,9 @@ set -x
 self=`basename $0`
 
 if [ x$1 = xinstall ]; then
-    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./mock/*.rpm
+    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./mock/*.rpm nano
 elif [ x$1 = xdownloads ]; then
-    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./downloads/*.rpm
+    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./downloads/*.rpm nano
     mock --configdir=$PWD --root=mock --resultdir=./mock -v --copyin $0 /
     mock --configdir=$PWD --root=mock --resultdir=./mock -v --shell -- bash /$self gcov
 
