@@ -1,3 +1,92 @@
+* Wed Mar 28 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.7-1
+- Update source tarball to revision: bc7ff2c
+- Statistics:
+  Changesets: 513
+  Diff:       1171 files changed, 90472 insertions(+), 19368 deletions(-)
+
+- Changes since Pacemaker-1.1.6.1
+High: ais: Prepare for corosync versions using IPC from libqb
+High: cib: Correctly shutdown in the presence of peers without relying on timers
+High: cib: Don't halt disk writes if the previous digest is missing
+High: cib: Determine when there are no peers to respond to our shutdown request and exit
+High: cib: Ensure no additional messages are processed after we begin terminating
+High: Cluster: Hook up the callbacks to the corosync quorum notifications
+High: Core: basename() may modify its input, do not pass in a constant
+High: Core: Bug cl#5016 - Prevent failures in recurring ops from being lost
+High: Core: Bug rhbz#800054 - Correctly retrieve heartbeat uuids
+High: Core: Correctly determine when an XML file should be decompressed
+High: Core: Correctly track the length of a string without reading from uninitialzied memory (valgrind)
+High: Core: Ensure signals are handled eventually in the absense of timer sources or IPC messages
+High: Core: Prevent use-of-NULL in crm_update_peer()
+High: Core: Strip text nodes from on disk xml files
+High: Core: Support libqb for logging
+High: corosync: Consistently set the correct uuid with get_node_uuid()
+High: Corosync: Correctly disconnect from corosync variants
+High: Corosync: Correctly extract the node id from membership udpates
+High: corosync: Correctly infer lost members from the quorum API
+High: Corosync: Default to using the nodeid as the node's uuid (instead of uname)
+High: corosync: Ensure we catch nodes that leave the membership, even if the ringid doesn't change
+High: corosync: Hook up CPG membership
+High: corosync: Relax a development assert and gracefully handle the error condition
+High: corosync: Remove deprecated member of the CFG API
+High: corosync: Treat CS_ERR_QUEUE_FULL the same as CS_ERR_TRY_AGAIN
+High: corosync: Unset the process list when nodes dissappear on us
+High: crmd: Also purge fencing results when we enter S_NOT_DC
+High: crmd: Bug cl#5015 - Remove the failed operation as well as the resulting fail-count and last-failure attributes
+High: crmd: Correctly determine when a node can suicide with fencing
+High: crmd: Election - perform the age comparison only once
+High: crmd: Fast-track shutdown if we couldn't request it via attrd
+High: crmd: Leave it up to the PE to decide which ops can/cannot be reload
+High: crmd: Prevent use-after-free when calling delete_resource due to CRM_OP_REPROBE
+High: crmd: Supply format arguments in the correct order
+High: Fencing: Add missing format parameter
+High: fencing: Add the fencing topology section to the 1.1 configuration schema
+High: fencing: fence_legacy - Drop spurilous host argument from status query
+High: Fencing: fence_legacy - Ensure port is available as an environment variable when calling monitor
+High: Fencing: fence_pcmk - don't block if nothing is specified on stdin
+High: fencing: Fix log format error
+High: Fencing: Fix segfault caused by passing garbage to dlsym()
+High: Fencing: Fix use-of-NULL in process_remote_stonith_query()
+High: Fencing: Fix use-of-NULL when listing installed devices
+High: Fencing: Implement support for advanced fencing topologies: eg. kdump || (network && disk) || power
+High: fencing: More gracefully handle failed 'list' operations for devices that only support a single connection
+High: Fencing: Prevent duplicate free when listing devices
+High: Fencing: Prevent uninitialized pointers being passed to free
+High: Fencing: Prevent use-after-free, we may need the query result for subsequent operations
+High: fencing: Provide enough data to construct an entry in the node's fencing history
+High: Fencing: Standardize on /one/ method for clients to request members be fenced
+High: Fencing: Supress errors when listing all registered devices
+High: mcp: corosync_cfg_state_track was removed from the corosync API, luckily we didnt use it for anything
+High: mcp: Do not specify a WorkingDirectory in the systemd unit file - startup fails if its not available
+High: mcp: Set the HA_quorum_type env variable consistently with our corosync plugin
+High: mcp: Shut down if one of our child processes can/should not be respawned
+High: PE: Bug cl#5000 - Ensure ordering is preserved when depending on partial sets
+High: PE: Bug cl#5028 - Unmanaged services should block shutdown unless in maintainence mode
+High: PE: Bug cl#5038 - Prevent restart of anonymous clones when clone-max decreases
+High: PE: Bug cl#5007 - Fixes use of colocation constraints with multi-state resources
+High: PE: Bug cl#5014 - Prevent asymmetrical order constraints from causing resource stops
+High: PE: Bug cl#5000 - Implements ability to create rsc_order constraint sets such that A can start after B or C has started.
+High: PE: Correctly migrate a resource that has just migrated
+High: PE: Correct return from error path
+High: PE: Detect reloads of previously migrated resources
+High: PE: Ensure post-migration stop actions occur before node shutdown
+High: PE: Log as loudly as possible when we cannot shut down a cluster node
+High: PE: Reload of a resource no longer causes a restart of dependant resources
+High: PE: Support limiting the number of concurrent live migrations
+High: PE: Support referencing templates in constraints
+High: PE: Support of referencing resource templates in resource sets
+High: PE: Support to make tickets standby for relinquishing tickets gracefully
+High: stonith: A "start" operation of a stonith resource does a "monitor" on the device beyond registering it
+High: stonith: Bug rhbz#745526 - Ensure stonith_admin actually gets called by fence_pcmk
+High: Stonith: Ensure all nodes receive and deliver notifications of the manual override
+High: stonith: Fix the stonith timeout issue (cl#5009, bnc#727498)
+High: Stonith: Implement a manual override for when nodes are known to be safely off
+High: Tools: Bug cl#5003 - Prevent use-after-free in crm_simlate
+High: Tools: crm_mon - Support to display tickets (based on Yuusuke Iida's work)
+High: Tools: crm_simulate - Support to grant/revoke/standby/activate tickets from the new ticket state section
+High: Tools: Implement crm_node functionality for native corosync
+High: Fix a number of potential problems reported by coverity
+
 * Wed Aug 31 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.6-1
 - Update source tarball to revision: 676e5f25aa46 tip
 - Statistics:
