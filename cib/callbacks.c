@@ -435,6 +435,19 @@ parse_peer_options(int call_type, xmlNode * request,
         return TRUE;
     }
 
+    op = crm_element_value(request, F_CIB_OPERATION);
+    if(safe_str_eq(op, "cib_shutdown_req")) {
+        /* Always process these */
+        *local_notify = FALSE;
+        if(reply_to == NULL || is_reply) {
+            *process = TRUE;
+        }
+        if(is_reply) {
+            *needs_reply = FALSE;
+        }
+        return *process;
+    }
+
     if (is_reply) {
         crm_trace("Forward reply sent from %s to local clients", originator);
         *process = FALSE;
@@ -443,7 +456,6 @@ parse_peer_options(int call_type, xmlNode * request,
         return TRUE;
     }
 
-    op = crm_element_value(request, F_CIB_OPERATION);
     delegated = crm_element_value(request, F_CIB_DELEGATED);
     if (delegated != NULL) {
         crm_trace("Ignoring msg for master instance");
@@ -1016,7 +1028,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
   done:
     if ((call_options & cib_discard_reply) == 0) {
         *reply = cib_construct_reply(request, output, rc);
-        /* crm_log_xml_info(*reply, "cib:reply"); */
+        crm_log_xml_trace(*reply, "cib:reply");
     }
 #if ENABLE_ACL
     if (filtered_current_cib != NULL) {
