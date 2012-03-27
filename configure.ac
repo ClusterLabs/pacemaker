@@ -231,12 +231,6 @@ AC_ARG_WITH(initdir,
     [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
     [ INITDIR="$withval" ])
 
-SUPPORT_TRACING=0
-AC_ARG_WITH(tracedata,
-    [  --with-tracedata     
-       Support the dynamic enablement of addition trace logging ],
-    [ SUPPORT_TRACING=$withval ])
-
 SUPPORT_PROFILING=0
 AC_ARG_WITH(profiling,
     [  --with-profiling     
@@ -942,13 +936,6 @@ case $SUPPORT_GCOV in
      *) SUPPORT_PROFILING=0;;
 esac
 AC_DEFINE_UNQUOTED(SUPPORT_GCOV, $SUPPORT_GCOV, Support for gcov coverage testing)
-
-case $SUPPORT_TRACING in
-     1|yes|true) SUPPORT_TRACING=1; PCMK_FEATURES="$PCMK_FEATURES trace-logging";;
-     *) SUPPORT_TRACING=0;;
-esac
-AC_DEFINE_UNQUOTED(SUPPORT_TRACING, $SUPPORT_TRACING, Support the dynamic enablement of addition trace logging)
-
 
 dnl ========================================================================
 dnl    Cluster infrastructure - Heartbeat / LibQB

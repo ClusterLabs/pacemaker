@@ -42,9 +42,6 @@
 %bcond_with profiling
 %bcond_with gcov
 
-# Support additional trace logging
-%bcond_without tracedata
-
 # We generate docs using Publican, Asciidoc and Inkscape, but they're not available everywhere
 %bcond_without doc
 
@@ -288,7 +285,6 @@ docdir=%{pcmk_docdir} %{configure}                 \
         %{?with_cman:        --with-cman}          \
         %{?with_profiling:   --with-profiling}     \
         %{?with_gcov:        --with-gcov}          \
-        %{?with_tracedata:   --with-tracedata}     \
         --with-initdir=%{_initrddir}               \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}       \
