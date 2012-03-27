@@ -67,6 +67,8 @@ extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t, int);
 gboolean cib_register_ha(ll_cluster_t * hb_cluster, const char *client_name);
 #endif
 
+extern void terminate_cib(const char *caller, gboolean fast);
+
 GMainLoop *mainloop = NULL;
 const char *cib_root = CRM_CONFIG_DIR;
 char *cib_our_uname = NULL;
@@ -428,9 +430,14 @@ cib_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
 static void
 cib_ais_destroy(gpointer user_data)
 {
-    crm_err("AIS connection terminated");
     ais_fd_sync = -1;
-    exit(1);
+    if (cib_shutdown_flag) {
+        crm_info("Corosync disconnection complete... exiting");
+        terminate_cib(__FUNCTION__, FALSE);
+    } else {
+        crm_err("Corosync connection lost!  Exiting.");
+        terminate_cib(__FUNCTION__, TRUE);
+    }
 }
 #endif
 
@@ -571,18 +578,10 @@ cib_ha_connection_destroy(gpointer user_data)
 {
     if (cib_shutdown_flag) {
         crm_info("Heartbeat disconnection complete... exiting");
+        terminate_cib(__FUNCTION__, FALSE);
     } else {
         crm_err("Heartbeat connection lost!  Exiting.");
-    }
-
-    uninitializeCib();
-
-    crm_info("Exiting...");
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
-        g_main_quit(mainloop);
-
-    } else {
-        exit(LSB_EXIT_OK);
+        terminate_cib(__FUNCTION__, TRUE);
     }
 }
 

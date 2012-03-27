@@ -58,7 +58,7 @@ extern enum cib_errors cib_update_counter(xmlNode * xml_obj, const char *field, 
 extern void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 
 void initiate_exit(void);
-void terminate_cib(const char *caller);
+void terminate_cib(const char *caller, gboolean fast);
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean can_write(int flags);
 void send_cib_replace(const xmlNode * sync_request, const char *host);
@@ -1309,7 +1309,7 @@ static gboolean
 cib_force_exit(gpointer data)
 {
     crm_notice("Forcing exit!");
-    terminate_cib(__FUNCTION__);
+    terminate_cib(__FUNCTION__, TRUE);
     return FALSE;
 }
 
@@ -1321,7 +1321,7 @@ initiate_exit(void)
 
     active = crm_active_peers(crm_proc_cib);
     if (active < 2) {
-        terminate_cib(__FUNCTION__);
+        terminate_cib(__FUNCTION__, FALSE);
         return;
     }
 
@@ -1339,9 +1339,10 @@ initiate_exit(void)
 
 extern int remote_fd;
 extern int remote_tls_fd;
+extern void terminate_ais_connection(void);
 
 void
-terminate_cib(const char *caller)
+terminate_cib(const char *caller, gboolean fast)
 {
     if (remote_fd > 0) {
         close(remote_fd);
@@ -1349,27 +1350,34 @@ terminate_cib(const char *caller)
     if (remote_tls_fd > 0) {
         close(remote_tls_fd);
     }
-#if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        cib_ha_connection_destroy(NULL);
-        return;
-    }
-#endif
+    
+    if(!fast) {
+        if(is_heartbeat_cluster()) {
 #if SUPPORT_HEARTBEAT
-    if (hb_conn != NULL) {
-        crm_info("%s: Disconnecting heartbeat", caller);
-        hb_conn->llc_ops->signoff(hb_conn, FALSE);
+            if (hb_conn != NULL) {
+                crm_info("%s: Disconnecting heartbeat", caller);
+                hb_conn->llc_ops->signoff(hb_conn, FALSE);
 
-    } else {
-        crm_err("%s: No heartbeat connection", caller);
-    }
+            } else {
+                crm_err("%s: No heartbeat connection", caller);
+            }
 #endif
+        } else {
+#if SUPPORT_COROSYNC
+            crm_info("%s: Disconnecting corosync", caller);
+            terminate_ais_connection();
+#endif
+        }
+    }
 
     uninitializeCib();
 
-    crm_info("Exiting...");
+    crm_info("%s: Exiting...", caller);
 
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
+    if (fast) {
+        exit(LSB_EXIT_GENERIC);
+
+    } else if(mainloop != NULL && g_main_is_running(mainloop)) {
         g_main_quit(mainloop);
 
     } else {
