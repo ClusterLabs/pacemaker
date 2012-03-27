@@ -446,7 +446,7 @@ terminate_ais_connection(void)
 /*     G_main_del_fd(ais_source); */
 /*     G_main_del_fd(ais_source_sync);     */
 
-    if (is_classic_ais_cluster() == FALSE) {
+    if (is_classic_ais_cluster()) {
         if(ais_ipc_handle) {
             crm_trace("Disconnecting plugin");
 #  if CS_USES_LIBQB
