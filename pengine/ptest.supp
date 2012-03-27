@@ -7,6 +7,16 @@
 }
 
 {
+   Ignore crm_system_name
+   Memcheck:Leak
+   fun:malloc
+   fun:crm_strdup_fn
+   fun:crm_log_init_worker
+   fun:crm_log_init
+   fun:main
+}
+
+{
    libqb fixed upstream 1
    Memcheck:Leak
    fun:realloc
