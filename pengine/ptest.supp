@@ -5,3 +5,19 @@
    fun:__strspn_sse42
    fun:crm_get_msec
 }
+
+{
+   libqb fixed upstream 1
+   Memcheck:Leak
+   fun:realloc
+   fun:_grow_bin_array
+   fun:_qb_array_grow
+}
+
+{
+   libqb fixed upstream 2
+   Memcheck:Leak
+   fun:calloc
+   fun:qb_log_dcs_get
+   fun:_qb_log_callsite_get
+}
