@@ -895,12 +895,8 @@ crm_log_args(int argc, char **argv)
         }
 
         len = 2 + strlen(argv[lpc]);    /* +1 space, +1 EOS */
-        if (arg_string) {
-            existing_len = strlen(arg_string);
-        }
-
         arg_string = realloc(arg_string, len + existing_len);
-        sprintf(arg_string + existing_len, "%s ", argv[lpc]);
+        existing_len += sprintf(arg_string + existing_len, "%s ", argv[lpc]);
     }
     cl_log(LOG_INFO, "Invoked: %s", arg_string);
     free(arg_string);
