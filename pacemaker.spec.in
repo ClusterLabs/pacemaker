@@ -386,7 +386,6 @@ fi
 %exclude %{_sbindir}/crm_uuid
 %endif
 
-%if %{with doc}
 %doc %{_mandir}/man7/*
 %doc %{_mandir}/man8/attrd_updater.*
 %doc %{_mandir}/man8/crm_attribute.*
@@ -395,7 +394,6 @@ fi
 %doc %{_mandir}/man8/fence_pcmk.*
 %doc %{_mandir}/man8/pacemakerd.*
 %doc %{_mandir}/man8/stonith_admin.*
-%endif
 
 %doc COPYING
 %doc AUTHORS
@@ -435,7 +433,6 @@ fi
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
 %{py_sitedir}/crm
-%if %{with doc}
 %doc %{_mandir}/man8/*
 %exclude %{_mandir}/man8/attrd_updater.*
 %exclude %{_mandir}/man8/crm_attribute.*
@@ -444,7 +441,6 @@ fi
 %exclude %{_mandir}/man8/fence_pcmk.*
 %exclude %{_mandir}/man8/pacemakerd.*
 %exclude %{_mandir}/man8/stonith_admin.*
-%endif
 
 %doc COPYING
 %doc AUTHORS
