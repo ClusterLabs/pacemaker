@@ -441,7 +441,7 @@ send_ais_message(xmlNode * msg, gboolean local, const char *node, enum crm_ais_m
 void
 terminate_ais_connection(void)
 {
-    crm_notice("Disconnecting from AIS");
+    crm_notice("Disconnecting from Corosync");
 
 /*     G_main_del_fd(ais_source); */
 /*     G_main_del_fd(ais_source_sync);     */
@@ -666,12 +666,14 @@ ais_dispatch(int sender, gpointer user_data)
         coroipcc_dispatch_put(ais_ipc_handle);
 #  endif
 
-    } while (good);
+    } while (good && ais_ipc_handle);
 
     return good;
 
   bail:
-    crm_err("AIS connection failed");
+    if(ais_ipc_handle) {
+        crm_err("AIS connection failed: %p", ais_ipc_handle);
+    }
     return FALSE;
 }
 

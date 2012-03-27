@@ -432,14 +432,22 @@ cib_ais_destroy(gpointer user_data)
 {
     ais_fd_sync = -1;
     if (cib_shutdown_flag) {
-        crm_info("Corosync disconnection complete... exiting");
-        terminate_cib(__FUNCTION__, FALSE);
+        crm_info("Corosync disconnection complete");
     } else {
         crm_err("Corosync connection lost!  Exiting.");
         terminate_cib(__FUNCTION__, TRUE);
     }
 }
 #endif
+
+static void
+cib_ais_status_callback(enum crm_status_type type, crm_node_t * node, const void *data)
+{
+    if(cib_shutdown_flag && crm_active_peers(crm_proc_cib) < 2) {
+        crm_info("No more peers");
+        terminate_cib(__FUNCTION__, FALSE);
+    }
+}
 
 int
 cib_init(void)
@@ -475,12 +483,9 @@ cib_init(void)
             crm_crit("Cannot sign in to the cluster... terminating");
             exit(100);
         }
-#if 0
         if (is_openais_cluster()) {
-            crm_info("Requesting the list of configured nodes");
-            send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+            crm_set_status_callback(&cib_ais_status_callback);
         }
-#endif
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {
 
