@@ -453,7 +453,7 @@ cib_ais_destroy(gpointer user_data)
 static void
 cib_ais_status_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
-    if(cib_shutdown_flag && crm_active_peers(crm_proc_cib) < 2) {
+    if(cib_shutdown_flag && crm_active_peers(crm_proc_cib) < 2 && g_hash_table_size(client_list) == 0) {
         crm_info("No more peers");
         terminate_cib(__FUNCTION__, FALSE);
     }
