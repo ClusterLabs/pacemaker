@@ -120,6 +120,15 @@ cib_diskwrite_complete(gpointer userdata, int status, int signo, int exitcode)
     }
 }
 
+static void
+log_cib_client(gpointer key, gpointer value, gpointer user_data)
+{
+    cib_client_t *a_client = value;
+
+    crm_info("Client %s/%s", crm_str(a_client->name),
+    crm_str(a_client->channel_name));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -238,6 +247,7 @@ main(int argc, char **argv)
     rc = cib_init();
 
     CRM_CHECK(g_hash_table_size(client_list) == 0, crm_warn("Not all clients gone at exit"));
+    g_hash_table_foreach(client_list, log_cib_client, NULL);
     cib_cleanup();
 
 #if SUPPORT_HEARTBEAT
