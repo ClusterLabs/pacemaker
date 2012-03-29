@@ -247,7 +247,7 @@ typedef GList *GListPtr;
         if(__unlikely((expr) == FALSE)) {				\
             static struct qb_log_callsite *core_cs = NULL;              \
             if(core_cs == NULL) {                                       \
-                qb_log_callsite_get(__func__, __FILE__, "log-assert", LOG_TRACE, __LINE__, 0); \
+                core_cs = qb_log_callsite_get(__func__, __FILE__, "log-assert", LOG_TRACE, __LINE__, 0); \
             }                                                           \
             crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,   \
                       core_cs?core_cs->targets:FALSE, TRUE);            \
@@ -258,7 +258,7 @@ typedef GList *GListPtr;
 	if(__unlikely((expr) == FALSE)) {				\
             static struct qb_log_callsite *core_cs = NULL;              \
             if(core_cs == NULL) {                                       \
-                qb_log_callsite_get(__func__, __FILE__, "check-assert", LOG_TRACE, __LINE__, 0); \
+                core_cs = qb_log_callsite_get(__func__, __FILE__, "check-assert", LOG_TRACE, __LINE__, 0); \
             }                                                           \
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
 		      core_cs?core_cs->targets:FALSE, TRUE);            \
@@ -269,9 +269,9 @@ typedef GList *GListPtr;
 #    define do_crm_log_xml(level, text, xml) do {                       \
         static struct qb_log_callsite *xml_cs = NULL;                   \
         if(xml_cs == NULL) {                                            \
-            qb_log_callsite_get(__func__, __FILE__, "xml-blog", LOG_TRACE, __LINE__, 0); \
+            xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blog", level, __LINE__, 0); \
         }                                                               \
-        if (xml_cs && xml_cs->targets) {                                            \
+        if (xml_cs && xml_cs->targets) {                              \
             log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
         }                                                               \
     } while(0)
