@@ -453,6 +453,33 @@ cib_ais_destroy(gpointer user_data)
 static void
 cib_ais_status_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
+#if 0
+    /* crm_active_peers(crm_proc_cib) appears to give the wrong answer
+     * sometimes, this might help figure out why
+     */
+    if(type == crm_status_nstate) {
+        crm_info("status: %s is now %s (was %s)", node->uname, node->state, (const char *)data);
+        if (safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
+            return;
+        }
+
+    } else if(type == crm_status_processes) {
+        uint32_t old = 0;
+        if (data) {
+            old = *(const uint32_t *)data;
+        }
+        
+        if ((node->processes ^ old) & crm_proc_cib) {
+            crm_info("status: cib process on %s is now %sactive",
+                     node->uname, is_set(node->processes, crm_proc_cib)?"":"in");
+        } else {
+            return;
+        }
+
+    } else {
+        return;
+    }
+#endif
     if(cib_shutdown_flag && crm_active_peers(crm_proc_cib) < 2 && g_hash_table_size(client_list) == 0) {
         crm_info("No more peers");
         terminate_cib(__FUNCTION__, FALSE);
