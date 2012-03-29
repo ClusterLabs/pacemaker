@@ -139,7 +139,7 @@ BuildRequires: net-snmp-devel
 %endif
 
 %if %{with corosync}
-# Do not require corosync, the admin should select which stack to use and install it
+Requires: corosync
 BuildRequires: corosynclib-devel
 %endif
 
@@ -317,7 +317,6 @@ find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 # Do not package these either
 rm -f %{buildroot}/%{_libexecdir}/pacemaker/hb2openais-helper.*
 rm -f %{buildroot}/%{_libexecdir}/pacemaker/crm_primitive.*
-rm -f %{buildroot}/%{_libexecdir}/pacemaker/atest
 rm -f %{buildroot}/%{_libdir}/service_crm.so
 
 %if %{with gcov}
@@ -401,7 +400,7 @@ fi
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/heartbeat/crm
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pengine
-%dir %attr (750, %{uname}, %{gname}) %{_var}/run/crm
+%ghost %dir %attr (750, %{uname}, %{gname}) %{_var}/run/crm
 %dir /usr/lib/ocf
 %dir /usr/lib/ocf/resource.d
 /usr/lib/ocf/resource.d/pacemaker
