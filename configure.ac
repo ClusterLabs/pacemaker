@@ -109,6 +109,25 @@ cc_supports_flag() {
          return $RC
 }
 
+try_extract_header_define() {
+	  AC_MSG_CHECKING(if $2 in $1 exists. If not defaulting to $3)
+	  Cfile=$srcdir/extract_define.$2.${$}
+	  printf "#include <stdio.h>\n" > ${Cfile}.c
+	  printf "#include <%s>\n" $1 >> ${Cfile}.c
+	  printf "int main(int argc, char **argv) {\n" >> ${Cfile}.c
+	  printf "#ifdef %s\n" $2 >> ${Cfile}.c
+	  printf "printf(\"%%s\", %s);\n" $2 >> ${Cfile}.c
+	  printf "#endif \n return 0; }\n" >> ${Cfile}.c
+	  $CC $CFLAGS ${Cfile}.c -o ${Cfile}
+	  value=`${Cfile}`
+	  if  test x"${value}" == x""; then
+	      value=$3
+	  fi
+	  AC_MSG_RESULT($value)
+	  printf $value
+	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM
+	}
+
 extract_header_define() {
 	  AC_MSG_CHECKING(for $2 in $1)
 	  Cfile=$srcdir/extract_define.$2.${$}
@@ -1025,7 +1044,7 @@ CRM_DAEMON_DIR="${libexecdir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
 AC_SUBST(CRM_DAEMON_DIR)
 
-HB_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
+HB_DAEMON_DIR=`try_extract_header_define $GLUE_HEADER HA_LIBHBDIR $libdir/heartbeat`
 AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location for Heartbeat expects Pacemaker daemons to be in)
 AC_SUBST(HB_DAEMON_DIR)
 
