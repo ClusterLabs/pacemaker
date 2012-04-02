@@ -1024,6 +1024,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     action_t *start = NULL;
     node_t *chosen = NULL;
     GListPtr gIter = NULL;
+    int num_active_nodes = g_list_length(rsc->running_on);
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
@@ -1053,12 +1054,29 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    if (g_list_length(rsc->running_on) > 1) {
+    if (num_active_nodes == 2 &&
+        chosen &&
+        rsc->partial_migration_target &&
+        (chosen->details == rsc->partial_migration_target->details)) {
+
+        /* Here the chosen node is still the migration target from a partial
+         * migration. Attempt to continue the migration instead of recovering
+         * by stopping the resource everywhere and starting it on a single node. */
+        crm_trace("Attempting to continue with a partial migration to target %s from %s",
+            rsc->partial_migration_target->details->id,
+            rsc->partial_migration_source->details->id);
+
+        NoRoleChange(rsc,
+            rsc->partial_migration_source,
+            rsc->partial_migration_target,
+            data_set);
+
+    } else if (num_active_nodes > 1) {
         const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
         pe_proc_err("Resource %s (%s::%s) is active on %d nodes %s",
-                    rsc->id, class, type, g_list_length(rsc->running_on),
+                    rsc->id, class, type, num_active_nodes,
                     recovery2text(rsc->recovery_type));
         crm_warn("See %s for more information.",
                  "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
@@ -1070,6 +1088,11 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
             StopRsc(rsc, NULL, FALSE, data_set);
             rsc->role = RSC_ROLE_STOPPED;
         }
+
+        /* If by chance a partial migration is in process,
+         * but the migration target is not chosen still, clear all
+         * partial migration data.  */
+        rsc->partial_migration_source = rsc->partial_migration_target = NULL;
 
     } else if (rsc->running_on != NULL) {
         node_t *current = rsc->running_on->data;
@@ -1959,7 +1982,6 @@ NoRoleChange(resource_t * rsc, node_t * current, node_t * next, pe_working_set_t
         }
 
     } else {
-
         stop = stop_action(rsc, current, TRUE);
         start = start_action(rsc, next, TRUE);
         if (is_set(start->flags, pe_action_optional)) {
@@ -2001,8 +2023,13 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         node_t *current = (node_t *) gIter->data;
+        action_t *stop;
 
-        action_t *stop = stop_action(rsc, current, optional);
+        if (next && next->details != current->details) {
+            continue;
+        }
+
+        stop = stop_action(rsc, current, optional);
         if(is_not_set(rsc->flags, pe_rsc_managed)) {
             update_action_flags(stop, pe_action_runnable|pe_action_clear);
         }
@@ -2703,16 +2730,12 @@ at_stack_bottom(resource_t * rsc)
 }
 
 static action_t *
-get_first_named_action(resource_t *rsc, const char *action, gboolean only_valid, gboolean stop) 
+get_first_named_action(resource_t *rsc, const char *action, gboolean only_valid, node_t *current)
 {
     action_t *a = NULL;
-    node_t *current = NULL;
     GListPtr action_list = NULL;
     char *key = generate_op_key(rsc->id, action, 0);
 
-    if(stop && rsc->running_on) {
-        current = rsc->running_on->data;
-    }
     action_list = find_actions(rsc->actions, key, current);
 
     crm_free(key);
@@ -2737,10 +2760,11 @@ get_first_named_action(resource_t *rsc, const char *action, gboolean only_valid,
 }
 
 static void
-MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t * data_set) 
+MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t * data_set, gboolean partial)
 {
     action_t *to = NULL;
     action_t *from = NULL;
+    action_t *then = NULL;
     action_t *other = NULL;
     action_t *done = get_pseudo_op(STONITH_DONE, data_set);
 
@@ -2781,10 +2805,16 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
         return;
     }
 
-    crm_info("Migrating %s from %s to %s", rsc->id,
+    if (partial) {
+        crm_info("Completing partial migration from %s to %s", rsc->id,
              stop->node ? stop->node->details->uname : "unknown",
              start->node ? start->node->details->uname : "unknown");
-    
+    } else {
+        crm_info("Migrating %s from %s to %s", rsc->id,
+             stop->node ? stop->node->details->uname : "unknown",
+             start->node ? start->node->details->uname : "unknown");
+    }
+
     /* Preserve the stop to ensure the end state is sane on that node,
      * Make the start a pseudo op
      * Create migrate_to, have it depend on everything the stop did
@@ -2796,8 +2826,10 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
                                                      * but perhaps we should have it run anyway
                                                      */
 
-    to = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), RSC_MIGRATE, stop->node,
+    if (!partial) {
+       to = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), RSC_MIGRATE, stop->node,
                        FALSE, TRUE, data_set);
+    }
     from = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), RSC_MIGRATED, start->node,
                       FALSE, TRUE, data_set);
 
@@ -2812,13 +2844,15 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
      */
     from->priority = INFINITY;
 
-    order_actions(to, from, pe_order_optional);
+    if (!partial) {
+        order_actions(to, from, pe_order_optional);
+        add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, stop->node->details->uname);
+        add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_TARGET, start->node->details->uname);
+    }
+
+    then = to ? to : from;
     order_actions(from, stop, pe_order_optional);
-    order_actions(done, to, pe_order_optional);
-
-    add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, stop->node->details->uname);
-    add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_TARGET, start->node->details->uname);
-
+    order_actions(done, then, pe_order_optional);
     add_hash_param(from->meta, XML_LRM_ATTR_MIGRATE_SOURCE, stop->node->details->uname);
     add_hash_param(from->meta, XML_LRM_ATTR_MIGRATE_TARGET, start->node->details->uname);
 
@@ -2894,7 +2928,7 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
         order_actions(from, other, other_w->type);
     }
 #endif
-    /* migrate_to also needs anything that the stop needed to have completed too */
+    /* migrate 'then' action also needs anything that the stop needed to have completed too */
     for (gIter = stop->actions_before; gIter != NULL; gIter = gIter->next) {
         action_wrapper_t *other_w = (action_wrapper_t *) gIter->data;
 
@@ -2907,10 +2941,10 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
             continue;
         }
         crm_debug("Ordering %s before %s (stop)", other_w->action->uuid, stop->uuid);
-        order_actions(other, to, other_w->type);
+        order_actions(other, then, other_w->type);
     }
 
-    /* migrate_to also needs anything that the start needed to have completed too */
+    /* migrate 'then' action also needs anything that the start needed to have completed too */
     for (gIter = start->actions_before; gIter != NULL; gIter = gIter->next) {
         action_wrapper_t *other_w = (action_wrapper_t *) gIter->data;
 
@@ -2922,7 +2956,7 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
             continue;
         }
         crm_debug("Ordering %s before %s (start)", other_w->action->uuid, stop->uuid);
-        order_actions(other, to, other_w->type);
+        order_actions(other, then, other_w->type);
     }
 }
 
@@ -2944,12 +2978,12 @@ ReloadRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t * 
         return;
     }
 
-    action = get_first_named_action(rsc, RSC_PROMOTE, TRUE, FALSE);
+    action = get_first_named_action(rsc, RSC_PROMOTE, TRUE, NULL);
     if (action && is_set(action->flags, pe_action_optional) == FALSE) {
         update_action_flags(action, pe_action_pseudo);
     }
 
-    action = get_first_named_action(rsc, RSC_DEMOTE, TRUE, FALSE);
+    action = get_first_named_action(rsc, RSC_DEMOTE, TRUE, NULL);
     if (action && is_set(action->flags, pe_action_optional) == FALSE) {
         rewrite = action;
         update_action_flags(stop, pe_action_pseudo);
@@ -2975,6 +3009,7 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
     GListPtr gIter = NULL;
     action_t *stop = NULL;
     action_t *start = NULL;
+    gboolean partial = FALSE;
 
     if (rsc->children) {
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
@@ -2990,16 +3025,27 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
 
     crm_trace("Processing %s", rsc->id);
 
+    if (rsc->partial_migration_target) {
+        start = get_first_named_action(rsc, RSC_START, TRUE, rsc->partial_migration_target);
+        stop = get_first_named_action(rsc, RSC_STOP, TRUE, rsc->partial_migration_source);
+        if (start && stop) {
+            partial = TRUE;
+        }
+    }
+
+    if (!partial) {
+        stop = get_first_named_action(rsc, RSC_STOP, TRUE, rsc->running_on ? rsc->running_on->data : NULL);
+        start = get_first_named_action(rsc, RSC_START, TRUE, NULL);
+    }
+
     if (is_not_set(rsc->flags, pe_rsc_managed)
         || is_set(rsc->flags, pe_rsc_failed)
         || is_set(rsc->flags, pe_rsc_start_pending)
-        || rsc->next_role < RSC_ROLE_STARTED || g_list_length(rsc->running_on) != 1) {
+        || rsc->next_role < RSC_ROLE_STARTED
+        || ((g_list_length(rsc->running_on) != 1) && !partial)) {
         crm_trace("%s: general resource state: flags=0x%.16llx", rsc->id, rsc->flags);
         return;
     }
-
-    start = get_first_named_action(rsc, RSC_START, TRUE, FALSE);
-    stop = get_first_named_action(rsc, RSC_STOP, TRUE, TRUE);
 
     if(stop == NULL) {
         return;
@@ -3008,7 +3054,7 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
         ReloadRsc(rsc, stop, start, data_set);
 
     } else if(is_not_set(stop->flags, pe_action_optional)) {
-        MigrateRsc(rsc, stop, start, data_set);
+        MigrateRsc(rsc, stop, start, data_set, partial);
     }
 }
 
