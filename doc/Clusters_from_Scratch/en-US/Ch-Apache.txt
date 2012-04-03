@@ -12,116 +12,118 @@ Before continuing, we need to make sure Apache is installed on both
 hosts.
 
 [source,Bash]
------
-# yum install -y httpdSetting up Install Process
+.....
+# yum install -y httpd
+Loaded plugins: langpacks, presto, refresh-packagekit
+fedora/metalink                                               | 2.6 kB     00:00     
+updates/metalink                                              | 3.2 kB     00:00     
+updates-testing/metalink                                      |  41 kB     00:00     
 Resolving Dependencies
 --> Running transaction check
----> Package httpd.x86_64 0:2.2.13-2.fc12 set to be updated
---> Processing Dependency: httpd-tools = 2.2.13-2.fc12 for package: httpd-2.2.13-2.fc12.x86_64
---> Processing Dependency: apr-util-ldap for package: httpd-2.2.13-2.fc12.x86_64
---> Processing Dependency: /etc/mime.types for package: httpd-2.2.13-2.fc12.x86_64
---> Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.2.13-2.fc12.x86_64
---> Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.2.13-2.fc12.x86_64
+---> Package httpd.x86_64 0:2.2.22-3.fc17 will be installed
+--> Processing Dependency: httpd-tools = 2.2.22-3.fc17 for package: httpd-2.2.22-3.fc17.x86_64
+--> Processing Dependency: apr-util-ldap for package: httpd-2.2.22-3.fc17.x86_64
+--> Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.2.22-3.fc17.x86_64
+--> Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.2.22-3.fc17.x86_64
 --> Running transaction check
----> Package apr.x86_64 0:1.3.9-2.fc12 set to be updated
----> Package apr-util.x86_64 0:1.3.9-2.fc12 set to be updated
----> Package apr-util-ldap.x86_64 0:1.3.9-2.fc12 set to be updated
----> Package httpd-tools.x86_64 0:2.2.13-2.fc12 set to be updated
----> Package mailcap.noarch 0:2.1.30-1.fc12 set to be updated
+---> Package apr.x86_64 0:1.4.6-1.fc17 will be installed
+---> Package apr-util.x86_64 0:1.4.1-2.fc17 will be installed
+---> Package apr-util-ldap.x86_64 0:1.4.1-2.fc17 will be installed
+---> Package httpd-tools.x86_64 0:2.2.22-3.fc17 will be installed
 --> Finished Dependency Resolution
 
 Dependencies Resolved
 
-=======================================================================================
-Package        Arch       Version        Repository     Size
-=======================================================================================
+=====================================================================================
+ Package             Arch         Version                Repository             Size
+=====================================================================================
 Installing:
-httpd        x86_64      2.2.13-2.fc12      rawhide      735 k
+ httpd               x86_64       2.2.22-3.fc17          updates-testing       823 k
 Installing for dependencies:
-apr         x86_64      1.3.9-2.fc12       rawhide      117 k
-apr-util      x86_64      1.3.9-2.fc12       rawhide      84 k
-apr-util-ldap    x86_64      1.3.9-2.fc12       rawhide      15 k
-httpd-tools     x86_64      2.2.13-2.fc12      rawhide      63 k
-mailcap       noarch      2.1.30-1.fc12      rawhide      25 k
+ apr                 x86_64       1.4.6-1.fc17           fedora                 99 k
+ apr-util            x86_64       1.4.1-2.fc17           fedora                 78 k
+ apr-util-ldap       x86_64       1.4.1-2.fc17           fedora                 17 k
+ httpd-tools         x86_64       2.2.22-3.fc17          updates-testing        74 k
 
 Transaction Summary
-=======================================================================================
-Install    6 Package(s)
-Upgrade    0 Package(s)
+=====================================================================================
+Install  1 Package (+4 Dependent packages)
 
-Total download size: 1.0 M
+Total download size: 1.1 M
+Installed size: 3.5 M
 Downloading Packages:
-(1/6): apr-1.3.9-2.fc12.x86_64.rpm                 | 117 kB   00:00   
-(2/6): apr-util-1.3.9-2.fc12.x86_64.rpm                | 84 kB   00:00   
-(3/6): apr-util-ldap-1.3.9-2.fc12.x86_64.rpm            | 15 kB   00:00   
-(4/6): httpd-2.2.13-2.fc12.x86_64.rpm                 | 735 kB   00:00   
-(5/6): httpd-tools-2.2.13-2.fc12.x86_64.rpm              | 63 kB   00:00   
-(6/6): mailcap-2.1.30-1.fc12.noarch.rpm                | 25 kB   00:00   
- ----------------------------------------------------------------------------------------
-Total                           875 kB/s | 1.0 MB   00:01   
-Running rpm_check_debug
+(1/5): apr-1.4.6-1.fc17.x86_64.rpm                            |  99 kB     00:00     
+(2/5): apr-util-1.4.1-2.fc17.x86_64.rpm                       |  78 kB     00:00     
+(3/5): apr-util-ldap-1.4.1-2.fc17.x86_64.rpm                  |  17 kB     00:00     
+(4/5): httpd-2.2.22-3.fc17.x86_64.rpm                         | 823 kB     00:01     
+(5/5): httpd-tools-2.2.22-3.fc17.x86_64.rpm                   |  74 kB     00:00     
+-------------------------------------------------------------------------------------
+Total                                                238 kB/s | 1.1 MB     00:04     
+Running Transaction Check
 Running Transaction Test
-Finished Transaction Test
 Transaction Test Succeeded
 Running Transaction
- Installing   : apr-1.3.9-2.fc12.x86_64                      1/6 
- Installing   : apr-util-1.3.9-2.fc12.x86_64                  2/6 
- Installing   : apr-util-ldap-1.3.9-2.fc12.x86_64                 3/6 
- Installing   : httpd-tools-2.2.13-2.fc12.x86_64                4/6 
- Installing   : mailcap-2.1.30-1.fc12.noarch                  5/6 
- Installing   : httpd-2.2.13-2.fc12.x86_64                   6/6 
+  Installing : apr-1.4.6-1.fc17.x86_64                                           1/5 
+  Installing : apr-util-1.4.1-2.fc17.x86_64                                      2/5 
+  Installing : apr-util-ldap-1.4.1-2.fc17.x86_64                                 3/5 
+  Installing : httpd-tools-2.2.22-3.fc17.x86_64                                  4/5 
+  Installing : httpd-2.2.22-3.fc17.x86_64                                        5/5 
+  Verifying  : apr-util-ldap-1.4.1-2.fc17.x86_64                                 1/5 
+  Verifying  : httpd-tools-2.2.22-3.fc17.x86_64                                  2/5 
+  Verifying  : apr-util-1.4.1-2.fc17.x86_64                                      3/5 
+  Verifying  : apr-1.4.6-1.fc17.x86_64                                           4/5 
+  Verifying  : httpd-2.2.22-3.fc17.x86_64                                        5/5 
 
 Installed:
- httpd.x86_64 0:2.2.13-2.fc12                              
+  httpd.x86_64 0:2.2.22-3.fc17                                                       
 
 Dependency Installed:
- apr.x86_64 0:1.3.9-2.fc12      apr-util.x86_64 0:1.3.9-2.fc12
- apr-util-ldap.x86_64 0:1.3.9-2.fc12 httpd-tools.x86_64 0:2.2.13-2.fc12
- mailcap.noarch 0:2.1.30-1.fc12 
+  apr.x86_64 0:1.4.6-1.fc17                 apr-util.x86_64 0:1.4.1-2.fc17          
+  apr-util-ldap.x86_64 0:1.4.1-2.fc17       httpd-tools.x86_64 0:2.2.22-3.fc17      
 
 Complete!
------
+.....
 
 Also, we need the wget tool in order for the cluster to be able to check
 the status of the Apache server.
 
 [source,Bash]
------
-# yum install -y wgetSetting up Install Process
+.....
+# yum install -y wget
+Loaded plugins: langpacks, presto, refresh-packagekit
 Resolving Dependencies
 --> Running transaction check
----> Package wget.x86_64 0:1.11.4-5.fc12 set to be updated
+---> Package wget.x86_64 0:1.13.4-2.fc17 will be installed
 --> Finished Dependency Resolution
 
 Dependencies Resolved
 
-===========================================================================================
-Package    Arch       Version           Repository        Size
-===========================================================================================
+=====================================================================================
+ Package         Arch              Version                   Repository         Size
+=====================================================================================
 Installing:
-wget      x86_64     1.11.4-5.fc12         rawhide        393 k
+ wget            x86_64            1.13.4-2.fc17             fedora            495 k
 
 Transaction Summary
-===========================================================================================
-Install    1 Package(s)
-Upgrade    0 Package(s)
+=====================================================================================
+Install  1 Package
 
-Total download size: 393 k
+Total download size: 495 k
+Installed size: 1.8 M
 Downloading Packages:
-wget-1.11.4-5.fc12.x86_64.rpm                      | 393 kB   00:00   
-Running rpm_check_debug
+wget-1.13.4-2.fc17.x86_64.rpm                                 | 495 kB     00:01     
+Running Transaction Check
 Running Transaction Test
-Finished Transaction Test
 Transaction Test Succeeded
 Running Transaction
- Installing   : wget-1.11.4-5.fc12.x86_64                      1/1 
+  Installing : wget-1.13.4-2.fc17.x86_64                                         1/1 
+  Verifying  : wget-1.13.4-2.fc17.x86_64                                         1/1 
 
 Installed:
- wget.x86_64 0:1.11.4-5.fc12
+  wget.x86_64 0:1.13.4-2.fc17                                                        
 
 Complete!
------
-
+.....
 
 == Preparation ==
 
@@ -131,10 +133,11 @@ there.
 
 [source,Bash]
 -----
-[root@pcmk-1 ~]# cat <<-END >/var/www/html/index.html <html>
+# cat <<-END >/var/www/html/index.html
+ <html>
  <body>My Test Site - pcmk-1</body>
  </html>
- END
+END
 -----
 
 For the moment, we will simplify things by serving up only a static site
@@ -153,7 +156,7 @@ again on pcmk-2.
 
 In order to monitor the health of your Apache instance, and recover it if
 it fails, the resource agent used by Pacemaker assumes the server-status
-URL is available. Look for the following in /etc/httpd/conf/httpd.conf
+URL is available. Look for the following in '/etc/httpd/conf/httpd.conf'
 and make sure it is not disabled or commented out:
 
 .....
@@ -177,45 +180,83 @@ minute that apache is still running.
 
 [source,Bash]
 -----
-# crm configure primitive WebSite ocf:heartbeat:apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=1min
+# crm configure primitive WebSite ocf:heartbeat:apache \
+     params configfile=/etc/httpd/conf/httpd.conf \
+     op monitor interval=1min
+WARNING: WebSite: default timeout 20s for start is smaller than the advised 40s
+WARNING: WebSite: default timeout 20s for stop is smaller than the advised 60s
+-----
+
+The easiest way resolve this, is to change the default:
+
+[source,Bash]
+-----
+# crm configure op_defaults timeout=240s
 # crm configure show
-node pcmk-1
-node pcmk-2primitive WebSite ocf:heartbeat:apache \ params configfile="/etc/httpd/conf/httpd.conf" \ op monitor interval="1min"primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" \
-    op monitor interval="30s"
+node $id="1702537408" pcmk-1
+node $id="1719314624" pcmk-2
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+	params ip="192.168.122.120" cidr_netmask="32" \
+	op monitor interval="30s"
+primitive WebSite ocf:heartbeat:apache \
+	params configfile="/etc/httpd/conf/httpd.conf" \
+	op monitor interval="1min"
 property $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="false" \
-    no-quorum-policy="ignore"
+	dc-version="1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff" \
+	cluster-infrastructure="corosync" \
+	stonith-enabled="false" \
+	no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
+	resource-stickiness="100"
+op_defaults $id="op-options" \
+	timeout="240s"
 -----
 
 After a short delay, we should see the cluster start apache
 
 [source,Bash]
 -----
-# crm_mon
+# crm_mon -1
 ============
-Last updated: Fri Aug 28 16:12:49 2009
-Stack: openais
-Current DC: pcmk-2 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
+Last updated: Tue Apr  3 11:54:29 2012
+Last change: Tue Apr  3 11:54:26 2012 via crmd on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1702537408)	- partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
 2 Resources configured.
 ============
 
 Online: [ pcmk-1 pcmk-2 ]
 
-ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2
-WebSite    (ocf::heartbeat:apache):    Started pcmk-1
+ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+WebSite (ocf::heartbeat:apache):        Started pcmk-1
 -----
 
 Wait a moment, the WebSite resource isn't running on the same host as our
 IP address!
 
+[NOTE]
+======
+If, in the `crm_mon` output, you see:
+
+....
+Failed actions:
+    WebSite_start_0 (node=pcmk-2, call=301, rc=1, status=complete): unknown error
+....
+
+Then you've likely not enabled the status URL correctly.
+You can check if this is the problem by running:
+
+....
+wget http://127.0.0.1/server-status
+....
+
+If you see +Connection refused+ in the output, then this is indeed the
+problem.  Check to ensure that +Allow from 127.0.0.1+ is present for
+the +<Location /server-status>+ block.
+
+======
 
 == Ensuring Resources Run on the Same Host ==
 
@@ -252,35 +293,40 @@ location of +ClusterIP+ before choosing a location for +WebSite+.
 -----
 # crm configure colocation website-with-ip INFINITY: WebSite ClusterIP
 # crm configure show
-node pcmk-1
-node pcmk-2
-primitive WebSite ocf:heartbeat:apache \
-    params configfile="/etc/httpd/conf/httpd.conf" \
-    op monitor interval="1min"
+node $id="1702537408" pcmk-1
+node $id="1719314624" pcmk-2
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" \
-    op monitor interval="30s"colocation website-with-ip inf: WebSite ClusterIPproperty $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="false" \
-    no-quorum-policy="ignore"
+	params ip="192.168.122.120" cidr_netmask="32" \
+	op monitor interval="30s"
+primitive WebSite ocf:heartbeat:apache \
+	params configfile="/etc/httpd/conf/httpd.conf" \
+	op monitor interval="1min"
+colocation website-with-ip inf: WebSite ClusterIP
+property $id="cib-bootstrap-options" \
+	dc-version="1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff" \
+	cluster-infrastructure="corosync" \
+	stonith-enabled="false" \
+	no-quorum-policy="ignore" \
+	last-lrm-refresh="1333446866"
 rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
-# crm_mon
+	resource-stickiness="100"
+op_defaults $id="op-options" \
+	timeout="240s"
+# crm_mon -1
 ============
-Last updated: Fri Aug 28 16:14:34 2009
-Stack: openais
-Current DC: pcmk-2 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
+Last updated: Tue Apr  3 11:57:13 2012
+Last change: Tue Apr  3 11:56:10 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (1719314624) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
 2 Resources configured.
 ============
 
 Online: [ pcmk-1 pcmk-2 ]
 
-ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2
-WebSite    (ocf::heartbeat:apache):    Started pcmk-2
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-2
 -----
 
 == Controlling Resource Start/Stop Ordering ==
@@ -298,22 +344,26 @@ resources in the order we need them to start.
 -----
 # crm configure order apache-after-ip mandatory: ClusterIP WebSite
 # crm configure show
-node pcmk-1
-node pcmk-2
-primitive WebSite ocf:heartbeat:apache \
-    params configfile="/etc/httpd/conf/httpd.conf" \
-    op monitor interval="1min"
+node $id="1702537408" pcmk-1
+node $id="1719314624" pcmk-2
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" \
-    op monitor interval="30s"
-colocation website-with-ip inf: WebSite ClusterIPorder apache-after-ip inf: ClusterIP WebSiteproperty $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="false" \
-    no-quorum-policy="ignore"
+	params ip="192.168.122.120" cidr_netmask="32" \
+	op monitor interval="30s"
+primitive WebSite ocf:heartbeat:apache \
+	params configfile="/etc/httpd/conf/httpd.conf" \
+	op monitor interval="1min"
+colocation website-with-ip inf: WebSite ClusterIP
+order apache-after-ip inf: ClusterIP WebSite
+property $id="cib-bootstrap-options" \
+	dc-version="1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff" \
+	cluster-infrastructure="corosync" \
+	stonith-enabled="false" \
+	no-quorum-policy="ignore" \
+	last-lrm-refresh="1333446866"
 rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
+	resource-stickiness="100"
+op_defaults $id="op-options" \
+	timeout="240s"
 -----
 
 == Specifying a Preferred Location ==
@@ -330,36 +380,50 @@ the host's name.
 [source,Bash]
 -----
 # crm configure location prefer-pcmk-1 WebSite 50: pcmk-1
+WARNING: prefer-pcmk-1: referenced node pcmk-1 does not exist
+-----
+
+This warning should be ignored.
+
+[source,Bash]
+-----
 # crm configure show
-node pcmk-1
-node pcmk-2
-primitive WebSite ocf:heartbeat:apache \
-    params configfile="/etc/httpd/conf/httpd.conf" \
-    op monitor interval="1min"
+node $id="1702537408" pcmk-1
+node $id="1719314624" pcmk-2
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" \
-    op monitor interval="30s"location prefer-pcmk-1 WebSite 50: pcmk-1colocation website-with-ip inf: WebSite ClusterIP
+	params ip="192.168.122.120" cidr_netmask="32" \
+	op monitor interval="30s"
+primitive WebSite ocf:heartbeat:apache \
+	params configfile="/etc/httpd/conf/httpd.conf" \
+	op monitor interval="1min"
+location prefer-pcmk-1 WebSite 50: pcmk-1
+colocation website-with-ip inf: WebSite ClusterIP
+order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="false" \
-    no-quorum-policy="ignore"
+	dc-version="1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff" \
+	cluster-infrastructure="corosync" \
+	stonith-enabled="false" \
+	no-quorum-policy="ignore" \
+	last-lrm-refresh="1333446866"
 rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
-# crm_mon
+	resource-stickiness="100"
+op_defaults $id="op-options" \
+	timeout="240s"
+# crm_mon -1
 ============
-Last updated: Fri Aug 28 16:17:35 2009
-Stack: openais
-Current DC: pcmk-2 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
+Last updated: Tue Apr  3 12:02:14 2012
+Last change: Tue Apr  3 11:59:42 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (1719314624) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
 2 Resources configured.
 ============
 
 Online: [ pcmk-1 pcmk-2 ]
 
-ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2WebSite    (ocf::heartbeat:apache):    Started pcmk-2
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-2
 -----
 
 Wait a minute, the resources are still on pcmk-2! 
@@ -368,16 +432,25 @@ Even though we now prefer pcmk-1 over pcmk-2, that preference is
 (intentionally) less than the resource stickiness (how much we
 preferred not to have unnecessary downtime). 
 
-To see the current placement scores, you can use a tool called ptest
+To see the current placement scores, you can use a tool called crm_simulate
 
-....
-ptest -sL
-....
+[source,Bash]
+----
+# crm_simulate -sL
+Current cluster status:
+Online: [ pcmk-1 pcmk-2 ]
 
-[NOTE]
-=======
-Include output There is a way to force them to move though...
-=======
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-2
+
+Allocation scores:
+native_color: ClusterIP allocation score on pcmk-1: 50
+native_color: ClusterIP allocation score on pcmk-2: 200
+native_color: WebSite allocation score on pcmk-1: -INFINITY
+native_color: WebSite allocation score on pcmk-2: 100
+
+Transition Summary:
+----
 
 == Manually Moving Resources Around the Cluster ==
 
@@ -390,20 +463,21 @@ location, we'll do the rest.
 [source,Bash]
 -----
 # crm resource move WebSite pcmk-1
-# crm_mon
+# crm_mon -1
 ============
-Last updated: Fri Aug 28 16:19:24 2009
-Stack: openais
-Current DC: pcmk-2 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
+Last updated: Tue Apr  3 12:03:41 2012
+Last change: Tue Apr  3 12:03:37 2012 via crm_resource on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (1719314624) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
 2 Resources configured.
 ============
 
 Online: [ pcmk-1 pcmk-2 ]
 
-ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-1
-WebSite    (ocf::heartbeat:apache):    Started pcmk-1
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
 -----
 
 Notice how the colocation rule we created has ensured that ClusterIP was also moved to pcmk-1.
@@ -412,31 +486,33 @@ For the curious, we can see the effect of this command by examining the configur
 [source,Bash]
 -----
 # crm configure show
-node pcmk-1
-node pcmk-2
-primitive WebSite ocf:heartbeat:apache \
-    params configfile="/etc/httpd/conf/httpd.conf" \
-    op monitor interval="1min"
+node $id="1702537408" pcmk-1
+node $id="1719314624" pcmk-2
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" \
-    op monitor interval="30s"
+	params ip="192.168.122.120" cidr_netmask="32" \
+	op monitor interval="30s"
+primitive WebSite ocf:heartbeat:apache \
+	params configfile="/etc/httpd/conf/httpd.conf" \
+	op monitor interval="1min"
 location cli-prefer-WebSite WebSite \
-    rule $id="cli-prefer-rule-WebSite" inf: #uname eq pcmk-1
+	rule $id="cli-prefer-rule-WebSite" inf: #uname eq pcmk-1
 location prefer-pcmk-1 WebSite 50: pcmk-1
 colocation website-with-ip inf: WebSite ClusterIP
+order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="false" \
-    no-quorum-policy="ignore"
+	dc-version="1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff" \
+	cluster-infrastructure="corosync" \
+	stonith-enabled="false" \
+	no-quorum-policy="ignore" \
+	last-lrm-refresh="1333446866"
 rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
+	resource-stickiness="100"
+op_defaults $id="op-options" \
+	timeout="240s"
 -----
 
-Highlighted is the automated constraint used to move the resources to
-pcmk-1
-
+The automated constraint used to move the resources to +pcmk-1+ is the
+line beginning with +location cli-prefer-WebSite+.
 
 === Giving Control Back to the Cluster ===
 
@@ -449,24 +525,27 @@ configured a default stickiness, the resources will remain on pcmk-1.
 -----
 # crm resource unmove WebSite
 # crm configure show
-node pcmk-1
-node pcmk-2
-primitive WebSite ocf:heartbeat:apache \
-    params configfile="/etc/httpd/conf/httpd.conf" \
-    op monitor interval="1min"
+node $id="1702537408" pcmk-1
+node $id="1719314624" pcmk-2
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" \
-    op monitor interval="30s"
+	params ip="192.168.122.120" cidr_netmask="32" \
+	op monitor interval="30s"
+primitive WebSite ocf:heartbeat:apache \
+	params configfile="/etc/httpd/conf/httpd.conf" \
+	op monitor interval="1min"
 location prefer-pcmk-1 WebSite 50: pcmk-1
 colocation website-with-ip inf: WebSite ClusterIP
+order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="false" \
-    no-quorum-policy="ignore"
+	dc-version="1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff" \
+	cluster-infrastructure="corosync" \
+	stonith-enabled="false" \
+	no-quorum-policy="ignore" \
+	last-lrm-refresh="1333446866"
 rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
+	resource-stickiness="100"
+op_defaults $id="op-options" \
+	timeout="240s"
 -----
 
 Note that the automated constraint is now gone. If we check the cluster
@@ -477,16 +556,17 @@ on pcmk-1.
 -----
 # crm_mon
 ============
-Last updated: Fri Aug 28 16:20:53 2009
-Stack: openais
-Current DC: pcmk-2 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
+Last updated: Tue Apr  3 12:05:08 2012
+Last change: Tue Apr  3 12:03:37 2012 via crm_resource on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (1719314624) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
 2 Resources configured.
 ============
 
 Online: [ pcmk-1 pcmk-2 ]
 
- ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-1 
- WebSite    (ocf::heartbeat:apache):    Started pcmk-1
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
 -----

@@ -11,461 +11,67 @@ multiple Primaries, we can also use that.
 The only hitch is that we need to use a cluster-aware filesystem. The
 one we used earlier with DRBD, ext4, is not one of those. Both OCFS2
 and GFS2 are supported, however here we will use GFS2 which comes with
-Fedora 13.
-
-We'll also need to use CMAN for Cluster Membership and Quorum instead
-of our Corosync plugin.
-
-
-== Adding CMAN Support ==
-
-http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Suite_Overview/index.html#s2-clumembership-overview-CSO[CMAN v3] is a Corosync plugin that monitors the names and number of active
-cluster nodes in order to deliver membership and quorum information to
-clients (such as the Pacemaker daemons).
-
-In a traditional Corosync-Pacemaker cluster, a Pacemaker plugin is
-loaded to provide membership and quorum information. The motivation
-for wanting to use CMAN for this instead, is to ensure all elements of
-the cluster stack are making decisions based on the same membership
-and quorum data.
-footnote:[A failure to do this can lead to what is called 'internal
-split-brain' - a situation where different parts of the stack disagree
-about whether some nodes are alive or dead - which quickly leads to
-unnecessary down-time and/or data corruption.]
-
-In the case of GFS2, the key pieces are the dlm_controld and
-gfs_controld helpers which act as the glue between the filesystem and
-the cluster software. Supporting CMAN enables us to use the versions
-already being shipped by most distributions (since CMAN has been
-around longer than Pacemaker and is part of the Red Hat cluster
-stack).
-
-[WARNING]
-=========
-Ensure Corosync and Pacemaker are stopped on all nodes before continuing
-=========
-
-[WARNING]
-=========
-Be sure to disable the Pacemaker plugin before continuing with this
-section. In most cases, this can be achieved by removing
-/etc/corosync/service.d/pcmk and stopping Corosync.
-=========
-
+Fedora 17.
 
 === Installing the required Software ===
 
 [source,Bash]
 -----
-# yum install -y cman gfs2-utils gfs2-cluster
-Loaded plugins: auto-update-debuginfo
-Setting up Install Process
+# yum install -y gfs2-utils dlm
+Loaded plugins: langpacks, presto, refresh-packagekit
 Resolving Dependencies
 --> Running transaction check
----> Package cman.x86_64 0:3.1.7-1.fc15 will be installed
---> Processing Dependency: modcluster >= 0.18.1-1 for package: cman-3.1.7-1.fc15.x86_64
---> Processing Dependency: fence-agents >= 3.1.5-1 for package: cman-3.1.7-1.fc15.x86_64
---> Processing Dependency: openais >= 1.1.4-1 for package: cman-3.1.7-1.fc15.x86_64
---> Processing Dependency: ricci >= 0.18.1-1 for package: cman-3.1.7-1.fc15.x86_64
---> Processing Dependency: libSaCkpt.so.3(OPENAIS_CKPT_B.01.01)(64bit) for package: cman-3.1.7-1.fc15.x86_64
---> Processing Dependency: libSaCkpt.so.3()(64bit) for package: cman-3.1.7-1.fc15.x86_64
----> Package gfs2-cluster.x86_64 0:3.1.1-2.fc15 will be installed
----> Package gfs2-utils.x86_64 0:3.1.1-2.fc15 will be installed
+---> Package dlm.x86_64 0:3.99.1-4.fc17 will be installed
+--> Processing Dependency: dlm-lib = 3.99.1-4.fc17 for package: dlm-3.99.1-4.fc17.x86_64
+--> Processing Dependency: libdlmcontrol.so.3()(64bit) for package: dlm-3.99.1-4.fc17.x86_64
+--> Processing Dependency: libdlm.so.3()(64bit) for package: dlm-3.99.1-4.fc17.x86_64
+---> Package gfs2-utils.x86_64 0:3.1.4-3.fc17 will be installed
 --> Running transaction check
----> Package fence-agents.x86_64 0:3.1.5-1.fc15 will be installed
---> Processing Dependency: /usr/bin/virsh for package: fence-agents-3.1.5-1.fc15.x86_64
---> Processing Dependency: net-snmp-utils for package: fence-agents-3.1.5-1.fc15.x86_64
---> Processing Dependency: sg3_utils for package: fence-agents-3.1.5-1.fc15.x86_64
---> Processing Dependency: perl(Net::Telnet) for package: fence-agents-3.1.5-1.fc15.x86_64
---> Processing Dependency: /usr/bin/ipmitool for package: fence-agents-3.1.5-1.fc15.x86_64
---> Processing Dependency: perl-Net-Telnet for package: fence-agents-3.1.5-1.fc15.x86_64
---> Processing Dependency: pexpect for package: fence-agents-3.1.5-1.fc15.x86_64
---> Processing Dependency: pyOpenSSL for package: fence-agents-3.1.5-1.fc15.x86_64
---> Processing Dependency: python-suds for package: fence-agents-3.1.5-1.fc15.x86_64
----> Package modcluster.x86_64 0:0.18.7-1.fc15 will be installed
---> Processing Dependency: oddjob for package: modcluster-0.18.7-1.fc15.x86_64
----> Package openais.x86_64 0:1.1.4-2.fc15 will be installed
----> Package openaislib.x86_64 0:1.1.4-2.fc15 will be installed
----> Package ricci.x86_64 0:0.18.7-1.fc15 will be installed
---> Processing Dependency: parted for package: ricci-0.18.7-1.fc15.x86_64
---> Processing Dependency: nss-tools for package: ricci-0.18.7-1.fc15.x86_64
---> Running transaction check
----> Package ipmitool.x86_64 0:1.8.11-6.fc15 will be installed
----> Package libvirt-client.x86_64 0:0.8.8-7.fc15 will be installed
---> Processing Dependency: libnetcf.so.1(NETCF_1.3.0)(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: cyrus-sasl-md5 for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: gettext for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: nc for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: libnuma.so.1(libnuma_1.1)(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: libnuma.so.1(libnuma_1.2)(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: libnetcf.so.1(NETCF_1.2.0)(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: gnutls-utils for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: libnetcf.so.1(NETCF_1.0.0)(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: libxenstore.so.3.0()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: libyajl.so.1()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: libnl.so.1()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: libnuma.so.1()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: libaugeas.so.0()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
---> Processing Dependency: libnetcf.so.1()(64bit) for package: libvirt-client-0.8.8-7.fc15.x86_64
----> Package net-snmp-utils.x86_64 1:5.6.1-7.fc15 will be installed
----> Package nss-tools.x86_64 0:3.12.10-6.fc15 will be installed
----> Package oddjob.x86_64 0:0.31-2.fc15 will be installed
----> Package parted.x86_64 0:2.3-10.fc15 will be installed
----> Package perl-Net-Telnet.noarch 0:3.03-12.fc15 will be installed
----> Package pexpect.noarch 0:2.3-6.fc15 will be installed
----> Package pyOpenSSL.x86_64 0:0.10-3.fc15 will be installed
----> Package python-suds.noarch 0:0.3.9-3.fc15 will be installed
----> Package sg3_utils.x86_64 0:1.29-3.fc15 will be installed
---> Processing Dependency: sg3_utils-libs = 1.29-3.fc15 for package: sg3_utils-1.29-3.fc15.x86_64
---> Processing Dependency: libsgutils2.so.2()(64bit) for package: sg3_utils-1.29-3.fc15.x86_64
---> Running transaction check
----> Package augeas-libs.x86_64 0:0.9.0-1.fc15 will be installed
----> Package cyrus-sasl-md5.x86_64 0:2.1.23-18.fc15 will be installed
----> Package gettext.x86_64 0:0.18.1.1-7.fc15 will be installed
---> Processing Dependency: libgomp.so.1(GOMP_1.0)(64bit) for package: gettext-0.18.1.1-7.fc15.x86_64
---> Processing Dependency: libgettextlib-0.18.1.so()(64bit) for package: gettext-0.18.1.1-7.fc15.x86_64
---> Processing Dependency: libgettextsrc-0.18.1.so()(64bit) for package: gettext-0.18.1.1-7.fc15.x86_64
---> Processing Dependency: libgomp.so.1()(64bit) for package: gettext-0.18.1.1-7.fc15.x86_64
----> Package gnutls-utils.x86_64 0:2.10.5-1.fc15 will be installed
----> Package libnl.x86_64 0:1.1-14.fc15 will be installed
----> Package nc.x86_64 0:1.100-3.fc15 will be installed
---> Processing Dependency: libbsd.so.0(LIBBSD_0.0)(64bit) for package: nc-1.100-3.fc15.x86_64
---> Processing Dependency: libbsd.so.0(LIBBSD_0.2)(64bit) for package: nc-1.100-3.fc15.x86_64
---> Processing Dependency: libbsd.so.0()(64bit) for package: nc-1.100-3.fc15.x86_64
----> Package netcf-libs.x86_64 0:0.1.9-1.fc15 will be installed
----> Package numactl.x86_64 0:2.0.7-1.fc15 will be installed
----> Package sg3_utils-libs.x86_64 0:1.29-3.fc15 will be installed
----> Package xen-libs.x86_64 0:4.1.1-3.fc15 will be installed
---> Processing Dependency: xen-licenses for package: xen-libs-4.1.1-3.fc15.x86_64
----> Package yajl.x86_64 0:1.0.11-1.fc15 will be installed
---> Running transaction check
----> Package gettext-libs.x86_64 0:0.18.1.1-7.fc15 will be installed
----> Package libbsd.x86_64 0:0.2.0-4.fc15 will be installed
----> Package libgomp.x86_64 0:4.6.1-9.fc15 will be installed
----> Package xen-licenses.x86_64 0:4.1.1-3.fc15 will be installed
+---> Package dlm-lib.x86_64 0:3.99.1-4.fc17 will be installed
 --> Finished Dependency Resolution
 
 Dependencies Resolved
 
-=============================================================================
- Package              Arch        Version                 Repository    Size
-=============================================================================
+=====================================================================================
+ Package             Arch            Version          Repository                Size
+=====================================================================================
 Installing:
- cman                 x86_64      3.1.7-1.fc15            updates      366 k
- gfs2-cluster         x86_64      3.1.1-2.fc15            fedora        69 k
- gfs2-utils           x86_64      3.1.1-2.fc15            fedora       222 k
+ dlm                 x86_64          3.99.1-4.fc17    updates-testing           77 k
+ gfs2-utils          x86_64          3.1.4-3.fc17     fedora                   214 k
 Installing for dependencies:
- augeas-libs          x86_64      0.9.0-1.fc15            updates      311 k
- cyrus-sasl-md5       x86_64      2.1.23-18.fc15          updates       46 k
- fence-agents         x86_64      3.1.5-1.fc15            updates      186 k
- gettext              x86_64      0.18.1.1-7.fc15         fedora       1.0 M
- gettext-libs         x86_64      0.18.1.1-7.fc15         fedora       610 k
- gnutls-utils         x86_64      2.10.5-1.fc15           fedora       101 k
- ipmitool             x86_64      1.8.11-6.fc15           fedora       273 k
- libbsd               x86_64      0.2.0-4.fc15            fedora        37 k
- libgomp              x86_64      4.6.1-9.fc15            updates       95 k
- libnl                x86_64      1.1-14.fc15             fedora       118 k
- libvirt-client       x86_64      0.8.8-7.fc15            updates      2.4 M
- modcluster           x86_64      0.18.7-1.fc15           fedora       187 k
- nc                   x86_64      1.100-3.fc15            updates       24 k
- net-snmp-utils       x86_64      1:5.6.1-7.fc15          fedora       180 k
- netcf-libs           x86_64      0.1.9-1.fc15            updates       50 k
- nss-tools            x86_64      3.12.10-6.fc15          updates      723 k
- numactl              x86_64      2.0.7-1.fc15            updates       54 k
- oddjob               x86_64      0.31-2.fc15             fedora        61 k
- openais              x86_64      1.1.4-2.fc15            fedora       190 k
- openaislib           x86_64      1.1.4-2.fc15            fedora        88 k
- parted               x86_64      2.3-10.fc15             updates      618 k
- perl-Net-Telnet      noarch      3.03-12.fc15            fedora        55 k
- pexpect              noarch      2.3-6.fc15              fedora       141 k
- pyOpenSSL            x86_64      0.10-3.fc15             fedora       198 k
- python-suds          noarch      0.3.9-3.fc15            fedora       195 k
- ricci                x86_64      0.18.7-1.fc15           fedora       584 k
- sg3_utils            x86_64      1.29-3.fc15             fedora       465 k
- sg3_utils-libs       x86_64      1.29-3.fc15             fedora        54 k
- xen-libs             x86_64      4.1.1-3.fc15            updates      310 k
- xen-licenses         x86_64      4.1.1-3.fc15            updates       64 k
- yajl                 x86_64      1.0.11-1.fc15           fedora        27 k
+ dlm-lib             x86_64          3.99.1-4.fc17    updates-testing           19 k
 
 Transaction Summary
-=============================================================================
-Install      34 Package(s)
+=====================================================================================
+Install  2 Packages (+1 Dependent package)
 
-Total download size: 10 M
-Installed size: 38 M
+Total download size: 309 k
+Installed size: 879 k
 Downloading Packages:
-(1/34): augeas-libs-0.9.0-1.fc15.x86_64.rpm           | 311 kB     00:00     
-(2/34): cman-3.1.7-1.fc15.x86_64.rpm                  | 366 kB     00:00     
-(3/34): cyrus-sasl-md5-2.1.23-18.fc15.x86_64.rpm      |  46 kB     00:00     
-(4/34): fence-agents-3.1.5-1.fc15.x86_64.rpm          | 186 kB     00:00     
-(5/34): gettext-0.18.1.1-7.fc15.x86_64.rpm            | 1.0 MB     00:01     
-(6/34): gettext-libs-0.18.1.1-7.fc15.x86_64.rpm       | 610 kB     00:00     
-(7/34): gfs2-cluster-3.1.1-2.fc15.x86_64.rpm          |  69 kB     00:00     
-(8/34): gfs2-utils-3.1.1-2.fc15.x86_64.rpm            | 222 kB     00:00     
-(9/34): gnutls-utils-2.10.5-1.fc15.x86_64.rpm         | 101 kB     00:00     
-(10/34): ipmitool-1.8.11-6.fc15.x86_64.rpm            | 273 kB     00:00     
-(11/34): libbsd-0.2.0-4.fc15.x86_64.rpm               |  37 kB     00:00     
-(12/34): libgomp-4.6.1-9.fc15.x86_64.rpm              |  95 kB     00:00     
-(13/34): libnl-1.1-14.fc15.x86_64.rpm                 | 118 kB     00:00     
-(14/34): libvirt-client-0.8.8-7.fc15.x86_64.rpm       | 2.4 MB     00:01     
-(15/34): modcluster-0.18.7-1.fc15.x86_64.rpm          | 187 kB     00:00     
-(16/34): nc-1.100-3.fc15.x86_64.rpm                   |  24 kB     00:00     
-(17/34): net-snmp-utils-5.6.1-7.fc15.x86_64.rpm       | 180 kB     00:00     
-(18/34): netcf-libs-0.1.9-1.fc15.x86_64.rpm           |  50 kB     00:00     
-(19/34): nss-tools-3.12.10-6.fc15.x86_64.rpm          | 723 kB     00:00     
-(20/34): numactl-2.0.7-1.fc15.x86_64.rpm              |  54 kB     00:00     
-(21/34): oddjob-0.31-2.fc15.x86_64.rpm                |  61 kB     00:00     
-(22/34): openais-1.1.4-2.fc15.x86_64.rpm              | 190 kB     00:00     
-(23/34): openaislib-1.1.4-2.fc15.x86_64.rpm           |  88 kB     00:00     
-(24/34): parted-2.3-10.fc15.x86_64.rpm                | 618 kB     00:00     
-(25/34): perl-Net-Telnet-3.03-12.fc15.noarch.rpm      |  55 kB     00:00     
-(26/34): pexpect-2.3-6.fc15.noarch.rpm                | 141 kB     00:00     
-(27/34): pyOpenSSL-0.10-3.fc15.x86_64.rpm             | 198 kB     00:00     
-(28/34): python-suds-0.3.9-3.fc15.noarch.rpm          | 195 kB     00:00     
-(29/34): ricci-0.18.7-1.fc15.x86_64.rpm               | 584 kB     00:00     
-(30/34): sg3_utils-1.29-3.fc15.x86_64.rpm             | 465 kB     00:00     
-(31/34): sg3_utils-libs-1.29-3.fc15.x86_64.rpm        |  54 kB     00:00     
-(32/34): xen-libs-4.1.1-3.fc15.x86_64.rpm             | 310 kB     00:00     
-(33/34): xen-licenses-4.1.1-3.fc15.x86_64.rpm         |  64 kB     00:00     
-(34/34): yajl-1.0.11-1.fc15.x86_64.rpm                |  27 kB     00:00     
- -----------------------------------------------------------------------------
-Total                                        803 kB/s |  10 MB     00:12     
-Running rpm_check_debug
+(1/3): dlm-3.99.1-4.fc17.x86_64.rpm                           |  77 kB     00:00     
+(2/3): dlm-lib-3.99.1-4.fc17.x86_64.rpm                       |  19 kB     00:00     
+(3/3): gfs2-utils-3.1.4-3.fc17.x86_64.rpm                     | 214 kB     00:00     
+ -------------------------------------------------------------------------------------
+Total                                                241 kB/s | 309 kB     00:01     
+Running Transaction Check
 Running Transaction Test
 Transaction Test Succeeded
 Running Transaction
-  Installing : openais-1.1.4-2.fc15.x86_64                              1/34 
-  Installing : openaislib-1.1.4-2.fc15.x86_64                           2/34 
-  Installing : libnl-1.1-14.fc15.x86_64                                 3/34 
-  Installing : augeas-libs-0.9.0-1.fc15.x86_64                          4/34 
-  Installing : oddjob-0.31-2.fc15.x86_64                                5/34 
-  Installing : modcluster-0.18.7-1.fc15.x86_64                          6/34 
-  Installing : netcf-libs-0.1.9-1.fc15.x86_64                           7/34 
-  Installing : 1:net-snmp-utils-5.6.1-7.fc15.x86_64                     8/34 
-  Installing : sg3_utils-libs-1.29-3.fc15.x86_64                        9/34 
-  Installing : sg3_utils-1.29-3.fc15.x86_64                            10/34 
-  Installing : libgomp-4.6.1-9.fc15.x86_64                             11/34 
-  Installing : gnutls-utils-2.10.5-1.fc15.x86_64                       12/34 
-  Installing : pyOpenSSL-0.10-3.fc15.x86_64                            13/34 
-  Installing : parted-2.3-10.fc15.x86_64                               14/34 
-  Installing : cyrus-sasl-md5-2.1.23-18.fc15.x86_64                    15/34 
-  Installing : python-suds-0.3.9-3.fc15.noarch                         16/34 
-  Installing : ipmitool-1.8.11-6.fc15.x86_64                           17/34 
-  Installing : perl-Net-Telnet-3.03-12.fc15.noarch                     18/34 
-  Installing : numactl-2.0.7-1.fc15.x86_64                             19/34 
-  Installing : yajl-1.0.11-1.fc15.x86_64                               20/34 
-  Installing : gettext-libs-0.18.1.1-7.fc15.x86_64                     21/34 
-  Installing : gettext-0.18.1.1-7.fc15.x86_64                          22/34 
-  Installing : libbsd-0.2.0-4.fc15.x86_64                              23/34 
-  Installing : nc-1.100-3.fc15.x86_64                                  24/34 
-  Installing : xen-licenses-4.1.1-3.fc15.x86_64                        25/34 
-  Installing : xen-libs-4.1.1-3.fc15.x86_64                            26/34 
-  Installing : libvirt-client-0.8.8-7.fc15.x86_64                      27/34 
-
-Note: This output shows SysV services only and does not include native
-      systemd services. SysV configuration data might be overridden by native
-      systemd configuration.
-
-  Installing : nss-tools-3.12.10-6.fc15.x86_64                         28/34 
-  Installing : ricci-0.18.7-1.fc15.x86_64                              29/34 
-  Installing : pexpect-2.3-6.fc15.noarch                               30/34 
-  Installing : fence-agents-3.1.5-1.fc15.x86_64                        31/34 
-  Installing : cman-3.1.7-1.fc15.x86_64                                32/34 
-  Installing : gfs2-cluster-3.1.1-2.fc15.x86_64                        33/34 
-  Installing : gfs2-utils-3.1.1-2.fc15.x86_64                          34/34 
+  Installing : dlm-lib-3.99.1-4.fc17.x86_64                                      1/3 
+  Installing : dlm-3.99.1-4.fc17.x86_64                                          2/3 
+  Installing : gfs2-utils-3.1.4-3.fc17.x86_64                                    3/3 
+  Verifying  : dlm-lib-3.99.1-4.fc17.x86_64                                      1/3 
+  Verifying  : gfs2-utils-3.1.4-3.fc17.x86_64                                    2/3 
+  Verifying  : dlm-3.99.1-4.fc17.x86_64                                          3/3 
 
 Installed:
-  cman.x86_64 0:3.1.7-1.fc15           gfs2-cluster.x86_64 0:3.1.1-2.fc15    
-  gfs2-utils.x86_64 0:3.1.1-2.fc15    
+  dlm.x86_64 0:3.99.1-4.fc17                 gfs2-utils.x86_64 0:3.1.4-3.fc17                
 
 Dependency Installed:
-  augeas-libs.x86_64 0:0.9.0-1.fc15                                          
-  cyrus-sasl-md5.x86_64 0:2.1.23-18.fc15                                     
-  fence-agents.x86_64 0:3.1.5-1.fc15                                         
-  gettext.x86_64 0:0.18.1.1-7.fc15                                           
-  gettext-libs.x86_64 0:0.18.1.1-7.fc15                                      
-  gnutls-utils.x86_64 0:2.10.5-1.fc15                                        
-  ipmitool.x86_64 0:1.8.11-6.fc15                                            
-  libbsd.x86_64 0:0.2.0-4.fc15                                               
-  libgomp.x86_64 0:4.6.1-9.fc15                                              
-  libnl.x86_64 0:1.1-14.fc15                                                 
-  libvirt-client.x86_64 0:0.8.8-7.fc15                                       
-  modcluster.x86_64 0:0.18.7-1.fc15                                          
-  nc.x86_64 0:1.100-3.fc15                                                   
-  net-snmp-utils.x86_64 1:5.6.1-7.fc15                                       
-  netcf-libs.x86_64 0:0.1.9-1.fc15                                           
-  nss-tools.x86_64 0:3.12.10-6.fc15                                          
-  numactl.x86_64 0:2.0.7-1.fc15                                              
-  oddjob.x86_64 0:0.31-2.fc15                                                
-  openais.x86_64 0:1.1.4-2.fc15                                              
-  openaislib.x86_64 0:1.1.4-2.fc15                                           
-  parted.x86_64 0:2.3-10.fc15                                                
-  perl-Net-Telnet.noarch 0:3.03-12.fc15                                      
-  pexpect.noarch 0:2.3-6.fc15                                                
-  pyOpenSSL.x86_64 0:0.10-3.fc15                                             
-  python-suds.noarch 0:0.3.9-3.fc15                                          
-  ricci.x86_64 0:0.18.7-1.fc15                                               
-  sg3_utils.x86_64 0:1.29-3.fc15                                             
-  sg3_utils-libs.x86_64 0:1.29-3.fc15                                        
-  xen-libs.x86_64 0:4.1.1-3.fc15                                             
-  xen-licenses.x86_64 0:4.1.1-3.fc15                                         
-  yajl.x86_64 0:1.0.11-1.fc15                                                
+  dlm-lib.x86_64 0:3.99.1-4.fc17                                                              
 
 Complete!
 -----
-
-=== Configuring CMAN ===
-
-The first thing we need to do, is tell CMAN complete starting up even
-without quorum. We can do this by changing the quorum timeout setting:
-
-[source,Bash]
------
-# sed -i.sed "s/.*CMAN_QUORUM_TIMEOUT=.*/CMAN_QUORUM_TIMEOUT=0/g" /etc/sysconfig/cman
------
-
-Next we create a basic configuration file and place it in
-/etc/cluster/cluster.conf. The name used for each clusternode should
-correspond to that node's uname -n, just as Pacemaker expects. The nodeid
-can be any positive mumber but must be unique.
-
-.Basic cluster.conf for a two-node cluster
-[source,XML]
------
-<?xml version="1.0"?>
-<cluster config_version="1" name="my_cluster_name">
-  <logging debug="off"/>
-  <clusternodes>
-    <clusternode name="pcmk-1" nodeid="1"/>
-    <clusternode name="pcmk-2" nodeid="2"/>
-  </clusternodes>
-</cluster>
------
-
-=== Configuring CMAN Fencing ===
-
-We configure the fence_pcmk agent (supplied with Pacemaker) to redirect
-any fencing requests from CMAN components (such as dlm_controld) to
-Pacemaker. Pacemaker's fencing subsystem lets other parts of the stack
-know that a node has been successfully fenced, thus avoiding the need for
-it to be fenced again when other subsystems notice the node is gone.
-
-
-[WARNING]
-=========
-Warning
-Configuring real fencing devices in CMAN will result in nodes being
-fenced multiple times as different parts of the stack notice the node is
-missing or failed. 
-=========
-
-The definition should be placed in the fencedevices
-section and contain:
-        
-[source,XML]
------
- <fencedevice name="pcmk" agent="fence_pcmk"/>
------
-
-Each clusternode must be configured to use this device by adding a
-fence method block that lists the node's name as the port.
-  
-[source,XML]
------
- <fence>
-   <method name="pcmk-redirect">
-     <device name="pcmk" port="node_name_here"/>
-   </method>
- </fence>
------        
-
-Putting everything together, we have:
-
-.cluster.conf for a two-node cluster with fencing
-[source,XML]
------
-<?xml version="1.0"?>
-<cluster config_version="1" name="mycluster">
-  <logging debug="off"/>
-  <clusternodes>
-    <clusternode name="pcmk-1" nodeid="1">
-      <fence>
-        <method name="pcmk-redirect">
-          <device name="pcmk" port="pcmk-1"/>
-        </method>
-      </fence>
-    </clusternode>
-    <clusternode name="pcmk-2" nodeid="2">
-      <fence>
-        <method name="pcmk-redirect">
-          <device name="pcmk" port="pcmk-2"/>
-        </method>
-      </fence>
-    </clusternode>
-  </clusternodes>
-  <fencedevices>
-    <fencedevice name="pcmk" agent="fence_pcmk"/>
-  </fencedevices>
-</cluster>
------        
-
-
-=== Bringing the Cluster Online with CMAN ===
-
-The first thing to do is check that the configuration is valid
-
-[source,Bash]
------
-# ccs_config_validate
-Configuration validates
------
-
-Now start CMAN
-
-[source,Bash]
------
-# service cman start
-Starting cluster: 
-   Checking Network Manager...                             [  OK  ]
-   Global setup...                                         [  OK  ]
-   Loading kernel modules...                               [  OK  ]
-   Mounting configfs...                                    [  OK  ]
-   Starting cman...                                        [  OK  ]
-   Waiting for quorum...                                   [  OK  ]
-   Starting fenced...                                      [  OK  ]
-   Starting dlm_controld...                                [  OK  ]
-   Starting gfs_controld...                                [  OK  ]
-   Unfencing self...                                       [  OK  ]
-   Joining fence domain...                                 [  OK  ]
-# crm_mon -1
------
-
-Once you have confirmed that the first node is happily online, start the
-second node.
-
-[source,Bash]
------
-[root@pcmk-2 ~]# service cman startStarting cluster: 
-   Checking Network Manager...                             [  OK  ]
-   Global setup...                                         [  OK  ]
-   Loading kernel modules...                               [  OK  ]
-   Mounting configfs...                                    [  OK  ]
-   Starting cman...                                        [  OK  ]
-   Waiting for quorum...                                   [  OK  ]
-   Starting fenced...                                      [  OK  ]
-   Starting dlm_controld...                                [  OK  ]
-   Starting gfs_controld...                                [  OK  ]
-   Unfencing self...                                       [  OK  ]
-   Joining fence domain...                                 [  OK  ]
-# cman_tool nodes
-Node  Sts   Inc   Joined               Name
-   1   M    548   2011-09-28 10:52:21  pcmk-1
-   2   M    548   2011-09-28 10:52:21  pcmk-2
-# crm_mon -1
------
-
-You should now see both nodes online and services started.
-
 
 == Create a GFS2 Filesystem ==
 
@@ -479,23 +85,24 @@ are not only stopped, but stopped in the correct order.
 
 [source,Bash]
 -----
-# crm_resource --resource WebFS --set-parameter target-role --meta --parameter-value Stopped
-# crm_mon
+# crm resource stop WebFS
+# crm_mon -1
 ============
-Last updated: Thu Sep 3 15:18:06 2009
-Stack: openais
-Current DC: pcmk-1 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
-6 Resources configured.
+Last updated: Tue Apr  3 14:07:36 2012
+Last change: Tue Apr  3 14:07:15 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1702537408) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
+5 Resources configured.
 ============
 
 Online: [ pcmk-1 pcmk-2 ]
 
-Master/Slave Set: WebDataClone
-    Masters: [ pcmk-1 ]
-    Slaves: [ pcmk-2 ]
-ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-1
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-2 ]
+     Slaves: [ pcmk-1 ]
 -----
 
 [NOTE]
@@ -526,44 +133,142 @@ Kernel's DLM. Next we use -j to indicate that it should reserve enough
 space for two journals (one per node accessing the filesystem).
 
 Lastly, we use -t to specify the lock table name. The format for this
-field is clustername:fsname. For the fsname, we just need to pick
-something unique and descriptive and since we haven't specified a
-clustername yet, we will use the default (pcmk).
+field is +clustername:fsname+. For the +fsname+, we need to use the same
+value as specified in 'cluster.conf' for +cluster_name+.  Just pick
+something unique and descriptive and add somewhere inside the +totem+
+block.  For example:
 
-To specify an alternate name for the cluster, locate the service
-section containing +name: pacemaker+ in corosync.conf and insert the
-following line anywhere inside the block:
 .....
-clustername: myname
+totem {
+        version: 2
+
+        # cypto_cipher and crypto_hash: Used for mutual node authentication.
+        # If you choose to enable this, then do remember to create a shared
+        # secret with "corosync-keygen".
+        crypto_cipher: none
+        crypto_hash: none
+        cluster_name: webtest
+  ...
 .....
+
+[IMPORTANT]
+===========
 Do this on each node in the cluster and be sure to restart them before
 continuing.
+===========
+
+[IMPORTANT]
+===========
+We must run the next command on whichever node last had '/dev/drbd'
+mounted.  Otherwise you will receive the message:
+
+-----
+/dev/drbd1: Read-only file system
+-----
+===========
 
 [source,Bash]
 -----
-# mkfs.gfs2 -p lock_dlm -j 2 -t pcmk:web /dev/drbd1
+# ssh pcmk-2 -- mkfs.gfs2 -p lock_dlm -j 2 -t webtest /dev/drbd1
 This will destroy any data on /dev/drbd1.
-It appears to contain: data
-
-Are you sure you want to proceed? [y/n] y
-
-Device:          /dev/drbd1
-Blocksize:         4096
-Device Size        1.00 GB (131072 blocks)
-Filesystem Size:      1.00 GB (131070 blocks)
-Journals:         2
-Resource Groups:      2
-Locking Protocol:     "lock_dlm"
-Lock Table:        "pcmk:web"
-UUID:           6B776F46-177B-BAF8-2C2B-292C0E078613
+It appears to contain: Linux rev 1.0 ext4 filesystem data, UUID=dc45fff3-c47a-4db2-96f7-a8049a323fe4 (extents) (large files) (huge files)
+Are you sure you want to proceed? [y/n]y
+Device:                    /dev/drbd1
+Blocksize:                 4096
+Device Size                0.97 GB (253935 blocks)
+Filesystem Size:           0.97 GB (253932 blocks)
+Journals:                  2
+Resource Groups:           4
+Locking Protocol:          "lock_dlm"
+Lock Table:                "webtest"
+UUID:                      ed293a02-9eee-3fa3-ed1c-435ef1fd0116
 -----
+
+[source,Bash]
+-----
+# crm
+crm(live)# cib new dlm
+INFO: dlm shadow CIB created
+crm(dlm)# configure primitive dlm ocf:pacemaker:controld \
+    op monitor interval=60s
+crm(dlm)# configure clone dlm_clone dlm meta clone-max=2 clone-node-max=1 
+crm(dlm)# configure show
+node $id="1702537408" pcmk-1 \
+	attributes standby="off"
+node $id="1719314624" pcmk-2
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+	params ip="192.168.122.120" cidr_netmask="32" \
+	op monitor interval="30s"
+primitive WebData ocf:linbit:drbd \
+	params drbd_resource="wwwdata" \
+	op monitor interval="60s"
+primitive WebFS ocf:heartbeat:Filesystem \
+	params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="ext4" \
+	meta target-role="Stopped"
+primitive WebSite ocf:heartbeat:apache \
+	params configfile="/etc/httpd/conf/httpd.conf" \
+	op monitor interval="1min"
+primitive dlm ocf:pacemaker:controld \
+	op monitor interval="60s"
+ms WebDataClone WebData \
+	meta master-max="1" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
+clone dlm_clone dlm \
+	meta clone-max="2" clone-node-max="1"
+location prefer-pcmk-1 WebSite 50: pcmk-1
+colocation WebSite-with-WebFS inf: WebSite WebFS
+colocation fs_on_drbd inf: WebFS WebDataClone:Master
+colocation website-with-ip inf: WebSite ClusterIP
+order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
+order WebSite-after-WebFS inf: WebFS WebSite
+order apache-after-ip inf: ClusterIP WebSite
+property $id="cib-bootstrap-options" \
+	dc-version="1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff" \
+	cluster-infrastructure="corosync" \
+	stonith-enabled="false" \
+	no-quorum-policy="ignore" \
+	last-lrm-refresh="1333446866"
+rsc_defaults $id="rsc-options" \
+	resource-stickiness="100"
+op_defaults $id="op-options" \
+	timeout="240s"
+crm(dlm)# cib commit dlm
+INFO: commited 'dlm' shadow CIB to the cluster
+crm(dlm)# quit
+bye
+# crm_mon -1
+============
+Last updated: Wed Apr  4 01:15:11 2012
+Last change: Wed Apr  4 00:50:11 2012 via crmd on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1702537408) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
+7 Resources configured.
+============
+
+Online: [ pcmk-1 pcmk-2 ]
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 ]
+ Clone Set: dlm_clone [dlm]
+     Started: [ pcmk-1 pcmk-2 ]
+-----
+
+
+[WARNING]
+=========
+Nothing has been updated past this point and is probably severely broken.
+=========
 
 Then (re)populate the new filesystem with data (web pages). For now we'll
 create another variation on our home page.
 
 [source,Bash]
 -----
-# mount /dev/drbd1 /mnt/# cat <<-END >/mnt/index.html
+# mount /dev/drbd1 /mnt/
+# cat <<-END >/mnt/index.html
 <html>
 <body>My Test Site - GFS2</body>
 </html>
@@ -663,8 +368,11 @@ advantage of this.
 This will involve a number of changes, so we'll again use interactive
 mode.
 
+[source,Bash]
+-----
 # crm
 # cib new active
+-----
 
 There's no point making the services active on both locations if we can't
 reach them, so lets first clone the IP address. Cloned IPaddr2 resources

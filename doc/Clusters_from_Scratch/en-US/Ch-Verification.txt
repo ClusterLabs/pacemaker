@@ -6,120 +6,157 @@ Start Corosync on the first node
 
 [source,Bash]
 ----
-# /etc/init.d/corosync start
-Starting Corosync Cluster Engine (corosync): [ OK ]
+# systemctl start corosync.service
 ----
 
-Check the cluster started correctly and that an initial membership was
-able to form
-
-[source,Bash]
-----
-# grep -e "corosync.*network interface" -e "Corosync Cluster Engine" -e "Successfully read main configuration file" /var/log/messages
-Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN ] Corosync Cluster Engine ('1.1.0'): started and ready to provide service.
-Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN ] Successfully read main configuration file '/etc/corosync/corosync.conf'.
-# grep TOTEM /var/log/messages
-Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transport (UDP/IP).
-Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).
-Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] The network interface [192.168.122.101] is now up.
-Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] A processor joined or left the membership and a new membership was formed.
-----
-
-With one node functional, it's now safe to start Corosync on the second
-node as well.
+The first thing to check is if cluster communication is happy, for
+that we use `corosync-cfgtool`.
 
 [source,Bash]
 ----
-# ssh pcmk-2 -- /etc/init.d/corosync start
-Starting Corosync Cluster Engine (corosync): [ OK ]
-#
+# corosync-cfgtool -s
+Printing ring status.
+Local node ID 1702537408
+RING ID 0
+	id	= 192.168.122.101
+	status	= ring 0 active with no faults
 ----
 
-Check the cluster formed correctly
+We can see here that everything appears normal with our fixed IP
+address, not a 127.0.0.x loopback address, listed as the +id+ and +no
+faults+ for the status.
+
+If you see something different, you might want to start by checking
+the node's network, firewall and selinux configurations.
+
+Next we check the membership and quorum APIs:
 
 [source,Bash]
 ----
-# grep TOTEM /var/log/messages
-Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transport (UDP/IP).
-Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).
-Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] The network interface [192.168.122.101] is now up.
-Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] A processor joined or left the membership and a new membership was formed.
-Aug 27 09:12:11 pcmk-1 corosync[1540]: [TOTEM ] A processor joined or left the membership and a new membership was formed.
+# corosync-cmapctl  | grep members
+runtime.totem.pg.mrp.srp.members.1702537408.ip (str) = r(0) ip(192.168.122.101) 
+runtime.totem.pg.mrp.srp.members.1702537408.join_count (u32) = 1
+runtime.totem.pg.mrp.srp.members.1702537408.status (str) = joined
+# corosync-quorumtool -l
+
+Membership information
+ ----------------------
+    Nodeid      Votes Name
+1702537408          1 pcmk-1
 ----
+
+The node see's itself in both locations which is a good sign.
+
+If the node list is empty when you call `corosync-quorumtool`, then
+you've not correctly quorum in 'corosync.conf'.
+
+With everything looking healthy, we start Corosync on the second node
+and run the same communications check.
+
+[source,Bash]
+----
+# ssh pcmk-2 -- systemctl start corosync.service
+# ssh pcmk-2 -- corosync-cfgtool -s
+Printing ring status.
+Local node ID 1719314624
+RING ID 0
+	id	= 192.168.122.102
+	status	= ring 0 active with no faults
+----
+
+Everything appears to look ok from +pcmk-2+, time to re-run the
+membership and quorum checks to see if it shows up there too.
+
+Again, if you see something different to the above, check for the
+usual suspects: network, firewall and selinux.
+
+[source,Bash]
+----
+# corosync-cmapctl  | grep members
+runtime.totem.pg.mrp.srp.members.1702537408.ip (str) = r(0) ip(192.168.122.101) 
+runtime.totem.pg.mrp.srp.members.1702537408.join_count (u32) = 1
+runtime.totem.pg.mrp.srp.members.1702537408.status (str) = joined
+runtime.totem.pg.mrp.srp.members.1719314624.ip (str) = r(0) ip(192.168.122.102) 
+runtime.totem.pg.mrp.srp.members.1719314624.join_count (u32) = 1
+runtime.totem.pg.mrp.srp.members.1719314624.status (str) = joined
+
+# corosync-quorumtool -l
+
+Membership information
+ ----------------------
+    Nodeid      Votes Name
+1702537408          1 pcmk-1
+1719314624          1 pcmk-2
+----
+
+All good!
 
 == Verify Pacemaker Installation ==
 
-Now that we have confirmed that Corosync is functional we can check the
-rest of the stack.
+Now that we have confirmed that Corosync is functional we can check
+the rest of the stack. Start Pacemaker and check the necessary
+processes have been started.
 
 [source,Bash]
 ----
-# grep pcmk_startup /var/log/messages
-Aug 27 09:05:35 pcmk-1 corosync[1540]:  [pcmk ] info: pcmk_startup: CRM: InitializedAug 27 09:05:35 pcmk-1 corosync[1540]:  [pcmk ] Logging: Initialized pcmk_startup
-Aug 27 09:05:35 pcmk-1 corosync[1540]:  [pcmk ] info: pcmk_startup: Maximum core file size is: 18446744073709551615
-Aug 27 09:05:35 pcmk-1 corosync[1540]:  [pcmk ] info: pcmk_startup: Service: 9Aug 27 09:05:35 pcmk-1 corosync[1540]:  [pcmk ] info: pcmk_startup: Local hostname: pcmk-1
+# systemctl start pacemaker.service
+# ps axf
+  PID TTY      STAT   TIME COMMAND
+    2 ?        S      0:00 [kthreadd]
+...lots of processes...
+28019 ?        Ssl    0:03 /usr/sbin/corosync
+28047 ?        Ss     0:00 /usr/sbin/pacemakerd -f
+28048 ?        Ss     0:00  \_ /usr/libexec/pacemaker/cib
+28049 ?        Ss     0:00  \_ /usr/libexec/pacemaker/stonithd
+28050 ?        Ss     0:00  \_ /usr/lib64/heartbeat/lrmd
+28051 ?        Ss     0:00  \_ /usr/libexec/pacemaker/attrd
+28052 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pengine
+28053 ?        Ss     0:00  \_ /usr/libexec/pacemaker/crmd
 ----
 
-Now try starting Pacemaker and check the necessary processes have been
-started
+If that looks ok, check the logs and crm_mon.
 
 [source,Bash]
 ----
-# /etc/init.d/pacemaker start
-Starting Pacemaker Cluster Manager: [ OK ]
+# grep pacemakerd /var/log/messages | grep -e get_cluster_type -e read_config
+Apr  3 09:19:32 pcmk-1 pacemakerd[28047]:     info: get_cluster_type: Detected an active 'corosync' cluster
+Apr  3 09:19:32 pcmk-1 pacemakerd[28047]:     info: read_config: Reading configure for stack: corosync
+# crm_mon -1
+============
+Last updated: Tue Apr  3 09:21:37 2012
+Last change: Tue Apr  3 09:19:54 2012 via crmd on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1702537408) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+1 Nodes configured, unknown expected votes
+0 Resources configured.
+============
 
-# grep -e pacemakerd.*get_config_opt -e pacemakerd.*start_child -e "Starting Pacemaker" /var/log/messages
-Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'pacemaker' for option: name
-Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found '1' for option: ver
-Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Defaulting to 'no' for option: use_logd
-Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Defaulting to 'no' for option: use_mgmtd
-Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'on' for option: debug
-Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'yes' for option: to_logfile
-Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found '/var/log/corosync.log' for option: logfile
-Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'yes' for option: to_syslog
-Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'daemon' for option: syslog_facility
-Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: main: Starting Pacemaker 1.1.5 (Build: 31f088949239+):  docbook-manpages publican ncurses trace-logging cman cs-quorum heartbeat corosync snmp libesmtp
-Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14022 for process stonith-ng
-Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14023 for process cib
-Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14024 for process lrmd
-Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14025 for process attrd
-Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14026 for process pengine
-Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 14027 for process crmd
-
-# ps axf PID TTY   STAT  TIME COMMAND
-  2 ?    S<   0:00 [kthreadd]
-  3 ?    S<   0:00 \_ [migration/0]
-... lots of processes ...
-13990 ?  S    0:01 pacemakerd
-14022 ?  Sa   0:00 \_ /usr/lib64/heartbeat/stonithd
-14023 ?  Sa   0:00 \_ /usr/lib64/heartbeat/cib
-14024 ?  Sa   0:00 \_ /usr/lib64/heartbeat/lrmd
-14025 ?  Sa   0:00 \_ /usr/lib64/heartbeat/attrd
-14026 ?  Sa   0:00 \_ /usr/lib64/heartbeat/pengine
-14027 ?  Sa   0:00 \_ /usr/lib64/heartbeat/crmd
+Online: [ pcmk-1 ]
 ----
 
 Next, check for any ERRORs during startup - there shouldn't be any.
 
 [source,Bash]
 ----
-# grep ERROR: /var/log/messages | grep -v unpack_resources
-#
+# grep -i error /var/log/messages
 ----
 
 Repeat on the other node and display the cluster's status.
 
 [source,Bash]
 ----
-# ssh pcmk-2 -- /etc/init.d/pacemaker start
-Starting Pacemaker Cluster Manager: [ OK ]
-# crm_mon
+# ssh pcmk-2 -- systemctl start pacemaker.service
+# crm_mon -1
 ============
-Last updated: Thu Aug 27 16:54:55 2009Stack: openais
-Current DC: pcmk-1 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
+Last updated: Tue Apr  3 09:26:23 2012
+Last change: Tue Apr  3 09:26:21 2012 via crmd on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1702537408) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
 0 Resources configured.
 ============
+
 Online: [ pcmk-1 pcmk-2 ]
 ----

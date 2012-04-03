@@ -10,63 +10,65 @@ RAID-1. See http://www.drbd.org/ for more details.
 
 == Install the DRBD Packages ==
 
-Since its inclusion in the upstream 2.6.33 kernel, everything needed to
-use DRBD ships with Fedora 13. All you need to do is install it:
+Since its inclusion in the upstream 2.6.33 kernel, everything needed
+to use DRBD has shiped with Fedora since version 13. All you need to
+do is install it:
 
 [source,Bash]
-----
+.....
 # yum install -y drbd-pacemaker drbd-udev
-Loaded plugins: presto, refresh-packagekit
-Setting up Install Process
+Loaded plugins: langpacks, presto, refresh-packagekit
 Resolving Dependencies
 --> Running transaction check
----> Package drbd-pacemaker.x86_64 0:8.3.7-2.fc13 set to be updated
---> Processing Dependency: drbd-utils = 8.3.7-2.fc13 for package: drbd-pacemaker-8.3.7-2.fc13.x86_64
+---> Package drbd-pacemaker.x86_64 0:8.3.11-5.fc17 will be installed
+--> Processing Dependency: drbd-utils = 8.3.11-5.fc17 for package: drbd-pacemaker-8.3.11-5.fc17.x86_64
+---> Package drbd-udev.x86_64 0:8.3.11-5.fc17 will be installed
 --> Running transaction check
----> Package drbd-utils.x86_64 0:8.3.7-2.fc13 set to be updated
+---> Package drbd-utils.x86_64 0:8.3.11-5.fc17 will be installed
 --> Finished Dependency Resolution
 
 Dependencies Resolved
 
-=================================================================================
- Package                Arch           Version              Repository      Size
-=================================================================================
+======================================================================================
+ Package              Arch         Version                Repository             Size
+======================================================================================
 Installing:
- drbd-pacemaker         x86_64         8.3.7-2.fc13         fedora          19 k
+ drbd-pacemaker       x86_64       8.3.11-5.fc17          updates-testing        22 k
+ drbd-udev            x86_64       8.3.11-5.fc17          updates-testing       6.4 k
 Installing for dependencies:
- drbd-utils             x86_64         8.3.7-2.fc13         fedora         165 k
+ drbd-utils           x86_64       8.3.11-5.fc17          updates-testing       183 k
 
 Transaction Summary
-=================================================================================
-Install       2 Package(s)
-Upgrade       0 Package(s)
+======================================================================================
+Install  2 Packages (+1 Dependent package)
 
-Total download size: 184 k
-Installed size: 427 k
+Total download size: 212 k
+Installed size: 473 k
 Downloading Packages:
-Setting up and reading Presto delta metadata
-fedora/prestodelta                                        | 1.7 kB     00:00     
-Processing delta metadata
-Package(s) data still to download: 184 k
-(1/2): drbd-pacemaker-8.3.7-2.fc13.x86_64.rpm             |  19 kB     00:01     
-(2/2): drbd-utils-8.3.7-2.fc13.x86_64.rpm                 | 165 kB     00:02     
- ---------------------------------------------------------------------------------
-Total                                             45 kB/s | 184 kB     00:04     
-Running rpm_check_debug
+(1/3): drbd-pacemaker-8.3.11-5.fc17.x86_64.rpm                 |  22 kB     00:00     
+(2/3): drbd-udev-8.3.11-5.fc17.x86_64.rpm                      | 6.4 kB     00:00     
+(3/3): drbd-utils-8.3.11-5.fc17.x86_64.rpm                     | 183 kB     00:00     
+--------------------------------------------------------------------------------------
+Total                                                 293 kB/s | 212 kB     00:00     
+Running Transaction Check
 Running Transaction Test
 Transaction Test Succeeded
 Running Transaction
-  Installing     : drbd-utils-8.3.7-2.fc13.x86_64                            1/2 
-  Installing     : drbd-pacemaker-8.3.7-2.fc13.x86_64                        2/2 
+  Installing : drbd-utils-8.3.11-5.fc17.x86_64                                    1/3 
+  Installing : drbd-pacemaker-8.3.11-5.fc17.x86_64                                2/3 
+  Installing : drbd-udev-8.3.11-5.fc17.x86_64                                     3/3 
+  Verifying  : drbd-pacemaker-8.3.11-5.fc17.x86_64                                1/3 
+  Verifying  : drbd-udev-8.3.11-5.fc17.x86_64                                     2/3 
+  Verifying  : drbd-utils-8.3.11-5.fc17.x86_64                                    3/3 
 
 Installed:
-  drbd-pacemaker.x86_64 0:8.3.7-2.fc13                                           
+  drbd-pacemaker.x86_64 0:8.3.11-5.fc17        drbd-udev.x86_64 0:8.3.11-5.fc17       
 
 Dependency Installed:
-  drbd-utils.x86_64 0:8.3.7-2.fc13                                               
+  drbd-utils.x86_64 0:8.3.11-5.fc17                                                   
 
 Complete!
-----
+.....
 
 == Configure DRBD ==
 
@@ -80,13 +82,20 @@ later holding the GFS2 metadata.
 
 [source,Bash]
 ----
-# lvcreate -n drbd-demo -L 1G VolGroup
+# vgdisplay | grep -e Name - e Free
+  VG Name               vg_fedora13
+  Free  PE / Size       31 / 992.00 MiB
+# lvs
+  LV        VG          Attr     LSize   Pool Origin Data%  Move Log Copy%  Convert
+  lv_root   vg_fedora13 -wi-ao--   8.56g                                           
+  lv_swap   vg_fedora13 -wi-ao-- 960.00m                                           
+# lvcreate -n drbd-demo -L 1G vg_fedora13
 Logical volume "drbd-demo" created
 # lvs
-LV    VG    Attr  LSize  Origin Snap% Move Log Copy% Convert
-drbd-demo VolGroup -wi-a- 1.00G                   
-lv_root  VolGroup -wi-ao  7.30G                   
-lv_swap  VolGroup -wi-ao 500.00M
+  LV        VG          Attr     LSize   Pool Origin Data%  Move Log Copy%  Convert
+  drbd-demo vg_fedora13 -wi-a--- 1.00G
+  lv_root   vg_fedora13 -wi-ao--   8.56g                                           
+  lv_swap   vg_fedora13 -wi-ao-- 960.00m                                           
 ----
 
 Repeat this on the second node, be sure to use the same size partition.
@@ -95,15 +104,15 @@ Repeat this on the second node, be sure to use the same size partition.
 ----
 # ssh pcmk-2 -- lvs 
 LV   VG    Attr  LSize  Origin Snap% Move Log Copy% Convert
-lv_root VolGroup -wi-ao  7.30G                   
-lv_swap VolGroup -wi-ao 500.00M                   
-# ssh pcmk-2 -- lvcreate -n drbd-demo -L 1G VolGroup
+  lv_root   vg_fedora13 -wi-ao--   8.56g                                           
+  lv_swap   vg_fedora13 -wi-ao-- 960.00m                                           
+# ssh pcmk-2 -- lvcreate -n drbd-demo -L 1G vg_fedora13
 Logical volume "drbd-demo" created
 # ssh pcmk-2 -- lvs
 LV    VG    Attr  LSize  Origin Snap% Move Log Copy% Convert
-drbd-demo VolGroup -wi-a- 1.00G                   
-lv_root  VolGroup -wi-ao  7.30G                   
-lv_swap  VolGroup -wi-ao 500.00M
+  drbd-demo vg_fedora13 -wi-a--- 1.00G
+  lv_root   vg_fedora13 -wi-ao--   8.56g                                           
+  lv_swap   vg_fedora13 -wi-ao-- 960.00m                                           
 ----
 
 === Write the DRBD Config ===
@@ -140,12 +149,12 @@ resource wwwdata {
   allow-two-primaries; 
  }
  on pcmk-1 {
-  disk   /dev/mapper/VolGroup-drbd--demo;
-  address  192.168.122.101:7789; 
+  disk   /dev/vg_fedora13/drbd-demo;
+  address  192.168.122.101:7789;
  }
  on pcmk-2 {
-  disk   /dev/mapper/VolGroup-drbd--demo;
-  address  192.168.122.102:7789;      
+  disk   /dev/vg_fedora13/drbd-demo;
+  address  192.168.122.102:7789;
  }
 }
 ....
@@ -165,15 +174,6 @@ initialization
 [source,Bash]
 ----
 # drbdadm create-md wwwdata
-md_offset 12578816
-al_offset 12546048
-bm_offset 12541952
-
-Found some data 
-==> This might destroy existing data! <==
-
-Do you want to proceed?
-[need to type 'yes' to confirm] yes
 Writing meta data...
 initializing activity log
 NOT initialized bitmap
@@ -185,10 +185,14 @@ Now load the DRBD kernel module and confirm that everything is sane
 
 [source,Bash]
 ----
-# modprobe drbd# drbdadm up wwwdata# cat /proc/drbdversion: 8.3.6 (api:88/proto:86-90)
-GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57
- 1: cs:WFConnection ro:Secondary/Unknown ds:Inconsistent/DUnknown C r----
-  ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248 
+# modprobe drbd
+# drbdadm up wwwdata
+# cat /proc/drbd
+version: 8.3.11 (api:88/proto:86-96)
+srcversion: 0D2B62DEDB020A425130935 
+
+ 1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r-----
+    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:1015740
 ----
 
 Repeat on the second node
@@ -205,10 +209,11 @@ success
 WARNING: Deprecated config file /etc/modprobe.conf, all config files belong into /etc/modprobe.d/.
 # ssh pcmk-2 -- drbdadm up wwwdata
 # ssh pcmk-2 -- cat /proc/drbd
-version: 8.3.6 (api:88/proto:86-90)
-GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57
- 1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r----
-    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248
+version: 8.3.11 (api:88/proto:86-96)
+srcversion: 0D2B62DEDB020A425130935 
+
+ 1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r-----
+    ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:1015740
 ----
 
 Now we need to tell DRBD which set of data to use. Since both sides
@@ -218,17 +223,25 @@ contain garbage, we can run the following on pcmk-1:
 ----
 # drbdadm -- --overwrite-data-of-peer primary wwwdata
 # cat /proc/drbd
-version: 8.3.6 (api:88/proto:86-90)
-GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57
-1: cs:SyncSource ro:Primary/Secondary ds:UpToDate/Inconsistent C r----
-   ns:2184 nr:0 dw:0 dr:2472 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:10064
-    [=====>..............] sync'ed: 33.4% (10064/12248)K
-    finish: 0:00:37 speed: 240 (240) K/sec
+version: 8.3.11 (api:88/proto:86-96)
+srcversion: 0D2B62DEDB020A425130935 
+
+ 1: cs:SyncSource ro:Primary/Secondary ds:UpToDate/Inconsistent C r-----
+    ns:8064 nr:0 dw:0 dr:8728 al:0 bm:0 lo:0 pe:1 ua:0 ap:0 ep:1 wo:f oos:1007804
+	[>....................] sync'ed:  0.9% (1007804/1015740)K
+	finish: 0:12:35 speed: 1,320 (1,320) K/sec
+----
+
+After a while, the sync should finish and you'll see:
+
+[source,Bash]
+----
 # cat /proc/drbd
-version: 8.3.6 (api:88/proto:86-90)
-GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57
-1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r----
-   ns:12248 nr:0 dw:0 dr:12536 al:0 bm:1 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:0
+version: 8.3.11 (api:88/proto:86-96)
+srcversion: 0D2B62DEDB020A425130935 
+
+ 1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
+    ns:1015740 nr:0 dw:0 dr:1016404 al:0 bm:62 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 ----
 
 pcmk-1 is now in the Primary state which allows it to be written to.
@@ -241,27 +254,26 @@ it with some data to serve up via our WebSite resource.
 [source,Bash]
 ----
 # mkfs.ext4 /dev/drbd1
-mke2fs 1.41.4 (27-Jan-2009)
+mke2fs 1.42 (29-Nov-2011)
 Filesystem label=
 OS type: Linux
-Block size=1024 (log=0)
-Fragment size=1024 (log=0)
-3072 inodes, 12248 blocks
-612 blocks (5.00%) reserved for the super user
-First data block=1
-Maximum filesystem blocks=12582912
-2 block groups
-8192 blocks per group, 8192 fragments per group
-1536 inodes per group
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+Stride=0 blocks, Stripe width=0 blocks
+63488 inodes, 253935 blocks
+12696 blocks (5.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=260046848
+8 block groups
+32768 blocks per group, 32768 fragments per group
+7936 inodes per group
 Superblock backups stored on blocks: 
-    8193
+	32768, 98304, 163840, 229376
 
-Writing inode tables: done              
-Creating journal (1024 blocks): done
+Allocating group tables: done                            
+Writing inode tables: done                            
+Creating journal (4096 blocks): done
 Writing superblocks and filesystem accounting information: done
-
-This filesystem will be automatically checked every 26 mounts or
-180 days, whichever comes first. Use tune2fs -c or -i to override.
 ----
 
 Now mount the newly created filesystem so we can create our index file
@@ -273,7 +285,7 @@ Now mount the newly created filesystem so we can create our index file
  <html>
   <body>My Test Site - drbd</body>
  </html>
- END
+END
 # umount /dev/drbd1
 ----
 
@@ -287,7 +299,7 @@ in interactive mode.
 
 [source,Bash]
 ----
-# crm cib
+# crm
 crm(live) #
 ----
 
@@ -310,27 +322,34 @@ Now we can create our DRBD clone and display the revised configuration.
 crm(drbd) # configure primitive WebData ocf:linbit:drbd params drbd_resource=wwwdata \
     op monitor interval=60s
 crm(drbd) # configure ms WebDataClone WebData meta master-max=1 master-node-max=1 \
-    clone-max=2 clone-node-max=1 notify=truecrm(drbd) # configure shownode pcmk-1
-node pcmk-2primitive WebData ocf:linbit:drbd \
- params drbd_resource="wwwdata" \
- op monitor interval="60s"primitive WebSite ocf:heartbeat:apache \
-    params configfile="/etc/httpd/conf/httpd.conf" \
-    op monitor interval="1min"
+    clone-max=2 clone-node-max=1 notify=true
+crm(drbd) # configure show
+node $id="1702537408" pcmk-1
+node $id="1719314624" pcmk-2
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" \
-    op monitor interval="30s"ms WebDataClone WebData \
- meta master-max="1" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
+	params ip="192.168.122.120" cidr_netmask="32" \
+	op monitor interval="30s"
+primitive WebData ocf:linbit:drbd \
+	params drbd_resource="wwwdata" \
+	op monitor interval="60s"
+primitive WebSite ocf:heartbeat:apache \
+	params configfile="/etc/httpd/conf/httpd.conf" \
+	op monitor interval="1min"
+ms WebDataClone WebData \
+	meta master-max="1" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
 location prefer-pcmk-1 WebSite 50: pcmk-1
 colocation website-with-ip inf: WebSite ClusterIP
 order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="false" \
-    no-quorum-policy="ignore"
+	dc-version="1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff" \
+	cluster-infrastructure="corosync" \
+	stonith-enabled="false" \
+	no-quorum-policy="ignore" \
+	last-lrm-refresh="1333446866"
 rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
+	resource-stickiness="100"
+op_defaults $id="op-options" \
+	timeout="240s"
 ----
 
 Once we're happy with the changes, we can tell the cluster to start using
@@ -338,28 +357,34 @@ them and use crm_mon to check everything is functioning.
 
 [source,Bash]
 ----
-crm(drbd) # cib commit drbdINFO: commited 'drbd' shadow CIB to the cluster
-crm(drbd) # quitbye
-# crm_mon
+crm(drbd) # cib commit drbd
+INFO: commited 'drbd' shadow CIB to the cluster
+crm(drbd) # quit
+bye
+# crm_mon -1
 ============
-Last updated: Tue Sep 1 09:37:13 2009
-Stack: openais
-Current DC: pcmk-1 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
-3 Resources configured.
+Last updated: Tue Apr  3 13:50:01 2012
+Last change: Tue Apr  3 13:49:46 2012 via crm_shadow on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1702537408) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
+4 Resources configured.
 ============
 
 Online: [ pcmk-1 pcmk-2 ]
 
-ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-1
-WebSite (ocf::heartbeat:apache):    Started pcmk-1Master/Slave Set: WebDataClone Masters: [ pcmk-2 ] Slaves: [ pcmk-1 ]
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 ]
 ----
 
 [NOTE]
 =======
 
-Include details on adding a second DRBD resource
+TODO: Include details on adding a second DRBD resource
 
 =======
 
@@ -379,11 +404,14 @@ crm(fs) # configure primitive WebFS ocf:heartbeat:Filesystem \
     params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="ext4"
 crm(fs) # configure colocation fs_on_drbd inf: WebFS WebDataClone:Master
 crm(fs) # configure order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
+----
 
 We also need to tell the cluster that Apache needs to run on the same
 machine as the filesystem and that it must be active before Apache can
 start.
 
+[source,Bash]
+----
 crm(fs) # configure colocation WebSite-with-WebFS inf: WebSite WebFS
 crm(fs) # configure order WebSite-after-WebFS inf: WebFS WebSite
 ----
@@ -392,22 +420,22 @@ Time to review the updated configuration:
 
 [source,Bash]
 ----
-crm(fs) # crm configure show
-node pcmk-1
-node pcmk-2
-primitive WebData ocf:linbit:drbd \
-    params drbd_resource="wwwdata" \
-    op monitor interval="60s"
-primitive WebFS ocf:heartbeat:Filesystem \
-    params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="ext4"
-primitive WebSite ocf:heartbeat:apache \
-    params configfile="/etc/httpd/conf/httpd.conf" \
-    op monitor interval="1min"
+crm(fs) # configure show
+node $id="1702537408" pcmk-1
+node $id="1719314624" pcmk-2
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" \
-    op monitor interval="30s"
+	params ip="192.168.122.120" cidr_netmask="32" \
+	op monitor interval="30s"
+primitive WebData ocf:linbit:drbd \
+	params drbd_resource="wwwdata" \
+	op monitor interval="60s"
+primitive WebFS ocf:heartbeat:Filesystem \
+	params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="ext4"
+primitive WebSite ocf:heartbeat:apache \
+	params configfile="/etc/httpd/conf/httpd.conf" \
+	op monitor interval="1min"
 ms WebDataClone WebData \
-    meta master-max="1" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
+	meta master-max="1" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
 location prefer-pcmk-1 WebSite 50: pcmk-1
 colocation WebSite-with-WebFS inf: WebSite WebFS
 colocation fs_on_drbd inf: WebFS WebDataClone:Master
@@ -416,13 +444,15 @@ order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
 order WebSite-after-WebFS inf: WebFS WebSite
 order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="false" \
-    no-quorum-policy="ignore"
+	dc-version="1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff" \
+	cluster-infrastructure="corosync" \
+	stonith-enabled="false" \
+	no-quorum-policy="ignore" \
+	last-lrm-refresh="1333446866"
 rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
+	resource-stickiness="100"
+op_defaults $id="op-options" \
+	timeout="240s"
 ----
 
 After reviewing the new configuration, we again upload it and watch the
@@ -434,24 +464,25 @@ crm(fs) # cib commit fs
 INFO: commited 'fs' shadow CIB to the cluster
 crm(fs) # quit
 bye
-# crm_mon
+# crm_mon -1
 ============
-Last updated: Tue Sep 1 10:08:44 2009
-Stack: openais
-Current DC: pcmk-1 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
-4 Resources configured.
+Last updated: Tue Apr  3 13:52:21 2012
+Last change: Tue Apr  3 13:52:06 2012 via crm_shadow on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1702537408) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
+5 Resources configured.
 ============
 
 Online: [ pcmk-1 pcmk-2 ]
 
-ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-1
-WebSite (ocf::heartbeat:apache): Started pcmk-1
-Master/Slave Set: WebDataClone
-    Masters: [ pcmk-1 ]
-    Slaves: [ pcmk-2 ]
-WebFS (ocf::heartbeat:Filesystem): Started pcmk-1
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 ]
+ WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1
 ----
 
 === Testing Migration ===
@@ -470,22 +501,26 @@ change to indicate that it can no longer host resources.
 [source,Bash]
 ----
 # crm node standby
-# crm_mon
+# crm_mon -1
 ============
-Last updated: Tue Sep 1 10:09:57 2009
-Stack: openais
-Current DC: pcmk-1 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
-4 Resources configured.
+Last updated: Tue Apr  3 13:59:14 2012
+Last change: Tue Apr  3 13:52:36 2012 via crm_attribute	on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1702537408)	- partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
+5 Resources configured.
 ============
-Node pcmk-1: standbyOnline: [ pcmk-2 ]
 
-ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2
-WebSite (ocf::heartbeat:apache):    Started pcmk-2
-Master/Slave Set: WebDataClone
-    Masters: [ pcmk-2 ]    Stopped: [ WebData:1 ]
-WebFS  (ocf::heartbeat:Filesystem):  Started pcmk-2
+Node pcmk-1 (1702537408): standby
+Online: [ pcmk-2 ]
+
+ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+WebSite (ocf::heartbeat:apache):        Started pcmk-2
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-2 ]
+     Stopped: [ WebData:1 ]
+WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2
 ----
 
 Once we've done everything we needed to on pcmk-1 (in this case nothing,
@@ -495,22 +530,25 @@ full cluster member again.
 [source,Bash]
 ----
 # crm node online
-# crm_mon
+# crm_mon -1
 ============
-Last updated: Tue Sep 1 10:13:25 2009
-Stack: openais
-Current DC: pcmk-1 - partition with quorum
-Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
-2 Nodes configured, 2 expected votes
-4 Resources configured.
+Last updated: Tue Apr  3 14:00:06 2012
+Last change: Tue Apr  3 14:00:00 2012 via crm_attribute on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1702537408) - partition with quorum
+Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
+2 Nodes configured, unknown expected votes
+5 Resources configured.
 ============
+
 Online: [ pcmk-1 pcmk-2 ]
-ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2
-WebSite (ocf::heartbeat:apache):    Started pcmk-2
-Master/Slave Set: WebDataClone
-    Masters: [ pcmk-2 ]
-    Slaves: [ pcmk-1 ]
-WebFS  (ocf::heartbeat:Filesystem):  Started pcmk-2
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-2
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-2 ]
+     Slaves: [ pcmk-1 ]
+ WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-2
 ----
 
 Notice that our resource stickiness settings prevent the services from
