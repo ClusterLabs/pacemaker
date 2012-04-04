@@ -2039,6 +2039,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
                         crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
                     node_t *target = pe_find_node(data_set->nodes, migrate_target);
+                    node_t *source = pe_find_node(data_set->nodes, migrate_source);
                     xmlNode *migrate_from =
                         find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source,
                                     data_set);
@@ -2075,11 +2076,16 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
                         crm_trace("Marking active on %s %p %d", migrate_target, target,
                                   target->details->online);
                         if (target && target->details->online) {
-                            /* TODO: One day, figure out how to complete the migration
-                             * For now, consider it active in both locations so it gets stopped everywhere
-                             */
                             native_add_running(rsc, target, data_set);
-
+                            if (source && source->details->online) {
+                                /* If we make it here we have a partial migration.  The migrate_to
+                                 * has completed but the migrate_from on the target has not. Hold on
+                                 * to the target and source on the resource. Later on if we detect that
+                                 * the resource is still going to run on that target, we may continue
+                                 * the migration */
+                                rsc->partial_migration_target = target;
+                                rsc->partial_migration_source = source;
+                            }
                         } else {
                             /* Consider it failed here - forces a restart, prevents migration */
                             set_bit_inplace(rsc->flags, pe_rsc_failed);
