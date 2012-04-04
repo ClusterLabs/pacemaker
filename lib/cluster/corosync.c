@@ -1083,6 +1083,10 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
     if (rc != CS_OK) {
         crm_err("Could not connect to the Quorum API: %d\n", rc);
         goto bail;
+
+    } else if (quorum_type != QUORUM_SET) {
+       crm_err("Corosync quorum is not configured\n");
+       goto bail;
     }
 
     rc = quorum_getquorate(pcmk_quorum_handle, &quorate);
