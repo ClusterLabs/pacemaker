@@ -60,22 +60,22 @@ gboolean NullOp(resource_t * rsc, node_t * next, gboolean optional, pe_working_s
 /* *INDENT-OFF* */
 enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 /* Current State */	
-/*    Next State:  Unknown 	    Stopped	      Started	        Slave	          Master */
-    /* Unknown */	{ RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, },
-    /* Stopped */	{ RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE, },
-    /* Started */	{ RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
-    /* Slave */	{ RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_UNKNOWN, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
-    /* Master */	{ RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_UNKNOWN, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+/*       Next State:    Unknown 	  Stopped	     Started	        Slave	          Master */
+    /* Unknown */ { RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, },
+    /* Stopped */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE, },
+    /* Started */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+    /* Slave */	  { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_UNKNOWN, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+    /* Master */  { RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_UNKNOWN, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
 };
 
 gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gboolean,pe_working_set_t*) = {
 /* Current State */	
-/*    Next State: Unknown	Stopped		Started		Slave		Master */
+/*       Next State:       Unknown	Stopped		Started		Slave		Master */
     /* Unknown */	{ RoleError,	StopRsc,	RoleError,	RoleError,	RoleError,  },
     /* Stopped */	{ RoleError,	NullOp,		StartRsc,	StartRsc,	RoleError,  },
     /* Started */	{ RoleError,	StopRsc,	NullOp,		NullOp,		PromoteRsc, },
-    /* Slave */	{ RoleError,	StopRsc,	RoleError,	NullOp,		PromoteRsc, },
-    /* Master */	{ RoleError,	RoleError,	RoleError,	DemoteRsc,	NullOp,     },
+    /* Slave */	        { RoleError,	StopRsc,	RoleError,	NullOp,		PromoteRsc, },
+    /* Master */	{ RoleError,	DemoteRsc,	RoleError,	DemoteRsc,	NullOp,     },
 };
 /* *INDENT-ON* */
 
