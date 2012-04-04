@@ -131,7 +131,7 @@ inject_node_state(cib_t * cib_conn, char *node)
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                cib_xpath | cib_sync_call | cib_scope_local);
 
-    if(ID(cib_object) == NULL) {
+    if(cib_object && ID(cib_object) == NULL) {
         crm_err("Detected multiple node_state entries for xpath=%s, bailing", xpath);
         crm_log_xml_warn(cib_object, "Duplicates");
         exit(1);
