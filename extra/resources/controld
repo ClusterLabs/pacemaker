@@ -189,7 +189,7 @@ controld_validate() {
 : ${OCF_RESKEY_CRM_meta_gloablly_unique:="false"}
 
 case "$HA_quorum_type" in
-    cman) daemon_ext="";;
+    cman|corosync) daemon_ext="";;
     *) daemon_ext=".pcmk";;
 esac
 
