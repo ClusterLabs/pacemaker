@@ -302,7 +302,7 @@ get_uuid(const char *uname)
 const char *
 get_uname(const char *uuid)
 {
-    char *uname = NULL;
+    const char *uname = NULL;
 
     if (crm_uname_cache == NULL) {
         crm_uname_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
@@ -318,7 +318,18 @@ get_uname(const char *uuid)
     }
 #if SUPPORT_COROSYNC
     if (is_openais_cluster()) {
-        g_hash_table_insert(crm_uname_cache, crm_strdup(uuid), crm_strdup(uuid));
+        if (!uname_is_uuid() && is_corosync_cluster()) {
+            uint32_t id = crm_int_helper(uuid, NULL);
+            crm_node_t *node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
+
+            uname = node ? node->uname : NULL;
+        } else {
+            uname = uuid;
+        }
+
+        if (uname) {
+            g_hash_table_insert(crm_uname_cache, crm_strdup(uuid), crm_strdup(uname));
+        }
     }
 #endif
 
