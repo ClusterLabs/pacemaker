@@ -150,7 +150,6 @@ function do_test {
     if [ ! -z $single_test ]; then
 	echo CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $*
 	CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $*
-	return $?
     fi
 
     CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* 2> $stderr_output > $score_output
@@ -280,6 +279,8 @@ if [ -z $single_test ]; then
 # zero out the error log
     > $failed
 else
+    failed=.single
+    > $failed
     do_test $single_test "Single shot" $*
     exit $?
 fi
