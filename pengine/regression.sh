@@ -19,7 +19,6 @@
 
 core=`dirname $0`
 . $core/regression.core.sh
-io_dir=$test_home/test10
 
 create_mode="true"
 info Generating test outputs for these tests...
@@ -371,15 +370,15 @@ do_test novell-239079 "Notification priority"
 #do_test notify-2 "Notify - 764"
 
 echo ""
-do_test 594 "OSDL #594"
-do_test 662 "OSDL #662"
-do_test 696 "OSDL #696"
-do_test 726 "OSDL #726"
-do_test 735 "OSDL #735"
-do_test 764 "OSDL #764"
-do_test 797 "OSDL #797"
+do_test 594 "OSDL #594 - Unrunnable actions scheduled in transition"
+do_test 662 "OSDL #662 - Two resources start on one node when incarnation_node_max = 1"
+do_test 696 "OSDL #696 - CRM starts stonith RA without monitor"
+do_test 726 "OSDL #726 - Attempting to schedule rsc_posic041_monitor_5000 _after_ a stop"
+do_test 735 "OSDL #735 - Correctly detect that rsc_hadev1 is stopped on hadev3"
+do_test 764 "OSDL #764 - Missing monitor op for DoFencing:child_DoFencing:1"
+do_test 797 "OSDL #797 - Assert triggered: task_id_i > max_call_id"
 do_test 829 "OSDL #829"
-do_test 994 "OSDL #994"
+do_test 994 "OSDL #994 - Stopping the last resource in a resource group causes the entire group to be restarted"
 do_test 994-2 "OSDL #994 - with a dependant resource"
 do_test 1360 "OSDL #1360 - Clone stickiness"
 do_test 1484 "OSDL #1484 - on_fail=stop"
