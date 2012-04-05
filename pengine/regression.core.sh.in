@@ -43,13 +43,12 @@ function show_test() {
 }
 
 info "Test home is:\t$test_home"
+io_dir=$test_home/test10
 test_binary=@abs_top_builddir@/tools/crm_simulate
 PCMK_schema_directory=@abs_top_builddir@/xml
 
 failed=$test_home/.regression.failed.diff
-
-# zero out the error log
-> $failed
+single_test=
 
 while true ; do
     case "$1" in
@@ -66,6 +65,7 @@ while true ; do
 	--valgrind-skip-output)
 	    VALGRIND_SKIP_OUTPUT=1
 	    shift;;
+	--run) single_test="$2"; shift; shift; break;;
 	-b|--binary) test_binary=$2; PCMK_schema_directory=""; shift; shift;;
 	-?|--help) echo "$0 [--binary name] [--force-local]"; shift; exit 0;;
 	--) shift ; break ;;
@@ -147,6 +147,12 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
+    if [ ! -z $single_test ]; then
+	echo CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $*
+	CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $*
+	return $?
+    fi
+
     CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* 2> $stderr_output > $score_output
     rc=$?
     if [ $rc != $expected_rc ]; then
@@ -270,3 +276,10 @@ function test_results {
     exit $num_failed
 }
 
+if [ -z $single_test ]; then
+# zero out the error log
+    > $failed
+else
+    do_test $single_test "Single shot" $*
+    exit $?
+fi
