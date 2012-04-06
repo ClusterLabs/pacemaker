@@ -289,7 +289,7 @@ static struct crm_option long_options[] = {
 
     {"-spacer-",	1, 0, '-', "\nModes:"},
     {"as-html",        1, 0, 'h', "Write cluster status to the named html file"},
-    {"as-xml",         0, 0, 'X', "\tWrite cluster status as xml to stdout."},
+    {"as-xml",         0, 0, 'X', "\tWrite cluster status as xml to stdout. This will enable one-shot mode."},
     {"web-cgi",        0, 0, 'w', "\tWeb mode with output suitable for cgi"},
     {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)"},
     {"snmp-traps",     1, 0, 'S', "Send SNMP traps to this station", !ENABLE_SNMP},
@@ -330,7 +330,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_mon --daemonize --as-html /path/to/docroot/filename.html", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Start crm_mon and export the current cluster status as xml to stdout, then exit.:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_mon --one-shot --as-xml", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', " crm_mon --as-xml", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send email alerts:", pcmk_option_paragraph|!ENABLE_ESMTP},
     {"-spacer-",	1, 0, '-', " crm_mon --daemonize --mail-to user@example.com --mail-host mail.example.com", pcmk_option_example|!ENABLE_ESMTP},
     {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send SNMP alerts:", pcmk_option_paragraph|!ENABLE_SNMP},
@@ -419,6 +419,7 @@ main(int argc, char **argv)
                 break;
             case 'X':
                 as_xml = TRUE;
+                one_shot = TRUE;
                 break;
             case 'w':
                 web_cgi = TRUE;
