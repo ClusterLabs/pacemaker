@@ -316,6 +316,14 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
         } else if (fsa_actions & A_READCONFIG) {
             do_fsa_action(fsa_data, A_READCONFIG, do_read_config);
 
+            /* sub-system restart */
+        } else if ((fsa_actions & O_CIB_RESTART) == O_CIB_RESTART) {
+            do_fsa_action(fsa_data, O_CIB_RESTART, do_cib_control);
+        } else if ((fsa_actions & O_PE_RESTART) == O_PE_RESTART) {
+            do_fsa_action(fsa_data, O_PE_RESTART, do_pe_control);
+        } else if ((fsa_actions & O_TE_RESTART) == O_TE_RESTART) {
+            do_fsa_action(fsa_data, O_TE_RESTART, do_te_control);
+
             /* sub-system start/connect */
         } else if (fsa_actions & A_LRM_CONNECT) {
             do_fsa_action(fsa_data, A_LRM_CONNECT, do_lrm_control);
@@ -325,14 +333,6 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             do_fsa_action(fsa_data, A_TE_START, do_te_control);
         } else if (fsa_actions & A_PE_START) {
             do_fsa_action(fsa_data, A_PE_START, do_pe_control);
-
-            /* sub-system restart */
-        } else if ((fsa_actions & O_CIB_RESTART) == O_CIB_RESTART) {
-            do_fsa_action(fsa_data, O_CIB_RESTART, do_cib_control);
-        } else if ((fsa_actions & O_PE_RESTART) == O_PE_RESTART) {
-            do_fsa_action(fsa_data, O_PE_RESTART, do_pe_control);
-        } else if ((fsa_actions & O_TE_RESTART) == O_TE_RESTART) {
-            do_fsa_action(fsa_data, O_TE_RESTART, do_te_control);
 
             /* Timers */
 /* 		else if(fsa_actions & O_DC_TIMER_RESTART) {
