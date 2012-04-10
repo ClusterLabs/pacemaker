@@ -290,7 +290,7 @@ docdir=%{pcmk_docdir} %{configure}                 \
         --with-version=%{version}-%{release}       \
         --enable-fatal-warnings=no
 
-make %{_smp_mflags} V=1 docdir=%{pcmk_docdir}
+make %{_smp_mflags} V=1 docdir=%{pcmk_docdir} all
 
 %install
 rm -rf %{buildroot}
