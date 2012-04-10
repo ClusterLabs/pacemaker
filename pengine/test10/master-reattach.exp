@@ -10,7 +10,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="12" operation="monitor" operation_key="drbd1:0_monitor_11000" internal_operation_key="drbd1:1_monitor_11000" on_node="dktest2" on_node_uuid="f430bc66-3388-4b7d-9e99-24fb02855f54">
+      <rsc_op id="11" operation="monitor" operation_key="drbd1:0_monitor_11000" internal_operation_key="drbd1:1_monitor_11000" on_node="dktest2" on_node_uuid="f430bc66-3388-4b7d-9e99-24fb02855f54">
         <primitive id="drbd1:0" long-id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="15000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
       </rsc_op>
@@ -19,7 +19,7 @@
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="40" operation="monitor" operation_key="apache-vip_monitor_60000" on_node="dktest1" on_node_uuid="c738bee8-591f-4653-aaad-20a961923f25">
+      <rsc_op id="39" operation="monitor" operation_key="apache-vip_monitor_60000" on_node="dktest1" on_node_uuid="c738bee8-591f-4653-aaad-20a961923f25">
         <primitive id="apache-vip" long-id="apache:apache-vip" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="15000" broadcast="10.200.200.255" cidr_netmask="24" crm_feature_set="3.0.6" ip="10.200.200.224" nic="eth1"/>
       </rsc_op>
@@ -28,7 +28,7 @@
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="43" operation="monitor" operation_key="mount_monitor_10000" on_node="dktest1" on_node_uuid="c738bee8-591f-4653-aaad-20a961923f25">
+      <rsc_op id="42" operation="monitor" operation_key="mount_monitor_10000" on_node="dktest1" on_node_uuid="c738bee8-591f-4653-aaad-20a961923f25">
         <primitive id="mount" long-id="apache:mount" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_enabled="true" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_role="Started" CRM_meta_timeout="5000" crm_feature_set="3.0.6" device="/dev/drbd1" directory="/srv" fstype="ext3"/>
       </rsc_op>
@@ -37,7 +37,7 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="46" operation="monitor" operation_key="webserver_monitor_30000" on_node="dktest1" on_node_uuid="c738bee8-591f-4653-aaad-20a961923f25">
+      <rsc_op id="45" operation="monitor" operation_key="webserver_monitor_30000" on_node="dktest1" on_node_uuid="c738bee8-591f-4653-aaad-20a961923f25">
         <primitive id="webserver" long-id="apache:webserver" class="ocf" provider="heartbeat" type="apache"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" configfile="/srv/apache/conf/httpd.conf" crm_feature_set="3.0.6" httpd="/srv/apache/bin/httpd" port="80" testregex="test"/>
       </rsc_op>

@@ -58,7 +58,7 @@
         <pseudo_event id="17" operation="start" operation_key="group-1_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -96,7 +96,7 @@
         <pseudo_event id="24" operation="stop" operation_key="migrator_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -108,7 +108,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
+        <crm_event id="73" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
       </trigger>
     </inputs>
   </synapse>
@@ -146,7 +146,7 @@
         <pseudo_event id="32" operation="stop" operation_key="rsc_sles-3_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -158,7 +158,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
+        <crm_event id="73" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
       </trigger>
     </inputs>
   </synapse>
@@ -284,10 +284,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="65" operation="start" operation_key="master_rsc_1_start_0"/>
+        <pseudo_event id="63" operation="start" operation_key="master_rsc_1_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -313,198 +313,198 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="65" operation="start" operation_key="master_rsc_1_start_0"/>
+        <pseudo_event id="63" operation="start" operation_key="master_rsc_1_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="25">
     <action_set>
-      <rsc_op id="56" operation="monitor" operation_key="ocf_msdummy:2_monitor_5000" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
+      <rsc_op id="55" operation="monitor" operation_key="ocf_msdummy:2_monitor_5000" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
         <primitive id="ocf_msdummy:2" long-id="master_rsc_1:ocf_msdummy:2" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="55" operation="start" operation_key="ocf_msdummy:2_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088"/>
+        <rsc_op id="54" operation="start" operation_key="ocf_msdummy:2_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="26">
     <action_set>
-      <rsc_op id="55" operation="start" operation_key="ocf_msdummy:2_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
+      <rsc_op id="54" operation="start" operation_key="ocf_msdummy:2_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
         <primitive id="ocf_msdummy:2" long-id="master_rsc_1:ocf_msdummy:2" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="54" operation="stop" operation_key="ocf_msdummy:2_stop_0"/>
+        <pseudo_event id="53" operation="stop" operation_key="ocf_msdummy:2_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="65" operation="start" operation_key="master_rsc_1_start_0"/>
+        <pseudo_event id="63" operation="start" operation_key="master_rsc_1_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="27">
     <action_set>
-      <pseudo_event id="54" operation="stop" operation_key="ocf_msdummy:2_stop_0">
+      <pseudo_event id="53" operation="stop" operation_key="ocf_msdummy:2_stop_0">
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="67" operation="stop" operation_key="master_rsc_1_stop_0"/>
+        <pseudo_event id="65" operation="stop" operation_key="master_rsc_1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
+        <crm_event id="73" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="28">
     <action_set>
-      <rsc_op id="58" operation="monitor" operation_key="ocf_msdummy:3_monitor_5000" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
+      <rsc_op id="57" operation="monitor" operation_key="ocf_msdummy:3_monitor_5000" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
         <primitive id="ocf_msdummy:3" long-id="master_rsc_1:ocf_msdummy:3" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="57" operation="start" operation_key="ocf_msdummy:3_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee"/>
+        <rsc_op id="56" operation="start" operation_key="ocf_msdummy:3_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="29">
     <action_set>
-      <rsc_op id="57" operation="start" operation_key="ocf_msdummy:3_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
+      <rsc_op id="56" operation="start" operation_key="ocf_msdummy:3_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
         <primitive id="ocf_msdummy:3" long-id="master_rsc_1:ocf_msdummy:3" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="65" operation="start" operation_key="master_rsc_1_start_0"/>
+        <pseudo_event id="63" operation="start" operation_key="master_rsc_1_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="30">
     <action_set>
-      <rsc_op id="60" operation="monitor" operation_key="ocf_msdummy:4_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
+      <rsc_op id="59" operation="monitor" operation_key="ocf_msdummy:4_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
         <primitive id="ocf_msdummy:4" long-id="master_rsc_1:ocf_msdummy:4" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="59" operation="start" operation_key="ocf_msdummy:4_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
+        <rsc_op id="58" operation="start" operation_key="ocf_msdummy:4_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="31">
     <action_set>
-      <rsc_op id="59" operation="start" operation_key="ocf_msdummy:4_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
+      <rsc_op id="58" operation="start" operation_key="ocf_msdummy:4_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
         <primitive id="ocf_msdummy:4" long-id="master_rsc_1:ocf_msdummy:4" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="65" operation="start" operation_key="master_rsc_1_start_0"/>
+        <pseudo_event id="63" operation="start" operation_key="master_rsc_1_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="32">
     <action_set>
-      <rsc_op id="64" operation="monitor" operation_key="ocf_msdummy:5_monitor_5000" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
+      <rsc_op id="62" operation="monitor" operation_key="ocf_msdummy:5_monitor_5000" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
         <primitive id="ocf_msdummy:5" long-id="master_rsc_1:ocf_msdummy:5" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="63" operation="start" operation_key="ocf_msdummy:5_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088"/>
+        <rsc_op id="61" operation="start" operation_key="ocf_msdummy:5_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="33">
     <action_set>
-      <rsc_op id="63" operation="start" operation_key="ocf_msdummy:5_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
+      <rsc_op id="61" operation="start" operation_key="ocf_msdummy:5_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
         <primitive id="ocf_msdummy:5" long-id="master_rsc_1:ocf_msdummy:5" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="62" operation="stop" operation_key="ocf_msdummy:5_stop_0"/>
+        <pseudo_event id="60" operation="stop" operation_key="ocf_msdummy:5_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="65" operation="start" operation_key="master_rsc_1_start_0"/>
+        <pseudo_event id="63" operation="start" operation_key="master_rsc_1_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="34">
     <action_set>
-      <pseudo_event id="62" operation="stop" operation_key="ocf_msdummy:5_stop_0">
+      <pseudo_event id="60" operation="stop" operation_key="ocf_msdummy:5_stop_0">
         <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="67" operation="stop" operation_key="master_rsc_1_stop_0"/>
+        <pseudo_event id="65" operation="stop" operation_key="master_rsc_1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
+        <crm_event id="73" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="35" priority="1000000">
     <action_set>
-      <pseudo_event id="68" operation="stopped" operation_key="master_rsc_1_stopped_0">
+      <pseudo_event id="66" operation="stopped" operation_key="master_rsc_1_stopped_0">
         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="54" operation="stop" operation_key="ocf_msdummy:2_stop_0"/>
+        <pseudo_event id="53" operation="stop" operation_key="ocf_msdummy:2_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="62" operation="stop" operation_key="ocf_msdummy:5_stop_0"/>
+        <pseudo_event id="60" operation="stop" operation_key="ocf_msdummy:5_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="67" operation="stop" operation_key="master_rsc_1_stop_0"/>
+        <pseudo_event id="65" operation="stop" operation_key="master_rsc_1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="36">
     <action_set>
-      <pseudo_event id="67" operation="stop" operation_key="master_rsc_1_stop_0">
+      <pseudo_event id="65" operation="stop" operation_key="master_rsc_1_stop_0">
         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
+        <crm_event id="73" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="37" priority="1000000">
     <action_set>
-      <pseudo_event id="66" operation="running" operation_key="master_rsc_1_running_0">
+      <pseudo_event id="64" operation="running" operation_key="master_rsc_1_running_0">
         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -516,64 +516,64 @@
         <rsc_op id="51" operation="start" operation_key="ocf_msdummy:1_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
       </trigger>
       <trigger>
-        <rsc_op id="55" operation="start" operation_key="ocf_msdummy:2_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088"/>
+        <rsc_op id="54" operation="start" operation_key="ocf_msdummy:2_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088"/>
       </trigger>
       <trigger>
-        <rsc_op id="57" operation="start" operation_key="ocf_msdummy:3_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee"/>
+        <rsc_op id="56" operation="start" operation_key="ocf_msdummy:3_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee"/>
       </trigger>
       <trigger>
-        <rsc_op id="59" operation="start" operation_key="ocf_msdummy:4_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
+        <rsc_op id="58" operation="start" operation_key="ocf_msdummy:4_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
       </trigger>
       <trigger>
-        <rsc_op id="63" operation="start" operation_key="ocf_msdummy:5_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088"/>
+        <rsc_op id="61" operation="start" operation_key="ocf_msdummy:5_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088"/>
       </trigger>
       <trigger>
-        <pseudo_event id="65" operation="start" operation_key="master_rsc_1_start_0"/>
+        <pseudo_event id="63" operation="start" operation_key="master_rsc_1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="38">
     <action_set>
-      <pseudo_event id="65" operation="start" operation_key="master_rsc_1_start_0">
+      <pseudo_event id="63" operation="start" operation_key="master_rsc_1_start_0">
         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="68" operation="stopped" operation_key="master_rsc_1_stopped_0"/>
+        <pseudo_event id="66" operation="stopped" operation_key="master_rsc_1_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="39">
     <action_set>
-      <crm_event id="75" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec">
+      <crm_event id="73" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec">
         <attributes CRM_meta_on_node="sles-3" CRM_meta_on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="73" operation="stonith_up" operation_key="stonith_up"/>
+        <pseudo_event id="71" operation="stonith_up" operation_key="stonith_up"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="40">
     <action_set>
-      <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete">
+      <pseudo_event id="72" operation="stonith_complete" operation_key="stonith_complete">
         <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="73" operation="stonith_up" operation_key="stonith_up"/>
+        <pseudo_event id="71" operation="stonith_up" operation_key="stonith_up"/>
       </trigger>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
+        <crm_event id="73" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="41">
     <action_set>
-      <pseudo_event id="73" operation="stonith_up" operation_key="stonith_up">
+      <pseudo_event id="71" operation="stonith_up" operation_key="stonith_up">
         <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -597,13 +597,13 @@
         <pseudo_event id="32" operation="stop" operation_key="rsc_sles-3_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="54" operation="stop" operation_key="ocf_msdummy:2_stop_0"/>
+        <pseudo_event id="53" operation="stop" operation_key="ocf_msdummy:2_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="62" operation="stop" operation_key="ocf_msdummy:5_stop_0"/>
+        <pseudo_event id="60" operation="stop" operation_key="ocf_msdummy:5_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
+        <crm_event id="73" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
       </trigger>
     </inputs>
   </synapse>

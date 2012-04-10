@@ -22,7 +22,7 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="36" operation="stop" operation_key="ms-sf_stop_0"/>
+        <pseudo_event id="34" operation="stop" operation_key="ms-sf_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -41,47 +41,47 @@
    </synapse>
    <synapse id="3">
      <action_set>
-      <pseudo_event id="33" operation="promoted" operation_key="group:1_promoted_0">
+      <pseudo_event id="31" operation="promoted" operation_key="group:1_promoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="19" operation="promote" operation_key="stateful-1:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="18" operation="promote" operation_key="stateful-1:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
       </trigger>
       <trigger>
-        <rsc_op id="24" operation="promote" operation_key="stateful-2:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="22" operation="promote" operation_key="stateful-2:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="4">
      <action_set>
-      <pseudo_event id="32" operation="promote" operation_key="group:1_promote_0">
+      <pseudo_event id="30" operation="promote" operation_key="group:1_promote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="38" operation="promote" operation_key="ms-sf_promote_0"/>
+        <pseudo_event id="36" operation="promote" operation_key="ms-sf_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="5">
      <action_set>
-      <rsc_op id="20" operation="monitor" operation_key="stateful-1:1_monitor_10000" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="19" operation="monitor" operation_key="stateful-1:1_monitor_10000" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
          <primitive id="stateful-1:1" long-id="ms-sf:group:1:stateful-1:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="19" operation="promote" operation_key="stateful-1:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="18" operation="promote" operation_key="stateful-1:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
       </trigger>
     </inputs>
    </synapse>
   <synapse id="6">
      <action_set>
-       <rsc_op id="19" operation="promote" operation_key="stateful-1:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="18" operation="promote" operation_key="stateful-1:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
          <primitive id="stateful-1:1" long-id="ms-sf:group:1:stateful-1:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -91,7 +91,7 @@
          <rsc_op id="2" operation="cancel" operation_key="stateful-1:1_monitor_20000" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
        </trigger>
        <trigger>
-         <pseudo_event id="32" operation="promote" operation_key="group:1_promote_0"/>
+        <pseudo_event id="30" operation="promote" operation_key="group:1_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -106,20 +106,20 @@
    </synapse>
   <synapse id="8">
      <action_set>
-      <rsc_op id="25" operation="monitor" operation_key="stateful-2:1_monitor_10000" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="23" operation="monitor" operation_key="stateful-2:1_monitor_10000" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
          <primitive id="stateful-2:1" long-id="ms-sf:group:1:stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="24" operation="promote" operation_key="stateful-2:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="22" operation="promote" operation_key="stateful-2:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
       </trigger>
     </inputs>
    </synapse>
   <synapse id="9">
      <action_set>
-       <rsc_op id="24" operation="promote" operation_key="stateful-2:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="22" operation="promote" operation_key="stateful-2:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
          <primitive id="stateful-2:1" long-id="ms-sf:group:1:stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -129,10 +129,10 @@
          <rsc_op id="3" operation="cancel" operation_key="stateful-2:1_monitor_20000" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
        </trigger>
        <trigger>
-         <rsc_op id="19" operation="promote" operation_key="stateful-1:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="18" operation="promote" operation_key="stateful-1:1_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
        </trigger>
        <trigger>
-         <pseudo_event id="32" operation="promote" operation_key="group:1_promote_0"/>
+        <pseudo_event id="30" operation="promote" operation_key="group:1_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -147,31 +147,31 @@
    </synapse>
   <synapse id="11" priority="1000000">
      <action_set>
-      <pseudo_event id="39" operation="promoted" operation_key="ms-sf_promoted_0">
+      <pseudo_event id="37" operation="promoted" operation_key="ms-sf_promoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="33" operation="promoted" operation_key="group:1_promoted_0"/>
+        <pseudo_event id="31" operation="promoted" operation_key="group:1_promoted_0"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="12">
      <action_set>
-       <pseudo_event id="38" operation="promote" operation_key="ms-sf_promote_0">
+      <pseudo_event id="36" operation="promote" operation_key="ms-sf_promote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="37" operation="stopped" operation_key="ms-sf_stopped_0"/>
+        <pseudo_event id="35" operation="stopped" operation_key="ms-sf_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="13" priority="1000000">
      <action_set>
-      <pseudo_event id="37" operation="stopped" operation_key="ms-sf_stopped_0">
+      <pseudo_event id="35" operation="stopped" operation_key="ms-sf_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
@@ -180,13 +180,13 @@
         <pseudo_event id="11" operation="stopped" operation_key="group:0_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="36" operation="stop" operation_key="ms-sf_stop_0"/>
+        <pseudo_event id="34" operation="stop" operation_key="ms-sf_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="14">
     <action_set>
-      <pseudo_event id="36" operation="stop" operation_key="ms-sf_stop_0">
+      <pseudo_event id="34" operation="stop" operation_key="ms-sf_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>

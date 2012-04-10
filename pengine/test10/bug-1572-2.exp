@@ -105,7 +105,7 @@
    </synapse>
   <synapse id="8">
      <action_set>
-      <rsc_op id="10" operation="demote" operation_key="rsc_drbd_7788:1_demote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
+      <rsc_op id="9" operation="demote" operation_key="rsc_drbd_7788:1_demote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 " CRM_meta_notify_stop_uname="arc-dknightlx " CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
@@ -183,7 +183,7 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="10" operation="demote" operation_key="rsc_drbd_7788:1_demote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
+        <rsc_op id="9" operation="demote" operation_key="rsc_drbd_7788:1_demote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
        </trigger>
        <trigger>
         <pseudo_event id="29" operation="demote" operation_key="ms_drbd_7788_demote_0"/>

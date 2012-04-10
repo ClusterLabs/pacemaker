@@ -117,35 +117,35 @@
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="30" operation="demote" operation_key="rsc5:1_demote_0" on_node="node1" on_node_uuid="node1">
+      <rsc_op id="28" operation="demote" operation_key="rsc5:1_demote_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc5:1" long-id="ms5:rsc5:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="37" operation="demote" operation_key="ms5_demote_0"/>
+        <pseudo_event id="36" operation="demote" operation_key="ms5_demote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="10" priority="1000000">
     <action_set>
-      <pseudo_event id="38" operation="demoted" operation_key="ms5_demoted_0">
+      <pseudo_event id="37" operation="demoted" operation_key="ms5_demoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="30" operation="demote" operation_key="rsc5:1_demote_0" on_node="node1" on_node_uuid="node1"/>
+        <rsc_op id="28" operation="demote" operation_key="rsc5:1_demote_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="37" operation="demote" operation_key="ms5_demote_0"/>
+        <pseudo_event id="36" operation="demote" operation_key="ms5_demote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="11">
     <action_set>
-      <pseudo_event id="37" operation="demote" operation_key="ms5_demote_0">
+      <pseudo_event id="36" operation="demote" operation_key="ms5_demote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>

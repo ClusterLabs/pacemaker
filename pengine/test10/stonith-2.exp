@@ -21,40 +21,40 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="112" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="102" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <crm_event id="113" operation="stonith" operation_key="stonith" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a">
+      <crm_event id="103" operation="stonith" operation_key="stonith" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a">
         <attributes CRM_meta_on_node="sles-5" CRM_meta_on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="111" operation="stonith_up" operation_key="stonith_up"/>
+        <pseudo_event id="101" operation="stonith_up" operation_key="stonith_up"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <pseudo_event id="112" operation="stonith_complete" operation_key="stonith_complete">
+      <pseudo_event id="102" operation="stonith_complete" operation_key="stonith_complete">
         <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="111" operation="stonith_up" operation_key="stonith_up"/>
+        <pseudo_event id="101" operation="stonith_up" operation_key="stonith_up"/>
       </trigger>
       <trigger>
-        <crm_event id="113" operation="stonith" operation_key="stonith" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a"/>
+        <crm_event id="103" operation="stonith" operation_key="stonith" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <pseudo_event id="111" operation="stonith_up" operation_key="stonith_up">
+      <pseudo_event id="101" operation="stonith_up" operation_key="stonith_up">
         <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -68,7 +68,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="113" operation="stonith" operation_key="stonith" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a"/>
+        <crm_event id="103" operation="stonith" operation_key="stonith" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a"/>
       </trigger>
     </inputs>
   </synapse>

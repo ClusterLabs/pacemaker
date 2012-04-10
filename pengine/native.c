@@ -47,7 +47,6 @@ void RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 void pe_post_notify(resource_t * rsc, node_t * node, action_t * op,
                     notify_data_t * n_data, pe_working_set_t * data_set);
 
-void NoRoleChange(resource_t * rsc, node_t * current, node_t * next, pe_working_set_t * data_set);
 gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
 gboolean StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
 gboolean StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
@@ -1023,22 +1022,31 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 {
     action_t *start = NULL;
     node_t *chosen = NULL;
+    node_t *current = NULL;
+    gboolean need_stop = FALSE;
+    
     GListPtr gIter = NULL;
     int num_active_nodes = g_list_length(rsc->running_on);
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
-    crm_trace("Createing actions for %s: %s->%s", rsc->id,
-                role2text(rsc->role), role2text(rsc->next_role));
-
     chosen = rsc->allocated_to;
     if (chosen != NULL && rsc->next_role == RSC_ROLE_UNKNOWN) {
         rsc->next_role = RSC_ROLE_STARTED;
+        crm_trace("Fixed next_role: unknown -> %s", role2text(rsc->next_role));
 
     } else if (rsc->next_role == RSC_ROLE_UNKNOWN) {
         rsc->next_role = RSC_ROLE_STOPPED;
+        crm_trace("Fixed next_role: unknown -> %s", role2text(rsc->next_role));
     }
 
+    crm_trace("Processing state transition for %s: %s->%s", rsc->id,
+              role2text(rsc->role), role2text(rsc->next_role));
+
+    if(rsc->running_on) {
+        current = rsc->running_on->data;
+    }
+    
     get_rsc_attributes(rsc->parameters, rsc, chosen, data_set);
 
     for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
@@ -1054,89 +1062,95 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    if (num_active_nodes == 2 &&
-        chosen &&
-        rsc->partial_migration_target &&
-        (chosen->details == rsc->partial_migration_target->details)) {
+    if (num_active_nodes > 1) {
 
-        /* Here the chosen node is still the migration target from a partial
-         * migration. Attempt to continue the migration instead of recovering
-         * by stopping the resource everywhere and starting it on a single node. */
-        crm_trace("Attempting to continue with a partial migration to target %s from %s",
-            rsc->partial_migration_target->details->id,
-            rsc->partial_migration_source->details->id);
-
-        NoRoleChange(rsc,
-            rsc->partial_migration_source,
-            rsc->partial_migration_target,
-            data_set);
-
-    } else if (num_active_nodes > 1) {
-        const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-
-        pe_proc_err("Resource %s (%s::%s) is active on %d nodes %s",
-                    rsc->id, class, type, num_active_nodes,
-                    recovery2text(rsc->recovery_type));
-        crm_warn("See %s for more information.",
-                 "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
-
-        if (rsc->recovery_type == recovery_stop_start) {
-            if (rsc->role == RSC_ROLE_MASTER) {
-                DemoteRsc(rsc, NULL, FALSE, data_set);
+        if (num_active_nodes == 2
+            && chosen
+            && rsc->partial_migration_target
+            && (chosen->details == rsc->partial_migration_target->details)) {
+            /* Here the chosen node is still the migration target from a partial
+             * migration. Attempt to continue the migration instead of recovering
+             * by stopping the resource everywhere and starting it on a single node. */
+            crm_trace("Will attempt to continue with a partial migration to target %s from %s",
+                      rsc->partial_migration_target->details->id,
+                      rsc->partial_migration_source->details->id);
+        } else {
+            const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+            const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+            
+            pe_proc_err("Resource %s (%s::%s) is active on %d nodes %s",
+                        rsc->id, class, type, num_active_nodes,
+                        recovery2text(rsc->recovery_type));
+            crm_warn("See %s for more information.",
+                     "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
+            
+            if (rsc->recovery_type == recovery_stop_start) {
+                need_stop = TRUE;
             }
-            StopRsc(rsc, NULL, FALSE, data_set);
-            rsc->role = RSC_ROLE_STOPPED;
+
+            /* If by chance a partial migration is in process,
+             * but the migration target is not chosen still, clear all
+             * partial migration data.  */
+            rsc->partial_migration_source = rsc->partial_migration_target = NULL;
         }
-
-        /* If by chance a partial migration is in process,
-         * but the migration target is not chosen still, clear all
-         * partial migration data.  */
-        rsc->partial_migration_source = rsc->partial_migration_target = NULL;
-
-    } else if (rsc->running_on != NULL) {
-        node_t *current = rsc->running_on->data;
-
-        NoRoleChange(rsc, current, chosen, data_set);
-
-    } else if (rsc->role == RSC_ROLE_STOPPED && rsc->next_role == RSC_ROLE_STOPPED) {
-        char *key = start_key(rsc);
-        GListPtr possible_matches = find_actions(rsc->actions, key, NULL);
-        GListPtr gIter = NULL;
-
-        for (gIter = possible_matches; gIter != NULL; gIter = gIter->next) {
-            action_t *action = (action_t *) gIter->data;
-
-            update_action_flags(action, pe_action_optional);
-/*			action->pseudo = TRUE; */
-        }
-
-        g_list_free(possible_matches);
-        crm_trace("Stopping a stopped resource");
-        crm_free(key);
-        goto do_recurring;
-
-    } else if (rsc->role != RSC_ROLE_STOPPED) {
-        /* A cheap trick to account for the fact that Master/Slave groups may not be
-         * completely running when we set their role to Slave
-         */
-        crm_trace("Resetting %s.role = %s (was %s)",
-                    rsc->id, role2text(RSC_ROLE_STOPPED), role2text(rsc->role));
-        rsc->role = RSC_ROLE_STOPPED;
     }
 
+    if (is_set(rsc->flags, pe_rsc_start_pending)) {
+        start = start_action(rsc, chosen, TRUE);
+        set_bit_inplace(start->flags, pe_action_print_always);
+    }
+
+    if(current && chosen && current->details != chosen->details) {
+        crm_trace("Moving %s", rsc->id);
+        need_stop = TRUE;
+
+    } else if(is_set(rsc->flags, pe_rsc_failed)) {
+        crm_trace("Recovering %s", rsc->id);
+        need_stop = TRUE;
+
+    } else if(rsc->role > RSC_ROLE_STARTED && current != NULL && chosen != NULL) {
+        /* Recovery of a promoted resource */
+        start = start_action(rsc, chosen, TRUE);
+        if(is_set(start->flags, pe_action_optional) == FALSE) {
+            crm_trace("Forced start %s", rsc->id);
+            need_stop = TRUE;
+        }
+    }
+
+    crm_trace("Creating actions for %s: %s->%s", rsc->id,
+              role2text(rsc->role), role2text(rsc->next_role));
+
+    role = rsc->role;
+    /* Potentiall optional steps on brining the resource down and back up to the same level */
+    while (role != RSC_ROLE_STOPPED) {
+        next_role = rsc_state_matrix[role][RSC_ROLE_STOPPED];
+        crm_trace("Down: Executing: %s->%s (%s)%s", role2text(role), role2text(next_role), rsc->id, need_stop?" required":"");
+        if (rsc_action_matrix[role][next_role] (rsc, current, !need_stop, data_set) == FALSE) {
+            break;
+        }
+        role = next_role;
+    }
+
+    while (rsc->role <= rsc->next_role && role != rsc->role) {
+        next_role = rsc_state_matrix[role][rsc->role];
+        crm_trace("Up:   Executing: %s->%s (%s)%s", role2text(role), role2text(next_role), rsc->id, need_stop?" required":"");
+        if (rsc_action_matrix[role][next_role] (rsc, chosen, !need_stop, data_set) == FALSE) {
+            break;
+        }
+        role = next_role;
+    }
     role = rsc->role;
 
+    /* Required steps from this role to the next */
     while (role != rsc->next_role) {
         next_role = rsc_state_matrix[role][rsc->next_role];
-        crm_trace("Executing: %s->%s (%s)", role2text(role), role2text(next_role), rsc->id);
+        crm_trace("Role: Executing: %s->%s (%s)", role2text(role), role2text(next_role), rsc->id);
         if (rsc_action_matrix[role][next_role] (rsc, chosen, FALSE, data_set) == FALSE) {
             break;
         }
         role = next_role;
     }
 
-  do_recurring:
     if (rsc->next_role != RSC_ROLE_STOPPED || is_set(rsc->flags, pe_rsc_managed) == FALSE) {
         start = start_action(rsc, chosen, TRUE);
         Recurring(rsc, start, chosen, data_set);
@@ -1638,14 +1652,14 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
 
     if (then_flags != then->flags) {
         changed |= pe_graph_updated_then;
-        crm_trace("Then: Flags for %s on %s are now  0x%.6x (were 0x%.6x) because of %s",
+        crm_trace("Then: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s",
                   then->uuid, then->node ? then->node->details->uname : "[none]", then->flags,
                   then_flags, first->uuid);
     }
 
     if (first_flags != first->flags) {
         changed |= pe_graph_updated_first;
-        crm_trace("First: Flags for %s on %s are now  0x%.6x (were 0x%.6x) because of %s",
+        crm_trace("First: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s",
                   first->uuid, first->node ? first->node->details->uname : "[none]", first->flags,
                   first_flags, then->uuid);
     }
@@ -1926,91 +1940,13 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     }
 }
 
-void
-NoRoleChange(resource_t * rsc, node_t * current, node_t * next, pe_working_set_t * data_set)
-{
-    GListPtr gIter = NULL;
-    action_t *stop = NULL;
-    action_t *start = NULL;
-    GListPtr possible_matches = NULL;
-
-    crm_trace("Executing: %s (role=%s)", rsc->id, role2text(rsc->next_role));
-
-    if (current == NULL || next == NULL) {
-        return;
-    }
-
-    if (is_set(rsc->flags, pe_rsc_failed)
-        || safe_str_neq(current->details->id, next->details->id)) {
-
-        if (rsc->next_role > RSC_ROLE_STARTED) {
-            gboolean optional = TRUE;
-
-            if (rsc->role == RSC_ROLE_MASTER) {
-                optional = FALSE;
-            }
-            DemoteRsc(rsc, current, optional, data_set);
-        }
-        if (rsc->role == RSC_ROLE_MASTER) {
-            DemoteRsc(rsc, current, FALSE, data_set);
-        }
-        StopRsc(rsc, current, FALSE, data_set);
-        StartRsc(rsc, next, FALSE, data_set);
-        if (rsc->next_role == RSC_ROLE_MASTER) {
-            PromoteRsc(rsc, next, FALSE, data_set);
-        }
-
-        possible_matches = find_recurring_actions(rsc->actions, next);
-        for (gIter = possible_matches; gIter != NULL; gIter = gIter->next) {
-            action_t *match = (action_t *) gIter->data;
-
-            if (is_set(match->flags, pe_action_optional) == FALSE) {
-                crm_debug("Fixing recurring action: %s", match->uuid);
-                update_action_flags(match, pe_action_optional);
-            }
-        }
-        g_list_free(possible_matches);
-
-    } else if (is_set(rsc->flags, pe_rsc_start_pending)) {
-        start = start_action(rsc, next, TRUE);
-        if (is_set(start->flags, pe_action_runnable)) {
-            /* wait for StartRsc() to be called */
-            rsc->role = RSC_ROLE_STOPPED;
-        } else {
-            /* wait for StopRsc() to be called */
-            rsc->next_role = RSC_ROLE_STOPPED;
-        }
-
-    } else {
-        stop = stop_action(rsc, current, TRUE);
-        start = start_action(rsc, next, TRUE);
-        if (is_set(start->flags, pe_action_optional)) {
-            update_action_flags(stop, pe_action_optional);
-        } else {
-            update_action_flags(stop, pe_action_optional | pe_action_clear);
-        }
-        if (rsc->next_role > RSC_ROLE_STARTED) {
-            DemoteRsc(rsc, current, is_set(start->flags, pe_action_optional), data_set);
-        }
-        StopRsc(rsc, current, is_set(start->flags, pe_action_optional), data_set);
-        StartRsc(rsc, current, is_set(start->flags, pe_action_optional), data_set);
-        if (rsc->next_role == RSC_ROLE_MASTER) {
-            PromoteRsc(rsc, next, is_set(start->flags, pe_action_optional), data_set);
-        }
-
-        if (is_set(start->flags, pe_action_runnable) == FALSE) {
-            rsc->next_role = RSC_ROLE_STOPPED;
-        }
-    }
-}
-
 gboolean
 StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
-    crm_trace("Executing: %s", rsc->id);
+    crm_trace("%s", rsc->id);
 
     if (rsc->next_role == RSC_ROLE_STOPPED
         && rsc->variant == pe_native && safe_str_eq(class, "stonith")) {
@@ -2025,11 +1961,19 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
         node_t *current = (node_t *) gIter->data;
         action_t *stop;
 
-        if (next && next->details != current->details) {
-            continue;
+        if (rsc->partial_migration_target) {
+            if(rsc->partial_migration_target->details == current->details) {
+                crm_trace("Filtered %s -> %s %s", current->details->uname, next->details->uname, rsc->id);
+                continue;
+            } else {
+                crm_trace("Forced on %s %s", current->details->uname, rsc->id);
+                optional = FALSE;
+            }
         }
 
+        crm_trace("%s on %s", rsc->id, current->details->uname);
         stop = stop_action(rsc, current, optional);
+
         if(is_not_set(rsc->flags, pe_rsc_managed)) {
             update_action_flags(stop, pe_action_runnable|pe_action_clear);
         }
@@ -2047,7 +1991,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
 {
     action_t *start = NULL;
 
-    crm_trace("Executing: %s", rsc->id);
+    crm_trace("%s on %s", rsc->id, next?next->details->uname:"N/A");
     start = start_action(rsc, next, TRUE);
     if (is_set(start->flags, pe_action_runnable) && optional == FALSE) {
         update_action_flags(start, pe_action_optional | pe_action_clear);
@@ -2063,10 +2007,7 @@ PromoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t 
     gboolean runnable = TRUE;
     GListPtr action_list = NULL;
 
-    crm_trace("Executing: %s", rsc->id);
-
-    CRM_CHECK(rsc->next_role == RSC_ROLE_MASTER,
-              crm_err("Next role: %s", role2text(rsc->next_role)); return FALSE);
+    crm_trace("%s on %s", rsc->id, next?next->details->uname:"N/A");
 
     CRM_CHECK(next != NULL, return FALSE);
 
@@ -2109,12 +2050,13 @@ DemoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t *
 {
     GListPtr gIter = NULL;
 
-    crm_trace("Executing: %s", rsc->id);
+    crm_trace("%s", rsc->id);
 
 /* 	CRM_CHECK(rsc->next_role == RSC_ROLE_SLAVE, return FALSE); */
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         node_t *current = (node_t *) gIter->data;
 
+        crm_trace("%s on %s", rsc->id, next?next->details->uname:"N/A");
         demote_action(rsc, current, optional);
     }
     return TRUE;
@@ -2123,7 +2065,7 @@ DemoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t *
 gboolean
 RoleError(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
-    crm_debug("Executing: %s", rsc->id);
+    crm_err("%s on %s", rsc->id, next?next->details->uname:"N/A");
     CRM_CHECK(FALSE, return FALSE);
     return FALSE;
 }
@@ -2131,7 +2073,7 @@ RoleError(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t *
 gboolean
 NullOp(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
-    crm_trace("Executing: %s", rsc->id);
+    crm_trace("%s", rsc->id);
     return FALSE;
 }
 
@@ -2770,6 +2712,7 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
 
     GListPtr gIter = NULL;
     const char *value = g_hash_table_lookup(rsc->meta, XML_OP_ATTR_ALLOW_MIGRATE);
+    crm_trace("%s %s -> %s", rsc->id, stop->node->details->uname, start->node->details->uname);
 
     if (crm_is_true(value) == FALSE) {
         return;
@@ -2978,6 +2921,8 @@ ReloadRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t * 
         return;
     }
 
+    crm_trace("%s on %s", rsc->id, stop->node->details->uname);
+
     action = get_first_named_action(rsc, RSC_PROMOTE, TRUE, NULL);
     if (action && is_set(action->flags, pe_action_optional) == FALSE) {
         update_action_flags(action, pe_action_pseudo);
@@ -3033,6 +2978,8 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
+    crm_trace("%s %s %p", rsc->id, partial?"partial":"full", stop);
+    
     if (!partial) {
         stop = get_first_named_action(rsc, RSC_STOP, TRUE, rsc->running_on ? rsc->running_on->data : NULL);
         start = get_first_named_action(rsc, RSC_START, TRUE, NULL);

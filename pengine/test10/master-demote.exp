@@ -1,20 +1,20 @@
  <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
-      <rsc_op id="44" operation="start" operation_key="named_address_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
+      <rsc_op id="43" operation="start" operation_key="named_address_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
          <primitive id="named_address" long-id="named_address" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.1.188"/>
        </rsc_op>
      </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="43" operation="stop" operation_key="named_address_stop_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
+        <rsc_op id="42" operation="stop" operation_key="named_address_stop_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
       </trigger>
     </inputs>
    </synapse>
    <synapse id="1">
      <action_set>
-      <rsc_op id="43" operation="stop" operation_key="named_address_stop_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
+      <rsc_op id="42" operation="stop" operation_key="named_address_stop_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
          <primitive id="named_address" long-id="named_address" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.1.188"/>
        </rsc_op>
@@ -30,7 +30,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="69" operation="notify" operation_key="named_drbd_post_notify_promoted_0"/>
+        <pseudo_event id="66" operation="notify" operation_key="named_drbd_post_notify_promoted_0"/>
       </trigger>
     </inputs>
    </synapse>
@@ -43,36 +43,36 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="67" operation="notify" operation_key="named_drbd_pre_notify_promote_0"/>
+        <pseudo_event id="64" operation="notify" operation_key="named_drbd_pre_notify_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="4">
      <action_set>
-       <rsc_op id="49" operation="monitor" operation_key="named_drbd_node:0_monitor_10000" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
+      <rsc_op id="47" operation="monitor" operation_key="named_drbd_node:0_monitor_10000" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
          <primitive id="named_drbd_node:0" long-id="named_drbd:named_drbd_node:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="5000" crm_feature_set="3.0.6" drbd_resource="drbd4"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="48" operation="promote" operation_key="named_drbd_node:0_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
+        <rsc_op id="46" operation="promote" operation_key="named_drbd_node:0_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
        </trigger>
        <trigger>
-         <pseudo_event id="70" operation="notified" operation_key="named_drbd_confirmed-post_notify_promoted_0"/>
+        <pseudo_event id="67" operation="notified" operation_key="named_drbd_confirmed-post_notify_promoted_0"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="5">
      <action_set>
-      <rsc_op id="48" operation="promote" operation_key="named_drbd_node:0_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
+      <rsc_op id="46" operation="promote" operation_key="named_drbd_node:0_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
          <primitive id="named_drbd_node:0" long-id="named_drbd:named_drbd_node:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="named_drbd_node:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="named_drbd_node:0 " CRM_meta_notify_promote_uname="cxb1 " CRM_meta_notify_slave_resource="named_drbd_node:0 named_drbd_node:1 " CRM_meta_notify_slave_uname="cxb1 cxa1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd4"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="65" operation="promote" operation_key="named_drbd_promote_0"/>
+        <pseudo_event id="62" operation="promote" operation_key="named_drbd_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -85,7 +85,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="69" operation="notify" operation_key="named_drbd_post_notify_promoted_0"/>
+        <pseudo_event id="66" operation="notify" operation_key="named_drbd_post_notify_promoted_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -98,19 +98,19 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="67" operation="notify" operation_key="named_drbd_pre_notify_promote_0"/>
+        <pseudo_event id="64" operation="notify" operation_key="named_drbd_pre_notify_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="8" priority="1000000">
      <action_set>
-      <pseudo_event id="70" operation="notified" operation_key="named_drbd_confirmed-post_notify_promoted_0">
+      <pseudo_event id="67" operation="notified" operation_key="named_drbd_confirmed-post_notify_promoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="69" operation="notify" operation_key="named_drbd_post_notify_promoted_0"/>
+        <pseudo_event id="66" operation="notify" operation_key="named_drbd_post_notify_promoted_0"/>
        </trigger>
        <trigger>
         <rsc_op id="132" operation="notify" operation_key="named_drbd_node:0_post_notify_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
@@ -122,28 +122,28 @@
    </synapse>
    <synapse id="9" priority="1000000">
      <action_set>
-      <pseudo_event id="69" operation="notify" operation_key="named_drbd_post_notify_promoted_0">
+      <pseudo_event id="66" operation="notify" operation_key="named_drbd_post_notify_promoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="66" operation="promoted" operation_key="named_drbd_promoted_0"/>
+        <pseudo_event id="63" operation="promoted" operation_key="named_drbd_promoted_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="68" operation="notified" operation_key="named_drbd_confirmed-pre_notify_promote_0"/>
+        <pseudo_event id="65" operation="notified" operation_key="named_drbd_confirmed-pre_notify_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="10">
      <action_set>
-       <pseudo_event id="68" operation="notified" operation_key="named_drbd_confirmed-pre_notify_promote_0">
+      <pseudo_event id="65" operation="notified" operation_key="named_drbd_confirmed-pre_notify_promote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="67" operation="notify" operation_key="named_drbd_pre_notify_promote_0"/>
+        <pseudo_event id="64" operation="notify" operation_key="named_drbd_pre_notify_promote_0"/>
        </trigger>
        <trigger>
         <rsc_op id="131" operation="notify" operation_key="named_drbd_node:0_pre_notify_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
@@ -155,7 +155,7 @@
    </synapse>
   <synapse id="11">
     <action_set>
-      <pseudo_event id="67" operation="notify" operation_key="named_drbd_pre_notify_promote_0">
+      <pseudo_event id="64" operation="notify" operation_key="named_drbd_pre_notify_promote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -163,28 +163,28 @@
   </synapse>
    <synapse id="12" priority="1000000">
      <action_set>
-      <pseudo_event id="66" operation="promoted" operation_key="named_drbd_promoted_0">
+      <pseudo_event id="63" operation="promoted" operation_key="named_drbd_promoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="48" operation="promote" operation_key="named_drbd_node:0_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
+        <rsc_op id="46" operation="promote" operation_key="named_drbd_node:0_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
       </trigger>
      </inputs>
    </synapse>
   <synapse id="13">
      <action_set>
-      <pseudo_event id="65" operation="promote" operation_key="named_drbd_promote_0">
+      <pseudo_event id="62" operation="promote" operation_key="named_drbd_promote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="44" operation="start" operation_key="named_address_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
+        <rsc_op id="43" operation="start" operation_key="named_address_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
        </trigger>
        <trigger>
-        <pseudo_event id="68" operation="notified" operation_key="named_drbd_confirmed-pre_notify_promote_0"/>
+        <pseudo_event id="65" operation="notified" operation_key="named_drbd_confirmed-pre_notify_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -196,7 +196,7 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="43" operation="stop" operation_key="named_address_stop_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
+        <rsc_op id="42" operation="stop" operation_key="named_address_stop_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
        </trigger>
      </inputs>
    </synapse>

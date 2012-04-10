@@ -17,7 +17,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="26" operation="notify" operation_key="ms_drbd_float_post_notify_promoted_0"/>
+        <pseudo_event id="25" operation="notify" operation_key="ms_drbd_float_post_notify_promoted_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -30,7 +30,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="24" operation="notify" operation_key="ms_drbd_float_pre_notify_promote_0"/>
+        <pseudo_event id="23" operation="notify" operation_key="ms_drbd_float_pre_notify_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -43,7 +43,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="18" operation="notify" operation_key="ms_drbd_float_pre_notify_stop_0"/>
+        <pseudo_event id="17" operation="notify" operation_key="ms_drbd_float_pre_notify_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -56,64 +56,64 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="notify" operation_key="ms_drbd_float_post_notify_running_0"/>
+        <pseudo_event id="13" operation="notify" operation_key="ms_drbd_float_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
     <action_set>
-      <rsc_op id="9" operation="promote" operation_key="drbd_float:0_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
+      <rsc_op id="8" operation="promote" operation_key="drbd_float:0_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource="drbd_float:0 " CRM_meta_notify_slave_uname="sambuca.linbit " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource="drbd_float:0 " CRM_meta_notify_stop_uname="sambuca.linbit " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="float"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="7" operation="start" operation_key="drbd_float:0_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
+        <rsc_op id="6" operation="start" operation_key="drbd_float:0_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
       </trigger>
       <trigger>
-        <pseudo_event id="22" operation="promote" operation_key="ms_drbd_float_promote_0"/>
+        <pseudo_event id="21" operation="promote" operation_key="ms_drbd_float_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="7" operation="start" operation_key="drbd_float:0_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
+      <rsc_op id="7" operation="stop" operation_key="drbd_float:0_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource="drbd_float:0 " CRM_meta_notify_slave_uname="sambuca.linbit " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource="drbd_float:0 " CRM_meta_notify_stop_uname="sambuca.linbit " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="float"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="stop" operation_key="drbd_float:0_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="10" operation="start" operation_key="ms_drbd_float_start_0"/>
+        <pseudo_event id="15" operation="stop" operation_key="ms_drbd_float_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="7">
     <action_set>
-      <rsc_op id="6" operation="stop" operation_key="drbd_float:0_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
+      <rsc_op id="6" operation="start" operation_key="drbd_float:0_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource="drbd_float:0 " CRM_meta_notify_slave_uname="sambuca.linbit " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource="drbd_float:0 " CRM_meta_notify_stop_uname="sambuca.linbit " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="float"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="16" operation="stop" operation_key="ms_drbd_float_stop_0"/>
+        <rsc_op id="7" operation="stop" operation_key="drbd_float:0_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="9" operation="start" operation_key="ms_drbd_float_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="8" priority="1000000">
     <action_set>
-      <pseudo_event id="27" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_promoted_0">
+      <pseudo_event id="26" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_promoted_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="26" operation="notify" operation_key="ms_drbd_float_post_notify_promoted_0"/>
+        <pseudo_event id="25" operation="notify" operation_key="ms_drbd_float_post_notify_promoted_0"/>
       </trigger>
       <trigger>
         <rsc_op id="45" operation="notify" operation_key="drbd_float:0_post_notify_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
@@ -122,28 +122,28 @@
   </synapse>
   <synapse id="9" priority="1000000">
     <action_set>
-      <pseudo_event id="26" operation="notify" operation_key="ms_drbd_float_post_notify_promoted_0">
+      <pseudo_event id="25" operation="notify" operation_key="ms_drbd_float_post_notify_promoted_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="23" operation="promoted" operation_key="ms_drbd_float_promoted_0"/>
+        <pseudo_event id="22" operation="promoted" operation_key="ms_drbd_float_promoted_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="25" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_promote_0"/>
+        <pseudo_event id="24" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="10">
     <action_set>
-      <pseudo_event id="25" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_promote_0">
+      <pseudo_event id="24" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_promote_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="24" operation="notify" operation_key="ms_drbd_float_pre_notify_promote_0"/>
+        <pseudo_event id="23" operation="notify" operation_key="ms_drbd_float_pre_notify_promote_0"/>
       </trigger>
       <trigger>
         <rsc_op id="44" operation="notify" operation_key="drbd_float:0_pre_notify_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
@@ -152,85 +152,85 @@
   </synapse>
   <synapse id="11">
     <action_set>
-      <pseudo_event id="24" operation="notify" operation_key="ms_drbd_float_pre_notify_promote_0">
+      <pseudo_event id="23" operation="notify" operation_key="ms_drbd_float_pre_notify_promote_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="15" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_running_0"/>
+        <pseudo_event id="14" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="21" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_stopped_0"/>
+        <pseudo_event id="20" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="12" priority="1000000">
     <action_set>
-      <pseudo_event id="23" operation="promoted" operation_key="ms_drbd_float_promoted_0">
+      <pseudo_event id="22" operation="promoted" operation_key="ms_drbd_float_promoted_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="promote" operation_key="drbd_float:0_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
+        <rsc_op id="8" operation="promote" operation_key="drbd_float:0_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="13">
     <action_set>
-      <pseudo_event id="22" operation="promote" operation_key="ms_drbd_float_promote_0">
+      <pseudo_event id="21" operation="promote" operation_key="ms_drbd_float_promote_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="11" operation="running" operation_key="ms_drbd_float_running_0"/>
+        <pseudo_event id="10" operation="running" operation_key="ms_drbd_float_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="17" operation="stopped" operation_key="ms_drbd_float_stopped_0"/>
+        <pseudo_event id="16" operation="stopped" operation_key="ms_drbd_float_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="25" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_promote_0"/>
+        <pseudo_event id="24" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="14" priority="1000000">
     <action_set>
-      <pseudo_event id="21" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_stopped_0">
+      <pseudo_event id="20" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_stopped_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="20" operation="notify" operation_key="ms_drbd_float_post_notify_stopped_0"/>
+        <pseudo_event id="19" operation="notify" operation_key="ms_drbd_float_post_notify_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="15" priority="1000000">
     <action_set>
-      <pseudo_event id="20" operation="notify" operation_key="ms_drbd_float_post_notify_stopped_0">
+      <pseudo_event id="19" operation="notify" operation_key="ms_drbd_float_post_notify_stopped_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="17" operation="stopped" operation_key="ms_drbd_float_stopped_0"/>
+        <pseudo_event id="16" operation="stopped" operation_key="ms_drbd_float_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="19" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_stop_0"/>
+        <pseudo_event id="18" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="16">
     <action_set>
-      <pseudo_event id="19" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_stop_0">
+      <pseudo_event id="18" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_stop_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="18" operation="notify" operation_key="ms_drbd_float_pre_notify_stop_0"/>
+        <pseudo_event id="17" operation="notify" operation_key="ms_drbd_float_pre_notify_stop_0"/>
       </trigger>
       <trigger>
         <rsc_op id="43" operation="notify" operation_key="drbd_float:0_pre_notify_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
@@ -239,7 +239,7 @@
   </synapse>
   <synapse id="17">
     <action_set>
-      <pseudo_event id="18" operation="notify" operation_key="ms_drbd_float_pre_notify_stop_0">
+      <pseudo_event id="17" operation="notify" operation_key="ms_drbd_float_pre_notify_stop_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -247,40 +247,40 @@
   </synapse>
   <synapse id="18" priority="1000000">
     <action_set>
-      <pseudo_event id="17" operation="stopped" operation_key="ms_drbd_float_stopped_0">
+      <pseudo_event id="16" operation="stopped" operation_key="ms_drbd_float_stopped_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="stop" operation_key="drbd_float:0_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
+        <rsc_op id="7" operation="stop" operation_key="drbd_float:0_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
       </trigger>
       <trigger>
-        <pseudo_event id="16" operation="stop" operation_key="ms_drbd_float_stop_0"/>
+        <pseudo_event id="15" operation="stop" operation_key="ms_drbd_float_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="19">
     <action_set>
-      <pseudo_event id="16" operation="stop" operation_key="ms_drbd_float_stop_0">
+      <pseudo_event id="15" operation="stop" operation_key="ms_drbd_float_stop_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="19" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_stop_0"/>
+        <pseudo_event id="18" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="20" priority="1000000">
     <action_set>
-      <pseudo_event id="15" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_running_0">
+      <pseudo_event id="14" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="notify" operation_key="ms_drbd_float_post_notify_running_0"/>
+        <pseudo_event id="13" operation="notify" operation_key="ms_drbd_float_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="42" operation="notify" operation_key="drbd_float:0_post_notify_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
@@ -289,61 +289,61 @@
   </synapse>
   <synapse id="21" priority="1000000">
     <action_set>
-      <pseudo_event id="14" operation="notify" operation_key="ms_drbd_float_post_notify_running_0">
+      <pseudo_event id="13" operation="notify" operation_key="ms_drbd_float_post_notify_running_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="11" operation="running" operation_key="ms_drbd_float_running_0"/>
+        <pseudo_event id="10" operation="running" operation_key="ms_drbd_float_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="12" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="22">
     <action_set>
-      <pseudo_event id="13" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_start_0">
+      <pseudo_event id="12" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="12" operation="notify" operation_key="ms_drbd_float_pre_notify_start_0"/>
+        <pseudo_event id="11" operation="notify" operation_key="ms_drbd_float_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="23">
     <action_set>
-      <pseudo_event id="12" operation="notify" operation_key="ms_drbd_float_pre_notify_start_0">
+      <pseudo_event id="11" operation="notify" operation_key="ms_drbd_float_pre_notify_start_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="21" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_stopped_0"/>
+        <pseudo_event id="20" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="24" priority="1000000">
     <action_set>
-      <pseudo_event id="11" operation="running" operation_key="ms_drbd_float_running_0">
+      <pseudo_event id="10" operation="running" operation_key="ms_drbd_float_running_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="7" operation="start" operation_key="drbd_float:0_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
+        <rsc_op id="6" operation="start" operation_key="drbd_float:0_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
       </trigger>
       <trigger>
-        <pseudo_event id="10" operation="start" operation_key="ms_drbd_float_start_0"/>
+        <pseudo_event id="9" operation="start" operation_key="ms_drbd_float_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="25">
     <action_set>
-      <pseudo_event id="10" operation="start" operation_key="ms_drbd_float_start_0">
+      <pseudo_event id="9" operation="start" operation_key="ms_drbd_float_start_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -352,35 +352,35 @@
         <rsc_op id="5" operation="start" operation_key="ip_float_right_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="12" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="17" operation="stopped" operation_key="ms_drbd_float_stopped_0"/>
+        <pseudo_event id="16" operation="stopped" operation_key="ms_drbd_float_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="26">
     <action_set>
-      <pseudo_event id="35" operation="start" operation_key="nfsexport_start_0">
+      <pseudo_event id="34" operation="start" operation_key="nfsexport_start_0">
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="27" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_promoted_0"/>
+        <pseudo_event id="26" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_promoted_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="27">
     <action_set>
-      <rsc_op id="34" operation="start" operation_key="ip_nfs_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
+      <rsc_op id="33" operation="start" operation_key="ip_nfs_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="ip_nfs" long-id="nfsexport:ip_nfs" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.6" ip="10.9.9.180" nic="eth0"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="35" operation="start" operation_key="nfsexport_start_0"/>
+        <pseudo_event id="34" operation="start" operation_key="nfsexport_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -392,10 +392,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="stop" operation_key="drbd_float:0_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
+        <rsc_op id="7" operation="stop" operation_key="drbd_float:0_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
       </trigger>
       <trigger>
-        <pseudo_event id="21" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_stopped_0"/>
+        <pseudo_event id="20" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>

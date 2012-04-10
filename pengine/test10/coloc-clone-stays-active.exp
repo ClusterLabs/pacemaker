@@ -23,32 +23,32 @@
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="620" operation="monitor" operation_key="mgmt-vm_monitor_10000" on_node="s01-1" on_node_uuid="s01-1">
+      <rsc_op id="609" operation="monitor" operation_key="mgmt-vm_monitor_10000" on_node="s01-1" on_node_uuid="s01-1">
         <primitive id="mgmt-vm" long-id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" config="/mnt/vm_meta/mgmt.prague.vds-ok.com.xml" crm_feature_set="3.0.6" hypervisor="qemu:///system" migration_transport="tls" refresh_config="1"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="619" operation="start" operation_key="mgmt-vm_start_0"/>
+        <pseudo_event id="608" operation="start" operation_key="mgmt-vm_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <pseudo_event id="619" operation="start" operation_key="mgmt-vm_start_0">
+      <pseudo_event id="608" operation="start" operation_key="mgmt-vm_start_0">
         <attributes CRM_meta_name="start" CRM_meta_timeout="120000" config="/mnt/vm_meta/mgmt.prague.vds-ok.com.xml" crm_feature_set="3.0.6" hypervisor="qemu:///system" migration_transport="tls" refresh_config="1"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="618" operation="stop" operation_key="mgmt-vm_stop_0" on_node="s01-0" on_node_uuid="s01-0"/>
+        <rsc_op id="607" operation="stop" operation_key="mgmt-vm_stop_0" on_node="s01-0" on_node_uuid="s01-0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="618" operation="stop" operation_key="mgmt-vm_stop_0" on_node="s01-0" on_node_uuid="s01-0">
+      <rsc_op id="607" operation="stop" operation_key="mgmt-vm_stop_0" on_node="s01-0" on_node_uuid="s01-0">
         <primitive id="mgmt-vm" long-id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_name="stop" CRM_meta_timeout="120000" config="/mnt/vm_meta/mgmt.prague.vds-ok.com.xml" crm_feature_set="3.0.6" hypervisor="qemu:///system" migration_transport="tls" refresh_config="1"/>
       </rsc_op>
@@ -67,7 +67,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="618" operation="stop" operation_key="mgmt-vm_stop_0" on_node="s01-0" on_node_uuid="s01-0"/>
+        <rsc_op id="607" operation="stop" operation_key="mgmt-vm_stop_0" on_node="s01-0" on_node_uuid="s01-0"/>
       </trigger>
     </inputs>
   </synapse>

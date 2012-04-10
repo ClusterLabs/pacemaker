@@ -10,7 +10,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="15" operation="monitor" operation_key="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1_monitor_19000" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
+      <rsc_op id="14" operation="monitor" operation_key="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1_monitor_19000" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
          <primitive id="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1" long-id="ms_drbd_poolA:ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="19000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="10000" crm_feature_set="3.0.6" drbd_resource="poolA" drbdconf="/etc/drbd.poolA"/>
        </rsc_op>

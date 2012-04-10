@@ -55,7 +55,7 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="69" operation="monitor" operation_key="stateful-1:0_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="68" operation="monitor" operation_key="stateful-1:0_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="stateful-1:0" long-id="master-1:stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
@@ -73,7 +73,7 @@
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="74" operation="monitor" operation_key="stateful-1:0_monitor_16000" internal_operation_key="stateful-1:1_monitor_16000" on_node="pcmk-3" on_node_uuid="pcmk-3">
+      <rsc_op id="73" operation="monitor" operation_key="stateful-1:0_monitor_16000" internal_operation_key="stateful-1:1_monitor_16000" on_node="pcmk-3" on_node_uuid="pcmk-3">
         <primitive id="stateful-1:0" long-id="stateful-1:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="16000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
@@ -82,7 +82,7 @@
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="78" operation="monitor" operation_key="stateful-1:0_monitor_15000" internal_operation_key="stateful-1:2_monitor_15000" on_node="pcmk-4" on_node_uuid="pcmk-4">
+      <rsc_op id="76" operation="monitor" operation_key="stateful-1:0_monitor_15000" internal_operation_key="stateful-1:2_monitor_15000" on_node="pcmk-4" on_node_uuid="pcmk-4">
         <primitive id="stateful-1:0" long-id="stateful-1:2" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>

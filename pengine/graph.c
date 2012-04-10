@@ -235,7 +235,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                 changed |= pe_graph_updated_then;
             }
         }
-        crm_trace("runnable_left_optional: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
+        crm_trace("runnable_one_or_more: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
     }
 
     if (type & pe_order_runnable_left) {
