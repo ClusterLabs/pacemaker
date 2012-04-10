@@ -137,7 +137,8 @@ A partially set up scenario is torn down if it fails during setup.
         ret = 1
         where = ""
         did_run = 0
-        
+
+        self.ClusterManager.instance_errorstoignore_clear()
         self.ClusterManager.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
 
         starttime = test.set_timer()
@@ -216,6 +217,7 @@ A partially set up scenario is torn down if it fails during setup.
         ignorelist.append("CTS:")
         ignorelist.extend(LocalIgnore)
         ignorelist.extend(self.ClusterManager.errorstoignore())
+        ignorelist.extend(self.ClusterManager.instance_errorstoignore())
 
         # This makes sure everything is stabilized before starting...
         failed = 0
