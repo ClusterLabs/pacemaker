@@ -897,9 +897,18 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus={}
         self.ns = NodeStatus(self.Env)
         self.OurNode=string.lower(os.uname()[1])
+        self.__instance_errorstoignore = []
 
     def key_for_node(self, node):
         return node
+
+    def instance_errorstoignore_clear(self):
+        '''Allows the test scenario to reset instance errors to ignore on each iteration.'''
+        self.__instance_errorstoignore = []
+
+    def instance_errorstoignore(self):
+        '''Return list of errors which are 'normal' for a specific test instance'''
+        return self.__instance_errorstoignore
 
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
@@ -1006,7 +1015,7 @@ class ClusterManager(UserDict):
 
             peer_list.append(peer)
             self.ShouldBeStatus[peer]="down"
-            self.log("   Peer %s was fenced as a result of %s starting" % (peer, node)) 
+            self.debug("   Peer %s was fenced as a result of %s starting" % (peer, node)) 
                 
             # Get the next one
             shot = stonith.look(60)
@@ -1083,8 +1092,10 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus[node]="up"
         watch_result = watch.lookforall()
 
-        self.fencing_cleanup(node, stonith)
-
+        peer_list = self.fencing_cleanup(node, stonith)
+        for peer in peer_list:
+            self.__instance_errorstoignore.append("te_fence_node: Executing .* fencing operation .* on %s" % (peer));
+ 
         if watch.unmatched:
             for regex in watch.unmatched:
                 self.log ("Warn: Startup pattern not found: %s" %(regex))
