@@ -181,7 +181,7 @@ do_pe_control(long long action,
         }
     }
 
-    if (action & start_actions) {
+    if ((action & start_actions) && (is_set(fsa_input_register, R_PE_CONNECTED) == FALSE)) {
         if (cur_state != S_STOPPING) {
             if (is_openais_cluster()) {
                 set_bit_inplace(fsa_input_register, pe_subsystem->flag_required);
