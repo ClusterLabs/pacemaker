@@ -1,0 +1,79 @@
+<cib epoch="335" num_updates="26" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="crmd" cib-last-written="Mon Mar 19 16:41:29 2012" have-quorum="0" dc-uuid="fc16-builder">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-ad7c087"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="cman"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-no-cluster-recheck-interval" name="cluster-recheck-interval" value="20s"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1331666640"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="fc16-builder" type="normal" uname="fc16-builder"/>
+      <node id="fc16-builder2" type="normal" uname="fc16-builder2"/>
+      <node id="fc16-builder3" type="normal" uname="fc16-builder3"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="virt-fencing" type="fence_xvm">
+        <instance_attributes id="virt-fencing-instance_attributes">
+          <nvpair id="virt-fencing-instance_attributes-pcmk_host_check" name="pcmk_host_check" value="static-list"/>
+          <nvpair id="virt-fencing-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="fc16-builder,fc16-builder2,fc16-builder3"/>
+          <nvpair id="virt-fencing-instance_attributes-action" name="action" value="reboot"/>
+          <nvpair id="virt-fencing-instance_attributes-debug" name="debug" value="1"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="ocf" id="A" provider="pacemaker" type="Dummy">
+        <meta_attributes id="A-meta_attributes">
+        </meta_attributes>
+        <instance_attributes id="A-instance_attributes">
+          <nvpair id="A-instance_attributes-target-role" name="target-role" value="started"/>
+          <nvpair id="A-instance_attributes-allow-migrate" name="allow-migrate" value="1"/>
+        </instance_attributes>
+        <operations>
+          <op id="A-monitor-30" interval="30" name="monitor" timeout="60"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="B" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-virt-fencing" rsc="virt-fencing">
+        <rule id="cli-prefer-rule-virt-fencing" score="INFINITY">
+          <expression attribute="#uname" id="cli-prefer-expr-virt-fencing" operation="eq" value="fc16-builder"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="fc16-builder" uname="fc16-builder" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="fc16-builder">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="1:2:0:bdaaec7f-1714-4cbb-85f5-225444f2fb96" transition-magic="0:0;1:2:0:bdaaec7f-1714-4cbb-85f5-225444f2fb96" call-id="9" rc-code="0" op-status="0" interval="0" last-run="1332193320" last-rc-change="1332193320" exec-time="10" queue-time="0" op-digest="7e3dbcf6815893c8d95c1b9fa1fd82ae"/>
+            <lrm_rsc_op id="virt-fencing_last_failure_0" operation_key="virt-fencing_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="7:0:0:bdaaec7f-1714-4cbb-85f5-225444f2fb96" transition-magic="0:1;7:0:0:bdaaec7f-1714-4cbb-85f5-225444f2fb96" call-id="5" rc-code="1" op-status="0" interval="0" last-run="1332193289" last-rc-change="1332193289" exec-time="30160" queue-time="0" op-digest="7e3dbcf6815893c8d95c1b9fa1fd82ae"/>
+          </lrm_resource>
+          <lrm_resource id="B" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="B_last_0" operation_key="B_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="10:0:0:bdaaec7f-1714-4cbb-85f5-225444f2fb96" transition-magic="0:0;10:0:0:bdaaec7f-1714-4cbb-85f5-225444f2fb96" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1332193289" last-rc-change="1332193289" exec-time="90" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="A" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="A_last_0" operation_key="A_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:8:0:bdaaec7f-1714-4cbb-85f5-225444f2fb96" transition-magic="0:0;6:8:0:bdaaec7f-1714-4cbb-85f5-225444f2fb96" call-id="12" rc-code="0" op-status="0" interval="0" last-run="1332193423" last-rc-change="1332193423" exec-time="10" queue-time="0" op-digest="0b5322da6efb57820fe216d34ecdf019" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="A_monitor_30000" operation_key="A_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="1:8:0:bdaaec7f-1714-4cbb-85f5-225444f2fb96" transition-magic="0:0;1:8:0:bdaaec7f-1714-4cbb-85f5-225444f2fb96" call-id="13" rc-code="0" op-status="0" interval="30000" last-rc-change="1332193423" exec-time="10" queue-time="0" op-digest="3ba7033408f060fda2110942d128d6e6"/>
+            <lrm_rsc_op id="A_last_failure_0" operation_key="A_asyncmon_0" operation="asyncmon" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="10:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:1;10:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="10" rc-code="1" op-status="0" interval="0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="fc16-builder">
+        <instance_attributes id="status-fc16-builder">
+          <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-fc16-builder-fail-count-virt-fencing" name="fail-count-virt-fencing" value="INFINITY"/>
+          <nvpair id="status-fc16-builder-last-failure-virt-fencing" name="last-failure-virt-fencing" value="1332193320"/>
+          <nvpair id="status-fc16-builder-fail-count-A" name="fail-count-A" value="1"/>
+          <nvpair id="status-fc16-builder-last-failure-A" name="last-failure-A" value="1332193424"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="fc16-builder2" uname="fc16-builder2" ha="dead" in_ccm="false" crmd="offline" join="down" crm-debug-origin="do_state_transition"/>
+    <node_state id="fc16-builder3" uname="fc16-builder3" ha="dead" in_ccm="false" crmd="offline" join="down" crm-debug-origin="do_state_transition"/>
+  </status>
+</cib>
