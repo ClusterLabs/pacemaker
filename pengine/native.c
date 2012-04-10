@@ -2749,7 +2749,7 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
     }
 
     if (partial) {
-        crm_info("Completing partial migration from %s to %s", rsc->id,
+        crm_info("Completing partial migration of %s from %s to %s", rsc->id,
              stop->node ? stop->node->details->uname : "unknown",
              start->node ? start->node->details->uname : "unknown");
     } else {
