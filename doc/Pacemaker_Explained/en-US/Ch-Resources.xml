@@ -500,13 +500,13 @@
 	<para>
 	  The easiest way to stop a recurring monitor is to just delete it.
 	  However, there can be times when you only want to disable it temporarily.
-	  In such cases, simply add <literal>disabled="true"</literal> to the operation's definition.
+	  In such cases, simply add <literal>enabled="false"</literal> to the operation's definition.
 	</para>
 	<example>
 	  <title>Example of an OCF resource with a disabled health check</title>
 	  <programlisting><![CDATA[ <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
     <operations>
-     <op id="public-ip-check" name="monitor" interval="60s" disabled="true"/>
+     <op id="public-ip-check" name="monitor" interval="60s" enabled="false"/>
     </operations>
     <instance_attributes id="params-public-ip">
        <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
@@ -514,9 +514,9 @@
   </primitive> ]]> </programlisting>
 	</example>
 	<para>This can be achieved from the command-line by executing</para>
-	<programlisting><command>cibadmin -M -X ‘&lt;op id="public-ip-check" disabled="true"/>'</command></programlisting>
+	<programlisting><command>cibadmin -M -X ‘&lt;op id="public-ip-check" enabled="false"/>'</command></programlisting>
 	<para>Once you've done whatever you needed to do, you can then re-enable it with</para>
-	<programlisting><command>cibadmin -M -X ‘&lt;op id="public-ip-check" disabled="false"/>'</command></programlisting>
+	<programlisting><command>cibadmin -M -X ‘&lt;op id="public-ip-check" enabled="true"/>'</command></programlisting>
       </section>
     </section>
   </chapter>
