@@ -171,7 +171,7 @@ crm_connect_corosync(void)
 
     if (rc && is_cman_cluster()) {
         init_cman_connection(crmd_cman_dispatch, crmd_cman_destroy);
-        set_bit_inplace(fsa_input_register, R_CCM_DATA);
+        set_bit_inplace(fsa_input_register, R_MEMBERSHIP);
     }
     return rc;
 }

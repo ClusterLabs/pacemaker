@@ -37,10 +37,14 @@ atest_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
 
 
 crmd_SOURCES	= main.c crmd.c corosync.c					\
-		fsa.c control.c messages.c ccm.c callbacks.c		\
+		fsa.c control.c messages.c membership.c callbacks.c		\
 		election.c join_client.c join_dc.c subsystems.c 	\
 		cib.c pengine.c tengine.c lrm.c 			\
 		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
+
+if BUILD_HEARTBEAT_SUPPORT
+crmd_SOURCES += ccm.c
+endif
 
 crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/transition/libtransitioner.la	\

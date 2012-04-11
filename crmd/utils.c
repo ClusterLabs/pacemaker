@@ -729,8 +729,8 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
     if (is_set(input_register, R_CIB_ASKED)) {
         crm_trace( "%s %.16llx (R_CIB_ASKED)", text, R_CIB_ASKED);
     }
-    if (is_set(input_register, R_CCM_DATA)) {
-        crm_trace( "%s %.16llx (R_CCM_DATA)", text, R_CCM_DATA);
+    if (is_set(input_register, R_MEMBERSHIP)) {
+        crm_trace( "%s %.16llx (R_MEMBERSHIP)", text, R_MEMBERSHIP);
     }
     if (is_set(input_register, R_PEER_DATA)) {
         crm_trace( "%s %.16llx (R_PEER_DATA)", text, R_PEER_DATA);

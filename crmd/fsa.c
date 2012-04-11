@@ -320,7 +320,13 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
         } else if (fsa_actions & A_LRM_CONNECT) {
             do_fsa_action(fsa_data, A_LRM_CONNECT, do_lrm_control);
         } else if (fsa_actions & A_CCM_CONNECT) {
-            do_fsa_action(fsa_data, A_CCM_CONNECT, do_ccm_control);
+#if SUPPORT_HEARTBEAT
+            if (is_heartbeat_cluster()) {
+                do_fsa_action(fsa_data, A_CCM_CONNECT, do_ccm_control);
+            }
+#endif
+            fsa_actions &= ~A_CCM_CONNECT;
+
         } else if (fsa_actions & A_TE_START) {
             do_fsa_action(fsa_data, A_TE_START, do_te_control);
         } else if (fsa_actions & A_PE_START) {
@@ -432,7 +438,13 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
         } else if (fsa_actions & A_LRM_DISCONNECT) {
             do_fsa_action(fsa_data, A_LRM_DISCONNECT, do_lrm_control);
         } else if (fsa_actions & A_CCM_DISCONNECT) {
-            do_fsa_action(fsa_data, A_CCM_DISCONNECT, do_ccm_control);
+#if SUPPORT_HEARTBEAT
+            if (is_heartbeat_cluster()) {
+                do_fsa_action(fsa_data, A_CCM_DISCONNECT, do_ccm_control);
+            }
+#endif
+            fsa_actions &= ~A_CCM_DISCONNECT;
+
         } else if (fsa_actions & A_HA_DISCONNECT) {
             do_fsa_action(fsa_data, A_HA_DISCONNECT, do_ha_control);
         } else if (fsa_actions & A_CIB_STOP) {

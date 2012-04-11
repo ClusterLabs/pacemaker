@@ -41,8 +41,6 @@ void crmd_ha_msg_filter(xmlNode * msg);
 /* From join_dc... */
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
-#define trigger_fsa(source) crm_trace("Triggering FSA: %s", __FUNCTION__); \
-	mainloop_set_trigger(source);
 #if SUPPORT_HEARTBEAT
 gboolean
 crmd_ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
@@ -542,120 +540,6 @@ crmd_client_connect(IPC_Channel * client_channel, gpointer user_data)
 
     return TRUE;
 }
-
-#if SUPPORT_HEARTBEAT
-static void *ccm_library = NULL;
-int (*ccm_api_callback_done) (void *cookie) = NULL;
-int (*ccm_api_handle_event) (const oc_ev_t * token) = NULL;
-static gboolean fsa_have_quorum = FALSE;
-
-gboolean
-ccm_dispatch(int fd, gpointer user_data)
-{
-    int rc = 0;
-    oc_ev_t *ccm_token = (oc_ev_t *) user_data;
-    gboolean was_error = FALSE;
-
-    crm_trace("Invoked");
-    if (ccm_api_handle_event == NULL) {
-        ccm_api_handle_event =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event");
-    }
-    rc = (*ccm_api_handle_event) (ccm_token);
-
-    if (rc != 0) {
-        if (is_set(fsa_input_register, R_CCM_DISCONNECTED) == FALSE) {
-            /* we signed out, so this is expected */
-            register_fsa_input(C_CCM_CALLBACK, I_ERROR, NULL);
-            crm_err("CCM connection appears to have failed: rc=%d.", rc);
-        }
-        was_error = TRUE;
-    }
-
-    trigger_fsa(fsa_source);
-    return !was_error;
-}
-
-void
-crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
-{
-    gboolean update_cache = FALSE;
-    const oc_ev_membership_t *membership = data;
-
-    gboolean update_quorum = FALSE;
-
-    crm_trace("Invoked");
-    CRM_ASSERT(data != NULL);
-
-    crm_info("Quorum %s after event=%s (id=%d)",
-             ccm_have_quorum(event) ? "(re)attained" : "lost",
-             ccm_event_name(event), membership->m_instance);
-
-    if (crm_peer_seq > membership->m_instance) {
-        crm_err("Membership instance ID went backwards! %llu->%d",
-                crm_peer_seq, membership->m_instance);
-        CRM_ASSERT(crm_peer_seq <= membership->m_instance);
-        return;
-    }
-
-    /*
-     * OC_EV_MS_NEW_MEMBERSHIP:   membership with quorum
-     * OC_EV_MS_MS_INVALID:       membership without quorum
-     * OC_EV_MS_NOT_PRIMARY:      previous membership no longer valid
-     * OC_EV_MS_PRIMARY_RESTORED: previous membership restored
-     * OC_EV_MS_EVICTED:          the client is evicted from ccm.
-     */
-
-    switch (event) {
-        case OC_EV_MS_NEW_MEMBERSHIP:
-        case OC_EV_MS_INVALID:
-            update_cache = TRUE;
-            update_quorum = TRUE;
-            break;
-        case OC_EV_MS_NOT_PRIMARY:
-            break;
-        case OC_EV_MS_PRIMARY_RESTORED:
-            update_cache = TRUE;
-            crm_peer_seq = membership->m_instance;
-            break;
-        case OC_EV_MS_EVICTED:
-            update_quorum = TRUE;
-            register_fsa_input(C_FSA_INTERNAL, I_STOP, NULL);
-            crm_err("Shutting down after CCM event: %s", ccm_event_name(event));
-            break;
-        default:
-            crm_err("Unknown CCM event: %d", event);
-    }
-
-    if (update_quorum) {
-        crm_have_quorum = ccm_have_quorum(event);
-        crm_update_quorum(crm_have_quorum, FALSE);
-
-        if (crm_have_quorum == FALSE) {
-            /* did we just loose quorum? */
-            if (fsa_have_quorum) {
-                crm_info("Quorum lost: %s", ccm_event_name(event));
-            }
-        }
-    }
-
-    if (update_cache) {
-        crm_trace("Updating cache after event %s", ccm_event_name(event));
-        do_ccm_update_cache(C_CCM_CALLBACK, fsa_state, event, data, NULL);
-
-    } else if (event != OC_EV_MS_NOT_PRIMARY) {
-        crm_peer_seq = membership->m_instance;
-        register_fsa_action(A_TE_CANCEL);
-    }
-
-    if (ccm_api_callback_done == NULL) {
-        ccm_api_callback_done =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_callback_done");
-    }
-    (*ccm_api_callback_done) (cookie);
-    return;
-}
-#endif
 
 void
 crmd_cib_connection_destroy(gpointer user_data)

@@ -236,7 +236,7 @@ free_mem(fsa_data_t * msg_data)
 
     empty_uuid_cache();
     crm_peer_destroy();
-    clear_bit_inplace(fsa_input_register, R_CCM_DATA);
+    clear_bit_inplace(fsa_input_register, R_MEMBERSHIP);
 
     if (te_subsystem->client && te_subsystem->client->client_source) {
         crm_debug("Full destroy: TE");
@@ -547,8 +547,8 @@ do_started(long long action,
         crm_err("Start cancelled... %s", fsa_state2string(cur_state));
         return;
 
-    } else if (is_set(fsa_input_register, R_CCM_DATA) == FALSE) {
-        crm_info("Delaying start, no membership data (%.16llx)", R_CCM_DATA);
+    } else if (is_set(fsa_input_register, R_MEMBERSHIP) == FALSE) {
+        crm_info("Delaying start, no membership data (%.16llx)", R_MEMBERSHIP);
 
         crmd_fsa_stall(NULL);
         return;

@@ -19,12 +19,6 @@
 /* put these first so that uuid_t is defined without conflicts */
 #include <crm_internal.h>
 
-#if SUPPORT_HEARTBEAT
-#  include <ocf/oc_event.h>
-#  include <ocf/oc_membership.h>
-static void *ccm_library = NULL;
-#endif
-
 #include <string.h>
 
 #include <crm/crm.h>
@@ -37,75 +31,25 @@ static void *ccm_library = NULL;
 #include <fsa_proto.h>
 #include <crmd_callbacks.h>
 #include <tengine.h>
+#include <membership.h>
 
-gboolean membership_flux_hack = FALSE;
-void post_cache_update(int instance);
+#include <ocf/oc_event.h>
+#include <ocf/oc_membership.h>
 
-#if SUPPORT_HEARTBEAT
-oc_ev_t *fsa_ev_token;
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t, int);
-
 void crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
-#endif
-
-void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
-void check_dead_member(const char *uname, GHashTable * members);
-void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data);
 
 #define CCM_EVENT_DETAIL 0
 #define CCM_EVENT_DETAIL_PARTIAL 0
 
-int num_ccm_register_fails = 0;
-int max_ccm_register_fails = 30;
-int last_peer_update = 0;
+int (*ccm_api_callback_done) (void *cookie) = NULL;
+int (*ccm_api_handle_event) (const oc_ev_t * token) = NULL;
+static gboolean fsa_have_quorum = FALSE;
 
-extern GHashTable *voted;
-
-struct update_data_s {
-    const char *state;
-    const char *caller;
-    xmlNode *updates;
-    gboolean overwrite_join;
-};
-
-void
-reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_node_t *node = value;
-
-    if (crm_is_member_active(node) == FALSE) {
-        check_dead_member(node->uname, NULL);
-        fail_incompletable_actions(transition_graph, node->uuid);
-    }
-}
-
-extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
-
-void
-check_dead_member(const char *uname, GHashTable * members)
-{
-    CRM_CHECK(uname != NULL, return);
-    if (members != NULL && g_hash_table_lookup(members, uname) != NULL) {
-        crm_err("%s didnt really leave the membership!", uname);
-        return;
-    }
-    erase_node_from_join(uname);
-    if (voted != NULL) {
-        g_hash_table_remove(voted, uname);
-    }
-
-    if (safe_str_eq(fsa_our_uname, uname)) {
-        crm_err("We're not part of the cluster anymore");
-        register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-
-    } else if (AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
-        crm_warn("Our DC node (%s) left the cluster", uname);
-        register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
-
-    } else if (fsa_state == S_INTEGRATION || fsa_state == S_FINALIZE_JOIN) {
-        check_join_state(fsa_state, __FUNCTION__);
-    }
-}
+static oc_ev_t *fsa_ev_token;
+static void *ccm_library = NULL;
+static int num_ccm_register_fails = 0;
+static int max_ccm_register_fails = 30;
 
 /*	 A_CCM_CONNECT	*/
 void
@@ -114,7 +58,6 @@ do_ccm_control(long long action,
                enum crmd_fsa_state cur_state,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-#if SUPPORT_HEARTBEAT
     if (is_heartbeat_cluster()) {
         int (*ccm_api_register) (oc_ev_t ** token) =
             find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_register");
@@ -196,14 +139,12 @@ do_ccm_control(long long action,
 
         }
     }
-#endif
 
     if (action & ~(A_CCM_CONNECT | A_CCM_DISCONNECT)) {
         crm_err("Unexpected action %s in %s", fsa_action2string(action), __FUNCTION__);
     }
 }
 
-#if SUPPORT_HEARTBEAT
 void
 ccm_event_detail(const oc_ev_membership_t * oc, oc_ed_t event)
 {
@@ -252,46 +193,11 @@ ccm_event_detail(const oc_ev_membership_t * oc, oc_ed_t event)
 
 }
 
-#endif
-
-gboolean ever_had_quorum = FALSE;
-
-void
-post_cache_update(int instance)
-{
-    xmlNode *no_op = NULL;
-
-    crm_peer_seq = instance;
-    crm_debug("Updated cache after membership event %d.", instance);
-
-    g_hash_table_foreach(crm_peer_cache, reap_dead_ccm_nodes, NULL);
-    set_bit_inplace(fsa_input_register, R_CCM_DATA);
-
-    if (AM_I_DC) {
-        populate_cib_nodes(FALSE);
-        do_update_cib_nodes(FALSE, __FUNCTION__);
-    }
-
-    /*
-     * If we lost nodes, we should re-check the election status
-     * Safe to call outside of an election
-     */
-    register_fsa_action(A_ELECTION_CHECK);
-
-    /* Membership changed, remind everyone we're here.
-     * This will aid detection of duplicate DCs
-     */
-    no_op = create_request(CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
-                           AM_I_DC ? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD, NULL);
-    send_cluster_message(NULL, crm_msg_crmd, no_op, FALSE);
-    free_xml(no_op);
-}
 
 /*	 A_CCM_UPDATE_CACHE	*/
 /*
  * Take the opportunity to update the node status in the CIB as well
  */
-#if SUPPORT_HEARTBEAT
 void
 do_ccm_update_cache(enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
                     oc_ed_t event, const oc_ev_membership_t * oc, xmlNode * xml)
@@ -349,134 +255,111 @@ do_ccm_update_cache(enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
     post_cache_update(instance);
     return;
 }
-#endif
 
-static void
-ccm_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
+gboolean
+ccm_dispatch(int fd, gpointer user_data)
 {
-    fsa_data_t *msg_data = NULL;
+    int rc = 0;
+    oc_ev_t *ccm_token = (oc_ev_t *) user_data;
+    gboolean was_error = FALSE;
 
-    last_peer_update = 0;
-
-    if (rc == cib_ok) {
-        crm_trace("Node update %d complete", call_id);
-
-    } else {
-        crm_err("Node update %d failed", call_id);
-        crm_log_xml_debug(msg, "failed");
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+    crm_trace("Invoked");
+    if (ccm_api_handle_event == NULL) {
+        ccm_api_handle_event =
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event");
     }
+    rc = (*ccm_api_handle_event) (ccm_token);
+
+    if (rc != 0) {
+        if (is_set(fsa_input_register, R_CCM_DISCONNECTED) == FALSE) {
+            /* we signed out, so this is expected */
+            register_fsa_input(C_CCM_CALLBACK, I_ERROR, NULL);
+            crm_err("CCM connection appears to have failed: rc=%d.", rc);
+        }
+        was_error = TRUE;
+    }
+
+    trigger_fsa(fsa_source);
+    return !was_error;
 }
 
 void
-ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
+crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 {
-    xmlNode *tmp1 = NULL;
-    const char *join = NULL;
-    crm_node_t *node = value;
-    struct update_data_s *data = (struct update_data_s *)user_data;
+    gboolean update_cache = FALSE;
+    const oc_ev_membership_t *membership = data;
 
-    data->state = XML_BOOLEAN_NO;
-    if (safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
-        data->state = XML_BOOLEAN_YES;
+    gboolean update_quorum = FALSE;
+
+    crm_trace("Invoked");
+    CRM_ASSERT(data != NULL);
+
+    crm_info("Quorum %s after event=%s (id=%d)",
+             ccm_have_quorum(event) ? "(re)attained" : "lost",
+             ccm_event_name(event), membership->m_instance);
+
+    if (crm_peer_seq > membership->m_instance) {
+        crm_err("Membership instance ID went backwards! %llu->%d",
+                crm_peer_seq, membership->m_instance);
+        CRM_ASSERT(crm_peer_seq <= membership->m_instance);
+        return;
     }
 
-    crm_debug("Updating %s: %s (overwrite=%s) hash_size=%d",
-              node->uname, data->state, data->overwrite_join ? "true" : "false",
-              g_hash_table_size(confirmed_nodes));
+    /*
+     * OC_EV_MS_NEW_MEMBERSHIP:   membership with quorum
+     * OC_EV_MS_MS_INVALID:       membership without quorum
+     * OC_EV_MS_NOT_PRIMARY:      previous membership no longer valid
+     * OC_EV_MS_PRIMARY_RESTORED: previous membership restored
+     * OC_EV_MS_EVICTED:          the client is evicted from ccm.
+     */
 
-    if (data->overwrite_join) {
-        if ((node->processes & crm_proc_crmd) == FALSE) {
-            join = CRMD_JOINSTATE_DOWN;
+    switch (event) {
+        case OC_EV_MS_NEW_MEMBERSHIP:
+        case OC_EV_MS_INVALID:
+            update_cache = TRUE;
+            update_quorum = TRUE;
+            break;
+        case OC_EV_MS_NOT_PRIMARY:
+            break;
+        case OC_EV_MS_PRIMARY_RESTORED:
+            update_cache = TRUE;
+            crm_peer_seq = membership->m_instance;
+            break;
+        case OC_EV_MS_EVICTED:
+            update_quorum = TRUE;
+            register_fsa_input(C_FSA_INTERNAL, I_STOP, NULL);
+            crm_err("Shutting down after CCM event: %s", ccm_event_name(event));
+            break;
+        default:
+            crm_err("Unknown CCM event: %d", event);
+    }
 
-        } else {
-            const char *peer_member = g_hash_table_lookup(confirmed_nodes, node->uname);
+    if (update_quorum) {
+        crm_have_quorum = ccm_have_quorum(event);
+        crm_update_quorum(crm_have_quorum, FALSE);
 
-            if (peer_member != NULL) {
-                join = CRMD_JOINSTATE_MEMBER;
-            } else {
-                join = CRMD_JOINSTATE_PENDING;
+        if (crm_have_quorum == FALSE) {
+            /* did we just loose quorum? */
+            if (fsa_have_quorum) {
+                crm_info("Quorum lost: %s", ccm_event_name(event));
             }
         }
     }
 
-    tmp1 =
-        create_node_state(node->uname, (node->processes & crm_proc_ais) ? ACTIVESTATUS : DEADSTATUS,
-                          data->state,
-                          (node->processes & crm_proc_crmd) ? ONLINESTATUS : OFFLINESTATUS, join,
-                          NULL, FALSE, data->caller);
+    if (update_cache) {
+        crm_trace("Updating cache after event %s", ccm_event_name(event));
+        do_ccm_update_cache(C_CCM_CALLBACK, fsa_state, event, data, NULL);
 
-    add_node_copy(data->updates, tmp1);
-    free_xml(tmp1);
-}
-
-void
-do_update_cib_nodes(gboolean overwrite, const char *caller)
-{
-    int call_id = 0;
-    int call_options = cib_scope_local | cib_quorum_override;
-    struct update_data_s update_data;
-    xmlNode *fragment = NULL;
-
-    if (crm_peer_cache == NULL) {
-        /* We got a replace notification before being connected to
-         *   the CCM.
-         * So there is no need to update the local CIB with our values
-         *   - since we have none.
-         */
-        return;
-
-    } else if (AM_I_DC == FALSE) {
-        return;
+    } else if (event != OC_EV_MS_NOT_PRIMARY) {
+        crm_peer_seq = membership->m_instance;
+        register_fsa_action(A_TE_CANCEL);
     }
 
-    fragment = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-
-    update_data.caller = caller;
-    update_data.updates = fragment;
-    update_data.overwrite_join = overwrite;
-
-    g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
-
-    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id, NULL);
-    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, ccm_node_update_complete);
-    last_peer_update = call_id;
-
-    free_xml(fragment);
-}
-
-static void
-cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
-{
-    fsa_data_t *msg_data = NULL;
-
-    if (rc == cib_ok) {
-        crm_trace("Quorum update %d complete", call_id);
-
-    } else {
-        crm_err("Quorum update %d failed", call_id);
-        crm_log_xml_debug(msg, "failed");
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+    if (ccm_api_callback_done == NULL) {
+        ccm_api_callback_done =
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_callback_done");
     }
+    (*ccm_api_callback_done) (cookie);
+    return;
 }
 
-void
-crm_update_quorum(gboolean quorum, gboolean force_update)
-{
-    ever_had_quorum |= quorum;
-    if (AM_I_DC && (force_update || fsa_has_quorum != quorum)) {
-        int call_id = 0;
-        xmlNode *update = NULL;
-        int call_options = cib_scope_local | cib_quorum_override;
-
-        update = create_xml_node(NULL, XML_TAG_CIB);
-        crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, quorum);
-        set_uuid(update, XML_ATTR_DC_UUID, fsa_our_uname);
-
-        fsa_cib_update(XML_TAG_CIB, update, call_options, call_id, NULL);
-        crm_debug("Updating quorum status to %s (call=%d)", quorum ? "true" : "false", call_id);
-        add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_quorum_update_complete);
-        free_xml(update);
-    }
-    fsa_has_quorum = quorum;
-}
