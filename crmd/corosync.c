@@ -117,18 +117,6 @@ crmd_cman_dispatch(unsigned long long seq, gboolean quorate)
 }
 
 static void
-crmd_cman_destroy(gpointer user_data)
-{
-    if (is_set(fsa_input_register, R_HA_DISCONNECTED)) {
-        crm_err("connection terminated");
-        exit(1);
-
-    } else {
-        crm_info("connection closed");
-    }
-}
-
-static void
 crmd_quorum_destroy(gpointer user_data)
 {
     if (is_set(fsa_input_register, R_HA_DISCONNECTED)) {
@@ -152,6 +140,20 @@ crmd_ais_destroy(gpointer user_data)
     }
 }
 
+#if SUPPORT_CMAN
+static void
+crmd_cman_destroy(gpointer user_data)
+{
+    if (is_set(fsa_input_register, R_HA_DISCONNECTED)) {
+        crm_err("connection terminated");
+        exit(1);
+
+    } else {
+        crm_info("connection closed");
+    }
+}
+#endif
+
 extern gboolean crm_connect_corosync(void);
 
 gboolean
@@ -169,10 +171,12 @@ crm_connect_corosync(void)
         init_quorum_connection(crmd_cman_dispatch, crmd_quorum_destroy);
     }
 
+#if SUPPORT_CMAN
     if (rc && is_cman_cluster()) {
         init_cman_connection(crmd_cman_dispatch, crmd_cman_destroy);
         set_bit_inplace(fsa_input_register, R_MEMBERSHIP);
     }
+#endif
     return rc;
 }
 

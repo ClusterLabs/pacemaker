@@ -33,7 +33,11 @@ libcrmcluster_la_LIBADD  = $(top_builddir)/lib/common/libcrmcommon.la $(top_buil
 libcrmcluster_la_DEPENDENCIES = $(top_builddir)/lib/common/libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la 
 
 if BUILD_CS_SUPPORT
+if BUILD_CS_PLUGIN
+libcrmcluster_la_SOURCES += legacy.c
+else
 libcrmcluster_la_SOURCES += corosync.c
+endif
 endif
 
 if BUILD_HEARTBEAT_SUPPORT

@@ -440,7 +440,6 @@ cib_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
 static void
 cib_ais_destroy(gpointer user_data)
 {
-    ais_fd_sync = -1;
     if (cib_shutdown_flag) {
         crm_info("Corosync disconnection complete");
     } else {

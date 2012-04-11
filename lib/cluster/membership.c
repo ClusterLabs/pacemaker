@@ -402,43 +402,6 @@ crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, ui
     return node;
 }
 
-crm_node_t *
-crm_update_ais_node(xmlNode * member, long long seq)
-{
-    const char *id_s = crm_element_value(member, "id");
-    const char *addr = crm_element_value(member, "addr");
-    const char *uname = crm_element_value(member, "uname");
-    const char *state = crm_element_value(member, "state");
-    const char *born_s = crm_element_value(member, "born");
-    const char *seen_s = crm_element_value(member, "seen");
-    const char *votes_s = crm_element_value(member, "votes");
-    const char *procs_s = crm_element_value(member, "processes");
-
-    int votes = crm_int_helper(votes_s, NULL);
-    unsigned int id = crm_int_helper(id_s, NULL);
-    unsigned int procs = crm_int_helper(procs_s, NULL);
-
-    /* TODO: These values will contain garbage if version < 0.7.1 */
-    uint64_t born = crm_int_helper(born_s, NULL);
-    uint64_t seen = crm_int_helper(seen_s, NULL);
-
-    return crm_update_peer(id, born, seen, votes, procs, uname, uname, addr, state);
-}
-
-crm_node_t *
-crm_update_cman_node(xmlNode * member, long long seq)
-{
-    const char *id_s = crm_element_value(member, "id");
-    const char *uname = crm_element_value(member, "uname");
-    const char *procs_s = crm_element_value(member, "processes");
-
-    unsigned int id = crm_int_helper(id_s, NULL);
-    unsigned int procs = crm_int_helper(procs_s, NULL);
-
-    crm_info("Updating peer processes for %s", crm_str(uname));
-    return crm_update_peer(id, 0, 0, 0, procs, uname, uname, NULL, NULL);
-}
-
 #if SUPPORT_HEARTBEAT
 crm_node_t *
 crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state, uint64_t seq)

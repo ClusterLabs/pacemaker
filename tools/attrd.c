@@ -409,7 +409,6 @@ attrd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
 static void
 attrd_ais_destroy(gpointer unused)
 {
-    ais_fd_sync = -1;
     if (need_shutdown) {
         /* we signed out, so this is expected */
         crm_info("OpenAIS disconnection complete");
