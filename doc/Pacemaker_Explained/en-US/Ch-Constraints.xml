@@ -41,28 +41,30 @@
                 <entry>Field</entry>
                 <entry>Description</entry>
               </row>
-            </thead><tbody><row>
-              <entry><indexterm significance="preferred"><primary>id</primary><secondary>Constraint Field</secondary></indexterm>
-                <indexterm><primary>Constraint Field</primary><secondary>id</secondary></indexterm>
-                entry>id</entry>
+            </thead>
+            <tbody>
+              <row>
+                <entry><indexterm significance="preferred"><primary>id</primary><secondary>Constraint Field</secondary></indexterm>
+                  <indexterm><primary>Constraint Field</primary><secondary>id</secondary></indexterm>
+                <entry>id</entry>
                 <entry>A unique name for the constraint</entry>
               </row>
               <row>
                 <entry><indexterm significance="preferred"><primary>rsc Constraint Field</primary></indexterm>
                   <indexterm><primary>Constraint Field</primary><secondary>rsc</secondary></indexterm>
-                  rsc</entry>
+                <entry>rsc</entry>
                 <entry>A resource name</entry>
               </row>
               <row>
                 <entry><indexterm significance="preferred"><primary>Node</primary><secondary>Constraint Field</secondary></indexterm>
                   <indexterm><primary>Constraint Field</primary><secondary>node</secondary></indexterm>
-                  node</entry>
+                <entry>node</entry>
                 <entry>A node's uname</entry>
               </row>
               <row>
                 <entry><indexterm significance="preferred"><primary>score</primary><secondary>Constraint Field</secondary></indexterm>
                   <indexterm><primary>Constraint Field</primary><secondary>score</secondary></indexterm>
-                  score</entry>
+                <entry>score</entry>
                 <entry>Positive values indicate the resource should run on this node. Negative values indicate the resource should not run on this node. Values of +/- <literal>INFINITY</literal> change "should"/"should not" to "must"/"must not".</entry>
               </row>
             </tbody>
