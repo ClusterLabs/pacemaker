@@ -117,8 +117,8 @@ when confronted with certain situations.
 
 They are grouped into sets and, in advanced configurations, there may
 be more than one.
-footnote:[This will be described later in the section on <xref
-linkend="ch-rules"/> where we will show how to have the cluster use
+footnote:[This will be described later in the section on
+<<ch-rules>> where we will show how to have the cluster use
 different sets of options during working hours (when downtime is
 usually to be avoided at all costs) than it does during the weekends
 (when resources can be moved to the their preferred hosts without
@@ -273,5 +273,4 @@ pass:[<command># crm_attribute --attr-name batch-limit --delete-attr</command>]
 
 In such cases follow the on-screen instructions to perform the
 requested action.  To determine which value is currently being used by
-the cluster, please refer to the section on <xref
-linkend="ch-rules"/>.
+the cluster, please refer to the section on <<ch-rules>>.
