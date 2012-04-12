@@ -72,11 +72,6 @@ operating a mixed version cluster during an upgrade.
 |=========================================================
 |Field |Description
 
-|crm-debug-origin |
-indexterm:[crm-debug-origin Cluster Fields]
-indexterm:[Cluster Fields,crm-debug-origin]
-Indicates where the last update came from. Informational purposes only.
-
 |cib-last-written | 
 indexterm:[cib-last-written Cluster Fields]
 indexterm:[Cluster Fields,cib-last-written]

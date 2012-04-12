@@ -32,6 +32,10 @@ why sometimes <example> and sometimes <figure>? example 2.2 has title at top, di
 some <command> are in <para>, some in <programlisting> ... I'd like the latter more, or perhaps in a <screen>.
 Indentation makes whitespace at start of lines ... remove?
 
+Chapter 3
+=========
+- table 3.3 "Properties maintained by the Cluster" incomplete (crm-feature-set, ...)
+
 
 4.4.2 structure different from 4.4.1 ... numbered lists
 
