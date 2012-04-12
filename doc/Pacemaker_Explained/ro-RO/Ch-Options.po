@@ -116,16 +116,6 @@ msgstr "Proprietăţi Menţinute de către Cluster"
 
 #. Tag: entry
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>crm-debug-origin Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>crm-debug-origin</secondary></indexterm> crm-debug-origin"
-msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului crm-debug-origin</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>crm-debug-origin</secondary></indexterm> crm-debug-origin"
-
-#. Tag: entry
-#, no-c-format
-msgid "Indicates where the last update came from. Informational purposes only."
-msgstr "Indică de unde a provenit ultima actualizare. Numai cu scop informaţional."
-
-#. Tag: entry
-#, no-c-format
 msgid "<indexterm significance=\"preferred\"><primary>cib-last-written Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>cib-last-written</secondary></indexterm> cib-last-written"
 msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului cib-last-written</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>cib-last-written</secondary></indexterm> cib-last-written"
 
