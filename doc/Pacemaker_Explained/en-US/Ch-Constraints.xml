@@ -41,10 +41,12 @@
                 <entry>Field</entry>
                 <entry>Description</entry>
               </row>
-            </thead><tbody><row>
-              <entry><indexterm significance="preferred"><primary>id</primary><secondary>Constraint Field</secondary></indexterm>
-                <indexterm><primary>Constraint Field</primary><secondary>id</secondary></indexterm>
-                entry>id</entry>
+            </thead>
+            <tbody>
+              <row>
+                <entry><indexterm significance="preferred"><primary>id</primary><secondary>Constraint Field</secondary></indexterm>
+                    <indexterm><primary>Constraint Field</primary><secondary>id</secondary></indexterm>
+                  id</entry>
                 <entry>A unique name for the constraint</entry>
               </row>
               <row>
