@@ -12,85 +12,85 @@
     <section id="s-upgrade-config-perform">
       <title>Perform the upgrade</title>
       <section>
-	<title>Upgrade the software</title>
-	<para>Refer to the appendix: <xref linkend="ap-upgrade"/></para>
+        <title>Upgrade the software</title>
+        <para>Refer to the appendix: <xref linkend="ap-upgrade"/></para>
       </section>
       <section>
-	<title>Upgrade the Configuration</title>
-	<para>As XML is not the friendliest of languages, it is common for cluster administrators to have scripted some of their activities. In such cases, it is likely that those scripts will not work with the new 1.0 syntax.</para>
-	<para>In order to support such environments, it is actually possible to continue using the old 0.6 syntax.</para>
-	<para>The downside is, however, that not all the new features will be available and there is a performance impact since the cluster must do a non-persistent configuration upgrade before each transition. So while using the old syntax is possible, it is not advisable to continue using it indefinitely.</para>
-	<para>Even if you wish to continue using the old syntax, it is advisable to follow the upgrade procedure to ensure that the cluster is able to use your existing configuration (since it will perform much the same task internally). </para>
-	<orderedlist spacing="compact">
-	  <listitem>
+        <title>Upgrade the Configuration</title>
+        <para>As XML is not the friendliest of languages, it is common for cluster administrators to have scripted some of their activities. In such cases, it is likely that those scripts will not work with the new 1.0 syntax.</para>
+        <para>In order to support such environments, it is actually possible to continue using the old 0.6 syntax.</para>
+        <para>The downside is, however, that not all the new features will be available and there is a performance impact since the cluster must do a non-persistent configuration upgrade before each transition. So while using the old syntax is possible, it is not advisable to continue using it indefinitely.</para>
+        <para>Even if you wish to continue using the old syntax, it is advisable to follow the upgrade procedure to ensure that the cluster is able to use your existing configuration (since it will perform much the same task internally). </para>
+        <orderedlist spacing="compact">
+          <listitem>
             <para>Create a <indexterm><primary>shadow copy</primary><secondary>example for upgrading</secondary></indexterm>shadow copy to work with
-	    <programlisting><command>crm_shadow --create upgrade06</command></programlisting></para>
-	  </listitem>
-	  <listitem>
+            <programlisting><command>crm_shadow --create upgrade06</command></programlisting></para>
+          </listitem>
+          <listitem>
             <para>Verify the <indexterm significance="preferred"><primary>Configuration</primary><secondary>Verify</secondary></indexterm><indexterm significance="preferred"><primary>Verify</primary><secondary>Configuration</secondary></indexterm>configuration is valid
-	    <programlisting><command>crm_verify --live-check</command></programlisting></para>
-	  </listitem>
-	  <listitem>
+            <programlisting><command>crm_verify --live-check</command></programlisting></para>
+          </listitem>
+          <listitem>
             <para>Fix any errors or warnings</para>
-	  </listitem>
-	  <listitem>
+          </listitem>
+          <listitem>
             <para>Perform the upgrade:
             <programlisting><command>cibadmin --upgrade</command></programlisting></para>
-	    <para>If this step fails, there are three main possibilities:
-	    <orderedlist spacing="compact">
-	      <listitem><para>The configuration was not valid to start with - go back to step 2</para></listitem>
-	      <listitem><para>The transformation failed - report a bug or email the project<footnote><para><ulink url="mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade"/></para></footnote></para></listitem>
-	      <listitem><para>The transformation was successful but produced an invalid result<footnote>
-		  <para>The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation.</para>
-		</footnote></para></listitem>
-	    </orderedlist></para>
-	    <para>If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url="http://clusterlabs.org/wiki/Validation_FAQ"/> and/or try the procedure described below under <xref linkend="s-upgrade-config-manual"/>. </para>
-	  </listitem>
-	  <listitem>
-	    <para>Check the changes
+            <para>If this step fails, there are three main possibilities:
+            <orderedlist spacing="compact">
+              <listitem><para>The configuration was not valid to start with - go back to step 2</para></listitem>
+              <listitem><para>The transformation failed - report a bug or email the project<footnote><para><ulink url="mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade"/></para></footnote></para></listitem>
+              <listitem><para>The transformation was successful but produced an invalid result<footnote>
+                  <para>The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation.</para>
+                </footnote></para></listitem>
+            </orderedlist></para>
+            <para>If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url="http://clusterlabs.org/wiki/Validation_FAQ"/> and/or try the procedure described below under <xref linkend="s-upgrade-config-manual"/>. </para>
+          </listitem>
+          <listitem>
+            <para>Check the changes
               <programlisting><command>crm_shadow --diff</command></programlisting></para>
-	    <para>If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:
+            <para>If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:
             <programlisting><command>crm_shadow --edit</command></programlisting></para>
-	    <para>This will open the configuration in your favorite editor (whichever is specified by the standard <envar>$EDITOR</envar> environment variable).</para>
-	  </listitem>
-	  <listitem>
-	    <para>Preview how the cluster will react</para>
-	    <para>Test what the cluster will do when you upload the new configuration
-	    <programlisting># <command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>
+            <para>This will open the configuration in your favorite editor (whichever is specified by the standard <envar>$EDITOR</envar> environment variable).</para>
+          </listitem>
+          <listitem>
+            <para>Preview how the cluster will react</para>
+            <para>Test what the cluster will do when you upload the new configuration
+            <programlisting># <command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>
 # <command>graphviz upgrade06.dot</command></programlisting></para>
-	    <para>
-	      Verify that either no resource actions will occur or that you are happy with any that are scheduled.
-	      If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes.
-	      See <xref linkend="s-config-testing-changes"/> for further details on how to interpret the output of ptest.
-	    </para>
-	  </listitem>
-	  <listitem>
+            <para>
+              Verify that either no resource actions will occur or that you are happy with any that are scheduled.
+              If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes.
+              See <xref linkend="s-config-testing-changes"/> for further details on how to interpret the output of ptest.
+            </para>
+          </listitem>
+          <listitem>
             <para>Upload the changes
             <programlisting><command>crm_shadow --commit upgrade06 --force</command></programlisting></para>
-	    <para>If this step fails, something really strange has occurred. You should report a bug.</para>
-	  </listitem>
-	</orderedlist>
+            <para>If this step fails, something really strange has occurred. You should report a bug.</para>
+          </listitem>
+        </orderedlist>
       </section>
       <section id="s-upgrade-config-manual">
-	<title>Manually Upgrading the Configuration</title>
+        <title>Manually Upgrading the Configuration</title>
         <para>It is also possible to perform the <indexterm significance="preferred"><primary>Configuration</primary><secondary>Upgrade manually</secondary></indexterm>configuration upgrade steps manually. To do this</para>
-	<orderedlist spacing="compact">
-	  <listitem>
-	    <para>Locate the <filename>upgrade06.xsl</filename> conversion script or download the latest version from <ulink url="http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/xml/upgrade06.xsl">version control</ulink></para>
-	  </listitem>
-	  <listitem>
+        <orderedlist spacing="compact">
+          <listitem>
+            <para>Locate the <filename>upgrade06.xsl</filename> conversion script or download the latest version from <ulink url="http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/xml/upgrade06.xsl">version control</ulink></para>
+          </listitem>
+          <listitem>
             <para>Convert the <indexterm><primary>XML</primary><secondary>Convert</secondary></indexterm>XML blob:
               <programlisting><command>xsltproc <filename>/path/to/upgrade06.xsl</filename> <filename>config06.xml</filename> > <filename>config10.xml</filename></command></programlisting>
-	    </para>
-	  </listitem>
-	  <listitem><para>Locate the <filename>pacemaker.rng</filename> script.</para></listitem>
-	  <listitem>
+            </para>
+          </listitem>
+          <listitem><para>Locate the <filename>pacemaker.rng</filename> script.</para></listitem>
+          <listitem>
             <para>Check the <indexterm significance="preferred"><primary>Validate</primary><secondary>XML</secondary></indexterm><indexterm><primary>xmllint</primary><secondary>Validate XML</secondary></indexterm>XML validity:
               <programlisting><command>xmllint --relaxng <filename>/path/to/pacemaker.rng</filename> <filename>config10.xml</filename></command></programlisting>
-	    </para>
-	  </listitem>
-	</orderedlist>
-	<para>The advantage of this method is that it can be performed without the cluster running and any validation errors should be more informative (despite being generated by the same library!) since they include line numbers.</para>
+            </para>
+          </listitem>
+        </orderedlist>
+        <para>The advantage of this method is that it can be performed without the cluster running and any validation errors should be more informative (despite being generated by the same library!) since they include line numbers.</para>
       </section>
     </section>
   </appendix>

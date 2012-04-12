@@ -3,84 +3,84 @@
     <section id="s-changes-new">
       <title>New</title>
       <itemizedlist spacing="compact">
-	<listitem><para>Failure timeouts. See <xref linkend="s-failure-migration"/></para></listitem>
-	<listitem><para>New section for resource and operation defaults. See <xref linkend="s-resource-defaults"/> and <xref linkend="s-operation-defaults"/></para></listitem>
-	<listitem><para>Tool for making offline configuration changes. See <xref linkend="s-config-sandboxes"/></para></listitem>
-	<listitem><para><literal>Rules, instance_attributes, meta_attributes</literal> and sets of operations can be defined once and referenced in multiple places. See <xref linkend="s-reusing-config-elements"/></para></listitem>
-	<listitem><para>The CIB now accepts XPath-based create/modify/delete operations. See the <command>cibadmin</command> help text.</para></listitem>
-	<listitem><para>Multi-dimensional colocation and ordering constraints. See <xref linkend="s-resource-sets-ordering"/> and <xref linkend="s-resource-sets-collocation"/></para></listitem>
-	<listitem><para>The ability to connect to the CIB from non-cluster machines. See <xref linkend="s-remote-connection"/></para></listitem>
-	<listitem><para>Allow recurring actions to be triggered at known times. See <xref linkend="s-recurring-start"/></para></listitem>
+        <listitem><para>Failure timeouts. See <xref linkend="s-failure-migration"/></para></listitem>
+        <listitem><para>New section for resource and operation defaults. See <xref linkend="s-resource-defaults"/> and <xref linkend="s-operation-defaults"/></para></listitem>
+        <listitem><para>Tool for making offline configuration changes. See <xref linkend="s-config-sandboxes"/></para></listitem>
+        <listitem><para><literal>Rules, instance_attributes, meta_attributes</literal> and sets of operations can be defined once and referenced in multiple places. See <xref linkend="s-reusing-config-elements"/></para></listitem>
+        <listitem><para>The CIB now accepts XPath-based create/modify/delete operations. See the <command>cibadmin</command> help text.</para></listitem>
+        <listitem><para>Multi-dimensional colocation and ordering constraints. See <xref linkend="s-resource-sets-ordering"/> and <xref linkend="s-resource-sets-collocation"/></para></listitem>
+        <listitem><para>The ability to connect to the CIB from non-cluster machines. See <xref linkend="s-remote-connection"/></para></listitem>
+        <listitem><para>Allow recurring actions to be triggered at known times. See <xref linkend="s-recurring-start"/></para></listitem>
       </itemizedlist>
     </section>
     <section id="s-changes">
       <title>Changed</title>
       <itemizedlist spacing="compact">
-	<listitem>
+        <listitem>
           <para>Syntax
-	  <itemizedlist spacing="compact">
-	    <listitem><para>All resource and cluster options now use dashes (-) instead of underscores (_)</para></listitem>
-	    <listitem><para><literal>master_slave</literal> was renamed to <literal>master</literal></para></listitem>
-	    <listitem><para>The <literal>attributes</literal> container tag was removed</para></listitem>
-	    <listitem><para>The operation field <literal>pre-req</literal> has been renamed <literal>requires</literal></para></listitem>
-	    <listitem><para>All operations must have an <literal>interval</literal>, <literal>start</literal>/<literal>stop</literal> must have it set to zero</para></listitem>
-	  </itemizedlist></para>
-	</listitem>
+          <itemizedlist spacing="compact">
+            <listitem><para>All resource and cluster options now use dashes (-) instead of underscores (_)</para></listitem>
+            <listitem><para><literal>master_slave</literal> was renamed to <literal>master</literal></para></listitem>
+            <listitem><para>The <literal>attributes</literal> container tag was removed</para></listitem>
+            <listitem><para>The operation field <literal>pre-req</literal> has been renamed <literal>requires</literal></para></listitem>
+            <listitem><para>All operations must have an <literal>interval</literal>, <literal>start</literal>/<literal>stop</literal> must have it set to zero</para></listitem>
+          </itemizedlist></para>
+        </listitem>
         <listitem><para>The <literal>stonith-enabled</literal> option now defaults to true.</para></listitem>
-	<listitem><para>The cluster will refuse to start resources if <literal>stonith-enabled</literal> is true (or unset) and no STONITH resources have been defined</para></listitem>
-	<listitem><para>The attributes of colocation and ordering constraints were renamed for clarity. See <xref linkend="s-resource-ordering"/> and <xref linkend="s-resource-colocation"/></para></listitem>
-	<listitem><para><literal>resource-failure-stickiness</literal> has been replaced by <literal>migration-threshold</literal>. See <xref linkend="s-failure-migration"/></para></listitem>
-	<listitem><para>The parameters for command-line tools have been made consistent</para></listitem>
-	<listitem>
+        <listitem><para>The cluster will refuse to start resources if <literal>stonith-enabled</literal> is true (or unset) and no STONITH resources have been defined</para></listitem>
+        <listitem><para>The attributes of colocation and ordering constraints were renamed for clarity. See <xref linkend="s-resource-ordering"/> and <xref linkend="s-resource-colocation"/></para></listitem>
+        <listitem><para><literal>resource-failure-stickiness</literal> has been replaced by <literal>migration-threshold</literal>. See <xref linkend="s-failure-migration"/></para></listitem>
+        <listitem><para>The parameters for command-line tools have been made consistent</para></listitem>
+        <listitem>
           <para>Switched to <indexterm><primary>RelaxNG</primary></indexterm>RelaxNG schema validation and <indexterm><primary>libxml2</primary></indexterm><filename>libxml2</filename> parser
-	  <itemizedlist spacing="compact">
-	    <listitem>
-	      <para>id fields are now XML IDs which have the following limitations:
-	      <itemizedlist spacing="compact">
-		<listitem><para>id's cannot contain colons (:)</para></listitem>
-		<listitem><para>id's cannot begin with a number</para></listitem>
-		<listitem><para>id's must be globally unique (not just unique for that tag)</para></listitem>
-	      </itemizedlist></para>
-	    </listitem>
-	    <listitem>
-	      <para>
-		Some fields (such as those in constraints that refer to resources) are IDREFs.
-		This means that they must reference existing resources or objects in order for the configuration to be valid.
-		Removing an object which is referenced elsewhere will therefore fail.
-	      </para>
-	    </listitem>
-	    <listitem>
-	      <para>
-		The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed.
-		This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0.
-		This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary.
-	      </para>
-	    </listitem>
-	  </itemizedlist></para>
-	</listitem>
-	<listitem>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>id fields are now XML IDs which have the following limitations:
+              <itemizedlist spacing="compact">
+                <listitem><para>id's cannot contain colons (:)</para></listitem>
+                <listitem><para>id's cannot begin with a number</para></listitem>
+                <listitem><para>id's must be globally unique (not just unique for that tag)</para></listitem>
+              </itemizedlist></para>
+            </listitem>
+            <listitem>
+              <para>
+                Some fields (such as those in constraints that refer to resources) are IDREFs.
+                This means that they must reference existing resources or objects in order for the configuration to be valid.
+                Removing an object which is referenced elsewhere will therefore fail.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed.
+                This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0.
+                This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary.
+              </para>
+            </listitem>
+          </itemizedlist></para>
+        </listitem>
+        <listitem>
           <para>Ping node information no longer needs to be added to <filename>ha.cf</filename>. Simply include the lists of hosts in your ping resource(s).</para>
-	</listitem>
+        </listitem>
       </itemizedlist>
     </section>
     <section id="s-changes-removed">
       <title>Removed</title>
       <itemizedlist spacing="compact">
-	<listitem>
+        <listitem>
           <para>Syntax
-	  <itemizedlist spacing="compact">
-	    <listitem>
-	      <para>
-		It is no longer possible to set resource meta options as top-level attributes.  Use meta attributes instead.
-	      </para>
-	    </listitem>
-	    <listitem>
-	      <para>
-		Resource and operation defaults are no longer read from <literal>crm_config</literal>.  See <xref linkend="s-resource-defaults"/> and <xref linkend="s-operation-defaults"/> instead.
-	      </para>
-	    </listitem>
-	  </itemizedlist></para>
-	</listitem>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>
+                It is no longer possible to set resource meta options as top-level attributes.  Use meta attributes instead.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Resource and operation defaults are no longer read from <literal>crm_config</literal>.  See <xref linkend="s-resource-defaults"/> and <xref linkend="s-operation-defaults"/> instead.
+              </para>
+            </listitem>
+          </itemizedlist></para>
+        </listitem>
       </itemizedlist>
     </section>
   </appendix>
