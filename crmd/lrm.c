@@ -246,17 +246,29 @@ do_lrm_control(long long action,
 
     if (action & A_LRM_DISCONNECT) {
         if (verify_stopped(cur_state, LOG_INFO) == FALSE) {
-            crmd_fsa_stall(NULL);
-            return;
+            if(action == A_LRM_DISCONNECT) {
+                crmd_fsa_stall(NULL);
+                return;
+            }
         }
 
         if (is_set(fsa_input_register, R_LRM_CONNECTED)) {
             clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+
+            if (lrm_source) {
+                G_main_del_IPC_Channel(lrm_source);
+                lrm_source = NULL;
+            }
             fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
             crm_info("Disconnected from the LRM");
         }
 
-        /* TODO: Clean up the hashtable */
+        g_hash_table_destroy(resource_history);
+        resource_history = NULL;
+        g_hash_table_destroy(deletion_ops);
+        deletion_ops = NULL;
+        g_hash_table_destroy(pending_ops);
+        pending_ops = NULL;
     }
 
     if (action & A_LRM_CONNECT) {
