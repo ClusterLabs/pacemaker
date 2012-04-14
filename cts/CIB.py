@@ -49,21 +49,18 @@ class Option:
         self.name = name
         self.value = value
 
-        self.target = "pcmk-1"
-        self.cib_tmpfile = CTSvars.CRM_CONFIG_DIR+"/cib.xml"
-
     def show(self):
         text = '''<crm_config>'''
         text += ''' <cluster_property_set id="%s">''' % self.section
-        text += '''  <nvpair id="cts-%s" name="%s" value="%s"/>''' % (self.id, self.name, self.value)
+        text += '''  <nvpair id="cts-%s" name="%s" value="%s"/>''' % (self.name, self.name, self.value)
         text += ''' </cluster_property_set>'''
         text += '''</crm_config>'''
         return text
         
     def commit(self):
         self.Factory.debug("Writing out %s" % self.id)
-        fixed = "HOME=/root CIB_file="+self.cib_tmpfile+" cibadmin --modify --xml-text '%s'" % self.show() 
-        rc = self.Factory.rsh(self.target, fixed)
+        fixed = "HOME=/root CIB_file="+self.Factory.tmpfile+" cibadmin --modify --xml-text '%s'" % self.show() 
+        rc = self.Factory.rsh(self.Factory.target, fixed)
         if rc != 0:
             self.Factory.log("Configure call failed: "+fixed)
             sys.exit(1)
