@@ -1,7 +1,0 @@
-session RA interface
-ra
-providers IPaddr
-providers Dummy
-info ocf:pacemaker:Dummy
-info stonith:external/ssh
-.

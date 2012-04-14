@@ -1685,15 +1685,6 @@ tools/Makefile							\
 	tools/coverage.sh					\
 	tools/hb2openais.sh					\
 	tools/crm_primitive.py					\
-shell/Makefile							\
-	shell/templates/Makefile				\
-	shell/regression/Makefile				\
-	shell/regression/testcases/Makefile			\
-	shell/modules/Makefile					\
-	shell/modules/ui.py					\
-	shell/modules/ra.py					\
-	shell/modules/vars.py					\
-	shell/modules/help.py					\
 xml/Makefile							\
 		)
 

@@ -23,7 +23,7 @@ EXTRA_DIST              = autogen.sh ConfigureMe README.in libltdl.tar
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-CORE	= $(LIBLTDL_DIR) replace include lib mcp pengine cib crmd fencing tools shell xml
+CORE	= $(LIBLTDL_DIR) replace include lib mcp pengine cib crmd fencing tools xml
 SUBDIRS	= $(CORE) cts extra doc
 
 doc_DATA = AUTHORS COPYING COPYING.LIB

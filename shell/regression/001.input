@@ -1,5 +1,0 @@
-configure
-primitive rsc_dummy ocf:heartbeat:Dummy
-monitor rsc_dummy 30
-commit
-quit

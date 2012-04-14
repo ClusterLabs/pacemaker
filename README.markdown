@@ -17,6 +17,10 @@ resource health.
 * [Mailing list](http://oss.clusterlabs.org/mailman/listinfo/pacemaker).
 * [Documentation](http://www.clusterlabs.org/doc)
 
+## Important information about the _crm shell_
+Since late-April, the _crm shell_ is no longer included in the Pacemaker source tree.
+This change was made at the author's request as it is now maintained as a separate project at https://savannah.nongnu.org/projects/crmsh/
+
 ## Build Dependencies
 * automake
 * autoconf

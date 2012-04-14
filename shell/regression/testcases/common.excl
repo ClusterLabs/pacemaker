@@ -1,8 +1,0 @@
-Could not send fail-count-p0=\(null\) update via attrd: connection failed
-Could not send fail-count-p0=<none> update via attrd: connection failed
-Could not send s1=\(null\) update via attrd: connection failed
-Could not send s1=<none> update via attrd: connection failed
-Error performing operation: The object/attribute does not exist
-Error setting fail-count-p0=5 \(section=status, set=status-node1\): The object/attribute does not exist
-Error setting s1=1 2 3 \(section=status, set=status-node1\): The object/attribute does not exist
-Error signing on to the CRMd service

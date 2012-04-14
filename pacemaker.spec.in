@@ -419,7 +419,6 @@ fi
 %{_sbindir}/crm_diff
 %{_sbindir}/crm_failcount
 %{_sbindir}/crm_mon
-%{_sbindir}/crm
 %{_sbindir}/crm_resource
 %{_sbindir}/crm_standby
 %{_sbindir}/crm_verify
@@ -431,7 +430,6 @@ fi
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
-%{py_sitedir}/crm
 %doc %{_mandir}/man8/*
 %exclude %{_mandir}/man8/attrd_updater.*
 %exclude %{_mandir}/man8/crm_attribute.*
