@@ -73,6 +73,10 @@ class CibXml:
         self.tag = tag
         self.name = name
         self.kwargs = kwargs
+        self.children = []
+
+    def add_child(self, child):
+        self.children.append(child)
 
     def __setitem__(self, key, value):
         self.kwargs[key] = value
@@ -81,7 +85,17 @@ class CibXml:
         text = '''<%s id="%s"''' % (self.tag, self.name)
         for k in self.kwargs.keys():
             text += ''' %s="%s"''' % (k, self.kwargs[k])
-        text += '''/>'''
+
+        if not self.children:
+            text += '''/>'''
+            return text
+
+        text += '''>'''
+
+        for c in self.children:
+            text += c.show()
+
+        text += '''</%s>''' % self.tag
         return text
 
 class Expression(CibXml):
@@ -96,24 +110,13 @@ class ResourceOp(CibXml):
         self["name"] = name
         self["interval"] = interval
 
-class Rule:
+class Rule(CibXml):
     def __init__(self, name, score, op="and", expr=None):
-        self.id = name
-        self.op = op
-        self.score = score
-        self.expr = []
+        CibXml.__init__(self, "rule", "%s" % name)
+        self["boolean-op"] = op
+        self["score"] = score
         if expr:
-            self.add_exp(expr)
-
-    def add_exp(self, e):
-        self.expr.append(e)
-
-    def show(self):
-        text = '''<rule id="%s" score="%s">''' % (self.id, self.score)
-        for e in self.expr:
-            text += e.show()
-        text += '''</rule>'''
-        return text
+            self.add_child(expr)
 
 class Resource:
     def __init__(self, Factory, name, rtype, standard, provider=None):
@@ -440,8 +443,8 @@ class CIB12(CibBase):
 
         # Require conectivity to run the master
         r = Rule("connected", "-INFINITY", op="or")
-        r.add_exp(Expression("m1-connected-1", "connected", "lt", "1"))
-        r.add_exp(Expression("m1-connected-2", "connected", "not_defined", None))
+        r.add_child(Expression("m1-connected-1", "connected", "lt", "1"))
+        r.add_child(Expression("m1-connected-2", "connected", "not_defined", None))
         ms.prefer("connected", rule=r)
         
         ms.commit()
