@@ -9,11 +9,10 @@ from UserDict import UserDict
 import sys, time, types, syslog, os, struct, string, signal, traceback, warnings, socket
 
 from cts.CTSvars import *
-from cts.CTS     import ClusterManager, RemoteExec
+from cts.CTS     import ClusterManager
 
 class CibBase:
     cts_cib = None
-    cib_tmpfile = None
     version = "unknown"
     feature_set = "unknown"
     Factory = None
@@ -24,12 +23,10 @@ class CibBase:
 
         if not tmpfile:
             warnings.filterwarnings("ignore")
-            self.cib_tmpfile=os.tmpnam()
+            tmpfile=os.tmpnam()
             warnings.resetwarnings()
-        else:
-            self.cib_tmpfile = tmpfile
 
-        self.Factory.tmpfile = self.cib_tmpfile
+        self.Factory.tmpfile = tmpfile
 
     def version(self):
         return self.version
@@ -41,36 +38,13 @@ class CibBase:
         self.CM.Env["IPBase"] = ip
         return ip
 
-class Option:
-    def __init__(self, Factory, name, value, section="cib-bootstrap-options"):
-        self.Factory = Factory
-        self.id = "%s-%s" % (section, name)
-        self.section = section
-        self.name = name
-        self.value = value
-
-    def show(self):
-        text = '''<crm_config>'''
-        text += ''' <cluster_property_set id="%s">''' % self.section
-        text += '''  <nvpair id="cts-%s" name="%s" value="%s"/>''' % (self.name, self.name, self.value)
-        text += ''' </cluster_property_set>'''
-        text += '''</crm_config>'''
-        return text
-        
-    def commit(self):
-        self.Factory.debug("Writing out %s" % self.id)
-        fixed = "HOME=/root CIB_file="+self.Factory.tmpfile+" cibadmin --modify --xml-text '%s'" % self.show() 
-        rc = self.Factory.rsh(self.Factory.target, fixed)
-        if rc != 0:
-            self.Factory.log("Configure call failed: "+fixed)
-            sys.exit(1)
-
 class CibXml:
-    def __init__(self, tag, name, **kwargs):
+    def __init__(self, Factory, tag, _id, **kwargs):
         self.tag = tag
-        self.name = name
+        self.name = _id
         self.kwargs = kwargs
         self.children = []
+        self.Factory = Factory
 
     def add_child(self, child):
         self.children.append(child)
@@ -95,31 +69,45 @@ class CibXml:
         text += '''</%s>''' % self.tag
         return text
 
+    def _run(self, operation, xml, section="all", options=""):
+        self.Factory.debug("Writing out %s" % self.name)
+        fixed  = "HOME=/root CIB_file="+self.Factory.tmpfile
+        fixed += " cibadmin --%s --scope %s %s --xml-text '%s'" % (operation, section, options, xml)
+        rc = self.Factory.rsh(self.Factory.target, fixed)
+        if rc != 0:
+            self.Factory.log("Configure call failed: "+fixed)
+            sys.exit(1)
+
+class Option(CibXml):
+    def __init__(self, Factory, name=None, value=None, section="cib-bootstrap-options"):
+        CibXml.__init__(self, Factory, "cluster_property_set", section)
+        if name and value:
+            self.add_child(CibXml(Factory, "nvpair", "cts-%s" % name, name=name, value=value))
+                           
+    def __setitem__(self, key, value):
+        self.add_child(CibXml(self.Factory, "nvpair", "cts-%s" % key, name=key, value=value))
+
+    def commit(self):
+        self._run("modify", self.show(), "crm_config", "--allow-create")
+
 class Expression(CibXml):
-    def __init__(self, name, attr, op, value=None):
-        CibXml.__init__(self, "expression", name, attribute=attr, operation=op)
+    def __init__(self, Factory, name, attr, op, value=None):
+        CibXml.__init__(self, Factory, "expression", name, attribute=attr, operation=op)
         if value:
             self["value"] = value
 
-class ResourceOp(CibXml):
-    def __init__(self, resource, name, interval, **kwargs):
-        CibXml.__init__(self, "op", "%s-%s-%s" % (resource, name, interval), **kwargs)
-        self["name"] = name
-        self["interval"] = interval
-
 class Rule(CibXml):
-    def __init__(self, name, score, op="and", expr=None):
-        CibXml.__init__(self, "rule", "%s" % name)
+    def __init__(self, Factory, name, score, op="and", expr=None):
+        CibXml.__init__(self, Factory, "rule", "%s" % name)
         self["boolean-op"] = op
         self["score"] = score
         if expr:
             self.add_child(expr)
 
-class Resource:
+class Resource(CibXml):
     def __init__(self, Factory, name, rtype, standard, provider=None):
-        self.Factory = Factory
+        CibXml.__init__(self, Factory, "native", name)
 
-        self.name = name
         self.rtype = rtype
         self.standard = standard
         self.provider = provider
@@ -141,7 +129,8 @@ class Resource:
         self.add_param(key, value)
         
     def add_op(self, name, interval, **kwargs):
-        self.op.append(ResourceOp(self.name, name, interval, **kwargs))
+        self.op.append(
+            CibXml(self.Factory, "op", "%s-%s-%s" % (self.name, name, interval), name=name, interval=interval, **kwargs))
 
     def add_param(self, name, value):
         self.param[name] = value
@@ -151,10 +140,11 @@ class Resource:
 
     def prefer(self, node, score="INFINITY", rule=None):
         if not rule:
-            rule = Rule("prefer-%s-r" % node, score, expr=Expression("prefer-%s-e" % node, "#uname", "eq", node))
+            rule = Rule(self.Factory, "prefer-%s-r" % node, score, 
+                        expr=Expression(self.Factory, "prefer-%s-e" % node, "#uname", "eq", node))
         self.scores[node] = rule
 
-    def _needs(self, resource, kind="Mandatory", first="start", then="start", **kwargs):
+    def after(self, resource, kind="Mandatory", first="start", then="start", **kwargs):
         kargs = kwargs.copy()
         kargs["kind"] = kind
         if then:
@@ -166,7 +156,7 @@ class Resource:
 
         self.needs[resource] = kargs
 
-    def _coloc(self, resource, score="INFINITY", role=None, withrole=None, **kwargs):
+    def colocate(self, resource, score="INFINITY", role=None, withrole=None, **kwargs):
         kargs = kwargs.copy()
         kargs["score"] = score
         if role:
@@ -229,34 +219,19 @@ class Resource:
         return text
 
     def commit(self):
-        self.Factory.debug("Writing out %s" % self.name)
-        fixed = "HOME=/root CIB_file="+self.Factory.tmpfile+" cibadmin --create --scope resources --xml-text '%s'" % self.show() 
-        rc = self.Factory.rsh(self.Factory.target, fixed)
-        if rc != 0:
-            self.Factory.log("Configure call failed: "+fixed)
-            sys.exit(1)
-
-        fixed = "HOME=/root CIB_file="+self.Factory.tmpfile+" cibadmin --modify --xml-text '%s'" % self.constraints() 
-        rc = self.Factory.rsh(self.Factory.target, fixed)
-        if rc != 0:
-            self.Factory.log("Configure call failed: "+fixed)
-            sys.exit(1)
+        self._run("create", self.show(), "resources")
+        self._run("modify", self.constraints())
 
 class Group(Resource):
     def __init__(self, Factory, name):
-        self.name = name
-        self.children = []
-        self.object = "group"
         Resource.__init__(self, Factory, name, None, None)
-
-    def add_child(self, resource):
-        self.children.append(resource)
+        self.tag = "group"
 
     def __setitem__(self, key, value):
         self.add_meta(key, value)
         
     def show(self):
-        text = '''<%s id="%s">''' % (self.object, self.name)
+        text = '''<%s id="%s">''' % (self.tag, self.name)
 
         if len(self.meta) > 0:
             text += '''<meta_attributes id="%s-meta">''' % self.name
@@ -266,13 +241,13 @@ class Group(Resource):
 
         for c in self.children:
             text += c.show()
-        text += '''</%s>''' % self.object
+        text += '''</%s>''' % self.tag
         return text
 
 class Clone(Group):
     def __init__(self, Factory, name, child=None):
         Group.__init__(self, Factory, name)
-        self.object = "clone"
+        self.tag = "clone"
         if child:
             self.add_child(child)
 
@@ -285,7 +260,7 @@ class Clone(Group):
 class Master(Clone):
     def __init__(self, Factory, name, child=None):
         Clone.__init__(self, Factory, name, child)
-        self.object = "master"
+        self.tag = "master"
 
 class CIB12(CibBase):
     feature_set = "3.0"
@@ -364,18 +339,20 @@ class CIB12(CibBase):
 
             st.commit()
 
-        Option(self.Factory, "stonith-enabled", self.CM.Env["DoFencing"]).commit()
-        Option(self.Factory, "start-failure-is-fatal", "false").commit()
-        Option(self.Factory, "pe-input-series-max", "5000").commit()
-        Option(self.Factory, "default-action-timeout", "60s").commit()
-        Option(self.Factory, "shutdown-escalation", "5min").commit()
-        Option(self.Factory, "batch-limit", "10").commit()
-        Option(self.Factory, "dc-deadtime", "5s").commit()
-        Option(self.Factory, "no-quorum-policy", no_quorum).commit()
-        Option(self.Factory, "expected-quorum-votes", self.num_nodes).commit()
+        o = Option(self.Factory, "stonith-enabled", self.CM.Env["DoFencing"])
+        o["start-failure-is-fatal"] = "false"
+        o["pe-input-series-max"] = "5000"
+        o["default-action-timeout"] = "60s"
+        o["shutdown-escalation"] = "5min"
+        o["batch-limit"] = "10"
+        o["dc-deadtime"] = "5s"
+        o["no-quorum-policy"] = no_quorum
+        o["expected-quorum-votes"] = self.num_nodes
 
         if self.CM.Env["DoBSC"] == 1:
-            Option(self.Factory, "ident-string", "Linux-HA TEST configuration file - REMOVEME!!").commit()
+            o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"
+
+        o.commit()
 
         # Add resources?
         if self.CM.Env["CIBResource"] == 1:
@@ -439,9 +416,9 @@ class CIB12(CibBase):
         ms["master-node-max"] = 1 
 
         # Require conectivity to run the master
-        r = Rule("connected", "-INFINITY", op="or")
-        r.add_child(Expression("m1-connected-1", "connected", "lt", "1"))
-        r.add_child(Expression("m1-connected-2", "connected", "not_defined", None))
+        r = Rule(self.Factory, "connected", "-INFINITY", op="or")
+        r.add_child(Expression(self.Factory, "m1-connected-1", "connected", "lt", "1"))
+        r.add_child(Expression(self.Factory, "m1-connected-2", "connected", "not_defined", None))
         ms.prefer("connected", rule=r)
         
         ms.commit()
@@ -453,8 +430,8 @@ class CIB12(CibBase):
         g.add_child(self.NewIP())
 
         # Group with the master
-        g._coloc("master-1", "INFINITY", withrole="Master")
-        g._needs("master-1", first="promote", then="start")
+        g.after("master-1", first="promote", then="start")
+        g.colocate("master-1", "INFINITY", withrole="Master")
 
         g.commit()
 
@@ -466,8 +443,8 @@ class CIB12(CibBase):
         lsb.add_op("monitor", "5s")
 
         # LSB with group
-        lsb._needs("group-1")
-        lsb._coloc("group-1")
+        lsb.after("group-1")
+        lsb.colocate("group-1")
 
         lsb.commit()
 
