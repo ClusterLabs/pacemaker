@@ -137,18 +137,8 @@ do_fsa_action(fsa_data_t * fsa_data, long long an_action,
                                 enum crmd_fsa_state cur_state,
                                 enum crmd_fsa_input cur_input, fsa_data_t * msg_data))
 {
-    int action_log_level = LOG_DEBUG;
-
-    /* The calls to fsa_action2string() is expensive,
-     * only make it if we will use the result
-     */
-
-    if (an_action & A_MSG_ROUTE) {
-        action_log_level = LOG_DEBUG_2;
-    }
-
     fsa_actions &= ~an_action;
-    do_crm_log(action_log_level, DOT_PREFIX "\t// %s", fsa_action2string(an_action));
+    crm_trace(DOT_PREFIX "\t// %s", fsa_action2string(an_action));
     function(an_action, fsa_data->fsa_cause, fsa_state, fsa_data->fsa_input, fsa_data);
 }
 

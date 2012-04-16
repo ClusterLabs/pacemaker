@@ -66,7 +66,7 @@ do_cib_updated(const char *event, xmlNode * msg)
 
     if (get_xpath_object
         ("//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_CRMCONFIG, msg,
-         LOG_DEBUG) != NULL) {
+         LOG_TRACE) != NULL) {
         mainloop_set_trigger(config_read);
     }
 }

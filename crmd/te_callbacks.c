@@ -273,7 +273,8 @@ te_update_diff(const char *event, xmlNode * msg)
              */
             crm_debug("Detected LRM refresh - %d resources updated: Skipping all resource events",
                      updates);
-            abort_transition(INFINITY, tg_restart, "LRM Refresh", diff);
+            crm_log_xml_trace(diff, "lrm-refresh");
+            abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
             goto bail;
         }
         xmlXPathFreeObject(xpathObj);
