@@ -591,12 +591,14 @@ read_config(void)
     cmap_finalize(local_handle); 
 #endif
     
-    if (crm_is_true(logging_debug) && get_crm_log_level() < LOG_DEBUG) {
-        set_crm_log_level(LOG_DEBUG);
-    }
-
-    if (get_crm_log_level() >= LOG_DEBUG) {
+    if (crm_is_true(logging_debug)) {
         setenv("HA_debug", "1", 1);
+        if(get_crm_log_level() < LOG_DEBUG) {
+            set_crm_log_level(LOG_DEBUG);
+        }
+
+    } else {
+        setenv("HA_debug", "0", 1);
     }
 
     if (crm_is_true(logging_to_logfile)) {
