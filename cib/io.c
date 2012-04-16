@@ -388,7 +388,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     xml_remove_prop(root, XML_ATTR_DC_UUID);
 
     if (discard_status) {
-        crm_log_xml_debug(root, "[on-disk]");
+        crm_log_xml_trace(root, "[on-disk]");
     }
 
     validation = crm_element_value(root, XML_ATTR_VALIDATION);
