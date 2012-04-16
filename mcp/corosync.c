@@ -573,7 +573,7 @@ read_config(void)
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "logging", top_handle);
     
-    get_config_opt(config, local_handle, "debug", &logging_debug, "on");
+    get_config_opt(config, local_handle, "debug", &logging_debug, "off");
     get_config_opt(config, local_handle, "logfile", &logging_logfile, "/var/log/pacemaker");
     get_config_opt(config, local_handle, "to_logfile", &logging_to_logfile, "off");
     get_config_opt(config, local_handle, "to_syslog", &logging_to_syslog, "on");
@@ -582,7 +582,7 @@ read_config(void)
     confdb_finalize(config);    
 #elif HAVE_CMAP
     /* =::=::= Logging =::=::= */
-    get_config_opt(local_handle, "logging.debug", &logging_debug, "on");
+    get_config_opt(local_handle, "logging.debug", &logging_debug, "off");
     get_config_opt(local_handle, "logging.logfile", &logging_logfile, "/var/log/pacemaker");
     get_config_opt(local_handle, "logging.to_logfile", &logging_to_logfile, "off");
     get_config_opt(local_handle, "logging.to_syslog", &logging_to_syslog, "on");
