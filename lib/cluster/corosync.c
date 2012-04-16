@@ -597,6 +597,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
                          uint64_t ring_id, uint32_t view_list_entries, uint32_t * view_list)
 {
     int i;
+    static gboolean init_phase = TRUE;
 
     if (quorate != crm_have_quorum) {
         crm_notice("Membership " U64T ": quorum %s (%lu)", ring_id,
@@ -608,6 +609,12 @@ pcmk_quorum_notification(quorum_handle_t handle,
                  quorate ? "retained" : "still lost", (long unsigned int)view_list_entries);
     }
 
+    if(view_list_entries == 0 && init_phase) {
+        crm_notice("Corosync membership is still forming, ignoring");
+        return;
+    }
+
+    init_phase = FALSE;
     g_hash_table_foreach(crm_peer_cache, corosync_mark_node_unseen, NULL);
 
     for (i = 0; i < view_list_entries; i++) {
