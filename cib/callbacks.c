@@ -1207,11 +1207,11 @@ cib_client_status_callback(const char *node, const char *client, const char *sta
             /* Make sure it gets created */
             const char *uuid = get_uuid(node);
 
-            member = crm_update_peer(0, 0, 0, -1, 0, uuid, node, NULL, NULL);
+            member = crm_update_peer(__FUNCTION__, 0, 0, 0, -1, 0, uuid, node, NULL, NULL);
             CRM_ASSERT(member);
         }
 
-        crm_update_peer_proc(node, crm_proc_cib, status);
+        crm_update_peer_proc(__FUNCTION__, node, crm_proc_cib, status);
     }
     return;
 }

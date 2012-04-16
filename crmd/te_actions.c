@@ -93,7 +93,7 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     free_xml(node_state);
 
     /* Make sure the membership cache is accurate */
-    crm_update_peer(0, 0, 0, -1, crm_proc_none, uuid, target, NULL, CRM_NODE_LOST);
+    crm_update_peer(__FUNCTION__, 0, 0, 0, -1, crm_proc_none, uuid, target, NULL, CRM_NODE_LOST);
 
     return;
 }

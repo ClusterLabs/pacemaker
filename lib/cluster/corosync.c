@@ -359,7 +359,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
     }
 
     if (msg->header.id != crm_class_members) {
-        crm_update_peer(msg->sender.id, 0, 0, 0, 0, msg->sender.uname, msg->sender.uname, NULL,
+        crm_update_peer(__FUNCTION__, msg->sender.id, 0, 0, 0, 0, msg->sender.uname, msg->sender.uname, NULL,
                         NULL);
     }
 
@@ -417,7 +417,7 @@ pcmk_mcp_dispatch(IPC_Channel * ch, gpointer user_data)
                 if (id == 0) {
                     crm_log_xml_err(msg, "Bad Update");
                 } else {
-                    crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+                    crm_update_peer(__FUNCTION__, id, 0, 0, 0, children, NULL, uname, NULL, NULL);
                 }
             }
             free_xml(msg);
@@ -579,7 +579,7 @@ corosync_mark_unseen_peer_dead(gpointer key, gpointer value, gpointer user_data)
 
     if (node->last_seen != *seq && crm_str_eq(CRM_NODE_LOST, node->state, TRUE) == FALSE) {
         crm_notice("Node %d/%s was not seen in the previous transition", node->id, node->uname);
-        crm_update_peer(node->id, 0, 0, 0, 0, NULL, NULL, NULL, CRM_NODE_LOST);
+        crm_update_peer(__FUNCTION__, node->id, 0, 0, 0, 0, NULL, NULL, NULL, CRM_NODE_LOST);
     }
 }
 
@@ -614,8 +614,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
         char *uuid = get_corosync_uuid(view_list[i], NULL);
 
         crm_debug("Member[%d] %d ", i, view_list[i]);
-
-        crm_update_peer(view_list[i], 0, ring_id, 0, 0, uuid, NULL, NULL, CRM_NODE_MEMBER);
+        crm_update_peer(__FUNCTION__, view_list[i], 0, ring_id, 0, 0, uuid, NULL, NULL, CRM_NODE_MEMBER);
     }
 
     crm_trace("Reaping unseen nodes...");
@@ -744,7 +743,7 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
 
     if (pcmk_nodeid != 0) {
         /* Ensure the local node always exists */
-        crm_update_peer(pcmk_nodeid, 0, 0, 0, 0, pcmk_uname, pcmk_uname, NULL, NULL);
+        crm_update_peer(__FUNCTION__, pcmk_nodeid, 0, 0, 0, 0, pcmk_uname, pcmk_uname, NULL, NULL);
     }
 
     if (our_uuid != NULL) {

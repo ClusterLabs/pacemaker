@@ -470,7 +470,7 @@ crm_update_ais_node(xmlNode * member, long long seq)
     uint64_t born = crm_int_helper(born_s, NULL);
     uint64_t seen = crm_int_helper(seen_s, NULL);
 
-    return crm_update_peer(id, born, seen, votes, procs, uname, uname, addr, state);
+    return crm_update_peer(__FUNCTION__, id, born, seen, votes, procs, uname, uname, addr, state);
 }
 
 static crm_node_t *
@@ -484,7 +484,7 @@ crm_update_cman_node(xmlNode * member, long long seq)
     unsigned int procs = crm_int_helper(procs_s, NULL);
 
     crm_info("Updating peer processes for %s", crm_str(uname));
-    return crm_update_peer(id, 0, 0, 0, procs, uname, uname, NULL, NULL);
+    return crm_update_peer(__FUNCTION__, id, 0, 0, 0, procs, uname, uname, NULL, NULL);
 }
 
 
@@ -538,7 +538,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
     }
 
     if (msg->header.id != crm_class_members) {
-        crm_update_peer(msg->sender.id, 0, 0, 0, 0, msg->sender.uname, msg->sender.uname, NULL,
+        crm_update_peer(__FUNCTION__, msg->sender.id, 0, 0, 0, 0, msg->sender.uname, msg->sender.uname, NULL,
                         NULL);
     }
 
@@ -684,7 +684,7 @@ pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
                 if (id == 0) {
                     crm_log_xml_err(msg, "Bad Update");
                 } else {
-                    crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+                    crm_update_peer(__FUNCTION__, id, 0, 0, 0, children, NULL, uname, NULL, NULL);
                 }
             }
             free_xml(msg);
@@ -758,7 +758,7 @@ cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
                     /* Never allow node ID 0 to be considered a member #315711 */
                     cman_nodes[lpc].cn_member = 0;
                 }
-                crm_update_peer(cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_incarnation,
+                crm_update_peer(__FUNCTION__, cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_incarnation,
                                 cman_nodes[lpc].cn_member ? crm_peer_seq : 0, 0, 0,
                                 cman_nodes[lpc].cn_name, cman_nodes[lpc].cn_name, NULL,
                                 cman_nodes[lpc].cn_member ? CRM_NODE_MEMBER : CRM_NODE_LOST);
@@ -1147,7 +1147,7 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
 
     if (pcmk_nodeid != 0) {
         /* Ensure the local node always exists */
-        crm_update_peer(pcmk_nodeid, 0, 0, 0, 0, pcmk_uname, pcmk_uname, NULL, NULL);
+        crm_update_peer(__FUNCTION__, pcmk_nodeid, 0, 0, 0, 0, pcmk_uname, pcmk_uname, NULL, NULL);
     }
 
     if (our_uuid != NULL) {
@@ -1370,4 +1370,3 @@ find_corosync_variant(void)
     confdb_finalize(config);
     return found;
 }
-

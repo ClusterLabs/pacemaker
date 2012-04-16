@@ -39,6 +39,28 @@ xmlNode *create_common_message(xmlNode * original_request, xmlNode * xml_respons
 #if SUPPORT_HEARTBEAT
 ll_cluster_t *heartbeat_cluster = NULL;
 
+crm_node_t *
+crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state, uint64_t seq)
+{
+    crm_node_t *node = NULL;
+    const char *uuid = NULL;
+
+    CRM_CHECK(oc->m_array[offset].node_uname != NULL, return NULL);
+    uuid = get_uuid(oc->m_array[offset].node_uname);
+    node = crm_update_peer(__FUNCTION__, oc->m_array[offset].node_id,
+                           oc->m_array[offset].node_born_on, seq, -1, 0,
+                           uuid, oc->m_array[offset].node_uname, NULL, state);
+
+    if (safe_str_eq(CRM_NODE_ACTIVE, state)) {
+        /* Heartbeat doesn't send status notifications for nodes that were already part of the cluster */
+        crm_update_peer_proc(__FUNCTION__, oc->m_array[offset].node_uname, crm_proc_ais, ONLINESTATUS);
+
+        /* Nor does it send status notifications for processes that were already active */
+        crm_update_peer_proc(__FUNCTION__, oc->m_array[offset].node_uname, crm_proc_crmd, ONLINESTATUS);
+    }
+    return node;
+}
+
 gboolean
 send_ha_message(ll_cluster_t * hb_conn, xmlNode * xml, const char *node, gboolean force_ordered)
 {

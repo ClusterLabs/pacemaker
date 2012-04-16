@@ -241,7 +241,7 @@ do_ccm_update_cache(enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
     }
 
     if (event == OC_EV_MS_EVICTED) {
-        crm_update_peer(0, 0, 0, -1, 0, fsa_our_uuid, fsa_our_uname, NULL, CRM_NODE_EVICTED);
+        crm_update_peer(__FUNCTION__, 0, 0, 0, -1, 0, fsa_our_uuid, fsa_our_uname, NULL, CRM_NODE_EVICTED);
 
         /* todo: drop back to S_PENDING instead */
         /* get out... NOW!

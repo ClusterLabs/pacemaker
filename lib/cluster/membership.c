@@ -298,7 +298,7 @@ crm_get_peer(unsigned int id, const char *uname)
 }
 
 crm_node_t *
-crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
+crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
                 const char *uuid, const char *uname, const char *addr, const char *state)
 {
     gboolean addr_changed = FALSE;
@@ -388,46 +388,22 @@ crm_update_peer(unsigned int id, uint64_t born, uint64_t seen, int32_t votes, ui
     }
 
     if (state_changed || addr_changed || votes_changed) {
-        crm_info("Node %s: id=%u state=%s%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
-                 " proc=%.32x%s", node->uname, node->id, node->state, state_changed ? " (new)" : "",
+        crm_info("%s: Node %s: id=%u state=%s%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
+                 " proc=%.32x%s", source, node->uname, node->id, node->state, state_changed ? " (new)" : "",
                  node->addr, addr_changed ? " (new)" : "", node->votes,
                  votes_changed ? " (new)" : "", node->born, node->last_seen, node->processes,
                  procs_changed ? " (new)" : "");
 
     } else if (procs_changed) {
-        crm_debug("Node %s: id=%u seen=" U64T
-                  " proc=%.32x (new)", node->uname, node->id, node->last_seen, node->processes);
+        crm_debug("%s: Node %s: id=%u seen=" U64T
+                  " proc=%.32x (new)", source, node->uname, node->id, node->last_seen, node->processes);
     }
 
     return node;
 }
-
-#if SUPPORT_HEARTBEAT
-crm_node_t *
-crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state, uint64_t seq)
-{
-    crm_node_t *node = NULL;
-    const char *uuid = NULL;
-
-    CRM_CHECK(oc->m_array[offset].node_uname != NULL, return NULL);
-    uuid = get_uuid(oc->m_array[offset].node_uname);
-    node = crm_update_peer(oc->m_array[offset].node_id,
-                           oc->m_array[offset].node_born_on, seq, -1, 0,
-                           uuid, oc->m_array[offset].node_uname, NULL, state);
-
-    if (safe_str_eq(CRM_NODE_ACTIVE, state)) {
-        /* Heartbeat doesn't send status notifications for nodes that were already part of the cluster */
-        crm_update_peer_proc(oc->m_array[offset].node_uname, crm_proc_ais, ONLINESTATUS);
-
-        /* Nor does it send status notifications for processes that were already active */
-        crm_update_peer_proc(oc->m_array[offset].node_uname, crm_proc_crmd, ONLINESTATUS);
-    }
-    return node;
-}
-#endif
 
 void
-crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
+crm_update_peer_proc(const char *source, const char *uname, uint32_t flag, const char *status)
 {
     uint32_t last = 0;
     crm_node_t *node = NULL;
@@ -453,7 +429,7 @@ crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
     }
 
     if (changed) {
-        crm_info("%s.%s is now %s", uname, peer2text(flag), status);
+        crm_info("%s: %s.%s is now %s", source, uname, peer2text(flag), status);
         if (crm_status_callback) {
             crm_status_callback(crm_status_processes, node, &last);
         }

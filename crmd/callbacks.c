@@ -375,10 +375,10 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
 
     member = crm_get_peer(0, node);
     if (member == NULL || crm_is_member_active(member) == FALSE) {
-        /* Make sure it is created so crm_update_peer_proc() succeeds */
+        /* Make sure it is created so crm_update_peer_proc(__FUNCTION__, ) succeeds */
         const char *uuid = get_uuid(node);
 
-        member = crm_update_peer(0, 0, 0, -1, 0, uuid, node, NULL, NULL);
+        member = crm_update_peer(__FUNCTION__, 0, 0, 0, -1, 0, uuid, node, NULL, NULL);
         CRM_ASSERT(member);
     }
 
@@ -388,14 +388,14 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
 
     if (safe_str_eq(status, DEADSTATUS)) {
         /* this node is toast */
-        crm_update_peer_proc(node, crm_proc_ais, OFFLINESTATUS);
+        crm_update_peer_proc(__FUNCTION__, node, crm_proc_ais, OFFLINESTATUS);
         if (AM_I_DC) {
             update = create_node_state(node, DEADSTATUS, XML_BOOLEAN_NO, OFFLINESTATUS,
                                        CRMD_JOINSTATE_DOWN, NULL, TRUE, __FUNCTION__);
         }
 
     } else {
-        crm_update_peer_proc(node, crm_proc_ais, ONLINESTATUS);
+        crm_update_peer_proc(__FUNCTION__, node, crm_proc_ais, ONLINESTATUS);
         if (AM_I_DC) {
             update = create_node_state(node, ACTIVESTATUS, NULL, NULL,
                                        CRMD_JOINSTATE_PENDING, NULL, FALSE, __FUNCTION__);
@@ -447,10 +447,10 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
 
     member = crm_get_peer(0, node);
     if (member == NULL || crm_is_member_active(member) == FALSE) {
-        /* Make sure it is created so crm_update_peer_proc() succeeds */
+        /* Make sure it is created so crm_update_peer_proc(__FUNCTION__, ) succeeds */
         const char *uuid = get_uuid(node);
 
-        member = crm_update_peer(0, 0, 0, -1, 0, uuid, node, NULL, NULL);
+        member = crm_update_peer(__FUNCTION__, 0, 0, 0, -1, 0, uuid, node, NULL, NULL);
         CRM_ASSERT(member);
     }
 
@@ -465,7 +465,7 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
                             cib_scope_local | cib_quorum_override | cib_can_create);
         free_xml(update);
     }
-    crm_update_peer_proc(node, crm_proc_crmd, status);
+    crm_update_peer_proc(__FUNCTION__, node, crm_proc_crmd, status);
 }
 
 void
