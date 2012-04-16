@@ -75,6 +75,7 @@ A partially set up scenario is torn down if it fails during setup.
     def SetUp(self):
         '''Set up the Scenario. Return TRUE on success.'''
 
+        self.audit() # Also detects remote/local log config
         self.ClusterManager.prepare()
         self.ClusterManager.ns.WaitForAllNodesToComeUp(self.ClusterManager.Env["nodes"])
 
