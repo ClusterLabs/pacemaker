@@ -503,7 +503,14 @@ for i in range(0, len(args)):
     elif args[i] == '-p' or args[i] == '--prefix':
         skipthis=1
         prefix = args[i+1]
+
+    elif args[i] == '-t' or args[i] == '--tag':
+        skipthis=1
     
+if not os.access(filename, os.R_OK):
+    print prefix + 'Last read: %d, limit=%d, count=%d - unreadable' % (0, limit, 0)
+    sys.exit(1)
+
 logfile=open(filename, 'r')
 logfile.seek(0, os.SEEK_END)
 newsize=logfile.tell()
@@ -539,10 +546,11 @@ logfile.close()
 """
 
 class SearchObj:
-    def __init__(self, Env, filename, host=None):
+    def __init__(self, Env, filename, host=None, name=None):
 
         self.Env = Env
         self.host = host
+        self.name = name
         self.filename = filename
 
         self.cache = []
@@ -587,7 +595,7 @@ class SearchObj:
             global log_watcher_bin
             (rc, lines) = self.Env.rsh(
                 self.host,
-                "python %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.filename, self.offset), 
+                "python %s -t %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset), 
                 stdout=None, silent=True, blocking=False)
             
             for line in lines:
@@ -660,7 +668,7 @@ class LogWatcher(RemoteExec):
 
         if self.Env["LogWatcher"] == "remote":
             for node in self.Env["nodes"]:
-                self.file_list.append(SearchObj(self.Env, self.filename, node))
+                self.file_list.append(SearchObj(self.Env, self.filename, node, self.name))
     
         else:
             self.file_list.append(SearchObj(self.Env, self.filename))
