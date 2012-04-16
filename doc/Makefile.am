@@ -22,8 +22,6 @@ MAINTAINERCLEANFILES    = Makefile.in
 helpdir		= $(datadir)/$(PACKAGE)
 
 ascii		= crm_fencing.txt acls.txt
-asciiman	= crm.8.txt
-help_DATA	= crm.8.txt
 docbook		= Pacemaker_Explained Clusters_from_Scratch
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 
@@ -57,10 +55,7 @@ graphics: $(PNGS)
 	$(INKSCAPE) --file=$< --export-dpi=180 -C --export-png=$@
 
 if BUILD_ASCIIDOC
-generated_docs	+= $(ascii:%.txt=%.html) $(asciiman:%.txt=%.html)
-generated_mans	+= $(asciiman:%.8.txt=%.8)
-$(generated_mans): $(asciiman)
-man8_MANS	= $(generated_mans)
+generated_docs	+= $(ascii:%.txt=%.html)
 
 if BUILD_DOCBOOK
 publican_docs	+= $(docbook)
@@ -162,8 +157,8 @@ brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
 #	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
 www:    $(generated_docs)
-	echo rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
-	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
+	echo rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
+	rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
 	rm -f $(docbook_txt)
 	make DOCBOOK_FORMATS="pdf,html,html-single,txt,epub" DOCBOOK_LANGS="all" all-local $(generated_docs) $(ascii)
 	echo Uploading current documentation set to clusterlabs.org
