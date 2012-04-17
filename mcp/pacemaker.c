@@ -592,6 +592,7 @@ update_process_peers(void)
     iov.iov_base = buffer;
     iov.iov_len = rc + 1;
 
+    crm_trace("Sending %s", buffer);
     send_cpg_message(&iov);
 }
 
@@ -620,13 +621,21 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
             node->uname = crm_strdup(uname);
             changed = TRUE;
         }
+
+    } else {
+        crm_trace("Empty uname for node %u", id);
     }
 
-    if (procs != 0 && procs != node->processes) {
-        crm_debug("Node %s now has process list: %.32x (was %.32x)",
-                 node->uname, procs, node->processes);
-        node->processes = procs;
-        changed = TRUE;
+    if (procs != 0) {
+        if(procs != node->processes) {
+            crm_debug("Node %s now has process list: %.32x (was %.32x)",
+                      node->uname, procs, node->processes);
+            node->processes = procs;
+            changed = TRUE;
+
+        } else {
+            crm_trace("Node %s still has process list: %.32x", node->uname, procs);
+        }
     }
 
     if (changed && id == local_nodeid) {

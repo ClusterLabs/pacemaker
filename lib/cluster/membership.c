@@ -433,6 +433,8 @@ crm_update_peer_proc(const char *source, const char *uname, uint32_t flag, const
         if (crm_status_callback) {
             crm_status_callback(crm_status_processes, node, &last);
         }
+    } else {
+        crm_trace("%s: %s.%s is unchanged %s", source, uname, peer2text(flag), status);
     }
 }
 

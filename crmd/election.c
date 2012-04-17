@@ -295,6 +295,10 @@ do_election_count_vote(long long action,
 
     age = crm_compare_age(your_age);
 
+    if(crm_is_member_active(your_node) && crm_is_full_member(your_node) == FALSE) {
+        crm_err("Process mismatch for %s", vote_from);
+    }
+
     if (cur_state == S_STARTING) {
         reason = "Still starting";
         we_loose = TRUE;
