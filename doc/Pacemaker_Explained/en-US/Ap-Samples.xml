@@ -3,7 +3,7 @@
       <title>An Empty Configuration</title>
       <example>
         <title>An <indexterm significance="preferred"><primary>Empty Configuration</primary></indexterm><indexterm significance="preferred"><primary>Configuration</primary><secondary>Empty</secondary></indexterm>empty configuration</title>
-	<programlisting><![CDATA[<cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
+        <programlisting><![CDATA[<cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -17,7 +17,7 @@
     <section id="s-sample-simple">
       <title>A <indexterm significance="preferred"><primary>Simple</primary><secondary>Configuration</secondary></indexterm><indexterm significance="preferred"><primary>Configuration</primary><secondary>Simple</secondary></indexterm>Simple Configuration</title>
       <example>
-	<title>2 nodes, some cluster options and a resource</title>
+        <title>2 nodes, some cluster options and a resource</title>
         <programlisting><![CDATA[<cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false"
     validate-with="pacemaker-1.0">
   <configuration>
@@ -59,7 +59,7 @@
       <title>An <indexterm significance="preferred"><primary>Advanced</primary><secondary>Configuration</secondary></indexterm><indexterm significance="preferred"><primary>Configuration</primary><secondary>Advanced</secondary></indexterm>Advanced Configuration</title>
       <para/>
       <example>
-	<title>groups and clones with stonith</title>
+        <title>groups and clones with stonith</title>
         <programlisting><![CDATA[ <cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false"
     validate-with="pacemaker-1.0">
   <configuration>

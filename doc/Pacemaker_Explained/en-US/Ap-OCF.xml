@@ -4,8 +4,8 @@
       <title>Location of Custom Scripts</title>
       <para><indexterm significance="preferred"><primary>OCF Resource Agents</primary></indexterm>OCF Resource Agents are found in <filename>/usr/lib/ocf/resource.d/<replaceable>provider</replaceable></filename>.</para>
       <para>
-	When creating your own agents, you are encouraged to create a new directory under <filename>/usr/lib/ocf/resource.d/</filename> so that they are not confused with (or overwritten by) the agents shipped with Heartbeat.
-	So, for example, if you chose the provider name of bigCorp and wanted a new resource named bigApp, you would create a script called <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> and define a resource:
+        When creating your own agents, you are encouraged to create a new directory under <filename>/usr/lib/ocf/resource.d/</filename> so that they are not confused with (or overwritten by) the agents shipped with Heartbeat.
+        So, for example, if you chose the provider name of bigCorp and wanted a new resource named bigApp, you would create a script called <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> and define a resource:
       </para>
       <programlisting>&lt;primitive id="custom-app" class="ocf" provider="bigCorp" type="bigApp"/></programlisting>
     </section>
@@ -13,8 +13,8 @@
       <title>Actions</title>
       <para>All OCF Resource Agents are required to implement the following actions</para>
       <table frame="all">
-	<title>Required Actions for OCF Agents</title>
-	<tgroup cols="3">
+        <title>Required Actions for OCF Agents</title>
+        <tgroup cols="3">
           <colspec colwidth="2*"/>
           <colspec colwidth="3*"/>
           <colspec colwidth="7*"/>
@@ -25,8 +25,8 @@
               <entry>Instructions</entry>
             </row>
           </thead>
-	  <tbody>
-	    <row>
+          <tbody>
+            <row>
               <entry><indexterm significance="preferred"><primary>start action</primary></indexterm>
                 <indexterm><primary>action</primary><secondary>start</secondary></indexterm>start</entry>
               <entry>Start the resource</entry>
@@ -43,8 +43,8 @@
                 <indexterm><primary>action</primary><secondary>monitor</secondary></indexterm>monitor</entry>
               <entry>Check the resource's state </entry>
               <entry>
-		<para>Exit 0 if the resource is running, 7 if it is stopped, and anything else if it is failed. </para>
-		<para>NOTE: The monitor script should test the state of the resource on the local machine only.</para>
+                <para>Exit 0 if the resource is running, 7 if it is stopped, and anything else if it is failed. </para>
+                <para>NOTE: The monitor script should test the state of the resource on the local machine only.</para>
               </entry>
             </row>
             <row>
@@ -52,8 +52,8 @@
                 <indexterm><primary>action</primary><secondary>meta-data</secondary></indexterm>meta-data</entry>
               <entry>Describe the resource</entry>
               <entry>
-		<para>Provide information about this resource as an XML snippet. Exit with 0.</para>
-		<para>NOTE: This is <emphasis>not</emphasis> performed as root.</para>
+                <para>Provide information about this resource as an XML snippet. Exit with 0.</para>
+                <para>NOTE: This is <emphasis>not</emphasis> performed as root.</para>
               </entry>
             </row>
             <row>
@@ -65,8 +65,8 @@
       </table>
       <para>Additional requirements (not part of the OCF specs) are placed on agents that will be used for advanced concepts like <link linkend="s-resource-clone">clones</link> and <link linkend="s-resource-multistate">multi-state</link> resources.</para>
       <table frame="all">
-	<title>Optional Actions for OCF Agents</title>
-	<tgroup cols="3">
+        <title>Optional Actions for OCF Agents</title>
+        <tgroup cols="3">
           <colspec colwidth="1*"/>
           <colspec colwidth="6*"/>
           <colspec colwidth="2*"/>
@@ -97,7 +97,7 @@
       </table>
       <para>One action specified in the OCF specs is not currently used by the cluster:
       <itemizedlist spacing="compact">
-	<listitem><para><literal>recover</literal> - a variant of the <literal>start</literal> action, this should try to recover a resource locally.</para></listitem>
+        <listitem><para><literal>recover</literal> - a variant of the <literal>start</literal> action, this should try to recover a resource locally.</para></listitem>
       </itemizedlist></para>
       <para/>
       <para>Remember to use <indexterm significance="preferred"><primary>ocf-tester</primary></indexterm><filename>ocf-tester</filename> to verify that your new agent complies with the OCF standard properly.</para>
@@ -109,8 +109,8 @@ If the result does not match the expected value, then the operation is considere
 </para>
       <para>There are three types of failure recovery:</para>
       <table frame="all">
-	<title>Types of recovery performed by the cluster</title>
-	<tgroup cols="3">
+        <title>Types of recovery performed by the cluster</title>
+        <tgroup cols="3">
           <colspec colwidth="1*"/>
           <colspec colwidth="4*"/>
           <colspec colwidth="4*"/>
@@ -141,8 +141,8 @@ If the result does not match the expected value, then the operation is considere
       </table>
       <para>Assuming an action is considered to have failed, the following table outlines the different OCF return codes and the type of recovery the cluster will initiate when it is received. </para>
       <table frame="all">
-	<title>OCF Return Codes and their Recovery Types</title>
-	<tgroup cols="4">
+        <title>OCF Return Codes and their Recovery Types</title>
+        <tgroup cols="4">
           <colspec colwidth="1*"/>
           <colspec colwidth="4*"/>
           <colspec colwidth="6*"/>
@@ -245,10 +245,10 @@ If the result does not match the expected value, then the operation is considere
       </table>
       <para>Although counterintuitive, even actions that return 0 (aka. <envar>OCF_SUCCESS</envar>) can be considered to have failed.
 This can happen when a resource that is expected to be in the Master state is found running as a Slave, or when a resource is found active on multiple machines.</para><section><title>Exceptions</title>
-	<itemizedlist spacing="compact">
-	  <listitem><para>Non-recurring monitor actions (probes) that find a resource active (or in Master mode) will not result in recovery action unless it is also found active elsewhere</para></listitem>
-	  <listitem><para>The recovery action taken when a resource is found active more than once is determined by the <literal>multiple-active</literal> property of the resource</para></listitem>
-	  <listitem><para>Recurring actions that return <envar>OCF_ERR_UNIMPLEMENTED</envar> do not cause any type of recovery</para></listitem>
-	</itemizedlist>
+        <itemizedlist spacing="compact">
+          <listitem><para>Non-recurring monitor actions (probes) that find a resource active (or in Master mode) will not result in recovery action unless it is also found active elsewhere</para></listitem>
+          <listitem><para>The recovery action taken when a resource is found active more than once is determined by the <literal>multiple-active</literal> property of the resource</para></listitem>
+          <listitem><para>Recurring actions that return <envar>OCF_ERR_UNIMPLEMENTED</envar> do not cause any type of recovery</para></listitem>
+        </itemizedlist>
     </section></section>
   </appendix>

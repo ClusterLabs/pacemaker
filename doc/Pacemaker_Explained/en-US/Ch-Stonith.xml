@@ -4,38 +4,38 @@
       <title>Why You Need STONITH</title>
       <para><ulink url="http://en.wikipedia.org/wiki/STONITH">STONITH</ulink> is an acronym for Shoot-The-Other-Node-In-The-Head; its purpose is to protect your data from being corrupted by rogue nodes or concurrent access.</para>
       <para>
-	When a node is unresponsive it might still access your data.
-	The only way to be 100% sure that your data is safe, is to use STONITH, so we can be certain that the node is truly offline, before allowing the data to be accessed from another node.
+        When a node is unresponsive it might still access your data.
+        The only way to be 100% sure that your data is safe, is to use STONITH, so we can be certain that the node is truly offline, before allowing the data to be accessed from another node.
       </para>
       <para>
-	STONITH also has a role to play in the event that a clustered service cannot be stopped.
-	In this case, the cluster uses STONITH to force the whole node offline, thereby making it safe to start the service elsewhere.
+        STONITH also has a role to play in the event that a clustered service cannot be stopped.
+        In this case, the cluster uses STONITH to force the whole node offline, thereby making it safe to start the service elsewhere.
       </para>
     </section>
     <section id="s-stonith-choose">
       <title>What STONITH Device Should You Use</title>
       <para>It is crucial that the STONITH device can allow the cluster to differentiate between a node and a network failure.</para>
       <para>
-	The biggest mistake people make in choosing a STONITH device is to use a remote power switch (such as many on-board IPMI controllers) that shares power with the node it controls.
-	In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault.
+        The biggest mistake people make in choosing a STONITH device is to use a remote power switch (such as many on-board IPMI controllers) that shares power with the node it controls.
+        In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault.
       </para>
       <para>Likewise, any device that relies on the machine being active (such as SSH-based "devices" used during testing) are inappropriate.</para>
     </section>
     <section id="s-stonith-configure">
       <title>Configuring STONITH</title>
       <orderedlist spacing="compact">
-	<listitem>
+        <listitem>
           <para>Find the correct driver: <command>stonith_admin --list-installed</command></para>
-	</listitem>
-	<listitem>
+        </listitem>
+        <listitem>
           <para> Since every device is different, the parameters needed to configure it will vary.
           To find out which parameters the device supports resp. needs, run:
         <programlisting><command>stonith_admin --metadata --agent <replaceable>type</replaceable></command>
         </programlisting></para>
-	  <para>The output should be XML formatted text containing additional parameter descriptions. We
+          <para>The output should be XML formatted text containing additional parameter descriptions. We
           will endeavour to make the output more friendly in a later version.</para>
-	</listitem>
-	<listitem>
+        </listitem>
+        <listitem>
         <para>Create a file called <filename>stonith.xml</filename> containing a primitive resource with a class of
           <literal>stonith</literal>, a type of <replaceable>type</replaceable> and a parameter for each of the values
           returned in step 2.</para>
@@ -57,7 +57,7 @@
             <constant>pcmk_host_argument</constant> parameter.  See <command>man stonithd</command>
           for details.</para>
       </listitem>
-	<listitem>
+        <listitem>
         <para>Upload it into the CIB using cibadmin: <command>cibadmin -C -o resources --xml-file
                 <filename><replaceable>stonith.xml</replaceable></filename></command></para>
       </listitem>
@@ -68,12 +68,12 @@
       </listitem>
       </orderedlist>
       <section id="s-stonith-example">
-	<title>Example</title>
-	<para>Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then
+        <title>Example</title>
+        <para>Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then
         we would chose the <literal>fence_ipmilan</literal> driver in step 2 and obtain the
         following list of parameters:</para>
-	<figure>
-	  <title>Obtaining a list of STONITH Parameters</title>
+        <figure>
+          <title>Obtaining a list of STONITH Parameters</title>
       <programlisting># <command>stonith_admin --metadata -a fence_ipmilan</command><![CDATA[
 <?xml version="1.0" ?>
 <resource-agent name="fence_ipmilan" shortdesc="Fence agent for IPMI over LAN">
@@ -126,18 +126,18 @@ increase wait after operation to 4 seconds (power_wait=4 / -T 4)</longdesc>
       <getopt mixed="-v" />         <content type="boolean" /> </parameter>
 </parameters>
 <actions>
-   <action name="on"      />        <action name="off"      /> 
-   <action name="reboot"  />        <action name="status"   /> 
-   <action name="diag"    />        <action name="list"     /> 
+   <action name="on"      />        <action name="off"      />
+   <action name="reboot"  />        <action name="status"   />
+   <action name="diag"    />        <action name="list"     />
    <action name="monitor" />        <action name="metadata" />
 </actions>
 </resource-agent>
 ]]> </programlisting>
-	</figure>
-	<para>From this list we would create a STONITH resource fragment that might look like this:
-	<example>
-	  <title>Sample STONITH Resource</title>
-	  <programlisting><![CDATA[ <primitive id="ipmi" class="stonith" type="fence_ipmilan">
+        </figure>
+        <para>From this list we would create a STONITH resource fragment that might look like this:
+        <example>
+          <title>Sample STONITH Resource</title>
+          <programlisting><![CDATA[ <primitive id="ipmi" class="stonith" type="fence_ipmilan">
         <operations>
          <op id="ipmi-mon-1" name="monitor" interval="2h"/>
         </operations>
@@ -148,7 +148,7 @@ increase wait after operation to 4 seconds (power_wait=4 / -T 4)</longdesc>
           <nvpair id="ipmi-attr-1" name="passwd" value="abc123"/>
         </instance_attributes>
        </primitive> ]]> </programlisting>
-	</example>
+        </example>
  The monitor interval of two hours is explained by bugs in some IPMI implementations; see <emphasis>Monitoring the fencing devices</emphasis><footnote><para><ulink url="http://www.clusterlabs.org/doc/crm_fencing.html" /></para></footnote>.</para>
       </section>
     </section>

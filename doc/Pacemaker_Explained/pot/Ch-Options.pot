@@ -129,16 +129,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>crm-debug-origin</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<indexterm> <primary>crm-debug-origin Cluster Fields</primary> </indexterm> <indexterm> <primary>Cluster Fields</primary><secondary>crm-debug-origin</secondary> </indexterm> <indexterm> <primary>crm-debug-origin</primary> </indexterm> Indicates where the last update came from. Informational purposes only."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
 msgid "<literal>cib-last-written</literal>"
 msgstr ""
 

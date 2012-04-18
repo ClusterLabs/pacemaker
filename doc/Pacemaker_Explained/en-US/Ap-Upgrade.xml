@@ -2,257 +2,257 @@
     <title>Upgrading Cluster Software</title>
     <section id="s-upgrade-compatible">
       <title>Version Compatibility</title>
-	<para>When releasing newer versions we take care to make sure we are backwards compatible with older versions. While you will always be able to upgrade from version x to x+1, in order to continue to produce high quality software it may occasionally be necessary to drop compatibility with older versions.</para>
-	<para>There will always be an upgrade path from any series-2 release to any other series-2 release.</para>
-	<para>There are three approaches to upgrading your cluster software:
-	<itemizedlist spacing="compact">
-	  <listitem><para>Complete Cluster Shutdown</para></listitem>
-	  <listitem><para>Rolling (node by node)</para></listitem>
-	  <listitem><para>Disconnect and Reattach</para></listitem>
-	</itemizedlist></para>
-	<para>Each method has advantages and disadvantages, some of which are listed in the table below, and you should chose the one most appropriate to your needs.</para>
-	<table frame="all">
-	  <title>Summary of Upgrade Methodologies</title>
-	  <tgroup cols="6">
+        <para>When releasing newer versions we take care to make sure we are backwards compatible with older versions. While you will always be able to upgrade from version x to x+1, in order to continue to produce high quality software it may occasionally be necessary to drop compatibility with older versions.</para>
+        <para>There will always be an upgrade path from any series-2 release to any other series-2 release.</para>
+        <para>There are three approaches to upgrading your cluster software:
+        <itemizedlist spacing="compact">
+          <listitem><para>Complete Cluster Shutdown</para></listitem>
+          <listitem><para>Rolling (node by node)</para></listitem>
+          <listitem><para>Disconnect and Reattach</para></listitem>
+        </itemizedlist></para>
+        <para>Each method has advantages and disadvantages, some of which are listed in the table below, and you should chose the one most appropriate to your needs.</para>
+        <table frame="all">
+          <title>Summary of Upgrade Methodologies</title>
+          <tgroup cols="6">
             <thead>
               <row>
-		<entry>Type</entry>
-		<entry>Available between all software versions</entry>
-		<entry>Service Outage During Upgrade</entry>
-		<entry>Service Recovery During Upgrade</entry>
-		<entry>Exercises Failover Logic/Configuration</entry>
-		<entry>
-		  Allows change of cluster stack type<footnote>
-		    <para>
+                <entry>Type</entry>
+                <entry>Available between all software versions</entry>
+                <entry>Service Outage During Upgrade</entry>
+                <entry>Service Recovery During Upgrade</entry>
+                <entry>Exercises Failover Logic/Configuration</entry>
+                <entry>
+                  Allows change of cluster stack type<footnote>
+                    <para>
                       <indexterm significance="preferred"><primary>Cluster Stack</primary><secondary>switching between</secondary></indexterm>
-		      For example, switching from Heartbeat to Corosync.
-		      Consult the Heartbeat or Corosync documentation to see if upgrading them to a newer version is also supported.
-		    </para>
-		  </footnote>
-		</entry>
+                      For example, switching from Heartbeat to Corosync.
+                      Consult the Heartbeat or Corosync documentation to see if upgrading them to a newer version is also supported.
+                    </para>
+                  </footnote>
+                </entry>
               </row>
             </thead>
-	    <tbody>
-	      <row>
+            <tbody>
+              <row>
                 <entry>
                   <indexterm significance="preferred"><primary>Upgrade</primary><secondary>Shutdown</secondary></indexterm>
                   <indexterm significance="preferred"><primary>Shutdown Upgrade</primary></indexterm>
                   Shutdown</entry>
-		<entry>yes</entry>
-		<entry>always</entry>
-		<entry>N/A</entry>
-		<entry>no</entry>
-		<entry>yes</entry>
+                <entry>yes</entry>
+                <entry>always</entry>
+                <entry>N/A</entry>
+                <entry>no</entry>
+                <entry>yes</entry>
               </row>
               <row>
                 <entry>
                   <indexterm significance="preferred"><primary>Upgrade</primary><secondary>Rolling</secondary></indexterm>
                   <indexterm significance="preferred"><primary>Rolling Upgrade</primary></indexterm>
                   Rolling</entry>
-		<entry>no</entry>
-		<entry>always</entry>
-		<entry>yes</entry>
-		<entry>yes</entry>
-		<entry>no</entry>
+                <entry>no</entry>
+                <entry>always</entry>
+                <entry>yes</entry>
+                <entry>yes</entry>
+                <entry>no</entry>
               </row>
               <row>
                 <entry>
                   <indexterm significance="preferred"><primary>Upgrade</primary><secondary>Reattach</secondary></indexterm>
                   <indexterm significance="preferred"><primary>Reattach Upgrade</primary></indexterm>
                   Reattach</entry>
-		<entry>yes</entry>
-		<entry>only due to failure</entry>
-		<entry>no</entry>
-		<entry>no</entry>
-		<entry>yes</entry>
+                <entry>yes</entry>
+                <entry>only due to failure</entry>
+                <entry>no</entry>
+                <entry>no</entry>
+                <entry>yes</entry>
               </row>
-	    </tbody>
-	  </tgroup>
-	</table>
+            </tbody>
+          </tgroup>
+        </table>
       </section>
       <section id="s-upgrade-shutdown">
-	<title>Complete Cluster Shutdown</title>
-	<para>In this scenario one shuts down all cluster nodes and resources and upgrades all the nodes before restarting the cluster.</para>
-	<section><title>Procedure</title>
-	  <orderedlist spacing="compact">
-	    <listitem>
+        <title>Complete Cluster Shutdown</title>
+        <para>In this scenario one shuts down all cluster nodes and resources and upgrades all the nodes before restarting the cluster.</para>
+        <section><title>Procedure</title>
+          <orderedlist spacing="compact">
+            <listitem>
               <para>On each node:
-	      <orderedlist spacing="compact">
-		<listitem>
-		  <para>Shutdown the cluster stack (Heartbeat or Corosync)</para>
-		</listitem>
-		<listitem>
-		  <para>
-		  Upgrade the Pacemaker software.
-		  This may also include upgrading the cluster stack and/or the underlying operating system.
-		  </para>
-		</listitem>
-	      </orderedlist></para>
-	    </listitem>
-	    <listitem>
+              <orderedlist spacing="compact">
+                <listitem>
+                  <para>Shutdown the cluster stack (Heartbeat or Corosync)</para>
+                </listitem>
+                <listitem>
+                  <para>
+                  Upgrade the Pacemaker software.
+                  This may also include upgrading the cluster stack and/or the underlying operating system.
+                  </para>
+                </listitem>
+              </orderedlist></para>
+            </listitem>
+            <listitem>
               <para>Check the configuration manually or with the <command>crm_verify</command> tool if available.</para>
-	    </listitem>
-	    <listitem>
+            </listitem>
+            <listitem>
               <para>On each node:
-	      <orderedlist spacing="compact">
-		<listitem>
-		  <para>
-		    Start the cluster stack.  
-		    This can be either Corosync or Heartbeat and does not need to be the same as the previous cluster stack.
-		  </para>
-		</listitem>
-	      </orderedlist></para>
-	    </listitem>
-	  </orderedlist>
-	</section>
+              <orderedlist spacing="compact">
+                <listitem>
+                  <para>
+                    Start the cluster stack.
+                    This can be either Corosync or Heartbeat and does not need to be the same as the previous cluster stack.
+                  </para>
+                </listitem>
+              </orderedlist></para>
+            </listitem>
+          </orderedlist>
+        </section>
       </section>
       <section id="s-upgrade-rolling">
-	<title>Rolling (node by node)</title>
-	<para>In this scenario each node is removed from the cluster, upgraded and then brought back online until all nodes are running the newest version.</para>
-	<important>
-	  <para>
-	    This method is currently broken between Pacemaker 0.6.x and 1.0.x.
-	  </para>
-	  <para>
-	    Measures have been put into place to ensure rolling upgrades always work for versions after 1.0.0.
-	    If there is sufficient demand, the work to repair 0.6 -&gt; 1.0 compatibility will be carried out.
-	    Otherwise, please try one of the other upgrade strategies.
-	    Detach/Reattach is a particularly good option for most people.  
-	  </para>
-	</important>
+        <title>Rolling (node by node)</title>
+        <para>In this scenario each node is removed from the cluster, upgraded and then brought back online until all nodes are running the newest version.</para>
+        <important>
+          <para>
+            This method is currently broken between Pacemaker 0.6.x and 1.0.x.
+          </para>
+          <para>
+            Measures have been put into place to ensure rolling upgrades always work for versions after 1.0.0.
+            If there is sufficient demand, the work to repair 0.6 -&gt; 1.0 compatibility will be carried out.
+            Otherwise, please try one of the other upgrade strategies.
+            Detach/Reattach is a particularly good option for most people.
+          </para>
+        </important>
         <para/>
-	<section>
-	  <title>Procedure</title>
-	  <para>On each node:
-	  <orderedlist spacing="compact">
-	    <listitem>
+        <section>
+          <title>Procedure</title>
+          <para>On each node:
+          <orderedlist spacing="compact">
+            <listitem>
               <para>Shutdown the cluster stack (Heartbeat or Corosync)</para>
-	    </listitem>
-	    <listitem>
+            </listitem>
+            <listitem>
               <para>Upgrade the Pacemaker software. This may also include upgrading the cluster stack and/or the underlying operating system.
-	      <orderedlist spacing="compact">
-		<listitem>
-		  <para>On the first node, check the configuration manually or with the <command>crm_verify</command> tool if available.</para>
-		</listitem>
-	      </orderedlist></para>
-	    </listitem>
-	    <listitem>
+              <orderedlist spacing="compact">
+                <listitem>
+                  <para>On the first node, check the configuration manually or with the <command>crm_verify</command> tool if available.</para>
+                </listitem>
+              </orderedlist></para>
+            </listitem>
+            <listitem>
               <para>
-		Start the cluster stack. 
-		This must be the same type of cluster stack (Corosync or Heartbeat) that the rest of the cluster is using.
-		Upgrading Corosync/Heartbeat may also be possible, please consult the documentation for those projects to see if the two versions will be compatible. 
-	      </para>
-	    </listitem>
-	  </orderedlist></para>
-	  <para>Repeat for each node in the cluster.</para>
-	</section>
-	<section>
-	  <title>Version Compatibility</title>
-	  <table frame="all">
-	    <title>Version Compatibility Table</title>
-	    <tgroup cols="2">
+                Start the cluster stack.
+                This must be the same type of cluster stack (Corosync or Heartbeat) that the rest of the cluster is using.
+                Upgrading Corosync/Heartbeat may also be possible, please consult the documentation for those projects to see if the two versions will be compatible.
+              </para>
+            </listitem>
+          </orderedlist></para>
+          <para>Repeat for each node in the cluster.</para>
+        </section>
+        <section>
+          <title>Version Compatibility</title>
+          <table frame="all">
+            <title>Version Compatibility Table</title>
+            <tgroup cols="2">
               <thead>
-		<row>
-		  <entry>Version being Installed</entry>
-		  <entry>Oldest Compatible Version</entry>
-		</row>
+                <row>
+                  <entry>Version being Installed</entry>
+                  <entry>Oldest Compatible Version</entry>
+                </row>
               </thead><tbody><row>
-		  <entry>Pacemaker 1.0.x</entry>
-		  <entry>Pacemaker 1.0.0</entry>
-		</row>
-		<row>
-		  <entry>Pacemaker 0.7.x</entry>
-		  <entry>Pacemaker 0.6 or Heartbeat 2.1.3</entry>
-		</row>
-		<row>
-		  <entry>Pacemaker 0.6.x</entry>
-		  <entry>Heartbeat 2.0.8</entry>
-		</row>
-		<row>
-		  <entry>Heartbeat 2.1.3 (or less)</entry>
-		  <entry>Heartbeat 2.0.4</entry>
-		</row>
-		<row>
-		  <entry>Heartbeat 2.0.4 (or less)</entry>
-		  <entry>Heartbeat 2.0.0</entry>
-		</row>
-		<row>
-		  <entry>Heartbeat 2.0.0</entry>
-		  <entry>None. Use an alternate upgrade strategy.</entry>
+                  <entry>Pacemaker 1.0.x</entry>
+                  <entry>Pacemaker 1.0.0</entry>
+                </row>
+                <row>
+                  <entry>Pacemaker 0.7.x</entry>
+                  <entry>Pacemaker 0.6 or Heartbeat 2.1.3</entry>
+                </row>
+                <row>
+                  <entry>Pacemaker 0.6.x</entry>
+                  <entry>Heartbeat 2.0.8</entry>
+                </row>
+                <row>
+                  <entry>Heartbeat 2.1.3 (or less)</entry>
+                  <entry>Heartbeat 2.0.4</entry>
+                </row>
+                <row>
+                  <entry>Heartbeat 2.0.4 (or less)</entry>
+                  <entry>Heartbeat 2.0.0</entry>
+                </row>
+                <row>
+                  <entry>Heartbeat 2.0.0</entry>
+                  <entry>None. Use an alternate upgrade strategy.</entry>
             </row></tbody></tgroup>
-	  </table>
-	</section>
-	<section>
-	  <title>Crossing Compatibility Boundaries</title>
-	  <para>Rolling upgrades that cross compatibility boundaries must be preformed in multiple steps. For example, to perform a rolling update from Heartbeat 2.0.1 to Pacemaker 0.6.6 one must:</para>
-	  <orderedlist spacing="compact">
-	    <listitem><para>Perform a rolling upgrade from Heartbeat 2.0.1 to Heartbeat 2.0.4 </para></listitem>
-	    <listitem><para>Perform a rolling upgrade from Heartbeat 2.0.4 to Heartbeat 2.1.3</para></listitem>
-	    <listitem><para>Perform a rolling upgrade from Heartbeat 2.1.3 to Pacemaker 0.6.6</para></listitem>
-	  </orderedlist>
-	</section>
+          </table>
+        </section>
+        <section>
+          <title>Crossing Compatibility Boundaries</title>
+          <para>Rolling upgrades that cross compatibility boundaries must be preformed in multiple steps. For example, to perform a rolling update from Heartbeat 2.0.1 to Pacemaker 0.6.6 one must:</para>
+          <orderedlist spacing="compact">
+            <listitem><para>Perform a rolling upgrade from Heartbeat 2.0.1 to Heartbeat 2.0.4 </para></listitem>
+            <listitem><para>Perform a rolling upgrade from Heartbeat 2.0.4 to Heartbeat 2.1.3</para></listitem>
+            <listitem><para>Perform a rolling upgrade from Heartbeat 2.1.3 to Pacemaker 0.6.6</para></listitem>
+          </orderedlist>
+        </section>
       </section>
       <section id="s-upgrade-reattach">
-	<title>Disconnect and Reattach</title>
-	<para>A variant of a complete cluster shutdown, but the resources are left active and get re-detected when the cluster is restarted.</para>
-	<section>
-	  <title>Procedure</title>
-	  <orderedlist spacing="compact">
-	    <listitem>
+        <title>Disconnect and Reattach</title>
+        <para>A variant of a complete cluster shutdown, but the resources are left active and get re-detected when the cluster is restarted.</para>
+        <section>
+          <title>Procedure</title>
+          <orderedlist spacing="compact">
+            <listitem>
               <para>
-		Tell the cluster to stop managing services.
-		This is required to allow the services to remain active after the cluster shuts down.
+                Tell the cluster to stop managing services.
+                This is required to allow the services to remain active after the cluster shuts down.
                 <programlisting><command>crm_attribute -t crm_config -n is-managed-default -v false </command></programlisting></para>
-	    </listitem>
-	    <listitem>
+            </listitem>
+            <listitem>
               <para>For any resource that has a value for <literal>is-managed</literal>, make sure it is set to <literal>false</literal> (so that the cluster will not stop it)
-	      <programlisting><command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false </command></programlisting></para>
-	    </listitem>
-	    <listitem>
+              <programlisting><command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false </command></programlisting></para>
+            </listitem>
+            <listitem>
               <para>On each node:
-	      <orderedlist spacing="compact">
-		<listitem>
-		  <para>Shutdown the cluster stack (Heartbeat or Corosync)</para>
-		</listitem>
-		<listitem>
-		  <para>Upgrade the cluster stack program - This may also include upgrading the underlying operating system.</para>
-		</listitem>
-	      </orderedlist></para>
-	    </listitem>
-	    <listitem>
+              <orderedlist spacing="compact">
+                <listitem>
+                  <para>Shutdown the cluster stack (Heartbeat or Corosync)</para>
+                </listitem>
+                <listitem>
+                  <para>Upgrade the cluster stack program - This may also include upgrading the underlying operating system.</para>
+                </listitem>
+              </orderedlist></para>
+            </listitem>
+            <listitem>
               <para>Check the configuration manually or with the <command>crm_verify</command> tool if available.</para>
-	    </listitem>
-	    <listitem>
+            </listitem>
+            <listitem>
               <para>On each node:
-	      <orderedlist spacing="compact">
-		<listitem><para>
-		  Start the cluster stack.  
-		  This can be either Corosync or Heartbeat and does not need to be the same as the previous cluster stack.
-		</para></listitem>
-	      </orderedlist></para>
-	    </listitem>
-	    <listitem>
+              <orderedlist spacing="compact">
+                <listitem><para>
+                  Start the cluster stack.
+                  This can be either Corosync or Heartbeat and does not need to be the same as the previous cluster stack.
+                </para></listitem>
+              </orderedlist></para>
+            </listitem>
+            <listitem>
               <para>Verify that the cluster re-detected all resources correctly.</para>
-	    </listitem>
-	    <listitem>
+            </listitem>
+            <listitem>
               <para>Allow the cluster to resume managing resources again:
                 <programlisting><command>crm_attribute -t crm_config -n is-managed-default -v true </command></programlisting></para>
-	    </listitem>
-	    <listitem>
+            </listitem>
+            <listitem>
               <para>For any resource that has a value for <literal>is-managed</literal> reset it to <literal>true</literal> (so the cluster can recover the service if it fails) if desired:
               <programlisting><command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false</command></programlisting></para>
-	    </listitem>
-	  </orderedlist>
-	</section>
-	<section>
-	  <title>Notes</title>
+            </listitem>
+          </orderedlist>
+        </section>
+        <section>
+          <title>Notes</title>
           <important>
-	    <para>Always check your existing configuration is still compatible with the version you are installing before starting the cluster.</para>
-	  </important>
-	  <para/>
+            <para>Always check your existing configuration is still compatible with the version you are installing before starting the cluster.</para>
+          </important>
+          <para/>
           <note>
-	    <para>The oldest version of the CRM to support this upgrade type was in Heartbeat 2.0.4</para>
-	  </note>
-	</section>
+            <para>The oldest version of the CRM to support this upgrade type was in Heartbeat 2.0.4</para>
+          </note>
+        </section>
       </section>
   </appendix>
