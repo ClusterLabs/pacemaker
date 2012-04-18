@@ -15,7 +15,7 @@
     </para>
     <para>
       For those that are allergic to XML, Pacemaker comes with a cluster shell; a Python based GUI exists, too, however these tools will not be covered at all in this document<footnote>
-	<para>I hope, however, that the concepts explained here make the functionality of these tools more easily understood.</para>
+        <para>I hope, however, that the concepts explained here make the functionality of these tools more easily understood.</para>
       </footnote>, precisely because they hide the XML.
     </para>
     <para>
@@ -26,7 +26,7 @@
   <corpauthor>
     <inlinemediaobject>
       <imageobject>
-	<imagedata fileref="Common_Content/images/title_logo.svg" format="SVG"/>
+        <imagedata fileref="Common_Content/images/title_logo.svg" format="SVG"/>
       </imageobject>
     </inlinemediaobject>
   </corpauthor>

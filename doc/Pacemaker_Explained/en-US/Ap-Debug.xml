@@ -4,105 +4,105 @@
       <title>Corosync</title>
 
       <section id="s-debug-openais-pre">
-	<title>Prerequisites</title>
-	<example>
-	  <title>Minimum logging configuration</title>
-	  <programlisting><userinput>
+        <title>Prerequisites</title>
+        <example>
+          <title>Minimum logging configuration</title>
+          <programlisting><userinput>
   # /etc/init.d/openais start
-	    </userinput>
-	    <computeroutput>
+            </userinput>
+            <computeroutput>
   logging {
       to_syslog: yes
       syslog_facility: daemon
   }
-	    </computeroutput>
-	  </programlisting>
-	  <caption>
-	  Whatever other logging you have, these two lines are required for Pacemaker clusters
-	  </caption>
-	</example>
+            </computeroutput>
+          </programlisting>
+          <caption>
+          Whatever other logging you have, these two lines are required for Pacemaker clusters
+          </caption>
+        </example>
       </section>
       <section id="s-debug-openais-start">
-	<title>Confirm Corosync Started</title>
-	<figure>
-	  <title>Expected output when starting openais</title>
-	  <screen><userinput>
+        <title>Confirm Corosync Started</title>
+        <figure>
+          <title>Expected output when starting openais</title>
+          <screen><userinput>
   # /etc/init.d/openais start
-	    </userinput>
-	    <computeroutput>
+            </userinput>
+            <computeroutput>
   Starting Corosync daemon (aisexec): starting... rc=0: OK
-	    </computeroutput>
-	  </screen>
-	</figure>
-	
-	<figure>
-	  <title>Expected log messages - startup</title>
-	  <screen><userinput>
+            </computeroutput>
+          </screen>
+        </figure>
+
+        <figure>
+          <title>Expected log messages - startup</title>
+          <screen><userinput>
   # grep -e "openais.*network interface" -e "AIS Executive Service" /var/log/messages
-	    </userinput>
-	    <computeroutput>
+            </userinput>
+            <computeroutput>
   Aug 27 16:23:37 test1 openais[26337]: [MAIN ] AIS Executive Service RELEASE 'subrev 1152 version 0.80'
   Aug 27 16:23:38 test1 openais[26337]: [MAIN ] AIS Executive Service: started and ready to provide service.
   Aug 27 16:23:38 test1 openais[26337]: [TOTEM] The network interface [192.168.9.41] is now up.
-	    </computeroutput>
-	  </screen>
-	  <caption>
-	    The versions may differ, but you should see Corosync indicate it started and sucessfully attached to the machine's network interface
-	  </caption>
-	</figure>
-	
-	<figure>
-	  <title>Expected log messages - membership</title>
-	  <screen><userinput>
+            </computeroutput>
+          </screen>
+          <caption>
+            The versions may differ, but you should see Corosync indicate it started and sucessfully attached to the machine's network interface
+          </caption>
+        </figure>
+
+        <figure>
+          <title>Expected log messages - membership</title>
+          <screen><userinput>
   # grep CLM /var/log/messages
-	    </userinput>
-	    <computeroutput>
+            </userinput>
+            <computeroutput>
   Aug 27 16:53:15 test1 openais[2166]: [CLM  ] CLM CONFIGURATION CHANGE
   Aug 27 16:53:15 test1 openais[2166]: [CLM  ] New Configuration:
   Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Left:
   Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Joined:
   Aug 27 16:53:15 test1 openais[2166]: [CLM  ] CLM CONFIGURATION CHANGE
   Aug 27 16:53:15 test1 openais[2166]: [CLM  ] New Configuration:
-  Aug 27 16:53:15 test1 openais[2166]: [CLM  ]     r(0) ip(192.168.9.41) 
+  Aug 27 16:53:15 test1 openais[2166]: [CLM  ]     r(0) ip(192.168.9.41)
   Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Left:
   Aug 27 16:53:15 test1 openais[2166]: [CLM  ] Members Joined:
-  Aug 27 16:53:15 test1 openais[2166]: [CLM  ]     r(0) ip(192.168.9.41) 
+  Aug 27 16:53:15 test1 openais[2166]: [CLM  ]     r(0) ip(192.168.9.41)
   Aug 27 16:53:15 test1 openais[2166]: [CLM  ] got nodejoin message 192.168.9.41
-	    </computeroutput>
-	  </screen>
-	  <caption>
-	    The exact messages will differ, but you should see a new membership formed with the real IP address of your node
-	  </caption>
-	</figure>
+            </computeroutput>
+          </screen>
+          <caption>
+            The exact messages will differ, but you should see a new membership formed with the real IP address of your node
+          </caption>
+        </figure>
       </section>
 
       <section id="s-debug-openais-pcmk">
-	<title>Checking Pacemaker</title>
-	<para>Now that we have confirmed that Corosync is functional we can check the rest of the stack.</para>
+        <title>Checking Pacemaker</title>
+        <para>Now that we have confirmed that Corosync is functional we can check the rest of the stack.</para>
 
-	<figure>
-	  <title>Expected Pacemaker startup logging for Corosync</title>
-	  <screen><userinput>
+        <figure>
+          <title>Expected Pacemaker startup logging for Corosync</title>
+          <screen><userinput>
   # grep pcmk_plugin_init /var/log/messages
-	    </userinput>
-	    <computeroutput>
+            </userinput>
+            <computeroutput>
   Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: CRM: Initialized
   Aug 27 16:53:15 test1 openais[2166]: [pcmk ] Logging: Initialized pcmk_plugin_init
   Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: Service: 9
   Aug 27 16:53:15 test1 openais[2166]: [pcmk ] info: pcmk_plugin_init: Local hostname: test1
-	    </computeroutput>
-	  </screen>
-	  <caption>
-	    If you don't see these messages, or some like them, there is likely a problem finding or loading the pacemaker plugin.
-	  </caption>
-	</figure>
+            </computeroutput>
+          </screen>
+          <caption>
+            If you don't see these messages, or some like them, there is likely a problem finding or loading the pacemaker plugin.
+          </caption>
+        </figure>
 
-	<figure>
-	  <title>Expected process listing on a 64-bit machine</title>
-	  <screen><userinput>
+        <figure>
+          <title>Expected process listing on a 64-bit machine</title>
+          <screen><userinput>
   # ps axf
-	    </userinput>
-	    <computeroutput>
+            </userinput>
+            <computeroutput>
   3718 ?        Ssl    0:05 /usr/sbin/aisexec
   3723 ?        SLs    0:00  \_ /usr/lib64/heartbeat/stonithd
   3724 ?        S      0:05  \_ /usr/lib64/heartbeat/cib
@@ -110,12 +110,12 @@
   3726 ?        S      0:01  \_ /usr/lib64/heartbeat/attrd
   3727 ?        S      0:00  \_ /usr/lib64/heartbeat/pengine
   3728 ?        S      0:01  \_ /usr/lib64/heartbeat/crmd
-	    </computeroutput>
-	  </screen>
-	  <caption>
-	    On 32-bit systems the exact path may differ, but all the above processes should be listed.
-	  </caption>
-	</figure>
+            </computeroutput>
+          </screen>
+          <caption>
+            On 32-bit systems the exact path may differ, but all the above processes should be listed.
+          </caption>
+        </figure>
 
       </section>
      </section>

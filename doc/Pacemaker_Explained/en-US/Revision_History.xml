@@ -8,25 +8,25 @@
       <revision>
         <revnumber>1</revnumber>
         <date>19 Oct 2009</date>
-	<author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
-	<revdescription><simplelist><member>Import from Pages.app</member></simplelist></revdescription>
+        <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
+        <revdescription><simplelist><member>Import from Pages.app</member></simplelist></revdescription>
       </revision>
       <revision>
         <revnumber>2</revnumber>
         <date>26 Oct 2009</date>
-	<author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
-	<revdescription><simplelist><member>Cleanup and reformatting of docbook xml complete</member></simplelist></revdescription>
+        <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
+        <revdescription><simplelist><member>Cleanup and reformatting of docbook xml complete</member></simplelist></revdescription>
       </revision>
       <revision>
-	<revnumber>3</revnumber>
-	<date>Tue Nov 12 2009</date>
-	<author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
-	<revdescription>
-	  <simplelist>
-	    <member>Split book into chapters and pass validation</member>
-	    <member>Re-organize book for use with <ulink url="https://fedorahosted.org/publican/">Publican</ulink></member>
-	  </simplelist>
-	</revdescription>
+        <revnumber>3</revnumber>
+        <date>Tue Nov 12 2009</date>
+        <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
+        <revdescription>
+          <simplelist>
+            <member>Split book into chapters and pass validation</member>
+            <member>Re-organize book for use with <ulink url="https://fedorahosted.org/publican/">Publican</ulink></member>
+          </simplelist>
+        </revdescription>
       </revision>
     </revhistory>
   </simpara>
