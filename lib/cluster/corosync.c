@@ -671,9 +671,13 @@ ais_dispatch(int sender, gpointer user_data)
     return good;
 
   bail:
+#  if CS_USES_LIBQB
     if(ais_ipc_handle) {
         crm_err("AIS connection failed: %p", (void*)ais_ipc_handle);
     }
+#  else
+        crm_err("AIS connection failed");
+#  endif
     return FALSE;
 }
 
