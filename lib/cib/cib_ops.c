@@ -548,6 +548,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     int diff_del_epoch = 0;
     int diff_del_admin_epoch = 0;
 
+    const char *originator = crm_element_value(req, F_ORIG);
     crm_trace("Processing \"%s\" event", op);
 
     cib_diff_version_details(input,
@@ -641,10 +642,10 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 
     if (reason != NULL) {
         do_crm_log(log_level,
-                   "Diff %d.%d.%d -> %d.%d.%d not applied to %d.%d.%d: %s",
+                   "Diff %d.%d.%d -> %d.%d.%d from %s not applied to %d.%d.%d: %s",
                    diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
                    diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
-                   this_admin_epoch, this_epoch, this_updates, reason);
+                   originator?originator:"local", this_admin_epoch, this_epoch, this_updates, reason);
 
         crm_log_xml_trace(input, "Discarded diff");
         if (result == cib_ok) {
@@ -652,10 +653,10 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
         }
 
     } else if (apply_diff) {
-        crm_trace("Diff %d.%d.%d -> %d.%d.%d was applied to %d.%d.%d",
+        crm_trace("Diff %d.%d.%d -> %d.%d.%d from %s was applied to %d.%d.%d",
                   diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
                   diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
-                  this_admin_epoch, this_epoch, this_updates);
+                  originator?originator:"local", this_admin_epoch, this_epoch, this_updates);
 
     }
     return result;
