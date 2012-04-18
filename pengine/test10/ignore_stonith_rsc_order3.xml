@@ -1,0 +1,40 @@
+<cib epoch="7" num_updates="19" admin_epoch="0" validate-with="pacemaker-1.1" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Wed Apr 18 12:22:12 2012" have-quorum="0" dc-uuid="fc16-builder">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-7172b73"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="fc16-builder" type="normal" uname="fc16-builder"/>
+    </nodes>
+    <resources>
+      <clone id="S_CLONE">
+          <primitive class="stonith" id="S_A" type="fence_xvm"/>
+      </clone>
+      <group id="MIXED_GROUP">
+          <primitive class="ocf" id="A" provider="pacemaker" type="Dummy"/>
+          <primitive class="stonith" id="S_B" type="fence_xvm"/>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_order first="MIXED_GROUP" id="A-before-S_A" score="INFINITY" then="S_CLONE"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="fc16-builder" uname="fc16-builder" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="fc16-builder">
+        <instance_attributes id="status-fc16-builder">
+          <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="fc16-builder">
+        <lrm_resources>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

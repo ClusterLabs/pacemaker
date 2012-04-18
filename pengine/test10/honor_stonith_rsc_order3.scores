@@ -1,0 +1,17 @@
+Allocation scores:
+clone_color: S_A:0 allocation score on fc16-builder: 0
+clone_color: S_B:0 allocation score on fc16-builder: 0
+clone_color: S_C:0 allocation score on fc16-builder: 0
+clone_color: S_CLONE allocation score on fc16-builder: 0
+clone_color: S_CLONE2 allocation score on fc16-builder: 0
+clone_color: S_D:0 allocation score on fc16-builder: 0
+clone_color: S_GROUP:0 allocation score on fc16-builder: 0
+group_color: S_B:0 allocation score on fc16-builder: 0
+group_color: S_C:0 allocation score on fc16-builder: 0
+group_color: S_D:0 allocation score on fc16-builder: 0
+group_color: S_GROUP:0 allocation score on fc16-builder: 0
+native_color: A allocation score on fc16-builder: 0
+native_color: S_A:0 allocation score on fc16-builder: 0
+native_color: S_B:0 allocation score on fc16-builder: 0
+native_color: S_C:0 allocation score on fc16-builder: 0
+native_color: S_D:0 allocation score on fc16-builder: 0
