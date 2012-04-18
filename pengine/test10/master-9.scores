@@ -26,7 +26,7 @@ clone_color: master_rsc_1 allocation score on va1: 0
 clone_color: ocf_msdummy:0 allocation score on ibm1: 0
 clone_color: ocf_msdummy:0 allocation score on sgi2: 0
 clone_color: ocf_msdummy:0 allocation score on test02: 0
-clone_color: ocf_msdummy:0 allocation score on va1: 0
+clone_color: ocf_msdummy:0 allocation score on va1: 1000
 clone_color: ocf_msdummy:1 allocation score on ibm1: 0
 clone_color: ocf_msdummy:1 allocation score on sgi2: 0
 clone_color: ocf_msdummy:1 allocation score on test02: 0
@@ -110,7 +110,7 @@ native_color: ocf_127.0.0.13 allocation score on va1: 0
 native_color: ocf_msdummy:0 allocation score on ibm1: -INFINITY
 native_color: ocf_msdummy:0 allocation score on sgi2: -INFINITY
 native_color: ocf_msdummy:0 allocation score on test02: -INFINITY
-native_color: ocf_msdummy:0 allocation score on va1: 0
+native_color: ocf_msdummy:0 allocation score on va1: 1000
 native_color: ocf_msdummy:1 allocation score on ibm1: -INFINITY
 native_color: ocf_msdummy:1 allocation score on sgi2: -INFINITY
 native_color: ocf_msdummy:1 allocation score on test02: -INFINITY
@@ -155,7 +155,7 @@ native_color: rsc_va1 allocation score on ibm1: 0
 native_color: rsc_va1 allocation score on sgi2: 0
 native_color: rsc_va1 allocation score on test02: 0
 native_color: rsc_va1 allocation score on va1: 100
-ocf_msdummy:0 promotion score on va1: -1
+ocf_msdummy:0 promotion score on va1: 1000
 ocf_msdummy:1 promotion score on va1: -1
 ocf_msdummy:2 promotion score on none: 0
 ocf_msdummy:3 promotion score on none: 0

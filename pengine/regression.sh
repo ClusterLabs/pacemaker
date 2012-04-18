@@ -340,6 +340,7 @@ do_test unmanaged-master "Ensure role is preserved for unmanaged resources"
 do_test master-unmanaged-monitor "Start the correct monitor operation for unmanaged masters"
 do_test master-demote-2 "Demote does not clear past failure"
 do_test master-move "Move master based on failure of colocated group"   
+do_test master-probed-score "Observe the promotion score of probed resources"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"

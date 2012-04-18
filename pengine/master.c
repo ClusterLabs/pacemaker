@@ -410,14 +410,18 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
         return score;
     }
 
-    if (rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED) {
-        return score;
-    }
+    if (node == NULL) {
+        if(rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED) {
+            crm_trace("Ingoring master score for %s: unknown state on %s",
+                      rsc->id, node->details->uname);
+            return score;
+        }
 
-    if (node != NULL) {
+    } else {
         node_t *match = pe_find_node_id(rsc->running_on, node->details->id);
+        node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
 
-        if (match == NULL) {
+        if (match == NULL && known == NULL) {
             crm_trace("%s is not active on %s - ignoring", rsc->id, node->details->uname);
             return score;
         }

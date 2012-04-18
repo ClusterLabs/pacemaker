@@ -22,7 +22,7 @@
 "lsb_dummy_monitor_5000 va1" [ style=dashed color="red" fontcolor="black" ]
 "ocf_127.0.0.11_monitor_5000 va1" [ style=dashed color="red" fontcolor="black" ]
 "ocf_127.0.0.13_monitor_5000 va1" [ style=dashed color="red" fontcolor="black" ]
-"ocf_msdummy:0_monitor_5000 va1" [ style=dashed color="red" fontcolor="black" ]
+"ocf_msdummy:0_monitor_6000 va1" [ style=dashed color="red" fontcolor="black"]
 "ocf_msdummy:1_monitor_5000 va1" [ style=dashed color="red" fontcolor="black" ]
 "ocf_msdummy:2_monitor_0 ibm1" -> "probe_complete ibm1" [ style = bold]
 "ocf_msdummy:2_monitor_0 ibm1" [ style=bold color="green" fontcolor="black" ]

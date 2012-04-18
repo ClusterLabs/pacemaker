@@ -1,0 +1,699 @@
+<cib epoch="1022" num_updates="54" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.5" cib-last-written="Fri Mar 30 11:24:47 2012" have-quorum="1" update-origin="orestes-corosync.nevis.columbia.edu" update-client="crmd" dc-uuid="hypatia-corosync.nevis.columbia.edu">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-3.el6-a02c0f19a00c1eb2527ad38f146ebc0834814558"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="cman"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1333120140"/>
+        <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="9"/>
+        <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="9"/>
+        <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="9"/>
+        <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="hypatia-corosync.nevis.columbia.edu" type="normal" uname="hypatia-corosync.nevis.columbia.edu">
+        <instance_attributes id="nodes-hypatia-corosync.nevis.columbia.edu">
+          <nvpair id="nodes-hypatia-corosync.nevis.columbia.edu-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="orestes-corosync.nevis.columbia.edu" type="normal" uname="orestes-corosync.nevis.columbia.edu">
+        <instance_attributes id="nodes-orestes-corosync.nevis.columbia.edu">
+          <nvpair id="nodes-orestes-corosync.nevis.columbia.edu-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <master id="AdminClone">
+        <meta_attributes id="AdminClone-meta_attributes">
+          <nvpair id="AdminClone-meta_attributes-master-max" name="master-max" value="2"/>
+          <nvpair id="AdminClone-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="AdminClone-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="AdminClone-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="AdminClone-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="AdminClone-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="AdminDrbd" provider="linbit" type="drbd">
+          <instance_attributes id="AdminDrbd-instance_attributes">
+            <nvpair id="AdminDrbd-instance_attributes-drbd_resource" name="drbd_resource" value="admin"/>
+          </instance_attributes>
+          <operations>
+            <op id="AdminDrbd-monitor-59s" interval="59s" name="monitor" role="Master" timeout="30s"/>
+            <op id="AdminDrbd-monitor-60s" interval="60s" name="monitor" role="Slave" timeout="30s"/>
+            <op id="AdminDrbd-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="AdminDrbd-start-0" interval="0" name="start" timeout="240"/>
+          </operations>
+          <meta_attributes id="AdminDrbd-meta_attributes">
+            <nvpair id="AdminDrbd-meta_attributes-target-role" name="target-role" value="Master"/>
+          </meta_attributes>
+        </primitive>
+      </master>
+      <primitive class="ocf" description="Shutdown cluster if A/C stops" id="CronAmbientTemperature" provider="heartbeat" type="symlink">
+        <operations>
+          <op id="CronAmbientTemperature-monitor-60" interval="60" name="monitor" timeout="15"/>
+          <op id="CronAmbientTemperature-start-0" interval="0" name="start" timeout="15"/>
+          <op id="CronAmbientTemperature-start-0-0" interval="0" name="start" timeout="15"/>
+        </operations>
+        <instance_attributes id="CronAmbientTemperature-instance_attributes">
+          <nvpair id="CronAmbientTemperature-instance_attributes-link" name="link" value="/etc/cron.d/ambient-temperature"/>
+          <nvpair id="CronAmbientTemperature-instance_attributes-target" name="target" value="/var/nevis/etc/cron.d/ambient-temperature"/>
+          <nvpair id="CronAmbientTemperature-instance_attributes-backup_suffix" name="backup_suffix" value=".original"/>
+        </instance_attributes>
+        <meta_attributes id="CronAmbientTemperature-meta_attributes">
+          <nvpair id="CronAmbientTemperature-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="stonith" description="How to shut down hypatia via its UPS" id="StonithHypatia" type="fence_nut">
+        <instance_attributes id="StonithHypatia-instance_attributes">
+          <nvpair id="StonithHypatia-instance_attributes-stonith-timeout" name="stonith-timeout" value="120s"/>
+          <nvpair id="StonithHypatia-instance_attributes-pcmk_host_check" name="pcmk_host_check" value="static-list"/>
+          <nvpair id="StonithHypatia-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="hypatia-corosync.nevis.columbia.edu"/>
+          <nvpair id="StonithHypatia-instance_attributes-ups" name="ups" value="sofia-ups"/>
+          <nvpair id="StonithHypatia-instance_attributes-username" name="username" value="admin"/>
+          <nvpair id="StonithHypatia-instance_attributes-password" name="password" value="acdc"/>
+          <nvpair id="StonithHypatia-instance_attributes-cycledelay" name="cycledelay" value="20"/>
+          <nvpair id="StonithHypatia-instance_attributes-ondelay" name="ondelay" value="20"/>
+          <nvpair id="StonithHypatia-instance_attributes-offdelay" name="offdelay" value="20"/>
+          <nvpair id="StonithHypatia-instance_attributes-noverifyonoff" name="noverifyonoff" value="1"/>
+          <nvpair id="StonithHypatia-instance_attributes-debug" name="debug" value="1"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="stonith" description="How to shut down orestes via its UPS" id="StonithOrestes" type="fence_nut">
+        <instance_attributes id="StonithOrestes-instance_attributes">
+          <nvpair id="StonithOrestes-instance_attributes-stonith-timeout" name="stonith-timeout" value="120s"/>
+          <nvpair id="StonithOrestes-instance_attributes-pcmk_host_check" name="pcmk_host_check" value="static-list"/>
+          <nvpair id="StonithOrestes-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="orestes-corosync.nevis.columbia.edu"/>
+          <nvpair id="StonithOrestes-instance_attributes-ups" name="ups" value="dc-test-stand-ups"/>
+          <nvpair id="StonithOrestes-instance_attributes-username" name="username" value="admin"/>
+          <nvpair id="StonithOrestes-instance_attributes-password" name="password" value="acdc"/>
+          <nvpair id="StonithOrestes-instance_attributes-cycledelay" name="cycledelay" value="20"/>
+          <nvpair id="StonithOrestes-instance_attributes-ondelay" name="ondelay" value="20"/>
+          <nvpair id="StonithOrestes-instance_attributes-offdelay" name="offdelay" value="20"/>
+          <nvpair id="StonithOrestes-instance_attributes-noverifyonoff" name="noverifyonoff" value="1"/>
+          <nvpair id="StonithOrestes-instance_attributes-debug" name="debug" value="1"/>
+        </instance_attributes>
+      </primitive>
+      <group id="DhcpGroup">
+        <primitive class="ocf" description="/etc/dhcpd.conf" id="SymlinkDhcpdConf" provider="heartbeat" type="symlink">
+          <operations>
+            <op id="SymlinkDhcpdConf-monitor-60" interval="60" name="monitor" timeout="15"/>
+            <op id="SymlinkDhcpdConf-start-0" interval="0" name="start" timeout="15"/>
+            <op id="SymlinkDhcpdConf-start-0-0" interval="0" name="start" timeout="15"/>
+          </operations>
+          <instance_attributes id="SymlinkDhcpdConf-instance_attributes">
+            <nvpair id="SymlinkDhcpdConf-instance_attributes-link" name="link" value="/etc/dhcpd.conf"/>
+            <nvpair id="SymlinkDhcpdConf-instance_attributes-target" name="target" value="/var/nevis/etc/dhcpd.conf"/>
+            <nvpair id="SymlinkDhcpdConf-instance_attributes-backup_suffix" name="backup_suffix" value=".original"/>
+          </instance_attributes>
+        </primitive>
+        <primitive class="ocf" description="/etc/sysconfig/dhcpd" id="SymlinkSysconfigDhcpd" provider="heartbeat" type="symlink">
+          <operations>
+            <op id="SymlinkSysconfigDhcpd-monitor-60" interval="60" name="monitor" timeout="15"/>
+            <op id="SymlinkSysconfigDhcpd-stop-0" interval="0" name="stop" timeout="15"/>
+            <op id="SymlinkSysconfigDhcpd-start-0" interval="0" name="start" timeout="15"/>
+          </operations>
+          <instance_attributes id="SymlinkSysconfigDhcpd-instance_attributes">
+            <nvpair id="SymlinkSysconfigDhcpd-instance_attributes-link" name="link" value="/etc/sysconfig/dhcpd"/>
+            <nvpair id="SymlinkSysconfigDhcpd-instance_attributes-target" name="target" value="/var/nevis/etc/sysconfig/dhcpd"/>
+            <nvpair id="SymlinkSysconfigDhcpd-instance_attributes-backup_suffix" name="backup_suffix" value=".original"/>
+          </instance_attributes>
+        </primitive>
+        <primitive class="ocf" description="/var/lib/dhcpd" id="SymlinkDhcpdLeases" provider="heartbeat" type="symlink">
+          <operations>
+            <op id="SymlinkDhcpdLeases-monitor-60" interval="60" name="monitor" timeout="15"/>
+            <op id="SymlinkDhcpdLeases-start-0" interval="0" name="start" timeout="15"/>
+            <op id="SymlinkDhcpdLeases-stop-0" interval="0" name="stop" timeout="15"/>
+          </operations>
+          <instance_attributes id="SymlinkDhcpdLeases-instance_attributes">
+            <nvpair id="SymlinkDhcpdLeases-instance_attributes-link" name="link" value="/var/lib/dhcpd"/>
+            <nvpair id="SymlinkDhcpdLeases-instance_attributes-target" name="target" value="/var/nevis/dhcpd"/>
+            <nvpair id="SymlinkDhcpdLeases-instance_attributes-backup_suffix" name="backup_suffix" value=".original"/>
+          </instance_attributes>
+        </primitive>
+        <primitive class="lsb" id="Dhcpd" type="dhcpd">
+          <operations>
+            <op id="Dhcpd-monitor-30" interval="30" name="monitor" timeout="15"/>
+          </operations>
+          <meta_attributes id="Dhcpd-meta_attributes">
+            <nvpair id="Dhcpd-meta_attributes-target-role" name="target-role" value="stopped"/>
+          </meta_attributes>
+        </primitive>
+        <primitive class="ocf" id="DhcpIP" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="DhcpIP-instance_attributes">
+            <nvpair id="DhcpIP-instance_attributes-ip" name="ip" value="10.44.107.13"/>
+            <nvpair id="DhcpIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+            <nvpair id="DhcpIP-instance_attributes-nic" name="nic" value="eth2"/>
+          </instance_attributes>
+          <operations>
+            <op id="DhcpIP-monitor-40s" interval="40s" name="monitor"/>
+          </operations>
+        </primitive>
+      </group>
+      <clone id="CupsClone">
+        <meta_attributes id="CupsClone-meta_attributes">
+          <nvpair id="CupsClone-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <group id="CupsGroup">
+          <primitive class="ocf" id="SymlinkUsrShareCups" provider="heartbeat" type="symlink">
+            <operations>
+              <op id="SymlinkUsrShareCups-monitor-60" interval="60" name="monitor" timeout="15"/>
+              <op id="SymlinkUsrShareCups-start-0" interval="0" name="start" timeout="15"/>
+              <op id="SymlinkUsrShareCups-stop-0" interval="0" name="stop" timeout="15"/>
+            </operations>
+            <instance_attributes id="SymlinkUsrShareCups-instance_attributes">
+              <nvpair id="SymlinkUsrShareCups-instance_attributes-link" name="link" value="/usr/share/cups"/>
+              <nvpair id="SymlinkUsrShareCups-instance_attributes-target" name="target" value="/var/nevis/share/cups"/>
+              <nvpair id="SymlinkUsrShareCups-instance_attributes-backup_suffix" name="backup_suffix" value=".original"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="ocf" id="SymlinkCupsdConf" provider="heartbeat" type="symlink">
+            <operations>
+              <op id="SymlinkCupsdConf-monitor-60" interval="60" name="monitor" timeout="15"/>
+              <op id="SymlinkCupsdConf-start-0" interval="0" name="start" timeout="15"/>
+              <op id="SymlinkCupsdConf-stop-0" interval="0" name="stop" timeout="15"/>
+            </operations>
+            <instance_attributes id="SymlinkCupsdConf-instance_attributes">
+              <nvpair id="SymlinkCupsdConf-instance_attributes-link" name="link" value="/etc/cups/cupsd.conf"/>
+              <nvpair id="SymlinkCupsdConf-instance_attributes-target" name="target" value="/var/nevis/etc/cups/cupsd.conf"/>
+              <nvpair id="SymlinkCupsdConf-instance_attributes-backup_suffix" name="backup_suffix" value=".original"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="lsb" id="Cups" type="cups">
+            <operations>
+              <op id="Cups-monitor-30s" interval="30s" name="monitor"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="IPClone">
+        <meta_attributes id="ClusterIPClone-meta_attributes">
+          <nvpair id="ClusterIPClone-meta_attributes-globally-unique" name="globally-unique" value="true"/>
+          <nvpair id="ClusterIPClone-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ClusterIPClone-meta_attributes-clone-node-max" name="clone-node-max" value="2"/>
+          <nvpair id="ClusterIPClone-meta_attributes-interleave" name="interleave" value="false"/>
+          <nvpair id="ClusterIPClone-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <group id="IPGroup">
+          <primitive class="ocf" id="ClusterIP" provider="heartbeat" type="IPaddr2">
+            <instance_attributes id="ClusterIP-instance_attributes">
+              <nvpair id="ClusterIP-instance_attributes-ip" name="ip" value="129.236.252.13"/>
+              <nvpair id="ClusterIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+              <nvpair id="ClusterIP-instance_attributes-nic" name="nic" value="eth0"/>
+            </instance_attributes>
+            <operations>
+              <op id="ClusterIP-monitor-30s" interval="30s" name="monitor"/>
+            </operations>
+            <meta_attributes id="ClusterIP-meta_attributes">
+              <nvpair id="ClusterIP-meta_attributes-resource-stickiness" name="resource-stickiness" value="0"/>
+            </meta_attributes>
+          </primitive>
+          <primitive class="ocf" id="ClusterIPLocal" provider="heartbeat" type="IPaddr2">
+            <instance_attributes id="ClusterIPLocal-instance_attributes">
+              <nvpair id="ClusterIPLocal-instance_attributes-ip" name="ip" value="10.44.7.13"/>
+              <nvpair id="ClusterIPLocal-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+              <nvpair id="ClusterIPLocal-instance_attributes-nic" name="nic" value="eth2"/>
+            </instance_attributes>
+            <operations>
+              <op id="ClusterIPLocal-monitor-31s" interval="31s" name="monitor"/>
+            </operations>
+            <meta_attributes id="ClusterIPLocal-meta_attributes">
+              <nvpair id="ClusterIPLocal-meta_attributes-resource-stickiness" name="resource-stickiness" value="0"/>
+            </meta_attributes>
+          </primitive>
+          <primitive class="ocf" id="ClusterIPSandbox" provider="heartbeat" type="IPaddr2">
+            <instance_attributes id="ClusterIPSandbox-instance_attributes">
+              <nvpair id="ClusterIPSandbox-instance_attributes-ip" name="ip" value="10.43.7.13"/>
+              <nvpair id="ClusterIPSandbox-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+              <nvpair id="ClusterIPSandbox-instance_attributes-nic" name="nic" value="eth0.3"/>
+            </instance_attributes>
+            <operations>
+              <op id="ClusterIPSandbox-monitor-32s" interval="32s" name="monitor"/>
+            </operations>
+            <meta_attributes id="ClusterIPSandbox-meta_attributes">
+              <nvpair id="ClusterIPSandbox-meta_attributes-resource-stickiness" name="resource-stickiness" value="0"/>
+            </meta_attributes>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="LibvirtdClone">
+        <meta_attributes id="LibvirtdClone-meta_attributes">
+          <nvpair id="LibvirtdClone-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <group id="LibvirtdGroup">
+          <primitive class="ocf" id="SymlinkEtcLibvirt" provider="heartbeat" type="symlink">
+            <operations>
+              <op id="SymlinkEtcLibvirt-monitor-60" interval="60" name="monitor" timeout="15"/>
+              <op id="SymlinkEtcLibvirt-start-0" interval="0" name="start" timeout="15"/>
+              <op id="SymlinkEtcLibvirt-stop-0" interval="0" name="stop" timeout="15"/>
+            </operations>
+            <instance_attributes id="SymlinkEtcLibvirt-instance_attributes">
+              <nvpair id="SymlinkEtcLibvirt-instance_attributes-link" name="link" value="/etc/libvirt"/>
+              <nvpair id="SymlinkEtcLibvirt-instance_attributes-target" name="target" value="/var/nevis/etc/libvirt"/>
+              <nvpair id="SymlinkEtcLibvirt-instance_attributes-backup_suffix" name="backup_suffix" value=".original"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="lsb" id="Libvirtd" type="libvirtd">
+            <operations>
+              <op id="Libvirtd-monitor-30s" interval="30s" name="monitor"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="TftpClone">
+        <meta_attributes id="TftpClone-meta_attributes">
+          <nvpair id="TftpClone-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <group id="TftpGroup">
+          <primitive class="ocf" description="/etc/xinetd.d/tftp" id="SymlinkTftp" provider="heartbeat" type="symlink">
+            <operations>
+              <op id="SymlinkTftp-monitor-60" interval="60" name="monitor" timeout="15"/>
+              <op id="SymlinkTftp-start-0" interval="0" name="start" timeout="15"/>
+              <op id="SymlinkTftp-stop-0" interval="0" name="stop" timeout="15"/>
+            </operations>
+            <instance_attributes id="SymlinkTftp-instance_attributes">
+              <nvpair id="SymlinkTftp-instance_attributes-link" name="link" value="/etc/xinetd.d/tftp"/>
+              <nvpair id="SymlinkTftp-instance_attributes-target" name="target" value="/var/nevis/etc/xinetd.d/tftp"/>
+              <nvpair id="SymlinkTftp-instance_attributes-backup_suffix" name="backup_suffix" value=".original"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="lsb" description="Used for tftp" id="Xinetd" type="xinetd"/>
+        </group>
+      </clone>
+      <clone id="ExportsClone">
+        <meta_attributes id="ExportsClone-meta_attributes">
+          <nvpair id="ExportsClone-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <group id="ExportsGroup">
+          <primitive class="ocf" description="Export all of /mail to mail server" id="ExportMail" provider="heartbeat" type="exportfs">
+            <operations>
+              <op id="ExportMail-start-0" interval="0" name="start" timeout="40"/>
+              <op id="ExportMail-stop-0" interval="0" name="stop" timeout="120"/>
+            </operations>
+            <instance_attributes id="ExportMail-instance_attributes">
+              <nvpair id="ExportMail-instance_attributes-clientspec" name="clientspec" value="franklin.nevis.columbia.edu"/>
+              <nvpair id="ExportMail-instance_attributes-directory" name="directory" value="/mail"/>
+              <nvpair id="ExportMail-instance_attributes-fsid" name="fsid" value="30"/>
+              <nvpair id="ExportMail-instance_attributes-options" name="options" value="rw,no_root_squash,async"/>
+              <nvpair id="ExportMail-instance_attributes-rmtab_backup" name="rmtab_backup" value="none"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="ocf" id="ExportMailInbox" provider="heartbeat" type="exportfs">
+            <operations>
+              <op id="ExportMailInbox-start-0" interval="0" name="start" timeout="40"/>
+              <op id="ExportMailInbox-stop-0" interval="0" name="stop" timeout="120"/>
+            </operations>
+            <instance_attributes id="ExportMailInbox-instance_attributes">
+              <nvpair id="ExportMailInbox-instance_attributes-clientspec" name="clientspec" value="@linux-hosts"/>
+              <nvpair id="ExportMailInbox-instance_attributes-directory" name="directory" value="/mail/inbox"/>
+              <nvpair id="ExportMailInbox-instance_attributes-fsid" name="fsid" value="40"/>
+              <nvpair id="ExportMailInbox-instance_attributes-options" name="options" value="rw,no_root_squash,async,nohide"/>
+              <nvpair id="ExportMailInbox-instance_attributes-rmtab_backup" name="rmtab_backup" value="none"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="ocf" id="ExportMailFolders" provider="heartbeat" type="exportfs">
+            <operations>
+              <op id="ExportMailFolders-start-0" interval="0" name="start" timeout="40"/>
+              <op id="ExportMailFolders-stop-0" interval="0" name="stop" timeout="120"/>
+            </operations>
+            <instance_attributes id="ExportMailFolders-instance_attributes">
+              <nvpair id="ExportMailFolders-instance_attributes-clientspec" name="clientspec" value="@linux-hosts"/>
+              <nvpair id="ExportMailFolders-instance_attributes-directory" name="directory" value="/mail/folders"/>
+              <nvpair id="ExportMailFolders-instance_attributes-fsid" name="fsid" value="50"/>
+              <nvpair id="ExportMailFolders-instance_attributes-options" name="options" value="rw,no_root_squash,async,nohide"/>
+              <nvpair id="ExportMailFolders-instance_attributes-rmtab_backup" name="rmtab_backup" value="none"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="ocf" id="ExportMailForward" provider="heartbeat" type="exportfs">
+            <operations>
+              <op id="ExportMailForward-start-0" interval="0" name="start" timeout="40"/>
+              <op id="ExportMailForward-stop-0" interval="0" name="stop" timeout="120"/>
+            </operations>
+            <instance_attributes id="ExportMailForward-instance_attributes">
+              <nvpair id="ExportMailForward-instance_attributes-clientspec" name="clientspec" value="@linux-hosts"/>
+              <nvpair id="ExportMailForward-instance_attributes-directory" name="directory" value="/mail/forward"/>
+              <nvpair id="ExportMailForward-instance_attributes-fsid" name="fsid" value="60"/>
+              <nvpair id="ExportMailForward-instance_attributes-options" name="options" value="rw,no_root_squash,async,nohide"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="ocf" id="ExportMailProcmailrc" provider="heartbeat" type="exportfs">
+            <operations>
+              <op id="ExportMailProcmailrc-start-0" interval="0" name="start" timeout="40"/>
+              <op id="ExportMailProcmailrc-stop-0" interval="0" name="stop" timeout="120"/>
+            </operations>
+            <instance_attributes id="ExportMailProcmailrc-instance_attributes">
+              <nvpair id="ExportMailProcmailrc-instance_attributes-clientspec" name="clientspec" value="@linux-hosts"/>
+              <nvpair id="ExportMailProcmailrc-instance_attributes-directory" name="directory" value="/mail/procmailrc"/>
+              <nvpair id="ExportMailProcmailrc-instance_attributes-fsid" name="fsid" value="70"/>
+              <nvpair id="ExportMailProcmailrc-instance_attributes-options" name="options" value="rw,no_root_squash,async,nohide"/>
+              <nvpair id="ExportMailProcmailrc-instance_attributes-rmtab_backup" name="rmtab_backup" value="none"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="ocf" description="Site-wide applications installed in /usr/nevis" id="ExportUsrNevis" provider="heartbeat" type="exportfs">
+            <operations>
+              <op id="ExportUsrNevis-start-0" interval="0" name="start" timeout="40"/>
+              <op id="ExportUsrNevis-stop-0" interval="0" name="stop" timeout="120"/>
+            </operations>
+            <instance_attributes id="ExportUsrNevis-instance_attributes">
+              <nvpair id="ExportUsrNevis-instance_attributes-clientspec" name="clientspec" value="*.nevis.columbia.edu"/>
+              <nvpair id="ExportUsrNevis-instance_attributes-directory" name="directory" value="/usr/nevis"/>
+              <nvpair id="ExportUsrNevis-instance_attributes-fsid" name="fsid" value="20"/>
+              <nvpair id="ExportUsrNevis-instance_attributes-options" name="options" value="ro,no_root_squash,async"/>
+              <nvpair id="ExportUsrNevis-instance_attributes-rmtab_backup" name="rmtab_backup" value="none"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="ocf" description="Include potential off-site systems, e.g., the Annex" id="ExportUsrNevisOffsite" provider="heartbeat" type="exportfs">
+            <operations>
+              <op id="ExportUsrNevisOffsite-start-0" interval="0" name="start" timeout="40"/>
+              <op id="ExportUsrNevisOffsite-stop-0" interval="0" name="stop" timeout="120"/>
+            </operations>
+            <instance_attributes id="ExportUsrNevisOffsite-instance_attributes">
+              <nvpair id="ExportUsrNevisOffsite-instance_attributes-clientspec" name="clientspec" value="@linux-hosts"/>
+              <nvpair id="ExportUsrNevisOffsite-instance_attributes-directory" name="directory" value="/usr/nevis"/>
+              <nvpair id="ExportUsrNevisOffsite-instance_attributes-fsid" name="fsid" value="25"/>
+              <nvpair id="ExportUsrNevisOffsite-instance_attributes-options" name="options" value="ro,no_root_squash,async"/>
+              <nvpair id="ExportUsrNevisOffsite-instance_attributes-rmtab_backup" name="rmtab_backup" value="none"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="ocf" description="Export /var/nevis/www to virtual machines that need it" id="ExportWWW" provider="heartbeat" type="exportfs">
+            <operations>
+              <op id="ExportWWW-start-0" interval="0" name="start" timeout="40"/>
+              <op id="ExportWWW-stop-0" interval="0" name="stop" timeout="120"/>
+            </operations>
+            <instance_attributes id="ExportWWW-instance_attributes">
+              <nvpair id="ExportWWW-instance_attributes-clientspec" name="clientspec" value="@www-hosts"/>
+              <nvpair id="ExportWWW-instance_attributes-directory" name="directory" value="/var/nevis/www"/>
+              <nvpair id="ExportWWW-instance_attributes-fsid" name="fsid" value="10"/>
+              <nvpair id="ExportWWW-instance_attributes-options" name="options" value="rw,no_root_squash,async"/>
+              <nvpair id="ExportWWW-instance_attributes-rmtab_backup" name="rmtab_backup" value="none"/>
+            </instance_attributes>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="FilesystemClone">
+        <meta_attributes id="FilesystemClone-meta_attributes">
+          <nvpair id="FilesystemClone-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="FilesystemClone-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <group id="FilesystemGroup">
+          <primitive class="ocf" id="AdminLvm" provider="heartbeat" type="LVM">
+            <instance_attributes id="AdminLvm-instance_attributes">
+              <nvpair id="AdminLvm-instance_attributes-volgrpname" name="volgrpname" value="ADMIN"/>
+            </instance_attributes>
+            <operations>
+              <op id="AdminLvm-monitor-30" interval="30" name="monitor" timeout="100">
+                <instance_attributes id="AdminLvm-monitor-30-instance_attributes">
+                  <nvpair id="AdminLvm-monitor-30-instance_attributes-depth" name="depth" value="0"/>
+                </instance_attributes>
+              </op>
+              <op id="AdminLvm-start-0" interval="0" name="start" timeout="30s"/>
+              <op id="AdminLvm-stop-0" interval="0" name="stop" timeout="30s"/>
+            </operations>
+          </primitive>
+          <primitive class="ocf" id="FSUsrNevis" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="FSUsrNevis-instance_attributes">
+              <nvpair id="FSUsrNevis-instance_attributes-device" name="device" value="/dev/mapper/ADMIN-usr"/>
+              <nvpair id="FSUsrNevis-instance_attributes-directory" name="directory" value="/usr/nevis"/>
+              <nvpair id="FSUsrNevis-instance_attributes-fstype" name="fstype" value="gfs2"/>
+              <nvpair id="FSUsrNevis-instance_attributes-options" name="options" value="defaults,noatime,nodiratime"/>
+            </instance_attributes>
+            <operations>
+              <op id="FSUsrNevis-monitor-20" interval="20" name="monitor" timeout="40">
+                <instance_attributes id="FSUsrNevis-monitor-20-instance_attributes">
+                  <nvpair id="FSUsrNevis-monitor-20-instance_attributes-depth" name="depth" value="0"/>
+                </instance_attributes>
+              </op>
+              <op id="FSUsrNevis-start-0" interval="0" name="start" timeout="60"/>
+              <op id="FSUsrNevis-stop-0" interval="0" name="stop" timeout="60"/>
+            </operations>
+          </primitive>
+          <primitive class="ocf" id="FSVarNevis" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="FSVarNevis-instance_attributes">
+              <nvpair id="FSVarNevis-instance_attributes-device" name="device" value="/dev/mapper/ADMIN-var"/>
+              <nvpair id="FSVarNevis-instance_attributes-directory" name="directory" value="/var/nevis"/>
+              <nvpair id="FSVarNevis-instance_attributes-fstype" name="fstype" value="gfs2"/>
+              <nvpair id="FSVarNevis-instance_attributes-options" name="options" value="defaults,noatime,nodiratime"/>
+            </instance_attributes>
+            <operations>
+              <op id="FSVarNevis-monitor-20" interval="20" name="monitor" timeout="40">
+                <instance_attributes id="FSVarNevis-monitor-20-instance_attributes">
+                  <nvpair id="FSVarNevis-monitor-20-instance_attributes-depth" name="depth" value="0"/>
+                </instance_attributes>
+              </op>
+              <op id="FSVarNevis-start-0" interval="0" name="start" timeout="60"/>
+              <op id="FSVarNevis-stop-0" interval="0" name="stop" timeout="60"/>
+            </operations>
+          </primitive>
+          <primitive class="ocf" id="FSVirtualMachines" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="FSVirtualMachines-instance_attributes">
+              <nvpair id="FSVirtualMachines-instance_attributes-device" name="device" value="/dev/mapper/ADMIN-xen"/>
+              <nvpair id="FSVirtualMachines-instance_attributes-directory" name="directory" value="/xen"/>
+              <nvpair id="FSVirtualMachines-instance_attributes-fstype" name="fstype" value="gfs2"/>
+              <nvpair id="FSVirtualMachines-instance_attributes-options" name="options" value="defaults,noatime,nodiratime"/>
+            </instance_attributes>
+            <operations>
+              <op id="FSVirtualMachines-monitor-20" interval="20" name="monitor" timeout="40">
+                <instance_attributes id="FSVirtualMachines-monitor-20-instance_attributes">
+                  <nvpair id="FSVirtualMachines-monitor-20-instance_attributes-depth" name="depth" value="0"/>
+                </instance_attributes>
+              </op>
+              <op id="FSVirtualMachines-start-0" interval="0" name="start" timeout="60"/>
+              <op id="FSVirtualMachines-stop-0" interval="0" name="stop" timeout="60"/>
+            </operations>
+          </primitive>
+          <primitive class="ocf" id="FSMail" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="FSMail-instance_attributes">
+              <nvpair id="FSMail-instance_attributes-device" name="device" value="/dev/mapper/ADMIN-mail"/>
+              <nvpair id="FSMail-instance_attributes-directory" name="directory" value="/mail"/>
+              <nvpair id="FSMail-instance_attributes-fstype" name="fstype" value="gfs2"/>
+              <nvpair id="FSMail-instance_attributes-options" name="options" value="defaults,noatime,nodiratime"/>
+            </instance_attributes>
+            <operations>
+              <op id="FSMail-monitor-20" interval="20" name="monitor" timeout="40">
+                <instance_attributes id="FSMail-monitor-20-instance_attributes">
+                  <nvpair id="FSMail-monitor-20-instance_attributes-depth" name="depth" value="0"/>
+                </instance_attributes>
+              </op>
+              <op id="FSMail-start-0" interval="0" name="start" timeout="60"/>
+              <op id="FSMail-stop-0" interval="0" name="stop" timeout="60"/>
+            </operations>
+          </primitive>
+          <primitive class="ocf" id="FSWork" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="FSWork-instance_attributes">
+              <nvpair id="FSWork-instance_attributes-device" name="device" value="/dev/mapper/ADMIN-work"/>
+              <nvpair id="FSWork-instance_attributes-directory" name="directory" value="/work"/>
+              <nvpair id="FSWork-instance_attributes-fstype" name="fstype" value="gfs2"/>
+              <nvpair id="FSWork-instance_attributes-options" name="options" value="defaults,noatime,nodiratime"/>
+            </instance_attributes>
+            <operations>
+              <op id="FSWork-monitor-20" interval="20" name="monitor" timeout="40">
+                <instance_attributes id="FSWork-monitor-20-instance_attributes">
+                  <nvpair id="FSWork-monitor-20-instance_attributes-depth" name="depth" value="0"/>
+                </instance_attributes>
+              </op>
+              <op id="FSWork-start-0" interval="0" name="start" timeout="60"/>
+              <op id="FSWork-stop-0" interval="0" name="stop" timeout="60"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+      <primitive class="ocf" id="KVM-guest" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="KVM-guest-instance_attributes">
+          <nvpair id="KVM-guest-instance_attributes-config" name="config" value="/etc/libvirt/qemu/KVM-guest.xml"/>
+          <nvpair id="KVM-guest-instance_attributes-migration_transport" name="migration_transport" value="ssh"/>
+        </instance_attributes>
+        <operations>
+          <op id="KVM-guest-start-0" interval="0" name="start" timeout="90s"/>
+          <op id="KVM-guest-stop-0" interval="0" name="stop" timeout="90s"/>
+        </operations>
+        <meta_attributes id="KVM-guest-meta_attributes">
+          <nvpair id="KVM-guest-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="Proxy" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="Proxy-instance_attributes">
+          <nvpair id="Proxy-instance_attributes-config" name="config" value="/etc/libvirt/qemu/proxy.xml"/>
+          <nvpair id="Proxy-instance_attributes-migration_transport" name="migration_transport" value="ssh"/>
+        </instance_attributes>
+        <operations>
+          <op id="Proxy-start-0" interval="0" name="start" timeout="90s"/>
+          <op id="Proxy-stop-0" interval="0" name="stop" timeout="90s"/>
+        </operations>
+        <meta_attributes id="Proxy-meta_attributes">
+          <nvpair id="Proxy-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="Proxy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="StonithHypatiaLocation" node="hypatia-corosync.nevis.columbia.edu" rsc="StonithHypatia" score="-INFINITY"/>
+      <rsc_location id="StonithOrestesLocation" node="orestes-corosync.nevis.columbia.edu" rsc="StonithOrestes" score="-INFINITY"/>
+      <rsc_colocation id="Cups_With_Filesystem" rsc="CupsClone" score="INFINITY" with-rsc="FilesystemClone"/>
+      <rsc_colocation id="Dhcp_With_Filesystem" rsc="DhcpGroup" score="INFINITY" with-rsc="FilesystemClone"/>
+      <rsc_colocation id="Exports_With_Filesystem" rsc="ExportsClone" score="INFINITY" with-rsc="FilesystemClone"/>
+      <rsc_colocation id="IP_With_Filesystem" rsc="IPClone" score="INFINITY" with-rsc="FilesystemClone"/>
+      <rsc_colocation id="Libvirtd_With_Filesystem" rsc="LibvirtdClone" score="INFINITY" with-rsc="FilesystemClone"/>
+      <rsc_colocation id="Temperature_With_Filesystem" rsc="CronAmbientTemperature" score="INFINITY" with-rsc="FilesystemClone"/>
+      <rsc_colocation id="Tftp_With_Filesystem" rsc="TftpClone" score="INFINITY" with-rsc="FilesystemClone"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Cups" score="INFINITY" then="CupsClone"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Dhcp" score="INFINITY" then="DhcpGroup"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Exports" score="INFINITY" then="ExportsClone"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_IP" score="INFINITY" then="IPClone"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Libvirtd" score="INFINITY" then="LibvirtdClone"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Temperature" score="INFINITY" then="CronAmbientTemperature"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Tftp" score="INFINITY" then="TftpClone"/>
+      <rsc_colocation id="Filesystem_With_Admin" rsc="FilesystemClone" score="INFINITY" with-rsc="AdminClone" with-rsc-role="Master"/>
+      <rsc_order first="AdminClone" first-action="promote" id="Admin_Before_Filesystem" score="INFINITY" then="FilesystemClone" then-action="start"/>
+      <rsc_colocation id="KVM-guest_With_Libvirtd" rsc="KVM-guest" score="INFINITY" with-rsc="LibvirtdClone"/>
+      <rsc_colocation id="Proxy_With_Libvirtd" rsc="Proxy" score="INFINITY" with-rsc="LibvirtdClone"/>
+      <rsc_order first="LibvirtdClone" id="Libvirtd_Before_KVM-guest" score="INFINITY" then="KVM-guest"/>
+      <rsc_order first="LibvirtdClone" id="Libvirtd_Before_Proxy" score="INFINITY" then="Proxy"/>
+      <rsc_location id="cli-prefer-Proxy" rsc="Proxy">
+        <rule id="cli-prefer-rule-Proxy" score="INFINITY">
+          <expression attribute="#uname" id="cli-prefer-expr-Proxy" operation="eq" value="orestes-corosync.nevis.columbia.edu"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair id="rsc-options-resource-stickiness" name="resource-stickiness" value="100"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="hypatia-corosync.nevis.columbia.edu" uname="hypatia-corosync.nevis.columbia.edu" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="hypatia-corosync.nevis.columbia.edu">
+        <lrm_resources>
+          <lrm_resource id="StonithHypatia" type="fence_nut" class="stonith">
+            <lrm_rsc_op id="StonithHypatia_last_0" operation_key="StonithHypatia_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="6:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;6:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="10" queue-time="0" op-digest="227416e76c8c671a7901f7a948fa2467"/>
+          </lrm_resource>
+          <lrm_resource id="StonithOrestes" type="fence_nut" class="stonith">
+            <lrm_rsc_op id="StonithOrestes_last_0" operation_key="StonithOrestes_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="7:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;7:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="10" queue-time="0" op-digest="632e3799cd08458be76cafea84b29a65"/>
+          </lrm_resource>
+          <lrm_resource id="CronAmbientTemperature" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="CronAmbientTemperature_last_0" operation_key="CronAmbientTemperature_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="5:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;5:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="50" queue-time="0" op-digest="8ae2511d57752cf4974d547f238da232"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkSysconfigDhcpd" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkSysconfigDhcpd_last_0" operation_key="SymlinkSysconfigDhcpd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="9:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;9:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="40" queue-time="0" op-digest="0737b297c40019810234acab33c21d01"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkDhcpdConf" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkDhcpdConf_last_0" operation_key="SymlinkDhcpdConf_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="8:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;8:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="40" queue-time="0" op-digest="dfb64cd6cf97a0501c094c0ad739dd92"/>
+          </lrm_resource>
+          <lrm_resource id="AdminDrbd:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="AdminDrbd:0_last_0" operation_key="AdminDrbd:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="4:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;4:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="110" queue-time="0" op-digest="067467b2a7cc085f48603c96c87ba821"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIPLocal:1" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIPLocal:1_last_0" operation_key="ClusterIPLocal:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="20:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;20:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="90" queue-time="0" op-digest="2f052ef9ce06808e9f1121e30521ea16"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP:1" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP:1_last_0" operation_key="ClusterIP:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="19:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;19:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="100" queue-time="0" op-digest="0ed818b9363ceb9720651540f5d895c9"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIPSandbox:1" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIPSandbox:1_last_0" operation_key="ClusterIPSandbox:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="21:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;21:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="90" queue-time="0" op-digest="991492cb05a4146078f5e38f8d4e5b71"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkDhcpdLeases" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkDhcpdLeases_last_0" operation_key="SymlinkDhcpdLeases_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="10:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;10:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="60" queue-time="1000" op-digest="a4f756ea393c1eef9375572013235bb0"/>
+          </lrm_resource>
+          <lrm_resource id="Dhcpd" type="dhcpd" class="lsb">
+            <lrm_rsc_op id="Dhcpd_last_0" operation_key="Dhcpd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="11:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;11:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="50" queue-time="1000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkUsrShareCups:0" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkUsrShareCups:0_last_0" operation_key="SymlinkUsrShareCups:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="13:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;13:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="40" queue-time="1010" op-digest="df233bc9ad971b4ff406f46faea765b2"/>
+          </lrm_resource>
+          <lrm_resource id="DhcpIP" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="DhcpIP_last_0" operation_key="DhcpIP_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="12:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;12:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="70" queue-time="1010" op-digest="acf733c952f95509ada465feb736a85d"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkCupsdConf:0" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkCupsdConf:0_last_0" operation_key="SymlinkCupsdConf:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="14:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;14:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1333121085" last-rc-change="1333121085" exec-time="30" queue-time="2010" op-digest="2a9ca867e4440b5909e5a1a599b4f6d4"/>
+          </lrm_resource>
+          <lrm_resource id="Cups:0" type="cups" class="lsb">
+            <lrm_rsc_op id="Cups:0_last_0" operation_key="Cups:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="15:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;15:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1333121085" last-rc-change="1333121085" exec-time="70" queue-time="2010" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP:0" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP:0_last_0" operation_key="ClusterIP:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="16:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;16:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1333121085" last-rc-change="1333121085" exec-time="90" queue-time="2000" op-digest="0ed818b9363ceb9720651540f5d895c9"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIPLocal:0" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIPLocal:0_last_0" operation_key="ClusterIPLocal:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="17:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;17:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1333121085" last-rc-change="1333121085" exec-time="100" queue-time="2000" op-digest="2f052ef9ce06808e9f1121e30521ea16"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIPSandbox:0" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIPSandbox:0_last_0" operation_key="ClusterIPSandbox:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="18:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;18:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1333121086" last-rc-change="1333121086" exec-time="100" queue-time="3000" op-digest="991492cb05a4146078f5e38f8d4e5b71"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="hypatia-corosync.nevis.columbia.edu">
+        <instance_attributes id="status-hypatia-corosync.nevis.columbia.edu">
+          <nvpair id="status-hypatia-corosync.nevis.columbia.edu-master-AdminDrbd.0" name="master-AdminDrbd:0" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="orestes-corosync.nevis.columbia.edu" uname="orestes-corosync.nevis.columbia.edu" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="orestes-corosync.nevis.columbia.edu">
+        <lrm_resources>
+          <lrm_resource id="StonithHypatia" type="fence_nut" class="stonith">
+            <lrm_rsc_op id="StonithHypatia_last_0" operation_key="StonithHypatia_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="45:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;45:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="0" queue-time="0" op-digest="227416e76c8c671a7901f7a948fa2467"/>
+          </lrm_resource>
+          <lrm_resource id="StonithOrestes" type="fence_nut" class="stonith">
+            <lrm_rsc_op id="StonithOrestes_last_0" operation_key="StonithOrestes_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="46:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;46:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="10" queue-time="0" op-digest="632e3799cd08458be76cafea84b29a65"/>
+          </lrm_resource>
+          <lrm_resource id="CronAmbientTemperature" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="CronAmbientTemperature_last_0" operation_key="CronAmbientTemperature_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="44:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;44:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="150" queue-time="0" op-digest="8ae2511d57752cf4974d547f238da232"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkDhcpdConf" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkDhcpdConf_last_0" operation_key="SymlinkDhcpdConf_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="47:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;47:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="140" queue-time="0" op-digest="dfb64cd6cf97a0501c094c0ad739dd92"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkSysconfigDhcpd" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkSysconfigDhcpd_last_0" operation_key="SymlinkSysconfigDhcpd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="48:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;48:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="140" queue-time="0" op-digest="0737b297c40019810234acab33c21d01"/>
+          </lrm_resource>
+          <lrm_resource id="AdminDrbd:1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="AdminDrbd:1_last_0" operation_key="AdminDrbd:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="43:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;43:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1333121083" last-rc-change="1333121083" exec-time="240" queue-time="0" op-digest="067467b2a7cc085f48603c96c87ba821"/>
+          </lrm_resource>
+          <lrm_resource id="Dhcpd" type="dhcpd" class="lsb">
+            <lrm_rsc_op id="Dhcpd_last_0" operation_key="Dhcpd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="50:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;50:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="30" queue-time="1000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkDhcpdLeases" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkDhcpdLeases_last_0" operation_key="SymlinkDhcpdLeases_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="49:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;49:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="30" queue-time="1000" op-digest="a4f756ea393c1eef9375572013235bb0"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkUsrShareCups:0" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkUsrShareCups:0_last_0" operation_key="SymlinkUsrShareCups:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="52:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;52:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="40" queue-time="1000" op-digest="df233bc9ad971b4ff406f46faea765b2"/>
+          </lrm_resource>
+          <lrm_resource id="DhcpIP" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="DhcpIP_last_0" operation_key="DhcpIP_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="51:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;51:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="140" queue-time="1000" op-digest="acf733c952f95509ada465feb736a85d"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIPLocal:1" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIPLocal:1_last_0" operation_key="ClusterIPLocal:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="59:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;59:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="120" queue-time="1000" op-digest="2f052ef9ce06808e9f1121e30521ea16"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP:1" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP:1_last_0" operation_key="ClusterIP:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="58:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;58:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="120" queue-time="1000" op-digest="0ed818b9363ceb9720651540f5d895c9"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIPSandbox:1" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIPSandbox:1_last_0" operation_key="ClusterIPSandbox:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="60:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;60:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1333121084" last-rc-change="1333121084" exec-time="110" queue-time="1000" op-digest="991492cb05a4146078f5e38f8d4e5b71"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkCupsdConf:0" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkCupsdConf:0_last_0" operation_key="SymlinkCupsdConf:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="53:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;53:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1333121085" last-rc-change="1333121085" exec-time="50" queue-time="2000" op-digest="2a9ca867e4440b5909e5a1a599b4f6d4"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIPLocal:0" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIPLocal:0_last_0" operation_key="ClusterIPLocal:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="56:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;56:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1333121085" last-rc-change="1333121085" exec-time="90" queue-time="2000" op-digest="2f052ef9ce06808e9f1121e30521ea16"/>
+          </lrm_resource>
+          <lrm_resource id="Cups:0" type="cups" class="lsb">
+            <lrm_rsc_op id="Cups:0_last_0" operation_key="Cups:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="54:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;54:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1333121085" last-rc-change="1333121085" exec-time="90" queue-time="2010" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP:0" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP:0_last_0" operation_key="ClusterIP:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="55:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;55:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1333121085" last-rc-change="1333121085" exec-time="90" queue-time="2000" op-digest="0ed818b9363ceb9720651540f5d895c9"/>
+          </lrm_resource>
+          <lrm_resource id="SymlinkEtcLibvirt:0" type="symlink" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SymlinkEtcLibvirt:0_last_0" operation_key="SymlinkEtcLibvirt:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="61:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;61:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="20" rc-code="7" op-status="0" interval="0" last-run="1333121085" last-rc-change="1333121085" exec-time="50" queue-time="2000" op-digest="44baa59366daf4f705f4aad4daf5e6ba"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIPSandbox:0" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIPSandbox:0_last_0" operation_key="ClusterIPSandbox:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="57:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" transition-magic="0:7;57:0:7:d9bf5a48-c7c0-4624-9c19-a08811ad1a6d" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1333121086" last-rc-change="1333121086" exec-time="90" queue-time="3000" op-digest="991492cb05a4146078f5e38f8d4e5b71"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="orestes-corosync.nevis.columbia.edu">
+        <instance_attributes id="status-orestes-corosync.nevis.columbia.edu">
+          <nvpair id="status-orestes-corosync.nevis.columbia.edu-master-AdminDrbd.1" name="master-AdminDrbd:1" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
