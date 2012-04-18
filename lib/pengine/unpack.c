@@ -1705,6 +1705,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
     const char *id = NULL;
     const char *key = NULL;
     const char *task = NULL;
+    const char *task_key = NULL;
     const char *magic = NULL;
     const char *actual_rc = NULL;
 
@@ -1733,6 +1734,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
 
     id = ID(xml_op);
     task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    task_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
     task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
     op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
@@ -1948,7 +1950,8 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
 
     if (task_status_i == LRM_OP_ERROR
         || task_status_i == LRM_OP_TIMEOUT || task_status_i == LRM_OP_NOTSUPPORTED) {
-        action = custom_action(rsc, crm_strdup(id), task, NULL, TRUE, FALSE, data_set);
+        const char *action_key = task_key ? task_key : id;
+        action = custom_action(rsc, crm_strdup(action_key), task, NULL, TRUE, FALSE, data_set);
         if (expired) {
             crm_notice("Ignoring expired failure (calculated) %s (rc=%d, magic=%s) on %s",
                        id, actual_rc_i, magic, node->details->uname);
