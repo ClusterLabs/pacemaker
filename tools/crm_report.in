@@ -309,11 +309,11 @@ do_cts() {
 	
 	if [ x$end_test = x ]; then
 	    msg="Extracting test $start_test"
-	    label="CTS-`date +"%a-%d-%b-%Y"`-$start_test"
+	    label="CTS-$start_test-`date +"%d-%b-%Y"`"
 	    end_test=`expr $start_test + 1`
 	else
 	    msg="Extracting tests $start_test to $end_test"
-	    label="CTS-`date +"%a-%d-%b-%Y"`-$start_test-$end_test"
+	    label="CTS-$start_test-$end_test-`date +"%d-%b-%Y"`"
 	    end_test=`expr $end_test + 1`
 	fi
 
