@@ -326,6 +326,10 @@ send_ais_text(int class, const char *data,
 
         errno = 0;
         switch (cluster_type) {
+            case pcmk_cluster_corosync:
+                CRM_ASSERT(FALSE/*Not supported here*/);
+                break;
+
             case pcmk_cluster_classic_ais:
                 rc = coroipcc_msg_send_reply_receive(ais_ipc_handle, &iov, 1, buf, buf_len);
                 header = (cs_ipc_header_response_t *) buf;
