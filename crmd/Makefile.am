@@ -43,7 +43,7 @@ crmd_SOURCES	= main.c crmd.c corosync.c					\
 		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
 
 if BUILD_HEARTBEAT_SUPPORT
-crmd_SOURCES += ccm.c
+crmd_SOURCES += heartbeat.c
 endif
 
 crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
