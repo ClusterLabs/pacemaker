@@ -287,8 +287,7 @@ docdir=%{pcmk_docdir} %{configure}                 \
         %{?with_gcov:        --with-gcov}          \
         --with-initdir=%{_initrddir}               \
         --localstatedir=%{_var}                    \
-        --with-version=%{version}-%{release}       \
-        --enable-fatal-warnings=no
+        --with-version=%{version}-%{release}
 
 make %{_smp_mflags} V=1 docdir=%{pcmk_docdir} all
 
