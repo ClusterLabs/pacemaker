@@ -4,12 +4,12 @@
         <indexterm><primary>Resources</primary><secondary>Groups</secondary></indexterm>
         Groups - A Syntactic Shortcut</title>
       <para>
-	One of the most common elements of a cluster is a set of resources that need to be located together, start sequentially, and stop in the reverse order.
-	To simplify this configuration we support the concept of groups.
+        One of the most common elements of a cluster is a set of resources that need to be located together, start sequentially, and stop in the reverse order.
+        To simplify this configuration we support the concept of groups.
       </para>
       <example>
-	<title>An example group</title>
-	<programlisting><![CDATA[ <group id="shortcut">
+        <title>An example group</title>
+        <programlisting><![CDATA[ <group id="shortcut">
    <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
     <instance_attributes id="params-public-ip">
        <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
@@ -19,25 +19,25 @@
   </group> ]]> </programlisting>
       </example>
       <para>
-	Although the example above contains only two resources, there is no limit to the number of resources a group can contain.
-	The example is also sufficient to explain the fundamental properties of a group:
+        Although the example above contains only two resources, there is no limit to the number of resources a group can contain.
+        The example is also sufficient to explain the fundamental properties of a group:
       </para>
       <itemizedlist spacing="compact">
-	<listitem><para>Resources are started in the order they appear in (<literal>Public-IP</literal> first, then <literal>Email</literal>)</para></listitem>
-	<listitem><para>Resources are stopped in the reverse order to which they appear in (<literal>Email</literal> first, then <literal>Public-IP</literal>)</para></listitem>
-	<listitem>
-	  <para>If a resource in the group can't run anywhere, then nothing after that is allowed to run, too.
-	    <itemizedlist spacing="compact">
-	      <listitem><para>If <literal>Public-IP</literal> can't run anywhere, neither can <literal>Email</literal>;</para></listitem>
-	      <listitem><para>but if <literal>Email</literal> can't run anywhere, this does not affect <literal>Public-IP</literal> in any way</para></listitem>
-	    </itemizedlist>
-	  </para>
-	</listitem>
+        <listitem><para>Resources are started in the order they appear in (<literal>Public-IP</literal> first, then <literal>Email</literal>)</para></listitem>
+        <listitem><para>Resources are stopped in the reverse order to which they appear in (<literal>Email</literal> first, then <literal>Public-IP</literal>)</para></listitem>
+        <listitem>
+          <para>If a resource in the group can't run anywhere, then nothing after that is allowed to run, too.
+            <itemizedlist spacing="compact">
+              <listitem><para>If <literal>Public-IP</literal> can't run anywhere, neither can <literal>Email</literal>;</para></listitem>
+              <listitem><para>but if <literal>Email</literal> can't run anywhere, this does not affect <literal>Public-IP</literal> in any way</para></listitem>
+            </itemizedlist>
+          </para>
+        </listitem>
       </itemizedlist>
       <para>The group above is logically equivalent to writing:</para>
       <example>
-	<title>How the cluster sees a group resource</title>
-	<programlisting><![CDATA[ <configuration>
+        <title>How the cluster sees a group resource</title>
+        <programlisting><![CDATA[ <configuration>
    <resources>
     <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
      <instance_attributes id="params-public-ip">
@@ -55,94 +55,94 @@
       <para>Obviously as the group grows bigger, the reduced configuration effort can become significant.</para>
       <para>Another (typical) example of a group is a DRBD volume, the filesystem mount, an IP address, and an application that uses them.</para>
       <section>
-	<title>Properties</title>
-	<table frame="all">
-	  <title>Properties of a Group Resource</title>
-	  <tgroup cols="2">
-	    <colspec colwidth="1*"/>
-	    <colspec colwidth="4*"/>
+        <title>Properties</title>
+        <table frame="all">
+          <title>Properties of a Group Resource</title>
+          <tgroup cols="2">
+            <colspec colwidth="1*"/>
+            <colspec colwidth="4*"/>
             <thead>
               <row>
-		<entry>Field</entry>
-		<entry>Description</entry>
+                <entry>Field</entry>
+                <entry>Description</entry>
               </row>
             </thead>
-	    <tbody>
-	      <row>
+            <tbody>
+              <row>
                 <entry><indexterm significance="preferred"><primary>id</primary><secondary>Group Resource Property</secondary></indexterm>
                   <indexterm><primary>Group Resource Properties</primary><secondary>id</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Group Property</secondary><tertiary>id</tertiary></indexterm>
                   id</entry>
-		<entry>Your name for the group</entry>
+                <entry>Your name for the group</entry>
               </row>
-	    </tbody>
-	  </tgroup>
-	</table>
+            </tbody>
+          </tgroup>
+        </table>
       </section>
       <section>
-	<title>Options</title>
-	<para>Options inherited from <link linkend="s-resource-options">simple resources</link>: <literal>priority, target-role, is-managed</literal></para>
+        <title>Options</title>
+        <para>Options inherited from <link linkend="s-resource-options">simple resources</link>: <literal>priority, target-role, is-managed</literal></para>
       </section>
-	<section>
-	  <title>Instance Attributes</title>
-	  <para>Groups have no instance attributes, however any that are set here will be inherited by the group's children.</para>
-	</section>
-	<section>
-	  <title>Contents</title>
-	  <para>
-	    Groups may only contain a collection of <link linkend="s-resource-supported">primitive</link> cluster resources.
-	    To refer to the child of a group resource, just use the child's id instead of the group's.
-	  </para>
-	</section>
-	<section>
-	  <title>Constraints</title>
-	  <para>Although it is possible to reference the group's children in constraints, it is usually preferable to use the group's name instead.</para>
-	  <example>
-	    <title>Example constraints involving groups</title>
-	    <programlisting><![CDATA[ <constraints>
+        <section>
+          <title>Instance Attributes</title>
+          <para>Groups have no instance attributes, however any that are set here will be inherited by the group's children.</para>
+        </section>
+        <section>
+          <title>Contents</title>
+          <para>
+            Groups may only contain a collection of <link linkend="s-resource-supported">primitive</link> cluster resources.
+            To refer to the child of a group resource, just use the child's id instead of the group's.
+          </para>
+        </section>
+        <section>
+          <title>Constraints</title>
+          <para>Although it is possible to reference the group's children in constraints, it is usually preferable to use the group's name instead.</para>
+          <example>
+            <title>Example constraints involving groups</title>
+            <programlisting><![CDATA[ <constraints>
     <rsc_location id="group-prefers-node1" rsc="shortcut" node="node1" score="500"/>
     <rsc_colocation id="webserver-with-group" rsc="Webserver" with-rsc="shortcut"/>
     <rsc_order id="start-group-then-webserver" first="Webserver" then="shortcut"/>
   </constraints> ]]> </programlisting>
-	  </example>
-	</section>
-	<section>
+          </example>
+        </section>
+        <section>
           <title><indexterm><primary>resource-stickiness</primary><secondary>of a Group Resource</secondary></indexterm>
             Stickiness</title>
-	  <para>Stickiness, the measure of how much a resource wants to stay where it is, is additive in groups.
+          <para>Stickiness, the measure of how much a resource wants to stay where it is, is additive in groups.
             Every active resource of the group will contribute its stickiness value to the group's total.
             So if the default <literal>resource-stickiness</literal> is 100, and a group has seven members, five of which are active, then the group as a whole will prefer its current location with a score of 500.</para>
-	</section>
+        </section>
     </section>
     <section id="s-resource-clone">
       <title><indexterm significance="preferred"><primary>Clone Resources</primary></indexterm>
         <indexterm><primary>Resources</primary><secondary>Clones</secondary></indexterm>
         Clones - Resources That Get Active on Multiple Hosts</title>
       <para>
-	Clones were initially conceived as a convenient way to start N instances of an IP resource and have them distributed throughout the cluster for load balancing.
-	They have turned out to quite useful for a number of purposes including integrating with Red Hat's DLM, the fencing subsystem, and OCFS2.
+        Clones were initially conceived as a convenient way to start N instances of an IP resource and have them distributed throughout the cluster for load balancing.
+        They have turned out to quite useful for a number of purposes including integrating with Red Hat's DLM, the fencing subsystem, and OCFS2.
       </para>
       <para>You can clone any resource, provided the resource agent supports it.</para>
       <para>Three types of cloned resources exist:
       <itemizedlist spacing="compact">
-	<listitem><para>Anonymous</para></listitem>
-	<listitem><para>Globally Unique</para></listitem>
-	<listitem><para>Stateful</para></listitem>
+        <listitem><para>Anonymous</para></listitem>
+        <listitem><para>Globally Unique</para></listitem>
+        <listitem><para>Stateful</para></listitem>
       </itemizedlist></para>
       <para>
-	Anonymous clones are the simplest type.
-	These resources behave completely identically everywhere they are running.
-	Because of this, there can only be one copy of an anonymous clone active per machine.
+        Anonymous clones are the simplest type.
+        These resources behave completely identically everywhere they are running.
+        Because of this, there can only be one copy of an anonymous clone active per machine.
       </para>
       <para>
-	Globally unique clones are distinct entities.
-	A copy of the clone running on one machine is not equivalent to another instance on another node.
-	Nor would any two copies on the same node be equivalent.
+        Globally unique clones are distinct entities.
+        A copy of the clone running on one machine is not equivalent to another instance on another node.
+        Nor would any two copies on the same node be equivalent.
       </para>
       <para>Stateful clones are covered later in <xref linkend="s-resource-multistate"/>.</para>
       <example>
-	<title>An example clone</title>
-	<programlisting><![CDATA[ <clone id="apache-clone">
+        <title>An example clone</title>
+        <programlisting><![CDATA[ <clone id="apache-clone">
     <meta_attributes id="apache-clone-meta">
        <nvpair id="apache-unique" name="globally-unique" value="false"/>
     </meta_attributes>
@@ -150,275 +150,275 @@
   </clone> ]]> </programlisting>
       </example>
       <section>
-	<title>Properties</title>
-	<table frame="all">
-	  <title>Properties of a Clone Resource</title>
-	  <tgroup cols="2">
-	    <colspec colwidth="2*"/>
-	    <colspec colwidth="7*"/>
+        <title>Properties</title>
+        <table frame="all">
+          <title>Properties of a Clone Resource</title>
+          <tgroup cols="2">
+            <colspec colwidth="2*"/>
+            <colspec colwidth="7*"/>
             <thead>
               <row>
-		<entry>Field</entry>
-		<entry>Description</entry>
+                <entry>Field</entry>
+                <entry>Description</entry>
               </row>
             </thead><tbody><row>
                 <entry><indexterm significance="preferred"><primary>id</primary><secondary>Clone Resource Property</secondary></indexterm>
                   <indexterm><primary>Clone Resource Properties</primary><secondary>id</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>id</tertiary></indexterm>
                   id</entry>
-		<entry>Your name for the clone</entry>
+                <entry>Your name for the clone</entry>
               </row>
-	    </tbody>
-	  </tgroup>
-	</table>
+            </tbody>
+          </tgroup>
+        </table>
       </section>
       <section>
-	<title>Options</title>
-	<para>Options inherited from <link linkend="s-resource-supported">simple resources</link>: <literal>priority, target-role, is-managed</literal></para>
-	<table frame="all">
-	  <title>Clone specific configuration options</title>
-	  <tgroup cols="2">
-	    <colspec colwidth="2*"/>
-	    <colspec colwidth="7*"/>
+        <title>Options</title>
+        <para>Options inherited from <link linkend="s-resource-supported">simple resources</link>: <literal>priority, target-role, is-managed</literal></para>
+        <table frame="all">
+          <title>Clone specific configuration options</title>
+          <tgroup cols="2">
+            <colspec colwidth="2*"/>
+            <colspec colwidth="7*"/>
             <thead>
               <row>
-		<entry>Field</entry>
-		<entry>Description</entry>
+                <entry>Field</entry>
+                <entry>Description</entry>
               </row>
             </thead>
-	    <tbody>
-	      <row>
+            <tbody>
+              <row>
                 <entry><indexterm significance="preferred"><primary>clone-max Clone Resource Property</primary></indexterm>
                   <indexterm><primary>Clone Resource Properties</primary><secondary>clone-max</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>clone-max</tertiary></indexterm>
                   clone-max</entry>
-		<entry>How many copies of the resource to start. Defaults to the number of nodes in the cluster.</entry>
+                <entry>How many copies of the resource to start. Defaults to the number of nodes in the cluster.</entry>
               </row>
               <row>
                 <entry><indexterm significance="preferred"><primary>clone-node-max Clone Resource Property</primary></indexterm>
                   <indexterm><primary>Clone Resource Properties</primary><secondary>clone-node-max</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>clone-node-max</tertiary></indexterm>
                   clone-node-max</entry>
-		<entry>How many copies of the resource can be started on a single node; default <emphasis>1</emphasis>.</entry>
+                <entry>How many copies of the resource can be started on a single node; default <emphasis>1</emphasis>.</entry>
               </row>
               <row>
                 <entry><indexterm significance="preferred"><primary>notify Clone Resource Property</primary></indexterm>
                   <indexterm><primary>Clone Resource Properties</primary><secondary>notify</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>notify</tertiary></indexterm>
                   notify</entry>
-		<entry>When stopping or starting a copy of the clone, tell all the other copies beforehand and when the action was successful. Allowed values: <emphasis>false</emphasis>, <literal>true</literal>
-		  </entry>
+                <entry>When stopping or starting a copy of the clone, tell all the other copies beforehand and when the action was successful. Allowed values: <emphasis>false</emphasis>, <literal>true</literal>
+                  </entry>
               </row>
               <row>
                 <entry><indexterm significance="preferred"><primary>globally-unique Clone Resource Property</primary></indexterm>
                   <indexterm><primary>Clone Resource Properties</primary><secondary>globally-unique</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>globally-unique</tertiary></indexterm>
                   globally-unique</entry>
-		<entry>Does each copy of the clone perform a different function? Allowed values: <emphasis>false</emphasis>, <literal>true</literal></entry>
+                <entry>Does each copy of the clone perform a different function? Allowed values: <emphasis>false</emphasis>, <literal>true</literal></entry>
               </row>
               <row>
                 <entry><indexterm significance="preferred"><primary>ordered Clone Resource Property</primary></indexterm>
                   <indexterm><primary>Clone Resource Properties</primary><secondary>ordered</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>ordered</tertiary></indexterm>
                   ordered</entry>
-		<entry>Should the copies be started in series (instead of in parallel). Allowed values: <emphasis>false</emphasis>, <literal>true</literal>
-		  </entry>
+                <entry>Should the copies be started in series (instead of in parallel). Allowed values: <emphasis>false</emphasis>, <literal>true</literal>
+                  </entry>
               </row>
               <row>
                 <entry><indexterm significance="preferred"><primary>interleave Clone Resource Property</primary></indexterm>
                   <indexterm><primary>Clone Resource Properties</primary><secondary>interleave</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>interleave</tertiary></indexterm>
                   interleave</entry>
-		<entry>Changes the behavior of ordering constraints (between clones/masters) so that instances can start/stop as soon as their peer instance has (rather than waiting for every instance of the other clone has). Allowed values: <emphasis>false</emphasis>, <literal>true</literal>
-		  </entry>
+                <entry>Changes the behavior of ordering constraints (between clones/masters) so that instances can start/stop as soon as their peer instance has (rather than waiting for every instance of the other clone has). Allowed values: <emphasis>false</emphasis>, <literal>true</literal>
+                  </entry>
               </row>
-	    </tbody>
-	  </tgroup>
-	</table>
+            </tbody>
+          </tgroup>
+        </table>
       </section>
-	<section>
-	  <title>Instance Attributes</title>
-	  <para>Clones have no instance attributes; however, any that are set here will be inherited by the clone's children.</para>
-	</section>
-	<section>
-	  <title>Contents</title>
-	  <para>Clones must contain exactly one group or one regular resource.</para>
-	  <warning>
-	    <para>
-	      You should never reference the name of a clone's child.
-	      If you think you need to do this, you probably need to re-evaluate your design.
-	    </para>
-	    <para><!-- ws --> </para>
-	  </warning>
-	</section>
-	<section>
-	  <title>Constraints</title>
-	  <para>
-	    In most cases, a clone will have a single copy on each active cluster node.
-	    If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints.
-	    These constraints are written no differently to those for regular resources except that the clone's id is used.
-	  </para>
-	  <para>
-	    Ordering constraints behave slightly differently for clones.
-	    In the example below, <literal>apache-stats</literal> will wait until all copies of the clone that need to be started have done so before being started itself.
-	    Only if <emphasis>no</emphasis> copies can be started <literal>apache-stats</literal> will be prevented from being active.
-	    Additionally, the clone will wait for <literal>apache-stats</literal> to be stopped before stopping the clone.
-	  </para>
-	  <para>
-	    Colocation of a regular (or group) resource with a clone means that the resource can run on any machine with an active copy of the clone.
-	    The cluster will choose a copy based on where the clone is running and the resource's own location preferences.
-	  </para>
-	  <para>
-	    Colocation between clones is also possible.
-	    In such cases, the set of allowed locations for the clone is limited to nodes on which the clone is (or will be) active.
-	    Allocation is then performed as normally.
-	  </para>
-	  <example>
-	    <title>Example constraints involving clones</title>
-	    <programlisting><![CDATA[ <constraints>
+        <section>
+          <title>Instance Attributes</title>
+          <para>Clones have no instance attributes; however, any that are set here will be inherited by the clone's children.</para>
+        </section>
+        <section>
+          <title>Contents</title>
+          <para>Clones must contain exactly one group or one regular resource.</para>
+          <warning>
+            <para>
+              You should never reference the name of a clone's child.
+              If you think you need to do this, you probably need to re-evaluate your design.
+            </para>
+            <para><!-- ws --> </para>
+          </warning>
+        </section>
+        <section>
+          <title>Constraints</title>
+          <para>
+            In most cases, a clone will have a single copy on each active cluster node.
+            If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints.
+            These constraints are written no differently to those for regular resources except that the clone's id is used.
+          </para>
+          <para>
+            Ordering constraints behave slightly differently for clones.
+            In the example below, <literal>apache-stats</literal> will wait until all copies of the clone that need to be started have done so before being started itself.
+            Only if <emphasis>no</emphasis> copies can be started <literal>apache-stats</literal> will be prevented from being active.
+            Additionally, the clone will wait for <literal>apache-stats</literal> to be stopped before stopping the clone.
+          </para>
+          <para>
+            Colocation of a regular (or group) resource with a clone means that the resource can run on any machine with an active copy of the clone.
+            The cluster will choose a copy based on where the clone is running and the resource's own location preferences.
+          </para>
+          <para>
+            Colocation between clones is also possible.
+            In such cases, the set of allowed locations for the clone is limited to nodes on which the clone is (or will be) active.
+            Allocation is then performed as normally.
+          </para>
+          <example>
+            <title>Example constraints involving clones</title>
+            <programlisting><![CDATA[ <constraints>
     <rsc_location id="clone-prefers-node1" rsc="apache-clone" node="node1" score="500"/>
     <rsc_colocation id="stats-with-clone" rsc="apache-stats" with="apache-clone"/>
     <rsc_order id="start-clone-then-stats" first="apache-clone" then="apache-stats"/>
   </constraints> ]]> </programlisting>
-	  </example>
-	</section>
-	<section>
-	  <title>Stickiness</title>
-	  <para>
+          </example>
+        </section>
+        <section>
+          <title>Stickiness</title>
+          <para>
           <indexterm><primary>resource-stickiness</primary><secondary>of a Clone Resource</secondary></indexterm>
-	    To achieve a stable allocation pattern, clones are slightly sticky by default.
-	    If no value for <literal>resource-stickiness</literal> is provided, the clone will use a value of 1.
-	    Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster.
-	  </para>
-	</section>
-	<section>
-	  <title>Resource Agent Requirements</title>
-	  <para>
-	    Any resource can be used as an anonymous clone, as it requires no additional support from the resource agent.
-	    Whether it makes sense to do so depends on your resource and its resource agent.
-	  </para>
-	  <para>
-	    Globally unique clones do require some additional support in the resource agent.
-	    In particular, it must only respond with <envar>${OCF_SUCCESS}</envar> if the node has that exact instance active.
-	    All other probes for instances of the clone should result in <envar>${OCF_NOT_RUNNING}</envar>.
-	    Unless of course they are failed, in which case they should return one of the other OCF error codes.
-	  </para>
-	  <para>Copies of a clone are identified by appending a colon and a numerical offset, eg. <literal>apache:2</literal>.</para>
-	  <para>Resource agents can find out how many copies there are by examining the <envar>OCF_RESKEY_CRM_meta_clone_max</envar> environment variable and which copy it is by examining <envar>OCF_RESKEY_CRM_meta_clone</envar>.</para>
-	  <para>
-	    You should not make any assumptions (based on <envar>OCF_RESKEY_CRM_meta_clone</envar>) about which copies are active.
-	    In particular, the list of active copies will not always be an unbroken sequence, nor always start at 0.
-	  </para>
-	</section>
-	<section>
-	  <title>Notifications</title>
-	  <para>
-	    Supporting notifications requires the <literal>notify</literal> action to be implemented.
-	    Once supported, the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it.
-	  </para>
-	  <table frame="all">
-	    <title>Environment variables supplied with Clone notify actions</title>
-	    <tgroup cols="2">
-	      <colspec colwidth="5*"/>
-	      <colspec colwidth="4*"/>
+            To achieve a stable allocation pattern, clones are slightly sticky by default.
+            If no value for <literal>resource-stickiness</literal> is provided, the clone will use a value of 1.
+            Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster.
+          </para>
+        </section>
+        <section>
+          <title>Resource Agent Requirements</title>
+          <para>
+            Any resource can be used as an anonymous clone, as it requires no additional support from the resource agent.
+            Whether it makes sense to do so depends on your resource and its resource agent.
+          </para>
+          <para>
+            Globally unique clones do require some additional support in the resource agent.
+            In particular, it must only respond with <envar>${OCF_SUCCESS}</envar> if the node has that exact instance active.
+            All other probes for instances of the clone should result in <envar>${OCF_NOT_RUNNING}</envar>.
+            Unless of course they are failed, in which case they should return one of the other OCF error codes.
+          </para>
+          <para>Copies of a clone are identified by appending a colon and a numerical offset, eg. <literal>apache:2</literal>.</para>
+          <para>Resource agents can find out how many copies there are by examining the <envar>OCF_RESKEY_CRM_meta_clone_max</envar> environment variable and which copy it is by examining <envar>OCF_RESKEY_CRM_meta_clone</envar>.</para>
+          <para>
+            You should not make any assumptions (based on <envar>OCF_RESKEY_CRM_meta_clone</envar>) about which copies are active.
+            In particular, the list of active copies will not always be an unbroken sequence, nor always start at 0.
+          </para>
+        </section>
+        <section>
+          <title>Notifications</title>
+          <para>
+            Supporting notifications requires the <literal>notify</literal> action to be implemented.
+            Once supported, the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it.
+          </para>
+          <table frame="all">
+            <title>Environment variables supplied with Clone notify actions</title>
+            <tgroup cols="2">
+              <colspec colwidth="5*"/>
+              <colspec colwidth="4*"/>
               <thead>
-		<row>
-		  <entry>Variable</entry>
-		  <entry>Description</entry>
-		</row>
+                <row>
+                  <entry>Variable</entry>
+                  <entry>Description</entry>
+                </row>
               </thead>
-	      <tbody>
-		<row>
-		  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_type</tertiary></indexterm>
+              <tbody>
+                <row>
+                  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_type</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_type</secondary></indexterm>
                     OCF_RESKEY_CRM_meta_notify_type</entry>
-		  <entry>Allowed values: <literal>pre</literal>, <literal>post</literal></entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_operation</tertiary></indexterm>
+                  <entry>Allowed values: <literal>pre</literal>, <literal>post</literal></entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_operation</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_operation</secondary></indexterm>
                     OCF_RESKEY_CRM_meta_notify_operation</entry>
-		  <entry>Allowed values: <literal>start</literal>, <literal>stop</literal></entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_start_resource</tertiary></indexterm>
+                  <entry>Allowed values: <literal>start</literal>, <literal>stop</literal></entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_start_resource</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_resource</secondary></indexterm>
                     OCF_RESKEY_CRM_meta_notify_start_resource</entry>
-		  <entry>Resources to be started</entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_stop_resource</tertiary></indexterm>
+                  <entry>Resources to be started</entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_stop_resource</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_resource</secondary></indexterm>
                     OCF_RESKEY_CRM_meta_notify_stop_resource</entry>
-		  <entry>Resources to be stopped</entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_active_resource</tertiary></indexterm>
+                  <entry>Resources to be stopped</entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_active_resource</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_resource</secondary></indexterm>
                     OCF_RESKEY_CRM_meta_notify_active_resource</entry>
-		  <entry>Resources that are running</entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_inactive_resource</tertiary></indexterm>
+                  <entry>Resources that are running</entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_inactive_resource</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_resource</secondary></indexterm>
                     OCF_RESKEY_CRM_meta_notify_inactive_resource</entry>
-		  <entry>Resources that are not running</entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_start_uname</tertiary></indexterm>
+                  <entry>Resources that are not running</entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_start_uname</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_uname</secondary></indexterm>
                     OCF_RESKEY_CRM_meta_notify_start_uname</entry>
-		  <entry>Nodes on which resources will be started</entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_stop_uname</tertiary></indexterm>
+                  <entry>Nodes on which resources will be started</entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_stop_uname</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_uname</secondary></indexterm>
                     OCF_RESKEY_CRM_meta_notify_stop_uname</entry>
-		  <entry>Nodes on which resources will be stopped</entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_active_uname</tertiary></indexterm>
+                  <entry>Nodes on which resources will be stopped</entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_active_uname</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_uname</secondary></indexterm>
                     OCF_RESKEY_CRM_meta_notify_active_uname</entry>
-		  <entry>Nodes on which resources are running</entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_inactive_uname</tertiary></indexterm>
+                  <entry>Nodes on which resources are running</entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_inactive_uname</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_uname</secondary></indexterm>
                     OCF_RESKEY_CRM_meta_notify_inactive_uname</entry>
-		  <entry>Nodes on which resources are not running</entry>
-		</row>
-	      </tbody>
-	    </tgroup>
-	  </table>
-	  <para>The variables come in pairs, such as <envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar> and <envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar> and should be treated as an array of whitespace separated elements.</para>
-	  <para>Thus in order to indicate that <literal>clone:0</literal> will be started on <literal>sles-1</literal>, <literal>clone:2</literal> will be started on <literal>sles-3</literal>, and <literal>clone:3</literal> will be started on <literal>sles-2</literal>, the cluster would set</para>
-	  <example>
-	    <title>Example notification variables</title>
-	    <programlisting><envar>
-		OCF_RESKEY_CRM_meta_notify_start_resource</envar>="clone:0 clone:2 clone:3" <envar>
-		OCF_RESKEY_CRM_meta_notify_start_uname</envar>="sles-1 sles-3 sles-2"
-	    </programlisting>
-	  </example>
-	</section>
-	<section>
-	  <title>Proper Interpretation of Notification Environment Variables</title>
-	  <para>Pre-notification (stop):
-	  <itemizedlist spacing="compact">
-	    <listitem>
+                  <entry>Nodes on which resources are not running</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </table>
+          <para>The variables come in pairs, such as <envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar> and <envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar> and should be treated as an array of whitespace separated elements.</para>
+          <para>Thus in order to indicate that <literal>clone:0</literal> will be started on <literal>sles-1</literal>, <literal>clone:2</literal> will be started on <literal>sles-3</literal>, and <literal>clone:3</literal> will be started on <literal>sles-2</literal>, the cluster would set</para>
+          <example>
+            <title>Example notification variables</title>
+            <programlisting><envar>
+                OCF_RESKEY_CRM_meta_notify_start_resource</envar>="clone:0 clone:2 clone:3" <envar>
+                OCF_RESKEY_CRM_meta_notify_start_uname</envar>="sles-1 sles-3 sles-2"
+            </programlisting>
+          </example>
+        </section>
+        <section>
+          <title>Proper Interpretation of Notification Environment Variables</title>
+          <para>Pre-notification (stop):
+          <itemizedlist spacing="compact">
+            <listitem>
               <para>Active resources: <envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar></para>
-	    </listitem>
-	    <listitem>
+            </listitem>
+            <listitem>
               <para>Inactive resources: <envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar></para>
-	    </listitem>
-	    <listitem>
+            </listitem>
+            <listitem>
               <para>Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para>
-	    </listitem>
-	    <listitem>
+            </listitem>
+            <listitem>
               <para>Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para>
-	    </listitem>
-	  </itemizedlist></para>
-	  <para>Post-notification (stop) / Pre-notification (start):
+            </listitem>
+          </itemizedlist></para>
+          <para>Post-notification (stop) / Pre-notification (start):
             <itemizedlist spacing="compact">
               <listitem>
                 <para>Active resources
@@ -460,7 +460,7 @@
                     <listitem><para><envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar></para></listitem>
                     <listitem><para>plus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
                     <listitem><para>minus <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
-                  </itemizedlist> 
+                  </itemizedlist>
                 </para>
               </listitem>
               <listitem>
@@ -470,96 +470,96 @@
                 <para>Resources that were stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para>
               </listitem>
           </itemizedlist></para>
-	</section>
+        </section>
     </section>
     <section id="s-resource-multistate">
       <title><indexterm significance="preferred"><primary>Multi-state Resources</primary></indexterm>
         <indexterm significance="preferred"><primary>Resources</primary><secondary>Multi-state</secondary></indexterm>
         Multi-state - Resources That Have Multiple Modes</title>
       <para>
-	Multi-state resources are a specialization of Clone resources; please ensure you understand the section on clones before continuing! They allow the instances to be in one of two operating modes;
-	these are called <literal>Master</literal> and <literal>Slave</literal>, but can mean whatever you wish them to mean.
-	The only limitation is that when an instance is started, it must come up in the <literal>Slave</literal> state.
+        Multi-state resources are a specialization of Clone resources; please ensure you understand the section on clones before continuing! They allow the instances to be in one of two operating modes;
+        these are called <literal>Master</literal> and <literal>Slave</literal>, but can mean whatever you wish them to mean.
+        The only limitation is that when an instance is started, it must come up in the <literal>Slave</literal> state.
       </para>
       <section>
-	<title>Properties</title>
-	<table frame="all">
-	  <title>Properties of a Multi-State Resource</title>
-	  <tgroup cols="2">
-	    <colspec colwidth="1*"/>
-	    <colspec colwidth="4*"/>
+        <title>Properties</title>
+        <table frame="all">
+          <title>Properties of a Multi-State Resource</title>
+          <tgroup cols="2">
+            <colspec colwidth="1*"/>
+            <colspec colwidth="4*"/>
             <thead>
               <row>
-		<entry>Field</entry>
-		<entry>Description</entry>
+                <entry>Field</entry>
+                <entry>Description</entry>
               </row>
             </thead><tbody><row>
                 <entry><indexterm significance="preferred"><primary>id</primary><secondary>Multi-State Resource Property</secondary></indexterm>
                   <indexterm><primary>Multi-State Resource Properties</primary><secondary>id</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Multi-State Property</secondary><tertiary>id</tertiary></indexterm>
                   id</entry>
-		<entry>Your name for the multi-state resource</entry>
+                <entry>Your name for the multi-state resource</entry>
               </row>
-	    </tbody>
-	  </tgroup>
-	</table>
+            </tbody>
+          </tgroup>
+        </table>
       </section>
       <section>
-	<title>Options</title>
-	<para>Options inherited from <link linkend="s-resource-supported">simple resources</link>: <literal>priority</literal>, <literal>target-role</literal>, <literal>is-managed</literal></para>
-	<para>Options inherited from <link linkend="s-resource-clone">clone resources</link>: <literal>clone-max</literal>, <literal>clone-node-max</literal>, <literal>notify</literal>, <literal>globally-unique</literal>, <literal>ordered</literal>, <literal>interleave</literal></para>
-	<table frame="all">
-	  <title>Multi-state specific resource configuration options</title>
-	  <tgroup cols="2">
-	    <colspec colwidth="1*"/>
-	    <colspec colwidth="4*"/>
+        <title>Options</title>
+        <para>Options inherited from <link linkend="s-resource-supported">simple resources</link>: <literal>priority</literal>, <literal>target-role</literal>, <literal>is-managed</literal></para>
+        <para>Options inherited from <link linkend="s-resource-clone">clone resources</link>: <literal>clone-max</literal>, <literal>clone-node-max</literal>, <literal>notify</literal>, <literal>globally-unique</literal>, <literal>ordered</literal>, <literal>interleave</literal></para>
+        <table frame="all">
+          <title>Multi-state specific resource configuration options</title>
+          <tgroup cols="2">
+            <colspec colwidth="1*"/>
+            <colspec colwidth="4*"/>
             <thead>
               <row>
-		<entry>Field</entry>
-		<entry>Description</entry>
+                <entry>Field</entry>
+                <entry>Description</entry>
               </row>
             </thead><tbody><row>
               <entry><indexterm significance="preferred"><primary>master-max Multi-State Resource Property</primary></indexterm>
                 <indexterm><primary>Multi-State Resource Properties</primary><secondary>master-max</secondary></indexterm>
                 <indexterm><primary>Resource</primary><secondary>Multi-State Property</secondary><tertiary>master-max</tertiary></indexterm>
                 master-max</entry>
-		<entry>How many copies of the resource can be promoted to <literal>master</literal> status; default 1.</entry>
+                <entry>How many copies of the resource can be promoted to <literal>master</literal> status; default 1.</entry>
               </row>
               <row>
                 <entry><indexterm significance="preferred"><primary>master-node-max Multi-State Resource Property</primary></indexterm>
                   <indexterm><primary>Multi-State Resource Properties</primary><secondary>master-node-max</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Multi-State Property</secondary><tertiary>master-node-max</tertiary></indexterm>
                   master-node-max</entry>
-		<entry>How many copies of the resource can be promoted to <literal>master</literal> status on a single node; default 1.</entry>
+                <entry>How many copies of the resource can be promoted to <literal>master</literal> status on a single node; default 1.</entry>
           </row></tbody></tgroup>
-	</table>
-	</section>
-	<section>
-	  <title>Instance Attributes</title>
-	  <para>Multi-state resources have no instance attributes; however, any that are set here will be inherited by master's children.</para>
-	</section>
-	<section>
-	  <title>Contents</title>
-	  <para>Masters must contain exactly one group or one regular resource.</para>
-	  <warning>
-	    <para>
-	      You should never reference the name of a master's child.
-	      If you think you need to do this, you probably need to re-evaluate your design.
-	    </para>
-	  </warning>
+        </table>
+        </section>
+        <section>
+          <title>Instance Attributes</title>
+          <para>Multi-state resources have no instance attributes; however, any that are set here will be inherited by master's children.</para>
+        </section>
+        <section>
+          <title>Contents</title>
+          <para>Masters must contain exactly one group or one regular resource.</para>
+          <warning>
+            <para>
+              You should never reference the name of a master's child.
+              If you think you need to do this, you probably need to re-evaluate your design.
+            </para>
+          </warning>
           <para> <!-- ws --> </para>
-	</section>
-	<section>
-	  <title>Monitoring Multi-State Resources</title>
-	  <para>
-	    The normal type of monitor actions are not sufficient to monitor a multi-state resource in the <literal>Master</literal> state.
-	    To detect failures of the <literal>Master</literal> instance, you need to define an additional monitor action with <literal>role="Master"</literal>.
-	  </para>
+        </section>
+        <section>
+          <title>Monitoring Multi-State Resources</title>
+          <para>
+            The normal type of monitor actions are not sufficient to monitor a multi-state resource in the <literal>Master</literal> state.
+            To detect failures of the <literal>Master</literal> instance, you need to define an additional monitor action with <literal>role="Master"</literal>.
+          </para>
           <important><para>It is crucial that <emphasis>every</emphasis> monitor operation has a different interval!</para>
             <para>This is because Pacemaker currently differentiates between operations only by resource and interval; so if eg. a master/slave resource has the same monitor interval for both roles, Pacemaker would ignore the role when checking the status - which would cause unexpected return codes, and therefore unnecessary complications.</para></important>
-	  <example>
-	    <title>Monitoring both states of a multi-state resource</title>
-	    <programlisting><![CDATA[ <master id="myMasterRsc">
+          <example>
+            <title>Monitoring both states of a multi-state resource</title>
+            <programlisting><![CDATA[ <master id="myMasterRsc">
    <primitive id="myRsc" class="ocf" type="myApp" provider="myCorp">
     <operations>
      <op id="public-ip-slave-check" name="monitor" interval="60"/>
@@ -567,80 +567,80 @@
     </operations>
    </primitive>
   </master> ]]> </programlisting>
-	  </example>
-	</section>
-	<section>
-	  <title>Constraints</title>
-	  <para>
-	    In most cases, a multi-state resources will have a single copy on each active cluster node.
-	    If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints.
-	    These constraints are written no differently to those for regular resources except that the master's id is used.
-	  </para>
-	  <para>
-	    When considering multi-state resources in constraints, for most purposes it is sufficient to treat them as clones.
-	    The exception is when the <literal>rsc-role</literal> and/or <literal>with-rsc-role</literal> fields (for colocation constraints) and <literal>first-action</literal> and/or <literal>then-action</literal> fields (for ordering constraints) are used.
-	  </para>
-	  <table frame="all">
-	    <title>Additional constraint options relevant to multi-state resources</title>
-	    <tgroup cols="2">
+          </example>
+        </section>
+        <section>
+          <title>Constraints</title>
+          <para>
+            In most cases, a multi-state resources will have a single copy on each active cluster node.
+            If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints.
+            These constraints are written no differently to those for regular resources except that the master's id is used.
+          </para>
+          <para>
+            When considering multi-state resources in constraints, for most purposes it is sufficient to treat them as clones.
+            The exception is when the <literal>rsc-role</literal> and/or <literal>with-rsc-role</literal> fields (for colocation constraints) and <literal>first-action</literal> and/or <literal>then-action</literal> fields (for ordering constraints) are used.
+          </para>
+          <table frame="all">
+            <title>Additional constraint options relevant to multi-state resources</title>
+            <tgroup cols="2">
               <colspec colwidth="1*"/>
               <colspec colwidth="4*"/>
               <thead>
-		<row>
-		  <entry>Field</entry>
-		  <entry>Description</entry>
-		</row>
+                <row>
+                  <entry>Field</entry>
+                  <entry>Description</entry>
+                </row>
               </thead><tbody><row>
                 <entry><indexterm significance="preferred"><primary>rsc-role Multi-State Resource Constraints</primary></indexterm>
                   <indexterm><primary>Multi-State Resource Constraints</primary><secondary>rsc-role</secondary></indexterm>
                   <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>rsc-role</tertiary></indexterm>
                   rsc-role</entry>
-		  <entry>
-		    <para>An additional attribute of colocation constraints that specifies the role that <literal>rsc</literal> must be in.
-		    Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>.</para>
-		  </entry>
-		</row>
-		<row>
+                  <entry>
+                    <para>An additional attribute of colocation constraints that specifies the role that <literal>rsc</literal> must be in.
+                    Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>.</para>
+                  </entry>
+                </row>
+                <row>
                   <entry><indexterm significance="preferred"><primary>with-rsc-role Multi-State Resource Constraints</primary></indexterm>
                     <indexterm><primary>Multi-State Resource Constraints</primary><secondary>with-rsc-role</secondary></indexterm>
                     <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>with-rsc-role</tertiary></indexterm>
                     with-rsc-role</entry>
-		  <entry>
-		    <para>An additional attribute of colocation constraints that specifies the role that <literal>with-rsc</literal> must be in.
-		    Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>.</para>
-		  </entry>
-		</row>
-		<row>
+                  <entry>
+                    <para>An additional attribute of colocation constraints that specifies the role that <literal>with-rsc</literal> must be in.
+                    Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>.</para>
+                  </entry>
+                </row>
+                <row>
                   <entry><indexterm significance="preferred"><primary>first-action Multi-State Resource Constraints</primary></indexterm>
                     <indexterm><primary>Multi-State Resource Constraints</primary><secondary>first-action</secondary></indexterm>
                     <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>first-action</tertiary></indexterm>
                     first-action</entry>
-		  <entry>
-		    <para>An additional attribute of ordering constraints that specifies the action that the <literal>first</literal> resource must complete before executing the specified action for the <literal>then</literal> resource.
-		    Allowed values: <emphasis>start</emphasis>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>.</para>
-		  </entry>
-		</row>
-		<row>
+                  <entry>
+                    <para>An additional attribute of ordering constraints that specifies the action that the <literal>first</literal> resource must complete before executing the specified action for the <literal>then</literal> resource.
+                    Allowed values: <emphasis>start</emphasis>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>.</para>
+                  </entry>
+                </row>
+                <row>
                   <entry><indexterm significance="preferred"><primary>then-action Multi-State Resource Constraints</primary></indexterm>
                     <indexterm><primary>Multi-State Resource Constraints</primary><secondary>then-action</secondary></indexterm>
                     <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>then-action</tertiary></indexterm>
                     then-action</entry>
-		  <entry>
-		    <para>An additional attribute of ordering constraints that specifies the action that the <literal>then</literal> resource can only execute after the <literal>first-action</literal> on the <literal>first</literal> resource has completed.
-		    Allowed values: <literal>start</literal>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. Defaults to the value (specified or implied) of <literal>first-action</literal>.</para>
-		  </entry>
-		</row>
-	      </tbody>
-	    </tgroup>
-	  </table>
-	  <para>
-	    In the example below, <literal>myApp</literal> will wait until one of the database copies has been started and promoted to master before being started itself.
-	    Only if no copies can be promoted will <literal>apache-stats</literal> be prevented from being active.
-	    Additionally, the database will wait for <literal>myApp</literal> to be stopped before it is demoted.
-	  </para>
-	  <example>
-	    <title>Example constraints involving multi-state resources</title>
-	    <programlisting><![CDATA[ <constraints>
+                  <entry>
+                    <para>An additional attribute of ordering constraints that specifies the action that the <literal>then</literal> resource can only execute after the <literal>first-action</literal> on the <literal>first</literal> resource has completed.
+                    Allowed values: <literal>start</literal>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. Defaults to the value (specified or implied) of <literal>first-action</literal>.</para>
+                  </entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </table>
+          <para>
+            In the example below, <literal>myApp</literal> will wait until one of the database copies has been started and promoted to master before being started itself.
+            Only if no copies can be promoted will <literal>apache-stats</literal> be prevented from being active.
+            Additionally, the database will wait for <literal>myApp</literal> to be stopped before it is demoted.
+          </para>
+          <example>
+            <title>Example constraints involving multi-state resources</title>
+            <programlisting><![CDATA[ <constraints>
    <rsc_location id="db-prefers-node1" rsc="database" node="node1" score="500"/>
    <rsc_colocation id="backup-with-db-slave" rsc="backup"
      with-rsc="database" with-rsc-role="Slave"/>
@@ -650,244 +650,244 @@
    <rsc_order id="promote-db-then-app" first="database" first-action="promote"
      then="myApp" then-action="start"/>
   </constraints> ]]> </programlisting>
-	  </example>
-	  <para>
-	    Colocation of a regular (or group) resource with a multi-state resource means that it can run on any machine with an active copy of the multi-state resource that is in the specified state (<literal>Master</literal> or <literal>Slave</literal>).
-	    In the example, the cluster will choose a location based on where database is running as a <literal>Master</literal>, and if there are multiple <literal>Master</literal> instances it will also factor in <literal>myApp</literal>'s own location preferences when deciding which location to choose.
-	  </para>
-	  <para>
-	    Colocation with regular clones and other multi-state resources is also possible.
-	    In such cases, the set of allowed locations for the <literal>rsc</literal> clone is (after role filtering) limited to nodes on which the <literal>with-rsc</literal> multi-state resource is (or will be) in the specified role.
-	    Allocation is then performed as-per-normal.
-	  </para>
-	</section>
-	<section>
-	  <title>Stickiness</title>
-	  <para>
+          </example>
+          <para>
+            Colocation of a regular (or group) resource with a multi-state resource means that it can run on any machine with an active copy of the multi-state resource that is in the specified state (<literal>Master</literal> or <literal>Slave</literal>).
+            In the example, the cluster will choose a location based on where database is running as a <literal>Master</literal>, and if there are multiple <literal>Master</literal> instances it will also factor in <literal>myApp</literal>'s own location preferences when deciding which location to choose.
+          </para>
+          <para>
+            Colocation with regular clones and other multi-state resources is also possible.
+            In such cases, the set of allowed locations for the <literal>rsc</literal> clone is (after role filtering) limited to nodes on which the <literal>with-rsc</literal> multi-state resource is (or will be) in the specified role.
+            Allocation is then performed as-per-normal.
+          </para>
+        </section>
+        <section>
+          <title>Stickiness</title>
+          <para>
             <indexterm><primary>resource-stickiness</primary><secondary>of a Multi-State Resource</secondary></indexterm>
-	    To achieve a stable allocation pattern, multi-state resources are slightly sticky by default.
-	    If no value for <literal>resource-stickiness</literal> is provided, the multi-state resource will use a value of 1.
-	    Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster.
-	  </para>
-	</section>
-	<section>
-	  <title>Which Resource Instance is Promoted</title>
-	  <para>
-	    During the start operation, most Resource Agent scripts should call the <command>crm_master</command> utility.
-	    This tool automatically detects both the resource and host and should be used to set a preference for being promoted.
-	    Based on this, <literal>master-max</literal>, and <literal>master-node-max</literal>, the instance(s) with the highest preference will be promoted.
-	  </para>
-	  <para>The other alternative is to create a location constraint that indicates which nodes are most preferred as masters.</para>
-	  <example>
-	    <title>Manually specifying which node should be promoted</title>
-	    <programlisting><![CDATA[ <rsc_location id="master-location" rsc="myMasterRsc">
+            To achieve a stable allocation pattern, multi-state resources are slightly sticky by default.
+            If no value for <literal>resource-stickiness</literal> is provided, the multi-state resource will use a value of 1.
+            Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster.
+          </para>
+        </section>
+        <section>
+          <title>Which Resource Instance is Promoted</title>
+          <para>
+            During the start operation, most Resource Agent scripts should call the <command>crm_master</command> utility.
+            This tool automatically detects both the resource and host and should be used to set a preference for being promoted.
+            Based on this, <literal>master-max</literal>, and <literal>master-node-max</literal>, the instance(s) with the highest preference will be promoted.
+          </para>
+          <para>The other alternative is to create a location constraint that indicates which nodes are most preferred as masters.</para>
+          <example>
+            <title>Manually specifying which node should be promoted</title>
+            <programlisting><![CDATA[ <rsc_location id="master-location" rsc="myMasterRsc">
     <rule id="master-rule" score="100" role="Master">
       <expression id="master-exp" attribute="#uname" operation="eq" value="node1"/>
     </rule>
   </rsc_location> ]]> </programlisting>
-	  </example>
-	</section>
-	<section>
-	  <title>Resource Agent Requirements</title>
-	  <para>
-	    Since multi-state resources are an extension of cloned resources, all the requirements of Clones are also requirements of multi-state resources.
-	    Additionally, multi-state resources require two extra actions: <literal>demote</literal> and <literal>promote</literal>;
-	    these actions are responsible for changing the state of the resource.
-	    Like <literal>start</literal> and <literal>stop</literal>, they should return <envar>OCF_SUCCESS</envar> if they completed successfully or a relevant error code if they did not.
-	  </para>
-	  <para>
-	    The states can mean whatever you wish, but when the resource is started, it must come up in the mode called <literal>Slave</literal>.
-	    From there the cluster will then decide which instances to promote to <literal>Master</literal>.
-	  </para>
-	  <para>
-	    In addition to the Clone requirements for monitor actions, agents must also <emphasis>accurately</emphasis> report which state they are in.
-	    The cluster relies on the agent to report its status (including role) accurately and does not indicate to the agent what role it currently believes it to be in.
-	  </para>
-	  <table frame="all">
-	    <title>Role implications of OCF return codes</title>
-	    <tgroup cols="2">
+          </example>
+        </section>
+        <section>
+          <title>Resource Agent Requirements</title>
+          <para>
+            Since multi-state resources are an extension of cloned resources, all the requirements of Clones are also requirements of multi-state resources.
+            Additionally, multi-state resources require two extra actions: <literal>demote</literal> and <literal>promote</literal>;
+            these actions are responsible for changing the state of the resource.
+            Like <literal>start</literal> and <literal>stop</literal>, they should return <envar>OCF_SUCCESS</envar> if they completed successfully or a relevant error code if they did not.
+          </para>
+          <para>
+            The states can mean whatever you wish, but when the resource is started, it must come up in the mode called <literal>Slave</literal>.
+            From there the cluster will then decide which instances to promote to <literal>Master</literal>.
+          </para>
+          <para>
+            In addition to the Clone requirements for monitor actions, agents must also <emphasis>accurately</emphasis> report which state they are in.
+            The cluster relies on the agent to report its status (including role) accurately and does not indicate to the agent what role it currently believes it to be in.
+          </para>
+          <table frame="all">
+            <title>Role implications of OCF return codes</title>
+            <tgroup cols="2">
               <colspec colwidth="1*"/>
               <colspec colwidth="2*"/>
               <thead>
-		<row>
-		  <entry>Monitor Return Code</entry>
-		  <entry>Description</entry>
-		</row>
+                <row>
+                  <entry>Monitor Return Code</entry>
+                  <entry>Description</entry>
+                </row>
               </thead><tbody><row>
-		  <entry><indexterm><primary>return code</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm>
+                  <entry><indexterm><primary>return code</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm>
                     <indexterm><primary>Environment Variable</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm>
                     <indexterm><primary>OCF_NOT_RUNNING</primary></indexterm>
                     OCF_NOT_RUNNING</entry>
-		  <entry>Stopped</entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>return code</primary><secondary>OCF_SUCCESS</secondary></indexterm>
+                  <entry>Stopped</entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>return code</primary><secondary>OCF_SUCCESS</secondary></indexterm>
                     <indexterm><primary>Environment Variable</primary><secondary>OCF_SUCCESS</secondary></indexterm>
                     <indexterm><primary>OCF_SUCCESS</primary></indexterm>
                     OCF_SUCCESS</entry>
-		  <entry>Running (Slave)</entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>return code</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm>
+                  <entry>Running (Slave)</entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>return code</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm>
                     <indexterm><primary>Environment Variable</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm>
                     <indexterm><primary>OCF_RUNNING_MASTER</primary></indexterm>
                     OCF_RUNNING_MASTER</entry>
-		  <entry>Running (Master)</entry>
-		</row>
-		<row>
-		  <entry><indexterm><primary>return code</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm>
+                  <entry>Running (Master)</entry>
+                </row>
+                <row>
+                  <entry><indexterm><primary>return code</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm>
                     <indexterm><primary>Environment Variable</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm>
                     <indexterm><primary>OCF_FAILED_MASTER</primary></indexterm>
                     OCF_FAILED_MASTER</entry>
-		  <entry>Failed (Master)</entry>
-		</row>
-		<row>
-		  <entry>Other</entry>
-		  <entry>Failed (Slave)</entry>
+                  <entry>Failed (Master)</entry>
+                </row>
+                <row>
+                  <entry>Other</entry>
+                  <entry>Failed (Slave)</entry>
             </row></tbody></tgroup>
-	  </table>
-	</section>
-	<section>
-	  <title>Notifications</title>
-	  <para>
-	    Like clones, supporting notifications requires the <literal>notify</literal> action to be implemented.
-	    Once supported the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it.
-	  </para>
-	  <table frame="all">
-	    <title>Environment variables supplied with <literal>Master</literal> notify actions<footnote><para>Emphasized variables are specific to <literal>Master</literal> resources and all behave in the same manner as described for Clone resources.</para></footnote>
-	    </title>
-	    <tgroup cols="2">
+          </table>
+        </section>
+        <section>
+          <title>Notifications</title>
+          <para>
+            Like clones, supporting notifications requires the <literal>notify</literal> action to be implemented.
+            Once supported the notify action will be passed a number of extra variables which, when combined with additional context, can be used to calculate the current state of the cluster and what is about to happen to it.
+          </para>
+          <table frame="all">
+            <title>Environment variables supplied with <literal>Master</literal> notify actions<footnote><para>Emphasized variables are specific to <literal>Master</literal> resources and all behave in the same manner as described for Clone resources.</para></footnote>
+            </title>
+            <tgroup cols="2">
               <colspec colwidth="5*"/>
               <colspec colwidth="3*"/>
               <thead>
-		<row>
-		  <entry>Variable</entry>
-		  <entry>Description</entry>
-		</row>
+                <row>
+                  <entry>Variable</entry>
+                  <entry>Description</entry>
+                </row>
               </thead><tbody><row>
                 <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_type</tertiary></indexterm>
                   <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_type</secondary></indexterm>
                   <envar>OCF_RESKEY_CRM_meta_notify_type</envar></entry>
-		  <entry>Allowed values: <literal>pre</literal>, <literal>post</literal></entry>
-		</row>
-		<row>
+                  <entry>Allowed values: <literal>pre</literal>, <literal>post</literal></entry>
+                </row>
+                <row>
                   <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_operation</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_operation</secondary></indexterm><envar>OCF_RESKEY_CRM_meta_notify_operation</envar></entry>
-		  <entry>Allowed values: <literal>start</literal>, <literal>stop</literal></entry>
-		</row>
-		<row>
+                  <entry>Allowed values: <literal>start</literal>, <literal>stop</literal></entry>
+                </row>
+                <row>
                   <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_active_resource</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_resource</secondary></indexterm>
                     <envar>OCF_RESKEY_CRM_meta_notify_active_resource</envar></entry>
-		  <entry>Resources the that are running</entry>
-		</row>
-		<row>
+                  <entry>Resources the that are running</entry>
+                </row>
+                <row>
                   <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_inactive_resource</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_resource</secondary></indexterm>
                     <envar>OCF_RESKEY_CRM_meta_notify_inactive_resource</envar></entry>
-		  <entry>Resources the that are not running</entry>
-		</row>
-		<row>
+                  <entry>Resources the that are not running</entry>
+                </row>
+                <row>
                   <entry><emphasis><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_master_resource</tertiary></indexterm>
                       <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_master_resource</secondary></indexterm>
                       <envar>OCF_RESKEY_CRM_meta_notify_master_resource</envar></emphasis></entry>
-		  <entry>Resources that are running in <literal>Master</literal> mode</entry>
-		</row>
-		<row>
+                  <entry>Resources that are running in <literal>Master</literal> mode</entry>
+                </row>
+                <row>
                   <entry><emphasis><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_slave_resource</tertiary></indexterm>
                       <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_slave_resource</secondary></indexterm>
                       <envar>OCF_RESKEY_CRM_meta_notify_slave_resource</envar></emphasis></entry>
-		  <entry>Resources that are running in <literal>Slave</literal> mode</entry>
-		</row>
-		<row>
+                  <entry>Resources that are running in <literal>Slave</literal> mode</entry>
+                </row>
+                <row>
                   <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_start_resource</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_resource</secondary></indexterm>
                     <envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar></entry>
-		  <entry>Resources to be started</entry>
-		</row>
-		<row>
+                  <entry>Resources to be started</entry>
+                </row>
+                <row>
                   <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_stop_resource</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_resource</secondary></indexterm>
                     <envar>OCF_RESKEY_CRM_meta_notify_stop_resource</envar></entry>
-		  <entry>Resources to be stopped</entry>
-		</row>
-		<row>
+                  <entry>Resources to be stopped</entry>
+                </row>
+                <row>
                   <entry><emphasis><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_promote_resource</tertiary></indexterm>
                       <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_promote_resource</secondary></indexterm>
                       <envar>OCF_RESKEY_CRM_meta_notify_promote_resource</envar></emphasis></entry>
-		  <entry>Resources to be promoted</entry>
-		</row>
-		<row>
+                  <entry>Resources to be promoted</entry>
+                </row>
+                <row>
                   <entry><emphasis><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_demote_resource</tertiary></indexterm>
                       <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_demote_resource</secondary></indexterm>
                       <envar>OCF_RESKEY_CRM_meta_notify_demote_resource</envar></emphasis></entry>
-		  <entry>Resources to be demoted</entry>
-		</row>
-		<row>
+                  <entry>Resources to be demoted</entry>
+                </row>
+                <row>
                   <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_start_uname</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_uname</secondary></indexterm>
                     <envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar></entry>
-		  <entry>Nodes on which resources will be started</entry>
-		</row>
-		<row>
+                  <entry>Nodes on which resources will be started</entry>
+                </row>
+                <row>
                   <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_stop_uname</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_uname</secondary></indexterm>
                     <envar>OCF_RESKEY_CRM_meta_notify_stop_uname</envar></entry>
-		  <entry>Nodes on which resources will be stopped</entry>
-		</row>
-		<row>
+                  <entry>Nodes on which resources will be stopped</entry>
+                </row>
+                <row>
                   <entry><emphasis><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_promote_uname</tertiary></indexterm>
                       <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_promote_uname</secondary></indexterm>
                       <envar>OCF_RESKEY_CRM_meta_notify_promote_uname</envar></emphasis></entry>
-		  <entry>Nodes on which resources will be promoted</entry>
-		</row>
-		<row>
+                  <entry>Nodes on which resources will be promoted</entry>
+                </row>
+                <row>
                   <entry><emphasis><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_demote_uname</tertiary></indexterm>
                       <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_demote_uname</secondary></indexterm>
                       <envar>OCF_RESKEY_CRM_meta_notify_demote_uname</envar></emphasis></entry>
-		  <entry>Nodes on which resources will be demoted</entry>
-		</row>
-		<row>
+                  <entry>Nodes on which resources will be demoted</entry>
+                </row>
+                <row>
                   <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_active_uname</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_uname</secondary></indexterm>
                     <envar>OCF_RESKEY_CRM_meta_notify_active_uname</envar></entry>
-		  <entry>Nodes on which resources are running</entry>
-		</row>
-		<row>
+                  <entry>Nodes on which resources are running</entry>
+                </row>
+                <row>
                   <entry><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_inactive_uname</tertiary></indexterm>
                     <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_uname</secondary></indexterm>
                     <envar>OCF_RESKEY_CRM_meta_notify_inactive_uname</envar></entry>
-		  <entry>Nodes on which resources are not running</entry>
-		</row>
-		<row>
+                  <entry>Nodes on which resources are not running</entry>
+                </row>
+                <row>
                   <entry><emphasis><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_master_uname</tertiary></indexterm>
                       <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_master_uname</secondary></indexterm>
                       <envar>OCF_RESKEY_CRM_meta_notify_master_uname</envar></emphasis></entry>
-		  <entry>Nodes on which resources are running in <literal>Master</literal> mode</entry>
-		</row>
-		<row>
+                  <entry>Nodes on which resources are running in <literal>Master</literal> mode</entry>
+                </row>
+                <row>
                   <entry><emphasis><indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_slave_uname</tertiary></indexterm>
                       <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_slave_uname</secondary></indexterm>
                       <envar>OCF_RESKEY_CRM_meta_notify_slave_uname</envar></emphasis></entry>
-		  <entry>Nodes on which resources are running in <literal>Slave</literal> mode</entry>
+                  <entry>Nodes on which resources are running in <literal>Slave</literal> mode</entry>
             </row></tbody></tgroup>
-	  </table>
-	</section>
-	<section>
-	  <title>Proper Interpretation of Notification Environment Variables</title>
-	  <para>Pre-notification (demote):
-	  <itemizedlist spacing="compact">
-	    <listitem><para><literal>Active</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar></para></listitem>
-	    <listitem><para><literal>Master</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_master_resource</envar></para></listitem>
-	    <listitem><para><literal>Slave</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar></para></listitem>
-	    <listitem><para>Inactive resources: <envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar></para></listitem>
-	    <listitem><para>Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
-	    <listitem><para>Resources to be promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar></para></listitem>
-	    <listitem><para>Resources to be demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
-	    <listitem><para>Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
-	  </itemizedlist>
+          </table>
+        </section>
+        <section>
+          <title>Proper Interpretation of Notification Environment Variables</title>
+          <para>Pre-notification (demote):
+          <itemizedlist spacing="compact">
+            <listitem><para><literal>Active</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar></para></listitem>
+            <listitem><para><literal>Master</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_master_resource</envar></para></listitem>
+            <listitem><para><literal>Slave</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar></para></listitem>
+            <listitem><para>Inactive resources: <envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar></para></listitem>
+            <listitem><para>Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
+            <listitem><para>Resources to be promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar></para></listitem>
+            <listitem><para>Resources to be demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
+            <listitem><para>Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
+          </itemizedlist>
         </para>
-	  <para>Post-notification (demote) / Pre-notification (stop):
+          <para>Post-notification (demote) / Pre-notification (stop):
             <itemizedlist spacing="compact">
               <listitem><para><literal>Active</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar></para></listitem>
               <listitem><para><literal>Master</literal> resources:
@@ -897,30 +897,30 @@
                   </itemizedlist>
                 </para>
               </listitem>
-	    <listitem><para><literal>Slave</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar></para></listitem>
-	    <listitem><para>Inactive resources: <envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar></para></listitem>
-	    <listitem><para>Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
-	    <listitem><para>Resources to be promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar></para></listitem>
-	    <listitem><para>Resources to be demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
-	    <listitem><para>Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
-	    <listitem><para>Resources that were demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
-	  </itemizedlist> </para>
-	  <para/>
-	  <para>Post-notification (stop) / Pre-notification (start)
-	  <itemizedlist spacing="compact">
+            <listitem><para><literal>Slave</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar></para></listitem>
+            <listitem><para>Inactive resources: <envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar></para></listitem>
+            <listitem><para>Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
+            <listitem><para>Resources to be promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar></para></listitem>
+            <listitem><para>Resources to be demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
+            <listitem><para>Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
+            <listitem><para>Resources that were demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
+          </itemizedlist> </para>
+          <para/>
+          <para>Post-notification (stop) / Pre-notification (start)
+          <itemizedlist spacing="compact">
             <listitem><para><literal>Active</literal> resources:
                 <itemizedlist spacing="compact" mark="none">
                   <listitem><para><envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar></para></listitem>
                   <listitem><para>minus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar> </para></listitem>
                 </itemizedlist>
             </para></listitem>
-	    <listitem><para><literal>Master</literal> resources:
+            <listitem><para><literal>Master</literal> resources:
                 <itemizedlist spacing="compact" mark="none">
                   <listitem><para><envar>$OCF_RESKEY_CRM_meta_notify_master_resource</envar></para></listitem>
                   <listitem><para>minus <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar> </para></listitem>
                 </itemizedlist>
             </para></listitem>
-	    <listitem><para><literal>Slave</literal> resources:
+            <listitem><para><literal>Slave</literal> resources:
                 <itemizedlist spacing="compact" mark="none">
                   <listitem><para><envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar></para></listitem>
                   <listitem><para>minus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar> </para></listitem>
@@ -932,16 +932,16 @@
                   <listitem><para>plus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar> </para></listitem>
                 </itemizedlist>
             </para></listitem>
-	    <listitem><para>Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
-	    <listitem><para>Resources to be promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar></para></listitem>
-	    <listitem><para>Resources to be demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
-	    <listitem><para>Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
-	    <listitem><para>Resources that were demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
-	    <listitem><para>Resources that were stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
+            <listitem><para>Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
+            <listitem><para>Resources to be promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar></para></listitem>
+            <listitem><para>Resources to be demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
+            <listitem><para>Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
+            <listitem><para>Resources that were demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
+            <listitem><para>Resources that were stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
           </itemizedlist></para>
-	  <para>Post-notification (start) / Pre-notification (promote)
-	  <itemizedlist spacing="compact">
-	    <listitem><para><literal>Active</literal> resources:
+          <para>Post-notification (start) / Pre-notification (promote)
+          <itemizedlist spacing="compact">
+            <listitem><para><literal>Active</literal> resources:
                 <itemizedlist spacing="compact" mark="none">
                   <listitem><para><envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar></para></listitem>
                   <listitem><para>minus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
@@ -968,16 +968,16 @@
                   <listitem><para>minus <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar> </para></listitem>
                 </itemizedlist>
             </para></listitem>
-	    <listitem><para>Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
-	    <listitem><para>Resources to be promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar></para></listitem>
-	    <listitem><para>Resources to be demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
-	    <listitem><para>Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
-	    <listitem><para>Resources that were started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
-	    <listitem><para>Resources that were demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
-	    <listitem><para>Resources that were stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
+            <listitem><para>Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
+            <listitem><para>Resources to be promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar></para></listitem>
+            <listitem><para>Resources to be demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
+            <listitem><para>Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
+            <listitem><para>Resources that were started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar></para></listitem>
+            <listitem><para>Resources that were demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar></para></listitem>
+            <listitem><para>Resources that were stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
         </itemizedlist></para>
-	  <para/>
-	  <para>Post-notification (promote)
+          <para/>
+          <para>Post-notification (promote)
             <itemizedlist spacing="compact">
               <listitem><para><literal>Active</literal> resources:
                   <itemizedlist spacing="compact" mark="none">
@@ -1018,6 +1018,6 @@
               <listitem><para>Resources that were stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar></para></listitem>
             </itemizedlist>
           </para>
-	</section>
+        </section>
     </section>
   </chapter>

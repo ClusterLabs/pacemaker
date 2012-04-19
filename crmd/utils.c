@@ -501,6 +501,9 @@ fsa_action2string(long long action)
         case A_LRM_DISCONNECT:
             actionAsText = "A_LRM_DISCONNECT";
             break;
+        case O_LRM_RECONNECT:
+            actionAsText = "O_LRM_RECONNECT";
+            break;
         case A_CL_JOIN_QUERY:
             actionAsText = "A_CL_JOIN_QUERY";
             break;

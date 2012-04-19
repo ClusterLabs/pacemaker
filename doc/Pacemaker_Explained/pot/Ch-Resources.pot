@@ -917,7 +917,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The easiest way to stop a recurring monitor is to just delete it. However, there can be times when you only want to disable it temporarily. In such cases, simply add <literal>disabled=\"true\"</literal> to the operation's definition."
+msgid "The easiest way to stop a recurring monitor is to just delete it. However, there can be times when you only want to disable it temporarily. In such cases, simply add <literal>enabled=\"false\"</literal> to the operation's definition."
 msgstr ""
 
 #. Tag: title
@@ -929,7 +929,7 @@ msgstr ""
 #, no-c-format
 msgid " &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "    &lt;operations&gt;\n"
-"     &lt;op id=\"public-ip-check\" name=\"monitor\" interval=\"60s\" disabled=\"true\"/&gt;\n"
+"     &lt;op id=\"public-ip-check\" name=\"monitor\" interval=\"60s\" enabled=\"false\"/&gt;\n"
 "    &lt;/operations&gt;\n"
 "    &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
 "       &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
@@ -944,7 +944,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>cibadmin -M -X ‘&lt;op id=\"public-ip-check\" disabled=\"true\"/&gt;'</command>"
+msgid "<command>cibadmin -M -X ‘&lt;op id=\"public-ip-check\" enabled=\"false\"/&gt;'</command>"
 msgstr ""
 
 #. Tag: para
@@ -954,6 +954,6 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>cibadmin -M -X ‘&lt;op id=\"public-ip-check\" disabled=\"false\"/&gt;'</command>"
+msgid "<command>cibadmin -M -X ‘&lt;op id=\"public-ip-check\" enabled=\"true\"/&gt;'</command>"
 msgstr ""
 

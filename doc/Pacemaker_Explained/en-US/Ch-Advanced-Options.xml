@@ -8,12 +8,12 @@
         <indexterm significance="preferred">
           <primary>Remote</primary>
           <secondary>administration</secondary></indexterm>
-	Provided Pacemaker is installed on a machine, it is possible to connect to the cluster even if the machine itself is not in the same cluster.
-	To do this, one simply sets up a number of environment variables and runs the same commands as when working on a cluster node.
+        Provided Pacemaker is installed on a machine, it is possible to connect to the cluster even if the machine itself is not in the same cluster.
+        To do this, one simply sets up a number of environment variables and runs the same commands as when working on a cluster node.
       </para>
       <table frame="all">
-	<title>Environment Variables Used to Connect to Remote Instances of the CIB </title>
-	<tgroup cols="2">
+        <title>Environment Variables Used to Connect to Remote Instances of the CIB </title>
+        <tgroup cols="2">
           <colspec colwidth="1*"/>
           <colspec colwidth="5*"/>
           <thead>
@@ -27,7 +27,7 @@
                 <indexterm significance="preferred"><primary>Environment Variable</primary><secondary>CIB_</secondary><tertiary>user</tertiary></indexterm>
                 CIB_user</entry>
               <entry>The user to connect as. Needs to be part of the <literal>hacluster</literal> group on the target host. Defaults to <emphasis>$USER</emphasis>.
-		</entry>
+                </entry>
             </row>
             <row>
               <entry><indexterm significance="preferred"><primary>CIB_*, Env. Var. for Remote Conn.</primary><secondary>passwd</secondary></indexterm>
@@ -53,25 +53,25 @@
                 CIB_encrypted</entry>
               <entry>Encrypt network traffic; defaults to <emphasis>true</emphasis>.</entry>
             </row>
-	  </tbody>
-	</tgroup>
+          </tbody>
+        </tgroup>
       </table>
       <para>
-	So, if <literal>c001n01</literal> is an active cluster node and is listening on <literal>1234</literal> for connections, and <literal>someguy</literal> is a member of the <literal>hacluster</literal> group,
-	then the following would prompt for <literal>someguy</literal>'s password and return the cluster's current configuration:
+        So, if <literal>c001n01</literal> is an active cluster node and is listening on <literal>1234</literal> for connections, and <literal>someguy</literal> is a member of the <literal>hacluster</literal> group,
+        then the following would prompt for <literal>someguy</literal>'s password and return the cluster's current configuration:
       </para>
       <programlisting><userinput>
   export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;
   cibadmin -Q </userinput> </programlisting>
       <para>
-	For security reasons, the cluster does not listen for remote connections by default.
-	If you wish to allow remote access, you need to set the <literal>remote-tls-port</literal> (encrypted) or <literal>remote-clear-port</literal> (unencrypted) top-level options (ie., those kept in the cib tag, like <literal>num_updates</literal> and <literal>epoch</literal>).
+        For security reasons, the cluster does not listen for remote connections by default.
+        If you wish to allow remote access, you need to set the <literal>remote-tls-port</literal> (encrypted) or <literal>remote-clear-port</literal> (unencrypted) top-level options (ie., those kept in the cib tag, like <literal>num_updates</literal> and <literal>epoch</literal>).
       </para>
       <table frame="all">
-		  <title>
-		  <indexterm significance="preferred"><primary>Remote</primary><secondary>connect, CIB options</secondary></indexterm>
-			  Extra top-level CIB options for remote access</title>
-	<tgroup cols="2">
+                  <title>
+                  <indexterm significance="preferred"><primary>Remote</primary><secondary>connect, CIB options</secondary></indexterm>
+                          Extra top-level CIB options for remote access</title>
+        <tgroup cols="2">
           <colspec colwidth="1*"/>
           <colspec colwidth="4*"/>
           <thead>
@@ -80,198 +80,198 @@
               <entry>Description</entry>
             </row>
           </thead><tbody><row>
-		  <entry><indexterm significance="preferred"><primary>remote-tls-port</primary></indexterm>
-			  remote-tls-port</entry>
+                  <entry><indexterm significance="preferred"><primary>remote-tls-port</primary></indexterm>
+                          remote-tls-port</entry>
               <entry>Listen for encrypted remote connections on this port. Default: <emphasis>none</emphasis></entry>
             </row>
             <row>
-				<entry><indexterm significance="preferred"><primary>remote-clear-port</primary></indexterm>
-					remote-clear-port</entry>
+                                <entry><indexterm significance="preferred"><primary>remote-clear-port</primary></indexterm>
+                                        remote-clear-port</entry>
               <entry>Listen for plaintext remote connections on this port. Default: <emphasis>none</emphasis></entry>
             </row>
-	  </tbody>
-	</tgroup>
+          </tbody>
+        </tgroup>
       </table>
     </section>
     <section id="s-recurring-start">
       <title>Specifying When Recurring Actions are Performed</title>
       <para>
-	By default, recurring actions are scheduled relative to when the resource started.
-	So if your resource was last started at 14:32 and you have a backup set to be performed every 24 hours, then the backup will always run at in the middle of the business day - hardly desirable.
+        By default, recurring actions are scheduled relative to when the resource started.
+        So if your resource was last started at 14:32 and you have a backup set to be performed every 24 hours, then the backup will always run at in the middle of the business day - hardly desirable.
       </para>
       <para>
-	To specify a date/time that the operation should be relative to, set the operation's <literal>interval-origin</literal>.
-	The cluster uses this point to calculate the correct <literal>start-delay</literal> such that the operation will occur at <emphasis>origin + (interval * N)</emphasis>.
+        To specify a date/time that the operation should be relative to, set the operation's <literal>interval-origin</literal>.
+        The cluster uses this point to calculate the correct <literal>start-delay</literal> such that the operation will occur at <emphasis>origin + (interval * N)</emphasis>.
       </para>
       <para>
-	So, if the operation's interval is 24h, it's interval-origin is set to <literal>02:00</literal> and it is currently <literal>14:32</literal>, then the cluster would initiate the operation with a start delay of 11 hours and 28 minutes.
-	If the resource is moved to another node before 2am, then the operation is of course cancelled.
+        So, if the operation's interval is 24h, it's interval-origin is set to <literal>02:00</literal> and it is currently <literal>14:32</literal>, then the cluster would initiate the operation with a start delay of 11 hours and 28 minutes.
+        If the resource is moved to another node before 2am, then the operation is of course cancelled.
       </para>
       <para>
-	The value specified for interval and <literal>interval-origin</literal> can be any date/time conforming to the <ulink url="http://en.wikipedia.org/wiki/ISO_8601">ISO8601 standard</ulink>.
-	By way of example, to specify an operation that would run on the first Monday of 2009 and every Monday after that you would add: 
+        The value specified for interval and <literal>interval-origin</literal> can be any date/time conforming to the <ulink url="http://en.wikipedia.org/wiki/ISO_8601">ISO8601 standard</ulink>.
+        By way of example, to specify an operation that would run on the first Monday of 2009 and every Monday after that you would add:
       </para>
       <example>
-	<title>Specifying a Base for Recurring Action Intervals</title>
+        <title>Specifying a Base for Recurring Action Intervals</title>
         <programlisting>&lt;op id="my-weekly-action" name="custom-action" interval="P7D" interval-origin="2009-W01-1"/> </programlisting>
       </example>
     </section>
     <section id="s-moving-resource">
       <title>Moving Resources</title>
-	  <indexterm significance="preferred"><primary>Moving Resources</primary></indexterm>
-	  <indexterm significance="preferred"><primary>Resource</primary><secondary>Moving</secondary></indexterm>
+          <indexterm significance="preferred"><primary>Moving Resources</primary></indexterm>
+          <indexterm significance="preferred"><primary>Resource</primary><secondary>Moving</secondary></indexterm>
       <section>
-	<title>Manual Intervention</title>
-	<para>There are primarily two occasions when you would want to move a resource from it's current location: when the whole node is under maintenance, and when a single resource needs to be moved.</para>
-	<para>
-	  Since everything eventually comes down to a score, you could create constraints for every resource to prevent them from running on one node.
-	  While the configuration can seem convoluted at times, not even we would require this of administrators.
-	</para>
-	<para>
-	  Instead one can set a special node attribute which tells the cluster "don't let anything run here".
-	  There is even a helpful tool to help query and set it, called <command>crm_standby</command>.
-	  To check the standby status of the current machine, simply run:
-	</para>
-	<programlisting><command>crm_standby --get-value</command></programlisting>
-	<para>
-	  A value of <literal>true</literal> indicates that the node is <emphasis>NOT</emphasis> able to host any resources, while a value of <literal>false</literal> says that it <emphasis>CAN</emphasis>.
-	</para>
-	<para>
-	  You can also check the status of other nodes in the cluster by specifying the <parameter>--node-uname</parameter> option:
-	</para>
-	<programlisting><command>crm_standby --get-value --node-uname sles-2</command></programlisting>
-	<para>To change the current node's standby status, use <parameter>--attr-value</parameter> instead of <parameter>--get-value</parameter>.</para>
-	<programlisting><command>crm_standby --attr-value</command></programlisting>
-	<para>Again, you can change another host's value by supplying a host name with <parameter>--node-uname</parameter>.</para>
-	<para>
-	  When only one resource is required to move, we do this by creating location constraints.
-	  However, once again we provide a user friendly shortcut as part of the <command>crm_resource</command> command, which creates and modifies the extra constraints for you.
-	  If <literal>Email</literal> was running on <literal>sles-1</literal> and you wanted it moved to a specific location, the command would look something like:
-	</para>
-	<programlisting><command>crm_resource -M -r Email -H sles-2</command></programlisting>
-	<para>Behind the scenes, the tool will create the following location constraint:</para>
+        <title>Manual Intervention</title>
+        <para>There are primarily two occasions when you would want to move a resource from it's current location: when the whole node is under maintenance, and when a single resource needs to be moved.</para>
+        <para>
+          Since everything eventually comes down to a score, you could create constraints for every resource to prevent them from running on one node.
+          While the configuration can seem convoluted at times, not even we would require this of administrators.
+        </para>
+        <para>
+          Instead one can set a special node attribute which tells the cluster "don't let anything run here".
+          There is even a helpful tool to help query and set it, called <command>crm_standby</command>.
+          To check the standby status of the current machine, simply run:
+        </para>
+        <programlisting><command>crm_standby --get-value</command></programlisting>
+        <para>
+          A value of <literal>true</literal> indicates that the node is <emphasis>NOT</emphasis> able to host any resources, while a value of <literal>false</literal> says that it <emphasis>CAN</emphasis>.
+        </para>
+        <para>
+          You can also check the status of other nodes in the cluster by specifying the <parameter>--node-uname</parameter> option:
+        </para>
+        <programlisting><command>crm_standby --get-value --node-uname sles-2</command></programlisting>
+        <para>To change the current node's standby status, use <parameter>--attr-value</parameter> instead of <parameter>--get-value</parameter>.</para>
+        <programlisting><command>crm_standby --attr-value</command></programlisting>
+        <para>Again, you can change another host's value by supplying a host name with <parameter>--node-uname</parameter>.</para>
+        <para>
+          When only one resource is required to move, we do this by creating location constraints.
+          However, once again we provide a user friendly shortcut as part of the <command>crm_resource</command> command, which creates and modifies the extra constraints for you.
+          If <literal>Email</literal> was running on <literal>sles-1</literal> and you wanted it moved to a specific location, the command would look something like:
+        </para>
+        <programlisting><command>crm_resource -M -r Email -H sles-2</command></programlisting>
+        <para>Behind the scenes, the tool will create the following location constraint:</para>
         <programlisting>&lt;rsc_location rsc="Email" node="sles-2" score="INFINITY"/> </programlisting>
-	<para>It is important to note that subsequent invocations of <command>crm_resource -M</command> are not cumulative. So, if you ran these commands</para>
-	<programlisting><command>crm_resource -M -r Email -H sles-2</command>
+        <para>It is important to note that subsequent invocations of <command>crm_resource -M</command> are not cumulative. So, if you ran these commands</para>
+        <programlisting><command>crm_resource -M -r Email -H sles-2</command>
           <command>crm_resource -M -r Email -H sles-3</command></programlisting>
-	<para>then it is as if you had never performed the first command.</para>
-	<para>To allow the resource to move back again, use:</para>
-	<programlisting><command>crm_resource -U -r Email</command></programlisting>
-	<para>
-	  Note the use of the word <emphasis>allow</emphasis>.
-	  The resource can move back to its original location but, depending on <literal>resource-stickiness</literal>, it might stay where it is.
-	  To be absolutely certain that it moves back to <literal>sles-1</literal>, move it there before issuing the call to <command>crm_resource -U</command>: 
-	</para>
-	<programlisting><command>crm_resource -M -r Email -H sles-1</command>
+        <para>then it is as if you had never performed the first command.</para>
+        <para>To allow the resource to move back again, use:</para>
+        <programlisting><command>crm_resource -U -r Email</command></programlisting>
+        <para>
+          Note the use of the word <emphasis>allow</emphasis>.
+          The resource can move back to its original location but, depending on <literal>resource-stickiness</literal>, it might stay where it is.
+          To be absolutely certain that it moves back to <literal>sles-1</literal>, move it there before issuing the call to <command>crm_resource -U</command>:
+        </para>
+        <programlisting><command>crm_resource -M -r Email -H sles-1</command>
           <command>crm_resource -U -r Email</command></programlisting>
-	<para>Alternatively, if you only care that the resource should be moved from its current location, try </para>
-	<programlisting><command>crm_resource -M -r Email</command></programlisting>
-	<para>Which will instead create a negative constraint, like
-	<programlisting>&lt;rsc_location rsc="Email" node="sles-1" score="-INFINITY"/></programlisting></para>
-	<para>
-	  This will achieve the desired effect, but will also have long-term consequences.
-	  As the tool will warn you, the creation of a <literal>-INFINITY</literal> constraint will prevent the resource from running on that node until <command>crm_resource -U</command> is used.
-	  This includes the situation where every other cluster node is no longer available!
-	</para>
-	<para>
-	  In some cases, such as when <literal>resource-stickiness</literal> is set to <literal>INFINITY</literal>, it is possible that you will end up with the problem described in <xref linkend="node-score-equal"/>.
-	  The tool can detect some of these cases and deals with them by also creating both a positive and negative constraint. Eg. 
-	</para>
+        <para>Alternatively, if you only care that the resource should be moved from its current location, try </para>
+        <programlisting><command>crm_resource -M -r Email</command></programlisting>
+        <para>Which will instead create a negative constraint, like
+        <programlisting>&lt;rsc_location rsc="Email" node="sles-1" score="-INFINITY"/></programlisting></para>
+        <para>
+          This will achieve the desired effect, but will also have long-term consequences.
+          As the tool will warn you, the creation of a <literal>-INFINITY</literal> constraint will prevent the resource from running on that node until <command>crm_resource -U</command> is used.
+          This includes the situation where every other cluster node is no longer available!
+        </para>
+        <para>
+          In some cases, such as when <literal>resource-stickiness</literal> is set to <literal>INFINITY</literal>, it is possible that you will end up with the problem described in <xref linkend="node-score-equal"/>.
+          The tool can detect some of these cases and deals with them by also creating both a positive and negative constraint. Eg.
+        </para>
         <para><literal>Email</literal> prefers <literal>sles-1</literal> with a score of <literal>-INFINITY</literal></para>
         <para><literal>Email</literal> prefers <literal>sles-2</literal> with a score of <literal>INFINITY</literal></para>
-	<para>which has the same long-term consequences as discussed earlier.</para>
+        <para>which has the same long-term consequences as discussed earlier.</para>
       </section>
       <section id="s-failure-migration">
-	<title>Moving Resources Due to Failure</title>
-	<para>New in 1.0 is the concept of a migration threshold<footnote>
+        <title>Moving Resources Due to Failure</title>
+        <para>New in 1.0 is the concept of a migration threshold<footnote>
             <para>
-	      The naming of this option was unfortunate as it is easily confused with true migration, the process of moving a resource from one node to another without stopping it.
-	      Xen virtual guests are the most common example of resources that can be migrated in this manner.
-	    </para>
-	  </footnote>.
-	  Simply define <literal>migration-threshold=N</literal> for a resource and it will migrate to a new node after N failures.
-	  There is no threshold defined by default.
-	  To determine the resource's current failure status and limits, use <command>crm_mon --failcounts</command>.
-	</para>
-	<para>
-	  By default, once the threshold has been reached, this node will no longer be allowed to run the failed resource until the administrator manually resets the resource's failcount using <command>crm_failcount</command> (after hopefully first fixing the failure's cause).
-	  However it is possible to expire them by setting the resource's <literal>failure-timeout</literal> option.
-	</para>
-	<para>So a setting of <literal>migration-threshold=2</literal> and <literal>failure-timeout=60s</literal> would cause the resource to move to a new node after 2 failures, and allow it to move back (depending on the stickiness and constraint scores) after one minute.</para>
-	<para>
-	  There are two exceptions to the migration threshold concept; they occur when a resource either fails to start or fails to stop.
-	  Start failures cause the failcount to be set to <literal>INFINITY</literal> and thus always cause the resource to move immediately.
-	</para>
-	<para>
-	  Stop failures are slightly different and crucial.
-	  If a resource fails to stop and STONITH is enabled, then the cluster will fence the node in order to be able to start the resource elsewhere.
-	  If STONITH is not enabled, then the cluster has no way to continue and will not try to start the resource elsewhere, but will try to stop it again after the failure timeout.
-	</para>
-	<important><para>Please read <xref linkend="s-rules-recheck"/> before enabling this option.</para><para> <!-- ws --></para></important>
+              The naming of this option was unfortunate as it is easily confused with true migration, the process of moving a resource from one node to another without stopping it.
+              Xen virtual guests are the most common example of resources that can be migrated in this manner.
+            </para>
+          </footnote>.
+          Simply define <literal>migration-threshold=N</literal> for a resource and it will migrate to a new node after N failures.
+          There is no threshold defined by default.
+          To determine the resource's current failure status and limits, use <command>crm_mon --failcounts</command>.
+        </para>
+        <para>
+          By default, once the threshold has been reached, this node will no longer be allowed to run the failed resource until the administrator manually resets the resource's failcount using <command>crm_failcount</command> (after hopefully first fixing the failure's cause).
+          However it is possible to expire them by setting the resource's <literal>failure-timeout</literal> option.
+        </para>
+        <para>So a setting of <literal>migration-threshold=2</literal> and <literal>failure-timeout=60s</literal> would cause the resource to move to a new node after 2 failures, and allow it to move back (depending on the stickiness and constraint scores) after one minute.</para>
+        <para>
+          There are two exceptions to the migration threshold concept; they occur when a resource either fails to start or fails to stop.
+          Start failures cause the failcount to be set to <literal>INFINITY</literal> and thus always cause the resource to move immediately.
+        </para>
+        <para>
+          Stop failures are slightly different and crucial.
+          If a resource fails to stop and STONITH is enabled, then the cluster will fence the node in order to be able to start the resource elsewhere.
+          If STONITH is not enabled, then the cluster has no way to continue and will not try to start the resource elsewhere, but will try to stop it again after the failure timeout.
+        </para>
+        <important><para>Please read <xref linkend="s-rules-recheck"/> before enabling this option.</para><para> <!-- ws --></para></important>
       </section>
       <section>
-	<title>Moving Resources Due to Connectivity Changes</title>
-	<para>Setting up the cluster to move resources when external connectivity is lost is a two-step process.</para>
-	<section>
-	  <title>Tell Pacemaker to monitor connectivity</title>
-	  <para>
-	    To do this, you need to add a <literal>ping</literal> resource to the cluster.
-	    The <literal>ping</literal> resource uses the system utility of the same name to a test if list of machines (specified by DNS hostname or IPv4/IPv6 address) are reachable and uses the results to maintain a node attribute normally called <literal>pingd</literal><footnote>
-	      <para>The attribute name is customizable; that allows multiple ping groups to be defined.</para>
-	  </footnote>.
-	  </para>
-	  <note><para>Older versions of Heartbeat required users to add ping nodes to <filename>ha.cf</filename> - this is no longer required.</para></note>
-	  <para/>
-	  <important>
-	    <para>
-	      Older versions of Pacemaker used a custom binary called <filename>pingd</filename> for this functionality; this is now deprecated in favor of <literal>ping</literal>.
-	      If your version of Pacemaker does not contain the <literal>ping</literal> agent, you can download the latest version<footnote><para><ulink url="http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping"/></para></footnote>.
-	    </para>
+        <title>Moving Resources Due to Connectivity Changes</title>
+        <para>Setting up the cluster to move resources when external connectivity is lost is a two-step process.</para>
+        <section>
+          <title>Tell Pacemaker to monitor connectivity</title>
+          <para>
+            To do this, you need to add a <literal>ping</literal> resource to the cluster.
+            The <literal>ping</literal> resource uses the system utility of the same name to a test if list of machines (specified by DNS hostname or IPv4/IPv6 address) are reachable and uses the results to maintain a node attribute normally called <literal>pingd</literal><footnote>
+              <para>The attribute name is customizable; that allows multiple ping groups to be defined.</para>
+          </footnote>.
+          </para>
+          <note><para>Older versions of Heartbeat required users to add ping nodes to <filename>ha.cf</filename> - this is no longer required.</para></note>
+          <para/>
+          <important>
+            <para>
+              Older versions of Pacemaker used a custom binary called <filename>pingd</filename> for this functionality; this is now deprecated in favor of <literal>ping</literal>.
+              If your version of Pacemaker does not contain the <literal>ping</literal> agent, you can download the latest version<footnote><para><ulink url="http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping"/></para></footnote>.
+            </para>
             <para><!-- ws --> </para>
-	  </important>
-	  <para>
-	    Normally the resource will run on all cluster nodes, which means that you'll need to create a clone.
-	    A template for this can be found below along with a description of the most interesting parameters.
-	  </para>
-	  <table frame="all">
-	    <title>Common Options for a 'ping' Resource</title>
-	    <tgroup cols="2">
+          </important>
+          <para>
+            Normally the resource will run on all cluster nodes, which means that you'll need to create a clone.
+            A template for this can be found below along with a description of the most interesting parameters.
+          </para>
+          <table frame="all">
+            <title>Common Options for a 'ping' Resource</title>
+            <tgroup cols="2">
               <colspec colwidth="1*"/>
               <colspec colwidth="6*"/>
               <thead>
-		<row>
-		  <entry>Field</entry>
-		  <entry>Description</entry>
-		</row>
+                <row>
+                  <entry>Field</entry>
+                  <entry>Description</entry>
+                </row>
               </thead>
-	      <tbody>
-		<row>
-			<entry>
+              <tbody>
+                <row>
+                        <entry>
                 <indexterm significance="preferred"><primary>dampen</primary><secondary>Resource Option</secondary></indexterm>
                 <indexterm significance="preferred"><primary>Resource</primary><secondary>Option</secondary><tertiary>dampen</tertiary></indexterm>
-				dampen</entry>
-		  <entry>The time to wait (dampening) for further changes to occur. Use this to prevent a resource from bouncing around the cluster when cluster nodes notice the loss of connectivity at slightly different times. </entry>
-		</row>
-		<row>
-			<entry>
+                                dampen</entry>
+                  <entry>The time to wait (dampening) for further changes to occur. Use this to prevent a resource from bouncing around the cluster when cluster nodes notice the loss of connectivity at slightly different times. </entry>
+                </row>
+                <row>
+                        <entry>
                 <indexterm significance="preferred"><primary>multiplier</primary><secondary>Resource Option</secondary></indexterm>
                 <indexterm significance="preferred"><primary>Resource</primary><secondary>Option</secondary><tertiary>multiplier</tertiary></indexterm>
-				multiplier</entry>
-		  <entry>The number of connected ping nodes gets multiplied by this value to get a score. Useful when there are multiple ping nodes configured.</entry>
-		</row>
-		<row>
-			<entry>
+                                multiplier</entry>
+                  <entry>The number of connected ping nodes gets multiplied by this value to get a score. Useful when there are multiple ping nodes configured.</entry>
+                </row>
+                <row>
+                        <entry>
                 <indexterm significance="preferred"><primary>host_list</primary><secondary>Resource Option</secondary></indexterm>
                 <indexterm significance="preferred"><primary>Resource</primary><secondary>Option</secondary><tertiary>host_list</tertiary></indexterm>
-				host_list</entry>
-		  <entry>The machines to contact in order to determine the current connectivity status. Allowed values include resolvable DNS host names, IPv4 and IPv6 addresses.</entry>
-		</row>
-	      </tbody>
-	    </tgroup>
-	  </table>
-	  <example>
-	    <title>An example ping cluster resource, checks node connectivity once every minute</title>
-	    <programlisting><![CDATA[ <clone id="Connected">
+                                host_list</entry>
+                  <entry>The machines to contact in order to determine the current connectivity status. Allowed values include resolvable DNS host names, IPv4 and IPv6 addresses.</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </table>
+          <example>
+            <title>An example ping cluster resource, checks node connectivity once every minute</title>
+            <programlisting><![CDATA[ <clone id="Connected">
    <primitive id="ping" provider="pacemaker" class="ocf" type="ping">
     <instance_attributes id="ping-attrs">
       <nvpair id="pingd-dampen" name="dampen" value="5s"/>
@@ -283,72 +283,72 @@
     </operations>
    </primitive>
   </clone> ]]> </programlisting>
-	  </example>
-	  <important>
-	    <para>
-	      You're only half done.
-	      The next section deals with telling Pacemaker how to deal with the connectivity status that <literal>ocf:pacemaker:ping</literal> is recording.
-	    </para>
+          </example>
+          <important>
+            <para>
+              You're only half done.
+              The next section deals with telling Pacemaker how to deal with the connectivity status that <literal>ocf:pacemaker:ping</literal> is recording.
+            </para>
             <para><!-- ws --> </para>
-	  </important>
-	</section>
-	<section>
-	  <title>Tell Pacemaker how to interpret the connectivity data</title>
-	  <para>NOTE: Before reading the following, please make sure you have read and understood <xref linkend="ch-rules"/> above.</para>
-	  <para>
-	    There are a number of ways to use the connectivity data provided by Heartbeat.
-	    The most common setup is for people to have a single ping node, to prevent the cluster from running a resource on any unconnected node.
+          </important>
+        </section>
+        <section>
+          <title>Tell Pacemaker how to interpret the connectivity data</title>
+          <para>NOTE: Before reading the following, please make sure you have read and understood <xref linkend="ch-rules"/> above.</para>
+          <para>
+            There are a number of ways to use the connectivity data provided by Heartbeat.
+            The most common setup is for people to have a single ping node, to prevent the cluster from running a resource on any unconnected node.
             TODO: is the idea that only nodes that can reach eg. the router should have active resources?
-	  </para>
-	  <example>
-	    <title>Don't run on unconnected nodes</title>
-	    <programlisting><![CDATA[ <rsc_location id="WebServer-no-connectivity" rsc="Webserver">
+          </para>
+          <example>
+            <title>Don't run on unconnected nodes</title>
+            <programlisting><![CDATA[ <rsc_location id="WebServer-no-connectivity" rsc="Webserver">
    <rule id="ping-exclude-rule" score="-INFINITY" >
     <expression id="ping-exclude" attribute="pingd" operation="not_defined"/>
    </rule>
   </rsc_location> ]]> </programlisting>
-	  </example>
-	  <para>
-	    A more complex setup is to have a number of ping nodes configured.
-	    You can require the cluster to only run resources on nodes that can connect to all (or a minimum subset) of them.
-	  </para>
-	  <example>
-	    <title>Run only on nodes connected to three or more ping nodes; this assumes <literal>multiplier</literal> is set to 1000.</title>
-	    <programlisting><![CDATA[ <rsc_location id="WebServer-connectivity" rsc="Webserver">
+          </example>
+          <para>
+            A more complex setup is to have a number of ping nodes configured.
+            You can require the cluster to only run resources on nodes that can connect to all (or a minimum subset) of them.
+          </para>
+          <example>
+            <title>Run only on nodes connected to three or more ping nodes; this assumes <literal>multiplier</literal> is set to 1000.</title>
+            <programlisting><![CDATA[ <rsc_location id="WebServer-connectivity" rsc="Webserver">
    <rule id="ping-prefer-rule" score="-INFINITY" >
     <expression id="ping-prefer" attribute="pingd" operation="lt" value="3000"/>
    </rule>
   </rsc_location> ]]> </programlisting>
-	  </example>
-	  <para>
-	    Instead you can tell the cluster only to <emphasis>prefer</emphasis> nodes with the best connectivity.
-	    Just be sure to set <literal>multiplier</literal> to a value higher than that of <literal>resource-stickiness</literal> (and don't set either of them to <literal>INFINITY</literal>).
-	  </para>
-	  <example>
-	    <title>Prefer the node with the most connected ping nodes</title>
-	    <programlisting><![CDATA[ <rsc_location id="WebServer-connectivity" rsc="Webserver">
+          </example>
+          <para>
+            Instead you can tell the cluster only to <emphasis>prefer</emphasis> nodes with the best connectivity.
+            Just be sure to set <literal>multiplier</literal> to a value higher than that of <literal>resource-stickiness</literal> (and don't set either of them to <literal>INFINITY</literal>).
+          </para>
+          <example>
+            <title>Prefer the node with the most connected ping nodes</title>
+            <programlisting><![CDATA[ <rsc_location id="WebServer-connectivity" rsc="Webserver">
    <rule id="ping-prefer-rule" score-attribute="pingd" >
     <expression id="ping-prefer" attribute="pingd" operation="defined"/>
    </rule>
   </rsc_location> ]]> </programlisting>
-	  </example>
-	  <para>
-	    It is perhaps easier to think of this in terms of the simple constraints that the cluster translates it into.
-	    For example, if <literal>sles-1</literal> is connected to all 5 ping nodes but <literal>sles-2</literal> is only connected to 2, then it would be as if you instead had the following constraints in your configuration:
-	  </para>
-	  <figure id="fig-pingd-constraint-expanded">
-	    <title>How the cluster translates the pingd constraint </title>
-	    <programlisting><![CDATA[ <rsc_location id="ping-1" rsc="Webserver" node="sles-1" score="5000"/>
+          </example>
+          <para>
+            It is perhaps easier to think of this in terms of the simple constraints that the cluster translates it into.
+            For example, if <literal>sles-1</literal> is connected to all 5 ping nodes but <literal>sles-2</literal> is only connected to 2, then it would be as if you instead had the following constraints in your configuration:
+          </para>
+          <figure id="fig-pingd-constraint-expanded">
+            <title>How the cluster translates the pingd constraint </title>
+            <programlisting><![CDATA[ <rsc_location id="ping-1" rsc="Webserver" node="sles-1" score="5000"/>
   <rsc_location id="ping-2" rsc="Webserver" node="sles-2" score="2000"/> ]]> </programlisting>
-	  </figure>
-	  <para>The advantage is that you don't have to manually update any constraints whenever your network connectivity changes.</para>
-	  <para>
-	    You can also combine the concepts above into something even more complex.
-	    The example below shows how you can prefer the node with the most connected ping nodes provided they have connectivity to at least three (again assuming that <literal>multiplier</literal> is set to 1000).
-	  </para>
-	  <example>
-	    <title>A more complex example of choosing a location based on connectivity </title>
-	    <programlisting><![CDATA[ <rsc_location id="WebServer-connectivity" rsc="Webserver">
+          </figure>
+          <para>The advantage is that you don't have to manually update any constraints whenever your network connectivity changes.</para>
+          <para>
+            You can also combine the concepts above into something even more complex.
+            The example below shows how you can prefer the node with the most connected ping nodes provided they have connectivity to at least three (again assuming that <literal>multiplier</literal> is set to 1000).
+          </para>
+          <example>
+            <title>A more complex example of choosing a location based on connectivity </title>
+            <programlisting><![CDATA[ <rsc_location id="WebServer-connectivity" rsc="Webserver">
    <rule id="ping-exclude-rule" score="-INFINITY" >
     <expression id="ping-exclude" attribute="pingd" operation="lt" value="3000"/>
    </rule>
@@ -356,52 +356,52 @@
     <expression id="ping-prefer" attribute="pingd" operation="defined"/>
    </rule>
   </rsc_location> ]]> </programlisting>
-	  </example>
-	</section>
+          </example>
+        </section>
       </section>
       <section>
-	<title>Resource Migration</title>
-	<para>
-	  Some resources, such as Xen virtual guests, are able to move to another location without loss of state.
-	  We call this resource migration; this is different from the normal practice of stopping the resource on the first machine and starting it elsewhere.
-	</para>
-	<para>
-	  Not all resources are able to migrate, see the Migration Checklist below, and those that can, won't do so in all situations.
-	  Conceptually there are two requirements from which the other prerequisites follow:
+        <title>Resource Migration</title>
+        <para>
+          Some resources, such as Xen virtual guests, are able to move to another location without loss of state.
+          We call this resource migration; this is different from the normal practice of stopping the resource on the first machine and starting it elsewhere.
+        </para>
+        <para>
+          Not all resources are able to migrate, see the Migration Checklist below, and those that can, won't do so in all situations.
+          Conceptually there are two requirements from which the other prerequisites follow:
           <itemizedlist spacing="compact">
             <listitem><para>the resource must be active and healthy at the old location </para></listitem>
             <listitem><para>everything required for the resource to run must be available on both the old and new locations</para></listitem>
           </itemizedlist>
-	</para>
-	<para>The cluster is able to accommodate both push and pull migration models by requiring the resource agent to support two new actions: <literal>migrate_to</literal> (performed on the current location) and <literal>migrate_from</literal> (performed on the destination).</para>
-	<para>
-	  In push migration, the process on the current location transfers the resource to the new location where is it later activated.
-	  In this scenario, most of the work would be done in the <literal>migrate_to</literal> action and, if anything, the activation would occur during <literal>migrate_from</literal>.
-	</para>
-	<para>Conversely for pull, the <literal>migrate_to</literal> action is practically empty and <literal>migrate_from</literal> does most of the work, extracting the relevant resource state from the old location and activating it.</para>
-	<para>There is no wrong or right way to implement migration for your service, as long as it works.</para>
-	<section>
-	  <title>Migration Checklist</title>
-	  <itemizedlist spacing="compact">
-	    <listitem><para>The resource may not be a clone.</para></listitem>
-	    <listitem><para>The resource must use an OCF style agent.</para></listitem>
-	    <listitem><para>The resource must not be in a failed or degraded state.</para></listitem>
-	    <listitem><para>The resource must not, directly or indirectly, depend on any primitive or group resources. TODO: how can a KVM with DRBD migrate?</para></listitem>
-	    <listitem><para>The resource must support two new actions: <literal>migrate_to</literal> and <literal>migrate_from</literal>, and advertise them in its metadata.</para></listitem>
-	    <listitem><para>The resource must have the <literal>allow-migrate</literal> meta-attribute set to <literal>true</literal> (which is not the default).</para></listitem>
-	  </itemizedlist>
-	  <para>
-	    If the resource depends on a clone, and at the time the resource needs to be move, the clone has instances that are stopping and instances that are starting, then the resource will be moved in the traditional manner.
-	    The Policy Engine is not yet able to model this situation correctly and so takes the safe (yet less optimal) path.
-	  </para>
-	</section>
+        </para>
+        <para>The cluster is able to accommodate both push and pull migration models by requiring the resource agent to support two new actions: <literal>migrate_to</literal> (performed on the current location) and <literal>migrate_from</literal> (performed on the destination).</para>
+        <para>
+          In push migration, the process on the current location transfers the resource to the new location where is it later activated.
+          In this scenario, most of the work would be done in the <literal>migrate_to</literal> action and, if anything, the activation would occur during <literal>migrate_from</literal>.
+        </para>
+        <para>Conversely for pull, the <literal>migrate_to</literal> action is practically empty and <literal>migrate_from</literal> does most of the work, extracting the relevant resource state from the old location and activating it.</para>
+        <para>There is no wrong or right way to implement migration for your service, as long as it works.</para>
+        <section>
+          <title>Migration Checklist</title>
+          <itemizedlist spacing="compact">
+            <listitem><para>The resource may not be a clone.</para></listitem>
+            <listitem><para>The resource must use an OCF style agent.</para></listitem>
+            <listitem><para>The resource must not be in a failed or degraded state.</para></listitem>
+            <listitem><para>The resource must not, directly or indirectly, depend on any primitive or group resources. TODO: how can a KVM with DRBD migrate?</para></listitem>
+            <listitem><para>The resource must support two new actions: <literal>migrate_to</literal> and <literal>migrate_from</literal>, and advertise them in its metadata.</para></listitem>
+            <listitem><para>The resource must have the <literal>allow-migrate</literal> meta-attribute set to <literal>true</literal> (which is not the default).</para></listitem>
+          </itemizedlist>
+          <para>
+            If the resource depends on a clone, and at the time the resource needs to be move, the clone has instances that are stopping and instances that are starting, then the resource will be moved in the traditional manner.
+            The Policy Engine is not yet able to model this situation correctly and so takes the safe (yet less optimal) path.
+          </para>
+        </section>
       </section>
     </section>
     <section id="s-reusing-config-elements">
       <title>Reusing Rules, Options and Sets of Operations</title>
       <para>
-	Sometimes a number of constraints need to use the same set of rules, and resources need to set the same options and parameters.
-	To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id.
+        Sometimes a number of constraints need to use the same set of rules, and resources need to set the same options and parameters.
+        To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id.
       </para>
       <para>So if for one resource you have</para>
       <programlisting><![CDATA[ <rsc_location id="WebServer-connectivity" rsc="Webserver">
@@ -411,22 +411,22 @@
   </rsc_location> ]]> </programlisting>
       <para>Then instead of duplicating the rule for all your other resources, you can instead specify</para>
       <example>
-	<title>Referencing rules from other constraints</title>
-	<programlisting><![CDATA[ <rsc_location id="WebDB-connectivity" rsc="WebDB">
+        <title>Referencing rules from other constraints</title>
+        <programlisting><![CDATA[ <rsc_location id="WebDB-connectivity" rsc="WebDB">
       <rule id-ref="ping-prefer-rule"/>
   </rsc_location> ]]> </programlisting>
       </example>
       <important>
-	<para>
-	  The cluster will insist that the <literal>rule</literal> exists somewhere.
-	  Attempting to add a reference to a non-existing rule will cause a validation failure, as will attempting to remove a <literal>rule</literal> that is referenced elsewhere.
-	</para>
+        <para>
+          The cluster will insist that the <literal>rule</literal> exists somewhere.
+          Attempting to add a reference to a non-existing rule will cause a validation failure, as will attempting to remove a <literal>rule</literal> that is referenced elsewhere.
+        </para>
         <para> <!-- ws --> </para>
       </important>
       <para>The same principle applies for <literal>meta_attributes</literal> and <literal>instance_attributes</literal> as illustrated in the example below</para>
       <example>
-	<title>Referencing attributes, options, and operations from other resources</title>
-	<programlisting><![CDATA[ <primitive id="mySpecialRsc" class="ocf" type="Special" provider="me">
+        <title>Referencing attributes, options, and operations from other resources</title>
+        <programlisting><![CDATA[ <primitive id="mySpecialRsc" class="ocf" type="Special" provider="me">
    <instance_attributes id="mySpecialRsc-attrs" score="1" >
     <nvpair id="default-interface" name="interface" value="eth0"/>
     <nvpair id="default-port" name="port" value="9999"/>
@@ -452,19 +452,19 @@
     <section id="s-reload">
       <title>Reloading Services After a Definition Change</title>
       <para>
-	The cluster automatically detects changes to the definition of services it manages.
-	However, the normal response is to stop the service (using the old definition) and start it again (with the new definition).
-	This works well, but some services are smarter and can be told to use a new set of options without restarting.
+        The cluster automatically detects changes to the definition of services it manages.
+        However, the normal response is to stop the service (using the old definition) and start it again (with the new definition).
+        This works well, but some services are smarter and can be told to use a new set of options without restarting.
       </para>
       <para>
-	To take advantage of this capability, your resource agent must:
-	  <orderedlist spacing="compact">
-	    <listitem>
-	      <para>Accept the <literal>reload</literal> operation and perform any required actions.
-	      The steps required here depend completely on your application!</para>
-	      <example>
-		<title>The DRBD Agent's Control logic for Supporting the <literal>reload</literal> Operation</title>
-		<programlisting><![CDATA[ case $1 in
+        To take advantage of this capability, your resource agent must:
+          <orderedlist spacing="compact">
+            <listitem>
+              <para>Accept the <literal>reload</literal> operation and perform any required actions.
+              The steps required here depend completely on your application!</para>
+              <example>
+                <title>The DRBD Agent's Control logic for Supporting the <literal>reload</literal> Operation</title>
+                <programlisting><![CDATA[ case $1 in
     start)
         drbd_start
         ;;
@@ -477,19 +477,19 @@
     monitor)
         drbd_monitor
         ;;
-    *)  
+    *)
         drbd_usage
         exit $OCF_ERR_UNIMPLEMENTED
         ;;
   esac
   exit $?  ]]> </programlisting>
-	      </example>
-	    </listitem>
-	    <listitem>
-	      <para>Advertise the <literal>reload</literal> operation in the <literal>actions</literal> section of its metadata</para>
-	      <example>
-		<title>The DRBD Agent Advertising Support for the <literal>reload</literal> Operation</title>
-		<programlisting><![CDATA[ <?xml version="1.0"?>
+              </example>
+            </listitem>
+            <listitem>
+              <para>Advertise the <literal>reload</literal> operation in the <literal>actions</literal> section of its metadata</para>
+              <example>
+                <title>The DRBD Agent Advertising Support for the <literal>reload</literal> Operation</title>
+                <programlisting><![CDATA[ <?xml version="1.0"?>
   <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
   <resource-agent name="drbd">
     <version>1.1</version>
@@ -511,35 +511,35 @@
       <action name="validate-all" timeout="30" />
     </actions>
   </resource-agent> ]]> </programlisting>
-	      </example>	      
-	    </listitem>
-	    <listitem>
-	      <para>Advertise one or more parameters that can take effect using <literal>reload</literal>.</para>
-	      <para>Any parameter with the <literal>unique</literal> set to 0 is eligible to be used in this way.</para>
-	      <example>
-		<title>Parameter that can be changed using reload</title>
-		<programlisting><![CDATA[ <parameter name="drbdconf" unique="0">
+              </example>
+            </listitem>
+            <listitem>
+              <para>Advertise one or more parameters that can take effect using <literal>reload</literal>.</para>
+              <para>Any parameter with the <literal>unique</literal> set to 0 is eligible to be used in this way.</para>
+              <example>
+                <title>Parameter that can be changed using reload</title>
+                <programlisting><![CDATA[ <parameter name="drbdconf" unique="0">
     <longdesc lang="en">Full path to the drbd.conf file.</longdesc>
     <shortdesc lang="en">Path to drbd.conf</shortdesc>
     <content type="string" default="${OCF_RESKEY_drbdconf_default}"/>
   </parameter> ]]> </programlisting>
-	      </example>
-	    </listitem>
-	  </orderedlist>
+              </example>
+            </listitem>
+          </orderedlist>
       </para>
       <para>
-	Once these requirements are satisfied, the cluster will automatically know to reload the resource (instead of restarting) when a non-unique fields changes.
+        Once these requirements are satisfied, the cluster will automatically know to reload the resource (instead of restarting) when a non-unique fields changes.
       </para>
       <note>
-	<para>
-	  The metadata is re-read when the resource is started.
-	  This may mean that the resource will be restarted the first time, even though you changed a parameter with <literal>unique=0</literal> 
-	</para>
+        <para>
+          The metadata is re-read when the resource is started.
+          This may mean that the resource will be restarted the first time, even though you changed a parameter with <literal>unique=0</literal>
+        </para>
       </note>
       <note>
-	<para>
-	  If both a unique and non-unique field are changed simultaneously, the resource will still be restarted.
-	</para>
+        <para>
+          If both a unique and non-unique field are changed simultaneously, the resource will still be restarted.
+        </para>
       </note>
     </section>
   </chapter>

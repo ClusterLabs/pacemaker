@@ -389,6 +389,7 @@ enum crmd_fsa_input {
 #  define	O_PE_RESTART		(A_PE_START|A_PE_STOP)
 #  define	O_TE_RESTART		(A_TE_START|A_TE_STOP)
 #  define	O_CIB_RESTART		(A_CIB_START|A_CIB_STOP)
+#  define	O_LRM_RECONNECT		(A_LRM_CONNECT|A_LRM_DISCONNECT)
 #  define O_DC_TIMER_RESTART	(A_DC_TIMER_STOP|A_DC_TIMER_START)
 /*======================================
  *
