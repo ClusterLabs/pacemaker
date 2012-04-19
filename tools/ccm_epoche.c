@@ -430,7 +430,7 @@ ais_membership_dispatch(AIS_Message * wrapper, char *data, int sender)
         for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
             crm_node_t *node = (crm_node_t *) lpc->data;
 
-            if (node->uname && crm_is_peer_active(node)) {
+            if (node->uname && safe_str_eq(node->state, CRM_NODE_MEMBER)) {
                 fprintf(stdout, "%s ", node->uname);
             }
         }
