@@ -440,6 +440,10 @@ logging {
         timestamp: on
         to_logfile: yes
         logfile: /var/log/corosync.log
+        logger_subsys {
+                 subsys: VOTEQ
+                 debug: off
+        }
 }
 
 amf {
