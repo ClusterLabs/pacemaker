@@ -95,7 +95,7 @@ struct crm_identify_msg_s {
 /* *INDENT-OFF* */
 static crm_child_t pcmk_children[] = {
     { 0, crm_proc_none,     crm_flag_none,    0, 0, FALSE, "none",     NULL,		NULL,			   NULL, NULL },
-    { 0, crm_proc_ais,      crm_flag_none,    0, 0, FALSE, "ais",      NULL,		NULL,			   NULL, NULL },
+    { 0, crm_proc_plugin,      crm_flag_none,    0, 0, FALSE, "ais",      NULL,		NULL,			   NULL, NULL },
     { 0, crm_proc_lrmd,     crm_flag_none,    3, 0, TRUE,  "lrmd",     NULL,		HB_DAEMON_DIR"/lrmd",      NULL, NULL },
     { 0, crm_proc_cib,      crm_flag_members, 1, 0, TRUE,  "cib",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib",      NULL, NULL },
     { 0, crm_proc_crmd,     crm_flag_members, 6, 0, TRUE,  "crmd",     CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd",     NULL, NULL },
@@ -145,7 +145,7 @@ static uint32_t
 get_process_list(void)
 {
     int lpc = 0;
-    uint32_t procs = crm_proc_ais;
+    uint32_t procs = crm_proc_plugin;
 
     if (use_mcp) {
         return 0;

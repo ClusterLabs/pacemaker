@@ -1190,7 +1190,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
 void
 cib_client_status_callback(const char *node, const char *client, const char *status, void *private)
 {
-    crm_node_t *member = NULL;
+    crm_node_t *peer = NULL;
 
     if (safe_str_eq(client, CRM_SYSTEM_CIB)) {
         crm_info("Status update: Client %s/%s now has status [%s]", node, client, status);
@@ -1202,16 +1202,8 @@ cib_client_status_callback(const char *node, const char *client, const char *sta
             status = OFFLINESTATUS;
         }
 
-        member = crm_get_peer(0, node);
-        if (member == NULL) {
-            /* Make sure it gets created */
-            const char *uuid = get_uuid(node);
-
-            member = crm_update_peer(__FUNCTION__, 0, 0, 0, -1, 0, uuid, node, NULL, NULL);
-            CRM_ASSERT(member);
-        }
-
-        crm_update_peer_proc(__FUNCTION__, node, crm_proc_cib, status);
+        peer = crm_get_peer(0, node);
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cib, status);
     }
     return;
 }
@@ -1331,7 +1323,7 @@ initiate_exit(void)
     int active = 0;
     xmlNode *leaving = NULL;
 
-    active = crm_active_peers(crm_proc_cib);
+    active = crm_active_peers();
     if (active < 2) {
         terminate_cib(__FUNCTION__, FALSE);
         return;

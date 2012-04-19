@@ -18,6 +18,8 @@
 
 #include <crm/common/cluster.h>
 
+extern void crmd_ha_msg_filter(xmlNode * msg);
+
 #if SUPPORT_HEARTBEAT
 extern void ccm_event_detail(const oc_ev_membership_t * oc, oc_ed_t event);
 extern gboolean ccm_dispatch(int fd, gpointer user_data);
@@ -54,4 +56,4 @@ extern void crmd_cib_connection_destroy(gpointer user_data);
 
 extern gboolean crm_fsa_trigger(gpointer user_data);
 
-extern void ais_status_callback(enum crm_status_type type, crm_node_t * node, const void *data);
+extern void peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data);

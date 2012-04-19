@@ -112,7 +112,8 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     const crm_node_t *member = value;
 
     CRM_ASSERT(member != NULL);
-    if (crm_is_member_active(member) == FALSE) {
+    if (crm_is_peer_active(member) == FALSE) {
+        crm_trace("Not making an offer to %s: not active", member->uname);
         return;
     }
 
@@ -129,7 +130,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         crm_info("Making join offers based on membership %llu", crm_peer_seq);
     }
 
-    if (member->processes & crm_proc_crmd) {
+    if (crm_is_peer_active(member)) {
         xmlNode *offer = create_request(CRM_OP_JOIN_OFFER, NULL, join_to,
                                         CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
         char *join_offered = crm_itoa(current_join_id);
@@ -198,19 +199,19 @@ do_dc_join_offer_one(long long action,
     }
 
     if (welcome == NULL) {
-        crm_err("Attempt to send welcome message " "without a message to reply to!");
+        crm_err("Attempt to send welcome message without a message to reply to!");
         return;
     }
 
     join_to = crm_element_value(welcome->msg, F_CRM_HOST_FROM);
     if (join_to == NULL) {
-        crm_err("Attempt to send welcome message " "without a host to reply to!");
+        crm_err("Attempt to send welcome message without a host to reply to!");
         return;
     }
 
     member = crm_get_peer(0, join_to);
-    if (member == NULL || crm_is_member_active(member) == FALSE) {
-        crm_err("Attempt to send welcome message " "to a node not part of our partition!");
+    if (crm_is_peer_active(member) == FALSE) {
+        crm_err("%s is not a fully active member of our partition", join_to);
         return;
     }
 
@@ -221,7 +222,7 @@ do_dc_join_offer_one(long long action,
          *  however, it will either re-announce itself in due course
          *  _or_ we can re-store the original offer on the client.
          */
-        crm_debug("(Re-)offering membership to %s...", join_to);
+        crm_trace("(Re-)offering membership to %s...", join_to);
     }
 
     crm_info("join-%d: Processing %s request from %s in state %s",
@@ -309,7 +310,7 @@ do_dc_join_filter_offer(long long action,
         check_join_state(cur_state, __FUNCTION__);
         return;
 
-    } else if (join_node == NULL || crm_is_member_active(join_node) == FALSE) {
+    } else if (join_node == NULL || crm_is_peer_active(join_node) == FALSE) {
         crm_err("Node %s is not a member", join_from);
         ack_nack_bool = FALSE;
 
@@ -548,7 +549,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     create_node_entry(join_to, join_to, NORMALNODE);
 
     join_node = crm_get_peer(0, join_to);
-    if (crm_is_member_active(join_node) == FALSE) {
+    if (crm_is_peer_active(join_node) == FALSE) {
         /*
          * NACK'ing nodes that the membership layer doesn't know about yet
          * simply creates more churn

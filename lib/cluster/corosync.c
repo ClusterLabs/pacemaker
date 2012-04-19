@@ -403,25 +403,8 @@ pcmk_mcp_dispatch(IPC_Channel * ch, gpointer user_data)
         }
 
         msg = xmlfromIPC(ch, MAX_IPC_DELAY);
-
-        if (msg) {
-            xmlNode *node = NULL;
-
-            for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
-                int id = 0;
-                int children = 0;
-                const char *uname = crm_element_value(node, "uname");
-
-                crm_element_value_int(node, "id", &id);
-                crm_element_value_int(node, "processes", &children);
-                if (id == 0) {
-                    crm_log_xml_err(msg, "Bad Update");
-                } else {
-                    crm_update_peer(__FUNCTION__, id, 0, 0, 0, children, NULL, uname, NULL, NULL);
-                }
-            }
-            free_xml(msg);
-        }
+        crm_log_xml_trace(msg, "MCP Message");
+        free_xml(msg);
 
         if (ch->ch_status != IPC_CONNECT) {
             break;
@@ -497,11 +480,15 @@ pcmk_cpg_membership(cpg_handle_t handle,
     int i;
 
     for (i = 0; i < member_list_entries; i++) {
+        crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
         crm_debug("Member[%d] %d ", i, member_list[i].nodeid);
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
     }
 
     for (i = 0; i < left_list_entries; i++) {
+        crm_node_t *peer = crm_get_peer(left_list[i].nodeid, NULL);
         crm_debug("Left[%d] %d ", i, left_list[i].nodeid);
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, OFFLINESTATUS);
     }
 }
 
@@ -517,6 +504,7 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
     int rc = -1;
     int fd = 0;
     int retries = 0;
+    crm_node_t *peer = NULL;
 
     strcpy(pcmk_cpg_group.value, crm_system_name);
     pcmk_cpg_group.length = strlen(crm_system_name) + 1;
@@ -555,6 +543,9 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
         cpg_finalize(pcmk_cpg_handle);
         return FALSE;
     }
+
+    peer = crm_get_peer(pcmk_nodeid, pcmk_uname);
+    crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
     return TRUE;
 }
 
@@ -854,3 +845,22 @@ find_corosync_variant(void)
     cmap_finalize(handle);
     return pcmk_cluster_corosync;
 }
+
+gboolean
+crm_is_corosync_peer_active(const crm_node_t * node)
+{
+    if (node == NULL) {
+        crm_trace("NULL");
+        return FALSE;
+
+    } else if(safe_str_neq(node->state, CRM_NODE_MEMBER)) {
+        crm_trace("%s: state=%s", node->uname, node->state);
+        return FALSE;
+
+    } else if((node->processes & crm_proc_cpg) == 0) {
+        crm_trace("%s: processes=%.16x", node->uname, node->processes);
+        return FALSE;
+    }
+    return TRUE;
+}
+

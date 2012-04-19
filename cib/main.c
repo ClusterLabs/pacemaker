@@ -450,7 +450,7 @@ cib_ais_destroy(gpointer user_data)
 #endif
 
 static void
-cib_ais_status_callback(enum crm_status_type type, crm_node_t * node, const void *data)
+cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
 #if 0
     /* crm_active_peers(crm_proc_cib) appears to give the wrong answer
@@ -479,7 +479,7 @@ cib_ais_status_callback(enum crm_status_type type, crm_node_t * node, const void
         return;
     }
 #endif
-    if(cib_shutdown_flag && crm_active_peers(crm_proc_cib) < 2 && g_hash_table_size(client_list) == 0) {
+    if(cib_shutdown_flag && crm_active_peers() < 2 && g_hash_table_size(client_list) == 0) {
         crm_info("No more peers");
         terminate_cib(__FUNCTION__, FALSE);
     }
@@ -520,7 +520,7 @@ cib_init(void)
             exit(100);
         }
         if (is_openais_cluster()) {
-            crm_set_status_callback(&cib_ais_status_callback);
+            crm_set_status_callback(&cib_peer_update_callback);
         }
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {

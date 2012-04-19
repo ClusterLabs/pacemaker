@@ -39,7 +39,7 @@ const char *pid_file = "/var/run/pacemaker.pid";
 /* *INDENT-OFF* */
 enum crm_proc_flag {
     crm_proc_none       = 0x00000001,
-    crm_proc_ais        = 0x00000002,
+    crm_proc_plugin        = 0x00000002,
     crm_proc_lrmd       = 0x00000010,
     crm_proc_cib        = 0x00000100,
     crm_proc_crmd       = 0x00000200,
@@ -70,7 +70,7 @@ typedef struct pcmk_child_s {
 /* *INDENT-OFF* */
 static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,		  NULL },
-    { 0, crm_proc_ais,        0, 0, FALSE, "ais",        NULL,		  NULL },
+    { 0, crm_proc_plugin,        0, 0, FALSE, "ais",        NULL,		  NULL },
     { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL,		  HB_DAEMON_DIR"/lrmd" },
     { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
     { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
@@ -108,7 +108,7 @@ static uint32_t
 get_process_list(void)
 {
     int lpc = 0;
-    uint32_t procs = crm_proc_ais;
+    uint32_t procs = crm_proc_plugin;
 
     for (lpc = 0; lpc < SIZEOF(pcmk_children); lpc++) {
         if (pcmk_children[lpc].pid != 0) {

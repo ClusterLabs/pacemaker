@@ -36,29 +36,57 @@
 
 xmlNode *create_common_message(xmlNode * original_request, xmlNode * xml_response_data);
 
+
 #if SUPPORT_HEARTBEAT
 ll_cluster_t *heartbeat_cluster = NULL;
+
+gboolean
+crm_is_heartbeat_peer_active(const crm_node_t * node)
+{
+    enum crm_proc_flag proc = text2proc(crm_system_name);
+    
+    if (node == NULL) {
+        crm_trace("NULL");
+        return FALSE;
+
+    } else if(safe_str_neq(node->state, CRM_NODE_MEMBER)) {
+        crm_trace("%s: state=%s", node->uname, node->state);
+        return FALSE;
+
+    } else if((node->processes & crm_proc_heartbeat) == 0) {
+        crm_trace("%s: processes=%.16x", node->uname, node->processes);
+        return FALSE;
+
+    } else if(proc == crm_proc_none) {
+        return TRUE;
+
+    } else if((node->processes & proc) == 0) {
+        crm_trace("%s: proc %.16x not in %.16x", node->uname, proc, node->processes);
+        return FALSE;
+    }
+    return TRUE;
+}
 
 crm_node_t *
 crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state, uint64_t seq)
 {
-    crm_node_t *node = NULL;
+    crm_node_t *peer = NULL;
     const char *uuid = NULL;
 
     CRM_CHECK(oc->m_array[offset].node_uname != NULL, return NULL);
     uuid = get_uuid(oc->m_array[offset].node_uname);
-    node = crm_update_peer(__FUNCTION__, oc->m_array[offset].node_id,
+    peer = crm_update_peer(__FUNCTION__, oc->m_array[offset].node_id,
                            oc->m_array[offset].node_born_on, seq, -1, 0,
                            uuid, oc->m_array[offset].node_uname, NULL, state);
 
     if (safe_str_eq(CRM_NODE_ACTIVE, state)) {
         /* Heartbeat doesn't send status notifications for nodes that were already part of the cluster */
-        crm_update_peer_proc(__FUNCTION__, oc->m_array[offset].node_uname, crm_proc_ais, ONLINESTATUS);
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, ONLINESTATUS);
 
         /* Nor does it send status notifications for processes that were already active */
-        crm_update_peer_proc(__FUNCTION__, oc->m_array[offset].node_uname, crm_proc_crmd, ONLINESTATUS);
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_crmd, ONLINESTATUS);
     }
-    return node;
+    return peer;
 }
 
 gboolean

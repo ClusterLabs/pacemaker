@@ -31,12 +31,12 @@
 #include <fsa_proto.h>
 #include <crmd_callbacks.h>
 #include <tengine.h>
+#include <membership.h>
 
 gboolean membership_flux_hack = FALSE;
 void post_cache_update(int instance);
 
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
-void check_dead_member(const char *uname, GHashTable * members);
 
 int last_peer_update = 0;
 
@@ -49,20 +49,9 @@ struct update_data_s {
     gboolean overwrite_join;
 };
 
-static void
-reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_node_t *node = value;
-
-    if (crm_is_member_active(node) == FALSE) {
-        check_dead_member(node->uname, NULL);
-        fail_incompletable_actions(transition_graph, node->uuid);
-    }
-}
-
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
-void
+static void
 check_dead_member(const char *uname, GHashTable * members)
 {
     CRM_CHECK(uname != NULL, return);
@@ -88,6 +77,17 @@ check_dead_member(const char *uname, GHashTable * members)
     }
 }
 
+
+static void
+reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+
+    if (crm_is_peer_active(node) == FALSE) {
+        check_dead_member(node->uname, NULL);
+        fail_incompletable_actions(transition_graph, node->uuid);
+    }
+}
 
 gboolean ever_had_quorum = FALSE;
 
@@ -146,6 +146,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
     const char *join = NULL;
     crm_node_t *node = value;
     struct update_data_s *data = (struct update_data_s *)user_data;
+    enum crm_proc_flag messaging = crm_proc_plugin | crm_proc_heartbeat | crm_proc_cpg;
 
     data->state = XML_BOOLEAN_NO;
     if (safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
@@ -157,7 +158,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
               g_hash_table_size(confirmed_nodes));
 
     if (data->overwrite_join) {
-        if ((node->processes & crm_proc_crmd) == FALSE) {
+        if ((node->processes & proc_flags) == FALSE) {
             join = CRMD_JOINSTATE_DOWN;
 
         } else {
@@ -172,9 +173,9 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
     }
 
     tmp1 =
-        create_node_state(node->uname, (node->processes & crm_proc_ais) ? ACTIVESTATUS : DEADSTATUS,
+        create_node_state(node->uname, (node->processes & messaging) ? ACTIVESTATUS : DEADSTATUS,
                           data->state,
-                          (node->processes & crm_proc_crmd) ? ONLINESTATUS : OFFLINESTATUS, join,
+                          (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS, join,
                           NULL, FALSE, data->caller);
 
     add_node_copy(data->updates, tmp1);

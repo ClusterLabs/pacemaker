@@ -182,7 +182,7 @@ get_node_uuid(uint32_t id, const char *uname)
     }
 
     /* Memory leak! */
-    CRM_LOG_ASSERT(uname != NULL);
+    CRM_LOG_ASSERT(uuid != NULL);
     return uuid;
 }
 

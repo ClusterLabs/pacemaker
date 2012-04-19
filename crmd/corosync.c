@@ -40,7 +40,6 @@ extern void crmd_ha_connection_destroy(gpointer user_data);
 
 /*	 A_HA_CONNECT	*/
 #if SUPPORT_COROSYNC
-extern void crmd_ha_msg_filter(xmlNode * msg);
 
 static gboolean
 crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
@@ -162,7 +161,7 @@ crm_connect_corosync(void)
     gboolean rc = FALSE;
 
     if (is_openais_cluster()) {
-        crm_set_status_callback(&ais_status_callback);
+        crm_set_status_callback(&peer_update_callback);
         rc = crm_cluster_connect(&fsa_our_uname, &fsa_our_uuid, crmd_ais_dispatch, crmd_ais_destroy,
                                  NULL);
     }

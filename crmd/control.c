@@ -79,7 +79,7 @@ do_ha_control(long long action,
     }
 
     if (action & A_HA_CONNECT) {
-        crm_set_status_callback(&ais_status_callback);
+        crm_set_status_callback(&peer_update_callback);
 
         if (is_openais_cluster()) {
 #if SUPPORT_COROSYNC

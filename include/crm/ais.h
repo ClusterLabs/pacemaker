@@ -104,17 +104,25 @@ enum crm_ais_msg_types {
 };
 
 enum crm_proc_flag {
-    crm_proc_none    = 0x00000001,
-    crm_proc_ais     = 0x00000002,
-    crm_proc_lrmd    = 0x00000010,
-    crm_proc_cib     = 0x00000100,
-    crm_proc_crmd    = 0x00000200,
-    crm_proc_attrd   = 0x00001000,
-    crm_proc_stonithd = 0x00002000,
-    crm_proc_pe      = 0x00010000,
-    crm_proc_te      = 0x00020000,
-    crm_proc_mgmtd   = 0x00040000,
-    crm_proc_stonith_ng = 0x00100000,
+    crm_proc_none      = 0x00000001,
+
+    /* 3 messaging types */
+    crm_proc_heartbeat = 0x00000100,
+    crm_proc_plugin    = 0x00000200,
+    crm_proc_cpg       = 0x00000400,
+
+    crm_proc_lrmd      = 0x00001000,
+    crm_proc_cib       = 0x00002000,
+    crm_proc_crmd      = 0x00004000,
+    crm_proc_attrd     = 0x00008000,
+
+    crm_proc_pe        = 0x00010000,
+    crm_proc_te        = 0x00020000,
+
+    crm_proc_stonithd  = 0x00100000,
+    crm_proc_stonith_ng= 0x00200000,
+
+    crm_proc_mgmtd     = 0x01000000,
 };
 /* *INDENT-ON* */
 
@@ -223,8 +231,11 @@ peer2text(enum crm_proc_flag proc)
         case crm_proc_none:
             text = "unknown";
             break;
-        case crm_proc_ais:
+        case crm_proc_plugin:
             text = "ais";
+            break;
+        case crm_proc_heartbeat:
+            text = "heartbeat";
             break;
         case crm_proc_cib:
             text = "cib";
@@ -253,9 +264,27 @@ peer2text(enum crm_proc_flag proc)
         case crm_proc_mgmtd:
             text = "mgmtd";
             break;
+        case crm_proc_cpg:
+            text = "corosync-cpg";
+            break;
     }
     return text;
 }
+
+static inline enum crm_proc_flag
+text2proc(const char *proc)
+{
+    /* We only care about these two so far */
+
+    if(proc && strcmp(proc, "cib") == 0) {
+        return crm_proc_cib;
+    } else if(proc && strcmp(proc, "crmd") == 0) {
+        return crm_proc_crmd;
+    }
+    
+    return crm_proc_none;
+}
+
 
 static inline const char *
 ais_dest(const struct crm_ais_host_s *host)

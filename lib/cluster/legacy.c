@@ -473,21 +473,6 @@ crm_update_ais_node(xmlNode * member, long long seq)
     return crm_update_peer(__FUNCTION__, id, born, seen, votes, procs, uname, uname, addr, state);
 }
 
-static crm_node_t *
-crm_update_cman_node(xmlNode * member, long long seq)
-{
-    const char *id_s = crm_element_value(member, "id");
-    const char *uname = crm_element_value(member, "uname");
-    const char *procs_s = crm_element_value(member, "processes");
-
-    unsigned int id = crm_int_helper(id_s, NULL);
-    unsigned int procs = crm_int_helper(procs_s, NULL);
-
-    crm_info("Updating peer processes for %s", crm_str(uname));
-    return crm_update_peer(__FUNCTION__, id, 0, 0, 0, procs, uname, uname, NULL, NULL);
-}
-
-
 static gboolean
 ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char *, int))
 {
@@ -549,25 +534,17 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
         reap_crm_member(id);
         goto done;
 
-    } else if (msg->header.id == crm_class_members || msg->header.id == crm_class_quorum) {
-
-        xml = string2xml(data);
-        if (xml == NULL) {
-            crm_err("Invalid membership update: %s", data);
-            goto badmsg;
-        }
-
-        if (is_classic_ais_cluster() == FALSE) {
-            xmlNode *node = NULL;
-
-            for (node = __xml_first_child(xml); node != NULL; node = __xml_next(node)) {
-                crm_update_cman_node(node, crm_peer_seq);
-            }
-
-        } else {
+    } else if (is_classic_ais_cluster()) { 
+        if (msg->header.id == crm_class_members || msg->header.id == crm_class_quorum) {
             xmlNode *node = NULL;
             const char *value = NULL;
             gboolean quorate = FALSE;
+
+            xml = string2xml(data);
+            if (xml == NULL) {
+                crm_err("Invalid membership update: %s", data);
+                goto badmsg;
+            }
 
             value = crm_element_value(xml, "quorate");
             CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No quorum value:"); goto badmsg);
@@ -896,11 +873,15 @@ pcmk_cpg_membership(cpg_handle_t handle,
     int i;
 
     for (i = 0; i < member_list_entries; i++) {
+        crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
         crm_debug("Member[%d] %d ", i, member_list[i].nodeid);
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
     }
 
     for (i = 0; i < left_list_entries; i++) {
+        crm_node_t *peer = crm_get_peer(left_list[i].nodeid, NULL);
         crm_debug("Left[%d] %d ", i, left_list[i].nodeid);
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, OFFLINESTATUS);
     }
 }
 
@@ -1369,4 +1350,37 @@ find_corosync_variant(void)
 
     confdb_finalize(config);
     return found;
+}
+
+gboolean
+crm_is_corosync_peer_active(const crm_node_t * node)
+{
+    enum crm_proc_flag proc = crm_proc_none;
+    if (node == NULL) {
+        crm_trace("NULL");
+        return FALSE;
+
+    } else if(safe_str_neq(node->state, CRM_NODE_MEMBER)) {
+        crm_trace("%s: state=%s", node->uname, node->state);
+        return FALSE;
+
+    } else if(is_cman_cluster() && (node->processes & crm_proc_cpg) == 0) {
+        /* If we can still talk to our peer process on that node,
+         * then its also part of the corosync membership
+         */
+        crm_trace("%s: processes=%.16x", node->uname, node->processes);
+        return TRUE;
+
+    } else if(is_classic_ais_cluster() && (node->processes & crm_proc_plugin) == 0) {
+        crm_trace("%s: processes=%.16x", node->uname, node->processes);
+        return FALSE;
+    }
+
+    proc = text2proc(crm_system_name);
+    if(proc != crm_proc_none && (node->processes & proc) == 0) {
+        crm_trace("%s: proc %.16x not in %.16x", node->uname, proc, node->processes);
+        return FALSE;
+    }
+
+    return TRUE;
 }

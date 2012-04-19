@@ -39,20 +39,18 @@ unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
 
 gboolean
-crm_is_member_active(const crm_node_t * node)
+crm_is_peer_active(const crm_node_t * node)
 {
-    if (node && safe_str_eq(node->state, CRM_NODE_MEMBER)) {
-        return TRUE;
+#ifdef SUPPORT_COROSYNC
+    if(is_corosync_cluster()) {
+        return crm_is_corosync_peer_active(node);
     }
-    return FALSE;
-}
-
-gboolean
-crm_is_full_member(const crm_node_t * node)
-{
-    if (crm_is_member_active(node) && (node->processes & crm_proc_crmd)) {
-        return TRUE;
+#endif
+#if SUPPORT_HEARTBEAT
+    if(is_heartbeat_cluster()) {
+        return crm_is_heartbeat_peer_active(node);
     }
+#endif
     return FALSE;
 }
 
@@ -65,7 +63,7 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
     if (search != NULL && node->id != search->id) {
         return FALSE;
 
-    } else if (crm_is_member_active(value) == FALSE) {
+    } else if (crm_is_peer_active(value) == FALSE) {
         crm_notice("Removing %s/%u from the membership list", node->uname, node->id);
         return TRUE;
     }
@@ -81,7 +79,7 @@ reap_crm_member(uint32_t id)
     if (node == NULL) {
         crm_info("Peer %u is unknown", id);
 
-    } else if (crm_is_member_active(node)) {
+    } else if (crm_is_peer_active(node)) {
         crm_warn("Peer %u/%s is still active", id, node->uname);
 
     } else {
@@ -100,50 +98,25 @@ reap_crm_member(uint32_t id)
     return matches;
 }
 
+
 static void
-crm_count_member(gpointer key, gpointer value, gpointer user_data)
+crm_count_peer(gpointer key, gpointer value, gpointer user_data)
 {
     guint *count = user_data;
+    crm_node_t *node = value;
 
-    if (crm_is_full_member(value)) {
+    if (crm_is_peer_active(node)) {
         *count = *count + 1;
     }
 }
 
 guint
-crm_active_members(void)
+crm_active_peers(void)
 {
     guint count = 0;
 
-    g_hash_table_foreach(crm_peer_cache, crm_count_member, &count);
+    g_hash_table_foreach(crm_peer_cache, crm_count_peer, &count);
     return count;
-}
-
-struct peer_count_s {
-    uint32_t peer;
-    guint count;
-};
-
-static void
-crm_count_peer(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_node_t *node = value;
-    struct peer_count_s *search = user_data;
-
-    if (crm_is_member_active(node) && (node->processes & search->peer)) {
-        search->count = search->count + 1;
-    }
-}
-
-guint
-crm_active_peers(uint32_t peer)
-{
-    struct peer_count_s search;
-
-    search.count = 0;
-    search.peer = peer;
-    g_hash_table_foreach(crm_peer_cache, crm_count_peer, &search);
-    return search.count;
 }
 
 void
@@ -206,9 +179,9 @@ static crm_node_t *
 crm_new_peer(unsigned int id, const char *uname)
 {
     crm_node_t *node = NULL;
-
     CRM_CHECK(uname != NULL || id > 0, return NULL);
 
+    crm_peer_init();
     crm_debug("Creating entry for node %s/%u", uname, id);
 
     crm_malloc0(node, sizeof(crm_node_t));
@@ -248,6 +221,9 @@ crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
 {
     crm_node_t *node = NULL;
+    CRM_ASSERT(id > 0 || uname != NULL);
+
+    crm_peer_init();
 
     if (uname != NULL) {
         node = g_hash_table_lookup(crm_peer_cache, uname);
@@ -255,9 +231,10 @@ crm_get_peer(unsigned int id, const char *uname)
 
     if (node == NULL && id > 0) {
         node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
+
         if (node && node->uname && uname) {
             crm_crit("Node %s and %s share the same cluster node id '%u'!", node->uname, uname, id);
-
+            
             /* NOTE: Calling crm_new_peer() means the entry in 
              * crm_peer_id_cache will point to the new entity
              */
@@ -268,6 +245,16 @@ crm_get_peer(unsigned int id, const char *uname)
         }
     }
 
+    if (node == NULL) {
+        node = crm_new_peer(id, uname);
+        if(uname) {
+            const char *uuid = get_uuid(uname);
+            crm_update_peer(__FUNCTION__, 0, 0, 0, -1, 0, uuid, uname, NULL, NULL);
+        }
+    }
+
+    CRM_ASSERT(node);
+
     if (node && uname && node->uname == NULL) {
         node->uname = crm_strdup(uname);
         crm_info("Node %u is now known as %s", id, uname);
@@ -277,7 +264,7 @@ crm_get_peer(unsigned int id, const char *uname)
         }
     }
 
-    if (node && node->uuid == NULL) {
+    if (node && node->uname && node->uuid == NULL) {
         const char *uuid = get_node_uuid(id, node->uname);
 
         if (node->uuid) {
@@ -375,7 +362,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
         crm_free(last);
     }
 
-    if (seen != 0 && crm_is_member_active(node)) {
+    if (seen != 0 && safe_str_eq(node->state, CRM_NODE_MEMBER)) {
         node->last_seen = seen;
     }
 
@@ -403,17 +390,13 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
 }
 
 void
-crm_update_peer_proc(const char *source, const char *uname, uint32_t flag, const char *status)
+crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const char *status)
 {
     uint32_t last = 0;
-    crm_node_t *node = NULL;
     gboolean changed = FALSE;
 
-    CRM_ASSERT(crm_peer_cache != NULL);
-
-    CRM_CHECK(uname != NULL, return);
-    node = g_hash_table_lookup(crm_peer_cache, uname);
-    CRM_CHECK(node != NULL, crm_err("Could not set %s.%s to %s", uname, peer2text(flag), status);
+    CRM_CHECK(node != NULL, crm_err("%s: Could not set %s to %s for NULL",
+                                    source, peer2text(flag), status);
               return);
 
     last = node->processes;
@@ -429,12 +412,12 @@ crm_update_peer_proc(const char *source, const char *uname, uint32_t flag, const
     }
 
     if (changed) {
-        crm_info("%s: %s.%s is now %s", source, uname, peer2text(flag), status);
+        crm_info("%s: %s.%s is now %s", source, node->uname, peer2text(flag), status);
         if (crm_status_callback) {
             crm_status_callback(crm_status_processes, node, &last);
         }
     } else {
-        crm_trace("%s: %s.%s is unchanged %s", source, uname, peer2text(flag), status);
+        crm_trace("%s: %s.%s is unchanged %s", source, node->uname, peer2text(flag), status);
     }
 }
 

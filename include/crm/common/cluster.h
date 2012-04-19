@@ -61,23 +61,20 @@ extern void destroy_crm_node(gpointer data);
 
 extern crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 
-extern void crm_update_peer_proc(const char *source, const char *uname, uint32_t flag, const char *status);
+extern void crm_update_peer_proc(const char *source, crm_node_t *peer, uint32_t flag, const char *status);
 extern crm_node_t *crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t seen, int32_t votes,
                                    uint32_t children, const char *uuid, const char *uname,
                                    const char *addr, const char *state);
 
-extern gboolean crm_is_member_active(const crm_node_t * node);
-extern gboolean crm_is_full_member(const crm_node_t * node);
-extern guint crm_active_members(void);
+extern guint crm_active_peers(void);
+extern gboolean crm_is_peer_active(const crm_node_t * node);
 extern guint reap_crm_member(uint32_t id);
-extern guint crm_active_members(void);
-extern guint crm_active_peers(uint32_t peer);
-extern gboolean crm_calculate_quorum(void);
 extern int crm_terminate_member(int nodeid, const char *uname, IPC_Channel * cluster);
 extern int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection);
 extern gboolean crm_get_cluster_name(char **cname);
 
 #  if SUPPORT_HEARTBEAT
+gboolean crm_is_heartbeat_peer_active(const crm_node_t * node);
 extern gboolean ccm_have_quorum(oc_ed_t event);
 extern const char *ccm_event_name(oc_ed_t event);
 extern crm_node_t *crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state,
@@ -87,6 +84,7 @@ extern crm_node_t *crm_update_ccm_node(const oc_ev_membership_t * oc, int offset
 #  if SUPPORT_COROSYNC
 extern int ais_fd_sync;
 extern GFDSource *ais_source;
+gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 extern gboolean send_ais_text(int class, const char *data, gboolean local,
                               const char *node, enum crm_ais_msg_types dest);
 extern gboolean get_ais_nodeid(uint32_t * id, char **uname);

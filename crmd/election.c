@@ -170,7 +170,7 @@ log_member_uname(gpointer key, gpointer value, gpointer user_data)
 {
     const crm_node_t *node = value;
 
-    if (crm_is_member_active(node)) {
+    if (crm_is_peer_active(node)) {
         crm_err("%s: %s proc=%.32x", (char *)user_data, (char *)key, node->processes);
     }
 }
@@ -188,7 +188,7 @@ do_election_check(long long action,
                   enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     int voted_size = 0;
-    int num_members = crm_active_members();
+    int num_members = crm_active_peers();
 
     if (voted) {
         voted_size = g_hash_table_size(voted);
@@ -295,20 +295,16 @@ do_election_count_vote(long long action,
 
     age = crm_compare_age(your_age);
 
-    if(crm_is_member_active(your_node) && crm_is_full_member(your_node) == FALSE) {
-        crm_err("Process mismatch for %s", vote_from);
-    }
-
     if (cur_state == S_STARTING) {
         reason = "Still starting";
         we_loose = TRUE;
 
-    } else if (our_node == NULL || crm_is_member_active(our_node) == FALSE) {
+    } else if (our_node == NULL || crm_is_peer_active(our_node) == FALSE) {
         reason = "We are not part of the cluster";
         log_level = LOG_ERR;
         we_loose = TRUE;
 
-    } else if (your_node == NULL || crm_is_member_active(your_node) == FALSE) {
+    } else if (your_node == NULL || crm_is_peer_active(your_node) == FALSE) {
         reason = "Peer is not part of our cluster";
         log_level = LOG_WARNING;
         done = TRUE;
