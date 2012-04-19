@@ -77,7 +77,7 @@ cibadmin_LDADD		= $(COMMONLIBS)
 crm_shadow_SOURCES	= cib_shadow.c
 crm_shadow_LDADD	= $(COMMONLIBS) 
 
-crm_node_SOURCES	= ccm_epoche.c
+crm_node_SOURCES	= crm_node.c
 crm_node_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la \
 			  $(COMMONLIBS) $(CLUSTERLIBS)
 
