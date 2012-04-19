@@ -38,8 +38,7 @@ ctslib_PYTHON	=	__init__.py		\
 
 cts_DATA	=	README cts.supp
 
-cts_SCRIPTS	=	extracttests.py		\
-			cluster_test		\
+cts_SCRIPTS	=	cluster_test		\
 			CTSlab.py		\
 			LSBDummy
 

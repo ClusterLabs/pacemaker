@@ -301,7 +301,6 @@ install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 # Scripts that should be executable
 chmod a+x %{buildroot}/%{_libexecdir}/pacemaker/hb2openais-helper.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
-chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/extracttests.py
 
 # These are not actually scripts
 find %{buildroot} -name '*.xml' -type f -print0 | xargs -0 chmod a-x
