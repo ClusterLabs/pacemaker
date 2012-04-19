@@ -341,13 +341,14 @@ process_ais_conf(void)
             FILE *logfile = fopen(value, "a");
 
             if (logfile) {
+                int ignore = 0;
                 int logfd = fileno(logfile);
 
                 pcmk_env.logfile = value;
 
                 /* Ensure the file has the correct permissions */
-                fchown(logfd, pcmk_uid, pcmk_gid);
-                fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+                ignore = fchown(logfd, pcmk_uid, pcmk_gid);
+                ignore = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 
                 fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
                         pcmk_uid, pcmk_gid, value);
@@ -634,8 +635,8 @@ pcmk_startup(struct corosync_api_v1 *init_with)
         return TRUE;
     }
 
-    mkdir(CRM_STATE_DIR, 0750);
-    chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    rc = mkdir(CRM_STATE_DIR, 0750);
+    rc = chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used by stonithd */
     build_path(HA_STATE_DIR "/heartbeat", 0755);

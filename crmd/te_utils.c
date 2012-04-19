@@ -160,11 +160,12 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
         /* In case fenced is already trying to shoot it */
         confirm = open("/var/run/cluster/fenced_override", O_NONBLOCK|O_WRONLY);
         if (confirm) {
+            int ignore = 0;
             int len = strlen(target_copy);
 
             errno = 0;
             local_rc = write(confirm, target_copy, len);
-            write(confirm, "\n", 1);
+            ignore = write(confirm, "\n", 1);
 
             if(errno == EBADF) {
                 crm_trace("CMAN not expecting %s to be fenced (yet)", target);
