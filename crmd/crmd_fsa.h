@@ -54,8 +54,9 @@ struct fsa_timer_s {
     guint source_id;            /* timer source id */
     int period_ms;              /* timer period */
     enum crmd_fsa_input fsa_input;
-     gboolean(*callback) (gpointer data);
+    gboolean(*callback) (gpointer data);
     gboolean repeat;
+    int counter;
 };
 
 enum fsa_data_type {

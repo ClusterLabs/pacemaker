@@ -120,11 +120,17 @@ crm_timer_popped(gpointer data)
         || timer == transition_timer || timer == finalization_timer || timer == election_trigger) {
         crm_info("%s (%s) just popped (%dms)",
                  get_timer_desc(timer), fsa_input2string(timer->fsa_input), timer->period_ms);
+        timer->counter++;
 
     } else {
         crm_err("%s (%s) just popped in state %s! (%dms)",
                 get_timer_desc(timer), fsa_input2string(timer->fsa_input),
                 fsa_state2string(fsa_state), timer->period_ms);
+    }
+
+    if(timer == election_trigger && election_trigger->counter > 5) {
+        crm_notice("We appear to be in an election loop, something may be wrong");
+        election_trigger->counter = 0;
     }
 
     if (timer->repeat == FALSE) {

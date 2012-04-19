@@ -547,6 +547,7 @@ do_state_transition(long long actions,
             update_dc(NULL);
             break;
         case S_NOT_DC:
+            election_trigger->counter = 0;
             if (is_set(fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we have a new DC");
                 set_bit_inplace(tmp, A_SHUTDOWN_REQ);
@@ -581,6 +582,7 @@ do_state_transition(long long actions,
             break;
 
         case S_POLICY_ENGINE:
+            election_trigger->counter = 0;
             CRM_LOG_ASSERT(AM_I_DC);
             if (cause == C_TIMER_POPPED) {
                 crm_info("Progressed to state %s after %s",
