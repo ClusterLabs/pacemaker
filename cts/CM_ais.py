@@ -83,6 +83,9 @@ class crm_ais(crm_lha):
                 r"Executing .* fencing operation",
                 r"LogActions: Recover",
                 r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
+                r"Corosync membership is still forming",
+                r"Peer is not part of our cluster",
+                r"We appear to be in an election loop",
 
                 # Not inherently bad, but worth tracking
                 #r"No need to invoke the TE",
@@ -351,7 +354,9 @@ class crm_mcp(crm_cs_v0):
             "QuorumCmd"      : "crm_node -q",
             "ParitionCmd"    : "crm_node -p",
 
-            "Pat:We_stopped"  : "%s.*Corosync Cluster Engine exiting normally",
+            # Close enough... "Corosync Cluster Engine exiting normally" isn't printed
+            #   reliably and there's little interest in doing anything it
+            "Pat:We_stopped"  : "%s.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
             "Pat:They_dead"    : "crmd.*Node %s: .* state=lost .new",
             
