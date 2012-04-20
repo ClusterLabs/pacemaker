@@ -487,7 +487,7 @@ class StonithdTest(CTSTest):
         return self.success()
 
     def errorstoignore(self):
-        return [ "Executing .* fencing operation" ]
+        return [ self.CM["Pat:We_fenced"] % ".*", self.CM["Pat:They_fenced"] % ".*" ]
 
     def is_applicable(self):
         if not self.is_applicable_common():
@@ -1837,6 +1837,7 @@ class NearQuorumPointTest(CTSTest):
         startset = []
         stopset = []
        
+        stonith = self.CM.prepare_fencing_watcher("NearQuorumPoint")
         #decide what to do with each node
         for node in self.CM.Env["nodes"]:
             action = self.CM.Env.RandomGen.choice(["start","stop"])
@@ -1886,6 +1887,7 @@ class NearQuorumPointTest(CTSTest):
         #get the result        
         if watch.lookforall():
             self.CM.cluster_stable()
+            self.CM.fencing_cleanup("NearQuorumPoint", stonith)
             return self.success()
 
         self.CM.log("Warn: Patterns not found: " + repr(watch.unmatched))
@@ -1901,6 +1903,7 @@ class NearQuorumPointTest(CTSTest):
             if self.CM.StataCM(node) == 0:
                 downnodes.append(node)
 
+        self.CM.fencing_cleanup,("NearQuorumPoint", stonith)
         if upnodes == [] and downnodes == []:
             self.CM.cluster_stable()
 
