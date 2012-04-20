@@ -1039,6 +1039,10 @@ class ClusterManager(UserDict):
 
                 self.ShouldBeStatus[peer]="up"
 
+        for peer in peer_list:
+            self.__instance_errorstoignore.append(self["Pat:They_fenced"] % peer)
+            self.__instance_errorstoignore.append(self["Pat:We_fenced"] % peer)
+
         return peer_list
 
 
@@ -1100,10 +1104,8 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus[node]="up"
         watch_result = watch.lookforall()
 
-        peer_list = self.fencing_cleanup(node, stonith)
-        for peer in peer_list:
-            self.__instance_errorstoignore.append("te_fence_node: Executing .* fencing operation .* on %s" % (peer));
- 
+        self.fencing_cleanup(node, stonith)
+
         if watch.unmatched:
             for regex in watch.unmatched:
                 self.log ("Warn: Startup pattern not found: %s" %(regex))
