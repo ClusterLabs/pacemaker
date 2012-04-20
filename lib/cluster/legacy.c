@@ -1373,7 +1373,7 @@ crm_is_corosync_peer_active(const crm_node_t * node)
         crm_trace("%s: state=%s", node->uname, node->state);
         return FALSE;
 
-    } else if(is_cman_cluster() && (node->processes & crm_proc_cpg) == 0) {
+    } else if(is_cman_cluster() && (node->processes & crm_proc_cpg)) {
         /* If we can still talk to our peer process on that node,
          * then its also part of the corosync membership
          */
