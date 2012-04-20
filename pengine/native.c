@@ -1175,7 +1175,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     if (top->variant == pe_master) {
         custom_action_order(rsc, generate_op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-                            pe_order_optional, data_set);
+                            pe_order_implies_first_master, data_set);
 
         custom_action_order(rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
                             rsc, generate_op_key(rsc->id, RSC_PROMOTE, 0), NULL,
@@ -1607,6 +1607,14 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
 
     if (type & pe_order_implies_first) {
         if ((filter & pe_action_optional) && (flags & pe_action_optional) == 0) {
+            clear_bit_inplace(first->flags, pe_action_optional);
+        }
+    }
+
+    if (type & pe_order_implies_first_master) {
+        if ((filter & pe_action_optional) &&
+            ((then->flags & pe_action_optional) == FALSE) &&
+            then->rsc && (then->rsc->role == RSC_ROLE_MASTER)) {
             clear_bit_inplace(first->flags, pe_action_optional);
         }
     }
