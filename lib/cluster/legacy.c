@@ -903,6 +903,7 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
     int rc = -1;
     int fd = 0;
     int retries = 0;
+    crm_node_t *peer = NULL;
 
     strcpy(pcmk_cpg_group.value, crm_system_name);
     pcmk_cpg_group.length = strlen(crm_system_name) + 1;
@@ -941,6 +942,10 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
         cpg_finalize(pcmk_cpg_handle);
         return FALSE;
     }
+
+    peer = crm_get_peer(pcmk_nodeid, pcmk_uname);
+    crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+
 #  else
     crm_err("The Corosync CPG API is not supported in this build");
     exit(100);
