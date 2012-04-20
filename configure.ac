@@ -942,7 +942,7 @@ case $SUPPORT_GCOV in
 	#CFLAGS="$CFLAGS -pg"
 
 	dnl Disable various compiler optimizations
-	CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage -fno-inline -fno-default-inline"
+	CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage -fno-inline"
 
 	dnl Turn off optimization so code coverage tool
 	dnl can get accurate line numbers
