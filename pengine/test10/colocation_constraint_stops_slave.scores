@@ -1,0 +1,10 @@
+Allocation scores:
+NATIVE_RSC_A:0 promotion score on none: 0
+clone_color: MASTER_RSC_A allocation score on fc16-builder2: -INFINITY
+clone_color: MASTER_RSC_A allocation score on fc16-builder: -INFINITY
+clone_color: NATIVE_RSC_A:0 allocation score on fc16-builder2: -INFINITY
+clone_color: NATIVE_RSC_A:0 allocation score on fc16-builder: -INFINITY
+native_color: NATIVE_RSC_A:0 allocation score on fc16-builder2: -INFINITY
+native_color: NATIVE_RSC_A:0 allocation score on fc16-builder: -INFINITY
+native_color: NATIVE_RSC_B allocation score on fc16-builder2: -INFINITY
+native_color: NATIVE_RSC_B allocation score on fc16-builder: -INFINITY

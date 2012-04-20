@@ -341,6 +341,10 @@ do_test master-unmanaged-monitor "Start the correct monitor operation for unmana
 do_test master-demote-2 "Demote does not clear past failure"
 do_test master-move "Move master based on failure of colocated group"   
 do_test master-probed-score "Observe the promotion score of probed resources"
+do_test colocation_constraint_stops_master "cl#5054 - Ensure master is demoted when stopped by colocation constraint"
+do_test colocation_constraint_stops_slave  "cl#5054 - Ensure slave is not demoted when stopped by colocation constraint"
+do_test order_constraint_stops_master      "cl#5054 - Ensure master is demoted when stopped by order constraint"
+do_test order_constraint_stops_slave       "cl#5054 - Ensure slave is not demoted when stopped by order constraint"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"
