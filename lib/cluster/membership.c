@@ -42,7 +42,7 @@ gboolean
 crm_is_peer_active(const crm_node_t * node)
 {
 #ifdef SUPPORT_COROSYNC
-    if(is_corosync_cluster()) {
+    if(is_openais_cluster()) {
         return crm_is_corosync_peer_active(node);
     }
 #endif
@@ -51,6 +51,7 @@ crm_is_peer_active(const crm_node_t * node)
         return crm_is_heartbeat_peer_active(node);
     }
 #endif
+    crm_err("Unhandled cluster type: %s", name_for_cluster_type(get_cluster_type()));
     return FALSE;
 }
 
