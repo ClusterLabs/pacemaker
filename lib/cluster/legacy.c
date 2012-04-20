@@ -652,7 +652,7 @@ pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
 
         msg = xmlfromIPC(ch, MAX_IPC_DELAY);
 
-        if (msg) {
+        if (msg && is_classic_ais_cluster()) {
             xmlNode *node = NULL;
 
             for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
@@ -668,8 +668,9 @@ pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
                     crm_update_peer(__FUNCTION__, id, 0, 0, 0, children, NULL, uname, NULL, NULL);
                 }
             }
-            free_xml(msg);
         }
+
+        free_xml(msg);
 
         if (ch->ch_status != IPC_CONNECT) {
             break;
