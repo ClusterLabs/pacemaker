@@ -115,6 +115,7 @@ class crm_lha(ClusterManager):
             "Pat:ChildRespawn" : "%s heartbeat.*Respawning client.*%s",
             "Pat:ChildExit"    : "(ERROR|error): Client .* exited with return code",
             
+            "Pat:We_fenced"    : "crmd.* Executing .* fencing operation .* on %s",
             "Pat:They_fenced"  : "stonith.* log_operation: Operation .* for host '%s' with device .* returned: 0",
             "Pat:They_fenced_offset"  : "for host '",
 
