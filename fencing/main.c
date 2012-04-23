@@ -38,6 +38,7 @@
 #include <crm/stonith-ng-internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <crm/common/mainloop.h>
 
 #include <crm/cib.h>
 
@@ -59,181 +60,143 @@ gboolean stonith_shutdown_flag = FALSE;
 ll_cluster_t *hb_conn = NULL;
 #endif
 
-static gboolean
-stonith_client_disconnect(
-    IPC_Channel *channel, stonith_client_t *stonith_client)
+static int32_t
+st_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    if (channel == NULL) {
-	CRM_LOG_ASSERT(stonith_client == NULL);
-		
-    } else if (stonith_client == NULL) {
-	crm_err("No client");
-		
-    } else {
-	CRM_LOG_ASSERT(channel->ch_status != IPC_CONNECT);
-	crm_trace("Cleaning up after client disconnect: %s/%s/%s",
-		    crm_str(stonith_client->name),
-		    stonith_client->channel_name,
-		    stonith_client->id);
-		
-	if(stonith_client->id != NULL) {
-	    if(!g_hash_table_remove(client_list, stonith_client->id)) {
-		crm_err("Client %s not found in the hashtable",
-			stonith_client->name);
-	    }
-	}		
+    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
+    if(stonith_shutdown_flag) {
+	crm_info("Ignoring new client [%d] during shutdown", crm_ipcs_client_pid(c));
+	return -EPERM;
     }
-	
-    return FALSE;
-}
-
-static gboolean
-stonith_client_callback(IPC_Channel *channel, gpointer user_data)
-{
-    int lpc = 0;
-    const char *value = NULL;
-    xmlNode *request = NULL;
-    gboolean keep_channel = TRUE;
-    stonith_client_t *stonith_client = user_data;
-    
-    CRM_CHECK(stonith_client != NULL, crm_err("Invalid client"); return FALSE);
-    CRM_CHECK(stonith_client->id != NULL,
-	      crm_err("Invalid client: %p", stonith_client); return FALSE);
-
-    if(IPC_ISRCONN(channel) && channel->ops->is_message_pending(channel)) {
-
-	lpc++;
-	request = xmlfromIPC(channel, MAX_IPC_DELAY);
-	if (request == NULL) {
-	    goto bail;
-	}
-
-	if(stonith_client->name == NULL) {
-	    value = crm_element_value(request, F_STONITH_CLIENTNAME);
-	    if(value == NULL) {
-		stonith_client->name = crm_itoa(channel->farside_pid);
-	    } else {
-		stonith_client->name = crm_strdup(value);
-	    }
-	}
-
-	crm_xml_add(request, F_STONITH_CLIENTID, stonith_client->id);
-	crm_xml_add(request, F_STONITH_CLIENTNAME, stonith_client->name);
-
-	if(stonith_client->callback_id == NULL) {
-	    value = crm_element_value(request, F_STONITH_CALLBACK_TOKEN);
-	    if(value != NULL) {
-		stonith_client->callback_id = crm_strdup(value);
-
-	    } else {
-		stonith_client->callback_id = crm_strdup(stonith_client->id);
-	    }
-	}
-
-	crm_log_xml_trace(request, "Client[inbound]");
-	stonith_command(stonith_client, request, NULL);
-
-	free_xml(request);
-    }
-    
-  bail:
-    if(channel->ch_status != IPC_CONNECT) {
-	crm_trace("Client disconnected");
-	keep_channel = stonith_client_disconnect(channel, stonith_client);	
-    }
-
-    return keep_channel;
+    return 0;
 }
 
 static void
-stonith_client_destroy(gpointer user_data)
-{
-    stonith_client_t *stonith_client = user_data;
-	
-    if(stonith_client == NULL) {
-	crm_trace("Destroying %p", user_data);
-	return;
-    }
-
-    if(stonith_client->source != NULL) {
-	crm_trace("Deleting %s (%p) from mainloop",
-		    stonith_client->name, stonith_client->source);
-	G_main_del_IPC_Channel(stonith_client->source); 
-	stonith_client->source = NULL;
-    }
-	
-    crm_trace("Destroying %s (%p)", stonith_client->name, user_data);
-    crm_free(stonith_client->name);
-    crm_free(stonith_client->callback_id);
-    crm_free(stonith_client->id);
-    crm_free(stonith_client);
-    crm_trace("Freed the cib client");
-
-    return;
-}
-
-static gboolean
-stonith_client_connect(IPC_Channel *channel, gpointer user_data)
+st_ipc_created(qb_ipcs_connection_t *c)
 {
     cl_uuid_t client_id;
-    xmlNode *reg_msg = NULL;
     stonith_client_t *new_client = NULL;
     char uuid_str[UU_UNPARSE_SIZEOF];
-    const char *channel_name = user_data;
 
-    crm_trace("Connecting channel");
-    CRM_CHECK(channel_name != NULL, return FALSE);
-	
-    if (channel == NULL) {
-	crm_err("Channel was NULL");
-	return FALSE;
+#if 0
+    struct qb_ipcs_stats srv_stats;
 
-    } else if (channel->ch_status != IPC_CONNECT) {
-	crm_err("Channel was disconnected");
-	return FALSE;
-		
-    } else if(stonith_shutdown_flag) {
-	crm_info("Ignoring new client [%d] during shutdown",
-		 channel->farside_pid);
-	return FALSE;		
-    }
+    qb_ipcs_stats_get(s1, &srv_stats, QB_FALSE);
+    qb_log(LOG_INFO, "Connection created (active:%d, closed:%d)",
+           srv_stats.active_connections,
+           srv_stats.closed_connections);
+#endif
 
     crm_malloc0(new_client, sizeof(stonith_client_t));
-    new_client->channel = channel;
-    new_client->channel_name = channel_name;
-	
-    crm_trace("Created channel %p for channel %s",
-		new_client, new_client->channel_name);
-	
-    channel->ops->set_recv_qlen(channel, 1024);
-    channel->ops->set_send_qlen(channel, 1024);
-	
-    new_client->source = G_main_add_IPC_Channel(
-	G_PRIORITY_DEFAULT, channel, FALSE, stonith_client_callback,
-	new_client, stonith_client_destroy);
-	
-    crm_trace("Channel %s connected for client %s",
-		new_client->channel_name, new_client->id);
+    new_client->channel = c;
+    new_client->channel_name = crm_strdup("ipc");
 	
     cl_uuid_generate(&client_id);
     cl_uuid_unparse(&client_id, uuid_str);
 
     CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
     new_client->id = crm_strdup(uuid_str);
+    crm_trace("Created channel %p for client %s", c, new_client->id);
 	
     /* make sure we can find ourselves later for sync calls
      * redirected to the master instance
      */
     g_hash_table_insert(client_list, new_client->id, new_client);
-	
-    reg_msg = create_xml_node(NULL, "callback");
-    crm_xml_add(reg_msg, F_STONITH_OPERATION, CRM_OP_REGISTER);
-    crm_xml_add(reg_msg, F_STONITH_CLIENTID,  new_client->id);
-	
-    send_ipc_message(channel, reg_msg);		
-    free_xml(reg_msg);
-	
-    return TRUE;
+    qb_ipcs_context_set(c, new_client);
+}
+
+/* Exit code means? */
+static int32_t
+st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
+{
+    xmlNode *request = NULL;
+    stonith_client_t *client = (stonith_client_t*)qb_ipcs_context_get(c);
+    
+    CRM_CHECK(client != NULL, crm_err("Invalid client"); return FALSE);
+    CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client); return FALSE);
+
+    request = crm_ipcs_recv(c, data, size);
+    if (request == NULL) {
+        return 0;
+    }
+
+    if(client->name == NULL) {
+        const char *value = crm_element_value(request, F_STONITH_CLIENTNAME);
+        if(value == NULL) {
+            client->name = crm_itoa(crm_ipcs_client_pid(c));
+        } else {
+            client->name = crm_strdup(value);
+        }
+    }
+
+    crm_xml_add(request, F_STONITH_CLIENTID, client->id);
+    crm_xml_add(request, F_STONITH_CLIENTNAME, client->name);
+    
+    crm_log_xml_trace(request, "Client[inbound]");
+    stonith_command(client, request, NULL);    
+    free_xml(request);
+    
+    return 0;
+}
+
+/* Error code means? */
+static int32_t
+st_ipc_closed(qb_ipcs_connection_t *c) 
+{
+    stonith_client_t *client = (stonith_client_t*)qb_ipcs_context_get(c);
+
+#if 0
+    qb_ipcs_stats_get(s1, &srv_stats, QB_FALSE);
+    qb_ipcs_connection_stats_get(c, &stats, QB_FALSE);
+    qb_log(LOG_INFO, "Connection to pid:%d destroyed (active:%d, closed:%d)",
+           stats.client_pid,
+           srv_stats.active_connections,
+           srv_stats.closed_connections);
+
+    qb_log(LOG_DEBUG, " Requests %"PRIu64"", stats.requests);
+    qb_log(LOG_DEBUG, " Responses %"PRIu64"", stats.responses);
+    qb_log(LOG_DEBUG, " Events %"PRIu64"", stats.events);
+    qb_log(LOG_DEBUG, " Send retries %"PRIu64"", stats.send_retries);
+    qb_log(LOG_DEBUG, " Recv retries %"PRIu64"", stats.recv_retries);
+    qb_log(LOG_DEBUG, " FC state %d", stats.flow_control_state);
+    qb_log(LOG_DEBUG, " FC count %"PRIu64"", stats.flow_control_count);
+#endif
+
+    if (client == NULL) {
+	crm_err("No client");
+	return 0;
+    }
+    
+    crm_trace("Cleaning up after client disconnect: %p/%s/%s", client, crm_str(client->name), client->id);
+    if(client->id != NULL) {
+        g_hash_table_remove(client_list, client->id);
+    }
+
+    /* 0 means: yes, go ahead and destroy the connection */
+    return 0;
+}
+
+static void
+st_ipc_destroy(qb_ipcs_connection_t *c) 
+{
+    stonith_client_t *client = (stonith_client_t*)qb_ipcs_context_get(c);
+
+    /* Make sure the connection is fully cleaned up */
+    st_ipc_closed(c);
+
+    if(client == NULL) {
+	crm_trace("Nothing to destroy");
+	return;
+    }
+
+    crm_trace("Destroying %s (%p)", client->name, client);
+    
+    crm_free(client->name);
+    crm_free(client->id);
+    crm_free(client);
+    crm_trace("Done");
+
+    return;
 }
 
 static void
@@ -304,55 +267,6 @@ stonith_peer_hb_destroy(gpointer user_data)
     }
 }
 
-static int
-send_via_callback_channel(xmlNode *msg, const char *token) 
-{
-    stonith_client_t *hash_client = NULL;
-    enum stonith_errors rc = stonith_ok;
-	
-    crm_trace("Delivering msg %p to client %s", msg, token);
-
-    if(token == NULL) {
-	crm_err("No client id token, cant send message");
-	if(rc == stonith_ok) {
-	    rc = -1;
-	}
-
-    } else if(msg == NULL) {
-	crm_err("No message to send");
-	rc = -1;
-	    
-    } else {
-	/* A client that left before we could reply is not really
-	 * _our_ error.  Warn instead.
-	 */
-	hash_client = g_hash_table_lookup(client_list, token);
-	if(hash_client == NULL) {
-	    crm_warn("Cannot find client for token %s", token);
-	    rc = -1;
-			
-	} else if (crm_str_eq(hash_client->channel_name, "remote", FALSE)) {
-	    /* just hope it's alive */
-		    
-	} else if(hash_client->channel == NULL) {
-	    crm_err("Cannot find channel for client %s", token);
-	    rc = -1;
-	}
-    }
-
-    if(rc == stonith_ok) {
-	crm_trace("Delivering reply to client %s (%s)",
-		    token, hash_client->channel_name);
-	if(send_ipc_message(hash_client->channel, msg) == FALSE) {
-	    crm_warn("Delivery of reply to client %s/%s failed",
-		     hash_client->name, token);
-	    rc = -1;
-	}
-    }
-	
-    return rc;
-}
-
 void do_local_reply(xmlNode *notify_src, const char *client_id,
 		     gboolean sync_reply, gboolean from_peer)
 {
@@ -374,19 +288,15 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
 	local_rc = -1;
 		
     } else {
-	const char *client_id = client_obj->callback_id;
 	crm_trace("Sending %ssync response to %s %s",
 		    sync_reply?"":"an a-",
 		    client_obj->name,
 		    from_peer?"(originator of delegated request)":"");
 		
-	if(sync_reply) {
-	    client_id = client_obj->id;
-	}
-	local_rc = send_via_callback_channel(notify_src, client_id);
+	local_rc = crm_ipcs_send(client_obj->channel, notify_src, !sync_reply);
     } 
 	
-    if(local_rc != stonith_ok && client_obj != NULL) {
+    if(local_rc < stonith_ok && client_obj != NULL) {
 	crm_warn("%sSync reply to %s failed: %s",
 		 sync_reply?"":"A-",
 		 client_obj?client_obj->name:"<unknown>", stonith_error2string(local_rc));
@@ -411,7 +321,6 @@ static void
 stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
 
-    IPC_Channel *ipc_client = NULL;
     xmlNode *update_msg = user_data;
     stonith_client_t *client = value;
     const char *type = NULL;
@@ -435,15 +344,9 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 	return;
     }
 
-    ipc_client = client->channel;
     if(client->flags & get_stonith_flag(type)) {
 	crm_trace("Sending %s-notification to client %s/%s", type, client->name, client->id);
-	if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
-	    /* We never want the STONITH to exit because our client is slow */
-	    crm_debug("%s-notification of client %s/%s failed - queue saturated",
-		     type, client->name, client->id);
-			
-	} else if(send_ipc_message(ipc_client, update_msg) == FALSE) {
+        if(crm_ipcs_send(client->channel, update_msg, ipcs_send_event|ipcs_send_error) <= 0) {
 	    crm_warn("%s-Notification of client %s/%s failed",
 		     type, client->name, client->id);
 	}
@@ -666,7 +569,6 @@ stonith_shutdown(int nsig)
 {
     stonith_shutdown_flag = TRUE;
     crm_info("Terminating with  %d clients", g_hash_table_size(client_list));
-    stonith_client_disconnect(NULL, NULL);
     exit(0);
 }
 
@@ -737,9 +639,17 @@ setup_cib(void)
         rc = cib->cmds->query(cib, NULL, NULL, cib_scope_local);
         add_cib_op_callback(cib, rc, FALSE, NULL, fencing_topology_callback);
         crm_notice("Watching for stonith topology changes");
-    }
-    
+    }    
 }
+
+struct qb_ipcs_service_handlers ipc_callbacks = 
+{
+    .connection_accept = st_ipc_accept,
+    .connection_created = st_ipc_created,
+    .msg_process = st_ipc_dispatch,
+    .connection_closed = st_ipc_closed,
+    .connection_destroyed = st_ipc_destroy
+};
 
 int
 main(int argc, char ** argv)
@@ -749,6 +659,7 @@ main(int argc, char ** argv)
     int lpc = 0;
     int argerr = 0;
     int option_index = 0;
+    qb_ipcs_service_t *ipcs = NULL;
     const char *actions[] = { "reboot", "poweroff", "list", "monitor", "status" };
 
     crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv);
@@ -887,10 +798,7 @@ main(int argc, char ** argv)
     topology = g_hash_table_new_full(
         crm_str_hash, g_str_equal, NULL, free_topology_entry);
 
-    channel1 = crm_strdup(stonith_channel);
-    rc = init_server_ipc_comms(
-	channel1, stonith_client_connect,
-	default_ipc_connection_destroy);
+    ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_SOCKET, &ipc_callbacks);
 
 #if SUPPORT_STONITH_CONFIG
     if (((stand_alone == TRUE)) && !(standalone_cfg_read_file(STONITH_NG_CONF_FILE))) {
@@ -898,12 +806,7 @@ main(int argc, char ** argv)
     }
 #endif
 
-    channel2 = crm_strdup(stonith_channel_callback);
-    rc = init_server_ipc_comms(
-	channel2, stonith_client_connect,
-	default_ipc_connection_destroy);
-
-    if(rc == 0) {
+    if(ipcs != NULL) {
 	/* Create the mainloop and run it... */
 	mainloop = g_main_new(FALSE);
 	crm_info("Starting %s mainloop", crm_system_name);
