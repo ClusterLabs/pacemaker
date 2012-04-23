@@ -56,6 +56,7 @@ static void st_child_done(GPid pid, gint status, gpointer user_data);
 
 static void free_async_command(async_command_t *cmd) 
 {
+    g_list_free(cmd->device_list);
     free(cmd->device);
     free(cmd->action);
     free(cmd->victim);
@@ -937,7 +938,6 @@ static int stonith_fence(xmlNode *msg)
 {
     int options = 0;
     const char *device_id = NULL;
-    struct device_search_s search;
     stonith_device_t *device = NULL;
     async_command_t *cmd = create_async_command(msg);
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
@@ -954,6 +954,8 @@ static int stonith_fence(xmlNode *msg)
         }
         
     } else {
+        struct device_search_s search;
+
         search.capable = NULL;
         search.host = crm_element_value(dev, F_STONITH_TARGET);
         
@@ -975,9 +977,11 @@ static int stonith_fence(xmlNode *msg)
             
             device = search.capable->data;
 
-            /* TODO: Shouldn't we remove the element here? */
             if(g_list_length(search.capable) > 1) {
                 cmd->device_list = search.capable;
+                cmd->device_next = cmd->device_list->next;
+            } else {
+                g_list_free(search.capable);
             }
         }
     }
