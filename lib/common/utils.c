@@ -50,6 +50,7 @@
 #include <crm/common/util.h>
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601.h>
+#include <crm/common/mainloop.h>
 #include <libxml2/libxml/relaxng.h>
 
 #if HAVE_HB_CONFIG_H

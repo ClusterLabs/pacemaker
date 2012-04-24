@@ -28,6 +28,7 @@
 #include <fcntl.h>
 
 #include <crm/common/ipc.h>
+#include <crm/common/mainloop.h>
 #include <crm/pengine/common.h>
 
 #if HAVE_LIBXML2
