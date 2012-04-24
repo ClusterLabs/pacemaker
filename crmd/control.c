@@ -39,7 +39,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-char *ipc_server = NULL;
+qb_ipcs_service_t *ipcs = NULL;
 
 extern gboolean crm_connect_corosync(void);
 extern void crmd_ha_connection_destroy(gpointer user_data);
@@ -238,21 +238,15 @@ free_mem(fsa_data_t * msg_data)
     crm_peer_destroy();
     clear_bit_inplace(fsa_input_register, R_MEMBERSHIP);
 
-    if (te_subsystem->client && te_subsystem->client->client_source) {
+    if (te_subsystem->client && te_subsystem->client->ipc) {
         crm_debug("Full destroy: TE");
-        G_main_del_IPC_Channel(te_subsystem->client->client_source);
-    } else {
-        crm_debug("Partial destroy: TE");
-        crmd_ipc_connection_destroy(te_subsystem->client);
+        qb_ipcs_disconnect(te_subsystem->client->ipc);
     }
     crm_free(te_subsystem);
 
-    if (pe_subsystem->client && pe_subsystem->client->client_source) {
+    if (pe_subsystem->client && pe_subsystem->client->ipc) {
         crm_debug("Full destroy: PE");
-        G_main_del_IPC_Channel(pe_subsystem->client->client_source);
-    } else {
-        crm_debug("Partial destroy: PE");
-        crmd_ipc_connection_destroy(pe_subsystem->client);
+        qb_ipcs_disconnect(pe_subsystem->client->ipc);
     }
     crm_free(pe_subsystem);
 
@@ -297,7 +291,6 @@ free_mem(fsa_data_t * msg_data)
     crm_free(fsa_our_uname);
     crm_free(fsa_our_uuid);
     crm_free(fsa_our_dc);
-    crm_free(ipc_server);
 
     crm_free(max_generation_from);
     free_xml(max_generation_xml);
@@ -528,12 +521,99 @@ do_startup(long long action,
     set_sigchld_proctrack(G_PRIORITY_HIGH, DEFAULT_MAXDISPATCHTIME);
 }
 
+static int32_t
+crmd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
+{
+    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
+    return 0;
+}
+
+static void
+crmd_ipc_created(qb_ipcs_connection_t *c)
+{
+    crmd_client_t *blank_client = NULL;
+
+    crm_malloc0(blank_client, sizeof(crmd_client_t));
+    CRM_ASSERT(blank_client != NULL);
+
+    crm_trace("Created client: %p", blank_client);
+
+    blank_client->ipc = c;
+    blank_client->sub_sys = NULL;
+    blank_client->uuid = NULL;
+    blank_client->table_key = NULL;
+
+    qb_ipcs_context_set(c, blank_client);
+}
+
+static int32_t
+crmd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
+{
+    crmd_client_t *client = qb_ipcs_context_get(c);
+
+    xmlNode *msg = crm_ipcs_recv(c, data, size);
+    xmlNode *ack = create_xml_node(NULL, "ack");
+
+    crm_trace("Invoked: %s", client->table_key);
+
+    crm_ipcs_send(c, ack, FALSE); /* TODO: Do not unconditionally send this */
+    free_xml(ack);
+    
+    if (msg == NULL) {
+        return 0;
+    }
+
+#if ENABLE_ACL
+    determine_request_user(&client->user, client, msg, F_CRM_USER);
+#endif
+
+    crm_trace("Processing msg from %s", client->table_key);
+    crm_log_xml_trace(msg, "CRMd[inbound]");
+
+    if (crmd_authorize_message(msg, client)) {
+        route_message(C_IPC_MESSAGE, msg);
+    }
+    
+    trigger_fsa(fsa_source);    
+    free_xml(msg);
+    return 0;
+}
+
+static int32_t
+crmd_ipc_closed(qb_ipcs_connection_t *c) 
+{
+    return 0;
+}
+
+static void
+crmd_ipc_destroy(qb_ipcs_connection_t *c) 
+{
+    crmd_client_t *client = qb_ipcs_context_get(c);
+
+    if (client == NULL) {
+        crm_trace("No client to delete");
+        return;
+    }
+
+    process_client_disconnect(client);
+    
+    crm_trace("Disconnecting client %s (%p)", client->table_key, client);
+    crm_free(client->table_key);
+    crm_free(client->sub_sys);
+    crm_free(client->uuid);
+    crm_free(client->user);
+    crm_free(client);
+
+    trigger_fsa(fsa_source);    
+}
+
 /*	 A_STOP	*/
 void
 do_stop(long long action,
         enum crmd_fsa_cause cause,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    mainloop_del_ipc_server(ipcs);
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
@@ -543,6 +623,15 @@ do_started(long long action,
            enum crmd_fsa_cause cause,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    static struct qb_ipcs_service_handlers crmd_callbacks = 
+        {
+            .connection_accept = crmd_ipc_accept,
+            .connection_created = crmd_ipc_created,
+            .msg_process = crmd_ipc_dispatch,
+            .connection_closed = crmd_ipc_closed,
+            .connection_destroyed = crmd_ipc_destroy
+        };
+
     if (cur_state != S_STARTING) {
         crm_err("Start cancelled... %s", fsa_state2string(cur_state));
         return;
@@ -592,11 +681,8 @@ do_started(long long action,
     }
 
     crm_debug("Init server comms");
-    if (ipc_server == NULL) {
-        ipc_server = crm_strdup(CRM_SYSTEM_CRMD);
-    }
-
-    if (init_server_ipc_comms(ipc_server, crmd_client_connect, default_ipc_connection_destroy)) {
+    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_SOCKET, &crmd_callbacks);
+    if (ipcs == NULL) {
         crm_err("Couldn't start IPC server");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }

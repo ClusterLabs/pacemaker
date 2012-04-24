@@ -24,14 +24,7 @@
 #  include <crm/common/xml.h>
 #  include <crm/common/msg.h>
 
-typedef struct crmd_client_s {
-    char *sub_sys;
-    char *uuid;
-    char *table_key;
-    char *user;
-    IPC_Channel *client_channel;
-    GCHSource *client_source;
-} crmd_client_t;
+/* clplumbing based IPC */
 
 extern gboolean send_ipc_message(IPC_Channel * ipc_client, xmlNode * msg);
 
@@ -60,11 +53,6 @@ extern xmlNode *createPingRequest(const char *crm_msg_reference, const char *to)
 extern xmlNode *validate_crm_message(xmlNode * msg,
                                      const char *sys, const char *uuid, const char *msg_type);
 
-extern void send_hello_message(IPC_Channel * ipc_client,
-                               const char *uuid,
-                               const char *client_name,
-                               const char *major_version, const char *minor_version);
-
 #  define create_reply(request, xml_response_data) create_reply_adv(request, xml_response_data, __FUNCTION__);
 extern xmlNode *create_reply_adv(xmlNode * request, xmlNode * xml_response_data,
                                  const char *origin);
@@ -84,7 +72,6 @@ typedef struct ha_msg_input_s {
 extern ha_msg_input_t *new_ha_msg_input(xmlNode * orig);
 extern void delete_ha_msg_input(ha_msg_input_t * orig);
 extern xmlNode *xmlfromIPC(IPC_Channel * ch, int timeout);
-
 
 /* Libqb based IPC */
 
@@ -111,7 +98,10 @@ long crm_ipc_read(crm_ipc_t *client);
 const char *crm_ipc_buffer(crm_ipc_t *client);
 const char *crm_ipc_name(crm_ipc_t *client);
 
-
+/* Utils */
+xmlNode *create_hello_message(const char *uuid, const char *client_name,
+                              const char *major_version, const char *minor_version);
 
 
 #endif
+

@@ -51,6 +51,11 @@ static void *ccm_library = NULL;
 static int num_ccm_register_fails = 0;
 static int max_ccm_register_fails = 30;
 
+static void
+ccm_connection_destroy(void *userdata)
+{
+}
+
 /*	 A_CCM_CONNECT	*/
 void
 do_ccm_control(long long action,
@@ -135,7 +140,7 @@ do_ccm_control(long long action,
             crm_info("CCM connection established..." " waiting for first callback");
 
             G_main_add_fd(G_PRIORITY_HIGH, fsa_ev_fd, FALSE, ccm_dispatch,
-                          fsa_ev_token, default_ipc_connection_destroy);
+                          fsa_ev_token, ccm_connection_destroy);
 
         }
     }

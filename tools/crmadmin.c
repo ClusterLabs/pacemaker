@@ -34,7 +34,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-#include <crm/common/ipc.h>
+#include <crm/common/mainloop.h>
 
 #include <crm/cib.h>
 
@@ -42,7 +42,7 @@ int message_timer_id = -1;
 int message_timeout_ms = 30 * 1000;
 
 GMainLoop *mainloop = NULL;
-IPC_Channel *crmd_channel = NULL;
+crm_ipc_t *crmd_channel = NULL;
 char *admin_uuid = NULL;
 
 void usage(const char *cmd, int exit_status);
@@ -50,7 +50,7 @@ gboolean do_init(void);
 int do_work(void);
 void crmadmin_ipc_connection_destroy(gpointer user_data);
 
-gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
+int admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata);
 char *pluralSection(const char *a_section);
 xmlNode *handleCibMod(void);
 int do_find_node_list(xmlNode * xml_node);
@@ -378,7 +378,7 @@ do_work(void)
         xmlNode *cmd = create_request(crmd_operation, msg_data, dest_node, sys_to,
                                       crm_system_name, admin_uuid);
 
-        send_ipc_message(crmd_channel, cmd);
+        crm_ipc_send(crmd_channel, cmd, NULL, 0);
         free_xml(cmd);
     }
 
@@ -396,10 +396,16 @@ crmadmin_ipc_connection_destroy(gpointer user_data)
     }
 }
 
+struct ipc_client_callbacks crm_callbacks = 
+{
+    .dispatch = admin_msg_callback,
+    .destroy = crmadmin_ipc_connection_destroy
+};
+
 gboolean
 do_init(void)
 {
-    GCHSource *src = NULL;
+    mainloop_ipc_t *source = mainloop_add_ipc_client(CRM_SYSTEM_CRMD, 0, NULL, &crm_callbacks);
 
     crm_malloc0(admin_uuid, 11);
     if (admin_uuid != NULL) {
@@ -407,66 +413,42 @@ do_init(void)
         admin_uuid[10] = '\0';
     }
 
-    src = init_client_ipc_comms(CRM_SYSTEM_CRMD, admin_msg_callback, NULL, &crmd_channel);
+    crmd_channel = mainloop_get_ipc_client(source);
 
     if (DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST) {
         return TRUE;
 
     } else if (crmd_channel != NULL) {
-        send_hello_message(crmd_channel, admin_uuid, crm_system_name, "0", "1");
-
-        set_IPC_Channel_dnotify(src, crmadmin_ipc_connection_destroy);
-
+        xmlNode *xml = create_hello_message(admin_uuid, crm_system_name, "0", "1");
+        crm_ipc_send(crmd_channel, xml, NULL, 0);
         return TRUE;
     }
     return FALSE;
 }
 
-gboolean
-admin_msg_callback(IPC_Channel * server, void *private_data)
+int
+admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
 {
-    int rc = 0;
-    int lpc = 0;
-    xmlNode *xml = NULL;
-    IPC_Message *msg = NULL;
-    gboolean hack_return_good = TRUE;
     static int received_responses = 0;
     const char *result = NULL;
+    xmlNode *xml = string2xml(buffer);
 
+    received_responses++;
     g_source_remove(message_timer_id);
 
-    while (server->ch_status != IPC_DISCONNECT && server->ops->is_message_pending(server) == TRUE) {
-        rc = server->ops->recv(server, &msg);
-        if (rc != IPC_OK) {
-            crm_perror(LOG_ERR, "Receive failure (%d)", rc);
-            return !hack_return_good;
-        }
+    crm_log_xml_trace(xml, "ipc");
 
-        if (msg == NULL) {
-            crm_trace("No message this time");
-            continue;
-        }
+    if (xml == NULL) {
+        crm_info("XML in IPC message was not valid... " "discarding.");
 
-        lpc++;
-        received_responses++;
+    } else if (validate_crm_message(xml, crm_system_name, admin_uuid, XML_ATTR_RESPONSE) == FALSE) {
+        crm_trace("Message was not a CRM response. Discarding.");
 
-        xml = convert_ipc_message(msg, __FUNCTION__);
-        msg->msg_done(msg);
-        crm_log_xml_trace(xml, "ipc");
-
-        if (xml == NULL) {
-            crm_info("XML in IPC message was not valid... " "discarding.");
-            goto cleanup;
-
-        } else if (validate_crm_message(xml, crm_system_name, admin_uuid,
-                                        XML_ATTR_RESPONSE) == FALSE) {
-            crm_trace("Message was not a CRM response. Discarding.");
-            goto cleanup;
-        }
-
+    } else {
         result = crm_element_value(xml, XML_ATTR_RESULT);
         if (result == NULL || strcasecmp(result, "ok") == 0) {
             result = "pass";
+
         } else {
             result = "fail";
         }
@@ -493,16 +475,9 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
             }
             exit(0);
         }
-
-  cleanup:
-        free_xml(xml);
-        xml = NULL;
     }
-
-    if (server->ch_status == IPC_DISCONNECT) {
-        crm_trace("admin_msg_callback: received HUP");
-        return !hack_return_good;
-    }
+    
+    free_xml(xml);
 
     if (received_responses >= expected_responses) {
         crm_trace("Received expected number (%d) of messages from Heartbeat."
@@ -511,8 +486,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
     }
 
     message_timer_id = g_timeout_add(message_timeout_ms, admin_message_timeout, NULL);
-
-    return hack_return_good;
+    return 0;
 }
 
 gboolean

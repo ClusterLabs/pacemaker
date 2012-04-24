@@ -386,87 +386,6 @@ is_ipc_empty(IPC_Channel * ch)
     return FALSE;
 }
 
-void
-send_hello_message(IPC_Channel * ipc_client,
-                   const char *uuid,
-                   const char *client_name, const char *major_version, const char *minor_version)
-{
-    xmlNode *hello_node = NULL;
-    xmlNode *hello = NULL;
-
-    if (uuid == NULL || strlen(uuid) == 0
-        || client_name == NULL || strlen(client_name) == 0
-        || major_version == NULL || strlen(major_version) == 0
-        || minor_version == NULL || strlen(minor_version) == 0) {
-        crm_err("Missing fields, Hello message will not be valid.");
-        return;
-    }
-
-    hello_node = create_xml_node(NULL, XML_TAG_OPTIONS);
-    crm_xml_add(hello_node, "major_version", major_version);
-    crm_xml_add(hello_node, "minor_version", minor_version);
-    crm_xml_add(hello_node, "client_name", client_name);
-    crm_xml_add(hello_node, "client_uuid", uuid);
-
-    crm_trace("creating hello message");
-    hello = create_request(CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
-
-    send_ipc_message(ipc_client, hello);
-    crm_trace("hello message sent");
-
-    free_xml(hello_node);
-    free_xml(hello);
-}
-
-gboolean
-process_hello_message(xmlNode * hello,
-                      char **uuid, char **client_name, char **major_version, char **minor_version)
-{
-    const char *local_uuid;
-    const char *local_client_name;
-    const char *local_major_version;
-    const char *local_minor_version;
-
-    *uuid = NULL;
-    *client_name = NULL;
-    *major_version = NULL;
-    *minor_version = NULL;
-
-    if (hello == NULL) {
-        return FALSE;
-    }
-
-    local_uuid = crm_element_value(hello, "client_uuid");
-    local_client_name = crm_element_value(hello, "client_name");
-    local_major_version = crm_element_value(hello, "major_version");
-    local_minor_version = crm_element_value(hello, "minor_version");
-
-    if (local_uuid == NULL || strlen(local_uuid) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "uuid");
-        return FALSE;
-
-    } else if (local_client_name == NULL || strlen(local_client_name) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "client name");
-        return FALSE;
-
-    } else if (local_major_version == NULL || strlen(local_major_version) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "major version");
-        return FALSE;
-
-    } else if (local_minor_version == NULL || strlen(local_minor_version) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "minor version");
-        return FALSE;
-    }
-
-    *uuid = crm_strdup(local_uuid);
-    *client_name = crm_strdup(local_client_name);
-    *major_version = crm_strdup(local_major_version);
-    *minor_version = crm_strdup(local_minor_version);
-
-    crm_trace("Hello message ok");
-    return TRUE;
-}
-
 xmlNode *
 create_request_adv(const char *task, xmlNode * msg_data,
                    const char *host_to, const char *sys_to,
@@ -930,4 +849,83 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
 
     crm_free(buffer);
     return rc;
+}
+
+/* Utils */
+
+xmlNode *
+create_hello_message(const char *uuid,
+                     const char *client_name, const char *major_version, const char *minor_version)
+{
+    xmlNode *hello_node = NULL;
+    xmlNode *hello = NULL;
+
+    if (uuid == NULL || strlen(uuid) == 0
+        || client_name == NULL || strlen(client_name) == 0
+        || major_version == NULL || strlen(major_version) == 0
+        || minor_version == NULL || strlen(minor_version) == 0) {
+        crm_err("Missing fields, Hello message will not be valid.");
+        return NULL;
+    }
+
+    hello_node = create_xml_node(NULL, XML_TAG_OPTIONS);
+    crm_xml_add(hello_node, "major_version", major_version);
+    crm_xml_add(hello_node, "minor_version", minor_version);
+    crm_xml_add(hello_node, "client_name", client_name);
+    crm_xml_add(hello_node, "client_uuid", uuid);
+
+    crm_trace("creating hello message");
+    hello = create_request(CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
+    free_xml(hello_node);
+
+    return hello;
+}
+
+gboolean
+process_hello_message(xmlNode * hello,
+                      char **uuid, char **client_name, char **major_version, char **minor_version)
+{
+    const char *local_uuid;
+    const char *local_client_name;
+    const char *local_major_version;
+    const char *local_minor_version;
+
+    *uuid = NULL;
+    *client_name = NULL;
+    *major_version = NULL;
+    *minor_version = NULL;
+
+    if (hello == NULL) {
+        return FALSE;
+    }
+
+    local_uuid = crm_element_value(hello, "client_uuid");
+    local_client_name = crm_element_value(hello, "client_name");
+    local_major_version = crm_element_value(hello, "major_version");
+    local_minor_version = crm_element_value(hello, "minor_version");
+
+    if (local_uuid == NULL || strlen(local_uuid) == 0) {
+        crm_err("Hello message was not valid (field %s not found)", "uuid");
+        return FALSE;
+
+    } else if (local_client_name == NULL || strlen(local_client_name) == 0) {
+        crm_err("Hello message was not valid (field %s not found)", "client name");
+        return FALSE;
+
+    } else if (local_major_version == NULL || strlen(local_major_version) == 0) {
+        crm_err("Hello message was not valid (field %s not found)", "major version");
+        return FALSE;
+
+    } else if (local_minor_version == NULL || strlen(local_minor_version) == 0) {
+        crm_err("Hello message was not valid (field %s not found)", "minor version");
+        return FALSE;
+    }
+
+    *uuid = crm_strdup(local_uuid);
+    *client_name = crm_strdup(local_client_name);
+    *major_version = crm_strdup(local_major_version);
+    *minor_version = crm_strdup(local_minor_version);
+
+    crm_trace("Hello message ok");
+    return TRUE;
 }
