@@ -33,11 +33,11 @@ AUTOMAKE_OPTIONS	= foreign
 
 core:
 	@echo "Building only core components: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do make -C $$subdir all; done
+	list='$(CORE)'; for subdir in $$list; do echo "Building in $$subdir"; make -C $$subdir all || exit 1; done
 
 core-install:
 	@echo "Installing only core components: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do make -C $$subdir install; done
+	list='$(CORE)'; for subdir in $$list; do echo "Installing in $$subdir"; make -C $$subdir install || exit 1; done
 
 install-exec-local:
 	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)
