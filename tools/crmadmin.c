@@ -230,7 +230,6 @@ main(int argc, char **argv)
              * the callbacks are invoked...
              */
             mainloop = g_main_new(FALSE);
-            expected_responses++;
             crm_trace("Waiting for %d replies from the local CRM", expected_responses);
 
             message_timer_id = g_timeout_add(message_timeout_ms, admin_message_timeout, NULL);
@@ -286,22 +285,19 @@ do_work(void)
     } else if (DO_ELECT_DC) {
         /* tell the local node to initiate an election */
 
+        dest_node = NULL;
         sys_to = CRM_SYSTEM_CRMD;
         crmd_operation = CRM_OP_VOTE;
 
         crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
-
-        dest_node = NULL;
-
         ret = 0;                /* no return message */
 
     } else if (DO_WHOIS_DC) {
+        dest_node = NULL;
         sys_to = CRM_SYSTEM_DC;
         crmd_operation = CRM_OP_PING;
-
         crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 
-        dest_node = NULL;
 
     } else if (DO_NODE_LIST) {
 
@@ -495,6 +491,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
             if (BE_SILENT && dc != NULL) {
                 fprintf(stderr, "%s\n", dc);
             }
+            exit(0);
         }
 
   cleanup:

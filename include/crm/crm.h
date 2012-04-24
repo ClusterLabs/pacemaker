@@ -102,6 +102,7 @@ extern const char *crm_system_name;
 #  define CRM_SYSTEM_PENGINE	"pengine"
 #  define CRM_SYSTEM_TENGINE	"tengine"
 #  define CRM_SYSTEM_STONITHD	"stonithd"
+#  define CRM_SYSTEM_MCP	"pacemakerd"
 
 /* Valid operations */
 #  define CRM_OP_NOOP		"noop"

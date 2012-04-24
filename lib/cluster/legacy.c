@@ -636,49 +636,6 @@ ais_destroy(gpointer user_data)
     exit(1);
 }
 
-static gboolean
-pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
-{
-    xmlNode *msg = NULL;
-    gboolean stay_connected = TRUE;
-
-    while (IPC_ISRCONN(ch)) {
-        if (ch->ops->is_message_pending(ch) == 0) {
-            break;
-        }
-
-        msg = xmlfromIPC(ch, MAX_IPC_DELAY);
-
-        if (msg && is_classic_ais_cluster()) {
-            xmlNode *node = NULL;
-
-            for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
-                int id = 0;
-                int children = 0;
-                const char *uname = crm_element_value(node, "uname");
-
-                crm_element_value_int(node, "id", &id);
-                crm_element_value_int(node, "processes", &children);
-                if (id == 0) {
-                    crm_log_xml_err(msg, "Bad Update");
-                } else {
-                    crm_update_peer(__FUNCTION__, id, 0, 0, 0, children, NULL, uname, NULL, NULL);
-                }
-            }
-        }
-
-        free_xml(msg);
-
-        if (ch->ch_status != IPC_CONNECT) {
-            break;
-        }
-    }
-
-    if (ch->ch_status != IPC_CONNECT) {
-        stay_connected = FALSE;
-    }
-    return stay_connected;
-}
 
 #  if SUPPORT_CMAN
 
@@ -1028,11 +985,52 @@ init_ais_connection_classic(gboolean(*dispatch) (AIS_Message *, char *, int),
     return TRUE;
 }
 
+
+static int
+pcmk_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
+{
+    xmlNode *msg = string2xml(buffer);
+
+    if (msg && is_classic_ais_cluster()) {
+        xmlNode *node = NULL;
+        
+        for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
+            int id = 0;
+            int children = 0;
+            const char *uname = crm_element_value(node, "uname");
+            
+            crm_element_value_int(node, "id", &id);
+            crm_element_value_int(node, "processes", &children);
+            if (id == 0) {
+                crm_log_xml_err(msg, "Bad Update");
+            } else {
+                crm_update_peer(__FUNCTION__, id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+            }
+        }
+    }
+
+    free_xml(msg);
+}
+
+static void
+pcmk_mcp_destroy(gpointer user_data)
+{
+    void (*callback)(gpointer data) = user_data;
+    if(callback) {
+        callback(NULL);
+    }
+}
+
 gboolean
 init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*destroy) (gpointer),
                     char **our_uuid, char **our_uname, int *nodeid)
 {
     int retries = 0;
+    static struct ipc_client_callbacks mcp_callbacks = 
+        {
+            .dispatch = pcmk_mcp_dispatch,
+            .destroy = pcmk_mcp_destroy
+        };
 
     while (retries++ < 30) {
         int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
@@ -1040,10 +1038,10 @@ init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
         switch (rc) {
             case CS_OK:
                 if (getenv("HA_mcp")) {
-                    IPC_Channel *ch = init_client_ipc_comms_nodispatch("pcmk");
-
-                    G_main_add_IPC_Channel(G_PRIORITY_HIGH, ch, FALSE, pcmk_proc_dispatch, NULL,
-                                           destroy);
+                    xmlNode *poke = create_xml_node(NULL, "poke");
+                    mainloop_ipc_t *ipc = mainloop_add_ipc_client(CRM_SYSTEM_MCP, 0, destroy, &mcp_callbacks);
+                    crm_ipc_send(mainloop_get_ipc_client(ipc), poke, NULL, 0);
+                    free_xml(poke);
                 }
                 return TRUE;
                 break;
