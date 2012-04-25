@@ -29,7 +29,7 @@
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
 
-#include <attrd.h>
+#include <crm/attrd.h>
 
 const char *attr_name = NULL;
 const char *attr_value = NULL;
@@ -146,8 +146,8 @@ main(int argc, char **argv)
         crm_help('?', LSB_EXIT_GENERIC);
 
     } else
-        if (attrd_lazy_update
-            (command, NULL, attr_name, attr_value, attr_section, attr_set, attr_dampen) == FALSE) {
+        if (FALSE == attrd_update_delegate(
+                NULL, command, NULL, attr_name, attr_value, attr_section, attr_set, attr_dampen, NULL)) {
         fprintf(stderr, "Could not update %s=%s\n", attr_name, attr_value);
         return 1;
     }

@@ -51,6 +51,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/mainloop.h>
+#include <crm/attrd.h>
 #include <libxml2/libxml/relaxng.h>
 
 #if HAVE_HB_CONFIG_H
@@ -2348,15 +2349,50 @@ crm_help(char cmd, int exit_code)
     }
 }
 
-#include <../../tools/attrd.h>
 gboolean
-attrd_update_delegate(IPC_Channel * cluster, char command, const char *host, const char *name,
+attrd_update(crm_ipc_t *cluster, char command, const char *host, const char *name,
+             const char *value, const char *section, const char *set, const char *dampen)
+{
+    return attrd_update_delegate(cluster, command, host, name, value, section, set, dampen, NULL);
+}
+
+gboolean
+attrd_lazy_update(char command, const char *host, const char *name,
+                                  const char *value, const char *section, const char *set,
+                                  const char *dampen)
+{
+    return attrd_update_delegate(NULL, command, host, name, value, section, set, dampen, NULL);
+}
+
+gboolean
+attrd_update_no_mainloop(int *connection, char command, const char *host,
+                         const char *name, const char *value, const char *section,
+                         const char *set, const char *dampen)
+{
+    return attrd_update_delegate(NULL, command, host, name, value, section, set, dampen, NULL);
+}
+
+gboolean
+attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char *name,
                       const char *value, const char *section, const char *set, const char *dampen,
                       const char *user_name)
 {
-    gboolean success = FALSE;
-    const char *reason = "Cluster connection failed";
+    int rc = 0;
+    int max = 5;
+    xmlNode *update = create_xml_node(NULL, __FUNCTION__);
 
+    static gboolean connected = TRUE;
+    static crm_ipc_t *local_ipc = NULL;
+
+    if(ipc == NULL && local_ipc == NULL) {
+        local_ipc = crm_ipc_new(T_ATTRD, 0);
+        connected = FALSE;
+    }
+
+    if(ipc == NULL) {
+        ipc = local_ipc;
+    }
+    
     /* remap common aliases */
     if (safe_str_eq(section, "reboot")) {
         section = XML_CIB_TAG_STATUS;
@@ -2365,129 +2401,72 @@ attrd_update_delegate(IPC_Channel * cluster, char command, const char *host, con
         section = XML_CIB_TAG_NODES;
     }
 
-    if (cluster == NULL) {
-        reason = "No connection to the cluster";
 
-    } else {
-        xmlNode *update = create_xml_node(NULL, __FUNCTION__);
-
-        crm_xml_add(update, F_TYPE, T_ATTRD);
-        crm_xml_add(update, F_ORIG, crm_system_name);
-
-        if (name == NULL && command == 'U') {
-            command = 'R';
-        }
-
-        switch (command) {
-            case 'D':
-            case 'U':
-            case 'v':
-                crm_xml_add(update, F_ATTRD_TASK, "update");
-                crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
-                break;
-            case 'R':
-                crm_xml_add(update, F_ATTRD_TASK, "refresh");
-                break;
-            case 'q':
-                crm_xml_add(update, F_ATTRD_TASK, "query");
-                break;
-        }
-
-        crm_xml_add(update, F_ATTRD_VALUE, value);
-        crm_xml_add(update, F_ATTRD_DAMPEN, dampen);
-        crm_xml_add(update, F_ATTRD_SECTION, section);
-        crm_xml_add(update, F_ATTRD_HOST, host);
-        crm_xml_add(update, F_ATTRD_SET, set);
+    crm_xml_add(update, F_TYPE, T_ATTRD);
+    crm_xml_add(update, F_ORIG, crm_system_name);
+    
+    if (name == NULL && command == 'U') {
+        command = 'R';
+    }
+    
+    switch (command) {
+        case 'D':
+        case 'U':
+        case 'v':
+            crm_xml_add(update, F_ATTRD_TASK, "update");
+            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+            break;
+        case 'R':
+            crm_xml_add(update, F_ATTRD_TASK, "refresh");
+            break;
+        case 'q':
+            crm_xml_add(update, F_ATTRD_TASK, "query");
+            break;
+    }
+    
+    crm_xml_add(update, F_ATTRD_VALUE, value);
+    crm_xml_add(update, F_ATTRD_DAMPEN, dampen);
+    crm_xml_add(update, F_ATTRD_SECTION, section);
+    crm_xml_add(update, F_ATTRD_HOST, host);
+    crm_xml_add(update, F_ATTRD_SET, set);
 #if ENABLE_ACL
-        if (user_name) {
-            crm_xml_add(update, F_ATTRD_USER, user_name);
-        }
+    if (user_name) {
+        crm_xml_add(update, F_ATTRD_USER, user_name);
+    }
 #endif
 
-        success = send_ipc_message(cluster, update);
-        free_xml(update);
+    while (max > 0) {
+        if (connected == FALSE) {
+            crm_info("Connecting to cluster... %d retries remaining", max);
+            connected = crm_ipc_connect(ipc);
+        }
+
+        if(connected) {
+            rc = crm_ipc_send(ipc, update, NULL, 0);
+        }
+
+        if(ipc != local_ipc) {
+            break;
+
+        } else if (rc > 0) {
+            break;
+
+        } else {
+            crm_ipc_close(ipc);
+            connected = FALSE;
+            sleep(1);
+            max--;
+        }
     }
 
-    if (success) {
+    free_xml(update);
+    if (rc > 0) {
         crm_debug("Sent update: %s=%s for %s", name, value, host ? host : "localhost");
         return TRUE;
     }
 
     crm_info("Could not send update: %s=%s for %s", name, value, host ? host : "localhost");
     return FALSE;
-}
-
-gboolean
-attrd_lazy_update(char command, const char *host, const char *name, const char *value,
-                  const char *section, const char *set, const char *dampen)
-{
-    int max = 5;
-    gboolean updated = FALSE;
-    static IPC_Channel *cluster = NULL;
-
-    while (updated == 0 && max > 0) {
-        if (cluster == NULL) {
-            crm_info("Connecting to cluster... %d retries remaining", max);
-            cluster = init_client_ipc_comms_nodispatch(T_ATTRD);
-        }
-
-        if (cluster != NULL) {
-            updated = attrd_update(cluster, command, host, name, value, section, set, dampen);
-        }
-
-        if (updated == 0) {
-            cluster = NULL;
-            sleep(2);
-            max--;
-        } else {
-            crm_info("Updated %s=%s for %s", name, value, host);
-        }
-    }
-
-    return updated;
-}
-
-gboolean
-attrd_update_no_mainloop(int *connection, char command, const char *host, const char *name,
-                         const char *value, const char *section, const char *set,
-                         const char *dampen)
-{
-    int max = 5;
-    gboolean updated = FALSE;
-    static IPC_Channel *cluster = NULL;
-
-    if (connection && *connection == 0 && cluster) {
-        crm_info("Forcing a new connection to the cluster");
-        cluster = NULL;
-    }
-
-    while (updated == 0 && max > 0) {
-        if (cluster == NULL) {
-            crm_info("Connecting to cluster... %d retries remaining", max);
-            cluster = init_client_ipc_comms_nodispatch(T_ATTRD);
-        }
-
-        if (connection) {
-            if (cluster != NULL) {
-                *connection = cluster->ops->get_recv_select_fd(cluster);
-            } else {
-                *connection = 0;
-            }
-        }
-
-        if (cluster != NULL) {
-            updated = attrd_update(cluster, command, host, name, value, section, set, dampen);
-        }
-
-        if (updated == 0) {
-            cluster = NULL;
-            sleep(2);
-            max--;
-        } else {
-            crm_info("Updated %s=%s for %s", name, value, host);
-        }
-    }
-    return updated;
 }
 
 #define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"

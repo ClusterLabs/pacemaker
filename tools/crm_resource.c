@@ -37,6 +37,7 @@
 #include <crm/common/mainloop.h>
 
 #include <crm/cib.h>
+#include <crm/attrd.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 
@@ -756,7 +757,7 @@ delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
         }
 
         attr_name = crm_concat("fail-count", id, '-');
-        attrd_lazy_update('D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL, NULL);
+        attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL, NULL, NULL);
         crm_free(attr_name);
     }
     return rc;

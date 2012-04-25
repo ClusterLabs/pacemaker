@@ -37,7 +37,7 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
-#include <attrd.h>
+#include <crm/attrd.h>
 
 #define OPTARGS	"hV"
 #if SUPPORT_HEARTBEAT
@@ -51,6 +51,10 @@ gboolean need_shutdown = FALSE;
 
 GHashTable *attr_hash = NULL;
 cib_t *cib_conn = NULL;
+
+typedef struct attrd_client_s {
+    char *user;
+} attrd_client_t;
 
 typedef struct attr_hash_entry_s {
     char *uuid;
@@ -68,6 +72,11 @@ typedef struct attr_hash_entry_s {
     char *user;
 
 } attr_hash_entry_t;
+
+void attrd_local_callback(xmlNode * msg);
+gboolean attrd_timer_callback(void *user_data);
+gboolean attrd_trigger_update(attr_hash_entry_t * hash_entry);
+void attrd_perform_update(attr_hash_entry_t * hash_entry);
 
 static void
 free_hash_entry(gpointer data)
@@ -88,10 +97,86 @@ free_hash_entry(gpointer data)
     crm_free(entry);
 }
 
-void attrd_local_callback(xmlNode * msg);
-gboolean attrd_timer_callback(void *user_data);
-gboolean attrd_trigger_update(attr_hash_entry_t * hash_entry);
-void attrd_perform_update(attr_hash_entry_t * hash_entry);
+static int32_t
+attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
+{
+    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
+    if (need_shutdown) {
+        crm_info("Ignoring connection request during shutdown");
+        return FALSE;
+    }
+    return 0;
+}
+
+static void
+attrd_ipc_created(qb_ipcs_connection_t *c)
+{
+    attrd_client_t *new_client = NULL;
+    crm_malloc0(new_client, sizeof(attrd_client_t));
+    qb_ipcs_context_set(c, new_client);
+    
+    crm_trace("Client %p connected", c);
+}
+
+/* Exit code means? */
+static int32_t
+attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
+{
+    xmlNode *msg = crm_ipcs_recv(c, data, size);
+    xmlNode *ack = create_xml_node(NULL, "ack");
+
+    crm_ipcs_send(c, ack, FALSE);
+    free_xml(ack);
+    
+    if (msg == NULL) {
+        return 0;
+    }
+
+#if ENABLE_ACL
+    determine_request_user(&curr_client->user, c, msg, F_ATTRD_USER);
+#endif
+
+    crm_trace("Processing msg from %p", c);
+    crm_log_xml_trace(msg, __PRETTY_FUNCTION__);
+    
+    attrd_local_callback(msg);
+    
+    free_xml(msg);
+    return 0;
+}
+
+/* Error code means? */
+static int32_t
+attrd_ipc_closed(qb_ipcs_connection_t *c) 
+{
+    return 0;
+}
+
+static void
+attrd_ipc_destroy(qb_ipcs_connection_t *c) 
+{
+    attrd_client_t *client = qb_ipcs_context_get(c);
+
+    if (client == NULL) {
+        return;
+    }
+
+    crm_trace("Destroying %p", c);
+    crm_free(client->user);
+    crm_free(client);
+    crm_trace("Freed the cib client");
+
+    return;
+}
+
+struct qb_ipcs_service_handlers ipc_callbacks = 
+{
+    .connection_accept = attrd_ipc_accept,
+    .connection_created = attrd_ipc_created,
+    .msg_process = attrd_ipc_dispatch,
+    .connection_closed = attrd_ipc_closed,
+    .connection_destroyed = attrd_ipc_destroy
+};
 
 static void
 attrd_shutdown(int nsig)
@@ -123,15 +208,6 @@ usage(const char *cmd, int exit_status)
     exit(exit_status);
 }
 
-typedef struct attrd_client_s {
-    char *id;
-    char *name;
-    char *user;
-
-    IPC_Channel *channel;
-    GCHSource *source;
-} attrd_client_t;
-
 static void
 stop_attrd_timer(attr_hash_entry_t * hash_entry)
 {
@@ -140,116 +216,6 @@ stop_attrd_timer(attr_hash_entry_t * hash_entry)
         g_source_remove(hash_entry->timer_id);
         hash_entry->timer_id = 0;
     }
-}
-
-static gboolean
-attrd_ipc_callback(IPC_Channel * client, gpointer user_data)
-{
-    int lpc = 0;
-    xmlNode *msg = NULL;
-    attrd_client_t *curr_client = (attrd_client_t *) user_data;
-    gboolean stay_connected = TRUE;
-
-    crm_trace("Invoked: %s", curr_client->id);
-
-    while (IPC_ISRCONN(client)) {
-        if (client->ops->is_message_pending(client) == 0) {
-            break;
-        }
-
-        msg = xmlfromIPC(client, MAX_IPC_DELAY);
-        if (msg == NULL) {
-            break;
-        }
-
-        lpc++;
-
-#if ENABLE_ACL
-        determine_request_user(&curr_client->user, client, msg, F_ATTRD_USER);
-#endif
-
-        crm_trace("Processing msg from %s", curr_client->id);
-        crm_log_xml_trace(msg, __PRETTY_FUNCTION__);
-
-        attrd_local_callback(msg);
-
-        free_xml(msg);
-        msg = NULL;
-
-        if (client->ch_status != IPC_CONNECT) {
-            break;
-        }
-    }
-
-    crm_trace("Processed %d messages", lpc);
-    if (client->ch_status != IPC_CONNECT) {
-        stay_connected = FALSE;
-    }
-
-    return stay_connected;
-}
-
-static void
-attrd_connection_destroy(gpointer user_data)
-{
-    attrd_client_t *client = user_data;
-
-    /* cib_process_disconnect */
-
-    if (client == NULL) {
-        return;
-    }
-
-    if (client->source != NULL) {
-        crm_trace("Deleting %s (%p) from mainloop", client->name, client->source);
-        G_main_del_IPC_Channel(client->source);
-        client->source = NULL;
-    }
-
-    crm_trace("Destroying %s (%p)", client->name, client);
-    crm_free(client->name);
-    crm_free(client->id);
-    crm_free(client->user);
-    crm_free(client);
-    crm_trace("Freed the cib client");
-
-    return;
-}
-
-static gboolean
-attrd_connect(IPC_Channel * channel, gpointer user_data)
-{
-    attrd_client_t *new_client = NULL;
-
-    crm_trace("Connecting channel");
-
-    if (channel == NULL) {
-        crm_err("Channel was NULL");
-        return FALSE;
-
-    } else if (channel->ch_status != IPC_CONNECT) {
-        crm_err("Channel was disconnected");
-        return FALSE;
-    } else if (need_shutdown) {
-        crm_info("Ignoring connection request during shutdown");
-        return FALSE;
-    }
-
-    crm_malloc0(new_client, sizeof(attrd_client_t));
-    new_client->channel = channel;
-
-    crm_trace("Created channel %p for channel %s", new_client, new_client->id);
-
-/* 		channel->ops->set_recv_qlen(channel, 100); */
-/* 		channel->ops->set_send_qlen(channel, 400); */
-
-    new_client->source =
-        G_main_add_IPC_Channel(G_PRIORITY_DEFAULT, channel, FALSE, attrd_ipc_callback, new_client,
-                               attrd_connection_destroy);
-
-    crm_trace("Client %s connected", new_client->id);
-
-    return TRUE;
 }
 
 static void
@@ -526,7 +492,6 @@ main(int argc, char **argv)
     int flag = 0;
     int argerr = 0;
     gboolean was_err = FALSE;
-    char *channel_name = crm_strdup(T_ATTRD);
 
     crm_log_init(T_ATTRD, LOG_NOTICE, TRUE, FALSE, argc, argv);
     mainloop_add_signal(SIGTERM, attrd_shutdown);
@@ -586,10 +551,8 @@ main(int argc, char **argv)
     crm_info("Cluster connection active");
 
     if (was_err == FALSE) {
-        int rc = init_server_ipc_comms(channel_name, attrd_connect,
-                                       default_ipc_connection_destroy);
-
-        if (rc != 0) {
+        qb_ipcs_service_t *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_SOCKET, &ipc_callbacks);
+        if (ipcs == NULL) {
             crm_err("Could not start IPC server");
             was_err = TRUE;
         }
@@ -626,7 +589,6 @@ main(int argc, char **argv)
     }
 
     g_hash_table_destroy(attr_hash);
-    crm_free(channel_name);
     crm_free(attrd_uuid);
     empty_uuid_cache();
 

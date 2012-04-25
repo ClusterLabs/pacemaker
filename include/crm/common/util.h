@@ -266,24 +266,6 @@ extern void crm_help(char cmd, int exit_code);
 extern int rsc_op_expected_rc(lrm_op_t * op);
 extern gboolean did_rsc_op_fail(lrm_op_t * op, int target_rc);
 
-extern gboolean attrd_update_delegate(IPC_Channel * cluster, char command, const char *host,
-                                      const char *name, const char *value, const char *section,
-                                      const char *set, const char *dampen, const char *user_name);
-
-static inline gboolean
-attrd_update(IPC_Channel * cluster, char command, const char *host, const char *name,
-             const char *value, const char *section, const char *set, const char *dampen)
-{
-    return attrd_update_delegate(cluster, command, host, name, value, section, set, dampen, NULL);
-}
-
-extern gboolean attrd_lazy_update(char command, const char *host, const char *name,
-                                  const char *value, const char *section, const char *set,
-                                  const char *dampen);
-extern gboolean attrd_update_no_mainloop(int *connection, char command, const char *host,
-                                         const char *name, const char *value, const char *section,
-                                         const char *set, const char *dampen);
-
 extern int node_score_red;
 extern int node_score_green;
 extern int node_score_yellow;

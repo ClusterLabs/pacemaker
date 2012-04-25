@@ -26,7 +26,7 @@ COMMONLIBS	= 							\
 		$(CURSESLIBS) $(CLUSTERLIBS) 
 
 headerdir               = $(pkgincludedir)/crm
-header_HEADERS		= attrd.h
+header_HEADERS		= 
 
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
