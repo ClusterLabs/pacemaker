@@ -37,65 +37,65 @@
 
 #define OPTARGS	"hVc"
 
-char *ipc_server = NULL;
 GMainLoop *mainloop = NULL;
+qb_ipcs_service_t *ipcs = NULL;
 
 void usage(const char *cmd, int exit_status);
 void pengine_shutdown(int nsig);
-extern gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, IPC_Channel * sender);
 
-static gboolean
-pe_msg_callback(IPC_Channel * client, gpointer user_data)
+static int32_t
+pe_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    xmlNode *msg = NULL;
-    gboolean stay_connected = TRUE;
-
-    while (IPC_ISRCONN(client)) {
-        if (client->ops->is_message_pending(client) == 0) {
-            break;
-        }
-
-        msg = xmlfromIPC(client, MAX_IPC_DELAY);
-        if (msg != NULL) {
-            xmlNode *data = get_message_xml(msg, F_CRM_DATA);
-
-            process_pe_message(msg, data, client);
-            free_xml(msg);
-        }
-    }
-
-    if (client->ch_status != IPC_CONNECT) {
-        stay_connected = FALSE;
-    }
-
-    return stay_connected;
+    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
+    return 0;
 }
 
 static void
-pe_connection_destroy(gpointer user_data)
+pe_ipc_created(qb_ipcs_connection_t *c)
 {
-    return;
 }
 
-static gboolean
-pe_client_connect(IPC_Channel * client, gpointer user_data)
+gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* sender);
+
+static int32_t
+pe_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
-    crm_trace("Invoked");
-    if (client == NULL) {
-        crm_err("Channel was NULL");
+    xmlNode *msg = crm_ipcs_recv(c, data, size);
+    xmlNode *ack = create_xml_node(NULL, "ack");
 
-    } else if (client->ch_status == IPC_DISCONNECT) {
-        crm_err("Channel was disconnected");
+    crm_ipcs_send(c, ack, FALSE);
+    free_xml(ack);
 
-    } else {
-        client->ops->set_recv_qlen(client, 1024);
-        client->ops->set_send_qlen(client, 1024);
-        G_main_add_IPC_Channel(G_PRIORITY_LOW, client, FALSE, pe_msg_callback, NULL,
-                               pe_connection_destroy);
+    if (msg != NULL) {
+        xmlNode *data = get_message_xml(msg, F_CRM_DATA);
+        
+        process_pe_message(msg, data, c);
+        free_xml(msg);
     }
-
-    return TRUE;
+    return 0;
 }
+
+/* Error code means? */
+static int32_t
+pe_ipc_closed(qb_ipcs_connection_t *c) 
+{
+    return 0;
+}
+
+static void
+pe_ipc_destroy(qb_ipcs_connection_t *c) 
+{
+    crm_trace("Disconnecting %p", c);
+}
+
+struct qb_ipcs_service_handlers ipc_callbacks = 
+{
+    .connection_accept = pe_ipc_accept,
+    .connection_created = pe_ipc_created,
+    .msg_process = pe_ipc_dispatch,
+    .connection_closed = pe_ipc_closed,
+    .connection_destroyed = pe_ipc_destroy
+};
 
 int
 main(int argc, char **argv)
@@ -103,7 +103,7 @@ main(int argc, char **argv)
     int flag;
     int argerr = 0;
     gboolean allow_cores = TRUE;
-    IPC_Channel *old_instance = NULL;
+    crm_ipc_t *old_instance = NULL;
 
     crm_system_name = CRM_SYSTEM_PENGINE;
     mainloop_add_signal(SIGTERM, pengine_shutdown);
@@ -147,27 +147,26 @@ main(int argc, char **argv)
         return 100;
     }
 
-    ipc_server = crm_strdup(CRM_SYSTEM_PENGINE);
-
     /* find any previous instances and shut them down */
-    crm_debug("Checking for old instances of %s", crm_system_name);
-    old_instance = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
-    while (old_instance != NULL) {
-        xmlNode *cmd =
-            create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_PENGINE, NULL);
-
-        crm_warn("Terminating previous PE instance");
-        send_ipc_message(old_instance, cmd);
+    crm_debug("Checking for old instances of %s", CRM_SYSTEM_PENGINE);
+    old_instance = crm_ipc_new(CRM_SYSTEM_PENGINE, 0);
+    crm_ipc_connect(old_instance);
+    
+    crm_debug("Terminating previous instance");
+    while (crm_ipc_connected(old_instance)) {
+        xmlNode *cmd = create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_PENGINE, NULL);
+        crm_debug(".");
+        crm_ipc_send(old_instance, cmd, NULL, 0);
         free_xml(cmd);
-
+        
         sleep(2);
-
-        old_instance->ops->destroy(old_instance);
-        old_instance = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
     }
+    crm_ipc_close(old_instance);
+    crm_ipc_destroy(old_instance);
 
     crm_debug("Init server comms");
-    if (init_server_ipc_comms(ipc_server, pe_client_connect, default_ipc_connection_destroy)) {
+    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_SOCKET, &ipc_callbacks);
+    if (ipcs == NULL) {
         crm_err("Couldn't start IPC server");
         return 1;
     }
@@ -207,6 +206,6 @@ usage(const char *cmd, int exit_status)
 void
 pengine_shutdown(int nsig)
 {
-    crm_free(ipc_server);
+    mainloop_del_ipc_server(ipcs);
     exit(LSB_EXIT_OK);
 }

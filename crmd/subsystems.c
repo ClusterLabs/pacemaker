@@ -156,7 +156,6 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
     const char *devnull = "/dev/null";
 
     crm_info("Starting sub-system \"%s\"", the_subsystem->name);
-    set_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 
     if (the_subsystem->pid > 0) {
         crm_warn("Client %s already running as pid %d",

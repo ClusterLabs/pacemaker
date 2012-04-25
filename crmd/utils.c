@@ -1022,7 +1022,7 @@ process_client_disconnect(crmd_client_t * curr_client)
     }
 
     if (the_subsystem != NULL) {
-        the_subsystem->ipc = NULL;
+        the_subsystem->source = NULL;
         the_subsystem->client = NULL;
         crm_info("Received HUP from %s:[%d]", the_subsystem->name, the_subsystem->pid);
 

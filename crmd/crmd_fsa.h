@@ -54,7 +54,7 @@ struct crm_subsystem_s {
     crmd_client_t *client;      /* Client connection object */
 
     gboolean sent_kill;
-    IPC_Channel *ipc;           /* How can we communicate with it */
+    mainloop_ipc_t *source;     /* How can we communicate with it */
     long long flag_connected;   /*  */
     long long flag_required;    /*  */
 };
