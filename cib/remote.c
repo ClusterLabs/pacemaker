@@ -63,7 +63,6 @@
 
 extern int remote_tls_fd;
 extern gboolean cib_shutdown_flag;
-extern void initiate_exit(void);
 
 int init_remote_listener(int port, gboolean encrypted);
 void cib_remote_connection_destroy(gpointer user_data);
@@ -82,13 +81,16 @@ extern gnutls_session *create_tls_session(int csock, int type);
 
 #endif
 
-extern int num_clients;
+int num_clients;
 int authenticate_user(const char *user, const char *passwd);
 gboolean cib_remote_listen(int ssock, gpointer data);
 gboolean cib_remote_msg(int csock, gpointer data);
 
-extern void cib_common_callback_worker(xmlNode * op_request, cib_client_t * cib_client,
-                                       gboolean force_synchronous, gboolean privileged);
+static void
+remote_connection_destroy(gpointer user_data)
+{
+    return;
+}
 
 #define ERROR_SUFFIX "  Shutting down remote listener"
 int
@@ -152,7 +154,7 @@ init_remote_listener(int port, gboolean encrypted)
     }
 
     G_main_add_fd(G_PRIORITY_HIGH, ssock, FALSE,
-                  cib_remote_listen, NULL, default_ipc_connection_destroy);
+                  cib_remote_listen, NULL, remote_connection_destroy);
 
     return ssock;
 }
@@ -303,9 +305,8 @@ cib_remote_listen(int ssock, gpointer data)
     }
 
     /* send ACK */
-    crm_malloc0(new_client, sizeof(cib_client_t));
     num_clients++;
-    new_client->channel_name = "remote";
+    crm_malloc0(new_client, sizeof(cib_client_t));
     new_client->name = crm_element_value_copy(login, "name");
 
     cl_uuid_generate(&client_id);
@@ -322,22 +323,22 @@ cib_remote_listen(int ssock, gpointer data)
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
         new_client->encrypted = TRUE;
-        new_client->channel = (void *)session;
+        new_client->session = session;
 #endif
     } else {
-        new_client->channel = GINT_TO_POINTER(csock);
+        new_client->session = GINT_TO_POINTER(csock);
     }
 
     free_xml(login);
     login = create_xml_node(NULL, "cib_result");
     crm_xml_add(login, F_CIB_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(login, F_CIB_CLIENTID, new_client->id);
-    cib_send_remote_msg(new_client->channel, login, new_client->encrypted);
+    cib_send_remote_msg(new_client->session, login, new_client->encrypted);
     free_xml(login);
 
-    new_client->source =
-        (void *)G_main_add_fd(G_PRIORITY_DEFAULT, csock, FALSE, cib_remote_msg, new_client,
-                              cib_remote_connection_destroy);
+    new_client->remote =
+        G_main_add_fd(G_PRIORITY_DEFAULT, csock, FALSE, cib_remote_msg, new_client,
+                      cib_remote_connection_destroy);
 
     g_hash_table_insert(client_list, new_client->id, new_client);
 
@@ -365,8 +366,8 @@ cib_remote_connection_destroy(gpointer user_data)
         return;
     }
 
-    crm_trace("Cleaning up after client disconnect: %s/%s/%s",
-              crm_str(client->name), client->channel_name, client->id);
+    crm_trace("Cleaning up after client disconnect: %s/%s",
+              crm_str(client->name), client->id);
 
     if (client->id != NULL) {
         if (!g_hash_table_remove(client_list, client->id)) {
@@ -374,11 +375,11 @@ cib_remote_connection_destroy(gpointer user_data)
         }
     }
 
-    if (client->source != NULL) {
+    if (client->remote != NULL) {
         /* Should this even be necessary? */
-        crm_trace("Deleting %s (%p) from mainloop", client->name, client->source);
-        G_main_del_fd((GFDSource *) client->source);
-        client->source = NULL;
+        crm_trace("Deleting %s (%p) from mainloop", client->name, client->remote);
+        G_main_del_fd(client->remote);
+        client->remote = NULL;
     }
 
     crm_trace("Destroying %s (%p)", client->name, user_data);
@@ -391,11 +392,9 @@ cib_remote_connection_destroy(gpointer user_data)
     crm_free(client);
     crm_trace("Freed the cib client");
 
-    if (cib_shutdown_flag && g_hash_table_size(client_list) == 0) {
-        crm_info("All clients disconnected...");
-        initiate_exit();
+    if (cib_shutdown_flag) {
+        cib_shutdown(0);
     }
-
     return;
 }
 
@@ -408,7 +407,7 @@ cib_remote_msg(int csock, gpointer data)
 
     crm_trace("%s callback", client->encrypted ? "secure" : "clear-text");
 
-    command = cib_recv_remote_msg(client->channel, client->encrypted);
+    command = cib_recv_remote_msg(client->session, client->encrypted);
     if (command == NULL) {
         return FALSE;
     }
@@ -466,7 +465,7 @@ cib_remote_msg(int csock, gpointer data)
     }
 
     crm_log_xml_trace(command, "Remote command: ");
-    cib_common_callback_worker(command, client, FALSE, TRUE);
+    cib_common_callback_worker(command, client, TRUE);
   bail:
     free_xml(command);
     command = NULL;

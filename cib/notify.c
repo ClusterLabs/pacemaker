@@ -74,12 +74,8 @@ need_post_notify(gpointer key, gpointer value, gpointer user_data)
 gboolean
 cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
-    int qlen = 0;
-    int max_qlen = 500;
     const char *type = NULL;
     gboolean do_send = FALSE;
-    gboolean do_remote = FALSE;
-    IPC_Channel *ipc_client = NULL;
 
     cib_client_t *client = value;
     xmlNode *update_msg = user_data;
@@ -91,24 +87,12 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
         crm_warn("Skipping NULL client");
         return TRUE;
 
-    } else if (client->channel == NULL) {
+    } else if (client->ipc == NULL) {
         crm_warn("Skipping client with NULL channel");
-        return FALSE;
-
-    } else if (client->name == NULL) {
-        crm_trace("Skipping unnammed client / comamnd channel");
         return FALSE;
     }
 
     type = crm_element_value(update_msg, F_SUBTYPE);
-
-    ipc_client = client->channel;
-    do_remote = crm_str_eq(client->channel_name, "remote", FALSE);
-
-    if (do_remote == FALSE) {
-        qlen = ipc_client->send_queue->current_qlen;
-        max_qlen = ipc_client->send_queue->max_qlen;
-    }
 
     CRM_LOG_ASSERT(type != NULL);
     if (client->diffs && safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
@@ -121,35 +105,26 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
         do_send = TRUE;
 
     } else if (client->pre_notify && safe_str_eq(type, T_CIB_PRE_NOTIFY)) {
-        if (qlen < (int)(0.4 * max_qlen)) {
-            do_send = TRUE;
-        } else {
-            crm_warn("Throttling pre-notifications due to"
-                     " high load: queue=%d (max=%d)", qlen, max_qlen);
-        }
+        do_send = TRUE;
 
     } else if (client->post_notify && safe_str_eq(type, T_CIB_POST_NOTIFY)) {
-        if (qlen < (int)(0.7 * max_qlen)) {
-            do_send = TRUE;
-        } else {
-            crm_warn("Throttling post-notifications due to"
-                     " extreme load: queue=%d (max=%d)", qlen, max_qlen);
-        }
+        do_send = TRUE;
     }
 
     if (do_send) {
-        if (do_remote) {
+        if (client->ipc) {
+            if(crm_ipcs_send(client->ipc, update_msg, TRUE) == FALSE) {
+                crm_warn("Notification of client %s/%s failed", client->name, client->id);
+            }
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        } else if (client->session) {
             crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
-            cib_send_remote_msg(client->channel, update_msg, client->encrypted);
+            cib_send_remote_msg(client->session, update_msg, client->encrypted);
 
-        } else if (ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
-            /* We never want the CIB to exit because our client is slow */
-            crm_crit("%s-notification of client %s/%s failed - queue saturated",
-                     type, client->name, client->id);
-
-        } else if (send_ipc_message(ipc_client, update_msg) == FALSE) {
-            crm_warn("Notification of client %s/%s failed", client->name, client->id);
-            return FALSE;
+#endif
+        } else {
+            crm_err("Unknown transport for %s", client->name);
         }
     }
     return FALSE;

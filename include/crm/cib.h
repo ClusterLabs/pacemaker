@@ -212,7 +212,7 @@ typedef struct cib_api_operations_s {
 
     int (*signon) (cib_t * cib, const char *name, enum cib_conn_type type);
     int (*signon_raw) (cib_t * cib, const char *name, enum cib_conn_type type, int *async_fd,
-                       int *sync_fd);
+                       int *unused);
     int (*signoff) (cib_t * cib);
     int (*free) (cib_t * cib);
 

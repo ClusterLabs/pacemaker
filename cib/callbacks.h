@@ -25,6 +25,12 @@
 #include <crm/common/xml.h>
 #include <crm/common/cluster.h>
 
+#ifdef HAVE_GNUTLS_GNUTLS_H
+#  undef KEYFILE
+#  include <gnutls/gnutls.h>
+#endif
+
+
 extern gboolean cib_is_master;
 extern GHashTable *client_list;
 extern GHashTable *peer_hash;
@@ -36,11 +42,16 @@ typedef struct cib_client_s {
     char *callback_id;
     char *user;
 
-    const char *channel_name;
+    qb_ipcs_connection_t *ipc;
 
-    IPC_Channel *channel;
-    GCHSource *source;
+#ifdef HAVE_GNUTLS_GNUTLS_H
+    gnutls_session *session;
+#else
+    void *session;
+#endif
     gboolean encrypted;
+    GFDSource *remote;
+        
     unsigned long num_calls;
 
     int pre_notify;
@@ -63,15 +74,19 @@ typedef struct cib_operation_s {
                            xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 } cib_operation_t;
 
-extern gboolean cib_client_connect(IPC_Channel * channel, gpointer user_data);
-extern gboolean cib_null_callback(IPC_Channel * channel, gpointer user_data);
-extern gboolean cib_rw_callback(IPC_Channel * channel, gpointer user_data);
-extern gboolean cib_ro_callback(IPC_Channel * channel, gpointer user_data);
+extern struct qb_ipcs_service_handlers ipc_ro_callbacks;
+extern struct qb_ipcs_service_handlers ipc_rw_callbacks;
+extern qb_ipcs_service_t *ipcs_ro;
+extern qb_ipcs_service_t *ipcs_rw;
 
 extern void cib_ha_peer_callback(HA_Message * msg, void *private_data);
 extern void cib_peer_callback(xmlNode * msg, void *private_data);
 extern void cib_client_status_callback(const char *node, const char *client,
                                        const char *status, void *private);
+extern void cib_common_callback_worker(xmlNode * op_request, cib_client_t * cib_client, gboolean privileged);
+
+void cib_shutdown(int nsig);
+void initiate_exit(void);
 
 #if SUPPORT_HEARTBEAT
 extern gboolean cib_ccm_dispatch(int fd, gpointer user_data);

@@ -574,6 +574,7 @@ cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean onl
             g_timeout_add(async_timer->timeout, cib_async_timeout_handler, async_timer);
     }
 
+    crm_trace("Adding callback %s for call %d", callback_name, call_id);
     g_hash_table_insert(cib_op_callback_table, GINT_TO_POINTER(call_id), blob);
 
     return TRUE;

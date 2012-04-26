@@ -81,7 +81,6 @@ int remote_tls_fd = 0;
 void usage(const char *cmd, int exit_status);
 int cib_init(void);
 void cib_shutdown(int nsig);
-void cib_ha_connection_destroy(gpointer user_data);
 gboolean startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
 
@@ -126,8 +125,7 @@ log_cib_client(gpointer key, gpointer value, gpointer user_data)
 {
     cib_client_t *a_client = value;
 
-    crm_info("Client %s/%s", crm_str(a_client->name),
-    crm_str(a_client->channel_name));
+    crm_info("Client %s", crm_str(a_client->name));
 }
 
 int
@@ -486,6 +484,18 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
     }
 }
 
+static void
+cib_ha_connection_destroy(gpointer user_data)
+{
+    if (cib_shutdown_flag) {
+        crm_info("Heartbeat disconnection complete... exiting");
+        terminate_cib(__FUNCTION__, FALSE);
+    } else {
+        crm_err("Heartbeat connection lost!  Exiting.");
+        terminate_cib(__FUNCTION__, TRUE);
+    }
+}
+
 int
 cib_init(void)
 {
@@ -552,16 +562,8 @@ cib_init(void)
         cib_our_uname = crm_strdup("localhost");
     }
 
-    channel1 = crm_strdup(cib_channel_callback);
-    was_error = init_server_ipc_comms(channel1, cib_client_connect, default_ipc_connection_destroy);
-
-    channel2 = crm_strdup(cib_channel_ro);
-    was_error = was_error || init_server_ipc_comms(channel2, cib_client_connect,
-                                                   default_ipc_connection_destroy);
-
-    channel3 = crm_strdup(cib_channel_rw);
-    was_error = was_error || init_server_ipc_comms(channel3, cib_client_connect,
-                                                   default_ipc_connection_destroy);
+    ipcs_ro = mainloop_add_ipc_server(cib_channel_ro, QB_IPC_SOCKET, &ipc_ro_callbacks);
+    ipcs_rw = mainloop_add_ipc_server(cib_channel_rw, QB_IPC_SOCKET, &ipc_rw_callbacks);
 
     if (stand_alone) {
         if (was_error) {
@@ -613,64 +615,6 @@ usage(const char *cmd, int exit_status)
     fflush(stream);
 
     exit(exit_status);
-}
-
-void
-cib_ha_connection_destroy(gpointer user_data)
-{
-    if (cib_shutdown_flag) {
-        crm_info("Heartbeat disconnection complete... exiting");
-        terminate_cib(__FUNCTION__, FALSE);
-    } else {
-        crm_err("Heartbeat connection lost!  Exiting.");
-        terminate_cib(__FUNCTION__, TRUE);
-    }
-}
-
-static void
-disconnect_cib_client(gpointer key, gpointer value, gpointer user_data)
-{
-    cib_client_t *a_client = value;
-
-    crm_trace("Processing client %s/%s... send=%d, recv=%d",
-                crm_str(a_client->name), crm_str(a_client->channel_name),
-                (int)a_client->channel->send_queue->current_qlen,
-                (int)a_client->channel->recv_queue->current_qlen);
-
-    if (a_client->channel->ch_status == IPC_CONNECT) {
-        a_client->channel->ops->resume_io(a_client->channel);
-        if (a_client->channel->send_queue->current_qlen != 0
-            || a_client->channel->recv_queue->current_qlen != 0) {
-            crm_info("Flushed messages to/from %s/%s... send=%d, recv=%d",
-                     crm_str(a_client->name),
-                     crm_str(a_client->channel_name),
-                     (int)a_client->channel->send_queue->current_qlen,
-                     (int)a_client->channel->recv_queue->current_qlen);
-        }
-    }
-
-    if (a_client->channel->ch_status == IPC_CONNECT) {
-        crm_warn("Disconnecting %s/%s...",
-                 crm_str(a_client->name), crm_str(a_client->channel_name));
-        a_client->channel->ops->disconnect(a_client->channel);
-    }
-}
-
-extern gboolean cib_process_disconnect(IPC_Channel * channel, cib_client_t * cib_client);
-
-void
-cib_shutdown(int nsig)
-{
-    if (cib_shutdown_flag == FALSE) {
-        cib_shutdown_flag = TRUE;
-        crm_debug("Disconnecting %d clients", g_hash_table_size(client_list));
-        g_hash_table_foreach(client_list, disconnect_cib_client, NULL);
-        crm_info("Disconnected %d clients", g_hash_table_size(client_list));
-        cib_process_disconnect(NULL, NULL);
-
-    } else {
-        crm_info("Waiting for %d clients to disconnect...", g_hash_table_size(client_list));
-    }
 }
 
 gboolean
