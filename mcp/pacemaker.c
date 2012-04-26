@@ -843,7 +843,7 @@ main(int argc, char **argv)
     client_list = g_hash_table_new(g_direct_hash, g_direct_equal);
     peers = g_hash_table_new(g_direct_hash, g_direct_equal);
 
-    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_SOCKET, &ipc_callbacks);
+    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Couldn't start IPC server");
         return 1;

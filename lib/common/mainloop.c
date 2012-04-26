@@ -389,6 +389,26 @@ struct qb_ipcs_poll_handlers gio_poll_funcs = {
     .dispatch_del = gio_poll_dispatch_del,
 };
 
+static enum qb_ipc_type
+pick_ipc_type(enum qb_ipc_type requested)
+{
+    const char *env = getenv("PCMK_ipc_type");
+
+    if(env && strcmp("shared-mem", env) == 0) {
+        return QB_IPC_SHM;
+    } else if(env && strcmp("socket", env) == 0) {
+        return QB_IPC_SOCKET;
+    } else if(env && strcmp("posix", env) == 0) {
+        return QB_IPC_POSIX_MQ;
+    } else if(env && strcmp("sysv", env) == 0) {
+        return QB_IPC_SYSV_MQ;
+    } else if(requested == QB_IPC_NATIVE) {
+        /* We prefer sockets actually */
+        return QB_IPC_SOCKET;
+    }
+    return requested;
+}
+
 qb_ipcs_service_t *mainloop_add_ipc_server(
     const char *name, enum qb_ipc_type type, struct qb_ipcs_service_handlers *callbacks) 
 {
@@ -398,11 +418,7 @@ qb_ipcs_service_t *mainloop_add_ipc_server(
         gio_map = qb_array_create_2(64, sizeof(struct gio_to_qb_poll), 1);
     }
 
-    if(type < 0) {
-        type = QB_IPC_SHM;
-    }
-
-    server = qb_ipcs_create(name, 0, type, callbacks);
+    server = qb_ipcs_create(name, 0, pick_ipc_type(type), callbacks);
     qb_ipcs_poll_handlers_set(server, &gio_poll_funcs);
     qb_ipcs_run(server);
 

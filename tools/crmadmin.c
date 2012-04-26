@@ -426,6 +426,66 @@ do_init(void)
     return FALSE;
 }
 
+static xmlNode *
+validate_crm_message(xmlNode * msg, const char *sys, const char *uuid, const char *msg_type)
+{
+    const char *to = NULL;
+    const char *type = NULL;
+    const char *crm_msg_reference = NULL;
+    xmlNode *action = NULL;
+    const char *true_sys;
+    char *local_sys = NULL;
+
+    if (msg == NULL) {
+        return NULL;
+    }
+
+    to = crm_element_value(msg, F_CRM_SYS_TO);
+    type = crm_element_value(msg, F_CRM_MSG_TYPE);
+
+    crm_msg_reference = crm_element_value(msg, XML_ATTR_REFERENCE);
+    action = msg;
+    true_sys = sys;
+
+    if (uuid != NULL) {
+        local_sys = generate_hash_key(sys, uuid);
+        true_sys = local_sys;
+    }
+
+    if (to == NULL) {
+        crm_info("No sub-system defined.");
+        action = NULL;
+    } else if (true_sys != NULL && strcasecmp(to, true_sys) != 0) {
+        crm_trace("The message is not for this sub-system (%s != %s).", to, true_sys);
+        action = NULL;
+    }
+
+    crm_free(local_sys);
+
+    if (type == NULL) {
+        crm_info("No message type defined.");
+        return NULL;
+
+    } else if (msg_type != NULL && strcasecmp(msg_type, type) != 0) {
+        crm_info("Expecting a (%s) message but received a (%s).", msg_type, type);
+        action = NULL;
+    }
+
+    if (crm_msg_reference == NULL) {
+        crm_info("No message crm_msg_reference defined.");
+        action = NULL;
+    }
+/*
+ 	if(action != NULL) 
+		crm_trace(
+		       "XML is valid and node with message type (%s) found.",
+		       type);
+	crm_trace("Returning node (%s)", crm_element_name(action));
+*/
+
+    return action;
+}
+
 int
 admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
 {

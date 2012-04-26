@@ -551,7 +551,7 @@ main(int argc, char **argv)
     crm_info("Cluster connection active");
 
     if (was_err == FALSE) {
-        qb_ipcs_service_t *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_SOCKET, &ipc_callbacks);
+        qb_ipcs_service_t *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, &ipc_callbacks);
         if (ipcs == NULL) {
             crm_err("Could not start IPC server");
             was_err = TRUE;

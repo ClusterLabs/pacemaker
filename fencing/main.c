@@ -798,7 +798,7 @@ main(int argc, char ** argv)
     topology = g_hash_table_new_full(
         crm_str_hash, g_str_equal, NULL, free_topology_entry);
 
-    ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_SOCKET, &ipc_callbacks);
+    ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_NATIVE, &ipc_callbacks);
 
 #if SUPPORT_STONITH_CONFIG
     if (((stand_alone == TRUE)) && !(standalone_cfg_read_file(STONITH_NG_CONF_FILE))) {

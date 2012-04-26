@@ -26,33 +26,6 @@
 
 /* clplumbing based IPC */
 
-extern gboolean send_ipc_message(IPC_Channel * ipc_client, xmlNode * msg);
-
-extern void default_ipc_connection_destroy(gpointer user_data);
-
-extern int init_server_ipc_comms(char *channel_name,
-                                 gboolean(*channel_client_connect) (IPC_Channel * newclient,
-                                                                    gpointer user_data),
-                                 void (*channel_connection_destroy) (gpointer user_data));
-
-extern GCHSource *init_client_ipc_comms(const char *channel_name,
-                                        gboolean(*dispatch) (IPC_Channel * source_data,
-                                                             gpointer user_data), void *client_data,
-                                        IPC_Channel ** ch);
-
-extern IPC_Channel *init_client_ipc_comms_nodispatch(const char *channel_name);
-
-extern gboolean subsystem_msg_dispatch(IPC_Channel * sender, void *user_data);
-
-extern IPC_WaitConnection *wait_channel_init(char daemonsocket[]);
-
-extern gboolean is_ipc_empty(IPC_Channel * ch);
-
-extern xmlNode *createPingRequest(const char *crm_msg_reference, const char *to);
-
-extern xmlNode *validate_crm_message(xmlNode * msg,
-                                     const char *sys, const char *uuid, const char *msg_type);
-
 #  define create_reply(request, xml_response_data) create_reply_adv(request, xml_response_data, __FUNCTION__);
 extern xmlNode *create_reply_adv(xmlNode * request, xmlNode * xml_response_data,
                                  const char *origin);

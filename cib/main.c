@@ -562,8 +562,8 @@ cib_init(void)
         cib_our_uname = crm_strdup("localhost");
     }
 
-    ipcs_ro = mainloop_add_ipc_server(cib_channel_ro, QB_IPC_SOCKET, &ipc_ro_callbacks);
-    ipcs_rw = mainloop_add_ipc_server(cib_channel_rw, QB_IPC_SOCKET, &ipc_rw_callbacks);
+    ipcs_ro = mainloop_add_ipc_server(cib_channel_ro, QB_IPC_NATIVE, &ipc_ro_callbacks);
+    ipcs_rw = mainloop_add_ipc_server(cib_channel_rw, QB_IPC_NATIVE, &ipc_rw_callbacks);
 
     if (stand_alone) {
         if (was_error) {

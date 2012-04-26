@@ -685,7 +685,7 @@ do_started(long long action,
     }
 
     crm_debug("Init server comms");
-    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_SOCKET, &crmd_callbacks);
+    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_NATIVE, &crmd_callbacks);
     if (ipcs == NULL) {
         crm_err("Couldn't start IPC server");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
