@@ -168,7 +168,7 @@ do_pe_control(long long action,
         if (cur_state != S_STOPPING) {
             set_bit_inplace(fsa_input_register, pe_subsystem->flag_required);
 
-            pe_subsystem->source = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE, 0, NULL, &pe_callbacks);
+            pe_subsystem->source = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE, 5*1024*1024/* 5Mb */, NULL, &pe_callbacks);
 
             if (pe_subsystem->source == NULL) {
                 crm_warn("Setup of client connection failed, not adding channel to mainloop");
