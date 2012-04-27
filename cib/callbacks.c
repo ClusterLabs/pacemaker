@@ -100,13 +100,12 @@ cib_ipc_created(qb_ipcs_connection_t *c)
     crm_malloc0(new_client, sizeof(cib_client_t));
     new_client->ipc = c;
 
-    crm_trace("%p connected for client %s", c, new_client->id);
-
     cl_uuid_generate(&client_id);
     cl_uuid_unparse(&client_id, uuid_str);
 
     CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
     new_client->id = crm_strdup(uuid_str);
+    crm_trace("%p connected for client %s", c, new_client->id);
 
     /* make sure we can find ourselves later for sync calls
      * redirected to the master instance
@@ -257,7 +256,8 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean p
     if(op_request) {
         crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
     }
-    
+
+    crm_trace("Inbound: %.120s", data);
     if (op_request == NULL || cib_client == NULL) {
         xmlNode *ack = create_xml_node(NULL, "nack");
 

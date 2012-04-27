@@ -183,13 +183,12 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
     const char *channel = NULL;
     cib_native_opaque_t *native = cib->variant_opaque;
 
-    static struct ipc_client_callbacks ipc_callbacks = 
+    static struct ipc_client_callbacks cib_callbacks = 
         {
             .dispatch = cib_native_dispatch_internal,
             .destroy = cib_native_destroy
         };
     
-    crm_trace("Connecting command channel");
     cib->call_timeout = MAX_IPC_DELAY;
 
     if (type == cib_command) {
@@ -204,6 +203,8 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
         return cib_not_connected;
     }
 
+    crm_trace("Connecting %s channel", channel);
+    
     if (async_fd != NULL) {
         native->ipc = crm_ipc_new(channel, 0);
 
@@ -214,8 +215,8 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
             rc = cib_connection;
         }
 
-    } else  {
-        native->source = mainloop_add_ipc_client(channel, 0, cib, &ipc_callbacks);
+    } else {
+        native->source = mainloop_add_ipc_client(channel, 512*1024 /* 512k */, cib, &cib_callbacks);
         native->ipc = mainloop_get_ipc_client(native->source);
     }
 
