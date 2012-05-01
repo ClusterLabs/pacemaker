@@ -160,7 +160,7 @@ controld_stop() {
 }
 
 controld_monitor() {
-    killall -0 ${OCF_RESKEY_daemon}; rc=$?
+    killall -0 ${OCF_RESKEY_daemon} >/dev/null 2>&1 ; rc=$?
 
     case $rc in
       0) return $OCF_SUCCESS;;
