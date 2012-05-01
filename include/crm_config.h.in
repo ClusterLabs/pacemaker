@@ -60,6 +60,9 @@
 /* Support the Corosync messaging and membership layer */
 #undef SUPPORT_COROSYNC
 
+/* Does corosync use libqb for its ipc */
+#undef CS_USES_LIBQB
+
 /* Compatability alias for SUPPORT_COROSYNC */
 #undef SUPPORT_AIS
 
