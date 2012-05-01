@@ -40,6 +40,7 @@ typedef struct async_command_s {
 
     GListPtr device_list;
     GListPtr device_next;
+    char *scheduled;
 
     ProcTrack_ops *pt_ops;
     ProcTrackKillInfo killseq[3];
