@@ -1783,7 +1783,12 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
     next = rsc->allocated_to;
     if (rsc->running_on) {
-        current = rsc->running_on->data;
+        if (g_list_length(rsc->running_on) > 1 && rsc->partial_migration_source) {
+            current = rsc->partial_migration_source;
+        } else {
+            current = rsc->running_on->data;
+        }
+
         if (rsc->role == RSC_ROLE_STOPPED) {
             /*
              * This can occur when resources are being recovered
