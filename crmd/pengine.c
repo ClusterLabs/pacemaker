@@ -243,7 +243,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     xmlNode *cmd = NULL;
 
     if (rc != cib_ok) {
-        crm_err("Cant retrieve the CIB: %s", cib_error2string(rc));
+        crm_err("Cant retrieve the CIB: %s (call %d)", cib_error2string(rc), call_id);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
         return;
 
