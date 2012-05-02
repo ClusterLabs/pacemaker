@@ -360,6 +360,12 @@ ccm_connect(void)
     int (*ccm_api_unregister) (oc_ev_t * token) =
         find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_unregister");
 
+    static struct mainloop_fd_callbacks ccm_fd_callbacks = 
+        {
+            .dispatch = cib_ccm_dispatch,
+            .destroy = ccm_connection_destroy,
+        };
+    
     while (did_fail) {
         did_fail = FALSE;
         crm_info("Registering with CCM...");
@@ -404,8 +410,7 @@ ccm_connect(void)
     }
 
     crm_debug("CCM Activation passed... all set to go!");
-    G_main_add_fd(G_PRIORITY_HIGH, cib_ev_fd, FALSE,
-                  cib_ccm_dispatch, cib_ev_token, ccm_connection_destroy);
+    mainloop_add_fd("heartbeat-ccm", cib_ev_fd, cib_ev_token, &ccm_fd_callbacks);
 
     return TRUE;
 }

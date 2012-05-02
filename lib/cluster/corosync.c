@@ -25,6 +25,7 @@
 #include <crm/ais.h>
 #include <crm/common/ipc.h>
 #include <crm/common/cluster.h>
+#include <crm/common/mainloop.h>
 #include <sys/utsname.h>
 #include "stack.h"
 
@@ -106,8 +107,6 @@ text2msg_type(const char *text)
     return type;
 }
 
-GFDSource *cpg_source = NULL;
-GFDSource *quorumd_source = NULL;
 static char *ais_cluster_name = NULL;
 
 gboolean
@@ -393,8 +392,8 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
 
 gboolean(*pcmk_cpg_dispatch_fn) (AIS_Message *, char *, int) = NULL;
 
-static gboolean
-pcmk_cpg_dispatch(int sender, gpointer user_data)
+static int
+pcmk_cpg_dispatch(gpointer user_data)
 {
     int rc = 0;
 
@@ -402,9 +401,9 @@ pcmk_cpg_dispatch(int sender, gpointer user_data)
     rc = cpg_dispatch(pcmk_cpg_handle, CS_DISPATCH_ALL);
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %d", rc);
-        return FALSE;
+        return -1;
     }
-    return TRUE;
+    return 0;
 }
 
 static void
@@ -479,7 +478,11 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
     int fd = 0;
     int retries = 0;
     crm_node_t *peer = NULL;
-
+    struct mainloop_fd_callbacks cpg_fd_callbacks = {
+        .dispatch = pcmk_cpg_dispatch,
+        .destroy = destroy,
+    };
+    
     strcpy(pcmk_cpg_group.value, crm_system_name);
     pcmk_cpg_group.length = strlen(crm_system_name) + 1;
 
@@ -509,8 +512,7 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
         goto bail;
     }
 
-    crm_debug("Adding fd=%d to mainloop", fd);
-    cpg_source = G_main_add_fd(G_PRIORITY_HIGH, fd, FALSE, pcmk_cpg_dispatch, dispatch, destroy);
+    mainloop_add_fd("corosync-cpg", fd, dispatch, &cpg_fd_callbacks);
 
   bail:
     if (rc != CS_OK) {
@@ -523,17 +525,17 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
     return TRUE;
 }
 
-static gboolean
-pcmk_quorum_dispatch(int sender, gpointer user_data)
+static int
+pcmk_quorum_dispatch(gpointer user_data)
 {
     int rc = 0;
 
     rc = quorum_dispatch(pcmk_quorum_handle, CS_DISPATCH_ALL);
     if (rc < 0) {
         crm_err("Connection to the Quorum API failed: %d", rc);
-        return FALSE;
+        return -1;
     }
-    return TRUE;
+    return 0;
 }
 
 static void
@@ -609,6 +611,9 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
     int fd = 0;
     int quorate = 0;
     uint32_t quorum_type = 0;
+    struct mainloop_fd_callbacks quorum_fd_callbacks;
+    quorum_fd_callbacks.dispatch = pcmk_quorum_dispatch;
+    quorum_fd_callbacks.destroy = destroy;
 
     crm_debug("Configuring Pacemaker to obtain quorum from Corosync");
 
@@ -644,8 +649,7 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
         goto bail;
     }
 
-    quorumd_source =
-        G_main_add_fd(G_PRIORITY_HIGH, fd, FALSE, pcmk_quorum_dispatch, dispatch, destroy);
+    mainloop_add_fd("quorum", fd, dispatch, &quorum_fd_callbacks);
 
   bail:
     if (rc != CS_OK) {

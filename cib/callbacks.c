@@ -1121,8 +1121,8 @@ static void *ccm_library = NULL;
 int (*ccm_api_callback_done) (void *cookie) = NULL;
 int (*ccm_api_handle_event) (const oc_ev_t * token) = NULL;
 
-gboolean
-cib_ccm_dispatch(int fd, gpointer user_data)
+int
+cib_ccm_dispatch(gpointer user_data)
 {
     int rc = 0;
     oc_ev_t *ccm_token = (oc_ev_t *) user_data;
@@ -1136,7 +1136,7 @@ cib_ccm_dispatch(int fd, gpointer user_data)
 
     rc = (*ccm_api_handle_event) (ccm_token);
     if (0 == rc) {
-        return TRUE;
+        return 0;
     }
 
     crm_err("CCM connection appears to have failed: rc=%d.", rc);
@@ -1145,7 +1145,7 @@ cib_ccm_dispatch(int fd, gpointer user_data)
     crm_err("Exiting to recover from CCM connection failure");
     exit(2);
 
-    return FALSE;
+    return -1;
 }
 
 int current_instance = 0;

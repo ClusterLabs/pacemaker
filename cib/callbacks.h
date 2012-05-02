@@ -24,7 +24,7 @@
 #include <crm/cib.h>
 #include <crm/common/xml.h>
 #include <crm/common/cluster.h>
-
+#include <crm/common/mainloop.h>
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
 #  include <gnutls/gnutls.h>
@@ -50,7 +50,7 @@ typedef struct cib_client_s {
     void *session;
 #endif
     gboolean encrypted;
-    GFDSource *remote;
+    mainloop_io_t *remote;
         
     unsigned long num_calls;
 
@@ -89,7 +89,7 @@ void cib_shutdown(int nsig);
 void initiate_exit(void);
 
 #if SUPPORT_HEARTBEAT
-extern gboolean cib_ccm_dispatch(int fd, gpointer user_data);
+extern int cib_ccm_dispatch(gpointer user_data);
 
 extern void cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
 #endif

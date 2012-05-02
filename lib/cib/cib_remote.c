@@ -33,6 +33,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/mainloop.h>
 #include <cib_private.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -59,7 +60,7 @@ struct remote_connection_s {
     int socket;
     gboolean encrypted;
     gnutls_session *session;
-    GFDSource *source;
+    mainloop_io_t *source;
     char *token;
 };
 
@@ -76,7 +77,7 @@ typedef struct cib_remote_opaque_s {
 } cib_remote_opaque_t;
 
 void cib_remote_connection_destroy(gpointer user_data);
-gboolean cib_remote_dispatch(int fd, gpointer user_data);
+int cib_remote_dispatch(gpointer user_data);
 int cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type);
 int cib_remote_signoff(cib_t * cib);
 int cib_remote_free(cib_t * cib);
@@ -196,6 +197,12 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection)
     xmlNode *answer = NULL;
     xmlNode *login = NULL;
 
+    static struct mainloop_fd_callbacks cib_fd_callbacks = 
+        {
+            .dispatch = cib_remote_dispatch,
+            .destroy = cib_remote_connection_destroy,
+        };
+
     connection->socket = 0;
     connection->session = NULL;
 
@@ -310,9 +317,7 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection)
     }
 
     connection->socket = sock;
-    connection->source = G_main_add_fd(G_PRIORITY_HIGH, connection->socket, FALSE,
-                                       cib_remote_dispatch, cib, cib_remote_connection_destroy);
-
+    connection->source = mainloop_add_fd("cib-remote", connection->socket, cib, &cib_fd_callbacks);
     return rc;
 }
 
@@ -326,45 +331,36 @@ cib_remote_connection_destroy(gpointer user_data)
     return;
 }
 
-gboolean
-cib_remote_dispatch(int fd, gpointer user_data)
+int
+cib_remote_dispatch(gpointer user_data)
 {
     cib_t *cib = user_data;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    if (fd == private->callback.socket) {
-        xmlNode *msg = NULL;
-        const char *type = NULL;
+    xmlNode *msg = NULL;
+    const char *type = NULL;
 
-        crm_info("Message on callback channel");
-        msg = cib_recv_remote_msg(private->callback.session, private->callback.encrypted);
+    crm_info("Message on callback channel");
+    msg = cib_recv_remote_msg(private->callback.session, private->callback.encrypted);
 
-        type = crm_element_value(msg, F_TYPE);
-        crm_trace("Activating %s callbacks...", type);
+    type = crm_element_value(msg, F_TYPE);
+    crm_trace("Activating %s callbacks...", type);
 
-        if (safe_str_eq(type, T_CIB)) {
-            cib_native_callback(cib, msg, 0, 0);
+    if (safe_str_eq(type, T_CIB)) {
+        cib_native_callback(cib, msg, 0, 0);
 
-        } else if (safe_str_eq(type, T_CIB_NOTIFY)) {
-            g_list_foreach(cib->notify_list, cib_native_notify, msg);
-
-        } else {
-            crm_err("Unknown message type: %s", type);
-        }
-
-        if (msg != NULL) {
-            free_xml(msg);
-            return TRUE;
-        }
-
-    } else if (fd == private->command.socket) {
-        crm_err("Message on command channel");
+    } else if (safe_str_eq(type, T_CIB_NOTIFY)) {
+        g_list_foreach(cib->notify_list, cib_native_notify, msg);
 
     } else {
-        crm_err("Unknown fd");
+        crm_err("Unknown message type: %s", type);
     }
 
-    return FALSE;
+    if (msg != NULL) {
+        free_xml(msg);
+        return 0;
+    }
+    return -1;
 }
 
 int
