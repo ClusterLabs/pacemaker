@@ -1039,7 +1039,7 @@ init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
             case CS_OK:
                 if (getenv("HA_mcp")) {
                     xmlNode *poke = create_xml_node(NULL, "poke");
-                    mainloop_ipc_t *ipc = mainloop_add_ipc_client(CRM_SYSTEM_MCP, 0, destroy, &mcp_callbacks);
+                    mainloop_io_t *ipc = mainloop_add_ipc_client(CRM_SYSTEM_MCP, 0, destroy, &mcp_callbacks);
                     crm_ipc_send(mainloop_get_ipc_client(ipc), poke, NULL, 0);
                     free_xml(poke);
                 }

@@ -496,7 +496,7 @@ try_corosync(int command, enum cluster_type_e stack)
     cpg_handle_t c_handle = 0;
     quorum_handle_t q_handle = 0;
 
-    mainloop_ipc_t *ipc = NULL;
+    mainloop_io_t *ipc = NULL;
     GMainLoop *amainloop = NULL;
 
     struct ipc_client_callbacks node_callbacks = 

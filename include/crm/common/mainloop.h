@@ -54,13 +54,25 @@ qb_ipcs_service_t *mainloop_add_ipc_server(
 
 void mainloop_del_ipc_server(qb_ipcs_service_t *server);
 
-typedef struct mainloop_ipc_s mainloop_ipc_t;
+typedef struct mainloop_io_s mainloop_io_t;
 
-mainloop_ipc_t *mainloop_add_ipc_client(
+mainloop_io_t *mainloop_add_ipc_client(
     const char *name, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks);
 
-void mainloop_del_ipc_client(mainloop_ipc_t *client);
+void mainloop_del_ipc_client(mainloop_io_t *client);
 
-crm_ipc_t *mainloop_get_ipc_client(mainloop_ipc_t *client);
+crm_ipc_t *mainloop_get_ipc_client(mainloop_io_t *client);
+
+
+struct mainloop_fd_callbacks 
+{
+        int (*dispatch)(gpointer userdata);
+        void (*destroy)(gpointer userdata);
+};
+
+mainloop_io_t *mainloop_add_fd(
+    const char *name, int fd, void *userdata, struct mainloop_fd_callbacks *callbacks);
+
+void mainloop_del_fd(mainloop_io_t *client);
 
 #endif

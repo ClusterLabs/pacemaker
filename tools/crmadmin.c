@@ -405,7 +405,7 @@ struct ipc_client_callbacks crm_callbacks =
 gboolean
 do_init(void)
 {
-    mainloop_ipc_t *source = mainloop_add_ipc_client(CRM_SYSTEM_CRMD, 0, NULL, &crm_callbacks);
+    mainloop_io_t *source = mainloop_add_ipc_client(CRM_SYSTEM_CRMD, 0, NULL, &crm_callbacks);
 
     crm_malloc0(admin_uuid, 11);
     if (admin_uuid != NULL) {

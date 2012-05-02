@@ -35,7 +35,7 @@ typedef struct cib_native_opaque_s {
     char *token;
     crm_ipc_t *ipc;
     void (*dnotify_fn) (gpointer user_data);
-    mainloop_ipc_t *source;
+    mainloop_io_t *source;
 
 } cib_native_opaque_t;
 

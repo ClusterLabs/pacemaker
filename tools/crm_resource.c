@@ -1357,7 +1357,7 @@ main(int argc, char **argv)
 
     if (rsc_cmd == 'R' || rsc_cmd == 'C' || rsc_cmd == 'F' || rsc_cmd == 'P') {
         xmlNode *xml = NULL;
-        mainloop_ipc_t *source = mainloop_add_ipc_client(CRM_SYSTEM_CRMD, 0, NULL, &crm_callbacks);
+        mainloop_io_t *source = mainloop_add_ipc_client(CRM_SYSTEM_CRMD, 0, NULL, &crm_callbacks);
         crmd_channel = mainloop_get_ipc_client(source);
 
         if (crmd_channel == NULL) {

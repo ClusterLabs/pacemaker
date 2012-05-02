@@ -46,7 +46,7 @@ CRM_TRACE_INIT_DATA(stonith);
 typedef struct stonith_private_s {
     char *token;
     crm_ipc_t *ipc;
-    mainloop_ipc_t *source;
+    mainloop_io_t *source;
     GHashTable *stonith_op_callback_table;
     GList *notify_list;
 

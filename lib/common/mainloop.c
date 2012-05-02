@@ -430,7 +430,7 @@ void mainloop_del_ipc_server(qb_ipcs_service_t *server)
     qb_ipcs_destroy(server);
 }
 
-typedef struct mainloop_ipc_s
+typedef struct mainloop_io_s
 {
         char *name;
         void *userdata;
@@ -439,48 +439,56 @@ typedef struct mainloop_ipc_s
         crm_ipc_t *ipc;
         GIOChannel *channel;
 
-        struct ipc_client_callbacks *callbacks;
+        int (*dispatch_fn_ipc)(const char *buffer, ssize_t length, gpointer userdata);
+        int (*dispatch_fn_io) (gpointer userdata);
+        void (*destroy_fn) (gpointer userdata);
 
-} mainloop_ipc_t;
+} mainloop_io_t;
 
 static gboolean
-mainloop_ipcc_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
+mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
 {
     gboolean keep = TRUE;
-    mainloop_ipc_t *client = data;
+    mainloop_io_t *client = data;
 
     if(condition & G_IO_IN) {
-        long rc = crm_ipc_read(client->ipc);
-        crm_trace("New message from %s[%p] = %d", client->name, client, rc);
+        if(client->ipc) {
+            long rc = crm_ipc_read(client->ipc);
+            crm_trace("New message from %s[%p] = %d", client->name, client, rc);
 
-        if(rc <= 0) {
-            crm_perror(LOG_TRACE, "Message acquisition failed: %ld", rc);
+            if(rc <= 0) {
+                crm_perror(LOG_TRACE, "Message acquisition failed: %ld", rc);
         
-        } else if(client->callbacks && client->callbacks->dispatch) {
-            const char *buffer = crm_ipc_buffer(client->ipc);
-            if(client->callbacks->dispatch(buffer, rc, client->userdata) < 0) {
-                crm_trace("Connection to %s no longer required", client->name);
-                keep = FALSE;
-            } else {
-                crm_trace("delivered: %.60s", buffer);
+            } else if(client->dispatch_fn_ipc) {
+                const char *buffer = crm_ipc_buffer(client->ipc);
+                if(client->dispatch_fn_ipc(buffer, rc, client->userdata) < 0) {
+                    crm_trace("Connection to %s no longer required", client->name);
+                    keep = FALSE;
+                }
             }
 
         } else {
-            crm_trace("No callbacks? %p", client->callbacks);
+            crm_trace("New message from %s[%p]", client->name, client);
+            if(client->dispatch_fn_io) {
+                if(client->dispatch_fn_io(client->userdata) < 0) {
+                    crm_trace("Connection to %s no longer required", client->name);
+                    keep = FALSE;
+                }
+            }
         }
     }
-    
-    if(crm_ipc_connected(client->ipc) == FALSE) {
+
+    if(client->ipc && crm_ipc_connected(client->ipc) == FALSE) {
         crm_err("Connection to %s[%p] closed", client->name, client);
         keep = FALSE;
     } else if(condition & G_IO_HUP) {
         crm_trace("Recieved G_IO_HUP for %s [%p] connection", client->name, client);
         keep = FALSE;
     } else if(condition & G_IO_NVAL) {
-        crm_trace("Recieved G_IO_NVAL for %s [%p] connection", client->name, client);
+        crm_err("Recieved G_IO_NVAL for %s [%p] connection", client->name, client);
         keep = FALSE;
     } else if(condition & G_IO_ERR) {
-        crm_trace("Recieved G_IO_ERR for %s [%p] connection", client->name, client);
+        crm_err("Recieved G_IO_ERR for %s [%p] connection", client->name, client);
         keep = FALSE;
     }
     
@@ -488,44 +496,36 @@ mainloop_ipcc_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
 }
 
 static void
-mainloop_ipcc_destroy(gpointer c)
+mainloop_gio_destroy(gpointer c)
 {
-    mainloop_ipc_t *client = c;
+    mainloop_io_t *client = c;
 
     crm_trace("Destroying %s[%p]", client->name, c);
-    if(client->callbacks && client->callbacks->destroy) {
-        client->callbacks->destroy(client->userdata);
+    if(client->destroy_fn) {
+        client->destroy_fn(client->userdata);
     }
     
-    crm_ipc_close(client->ipc);
-    crm_ipc_destroy(client->ipc);
+    if(client->ipc) {
+        crm_ipc_close(client->ipc);
+        crm_ipc_destroy(client->ipc);
+    }
     free(client->name);
     free(client);
 }
 
-
-mainloop_ipc_t *
+mainloop_io_t *
 mainloop_add_ipc_client(
     const char *name, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks) 
 {
-    mainloop_ipc_t *client = NULL;
+    mainloop_io_t *client = NULL;
     crm_ipc_t *conn = crm_ipc_new(name, max_size);
 
     if(conn && crm_ipc_connect(conn)) {
         int32_t fd = crm_ipc_get_fd(conn);
-
-        if(fd > 0) {
-            crm_malloc0(client, sizeof(mainloop_ipc_t));            
-            client->ipc = conn;
-            client->name = crm_strdup(name);
-            client->userdata = userdata;
-            client->callbacks = callbacks;
-            client->channel = g_io_channel_unix_new(fd);
-            client->source = g_io_add_watch_full(
-                client->channel, G_PRIORITY_DEFAULT, (G_IO_IN|G_IO_HUP|G_IO_NVAL|G_IO_ERR),
-                mainloop_ipcc_callback, client, mainloop_ipcc_destroy);
-            crm_trace("Added connection %d for %s[%p].%d", client->source, client->name, client, fd);
-        }
+        client = mainloop_add_fd(name, fd, userdata, NULL);
+        client->ipc = conn;
+        client->destroy_fn = callbacks->destroy;
+        client->dispatch_fn_ipc = callbacks->dispatch;
     }
 
     if(conn && client == NULL) {
@@ -538,20 +538,51 @@ mainloop_add_ipc_client(
 }
 
 void
-mainloop_del_ipc_client(mainloop_ipc_t *client)
+mainloop_del_ipc_client(mainloop_io_t *client)
+{
+    mainloop_del_fd(client);
+}
+
+crm_ipc_t *
+mainloop_get_ipc_client(mainloop_io_t *client)
+{
+    if(client) {
+        return client->ipc;
+    }
+    return NULL;
+}
+
+mainloop_io_t *
+mainloop_add_fd(
+    const char *name, int fd, void *userdata, struct mainloop_fd_callbacks *callbacks) 
+{
+    mainloop_io_t *client = NULL;
+    if(fd > 0) {
+        crm_malloc0(client, sizeof(mainloop_io_t));          
+        client->name = crm_strdup(name);
+        client->userdata = userdata;
+
+        if(callbacks) {
+            client->destroy_fn = callbacks->destroy;
+            client->dispatch_fn_io = callbacks->dispatch;
+        }
+
+        client->channel = g_io_channel_unix_new(fd);
+        client->source = g_io_add_watch_full(
+            client->channel, G_PRIORITY_DEFAULT, (G_IO_IN|G_IO_HUP|G_IO_NVAL|G_IO_ERR),
+            mainloop_gio_callback, client, mainloop_gio_destroy);
+        crm_trace("Added connection %d for %s[%p].%d", client->source, client->name, client, fd);
+    }
+
+    return client;
+}
+
+void
+mainloop_del_fd(mainloop_io_t *client)
 {
     if(client != NULL) {
         crm_trace("Removing client %s[%p]", client->name, client);
         g_io_channel_unref(client->channel);
         /* Results in mainloop_ipcc_destroy() being called once the source is removed from mainloop? */
     }
-}
-
-crm_ipc_t *
-mainloop_get_ipc_client(mainloop_ipc_t *client)
-{
-    if(client) {
-        return client->ipc;
-    }
-    return NULL;
 }
