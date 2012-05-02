@@ -765,7 +765,8 @@ handle_request(xmlNode * stored_msg)
 
         crm_xml_add(ping, "crmd_state", fsa_state2string(fsa_state));
 
-        crm_info("Current ping state: %s", fsa_state2string(fsa_state));
+        /* Ok, so technically not so interesting, but CTS needs to see this */
+        crm_notice("Current ping state: %s", fsa_state2string(fsa_state));
 
         msg = create_reply(stored_msg, ping);
         relay_message(msg, TRUE);
