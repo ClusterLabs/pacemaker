@@ -43,13 +43,9 @@ log_ais_message(int level, const AIS_Message * msg)
 {
     char *data = get_ais_data(msg);
 
-#if LIBQB_LOGGING
     qb_log_from_external_source(__func__, __FILE__,
                                 "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s",
                                 level, __LINE__, 0,
-#else
-    log_printf(level, "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s",
-#endif
                msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
                ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
                msg->sender.pid,

@@ -54,7 +54,6 @@
 #define XML_PARSER_DEBUG 0
 #define BEST_EFFORT_STATUS 0
 
-#if LIBQB_LOGGING
 void xml_log(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
 
 void xml_log(int priority, const char * fmt, ...)
@@ -64,9 +63,6 @@ void xml_log(int priority, const char * fmt, ...)
     qb_log_from_external_source_va(__FUNCTION__, __FILE__, fmt, priority, __LINE__, 0, ap);
     va_end(ap);
 }
-#else
-#  define xml_log cl_log
-#endif
 
 typedef struct 
 {
@@ -2270,6 +2266,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     xmlDoc *doc = NULL;
     xmlNode *copy = NULL;
     xmlBuffer *xml_buffer = NULL;
+    static struct qb_log_callsite *digest_cs = NULL;
 
     if(do_filter && BEST_EFFORT_STATUS) {
 	/* Exclude the status calculation from the digest
@@ -2324,9 +2321,6 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     digest[(2*digest_len)] = 0;
     crm_trace("Digest %s\n", digest);
 
-#if LIBQB_LOGGING
-    {
-        static struct qb_log_callsite *digest_cs = NULL;
         if(digest_cs == NULL) {
             qb_log_callsite_get(__func__, __FILE__, "xml-blog", LOG_TRACE, __LINE__, 0);
         }
@@ -2347,8 +2341,6 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
             }
             crm_free(trace_file);
         }
-    }
-#endif
 
   done:
     xmlBufferFree(xml_buffer);

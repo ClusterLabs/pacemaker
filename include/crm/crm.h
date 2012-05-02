@@ -224,8 +224,6 @@ typedef GList *GListPtr;
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
-#  if LIBQB_LOGGING
-
 #    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
 
 #    define do_crm_log(level, fmt, args...) do {                        \
@@ -283,80 +281,25 @@ typedef GList *GListPtr;
 
 #    define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
 
+#  define crm_perror(level, fmt, args...) do {				\
+	const char *err = strerror(errno);				\
+	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
+	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
+    } while(0)
+
 #    define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
 #    define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
 #    define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
 #    define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
 #    define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
-#    define crm_debug(fmt, args...)   qb_logt(LOG_DEBUG,   0, fmt , ##args)
-#    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
-
-#  else
-#    define CRM_TRACE_INIT_DATA(name)
-
-#    define do_crm_log(level, fmt, args...) do {				\
-	if(__likely((level) <= crm_log_level)) {			\
-	    cl_log((level)>LOG_DEBUG?LOG_DEBUG:(level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
-	}								\
-    } while(0)
-
-#    define do_crm_log_unlikely(level, fmt, args...) do {			\
-	if(__unlikely((level) <= crm_log_level)) {			\
-	    cl_log((level)>LOG_DEBUG?LOG_DEBUG:(level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args); \
-	}								\
-    } while(0)
-
-#    define do_crm_log_xml(level, text, xml) do {				\
-	if(xml == NULL) {						\
-	} else if(__unlikely((level) <= crm_log_level)) {		\
-	    log_data_element((level)>LOG_DEBUG?LOG_DEBUG:(level), __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
-	}								\
-    } while(0)
-
-#    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
-        if((level) <= crm_log_level) {                                  \
-            cl_log((level)>LOG_DEBUG?LOG_DEBUG:(level), "%s: "fmt, function, ##args); \
-        }                                                               \
-    } while(0)
-
-#    define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
-
-#    define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
-#    define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
-#    define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
-#    define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
-#    define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
 #    define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
 #    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
-
-#    define CRM_LOG_ASSERT(expr) do {					\
-        if(__unlikely((expr) == FALSE)) {				\
-            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,   \
-                      FALSE, TRUE);                                     \
-        }                                                               \
-    } while(0)
-
-#    define CRM_CHECK(expr, failure_action) do {				\
-	if(__unlikely((expr) == FALSE)) {				\
-	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
-		      FALSE, TRUE);                                     \
-	    failure_action;						\
-	}								\
-    } while(0)
-
-#  endif
 
 #  define crm_debug_2 crm_trace
 #  define crm_debug_3 crm_trace
 #  define crm_debug_4 crm_trace
 #  define crm_debug_5 crm_trace
 #  define crm_debug_6 crm_trace
-
-#  define crm_perror(level, fmt, args...) do {				\
-	const char *err = strerror(errno);				\
-	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
-	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
-    } while(0)
 
 #  include <crm/common/util.h>
 

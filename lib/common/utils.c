@@ -40,9 +40,7 @@
 #include <libgen.h>
 #include <sys/utsname.h>
 
-#if LIBQB_LOGGING
-#  include <qb/qbdefs.h>
-#endif
+#include <qb/qbdefs.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -55,11 +53,11 @@
 #include <libxml2/libxml/relaxng.h>
 
 #if HAVE_HB_CONFIG_H
-#  include <heartbeat/hb_config.h>      /* for HB_COREDIR */
+#  include <heartbeat/hb_config.h>      /* for HA_COREDIR */
 #endif
 
 #if HAVE_GLUE_CONFIG_H
-#  include <glue_config.h>      /* for HB_COREDIR */
+#  include <glue_config.h>      /* for HA_COREDIR */
 #endif
 
 #ifndef MAXLINE
@@ -84,7 +82,6 @@ int node_score_infinity = INFINITY;
 
 unsigned int crm_log_level = LOG_INFO;
 
-void crm_set_env_options(void);
 void set_format_string(int method, const char *daemon, gboolean trace);
 
 gboolean
@@ -515,7 +512,6 @@ crm_log_init_quiet(const char *entity, int level, gboolean coredir, gboolean to_
 void
 set_format_string(int method, const char *daemon, gboolean trace)
 {
-#if LIBQB_LOGGING
     static gboolean local_trace = FALSE;
     int offset = 0;
     char fmt[FMT_MAX];
@@ -546,7 +542,6 @@ set_format_string(int method, const char *daemon, gboolean trace)
         offset += snprintf(fmt + offset, FMT_MAX - offset, "\t%%b");
     }
     qb_log_format_set(method, fmt);
-#endif
 }
 
 static void
@@ -569,19 +564,19 @@ crm_add_logfile(const char *filename)
         crm_perror(LOG_WARNING, "Couldn't send additional logging to %s", filename);
         return;
     }
-    
+
     crm_notice("Additional logging available in %s", filename);
     qb_log_filter_ctl(fd, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", crm_log_level);
     qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
 
     /* Set the default log format */
     set_format_string(fd, crm_system_name, FALSE);
+    have_logfile = TRUE;
 }
 
 void
 update_all_trace_data(void)
 {
-#if LIBQB_LOGGING
     int lpc = 0;
 
     if(getenv("PCMK_trace_files") || getenv("PCMK_trace_functions") || getenv("PCMK_trace_formats")) {
@@ -638,7 +633,6 @@ update_all_trace_data(void)
             set_format_string(lpc, crm_system_name, TRUE);
         }
     }
-#endif
 }
 
 #ifndef NAME_MAX
@@ -715,23 +709,13 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
         /* Override the default setting */
         to_stderr = TRUE;
     }
-#if LIBQB_LOGGING
     crm_log_level = level;
     qb_log_init(crm_system_name, qb_log_facility2int(facility), level);
-#else
-    cl_log_set_entity(crm_system_name);
-    set_crm_log_level(level);
-    crm_set_env_options();
-#endif
 
     if (quiet) {
         /* Nuke any syslog activity */
         unsetenv("HA_logfacility");
-#if LIBQB_LOGGING
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
-#else
-        cl_log_set_facility(0);
-#endif
 
     } else {
         setenv("HA_logfacility", facility, TRUE);
@@ -745,11 +729,9 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
     
     crm_enable_stderr(to_stderr);
 
-#if LIBQB_LOGGING
     if(logfile) {
         crm_add_logfile(logfile);
     }
-#endif
 
     /* Ok, now we can start logging... */
 
@@ -809,7 +791,6 @@ set_crm_log_level(unsigned int level)
 {
     unsigned int old = crm_log_level;
 
-#if LIBQB_LOGGING
     int lpc = 0;
 
     for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
@@ -831,7 +812,6 @@ set_crm_log_level(unsigned int level)
             set_format_string(lpc, crm_system_name, level > LOG_DEBUG);
         }
     }
-#endif
     crm_log_level = level;
     return old;
 }
@@ -839,7 +819,6 @@ set_crm_log_level(unsigned int level)
 void
 crm_enable_stderr(int enable)
 {
-#if LIBQB_LOGGING
     if (enable && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", crm_log_level);
         set_format_string(QB_LOG_STDERR, crm_system_name, crm_log_level > LOG_DEBUG);
@@ -851,21 +830,14 @@ crm_enable_stderr(int enable)
     } else if (enable == FALSE) {
         qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_FALSE);
     }
-#else
-    cl_log_enable_stderr(enable);
-#endif
 }
 
 void
 crm_bump_log_level(void)
 {
-#if LIBQB_LOGGING
     if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
         set_crm_log_level(crm_log_level + 1);
     }
-#else
-    set_crm_log_level(crm_log_level + 1);
-#endif
     crm_enable_stderr(TRUE);
 }
 
@@ -925,7 +897,7 @@ crm_log_args(int argc, char **argv)
         arg_string = realloc(arg_string, len + existing_len);
         existing_len += sprintf(arg_string + existing_len, "%s ", argv[lpc]);
     }
-    cl_log(LOG_INFO, "Invoked: %s", arg_string);
+    do_crm_log_always(LOG_INFO, "Invoked: %s", arg_string);
     free(arg_string);
 }
 
@@ -1146,18 +1118,6 @@ crm_strdup_fn(const char *src, const char *file, const char *fn, int line)
               return NULL);
     crm_malloc0(dup, strlen(src) + 1);
     return strcpy(dup, src);
-}
-
-#define ENV_PREFIX "HA_"
-void
-crm_set_env_options(void)
-{
-    cl_inherit_logging_environment(500);
-    cl_log_set_logd_channel_source(NULL, NULL);
-
-    if (debug_level > 0 && (debug_level + LOG_INFO) > (int)get_crm_log_level()) {
-        set_crm_log_level(LOG_INFO + debug_level);
-    }
 }
 
 gboolean
