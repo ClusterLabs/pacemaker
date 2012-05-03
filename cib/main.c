@@ -280,47 +280,6 @@ unsigned long cib_num_ops = 0;
 const char *cib_stat_interval = "10min";
 unsigned long cib_num_local = 0, cib_num_updates = 0, cib_num_fail = 0;
 unsigned long cib_bad_connects = 0, cib_num_timeouts = 0;
-longclock_t cib_call_time = 0;
-
-gboolean cib_stats(gpointer data);
-
-gboolean
-cib_stats(gpointer data)
-{
-    int local_log_level = LOG_DEBUG;
-    static unsigned long last_stat = 0;
-    unsigned int cib_calls_ms = 0;
-    static unsigned long cib_stat_interval_ms = 0;
-
-    if (cib_stat_interval_ms == 0) {
-        cib_stat_interval_ms = crm_get_msec(cib_stat_interval);
-    }
-
-    cib_calls_ms = longclockto_ms(cib_call_time);
-
-    if ((cib_num_ops - last_stat) > 0) {
-        unsigned long calls_diff = cib_num_ops - last_stat;
-        double stat_1 = (1000 * cib_calls_ms) / calls_diff;
-
-        local_log_level = LOG_INFO;
-        do_crm_log(local_log_level,
-                   "Processed %lu operations"
-                   " (%.2fus average, %lu%% utilization) in the last %s",
-                   calls_diff, stat_1,
-                   (100 * cib_calls_ms) / cib_stat_interval_ms, cib_stat_interval);
-    }
-
-    crm_trace(
-                        "\tDetail: %lu operations (%ums total)"
-                        " (%lu local, %lu updates, %lu failures,"
-                        " %lu timeouts, %lu bad connects)",
-                        cib_num_ops, cib_calls_ms, cib_num_local, cib_num_updates,
-                        cib_num_fail, cib_bad_connects, cib_num_timeouts);
-
-    last_stat = cib_num_ops;
-    cib_call_time = 0;
-    return TRUE;
-}
 
 #if SUPPORT_HEARTBEAT
 gboolean ccm_connect(void);
@@ -596,8 +555,6 @@ cib_init(void)
         /* Create the mainloop and run it... */
         mainloop = g_main_new(FALSE);
         crm_info("Starting %s mainloop", crm_system_name);
-
-        g_timeout_add(crm_get_msec(cib_stat_interval), cib_stats, NULL);
 
         g_main_run(mainloop);
 

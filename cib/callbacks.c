@@ -71,7 +71,6 @@ int next_client_id = 0;
 extern const char *cib_our_uname;
 extern unsigned long cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail;
 extern unsigned long cib_bad_connects, cib_num_timeouts;
-extern longclock_t cib_call_time;
 extern enum cib_errors cib_status;
 
 enum cib_errors cib_process_command(xmlNode * request, xmlNode ** reply,
@@ -193,9 +192,6 @@ struct qb_ipcs_service_handlers ipc_rw_callbacks =
 void
 cib_common_callback_worker(xmlNode * op_request, cib_client_t * cib_client, gboolean privileged)
 {
-    longclock_t call_stop = 0;
-    longclock_t call_start = 0;
-
     const char *op = crm_element_value(op_request, F_CIB_OPERATION);
 
     if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
@@ -239,11 +235,7 @@ cib_common_callback_worker(xmlNode * op_request, cib_client_t * cib_client, gboo
     }
 
     cib_client->num_calls++;
-    call_start = time_longclock();
     cib_process_request(op_request, FALSE, privileged, FALSE, cib_client);
-
-    call_stop = time_longclock();
-    cib_call_time += (call_stop - call_start);
 }
 
 int32_t
