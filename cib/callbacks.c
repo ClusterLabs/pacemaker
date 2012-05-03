@@ -49,6 +49,7 @@ extern const char *cib_root;
 
 qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
+qb_ipcs_service_t *ipcs_shm = NULL;
 
 #if SUPPORT_HEARTBEAT
 extern ll_cluster_t *hb_conn;
@@ -1243,6 +1244,12 @@ cib_shutdown(int nsig)
 
         for(c = qb_ipcs_connection_first_get(ipcs_ro); c != NULL; c = qb_ipcs_connection_next_get(ipcs_ro, c)) {
             crm_debug("Disconnecting r/o client %p...", c);
+            qb_ipcs_disconnect(c);
+            disconnects++;
+        }
+
+        for(c = qb_ipcs_connection_first_get(ipcs_shm); c != NULL; c = qb_ipcs_connection_next_get(ipcs_shm, c)) {
+            crm_debug("Disconnecting non-blocking r/w client %p...", c);
             qb_ipcs_disconnect(c);
             disconnects++;
         }

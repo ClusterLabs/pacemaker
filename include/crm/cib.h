@@ -43,6 +43,7 @@ enum cib_state {
 
 enum cib_conn_type {
     cib_command,
+    cib_command_nonblocking,
     cib_query,
     cib_no_connection
 };
@@ -199,9 +200,7 @@ enum cib_section {
 
 #  define cib_channel_ro		"cib_ro"
 #  define cib_channel_rw		"cib_rw"
-#  define cib_channel_callback	"cib_callback"
-#  define cib_channel_ro_synchronous	"cib_ro_syncronous"
-#  define cib_channel_rw_synchronous	"cib_rw_syncronous"
+#  define cib_channel_shm		"cib_shm"
 
 typedef struct cib_s cib_t;
 

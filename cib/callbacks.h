@@ -78,6 +78,7 @@ extern struct qb_ipcs_service_handlers ipc_ro_callbacks;
 extern struct qb_ipcs_service_handlers ipc_rw_callbacks;
 extern qb_ipcs_service_t *ipcs_ro;
 extern qb_ipcs_service_t *ipcs_rw;
+extern qb_ipcs_service_t *ipcs_shm;
 
 extern void cib_ha_peer_callback(HA_Message * msg, void *private_data);
 extern void cib_peer_callback(xmlNode * msg, void *private_data);
