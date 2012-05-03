@@ -529,8 +529,6 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
     return cib_ok;
 }
 
-void crm_set_env_options(void);
-
 int
 write_cib_contents(gpointer p)
 {
@@ -559,9 +557,6 @@ write_cib_contents(gpointer p)
 
     } else {
         /* A-synchronous write out after a fork() */
-
-        /* Do nothing until we've re-setup logging */
-        crm_set_env_options();
 
         /* Don't log anything unless strictly necessary */
         set_crm_log_level(LOG_ERR);

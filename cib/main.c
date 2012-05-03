@@ -489,6 +489,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
     }
 }
 
+#if SUPPORT_HEARTBEAT
 static void
 cib_ha_connection_destroy(gpointer user_data)
 {
@@ -500,6 +501,7 @@ cib_ha_connection_destroy(gpointer user_data)
         terminate_cib(__FUNCTION__, TRUE);
     }
 }
+#endif
 
 int
 cib_init(void)
@@ -515,13 +517,18 @@ cib_init(void)
     }
 
     if (stand_alone == FALSE) {
-        void *dispatch = cib_ha_peer_callback;
-        void *destroy = cib_ha_connection_destroy;
+        void *dispatch = NULL;
+        void *destroy = NULL;
 
         if (is_openais_cluster()) {
 #if SUPPORT_COROSYNC
             destroy = cib_ais_destroy;
             dispatch = cib_ais_dispatch;
+#endif
+        } else if(is_heartbeat_cluster()) {
+#if SUPPORT_HEARTBEAT
+            dispatch = cib_ha_peer_callback;
+            destroy = cib_ha_connection_destroy;
 #endif
         }
 

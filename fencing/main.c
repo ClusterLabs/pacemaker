@@ -210,9 +210,11 @@ stonith_peer_callback(xmlNode * msg, void* private_data)
 static void
 stonith_peer_hb_callback(HA_Message * msg, void* private_data)
 {
+#if SUPPORT_HEARTBEAT
     xmlNode *xml = convert_ha_message(NULL, msg, __FUNCTION__);
     stonith_peer_callback(xml, private_data);
     free_xml(xml);
+#endif
 }
 
 

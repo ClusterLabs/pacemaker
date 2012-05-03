@@ -148,7 +148,9 @@ send_ha_message(ll_cluster_t * hb_conn, xmlNode * xml, const char *node, gboolea
         crm_log_xml_warn(xml, "outbound");
     }
 
-    crm_msg_del(msg);
+    if(msg != NULL) {
+        ha_msg_del(msg);
+    }
     return all_is_good;
 }
 

@@ -36,6 +36,10 @@ libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c iso8601.c iso8601_fields.c remote.
 libcrmcommon_la_LDFLAGS	= -version-info 2:0:0
 libcrmcommon_la_LIBADD  = -ldl $(GNUTLSLIBS)
 
+if BUILD_HEARTBEAT_SUPPORT
+libcrmcommon_la_SOURCES += heartbeat.c
+endif
+
 clean-generic:
 	rm -f *.log *.debug *.xml *~
 

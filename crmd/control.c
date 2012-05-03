@@ -665,21 +665,21 @@ do_started(long long action,
         return;
 
     } else if (is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
-        HA_Message *msg = NULL;
 
         /* try reading from HA */
         crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
 
-        crm_trace("Looking for a HA message");
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {
+            HA_Message *msg = NULL;
+            crm_trace("Looking for a HA message");
             msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
+            if (msg != NULL) {
+                crm_trace("There was a HA message");
+                ha_msg_del(msg);
+            }
         }
 #endif
-        if (msg != NULL) {
-            crm_trace("There was a HA message");
-            crm_msg_del(msg);
-        }
         crmd_fsa_stall(NULL);
         return;
     }

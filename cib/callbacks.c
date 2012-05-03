@@ -1053,6 +1053,7 @@ cib_GCompareFunc(gconstpointer a, gconstpointer b)
     return 1;
 }
 
+#if SUPPORT_HEARTBEAT
 void
 cib_ha_peer_callback(HA_Message * msg, void *private_data)
 {
@@ -1061,6 +1062,7 @@ cib_ha_peer_callback(HA_Message * msg, void *private_data)
     cib_peer_callback(xml, private_data);
     free_xml(xml);
 }
+#endif
 
 void
 cib_peer_callback(xmlNode * msg, void *private_data)
