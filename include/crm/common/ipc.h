@@ -49,7 +49,17 @@ extern xmlNode *xmlfromIPC(IPC_Channel * ch, int timeout);
 /* Libqb based IPC */
 
 #include <qb/qbipcs.h>
-ssize_t crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *msg, gboolean event);
+
+enum ipcs_send_flags
+{
+    ipcs_send_none  = 0x0000,
+    ipcs_send_event = 0x0001,
+
+    ipcs_send_info  = 0x0010,
+    ipcs_send_error = 0x0020,
+};
+
+ssize_t crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *msg, enum ipcs_send_flags flags);
 xmlNode *crm_ipcs_recv(qb_ipcs_connection_t *c, void *data, size_t size);
 int crm_ipcs_client_pid(qb_ipcs_connection_t *c);
 void crm_ipcs_send_ack(qb_ipcs_connection_t *c, const char *tag, const char *function, int line);
