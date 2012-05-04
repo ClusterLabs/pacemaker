@@ -63,35 +63,6 @@ crmdManagedChildDied(GPid pid, gint status, gpointer user_data)
     } else {
         crm_err("Process %s:[%d] exited?", the_subsystem->name, the_subsystem->pid);
     }
-
-#if 0
-    /* everything below is now handled in pe_connection_destroy() */
-    the_subsystem->pid = -1;
-    the_subsystem->ipc = NULL;
-    clear_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
-
-    crm_trace("Triggering FSA: %s", __FUNCTION__);
-    mainloop_set_trigger(fsa_source);
-
-    if (is_set(fsa_input_register, the_subsystem->flag_required)) {
-        /* this wasnt supposed to happen */
-        crm_warn("The %s subsystem terminated unexpectedly", the_subsystem->name);
-
-        if (the_subsystem->flag_connected == R_PE_CONNECTED) {
-            int rc = cib_ok;
-            char *pid = crm_itoa(the_subsystem->pid);
-
-            /* the PE died...
-             * save the current CIB so that we have a chance of
-             * figuring out what killed it
-             */
-            rc = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
-            add_cib_op_callback(fsa_cib_conn, rc, TRUE, pid, save_cib_contents);
-        }
-
-        register_fsa_input_before(C_FSA_INTERNAL, I_ERROR, NULL);
-    }
-#endif
 }
 
 gboolean
