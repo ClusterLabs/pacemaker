@@ -93,18 +93,13 @@ cib_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 static void
 cib_ipc_created(qb_ipcs_connection_t *c)
 {
-    cl_uuid_t client_id;
     cib_client_t *new_client = NULL;
-    char uuid_str[UU_UNPARSE_SIZEOF];
-
+    
     crm_malloc0(new_client, sizeof(cib_client_t));
     new_client->ipc = c;
 
-    cl_uuid_generate(&client_id);
-    cl_uuid_unparse(&client_id, uuid_str);
-
     CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
-    new_client->id = crm_strdup(uuid_str);
+    new_client->id = crm_generate_uuid();
     crm_trace("%p connected for client %s", c, new_client->id);
 
     /* make sure we can find ourselves later for sync calls

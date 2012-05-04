@@ -287,13 +287,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
         crm_trace("Recorded new stonith op: %s", op->id);
 
     } else {
-	cl_uuid_t new_uuid;
-	char uuid_str[UU_UNPARSE_SIZEOF];
-
-	cl_uuid_generate(&new_uuid);
-	cl_uuid_unparse(&new_uuid, uuid_str);
-	
-	op->id = crm_strdup(uuid_str);
+	op->id = crm_generate_uuid();
         crm_trace("Generated new stonith op: %s", op->id);
     }
 

@@ -77,9 +77,6 @@ do_te_control(long long action,
 {
     gboolean init_ok = TRUE;
 
-    cl_uuid_t new_uuid;
-    char uuid_str[UU_UNPARSE_SIZEOF];
-
     if (action & A_TE_STOP) {
         if (transition_graph) {
             destroy_graph(transition_graph);
@@ -108,9 +105,7 @@ do_te_control(long long action,
         return;
     }
 
-    cl_uuid_generate(&new_uuid);
-    cl_uuid_unparse(&new_uuid, uuid_str);
-    te_uuid = crm_strdup(uuid_str);
+    te_uuid = crm_generate_uuid();
     crm_info("Registering TE UUID: %s", te_uuid);
 
     if (transition_trigger == NULL) {

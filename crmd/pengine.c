@@ -89,11 +89,7 @@ pe_ipc_destroy(gpointer user_data)
     clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
     if (is_set(fsa_input_register, pe_subsystem->flag_required)) {
         int rc = cib_ok;
-        cl_uuid_t new_uuid;
-        char uuid_str[UU_UNPARSE_SIZEOF];
-
-        cl_uuid_generate(&new_uuid);
-        cl_uuid_unparse(&new_uuid, uuid_str);
+        char *uuid_str = crm_generate_uuid();
 
         crm_crit("Connection to the Policy Engine failed (pid=%d, uuid=%s)",
                  pe_subsystem->pid, uuid_str);
@@ -109,7 +105,7 @@ pe_ipc_destroy(gpointer user_data)
          *
          */
         rc = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
-        fsa_cib_conn->cmds->register_callback(fsa_cib_conn, rc, 5, FALSE, crm_strdup(uuid_str),
+        fsa_cib_conn->cmds->register_callback(fsa_cib_conn, rc, 5, FALSE, uuid_str,
                                               "save_cib_contents", save_cib_contents);
 
     } else {

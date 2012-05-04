@@ -74,9 +74,7 @@ st_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 static void
 st_ipc_created(qb_ipcs_connection_t *c)
 {
-    cl_uuid_t client_id;
     stonith_client_t *new_client = NULL;
-    char uuid_str[UU_UNPARSE_SIZEOF];
 
 #if 0
     struct qb_ipcs_stats srv_stats;
@@ -91,11 +89,8 @@ st_ipc_created(qb_ipcs_connection_t *c)
     new_client->channel = c;
     new_client->channel_name = crm_strdup("ipc");
 	
-    cl_uuid_generate(&client_id);
-    cl_uuid_unparse(&client_id, uuid_str);
-
     CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
-    new_client->id = crm_strdup(uuid_str);
+    new_client->id = crm_generate_uuid();
     crm_trace("Created channel %p for client %s", c, new_client->id);
 	
     /* make sure we can find ourselves later for sync calls

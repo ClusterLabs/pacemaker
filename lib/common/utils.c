@@ -2778,3 +2778,14 @@ convert_const_pointer(const void *ptr)
     /* Worst function ever */
     return (void *)ptr;
 }
+
+#include <uuid/uuid.h>
+
+char *crm_generate_uuid(void) 
+{
+	unsigned char uuid[16];
+        char *buffer = malloc(37); /* Including NUL byte */
+	uuid_generate(uuid);
+	uuid_unparse(uuid, buffer);
+        return buffer;
+}

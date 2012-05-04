@@ -226,9 +226,6 @@ cib_remote_listen(gpointer data)
     const char *pass = NULL;
     const char *tmp = NULL;
 
-    cl_uuid_t client_id;
-    char uuid_str[UU_UNPARSE_SIZEOF];
-
 #ifdef HAVE_DECL_NANOSLEEP
     const struct timespec sleepfast = { 0, 10000000 };  /* 10 millisec */
 #endif
@@ -321,11 +318,8 @@ cib_remote_listen(gpointer data)
     crm_malloc0(new_client, sizeof(cib_client_t));
     new_client->name = crm_element_value_copy(login, "name");
 
-    cl_uuid_generate(&client_id);
-    cl_uuid_unparse(&client_id, uuid_str);
-
     CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
-    new_client->id = crm_strdup(uuid_str);
+    new_client->id = crm_generate_uuid();
 
 #if ENABLE_ACL
     new_client->user = crm_strdup(user);
@@ -455,13 +449,11 @@ cib_remote_msg(gpointer data)
 #endif
 
     if (crm_element_value(command, F_CIB_CALLID) == NULL) {
-        cl_uuid_t call_id;
-        char call_uuid[UU_UNPARSE_SIZEOF];
+        char *call_uuid = crm_generate_uuid();
 
         /* fix the command */
-        cl_uuid_generate(&call_id);
-        cl_uuid_unparse(&call_id, call_uuid);
         crm_xml_add(command, F_CIB_CALLID, call_uuid);
+        free(call_uuid);
     }
 
     if (crm_element_value(command, F_CIB_CALLOPTS) == NULL) {

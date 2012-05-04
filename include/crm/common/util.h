@@ -369,4 +369,6 @@ extern void *find_library_function(void **handle, const char *lib, const char *f
 
 extern void *convert_const_pointer(const void *ptr);
 
+extern char *crm_generate_uuid(void);
+
 #endif

@@ -592,8 +592,11 @@ AC_CHECK_LIB(dl, dlopen)			dnl -ldl (for Linux)
 AC_CHECK_LIB(rt, sched_getscheduler)            dnl -lrt (for Tru64)
 AC_CHECK_LIB(gnugetopt, getopt_long)		dnl -lgnugetopt ( if available )
 AC_CHECK_LIB(pam, pam_start)			dnl -lpam (if available)
-AC_CHECK_LIB(uuid, uuid_parse)			dnl e2fsprogs
-AC_CHECK_LIB(uuid, uuid_create)			dnl ossp
+AC_CHECK_LIB(uuid, uuid_parse)			dnl libuuid
+
+if test "x$ac_cv_lib_uuid_uuid_parse" != x""yes; then
+   AC_MSG_ERROR(You do not have the libuuid development package installed)
+fi
 
 if test x"${PKGCONFIG}" = x""; then
    AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})

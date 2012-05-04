@@ -96,7 +96,7 @@ BuildRequires: python-curses python-xml
 # Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig python libtool-ltdl-devel
 BuildRequires: glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel 
-BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel pam-devel
+BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel pam-devel libuuid-devel
 
 %if 0%{?suse_version} >= 1100
 # Renamed since opensuse-11.0
