@@ -23,7 +23,6 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <clplumbing/proctrack.h>
 #include <crm/common/mainloop.h>
 
 gboolean fatal_error = FALSE;
@@ -148,21 +147,24 @@ pcmk_user_lookup(const char *name, uid_t * uid, gid_t * gid)
     return rc;
 }
 
-static void
-pcmk_child_exit(ProcTrack * p, int status, int signo, int exitcode, int waslogged)
+static void pcmk_child_exit(GPid pid, gint status, gpointer user_data) 
 {
-    pcmk_child_t *child = p->privatedata;
+    int exitcode = 0;
+    pcmk_child_t *child = user_data;
 
-    p->privatedata = NULL;
+    if(WIFSIGNALED(status)) {
+        int signo = WTERMSIG(status);
+        int core = WCOREDUMP(status);
+        crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
+                   child->name, signo, child->pid, core);
 
-    if (signo) {
-        crm_notice("Child process %s terminated with signal %d (pid=%d, rc=%d)",
-                   child->name, signo, child->pid, exitcode);
-    } else {
+    } else if(WIFEXITED(status)) {
+        exitcode = WEXITSTATUS(status);
         do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
                    "Child process %s exited (pid=%d, rc=%d)", child->name, child->pid, exitcode);
     }
 
+    
     child->pid = 0;
     if (exitcode == 100) {
         crm_warn("Pacemaker child process %s no longer wishes to be respawned. "
@@ -197,28 +199,6 @@ pcmk_child_exit(ProcTrack * p, int status, int signo, int exitcode, int waslogge
         start_child(child);
     }
 }
-
-static void
-pcmkManagedChildRegistered(ProcTrack * p)
-{
-    pcmk_child_t *child = p->privatedata;
-
-    child->pid = p->pid;
-}
-
-static const char *
-pcmkManagedChildName(ProcTrack * p)
-{
-    pcmk_child_t *child = p->privatedata;
-
-    return child->name;
-}
-
-static ProcTrack_ops pcmk_managed_child_ops = {
-    pcmk_child_exit,
-    pcmkManagedChildRegistered,
-    pcmkManagedChildName
-};
 
 static gboolean
 stop_child(pcmk_child_t * child, int signal)
@@ -295,7 +275,8 @@ start_child(pcmk_child_t * child)
 
     if (child->pid > 0) {
         /* parent */
-        NewTrackedProc(child->pid, 0, PT_LOGNORMAL, child, &pcmk_managed_child_ops);
+        g_child_watch_add(child->pid, pcmk_child_exit, child);
+        
         crm_info("Forked child %d for process %s%s", child->pid, child->name,
                  use_valgrind ? " (valgrind enabled: " VALGRIND_BIN ")" : "");
         update_node_processes(local_nodeid, NULL, get_process_list());
@@ -701,11 +682,6 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options, "Start/Stop Pacemaker\n");
 
-#ifndef ON_DARWIN
-    /* prevent zombies */
-    signal(SIGCLD, SIG_IGN);
-#endif
-
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);
         if (flag == -1)
@@ -864,7 +840,6 @@ main(int argc, char **argv)
 
     mainloop_add_signal(SIGTERM, pcmk_shutdown);
     mainloop_add_signal(SIGINT, pcmk_shutdown);
-    set_sigchld_proctrack(G_PRIORITY_HIGH, DEFAULT_MAXDISPATCHTIME);
 
     for (start_seq = 1; start_seq < max; start_seq++) {
         /* dont start anything with start_seq < 1 */
