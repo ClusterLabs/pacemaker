@@ -43,23 +43,26 @@
 
 #include <crmd.h>
 #include <crm/common/util.h>
-#include <clplumbing/proctrack.h>
 
 static void
-crmdManagedChildRegistered(ProcTrack * p)
+crmdManagedChildDied(GPid pid, gint status, gpointer user_data)
 {
-    struct crm_subsystem_s *the_subsystem = p->privatedata;
+    struct crm_subsystem_s *the_subsystem = user_data;
 
-    the_subsystem->pid = p->pid;
-}
+    if(WIFSIGNALED(status)) {
+        int signo = WTERMSIG(status);
+        int core = WCOREDUMP(status);
+        crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
+                   the_subsystem->name, signo, the_subsystem->pid, core);
 
-static void
-crmdManagedChildDied(ProcTrack * p, int status, int signo, int exitcode, int waslogged)
-{
-    struct crm_subsystem_s *the_subsystem = p->privatedata;
+    } else if(WIFEXITED(status)) {
+        int exitcode = WEXITSTATUS(status);
+        do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
+                   "Child process %s exited (pid=%d, rc=%d)", the_subsystem->name, the_subsystem->pid, exitcode);
 
-    crm_info("Process %s:[%d] exited (signal=%d, exitcode=%d)",
-             the_subsystem->name, the_subsystem->pid, signo, exitcode);
+    } else {
+        crm_err("Process %s:[%d] exited?", the_subsystem->name, the_subsystem->pid);
+    }
 
 #if 0
     /* everything below is now handled in pe_connection_destroy() */
@@ -89,22 +92,7 @@ crmdManagedChildDied(ProcTrack * p, int status, int signo, int exitcode, int was
         register_fsa_input_before(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 #endif
-    p->privatedata = NULL;
 }
-
-static const char *
-crmdManagedChildName(ProcTrack * p)
-{
-    struct crm_subsystem_s *the_subsystem = p->privatedata;
-
-    return the_subsystem->name;
-}
-
-static ProcTrack_ops crmd_managed_child_ops = {
-    crmdManagedChildDied,
-    crmdManagedChildRegistered,
-    crmdManagedChildName
-};
 
 gboolean
 stop_subsystem(struct crm_subsystem_s *the_subsystem, gboolean force_quit)
@@ -188,7 +176,7 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
             return FALSE;
 
         default:               /* Parent */
-            NewTrackedProc(pid, 0, PT_LOGNORMAL, the_subsystem, &crmd_managed_child_ops);
+            g_child_watch_add(pid, crmdManagedChildDied, the_subsystem);
             crm_trace("Client %s is has pid: %d", the_subsystem->name, pid);
             the_subsystem->pid = pid;
             return TRUE;

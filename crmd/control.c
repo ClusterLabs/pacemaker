@@ -517,8 +517,6 @@ do_startup(long long action,
                                             g_hash_destroy_str, g_hash_destroy_str);
     confirmed_nodes = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                             g_hash_destroy_str, g_hash_destroy_str);
-
-    set_sigchld_proctrack(G_PRIORITY_HIGH, DEFAULT_MAXDISPATCHTIME);
 }
 
 static int32_t
