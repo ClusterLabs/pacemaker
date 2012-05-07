@@ -138,7 +138,8 @@ class crm_ais(crm_lha):
                     "State transition .* S_RECOVERY",
                     "Respawning .* crmd",
                     "Respawning .* attrd",
-                    "Lost connection to the CIB service",
+                    "error: crm_ipc_read: Connection to cib_.* failed",
+                    "error: mainloop_gio_callback: Connection to cib_.* closed",
                     "Connection to the CIB terminated...",
                     "Child process crmd exited .* rc=2",
                     "Child process attrd exited .* rc=1",
@@ -166,14 +167,15 @@ class crm_ais(crm_lha):
                     ], badnews_ignore = self.common_ignore)
 
         fullcomplist["attrd"] = Process(self, "attrd", pats = [
-                    "crmd.*(ERROR|error): attrd_connection_destroy: Lost connection to attrd"
                     ], badnews_ignore = self.common_ignore)
 
         fullcomplist["pengine"] = Process(self, "pengine", dc_pats = [
                     "State transition .* S_RECOVERY",
                     "Respawning .* crmd",
                     "Child process crmd exited .* rc=2",
-                    "crmd.*pe_connection_destroy: Connection to the Policy Engine failed",
+                    "crm_ipc_read: Connection to pengine failed",
+                    "error: mainloop_gio_callback: Connection to pengine.* closed",
+                    "crit: pe_ipc_destroy: Connection to the Policy Engine failed",
                     "crmd.*I_ERROR.*save_cib_contents",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.*do_exit: Could not recover from internal error",
@@ -188,7 +190,8 @@ class crm_ais(crm_lha):
         stonith_ignore.extend(self.common_ignore)
         
         fullcomplist["stonith-ng"] = Process(self, "stonith-ng", process="stonithd", pats = [
-                "stonith_dispatch.* Lost connection to the STONITH service",
+                "crm_ipc_read: Connection to stonith-ng failed",
+                "mainloop_gio_callback: Connection to stonith-ng.* closed",
                 "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                 "crmd.*stonith_api_add_notification: Callback already present",
                 ], badnews_ignore = stonith_ignore)
