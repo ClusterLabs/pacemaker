@@ -83,10 +83,9 @@ do_te_control(long long action,
             transition_graph = NULL;
         }
 
-        if (fsa_cib_conn
-            && cib_ok != fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY,
-                                                                 te_update_diff)) {
-            crm_err("Could not unset CIB notification callback");
+        if (fsa_cib_conn) {
+            fsa_cib_conn->cmds->del_notify_callback(
+                fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff);
         }
 
         clear_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
