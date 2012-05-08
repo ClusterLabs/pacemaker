@@ -100,16 +100,11 @@ static void free_remote_op(gpointer data)
 
 static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc) 
 {
-    int call = 0;
     xmlNode *reply = NULL;
     xmlNode *local_data = NULL;
     xmlNode *notify_data = NULL;
 
     op->completed = time(NULL);
-    if(op->request != NULL) {
-	crm_element_value_int(op->request, F_STONITH_CALLID, &call);
-	/* else: keep going, make sure the details are accurate for ops that arrive late */
-    }
     
     if(op->query_timer) {
 	g_source_remove(op->query_timer);
@@ -148,8 +143,7 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
 	return;
     }
     
-    if(call && reply) {
-	/* Don't bother with this if there is no callid - and thus the op originated elsewhere */
+    if(reply) {
 	do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
     }
 
