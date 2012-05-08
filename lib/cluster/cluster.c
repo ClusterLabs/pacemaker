@@ -481,7 +481,7 @@ get_cluster_type(void)
         }
 
         if (cluster_type == pcmk_cluster_invalid) {
-            crm_crit
+            crm_notice
                 ("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
                  cluster);
             exit(100);
