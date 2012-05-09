@@ -1121,21 +1121,13 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	    remote_fencing_op_t *rop = initiate_remote_stonith_op(client, request, TRUE);
             rc = stonith_manual_ack(request, rop);
             
-        } else if(call_options & st_opt_local_first) {
-	    rc = stonith_fence(request);
-	    if(rc < 0) {
-		initiate_remote_stonith_op(client, request, FALSE);
-                if((call_options & st_opt_sync_call) == 0) {
-                    crm_ipcs_send_ack(client->channel, "ack", __FUNCTION__, __LINE__);
-                }
-		return;
-	    }
-
-	} else {
+	} else if((call_options & st_opt_sync_call) == 0) {
 	    initiate_remote_stonith_op(client, request, FALSE);
-            if((call_options & st_opt_sync_call) == 0) {
-                crm_ipcs_send_ack(client->channel, "ack", __FUNCTION__, __LINE__);
-            }
+            crm_ipcs_send_ack(client->channel, "ack", __FUNCTION__, __LINE__);
+	    return;
+
+        } else {
+	    initiate_remote_stonith_op(client, request, FALSE);
 	    return;
 	}
 
