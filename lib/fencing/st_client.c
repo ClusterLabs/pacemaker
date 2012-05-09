@@ -425,6 +425,32 @@ make_args(const char *action, const char *victim, GHashTable * device_args, GHas
     return arg_list;
 }
 
+static gboolean
+st_child_term(gpointer data)
+{
+    int rc = 0;
+    int pid = GPOINTER_TO_INT(data);
+    crm_info("Child %d timed out, sending SIGTERM", pid);
+    rc = kill(pid, SIGTERM);
+    if(rc < 0) {
+        crm_perror(LOG_ERR, "Couldn't send SIGTERM to %d", pid);
+    }
+    return FALSE;
+}
+
+static gboolean
+st_child_kill(gpointer data)
+{
+    int rc = 0;
+    int pid = GPOINTER_TO_INT(data);
+    crm_info("Child %d timed out, sending SIGKILL", pid);
+    rc = kill(pid, SIGKILL);
+    if(rc < 0) {
+        crm_perror(LOG_ERR, "Couldn't send SIGKILL to %d", pid);
+    }
+    return FALSE;
+}
+
 /* Borrowed from libfence and extended */
 int
 run_stonith_agent(const char *agent, const char *action, const char *victim,
@@ -487,20 +513,14 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
 
         close(p_write_fd);
 
-        if (track) {
+        if (track && track->done) {
             track->stdout = p_read_fd;
-            NewTrackedProc(pid, 0, PT_LOGNORMAL, track, track->pt_ops);
+            g_child_watch_add(pid, track->done, track);
             crm_trace("Op: %s on %s, pid: %d, timeout: %d", action, agent, pid, track->timeout);
 
             if (track->timeout) {
-                track->killseq[0].mstimeout = track->timeout;   /* after timeout send TERM */
-                track->killseq[0].signalno = SIGTERM;
-                track->killseq[1].mstimeout = 5000;     /* after another 5s remove it */
-                track->killseq[1].signalno = SIGKILL;
-                track->killseq[2].mstimeout = 5000;     /* if it's still there after another 5s, complain */
-                track->killseq[2].signalno = 0;
-
-                SetTrackedProcTimeouts(pid, track->killseq);
+                track->timer_sigterm = g_timeout_add(track->timeout, st_child_term, GINT_TO_POINTER(pid));
+                track->timer_sigkill = g_timeout_add(track->timeout+5000, st_child_kill, GINT_TO_POINTER(pid));
 
             } else {
                 crm_err("No timeout set for stonith operation %s with device %s", action, agent);

@@ -754,9 +754,6 @@ main(int argc, char ** argv)
     }
 
     mainloop_add_signal(SIGTERM, stonith_shutdown);
-	
-    /* EnableProcLogging(); */
-    set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
 
     crm_peer_init();
     client_list = g_hash_table_new(crm_str_hash, g_str_equal);
