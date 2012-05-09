@@ -551,14 +551,16 @@ get_logfiles() {
     if [ "x$facility" = x ]; then
 	facility=`getcfvar $cf_type $facility_var $cf_file`
 	[ "" = "$facility" ] && facility="daemon"
-	if [ "none" = "$facility" ]; then
-	    fatal "No logging is configured"
-	fi
-	msg="Mark:pcmk:`perl -e 'print time()'`"
-	logger -p $facility.info $msg >/dev/null 2>&1
-	sleep 2 # Give syslog time to catch up in case its busy
-	findmsg 1 "$msg"
     fi
+    if [ "x$facility" = x ]; then
+	facility="daemon"
+    fi
+
+    # Always include system logs (if we can find them)
+    msg="Mark:pcmk:`perl -e 'print time()'`"
+    logger -p $facility.info $msg >/dev/null 2>&1
+    sleep 2 # Give syslog time to catch up in case its busy
+    findmsg 1 "$msg"
 }
 
 essential_files() {
