@@ -314,6 +314,7 @@ get_uname(const char *uuid)
     /* avoid blocking calls where possible */
     uname = g_hash_table_lookup(crm_uname_cache, uuid);
     if (uname != NULL) {
+        crm_trace("%s = %s (cached)", uuid, uname);
         return uname;
     }
 #if SUPPORT_COROSYNC
@@ -328,6 +329,7 @@ get_uname(const char *uuid)
         }
 
         if (uname) {
+            crm_trace("Storing %s = %s", uuid, uname);
             g_hash_table_insert(crm_uname_cache, crm_strdup(uuid), crm_strdup(uname));
         }
     }
@@ -350,6 +352,7 @@ get_uname(const char *uuid)
                 crm_free(hb_uname);
 
             } else {
+                crm_trace("Storing %s = %s", uuid, uname);
                 g_hash_table_insert(crm_uname_cache, uuid_copy, hb_uname);
             }
         }
