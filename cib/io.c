@@ -21,6 +21,7 @@
 #include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -61,14 +62,13 @@ const char *constraint_path[] = {
     XML_CIB_TAG_CONSTRAINTS,
 };
 
+crm_trigger_t *cib_writer = NULL;
 gboolean initialized = FALSE;
 xmlNode *node_search = NULL;
 xmlNode *resource_search = NULL;
 xmlNode *constraint_search = NULL;
 xmlNode *status_search = NULL;
 
-extern gboolean cib_writes_enabled;
-extern GTRIGSource *cib_writer;
 extern enum cib_errors cib_status;
 
 int set_connected_peers(xmlNode * xml_obj);
@@ -523,10 +523,30 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
     free_xml(saved_cib);
     if (cib_writes_enabled && cib_status == cib_ok && to_disk) {
         crm_debug("Triggering CIB write for %s op", op);
-        G_main_set_trigger(cib_writer);
+        mainloop_set_trigger(cib_writer);
     }
 
     return cib_ok;
+}
+
+static void cib_diskwrite_complete(GPid pid, gint status, gpointer user_data) 
+{
+    int exitcode = -1;
+
+    if(WIFSIGNALED(status)) {
+        int signo = WTERMSIG(status);
+        int core = WCOREDUMP(status);
+        crm_notice("Disk write process terminated with signal %d (pid=%d, core=%d)", signo, pid, core);
+
+    } else if(WIFEXITED(status)) {
+        exitcode = WEXITSTATUS(status);
+        do_crm_log(exitcode == 0 ? LOG_TRACE : LOG_ERR, "Disk write process exited (pid=%d, rc=%d)", pid, exitcode);
+    }
+
+    if(exitcode != 0 && cib_writes_enabled) {
+        crm_err("Disabling disk writes after write failure");
+        cib_writes_enabled = FALSE;
+    }
 }
 
 int
@@ -556,6 +576,17 @@ write_cib_contents(gpointer p)
         local_cib = copy_xml(p);
 
     } else {
+        int pid = fork();
+        if (pid < 0) {
+            return FALSE;
+        }
+
+        if (pid) {
+            /* Parent */
+            g_child_watch_add(pid, cib_diskwrite_complete, NULL);
+            return TRUE;
+        }
+        
         /* A-synchronous write out after a fork() */
 
         /* Don't log anything unless strictly necessary */

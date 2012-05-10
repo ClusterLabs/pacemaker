@@ -28,6 +28,7 @@
 #  include <fcntl.h>
 
 #  include <crm/common/xml.h>
+#  include <crm/common/mainloop.h>
 
 extern gboolean initialized;
 extern xmlNode *the_cib;
@@ -46,6 +47,8 @@ extern xmlNode *readCibXml(char *buffer);
 extern xmlNode *readCibXmlFile(const char *dir, const char *file, gboolean discard_status);
 extern int activateCibBuffer(char *buffer, const char *filename);
 extern int activateCibXml(xmlNode * doc, gboolean to_disk, const char *op);
+extern crm_trigger_t *cib_writer;
+extern gboolean cib_writes_enabled;
 
 /* extern xmlNode *server_get_cib_copy(void); */
 

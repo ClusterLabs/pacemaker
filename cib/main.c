@@ -84,7 +84,6 @@ void cib_shutdown(int nsig);
 gboolean startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
 
-GTRIGSource *cib_writer = NULL;
 GHashTable *client_list = NULL;
 GHashTable *config_hash = NULL;
 
@@ -102,22 +101,6 @@ cib_enable_writes(int nsig)
 {
     crm_info("(Re)enabling disk writes");
     cib_writes_enabled = TRUE;
-}
-
-static void
-cib_diskwrite_complete(gpointer userdata, int status, int signo, int exitcode)
-{
-    if (exitcode != LSB_EXIT_OK || signo != 0 || status != 0) {
-        crm_err("Disk write failed: status=%d, signo=%d, exitcode=%d", status, signo, exitcode);
-
-        if (cib_writes_enabled) {
-            crm_err("Disabling disk writes after write failure");
-            cib_writes_enabled = FALSE;
-        }
-
-    } else {
-        crm_trace("Disk write passed");
-    }
 }
 
 static void
@@ -160,12 +143,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
-    cib_writer =
-        G_main_add_tempproc_trigger(G_PRIORITY_LOW, write_cib_contents, "write_cib_contents", NULL,
-                                    NULL, NULL, cib_diskwrite_complete);
-
-    /* EnableProcLogging(); */
-    set_sigchld_proctrack(G_PRIORITY_HIGH, DEFAULT_MAXDISPATCHTIME);
+    cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
 
     crm_peer_init();
     client_list = g_hash_table_new(crm_str_hash, g_str_equal);
