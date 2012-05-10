@@ -317,7 +317,7 @@ crm_ipc_connect(crm_ipc_t *client)
 void
 crm_ipc_close(crm_ipc_t *client) 
 {
-    crm_trace("Disconnecting %s IPC connection %p", client->name, client);
+    crm_trace("Disconnecting %s IPC connection %p (%p.%d)", client->name, client, client->ipc, client->closed);
     if(client->ipc && client->closed == FALSE) {
         client->closed = TRUE;
         qb_ipcc_disconnect(client->ipc);
