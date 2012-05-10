@@ -443,8 +443,6 @@ crm_itoa(int an_int)
     return buffer;
 }
 
-extern int LogToLoggingDaemon(int priority, const char *buf, int bstrlen, gboolean use_pri_str);
-
 #ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
 GLogFunc glib_log_default;
 
