@@ -122,7 +122,8 @@ doc/Clusters_from_Scratch/en-US/Ch-Tools.xml
 doc/Clusters_from_Scratch/en-US/Ch-Verification.xml
 doc/Pacemaker_Explained/en-US/Ch-Basics.xml
 doc/Pacemaker_Explained/en-US/Ch-Options.xml
-
+lib/gnu/libgnu.a
+lib/gnu/stdalign.h
 
 #Other 
 mock

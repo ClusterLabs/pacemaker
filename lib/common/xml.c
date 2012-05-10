@@ -34,7 +34,6 @@
 #include <crm/common/xml.h>
 #include <libxml/xmlreader.h>
 
-#include <clplumbing/md5.h>
 #if HAVE_BZLIB_H
 #  include <bzlib.h>
 #endif
@@ -1926,13 +1925,9 @@ filter_xml(xmlNode *data, filter_t *filter, int filter_len, gboolean recursive)
 static char *
 calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
 {
-    int i = 0;
-    int digest_len = 16;
     char *digest = NULL;
-    unsigned char *raw_digest = NULL;
     xmlNode *copy = NULL;
     char *buffer = NULL;
-    size_t buffer_len = 0;
 
     if(sort || do_filter) {
 	copy = sorted_xml(input, NULL, TRUE);
@@ -1944,21 +1939,13 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
     }
 
     buffer = dump_xml(input, FALSE, TRUE);
-    buffer_len = strlen(buffer);
-	
-    CRM_CHECK(buffer != NULL && buffer_len > 0, free_xml(copy); crm_free(buffer); return NULL);
+    CRM_CHECK(buffer != NULL && strlen(buffer) > 0, free_xml(copy); crm_free(buffer); return NULL);
 
-    crm_malloc(digest, (2 * digest_len + 1));
-    crm_malloc(raw_digest, (digest_len + 1));
-    MD5((unsigned char *)buffer, buffer_len, raw_digest);
-    for(i = 0; i < digest_len; i++) {
-	sprintf(digest+(2*i), "%02x", raw_digest[i]);
-    }
-    digest[(2*digest_len)] = 0;
+    digest = crm_md5sum(buffer);
     crm_trace("Digest %s: %s\n", digest, buffer);
     crm_log_xml_trace(copy,  "digest:source");
+
     crm_free(buffer);
-    crm_free(raw_digest);
     free_xml(copy);
     return digest;
 }
@@ -1966,12 +1953,10 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
 static char *
 calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
 {
-    int i = 0;
-    int digest_len = 16;
     char *digest = NULL;
-    size_t buffer_len = 0;
+
+    int buffer_len = 0;
     int filter_size = DIMOF(filter);
-    unsigned char *raw_digest = NULL;
 
     xmlDoc *doc = NULL;
     xmlNode *copy = NULL;
@@ -2019,16 +2004,9 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     CRM_CHECK(doc != NULL, return NULL); /* doc will only be NULL if an_xml_node is */
     
     buffer_len = xmlNodeDump(xml_buffer, doc, input, 0, FALSE);
-    
     CRM_CHECK(xml_buffer->content != NULL && buffer_len > 0, goto done);
 
-    crm_malloc(digest, (2 * digest_len + 1));
-    crm_malloc(raw_digest, (digest_len + 1));
-    MD5((unsigned char *)xml_buffer->content, buffer_len, raw_digest);
-    for(i = 0; i < digest_len; i++) {
-	sprintf(digest+(2*i), "%02x", raw_digest[i]);
-    }
-    digest[(2*digest_len)] = 0;
+    digest = crm_md5sum((char *)xml_buffer->content);
     crm_trace("Digest %s\n", digest);
 
         if(digest_cs == NULL) {
@@ -2054,7 +2032,6 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
 
   done:
     xmlBufferFree(xml_buffer);
-    crm_free(raw_digest);
     free_xml(copy);
 
     return digest;

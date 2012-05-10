@@ -223,3 +223,13 @@ clang:
 	test -e $(ccc_analyzer) || echo "CLang Analyiser not available. Install the clang-analyzer package"
 	test -e $(ccc_analyzer) || false
 	make CC=$(ccc_analyzer) check
+
+# Not available: strlcat
+# V3	= scandir unsetenv alphasort 
+# V2	= setenv strerror strchrnul strndup
+# http://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
+GNU_MODS	= crypto/md5
+gnulib-update:
+	-test ! -e gnulib && git clone git://git.savannah.gnu.org/gnulib.git
+	cd gnulib && git pull
+	gnulib/gnulib-tool --source-base=lib/gnu --lgpl=2 --no-vc-files --import $(GNU_MODS)

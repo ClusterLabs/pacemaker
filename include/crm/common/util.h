@@ -371,4 +371,6 @@ extern void *convert_const_pointer(const void *ptr);
 
 extern char *crm_generate_uuid(void);
 
+char *crm_md5sum(const char *buffer);
+
 #endif

@@ -6,7 +6,7 @@ dnl License: GNU General Public License (GPL)
 dnl ===============================================
 dnl Bootstrap 
 dnl ===============================================
-AC_PREREQ(2.53)
+AC_PREREQ(2.59)
 
 dnl Suggested structure:
 dnl     information on the package
@@ -82,6 +82,8 @@ dnl ========================================================================
 AC_PROG_CC dnl Can force other with environment variable "CC".
 AM_PROG_CC_C_O
 AC_PROG_CC_STDC
+gl_EARLY
+gl_INIT
 
 AC_LIBTOOL_DLOPEN               dnl Enable dlopen support...
 AC_LIBLTDL_CONVENIENCE          dnl make libltdl a convenience lib
@@ -1690,6 +1692,7 @@ tools/Makefile							\
 	tools/hb2openais.sh					\
 	tools/crm_primitive.py					\
 xml/Makefile							\
+lib/gnu/Makefile						\
 		)
 
 dnl Now process the entire list of files added by previous 

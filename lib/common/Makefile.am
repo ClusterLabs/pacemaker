@@ -18,7 +18,8 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 INCLUDES       	= -I$(top_builddir)/include  -I$(top_srcdir)/include   \
-		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl
+		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl   \
+		  -I$(top_builddir)/lib/gnu  -I$(top_srcdir)/lib/gnu
 
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la
@@ -35,6 +36,7 @@ libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c iso8601.c iso8601_fields.c remote.
 
 libcrmcommon_la_LDFLAGS	= -version-info 2:0:0
 libcrmcommon_la_LIBADD  = -ldl $(GNUTLSLIBS)
+libcrmcommon_la_SOURCES += $(top_builddir)/lib/gnu/md5.c
 
 if BUILD_HEARTBEAT_SUPPORT
 libcrmcommon_la_SOURCES += heartbeat.c
