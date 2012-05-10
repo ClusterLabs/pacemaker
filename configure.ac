@@ -965,18 +965,7 @@ dnl ========================================================================
 dnl    Cluster infrastructure - Heartbeat / LibQB
 dnl ========================================================================
 
-dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
-dnl So check for all the depenancies (so they're added to LIBS) before checking for -lplumb
-
-AC_CHECK_LIB(pils, PILLoadPlugin)
-AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
-
-if test x"$ac_cv_lib_plumb_G_main_add_IPC_Channel" != x"yes"; then
-   AC_MSG_FAILURE(Core Heartbeat utility libraries not found: $ac_cv_lib_plumb_G_main_add_IPC_Channel)
-fi
-
 dnl Compatability checks
-AC_CHECK_FUNCS(msgfromIPC_timeout)
 AC_CHECK_MEMBERS([struct lrm_ops.fail_rsc],,,[[#include <lrm/lrm_api.h>]])
 
 if test x${enable_no_stack} = xyes; then
@@ -1143,6 +1132,16 @@ esac
 
 if test $SUPPORT_HEARTBEAT = 1; then
    STACKS="$STACKS heartbeat"
+
+   dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
+   dnl So check for all the depenancies (so they're added to LIBS) before checking for -lplumb
+   AC_CHECK_LIB(pils, PILLoadPlugin)
+   AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
+
+   if test x"$ac_cv_lib_plumb_G_main_add_IPC_Channel" != x"yes"; then
+      AC_MSG_FAILURE(Core Heartbeat utility libraries not found: $ac_cv_lib_plumb_G_main_add_IPC_Channel)
+   fi
+
    AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
    AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
 fi
