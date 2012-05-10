@@ -629,8 +629,8 @@ case $cluster in
 
 	tool=`pickfirst corosync-objctl corosync-cmapctl`
 	case $tool in
-	    *objctl)  $tool -a > corosync.dump;;
-	    *cmapctl) $tool    > corosync.dump;;
+	    *objctl)  $tool -a > corosync.dump  2>/dev/null;;
+	    *cmapctl) $tool    > corosync.dump  2>/dev/null;;
 	esac
 	;;
 esac
