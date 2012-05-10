@@ -88,15 +88,6 @@ main(int argc, char **argv)
     const char *xml_file = NULL;
     const char *xml_string = NULL;
 
-    g_log_set_handler(NULL,
-                      G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL
-                      | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_MESSAGE
-                      | G_LOG_LEVEL_INFO | G_LOG_LEVEL_DEBUG
-                      | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL, cl_glib_msg_handler, NULL);
-
-    /* and for good measure... - this enum is a bit field (!) */
-    g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
-
     crm_log_init_quiet(NULL, LOG_ERR, FALSE, TRUE, argc, argv);
     crm_set_options(NULL, "[modifiers] data_source", long_options,
                     "Check a (complete) confiuration for syntax and common conceptual errors."
