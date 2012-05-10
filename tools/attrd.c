@@ -394,6 +394,9 @@ attrd_ais_destroy(gpointer unused)
 static void
 attrd_cib_connection_destroy(gpointer user_data)
 {
+    cib_t *conn = user_data;
+    conn->cmds->signoff(conn); /* Ensure IPC is cleaned up */
+
     if (need_shutdown) {
         crm_info("Connection to the CIB terminated...");
 
