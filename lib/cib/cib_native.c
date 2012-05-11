@@ -279,12 +279,12 @@ cib_native_signoff(cib_t * cib)
 
     crm_debug("Signing out of the CIB Service");
 
-    if(native->source) {
-        mainloop_del_ipc_client(native->source);
-        native->source = NULL;
-        native->ipc = NULL;
-
-    } else if (native->ipc != NULL) {
+    if (native->ipc != NULL) {
+        /* If attached to mainloop and it is active, _close() will result in:
+         *  - the source being removed from mainloop
+         *  - the dnotify callback being invoked
+         * Otherwise, we are at least correctly disconnecting IPC
+         */
         crm_ipc_close(native->ipc);
         crm_ipc_destroy(native->ipc);
         native->ipc = NULL;
