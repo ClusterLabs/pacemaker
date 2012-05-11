@@ -1001,7 +1001,7 @@ elif test "$ac_cv_header_hb_config_h" = "yes"; then
    GLUE_HEADER=hb_config.h
 
 else
-   AC_MSG_FAILURE(Core development headers were not found)
+   AC_MSG_WARN(cluster-glue development headers were not found)
 fi
 
 dnl ===============================================
@@ -1014,11 +1014,11 @@ AC_SUBST(CRM_DTD_DIRECTORY)
 AC_DEFINE_UNQUOTED(CRM_DTD_VERSION,"$CRM_DTD_VERSION", Current version of the Pacemaker Relax-NG Schema)
 AC_SUBST(CRM_DTD_VERSION)
 
-CRM_DAEMON_USER=`extract_header_define $GLUE_HEADER HA_CCMUSER`
+CRM_DAEMON_USER=`try_extract_header_define $GLUE_HEADER HA_CCMUSER hacluster`
 AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_USER)
 
-CRM_DAEMON_GROUP=`extract_header_define $GLUE_HEADER HA_APIGROUP`
+CRM_DAEMON_GROUP=`try_extract_header_define $GLUE_HEADER HA_APIGROUP haclient`
 AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_GROUP)
 
@@ -1044,38 +1044,29 @@ AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location for Heartbeat expect
 AC_SUBST(HB_DAEMON_DIR)
 
 dnl Needed so that the Corosync plugin can clear out the directory as Heartbeat does
-HA_STATE_DIR=`extract_header_define $GLUE_HEADER HA_VARRUNDIR`
+HA_STATE_DIR=`try_extract_header_define $GLUE_HEADER HA_VARRUNDIR ${localstatedir}/run`
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
 AC_SUBST(HA_STATE_DIR)
 
-CRM_RSCTMP_DIR=
-if test "$ac_cv_header_agent_config_h" = "yes";  then
-   CRM_RSCTMP_DIR=`extract_header_define agent_config.h HA_RSCTMPDIR`
-else
-   AC_MSG_WARN(Agents development headers were not found.)
-fi
-
-if test x$CRM_RSCTMP_DIR = x; then
-   CRM_RSCTMP_DIR="$HA_STATE_DIR/heartbeat/rsctmp"
-fi
+CRM_RSCTMP_DIR=`try_extract_header_define agent_config.h HA_RSCTMPDIR $HA_STATE_DIR/heartbeat/rsctmp`
 AC_MSG_CHECKING(Scratch dir for resource agents)
 AC_MSG_RESULT($CRM_RSCTMP_DIR)
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
 
 dnl Needed for the location of hostcache in CTS.py
-HA_VARLIBHBDIR=`extract_header_define $GLUE_HEADER HA_VARLIBHBDIR`
+HA_VARLIBHBDIR=`try_extract_header_define $GLUE_HEADER HA_VARLIBHBDIR ${localstatedir}/lib/heartbeat`
 AC_SUBST(HA_VARLIBHBDIR)
 
 AC_DEFINE_UNQUOTED(UUID_FILE,"$localstatedir/lib/heartbeat/hb_uuid", Location of Heartbeat's UUID file)
 
-OCF_ROOT_DIR=`extract_header_define $GLUE_HEADER OCF_ROOT_DIR`
+OCF_ROOT_DIR=`try_extract_header_define $GLUE_HEADER OCF_ROOT_DIR /usr/lib/ocf`
 if test "X$OCF_ROOT_DIR" = X; then
   AC_MSG_ERROR(Could not locate OCF directory)
 fi
 AC_SUBST(OCF_ROOT_DIR)
 
-OCF_RA_DIR=`extract_header_define $GLUE_HEADER OCF_RA_DIR`
+OCF_RA_DIR=`try_extract_header_define $GLUE_HEADER OCF_RA_DIR $OCF_ROOT_DIR/resource.d`
 AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
 AC_SUBST(OCF_RA_DIR)
 
