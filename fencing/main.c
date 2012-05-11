@@ -46,8 +46,6 @@
 
 #include <standalone_config.h>
 
-char *channel1 = NULL;
-char *channel2 = NULL;
 char *stonith_our_uname = NULL;
 
 GMainLoop *mainloop = NULL;
@@ -59,6 +57,9 @@ gboolean stonith_shutdown_flag = FALSE;
 #if SUPPORT_HEARTBEAT
 ll_cluster_t *hb_conn = NULL;
 #endif
+
+static void stonith_shutdown(int nsig);
+static void stonith_cleanup(void);
 
 static int32_t
 st_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
@@ -242,7 +243,7 @@ static void
 stonith_peer_ais_destroy(gpointer user_data)
 {
     crm_err("AIS connection terminated");
-    exit(1);
+    stonith_shutdown(0);
 }
 #endif
 
@@ -254,14 +255,7 @@ stonith_peer_hb_destroy(gpointer user_data)
     } else {
 	crm_err("Heartbeat connection lost!  Exiting.");
     }
-		
-    crm_info("Exiting...");
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
-	g_main_quit(mainloop);
-		
-    } else {
-	exit(LSB_EXIT_OK);
-    }
+    stonith_shutdown(0);
 }
 
 void do_local_reply(xmlNode *notify_src, const char *client_id,
@@ -566,7 +560,12 @@ stonith_shutdown(int nsig)
 {
     stonith_shutdown_flag = TRUE;
     crm_info("Terminating with  %d clients", g_hash_table_size(client_list));
-    exit(0);
+    if(mainloop != NULL && g_main_is_running(mainloop)) {
+        g_main_quit(mainloop);
+    } else {
+        stonith_cleanup();
+        exit(LSB_EXIT_OK);
+    }
 }
 
 cib_t *cib = NULL;
@@ -584,7 +583,6 @@ stonith_cleanup(void)
 #if HAVE_LIBXML2
     crm_xml_cleanup();
 #endif
-    crm_free(channel1);
 }
 
 /* *INDENT-OFF* */
