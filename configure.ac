@@ -190,8 +190,9 @@ AC_ARG_WITH(ais,
 AC_ARG_WITH(corosync,
     [  --with-corosync     
        Support the Corosync messaging and membership layer ],
-    [ SUPPORT_CS=$withval ],
-    [ SUPPORT_CS=try ],
+    [ SUPPORT_CS=$withval ]
+dnl	initialized in AC_ARG_WITH(ais...) already,
+dnl	don't reset to try if it was given as --without-ais
 )
 
 AC_ARG_WITH(heartbeat,

@@ -354,8 +354,10 @@ fi
 %exclude %{_datadir}/pacemaker/tests
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
+%if %{with corosync}
 %{_sbindir}/pacemakerd
 %{_initrddir}/pacemaker
+%endif
 
 %if %{defined _unitdir}
 %{_unitdir}/pacemaker.service
@@ -389,7 +391,9 @@ fi
 %doc %{_mandir}/man8/crm_node.*
 %doc %{_mandir}/man8/crm_master.*
 %doc %{_mandir}/man8/fence_pcmk.*
+%if %{with corosync}
 %doc %{_mandir}/man8/pacemakerd.*
+%endif
 %doc %{_mandir}/man8/stonith_admin.*
 
 %doc COPYING
@@ -434,7 +438,9 @@ fi
 %exclude %{_mandir}/man8/crm_node.*
 %exclude %{_mandir}/man8/crm_master.*
 %exclude %{_mandir}/man8/fence_pcmk.*
+%if %{with corosync}
 %exclude %{_mandir}/man8/pacemakerd.*
+%endif
 %exclude %{_mandir}/man8/stonith_admin.*
 
 %doc COPYING
