@@ -454,13 +454,13 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
     for (i = 0; i < member_list_entries; i++) {
         crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
-        crm_debug("Member[%d] %d ", i, member_list[i].nodeid);
+        crm_info("Member[%d] %d ", i, member_list[i].nodeid);
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
     }
 
     for (i = 0; i < left_list_entries; i++) {
         crm_node_t *peer = crm_get_peer(left_list[i].nodeid, NULL);
-        crm_debug("Left[%d] %d ", i, left_list[i].nodeid);
+        crm_info("Left[%d] %d ", i, left_list[i].nodeid);
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, OFFLINESTATUS);
     }
 }
