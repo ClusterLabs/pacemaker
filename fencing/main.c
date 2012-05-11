@@ -569,9 +569,15 @@ stonith_shutdown(int nsig)
     exit(0);
 }
 
+cib_t *cib = NULL;
+
 static void
 stonith_cleanup(void) 
 {
+    if(cib) {
+        cib->cmds->signoff(cib);
+    }
+
     crm_peer_destroy();	
     g_hash_table_destroy(client_list);
     crm_free(stonith_our_uname);
@@ -600,7 +606,6 @@ setup_cib(void)
     static const char *(*cib_err_fn)(enum cib_errors) = NULL;
 
     int rc, retries = 0;
-    cib_t *cib = NULL;
 
     if(cib_library == NULL) {
         cib_library = dlopen(CIB_LIBRARY, RTLD_LAZY);
