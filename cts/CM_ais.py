@@ -86,6 +86,7 @@ class crm_ais(crm_lha):
                 r"Corosync membership is still forming",
                 r"Peer is not part of our cluster",
                 r"We appear to be in an election loop",
+                r"Unknown node -> we will not deliver message",
 
                 # Not inherently bad, but worth tracking
                 #r"No need to invoke the TE",
