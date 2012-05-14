@@ -1160,8 +1160,8 @@ clone_action_flags(action_t * action, node_t * node)
             if (is_set(flags, pe_action_optional)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
                 crm_trace("%s is manditory because of %s", action->uuid, child_action->uuid);
-                clear_bit_inplace(flags, pe_action_optional);
-                clear_bit_inplace(action->flags, pe_action_optional);
+                flags = crm_clear_bit(__FUNCTION__, action->rsc->id, flags, pe_action_optional);
+                pe_clear_action_bit(action, pe_action_optional);
             }
             if (is_set(child_flags, pe_action_runnable)) {
                 any_runnable = TRUE;
@@ -1182,9 +1182,9 @@ clone_action_flags(action_t * action, node_t * node)
 
     if (check_runnable && any_runnable == FALSE) {
         crm_trace("%s is not runnable because no children are", action->uuid);
-        clear_bit_inplace(flags, pe_action_runnable);
+        flags = crm_clear_bit(__FUNCTION__, action->rsc->id, flags, pe_action_runnable);
         if (node == NULL) {
-            clear_bit_inplace(action->flags, pe_action_runnable);
+            pe_clear_action_bit(action, pe_action_runnable);
         }
     }
 

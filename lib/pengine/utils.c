@@ -372,12 +372,12 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
         action->uuid = key;
 
-        set_bit_inplace(action->flags, pe_action_failure_is_fatal);
-        set_bit_inplace(action->flags, pe_action_runnable);
+        pe_set_action_bit(action, pe_action_failure_is_fatal);
+        pe_set_action_bit(action, pe_action_runnable);
         if (optional) {
-            set_bit_inplace(action->flags, pe_action_optional);
+            pe_set_action_bit(action, pe_action_optional);
         } else {
-            clear_bit_inplace(action->flags, pe_action_optional);
+            pe_clear_action_bit(action, pe_action_optional);
         }
 
 /*
@@ -414,9 +414,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
     }
 
-    if (optional == FALSE && (action->flags & pe_action_optional)) {
+    if (optional == FALSE) {
         crm_trace("Action %d (%s) marked manditory", action->id, action->uuid);
-        clear_bit_inplace(action->flags, pe_action_optional);
+        pe_clear_action_bit(action, pe_action_optional);
     }
 
     if (rsc != NULL) {
@@ -429,7 +429,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         if (is_set(action->flags, pe_action_have_node_attrs) == FALSE
             && action->node != NULL && action->op_entry != NULL) {
-            set_bit_inplace(action->flags, pe_action_have_node_attrs);
+            pe_set_action_bit(action, pe_action_have_node_attrs);
             unpack_instance_attributes(data_set->input, action->op_entry, XML_TAG_ATTR_SETS,
                                        action->node->details->attrs,
                                        action->extra, NULL, FALSE, data_set->now);
@@ -439,16 +439,16 @@ custom_action(resource_t * rsc, char *key, const char *task,
             /* leave untouched */
 
         } else if (action->node == NULL) {
-            clear_bit_inplace(action->flags, pe_action_runnable);
+            pe_clear_action_bit(action, pe_action_runnable);
 
         } else if (is_not_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
             crm_debug("Action %s (unmanaged)", action->uuid);
-            set_bit_inplace(action->flags, pe_action_optional);
+            pe_set_action_bit(action, pe_action_optional);
 /*   			action->runnable = FALSE; */
 
         } else if (action->node->details->online == FALSE) {
-            clear_bit_inplace(action->flags, pe_action_runnable);
+            pe_clear_action_bit(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
             if (is_set(action->rsc->flags, pe_rsc_managed)
@@ -458,13 +458,13 @@ custom_action(resource_t * rsc, char *key, const char *task,
             }
 
         } else if (action->node->details->pending) {
-            clear_bit_inplace(action->flags, pe_action_runnable);
+            pe_clear_action_bit(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (pending)",
                        action->uuid, action->node->details->uname);
 
         } else if (action->needs == rsc_req_nothing) {
             crm_trace("Action %s doesnt require anything", action->uuid);
-            set_bit_inplace(action->flags, pe_action_runnable);
+            pe_set_action_bit(action, pe_action_runnable);
 #if 0
             /*
              * No point checking this
@@ -476,21 +476,21 @@ custom_action(resource_t * rsc, char *key, const char *task,
 #endif
         } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
                    && data_set->no_quorum_policy == no_quorum_stop) {
-            clear_bit_inplace(action->flags, pe_action_runnable);
+            pe_clear_action_bit(action, pe_action_runnable);
             crm_debug("%s\t%s (cancelled : quorum)", action->node->details->uname, action->uuid);
 
         } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
                    && data_set->no_quorum_policy == no_quorum_freeze) {
             crm_trace("Check resource is already active");
             if (rsc->fns->active(rsc, TRUE) == FALSE) {
-                clear_bit_inplace(action->flags, pe_action_runnable);
+                pe_clear_action_bit(action, pe_action_runnable);
                 crm_debug("%s\t%s (cancelled : quorum freeze)",
                           action->node->details->uname, action->uuid);
             }
 
         } else {
             crm_trace("Action %s is runnable", action->uuid);
-            set_bit_inplace(action->flags, pe_action_runnable);
+            pe_set_action_bit(action, pe_action_runnable);
         }
 
         if (save_action) {

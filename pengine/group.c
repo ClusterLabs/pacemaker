@@ -386,14 +386,14 @@ group_action_flags(action_t * action, node_t * node)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
                 crm_trace("%s is manditory because of %s", action->uuid, child_action->uuid);
                 clear_bit_inplace(flags, pe_action_optional);
-                clear_bit_inplace(action->flags, pe_action_optional);
+                pe_clear_action_bit(action, pe_action_optional);
             }
             if (safe_str_neq(task_s, action->task)
                 && is_set(flags, pe_action_runnable)
                 && is_set(child_flags, pe_action_runnable) == FALSE) {
                 crm_trace("%s is not runnable because of %s", action->uuid, child_action->uuid);
                 clear_bit_inplace(flags, pe_action_runnable);
-                clear_bit_inplace(action->flags, pe_action_runnable);
+                pe_clear_action_bit(action, pe_action_runnable);
             }
 
         } else if (task != stop_rsc) {

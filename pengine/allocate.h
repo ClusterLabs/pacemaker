@@ -173,9 +173,9 @@ update_action_flags(action_t * action, enum pe_action_flags flags)
     enum pe_action_flags last = action->flags;
 
     if (clear) {
-        clear_bit_inplace(action->flags, flags);
+        pe_clear_action_bit(action, flags);
     } else {
-        set_bit_inplace(action->flags, flags);
+        pe_set_action_bit(action, flags);
     }
 
     if (last != action->flags) {

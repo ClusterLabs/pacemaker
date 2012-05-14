@@ -236,25 +236,33 @@ extern gboolean crm_is_writable(const char *dir, const char *file,
 static inline long long
 crm_clear_bit(const char *function, const char *target, long long word, long long bit)
 {
-    if (target) {
-        crm_trace("Bit %s.0x%.16llx cleared by %s", target, bit, function);
+    long long rc = (word & ~bit);
+
+    if(rc == word) {
+        /* Unchanged */
+    } else if (target) {
+        crm_trace("Bit 0x%.8llx for %s cleared by %s", bit, target, function);
     } else {
-        crm_trace("Bit 0x%.16llx cleared by %s", bit, function);
+        crm_trace("Bit 0x%.8llx cleared by %s", bit, function);
     }
 
-    return (word & ~bit);
+    return rc;
 }
 
 static inline long long
 crm_set_bit(const char *function, const char *target, long long word, long long bit)
 {
-    if (target) {
-        crm_trace("Bit %s.0x%.16llx set by %s", target, bit, function);
+    long long rc = (word|bit);
+
+    if(rc == word) {
+        /* Unchanged */
+    } else if (target) {
+        crm_trace("Bit 0x%.8llx for %s set by %s", bit, target, function);
     } else {
-        crm_trace("Bit 0x%.16llx set by %s", bit, function);
+        crm_trace("Bit 0x%.8llx set by %s", bit, function);
     }
 
-    return (word|bit);
+    return rc;
 }
 
 static inline gboolean

@@ -1579,6 +1579,7 @@ enum pe_graph_flags
 native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
                       enum pe_action_flags filter, enum pe_ordering type)
 {
+    /* flags == get_action_flags(first, then_node) called from update_action() */
     enum pe_graph_flags changed = pe_graph_none;
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
@@ -1598,8 +1599,9 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         } else if (!(first->flags & pe_action_runnable)) {
             /* prevent 'then' action from happening if 'first' is not runnable and
              * 'then' has not yet occurred. */
-            clear_bit_inplace(then->flags, pe_action_runnable);
-            clear_bit_inplace(then->flags, pe_action_optional);
+            pe_clear_action_bit(then, pe_action_runnable);
+            pe_clear_action_bit(then, pe_action_optional);
+            crm_trace("Unset optional and runnable on %s", then->uuid);
         } else {
             /* ignore... then is allowed to start/stop if it wants to. */
         }
@@ -1607,20 +1609,25 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
 
     if (type & pe_order_implies_first) {
         if ((filter & pe_action_optional) && (flags & pe_action_optional) == 0) {
-            clear_bit_inplace(first->flags, pe_action_optional);
+            crm_trace("Unset optional on %s because of %s", first->uuid, then->uuid);
+            pe_clear_action_bit(first, pe_action_optional);
         }
     }
 
     if (is_set(type, pe_order_runnable_left)
         && is_set(filter, pe_action_runnable)
+        && is_set(then->flags, pe_action_runnable)
         && is_set(flags, pe_action_runnable) == FALSE) {
-        clear_bit_inplace(then->flags, pe_action_runnable);
+        crm_trace("Unset runnable on %s because of %s", then->uuid, first->uuid);
+        pe_clear_action_bit(then, pe_action_runnable);
     }
 
     if (is_set(type, pe_order_implies_then)
         && is_set(filter, pe_action_optional)
+        && is_set(then->flags, pe_action_optional)
         && is_set(flags, pe_action_optional) == FALSE) {
-        clear_bit_inplace(then->flags, pe_action_optional);
+        crm_trace("Unset optional on %s because of %s", then->uuid, first->uuid);
+        pe_clear_action_bit(then, pe_action_optional);
     }
 
     if (is_set(type, pe_order_restart)) {
@@ -1640,28 +1647,28 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         if (reason && is_set(first->flags, pe_action_optional)
             && is_set(first->flags, pe_action_runnable)) {
             crm_trace("Handling %s: %s -> %s", reason, first->uuid, then->uuid);
-            clear_bit_inplace(first->flags, pe_action_optional);
+            pe_clear_action_bit(first, pe_action_optional);
         }
 
         if (reason && is_not_set(first->flags, pe_action_optional)
             && is_not_set(first->flags, pe_action_runnable)) {
             crm_trace("Handling %s: %s -> %s", reason, first->uuid, then->uuid);
-            clear_bit_inplace(then->flags, pe_action_runnable);
+            pe_clear_action_bit(then, pe_action_runnable);
         }
     }
 
     if (then_flags != then->flags) {
         changed |= pe_graph_updated_then;
-        crm_trace("Then: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s",
+        crm_trace("Then: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s 0x%.6x",
                   then->uuid, then->node ? then->node->details->uname : "[none]", then->flags,
-                  then_flags, first->uuid);
+                  then_flags, first->uuid, first->flags);
     }
 
     if (first_flags != first->flags) {
         changed |= pe_graph_updated_first;
-        crm_trace("First: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s",
+        crm_trace("First: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s 0x%.6x",
                   first->uuid, first->node ? first->node->details->uname : "[none]", first->flags,
-                  first_flags, then->uuid);
+                  first_flags, then->uuid, then->flags);
     }
 
     return changed;
@@ -1991,7 +1998,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
 {
     action_t *start = NULL;
 
-    crm_trace("%s on %s", rsc->id, next?next->details->uname:"N/A");
+    crm_trace("%s on %s %d", rsc->id, next?next->details->uname:"N/A", optional);
     start = start_action(rsc, next, TRUE);
     if (is_set(start->flags, pe_action_runnable) && optional == FALSE) {
         update_action_flags(start, pe_action_optional | pe_action_clear);
