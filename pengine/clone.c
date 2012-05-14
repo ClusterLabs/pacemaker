@@ -1260,7 +1260,7 @@ clone_update_actions_interleave(action_t * first, action_t * then, node_t * node
             }
             changed |=
                 then_child->cmds->update_actions(first_action, then_action, node,
-                                                 then_child->cmds->action_flags(then_action, node),
+                                                 first_child->cmds->action_flags(first_action, node),
                                                  filter, type);
         }
     }
