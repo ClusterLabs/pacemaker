@@ -203,7 +203,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
 
         processed = TRUE;
         changed |=
-            then->rsc->cmds->update_actions(first, then, node, flags & restart, restart,
+            then->rsc->cmds->update_actions(first, then, node, flags, restart,
                                             pe_order_restart);
         crm_trace("restart: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
     }
@@ -212,7 +212,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         processed = TRUE;
         if (first->rsc) {
             changed |=
-                first->rsc->cmds->update_actions(first, then, node, flags & pe_action_optional,
+                first->rsc->cmds->update_actions(first, then, node, flags,
                                                  pe_action_optional, pe_order_implies_first);
 
         } else if (is_set(flags, pe_action_optional) == FALSE) {
@@ -227,7 +227,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         processed = TRUE;
         if (then->rsc) {
             changed |=
-                then->rsc->cmds->update_actions(first, then, node, flags & pe_action_runnable,
+                then->rsc->cmds->update_actions(first, then, node, flags,
                                                 pe_action_runnable, pe_order_one_or_more);
 
         } else if (is_set(flags, pe_action_runnable)) {
@@ -242,7 +242,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         processed = TRUE;
         if (then->rsc) {
             changed |=
-                then->rsc->cmds->update_actions(first, then, node, flags & pe_action_runnable,
+                then->rsc->cmds->update_actions(first, then, node, flags,
                                                 pe_action_runnable, pe_order_runnable_left);
 
         } else if (is_set(flags, pe_action_runnable) == FALSE) {
@@ -257,7 +257,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         processed = TRUE;
         if (then->rsc) {
             changed |=
-                then->rsc->cmds->update_actions(first, then, node, flags & pe_action_runnable,
+                then->rsc->cmds->update_actions(first, then, node, flags,
                                                 pe_action_runnable, pe_order_optional);
         }
         crm_trace("optional: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
@@ -268,7 +268,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         processed = TRUE;
         if (then->rsc) {
             changed |=
-                then->rsc->cmds->update_actions(first, then, node, flags & pe_action_runnable,
+                then->rsc->cmds->update_actions(first, then, node, flags,
                                                 pe_action_runnable, pe_order_asymmetrical);
         }
     }
