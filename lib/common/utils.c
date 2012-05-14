@@ -2060,35 +2060,6 @@ crm_is_writable(const char *dir, const char *file,
     return pass;
 }
 
-static unsigned long long crm_bit_filter = 0;   /* 0x00000002ULL; */
-
-long long
-crm_clear_bit(const char *function, long long word, long long bit)
-{
-    if (bit & crm_bit_filter) {
-        crm_err("Bit 0x%.16llx cleared by %s", bit, function);
-    } else {
-        crm_trace("Bit 0x%.16llx cleared by %s", bit, function);
-    }
-
-    word &= ~bit;
-
-    return word;
-}
-
-long long
-crm_set_bit(const char *function, long long word, long long bit)
-{
-    if (bit & crm_bit_filter) {
-        crm_err("Bit 0x%.16llx set by %s", bit, function);
-    } else {
-        crm_trace("Bit 0x%.16llx set by %s", bit, function);
-    }
-
-    word |= bit;
-    return word;
-}
-
 gboolean
 crm_str_eq(const char *a, const char *b, gboolean use_case)
 {
