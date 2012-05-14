@@ -37,6 +37,7 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <crm/common/mainloop.h>
 
 #include <cibio.h>
 #include <callbacks.h>

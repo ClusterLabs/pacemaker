@@ -19,7 +19,6 @@
 #  define CRM_COMMON_UTIL__H
 
 #  include <clplumbing/lsb_exitcodes.h>
-#  include <crm/common/mainloop.h>
 
 #  include <lrm/lrm_api.h>
 

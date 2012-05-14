@@ -391,32 +391,6 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
     goto done;
 }
 
-static gboolean
-pcmk_mcp_dispatch(IPC_Channel * ch, gpointer user_data)
-{
-    xmlNode *msg = NULL;
-    gboolean stay_connected = TRUE;
-
-    while (IPC_ISRCONN(ch)) {
-        if (ch->ops->is_message_pending(ch) == 0) {
-            break;
-        }
-
-        msg = xmlfromIPC(ch, MAX_IPC_DELAY);
-        crm_log_xml_trace(msg, "MCP Message");
-        free_xml(msg);
-
-        if (ch->ch_status != IPC_CONNECT) {
-            break;
-        }
-    }
-
-    if (ch->ch_status != IPC_CONNECT) {
-        stay_connected = FALSE;
-    }
-    return stay_connected;
-}
-
 gboolean(*pcmk_cpg_dispatch_fn) (AIS_Message *, char *, int) = NULL;
 
 static gboolean
@@ -688,13 +662,10 @@ init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
     int retries = 0;
 
     while (retries++ < 30) {
-        IPC_Channel *ch = NULL;
         int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
 
         switch (rc) {
             case CS_OK:
-                ch = init_client_ipc_comms_nodispatch("pcmk");
-                G_main_add_IPC_Channel(G_PRIORITY_HIGH, ch, FALSE, pcmk_mcp_dispatch, NULL, destroy);
                 return TRUE;
                 break;
             case CS_ERR_TRY_AGAIN:

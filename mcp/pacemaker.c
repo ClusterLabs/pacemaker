@@ -24,6 +24,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <clplumbing/proctrack.h>
+#include <crm/common/mainloop.h>
 
 gboolean fatal_error = FALSE;
 GMainLoop *mainloop = NULL;
