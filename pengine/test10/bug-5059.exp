@@ -1,0 +1,556 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <pseudo_event id="20" operation="promoted" operation_key="g_stateful:0_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="10" operation="promote" operation_key="p_stateful1:0_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="promote" operation_key="p_stateful2:0_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <pseudo_event id="19" operation="promote" operation_key="g_stateful:0_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="54" operation="promote" operation_key="ms_stateful_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="14" operation="running" operation_key="g_stateful:0_running_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="p_stateful2:0_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="13" operation="start" operation_key="g_stateful:0_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="13" operation="start" operation_key="g_stateful:0_start_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="42" operation="start" operation_key="ms_stateful_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4" priority="1000000">
+    <action_set>
+      <rsc_op id="100" operation="notify" operation_key="p_stateful1:0_post_notify_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h">
+        <primitive id="p_stateful1:0" long-id="ms_stateful:g_stateful:0:p_stateful1:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="58" operation="notify" operation_key="ms_stateful_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="99" operation="notify" operation_key="p_stateful1:0_pre_notify_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h">
+        <primitive id="p_stateful1:0" long-id="ms_stateful:g_stateful:0:p_stateful1:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="56" operation="notify" operation_key="ms_stateful_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6" priority="1000000">
+    <action_set>
+      <rsc_op id="90" operation="notify" operation_key="p_stateful1:0_post_notify_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h">
+        <primitive id="p_stateful1:0" long-id="ms_stateful:g_stateful:0:p_stateful1:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="89" operation="notify" operation_key="p_stateful1:0_pre_notify_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h">
+        <primitive id="p_stateful1:0" long-id="ms_stateful:g_stateful:0:p_stateful1:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="44" operation="notify" operation_key="ms_stateful_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="10" operation="promote" operation_key="p_stateful1:0_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h">
+        <primitive id="p_stateful1:0" long-id="ms_stateful:g_stateful:0:p_stateful1:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="19" operation="promote" operation_key="g_stateful:0_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9" priority="1000000">
+    <action_set>
+      <rsc_op id="102" operation="notify" operation_key="p_stateful2:0_post_notify_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h">
+        <primitive id="p_stateful2:0" long-id="ms_stateful:g_stateful:0:p_stateful2:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="58" operation="notify" operation_key="ms_stateful_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="101" operation="notify" operation_key="p_stateful2:0_pre_notify_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h">
+        <primitive id="p_stateful2:0" long-id="ms_stateful:g_stateful:0:p_stateful2:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="56" operation="notify" operation_key="ms_stateful_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11" priority="1000000">
+    <action_set>
+      <rsc_op id="91" operation="notify" operation_key="p_stateful2:0_post_notify_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h">
+        <primitive id="p_stateful2:0" long-id="ms_stateful:g_stateful:0:p_stateful2:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="12" operation="promote" operation_key="p_stateful2:0_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h">
+        <primitive id="p_stateful2:0" long-id="ms_stateful:g_stateful:0:p_stateful2:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="10" operation="promote" operation_key="p_stateful1:0_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="p_stateful2:0_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="19" operation="promote" operation_key="g_stateful:0_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="11" operation="start" operation_key="p_stateful2:0_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h">
+        <primitive id="p_stateful2:0" long-id="ms_stateful:g_stateful:0:p_stateful2:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="13" operation="start" operation_key="g_stateful:0_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <pseudo_event id="27" operation="running" operation_key="g_stateful:1_running_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="p_stateful2:1_start_0" on_node="gluster02.h" on_node_uuid="gluster02.h"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="26" operation="start" operation_key="g_stateful:1_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <pseudo_event id="26" operation="start" operation_key="g_stateful:1_start_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="42" operation="start" operation_key="ms_stateful_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16" priority="1000000">
+    <action_set>
+      <rsc_op id="104" operation="notify" operation_key="p_stateful1:1_post_notify_promote_0" on_node="gluster02.h" on_node_uuid="gluster02.h">
+        <primitive id="p_stateful1:1" long-id="ms_stateful:g_stateful:1:p_stateful1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="58" operation="notify" operation_key="ms_stateful_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="103" operation="notify" operation_key="p_stateful1:1_pre_notify_promote_0" on_node="gluster02.h" on_node_uuid="gluster02.h">
+        <primitive id="p_stateful1:1" long-id="ms_stateful:g_stateful:1:p_stateful1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="56" operation="notify" operation_key="ms_stateful_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18" priority="1000000">
+    <action_set>
+      <rsc_op id="93" operation="notify" operation_key="p_stateful1:1_post_notify_start_0" on_node="gluster02.h" on_node_uuid="gluster02.h">
+        <primitive id="p_stateful1:1" long-id="ms_stateful:g_stateful:1:p_stateful1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="92" operation="notify" operation_key="p_stateful1:1_pre_notify_start_0" on_node="gluster02.h" on_node_uuid="gluster02.h">
+        <primitive id="p_stateful1:1" long-id="ms_stateful:g_stateful:1:p_stateful1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="44" operation="notify" operation_key="ms_stateful_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="23" operation="monitor" operation_key="p_stateful1:1_monitor_10000" on_node="gluster02.h" on_node_uuid="gluster02.h">
+        <primitive id="p_stateful1:1" long-id="ms_stateful:g_stateful:1:p_stateful1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="47" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="59" operation="notified" operation_key="ms_stateful_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21" priority="1000000">
+    <action_set>
+      <rsc_op id="106" operation="notify" operation_key="p_stateful2:1_post_notify_promote_0" on_node="gluster02.h" on_node_uuid="gluster02.h">
+        <primitive id="p_stateful2:1" long-id="ms_stateful:g_stateful:1:p_stateful2:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="58" operation="notify" operation_key="ms_stateful_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="105" operation="notify" operation_key="p_stateful2:1_pre_notify_promote_0" on_node="gluster02.h" on_node_uuid="gluster02.h">
+        <primitive id="p_stateful2:1" long-id="ms_stateful:g_stateful:1:p_stateful2:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="56" operation="notify" operation_key="ms_stateful_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23" priority="1000000">
+    <action_set>
+      <rsc_op id="94" operation="notify" operation_key="p_stateful2:1_post_notify_start_0" on_node="gluster02.h" on_node_uuid="gluster02.h">
+        <primitive id="p_stateful2:1" long-id="ms_stateful:g_stateful:1:p_stateful2:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="25" operation="monitor" operation_key="p_stateful2:1_monitor_10000" on_node="gluster02.h" on_node_uuid="gluster02.h">
+        <primitive id="p_stateful2:1" long-id="ms_stateful:g_stateful:1:p_stateful2:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="p_stateful2:1_start_0" on_node="gluster02.h" on_node_uuid="gluster02.h"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="47" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="59" operation="notified" operation_key="ms_stateful_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="24" operation="start" operation_key="p_stateful2:1_start_0" on_node="gluster02.h" on_node_uuid="gluster02.h">
+        <primitive id="p_stateful2:1" long-id="ms_stateful:g_stateful:1:p_stateful2:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="p_stateful1:2 p_stateful2:0 p_stateful2:1 p_stateful2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="p_stateful1:0 p_stateful2:0 " CRM_meta_notify_promote_uname="gluster01.h gluster01.h " CRM_meta_notify_slave_resource="p_stateful1:0 p_stateful1:1 " CRM_meta_notify_slave_uname="gluster01.h gluster02.h " CRM_meta_notify_start_resource="p_stateful2:0 p_stateful2:1 " CRM_meta_notify_start_uname="gluster01.h gluster02.h " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="26" operation="start" operation_key="g_stateful:1_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26" priority="1000000">
+    <action_set>
+      <pseudo_event id="59" operation="notified" operation_key="ms_stateful_confirmed-post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="58" operation="notify" operation_key="ms_stateful_post_notify_promoted_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="100" operation="notify" operation_key="p_stateful1:0_post_notify_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="102" operation="notify" operation_key="p_stateful2:0_post_notify_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="104" operation="notify" operation_key="p_stateful1:1_post_notify_promote_0" on_node="gluster02.h" on_node_uuid="gluster02.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="106" operation="notify" operation_key="p_stateful2:1_post_notify_promote_0" on_node="gluster02.h" on_node_uuid="gluster02.h"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27" priority="1000000">
+    <action_set>
+      <pseudo_event id="58" operation="notify" operation_key="ms_stateful_post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="55" operation="promoted" operation_key="ms_stateful_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="57" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <pseudo_event id="57" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="56" operation="notify" operation_key="ms_stateful_pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="99" operation="notify" operation_key="p_stateful1:0_pre_notify_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="101" operation="notify" operation_key="p_stateful2:0_pre_notify_promote_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="103" operation="notify" operation_key="p_stateful1:1_pre_notify_promote_0" on_node="gluster02.h" on_node_uuid="gluster02.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="105" operation="notify" operation_key="p_stateful2:1_pre_notify_promote_0" on_node="gluster02.h" on_node_uuid="gluster02.h"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <pseudo_event id="56" operation="notify" operation_key="ms_stateful_pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="47" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30" priority="1000000">
+    <action_set>
+      <pseudo_event id="55" operation="promoted" operation_key="ms_stateful_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="20" operation="promoted" operation_key="g_stateful:0_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <pseudo_event id="54" operation="promote" operation_key="ms_stateful_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="running" operation_key="ms_stateful_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="57" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32" priority="1000000">
+    <action_set>
+      <pseudo_event id="47" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="90" operation="notify" operation_key="p_stateful1:0_post_notify_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="91" operation="notify" operation_key="p_stateful2:0_post_notify_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="93" operation="notify" operation_key="p_stateful1:1_post_notify_start_0" on_node="gluster02.h" on_node_uuid="gluster02.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="94" operation="notify" operation_key="p_stateful2:1_post_notify_start_0" on_node="gluster02.h" on_node_uuid="gluster02.h"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33" priority="1000000">
+    <action_set>
+      <pseudo_event id="46" operation="notify" operation_key="ms_stateful_post_notify_running_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="running" operation_key="ms_stateful_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <pseudo_event id="45" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_start_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="44" operation="notify" operation_key="ms_stateful_pre_notify_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="89" operation="notify" operation_key="p_stateful1:0_pre_notify_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="92" operation="notify" operation_key="p_stateful1:1_pre_notify_start_0" on_node="gluster02.h" on_node_uuid="gluster02.h"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <pseudo_event id="44" operation="notify" operation_key="ms_stateful_pre_notify_start_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="36" priority="1000000">
+    <action_set>
+      <pseudo_event id="43" operation="running" operation_key="ms_stateful_running_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="14" operation="running" operation_key="g_stateful:0_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="27" operation="running" operation_key="g_stateful:1_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="42" operation="start" operation_key="ms_stateful_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <pseudo_event id="42" operation="start" operation_key="ms_stateful_start_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="45" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
+

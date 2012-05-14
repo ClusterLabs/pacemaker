@@ -424,6 +424,7 @@ do_test bug-5025-2 "Make sure clear failcount action isn't set when config does 
 do_test bug-5025-3 "Automatically clean up failcount after resource config change with restart"
 do_test monitor-onfail-restart "bug-5058 - Monitor failure with on-fail set to restart"
 do_test monitor-onfail-stop    "bug-5058 - Monitor failure wiht on-fail set to stop"
+do_test bug-5059 "No need to restart p_stateful1:*"
 
 echo ""
 do_test systemhealth1  "System Health ()               #1"

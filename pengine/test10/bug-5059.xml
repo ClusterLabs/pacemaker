@@ -1,0 +1,159 @@
+<cib epoch="291" num_updates="91" admin_epoch="2" validate-with="pacemaker-1.1" crm_feature_set="3.0.5" have-quorum="1" cib-last-written="Mon Apr 30 17:53:04 2012" update-origin="gluster02.h" update-client="cibadmin" dc-uuid="gluster02.h">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-3.el6-a02c0f19a00c1eb2527ad38f146ebc0834814558"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1335797450"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stop-all-resources" name="stop-all-resources" value="false"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="gluster02.h" type="normal" uname="gluster02.h">
+        <instance_attributes id="nodes-gluster02.h">
+          <nvpair id="nodes-gluster02.h-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="gluster03.h" type="normal" uname="gluster03.h">
+        <instance_attributes id="nodes-gluster03.h">
+          <nvpair id="nodes-gluster03.h-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="gluster04.h" type="normal" uname="gluster04.h"/>
+      <node id="gluster01.h" type="normal" uname="gluster01.h"/>
+    </nodes>
+    <resources>
+      <master id="ms_stateful">
+        <meta_attributes id="ms_stateful-meta_attributes">
+          <nvpair id="ms_stateful-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms_stateful-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms_stateful-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms_stateful-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="ms_stateful-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <group id="g_stateful">
+          <primitive class="ocf" id="p_stateful1" provider="pacemaker" type="Stateful">
+            <operations>
+              <op id="stateful1-monitor-10s" interval="10s" name="monitor"/>
+            </operations>
+          </primitive>
+          <primitive class="ocf" id="p_stateful2" provider="pacemaker" type="Stateful">
+            <operations>
+              <op id="stateful2-monitor-10s" interval="10s" name="monitor"/>
+            </operations>
+          </primitive>
+        </group>
+      </master>
+      <clone id="c_dummy">
+        <meta_attributes id="c_dummy-meta_attributes">
+          <nvpair id="c_dummy-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="c_dummy-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="c_dummy-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="c_dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="p_dummy1" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="p_dummy1-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order first="c_dummy" id="clone-before-ms-group" score="INFINITY" then="ms_stateful"/>
+    </constraints>
+    <acls/>
+  </configuration>
+  <status>
+    <node_state id="gluster01.h" uname="gluster01.h" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="gluster01.h">
+        <instance_attributes id="status-gluster01.h">
+          <nvpair id="status-gluster01.h-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-gluster01.h-master-p_stateful1.0" name="master-p_stateful1:0" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="gluster01.h">
+        <lrm_resources>
+          <lrm_resource id="p_dummy1:0" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_dummy1:0_last_0" operation_key="p_dummy1:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="54:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:0;54:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="8" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1335801183" last-rc-change="1335801183" exec-time="20" queue-time="0" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p_dummy1:0_monitor_10000" operation_key="p_dummy1:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="55:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:0;55:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="9" rc-code="0" op-status="0" interval="10000" last-rc-change="1335801183" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="p_stateful2:0" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_stateful2:0_last_0" operation_key="p_stateful2:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="13:258:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:7;13:258:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="7" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="p_stateful1:0" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_stateful1:0_last_0" operation_key="p_stateful1:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="6:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:0;6:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="10" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1335801183" last-rc-change="1335801183" exec-time="40" queue-time="0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="gluster02.h" uname="gluster02.h" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="gluster02.h">
+        <instance_attributes id="status-gluster02.h">
+          <nvpair id="status-gluster02.h-last-failure-p_fs_export01.0" name="last-failure-p_fs_export01:0" value="1335791231"/>
+          <nvpair id="status-gluster02.h-last-failure-p_glusterd.0" name="last-failure-p_glusterd:0" value="1335791251"/>
+          <nvpair id="status-gluster02.h-last-failure-iptest2" name="last-failure-iptest2" value="1335791253"/>
+          <nvpair id="status-gluster02.h-last-failure-routetest" name="last-failure-routetest" value="1335791253"/>
+          <nvpair id="status-gluster02.h-last-failure-p_volume_demo.0" name="last-failure-p_volume_demo:0" value="1335791371"/>
+          <nvpair id="status-gluster02.h-last-failure-p_volume_export01.0" name="last-failure-p_volume_export01:0" value="1335791351"/>
+          <nvpair id="status-gluster02.h-master-p_stateful1.0" name="master-p_stateful1:0" value="10"/>
+          <nvpair id="status-gluster02.h-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-gluster02.h-last-failure-p_stateful2.0" name="last-failure-p_stateful2:0" value="1335797394"/>
+          <nvpair id="status-gluster02.h-master-p_stateful1.1" name="master-p_stateful1:1" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="gluster02.h">
+        <lrm_resources>
+          <lrm_resource id="iptest" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="iptest_last_0" operation_key="iptest_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="7:20:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:0;7:20:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="31" rc-code="0" op-status="0" interval="0" op-digest="136d9cec6278ff374c4214cd0db31f6f"/>
+          </lrm_resource>
+          <lrm_resource id="p_stateful1:1" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_stateful1:1_last_0" operation_key="p_stateful1:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="18:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:0;18:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="2209" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1335801183" last-rc-change="1335801183" exec-time="20" queue-time="0"/>
+            <lrm_rsc_op id="p_stateful1:1_last_failure_0" operation_key="p_stateful1:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="6:258:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:8;6:258:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="368" rc-code="8" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="p_dummy1:1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_dummy1:1_last_0" operation_key="p_dummy1:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="56:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:0;56:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="2207" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1335801183" last-rc-change="1335801183" exec-time="10" queue-time="0" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p_dummy1:1_monitor_10000" operation_key="p_dummy1:1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="57:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:0;57:1488:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="2208" rc-code="0" op-status="0" interval="10000" last-rc-change="1335801183" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="p_stateful2:1" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_stateful2:1_last_0" operation_key="p_stateful2:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="18:262:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:0;18:262:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="382" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p_stateful2:1_last_failure_0" operation_key="p_stateful2:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="7:258:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:8;7:258:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="369" rc-code="8" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="p_dummy1:0" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_dummy1:0_last_0" operation_key="p_dummy1:0_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="48:1486:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:0;48:1486:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="2206" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ipsrc2" type="IPsrcaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ipsrc2_last_0" operation_key="ipsrc2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="9:7:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:7;9:7:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="17" rc-code="7" op-status="0" interval="0" op-digest="57f6dc827f82dccafc4642927e86e70f"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="gluster03.h" uname="gluster03.h" ha="active" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_state_transition" expected="member" shutdown="0">
+      <lrm id="gluster03.h">
+        <lrm_resources>
+          <lrm_resource id="p_dummy1:0" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_dummy1:0_last_0" operation_key="p_dummy1:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="10:238:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:7;10:238:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="4" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="p_stateful2:0" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_stateful2:0_last_0" operation_key="p_stateful2:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="10:258:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:7;10:258:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="24" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="p_dummy1:1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_dummy1:1_last_0" operation_key="p_dummy1:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="49:1486:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:0;49:1486:0:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="25" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="p_stateful1:0" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="p_stateful1:0_last_0" operation_key="p_stateful1:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="9:258:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" transition-magic="0:7;9:258:7:9868f0a6-5d36-4a83-8a9d-3a6aa2e817ba" call-id="23" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="gluster03.h">
+        <instance_attributes id="status-gluster03.h">
+          <nvpair id="status-gluster03.h-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="gluster04.h" uname="gluster04.h" ha="dead" in_ccm="true" crmd="offline" join="down" crm-debug-origin="do_state_transition"/>
+  </status>
+</cib>
