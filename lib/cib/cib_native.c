@@ -170,6 +170,8 @@ cib_native_destroy(void *userdata)
 
     crm_trace("destroying %p", userdata);
     cib->state = cib_disconnected;
+    native->source = NULL;
+    native->ipc = NULL;
 
     if(native->dnotify_fn) {
         native->dnotify_fn(userdata);
@@ -287,6 +289,7 @@ cib_native_signoff(cib_t * cib)
          */
         crm_ipc_close(native->ipc);
         crm_ipc_destroy(native->ipc);
+        native->source = NULL;
         native->ipc = NULL;
     }
 
