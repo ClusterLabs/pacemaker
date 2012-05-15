@@ -451,18 +451,34 @@ pcmk_cpg_membership(cpg_handle_t handle,
                     const struct cpg_address *joined_list, size_t joined_list_entries)
 {
     int i;
-
-    for (i = 0; i < member_list_entries; i++) {
-        crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
-        crm_info("Member[%d] %d ", i, member_list[i].nodeid);
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
-    }
+    gboolean found = FALSE;
+    static int counter = 0;
 
     for (i = 0; i < left_list_entries; i++) {
         crm_node_t *peer = crm_get_peer(left_list[i].nodeid, NULL);
-        crm_info("Left[%d] %d ", i, left_list[i].nodeid);
+        crm_info("Left[%d.%d] %s.%d ", counter, i, groupName->value, left_list[i].nodeid);
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, OFFLINESTATUS);
     }
+
+    for (i = 0; i < joined_list_entries; i++) {
+        crm_info("Joined[%d.%d] %s.%d ", counter, i, groupName->value, joined_list[i].nodeid);
+    }
+
+    for (i = 0; i < member_list_entries; i++) {
+        crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
+        crm_info("Member[%d.%d] %s.%d ", counter, i, groupName->value, member_list[i].nodeid);
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+        if(pcmk_nodeid == member_list[i].nodeid) {
+            found = TRUE;
+        }
+    }
+
+    if(!found) {
+        crm_err("We're not part of CPG group %s anymore!", groupName->value);
+        /* Possibly re-call cpg_join() */
+    }
+    
+    counter++;
 }
 
 cpg_callbacks_t cpg_callbacks = {
