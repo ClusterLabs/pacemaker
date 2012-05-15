@@ -131,6 +131,8 @@ stonith_connection_destroy(gpointer user_data)
     blob.xml = create_xml_node(NULL, "notify");
 
     native = stonith->private;
+    native->ipc = NULL;
+    native->source = NULL;
 
     stonith->state = stonith_disconnected;
     crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);
@@ -1159,6 +1161,7 @@ stonith_api_signoff(stonith_t * stonith)
          */
         crm_ipc_close(native->ipc);
         crm_ipc_destroy(native->ipc);
+        native->source = NULL;
         native->ipc = NULL;
     }
 
