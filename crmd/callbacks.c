@@ -201,10 +201,12 @@ crmd_proc_update(crm_node_t * member, enum crm_proc_flag client)
         register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 
     } else if (AM_I_DC) {
+        enum crm_proc_flag messaging = crm_proc_plugin | crm_proc_heartbeat | crm_proc_cpg;
         xmlNode *update = NULL;
 
-        update =
-            create_node_state(member->uname, NULL, NULL, status, NULL, NULL, FALSE, __FUNCTION__);
+        update = create_node_state(member->uname,
+            (member->processes & messaging) ? ACTIVESTATUS : DEADSTATUS,
+            NULL, status, NULL, NULL, FALSE, __FUNCTION__);
 
         fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
                             cib_scope_local | cib_quorum_override | cib_can_create);
