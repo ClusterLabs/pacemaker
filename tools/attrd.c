@@ -495,7 +495,8 @@ main(int argc, char **argv)
     int flag = 0;
     int argerr = 0;
     gboolean was_err = FALSE;
-
+    qb_ipcs_service_t *ipcs = NULL;
+    
     crm_log_init(T_ATTRD, LOG_NOTICE, TRUE, FALSE, argc, argv);
     mainloop_add_signal(SIGTERM, attrd_shutdown);
 
@@ -554,7 +555,7 @@ main(int argc, char **argv)
     crm_info("Cluster connection active");
 
     if (was_err == FALSE) {
-        qb_ipcs_service_t *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, &ipc_callbacks);
+        ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, &ipc_callbacks);
         if (ipcs == NULL) {
             crm_err("Could not start IPC server");
             was_err = TRUE;
@@ -586,6 +587,8 @@ main(int argc, char **argv)
     }
 #endif
 
+    qb_ipcs_destroy(ipcs);
+    
     if (cib_conn) {
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
