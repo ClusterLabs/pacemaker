@@ -54,6 +54,8 @@ GHashTable *client_list = NULL;
 gboolean stand_alone = FALSE;
 gboolean stonith_shutdown_flag = FALSE;
 
+qb_ipcs_service_t *ipcs = NULL;
+
 #if SUPPORT_HEARTBEAT
 ll_cluster_t *hb_conn = NULL;
 #endif
@@ -577,6 +579,7 @@ stonith_cleanup(void)
         cib->cmds->signoff(cib);
     }
 
+    qb_ipcs_destroy(ipcs);
     crm_peer_destroy();	
     g_hash_table_destroy(client_list);
     crm_free(stonith_our_uname);
@@ -659,7 +662,6 @@ main(int argc, char ** argv)
     int lpc = 0;
     int argerr = 0;
     int option_index = 0;
-    qb_ipcs_service_t *ipcs = NULL;
     const char *actions[] = { "reboot", "poweroff", "list", "monitor", "status" };
 
     crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv);
