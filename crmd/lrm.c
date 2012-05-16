@@ -670,7 +670,7 @@ build_operation_update(xmlNode * parent, lrm_rsc_t * rsc, lrm_op_t * op, const c
          *   should still be completely supported anyway
          */
         caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
-        crm_warn("Falling back to operation originator version: %s", caller_version);
+        crm_debug("Falling back to operation originator version: %s", caller_version);
     }
 
     target_rc = rsc_op_expected_rc(op);
