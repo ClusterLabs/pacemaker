@@ -31,6 +31,14 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
 
+typedef struct trigger_s {
+    GSource source;
+    gboolean trigger;
+    void *user_data;
+    guint id;
+
+} crm_trigger_t;
+
 static gboolean
 crm_trigger_prepare(GSource * source, gint * timeout)
 {

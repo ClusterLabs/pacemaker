@@ -20,13 +20,7 @@
 
 #  include <glib.h>
 
-typedef struct trigger_s {
-    GSource source;
-    gboolean trigger;
-    void *user_data;
-    guint id;
-
-} crm_trigger_t;
+typedef struct trigger_s crm_trigger_t;
 
 extern crm_trigger_t *mainloop_add_trigger(int priority, gboolean(*dispatch) (gpointer user_data),
                                            gpointer userdata);
