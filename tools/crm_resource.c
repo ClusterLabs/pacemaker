@@ -34,9 +34,10 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/ipc.h>
+#include <crm/common/mainloop.h>
 
 #include <crm/cib.h>
+#include <crm/attrd.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 
@@ -54,7 +55,7 @@ const char *prop_set = NULL;
 char *move_lifetime = NULL;
 char rsc_cmd = 'L';
 char *our_pid = NULL;
-IPC_Channel *crmd_channel = NULL;
+crm_ipc_t *crmd_channel = NULL;
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
 int crmd_replies_needed = 0;
@@ -97,51 +98,31 @@ start_mainloop(void)
     g_main_run(mainloop);
 }
 
-static gboolean
-resource_ipc_callback(IPC_Channel * server, void *private_data)
+static int
+resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
 {
-    int lpc = 0;
-    xmlNode *msg = NULL;
-    gboolean stay_connected = TRUE;
+    xmlNode *msg = string2xml(buffer);
 
-    while (IPC_ISRCONN(server)) {
-        if (server->ops->is_message_pending(server) == 0) {
-            break;
-        }
+    fprintf(stderr, ".");
+    crm_log_xml_trace(msg, "[inbound]");
 
-        msg = xmlfromIPC(server, MAX_IPC_DELAY);
-        if (msg == NULL) {
-            break;
-        }
-
-        lpc++;
-        fprintf(stderr, ".");
-        crm_log_xml_trace(msg, "[inbound]");
-
-        crmd_replies_needed--;
-        if (crmd_replies_needed == 0) {
-            fprintf(stderr, " OK\n");
-            crm_debug("Got all the replies we expected");
-            crm_xml_cleanup();
-            exit(0);
-        }
-
-        free_xml(msg);
-        msg = NULL;
-
-        if (server->ch_status != IPC_CONNECT) {
-            break;
-        }
+    crmd_replies_needed--;
+    if (crmd_replies_needed == 0) {
+        fprintf(stderr, " OK\n");
+        crm_debug("Got all the replies we expected");
+        crm_xml_cleanup();
+        exit(0);
     }
 
-    crm_trace("Processed %d messages (%d)", lpc, server->ch_status);
-
-    if (server->ch_status != IPC_CONNECT) {
-        stay_connected = FALSE;
-    }
-
-    return stay_connected;
+    free_xml(msg);
+    return 0;
 }
+
+struct ipc_client_callbacks crm_callbacks = 
+{
+    .dispatch = resource_ipc_callback,
+    .destroy = resource_ipc_connection_destroy,
+};
 
 static int
 do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_set)
@@ -648,7 +629,7 @@ dump_resource_prop(const char *rsc, const char *attr, pe_working_set_t * data_se
 }
 
 static int
-send_lrm_rsc_op(IPC_Channel * crmd_channel, const char *op,
+send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
                 const char *host_uname, const char *rsc_id,
                 gboolean only_failed, pe_working_set_t * data_set)
 {
@@ -719,7 +700,7 @@ send_lrm_rsc_op(IPC_Channel * crmd_channel, const char *op,
 /* 	crm_log_xml_warn(cmd, "send_lrm_rsc_op"); */
     free_xml(msg_data);
 
-    if (send_ipc_message(crmd_channel, cmd)) {
+    if (crm_ipc_send(crmd_channel, cmd, NULL, 0) > 0) {
         rc = 0;
 
     } else {
@@ -732,7 +713,7 @@ send_lrm_rsc_op(IPC_Channel * crmd_channel, const char *op,
 }
 
 static int
-delete_lrm_rsc(IPC_Channel * crmd_channel, const char *host_uname,
+delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
                resource_t * rsc, pe_working_set_t * data_set)
 {
     int rc = cib_ok;
@@ -776,14 +757,14 @@ delete_lrm_rsc(IPC_Channel * crmd_channel, const char *host_uname,
         }
 
         attr_name = crm_concat("fail-count", id, '-');
-        attrd_lazy_update('D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL, NULL);
+        attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL, NULL, NULL);
         crm_free(attr_name);
     }
     return rc;
 }
 
 static int
-fail_lrm_rsc(IPC_Channel * crmd_channel, const char *host_uname,
+fail_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
              const char *rsc_id, pe_working_set_t * data_set)
 {
     crm_warn("Failing: %s", rsc_id);
@@ -794,7 +775,7 @@ fail_lrm_rsc(IPC_Channel * crmd_channel, const char *host_uname,
 }
 
 static int
-refresh_lrm(IPC_Channel * crmd_channel, const char *host_uname)
+refresh_lrm(crm_ipc_t * crmd_channel, const char *host_uname)
 {
     xmlNode *cmd = NULL;
     int rc = cib_send_failed;
@@ -802,7 +783,7 @@ refresh_lrm(IPC_Channel * crmd_channel, const char *host_uname)
     cmd = create_request(CRM_OP_LRM_REFRESH, NULL, host_uname,
                          CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
-    if (send_ipc_message(crmd_channel, cmd)) {
+    if (crm_ipc_send(crmd_channel, cmd, NULL, 0) > 0) {
         rc = 0;
     }
     free_xml(cmd);
@@ -1375,19 +1356,19 @@ main(int argc, char **argv)
     }
 
     if (rsc_cmd == 'R' || rsc_cmd == 'C' || rsc_cmd == 'F' || rsc_cmd == 'P') {
-        GCHSource *src = NULL;
+        xmlNode *xml = NULL;
+        mainloop_io_t *source = mainloop_add_ipc_client(CRM_SYSTEM_CRMD, 0, NULL, &crm_callbacks);
+        crmd_channel = mainloop_get_ipc_client(source);
 
-        src = init_client_ipc_comms(CRM_SYSTEM_CRMD, resource_ipc_callback, NULL, &crmd_channel);
-
-        if (src == NULL) {
+        if (crmd_channel == NULL) {
             CMD_ERR("Error signing on to the CRMd service\n");
             rc = cib_connection;
             goto bail;
         }
 
-        send_hello_message(crmd_channel, our_pid, crm_system_name, "0", "1");
-
-        set_IPC_Channel_dnotify(src, resource_ipc_connection_destroy);
+        xml = create_hello_message(our_pid, crm_system_name, "0", "1");
+        crm_ipc_send(crmd_channel, xml, NULL, 0);
+        free_xml(xml);
     }
 
     if (rsc_cmd == 'L') {
@@ -1628,11 +1609,10 @@ main(int argc, char **argv)
         rc = delete_resource_attr(rsc_id, prop_set, prop_id, prop_name, cib_conn, &data_set);
 
     } else if (rsc_cmd == 'P') {
-        xmlNode *cmd = NULL;
+        xmlNode *cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
+                                      CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
-        cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
-                             CRM_SYSTEM_CRMD, crm_system_name, our_pid);
-        if (send_ipc_message(crmd_channel, cmd)) {
+        if (crm_ipc_send(crmd_channel, cmd, NULL, 0) > 0) {
             start_mainloop();
         }
 

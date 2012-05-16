@@ -43,68 +43,27 @@
 
 #include <crmd.h>
 #include <crm/common/util.h>
-#include <clplumbing/proctrack.h>
 
 static void
-crmdManagedChildRegistered(ProcTrack * p)
+crmdManagedChildDied(GPid pid, gint status, gpointer user_data)
 {
-    struct crm_subsystem_s *the_subsystem = p->privatedata;
+    struct crm_subsystem_s *the_subsystem = user_data;
 
-    the_subsystem->pid = p->pid;
-}
+    if(WIFSIGNALED(status)) {
+        int signo = WTERMSIG(status);
+        int core = WCOREDUMP(status);
+        crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
+                   the_subsystem->name, signo, the_subsystem->pid, core);
 
-static void
-crmdManagedChildDied(ProcTrack * p, int status, int signo, int exitcode, int waslogged)
-{
-    struct crm_subsystem_s *the_subsystem = p->privatedata;
+    } else if(WIFEXITED(status)) {
+        int exitcode = WEXITSTATUS(status);
+        do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
+                   "Child process %s exited (pid=%d, rc=%d)", the_subsystem->name, the_subsystem->pid, exitcode);
 
-    crm_info("Process %s:[%d] exited (signal=%d, exitcode=%d)",
-             the_subsystem->name, the_subsystem->pid, signo, exitcode);
-
-#if 0
-    /* everything below is now handled in pe_connection_destroy() */
-    the_subsystem->pid = -1;
-    the_subsystem->ipc = NULL;
-    clear_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
-
-    crm_trace("Triggering FSA: %s", __FUNCTION__);
-    mainloop_set_trigger(fsa_source);
-
-    if (is_set(fsa_input_register, the_subsystem->flag_required)) {
-        /* this wasnt supposed to happen */
-        crm_warn("The %s subsystem terminated unexpectedly", the_subsystem->name);
-
-        if (the_subsystem->flag_connected == R_PE_CONNECTED) {
-            int rc = cib_ok;
-            char *pid = crm_itoa(the_subsystem->pid);
-
-            /* the PE died...
-             * save the current CIB so that we have a chance of
-             * figuring out what killed it
-             */
-            rc = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
-            add_cib_op_callback(fsa_cib_conn, rc, TRUE, pid, save_cib_contents);
-        }
-
-        register_fsa_input_before(C_FSA_INTERNAL, I_ERROR, NULL);
+    } else {
+        crm_err("Process %s:[%d] exited?", the_subsystem->name, the_subsystem->pid);
     }
-#endif
-    p->privatedata = NULL;
 }
-
-static const char *
-crmdManagedChildName(ProcTrack * p)
-{
-    struct crm_subsystem_s *the_subsystem = p->privatedata;
-
-    return the_subsystem->name;
-}
-
-static ProcTrack_ops crmd_managed_child_ops = {
-    crmdManagedChildDied,
-    crmdManagedChildRegistered,
-    crmdManagedChildName
-};
 
 gboolean
 stop_subsystem(struct crm_subsystem_s *the_subsystem, gboolean force_quit)
@@ -156,7 +115,6 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
     const char *devnull = "/dev/null";
 
     crm_info("Starting sub-system \"%s\"", the_subsystem->name);
-    set_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 
     if (the_subsystem->pid > 0) {
         crm_warn("Client %s already running as pid %d",
@@ -189,7 +147,7 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
             return FALSE;
 
         default:               /* Parent */
-            NewTrackedProc(pid, 0, PT_LOGNORMAL, the_subsystem, &crmd_managed_child_ops);
+            g_child_watch_add(pid, crmdManagedChildDied, the_subsystem);
             crm_trace("Client %s is has pid: %d", the_subsystem->name, pid);
             the_subsystem->pid = pid;
             return TRUE;

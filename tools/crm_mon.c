@@ -1866,7 +1866,7 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
 
     pid = fork();
     if (pid == -1) {
-        cl_perror("notification fork() failed.");
+        crm_perror(LOG_ERR, "notification fork() failed.");
     }
     if (pid == 0) {
         /* crm_debug("notification: I am the child. Executing the nofitication program."); */

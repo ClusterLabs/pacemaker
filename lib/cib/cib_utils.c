@@ -751,49 +751,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     return rc;
 }
 
-int
-get_channel_token(IPC_Channel * ch, char **token)
-{
-    int rc = cib_ok;
-    xmlNode *reg_msg = NULL;
-    const char *msg_type = NULL;
-    const char *tmp_ticket = NULL;
-
-    CRM_CHECK(ch != NULL, return cib_missing);
-    CRM_CHECK(token != NULL, return cib_output_ptr);
-
-    crm_trace("Waiting for msg on command channel");
-
-    reg_msg = xmlfromIPC(ch, MAX_IPC_DELAY);
-
-    if (ch->ops->get_chan_status(ch) != IPC_CONNECT) {
-        crm_err("No reply message - disconnected");
-        free_xml(reg_msg);
-        return cib_not_connected;
-
-    } else if (reg_msg == NULL) {
-        crm_err("No reply message - empty");
-        return cib_reply_failed;
-    }
-
-    msg_type = crm_element_value(reg_msg, F_CIB_OPERATION);
-    tmp_ticket = crm_element_value(reg_msg, F_CIB_CLIENTID);
-
-    if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
-        crm_err("Invalid registration message: %s", msg_type);
-        rc = cib_registration_msg;
-
-    } else if (tmp_ticket == NULL) {
-        rc = cib_callback_token;
-
-    } else {
-        *token = crm_strdup(tmp_ticket);
-    }
-
-    free_xml(reg_msg);
-    return rc;
-}
-
 xmlNode *
 cib_create_op(int call_id, const char *token, const char *op, const char *host, const char *section,
               xmlNode * data, int call_options, const char *user_name)

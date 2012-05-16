@@ -483,6 +483,7 @@ do_state_transition(long long actions,
                     enum crmd_fsa_state cur_state,
                     enum crmd_fsa_state next_state, fsa_data_t * msg_data)
 {
+    int level = LOG_INFO;
     long long tmp = actions;
     gboolean clear_recovery_bit = TRUE;
 
@@ -498,7 +499,17 @@ do_state_transition(long long actions,
     do_dot_log(DOT_PREFIX "\t%s -> %s [ label=%s cause=%s origin=%s ]",
                state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
 
-    crm_notice("State transition %s -> %s [ input=%s cause=%s origin=%s ]",
+    if(cur_state == S_IDLE || next_state == S_IDLE) {
+        level = LOG_NOTICE;
+    } else if(cur_state == S_NOT_DC || next_state == S_NOT_DC) {
+        level = LOG_NOTICE;
+    } else if(cur_state == S_ELECTION) {
+        level = LOG_NOTICE;
+    } else if(next_state == S_RECOVERY) {
+        level = LOG_WARNING;
+    }
+
+    do_crm_log(level, "State transition %s -> %s [ input=%s cause=%s origin=%s ]",
              state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
 
     /* the last two clauses might cause trouble later */

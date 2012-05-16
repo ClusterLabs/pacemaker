@@ -26,10 +26,20 @@
 #  include <crm/common/xml.h>
 #  include <crm/common/mainloop.h>
 #  include <crm/common/cluster.h>
+#  include <crm/common/ipc.h>
 
 #  if SUPPORT_HEARTBEAT
 extern ll_cluster_t *fsa_cluster_conn;
 #  endif
+
+typedef struct crmd_client_s {
+    char *sub_sys;
+    char *uuid;
+    char *table_key;
+    char *user;
+    qb_ipcs_connection_t *ipc;
+} crmd_client_t;
+
 
 /* copy from struct client_child in heartbeat.h
  *
@@ -44,7 +54,7 @@ struct crm_subsystem_s {
     crmd_client_t *client;      /* Client connection object */
 
     gboolean sent_kill;
-    IPC_Channel *ipc;           /* How can we communicate with it */
+    mainloop_io_t *source;     /* How can we communicate with it */
     long long flag_connected;   /*  */
     long long flag_required;    /*  */
 };

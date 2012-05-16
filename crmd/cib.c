@@ -158,12 +158,12 @@ do_cib_control(long long action,
             return;
         }
 
-        rc = fsa_cib_conn->cmds->signon(fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command);
+        rc = fsa_cib_conn->cmds->signon(fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command_nonblocking);
 
         if (rc != cib_ok) {
             /* a short wait that usually avoids stalling the FSA */
             sleep(1);
-            rc = fsa_cib_conn->cmds->signon(fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command);
+            rc = fsa_cib_conn->cmds->signon(fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command_nonblocking);
         }
 
         if (rc != cib_ok) {

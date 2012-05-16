@@ -186,7 +186,9 @@ usage(const char *cmd, int exit_status)
 void
 cib_connection_destroy(gpointer user_data)
 {
+    cib_t *conn = user_data;
     crm_err("Connection to the CIB terminated... exiting");
+    conn->cmds->signoff(conn); /* Ensure IPC is cleaned up */
     g_main_quit(mainloop);
     return;
 }

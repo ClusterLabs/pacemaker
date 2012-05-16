@@ -40,9 +40,7 @@
 #include <libgen.h>
 #include <sys/utsname.h>
 
-#if LIBQB_LOGGING
-#  include <qb/qbdefs.h>
-#endif
+#include <qb/qbdefs.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -51,14 +49,15 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/mainloop.h>
+#include <crm/attrd.h>
 #include <libxml2/libxml/relaxng.h>
 
 #if HAVE_HB_CONFIG_H
-#  include <heartbeat/hb_config.h>      /* for HB_COREDIR */
+#  include <heartbeat/hb_config.h>      /* for HA_COREDIR */
 #endif
 
 #if HAVE_GLUE_CONFIG_H
-#  include <glue_config.h>      /* for HB_COREDIR */
+#  include <glue_config.h>      /* for HA_COREDIR */
 #endif
 
 #ifndef MAXLINE
@@ -83,7 +82,6 @@ int node_score_infinity = INFINITY;
 
 unsigned int crm_log_level = LOG_INFO;
 
-void crm_set_env_options(void);
 void set_format_string(int method, const char *daemon, gboolean trace);
 
 gboolean
@@ -445,8 +443,6 @@ crm_itoa(int an_int)
     return buffer;
 }
 
-extern int LogToLoggingDaemon(int priority, const char *buf, int bstrlen, gboolean use_pri_str);
-
 #ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
 GLogFunc glib_log_default;
 
@@ -514,7 +510,6 @@ crm_log_init_quiet(const char *entity, int level, gboolean coredir, gboolean to_
 void
 set_format_string(int method, const char *daemon, gboolean trace)
 {
-#if LIBQB_LOGGING
     static gboolean local_trace = FALSE;
     int offset = 0;
     char fmt[FMT_MAX];
@@ -545,20 +540,57 @@ set_format_string(int method, const char *daemon, gboolean trace)
         offset += snprintf(fmt + offset, FMT_MAX - offset, "\t%%b");
     }
     qb_log_format_set(method, fmt);
-#endif
+}
+
+static void
+crm_add_logfile(const char *filename)
+{
+    int fd = 0;
+    static gboolean have_logfile = FALSE;
+
+    if(filename == NULL && have_logfile == FALSE) {
+        filename = "/var/log/pacemaker.log";
+    }
+    
+    if (filename == NULL) {
+        return; /* Nothing to do */
+    }
+
+    fd = qb_log_file_open(filename);
+
+    if(fd < 0) {
+        crm_perror(LOG_WARNING, "Couldn't send additional logging to %s", filename);
+        return;
+    }
+
+    crm_notice("Additional logging available in %s", filename);
+    qb_log_filter_ctl(fd, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", crm_log_level);
+    qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
+
+    /* Set the default log format */
+    set_format_string(fd, crm_system_name, FALSE);
+    have_logfile = TRUE;
 }
 
 void
 update_all_trace_data(void)
 {
-#if LIBQB_LOGGING
     int lpc = 0;
 
+    if(getenv("PCMK_trace_files") || getenv("PCMK_trace_functions") || getenv("PCMK_trace_formats")) {
+        if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
+            /* Make sure tracing goes somewhere */
+            crm_add_logfile(NULL);
+        }
+
+    } else {
+        return;
+    }
+    
     /* No tracing to SYSLOG */
     for (lpc = QB_LOG_STDERR; lpc < QB_LOG_TARGET_MAX; lpc++) {
         if (qb_log_ctl(lpc, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
 
-            gboolean trace = FALSE;
             const char *env_value = NULL;
 
             env_value = getenv("PCMK_trace_files");
@@ -566,8 +598,6 @@ update_all_trace_data(void)
                 char token[500];
                 const char *offset = NULL;
                 const char *next = env_value;
-
-                trace = TRUE;
 
                 do {
                     offset = next;
@@ -586,7 +616,6 @@ update_all_trace_data(void)
 
             env_value = getenv("PCMK_trace_formats");
             if (env_value) {
-                trace = TRUE;
                 crm_info("Looking for format strings matching %s (%d)", env_value, lpc);
                 qb_log_filter_ctl(lpc,
                                   QB_LOG_FILTER_ADD, QB_LOG_FILTER_FORMAT, env_value, LOG_TRACE);
@@ -594,18 +623,14 @@ update_all_trace_data(void)
 
             env_value = getenv("PCMK_trace_functions");
             if (env_value) {
-                trace = TRUE;
                 crm_info("Looking for functions named %s (%d)", env_value, lpc);
                 qb_log_filter_ctl(lpc,
                                   QB_LOG_FILTER_ADD, QB_LOG_FILTER_FUNCTION, env_value, LOG_TRACE);
             }
 
-            if (trace) {
-                set_format_string(lpc, crm_system_name, trace);
-            }
+            set_format_string(lpc, crm_system_name, TRUE);
         }
     }
-#endif
 }
 
 #ifndef NAME_MAX
@@ -639,7 +664,8 @@ gboolean
 crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to_stderr,
                     int argc, char **argv, gboolean quiet)
 {
-    const char *logfile = NULL;
+    int lpc = 0;
+    const char *logfile = getenv("HA_debugfile");
     const char *facility = getenv("HA_logfacility");
 
     /* Redirect messages from glib functions to our handler */
@@ -681,49 +707,29 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
         /* Override the default setting */
         to_stderr = TRUE;
     }
-#if LIBQB_LOGGING
     crm_log_level = level;
     qb_log_init(crm_system_name, qb_log_facility2int(facility), level);
-#else
-    cl_log_set_entity(crm_system_name);
-    set_crm_log_level(level);
-    crm_set_env_options();
-#endif
 
     if (quiet) {
         /* Nuke any syslog activity */
         unsetenv("HA_logfacility");
-#if LIBQB_LOGGING
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
-#else
-        cl_log_set_facility(0);
-#endif
 
     } else {
         setenv("HA_logfacility", facility, TRUE);
         crm_log_args(argc, argv);
     }
 
+    /* Set default format strings */
+    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+        set_format_string(lpc, crm_system_name, FALSE);
+    }
+    
     crm_enable_stderr(to_stderr);
-    logfile = getenv("HA_debugfile");
 
-#if LIBQB_LOGGING
-    if (logfile) {
-        int fd = qb_log_file_open(logfile);
-
-        qb_log_filter_ctl(fd, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
-        qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
+    if(logfile) {
+        crm_add_logfile(logfile);
     }
-
-    /* Set the default log formats */
-    {
-        int lpc = 0;
-
-        for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-            set_format_string(lpc, crm_system_name, FALSE);
-        }
-    }
-#endif
 
     /* Ok, now we can start logging... */
 
@@ -783,7 +789,6 @@ set_crm_log_level(unsigned int level)
 {
     unsigned int old = crm_log_level;
 
-#if LIBQB_LOGGING
     int lpc = 0;
 
     for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
@@ -805,7 +810,6 @@ set_crm_log_level(unsigned int level)
             set_format_string(lpc, crm_system_name, level > LOG_DEBUG);
         }
     }
-#endif
     crm_log_level = level;
     return old;
 }
@@ -813,7 +817,6 @@ set_crm_log_level(unsigned int level)
 void
 crm_enable_stderr(int enable)
 {
-#if LIBQB_LOGGING
     if (enable && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", crm_log_level);
         set_format_string(QB_LOG_STDERR, crm_system_name, crm_log_level > LOG_DEBUG);
@@ -825,21 +828,14 @@ crm_enable_stderr(int enable)
     } else if (enable == FALSE) {
         qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_FALSE);
     }
-#else
-    cl_log_enable_stderr(enable);
-#endif
 }
 
 void
 crm_bump_log_level(void)
 {
-#if LIBQB_LOGGING
     if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
         set_crm_log_level(crm_log_level + 1);
     }
-#else
-    set_crm_log_level(crm_log_level + 1);
-#endif
     crm_enable_stderr(TRUE);
 }
 
@@ -899,7 +895,7 @@ crm_log_args(int argc, char **argv)
         arg_string = realloc(arg_string, len + existing_len);
         existing_len += sprintf(arg_string + existing_len, "%s ", argv[lpc]);
     }
-    cl_log(LOG_INFO, "Invoked: %s", arg_string);
+    do_crm_log_always(LOG_INFO, "Invoked: %s", arg_string);
     free(arg_string);
 }
 
@@ -1120,18 +1116,6 @@ crm_strdup_fn(const char *src, const char *file, const char *fn, int line)
               return NULL);
     crm_malloc0(dup, strlen(src) + 1);
     return strcpy(dup, src);
-}
-
-#define ENV_PREFIX "HA_"
-void
-crm_set_env_options(void)
-{
-    cl_inherit_logging_environment(500);
-    cl_log_set_logd_channel_source(NULL, NULL);
-
-    if (debug_level > 0 && (debug_level + LOG_INFO) > (int)get_crm_log_level()) {
-        set_crm_log_level(LOG_INFO + debug_level);
-    }
 }
 
 gboolean
@@ -2319,15 +2303,50 @@ crm_help(char cmd, int exit_code)
     }
 }
 
-#include <../../tools/attrd.h>
 gboolean
-attrd_update_delegate(IPC_Channel * cluster, char command, const char *host, const char *name,
+attrd_update(crm_ipc_t *cluster, char command, const char *host, const char *name,
+             const char *value, const char *section, const char *set, const char *dampen)
+{
+    return attrd_update_delegate(cluster, command, host, name, value, section, set, dampen, NULL);
+}
+
+gboolean
+attrd_lazy_update(char command, const char *host, const char *name,
+                                  const char *value, const char *section, const char *set,
+                                  const char *dampen)
+{
+    return attrd_update_delegate(NULL, command, host, name, value, section, set, dampen, NULL);
+}
+
+gboolean
+attrd_update_no_mainloop(int *connection, char command, const char *host,
+                         const char *name, const char *value, const char *section,
+                         const char *set, const char *dampen)
+{
+    return attrd_update_delegate(NULL, command, host, name, value, section, set, dampen, NULL);
+}
+
+gboolean
+attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char *name,
                       const char *value, const char *section, const char *set, const char *dampen,
                       const char *user_name)
 {
-    gboolean success = FALSE;
-    const char *reason = "Cluster connection failed";
+    int rc = 0;
+    int max = 5;
+    xmlNode *update = create_xml_node(NULL, __FUNCTION__);
 
+    static gboolean connected = TRUE;
+    static crm_ipc_t *local_ipc = NULL;
+
+    if(ipc == NULL && local_ipc == NULL) {
+        local_ipc = crm_ipc_new(T_ATTRD, 0);
+        connected = FALSE;
+    }
+
+    if(ipc == NULL) {
+        ipc = local_ipc;
+    }
+    
     /* remap common aliases */
     if (safe_str_eq(section, "reboot")) {
         section = XML_CIB_TAG_STATUS;
@@ -2336,129 +2355,72 @@ attrd_update_delegate(IPC_Channel * cluster, char command, const char *host, con
         section = XML_CIB_TAG_NODES;
     }
 
-    if (cluster == NULL) {
-        reason = "No connection to the cluster";
 
-    } else {
-        xmlNode *update = create_xml_node(NULL, __FUNCTION__);
-
-        crm_xml_add(update, F_TYPE, T_ATTRD);
-        crm_xml_add(update, F_ORIG, crm_system_name);
-
-        if (name == NULL && command == 'U') {
-            command = 'R';
-        }
-
-        switch (command) {
-            case 'D':
-            case 'U':
-            case 'v':
-                crm_xml_add(update, F_ATTRD_TASK, "update");
-                crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
-                break;
-            case 'R':
-                crm_xml_add(update, F_ATTRD_TASK, "refresh");
-                break;
-            case 'q':
-                crm_xml_add(update, F_ATTRD_TASK, "query");
-                break;
-        }
-
-        crm_xml_add(update, F_ATTRD_VALUE, value);
-        crm_xml_add(update, F_ATTRD_DAMPEN, dampen);
-        crm_xml_add(update, F_ATTRD_SECTION, section);
-        crm_xml_add(update, F_ATTRD_HOST, host);
-        crm_xml_add(update, F_ATTRD_SET, set);
+    crm_xml_add(update, F_TYPE, T_ATTRD);
+    crm_xml_add(update, F_ORIG, crm_system_name);
+    
+    if (name == NULL && command == 'U') {
+        command = 'R';
+    }
+    
+    switch (command) {
+        case 'D':
+        case 'U':
+        case 'v':
+            crm_xml_add(update, F_ATTRD_TASK, "update");
+            crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+            break;
+        case 'R':
+            crm_xml_add(update, F_ATTRD_TASK, "refresh");
+            break;
+        case 'q':
+            crm_xml_add(update, F_ATTRD_TASK, "query");
+            break;
+    }
+    
+    crm_xml_add(update, F_ATTRD_VALUE, value);
+    crm_xml_add(update, F_ATTRD_DAMPEN, dampen);
+    crm_xml_add(update, F_ATTRD_SECTION, section);
+    crm_xml_add(update, F_ATTRD_HOST, host);
+    crm_xml_add(update, F_ATTRD_SET, set);
 #if ENABLE_ACL
-        if (user_name) {
-            crm_xml_add(update, F_ATTRD_USER, user_name);
-        }
+    if (user_name) {
+        crm_xml_add(update, F_ATTRD_USER, user_name);
+    }
 #endif
 
-        success = send_ipc_message(cluster, update);
-        free_xml(update);
+    while (max > 0) {
+        if (connected == FALSE) {
+            crm_info("Connecting to cluster... %d retries remaining", max);
+            connected = crm_ipc_connect(ipc);
+        }
+
+        if(connected) {
+            rc = crm_ipc_send(ipc, update, NULL, 0);
+        }
+
+        if(ipc != local_ipc) {
+            break;
+
+        } else if (rc > 0) {
+            break;
+
+        } else {
+            crm_ipc_close(ipc);
+            connected = FALSE;
+            sleep(1);
+            max--;
+        }
     }
 
-    if (success) {
+    free_xml(update);
+    if (rc > 0) {
         crm_debug("Sent update: %s=%s for %s", name, value, host ? host : "localhost");
         return TRUE;
     }
 
     crm_info("Could not send update: %s=%s for %s", name, value, host ? host : "localhost");
     return FALSE;
-}
-
-gboolean
-attrd_lazy_update(char command, const char *host, const char *name, const char *value,
-                  const char *section, const char *set, const char *dampen)
-{
-    int max = 5;
-    gboolean updated = FALSE;
-    static IPC_Channel *cluster = NULL;
-
-    while (updated == 0 && max > 0) {
-        if (cluster == NULL) {
-            crm_info("Connecting to cluster... %d retries remaining", max);
-            cluster = init_client_ipc_comms_nodispatch(T_ATTRD);
-        }
-
-        if (cluster != NULL) {
-            updated = attrd_update(cluster, command, host, name, value, section, set, dampen);
-        }
-
-        if (updated == 0) {
-            cluster = NULL;
-            sleep(2);
-            max--;
-        } else {
-            crm_info("Updated %s=%s for %s", name, value, host);
-        }
-    }
-
-    return updated;
-}
-
-gboolean
-attrd_update_no_mainloop(int *connection, char command, const char *host, const char *name,
-                         const char *value, const char *section, const char *set,
-                         const char *dampen)
-{
-    int max = 5;
-    gboolean updated = FALSE;
-    static IPC_Channel *cluster = NULL;
-
-    if (connection && *connection == 0 && cluster) {
-        crm_info("Forcing a new connection to the cluster");
-        cluster = NULL;
-    }
-
-    while (updated == 0 && max > 0) {
-        if (cluster == NULL) {
-            crm_info("Connecting to cluster... %d retries remaining", max);
-            cluster = init_client_ipc_comms_nodispatch(T_ATTRD);
-        }
-
-        if (connection) {
-            if (cluster != NULL) {
-                *connection = cluster->ops->get_recv_select_fd(cluster);
-            } else {
-                *connection = 0;
-            }
-        }
-
-        if (cluster != NULL) {
-            updated = attrd_update(cluster, command, host, name, value, section, set, dampen);
-        }
-
-        if (updated == 0) {
-            cluster = NULL;
-            sleep(2);
-            max--;
-        } else {
-            crm_info("Updated %s=%s for %s", name, value, host);
-        }
-    }
-    return updated;
 }
 
 #define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -2784,4 +2746,34 @@ convert_const_pointer(const void *ptr)
 {
     /* Worst function ever */
     return (void *)ptr;
+}
+
+#include <uuid/uuid.h>
+
+char *crm_generate_uuid(void) 
+{
+	unsigned char uuid[16];
+        char *buffer = malloc(37); /* Including NUL byte */
+	uuid_generate(uuid);
+	uuid_unparse(uuid, buffer);
+        return buffer;
+}
+
+#include <md5.h>
+
+char *
+crm_md5sum(const char *buffer)
+{
+    int lpc = 0;
+    char *digest = NULL;
+    unsigned char raw_digest[MD5_DIGEST_SIZE];
+
+    digest = malloc(2*MD5_DIGEST_SIZE + 1);
+    md5_buffer(buffer, strlen(buffer), raw_digest);
+    for(lpc = 0; lpc < MD5_DIGEST_SIZE; lpc++) {
+	sprintf(digest+(2*lpc), "%02x", raw_digest[lpc]);
+    }
+    digest[(2*MD5_DIGEST_SIZE)] = 0;
+    crm_trace("Digest %s\n", digest);
+    return digest;
 }

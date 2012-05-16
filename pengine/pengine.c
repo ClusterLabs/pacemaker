@@ -58,13 +58,14 @@ series_t series[] = {
     {0, "pe-input", "pe-input-series-max", 400},
 };
 
+gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* sender);
+
 gboolean
-process_pe_message(xmlNode * msg, xmlNode * xml_data, IPC_Channel * sender)
+process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* sender)
 {
     static char *filename = NULL;
     static char *last_digest = NULL;
 
-    gboolean send_via_disk = FALSE;
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *op = crm_element_value(msg, F_CRM_TASK);
     const char *ref = crm_element_value(msg, XML_ATTR_REFERENCE);
@@ -168,17 +169,8 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, IPC_Channel * sender)
         crm_xml_add_int(reply, "config-errors", crm_config_error);
         crm_xml_add_int(reply, "config-warnings", crm_config_warning);
 
-        if (send_ipc_message(sender, reply) == FALSE) {
-            if (sender && sender->ops->get_chan_status(sender) == IPC_CONNECT) {
-                send_via_disk = TRUE;
-                crm_err("Answer could not be sent via IPC, send via the disk instead");
-                crm_notice("Writing the TE graph to %s", graph_file);
-                if (write_xml_file(data_set.graph, graph_file, FALSE) < 0) {
-                    crm_err("TE graph could not be written to disk");
-                }
-            } else {
-                crm_info("Peer disconnected, discarding transition graph");
-            }
+        if (crm_ipcs_send(sender, reply, TRUE) == FALSE) {
+            crm_err("Couldn't send transition graph to peer, discarding");
         }
 
         free_xml(reply);
@@ -210,17 +202,6 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, IPC_Channel * sender)
         } else if (crm_config_warning) {
             crm_notice("Configuration WARNINGs found during PE processing."
                        "  Please run \"crm_verify -L\" to identify issues.");
-        }
-
-        if (send_via_disk) {
-            reply = create_reply(msg, NULL);
-            crm_xml_add(reply, F_CRM_TGRAPH, graph_file);
-            crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
-            CRM_ASSERT(reply != NULL);
-            if (send_ipc_message(sender, reply) == FALSE) {
-                crm_err("Answer could not be sent");
-            }
-            free_xml(reply);
         }
 
         free_xml(converted);

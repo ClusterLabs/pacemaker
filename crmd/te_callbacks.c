@@ -404,8 +404,8 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
     crm_action_t *action = NULL;
 
     CRM_CHECK(userdata != NULL, return);
-    crm_log_xml_info(output, "StonithOp");
-    crm_debug("Stonith operation %d/%s: %s (%d)", call_id, (char *)userdata,
+    crm_log_xml_trace(output, "StonithOp");
+    crm_notice("Stonith operation %d/%s: %s (%d)", call_id, (char *)userdata,
              stonith_error2string(rc), rc);
 
     if (AM_I_DC == FALSE) {

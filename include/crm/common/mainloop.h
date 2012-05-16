@@ -20,18 +20,14 @@
 
 #  include <glib.h>
 
-typedef struct trigger_s {
-    GSource source;
-    gboolean trigger;
-    void *user_data;
-    guint id;
+typedef struct trigger_s crm_trigger_t;
 
-} crm_trigger_t;
-
-extern crm_trigger_t *mainloop_add_trigger(int priority, gboolean(*dispatch) (gpointer user_data),
+extern crm_trigger_t *mainloop_add_trigger(int priority, int(*dispatch) (gpointer user_data),
                                            gpointer userdata);
 
 extern void mainloop_set_trigger(crm_trigger_t * source);
+
+extern void mainloop_trigger_complete(crm_trigger_t *trig);
 
 extern gboolean mainloop_destroy_trigger(crm_trigger_t * source);
 
@@ -40,5 +36,39 @@ extern gboolean crm_signal(int sig, void (*dispatch) (int sig));
 extern gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
 extern gboolean mainloop_destroy_signal(int sig);
+
+#include <crm/common/ipc.h>
+
+struct ipc_client_callbacks 
+{
+        int (*dispatch)(const char *buffer, ssize_t length, gpointer userdata);
+        void (*destroy) (gpointer);
+};
+
+qb_ipcs_service_t *mainloop_add_ipc_server(
+    const char *name, enum qb_ipc_type type, struct qb_ipcs_service_handlers *callbacks);
+
+void mainloop_del_ipc_server(qb_ipcs_service_t *server);
+
+typedef struct mainloop_io_s mainloop_io_t;
+
+mainloop_io_t *mainloop_add_ipc_client(
+    const char *name, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks);
+
+void mainloop_del_ipc_client(mainloop_io_t *client);
+
+crm_ipc_t *mainloop_get_ipc_client(mainloop_io_t *client);
+
+
+struct mainloop_fd_callbacks 
+{
+        int (*dispatch)(gpointer userdata);
+        void (*destroy)(gpointer userdata);
+};
+
+mainloop_io_t *mainloop_add_fd(
+    const char *name, int fd, void *userdata, struct mainloop_fd_callbacks *callbacks);
+
+void mainloop_del_fd(mainloop_io_t *client);
 
 #endif

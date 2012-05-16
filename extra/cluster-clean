@@ -36,7 +36,6 @@ cluster-helper --list bullet $target
 if [ $kill = 1 ]; then
     echo "Cleaning processes"
     cluster-helper $target -- "killall -q -9 corosync aisexec heartbeat pacemakerd ccm stonithd ha_logd lrmd crmd pengine attrd pingd mgmtd cib fenced dlm_controld gfs_controld" &> /dev/null
-    cluster-helper $target -- "rm -rf /var/lib/heartbeat/crm/cib*"
 
     # Bah. Force systemd to actually look at the process and realize its dead"
     cluster-helper $target -- "service corosync stop" &> /dev/null
@@ -45,10 +44,23 @@ fi
 
 #logrotate -f $cluster_rotate
 echo "Cleaning files"
-cluster-helper $target -- "rm -rf /var/lib/heartbeat/crm/cib-*  /var/lib/heartbeat/cores/*/core.* /var/lib/heartbeat/hostcache /var/lib/openais/core.* /var/lib/corosync/core.* var/lib/oprofile/samples/cts.*"
+files=""
+files="$files /dev/shm/qb-*"
+files="$files /var/lib/heartbeat/crm/cib-*"
+files="$files /var/lib/heartbeat/cores/*/core.*"
+files="$files /var/lib/heartbeat/hostcache"
+files="$files /var/lib/openais/core.*"
+files="$files /var/lib/corosync/core.*"
+files="$files /var/lib/oprofile/samples/cts.*"
+files="$files /var/log/messages*"
+files="$files /var/log/localmessages*"
+files="$files /var/log/cluster*.log"
+files="$files /var/log/corosync.log"
+files="$files /var/log/pacemaker.log"
+
+cluster-helper $target -- "rm -f $files"
 cluster-helper $target -- "find /var/lib/pengine -name '*.bz2' -exec rm -f \{\} \;"
 cluster-helper $target -- "find /tmp -name 'cts-*.valgrind' -exec rm -f \{\} \;"
-cluster-helper $target -- "rm -f /var/log/messages* /var/log/localmessages* /var/log/cluster*.log /var/log/corosync.log"
 cluster-helper $target -- service rsyslog restart  2>&1 > /dev/null
 cluster-helper $target -- logger -i -p daemon.info __clean_logs__
 

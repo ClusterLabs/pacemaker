@@ -183,6 +183,57 @@ class DiskAudit(ClusterAudit):
             return 0
         return 1
 
+
+class FileAudit(ClusterAudit):
+
+    def name(self):
+        return "FileAudit"
+
+    def __init__(self, cm):
+        self.CM = cm
+        self.known = []
+
+    def __call__(self):
+        result=1
+
+        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+        for node in self.CM.Env["nodes"]:
+
+            (rc, lsout)=self.CM.rsh(node, "ls -al /var/lib/heartbeat/cores/* | grep core.[0-9]", None)
+            for line in lsout:
+                line = line.strip()
+                if line not in self.known:
+                    result=0
+                    self.known.append(line)
+                    self.CM.log("Warning: Pacemaker core file on %s: %s" % (node, line))
+
+            (rc, lsout)=self.CM.rsh(node, "ls -al /var/lib/corosync | grep core.[0-9]", None)
+            for line in lsout:
+                line = line.strip()
+                if line not in self.known:
+                    result=0
+                    self.known.append(line)
+                    self.CM.log("Warning: Corosync core file on %s: %s" % (node, line))
+
+            if self.CM.ShouldBeStatus.has_key(node) and self.CM.ShouldBeStatus[node] == "down":
+                clean=0
+                (rc, lsout)=self.CM.rsh(node, "ls -al /dev/shm | grep qb-", None)
+                for line in lsout:
+                    result=0
+                    clean=1
+                    self.CM.log("Warning: Stale IPC file on %s: %s" % (node, line))
+
+                if clean:
+                    self.CM.rsh(node, "rm -f /dev/shm/qb-*")
+
+            else:
+                self.CM.debug("Skipping %s" % node)
+
+        return result
+    
+    def is_applicable(self):
+        return 1
+
 class AuditResource:
     def __init__(self, cm, line):
         fields = line.split()
@@ -769,6 +820,7 @@ class PartitionAudit(ClusterAudit):
         return 0
 
 AllAuditClasses.append(DiskAudit)
+AllAuditClasses.append(FileAudit)
 AllAuditClasses.append(LogAudit)
 AllAuditClasses.append(CrmdStateAudit)
 AllAuditClasses.append(PartitionAudit)

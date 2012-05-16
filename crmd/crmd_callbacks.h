@@ -20,12 +20,6 @@
 
 extern void crmd_ha_msg_filter(xmlNode * msg);
 
-#if SUPPORT_HEARTBEAT
-extern void ccm_event_detail(const oc_ev_membership_t * oc, oc_ed_t event);
-extern gboolean ccm_dispatch(int fd, gpointer user_data);
-extern void crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
-extern gboolean crmd_ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data);
-#endif
 /*
  * Apparently returning TRUE means "stay connected, keep doing stuff".
  * Returning FALSE means "we're all done, close the connection"

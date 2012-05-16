@@ -6,7 +6,7 @@ dnl License: GNU General Public License (GPL)
 dnl ===============================================
 dnl Bootstrap 
 dnl ===============================================
-AC_PREREQ(2.53)
+AC_PREREQ(2.59)
 
 dnl Suggested structure:
 dnl     information on the package
@@ -82,6 +82,8 @@ dnl ========================================================================
 AC_PROG_CC dnl Can force other with environment variable "CC".
 AM_PROG_CC_C_O
 AC_PROG_CC_STDC
+gl_EARLY
+gl_INIT
 
 AC_LIBTOOL_DLOPEN               dnl Enable dlopen support...
 AC_LIBLTDL_CONVENIENCE          dnl make libltdl a convenience lib
@@ -592,8 +594,11 @@ AC_CHECK_LIB(dl, dlopen)			dnl -ldl (for Linux)
 AC_CHECK_LIB(rt, sched_getscheduler)            dnl -lrt (for Tru64)
 AC_CHECK_LIB(gnugetopt, getopt_long)		dnl -lgnugetopt ( if available )
 AC_CHECK_LIB(pam, pam_start)			dnl -lpam (if available)
-AC_CHECK_LIB(uuid, uuid_parse)			dnl e2fsprogs
-AC_CHECK_LIB(uuid, uuid_create)			dnl ossp
+AC_CHECK_LIB(uuid, uuid_parse)			dnl libuuid
+
+if test "x$ac_cv_lib_uuid_uuid_parse" != x""yes; then
+   AC_MSG_ERROR(You do not have the libuuid development package installed)
+fi
 
 if test x"${PKGCONFIG}" = x""; then
    AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})
@@ -960,18 +965,7 @@ dnl ========================================================================
 dnl    Cluster infrastructure - Heartbeat / LibQB
 dnl ========================================================================
 
-dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
-dnl So check for all the depenancies (so they're added to LIBS) before checking for -lplumb
-
-AC_CHECK_LIB(pils, PILLoadPlugin)
-AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
-
-if test x"$ac_cv_lib_plumb_G_main_add_IPC_Channel" != x"yes"; then
-   AC_MSG_FAILURE(Core Heartbeat utility libraries not found: $ac_cv_lib_plumb_G_main_add_IPC_Channel)
-fi
-
 dnl Compatability checks
-AC_CHECK_FUNCS(msgfromIPC_timeout)
 AC_CHECK_MEMBERS([struct lrm_ops.fail_rsc],,,[[#include <lrm/lrm_api.h>]])
 
 if test x${enable_no_stack} = xyes; then
@@ -981,13 +975,14 @@ fi
 
 PKG_CHECK_MODULES(libqb, libqb, HAVE_libqb=1, HAVE_libqb=0)
 AC_CHECK_HEADERS(qb/qbipc_common.h)
-AC_CHECK_LIB(qb, qb_log_callsite_get)
-AC_CHECK_FUNCS(qb_log_callsite_get)
+AC_CHECK_LIB(qb, qb_ipcc_is_connected)
+AC_CHECK_FUNCS(qb_ipcc_is_connected)
 
-LIBQB_LOG=0
-if test $ac_cv_lib_qb_qb_log_callsite_get = yes; then
-   LIBQB_LOG=1
-   PCMK_FEATURES="$PCMK_FEATURES libqb-logging"
+LIBQB_LOG=1
+PCMK_FEATURES="$PCMK_FEATURES libqb-logging"
+
+if test $ac_cv_lib_qb_qb_ipcc_is_connected != yes; then
+   AC_MSG_FAILURE(Version of IPC in libqb is not new enough)
 fi
 
 AC_DEFINE_UNQUOTED(LIBQB_LOGGING, $LIBQB_LOG, Use libqb for logging)
@@ -1006,7 +1001,7 @@ elif test "$ac_cv_header_hb_config_h" = "yes"; then
    GLUE_HEADER=hb_config.h
 
 else
-   AC_MSG_FAILURE(Core development headers were not found)
+   AC_MSG_WARN(cluster-glue development headers were not found)
 fi
 
 dnl ===============================================
@@ -1019,11 +1014,11 @@ AC_SUBST(CRM_DTD_DIRECTORY)
 AC_DEFINE_UNQUOTED(CRM_DTD_VERSION,"$CRM_DTD_VERSION", Current version of the Pacemaker Relax-NG Schema)
 AC_SUBST(CRM_DTD_VERSION)
 
-CRM_DAEMON_USER=`extract_header_define $GLUE_HEADER HA_CCMUSER`
+CRM_DAEMON_USER=`try_extract_header_define $GLUE_HEADER HA_CCMUSER hacluster`
 AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_USER)
 
-CRM_DAEMON_GROUP=`extract_header_define $GLUE_HEADER HA_APIGROUP`
+CRM_DAEMON_GROUP=`try_extract_header_define $GLUE_HEADER HA_APIGROUP haclient`
 AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_GROUP)
 
@@ -1049,38 +1044,29 @@ AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location for Heartbeat expect
 AC_SUBST(HB_DAEMON_DIR)
 
 dnl Needed so that the Corosync plugin can clear out the directory as Heartbeat does
-HA_STATE_DIR=`extract_header_define $GLUE_HEADER HA_VARRUNDIR`
+HA_STATE_DIR=`try_extract_header_define $GLUE_HEADER HA_VARRUNDIR ${localstatedir}/run`
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
 AC_SUBST(HA_STATE_DIR)
 
-CRM_RSCTMP_DIR=
-if test "$ac_cv_header_agent_config_h" = "yes";  then
-   CRM_RSCTMP_DIR=`extract_header_define agent_config.h HA_RSCTMPDIR`
-else
-   AC_MSG_WARN(Agents development headers were not found.)
-fi
-
-if test x$CRM_RSCTMP_DIR = x; then
-   CRM_RSCTMP_DIR="$HA_STATE_DIR/heartbeat/rsctmp"
-fi
+CRM_RSCTMP_DIR=`try_extract_header_define agent_config.h HA_RSCTMPDIR $HA_STATE_DIR/heartbeat/rsctmp`
 AC_MSG_CHECKING(Scratch dir for resource agents)
 AC_MSG_RESULT($CRM_RSCTMP_DIR)
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
 
 dnl Needed for the location of hostcache in CTS.py
-HA_VARLIBHBDIR=`extract_header_define $GLUE_HEADER HA_VARLIBHBDIR`
+HA_VARLIBHBDIR=`try_extract_header_define $GLUE_HEADER HA_VARLIBHBDIR ${localstatedir}/lib/heartbeat`
 AC_SUBST(HA_VARLIBHBDIR)
 
 AC_DEFINE_UNQUOTED(UUID_FILE,"$localstatedir/lib/heartbeat/hb_uuid", Location of Heartbeat's UUID file)
 
-OCF_ROOT_DIR=`extract_header_define $GLUE_HEADER OCF_ROOT_DIR`
+OCF_ROOT_DIR=`try_extract_header_define $GLUE_HEADER OCF_ROOT_DIR /usr/lib/ocf`
 if test "X$OCF_ROOT_DIR" = X; then
   AC_MSG_ERROR(Could not locate OCF directory)
 fi
 AC_SUBST(OCF_ROOT_DIR)
 
-OCF_RA_DIR=`extract_header_define $GLUE_HEADER OCF_RA_DIR`
+OCF_RA_DIR=`try_extract_header_define $GLUE_HEADER OCF_RA_DIR $OCF_ROOT_DIR/resource.d`
 AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
 AC_SUBST(OCF_RA_DIR)
 
@@ -1137,6 +1123,16 @@ esac
 
 if test $SUPPORT_HEARTBEAT = 1; then
    STACKS="$STACKS heartbeat"
+
+   dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
+   dnl So check for all the depenancies (so they're added to LIBS) before checking for -lplumb
+   AC_CHECK_LIB(pils, PILLoadPlugin)
+   AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
+
+   if test x"$ac_cv_lib_plumb_G_main_add_IPC_Channel" != x"yes"; then
+      AC_MSG_FAILURE(Core Heartbeat utility libraries not found: $ac_cv_lib_plumb_G_main_add_IPC_Channel)
+   fi
+
    AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
    AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
 fi
@@ -1686,6 +1682,7 @@ tools/Makefile							\
 	tools/hb2openais.sh					\
 	tools/crm_primitive.py					\
 xml/Makefile							\
+lib/gnu/Makefile						\
 		)
 
 dnl Now process the entire list of files added by previous 

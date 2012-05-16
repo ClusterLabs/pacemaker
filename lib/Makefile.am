@@ -39,7 +39,7 @@ clean-local:
 	rm -f *.pc
 
 ## Subdirectories...
-SUBDIRS	= common pengine transition cib fencing cluster plugins
+SUBDIRS	= gnu common pengine transition cib fencing cluster plugins
 DIST_SUBDIRS =  $(SUBDIRS) ais
 
 if BUILD_CS_PLUGIN

@@ -251,7 +251,7 @@ findmsg() {
 
 	for d in $syslogdirs; do
 	    if [ -d $d ]; then
-		logfiles=`grep -l -e "$pattern" $d/*` && break
+		logfiles="$logfiles `grep -l -e "$pattern" $d/*`"
 	    fi
 	done 2>/dev/null
 

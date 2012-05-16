@@ -88,7 +88,6 @@ gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 extern gboolean send_ais_text(int class, const char *data, gboolean local,
                               const char *node, enum crm_ais_msg_types dest);
 extern gboolean get_ais_nodeid(uint32_t * id, char **uname);
-extern gboolean ais_dispatch(int sender, gpointer user_data);
 #  endif
 
 extern void empty_uuid_cache(void);

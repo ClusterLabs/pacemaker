@@ -33,6 +33,7 @@
 #endif
 
 #include <crm/common/cluster.h>
+#include <crm/common/mainloop.h>
 
 #if SUPPORT_CMAN
 #  include <libcman.h>
@@ -68,16 +69,16 @@ static corosync_cfg_callbacks_t cfg_callbacks = {
     .corosync_cfg_shutdown_callback = cfg_shutdown_callback,
 };
 
-static gboolean
-pcmk_cfg_dispatch(int sender, gpointer user_data)
+static int
+pcmk_cfg_dispatch(gpointer user_data)
 {
     corosync_cfg_handle_t *handle = (corosync_cfg_handle_t *) user_data;
     cs_error_t rc = corosync_cfg_dispatch(*handle, CS_DISPATCH_ALL);
 
     if (rc != CS_OK) {
-        return FALSE;
+        return -1;
     }
-    return TRUE;
+    return 0;
 }
 
 static void
@@ -87,7 +88,6 @@ cfg_connection_destroy(gpointer user_data)
     cfg_handle = 0;
 
     pcmk_shutdown(SIGTERM);
-    return;
 }
 
 gboolean
@@ -118,6 +118,11 @@ cluster_connect_cfg(uint32_t * nodeid)
 {
     cs_error_t rc;
     int fd = 0, retries = 0;
+    static struct mainloop_fd_callbacks cfg_fd_callbacks = 
+        {
+            .dispatch = pcmk_cfg_dispatch,
+            .destroy = cfg_connection_destroy,
+        };
 
     cs_repeat(retries, 30, rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks));
 
@@ -141,10 +146,7 @@ cluster_connect_cfg(uint32_t * nodeid)
     }
 
     crm_debug("Our nodeid: %d", *nodeid);
-
-    crm_debug("Adding fd=%d to mainloop", fd);
-    G_main_add_fd(G_PRIORITY_HIGH, fd, FALSE, pcmk_cfg_dispatch, &cfg_handle,
-                  cfg_connection_destroy);
+    mainloop_add_fd("corosync-cfg", fd, &cfg_handle, &cfg_fd_callbacks);
 
     return TRUE;
 
@@ -155,16 +157,16 @@ cluster_connect_cfg(uint32_t * nodeid)
 
 /* =::=::=::= CPG - Closed Process Group Messaging =::=::=::= */
 
-static gboolean
-pcmk_cpg_dispatch(int sender, gpointer user_data)
+static int
+pcmk_cpg_dispatch(gpointer user_data)
 {
     cpg_handle_t *handle = (cpg_handle_t *) user_data;
     cs_error_t rc = cpg_dispatch(*handle, CS_DISPATCH_ALL);
 
     if (rc != CS_OK) {
-        return FALSE;
+        return -1;
     }
-    return TRUE;
+    return 0;
 }
 
 static void
@@ -172,7 +174,6 @@ cpg_connection_destroy(gpointer user_data)
 {
     crm_err("Connection destroyed");
     cpg_handle = 0;
-    return;
 }
 
 static void
@@ -226,6 +227,11 @@ cluster_connect_cpg(void)
     unsigned int nodeid;
     int fd;
     int retries = 0;
+    static struct mainloop_fd_callbacks cpg_fd_callbacks = 
+        {
+            .dispatch = pcmk_cpg_dispatch,
+            .destroy = cpg_connection_destroy,
+        };
 
     strcpy(cpg_group.value, "pcmk");
     cpg_group.length = strlen(cpg_group.value) + 1;
@@ -260,10 +266,7 @@ cluster_connect_cpg(void)
         goto bail;
     }
 
-    crm_debug("Adding fd=%d to mainloop", fd);
-    G_main_add_fd(G_PRIORITY_HIGH, fd, FALSE, pcmk_cpg_dispatch, &cpg_handle,
-                  cpg_connection_destroy);
-
+    mainloop_add_fd("corosync-cpg", fd, &cpg_handle, &cpg_fd_callbacks);
     return TRUE;
 
   bail:

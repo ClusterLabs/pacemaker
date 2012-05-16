@@ -25,6 +25,8 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/attrd.h>
+
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
@@ -33,7 +35,6 @@
 #include <crmd_fsa.h>
 #include <crmd_utils.h>
 #include <crmd_messages.h>
-#include <../tools/attrd.h>
 
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START,
  *	A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START
@@ -1022,7 +1023,7 @@ process_client_disconnect(crmd_client_t * curr_client)
     }
 
     if (the_subsystem != NULL) {
-        the_subsystem->ipc = NULL;
+        the_subsystem->source = NULL;
         the_subsystem->client = NULL;
         crm_info("Received HUP from %s:[%d]", the_subsystem->name, the_subsystem->pid);
 
@@ -1132,76 +1133,10 @@ erase_status_tag(const char *uname, const char *tag, int options)
     }
 }
 
-static IPC_Channel *attrd = NULL;
-
-static gboolean
-attrd_dispatch(IPC_Channel * client, gpointer user_data)
-{
-    xmlNode *msg = NULL;
-    gboolean stay_connected = TRUE;
-
-    while (IPC_ISRCONN(client)) {
-        if (client->ops->is_message_pending(client) == 0) {
-            break;
-        }
-
-        msg = xmlfromIPC(client, MAX_IPC_DELAY);
-        if (msg != NULL) {
-            crm_log_xml_err(msg, "attrd:msg");
-            free_xml(msg);
-        }
-    }
-
-    if (client->ch_status != IPC_CONNECT) {
-        stay_connected = FALSE;
-    }
-
-    return stay_connected;
-}
-
-static void
-attrd_connection_destroy(gpointer user_data)
-{
-    crm_err("Lost connection to attrd");
-    attrd = NULL;
-    return;
-}
-
 void
 update_attrd(const char *host, const char *name, const char *value, const char *user_name)
 {
-    int retries = 0;
-    gboolean rc = FALSE;
-
-    do {
-        rc = FALSE;
-        if (attrd == NULL) {
-            crm_info("Connecting to attrd...");
-            attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
-            if (attrd) {
-                G_main_add_IPC_Channel(G_PRIORITY_LOW, attrd, FALSE, attrd_dispatch, NULL,
-                                       attrd_connection_destroy);
-            }
-        }
-
-        if (attrd != NULL) {
-            rc = attrd_update_delegate(attrd, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL, NULL,
-                                       user_name);
-
-        } else {
-            crm_warn("Could not connect to %s", T_ATTRD);
-        }
-
-        if (rc == FALSE) {
-            attrd = NULL;
-
-            if (retries < 5) {
-                retries++;
-                sleep(retries);
-            }
-        }
-
-    } while(rc == FALSE && retries < 5);
+    gboolean rc = attrd_update_delegate(NULL, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL, NULL, user_name);
     
     if (rc == FALSE) {
         crm_err("Could not send %s %s %s (%d)", T_ATTRD, name ? "update" : "refresh",
@@ -1210,8 +1145,5 @@ update_attrd(const char *host, const char *name, const char *value, const char *
         if(is_set(fsa_input_register, R_SHUTDOWN)) {
             register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
         }
-
-    } else if(retries) {
-        crm_debug("Needed %d retries to send %s %s %s", retries, T_ATTRD, name ? "update" : "refresh", name?name:"");
     }
 }

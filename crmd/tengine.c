@@ -77,19 +77,15 @@ do_te_control(long long action,
 {
     gboolean init_ok = TRUE;
 
-    cl_uuid_t new_uuid;
-    char uuid_str[UU_UNPARSE_SIZEOF];
-
     if (action & A_TE_STOP) {
         if (transition_graph) {
             destroy_graph(transition_graph);
             transition_graph = NULL;
         }
 
-        if (fsa_cib_conn
-            && cib_ok != fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY,
-                                                                 te_update_diff)) {
-            crm_err("Could not unset CIB notification callback");
+        if (fsa_cib_conn) {
+            fsa_cib_conn->cmds->del_notify_callback(
+                fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff);
         }
 
         clear_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
@@ -108,9 +104,7 @@ do_te_control(long long action,
         return;
     }
 
-    cl_uuid_generate(&new_uuid);
-    cl_uuid_unparse(&new_uuid, uuid_str);
-    te_uuid = crm_strdup(uuid_str);
+    te_uuid = crm_generate_uuid();
     crm_info("Registering TE UUID: %s", te_uuid);
 
     if (transition_trigger == NULL) {

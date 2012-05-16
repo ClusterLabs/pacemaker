@@ -37,8 +37,8 @@
 #include <crm/common/util.h>
 
 #include <crm/cib.h>
+#include <crm/attrd.h>
 #include <sys/utsname.h>
-#include <attrd.h>
 
 gboolean BE_QUIET = FALSE;
 char command = 'G';
@@ -243,8 +243,7 @@ main(int argc, char **argv)
 
     } else if ((command == 'v' || command == 'D')
                && safe_str_eq(type, XML_CIB_TAG_STATUS)
-               && attrd_lazy_update(command, dest_uname, attr_name, attr_value, type, set_name,
-                                    NULL)) {
+               && attrd_update_delegate(NULL, command, dest_uname, attr_name, attr_value, type, set_name, NULL, NULL)) {
         crm_info("Update %s=%s sent via attrd", attr_name, command == 'D' ? "<none>" : attr_value);
 
     } else if (command == 'D') {

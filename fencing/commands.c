@@ -35,6 +35,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/cluster.h>
+#include <crm/common/mainloop.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/stonith-ng-internal.h>
@@ -50,18 +51,7 @@ GHashTable *topology = NULL;
 static int active_children = 0;
 
 static gboolean stonith_device_dispatch(gpointer user_data);
-static void exec_child_done(ProcTrack* proc, int status, int signo, int rc, int waslogged);
-static void exec_child_new(ProcTrack* p) { active_children++; }
-static const char *exec_child_name(ProcTrack* p) {
-    async_command_t *cmd = proctrack_data(p);
-    return cmd->client?cmd->client:cmd->remote;
-}
-
-static ProcTrack_ops StonithdProcessTrackOps = {
-	exec_child_done,
-	exec_child_new,
-	exec_child_name,
-};
+static void st_child_done(GPid pid, gint status, gpointer user_data);
 
 
 static void free_async_command(async_command_t *cmd) 
@@ -97,7 +87,7 @@ static async_command_t *create_async_command(xmlNode *msg)
     cmd->op     = crm_element_value_copy(msg, F_STONITH_OPERATION);
     cmd->action = crm_strdup(action);
     cmd->victim = crm_element_value_copy(op, F_STONITH_TARGET);
-    cmd->pt_ops = &StonithdProcessTrackOps;
+    cmd->done   = st_child_done;
 
     CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
     CRM_CHECK(cmd->client != NULL, crm_log_xml_warn(msg, "NoClient"));
@@ -106,7 +96,6 @@ static async_command_t *create_async_command(xmlNode *msg)
 
 static int stonith_manual_ack(xmlNode *msg, remote_fencing_op_t *op) 
 {
-    struct _ProcTrack p;
     async_command_t *cmd = create_async_command(msg);
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
     
@@ -120,10 +109,7 @@ static int stonith_manual_ack(xmlNode *msg, remote_fencing_op_t *op)
     crm_notice("Injecting manual confirmation that %s is safely off/down",
                crm_element_value(dev, F_STONITH_TARGET));
 
-    memset(&p, 0, sizeof(struct _ProcTrack));
-    p.privatedata = cmd;
-
-    exec_child_done(&p, 0, 0, 0, FALSE);
+    st_child_done(0, 0, cmd);
     return stonith_ok;
 }
 
@@ -162,14 +148,10 @@ static gboolean stonith_device_execute(stonith_device_t *device)
 	device->active_pid = exec_rc;
 	
     } else {
-	struct _ProcTrack p;
-	memset(&p, 0, sizeof(struct _ProcTrack));
-	p.privatedata = cmd;
-	
 	crm_warn("Operation %s%s%s on %s failed (%d/%d)",
 		 cmd->action, cmd->victim?" for node ":"", cmd->victim?cmd->victim:"",
 		 device->id, exec_rc, rc);
-	exec_child_done(&p, 0, 0, rc<0?rc:exec_rc, 0);
+	st_child_done(0, rc<0?rc:exec_rc, cmd);
     }
     return TRUE;
 }
@@ -198,14 +180,10 @@ void free_device(gpointer data)
     g_hash_table_destroy(device->aliases);
     
     for(gIter = device->pending_ops; gIter != NULL; gIter = gIter->next) {
-	struct _ProcTrack p;
 	async_command_t *cmd = gIter->data;
-
-	memset(&p, 0, sizeof(struct _ProcTrack));
-	p.privatedata = cmd;
 	
 	crm_warn("Removal of device '%s' purged operation %s", device->id, cmd->action);
-	exec_child_done(&p, 0, 0, st_err_unknown_device, 0);
+	st_child_done(0, st_err_unknown_device, cmd);
 	free_async_command(cmd);
     }
     g_list_free(device->pending_ops);
@@ -797,9 +775,10 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 }
 
 #define READ_MAX 500
-static void
-exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
+static void st_child_done(GPid pid, gint status, gpointer user_data) 
 {
+    int rc = st_err_generic;
+
     int len = 0;
     int more = 0;
     gboolean bcast = FALSE;
@@ -808,11 +787,33 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     xmlNode *data = NULL;
     xmlNode *reply = NULL;
 
-    int pid = proctrack_pid(proc);
     stonith_device_t *device = NULL;
-    async_command_t *cmd = proctrack_data(proc);
+    async_command_t *cmd = user_data;
     
     CRM_CHECK(cmd != NULL, return);
+
+    g_source_remove(cmd->timer_sigterm);
+    g_source_remove(cmd->timer_sigkill);
+    
+    if(WIFSIGNALED(status)) {
+        int signo = WTERMSIG(status);
+
+        if(signo) {
+            if(signo == SIGTERM || signo == SIGKILL) {
+                rc = st_err_timeout;
+            } else {
+                rc = st_err_signal;
+            }
+        }
+        crm_notice("Child process %s performing action '%s' with '%s' terminated with signal %d",
+                   pid, cmd->action, cmd->device, signo);
+
+    } else if(WIFEXITED(status)) {
+        rc = WEXITSTATUS(status);
+        crm_debug("Child process %s performing action '%s' with '%s' exited with rc %d",
+                  pid, cmd->action, cmd->device, rc);
+    }
+    
     active_children--;
 
     /* The device is ready to do something else now */
@@ -820,15 +821,6 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     if(device) {
 	device->active_pid = 0;
 	mainloop_set_trigger(device->work);
-    }
-
-    if( signum ) {
-	rc = st_err_signal;
-	if( proctrack_timedout(proc) ) {
-	    crm_warn("Child '%d' performing action '%s' with '%s' timed out",
-		     pid, cmd->action, cmd->device);
-	    rc = st_err_timeout;
-	}
     }
 
     do {
@@ -905,7 +897,6 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     free_async_command(cmd);
   done:
 
-    reset_proctrack_data(proc);
     crm_free(output);
     free_xml(reply);
     free_xml(data);
@@ -1070,7 +1061,15 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     crm_debug("Processing %s%s from %s (%16x)", op, is_reply?" reply":"",
 	      client?client->name:remote, call_options);
 
-    if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
+    if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
+        xmlNode *reply = create_xml_node(NULL, "reply");
+        crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
+        crm_xml_add(reply, F_STONITH_CLIENTID,  client->id);
+	crm_ipcs_send(client->channel, reply, FALSE);
+        free_xml(reply);
+        return;
+
+    } else if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
 	rc = stonith_device_action(request, &output);
 
     } else if(is_reply && crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
@@ -1105,6 +1104,8 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 		      flag_name, client->name, client->id);
 	    client->flags |= get_stonith_flag(flag_name);
 	}
+
+        crm_ipcs_send_ack(client->channel, "ack", __FUNCTION__, __LINE__);
 	return;
 
     /* } else if(is_reply && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) { */
@@ -1120,14 +1121,12 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	    remote_fencing_op_t *rop = initiate_remote_stonith_op(client, request, TRUE);
             rc = stonith_manual_ack(request, rop);
             
-        } else if(call_options & st_opt_local_first) {
-	    rc = stonith_fence(request);
-	    if(rc < 0) {
-		initiate_remote_stonith_op(client, request, FALSE);
-		return;
-	    }
+	} else if((call_options & st_opt_sync_call) == 0) {
+	    initiate_remote_stonith_op(client, request, FALSE);
+            crm_ipcs_send_ack(client->channel, "ack", __FUNCTION__, __LINE__);
+	    return;
 
-	} else {
+        } else {
 	    initiate_remote_stonith_op(client, request, FALSE);
 	    return;
 	}
@@ -1176,14 +1175,14 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	       client?client->name:remote, rc);
     
     if(is_reply || rc == stonith_pending) {
-	/* Nothing (yet) */	
+	/* Nothing (yet) */
 	
     } else if(remote) {
 	reply = stonith_construct_reply(request, output, data, rc);
 	send_cluster_message(remote, crm_msg_stonith_ng, reply, FALSE);
 	free_xml(reply);
 
-    } else if(rc <= 0 || always_reply) {
+    } else if(rc <= stonith_ok || always_reply) {
 	reply = stonith_construct_reply(request, output, data, rc);
 	do_local_reply(reply, client_id, call_options & st_opt_sync_call, remote!=NULL);
 	free_xml(reply);

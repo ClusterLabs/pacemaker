@@ -43,8 +43,6 @@ void handle_response(xmlNode * stored_msg);
 enum crmd_fsa_input handle_request(xmlNode * stored_msg);
 enum crmd_fsa_input handle_shutdown_request(xmlNode * stored_msg);
 
-gboolean ipc_queue_helper(gpointer key, gpointer value, gpointer user_data);
-
 #ifdef MSG_LOG
 #  define ROUTER_RESULT(x)	crm_trace("Router result: %s", x);	\
     crm_log_xml_trace(msg, "router.log");
@@ -485,7 +483,6 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
     const char *filtered_from;
     gpointer table_key = NULL;
     gboolean auth_result = FALSE;
-    struct crm_subsystem_s *the_subsystem = NULL;
     gboolean can_reply = FALSE; /* no-one has registered with this id */
 
     xmlNode *xml = NULL;
@@ -546,71 +543,31 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
         crm_free(minor_version);
     }
 
-    if (safe_str_eq(CRM_SYSTEM_PENGINE, client_name)) {
-        the_subsystem = pe_subsystem;
-
-    } else if (safe_str_eq(CRM_SYSTEM_TENGINE, client_name)) {
-        the_subsystem = te_subsystem;
-    }
-
-    /* TODO: Is this code required anymore?? */
-    if (auth_result == TRUE && the_subsystem != NULL) {
-        /* if we already have one of those clients
-         * only applies to te, pe etc.  not admin clients
-         */
-        crm_err("Checking if %s is required/already connected", client_name);
-
-        table_key = (gpointer) crm_strdup(client_name);
-
-        if (is_set(fsa_input_register, the_subsystem->flag_connected)) {
-            auth_result = FALSE;
-            crm_free(table_key);
-            table_key = NULL;
-            crm_warn("Bit\t%.16llx set in %.16llx",
-                     the_subsystem->flag_connected, fsa_input_register);
-            crm_err("Client %s is already connected", client_name);
-
-        } else if (FALSE == is_set(fsa_input_register, the_subsystem->flag_required)) {
-            crm_warn("Bit\t%.16llx not set in %.16llx",
-                     the_subsystem->flag_connected, fsa_input_register);
-            crm_warn("Client %s joined but we dont need it", client_name);
-            stop_subsystem(the_subsystem, TRUE);
-
-        } else {
-            the_subsystem->ipc = curr_client->client_channel;
-            set_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
-        }
-
-    } else {
-        table_key = (gpointer) generate_hash_key(client_name, uuid);
-    }
+    table_key = (gpointer) generate_hash_key(client_name, uuid);
 
     if (auth_result == TRUE) {
+        xmlNode *xml = NULL;
         crm_trace("Accepted client %s", crm_str(table_key));
 
         curr_client->table_key = table_key;
         curr_client->sub_sys = crm_strdup(client_name);
         curr_client->uuid = crm_strdup(uuid);
 
-        g_hash_table_insert(ipc_clients, table_key, curr_client->client_channel);
+        g_hash_table_insert(ipc_clients, table_key, curr_client->ipc);
 
-        send_hello_message(curr_client->client_channel, "n/a", CRM_SYSTEM_CRMD, "0", "1");
+        xml = create_hello_message("n/a", CRM_SYSTEM_CRMD, "0", "1");
+        crm_ipcs_send(curr_client->ipc, xml, FALSE);
+        free_xml(xml);
 
         crm_trace("Updated client list with %s", crm_str(table_key));
 
         crm_trace("Triggering FSA: %s", __FUNCTION__);
         mainloop_set_trigger(fsa_source);
 
-        if (the_subsystem != NULL) {
-            CRM_CHECK(the_subsystem->client == NULL,
-                      process_client_disconnect(the_subsystem->client));
-            the_subsystem->client = curr_client;
-        }
-
     } else {
         crm_free(table_key);
         crm_warn("Rejected client logon request");
-        curr_client->client_channel->ch_status = IPC_DISC_PENDING;
+        qb_ipcs_disconnect(curr_client->ipc);
     }
 
     if (uuid != NULL)
@@ -808,7 +765,8 @@ handle_request(xmlNode * stored_msg)
 
         crm_xml_add(ping, "crmd_state", fsa_state2string(fsa_state));
 
-        crm_info("Current ping state: %s", fsa_state2string(fsa_state));
+        /* Ok, so technically not so interesting, but CTS needs to see this */
+        crm_notice("Current ping state: %s", fsa_state2string(fsa_state));
 
         msg = create_reply(stored_msg, ping);
         relay_message(msg, TRUE);
@@ -918,17 +876,17 @@ gboolean
 send_msg_via_ipc(xmlNode * msg, const char *sys)
 {
     gboolean send_ok = TRUE;
-    IPC_Channel *client_channel;
+    qb_ipcs_connection_t *client_channel;
 
-    client_channel = (IPC_Channel *) g_hash_table_lookup(ipc_clients, sys);
+    client_channel = (qb_ipcs_connection_t *) g_hash_table_lookup(ipc_clients, sys);
 
     if (crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
         crm_xml_add(msg, F_CRM_HOST_FROM, fsa_our_uname);
     }
 
     if (client_channel != NULL) {
-        crm_trace("Sending message via channel %s.", sys);
-        send_ok = send_ipc_message(client_channel, msg);
+        /* Transient clients such as crmadmin */
+        send_ok = crm_ipcs_send(client_channel, msg, TRUE);
 
     } else if (sys != NULL && strcmp(sys, CRM_SYSTEM_TENGINE) == 0) {
         xmlNode *data = get_message_xml(msg, F_CRM_DATA);
@@ -963,29 +921,3 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
     return send_ok;
 }
 
-void
-msg_queue_helper(void)
-{
-#if SUPPORT_HEARTBEAT
-    IPC_Channel *ipc = NULL;
-
-    if (fsa_cluster_conn != NULL) {
-        ipc = fsa_cluster_conn->llc_ops->ipcchan(fsa_cluster_conn);
-    }
-    if (ipc != NULL) {
-        ipc->ops->resume_io(ipc);
-    }
-/*  	g_hash_table_foreach_remove(ipc_clients, ipc_queue_helper, NULL); */
-#endif
-}
-
-gboolean
-ipc_queue_helper(gpointer key, gpointer value, gpointer user_data)
-{
-    crmd_client_t *ipc_client = value;
-
-    if (ipc_client->client_channel != NULL) {
-        ipc_client->client_channel->ops->is_message_pending(ipc_client->client_channel);
-    }
-    return FALSE;
-}

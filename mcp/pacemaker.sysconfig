@@ -1,5 +1,24 @@
 # For non-systemd based systems, prefix export to each enabled line
 
+#==#==# Variables that control logging
+
+# Log all messages from a comma-separated list of functions
+# PCMK_trace_functions=function1,function2,function3
+
+# Log all messages from a comma-separated list of files (no path)
+# Supports wildcards eg. PCMK_trace_files=prefix*.c
+# PCMK_trace_files=file.c,other.h
+
+# Log all messages matching comma-separated list of formats
+# PCMK_trace_formats="Sent delete %d"
+
+# Enable debug logging globally or per-subsystem
+# Multiple subsystems may me listed separated by commas
+# eg. PCMK_debug=crmd,pengine
+# PCMK_debug=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
+
+#==#==# Advanced use only
+
 # Enable this for compatibility with older corosync (prior to 2.0)
 # based clusters which used the nodes uname as its uuid also
 # PCMK_uname_is_uuid=no
@@ -8,10 +27,16 @@
 # Mostly only useful for developer testing
 # PCMK_schema_directory=/some/path
 
-# Variables that control logging
-# PCMK_trace_functions=function1,function2,function3
-# PCMK_trace_formats="Sent delete %d"
-# PCMK_trace_files=file.c,other.c
+#==#==# IPC
+
+# Force use of a particular class of IPC connection
+# PCMK_ipc_type=shared-mem|socket|posix|sysv
+
+# Specify an IPC buffer size in bytes
+# Useful when connecting to really big clusters that exceed the default 20k buffer
+# PCMK_ipc_buffer=20480
+
+#==#==# Profiling and memory leak testing
 
 # Variables for running child daemons under valgrind and/or checking for memory problems
 # G_SLICE=always-malloc

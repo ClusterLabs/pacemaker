@@ -23,7 +23,6 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <clplumbing/proctrack.h>
 #include <crm/common/mainloop.h>
 
 gboolean fatal_error = FALSE;
@@ -31,7 +30,8 @@ GMainLoop *mainloop = NULL;
 GHashTable *client_list = NULL;
 GHashTable *peers = NULL;
 
-char ipc_name[] = "pcmk";
+qb_ipcs_service_t *ipcs = NULL;
+
 char *local_name = NULL;
 uint32_t local_nodeid = 0;
 crm_trigger_t *shutdown_trigger = NULL;
@@ -147,21 +147,24 @@ pcmk_user_lookup(const char *name, uid_t * uid, gid_t * gid)
     return rc;
 }
 
-static void
-pcmk_child_exit(ProcTrack * p, int status, int signo, int exitcode, int waslogged)
+static void pcmk_child_exit(GPid pid, gint status, gpointer user_data) 
 {
-    pcmk_child_t *child = p->privatedata;
+    int exitcode = 0;
+    pcmk_child_t *child = user_data;
 
-    p->privatedata = NULL;
+    if(WIFSIGNALED(status)) {
+        int signo = WTERMSIG(status);
+        int core = WCOREDUMP(status);
+        crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
+                   child->name, signo, child->pid, core);
 
-    if (signo) {
-        crm_notice("Child process %s terminated with signal %d (pid=%d, rc=%d)",
-                   child->name, signo, child->pid, exitcode);
-    } else {
+    } else if(WIFEXITED(status)) {
+        exitcode = WEXITSTATUS(status);
         do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
                    "Child process %s exited (pid=%d, rc=%d)", child->name, child->pid, exitcode);
     }
 
+    
     child->pid = 0;
     if (exitcode == 100) {
         crm_warn("Pacemaker child process %s no longer wishes to be respawned. "
@@ -196,28 +199,6 @@ pcmk_child_exit(ProcTrack * p, int status, int signo, int exitcode, int waslogge
         start_child(child);
     }
 }
-
-static void
-pcmkManagedChildRegistered(ProcTrack * p)
-{
-    pcmk_child_t *child = p->privatedata;
-
-    child->pid = p->pid;
-}
-
-static const char *
-pcmkManagedChildName(ProcTrack * p)
-{
-    pcmk_child_t *child = p->privatedata;
-
-    return child->name;
-}
-
-static ProcTrack_ops pcmk_managed_child_ops = {
-    pcmk_child_exit,
-    pcmkManagedChildRegistered,
-    pcmkManagedChildName
-};
 
 static gboolean
 stop_child(pcmk_child_t * child, int signal)
@@ -294,7 +275,8 @@ start_child(pcmk_child_t * child)
 
     if (child->pid > 0) {
         /* parent */
-        NewTrackedProc(child->pid, 0, PT_LOGNORMAL, child, &pcmk_managed_child_ops);
+        g_child_watch_add(child->pid, pcmk_child_exit, child);
+        
         crm_info("Forked child %d for process %s%s", child->pid, child->name,
                  use_valgrind ? " (valgrind enabled: " VALGRIND_BIN ")" : "");
         update_node_processes(local_nodeid, NULL, get_process_list());
@@ -436,6 +418,11 @@ pcmk_shutdown_worker(gpointer user_data)
 void
 pcmk_shutdown(int nsig)
 {
+    if(ipcs) {
+        crm_trace("Closing IPC server");
+        mainloop_del_ipc_server(ipcs);
+        ipcs = NULL;
+    }
     if (shutdown_trigger == NULL) {
         shutdown_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, pcmk_shutdown_worker, NULL);
     }
@@ -465,83 +452,83 @@ build_path(const char *path_c, mode_t mode)
     crm_free(path);
 }
 
-static void
-pcmk_server_destroy(gpointer user_data)
+static int32_t
+pcmk_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_info("Server destroyed");
-    return;
+    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
+    return 0;
 }
 
 static void
-pcmk_client_destroy(gpointer user_data)
+pcmk_ipc_created(qb_ipcs_connection_t *c)
 {
-    crm_debug("Client %p disconnected", user_data);
-    g_hash_table_remove(client_list, user_data);
-    return;
+    g_hash_table_insert(client_list, c, c);
+    crm_debug("Channel %p connected: %d children", c, g_hash_table_size(client_list));
+    /* update_process_clients(); */
 }
 
-static gboolean
-pcmk_client_msg(IPC_Channel * client, gpointer user_data)
+/* Exit code means? */
+static int32_t
+pcmk_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
-    xmlNode *msg = NULL;
-    gboolean stay_connected = TRUE;
+    const char *task = NULL;
+    xmlNode *msg = crm_ipcs_recv(c, data, size);
+    xmlNode *ack = create_xml_node(NULL, "ack");
 
-    while (IPC_ISRCONN(client)) {
-        if (client->ops->is_message_pending(client) == 0) {
-            break;
-        }
-
-        msg = xmlfromIPC(client, MAX_IPC_DELAY);
-
-        if(msg) {
-            const char *task = crm_element_value(msg, F_CRM_TASK);
-            if(crm_str_eq(task, CRM_OP_QUIT, TRUE)) {
-                /* Time to quit */
-                crm_notice("Shutting down in responce to ticket %s (%s)",
-                           crm_element_value(msg, XML_ATTR_REFERENCE),
-                           crm_element_value(msg, F_CRM_ORIGIN));
-                pcmk_shutdown(15);
-            }
-        }
-        free_xml(msg);
-
-        if (client->ch_status != IPC_CONNECT) {
-            break;
-        }
+    crm_trace("Message from %p", c);
+    crm_ipcs_send(c, ack, FALSE);
+    free_xml(ack);
+    
+    if (msg == NULL) {
+        return 0;
     }
 
-    if (client->ch_status != IPC_CONNECT) {
-        stay_connected = FALSE;
-    }
-    return stay_connected;
-}
-
-static gboolean
-pcmk_client_connect(IPC_Channel * ch, gpointer user_data)
-{
-    if (ch == NULL) {
-        crm_err("Channel was invalid");
-
-    } else if (ch->ch_status == IPC_DISCONNECT) {
-        crm_err("Channel was disconnected");
+    task = crm_element_value(msg, F_CRM_TASK);
+    if(crm_str_eq(task, CRM_OP_QUIT, TRUE)) {
+        /* Time to quit */
+        crm_notice("Shutting down in responce to ticket %s (%s)",
+                   crm_element_value(msg, XML_ATTR_REFERENCE),
+                   crm_element_value(msg, F_CRM_ORIGIN));
+        pcmk_shutdown(15);
 
     } else {
-        ch->ops->set_recv_qlen(ch, 1024);
-        ch->ops->set_send_qlen(ch, 1024);
-
-        g_hash_table_insert(client_list, ch, user_data);
-        crm_debug("Channel %p connected: %d children", ch, g_hash_table_size(client_list));
+        /* Just send to everyone */
         update_process_clients();
-
-        G_main_add_IPC_Channel(G_PRIORITY_LOW, ch, FALSE, pcmk_client_msg, ch, pcmk_client_destroy);
     }
-    return TRUE;
+    
+    free_xml(msg);
+    return 0;
 }
+
+/* Error code means? */
+static int32_t
+pcmk_ipc_closed(qb_ipcs_connection_t *c) 
+{
+    crm_trace("%p closed", c);
+    return 0;
+}
+
+static void
+pcmk_ipc_destroy(qb_ipcs_connection_t *c) 
+{
+    crm_trace("%p destroy", c);
+    g_hash_table_remove(client_list, c);
+}
+
+struct qb_ipcs_service_handlers ipc_callbacks = 
+{
+    .connection_accept = pcmk_ipc_accept,
+    .connection_created = pcmk_ipc_created,
+    .msg_process = pcmk_ipc_dispatch,
+    .connection_closed = pcmk_ipc_closed,
+    .connection_destroyed = pcmk_ipc_destroy
+};
+
 
 static gboolean
 ghash_send_proc_details(gpointer key, gpointer value, gpointer data)
 {
-    if (send_ipc_message(key, data) == FALSE) {
+    if (crm_ipcs_send(key, data, TRUE) <= 0) {
         /* remove it */
         return TRUE;
     }
@@ -673,14 +660,14 @@ main(int argc, char **argv)
     int option_index = 0;
     gboolean shutdown = FALSE;
     gboolean daemonize = TRUE;
-
+    
     int start_seq = 1, lpc = 0;
     static int max = SIZEOF(pcmk_children);
 
     uid_t pcmk_uid = 0;
     gid_t pcmk_gid = 0;
     struct rlimit cores;
-    IPC_Channel *old_instance = NULL;
+    crm_ipc_t *old_instance = NULL;
 
 /* *INDENT-OFF* */
     /* =::=::= Default Environment =::=::= */
@@ -694,11 +681,6 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options, "Start/Stop Pacemaker\n");
-
-#ifndef ON_DARWIN
-    /* prevent zombies */
-    signal(SIGCLD, SIG_IGN);
-#endif
 
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);
@@ -743,29 +725,34 @@ main(int argc, char **argv)
         crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    crm_debug("Checking for old instances of %s", crm_system_name);
-    old_instance = init_client_ipc_comms_nodispatch(ipc_name);
+    crm_debug("Checking for old instances of %s", CRM_SYSTEM_MCP);
+    old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
+    crm_ipc_connect(old_instance);
     
     if(shutdown) {
-        while (old_instance != NULL) {
-            xmlNode *cmd = create_request(CRM_OP_QUIT, NULL, NULL, crm_system_name, crm_system_name, NULL);
+        crm_debug("Terminating previous instance");
+        while (crm_ipc_connected(old_instance)) {
+            xmlNode *cmd = create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_MCP, CRM_SYSTEM_MCP, NULL);
 
-            crm_debug("Terminating previous instance");
-            send_ipc_message(old_instance, cmd);
+            crm_debug(".");
+            crm_ipc_send(old_instance, cmd, NULL, 0);
             free_xml(cmd);
 
             sleep(2);
-
-            old_instance->ops->destroy(old_instance);
-            old_instance = init_client_ipc_comms_nodispatch(ipc_name);
         }
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
         exit(0);
 
-    } else if(old_instance != NULL) {
-        old_instance->ops->destroy(old_instance);
+    } else if(crm_ipc_connected(old_instance)) {
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
         crm_err("Pacemaker is already active, aborting startup");
         exit(100);
     }
+
+    crm_ipc_close(old_instance);
+    crm_ipc_destroy(old_instance);
 
     if (read_config() == FALSE) {
         return 1;
@@ -832,7 +819,8 @@ main(int argc, char **argv)
     client_list = g_hash_table_new(g_direct_hash, g_direct_equal);
     peers = g_hash_table_new(g_direct_hash, g_direct_equal);
 
-    if (init_server_ipc_comms(ipc_name, pcmk_client_connect, pcmk_server_destroy)) {
+    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &ipc_callbacks);
+    if (ipcs == NULL) {
         crm_err("Couldn't start IPC server");
         return 1;
     }
@@ -852,7 +840,6 @@ main(int argc, char **argv)
 
     mainloop_add_signal(SIGTERM, pcmk_shutdown);
     mainloop_add_signal(SIGINT, pcmk_shutdown);
-    set_sigchld_proctrack(G_PRIORITY_HIGH, DEFAULT_MAXDISPATCHTIME);
 
     for (start_seq = 1; start_seq < max; start_seq++) {
         /* dont start anything with start_seq < 1 */

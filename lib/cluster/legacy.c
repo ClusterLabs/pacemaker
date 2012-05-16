@@ -49,6 +49,7 @@ static int pcmk_uname_len = 0;
 static uint32_t pcmk_nodeid = 0;
 int ais_membership_timer = 0;
 gboolean ais_membership_force = FALSE;
+int ais_dispatch(gpointer user_data);
 
 #define cs_repeat(counter, max, code) do {		\
 	code;						\
@@ -135,10 +136,6 @@ int ais_fd_async = -1;          /* never send messages via this channel */
 void *ais_ipc_ctx = NULL;
 
 hdb_handle_t ais_ipc_handle = 0;
-GFDSource *ais_source = NULL;
-GFDSource *ais_source_sync = NULL;
-GFDSource *cman_source = NULL;
-GFDSource *cpg_source = NULL;
 static char *ais_cluster_name = NULL;
 
 gboolean
@@ -396,8 +393,8 @@ send_ais_message(xmlNode * msg, gboolean local, const char *node, enum crm_ais_m
     char *data = NULL;
 
     if (is_classic_ais_cluster()) {
-        if (ais_fd_async < 0 || ais_source == NULL) {
-            crm_err("Not connected to AIS: %d %p", ais_fd_async, ais_source);
+        if (ais_fd_async < 0) {
+            crm_err("Not connected to AIS: %d", ais_fd_async);
             return FALSE;
         }
     }
@@ -412,9 +409,6 @@ void
 terminate_ais_connection(void)
 {
     crm_notice("Disconnecting from Corosync");
-
-/*     G_main_del_fd(ais_source); */
-/*     G_main_del_fd(ais_source_sync);     */
 
     if (is_classic_ais_cluster()) {
         if(ais_ipc_handle) {
@@ -594,8 +588,8 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
     goto done;
 }
 
-gboolean
-ais_dispatch(int sender, gpointer user_data)
+int
+ais_dispatch(gpointer user_data)
 {
     int rc = CS_OK;
     gboolean good = TRUE;
@@ -607,25 +601,26 @@ ais_dispatch(int sender, gpointer user_data)
 
         rc = coroipcc_dispatch_get(ais_ipc_handle, (void **)&buffer, 0);
         if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
-            return TRUE;
+            return 0;
         }
         if (rc != CS_OK) {
             crm_perror(LOG_ERR, "Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
-            goto bail;
+            return -1;
         }
         if (buffer == NULL) {
             /* NULL is a legal "no message afterall" value */
-            return TRUE;
+            return 0;
         }
         good = ais_dispatch_message((AIS_Message *) buffer, dispatch);
         coroipcc_dispatch_put(ais_ipc_handle);
 
     } while (good && ais_ipc_handle);
 
-    return good;
+    if(good) {
+        return 0;
+    }
 
-  bail:
-    return FALSE;
+    return -1;
 }
 
 static void
@@ -636,54 +631,11 @@ ais_destroy(gpointer user_data)
     exit(1);
 }
 
-static gboolean
-pcmk_proc_dispatch(IPC_Channel * ch, gpointer user_data)
-{
-    xmlNode *msg = NULL;
-    gboolean stay_connected = TRUE;
-
-    while (IPC_ISRCONN(ch)) {
-        if (ch->ops->is_message_pending(ch) == 0) {
-            break;
-        }
-
-        msg = xmlfromIPC(ch, MAX_IPC_DELAY);
-
-        if (msg && is_classic_ais_cluster()) {
-            xmlNode *node = NULL;
-
-            for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
-                int id = 0;
-                int children = 0;
-                const char *uname = crm_element_value(node, "uname");
-
-                crm_element_value_int(node, "id", &id);
-                crm_element_value_int(node, "processes", &children);
-                if (id == 0) {
-                    crm_log_xml_err(msg, "Bad Update");
-                } else {
-                    crm_update_peer(__FUNCTION__, id, 0, 0, 0, children, NULL, uname, NULL, NULL);
-                }
-            }
-        }
-
-        free_xml(msg);
-
-        if (ch->ch_status != IPC_CONNECT) {
-            break;
-        }
-    }
-
-    if (ch->ch_status != IPC_CONNECT) {
-        stay_connected = FALSE;
-    }
-    return stay_connected;
-}
 
 #  if SUPPORT_CMAN
 
-static gboolean
-pcmk_cman_dispatch(int sender, gpointer user_data)
+static int
+pcmk_cman_dispatch(gpointer user_data)
 {
     int rc = cman_dispatch(pcmk_cman_handle, CMAN_DISPATCH_ALL);
 
@@ -767,6 +719,10 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
 #  if SUPPORT_CMAN
     int rc = -1, fd = -1;
     cman_cluster_t cluster;
+    struct mainloop_fd_callbacks cman_fd_callbacks = {
+        .dispatch = pcmk_cman_dispatch,
+        .destroy = destroy,
+    };
 
     crm_info("Configuring Pacemaker to obtain quorum from cman");
 
@@ -796,8 +752,8 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
                         cman_is_quorate(pcmk_cman_handle));
 
     fd = cman_get_fd(pcmk_cman_handle);
-    crm_debug("Adding fd=%d to mainloop", fd);
-    cman_source = G_main_add_fd(G_PRIORITY_HIGH, fd, FALSE, pcmk_cman_dispatch, dispatch, destroy);
+
+    mainloop_add_fd("cman", fd, dispatch, &cman_fd_callbacks);
 
   cman_bail:
     if (rc < 0) {
@@ -814,8 +770,8 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
 #  ifdef SUPPORT_COROSYNC
 gboolean(*pcmk_cpg_dispatch_fn) (AIS_Message *, char *, int) = NULL;
 
-static gboolean
-pcmk_cpg_dispatch(int sender, gpointer user_data)
+static int
+pcmk_cpg_dispatch(gpointer user_data)
 {
     int rc = 0;
 
@@ -823,9 +779,9 @@ pcmk_cpg_dispatch(int sender, gpointer user_data)
     rc = cpg_dispatch(pcmk_cpg_handle, CS_DISPATCH_ALL);
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %d", rc);
-        return FALSE;
+        return -1;
     }
-    return TRUE;
+    return 0;
 }
 
 static void
@@ -902,6 +858,10 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
     int fd = 0;
     int retries = 0;
     crm_node_t *peer = NULL;
+    struct mainloop_fd_callbacks cpg_fd_callbacks = {
+        .dispatch = pcmk_cpg_dispatch,
+        .destroy = destroy,
+    };    
 
     strcpy(pcmk_cpg_group.value, crm_system_name);
     pcmk_cpg_group.length = strlen(crm_system_name) + 1;
@@ -932,8 +892,7 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
         goto bail;
     }
 
-    crm_debug("Adding fd=%d to mainloop", fd);
-    cpg_source = G_main_add_fd(G_PRIORITY_HIGH, fd, FALSE, pcmk_cpg_dispatch, dispatch, destroy);
+    mainloop_add_fd("corosync-cpg", fd, dispatch, &cpg_fd_callbacks);
 
   bail:
     if (rc != CS_OK) {
@@ -969,6 +928,10 @@ init_ais_connection_classic(gboolean(*dispatch) (AIS_Message *, char *, int),
     int pid = 0;
     char *pid_s = NULL;
     struct utsname name;
+    struct mainloop_fd_callbacks ais_fd_callbacks = {
+        .dispatch = ais_dispatch,
+        .destroy = destroy,
+    };
 
     crm_info("Creating connection to our Corosync plugin");
     rc = coroipcc_service_connect(COROSYNC_SOCKET_NAME, PCMK_SERVICE_ID,
@@ -998,12 +961,7 @@ init_ais_connection_classic(gboolean(*dispatch) (AIS_Message *, char *, int),
         destroy = ais_destroy;
     }
 
-    if (dispatch) {
-        crm_debug("Adding fd=%d to mainloop", ais_fd_async);
-        ais_source =
-            G_main_add_fd(G_PRIORITY_HIGH, ais_fd_async, FALSE, ais_dispatch, dispatch, destroy);
-    }
-
+    mainloop_add_fd("corosync-plugin", ais_fd_async, dispatch, &ais_fd_callbacks);
     crm_info("AIS connection established");
 
     pid = getpid();
@@ -1028,11 +986,52 @@ init_ais_connection_classic(gboolean(*dispatch) (AIS_Message *, char *, int),
     return TRUE;
 }
 
+
+static int
+pcmk_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
+{
+    xmlNode *msg = string2xml(buffer);
+
+    if (msg && is_classic_ais_cluster()) {
+        xmlNode *node = NULL;
+        
+        for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
+            int id = 0;
+            int children = 0;
+            const char *uname = crm_element_value(node, "uname");
+            
+            crm_element_value_int(node, "id", &id);
+            crm_element_value_int(node, "processes", &children);
+            if (id == 0) {
+                crm_log_xml_err(msg, "Bad Update");
+            } else {
+                crm_update_peer(__FUNCTION__, id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+            }
+        }
+    }
+
+    free_xml(msg);
+}
+
+static void
+pcmk_mcp_destroy(gpointer user_data)
+{
+    void (*callback)(gpointer data) = user_data;
+    if(callback) {
+        callback(NULL);
+    }
+}
+
 gboolean
 init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*destroy) (gpointer),
                     char **our_uuid, char **our_uname, int *nodeid)
 {
     int retries = 0;
+    static struct ipc_client_callbacks mcp_callbacks = 
+        {
+            .dispatch = pcmk_mcp_dispatch,
+            .destroy = pcmk_mcp_destroy
+        };
 
     while (retries++ < 30) {
         int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
@@ -1040,10 +1039,10 @@ init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
         switch (rc) {
             case CS_OK:
                 if (getenv("HA_mcp")) {
-                    IPC_Channel *ch = init_client_ipc_comms_nodispatch("pcmk");
-
-                    G_main_add_IPC_Channel(G_PRIORITY_HIGH, ch, FALSE, pcmk_proc_dispatch, NULL,
-                                           destroy);
+                    xmlNode *poke = create_xml_node(NULL, "poke");
+                    mainloop_io_t *ipc = mainloop_add_ipc_client(CRM_SYSTEM_MCP, 0, destroy, &mcp_callbacks);
+                    crm_ipc_send(mainloop_get_ipc_client(ipc), poke, NULL, 0);
+                    free_xml(poke);
                 }
                 return TRUE;
                 break;

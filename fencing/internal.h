@@ -1,3 +1,5 @@
+#include <crm/common/mainloop.h>
+
 typedef struct stonith_device_s {
     char *id;
     char *agent;
@@ -19,12 +21,9 @@ typedef struct stonith_device_s {
 typedef struct stonith_client_s {
     char *id;
     char *name;
-    char *callback_id;
 
-    const char *channel_name;
-
-    IPC_Channel *channel;
-    GCHSource *source;
+    char *channel_name;
+    qb_ipcs_connection_t *channel;
 
     long long flags;
 
@@ -103,3 +102,5 @@ extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
+
+

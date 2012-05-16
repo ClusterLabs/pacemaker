@@ -37,7 +37,10 @@
 #include <ocf/oc_membership.h>
 
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t, int);
+void ccm_event_detail(const oc_ev_membership_t * oc, oc_ed_t event);
+gboolean crmd_ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data);
 void crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
+int ccm_dispatch(gpointer user_data);
 
 #define CCM_EVENT_DETAIL 0
 #define CCM_EVENT_DETAIL_PARTIAL 0
@@ -51,6 +54,11 @@ static void *ccm_library = NULL;
 static int num_ccm_register_fails = 0;
 static int max_ccm_register_fails = 30;
 
+static void
+ccm_connection_destroy(void *userdata)
+{
+}
+
 /*	 A_CCM_CONNECT	*/
 void
 do_ccm_control(long long action,
@@ -58,6 +66,12 @@ do_ccm_control(long long action,
                enum crmd_fsa_state cur_state,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    static struct mainloop_fd_callbacks ccm_fd_callbacks = 
+        {
+            .dispatch = ccm_dispatch,
+            .destroy = ccm_connection_destroy,
+        };
+
     if (is_heartbeat_cluster()) {
         int (*ccm_api_register) (oc_ev_t ** token) =
             find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_register");
@@ -132,10 +146,8 @@ do_ccm_control(long long action,
                 }
             }
 
-            crm_info("CCM connection established..." " waiting for first callback");
-
-            G_main_add_fd(G_PRIORITY_HIGH, fsa_ev_fd, FALSE, ccm_dispatch,
-                          fsa_ev_token, default_ipc_connection_destroy);
+            crm_info("CCM connection established... waiting for first callback");
+            mainloop_add_fd("heartbeat-ccm", fsa_ev_fd, fsa_ev_token, &ccm_fd_callbacks);
 
         }
     }
@@ -256,8 +268,8 @@ do_ccm_update_cache(enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
     return;
 }
 
-gboolean
-ccm_dispatch(int fd, gpointer user_data)
+int
+ccm_dispatch(gpointer user_data)
 {
     int rc = 0;
     oc_ev_t *ccm_token = (oc_ev_t *) user_data;
@@ -280,7 +292,11 @@ ccm_dispatch(int fd, gpointer user_data)
     }
 
     trigger_fsa(fsa_source);
-    return !was_error;
+    if(was_error) {
+        return -1;
+    }
+
+    return 0;
 }
 
 void

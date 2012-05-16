@@ -41,8 +41,9 @@ typedef struct async_command_s {
     GListPtr device_list;
     GListPtr device_next;
 
-    ProcTrack_ops *pt_ops;
-    ProcTrackKillInfo killseq[3];
+    void (*done)(GPid pid, gint status, gpointer user_data);
+    guint timer_sigterm;
+    guint timer_sigkill;
 
 } async_command_t;
 

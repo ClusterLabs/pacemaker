@@ -81,11 +81,9 @@ int remote_tls_fd = 0;
 void usage(const char *cmd, int exit_status);
 int cib_init(void);
 void cib_shutdown(int nsig);
-void cib_ha_connection_destroy(gpointer user_data);
 gboolean startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
 
-GTRIGSource *cib_writer = NULL;
 GHashTable *client_list = NULL;
 GHashTable *config_hash = NULL;
 
@@ -106,28 +104,11 @@ cib_enable_writes(int nsig)
 }
 
 static void
-cib_diskwrite_complete(gpointer userdata, int status, int signo, int exitcode)
-{
-    if (exitcode != LSB_EXIT_OK || signo != 0 || status != 0) {
-        crm_err("Disk write failed: status=%d, signo=%d, exitcode=%d", status, signo, exitcode);
-
-        if (cib_writes_enabled) {
-            crm_err("Disabling disk writes after write failure");
-            cib_writes_enabled = FALSE;
-        }
-
-    } else {
-        crm_trace("Disk write passed");
-    }
-}
-
-static void
 log_cib_client(gpointer key, gpointer value, gpointer user_data)
 {
     cib_client_t *a_client = value;
 
-    crm_info("Client %s/%s", crm_str(a_client->name),
-    crm_str(a_client->channel_name));
+    crm_info("Client %s", crm_str(a_client->name));
 }
 
 int
@@ -162,12 +143,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
-    cib_writer =
-        G_main_add_tempproc_trigger(G_PRIORITY_LOW, write_cib_contents, "write_cib_contents", NULL,
-                                    NULL, NULL, cib_diskwrite_complete);
-
-    /* EnableProcLogging(); */
-    set_sigchld_proctrack(G_PRIORITY_HIGH, DEFAULT_MAXDISPATCHTIME);
+    cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
 
     crm_peer_init();
     client_list = g_hash_table_new(crm_str_hash, g_str_equal);
@@ -282,47 +258,6 @@ unsigned long cib_num_ops = 0;
 const char *cib_stat_interval = "10min";
 unsigned long cib_num_local = 0, cib_num_updates = 0, cib_num_fail = 0;
 unsigned long cib_bad_connects = 0, cib_num_timeouts = 0;
-longclock_t cib_call_time = 0;
-
-gboolean cib_stats(gpointer data);
-
-gboolean
-cib_stats(gpointer data)
-{
-    int local_log_level = LOG_DEBUG;
-    static unsigned long last_stat = 0;
-    unsigned int cib_calls_ms = 0;
-    static unsigned long cib_stat_interval_ms = 0;
-
-    if (cib_stat_interval_ms == 0) {
-        cib_stat_interval_ms = crm_get_msec(cib_stat_interval);
-    }
-
-    cib_calls_ms = longclockto_ms(cib_call_time);
-
-    if ((cib_num_ops - last_stat) > 0) {
-        unsigned long calls_diff = cib_num_ops - last_stat;
-        double stat_1 = (1000 * cib_calls_ms) / calls_diff;
-
-        local_log_level = LOG_INFO;
-        do_crm_log(local_log_level,
-                   "Processed %lu operations"
-                   " (%.2fus average, %lu%% utilization) in the last %s",
-                   calls_diff, stat_1,
-                   (100 * cib_calls_ms) / cib_stat_interval_ms, cib_stat_interval);
-    }
-
-    crm_trace(
-                        "\tDetail: %lu operations (%ums total)"
-                        " (%lu local, %lu updates, %lu failures,"
-                        " %lu timeouts, %lu bad connects)",
-                        cib_num_ops, cib_calls_ms, cib_num_local, cib_num_updates,
-                        cib_num_fail, cib_bad_connects, cib_num_timeouts);
-
-    last_stat = cib_num_ops;
-    cib_call_time = 0;
-    return TRUE;
-}
 
 #if SUPPORT_HEARTBEAT
 gboolean ccm_connect(void);
@@ -362,6 +297,12 @@ ccm_connect(void)
     int (*ccm_api_unregister) (oc_ev_t * token) =
         find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_unregister");
 
+    static struct mainloop_fd_callbacks ccm_fd_callbacks = 
+        {
+            .dispatch = cib_ccm_dispatch,
+            .destroy = ccm_connection_destroy,
+        };
+    
     while (did_fail) {
         did_fail = FALSE;
         crm_info("Registering with CCM...");
@@ -406,8 +347,7 @@ ccm_connect(void)
     }
 
     crm_debug("CCM Activation passed... all set to go!");
-    G_main_add_fd(G_PRIORITY_HIGH, cib_ev_fd, FALSE,
-                  cib_ccm_dispatch, cib_ev_token, ccm_connection_destroy);
+    mainloop_add_fd("heartbeat-ccm", cib_ev_fd, cib_ev_token, &ccm_fd_callbacks);
 
     return TRUE;
 }
@@ -486,11 +426,23 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
     }
 }
 
+#if SUPPORT_HEARTBEAT
+static void
+cib_ha_connection_destroy(gpointer user_data)
+{
+    if (cib_shutdown_flag) {
+        crm_info("Heartbeat disconnection complete... exiting");
+        terminate_cib(__FUNCTION__, FALSE);
+    } else {
+        crm_err("Heartbeat connection lost!  Exiting.");
+        terminate_cib(__FUNCTION__, TRUE);
+    }
+}
+#endif
+
 int
 cib_init(void)
 {
-    gboolean was_error = FALSE;
-
     config_hash =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
@@ -500,13 +452,18 @@ cib_init(void)
     }
 
     if (stand_alone == FALSE) {
-        void *dispatch = cib_ha_peer_callback;
-        void *destroy = cib_ha_connection_destroy;
+        void *dispatch = NULL;
+        void *destroy = NULL;
 
         if (is_openais_cluster()) {
 #if SUPPORT_COROSYNC
             destroy = cib_ais_destroy;
             dispatch = cib_ais_dispatch;
+#endif
+        } else if(is_heartbeat_cluster()) {
+#if SUPPORT_HEARTBEAT
+            dispatch = cib_ha_peer_callback;
+            destroy = cib_ha_connection_destroy;
 #endif
         }
 
@@ -525,6 +482,8 @@ cib_init(void)
         }
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {
+
+            gboolean was_error = FALSE;
 
             if (was_error == FALSE) {
                 if (HA_OK !=
@@ -552,44 +511,29 @@ cib_init(void)
         cib_our_uname = crm_strdup("localhost");
     }
 
-    channel1 = crm_strdup(cib_channel_callback);
-    was_error = init_server_ipc_comms(channel1, cib_client_connect, default_ipc_connection_destroy);
-
-    channel2 = crm_strdup(cib_channel_ro);
-    was_error = was_error || init_server_ipc_comms(channel2, cib_client_connect,
-                                                   default_ipc_connection_destroy);
-
-    channel3 = crm_strdup(cib_channel_rw);
-    was_error = was_error || init_server_ipc_comms(channel3, cib_client_connect,
-                                                   default_ipc_connection_destroy);
+    ipcs_ro = mainloop_add_ipc_server(cib_channel_ro, QB_IPC_NATIVE, &ipc_ro_callbacks);
+    ipcs_rw = mainloop_add_ipc_server(cib_channel_rw, QB_IPC_NATIVE, &ipc_rw_callbacks);
+    ipcs_shm = mainloop_add_ipc_server(cib_channel_shm, QB_IPC_SHM, &ipc_rw_callbacks);
 
     if (stand_alone) {
-        if (was_error) {
-            crm_err("Couldnt start");
-            return 1;
-        }
         cib_is_master = TRUE;
-
-        /* Create the mainloop and run it... */
-        mainloop = g_main_new(FALSE);
-        crm_info("Starting %s mainloop", crm_system_name);
-
-        g_main_run(mainloop);
-        return 0;
     }
 
-    if (was_error == FALSE) {
+    if (ipcs_ro != NULL && ipcs_rw != NULL && ipcs_shm != NULL) {
         /* Create the mainloop and run it... */
         mainloop = g_main_new(FALSE);
         crm_info("Starting %s mainloop", crm_system_name);
-
-        g_timeout_add(crm_get_msec(cib_stat_interval), cib_stats, NULL);
 
         g_main_run(mainloop);
 
     } else {
-        crm_err("Couldnt start all communication channels, exiting.");
+        crm_err("Couldnt start all IPC channels, exiting.");
+        return -1;
     }
+
+    qb_ipcs_destroy(ipcs_ro);
+    qb_ipcs_destroy(ipcs_rw);
+    qb_ipcs_destroy(ipcs_shm);
 
     return 0;
 }
@@ -613,64 +557,6 @@ usage(const char *cmd, int exit_status)
     fflush(stream);
 
     exit(exit_status);
-}
-
-void
-cib_ha_connection_destroy(gpointer user_data)
-{
-    if (cib_shutdown_flag) {
-        crm_info("Heartbeat disconnection complete... exiting");
-        terminate_cib(__FUNCTION__, FALSE);
-    } else {
-        crm_err("Heartbeat connection lost!  Exiting.");
-        terminate_cib(__FUNCTION__, TRUE);
-    }
-}
-
-static void
-disconnect_cib_client(gpointer key, gpointer value, gpointer user_data)
-{
-    cib_client_t *a_client = value;
-
-    crm_trace("Processing client %s/%s... send=%d, recv=%d",
-                crm_str(a_client->name), crm_str(a_client->channel_name),
-                (int)a_client->channel->send_queue->current_qlen,
-                (int)a_client->channel->recv_queue->current_qlen);
-
-    if (a_client->channel->ch_status == IPC_CONNECT) {
-        a_client->channel->ops->resume_io(a_client->channel);
-        if (a_client->channel->send_queue->current_qlen != 0
-            || a_client->channel->recv_queue->current_qlen != 0) {
-            crm_info("Flushed messages to/from %s/%s... send=%d, recv=%d",
-                     crm_str(a_client->name),
-                     crm_str(a_client->channel_name),
-                     (int)a_client->channel->send_queue->current_qlen,
-                     (int)a_client->channel->recv_queue->current_qlen);
-        }
-    }
-
-    if (a_client->channel->ch_status == IPC_CONNECT) {
-        crm_warn("Disconnecting %s/%s...",
-                 crm_str(a_client->name), crm_str(a_client->channel_name));
-        a_client->channel->ops->disconnect(a_client->channel);
-    }
-}
-
-extern gboolean cib_process_disconnect(IPC_Channel * channel, cib_client_t * cib_client);
-
-void
-cib_shutdown(int nsig)
-{
-    if (cib_shutdown_flag == FALSE) {
-        cib_shutdown_flag = TRUE;
-        crm_debug("Disconnecting %d clients", g_hash_table_size(client_list));
-        g_hash_table_foreach(client_list, disconnect_cib_client, NULL);
-        crm_info("Disconnected %d clients", g_hash_table_size(client_list));
-        cib_process_disconnect(NULL, NULL);
-
-    } else {
-        crm_info("Waiting for %d clients to disconnect...", g_hash_table_size(client_list));
-    }
 }
 
 gboolean

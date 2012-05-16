@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-EXTRA_DIST              = autogen.sh ConfigureMe README.in libltdl.tar
+EXTRA_DIST              = autogen.sh ConfigureMe README.in libltdl.tar m4/gnulib-cache.m4
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
@@ -28,8 +28,8 @@ SUBDIRS	= $(CORE) cts extra doc
 
 doc_DATA = AUTHORS COPYING COPYING.LIB
 
-AUTOMAKE_OPTIONS	= foreign
-##ACLOCAL                 = aclocal -I $(auxdir)
+AUTOMAKE_OPTIONS = foreign
+ACLOCAL_AMFLAGS  = -I m4
 
 core:
 	@echo "Building only core components: $(CORE)"
