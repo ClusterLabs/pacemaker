@@ -83,7 +83,6 @@ class crm_ais(crm_lha):
                 r"Executing .* fencing operation",
                 r"LogActions: Recover",
                 r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
-                r"Corosync membership is still forming",
                 r"Peer is not part of our cluster",
                 r"We appear to be in an election loop",
                 r"Unknown node -> we will not deliver message",

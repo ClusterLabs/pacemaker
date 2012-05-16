@@ -593,7 +593,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
     }
 
     if(view_list_entries == 0 && init_phase) {
-        crm_notice("Corosync membership is still forming, ignoring");
+        crm_info("Corosync membership is still forming, ignoring");
         return;
     }
 
