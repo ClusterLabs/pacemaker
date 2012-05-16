@@ -1234,18 +1234,21 @@ cib_shutdown(int nsig)
         for(c = qb_ipcs_connection_first_get(ipcs_rw); c != NULL; c = qb_ipcs_connection_next_get(ipcs_rw, c)) {
             crm_debug("Disconnecting r/w client %p...", c);
             qb_ipcs_disconnect(c);
+            qb_ipcs_connection_unref(c);
             disconnects++;
         }
 
         for(c = qb_ipcs_connection_first_get(ipcs_ro); c != NULL; c = qb_ipcs_connection_next_get(ipcs_ro, c)) {
             crm_debug("Disconnecting r/o client %p...", c);
             qb_ipcs_disconnect(c);
+            qb_ipcs_connection_unref(c);
             disconnects++;
         }
 
         for(c = qb_ipcs_connection_first_get(ipcs_shm); c != NULL; c = qb_ipcs_connection_next_get(ipcs_shm, c)) {
             crm_debug("Disconnecting non-blocking r/w client %p...", c);
             qb_ipcs_disconnect(c);
+            qb_ipcs_connection_unref(c);
             disconnects++;
         }
 
