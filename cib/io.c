@@ -547,6 +547,8 @@ static void cib_diskwrite_complete(GPid pid, gint status, gpointer user_data)
         crm_err("Disabling disk writes after write failure");
         cib_writes_enabled = FALSE;
     }
+
+    mainloop_trigger_complete(cib_writer);
 }
 
 int
@@ -578,13 +580,15 @@ write_cib_contents(gpointer p)
     } else {
         int pid = fork();
         if (pid < 0) {
+            crm_perror(LOG_ERR, "Disabling disk writes after fork failure");
+            cib_writes_enabled = FALSE;
             return FALSE;
         }
 
         if (pid) {
             /* Parent */
             g_child_watch_add(pid, cib_diskwrite_complete, NULL);
-            return TRUE;
+            return -1; /* -1 means 'still work to do' */
         }
         
         /* A-synchronous write out after a fork() */

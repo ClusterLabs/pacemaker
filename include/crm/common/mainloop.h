@@ -22,10 +22,12 @@
 
 typedef struct trigger_s crm_trigger_t;
 
-extern crm_trigger_t *mainloop_add_trigger(int priority, gboolean(*dispatch) (gpointer user_data),
+extern crm_trigger_t *mainloop_add_trigger(int priority, int(*dispatch) (gpointer user_data),
                                            gpointer userdata);
 
 extern void mainloop_set_trigger(crm_trigger_t * source);
+
+extern void mainloop_trigger_complete(crm_trigger_t *trig);
 
 extern gboolean mainloop_destroy_trigger(crm_trigger_t * source);
 

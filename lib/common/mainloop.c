@@ -33,6 +33,7 @@
 
 typedef struct trigger_s {
     GSource source;
+    gboolean running;
     gboolean trigger;
     void *user_data;
     guint id;
@@ -77,14 +78,24 @@ crm_trigger_check(GSource * source)
 static gboolean
 crm_trigger_dispatch(GSource * source, GSourceFunc callback, gpointer userdata)
 {
+    int rc = TRUE;
     crm_trigger_t *trig = (crm_trigger_t *) source;
 
+    if(trig->running) {
+        /* Wait until the existing job is complete before starting the next one */
+        return TRUE;
+    }
     trig->trigger = FALSE;
 
     if (callback) {
-        return callback(trig->user_data);
+        rc = callback(trig->user_data);
+        if(rc < 0) {
+            crm_trace("Trigger handler %p not yet complete", trig);
+            trig->running = TRUE;
+            rc = TRUE;
+        }
     }
-    return TRUE;
+    return rc;
 }
 
 static GSourceFuncs crm_trigger_funcs = {
@@ -95,7 +106,7 @@ static GSourceFuncs crm_trigger_funcs = {
 };
 
 static crm_trigger_t *
-mainloop_setup_trigger(GSource * source, int priority, gboolean(*dispatch) (gpointer user_data),
+mainloop_setup_trigger(GSource * source, int priority, int(*dispatch) (gpointer user_data),
                        gpointer userdata)
 {
     crm_trigger_t *trigger = NULL;
@@ -117,8 +128,20 @@ mainloop_setup_trigger(GSource * source, int priority, gboolean(*dispatch) (gpoi
     return trigger;
 }
 
+void
+mainloop_trigger_complete(crm_trigger_t *trig) 
+{
+    crm_trace("Trigger handler %p complete", trig);
+    trig->running = FALSE;
+}
+
+/* If dispatch returns:
+ *  -1: Job running but not complete
+ *   0: Remove the trigger from mainloop
+ *   1: Leave the trigger in mainloop
+ */
 crm_trigger_t *
-mainloop_add_trigger(int priority, gboolean(*dispatch) (gpointer user_data), gpointer userdata)
+mainloop_add_trigger(int priority, int(*dispatch) (gpointer user_data), gpointer userdata)
 {
     GSource *source = NULL;
 
