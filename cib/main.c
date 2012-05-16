@@ -443,8 +443,6 @@ cib_ha_connection_destroy(gpointer user_data)
 int
 cib_init(void)
 {
-    gboolean was_error = FALSE;
-
     config_hash =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
@@ -485,6 +483,8 @@ cib_init(void)
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {
 
+            gboolean was_error = FALSE;
+
             if (was_error == FALSE) {
                 if (HA_OK !=
                     hb_conn->llc_ops->set_cstatus_callback(hb_conn, cib_client_status_callback,
@@ -516,21 +516,10 @@ cib_init(void)
     ipcs_shm = mainloop_add_ipc_server(cib_channel_shm, QB_IPC_SHM, &ipc_rw_callbacks);
 
     if (stand_alone) {
-        if (was_error) {
-            crm_err("Couldnt start");
-            return 1;
-        }
         cib_is_master = TRUE;
-
-        /* Create the mainloop and run it... */
-        mainloop = g_main_new(FALSE);
-        crm_info("Starting %s mainloop", crm_system_name);
-
-        g_main_run(mainloop);
-        return 0;
     }
 
-    if (was_error == FALSE) {
+    if (ipcs_ro != NULL && ipcs_rw != NULL && ipcs_shm != NULL) {
         /* Create the mainloop and run it... */
         mainloop = g_main_new(FALSE);
         crm_info("Starting %s mainloop", crm_system_name);
@@ -538,8 +527,13 @@ cib_init(void)
         g_main_run(mainloop);
 
     } else {
-        crm_err("Couldnt start all communication channels, exiting.");
+        crm_err("Couldnt start all IPC channels, exiting.");
+        return -1;
     }
+
+    qb_ipcs_destroy(ipcs_ro);
+    qb_ipcs_destroy(ipcs_rw);
+    qb_ipcs_destroy(ipcs_shm);
 
     return 0;
 }
