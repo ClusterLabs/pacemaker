@@ -966,8 +966,10 @@ delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id)
         crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
 
         if(op->interval > 0) {
+            char *op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
             /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
-            crm_xml_add(xml_top, XML_ATTR_ID, op->user_data);
+            crm_xml_add(xml_top, XML_ATTR_ID, op_id);
+            crm_free(op_id);
         }
 
         crm_debug("async: Sending delete op for %s_%s_%d (call=%d)",
