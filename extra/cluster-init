@@ -144,7 +144,10 @@ if [ $accept_defaults = 0 ]; then
 	read -p "Shall I set one? [No] (domain) " -t 60 DOMAIN
     fi
     echo ""
-    read -p "Shall I install/update the relevant packages? [No] "  -t 60 INSTALL
+    if [ -z $INSTALL ]; then
+	read -p "Shall I install/update the relevant packages? [No] "  -t 60 INSTALL
+    fi
+    read -p "Shall I sync the date/time? [Yes] "  -t 60 DATE
 fi
 
 if [ -z $SSH ]; then
@@ -165,12 +168,26 @@ fi
 if [ -z $INSTALL ]; then
     INSTALL="No"
 fi
+if [ -z $DATE ]; then
+    DATE="Yes"
+fi
 
 case $SSH in
     [Yy][Ee][Ss]|[Yy]) 
 	for host in $host_list; do
 	    echo "Installing our ssh key on ${host}"
 	    ssh-copy-id root@${host} >/dev/null 2>&1 
+	done
+	;;
+esac
+
+case $DATE in
+    [Yy][Ee][Ss]|[Yy]) 
+	now=`date`
+	for host in $host_list; do
+	    echo "Setting time on ${host}"
+	    ssh -l root ${host} -- date -s "'$now'"
+	    echo ""
 	done
 	;;
 esac
