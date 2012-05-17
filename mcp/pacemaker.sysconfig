@@ -12,6 +12,13 @@
 # Log all messages matching comma-separated list of formats
 # PCMK_trace_formats="Sent delete %d"
 
+# Enable blackbox logging globally or per-subsystem
+# Blackbox data is written after a crash or assertion failure
+#
+# Multiple subsystems may me listed separated by commas
+# eg. PCMK_blackbox=crmd,pengine
+# PCMK_blackbox=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
+
 # Enable debug logging globally or per-subsystem
 # Multiple subsystems may me listed separated by commas
 # eg. PCMK_debug=crmd,pengine

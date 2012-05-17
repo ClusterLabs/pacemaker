@@ -27,10 +27,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
+
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-
 #include <stdlib.h>
 #include <limits.h>
 #include <ctype.h>
@@ -38,7 +39,7 @@
 #include <grp.h>
 #include <time.h>
 #include <libgen.h>
-#include <sys/utsname.h>
+#include <signal.h>
 
 #include <qb/qbdefs.h>
 
@@ -646,6 +647,67 @@ daemon_option_enabled(const char *daemon, const char *option)
     return FALSE;
 }
 
+static char *blackbox_file_prefix = NULL;
+
+void
+crm_enable_blackbox(int nsig)
+{
+    if(blackbox_file_prefix == NULL) {
+        pid_t pid = getpid();
+
+        blackbox_file_prefix = malloc(NAME_MAX);
+        snprintf(blackbox_file_prefix, NAME_MAX, "%s/blackbox-%s-%d", CRM_STATE_DIR, crm_system_name, pid);
+    }
+
+    if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
+        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
+        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 1024*100); /* Any size change drops existing entries */
+        qb_log_filter_ctl(QB_LOG_BLACKBOX, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", LOG_DEBUG);
+
+        crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
+        crm_signal(SIGSEGV, crm_write_blackbox);
+    }
+}
+
+void
+crm_write_blackbox(int nsig)
+{
+    static int counter = 1;
+    char buffer[NAME_MAX];
+
+    if(blackbox_file_prefix == NULL) {
+        return;
+    }
+
+    switch(nsig) {
+        case 0:
+        case SIGTRAP:
+            /* The graceful case - such as assertion failure or user request */
+
+            snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
+
+            crm_notice("Problem detected, please see %s for additional detail", buffer);
+            qb_log_blackbox_write_to_file(buffer);
+
+            /* Flush the existing contents
+             * A size change would also work
+             */
+            qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
+            qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
+            break;
+        
+        default:
+            /* Do as little as possible, just try to get what we have out
+             * We logged the filename when the blackbox was enabled
+             */
+            crm_signal(nsig, SIG_DFL);
+            qb_log_blackbox_write_to_file(blackbox_file_prefix);
+            qb_log_fini();
+            raise(nsig);
+            break;
+    }
+}
+
 gboolean
 crm_log_cli_init(const char *entity)
 {
@@ -712,6 +774,10 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         if(daemon) {
             setenv("HA_logfacility", facility, TRUE);
         }
+    }
+
+    if (daemon_option_enabled(crm_system_name, "blackbox")) {
+        crm_enable_blackbox(0);
     }
 
     /* Set default format strings */
@@ -1616,6 +1682,8 @@ crm_abort(const char *file, const char *function, int line,
     int rc = 0;
     int pid = 0;
     int status = 0;
+
+    crm_write_blackbox(0);
 
     if (do_core == FALSE) {
         crm_err("%s: Triggered assert at %s:%d : %s", function, file, line, assert_condition);

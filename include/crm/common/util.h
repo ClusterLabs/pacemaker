@@ -398,4 +398,7 @@ extern char *crm_generate_uuid(void);
 
 char *crm_md5sum(const char *buffer);
 
+void crm_enable_blackbox(void);
+void crm_write_blackbox(int nsig);
+
 #endif
