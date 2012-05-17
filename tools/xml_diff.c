@@ -87,7 +87,7 @@ main(int argc, char **argv)
 
     int option_index = 0;
 
-    crm_log_init_quiet(NULL, LOG_CRIT - 1, FALSE, FALSE, argc, argv);
+    crm_log_cli_init("crm_diff");
     crm_set_options(NULL, "original_xml operation [options]", long_options,
                     "A utility for comparing Pacemaker configurations (XML format)\n\n"
                     "The tool produces a custom (diff-like) output which it can also apply like a patch\n");

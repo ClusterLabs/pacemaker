@@ -492,20 +492,6 @@ crm_log_deinit(void)
 #endif
 }
 
-gboolean
-crm_log_init(const char *entity, int level, gboolean coredir, gboolean to_stderr,
-             int argc, char **argv)
-{
-    return crm_log_init_worker(entity, level, coredir, to_stderr, argc, argv, FALSE);
-}
-
-gboolean
-crm_log_init_quiet(const char *entity, int level, gboolean coredir, gboolean to_stderr,
-                   int argc, char **argv)
-{
-    return crm_log_init_worker(entity, level, coredir, to_stderr, argc, argv, TRUE);
-}
-
 #define FMT_MAX 256
 void
 set_format_string(int method, const char *daemon, gboolean trace)
@@ -661,8 +647,14 @@ daemon_option_enabled(const char *daemon, const char *option)
 }
 
 gboolean
-crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to_stderr,
-                    int argc, char **argv, gboolean quiet)
+crm_log_cli_init(const char *entity)
+{
+    return crm_log_init(entity, LOG_ERR, FALSE, FALSE, 0, NULL, TRUE);
+}
+
+gboolean
+crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
+             int argc, char **argv, gboolean quiet)
 {
     int lpc = 0;
     const char *logfile = getenv("HA_debugfile");
@@ -716,8 +708,10 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
 
     } else {
-        setenv("HA_logfacility", facility, TRUE);
         crm_log_args(argc, argv);
+        if(daemon) {
+            setenv("HA_logfacility", facility, TRUE);
+        }
     }
 
     /* Set default format strings */
@@ -733,16 +727,16 @@ crm_log_init_worker(const char *entity, int level, gboolean coredir, gboolean to
 
     /* Ok, now we can start logging... */
 
-    if (coredir) {
+    if (daemon) {
         const char *user = getenv("USER");
 
         if (user != NULL && safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
             crm_trace("Not switching to corefile directory for %s", user);
-            coredir = FALSE;
+            daemon = FALSE;
         }
     }
 
-    if (coredir) {
+    if (daemon) {
         int user = getuid();
         const char *base = HA_COREDIR;
         struct passwd *pwent = getpwuid(user);

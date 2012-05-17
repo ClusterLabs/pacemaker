@@ -194,7 +194,7 @@ main(int argc, char **argv)
 
     int option_index = 0;
 
-    crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv);
+    crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "command [options] [data]", long_options,
                     "Provides direct access to the cluster configuration."
                     "\n\nAllows the configuration, or sections of it, to be queried, modified, replaced and deleted."

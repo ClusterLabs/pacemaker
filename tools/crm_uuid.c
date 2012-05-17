@@ -73,7 +73,7 @@ main(int argc, char **argv)
         return rc;
     }
 
-    crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_log_cli_init("crm_uuid");
     crm_set_options(NULL, " [-r|-w new_ascii_value]",
                     long_options, "A tool for manipulating Heartbeat's UUID file");
 

@@ -1195,7 +1195,7 @@ main(int argc, char **argv)
     int argerr = 0;
     int flag;
 
-    crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_log_cli_init("crm_resource");
     crm_set_options(NULL, "(query|command) [options]", long_options,
                     "Perform tasks related to cluster resources.\nAllows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 

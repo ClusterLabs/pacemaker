@@ -71,7 +71,7 @@ main(int argc, char ** argv)
     stonith_key_value_t *params = NULL;
     gboolean passive_mode = FALSE;
     
-    crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv);
+    crm_log_cli_init("stonith-test");
     crm_set_options(NULL, "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");

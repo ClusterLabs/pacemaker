@@ -74,7 +74,7 @@ main(int argc, char **argv)
     int flag;
     int BE_QUIET = FALSE;
 
-    crm_log_init_quiet(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_log_cli_init("attrd_updater");
     crm_set_options(NULL, "command -n attribute [options]", long_options,
                     "Tool for updating cluster node attributes");
 

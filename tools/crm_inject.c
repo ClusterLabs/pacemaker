@@ -1230,7 +1230,7 @@ main(int argc, char **argv)
 
     xmlNode *input = NULL;
 
-    crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_log_cli_init("crm_simulate");
     crm_set_options(NULL, "datasource operation [additional options]",
                     long_options, "Tool for simulating the cluster's response to events");
 

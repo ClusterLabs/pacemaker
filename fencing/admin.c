@@ -112,7 +112,7 @@ main(int argc, char ** argv)
     stonith_key_value_t *devices = NULL;
     stonith_key_value_t *dIter = NULL;
     
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
+    crm_log_init(NULL, LOG_NOTICE, FALSE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "mode [options]", long_options,
 		    "Provides access to the stonith-ng API.\n"
                     "\nAllows the administrator to add/remove/list devices, check device and host status and fence hosts\n");

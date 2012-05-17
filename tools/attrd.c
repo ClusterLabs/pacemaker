@@ -497,7 +497,7 @@ main(int argc, char **argv)
     gboolean was_err = FALSE;
     qb_ipcs_service_t *ipcs = NULL;
     
-    crm_log_init(T_ATTRD, LOG_NOTICE, TRUE, FALSE, argc, argv);
+    crm_log_init(T_ATTRD, LOG_NOTICE, TRUE, FALSE, argc, argv, FALSE);
     mainloop_add_signal(SIGTERM, attrd_shutdown);
 
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {

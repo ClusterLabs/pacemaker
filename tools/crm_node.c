@@ -626,7 +626,7 @@ main(int argc, char **argv)
     int option_index = 0;
 
     crm_peer_init();
-    crm_log_init(NULL, LOG_INFO, FALSE, FALSE, argc, argv);
+    crm_log_cli_init("crm_node");
     crm_set_options(NULL, "command [options]", long_options,
                     "Tool for displaying low-level node information");
 

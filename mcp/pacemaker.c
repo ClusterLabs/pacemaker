@@ -679,7 +679,7 @@ main(int argc, char **argv)
     setenv("HA_use_logd",       "off",     1);
 /* *INDENT-ON* */
 
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "mode [options]", long_options, "Start/Stop Pacemaker\n");
 
     while (1) {
@@ -763,7 +763,7 @@ main(int argc, char **argv)
         crm_make_daemon(crm_system_name, TRUE, pid_file);
 
         /* Only Re-init if we're running daemonized */
-        crm_log_init(NULL, LOG_INFO, TRUE, FALSE, 0, NULL);
+        crm_log_init(NULL, LOG_INFO, TRUE, FALSE, 0, NULL, FALSE);
     }
 
     crm_notice("Starting Pacemaker %s (Build: %s): %s\n",

@@ -138,7 +138,7 @@ main(int argc, char **argv)
         usage(crm_system_name, LSB_EXIT_GENERIC);
     }
 
-    crm_log_init(NULL, LOG_NOTICE, TRUE, FALSE, argc, argv);
+    crm_log_init(NULL, LOG_NOTICE, TRUE, FALSE, argc, argv, FALSE);
 
     if (crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
         crm_err("Bad permissions on " PE_STATE_DIR ". Terminating");

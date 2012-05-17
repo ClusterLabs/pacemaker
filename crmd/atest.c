@@ -42,7 +42,7 @@ main(int argc, char **argv)
     const char *xml_file = NULL;
     const char *xpath = NULL;
 
-    crm_log_init(NULL, LOG_DEBUG, FALSE, TRUE, argc, argv);
+    crm_log_init(NULL, LOG_DEBUG, FALSE, TRUE, argc, argv, FALSE);
     while (1) {
         flag = getopt(argc, argv, OPTARGS);
         if (flag == -1)

@@ -135,7 +135,7 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 
     if (log_init == FALSE) {
         log_init = TRUE;
-        crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL);
+        crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL, FALSE);
     }
 
     if (0 == STRNCMP_CONST(op_type, "meta-data")) {

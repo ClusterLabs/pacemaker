@@ -55,7 +55,7 @@ main(int argc, char **argv)
     char *input_s = NULL;
     char *mutable_s = NULL;
 
-    crm_log_init_quiet(NULL, LOG_INFO, FALSE, TRUE, argc, argv);
+    crm_log_cli_init("iso8601");
     crm_set_options(NULL, "command [output modifier] ", long_options,
                     "Display and parse ISO8601 dates and times");
 

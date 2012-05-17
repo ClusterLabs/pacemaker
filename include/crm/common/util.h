@@ -88,16 +88,12 @@ struct crm_option {
 
 extern void crm_log_deinit(void);
 
-extern gboolean crm_log_init(const char *entity, int level, gboolean coredir, gboolean to_stderr,
-                             int argc, char **argv);
-
-extern gboolean crm_log_init_quiet(const char *entity, int level, gboolean coredir,
-                                   gboolean to_stderr, int argc, char **argv);
-
 extern gboolean daemon_option_enabled(const char *daemon, const char *option);
 
-extern gboolean crm_log_init_worker(const char *entity, int level, gboolean coredir,
-                                    gboolean to_stderr, int argc, char **argv, gboolean quiet);
+gboolean crm_log_cli_init(const char *entity);
+
+gboolean crm_log_init(const char *entity, int level, gboolean daemon,
+                      gboolean to_stderr, int argc, char **argv, gboolean quiet);
 
 extern void crm_log_args(int argc, char **argv);
 

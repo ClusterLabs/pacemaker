@@ -664,7 +664,7 @@ main(int argc, char ** argv)
     int option_index = 0;
     const char *actions[] = { "reboot", "poweroff", "list", "monitor", "status" };
 
-    crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv);
+    crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");

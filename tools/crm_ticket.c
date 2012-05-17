@@ -666,7 +666,7 @@ main(int argc, char **argv)
     int argerr = 0;
     int flag;
 
-    crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "(query|command) [options]", long_options,
                     "Perform tasks related to cluster tickets.\nAllows ticket attributes to be queried, modified and deleted.\n");
 

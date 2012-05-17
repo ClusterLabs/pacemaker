@@ -76,7 +76,7 @@ main(int argc, char **argv)
         return 0;
     }
 
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
     crm_notice("CRM Git Version: %s\n", BUILD_VERSION);
 
