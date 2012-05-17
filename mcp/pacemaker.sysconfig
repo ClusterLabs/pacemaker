@@ -16,6 +16,9 @@
 # Blackbox data is written after a crash, assertion failure and/or when SIGTRAP is recieved
 # The blackbox recorder can also be enabled for Pacemaker daemons at runtime by sending SIGUSR1
 #
+# After the blackbox has been enabled, additional (very verbose) tracing can
+#   be turned on with SIGPROF
+#
 # Multiple subsystems may me listed separated by commas
 # eg. PCMK_blackbox=crmd,pengine
 # PCMK_blackbox=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd

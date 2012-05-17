@@ -650,6 +650,21 @@ daemon_option_enabled(const char *daemon, const char *option)
 static char *blackbox_file_prefix = NULL;
 
 void
+crm_enable_blackbox_tracing(int nsig) 
+{
+    static gboolean enabled = FALSE;
+
+    if(enabled) {
+        enabled = FALSE;
+        qb_log_filter_ctl(QB_LOG_BLACKBOX, QB_LOG_FILTER_REMOVE, QB_LOG_FILTER_FILE, "*", LOG_TRACE);
+    } else {
+        enabled = TRUE;
+        qb_log_filter_ctl(QB_LOG_BLACKBOX, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", LOG_TRACE);
+    }
+    crm_debug("Blackbox tracing is %s", enabled?"on":"off");
+}
+
+void
 crm_enable_blackbox(int nsig)
 {
     if(blackbox_file_prefix == NULL) {
@@ -667,6 +682,15 @@ crm_enable_blackbox(int nsig)
         crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
         crm_signal(SIGSEGV, crm_write_blackbox);
 
+        /* Original meanings from signal(7) 
+         *
+         * Signal       Value     Action   Comment
+         * SIGPROF     27,27,29    Term    Profiling timer expired
+         * SIGTRAP        5        Core    Trace/breakpoint trap
+         *
+         * Our usage is as similar as possible
+         */
+        mainloop_add_signal(SIGPROF, crm_enable_blackbox_tracing);
         mainloop_add_signal(SIGTRAP, crm_write_blackbox);
     }
 }
@@ -834,7 +858,6 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
             }
 #endif
         }
-
         mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
     }
 
