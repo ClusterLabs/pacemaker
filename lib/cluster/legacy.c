@@ -21,6 +21,7 @@
 #include <crm/ais.h>
 #include <crm/common/ipc.h>
 #include <crm/common/cluster.h>
+#include <crm/common/mainloop.h>
 #include <sys/utsname.h>
 #include "stack.h"
 #if SUPPORT_COROSYNC
@@ -1011,6 +1012,7 @@ pcmk_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     }
 
     free_xml(msg);
+    return 0;
 }
 
 static void
