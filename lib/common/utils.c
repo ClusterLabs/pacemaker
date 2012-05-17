@@ -666,6 +666,8 @@ crm_enable_blackbox(int nsig)
 
         crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
         crm_signal(SIGSEGV, crm_write_blackbox);
+
+        mainloop_add_signal(SIGTRAP, crm_write_blackbox);
     }
 }
 
@@ -683,7 +685,6 @@ crm_write_blackbox(int nsig)
         case 0:
         case SIGTRAP:
             /* The graceful case - such as assertion failure or user request */
-
             snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
 
             crm_notice("Problem detected, please see %s for additional detail", buffer);
@@ -833,12 +834,11 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
             }
 #endif
         }
+
+        mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
     }
 
     update_all_trace_data();
-
-    crm_signal(DEBUG_INC, alter_debug);
-    crm_signal(DEBUG_DEC, alter_debug);
 
     return TRUE;
 }
@@ -1044,32 +1044,6 @@ compare_version(const char *version1, const char *version2)
 }
 
 gboolean do_stderr = FALSE;
-
-void
-alter_debug(int nsig)
-{
-    int level = get_crm_log_level();
-
-    crm_signal(DEBUG_INC, alter_debug);
-    crm_signal(DEBUG_DEC, alter_debug);
-
-    switch (nsig) {
-        case DEBUG_INC:
-            crm_bump_log_level();
-            break;
-
-        case DEBUG_DEC:
-            if (level > 0) {
-                set_crm_log_level(level - 1);
-            }
-            break;
-
-        default:
-            fprintf(stderr, "Unknown signal %d\n", nsig);
-            crm_err("Unknown signal %d", nsig);
-            break;
-    }
-}
 
 void
 g_hash_destroy_str(gpointer data)

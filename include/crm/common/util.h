@@ -45,9 +45,6 @@
                                         /* Status of an offline client */
 #  endif
 
-#  define DEBUG_INC SIGUSR1
-#  define DEBUG_DEC SIGUSR2
-
 extern unsigned int crm_log_level;
 extern gboolean crm_config_error;
 extern gboolean crm_config_warning;
@@ -121,8 +118,6 @@ extern gboolean decodeNVpair(const char *srcstring, char separator, char **name,
 extern int compare_version(const char *version1, const char *version2);
 
 extern char *generateReference(const char *custom1, const char *custom2);
-
-extern void alter_debug(int nsig);
 
 extern void g_hash_destroy_str(gpointer data);
 
@@ -398,7 +393,7 @@ extern char *crm_generate_uuid(void);
 
 char *crm_md5sum(const char *buffer);
 
-void crm_enable_blackbox(void);
+void crm_enable_blackbox(int nsig);
 void crm_write_blackbox(int nsig);
 
 #endif

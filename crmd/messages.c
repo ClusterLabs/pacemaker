@@ -782,7 +782,9 @@ handle_request(xmlNode * stored_msg)
         crm_info("Debug set to %d", get_crm_log_level());
 
     } else if (strcmp(op, CRM_OP_DEBUG_DOWN) == 0) {
-        alter_debug(DEBUG_DEC);
+        int level = get_crm_log_level();
+
+        set_crm_log_level(level - 1);
         crm_info("Debug set to %d", get_crm_log_level());
 
     } else {

@@ -13,7 +13,8 @@
 # PCMK_trace_formats="Sent delete %d"
 
 # Enable blackbox logging globally or per-subsystem
-# Blackbox data is written after a crash or assertion failure
+# Blackbox data is written after a crash, assertion failure and/or when SIGTRAP is recieved
+# The blackbox recorder can also be enabled for Pacemaker daemons at runtime by sending SIGUSR1
 #
 # Multiple subsystems may me listed separated by commas
 # eg. PCMK_blackbox=crmd,pengine
