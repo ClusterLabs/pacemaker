@@ -31,14 +31,14 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
 
-typedef struct trigger_s {
+struct trigger_s {
     GSource source;
     gboolean running;
     gboolean trigger;
     void *user_data;
     guint id;
 
-} crm_trigger_t;
+};
 
 static gboolean
 crm_trigger_prepare(GSource * source, gint * timeout)
@@ -467,7 +467,7 @@ void mainloop_del_ipc_server(qb_ipcs_service_t *server)
     qb_ipcs_destroy(server);
 }
 
-typedef struct mainloop_io_s
+struct mainloop_io_s
 {
         char *name;
         void *userdata;
@@ -480,7 +480,7 @@ typedef struct mainloop_io_s
         int (*dispatch_fn_io) (gpointer userdata);
         void (*destroy_fn) (gpointer userdata);
 
-} mainloop_io_t;
+};
 
 static gboolean
 mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
