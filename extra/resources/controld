@@ -172,9 +172,9 @@ controld_monitor() {
 controld_validate() {
     check_binary ${OCF_RESKEY_daemon}
 
-    case ${OCF_RESKEY_CRM_meta_gloablly_unique} in
+    case ${OCF_RESKEY_CRM_meta_globally_unique} in
 	yes|Yes|true|True|1) 
-	    ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the gloablly_unique=false meta attribute"
+	    ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the globally_unique=false meta attribute"
 	    exit $OCF_ERR_CONFIGURED
 	    ;;
     esac
@@ -186,7 +186,7 @@ controld_validate() {
 
 : ${OCF_RESKEY_sctp=false}
 : ${OCF_RESKEY_configdir=/sys/kernel/config}
-: ${OCF_RESKEY_CRM_meta_gloablly_unique:="false"}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 case "$HA_quorum_type" in
     cman|corosync) daemon_ext="";;
