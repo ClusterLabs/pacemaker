@@ -1357,7 +1357,7 @@ unpack_order_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t
     expand_templates_in_sets(xml_obj, &new_xml, data_set);
     if (new_xml) {
         /* There are resource sets referencing templates. Return with the expanded XML. */
-	crm_log_xml_debug_3(new_xml, "Expanded rsc_order...");
+	crm_log_xml_trace(new_xml, "Expanded rsc_order...");
 	*expanded_xml = new_xml;
 	return TRUE;
     }
@@ -1840,7 +1840,7 @@ unpack_colocation_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
     expand_templates_in_sets(xml_obj, &new_xml, data_set);
     if (new_xml) {
         /* There are resource sets referencing templates. Return with the expanded XML. */
-	crm_log_xml_debug_3(new_xml, "Expanded rsc_colocation...");
+	crm_log_xml_trace(new_xml, "Expanded rsc_colocation...");
 	*expanded_xml = new_xml;
 	return TRUE;
     }
@@ -2204,7 +2204,7 @@ unpack_rsc_ticket_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_
     expand_templates_in_sets(xml_obj, &new_xml, data_set);
     if (new_xml) {
         /* There are resource sets referencing templates. Return with the expanded XML. */
-	crm_log_xml_debug_3(new_xml, "Expanded rsc_ticket...");
+	crm_log_xml_trace(new_xml, "Expanded rsc_ticket...");
 	*expanded_xml = new_xml;
 	return TRUE;
     }

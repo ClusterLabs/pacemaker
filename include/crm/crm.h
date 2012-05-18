@@ -295,12 +295,6 @@ typedef GList *GListPtr;
 #    define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
 #    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
 
-#  define crm_debug_2 crm_trace
-#  define crm_debug_3 crm_trace
-#  define crm_debug_4 crm_trace
-#  define crm_debug_5 crm_trace
-#  define crm_debug_6 crm_trace
-
 #  include <crm/common/util.h>
 
 #  define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)
@@ -310,12 +304,6 @@ typedef GList *GListPtr;
 #  define crm_log_xml_info(xml, text)    do_crm_log_xml(LOG_INFO,    text, xml)
 #  define crm_log_xml_debug(xml, text)   do_crm_log_xml(LOG_DEBUG,   text, xml)
 #  define crm_log_xml_trace(xml, text)   do_crm_log_xml(LOG_TRACE,   text, xml)
-
-#  define crm_log_xml do_crm_log_xml
-#  define crm_log_xml_debug_2 crm_log_xml_trace
-#  define crm_log_xml_debug_3 crm_log_xml_trace
-#  define crm_log_xml_debug_4 crm_log_xml_trace
-#  define crm_log_xml_debug_5 crm_log_xml_trace
 
 #  define crm_str(x)    (const char*)(x?x:"<null>")
 
@@ -381,17 +369,6 @@ slist_basic_destroy(GListPtr list)
 	    { a; }							\
 	}								\
 	g_list_free(parent);						\
-    } while(0)
-
-#  define slist_iter(child, child_type, parent, counter, a) do {		\
-	GListPtr __crm_iter_head = parent;				\
-	child_type *child = NULL;					\
-	int counter = 0;						\
-	for(; __crm_iter_head != NULL; counter++) {			\
-	    child = (child_type *) __crm_iter_head->data;		\
-	    __crm_iter_head = __crm_iter_head->next;			\
-	    { a; }							\
-	}								\
     } while(0)
 
 #endif

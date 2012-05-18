@@ -223,7 +223,7 @@ stop_child(crm_child_t * child, int signal)
     ais_debug("Stopping CRM child \"%s\"", child->name);
 
     if (child->pid <= 0) {
-        ais_debug_2("Client %s not running", child->name);
+        ais_trace("Client %s not running", child->name);
         return TRUE;
     }
 

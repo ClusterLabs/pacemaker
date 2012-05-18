@@ -187,11 +187,7 @@ level2char(int level)
 #  define ais_notice(fmt, args...)  do_ais_log(LOG_NOTICE,  fmt , ##args)
 #  define ais_info(fmt, args...)    do_ais_log(LOG_INFO,    fmt , ##args)
 #  define ais_debug(fmt, args...)   do_ais_log(LOG_DEBUG,   fmt , ##args)
-#  define ais_debug_2(fmt, args...) do_ais_log(LOG_DEBUG+1, fmt , ##args)
-#  define ais_debug_3(fmt, args...) do_ais_log(LOG_DEBUG+2, fmt , ##args)
-#  define ais_debug_4(fmt, args...) do_ais_log(LOG_DEBUG+3, fmt , ##args)
-#  define ais_debug_5(fmt, args...) do_ais_log(LOG_DEBUG+4, fmt , ##args)
-#  define ais_debug_6(fmt, args...) do_ais_log(LOG_DEBUG+5, fmt , ##args)
+#  define ais_trace(fmt, args...)   do_ais_log(LOG_DEBUG+1, fmt , ##args)
 
 #  define ais_malloc0(malloc_obj, length) do {				\
 	malloc_obj = malloc(length);					\

@@ -811,7 +811,7 @@ pcmk_peer_update(enum totem_configuration_type configuration_type,
         changed = 0;
     }
 
-    ais_debug_2("Reaping unseen nodes...");
+    ais_trace("Reaping unseen nodes...");
     g_hash_table_foreach(membership_list, ais_mark_unseen_peer_dead, &changed);
 
     if (member_list_entries > 1) {
@@ -881,7 +881,7 @@ pcmk_cluster_swab(void *msg)
 {
     AIS_Message *ais_msg = msg;
 
-    ais_debug_3("Performing endian conversion...");
+    ais_trace("Performing endian conversion...");
     ais_msg->id = swab32(ais_msg->id);
     ais_msg->size = swab32(ais_msg->size);
     ais_msg->is_compressed = swab32(ais_msg->is_compressed);
@@ -909,7 +909,7 @@ pcmk_cluster_callback(ais_void_ptr * message, unsigned int nodeid)
 {
     const AIS_Message *ais_msg = message;
 
-    ais_debug_2("Message from node %u (%s)", nodeid, nodeid == local_nodeid ? "local" : "remote");
+    ais_trace("Message from node %u (%s)", nodeid, nodeid == local_nodeid ? "local" : "remote");
 /*  Shouldn't be required...
     update_member(
  	ais_msg->sender.id, membership_seq, -1, 0, ais_msg->sender.uname, NULL);
@@ -919,7 +919,7 @@ pcmk_cluster_callback(ais_void_ptr * message, unsigned int nodeid)
         route_ais_message(ais_msg, FALSE);
 
     } else {
-        ais_debug_3("Discarding Msg[%d] (dest=%s:%s, from=%s:%s)",
+        ais_trace("Discarding Msg[%d] (dest=%s:%s, from=%s:%s)",
                     ais_msg->id, ais_dest(&(ais_msg->host)),
                     msg_type2text(ais_msg->host.type),
                     ais_dest(&(ais_msg->sender)), msg_type2text(ais_msg->sender.type));
@@ -931,7 +931,7 @@ pcmk_cluster_id_swab(void *msg)
 {
     struct crm_identify_msg_s *ais_msg = msg;
 
-    ais_debug_3("Performing endian conversion...");
+    ais_trace("Performing endian conversion...");
     ais_msg->id = swab32(ais_msg->id);
     ais_msg->pid = swab32(ais_msg->pid);
     ais_msg->votes = swab32(ais_msg->votes);
@@ -992,7 +992,7 @@ pcmk_ipc(void *conn, ais_void_ptr * msg)
     const AIS_Message *ais_msg = (const AIS_Message *)msg;
     void *async_conn = conn;
 
-    ais_debug_2("Message from client %p", conn);
+    ais_trace("Message from client %p", conn);
 
     if (check_message_sanity(msg, ((const AIS_Message *)msg)->data) == FALSE) {
         /* The message is corrupted - ignore */
@@ -1014,7 +1014,7 @@ pcmk_ipc(void *conn, ais_void_ptr * msg)
     /* memcpy(ais_msg, msg, size); */
 
     type = mutable->sender.type;
-    ais_debug_3
+    ais_trace
         ("type: %d local: %d conn: %p host type: %d ais: %d sender pid: %d child pid: %d size: %d",
          type, mutable->host.local, pcmk_children[type].conn, mutable->host.type, crm_msg_ais,
          mutable->sender.pid, pcmk_children[type].pid, ((int)SIZEOF(pcmk_children)));
@@ -1180,7 +1180,7 @@ member_loop_fn(gpointer key, gpointer value, gpointer user_data)
     crm_node_t *node = value;
     struct member_loop_data *data = user_data;
 
-    ais_debug_2("Dumping node %u", node->id);
+    ais_trace("Dumping node %u", node->id);
     data->string = append_member(data->string, node);
 }
 
@@ -1326,7 +1326,7 @@ pcmk_nodeid(void *conn, ais_void_ptr * msg)
     static int counter = 0;
     struct crm_ais_nodeid_resp_s resp;
 
-    ais_debug_2("Sending local nodeid: %d to %p[%d]", local_nodeid, conn, counter);
+    ais_trace("Sending local nodeid: %d to %p[%d]", local_nodeid, conn, counter);
 
     resp.header.id = crm_class_nodeid;
     resp.header.size = sizeof(struct crm_ais_nodeid_resp_s);
@@ -1409,7 +1409,7 @@ check_message_sanity(const AIS_Message * msg, const char *data)
                 if (lpc < 0) {
                     lpc = 0;
                 }
-                ais_debug_2("bad_data[%d]: %d / '%c'", lpc, data[lpc], data[lpc]);
+                ais_trace("bad_data[%d]: %d / '%c'", lpc, data[lpc], data[lpc]);
             }
         }
     }
@@ -1429,7 +1429,7 @@ check_message_sanity(const AIS_Message * msg, const char *data)
              msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
              ais_data_len(msg), msg->header.size);
     } else {
-        ais_debug_3
+        ais_trace
             ("Verified message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
              msg->id, ais_dest(&(msg->host)), msg_type2text(dest), ais_dest(&(msg->sender)),
              msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
@@ -1468,7 +1468,7 @@ route_ais_message(const AIS_Message * msg, gboolean local_origin)
     AIS_Message *mutable = ais_msg_copy(msg);
     static int service_id = SERVICE_ID_MAKE(PCMK_SERVICE_ID, 0);
 
-    ais_debug_3("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d)",
+    ais_trace("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d)",
                 mutable->id, ais_dest(&(mutable->host)), msg_type2text(dest),
                 ais_dest(&(mutable->sender)), msg_type2text(mutable->sender.type),
                 mutable->sender.pid, local_origin ? "false" : "true", ais_data_len((mutable)));
@@ -1507,12 +1507,12 @@ route_ais_message(const AIS_Message * msg, gboolean local_origin)
             delivered_transient = 0;
             g_hash_table_foreach(ipc_client_list, deliver_transient_msg, mutable);
             if (delivered_transient) {
-                ais_debug_2("Sent message to %d transient clients: %d", delivered_transient, dest);
+                ais_trace("Sent message to %d transient clients: %d", delivered_transient, dest);
                 goto bail;
 
             } else {
                 /* try the crmd */
-                ais_debug_2("Sending message to transient client %d via crmd", dest);
+                ais_trace("Sending message to transient client %d via crmd", dest);
                 dest = crm_msg_crmd;
             }
 
@@ -1543,7 +1543,7 @@ route_ais_message(const AIS_Message * msg, gboolean local_origin)
 
     } else if (local_origin) {
         /* forward to other hosts */
-        ais_debug_3("Forwarding to cluster");
+        ais_trace("Forwarding to cluster");
         reason = "cluster delivery failed";
         rc = send_cluster_msg_raw(mutable);
     }
@@ -1589,11 +1589,11 @@ send_cluster_msg_raw(const AIS_Message * ais_msg)
     iovec.iov_base = (char *)mutable;
     iovec.iov_len = mutable->header.size;
 
-    ais_debug_3("Sending message (size=%u)", (unsigned int)iovec.iov_len);
+    ais_trace("Sending message (size=%u)", (unsigned int)iovec.iov_len);
     rc = pcmk_api->totem_mcast(&iovec, 1, TOTEMPG_SAFE);
 
     if (rc == 0 && mutable->is_compressed == FALSE) {
-        ais_debug_2("Message sent: %.80s", mutable->data);
+        ais_trace("Message sent: %.80s", mutable->data);
     }
 
     AIS_CHECK(rc == 0, ais_err("Message not sent (%d): %.120s", rc, mutable->data));
