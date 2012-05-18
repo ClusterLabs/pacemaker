@@ -28,7 +28,7 @@ header_HEADERS = stack.h
 lib_LTLIBRARIES	= libcrmcluster.la 
 
 libcrmcluster_la_SOURCES = cluster.c membership.c stack.h
-libcrmcluster_la_LDFLAGS = -version-info 1:0:0 $(CLUSTERLIBS) 
+libcrmcluster_la_LDFLAGS = -version-info 2:0:0 $(CLUSTERLIBS) 
 libcrmcluster_la_LIBADD  = $(top_builddir)/lib/common/libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la
 libcrmcluster_la_DEPENDENCIES = $(top_builddir)/lib/common/libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la 
 
