@@ -31,7 +31,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/msg.h>
 #include <crm/common/ipc.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 #include "stack.h"
 
 CRM_TRACE_INIT_DATA(cluster);

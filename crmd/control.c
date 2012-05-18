@@ -25,7 +25,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/pengine/rules.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 #include "../lib/cluster/stack.h"
 
 #include <crmd.h>

@@ -23,7 +23,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/xml.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 #include <crm/common/mainloop.h>
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE

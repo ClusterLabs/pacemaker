@@ -19,7 +19,7 @@
 #ifndef CRM_STACK__H
 #  define CRM_STACK__H
 
-#  include <crm/common/cluster.h>
+#  include <crm/cluster.h>
 
 #  if SUPPORT_HEARTBEAT
 extern ll_cluster_t *heartbeat_cluster;

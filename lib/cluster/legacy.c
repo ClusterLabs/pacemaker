@@ -20,7 +20,7 @@
 #include <bzlib.h>
 #include <crm/ais.h>
 #include <crm/common/ipc.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 #include <crm/common/mainloop.h>
 #include <sys/utsname.h>
 #include "stack.h"

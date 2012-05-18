@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 
 extern void crmd_ha_msg_filter(xmlNode * msg);
 

@@ -66,7 +66,7 @@ struct icmp_filter {
 #include <attrd.h>
 
 #if SUPPORT_HEARTBEAT
-#  include <crm/common/cluster.h>
+#  include <crm/cluster.h>
 ll_cluster_t *pingd_cluster = NULL;
 void do_node_walk(ll_cluster_t * hb_cluster);
 #endif

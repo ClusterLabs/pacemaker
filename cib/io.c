@@ -37,7 +37,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 
 #define CIB_SERIES "cib"
 

@@ -28,7 +28,7 @@
 #include <string.h>
 #include <glib.h>
 #include <crm/common/ipc.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 #include <crm/ais.h>
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>

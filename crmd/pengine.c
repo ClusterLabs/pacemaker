@@ -40,7 +40,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 

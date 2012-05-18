@@ -31,7 +31,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 
 xmlNode *
 create_request_adv(const char *task, xmlNode * msg_data,

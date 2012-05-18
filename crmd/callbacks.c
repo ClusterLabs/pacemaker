@@ -26,7 +26,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 #include <crm/cib.h>
 
 #include <crmd.h>

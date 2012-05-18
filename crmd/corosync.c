@@ -21,7 +21,7 @@
 #include <sys/param.h>
 
 #include <crm/crm.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 #include <crm/common/xml.h>
 
 #include <crmd.h>

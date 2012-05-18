@@ -29,7 +29,7 @@
 #include <te_callbacks.h>
 #include <crmd_fsa.h>
 
-#include <crm/common/cluster.h> /* For ONLINESTATUS etc */
+#include <crm/cluster.h> /* For ONLINESTATUS etc */
 
 void te_update_confirm(const char *event, xmlNode * msg);
 

@@ -28,7 +28,7 @@
 
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
-#include <crm/common/cluster.h>
+#include <crm/cluster.h>
 
 char *te_uuid = NULL;
 

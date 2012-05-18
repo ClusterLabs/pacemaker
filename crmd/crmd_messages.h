@@ -21,7 +21,7 @@
 #  include <crm/crm.h>
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
-#  include <crm/common/cluster.h>
+#  include <crm/cluster.h>
 #  include <crmd_fsa.h>
 
 extern void *fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type,
