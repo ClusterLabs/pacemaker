@@ -1147,8 +1147,10 @@ dnl ========================================================================
 
 dnl Normalize the values
 case $SUPPORT_CS in
-     1|yes|true) missingisfatal=1;;
-     try)        missingisfatal=0;;
+     1|yes|true)
+		SUPPORT_CS=yes
+		missingisfatal=1;;
+     try)	missingisfatal=0;;
      *) SUPPORT_CS=no;;
 esac
 
@@ -1161,6 +1163,7 @@ LCRSODIR="$libdir"
 
 if test $SUPPORT_CS = no; then
     AC_MSG_RESULT(no (disabled))
+    SUPPORT_CS=0
 else
     AC_MSG_RESULT($SUPPORT_CS, with '$CSPREFIX')
     PKG_CHECK_MODULES(cpg,    libcpg) dnl Fatal
@@ -1228,7 +1231,7 @@ fi
 if test $SUPPORT_CS = 1; then
     CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
 
-elif test $SUPPORT_CS != no; then
+elif test $SUPPORT_CS != 0; then
     SUPPORT_CS=0
     if test $missingisfatal = 0; then
         AC_MSG_WARN(Unable to support Corosync: $aisreason) 
