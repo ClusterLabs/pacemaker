@@ -208,6 +208,7 @@ changes:
 	@git log --pretty=format:'%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: | sort -uf >> ChangeLog 
 	@printf "\n">> ChangeLog 
 	cat ChangeLog.last >> ChangeLog 
+	@echo -e "\033[1;35m -- Don't forget to run the bumplibs.sh script! --\033[0m"
 
 indent:
 	find . -name "*.h" -exec ./p-indent \{\} \;
