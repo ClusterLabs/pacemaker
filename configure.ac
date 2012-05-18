@@ -1112,30 +1112,28 @@ dnl    Cluster stack - Heartbeat
 dnl ========================================================================
 
 case $SUPPORT_HEARTBEAT in
-     1|yes|true) 
-        AC_CHECK_LIB(hbclient, ll_cluster_new, 
-   		[SUPPORT_HEARTBEAT=1], [AC_MSG_FAILURE(Unable to support Heartbeat: client libraries not found)]);;
-     try)
-        AC_CHECK_LIB(hbclient, ll_cluster_new, 
-   		[SUPPORT_HEARTBEAT=1], [SUPPORT_HEARTBEAT=0]);;
-     *) SUPPORT_HEARTBEAT=0;;
-esac
-
-if test $SUPPORT_HEARTBEAT = 1; then
-   STACKS="$STACKS heartbeat"
+1|yes|true|try)
+   AC_MSG_CHECKING(for heartbeat support)
 
    dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
    dnl So check for all the depenancies (so they're added to LIBS) before checking for -lplumb
    AC_CHECK_LIB(pils, PILLoadPlugin)
    AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
+   AC_CHECK_LIB(hbclient, ll_cluster_new, [SUPPORT_HEARTBEAT=1],
+		[if $SUPPORT_HEARTBEAT != try; then
+			AC_MSG_FAILURE(Unable to support Heartbeat: client libraries not found)
+		fi])
 
-   if test x"$ac_cv_lib_plumb_G_main_add_IPC_Channel" != x"yes"; then
-      AC_MSG_FAILURE(Core Heartbeat utility libraries not found: $ac_cv_lib_plumb_G_main_add_IPC_Channel)
+   if test $SUPPORT_HEARTBEAT = 1 ; then
+	STACKS="$STACKS heartbeat"
+	AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
+	AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
+   else
+	SUPPORT_HEARTBEAT=0
    fi
-
-   AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
-   AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
-fi
+   ;;
+*) SUPPORT_HEARTBEAT=0;;
+esac
 
 AM_CONDITIONAL(BUILD_HEARTBEAT_SUPPORT, test $SUPPORT_HEARTBEAT = 1)
 AC_DEFINE_UNQUOTED(SUPPORT_HEARTBEAT, $SUPPORT_HEARTBEAT, Support the Heartbeat messaging and membership layer)
