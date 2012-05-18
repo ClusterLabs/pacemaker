@@ -43,9 +43,9 @@ enum cib_state {
 
 enum cib_conn_type {
     cib_command,
-    cib_command_nonblocking,
     cib_query,
-    cib_no_connection
+    cib_no_connection,
+    cib_command_nonblocking,
 };
 
 /* *INDENT-OFF* */

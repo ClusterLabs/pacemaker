@@ -232,8 +232,6 @@ struct resource_s {
     GListPtr rsc_tickets;       /* rsc_ticket*       */
 
     node_t *allocated_to;
-    node_t *partial_migration_target;
-    node_t *partial_migration_source;
     GListPtr running_on;        /* node_t*   */
     GHashTable *known_on;       /* node_t*   */
     GHashTable *allowed_nodes;  /* node_t*   */
@@ -247,6 +245,9 @@ struct resource_s {
 
     GListPtr children;          /* resource_t*   */
     GListPtr dangling_migrations;       /* node_t*       */
+
+    node_t *partial_migration_target;
+    node_t *partial_migration_source;
 };
 
 struct pe_action_s {
