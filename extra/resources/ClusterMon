@@ -152,8 +152,14 @@ ClusterMon_stop() {
 ClusterMon_monitor() {
     if [ -f $OCF_RESKEY_pidfile ]; then
 	pid=`cat $OCF_RESKEY_pidfile`
-	[ "$pid" ] && kill -s 0 $pid &&
-	    exit $OCF_SUCCESS
+	if [ ! -z $pid ]; then
+	    kill -s 0 $pid >/dev/null 2>&1; rc=$?
+	    case $rc in
+		0) exit $OCF_SUCCESS;;
+		1) exit $OCF_NOT_RUNNING;;
+		*) exit $OCF_ERR_GENERIC;;
+	    esac
+	fi
     fi
     exit $OCF_NOT_RUNNING
 }
