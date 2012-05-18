@@ -197,7 +197,7 @@ www:	global
 
 changes:
 	git co - ChangeLog
-	mv ChangeLog ChangeLog.last 
+	git show $(LAST_RELEASE):ChangeLog > ChangeLog.last 
 	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(NEXT_RELEASE)-1" > ChangeLog 
 	@printf "\n- Update source tarball to revision: `git id`" >> ChangeLog 
 	@printf "\n- Statistics:\n">> ChangeLog 
