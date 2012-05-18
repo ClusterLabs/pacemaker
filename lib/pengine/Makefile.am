@@ -26,14 +26,11 @@ lib_LTLIBRARIES	= libpe_rules.la libpe_status.la
 ## SOURCES
 noinst_HEADERS	= unpack.h utils.h variant.h
 
-rule_files = rules.c common.c
-status_files = status.c unpack.c utils.c complex.c native.c group.c clone.c
-
 libpe_rules_la_LDFLAGS	= -version-info 2:0:0
-libpe_rules_la_SOURCES	= $(rule_files) 
+libpe_rules_la_SOURCES	= rules.c common.c
 
 libpe_status_la_LDFLAGS	= -version-info 3:0:0
-libpe_status_la_SOURCES	=  $(rule_files) $(status_files)
+libpe_status_la_SOURCES	=  status.c unpack.c utils.c complex.c native.c group.c clone.c rules.c common.c
 libpe_status_la_LIBADD	= -llrm @CURSESLIBS@
 
 clean-generic:
