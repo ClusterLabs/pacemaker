@@ -54,34 +54,38 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 
 	case $CHANGE in
 	    A|a) 
-		echo "x+1:0:z+1"
+		echo "New version with backwards compatible extensions: x+1:0:z+1"
 		VER_1=`expr $VER_1 + 1`
 		VER_2=0
 		VER_3=`expr $VER_3 + 1`
 		;;
 	    R|r)
-		echo "x+1:0:0"
+		echo "New backwards incompatible version: x+1:0:0"
 		VER_1=`expr $VER_1 + 1`
 		VER_2=0
 		VER_3=0
 		;;
 	    F|f) 
-		echo "x:y+1:z"
+		echo "Bugfix: x:y+1:z"
 		VER_2=`expr $VER_2 + 1`
 		;;
 	esac
 	VER_NEW=$VER_1:$VER_2:$VER_3
 	
-	if [ $VER_NEW != $VER_NOW ]; then
-	    read -p "Updating $lib library version: $VER -> $VER_NEW"
-	    sed -i.sed  "s/version-info\ $VER_NOW/version-info\ $VER_NEW/" $am
+	if [ ! -z $CHANGE ]; then
+	    if [ $VER_NEW != $VER_NOW ]; then
+		read -p "Updating $lib library version: $VER -> $VER_NEW"
+		sed -i.sed  "s/version-info\ $VER_NOW/version-info\ $VER_NEW/" $am
+	    else
+		read -p "No further version changes needed"
+	    fi
 	else
-	    read -p "No further version changes needed"
+	    read -p "Skipping $lib version"
 	fi
-	
     else
 	read -p "No changes to $lib interface"
     fi
+	
     echo ""
 done
 
