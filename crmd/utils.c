@@ -1133,10 +1133,19 @@ erase_status_tag(const char *uname, const char *tag, int options)
     }
 }
 
+crm_ipc_t *attrd_ipc = NULL;
+
 void
 update_attrd(const char *host, const char *name, const char *value, const char *user_name)
 {
-    gboolean rc = attrd_update_delegate(NULL, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL, NULL, user_name);
+    gboolean rc;
+
+    if(attrd_ipc == NULL) {
+        attrd_ipc = crm_ipc_new(T_ATTRD, 0);
+        crm_ipc_connect(attrd_ipc);
+    }
+
+    rc = attrd_update_delegate(attrd_ipc, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL, NULL, user_name);
     
     if (rc == FALSE) {
         crm_err("Could not send %s %s %s (%d)", T_ATTRD, name ? "update" : "refresh",

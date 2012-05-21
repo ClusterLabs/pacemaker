@@ -191,6 +191,7 @@ do_shutdown_req(long long action,
     free_xml(msg);
 }
 
+extern crm_ipc_t *attrd_ipc;
 extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
@@ -210,6 +211,8 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
 static void
 free_mem(fsa_data_t * msg_data)
 {
+    crm_ipc_close(attrd_ipc);
+    crm_ipc_destroy(attrd_ipc);
     g_main_loop_quit(crmd_mainloop);
     g_main_loop_unref(crmd_mainloop);
 
