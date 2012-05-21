@@ -39,6 +39,10 @@ core-install:
 	@echo "Installing only core components: $(CORE)"
 	list='$(CORE)'; for subdir in $$list; do echo "Installing in $$subdir"; make -C $$subdir install || exit 1; done
 
+core-clean:
+	@echo "Cleaning only core components: $(CORE)"
+	list='$(CORE)'; for subdir in $$list; do echo "Installing in $$subdir"; make -C $$subdir clean || exit 1; done
+
 install-exec-local:
 	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CONFIG_DIR)

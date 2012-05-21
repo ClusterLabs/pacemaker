@@ -156,7 +156,7 @@ COVPASS		?= password
 coverity:
 	test -e configure || ./autogen.sh
 	test -e Makefile || ./configure
-	make clean
+	make core-clean
 	rm -rf $(COVERITY_DIR)
 	cov-build --dir $(COVERITY_DIR) make core
 	@echo "Waiting for a Coverity license..."
