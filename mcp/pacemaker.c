@@ -755,6 +755,7 @@ main(int argc, char **argv)
     crm_ipc_destroy(old_instance);
 
     if (read_config() == FALSE) {
+        crm_notice("Could not obtain corosync config data, exiting");
         return 1;
     }
 
@@ -766,7 +767,7 @@ main(int argc, char **argv)
         crm_log_init(NULL, LOG_INFO, TRUE, FALSE, 0, NULL, FALSE);
     }
 
-    crm_notice("Starting Pacemaker %s (Build: %s): %s\n",
+    crm_notice("Starting Pacemaker %s (Build: %s): %s",
                VERSION, BUILD_VERSION, CRM_FEATURES);
     mainloop = g_main_new(FALSE);
 

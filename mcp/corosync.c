@@ -500,8 +500,10 @@ read_config(void)
         rc = cmap_initialize(&local_handle);
 	if(rc < 0) {
 	    retries++;
-	    printf("Connection setup failed: %s.  Retrying in %ds\n",
+	    printf("API connection setup failed: %s.  Retrying in %ds\n",
                    cs_strerror(rc), retries);
+	    crm_info("API connection setup failed: %s.  Retrying in %ds",
+                     cs_strerror(rc), retries);
 	    sleep(retries);
 
 	} else {
@@ -512,7 +514,8 @@ read_config(void)
 #endif
 
     if (rc != CS_OK) {
-        printf("Could not initialize Cluster Configuration Database API instance, error %d\n", rc);
+        printf("Could not connect to Cluster Configuration Database API, error %d\n", rc);
+        crm_warn("Could not connect to Cluster Configuration Database API, error %d", rc);
         return FALSE;
     }
 
