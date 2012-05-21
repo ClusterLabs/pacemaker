@@ -28,7 +28,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/msg.h>
+
 #include <crm/cluster.h>
 #include <crm/cib.h>
 
@@ -471,6 +471,55 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     return processing_complete;
 }
 
+static gboolean
+process_hello_message(xmlNode * hello,
+                      char **uuid, char **client_name, char **major_version, char **minor_version)
+{
+    const char *local_uuid;
+    const char *local_client_name;
+    const char *local_major_version;
+    const char *local_minor_version;
+
+    *uuid = NULL;
+    *client_name = NULL;
+    *major_version = NULL;
+    *minor_version = NULL;
+
+    if (hello == NULL) {
+        return FALSE;
+    }
+
+    local_uuid = crm_element_value(hello, "client_uuid");
+    local_client_name = crm_element_value(hello, "client_name");
+    local_major_version = crm_element_value(hello, "major_version");
+    local_minor_version = crm_element_value(hello, "minor_version");
+
+    if (local_uuid == NULL || strlen(local_uuid) == 0) {
+        crm_err("Hello message was not valid (field %s not found)", "uuid");
+        return FALSE;
+
+    } else if (local_client_name == NULL || strlen(local_client_name) == 0) {
+        crm_err("Hello message was not valid (field %s not found)", "client name");
+        return FALSE;
+
+    } else if (local_major_version == NULL || strlen(local_major_version) == 0) {
+        crm_err("Hello message was not valid (field %s not found)", "major version");
+        return FALSE;
+
+    } else if (local_minor_version == NULL || strlen(local_minor_version) == 0) {
+        crm_err("Hello message was not valid (field %s not found)", "minor version");
+        return FALSE;
+    }
+
+    *uuid = crm_strdup(local_uuid);
+    *client_name = crm_strdup(local_client_name);
+    *major_version = crm_strdup(local_major_version);
+    *minor_version = crm_strdup(local_minor_version);
+
+    crm_trace("Hello message ok");
+    return TRUE;
+}
+
 gboolean
 crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
 {
@@ -761,8 +810,10 @@ handle_request(xmlNode * stored_msg)
          * if we /are/ ok
          */
         const char *sys_to = crm_element_value(stored_msg, F_CRM_SYS_TO);
-        xmlNode *ping = createPingAnswerFragment(sys_to, "ok");
+        xmlNode *ping = create_xml_node(NULL, XML_CRM_TAG_PING);
 
+        crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
+        crm_xml_add(ping, XML_PING_ATTR_SYSFROM, sys_to);
         crm_xml_add(ping, "crmd_state", fsa_state2string(fsa_state));
 
         /* Ok, so technically not so interesting, but CTS needs to see this */
@@ -921,5 +972,26 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
     }
 
     return send_ok;
+}
+
+ha_msg_input_t *
+new_ha_msg_input(xmlNode * orig)
+{
+    ha_msg_input_t *input_copy = NULL;
+
+    crm_malloc0(input_copy, sizeof(ha_msg_input_t));
+    input_copy->msg = orig;
+    input_copy->xml = get_message_xml(input_copy->msg, F_CRM_DATA);
+    return input_copy;
+}
+
+void
+delete_ha_msg_input(ha_msg_input_t * orig)
+{
+    if (orig == NULL) {
+        return;
+    }
+    free_xml(orig->msg);
+    crm_free(orig);
 }
 

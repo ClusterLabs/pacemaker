@@ -22,7 +22,6 @@
 #  include <clplumbing/GSource.h>
 
 #  include <crm/common/xml.h>
-#  include <crm/common/msg.h>
 
 /* clplumbing based IPC */
 
@@ -35,16 +34,6 @@ extern xmlNode *create_reply_adv(xmlNode * request, xmlNode * xml_response_data,
 extern xmlNode *create_request_adv(const char *task, xmlNode * xml_data, const char *host_to,
                                    const char *sys_to, const char *sys_from, const char *uuid_from,
                                    const char *origin);
-
-typedef struct ha_msg_input_s {
-    xmlNode *msg;
-    xmlNode *xml;
-
-} ha_msg_input_t;
-
-extern ha_msg_input_t *new_ha_msg_input(xmlNode * orig);
-extern void delete_ha_msg_input(ha_msg_input_t * orig);
-extern xmlNode *xmlfromIPC(IPC_Channel * ch, int timeout);
 
 /* Libqb based IPC */
 

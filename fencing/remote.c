@@ -39,7 +39,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/stonith-ng-internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/msg.h>
+
 #include <crm/common/util.h>
 #include <internal.h>
 

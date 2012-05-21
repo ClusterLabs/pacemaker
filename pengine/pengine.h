@@ -26,7 +26,6 @@ typedef struct order_constraint_s order_constraint_t;
 
 #  include <glib.h>
 #  include <crm/crm.h>
-#  include <crm/common/msg.h>
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/rules.h>
 #  include <crm/pengine/common.h>

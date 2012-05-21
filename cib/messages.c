@@ -31,7 +31,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
-#include <crm/common/msg.h>
+
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
 
@@ -186,7 +186,11 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     enum cib_errors result = cib_ok;
 
     crm_trace("Processing \"%s\" event", op);
-    *answer = createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
+    *answer = create_xml_node(NULL, XML_CRM_TAG_PING);
+
+    crm_xml_add(*answer, XML_PING_ATTR_STATUS, "ok");
+    crm_xml_add(*answer, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CIB);
+
     return result;
 #endif
 }

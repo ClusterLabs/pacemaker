@@ -29,7 +29,7 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
-#include <crm/common/msg.h>
+
 #include <crm/common/ipc.h>
 #include <crm/cluster.h>
 #include "stack.h"
@@ -368,19 +368,6 @@ set_uuid(xmlNode * node, const char *attr, const char *uname)
 
     crm_xml_add(node, attr, uuid_calc);
     return;
-}
-
-xmlNode *
-createPingAnswerFragment(const char *from, const char *status)
-{
-    xmlNode *ping = NULL;
-
-    ping = create_xml_node(NULL, XML_CRM_TAG_PING);
-
-    crm_xml_add(ping, XML_PING_ATTR_STATUS, status);
-    crm_xml_add(ping, XML_PING_ATTR_SYSFROM, from);
-
-    return ping;
 }
 
 const char *

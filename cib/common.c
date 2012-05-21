@@ -34,7 +34,7 @@
 #include <crm/cluster.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/msg.h>
+
 
 #include <cibio.h>
 #include <callbacks.h>

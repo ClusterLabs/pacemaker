@@ -23,7 +23,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/msg.h>
+
 #include <crm/common/util.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/rules.h>

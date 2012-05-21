@@ -39,7 +39,7 @@
 #include <crm/pengine/status.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/msg.h>
+
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {

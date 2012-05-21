@@ -75,27 +75,6 @@ create_request_adv(const char *task, xmlNode * msg_data,
     return request;
 }
 
-ha_msg_input_t *
-new_ha_msg_input(xmlNode * orig)
-{
-    ha_msg_input_t *input_copy = NULL;
-
-    crm_malloc0(input_copy, sizeof(ha_msg_input_t));
-    input_copy->msg = orig;
-    input_copy->xml = get_message_xml(input_copy->msg, F_CRM_DATA);
-    return input_copy;
-}
-
-void
-delete_ha_msg_input(ha_msg_input_t * orig)
-{
-    if (orig == NULL) {
-        return;
-    }
-    free_xml(orig->msg);
-    crm_free(orig);
-}
-
 /*
  * This method adds a copy of xml_response_data
  */
@@ -484,53 +463,4 @@ create_hello_message(const char *uuid,
     free_xml(hello_node);
 
     return hello;
-}
-
-gboolean
-process_hello_message(xmlNode * hello,
-                      char **uuid, char **client_name, char **major_version, char **minor_version)
-{
-    const char *local_uuid;
-    const char *local_client_name;
-    const char *local_major_version;
-    const char *local_minor_version;
-
-    *uuid = NULL;
-    *client_name = NULL;
-    *major_version = NULL;
-    *minor_version = NULL;
-
-    if (hello == NULL) {
-        return FALSE;
-    }
-
-    local_uuid = crm_element_value(hello, "client_uuid");
-    local_client_name = crm_element_value(hello, "client_name");
-    local_major_version = crm_element_value(hello, "major_version");
-    local_minor_version = crm_element_value(hello, "minor_version");
-
-    if (local_uuid == NULL || strlen(local_uuid) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "uuid");
-        return FALSE;
-
-    } else if (local_client_name == NULL || strlen(local_client_name) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "client name");
-        return FALSE;
-
-    } else if (local_major_version == NULL || strlen(local_major_version) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "major version");
-        return FALSE;
-
-    } else if (local_minor_version == NULL || strlen(local_minor_version) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "minor version");
-        return FALSE;
-    }
-
-    *uuid = crm_strdup(local_uuid);
-    *client_name = crm_strdup(local_client_name);
-    *major_version = crm_strdup(local_major_version);
-    *minor_version = crm_strdup(local_minor_version);
-
-    crm_trace("Hello message ok");
-    return TRUE;
 }

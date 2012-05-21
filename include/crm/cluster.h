@@ -19,7 +19,6 @@
 #  define CRM_COMMON_CLUSTER__H
 
 #  include <crm/common/xml.h>
-#  include <crm/common/msg.h>
 #  include <crm/common/util.h>
 #  include <crm/ais.h>
 

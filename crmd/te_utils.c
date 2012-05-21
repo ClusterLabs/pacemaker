@@ -22,7 +22,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
-#include <crm/common/msg.h>
+
 #include <crm/common/xml.h>
 #include <tengine.h>
 #include <crmd_fsa.h>

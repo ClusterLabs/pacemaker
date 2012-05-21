@@ -29,7 +29,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/msg.h>
+
 #include <crm/cluster.h>
 
 #include <crmd_fsa.h>

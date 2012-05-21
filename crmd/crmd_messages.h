@@ -24,6 +24,15 @@
 #  include <crm/cluster.h>
 #  include <crmd_fsa.h>
 
+typedef struct ha_msg_input_s {
+    xmlNode *msg;
+    xmlNode *xml;
+
+} ha_msg_input_t;
+
+extern ha_msg_input_t *new_ha_msg_input(xmlNode * orig);
+extern void delete_ha_msg_input(ha_msg_input_t * orig);
+
 extern void *fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type,
                                 const char *caller);
 

@@ -37,7 +37,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/stonith-ng-internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/msg.h>
+
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
