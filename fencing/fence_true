@@ -5,7 +5,7 @@
 # Virsh 0.3.3 on RHEL 5.2 with xen-3.0.3-51
 #
 
-import sys
+import sys, time
 sys.path.append("/usr/share/fence")
 from fencing import *
 
@@ -35,6 +35,11 @@ def set_power_status(conn, options):
 	global plug_status
 	plug_status = "off"
 
+	# Sleep for power_wait seconds before returning
+	if options.has_key("-G"):
+		time.sleep(int(options["-G"]))
+
+
 def main():
 	device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",
 			"no_password", "power_wait", "power_timeout" ]
@@ -53,7 +58,7 @@ def main():
 	## Defaults for fence agent
 	docs = { }
 	docs["shortdesc"] = "Fake fence agent"
-	docs["longdesc"] = "fence_true is an fake Fencing agent which always reports success without doing anything."
+	docs["longdesc"] = "fence_true is a fake Fencing agent which always reports success without doing anything."
 	show_docs(options, docs)
 
 	## Operate the fencing device
