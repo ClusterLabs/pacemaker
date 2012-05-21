@@ -328,7 +328,11 @@ main(int argc, char **argv)
             case 'a':
                 output = createEmptyCib();
                 crm_xml_add(output, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-                crm_xml_add(output, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
+                if (optind >= argc) {
+                    crm_xml_add(output, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
+                } else {
+                    crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
+                }
                 crm_xml_add_int(output, XML_ATTR_GENERATION_ADMIN, 1);
                 crm_xml_add_int(output, XML_ATTR_GENERATION, 0);
                 crm_xml_add_int(output, XML_ATTR_NUMUPDATES, 0);
