@@ -408,6 +408,9 @@ if __name__ == '__main__':
            (name, value) = args[i+1].split('=')
            Environment[name] = value
 
+       elif args[i] == "--":
+           break
+
        else:
            try:
                NumIter=int(args[i])
