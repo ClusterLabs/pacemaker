@@ -805,12 +805,12 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
                 rc = st_err_signal;
             }
         }
-        crm_notice("Child process %s performing action '%s' with '%s' terminated with signal %d",
+        crm_notice("Child process %d performing action '%s' with '%s' terminated with signal %d",
                    pid, cmd->action, cmd->device, signo);
 
     } else if(WIFEXITED(status)) {
         rc = WEXITSTATUS(status);
-        crm_debug("Child process %s performing action '%s' with '%s' exited with rc %d",
+        crm_debug("Child process %d performing action '%s' with '%s' exited with rc %d",
                   pid, cmd->action, cmd->device, rc);
     }
     
