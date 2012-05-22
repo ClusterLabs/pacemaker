@@ -365,6 +365,9 @@ class crm_mcp(crm_cs_v0):
             
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
+
+            "Pat:InfraUp"      : "%s corosync.*Initializing transport",
+            "Pat:PacemakerUp"  : "%s pacemakerd.*Starting Pacemaker",
         })
 
 

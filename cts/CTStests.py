@@ -2195,6 +2195,8 @@ class SimulStartLite(CTSTest):
             watchpats.append(self.CM["Pat:DC_IDLE"])
             for node in node_list:
                 watchpats.append(uppat % node)        
+                watchpats.append(self.CM["Pat:InfraUp"] % node)
+                watchpats.append(self.CM["Pat:PacemakerUp"] % node)
         
             #   Start all the nodes - at about the same time...
             watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
