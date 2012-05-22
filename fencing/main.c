@@ -108,16 +108,15 @@ static int32_t
 st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     xmlNode *request = NULL;
-    stonith_client_t *client = (stonith_client_t*)qb_ipcs_context_get(c);
-    
-    CRM_CHECK(client != NULL, crm_err("Invalid client"); return FALSE);
-    CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client); return FALSE);
+    stonith_client_t *client = (stonith_client_t*)qb_ipcs_context_get(c);    
 
     request = crm_ipcs_recv(c, data, size);
     if (request == NULL) {
         return 0;
     }
 
+    CRM_CHECK(client != NULL, goto cleanup);
+    
     if(client->name == NULL) {
         const char *value = crm_element_value(request, F_STONITH_CLIENTNAME);
         if(value == NULL) {
@@ -127,13 +126,20 @@ st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         }
     }
 
+    CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p/%s", client, client->name); goto cleanup);
+    
     crm_xml_add(request, F_STONITH_CLIENTID, client->id);
     crm_xml_add(request, F_STONITH_CLIENTNAME, client->name);
     
     crm_log_xml_trace(request, "Client[inbound]");
-    stonith_command(client, request, NULL);    
+    stonith_command(client, request, NULL);
+
+  cleanup:
+    if(client == NULL || client->id == NULL) {
+        crm_log_xml_notice(request, "Invalid client");
+    }
+
     free_xml(request);
-    
     return 0;
 }
 
