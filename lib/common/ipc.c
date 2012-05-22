@@ -225,7 +225,6 @@ typedef struct crm_ipc_s
         int msg_size;
         char *buffer;
         char *name;
-        int closed;
 
         qb_ipcc_connection_t *ipc;
         
@@ -262,7 +261,6 @@ crm_ipc_new(const char *name, size_t max_size)
     client->name = crm_strdup(name);
     client->buf_size = pick_ipc_buffer(max_size);
     client->buffer = malloc(client->buf_size);
-    client->closed = FALSE;
 
     client->pfd.fd = -1;
     client->pfd.events = POLLIN;
@@ -281,7 +279,6 @@ crm_ipc_connect(crm_ipc_t *client)
         return FALSE;
     }
 
-    client->closed = FALSE;
     client->pfd.fd = crm_ipc_get_fd(client);
     if(client->pfd.fd < 0) {
         crm_perror(LOG_INFO, "Could not obtain file descriptor for %s connection", client->name);
@@ -296,20 +293,35 @@ crm_ipc_connect(crm_ipc_t *client)
 void
 crm_ipc_close(crm_ipc_t *client) 
 {
-    crm_trace("Disconnecting %s IPC connection %p (%p.%d)", client->name, client, client->ipc, client->closed);
-    if(client->ipc && client->closed == FALSE) {
-        client->closed = TRUE;
-        qb_ipcc_disconnect(client->ipc);
+    crm_trace("Disconnecting %s IPC connection %p (%p.%d)", client->name, client, client->ipc);
+    if(client && client->ipc) {
+        qb_ipcc_connection_t *ipc = client->ipc;
+        client->ipc = NULL;
+        qb_ipcc_disconnect(ipc);
     }
 }
 
 void
 crm_ipc_destroy(crm_ipc_t *client) 
 {
-    crm_trace("Destroying %s IPC connection %p", client->name, client);
-    free(client->buffer);
-    free(client->name);
-    free(client);    
+    if(client) {
+        if(client->ipc && qb_ipcc_is_connected(client->ipc)) {
+            crm_notice("Destroying an active IPC connection to %s", client->name);
+            /* The next line is basically unsafe
+             *
+             * If this connection was attached to mainloop and mainloop is active,
+             *   the 'disconnected' callback will end up back here and we'll end
+             *   up free'ing the memory twice - something that can still happen
+             *   even without this if we destroy a connection and it closes before
+             *   we call exit
+             */
+            /* crm_ipc_close(client); */
+        }
+        crm_trace("Destroying %s IPC connection %p", client->name, client);
+        free(client->buffer);
+        free(client->name);
+        free(client);
+    }
 }
 
 int
