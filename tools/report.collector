@@ -561,6 +561,9 @@ get_logfiles() {
     logger -p $facility.info $msg >/dev/null 2>&1
     sleep 2 # Give syslog time to catch up in case its busy
     findmsg 1 "$msg"
+
+    # Initial pacemakerd logs and tracing might also go to a file (other than the syslog log file)
+    findmsg 3 "Starting Pacemaker"
 }
 
 essential_files() {
@@ -603,7 +606,7 @@ if [ -z $cluster_cf ]; then
 fi
 
 if [ $SEARCH_LOGS = 1 ]; then
-    logfiles=`get_logfiles $cluster "$cluster_cf" "$logd_cf"`
+    logfiles=`get_logfiles $cluster "$cluster_cf" "$logd_cf" | sort -u`
 fi
 
 if [ -z "$logfiles" ]; then

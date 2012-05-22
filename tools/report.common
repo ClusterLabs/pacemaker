@@ -486,7 +486,7 @@ print_logseg() {
 		    dumplog $sourcef $FROM_LINE $TO_LINE
 		    log "Including segment [$FROM_LINE-$TO_LINE] from $logf"
 		else
-		    log "Segment from $logf finished before it started, line: $FROM_LINE to $TO_LINE"
+		    debug "Empty segment [$FROM_LINE-$TO_LINE] from $logf"
 		fi
 	else
 	    dumplog $sourcef $FROM_LINE $TO_LINE
