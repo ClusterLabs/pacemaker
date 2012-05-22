@@ -897,6 +897,9 @@ class ClusterManager(UserDict):
             "Pat:We_stopped"   : None,
             "Pat:They_stopped" : None,
 
+            "Pat:InfraUp"      : "%s",
+            "Pat:PacemakerUp"  : "%s",
+
             "BadRegexes"     : None,        # A set of "bad news" regexes
                                         # to apply to the log
         }
@@ -947,15 +950,18 @@ class ClusterManager(UserDict):
             count=count+1
         return count
 
-    def install_helper(self, filename, nodes=None):
+    def install_helper(self, filename, destdir=None, nodes=None):
         file_with_path="%s/%s" % (CTSvars.CTS_home, filename)
         if not nodes:
             nodes = self.Env["nodes"]
 
-        self.debug("Installing %s to %s on %s" % (filename, CTSvars.CTS_home, repr(self.Env["nodes"])))
+        if not destdir:
+            destdir=CTSvars.CTS_home
+
+        self.debug("Installing %s to %s on %s" % (filename, destdir, repr(self.Env["nodes"])))
         for node in nodes:
-            self.rsh(node, "mkdir -p %s" % CTSvars.CTS_home)
-            self.rsh.cp(file_with_path, "root@%s:%s" % (node, file_with_path))
+            self.rsh(node, "mkdir -p %s" % destdir)
+            self.rsh.cp(file_with_path, "root@%s:%s/%s" % (node, destdir, filename))
         return file_with_path
 
     def install_config(self, node):

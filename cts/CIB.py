@@ -53,7 +53,9 @@ class CibXml:
         self.kwargs[key] = value
 
     def show(self):
-        text = '''<%s id="%s"''' % (self.tag, self.name)
+        text = '''<%s''' % self.tag
+        if self.name:
+            text += ''' id="%s"''' % (self.name)
         for k in self.kwargs.keys():
             text += ''' %s="%s"''' % (k, self.kwargs[k])
 
@@ -77,6 +79,19 @@ class CibXml:
         if rc != 0:
             self.Factory.log("Configure call failed: "+fixed)
             sys.exit(1)
+
+
+class FencingTopology(CibXml):
+    def __init__(self, Factory):
+        CibXml.__init__(self, Factory, "fencing-topology", None)
+
+    def level(self, index, node, devices):
+        self.add_child(CibXml(self.Factory, "fencing-level", "%s.%d" % (node, index), target=node, index=index, devices=devices))
+
+    def commit(self):
+        self._run("create", self.show(), "configuration", "--allow-create")
+
+
 
 class Option(CibXml):
     def __init__(self, Factory, name=None, value=None, section="cib-bootstrap-options"):
@@ -222,6 +237,7 @@ class Resource(CibXml):
         self._run("create", self.show(), "resources")
         self._run("modify", self.constraints())
 
+
 class Group(Resource):
     def __init__(self, Factory, name):
         Resource.__init__(self, Factory, name, None, None)
@@ -262,9 +278,9 @@ class Master(Clone):
         Clone.__init__(self, Factory, name, child)
         self.tag = "master"
 
-class CIB12(CibBase):
+class CIB11(CibBase):
     feature_set = "3.0"
-    version = "pacemaker-1.2"
+    version = "pacemaker-1.1"
 
     def _show(self, command=""):
         output = ""
@@ -305,7 +321,7 @@ class CIB12(CibBase):
         if target:
             self.Factory.target = target
 
-        self.Factory.rsh(self.Factory.target, "HOME=/root cibadmin --empty > %s" % self.Factory.tmpfile)
+        self.Factory.rsh(self.Factory.target, "HOME=/root cibadmin --empty %s > %s" % (self.version, self.Factory.tmpfile))
         #cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' remote-clear-port='9999' ''')
 
         nodelist = ""
@@ -334,10 +350,35 @@ class CIB12(CibBase):
                 (name, value) = string.split(entry, '=')
                 if name == "hostlist" and value == "all":
                     value = string.join(self.CM.Env["nodes"], " ")
+                elif name == "pcmk_host_list" and value == "all":
+                    value = string.join(self.CM.Env["nodes"], " ")
 
                 st[name] = value
 
             st.commit()
+
+            ftype=None
+            ftype="fence_true"
+            #ftype="fence_false"
+
+            if ftype:
+                # Test advanced fencing logic
+                ftype="fence_true"
+                self.CM.install_helper(ftype, destdir="/usr/sbin")
+                st = Resource(self.Factory, "FakeFencing", ftype, "stonith")
+                st["pcmk_host_list"] = string.join(self.CM.Env["nodes"], " ")
+                st["power_wait"] = "45" # Wait this many seconds before doing anything, handy for letting disks get flushed
+                st.commit()
+
+                stl = FencingTopology(self.Factory)
+                for node in self.CM.Env["nodes"]:
+                    if ftype == "fence_true":
+                        stl.level(1, node, "FakeFencing,Fencing")
+                    else:
+                        stl.level(1, node, "FakeFencing")
+                        stl.level(2, node, "Fencing")
+
+                stl.commit()
 
         o = Option(self.Factory, "stonith-enabled", self.CM.Env["DoFencing"])
         o["start-failure-is-fatal"] = "false"
@@ -435,7 +476,6 @@ class CIB12(CibBase):
 
         g.commit()
 
-
         # LSB resource
         lsb_agent = self.CM.install_helper("LSBDummy")
     
@@ -447,6 +487,10 @@ class CIB12(CibBase):
         lsb.colocate("group-1")
 
         lsb.commit()
+
+class CIB12(CIB11):
+    feature_set = "3.0"
+    version = "pacemaker-1.2"
 
 #class HASI(CIB10):
 #    def add_resources(self):
@@ -464,7 +508,7 @@ class ConfigFactory:
     def __init__(self, CM):
         self.CM = CM
         self.rsh = self.CM.rsh
-        self.register("pacemaker11", CIB12, CM, self)
+        self.register("pacemaker11", CIB11, CM, self)
         self.register("pacemaker12", CIB12, CM, self)
 #        self.register("hae", HASI, CM, self)
         self.target = self.CM.Env["nodes"][0]
