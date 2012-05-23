@@ -74,6 +74,15 @@ Fake attribute that can be changed to cause a reload
 <content type="string" default="dummy" />
 </parameter>
 
+<parameter name="op_sleep" unique="1">
+<longdesc lang="en">
+Number of seconds to sleep during operations.  This can be used to test how
+the cluster reacts to operation timeouts.
+</longdesc>
+<shortdesc lang="en">Operation sleep duration in seconds.</shortdesc>
+<content type="string" default="0" />
+</parameter>
+
 </parameters>
 
 <actions>
@@ -127,6 +136,8 @@ dummy_monitor() {
 	# Monitor _MUST!_ differentiate correctly between running
 	# (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
 	# That is THREE states, not just yes/no.
+
+	sleep ${OCF_RESKEY_op_sleep}
 	
 	if [ -f ${OCF_RESKEY_state} ]; then
 	    return $OCF_SUCCESS
@@ -151,6 +162,7 @@ dummy_validate() {
 }
 
 : ${OCF_RESKEY_fake=dummy}
+: ${OCF_RESKEY_op_sleep=0}
 : ${OCF_RESKEY_CRM_meta_interval=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
