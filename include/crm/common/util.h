@@ -157,6 +157,12 @@ extern gboolean decode_op_key(const char *key, char **rsc_id, char **op_type, in
 extern void filter_action_parameters(xmlNode * param_set, const char *version);
 extern void filter_reload_parameters(xmlNode * param_set, const char *restart_string);
 
+static inline int
+crm_strlen_zero(const char *s)
+{
+    return !s || *s == '\0';
+}
+
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
 extern gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);

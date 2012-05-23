@@ -26,10 +26,24 @@
 #include <signal.h>
 #include <errno.h>
 
+#include <sys/wait.h>
+
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
+
+struct mainloop_child_s {
+    pid_t     pid;
+    char     *desc;
+    unsigned  timerid;
+    unsigned  watchid;
+    gboolean  timeout;
+    void     *privatedata;
+
+    /* Called when a process dies */
+    void (*callback)(mainloop_child_t* p, int status, int signo, int exitcode);
+};
 
 typedef struct trigger_s {
     GSource source;
@@ -618,8 +632,136 @@ void
 mainloop_del_fd(mainloop_io_t *client)
 {
     if(client != NULL) {
-        crm_trace("Removing client %s[%p]", client->name, client);
-        g_io_channel_unref(client->channel);
+        if (client->channel) {
+            crm_trace("Removing client %s[%p]", client->name, client);
+            g_io_channel_unref(client->channel);
+            client->channel = NULL;
+        }
+        if (client->source) {
+            g_source_remove(client->source);
+            client->source = 0;
+        }
         /* Results in mainloop_ipcc_destroy() being called once the source is removed from mainloop? */
     }
+}
+
+pid_t
+mainloop_get_child_pid(mainloop_child_t *child)
+{
+    return child->pid;
+}
+
+int
+mainloop_get_child_timeout(mainloop_child_t *child)
+{
+    return child->timeout;
+}
+
+void *
+mainloop_get_child_userdata(mainloop_child_t *child)
+{
+    return child->privatedata;
+}
+
+void
+mainloop_clear_child_userdata(mainloop_child_t *child)
+{
+    child->privatedata = NULL;
+}
+
+static gboolean
+child_timeout_callback(gpointer p)
+{
+    mainloop_child_t *child = p;
+
+    child->timerid = 0;
+    if (child->timeout) {
+        crm_crit("%s process (PID %d) will not die!", child->desc, (int)child->pid);
+        return FALSE;
+    }
+
+    child->timeout = TRUE;
+    crm_warn("%s process (PID %d) timed out", child->desc, (int)child->pid);
+
+    if (kill(child->pid, SIGKILL) < 0) {
+        if (errno == ESRCH) {
+            /* Nothing left to do */
+            return FALSE;
+        }
+        crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
+    }
+
+    child->timerid = g_timeout_add(5000, child_timeout_callback, child);
+    return FALSE;
+}
+
+static void
+mainloop_child_destroy(mainloop_child_t *child)
+{
+    if (child->timerid != 0) {
+        crm_trace("Removing timer %d", child->timerid);
+        g_source_remove(child->timerid);
+        child->timerid = 0;
+    }
+
+    free(child->desc);
+    g_free(child);
+}
+
+static void
+child_death_dispatch(GPid pid, gint status, gpointer user_data)
+{
+    int signo = 0;
+    int exitcode = 0;
+    mainloop_child_t *child = user_data;
+
+    crm_trace("Managed process %d exited: %p", pid, child);
+
+    if (WIFEXITED(status)) {
+        exitcode = WEXITSTATUS(status);
+        crm_trace("Managed process %d (%s) exited with rc=%d", pid,
+                 child->desc, exitcode);
+
+    } else if (WIFSIGNALED(status)) {
+        signo = WTERMSIG(status);
+        crm_trace("Managed process %d (%s) exited with signal=%d", pid,
+                 child->desc, signo);
+    }
+#ifdef WCOREDUMP
+    if (WCOREDUMP(status)) {
+        crm_err("Managed process %d (%s) dumped core", pid, child->desc);
+    }
+#endif
+
+    if (child->callback) {
+       child->callback(child, status, signo, exitcode);
+    }
+    crm_trace("Removed process entry for %d", pid);
+
+    mainloop_child_destroy(child);
+    return;
+}
+
+/* Create/Log a new tracked process
+ * To track a process group, use -pid
+ */
+void
+mainloop_add_child(pid_t pid, int timeout, const char *desc, void * privatedata,
+    void (*callback)(mainloop_child_t *p, int status, int signo, int exitcode))
+{
+    mainloop_child_t *child = g_new(mainloop_child_t, 1);
+
+    child->pid = pid;
+    child->timerid = 0;
+    child->timeout = FALSE;
+    child->desc = strdup(desc);
+    child->privatedata = privatedata;
+    child->callback = callback;
+
+    if (timeout) {
+        child->timerid = g_timeout_add(
+            timeout, child_timeout_callback, child);
+    }
+
+    child->watchid = g_child_watch_add(pid, child_death_dispatch, child);
 }
