@@ -1667,12 +1667,15 @@ lib/Makefile							\
 	lib/pengine/Makefile					\
 	lib/transition/Makefile					\
 	lib/fencing/Makefile					\
+	lib/lrmd/Makefile					\
+	lib/services/Makefile					\
 	lib/plugins/Makefile					\
 		lib/plugins/lrm/Makefile			\
 mcp/Makefile							\
 	mcp/pacemaker						\
 	mcp/pacemaker.service					\
 fencing/Makefile                                                \
+lrmd/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\
 	extra/rgmanager/Makefile				\
