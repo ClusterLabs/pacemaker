@@ -212,27 +212,27 @@ struct stonith_s
 /* *INDENT-ON* */
 
 /* Core functions */
-extern stonith_t *stonith_api_new(void);
-extern void stonith_api_delete(stonith_t * st);
+stonith_t *stonith_api_new(void);
+void stonith_api_delete(stonith_t * st);
 
-extern const char *stonith_error2string(enum stonith_errors return_code);
-extern void stonith_dump_pending_callbacks(stonith_t * st);
+const char *stonith_error2string(enum stonith_errors return_code);
+void stonith_dump_pending_callbacks(stonith_t * st);
 
-extern const char *get_stonith_provider(const char *agent, const char *provider);
+const char *get_stonith_provider(const char *agent, const char *provider);
 
-extern bool stonith_dispatch(stonith_t * st);
+bool stonith_dispatch(stonith_t * st);
 
-extern stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
+stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
                                                   const char *value);
-extern void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
+void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
 
 /* Basic helpers that allows nodes to be fenced and the history to be
  * queried without mainloop or the caller understanding the full API
  *
  * At least one of nodeid and uname are required
  */
-extern int stonith_api_kick(int nodeid, const char *uname, int timeout, bool off);
-extern time_t stonith_api_time(int nodeid, const char *uname, bool in_progress);
+int stonith_api_kick(int nodeid, const char *uname, int timeout, bool off);
+time_t stonith_api_time(int nodeid, const char *uname, bool in_progress);
 
 /*
  * Helpers for using the above functions without install-time dependancies

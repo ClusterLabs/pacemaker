@@ -285,21 +285,21 @@ struct cib_s {
 };
 
 /* Core functions */
-extern cib_t *cib_new(void);
-extern cib_t *cib_native_new(void);
-extern cib_t *cib_file_new(const char *filename);
-extern cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port,
+cib_t *cib_new(void);
+cib_t *cib_native_new(void);
+cib_t *cib_file_new(const char *filename);
+cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port,
                              gboolean encrypted);
 
-extern cib_t *cib_new_no_shadow(void);
-extern char *get_shadow_file(const char *name);
-extern cib_t *cib_shadow_new(const char *name);
+cib_t *cib_new_no_shadow(void);
+char *get_shadow_file(const char *name);
+cib_t *cib_shadow_new(const char *name);
 
-extern void cib_delete(cib_t * cib);
+void cib_delete(cib_t * cib);
 
-extern void cib_dump_pending_callbacks(void);
-extern int num_cib_op_callbacks(void);
-extern void remove_cib_op_callback(int call_id, gboolean all_callbacks);
+void cib_dump_pending_callbacks(void);
+int num_cib_op_callbacks(void);
+void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
 #  define add_cib_op_callback(cib, id, flag, data, fn) cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn)
 

@@ -348,12 +348,12 @@ struct action_wrapper_s {
 };
 
 gboolean cluster_status(pe_working_set_t * data_set);
-extern void set_working_set_defaults(pe_working_set_t * data_set);
-extern void cleanup_calculations(pe_working_set_t * data_set);
-extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
-extern node_t *pe_find_node(GListPtr node_list, const char *uname);
-extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
-extern GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
+void set_working_set_defaults(pe_working_set_t * data_set);
+void cleanup_calculations(pe_working_set_t * data_set);
+resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
+node_t *pe_find_node(GListPtr node_list, const char *uname);
+node_t *pe_find_node_id(GListPtr node_list, const char *id);
+GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                                 pe_working_set_t * data_set);
 
 # define pe_set_action_bit(action, bit) action->flags = crm_set_bit(__FUNCTION__, action->uuid, action->flags, bit)

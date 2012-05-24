@@ -47,11 +47,11 @@ typedef struct async_command_s {
 
 } async_command_t;
 
-extern int run_stonith_agent(const char *agent, const char *action, const char *victim,
+int run_stonith_agent(const char *agent, const char *action, const char *victim,
                              GHashTable * dev_hash, GHashTable * port_map, int *agent_result,
                              char **output, async_command_t * track);
 
-extern gboolean is_redhat_agent(const char *agent);
+gboolean is_redhat_agent(const char *agent);
 
 xmlNode *create_level_registration_xml(const char *node, int level,
                                        stonith_key_value_t * device_list);

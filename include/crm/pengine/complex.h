@@ -35,8 +35,8 @@ enum pe_obj_types {
     pe_master = 3
 };
 
-extern enum pe_obj_types get_resource_type(const char *name);
-extern const char *get_resource_typename(enum pe_obj_types type);
+enum pe_obj_types get_resource_type(const char *name);
+const char *get_resource_typename(enum pe_obj_types type);
 
 typedef struct resource_object_functions_s {
     gboolean(*unpack) (resource_t *, pe_working_set_t *);
@@ -50,55 +50,55 @@ typedef struct resource_object_functions_s {
     void (*free) (resource_t *);
 } resource_object_functions_t;
 
-extern void common_update_score(resource_t * rsc, const char *id, int score);
+void common_update_score(resource_t * rsc, const char *id, int score);
 
-extern char *native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *name,
+char *native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *name,
                               pe_working_set_t * data_set);
 
-extern gboolean native_unpack(resource_t * rsc, pe_working_set_t * data_set);
-extern gboolean group_unpack(resource_t * rsc, pe_working_set_t * data_set);
-extern gboolean clone_unpack(resource_t * rsc, pe_working_set_t * data_set);
-extern gboolean master_unpack(resource_t * rsc, pe_working_set_t * data_set);
+gboolean native_unpack(resource_t * rsc, pe_working_set_t * data_set);
+gboolean group_unpack(resource_t * rsc, pe_working_set_t * data_set);
+gboolean clone_unpack(resource_t * rsc, pe_working_set_t * data_set);
+gboolean master_unpack(resource_t * rsc, pe_working_set_t * data_set);
 
-extern resource_t *native_find_rsc(resource_t * rsc, const char *id, node_t * node, int flags);
+resource_t *native_find_rsc(resource_t * rsc, const char *id, node_t * node, int flags);
 
-extern gboolean native_active(resource_t * rsc, gboolean all);
-extern gboolean group_active(resource_t * rsc, gboolean all);
-extern gboolean clone_active(resource_t * rsc, gboolean all);
-extern gboolean master_active(resource_t * rsc, gboolean all);
+gboolean native_active(resource_t * rsc, gboolean all);
+gboolean group_active(resource_t * rsc, gboolean all);
+gboolean clone_active(resource_t * rsc, gboolean all);
+gboolean master_active(resource_t * rsc, gboolean all);
 
-extern void native_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
-extern void group_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
-extern void clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
-extern void master_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
+void native_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
+void group_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
+void clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
+void master_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 
-extern void native_free(resource_t * rsc);
-extern void group_free(resource_t * rsc);
-extern void clone_free(resource_t * rsc);
-extern void master_free(resource_t * rsc);
+void native_free(resource_t * rsc);
+void group_free(resource_t * rsc);
+void clone_free(resource_t * rsc);
+void master_free(resource_t * rsc);
 
-extern enum rsc_role_e native_resource_state(const resource_t * rsc, gboolean current);
-extern enum rsc_role_e group_resource_state(const resource_t * rsc, gboolean current);
-extern enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
-extern enum rsc_role_e master_resource_state(const resource_t * rsc, gboolean current);
+enum rsc_role_e native_resource_state(const resource_t * rsc, gboolean current);
+enum rsc_role_e group_resource_state(const resource_t * rsc, gboolean current);
+enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
+enum rsc_role_e master_resource_state(const resource_t * rsc, gboolean current);
 
-extern node_t *native_location(resource_t * rsc, GListPtr * list, gboolean current);
+node_t *native_location(resource_t * rsc, GListPtr * list, gboolean current);
 
 extern resource_object_functions_t resource_class_functions[];
-extern gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc,
+gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc,
                               resource_t * parent, pe_working_set_t * data_set);
 
-extern void common_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
+void common_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 
-extern void common_free(resource_t * rsc);
-extern void native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set);
-extern void get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
+void common_free(resource_t * rsc);
+void native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set);
+void get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
                                 node_t * node, pe_working_set_t * data_set);
-extern void get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
+void get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
                                node_t * node, pe_working_set_t * data_set);
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
-extern resource_t *uber_parent(resource_t * rsc);
-extern node_t *rsc_known_on(resource_t * rsc, GListPtr * list);
+resource_t *uber_parent(resource_t * rsc);
+node_t *rsc_known_on(resource_t * rsc, GListPtr * list);
 
 #endif

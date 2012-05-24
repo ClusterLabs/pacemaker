@@ -26,12 +26,12 @@
 /* clplumbing based IPC */
 
 #  define create_reply(request, xml_response_data) create_reply_adv(request, xml_response_data, __FUNCTION__);
-extern xmlNode *create_reply_adv(xmlNode * request, xmlNode * xml_response_data,
+xmlNode *create_reply_adv(xmlNode * request, xmlNode * xml_response_data,
                                  const char *origin);
 
 #  define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) create_request_adv(task, xml_data, host_to, sys_to, sys_from, uuid_from, __FUNCTION__)
 
-extern xmlNode *create_request_adv(const char *task, xmlNode * xml_data, const char *host_to,
+xmlNode *create_request_adv(const char *task, xmlNode * xml_data, const char *host_to,
                                    const char *sys_to, const char *sys_from, const char *uuid_from,
                                    const char *origin);
 

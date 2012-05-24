@@ -130,18 +130,18 @@ enum transition_status {
     transition_failed,
 };
 
-extern void set_default_graph_functions(void);
-extern void set_graph_functions(crm_graph_functions_t * fns);
-extern crm_graph_t *unpack_graph(xmlNode * xml_graph, const char *reference);
-extern int run_graph(crm_graph_t * graph);
-extern gboolean update_graph(crm_graph_t * graph, crm_action_t * action);
-extern void destroy_graph(crm_graph_t * graph);
-extern const char *transition_status(enum transition_status state);
-extern void print_graph(unsigned int log_level, crm_graph_t * graph);
-extern void print_action(int log_level, const char *prefix, crm_action_t * action);
-extern void update_abort_priority(crm_graph_t * graph, int priority,
+void set_default_graph_functions(void);
+void set_graph_functions(crm_graph_functions_t * fns);
+crm_graph_t *unpack_graph(xmlNode * xml_graph, const char *reference);
+int run_graph(crm_graph_t * graph);
+gboolean update_graph(crm_graph_t * graph, crm_action_t * action);
+void destroy_graph(crm_graph_t * graph);
+const char *transition_status(enum transition_status state);
+void print_graph(unsigned int log_level, crm_graph_t * graph);
+void print_action(int log_level, const char *prefix, crm_action_t * action);
+void update_abort_priority(crm_graph_t * graph, int priority,
                                   enum transition_action action, const char *abort_reason);
-extern const char *actiontype2text(action_type_e type);
+const char *actiontype2text(action_type_e type);
 
 #ifdef TESTING
 #  define te_log_action(log_level, fmt, args...) {			\
@@ -153,5 +153,5 @@ extern const char *actiontype2text(action_type_e type);
 #endif
 
 #include <lrm/lrm_api.h>
-extern lrm_op_t *convert_graph_action(xmlNode * resource, crm_action_t * action, int status,
+lrm_op_t *convert_graph_action(xmlNode * resource, crm_action_t * action, int status,
                                       int rc);

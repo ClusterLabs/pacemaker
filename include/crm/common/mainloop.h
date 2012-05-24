@@ -22,20 +22,20 @@
 
 typedef struct trigger_s crm_trigger_t;
 
-extern crm_trigger_t *mainloop_add_trigger(int priority, int(*dispatch) (gpointer user_data),
+crm_trigger_t *mainloop_add_trigger(int priority, int(*dispatch) (gpointer user_data),
                                            gpointer userdata);
 
-extern void mainloop_set_trigger(crm_trigger_t * source);
+void mainloop_set_trigger(crm_trigger_t * source);
 
-extern void mainloop_trigger_complete(crm_trigger_t *trig);
+void mainloop_trigger_complete(crm_trigger_t *trig);
 
-extern gboolean mainloop_destroy_trigger(crm_trigger_t * source);
+gboolean mainloop_destroy_trigger(crm_trigger_t * source);
 
-extern gboolean crm_signal(int sig, void (*dispatch) (int sig));
+gboolean crm_signal(int sig, void (*dispatch) (int sig));
 
-extern gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
+gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
-extern gboolean mainloop_destroy_signal(int sig);
+gboolean mainloop_destroy_signal(int sig);
 
 #include <crm/common/ipc.h>
 

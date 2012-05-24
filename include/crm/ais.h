@@ -404,9 +404,8 @@ ais_error2text(int error)
     return text;
 }
 
-extern enum crm_ais_msg_types crm_system_type;
-extern enum crm_ais_msg_types text2msg_type(const char *text);
-extern char *get_ais_data(const AIS_Message * msg);
-extern gboolean check_message_sanity(const AIS_Message * msg, const char *data);
+enum crm_ais_msg_types text2msg_type(const char *text);
+char *get_ais_data(const AIS_Message * msg);
+gboolean check_message_sanity(const AIS_Message * msg, const char *data);
 
 #endif

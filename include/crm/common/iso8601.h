@@ -86,68 +86,68 @@ typedef struct ha_time_period_s {
 #  define ha_date_ordinal 0x10
 #  define ha_date_weeks   0x20
 
-extern int str_lookup(const char *str, enum date_fields);
+int str_lookup(const char *str, enum date_fields);
 
-extern char *date_to_string(ha_time_t * dt, int flags);
-extern void log_date(int log_level, const char *prefix, ha_time_t * dt, int flags);
-extern void log_time_period(int log_level, ha_time_period_t * dtp, int flags);
+char *date_to_string(ha_time_t * dt, int flags);
+void log_date(int log_level, const char *prefix, ha_time_t * dt, int flags);
+void log_time_period(int log_level, ha_time_period_t * dtp, int flags);
 
-extern ha_time_t *parse_time(char **time_str, ha_time_t * atime, gboolean with_offset);
-extern ha_time_t *parse_time_offset(char **offset_str);
-extern ha_time_t *parse_date(char **date_str);
-extern ha_time_t *parse_time_duration(char **duration_str);
-extern ha_time_period_t *parse_time_period(char **period_str);
+ha_time_t *parse_time(char **time_str, ha_time_t * atime, gboolean with_offset);
+ha_time_t *parse_time_offset(char **offset_str);
+ha_time_t *parse_date(char **date_str);
+ha_time_t *parse_time_duration(char **duration_str);
+ha_time_period_t *parse_time_period(char **period_str);
 
 /* ha_time_interval_t *parse_time_interval(char **interval_str); */
 
 unsigned long long int date_in_seconds(ha_time_t * a_date);
 unsigned long long int date_in_seconds_since_epoch(ha_time_t * a_date);
-extern int compare_date(ha_time_t * lhs, ha_time_t * rhs);
+int compare_date(ha_time_t * lhs, ha_time_t * rhs);
 
-extern gboolean parse_int(char **str, int field_width, int uppper_bound, int *result);
-extern gboolean check_for_ordinal(const char *str);
+gboolean parse_int(char **str, int field_width, int uppper_bound, int *result);
+gboolean check_for_ordinal(const char *str);
 
-extern void ha_set_time(ha_time_t * lhs, ha_time_t * rhs, gboolean offset);
-extern void ha_set_tm_time(ha_time_t * lhs, struct tm *rhs);
-extern void ha_set_timet_time(ha_time_t * lhs, time_t * rhs);
-extern ha_time_t *add_time(ha_time_t * lhs, ha_time_t * rhs);
-extern ha_time_t *subtract_time(ha_time_t * lhs, ha_time_t * rhs);
-extern ha_time_t *subtract_duration(ha_time_t * time, ha_time_t * duration);
-extern void reset_tm(struct tm *some_tm);
-extern void add_seconds(ha_time_t * a_time, int extra);
-extern void add_minutes(ha_time_t * a_time, int extra);
-extern void add_hours(ha_time_t * a_time, int extra);
-extern void add_days(ha_time_t * a_time, int extra);
-extern void add_weekdays(ha_time_t * a_time, int extra);
-extern void add_yeardays(ha_time_t * a_time, int extra);
-extern void add_weeks(ha_time_t * a_time, int extra);
-extern void add_months(ha_time_t * a_time, int extra);
-extern void add_years(ha_time_t * a_time, int extra);
-extern void add_ordinalyears(ha_time_t * a_time, int extra);
-extern void add_weekyears(ha_time_t * a_time, int extra);
-extern void sub_seconds(ha_time_t * a_time, int extra);
-extern void sub_minutes(ha_time_t * a_time, int extra);
-extern void sub_hours(ha_time_t * a_time, int extra);
-extern void sub_days(ha_time_t * a_time, int extra);
-extern void sub_weekdays(ha_time_t * a_time, int extra);
-extern void sub_yeardays(ha_time_t * a_time, int extra);
-extern void sub_weeks(ha_time_t * a_time, int extra);
-extern void sub_months(ha_time_t * a_time, int extra);
-extern void sub_years(ha_time_t * a_time, int extra);
-extern void sub_ordinalyears(ha_time_t * a_time, int extra);
-extern void sub_weekyears(ha_time_t * a_time, int extra);
+void ha_set_time(ha_time_t * lhs, ha_time_t * rhs, gboolean offset);
+void ha_set_tm_time(ha_time_t * lhs, struct tm *rhs);
+void ha_set_timet_time(ha_time_t * lhs, time_t * rhs);
+ha_time_t *add_time(ha_time_t * lhs, ha_time_t * rhs);
+ha_time_t *subtract_time(ha_time_t * lhs, ha_time_t * rhs);
+ha_time_t *subtract_duration(ha_time_t * time, ha_time_t * duration);
+void reset_tm(struct tm *some_tm);
+void add_seconds(ha_time_t * a_time, int extra);
+void add_minutes(ha_time_t * a_time, int extra);
+void add_hours(ha_time_t * a_time, int extra);
+void add_days(ha_time_t * a_time, int extra);
+void add_weekdays(ha_time_t * a_time, int extra);
+void add_yeardays(ha_time_t * a_time, int extra);
+void add_weeks(ha_time_t * a_time, int extra);
+void add_months(ha_time_t * a_time, int extra);
+void add_years(ha_time_t * a_time, int extra);
+void add_ordinalyears(ha_time_t * a_time, int extra);
+void add_weekyears(ha_time_t * a_time, int extra);
+void sub_seconds(ha_time_t * a_time, int extra);
+void sub_minutes(ha_time_t * a_time, int extra);
+void sub_hours(ha_time_t * a_time, int extra);
+void sub_days(ha_time_t * a_time, int extra);
+void sub_weekdays(ha_time_t * a_time, int extra);
+void sub_yeardays(ha_time_t * a_time, int extra);
+void sub_weeks(ha_time_t * a_time, int extra);
+void sub_months(ha_time_t * a_time, int extra);
+void sub_years(ha_time_t * a_time, int extra);
+void sub_ordinalyears(ha_time_t * a_time, int extra);
+void sub_weekyears(ha_time_t * a_time, int extra);
 
 /* conversion functions */
-extern int january1(int year);
+int january1(int year);
 
-extern gboolean convert_from_weekdays(ha_time_t * a_date);
-extern gboolean convert_from_ordinal(ha_time_t * a_date);
-extern gboolean convert_from_gregorian(ha_time_t * a_date);
+gboolean convert_from_weekdays(ha_time_t * a_date);
+gboolean convert_from_ordinal(ha_time_t * a_date);
+gboolean convert_from_gregorian(ha_time_t * a_date);
 
-extern gboolean is_leap_year(int year);
+gboolean is_leap_year(int year);
 
-extern int weeks_in_year(int year);
-extern int days_per_month(int month, int year);
+int weeks_in_year(int year);
+int days_per_month(int month, int year);
 
 gboolean is_date_sane(ha_time_t * a_date);
 

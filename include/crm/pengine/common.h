@@ -99,22 +99,22 @@ enum pe_print_options {
 };
 /* *INDENT-ON* */
 
-extern int merge_weights(int w1, int w2);
+int merge_weights(int w1, int w2);
 
-extern const char *task2text(enum action_tasks task);
-extern enum action_tasks text2task(const char *task);
+const char *task2text(enum action_tasks task);
+enum action_tasks text2task(const char *task);
 
-extern enum rsc_role_e text2role(const char *role);
-extern const char *role2text(enum rsc_role_e role);
+enum rsc_role_e text2role(const char *role);
+const char *role2text(enum rsc_role_e role);
 
-extern const char *fail2text(enum action_fail_response fail);
+const char *fail2text(enum action_fail_response fail);
 
-extern void add_hash_param(GHashTable * hash, const char *name, const char *value);
-extern void append_hashtable(gpointer key, gpointer value, gpointer user_data);
-extern void pe_metadata(void);
-extern void verify_pe_options(GHashTable * options);
-extern const char *pe_pref(GHashTable * options, const char *name);
-extern void calculate_active_ops(GList * sorted_op_list, int *start_index, int *stop_index);
+void add_hash_param(GHashTable * hash, const char *name, const char *value);
+void append_hashtable(gpointer key, gpointer value, gpointer user_data);
+void pe_metadata(void);
+void verify_pe_options(GHashTable * options);
+const char *pe_pref(GHashTable * options, const char *name);
+void calculate_active_ops(GList * sorted_op_list, int *start_index, int *stop_index);
 
 /* Helper macros to avoid NULL pointers */
 #  define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)

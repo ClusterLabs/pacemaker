@@ -36,7 +36,7 @@
 
 #  include <libxml/tree.h>
 
-extern int log_data_element(int log_level, const char *file, const char *function, int line,
+int log_data_element(int log_level, const char *file, const char *function, int line,
                             const char *prefix, xmlNode * data, int depth, gboolean formatted);
 
 #  define CRM_FEATURE_SET		"3.0.6"
@@ -333,9 +333,9 @@ typedef GList *GListPtr;
 #  define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
 #  define crm_str_hash g_str_hash_traditional
-extern guint g_str_hash_traditional(gconstpointer v);
+guint g_str_hash_traditional(gconstpointer v);
 
-extern void update_all_trace_data(void);
+void update_all_trace_data(void);
 
 static inline void
 slist_basic_destroy(GListPtr list)

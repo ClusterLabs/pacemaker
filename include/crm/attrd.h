@@ -31,7 +31,7 @@
 #define F_ATTRD_HOST		"attr_host"
 #define F_ATTRD_USER		"attr_user"
 
-extern gboolean attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host,
+gboolean attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host,
                                       const char *name, const char *value, const char *section,
                                       const char *set, const char *dampen, const char *user_name);
 
