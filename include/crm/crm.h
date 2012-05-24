@@ -228,6 +228,9 @@ typedef GList *GListPtr;
 
 #    define do_crm_log(level, fmt, args...) do {                        \
         qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args); \
+        if((level) < LOG_WARNING) {                                     \
+            crm_write_blackbox(0);                                      \
+        }                                                               \
     } while(0)
 
 /* level /MUST/ be a constant or compilation will fail */
@@ -273,6 +276,9 @@ typedef GList *GListPtr;
         if (xml_cs && xml_cs->targets) {                              \
             log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
         }                                                               \
+        if((level) < LOG_WARNING) {                                     \
+            crm_write_blackbox(0);                                      \
+        }                                                               \
     } while(0)
 
 #    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
@@ -285,13 +291,25 @@ typedef GList *GListPtr;
 	const char *err = strerror(errno);				\
 	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
 	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
+        if((level) < LOG_WARNING) {                                     \
+            crm_write_blackbox(0);                                      \
+        }                                                               \
     } while(0)
 
-#    define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
-#    define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
+#    define crm_crit(fmt, args...)    do {      \
+        qb_logt(LOG_CRIT,    0, fmt , ##args);  \
+        crm_write_blackbox(0);                  \
+    } while(0)
+
+#    define crm_err(fmt, args...)    do {      \
+        qb_logt(LOG_ERR,    0, fmt , ##args);  \
+        crm_write_blackbox(0);                  \
+    } while(0)
+
 #    define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
 #    define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
 #    define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
+
 #    define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
 #    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
 
