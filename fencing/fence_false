@@ -41,7 +41,7 @@ def set_power_status(conn, options):
 
 def main():
 	device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",
-			"no_password", "power_wait", "power_timeout" ]
+			"no_password", "power_wait", "power_timeout", "nodename" ]
 
 	atexit.register(atexit_handler)
 
