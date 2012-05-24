@@ -59,10 +59,10 @@ initialize:
 	echo "Now run configure with any arguments (eg. --prefix) specific to your system"
 
 export: 
-	rm -f $(PACKAGE)-scratch.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
+	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
 	if [ ! -f $(TARFILE) ]; then						\
 	    rm -f $(PACKAGE).tar.*;						\
-	    if [ $(TAG) = scratch ]; then 					\
+	    if [ $(TAG) = dirty ]; then 					\
 		git commit -m "DO-NOT-PUSH" -a;					\
 		git archive --prefix=$(distdir)/ HEAD | gzip > $(TARFILE);	\
 		git reset --mixed HEAD^; 					\
@@ -146,8 +146,8 @@ rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
-scratch:
-	make TAG=scratch mock
+dirty:
+	make TAG=dirty mock
 
 COVERITY_DIR	 = $(shell pwd)/coverity-$(TAG)
 COVHOST		?= coverity.example.com
