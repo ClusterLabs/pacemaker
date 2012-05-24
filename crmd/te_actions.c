@@ -37,7 +37,7 @@ void send_rsc_command(crm_action_t * action);
 static void
 te_start_action_timer(crm_graph_t * graph, crm_action_t * action)
 {
-    crm_malloc0(action->timer, sizeof(crm_action_timer_t));
+    action->timer = calloc(1, sizeof(crm_action_timer_t));
     action->timer->timeout = action->timeout;
     action->timer->reason = timeout_action;
     action->timer->action = action;

@@ -360,7 +360,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         return FALSE;
     }
 
-    crm_malloc0(*rsc, sizeof(resource_t));
+    *rsc = calloc(1, sizeof(resource_t));
 
     if (expanded_xml) {
         crm_log_xml_trace(expanded_xml, "Expanded resource...");

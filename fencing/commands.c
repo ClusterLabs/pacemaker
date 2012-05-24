@@ -75,7 +75,7 @@ static async_command_t *create_async_command(xmlNode *msg)
     CRM_CHECK(action != NULL, crm_log_xml_warn(msg, "NoAction"); return NULL);
 
     crm_log_xml_trace(msg, "Command");
-    crm_malloc0(cmd, sizeof(async_command_t));
+    cmd = calloc(1, sizeof(async_command_t));
     crm_element_value_int(msg, F_STONITH_CALLID,   &(cmd->id));
     crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
     crm_element_value_int(msg, F_STONITH_TIMEOUT,  &(cmd->timeout));
@@ -213,7 +213,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 	    case ':':
 		if(lpc > last) {
 		    crm_free(name);
-		    crm_malloc0(name, 1 + lpc - last);
+		    name = calloc(1, 1 + lpc - last);
 		    strncpy(name, hostmap + last, lpc - last);
 		}
 		last = lpc + 1;
@@ -227,7 +227,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 	    case '\t':
 		if(name) {
 		    char *value = NULL;
-		    crm_malloc0(value, 1 + lpc - last);
+		    value = calloc(1, 1 + lpc - last);
 		    strncpy(value, hostmap + last, lpc - last);
 		    
 		    crm_debug("Adding alias '%s'='%s'", name, value);
@@ -295,7 +295,7 @@ static void parse_host_line(const char *line, GListPtr *output)
 	    char *entry = NULL;
 	    
             if(lpc != last) {
-                crm_malloc0(entry, 1 + lpc - last);
+                entry = calloc(1, 1 + lpc - last);
                 rc = sscanf(line+last, "%[a-zA-Z0-9_-.]", entry);
 	    }
 
@@ -332,7 +332,7 @@ static GListPtr parse_host_list(const char *hosts)
 	if(hosts[lpc] == '\n' || hosts[lpc] == 0) {
 	    char *line = NULL;
 
-	    crm_malloc0(line, 2 + lpc - last);
+	    line = calloc(1, 2 + lpc - last);
 	    snprintf(line, 1 + lpc - last, "%s", hosts+last);
 	    parse_host_line(line, &output);
 	    crm_free(line);
@@ -349,7 +349,7 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
     stonith_device_t *device = NULL;
 
-    crm_malloc0(device, sizeof(stonith_device_t));
+    device = calloc(1, sizeof(stonith_device_t));
     device->id = crm_element_value_copy(dev, XML_ATTR_ID);
     device->agent = crm_element_value_copy(dev, "agent");
     device->namespace = crm_element_value_copy(dev, "namespace");
@@ -437,7 +437,7 @@ int stonith_level_register(xmlNode *msg)
     }
     
     if(tp == NULL) {
-        crm_malloc0(tp, sizeof(stonith_topology_t));
+        tp = calloc(1, sizeof(stonith_topology_t));
         tp->node = crm_strdup(node);
         g_hash_table_replace(topology, tp->node, tp);
         crm_trace("Added %s to the topology (%d active entries)", node, g_hash_table_size(topology));

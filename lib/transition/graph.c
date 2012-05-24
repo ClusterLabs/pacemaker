@@ -249,7 +249,7 @@ count_migrating(crm_graph_t * graph, synapse_t * synapse)
             int *counter = g_hash_table_lookup(graph->migrating, node);
 
             if (counter == NULL) {
-                crm_malloc0(counter, sizeof(int));
+                counter = calloc(1, sizeof(int));
                 g_hash_table_insert(graph->migrating, crm_strdup(node), counter);
             }
 

@@ -403,7 +403,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
     CRM_ASSERT(value != NULL);
     *value = NULL;
 
-    crm_malloc0(xpath_string, xpath_max);
+    xpath_string = calloc(1, xpath_max);
     offset +=
         snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path("resources"));
 
@@ -1036,7 +1036,7 @@ show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int o
     GListPtr lpc = NULL;
     GListPtr list = rsc->rsc_cons;
 
-    crm_malloc0(prefix, (offset * 4) + 1);
+    prefix = calloc(1, (offset * 4) + 1);
     memset(prefix, ' ', offset * 4);
 
     if (dependants) {
@@ -1309,7 +1309,7 @@ main(int argc, char **argv)
         crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    crm_malloc0(our_pid, 11);
+    our_pid = calloc(1, 11);
     if (our_pid != NULL) {
         snprintf(our_pid, 10, "%d", getpid());
         our_pid[10] = '\0';

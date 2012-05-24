@@ -127,7 +127,7 @@ pcmk_user_lookup(const char *name, uid_t * uid, gid_t * gid)
     struct passwd pwd;
     struct passwd *pwentry = NULL;
 
-    crm_malloc0(buffer, PW_BUFFER_LEN);
+    buffer = calloc(1, PW_BUFFER_LEN);
     getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
     if (pwentry) {
         rc = 0;
@@ -593,7 +593,7 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
     if (node == NULL) {
         changed = TRUE;
 
-        crm_malloc0(node, sizeof(pcmk_peer_t));
+        node = calloc(1, sizeof(pcmk_peer_t));
         node->id = id;
 
         g_hash_table_insert(peers, GUINT_TO_POINTER(id), node);

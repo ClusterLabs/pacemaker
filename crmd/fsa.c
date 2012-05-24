@@ -160,7 +160,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     do_fsa_stall = FALSE;
     if (is_message() == FALSE && fsa_actions != A_NOTHING) {
         /* fake the first message so we can get into the loop */
-        crm_malloc0(fsa_data, sizeof(fsa_data_t));
+        fsa_data = calloc(1, sizeof(fsa_data_t));
         fsa_data->fsa_input = I_NULL;
         fsa_data->fsa_cause = C_FSA_INTERNAL;
         fsa_data->origin = __FUNCTION__;

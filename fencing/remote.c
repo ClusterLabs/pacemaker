@@ -273,7 +273,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
 	}
     }
     
-    crm_malloc0(op, sizeof(remote_fencing_op_t));
+    op = calloc(1, sizeof(remote_fencing_op_t));
     crm_element_value_int(request, F_STONITH_TIMEOUT, (int*)&(op->base_timeout));
 
     if(peer && dev) {
@@ -512,7 +512,7 @@ int process_remote_stonith_query(xmlNode *msg)
     }
 
     crm_trace("Query result from %s (%d devices)", host, devices);
-    crm_malloc0(result, sizeof(st_query_result_t));
+    result = calloc(1, sizeof(st_query_result_t));
     result->host = crm_strdup(host);
     result->devices = devices;
 

@@ -635,7 +635,7 @@ unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_nam
                 continue;
             }
 
-            crm_malloc0(pair, sizeof(sorted_set_t));
+            pair = calloc(1, sizeof(sorted_set_t));
             pair->name = ID(attr_set);
             pair->special_name = always_first;
             pair->attr_set = attr_set;

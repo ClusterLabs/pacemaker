@@ -160,7 +160,7 @@ cib_recv_tls(gnutls_session * session)
         return NULL;
     }
 
-    crm_malloc0(buf, chunk_size);
+    buf = calloc(1, chunk_size);
 
     while (TRUE) {
         errno = 0;
@@ -253,7 +253,7 @@ cib_recv_plaintext(int sock)
     ssize_t len = 0;
     ssize_t chunk_size = 512;
 
-    crm_malloc0(buf, chunk_size);
+    buf = calloc(1, chunk_size);
 
     while (1) {
         errno = 0;

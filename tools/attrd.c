@@ -112,7 +112,7 @@ static void
 attrd_ipc_created(qb_ipcs_connection_t *c)
 {
     attrd_client_t *new_client = NULL;
-    crm_malloc0(new_client, sizeof(attrd_client_t));
+    new_client = calloc(1, sizeof(attrd_client_t));
     qb_ipcs_context_set(c, new_client);
     
     crm_trace("Client %p connected", c);
@@ -245,7 +245,7 @@ find_hash_entry(xmlNode * msg)
     if (hash_entry == NULL) {
         /* create one and add it */
         crm_info("Creating hash entry for %s", attr);
-        crm_malloc0(hash_entry, sizeof(attr_hash_entry_t));
+        hash_entry = calloc(1, sizeof(attr_hash_entry_t));
         hash_entry->id = crm_strdup(attr);
 
         g_hash_table_insert(attr_hash, hash_entry->id, hash_entry);
@@ -707,7 +707,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
         }
     }
 
-    crm_malloc0(data, sizeof(struct attrd_callback_s));
+    data = calloc(1, sizeof(struct attrd_callback_s));
     data->attr = crm_strdup(hash_entry->id);
     if (hash_entry->value != NULL) {
         data->value = crm_strdup(hash_entry->value);

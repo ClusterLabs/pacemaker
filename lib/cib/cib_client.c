@@ -341,7 +341,7 @@ cib_new_variant(void)
 {
     cib_t *new_cib = NULL;
 
-    crm_malloc0(new_cib, sizeof(cib_t));
+    new_cib = calloc(1, sizeof(cib_t));
 
     if (cib_op_callback_table != NULL) {
         g_hash_table_destroy(cib_op_callback_table);
@@ -363,7 +363,7 @@ cib_new_variant(void)
     new_cib->notify_list = NULL;
 
     /* the rest will get filled in by the variant constructor */
-    crm_malloc0(new_cib->cmds, sizeof(cib_api_operations_t));
+    new_cib->cmds = calloc(1, sizeof(cib_api_operations_t));
 
     new_cib->cmds->set_op_callback = cib_client_set_op_callback;
     new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
@@ -444,7 +444,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
 
     crm_trace("Adding callback for %s events (%d)", event, g_list_length(cib->notify_list));
 
-    crm_malloc0(new_client, sizeof(cib_notify_client_t));
+    new_client = calloc(1, sizeof(cib_notify_client_t));
     new_client->event = event;
     new_client->callback = callback;
 
@@ -478,7 +478,7 @@ cib_client_del_notify_callback(cib_t * cib, const char *event,
 
     crm_debug("Removing callback for %s events", event);
 
-    crm_malloc0(new_client, sizeof(cib_notify_client_t));
+    new_client = calloc(1, sizeof(cib_notify_client_t));
     new_client->event = event;
     new_client->callback = callback;
 
@@ -555,7 +555,7 @@ cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean onl
         return FALSE;
     }
 
-    crm_malloc0(blob, sizeof(cib_callback_client_t));
+    blob = calloc(1, sizeof(cib_callback_client_t));
     blob->id = callback_name;
     blob->only_success = only_success;
     blob->user_data = user_data;
@@ -564,7 +564,7 @@ cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean onl
     if (timeout > 0) {
         struct timer_rec_s *async_timer = NULL;
 
-        crm_malloc0(async_timer, sizeof(struct timer_rec_s));
+        async_timer = calloc(1, sizeof(struct timer_rec_s));
         blob->timer = async_timer;
 
         async_timer->cib = cib;

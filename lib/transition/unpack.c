@@ -42,7 +42,7 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
     }
 
     action_copy = copy_xml(xml_action);
-    crm_malloc0(action, sizeof(crm_action_t));
+    action = calloc(1, sizeof(crm_action_t));
     if (action == NULL) {
         return NULL;
     }
@@ -95,7 +95,7 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
     CRM_CHECK(xml_synapse != NULL, return NULL);
     crm_trace("looking in synapse %s", ID(xml_synapse));
 
-    crm_malloc0(new_synapse, sizeof(synapse_t));
+    new_synapse = calloc(1, sizeof(synapse_t));
     new_synapse->id = crm_parse_int(ID(xml_synapse), NULL);
 
     value = crm_element_value(xml_synapse, XML_CIB_ATTR_PRIORITY);
@@ -175,7 +175,7 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
     const char *time = NULL;
     xmlNode *synapse = NULL;
 
-    crm_malloc0(new_graph, sizeof(crm_graph_t));
+    new_graph = calloc(1, sizeof(crm_graph_t));
 
     new_graph->id = -1;
     new_graph->abort_priority = 0;
@@ -300,7 +300,7 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
     action_resource = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
     CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "Bad"); return NULL);
 
-    crm_malloc0(op, sizeof(lrm_op_t));
+    op = calloc(1, sizeof(lrm_op_t));
     op->app_name = crm_strdup(crm_system_name);
 
     op->rsc_id = crm_strdup(ID(action_resource));

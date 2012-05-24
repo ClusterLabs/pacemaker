@@ -80,7 +80,7 @@ date_to_string(ha_time_t * date_time, int flags)
     CRM_CHECK(dt != NULL, return NULL);
 
     if (flags & ha_log_date) {
-        crm_malloc0(date_s, 32);
+        date_s = calloc(1, 32);
         if (date_s == NULL) {
             return NULL;
 
@@ -97,7 +97,7 @@ date_to_string(ha_time_t * date_time, int flags)
     if (flags & ha_log_time) {
         int offset = 0;
 
-        crm_malloc0(time_s, 32);
+        time_s = calloc(1, 32);
         if (time_s == NULL) {
             goto cleanup;
         }
@@ -108,7 +108,7 @@ date_to_string(ha_time_t * date_time, int flags)
             offset = (dt->offset->hours * 100) + dt->offset->minutes;
         }
 
-        crm_malloc0(offset_s, 32);
+        offset_s = calloc(1, 32);
         if ((flags & ha_log_local) == 0 || offset == 0) {
             snprintf(offset_s, 31, "Z");
 
@@ -126,7 +126,7 @@ date_to_string(ha_time_t * date_time, int flags)
         }
     }
 
-    crm_malloc0(result_s, 100);
+    result_s = calloc(1, 100);
 
     snprintf(result_s, 100, "%s%s%s%s",
              date_s ? date_s : "", (date_s != NULL && time_s != NULL) ? " " : "",
@@ -163,8 +163,8 @@ parse_time_offset(char **offset_str)
 {
     ha_time_t *new_time = NULL;
 
-    crm_malloc0(new_time, sizeof(ha_time_t));
-    crm_malloc0(new_time->has, sizeof(ha_has_time_t));
+    new_time = calloc(1, sizeof(ha_time_t));
+    new_time->has = calloc(1, sizeof(ha_has_time_t));
 
     if ((*offset_str)[0] == 'Z') {
 
@@ -256,10 +256,10 @@ normalize_time(ha_time_t * a_time)
     CRM_CHECK(a_time->has != NULL, return);
 
     if (a_time->normalized == NULL) {
-        crm_malloc0(a_time->normalized, sizeof(ha_time_t));
+        a_time->normalized = calloc(1, sizeof(ha_time_t));
     }
     if (a_time->normalized->has == NULL) {
-        crm_malloc0(a_time->normalized->has, sizeof(ha_has_time_t));
+        a_time->normalized->has = calloc(1, sizeof(ha_has_time_t));
     }
 
     ha_set_time(a_time->normalized, a_time, FALSE);
@@ -296,8 +296,8 @@ parse_date(char **date_str)
         is_done = TRUE;
 
     } else {
-        crm_malloc0(new_time, sizeof(ha_time_t));
-        crm_malloc0(new_time->has, sizeof(ha_has_time_t));
+        new_time = calloc(1, sizeof(ha_time_t));
+        new_time->has = calloc(1, sizeof(ha_has_time_t));
     }
 
     while (is_done == FALSE) {
@@ -423,8 +423,8 @@ parse_time_duration(char **interval_str)
     CRM_CHECK((*interval_str)[0] == 'P', goto bail);
     (*interval_str)++;
 
-    crm_malloc0(diff, sizeof(ha_time_t));
-    crm_malloc0(diff->has, sizeof(ha_has_time_t));
+    diff = calloc(1, sizeof(ha_time_t));
+    diff->has = calloc(1, sizeof(ha_has_time_t));
 
     while (isspace((int)(*interval_str)[0]) == FALSE) {
         int an_int = 0;
@@ -504,7 +504,7 @@ parse_time_period(char **period_str)
     CRM_CHECK(strlen(*period_str) > 0, return NULL);
 
     tzset();
-    crm_malloc0(period, sizeof(ha_time_period_t));
+    period = calloc(1, sizeof(ha_time_period_t));
 
     if ((*period_str)[0] == 'P') {
         period->diff = parse_time_duration(period_str);
@@ -526,10 +526,10 @@ parse_time_period(char **period_str)
         /* just aduration starting from now */
         time_t now = time(NULL);
 
-        crm_malloc0(period->start, sizeof(ha_time_t));
-        crm_malloc0(period->start->has, sizeof(ha_has_time_t));
-        crm_malloc0(period->start->offset, sizeof(ha_time_t));
-        crm_malloc0(period->start->offset->has, sizeof(ha_has_time_t));
+        period->start = calloc(1, sizeof(ha_time_t));
+        period->start->has = calloc(1, sizeof(ha_has_time_t));
+        period->start->offset = calloc(1, sizeof(ha_time_t));
+        period->start->offset->has = calloc(1, sizeof(ha_has_time_t));
 
         ha_set_timet_time(period->start, &now);
         normalize_time(period->start);
@@ -1277,10 +1277,10 @@ new_ha_date(gboolean set_to_now)
     ha_time_t *now = NULL;
 
     tzset();
-    crm_malloc0(now, sizeof(ha_time_t));
-    crm_malloc0(now->has, sizeof(ha_has_time_t));
-    crm_malloc0(now->offset, sizeof(ha_time_t));
-    crm_malloc0(now->offset->has, sizeof(ha_has_time_t));
+    now = calloc(1, sizeof(ha_time_t));
+    now->has = calloc(1, sizeof(ha_has_time_t));
+    now->offset = calloc(1, sizeof(ha_time_t));
+    now->offset->has = calloc(1, sizeof(ha_has_time_t));
     if (set_to_now) {
         tm_now = time(NULL);
         now->tm_now = tm_now;

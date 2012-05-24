@@ -306,7 +306,7 @@ te_update_diff(const char *event, xmlNode * msg)
             op_id = ID(match);
 
             max = strlen(rsc_op_template) + strlen(op_id) + 1;
-            crm_malloc0(rsc_op_xpath, max);
+            rsc_op_xpath = calloc(1, max);
             snprintf(rsc_op_xpath, max, rsc_op_template, op_id);
 
             op_match = xpath_search(diff, rsc_op_xpath);

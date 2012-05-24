@@ -72,7 +72,7 @@ cib_file_new(const char *cib_location)
     cib_file_opaque_t *private = NULL;
     cib_t *cib = cib_new_variant();
 
-    crm_malloc0(private, sizeof(cib_file_opaque_t));
+    private = calloc(1, sizeof(cib_file_opaque_t));
 
     cib->variant = cib_file;
     cib->variant_opaque = private;

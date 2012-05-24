@@ -445,7 +445,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
     }
 
     len = 8 + strlen(name);
-    crm_malloc0(attr_name, len);
+    attr_name = calloc(1, len);
     sprintf(attr_name, "master-%s", name);
 
     if (node) {

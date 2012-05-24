@@ -73,7 +73,7 @@ rsc2node_new(const char *id, resource_t * rsc,
         CRM_CHECK(node_weight == 0, return NULL);
     }
 
-    crm_malloc0(new_con, sizeof(rsc_to_node_t));
+    new_con = calloc(1, sizeof(rsc_to_node_t));
     if (new_con != NULL) {
         new_con->id = id;
         new_con->rsc_lh = rsc;

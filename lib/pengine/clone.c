@@ -183,7 +183,7 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     crm_trace("Processing resource %s...", rsc->id);
 
-    crm_malloc0(clone_data, sizeof(clone_variant_data_t));
+    clone_data = calloc(1, sizeof(clone_variant_data_t));
     rsc->variant_opaque = clone_data;
     clone_data->interleave = FALSE;
     clone_data->ordered = FALSE;

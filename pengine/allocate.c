@@ -1796,7 +1796,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
         return NULL;
     }
 
-    crm_malloc0(n_data, sizeof(notify_data_t));
+    n_data = calloc(1, sizeof(notify_data_t));
     n_data->action = action;
     n_data->keys =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
@@ -1899,7 +1899,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
     if (state) {
         notify_entry_t *entry = NULL;
 
-        crm_malloc0(entry, sizeof(notify_entry_t));
+        entry = calloc(1, sizeof(notify_entry_t));
         entry->rsc = rsc;
         if (rsc->running_on) {
             /* we only take the first one */
@@ -1939,7 +1939,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
 
             if (is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
 
-                crm_malloc0(entry, sizeof(notify_entry_t));
+                entry = calloc(1, sizeof(notify_entry_t));
                 entry->node = op->node;
                 entry->rsc = rsc;
 

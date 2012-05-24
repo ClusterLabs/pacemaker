@@ -95,7 +95,7 @@ cib_ipc_created(qb_ipcs_connection_t *c)
 {
     cib_client_t *new_client = NULL;
     
-    crm_malloc0(new_client, sizeof(cib_client_t));
+    new_client = calloc(1, sizeof(cib_client_t));
     new_client->ipc = c;
 
     CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));

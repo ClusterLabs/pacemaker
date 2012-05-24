@@ -66,7 +66,7 @@ get_shadow_prompt(const char *name)
     CRM_ASSERT(name != NULL);
 
     len += strlen(name);
-    crm_malloc0(prompt, len);
+    prompt = calloc(1, len);
 
     snprintf(prompt, len, "shadow[%s] # ", name);
     return prompt;
@@ -576,7 +576,7 @@ print_xml_diff(FILE * where, xmlNode * diff)
         len = 0;
         max = 1024;
         crm_free(buffer);
-        crm_malloc0(buffer, max);
+        buffer = calloc(1, max);
 
         if (is_first) {
             is_first = FALSE;
@@ -593,7 +593,7 @@ print_xml_diff(FILE * where, xmlNode * diff)
         len = 0;
         max = 1024;
         crm_free(buffer);
-        crm_malloc0(buffer, max);
+        buffer = calloc(1, max);
 
         if (is_first) {
             is_first = FALSE;

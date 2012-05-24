@@ -66,7 +66,7 @@ get_heartbeat_uuid(uint32_t unused, const char *uname)
         return NULL;
     }
 
-    crm_malloc0(uuid_calc, 50);
+    uuid_calc = calloc(1, 50);
     cl_uuid_unparse(&uuid_raw, uuid_calc);
 
     if (safe_str_eq(uuid_calc, unknown)) {
@@ -343,7 +343,7 @@ get_uname(const char *uuid)
             char *uuid_copy = crm_strdup(uuid);
 
             cl_uuid_parse(uuid_copy, &uuid_raw);
-            crm_malloc(hb_uname, MAX_NAME);
+            hb_uname = malloc( MAX_NAME);
 
             if (heartbeat_cluster->llc_ops->get_name_by_uuid(heartbeat_cluster, &uuid_raw, hb_uname,
                                                              MAX_NAME) == HA_FAIL) {

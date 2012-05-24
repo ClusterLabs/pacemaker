@@ -595,7 +595,7 @@ mainloop_add_fd(
 {
     mainloop_io_t *client = NULL;
     if(fd > 0) {
-        crm_malloc0(client, sizeof(mainloop_io_t));          
+        client = calloc(1, sizeof(mainloop_io_t));          
         client->name = crm_strdup(name);
         client->userdata = userdata;
 

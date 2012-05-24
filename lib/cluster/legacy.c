@@ -119,7 +119,7 @@ get_ais_data(const AIS_Message * msg)
 
     } else {
         crm_trace("Decompressing message data");
-        crm_malloc0(uncompressed, new_size);
+        uncompressed = calloc(1, new_size);
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, (char *)msg->data,
                                         msg->compressed_size, 1, 0);
@@ -239,7 +239,7 @@ send_ais_text(int class, const char *data,
         sender = local_pid;
     }
 
-    crm_malloc0(ais_msg, sizeof(AIS_Message));
+    ais_msg = calloc(1, sizeof(AIS_Message));
 
     ais_msg->id = msg_id++;
     ais_msg->header.id = class;
@@ -279,7 +279,7 @@ send_ais_text(int class, const char *data,
         unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
 
         crm_trace("Compressing message payload");
-        crm_malloc(compressed, len);
+        compressed = malloc( len);
 
         rc = BZ2_bzBuffToBuffCompress(compressed, &len, uncompressed, ais_msg->size, CRM_BZ2_BLOCKS,
                                       0, CRM_BZ2_WORK);
@@ -496,7 +496,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
         }
 
         crm_trace("Decompressing message data");
-        crm_malloc0(uncompressed, new_size);
+        uncompressed = calloc(1, new_size);
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, data, msg->compressed_size, 1, 0);
 
         if (rc != BZ_OK) {

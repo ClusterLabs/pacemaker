@@ -112,7 +112,7 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
     
     len = (orig * 1.1) + 600; /* recomended size */
     
-    crm_malloc(compressed, len);
+    compressed = malloc( len);
     rc = BZ2_bzBuffToBuffCompress(compressed, &len, buffer, orig, CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);
     
     if(rc != BZ_OK) {
@@ -136,7 +136,7 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
 	char *uncompressed = NULL;
 	
 	crm_debug("Trying to decompress %d bytes", len);
-	crm_malloc0(uncompressed, orig);
+	uncompressed = calloc(1, orig);
 	rc = BZ2_bzBuffToBuffDecompress(
 	    uncompressed, &used, compressed, len, 1, 0);
 	CRM_CHECK(rc == BZ_OK, ;);
@@ -231,7 +231,7 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 		return;
 	    }
 
-	    crm_malloc0(compressed, orig_len);
+	    compressed = calloc(1, orig_len);
 	    memcpy(compressed, value, orig_len);
 	    
 	    crm_trace("Trying to decompress %d bytes", (int)orig_len);

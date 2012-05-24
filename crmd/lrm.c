@@ -126,7 +126,7 @@ make_stop_id(const char *rsc, int call_id)
 {
     char *op_id = NULL;
 
-    crm_malloc0(op_id, strlen(rsc) + 34);
+    op_id = calloc(1, strlen(rsc) + 34);
     if (op_id != NULL) {
         snprintf(op_id, strlen(rsc) + 34, "%s:%d", rsc, call_id);
     }
@@ -176,7 +176,7 @@ update_history_cache(lrm_rsc_t * rsc, lrm_op_t * op)
 
     entry = g_hash_table_lookup(resource_history, op->rsc_id);
     if (entry == NULL && rsc) {
-        crm_malloc0(entry, sizeof(rsc_history_t));
+        entry = calloc(1, sizeof(rsc_history_t));
         entry->id = crm_strdup(op->rsc_id);
         g_hash_table_insert(resource_history, entry->id, entry);
 
@@ -507,7 +507,7 @@ get_rsc_restart_list(lrm_rsc_t * rsc, lrm_op_t * op)
     }
 
     len = strlen(rsc->type) + strlen(rsc->class) + strlen(provider) + 4;
-    crm_malloc(key, len);
+    key = malloc( len);
     snprintf(key, len, "%s::%s:%s", rsc->type, rsc->class, provider);
 
     reload = g_hash_table_lookup(reload_hash, key);
@@ -520,7 +520,7 @@ get_rsc_restart_list(lrm_rsc_t * rsc, lrm_op_t * op)
     if (reload == NULL) {
         xmlNode *action = NULL;
 
-        crm_malloc0(reload, sizeof(reload_data_t));
+        reload = calloc(1, sizeof(reload_data_t));
         g_hash_table_replace(reload_hash, key, reload);
 
         reload->last_query = now;
@@ -905,7 +905,7 @@ delete_rsc_status(const char *rsc_id, int call_options, const char *user_name)
     CRM_CHECK(rsc_id != NULL, return cib_id_check);
 
     max = strlen(rsc_template) + strlen(rsc_id) + strlen(fsa_our_uname) + 1;
-    crm_malloc0(rsc_xpath, max);
+    rsc_xpath = calloc(1, max);
     snprintf(rsc_xpath, max, rsc_template, fsa_our_uname, rsc_id);
 
     rc = fsa_cib_conn->cmds->delegated_variant_op(fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath,
@@ -985,12 +985,12 @@ delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id)
             max =
                 strlen(op_call_template) + strlen(rsc_id) + strlen(fsa_our_uname) + strlen(key) +
                 10;
-            crm_malloc0(op_xpath, max);
+            op_xpath = calloc(1, max);
             snprintf(op_xpath, max, op_call_template, fsa_our_uname, rsc_id, key, call_id);
 
         } else {
             max = strlen(op_template) + strlen(rsc_id) + strlen(fsa_our_uname) + strlen(key) + 1;
-            crm_malloc0(op_xpath, max);
+            op_xpath = calloc(1, max);
             snprintf(op_xpath, max, op_template, fsa_our_uname, rsc_id, key);
         }
 
@@ -1209,7 +1209,7 @@ delete_resource(const char *id, lrm_rsc_t * rsc, GHashTableIter *gIter,
             struct pending_deletion_op_s *op = NULL;
             char *ref = crm_element_value_copy(request->msg, XML_ATTR_REFERENCE);
 
-            crm_malloc0(op, sizeof(struct pending_deletion_op_s));
+            op = calloc(1, sizeof(struct pending_deletion_op_s));
             op->rsc = crm_strdup(rsc->id);
             op->input = copy_ha_msg_input(request);
             g_hash_table_insert(deletion_ops, ref, op);
@@ -1518,7 +1518,7 @@ construct_op(xmlNode * rsc_op, const char *rsc_id, const char *operation)
 
     CRM_LOG_ASSERT(rsc_id != NULL);
 
-    crm_malloc0(op, sizeof(lrm_op_t));
+    op = calloc(1, sizeof(lrm_op_t));
     op->op_type = crm_strdup(operation);
     op->op_status = LRM_OP_PENDING;
     op->rc = -1;
@@ -1766,7 +1766,7 @@ do_lrm_rsc_op(lrm_rsc_t * rsc, const char *operation, xmlNode * msg, xmlNode * r
         char *call_id_s = make_stop_id(rsc->id, call_id);
         struct recurring_op_s *pending = NULL;
 
-        crm_malloc0(pending, sizeof(struct recurring_op_s));
+        pending = calloc(1, sizeof(struct recurring_op_s));
         crm_trace("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
 
         pending->call_id = call_id;
@@ -1803,7 +1803,7 @@ copy_lrm_op(const lrm_op_t * op)
     CRM_CHECK(op != NULL, return NULL);
     CRM_CHECK(op->rsc_id != NULL, return NULL);
 
-    crm_malloc0(op_copy, sizeof(lrm_op_t));
+    op_copy = calloc(1, sizeof(lrm_op_t));
 
     op_copy->op_type = crm_strdup(op->op_type);
     /* input fields */
@@ -1847,7 +1847,7 @@ copy_lrm_rsc(const lrm_rsc_t * rsc)
         return NULL;
     }
 
-    crm_malloc0(rsc_copy, sizeof(lrm_rsc_t));
+    rsc_copy = calloc(1, sizeof(lrm_rsc_t));
 
     rsc_copy->id = crm_strdup(rsc->id);
     rsc_copy->type = crm_strdup(rsc->type);

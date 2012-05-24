@@ -522,7 +522,7 @@ ping_new(const char *host)
 {
     ping_node *node;
 
-    crm_malloc0(node, sizeof(ping_node));
+    node = calloc(1, sizeof(ping_node));
 
     if (strstr(host, ":")) {
         node->type = AF_INET6;
@@ -852,7 +852,7 @@ ping_read(ping_node * node, int *lenp)
     gettimeofday(&recv_start_time, NULL);
     packlen = DEFDATALEN + IP6LEN + ICMP6ECHOLEN + EXTRA;
 
-    crm_malloc0(packet, packlen);
+    packet = calloc(1, packlen);
 
   retry:
     m.msg_name = &fromaddr;

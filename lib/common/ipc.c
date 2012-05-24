@@ -256,7 +256,7 @@ crm_ipc_t *
 crm_ipc_new(const char *name, size_t max_size) 
 {
     crm_ipc_t *client = NULL;
-    crm_malloc0(client, sizeof(crm_ipc_t));
+    client = calloc(1, sizeof(crm_ipc_t));
 
     client->name = crm_strdup(name);
     client->buf_size = pick_ipc_buffer(max_size);

@@ -656,7 +656,7 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
         return FALSE;
     }
 
-    crm_malloc0(new_con, sizeof(rsc_colocation_t));
+    new_con = calloc(1, sizeof(rsc_colocation_t));
     if (new_con == NULL) {
         return FALSE;
     }
@@ -736,7 +736,7 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
         return -1;
     }
 
-    crm_malloc0(order, sizeof(order_constraint_t));
+    order = calloc(1, sizeof(order_constraint_t));
 
     order->id = data_set->order_id++;
     order->type = type;
@@ -2007,7 +2007,7 @@ rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
         return FALSE;
     }
 
-    crm_malloc0(new_rsc_ticket, sizeof(rsc_ticket_t));
+    new_rsc_ticket = calloc(1, sizeof(rsc_ticket_t));
     if (new_rsc_ticket == NULL) {
         return FALSE;
     }

@@ -231,14 +231,14 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
                                 " - this is rarely intended", uname);
             }
 
-            crm_malloc0(new_node, sizeof(node_t));
+            new_node = calloc(1, sizeof(node_t));
             if (new_node == NULL) {
                 return FALSE;
             }
 
             new_node->weight = char2score(score);
             new_node->fixed = FALSE;
-            crm_malloc0(new_node->details, sizeof(struct node_shared_s));
+            new_node->details = calloc(1, sizeof(struct node_shared_s));
 
             if (new_node->details == NULL) {
                 crm_free(new_node);
@@ -982,7 +982,7 @@ clone_zero(const char *last_rsc_id)
             case '9':
                 break;
             case ':':
-                crm_malloc0(zero, lpc + 3);
+                zero = calloc(1, lpc + 3);
                 memcpy(zero, last_rsc_id, lpc);
                 zero[lpc] = ':';
                 zero[lpc + 1] = '0';
@@ -1045,7 +1045,7 @@ increment_clone(char *last_rsc_id)
                 break;
             case ':':
                 tmp = last_rsc_id;
-                crm_malloc0(last_rsc_id, len + 2);
+                last_rsc_id = calloc(1, len + 2);
                 memcpy(last_rsc_id, tmp, len);
                 last_rsc_id[++lpc] = '1';
                 last_rsc_id[len] = '0';

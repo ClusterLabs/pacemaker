@@ -66,7 +66,7 @@ save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
         len += strlen(id);
         len += strlen(PE_STATE_DIR);
 
-        crm_malloc0(filename, len);
+        filename = calloc(1, len);
         CRM_CHECK(filename != NULL, return);
 
         sprintf(filename, PE_STATE_DIR "/pe-core-%s.bz2", id);

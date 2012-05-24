@@ -299,7 +299,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
 
         } else if (map[lpc] == '=' || map[lpc] == ':') {
             crm_free(name);
-            crm_malloc0(name, 1 + lpc - last);
+            name = calloc(1, 1 + lpc - last);
             strncpy(name, map + last, lpc - last);
             crm_debug("Got name: %s", name);
             last = lpc + 1;
@@ -308,7 +308,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
             char *param = NULL;
             const char *value = NULL;
 
-            crm_malloc0(param, 1 + lpc - last);
+            param = calloc(1, 1 + lpc - last);
             strncpy(param, map + last, lpc - last);
             last = lpc + 1;
 
@@ -802,7 +802,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             + strlen(xml_meta_longdesc) + strlen(xml_meta_shortdesc)
             + strlen(meta_param) + 1;
 
-        crm_malloc0(buffer, bufferlen);
+        buffer = calloc(1, bufferlen);
         snprintf(buffer, bufferlen - 1, META_TEMPLATE,
                  agent, xml_meta_longdesc, xml_meta_shortdesc, meta_param);
 
@@ -938,7 +938,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
         for (op = __xml_first_child(reply); op != NULL; op = __xml_next(op)) {
             stonith_history_t *kvp;
 
-            crm_malloc0(kvp, sizeof(stonith_history_t));
+            kvp = calloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
             kvp->action = crm_element_value_copy(op, F_STONITH_ACTION);
             kvp->origin = crm_element_value_copy(op, F_STONITH_ORIGIN);
@@ -1298,7 +1298,7 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
     private = stonith->private;
     crm_trace("Adding callback for %s events (%d)", event, g_list_length(private->notify_list));
 
-    crm_malloc0(new_client, sizeof(stonith_notify_client_t));
+    new_client = calloc(1, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = callback;
 
@@ -1329,7 +1329,7 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
     crm_debug("Removing callback for %s events", event);
 
     private = stonith->private;
-    crm_malloc0(new_client, sizeof(stonith_notify_client_t));
+    new_client = calloc(1, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = NULL;
 
@@ -1393,7 +1393,7 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, bool onl
         return FALSE;
     }
 
-    crm_malloc0(blob, sizeof(stonith_callback_client_t));
+    blob = calloc(1, sizeof(stonith_callback_client_t));
     blob->id = callback_name;
     blob->only_success = only_success;
     blob->user_data = user_data;
@@ -1402,7 +1402,7 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, bool onl
     if (timeout > 0) {
         struct timer_rec_s *async_timer = NULL;
 
-        crm_malloc0(async_timer, sizeof(struct timer_rec_s));
+        async_timer = calloc(1, sizeof(struct timer_rec_s));
         blob->timer = async_timer;
 
         async_timer->stonith = stonith;
@@ -1761,8 +1761,8 @@ stonith_api_new(void)
     stonith_t *new_stonith = NULL;
     stonith_private_t *private = NULL;
 
-    crm_malloc0(new_stonith, sizeof(stonith_t));
-    crm_malloc0(private, sizeof(stonith_private_t));
+    new_stonith = calloc(1, sizeof(stonith_t));
+    private = calloc(1, sizeof(stonith_private_t));
     new_stonith->private = private;
 
     private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
@@ -1772,7 +1772,7 @@ stonith_api_new(void)
     new_stonith->call_id = 1;
     new_stonith->state = stonith_disconnected;
 
-    crm_malloc0(new_stonith->cmds, sizeof(stonith_api_operations_t));
+    new_stonith->cmds = calloc(1, sizeof(stonith_api_operations_t));
 
 /* *INDENT-OFF* */
     new_stonith->cmds->free       = stonith_api_free;
@@ -1808,7 +1808,7 @@ stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *v
 {
     stonith_key_value_t *p, *end;
 
-    crm_malloc0(p, sizeof(stonith_key_value_t));
+    p = calloc(1, sizeof(stonith_key_value_t));
     if (key) {
         p->key = crm_strdup(key);
     }

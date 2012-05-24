@@ -102,7 +102,7 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     crm_trace("Processing resource %s...", rsc->id);
 
-    crm_malloc0(native_data, sizeof(native_variant_data_t));
+    native_data = calloc(1, sizeof(native_variant_data_t));
 
     if (is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);

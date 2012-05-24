@@ -161,7 +161,7 @@ find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_sta
     CRM_ASSERT(ticket_state_xml != NULL);
     *ticket_state_xml = NULL;
 
-    crm_malloc0(xpath_string, xpath_max);
+    xpath_string = calloc(1, xpath_max);
     offset +=
         snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
 
@@ -205,7 +205,7 @@ find_ticket_constraints(cib_t * the_cib, const char * ticket_id, xmlNode ** tick
     CRM_ASSERT(ticket_cons_xml != NULL);
     *ticket_cons_xml = NULL;
 
-    crm_malloc0(xpath_string, xpath_max);
+    xpath_string = calloc(1, xpath_max);
     offset +=
         snprintf(xpath_string + offset, xpath_max - offset, "%s/%s",
                  get_object_path(XML_CIB_TAG_CONSTRAINTS), XML_CONS_TAG_RSC_TICKET);
@@ -290,7 +290,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
     CRM_ASSERT(value != NULL);
     *value = NULL;
 
-    crm_malloc0(xpath_string, xpath_max);
+    xpath_string = calloc(1, xpath_max);
     offset +=
         snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
 
@@ -524,7 +524,7 @@ confirm(const char *ticket_id, const char *action)
     char *warning = NULL;
     const char * word = NULL;
 
-    crm_malloc0(warning, text_max);
+    warning = calloc(1, text_max);
     if (safe_str_eq(action, "grant")) {
         offset += snprintf(warning + offset, text_max - offset,
                 "The command cannot help you verify if '%s' is already granted elsewhere.\n",
@@ -551,7 +551,7 @@ confirm(const char *ticket_id, const char *action)
     while (TRUE) {
         char *answer = NULL;
 
-        crm_malloc0(answer, text_max);
+        answer = calloc(1, text_max);
         fprintf(stdout, "Are you sure you want to %s '%s' %s this site now? (y/n)",
                 action, ticket_id, word);
 

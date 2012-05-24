@@ -319,7 +319,7 @@ generateReference(const char *custom1, const char *custom2)
     }
     reference_len += strlen(local_cust2);
 
-    crm_malloc0(since_epoch, reference_len);
+    since_epoch = calloc(1, reference_len);
 
     if (since_epoch != NULL) {
         sprintf(since_epoch, "%s-%s-%ld-%u",
@@ -345,7 +345,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
         len = strlen(srcstring);
         while (lpc <= len) {
             if (srcstring[lpc] == separator) {
-                crm_malloc0(*name, lpc + 1);
+                *name = calloc(1, lpc + 1);
                 if (*name == NULL) {
                     break;      /* and return FALSE */
                 }
@@ -361,7 +361,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
                     *value = NULL;
                 } else {
 
-                    crm_malloc0(*value, len + 1);
+                    *value = calloc(1, len + 1);
                     if (*value == NULL) {
                         crm_free(*name);
                         break;  /* and return FALSE */
@@ -395,7 +395,7 @@ crm_concat(const char *prefix, const char *suffix, char join)
     CRM_ASSERT(suffix != NULL);
     len = strlen(prefix) + strlen(suffix) + 2;
 
-    crm_malloc0(new_str, (len));
+    new_str = calloc(1, (len));
     sprintf(new_str, "%s%c%s", prefix, join, suffix);
     new_str[len - 1] = 0;
     return new_str;
@@ -436,7 +436,7 @@ crm_itoa(int an_int)
     int len = 32;
     char *buffer = NULL;
 
-    crm_malloc0(buffer, (len + 1));
+    buffer = calloc(1, (len + 1));
     if (buffer != NULL) {
         snprintf(buffer, len, "%d", an_int);
     }
@@ -1171,7 +1171,7 @@ crm_strdup_fn(const char *src, const char *file, const char *fn, int line)
 
     CRM_CHECK(src != NULL, crm_err("Could not perform copy at %s:%d (%s)", file, line, fn);
               return NULL);
-    crm_malloc0(dup, strlen(src) + 1);
+    dup = calloc(1, strlen(src) + 1);
     return strcpy(dup, src);
 }
 
@@ -1327,7 +1327,7 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 
     len += strlen(op_type);
     len += strlen(rsc_id);
-    crm_malloc0(op_id, len);
+    op_id = calloc(1, len);
     CRM_CHECK(op_id != NULL, return NULL);
     sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
     return op_id;
@@ -1417,7 +1417,7 @@ generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_
     len += strlen(op_type);
     len += strlen(rsc_id);
     len += strlen(notify_type);
-    crm_malloc0(op_id, len);
+    op_id = calloc(1, len);
     if (op_id != NULL) {
         sprintf(op_id, "%s_%s_notify_%s_0", rsc_id, notify_type, op_type);
     }
@@ -1434,7 +1434,7 @@ generate_transition_magic_v202(const char *transition_key, int op_status)
 
     len += strlen(transition_key);
 
-    crm_malloc0(fail_state, len);
+    fail_state = calloc(1, len);
     if (fail_state != NULL) {
         snprintf(fail_state, len, "%d:%s", op_status, transition_key);
     }
@@ -1451,7 +1451,7 @@ generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 
     len += strlen(transition_key);
 
-    crm_malloc0(fail_state, len);
+    fail_state = calloc(1, len);
     if (fail_state != NULL) {
         snprintf(fail_state, len, "%d:%d;%s", op_status, op_rc, transition_key);
     }
@@ -1470,7 +1470,7 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
     CRM_CHECK(op_rc != NULL, return FALSE);
     CRM_CHECK(op_status != NULL, return FALSE);
 
-    crm_malloc0(key, strlen(magic) + 1);
+    key = calloc(1, strlen(magic) + 1);
     res = sscanf(magic, "%d:%d;%s", op_status, op_rc, key);
     if (res != 3) {
         crm_crit("Only found %d items in: %s", res, magic);
@@ -1497,7 +1497,7 @@ generate_transition_key(int transition_id, int action_id, int target_rc, const c
 
     len += strlen(node);
 
-    crm_malloc0(fail_state, len);
+    fail_state = calloc(1, len);
     if (fail_state != NULL) {
         snprintf(fail_state, len, "%d:%d:%d:%s", action_id, transition_id, target_rc, node);
     }
@@ -1516,7 +1516,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     CRM_CHECK(action_id != NULL, return FALSE);
     CRM_CHECK(transition_id != NULL, return FALSE);
 
-    crm_malloc0(*uuid, strlen(key) + 1);
+    *uuid = calloc(1, strlen(key) + 1);
     res = sscanf(key, "%d:%d:%d:%s", action_id, transition_id, target_rc, *uuid);
     switch (res) {
         case 4:
@@ -1658,7 +1658,7 @@ filter_reload_parameters(xmlNode * param_set, const char *restart_string)
             name = NULL;
             len = strlen(prop_name) + 3;
 
-            crm_malloc0(name, len);
+            name = calloc(1, len);
             sprintf(name, " %s ", prop_name);
             name[len - 1] = 0;
 
@@ -1730,7 +1730,7 @@ generate_series_filename(const char *directory, const char *series, int sequence
 
     len += strlen(directory);
     len += strlen(series);
-    crm_malloc0(filename, len);
+    filename = calloc(1, len);
     CRM_CHECK(filename != NULL, return NULL);
 
     if (bzip) {
@@ -1756,7 +1756,7 @@ get_last_sequence(const char *directory, const char *series)
 
     len += strlen(directory);
     len += strlen(series);
-    crm_malloc0(series_file, len);
+    series_file = calloc(1, len);
     CRM_CHECK(series_file != NULL, return 0);
     sprintf(series_file, "%s/%s.last", directory, series);
 
@@ -1783,7 +1783,7 @@ get_last_sequence(const char *directory, const char *series)
 
     } else {
         crm_trace("Reading %d bytes from file", length);
-        crm_malloc0(buffer, (length + 1));
+        buffer = calloc(1, (length + 1));
         read_len = fread(buffer, 1, length, file_strm);
         if (read_len != length) {
             crm_err("Calculated and read bytes differ: %d vs. %d", length, read_len);
@@ -1819,7 +1819,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
 
     len += strlen(directory);
     len += strlen(series);
-    crm_malloc0(series_file, len);
+    series_file = calloc(1, len);
     sprintf(series_file, "%s/%s.last", directory, series);
 
     file_strm = fopen(series_file, "w");

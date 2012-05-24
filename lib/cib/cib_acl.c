@@ -350,7 +350,7 @@ acl_append(xmlNode * acl_child, GListPtr * acl)
         return FALSE;
     }
 
-    crm_malloc0(acl_obj, sizeof(acl_obj_t));
+    acl_obj = calloc(1, sizeof(acl_obj_t));
     if (acl_obj == NULL) {
         return FALSE;
     }
@@ -395,7 +395,7 @@ parse_acl_xpath(xmlNode * xml, GListPtr acl, GListPtr * parsed_acl)
         acl_obj_t *acl_obj = acl_iterator->data;
 
         if (acl_obj->tag || acl_obj->ref) {
-            crm_malloc0(new_acl_obj, sizeof(acl_obj_t));
+            new_acl_obj = calloc(1, sizeof(acl_obj_t));
             if (new_acl_obj == NULL) {
                 return FALSE;
             }
@@ -416,7 +416,7 @@ parse_acl_xpath(xmlNode * xml, GListPtr acl, GListPtr * parsed_acl)
 
             children_iterator = children;
             while (children_iterator != NULL) {
-                crm_malloc0(new_acl_obj, sizeof(acl_obj_t));
+                new_acl_obj = calloc(1, sizeof(acl_obj_t));
                 if (new_acl_obj == NULL) {
                     return FALSE;
                 }
@@ -560,7 +560,7 @@ update_xml_perms(xmlNode * xml, acl_obj_t * acl_obj, GHashTable * xml_perms)
             return FALSE;
         }
     } else {
-        crm_malloc0(perm, sizeof(xml_perm_t));
+        perm = calloc(1, sizeof(xml_perm_t));
         if (perm == NULL) {
             return FALSE;
         }
@@ -611,7 +611,7 @@ update_xml_children_perms(xmlNode * xml, const char *mode, GHashTable * xml_perm
             return FALSE;
         }
     } else {
-        crm_malloc0(perm, sizeof(xml_perm_t));
+        perm = calloc(1, sizeof(xml_perm_t));
         if (perm == NULL) {
             return FALSE;
         }

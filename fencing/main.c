@@ -88,7 +88,7 @@ st_ipc_created(qb_ipcs_connection_t *c)
            srv_stats.closed_connections);
 #endif
 
-    crm_malloc0(new_client, sizeof(stonith_client_t));
+    new_client = calloc(1, sizeof(stonith_client_t));
     new_client->channel = c;
     new_client->channel_name = crm_strdup("ipc");
 	
@@ -393,7 +393,7 @@ static stonith_key_value_t *parse_device_list(const char *devices)
         if(devices[lpc] == ',' || devices[lpc] == 0) {
 	    char *line = NULL;
 
-            crm_malloc0(line, 2 + lpc - last);
+            line = calloc(1, 2 + lpc - last);
             snprintf(line, 1 + lpc - last, "%s", devices+last);
             output = stonith_key_value_add(output, NULL, line);
             crm_free(line);

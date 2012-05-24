@@ -61,7 +61,7 @@ cib_native_new(void)
     cib_native_opaque_t *native = NULL;
     cib_t *cib = cib_new_variant();
 
-    crm_malloc0(native, sizeof(cib_native_opaque_t));
+    native = calloc(1, sizeof(cib_native_opaque_t));
 
     cib->variant = cib_native;
     cib->variant_opaque = native;

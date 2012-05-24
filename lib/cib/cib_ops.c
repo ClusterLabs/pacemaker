@@ -141,7 +141,7 @@ cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
         old_value = crm_element_value_copy(xml_obj, field);
     }
     if (old_value != NULL) {
-        crm_malloc0(new_value, 128);
+        new_value = calloc(1, 128);
         int_value = atoi(old_value);
         sprintf(new_value, "%d", ++int_value);
     } else {
@@ -376,7 +376,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                     goto incr;
                 }
 
-                crm_malloc0(replace_item, lpc - last + 1);
+                replace_item = calloc(1, lpc - last + 1);
                 strncpy(replace_item, replace + last, lpc - last);
 
                 remove = find_xml_node(target, replace_item, FALSE);

@@ -359,14 +359,14 @@ do_startup(long long action,
     fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);
 
     /* set up the timers */
-    crm_malloc0(transition_timer, sizeof(fsa_timer_t));
-    crm_malloc0(integration_timer, sizeof(fsa_timer_t));
-    crm_malloc0(finalization_timer, sizeof(fsa_timer_t));
-    crm_malloc0(election_trigger, sizeof(fsa_timer_t));
-    crm_malloc0(election_timeout, sizeof(fsa_timer_t));
-    crm_malloc0(shutdown_escalation_timer, sizeof(fsa_timer_t));
-    crm_malloc0(wait_timer, sizeof(fsa_timer_t));
-    crm_malloc0(recheck_timer, sizeof(fsa_timer_t));
+    transition_timer = calloc(1, sizeof(fsa_timer_t));
+    integration_timer = calloc(1, sizeof(fsa_timer_t));
+    finalization_timer = calloc(1, sizeof(fsa_timer_t));
+    election_trigger = calloc(1, sizeof(fsa_timer_t));
+    election_timeout = calloc(1, sizeof(fsa_timer_t));
+    shutdown_escalation_timer = calloc(1, sizeof(fsa_timer_t));
+    wait_timer = calloc(1, sizeof(fsa_timer_t));
+    recheck_timer = calloc(1, sizeof(fsa_timer_t));
 
     interval = interval * 1000;
 
@@ -465,9 +465,9 @@ do_startup(long long action,
     }
 
     /* set up the sub systems */
-    crm_malloc0(cib_subsystem, sizeof(struct crm_subsystem_s));
-    crm_malloc0(te_subsystem, sizeof(struct crm_subsystem_s));
-    crm_malloc0(pe_subsystem, sizeof(struct crm_subsystem_s));
+    cib_subsystem = calloc(1, sizeof(struct crm_subsystem_s));
+    te_subsystem = calloc(1, sizeof(struct crm_subsystem_s));
+    pe_subsystem = calloc(1, sizeof(struct crm_subsystem_s));
 
     if (cib_subsystem != NULL) {
         cib_subsystem->pid = -1;
@@ -534,7 +534,7 @@ crmd_ipc_created(qb_ipcs_connection_t *c)
 {
     crmd_client_t *blank_client = NULL;
 
-    crm_malloc0(blank_client, sizeof(crmd_client_t));
+    blank_client = calloc(1, sizeof(crmd_client_t));
     CRM_ASSERT(blank_client != NULL);
 
     crm_trace("Created client: %p", blank_client);

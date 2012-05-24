@@ -41,7 +41,7 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     crm_trace("Processing resource %s...", rsc->id);
 
-    crm_malloc0(group_data, sizeof(group_variant_data_t));
+    group_data = calloc(1, sizeof(group_variant_data_t));
     group_data->num_children = 0;
     group_data->self = NULL;
     group_data->first_child = NULL;

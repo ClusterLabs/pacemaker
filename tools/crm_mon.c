@@ -1644,7 +1644,7 @@ crm_snmp_init(const char *target, char *community)
         snmp_set_do_debugging(1);
     }
 
-    crm_malloc0(session, sizeof(netsnmp_session));
+    session = calloc(1, sizeof(netsnmp_session));
     snmp_sess_init(session);
     session->version = SNMP_VERSION_2c;
     session->callback = snmp_input;
@@ -1929,7 +1929,7 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     len += strlen(desc);
     len++;
 
-    crm_malloc0(crm_mail_subject, len);
+    crm_mail_subject = calloc(1, len);
     snprintf(crm_mail_subject, len, "%s - %s event for %s on %s: %s\r\n", crm_mail_prefix, task,
              rsc, node, desc);
 

@@ -110,7 +110,7 @@ standalone_cfg_add_device(const char *device, const char *agent)
 	if (find_device(device)) {
 		return 0;
 	}
-	crm_malloc0(dev, sizeof(struct device));
+	dev = calloc(1, sizeof(struct device));
 
 	dev->name = crm_strdup(device);
 	dev->agent = crm_strdup(agent);
@@ -173,7 +173,7 @@ standalone_cfg_add_node(const char *node, const char *device, const char *ports)
 		offset = strlen(tmp);
 		crm_realloc(tmp, len + offset + 1);
 	} else {
-		crm_malloc(tmp, len);
+		tmp = malloc( len);
 	}
 
 	*ptr = tmp;
@@ -200,7 +200,7 @@ standalone_cfg_add_node_priority(const char *node, const char *device, unsigned 
 
 	if (!(topo = find_topology(node))) {
 		new = 1;
-		crm_malloc0(topo, sizeof(struct topology));
+		topo = calloc(1, sizeof(struct topology));
 		topo->node_name = crm_strdup(node);
 	} else if (topo->priority_levels_count >= STANDALONE_CFG_MAX_KEYVALS) {
 		return -1;

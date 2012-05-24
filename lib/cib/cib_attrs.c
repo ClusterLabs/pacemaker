@@ -85,7 +85,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
         return cib_missing_data;
     }
 
-    crm_malloc0(xpath_string, xpath_max);
+    xpath_string = calloc(1, xpath_max);
     offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path(section));
 
     if (safe_str_eq(node_type, XML_CIB_TAG_TICKETS)) {
@@ -527,12 +527,12 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
         scope = XML_CIB_TAG_STATUS;
 
         str_length += strlen(extra);
-        crm_malloc0(attr_id, str_length);
+        attr_id = calloc(1, str_length);
         sprintf(attr_id, "%s-%s-%s", extra, attr_name, uuid);
 
     } else {
         scope = XML_CIB_TAG_NODES;
-        crm_malloc0(attr_id, str_length);
+        attr_id = calloc(1, str_length);
         sprintf(attr_id, "%s-%s", attr_name, uuid);
     }
 

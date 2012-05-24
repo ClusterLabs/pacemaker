@@ -877,7 +877,7 @@ dump_xml(xmlNode *an_xml_node, gboolean formatted, gboolean for_digest)
 	if(for_digest) {
 	    /* for compatability with the old result which is used for digests */
 	    len += 3;
-	    crm_malloc0(buffer, len);
+	    buffer = calloc(1, len);
 	    snprintf(buffer, len, " %s\n", (char *)xml_buffer->content);
 	} else {
 	    buffer = crm_strdup((char *)xml_buffer->content);	    
@@ -966,7 +966,7 @@ log_data_element(
     CRM_ASSERT(name != NULL);
 	
     crm_trace("Dumping %s", name);
-    crm_malloc0(buffer, buffer_len);
+    buffer = calloc(1, buffer_len);
 	
     if(formatted) {
 	offset = print_spaces(buffer, depth, buffer_len - offset);
@@ -1880,7 +1880,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     result = create_xml_node(parent, name);
 	
     xml_prop_iter(input, p_name, p_value,
-		  crm_malloc0(pair, sizeof(name_value_t));
+		  pair = calloc(1, sizeof(name_value_t));
 		  pair->name  = p_name;
 		  pair->value = p_value;
 		  unsorted = g_list_prepend(unsorted, pair);
@@ -2183,7 +2183,7 @@ validate_with_relaxng(
 
     } else {
 	crm_info("Creating RNG parser context");
-	crm_malloc0(ctx, sizeof(relaxng_ctx_cache_t));
+	ctx = calloc(1, sizeof(relaxng_ctx_cache_t));
 	
 	xmlLoadExtDtdDefaultValue = 1;
 	ctx->parser = xmlRelaxNGNewParserCtxt(relaxng_file);
@@ -2733,7 +2733,7 @@ xmlNode *expand_idref(xmlNode *input, xmlNode *top)
     
     if(ref != NULL) {
 	int xpath_max = 512, offset = 0;
-	crm_malloc0(xpath_string, xpath_max);
+	xpath_string = calloc(1, xpath_max);
 
 	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
 	result = get_xpath_object(xpath_string, top, LOG_ERR);

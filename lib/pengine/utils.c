@@ -40,7 +40,7 @@ node_copy(node_t * this_node)
 
     CRM_CHECK(this_node != NULL, return NULL);
 
-    crm_malloc0(new_node, sizeof(node_t));
+    new_node = calloc(1, sizeof(node_t));
     CRM_ASSERT(new_node != NULL);
 
     crm_trace("Copying %p (%s) to %p", this_node, this_node->details->uname, new_node);
@@ -216,7 +216,7 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     char *new_text = NULL;
 
     len = strlen(*dump_text) + strlen(" ") + strlen(key) + strlen("=") + strlen(value) + 1;
-    crm_malloc0(new_text, len);
+    new_text = calloc(1, len);
     sprintf(new_text, "%s %s=%s", *dump_text, (char *)key, (char *)value);
 
     crm_free(*dump_text);
@@ -230,7 +230,7 @@ dump_node_capacity(int level, const char *comment, node_t * node)
     char *dump_text = NULL;
 
     len = strlen(comment) + strlen(": ") + strlen(node->details->uname) + strlen(" capacity:") + 1;
-    crm_malloc0(dump_text, len);
+    dump_text = calloc(1, len);
     sprintf(dump_text, "%s: %s capacity:", comment, node->details->uname);
 
     g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
@@ -252,7 +252,7 @@ dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * 
 
     len = strlen(comment) + strlen(": ") + strlen(rsc->id) + strlen(" utilization on ")
         + strlen(node->details->uname) + strlen(":") + 1;
-    crm_malloc0(dump_text, len);
+    dump_text = calloc(1, len);
     sprintf(dump_text, "%s: %s utilization on %s:", comment, rsc->id, node->details->uname);
 
     g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
@@ -358,7 +358,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
                       rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>");
         }
 
-        crm_malloc0(action, sizeof(action_t));
+        action = calloc(1, sizeof(action_t));
         if (save_action) {
             action->id = data_set->action_id++;
         } else {
@@ -381,7 +381,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
 
 /*
-  Implied by crm_malloc0()...
+  Implied by calloc()...
   action->actions_before   = NULL;
   action->actions_after    = NULL;
 		
@@ -1407,7 +1407,7 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
         }
     }
 
-    crm_malloc0(wrapper, sizeof(action_wrapper_t));
+    wrapper = calloc(1, sizeof(action_wrapper_t));
     wrapper->action = rh_action;
     wrapper->type = order;
 
@@ -1420,7 +1420,7 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
 /* 	order |= pe_order_implies_then; */
 /* 	order ^= pe_order_implies_then; */
 
-    crm_malloc0(wrapper, sizeof(action_wrapper_t));
+    wrapper = calloc(1, sizeof(action_wrapper_t));
     wrapper->action = lh_action;
     wrapper->type = order;
     list = rh_action->actions_before;
@@ -1483,7 +1483,7 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
     if (ticket == NULL) {
 
-        crm_malloc0(ticket, sizeof(ticket_t));
+        ticket = calloc(1, sizeof(ticket_t));
         if (ticket == NULL) {
             crm_err("Cannot allocate ticket '%s'", ticket_id);
             return NULL;

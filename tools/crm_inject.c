@@ -76,7 +76,7 @@ find_resource(xmlNode * cib_node, const char *resource)
     const char *node = crm_element_value(cib_node, XML_ATTR_UNAME);
     int max = strlen(rsc_template) + strlen(resource) + strlen(node) + 1;
 
-    crm_malloc0(xpath, max);
+    xpath = calloc(1, max);
 
     snprintf(xpath, max, rsc_template, node, resource);
     match = get_xpath_object(xpath, cib_node, LOG_DEBUG_2);
@@ -92,7 +92,7 @@ create_node_entry(cib_t * cib_conn, char *node)
     int max = strlen(new_node_template) + strlen(node) + 1;
     char *xpath = NULL;
 
-    crm_malloc0(xpath, max);
+    xpath = calloc(1, max);
 
     snprintf(xpath, max, new_node_template, node);
     rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath | cib_sync_call | cib_scope_local);
@@ -123,7 +123,7 @@ inject_node_state(cib_t * cib_conn, char *node)
     char *xpath = NULL;
     xmlNode *cib_object = NULL;
 
-    crm_malloc0(xpath, max);
+    xpath = calloc(1, max);
 
     create_node_entry(cib_conn, node);
 
@@ -280,7 +280,7 @@ create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
     lrm_op_t *op = NULL;
     xmlNode *xop = NULL;
 
-    crm_malloc0(op, sizeof(lrm_op_t));
+    op = calloc(1, sizeof(lrm_op_t));
 
     op->app_name = crm_strdup(crm_system_name);
 
@@ -409,7 +409,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         char *spec = (char *)gIter->data;
         char *key = NULL;
 
-        crm_malloc0(key, 1 + strlen(spec));
+        key = calloc(1, 1 + strlen(spec));
         snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
 
         if (strncasecmp(key, spec, strlen(key)) == 0) {
@@ -776,7 +776,7 @@ find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_sta
     CRM_ASSERT(ticket_state_xml != NULL);
     *ticket_state_xml = NULL;
 
-    crm_malloc0(xpath_string, xpath_max);
+    xpath_string = calloc(1, xpath_max);
     offset +=
         snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
 
@@ -966,8 +966,8 @@ modify_configuration(pe_working_set_t * data_set,
 
         quiet_log(" + Injecting %s into the configuration\n", spec);
 
-        crm_malloc0(key, strlen(spec) + 1);
-        crm_malloc0(node, strlen(spec) + 1);
+        key = calloc(1, strlen(spec) + 1);
+        node = calloc(1, strlen(spec) + 1);
         rc = sscanf(spec, "%[^@]@%[^=]=%d", key, node, &outcome);
         CRM_CHECK(rc == 3,
                   fprintf(stderr, "Invalid operation spec: %s.  Only found %d fields\n", spec, rc);

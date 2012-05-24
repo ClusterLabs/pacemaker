@@ -120,7 +120,7 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib_remote_opaque_t *private = NULL;
     cib_t *cib = cib_new_variant();
 
-    crm_malloc0(private, sizeof(cib_remote_opaque_t));
+    private = calloc(1, sizeof(cib_remote_opaque_t));
 
     cib->variant = cib_remote;
     cib->variant_opaque = private;
@@ -378,7 +378,7 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
         rc = tcsetattr(0, TCSANOW, &settings);
 
         fprintf(stderr, "Password: ");
-        crm_malloc0(private->passwd, 1024);
+        private->passwd = calloc(1, 1024);
         rc = scanf("%s", private->passwd);
         fprintf(stdout, "\n");
         /* fprintf(stderr, "entered: '%s'\n", buffer); */
@@ -492,7 +492,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     if (sync_timer == NULL) {
-        crm_malloc0(sync_timer, sizeof(struct timer_rec_s));
+        sync_timer = calloc(1, sizeof(struct timer_rec_s));
     }
 
     if (cib->state == cib_disconnected) {

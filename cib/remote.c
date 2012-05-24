@@ -315,7 +315,7 @@ cib_remote_listen(gpointer data)
 
     /* send ACK */
     num_clients++;
-    crm_malloc0(new_client, sizeof(cib_client_t));
+    new_client = calloc(1, sizeof(cib_client_t));
     new_client->name = crm_element_value_copy(login, "name");
 
     CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));

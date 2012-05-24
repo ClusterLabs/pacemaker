@@ -115,7 +115,7 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
 
     if (length > 0) {
         crm_trace("Reading %d bytes from file", length);
-        crm_malloc0(expected, (length + 1));
+        expected = calloc(1, (length + 1));
         read_len = fread(expected, 1, length, expected_strm);   /* Coverity: False positive */
         CRM_ASSERT(read_len == length);
     }
@@ -197,7 +197,7 @@ validate_on_disk_cib(const char *filename, xmlNode ** on_disk_cib)
         root = filename2xml(filename);
 
         fnsize = strlen(filename) + 5;
-        crm_malloc0(sigfile, fnsize);
+        sigfile = calloc(1, fnsize);
         snprintf(sigfile, fnsize, "%s.sig", filename);
         if (validate_cib_digest(root, sigfile) == FALSE) {
             passed = FALSE;

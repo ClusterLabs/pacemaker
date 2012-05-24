@@ -106,7 +106,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         return 0;
     }
 
-    crm_malloc0(fsa_data, sizeof(fsa_data_t));
+    fsa_data = calloc(1, sizeof(fsa_data_t));
     fsa_data->id = last_data_id;
     fsa_data->fsa_input = input;
     fsa_data->fsa_cause = cause;
@@ -979,7 +979,7 @@ new_ha_msg_input(xmlNode * orig)
 {
     ha_msg_input_t *input_copy = NULL;
 
-    crm_malloc0(input_copy, sizeof(ha_msg_input_t));
+    input_copy = calloc(1, sizeof(ha_msg_input_t));
     input_copy->msg = orig;
     input_copy->xml = get_message_xml(input_copy->msg, F_CRM_DATA);
     return input_copy;
