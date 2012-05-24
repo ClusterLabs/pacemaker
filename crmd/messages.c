@@ -588,8 +588,6 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
             crm_err("Client version (%d:%d) is not acceptable", mav, miv);
             auth_result = FALSE;
         }
-        free(major_version);
-        free(minor_version);
     }
 
     table_key = (gpointer) generate_hash_key(client_name, uuid);
@@ -619,14 +617,10 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
         qb_ipcs_disconnect(curr_client->ipc);
     }
 
-    if (uuid != NULL)
-        free(uuid);
-    if (minor_version != NULL)
-        free(minor_version);
-    if (major_version != NULL)
-        free(major_version);
-    if (client_name != NULL)
-        free(client_name);
+    free(uuid);
+    free(minor_version);
+    free(major_version);
+    free(client_name);
 
     /* hello messages should never be processed further */
     return FALSE;
