@@ -711,7 +711,11 @@ crm_write_blackbox(int nsig)
             /* The graceful case - such as assertion failure or user request */
             snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
 
-            crm_notice("Problem detected, please see %s for additional detail", buffer);
+            if(nsig == SIGTRAP) {
+                crm_notice("Blackbox dump requested, please see %s for contents", buffer);
+            } else {
+                crm_notice("Problem detected, please see %s for additional details", buffer);
+            }
             qb_log_blackbox_write_to_file(buffer);
 
             /* Flush the existing contents
