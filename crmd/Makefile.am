@@ -24,17 +24,12 @@ halibdir	= $(CRM_DAEMON_DIR)
 
 ## binary progs
 halib_PROGRAMS	= crmd
-noinst_PROGRAMS = atest
 
 ## SOURCES
 
 noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h \
 		crmd_lrm.h te_callbacks.h tengine.h
-
-atest_SOURCES	= atest.c
-atest_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
-
 
 crmd_SOURCES	= main.c crmd.c corosync.c					\
 		fsa.c control.c messages.c membership.c callbacks.c		\
