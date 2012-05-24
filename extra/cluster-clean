@@ -57,6 +57,7 @@ files="$files /var/log/localmessages*"
 files="$files /var/log/cluster*.log"
 files="$files /var/log/corosync.log"
 files="$files /var/log/pacemaker.log"
+files="$files var/run/crm/blackbox*"
 
 cluster-helper $target -- "rm -f $files"
 cluster-helper $target -- "find /var/lib/pengine -name '*.bz2' -exec rm -f \{\} \;"
