@@ -243,15 +243,15 @@ cib_cleanup(void)
     crm_peer_destroy();
     g_hash_table_destroy(config_hash);
     g_hash_table_destroy(client_list);
-    crm_free(cib_our_uname);
+    free(cib_our_uname);
 #if HAVE_LIBXML2
     crm_xml_cleanup();
 #endif
-    crm_free(channel1);
-    crm_free(channel2);
-    crm_free(channel3);
-    crm_free(channel4);
-    crm_free(channel5);
+    free(channel1);
+    free(channel2);
+    free(channel3);
+    free(channel4);
+    free(channel5);
 }
 
 unsigned long cib_num_ops = 0;

@@ -134,8 +134,8 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
                 expected, sigfile, digest);
     }
 
-    crm_free(digest);
-    crm_free(expected);
+    free(digest);
+    free(expected);
     return passed;
 }
 
@@ -174,7 +174,7 @@ write_cib_digest(xmlNode * local_cib, const char *digest_file, char *digest)
     }
 
     fclose(digest_strm);
-    crm_free(local_digest);
+    free(local_digest);
     return rc;
 }
 
@@ -202,7 +202,7 @@ validate_on_disk_cib(const char *filename, xmlNode ** on_disk_cib)
         if (validate_cib_digest(root, sigfile) == FALSE) {
             passed = FALSE;
         }
-        crm_free(sigfile);
+        free(sigfile);
     }
 
     if (on_disk_cib != NULL) {
@@ -234,7 +234,7 @@ cib_rename(const char *old, const char *new)
                    new);
         cib_writes_enabled = FALSE;
     }
-    crm_free(automatic);
+    free(automatic);
     return rc;
 }
 
@@ -310,7 +310,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     while (root == NULL) {
         struct stat buf;
 
-        crm_free(sigfile);
+        free(sigfile);
 
         if (seq == 0) {
             seq += cib_wrap;    /* unwrap */
@@ -327,7 +327,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         root = retrieveCib(backup_file, sigfile, FALSE);
         seq--;
     }
-    crm_free(backup_file);
+    free(backup_file);
 
     if (root == NULL) {
         root = createEmptyCib();
@@ -409,8 +409,8 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         }
     }
 
-    crm_free(filename);
-    crm_free(sigfile);
+    free(filename);
+    free(sigfile);
     return root;
 }
 
@@ -698,13 +698,13 @@ write_cib_contents(gpointer p)
     sync_directory(cib_root);
 
   cleanup:
-    crm_free(backup_digest);
-    crm_free(primary_file);
-    crm_free(backup_file);
-    crm_free(digest_file);
-    crm_free(digest);
-    crm_free(tmp2);
-    crm_free(tmp1);
+    free(backup_digest);
+    free(primary_file);
+    free(backup_file);
+    free(digest_file);
+    free(digest);
+    free(tmp2);
+    free(tmp1);
 
     free_xml(local_cib);
 

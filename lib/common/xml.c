@@ -383,7 +383,7 @@ crm_xml_add_int(xmlNode* node, const char *name, int value)
 {
     char *number = crm_itoa(value);
     const char *added = crm_xml_add(node, name, number);
-    crm_free(number);
+    free(number);
     return added;
 }
 
@@ -580,14 +580,14 @@ stdin2xml(void)
 
     if(data_length == 0) {
 	crm_warn("No XML supplied on stdin");
-	crm_free(xml_buffer);
+	free(xml_buffer);
 	return NULL;
     }
 
     xml_buffer[data_length] = '\0';
 
     xml_obj = string2xml(xml_buffer);
-    crm_free(xml_buffer);
+    free(xml_buffer);
 
     crm_log_xml_trace(xml_obj, "Created fragment");
     return xml_obj;
@@ -635,7 +635,7 @@ decompress_file(const char *filename)
     
     if ( rc != BZ_STREAM_END ) {
 	crm_err("Couldnt read compressed xml from file");
-	crm_free(buffer);
+	free(buffer);
 	buffer = NULL;
     }
     
@@ -709,7 +709,7 @@ filename2xml(const char *filename)
     } else {
 	char *input = decompress_file(filename);
 	output = xmlCtxtReadDoc(ctxt, (const xmlChar*)input, NULL, NULL, xml_options);
-	crm_free(input);
+	free(input);
     }
 
     if(output && (xml = xmlDocGetRootElement(output))) {
@@ -834,7 +834,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
     fclose(file_output_strm);
 	
     crm_trace("Saved %d bytes to the Cib as XML", res);
-    crm_free(buffer);
+    free(buffer);
 
     return res;
 }
@@ -1004,7 +1004,7 @@ log_data_element(
     do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
 	
     if(xml_has_children(data) == FALSE) {
-	crm_free(buffer);
+	free(buffer);
 	return 0;
     }
 	
@@ -1021,7 +1021,7 @@ log_data_element(
     update_buffer();
 
     do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
-    crm_free(buffer);
+    free(buffer);
     return 1;
 }
 
@@ -1190,7 +1190,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 	    crm_trace("Digest matched: expected %s, calculated %s",
 			digest, new_digest);
 	}
-	crm_free(new_digest);
+	free(new_digest);
 	    
 #if XML_PARANOIA_CHECKS	    
     } else if(result) {
@@ -1777,7 +1777,7 @@ hash2metafield(gpointer key, gpointer value, gpointer user_data)
     
     crm_name = crm_meta_name(key);
     hash2field(crm_name, value, user_data);
-    crm_free(crm_name);
+    free(crm_name);
 }
 
 
@@ -1939,13 +1939,13 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
     }
 
     buffer = dump_xml(input, FALSE, TRUE);
-    CRM_CHECK(buffer != NULL && strlen(buffer) > 0, free_xml(copy); crm_free(buffer); return NULL);
+    CRM_CHECK(buffer != NULL && strlen(buffer) > 0, free_xml(copy); free(buffer); return NULL);
 
     digest = crm_md5sum(buffer);
     crm_trace("Digest %s: %s\n", digest, buffer);
     crm_log_xml_trace(copy,  "digest:source");
 
-    crm_free(buffer);
+    free(buffer);
     free_xml(copy);
     return digest;
 }
@@ -2027,7 +2027,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
                 /* fsync(fileno(st)); */
                 fclose(st);
             }
-            crm_free(trace_file);
+            free(trace_file);
         }
 
   done:
@@ -2247,7 +2247,7 @@ validate_with_relaxng(
 	if (ctx->rng != NULL) {
 	    xmlRelaxNGFree(ctx->rng);    
 	}
-	crm_free(ctx);
+	free(ctx);
     }
     
     return valid;
@@ -2282,7 +2282,7 @@ void crm_xml_cleanup(void)
 		if (ctx->rng != NULL) {
 		    xmlRelaxNGFree(ctx->rng);    
 		}
-		crm_free(ctx);
+		free(ctx);
 		known_schemas[lpc].cache = NULL;
 		break;
 	    default:
@@ -2319,7 +2319,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
 	    break;
     }
 
-    crm_free(file);
+    free(file);
     return valid;
 }
 
@@ -2438,7 +2438,7 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
 
     xsltCleanupGlobals();
     xmlCleanupParser();
-    crm_free(xform);
+    free(xform);
 
     return out;
 }
@@ -2496,7 +2496,7 @@ int update_validation(
 
     if(match >= max_schemas) {
 	/* nothing to do */
-	crm_free(value);
+	free(value);
 	*best = match;
 	return cib_ok;
     }
@@ -2561,7 +2561,7 @@ int update_validation(
     }
 
     *xml_blob = xml;
-    crm_free(value);
+    free(value);
     return rc;
 }
 
@@ -2740,11 +2740,11 @@ xmlNode *expand_idref(xmlNode *input, xmlNode *top)
 	if(result == NULL) {
 	    char *nodePath = (char *)xmlGetNodePath(top);
 	    crm_err("No match for %s found in %s: Invalid configuration", xpath_string, crm_str(nodePath));
-	    crm_free(nodePath);
+	    free(nodePath);
 	}
     }
     
-    crm_free(xpath_string);
+    free(xpath_string);
     return result;
 }
 
@@ -2770,8 +2770,8 @@ get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
 
     result = get_xpath_object(xpath_full, xml_obj, error_level);
 
-    crm_free(xpath_prefix);
-    crm_free(xpath_full);
+    free(xpath_prefix);
+    free(xpath_full);
     return result;
 }
 
@@ -2803,7 +2803,7 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
 
 	    matchNodePath = (char *)xmlGetNodePath(match);
 	    do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, crm_str(matchNodePath));
-	    crm_free(matchNodePath);
+	    free(matchNodePath);
 	}
 	crm_log_xml_trace(xml_obj, "Bad Input");
 
@@ -2814,7 +2814,7 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
     if(xpathObj) {
 	xmlXPathFreeObject(xpathObj);
     }
-    crm_free(nodePath);
+    free(nodePath);
 
     return result;
 }

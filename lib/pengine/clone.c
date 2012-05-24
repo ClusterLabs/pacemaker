@@ -91,7 +91,7 @@ find_clone_instance(resource_t * rsc, const char *sub_id, pe_working_set_t * dat
     child_id = crm_concat(child_base, sub_id, ':');
     child = pe_find_resource(rsc->children, child_id);
 
-    crm_free(child_id);
+    free(child_id);
     return child;
 }
 
@@ -139,8 +139,8 @@ create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set)
     print_resource(LOG_DEBUG_3, "Added", child_rsc, FALSE);
 
   bail:
-    crm_free(inc_num);
-    crm_free(inc_max);
+    free(inc_num);
+    free(inc_max);
 
     return child_rsc;
 }
@@ -380,7 +380,7 @@ clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
     }
 
     status_print("%s</clone>\n", pre_text);
-    crm_free(child_text);
+    free(child_text);
 }
 
 void
@@ -490,15 +490,15 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
                 print_data);
     short_print(stopped_list, child_text, "Stopped", options, print_data);
 
-    crm_free(master_list);
-    crm_free(started_list);
-    crm_free(stopped_list);
+    free(master_list);
+    free(started_list);
+    free(stopped_list);
 
     if (options & pe_print_html) {
         status_print("</ul>\n");
     }
 
-    crm_free(child_text);
+    free(child_text);
 }
 
 void

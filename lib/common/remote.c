@@ -142,7 +142,7 @@ cib_send_tls(gnutls_session * session, xmlNode * msg)
         }
 
     }
-    crm_free(xml_text);
+    free(xml_text);
     return NULL;
 
 }
@@ -198,7 +198,7 @@ cib_recv_tls(gnutls_session * session)
         }
     }
   bail:
-    crm_free(buf);
+    free(buf);
     return NULL;
 
 }
@@ -239,7 +239,7 @@ cib_send_plaintext(int sock, xmlNode * msg)
             crm_trace("Sent %d bytes: %.100s", rc, xml_text);
         }
     }
-    crm_free(xml_text);
+    free(xml_text);
     return NULL;
 
 }
@@ -291,7 +291,7 @@ cib_recv_plaintext(int sock)
         }
     }
   bail:
-    crm_free(buf);
+    free(buf);
     return NULL;
 
 }
@@ -335,6 +335,6 @@ cib_recv_remote_msg(void *session, gboolean encrypted)
         }
     }
 
-    crm_free(reply);
+    free(reply);
     return xml;
 }

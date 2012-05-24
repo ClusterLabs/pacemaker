@@ -202,8 +202,8 @@ cib_destroy_op_callback(gpointer data)
     if (blob->timer && blob->timer->ref > 0) {
         g_source_remove(blob->timer->ref);
     }
-    crm_free(blob->timer);
-    crm_free(blob);
+    free(blob->timer);
+    free(blob);
 }
 
 char *
@@ -260,8 +260,8 @@ get_shadow_file(const char *suffix)
     }
 
     fullname = crm_concat(dir, name, '/');
-    crm_free(cib_home);
-    crm_free(name);
+    free(cib_home);
+    free(name);
 
     return fullname;
 }
@@ -276,7 +276,7 @@ cib_shadow_new(const char *shadow)
 
     shadow_file = get_shadow_file(shadow);
     new_cib = cib_file_new(shadow_file);
-    crm_free(shadow_file);
+    free(shadow_file);
 
     return new_cib;
 }
@@ -408,7 +408,7 @@ cib_delete(cib_t * cib)
         cib_notify_client_t *client = g_list_nth_data(list, 0);
 
         list = g_list_remove(list, client);
-        crm_free(client);
+        free(client);
     }
 
     g_hash_table_destroy(cib_op_callback_table);
@@ -452,7 +452,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
 
     if (list_item != NULL) {
         crm_warn("Callback already present");
-        crm_free(new_client);
+        free(new_client);
         return cib_EXISTS;
 
     } else {
@@ -490,14 +490,14 @@ cib_client_del_notify_callback(cib_t * cib, const char *event,
         cib_notify_client_t *list_client = list_item->data;
 
         cib->notify_list = g_list_remove(cib->notify_list, list_client);
-        crm_free(list_client);
+        free(list_client);
 
         crm_trace("Removed callback");
 
     } else {
         crm_trace("Callback not present");
     }
-    crm_free(new_client);
+    free(new_client);
     return cib_ok;
 }
 

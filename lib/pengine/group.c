@@ -153,7 +153,7 @@ group_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
     }
 
     status_print("%s</group>\n", pre_text);
-    crm_free(child_text);
+    free(child_text);
 }
 
 void
@@ -197,7 +197,7 @@ group_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     if (options & pe_print_html) {
         status_print("</ul>\n");
     }
-    crm_free(child_text);
+    free(child_text);
 }
 
 void

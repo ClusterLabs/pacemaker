@@ -92,7 +92,7 @@ st_ipc_created(qb_ipcs_connection_t *c)
     new_client->channel = c;
     new_client->channel_name = crm_strdup("ipc");
 	
-    CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
+    CRM_CHECK(new_client->id == NULL, free(new_client->id));
     new_client->id = crm_generate_uuid();
     crm_trace("Created channel %p for client %s", c, new_client->id);
 	
@@ -195,9 +195,9 @@ st_ipc_destroy(qb_ipcs_connection_t *c)
 
     crm_trace("Destroying %s (%p)", client->name, client);
     
-    crm_free(client->name);
-    crm_free(client->id);
-    crm_free(client);
+    free(client->name);
+    free(client->id);
+    free(client);
     crm_trace("Done");
 
     return;
@@ -396,7 +396,7 @@ static stonith_key_value_t *parse_device_list(const char *devices)
             line = calloc(1, 2 + lpc - last);
             snprintf(line, 1 + lpc - last, "%s", devices+last);
             output = stonith_key_value_add(output, NULL, line);
-            crm_free(line);
+            free(line);
 
             last = lpc + 1;
         }
@@ -588,7 +588,7 @@ stonith_cleanup(void)
     qb_ipcs_destroy(ipcs);
     crm_peer_destroy();	
     g_hash_table_destroy(client_list);
-    crm_free(stonith_our_uname);
+    free(stonith_our_uname);
 #if HAVE_LIBXML2
     crm_xml_cleanup();
 #endif

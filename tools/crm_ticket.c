@@ -188,7 +188,7 @@ find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_sta
     }
 
   bail:
-    crm_free(xpath_string);
+    free(xpath_string);
     return rc;
 }
 
@@ -226,7 +226,7 @@ find_ticket_constraints(cib_t * the_cib, const char * ticket_id, xmlNode ** tick
     *ticket_cons_xml = xml_search;
 
   bail:
-    crm_free(xpath_string);
+    free(xpath_string);
     return rc;
 }
 
@@ -249,7 +249,7 @@ dump_ticket_xml(cib_t * the_cib, const char *ticket_id)
         state_xml_str = dump_xml_formatted(state_xml);
         fprintf(stdout, "\n%s\n", crm_str(state_xml_str));
         free_xml(state_xml);
-        crm_free(state_xml_str);
+        free(state_xml_str);
     }
 
     return cib_ok;
@@ -271,7 +271,7 @@ dump_constraints(cib_t * the_cib, const char * ticket_id)
     cons_xml_str = dump_xml_formatted(cons_xml);
     fprintf(stdout, "Constraints XML:\n\n%s\n", crm_str(cons_xml_str));
     free_xml(cons_xml);
-    crm_free(cons_xml_str);
+    free(cons_xml_str);
 
     return cib_ok;
 }
@@ -322,7 +322,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
         }
         offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", long_key);
 
-        crm_free(long_key);
+        free(long_key);
     }
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
 
@@ -354,7 +354,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
     }
 
   bail:
-    crm_free(xpath_string);
+    free(xpath_string);
     free_xml(xml_search);
     return rc;
 }
@@ -397,7 +397,7 @@ delete_ticket_state_attr_legacy(const char *ticket_id, const char *set_name, con
     }
 
     free_xml(xml_obj);
-    crm_free(local_attr_id);
+    free(local_attr_id);
     return rc;
 }
 
@@ -559,22 +559,22 @@ confirm(const char *ticket_id, const char *action)
 
         if (strchr(answer, 'y') == answer || strchr(answer, 'Y') == answer) {
             rc = TRUE;
-            crm_free(answer);
+            free(answer);
             goto bail;
 
         } else if (strchr(answer, 'n') == answer || strchr(answer, 'N') == answer) {
             rc = FALSE;
-            crm_free(answer);
+            free(answer);
             goto bail;
 
         } else {
-            crm_free(answer);
+            free(answer);
             fprintf(stdout, "Please answer with y or n\n");
         }
     }
 
 bail:
-    crm_free(warning);
+    free(warning);
     return rc;
 }
 

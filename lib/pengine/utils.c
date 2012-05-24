@@ -174,7 +174,7 @@ dump_node_scores_worker(int level, const char *file, const char *function, int l
             } else {
                 printf("%s: %s = %s\n", comment, node->details->uname, score);
             }
-            crm_free(score);
+            free(score);
         }
 
         g_list_free(list);
@@ -192,7 +192,7 @@ dump_node_scores_worker(int level, const char *file, const char *function, int l
                 do_crm_log_alias(LOG_TRACE, file, function, line + 1, "%s: %s = %s", comment,
                                  node->details->uname, score);
             }
-            crm_free(score);
+            free(score);
         }
     }
 
@@ -219,7 +219,7 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     new_text = calloc(1, len);
     sprintf(new_text, "%s %s=%s", *dump_text, (char *)key, (char *)value);
 
-    crm_free(*dump_text);
+    free(*dump_text);
     *dump_text = new_text;
 }
 
@@ -241,7 +241,7 @@ dump_node_capacity(int level, const char *comment, node_t * node)
         crm_trace("%s", dump_text);
     }
 
-    crm_free(dump_text);
+    free(dump_text);
 }
 
 void
@@ -263,7 +263,7 @@ dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * 
         crm_trace("%s", dump_text);
     }
 
-    crm_free(dump_text);
+    free(dump_text);
 }
 
 gint
@@ -336,7 +336,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
     }
 
     if (possible_matches != NULL) {
-        crm_free(key);
+        free(key);
 
         if (g_list_length(possible_matches) > 1) {
             pe_warn("Action %s for %s on %s exists %d times",
@@ -712,7 +712,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         date_str = crm_strdup(value);
         date_str_mutable = date_str;
         origin = parse_date(&date_str_mutable);
-        crm_free(date_str);
+        free(date_str);
 
         if (origin == NULL) {
             crm_config_err("Operation %s contained an invalid " XML_OP_ATTR_ORIGIN ": %s",
@@ -789,16 +789,16 @@ find_rsc_op_entry(resource_t * rsc, const char *key)
             if (safe_str_eq(key, match_key)) {
                 op = operation;
             }
-            crm_free(match_key);
+            free(match_key);
 
             if (op != NULL) {
-                crm_free(local_key);
+                free(local_key);
                 return op;
             }
         }
     }
 
-    crm_free(local_key);
+    free(local_key);
     if (do_retry == FALSE) {
         return NULL;
     }
@@ -839,7 +839,7 @@ print_node(const char *pre_text, node_t * node, gboolean details)
 
         crm_trace("\t\t===Node Attributes");
         g_hash_table_foreach(node->details->attrs, print_str_str, pe_mutable);
-        crm_free(pe_mutable);
+        free(pe_mutable);
 
         crm_trace("\t\t=== Resources");
 
@@ -892,10 +892,10 @@ pe_free_action(action_t * action)
     if (action->meta) {
         g_hash_table_destroy(action->meta);
     }
-    crm_free(action->task);
-    crm_free(action->uuid);
-    crm_free(action->node);
-    crm_free(action);
+    free(action->task);
+    free(action->uuid);
+    free(action->node);
+    free(action);
 }
 
 GListPtr
@@ -1104,15 +1104,15 @@ resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
     if (node == NULL && score == -INFINITY) {
         if (rsc->allocated_to) {
             crm_info("Deallocating %s from %s", rsc->id, rsc->allocated_to->details->uname);
-            crm_free(rsc->allocated_to);
+            free(rsc->allocated_to);
             rsc->allocated_to = NULL;
         }
     }
 }
 
 #define sort_return(an_int, why) do {					\
-	crm_free(a_uuid);						\
-	crm_free(b_uuid);						\
+	free(a_uuid);						\
+	free(b_uuid);						\
 	crm_trace("%s (%d) %c %s (%d) : %s",				\
 		  a_xml_id, a_call_id, an_int>0?'>':an_int<0?'<':'=',	\
 		  b_xml_id, b_call_id, why);				\
@@ -1310,12 +1310,12 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
         key = crm_concat("fail-count", rsc->id, '-');
         value = g_hash_table_lookup(node->details->attrs, key);
         search.count = char2score(value);
-        crm_free(key);
+        free(key);
 
         key = crm_concat("last-failure", rsc->id, '-');
         value = g_hash_table_lookup(node->details->attrs, key);
         search.last = crm_int_helper(value, NULL);
-        crm_free(key);
+        free(key);
     }
 
     if (search.count != 0 && search.last != 0 && rsc->failure_timeout) {
@@ -1337,10 +1337,10 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
         char *score = score2char(search.count);
 
         crm_info("%s has failed %s times on %s", search.rsc->id, score, node->details->uname);
-        crm_free(score);
+        free(score);
     }
 
-    crm_free(search.key);
+    free(search.key);
     return search.count;
 }
 
@@ -1462,8 +1462,8 @@ destroy_ticket(gpointer data)
     if (ticket->state) {
         g_hash_table_destroy(ticket->state);
     }
-    crm_free(ticket->id);
-    crm_free(ticket);
+    free(ticket->id);
+    free(ticket);
 }
 
 ticket_t *

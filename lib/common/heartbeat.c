@@ -117,17 +117,17 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
     
     if(rc != BZ_OK) {
 	crm_err("Compression failed: %d", rc);
-	crm_free(compressed);
+	free(compressed);
 	convert_xml_message_struct(msg, xml, name);
 	goto done;
     }
     
-    crm_free(buffer);
+    free(buffer);
     buffer = compressed;
     crm_trace("Compression details: %d -> %d", orig, len);
     ha_msg_addbin(msg, name, buffer, len);
   done:
-    crm_free(buffer);
+    free(buffer);
 
 
 #  if 0
@@ -146,7 +146,7 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
 	    exit(100);
 	}
 	crm_debug("Original %s, decompressed %s", buffer, uncompressed);
-	crm_free(uncompressed);
+	free(uncompressed);
     }
 #  endif 
 }
@@ -272,8 +272,8 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 		free_xml(xml);
 	    }
 	    
-	    crm_free(uncompressed);
-	    crm_free(compressed);		
+	    free(uncompressed);
+	    free(compressed);		
 	    break;
     }
 }

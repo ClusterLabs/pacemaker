@@ -111,7 +111,7 @@ create_action_name(action_t * action)
         char *tmp_action_name = action_name;
 
         action_name = crm_concat("Cancel", tmp_action_name, ' ');
-        crm_free(tmp_action_name);
+        free(tmp_action_name);
     }
 
     return action_name;
@@ -331,7 +331,7 @@ main(int argc, char **argv)
             }
             fflush(input_strm);
             fclose(input_strm);
-            crm_free(msg_buffer);
+            free(msg_buffer);
         }
     }
 
@@ -371,7 +371,7 @@ main(int argc, char **argv)
             fclose(graph_strm);
         }
     }
-    crm_free(msg_buffer);
+    free(msg_buffer);
 
     if (dot_file != NULL) {
         dot_strm = fopen(dot_file, "w");
@@ -426,7 +426,7 @@ main(int argc, char **argv)
         dot_write("\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"  %s%s]",
                   action_name, style, color, font, fill ? "fillcolor=" : "", fill ? fill : "");
   dont_write:
-        crm_free(action_name);
+        free(action_name);
     }
 
     for (lpc = data_set.actions; lpc != NULL; lpc = lpc->next) {
@@ -461,8 +461,8 @@ main(int argc, char **argv)
                 before_name = create_action_name(before->action);
                 after_name = create_action_name(action);
                 dot_write("\"%s\" -> \"%s\" [ style = %s]", before_name, after_name, style);
-                crm_free(before_name);
-                crm_free(after_name);
+                free(before_name);
+                free(after_name);
             }
         }
     }

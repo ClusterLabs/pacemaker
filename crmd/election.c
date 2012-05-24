@@ -209,11 +209,11 @@ do_election_check(long long action,
 
             data = crm_strdup("member");
             g_hash_table_foreach(crm_peer_cache, log_member_uname, data);
-            crm_free(data);
+            free(data);
 
             data = crm_strdup("voted");
             g_hash_table_foreach(voted, log_node, data);
-            crm_free(data);
+            free(data);
 
         }
         crm_debug("Destroying voted hash");
@@ -499,7 +499,7 @@ do_dc_takeover(long long action,
 
         crm_notice("Marking %s, target of a previous stonith action, as clean", target);
         send_stonith_update(NULL, target, uuid);
-        crm_free(target);
+        free(target);
     }
     g_list_free(stonith_cleanup_list);
     stonith_cleanup_list = NULL;
@@ -551,7 +551,7 @@ do_dc_release(long long action,
         for (gIter = stonith_cleanup_list; gIter != NULL; gIter = gIter->next) {
             char *target = gIter->data;
             crm_debug("Purging %s from stonith cleanup list", target);
-            crm_free(target);
+            free(target);
         }
         g_list_free(stonith_cleanup_list);
         stonith_cleanup_list = NULL;

@@ -241,7 +241,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             new_node->details = calloc(1, sizeof(struct node_shared_s));
 
             if (new_node->details == NULL) {
-                crm_free(new_node);
+                free(new_node);
                 return FALSE;
             }
 
@@ -549,12 +549,12 @@ get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
     }
 
     if (ticket_id == NULL || strlen(ticket_id) == 0) {
-        crm_free(state_key);
+        free(state_key);
         return;
     }
 
     if (state_key == NULL || strlen(state_key) == 0) {
-        crm_free(state_key);
+        free(state_key);
         return;
     }
 
@@ -562,7 +562,7 @@ get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
     if (ticket == NULL) {
         ticket = ticket_new(ticket_id, data_set);
         if (ticket == NULL) {
-            crm_free(state_key);
+            free(state_key);
             return;
         }
     }
@@ -1051,7 +1051,7 @@ increment_clone(char *last_rsc_id)
                 last_rsc_id[len] = '0';
                 last_rsc_id[len + 1] = 0;
                 complete = TRUE;
-                crm_free(tmp);
+                free(tmp);
                 break;
             default:
                 crm_err("Unexpected char: %c (%d)", last_rsc_id[lpc], lpc);
@@ -1235,7 +1235,7 @@ find_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent, cons
         CRM_ASSERT(rsc != NULL);
     }
 
-    crm_free(rsc->clone_name);
+    free(rsc->clone_name);
     rsc->clone_name = NULL;
     if (safe_str_neq(rsc_id, rsc->id)) {
         crm_info("Internally renamed %s on %s to %s%s",
@@ -1244,8 +1244,8 @@ find_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent, cons
         rsc->clone_name = crm_strdup(rsc_id);
     }
 
-    crm_free(alt_rsc_id);
-    crm_free(base);
+    free(alt_rsc_id);
+    free(base);
     return rsc;
 }
 
@@ -1267,7 +1267,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
         resource_t *clone0 = pe_find_resource(data_set->resources, tmp);
 
         clone_parent = uber_parent(clone0);
-        crm_free(tmp);
+        free(tmp);
 
         crm_trace("%s not found: %s", alt_rsc_id, clone_parent ? clone_parent->id : "orphan");
 
@@ -1280,7 +1280,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
         CRM_ASSERT(rsc != NULL);
     }
 
-    crm_free(alt_rsc_id);
+    free(alt_rsc_id);
     return rsc;
 }
 
@@ -1421,7 +1421,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
     } else if (rsc->clone_name) {
         crm_trace("Resetting clone_name %s for %s (stopped)", rsc->clone_name, rsc->id);
-        crm_free(rsc->clone_name);
+        free(rsc->clone_name);
         rsc->clone_name = NULL;
 
     } else {
@@ -1435,7 +1435,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
             stop->flags |= pe_action_optional;
         }
 
-        crm_free(key);
+        free(key);
     }
 }
 
@@ -1793,7 +1793,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
         char *dummy_string = NULL;
 
         decode_transition_key(key, &dummy_string, &dummy, &dummy, &target_rc);
-        crm_free(dummy_string);
+        free(dummy_string);
     }
 
     if (task_status_i == LRM_OP_DONE && target_rc >= 0) {

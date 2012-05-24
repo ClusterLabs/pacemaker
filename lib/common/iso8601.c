@@ -133,9 +133,9 @@ date_to_string(ha_time_t * date_time, int flags)
              time_s ? time_s : "", offset_s ? offset_s : "");
 
   cleanup:
-    crm_free(date_s);
-    crm_free(time_s);
-    crm_free(offset_s);
+    free(date_s);
+    free(time_s);
+    free(offset_s);
 
     return result_s;
 }
@@ -148,7 +148,7 @@ log_date(int log_level, const char *prefix, ha_time_t * date_time, int flags)
     do_crm_log(log_level, "%s%s%s",
                prefix ? prefix : "", prefix ? ": " : "", date_s ? date_s : "__invalid_date__");
 
-    crm_free(date_s);
+    free(date_s);
 }
 
 void
@@ -487,9 +487,9 @@ parse_time_duration(char **interval_str)
 
   bail:
     if (diff) {
-        crm_free(diff->has);
+        free(diff->has);
     }
-    crm_free(diff);
+    free(diff);
     return NULL;
 }
 
@@ -556,10 +556,10 @@ parse_time_period(char **period_str)
 
   bail:
     if (invalid) {
-        crm_free(period->start);
-        crm_free(period->end);
-        crm_free(period->diff);
-        crm_free(period);
+        free(period->start);
+        free(period->end);
+        free(period->diff);
+        free(period);
         return NULL;
     }
     if (period->end == NULL && period->diff == NULL) {
@@ -1297,8 +1297,8 @@ free_ha_date(ha_time_t * a_date)
     }
     free_ha_date(a_date->normalized);
     free_ha_date(a_date->offset);
-    crm_free(a_date->has);
-    crm_free(a_date);
+    free(a_date->has);
+    free(a_date);
 }
 
 void
@@ -1368,7 +1368,7 @@ date_in_seconds_since_epoch(ha_time_t * a_date)
 
         the_epoch = parse_date(&EPOCH);
         normalize_time(the_epoch);
-        crm_free(EPOCH);
+        free(EPOCH);
     }
 
     since_epoch = subtract_time(a_date, the_epoch);

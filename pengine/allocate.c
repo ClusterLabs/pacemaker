@@ -166,7 +166,7 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
 
     cancel = custom_action(rsc, crm_strdup(key), RSC_CANCEL, active_node, FALSE, TRUE, data_set);
 
-    crm_free(cancel->task);
+    free(cancel->task);
     cancel->task = crm_strdup(RSC_CANCEL);
 
     add_hash_param(cancel->meta, XML_LRM_ATTR_TASK, task);
@@ -174,7 +174,7 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
     add_hash_param(cancel->meta, XML_LRM_ATTR_INTERVAL, interval_s);
 
     custom_action_order(rsc, stop_key(rsc), NULL, rsc, NULL, cancel, pe_order_optional, data_set);
-    crm_free(key);
+    free(key);
     key = NULL;
 }
 
@@ -221,13 +221,13 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
         if (op_match == NULL && is_set(data_set->flags, pe_flag_stop_action_orphans)) {
             CancelXmlOp(rsc, xml_op, active_node, "orphan", data_set);
-            crm_free(key);
+            free(key);
             key = NULL;
             return TRUE;
 
         } else if (op_match == NULL) {
             crm_debug("Orphan action detected: %s on %s", key, active_node->details->uname);
-            crm_free(key);
+            free(key);
             key = NULL;
             return TRUE;
         }
@@ -330,8 +330,8 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
   cleanup:
     free_xml(params_all);
     free_xml(params_restart);
-    crm_free(digest_all_calc);
-    crm_free(digest_restart_calc);
+    free(digest_all_calc);
+    free(digest_restart_calc);
     g_hash_table_destroy(local_rsc_params);
 
     pe_free_action(action);
@@ -1385,9 +1385,9 @@ find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_ke
             crm_err("search key: %s", original_key);
         }
 
-        crm_free(key);
-        crm_free(tmp);
-        crm_free(task);
+        free(key);
+        free(tmp);
+        free(task);
     }
 
     return list;
@@ -1479,13 +1479,13 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
             lh_action = custom_action(lh_rsc, key, op_type, NULL, TRUE, TRUE, data_set);
             lh_actions = g_list_prepend(NULL, lh_action);
         } else {
-            crm_free(key);
+            free(key);
             crm_trace("No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
         }
 
-        crm_free(op_type);
-        crm_free(rsc_id);
+        free(op_type);
+        free(rsc_id);
     }
 
     gIter = lh_actions;
@@ -1923,7 +1923,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
                 break;
             default:
                 crm_err("Unsupported notify role");
-                crm_free(entry);
+                free(entry);
                 break;
         }
     }
@@ -1958,7 +1958,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
                         n_data->demote = g_list_prepend(n_data->demote, entry);
                         break;
                     default:
-                        crm_free(entry);
+                        free(entry);
                         break;
                 }
             }
@@ -2151,7 +2151,7 @@ free_notification_data(notify_data_t * n_data)
     slist_basic_destroy(n_data->active);
     slist_basic_destroy(n_data->inactive);
     g_hash_table_destroy(n_data->keys);
-    crm_free(n_data);
+    free(n_data);
 }
 
 int transition_id = -1;

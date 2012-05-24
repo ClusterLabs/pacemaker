@@ -136,11 +136,11 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
     }
 
     if (free_original) {
-        crm_free(old_uuid);
+        free(old_uuid);
     }
 
-    crm_free(raw_task);
-    crm_free(rid);
+    free(raw_task);
+    free(rid);
     return uuid;
 }
 
@@ -168,7 +168,7 @@ rsc_expand_action(action_t * action)
                 crm_err("Couldn't expand %s", action->uuid);
                 result = action;
             }
-            crm_free(uuid);
+            free(uuid);
         }
     }
     return result;
@@ -527,7 +527,7 @@ action2xml(action_t * action, gboolean as_input)
 
     action_id_s = crm_itoa(action->id);
     crm_xml_add(action_xml, XML_ATTR_ID, action_id_s);
-    crm_free(action_id_s);
+    free(action_id_s);
 
     crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
     if (action->rsc != NULL && action->rsc->clone_name != NULL) {
@@ -551,7 +551,7 @@ action2xml(action_t * action, gboolean as_input)
         CRM_CHECK(clone_key != NULL, crm_err("Could not generate a key for %s", action->uuid));
         crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
         crm_xml_add(action_xml, "internal_" XML_LRM_ATTR_TASK_KEY, action->uuid);
-        crm_free(clone_key);
+        free(clone_key);
 
     } else {
         crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);

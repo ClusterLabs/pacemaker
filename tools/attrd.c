@@ -86,15 +86,15 @@ free_hash_entry(gpointer data)
     if (entry == NULL) {
         return;
     }
-    crm_free(entry->id);
-    crm_free(entry->set);
-    crm_free(entry->dampen);
-    crm_free(entry->section);
-    crm_free(entry->uuid);
-    crm_free(entry->value);
-    crm_free(entry->stored_value);
-    crm_free(entry->user);
-    crm_free(entry);
+    free(entry->id);
+    free(entry->set);
+    free(entry->dampen);
+    free(entry->section);
+    free(entry->uuid);
+    free(entry->value);
+    free(entry->stored_value);
+    free(entry->user);
+    free(entry);
 }
 
 static int32_t
@@ -162,8 +162,8 @@ attrd_ipc_destroy(qb_ipcs_connection_t *c)
     }
 
     crm_trace("Destroying %p", c);
-    crm_free(client->user);
-    crm_free(client);
+    free(client->user);
+    free(client);
     crm_trace("Freed the cib client");
 
     return;
@@ -255,7 +255,7 @@ find_hash_entry(xmlNode * msg)
 
     value = crm_element_value(msg, F_ATTRD_SET);
     if (value != NULL) {
-        crm_free(hash_entry->set);
+        free(hash_entry->set);
         hash_entry->set = crm_strdup(value);
         crm_debug("\t%s->set: %s", attr, value);
     }
@@ -264,20 +264,20 @@ find_hash_entry(xmlNode * msg)
     if (value == NULL) {
         value = XML_CIB_TAG_STATUS;
     }
-    crm_free(hash_entry->section);
+    free(hash_entry->section);
     hash_entry->section = crm_strdup(value);
     crm_trace("\t%s->section: %s", attr, value);
 
     value = crm_element_value(msg, F_ATTRD_DAMPEN);
     if (value != NULL) {
-        crm_free(hash_entry->dampen);
+        free(hash_entry->dampen);
         hash_entry->dampen = crm_strdup(value);
 
         hash_entry->timeout = crm_get_msec(value);
         crm_trace("\t%s->timeout: %s", attr, value);
     }
 #if ENABLE_ACL
-    crm_free(hash_entry->user);
+    free(hash_entry->user);
 
     value = crm_element_value(msg, F_ATTRD_USER);
     if (value != NULL) {
@@ -595,7 +595,7 @@ main(int argc, char **argv)
     }
 
     g_hash_table_destroy(attr_hash);
-    crm_free(attrd_uuid);
+    free(attrd_uuid);
     empty_uuid_cache();
 
     return 0;
@@ -622,7 +622,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
             hash_entry = g_hash_table_lookup(attr_hash, data->attr);
 
             if (hash_entry) {
-                crm_free(hash_entry->stored_value);
+                free(hash_entry->stored_value);
                 hash_entry->stored_value = NULL;
                 if (data->value != NULL) {
                     hash_entry->stored_value = crm_strdup(data->value);
@@ -642,9 +642,9 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
                     call_id, data->attr, data->value, cib_error2string(rc));
     }
 
-    crm_free(data->value);
-    crm_free(data->attr);
-    crm_free(data);
+    free(data->value);
+    free(data->attr);
+    free(data);
 }
 
 void
@@ -795,7 +795,7 @@ attrd_local_callback(xmlNode * msg)
         return;
     }
 
-    crm_free(hash_entry->value);
+    free(hash_entry->value);
     hash_entry->value = NULL;
     if (value != NULL) {
         hash_entry->value = crm_strdup(value);

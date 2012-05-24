@@ -363,7 +363,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 
                     *value = calloc(1, len + 1);
                     if (*value == NULL) {
-                        crm_free(*name);
+                        free(*name);
                         break;  /* and return FALSE */
                     }
                     temp = srcstring + lpc + 1;
@@ -377,7 +377,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
     }
 
     if (*name != NULL) {
-        crm_free(*name);
+        free(*name);
     }
     *name = NULL;
     *value = NULL;
@@ -1052,8 +1052,8 @@ compare_version(const char *version1, const char *version2)
         }
     }
 
-    crm_free(ver1_copy);
-    crm_free(ver2_copy);
+    free(ver1_copy);
+    free(ver2_copy);
 
     if (rc == 0) {
         crm_trace("%s == %s (%d)", version1, version2, lpc);
@@ -1071,7 +1071,7 @@ gboolean do_stderr = FALSE;
 void
 g_hash_destroy_str(gpointer data)
 {
-    crm_free(data);
+    free(data);
 }
 
 #include <sys/types.h>
@@ -1227,14 +1227,14 @@ crm_get_interval(const char *input)
         return 0;
 
     } else if (input[0] != 'P') {
-        crm_free(input_copy);
+        free(input_copy);
         return crm_get_msec(input);
     }
 
     interval = parse_time_duration(&input_copy_mutable);
     msec = date_in_seconds(interval);
     free_ha_date(interval);
-    crm_free(input_copy);
+    free(input_copy);
     return msec * 1000;
 }
 
@@ -1375,7 +1375,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
         offset--;
     }
 
-    CRM_CHECK(key[offset] == '_', crm_free(mutable_key); return FALSE);
+    CRM_CHECK(key[offset] == '_', free(mutable_key); return FALSE);
 
     mutable_key_ptr = mutable_key + offset + 1;
 
@@ -1386,7 +1386,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
     mutable_key[offset] = 0;
     offset--;
 
-    CRM_CHECK(mutable_key != mutable_key_ptr, crm_free(mutable_key); return FALSE);
+    CRM_CHECK(mutable_key != mutable_key_ptr, free(mutable_key); return FALSE);
 
     notify = strstr(mutable_key, "_post_notify");
     if (safe_str_eq(notify, "_post_notify")) {
@@ -1483,7 +1483,7 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
         );
 
   bail:
-    crm_free(key);
+    free(key);
     return result;
 }
 
@@ -1561,7 +1561,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     if (done == FALSE) {
         crm_err("Cannot decode '%s' rc=%d", key, res);
 
-        crm_free(*uuid);
+        free(*uuid);
         *uuid = NULL;
         *target_rc = -1;
         *action_id = -1;
@@ -1602,7 +1602,7 @@ filter_action_parameters(xmlNode * param_set, const char *version)
 
     key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
     interval = crm_element_value_copy(param_set, key);
-    crm_free(key);
+    free(key);
 
     key = crm_meta_name(XML_ATTR_TIMEOUT);
     timeout = crm_element_value_copy(param_set, key);
@@ -1632,9 +1632,9 @@ filter_action_parameters(xmlNode * param_set, const char *version)
         }
     }
 
-    crm_free(interval);
-    crm_free(timeout);
-    crm_free(key);
+    free(interval);
+    free(timeout);
+    free(key);
 }
 
 void
@@ -1667,7 +1667,7 @@ filter_reload_parameters(xmlNode * param_set, const char *restart_string)
                 crm_trace("%s not found in %s", prop_name, restart_string);
                 xml_remove_prop(param_set, prop_name);
             }
-            crm_free(name);
+            free(name);
         }
     }
 }
@@ -1763,7 +1763,7 @@ get_last_sequence(const char *directory, const char *series)
     file_strm = fopen(series_file, "r");
     if (file_strm == NULL) {
         crm_debug("Series file %s does not exist", series_file);
-        crm_free(series_file);
+        free(series_file);
         return 0;
     }
 
@@ -1778,7 +1778,7 @@ get_last_sequence(const char *directory, const char *series)
 
     if (length <= 0) {
         crm_info("%s was not valid", series_file);
-        crm_free(buffer);
+        free(buffer);
         buffer = NULL;
 
     } else {
@@ -1787,14 +1787,14 @@ get_last_sequence(const char *directory, const char *series)
         read_len = fread(buffer, 1, length, file_strm);
         if (read_len != length) {
             crm_err("Calculated and read bytes differ: %d vs. %d", length, read_len);
-            crm_free(buffer);
+            free(buffer);
             buffer = NULL;
         }
     }
 
-    crm_free(series_file);
+    free(series_file);
     seq = crm_parse_int(buffer, "0");
-    crm_free(buffer);
+    free(buffer);
     fclose(file_strm);
     return seq;
 }
@@ -1839,7 +1839,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
         fclose(file_strm);
     }
 
-    crm_free(series_file);
+    free(series_file);
 }
 
 #define	LOCKSTRLEN	11
@@ -2100,7 +2100,7 @@ crm_is_writable(const char *dir, const char *file,
     }
 
   out:
-    crm_free(full_file);
+    free(full_file);
     return pass;
 }
 
@@ -2154,7 +2154,7 @@ crm_meta_value(GHashTable * hash, const char *field)
     key = crm_meta_name(field);
     if (key) {
         value = g_hash_table_lookup(hash, key);
-        crm_free(key);
+        free(key);
     }
 
     return value;
@@ -2509,13 +2509,13 @@ append_digest(lrm_op_t * op, xmlNode * update, const char *version, const char *
 
         do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s\n",
                    digest, ID(update), magic, digest_source);
-        crm_free(digest_source);
+        free(digest_source);
     }
 #endif
     crm_xml_add(update, XML_LRM_ATTR_OP_DIGEST, digest);
 
     free_xml(args_xml);
-    crm_free(digest);
+    free(digest);
 }
 
 int
@@ -2528,7 +2528,7 @@ rsc_op_expected_rc(lrm_op_t * op)
         char *uuid = NULL;
 
         decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &rc);
-        crm_free(uuid);
+        free(uuid);
     }
     return rc;
 }
@@ -2691,12 +2691,12 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
     append_digest(op, xml_op, caller_version, magic, LOG_DEBUG);
 
     if (local_user_data) {
-        crm_free(local_user_data);
+        free(local_user_data);
         op->user_data = NULL;
     }
-    crm_free(magic);
-    crm_free(op_id);
-    crm_free(key);
+    free(magic);
+    free(op_id);
+    free(key);
     return xml_op;
 }
 
@@ -2709,12 +2709,12 @@ free_lrm_op(lrm_op_t * op)
     if (op->params) {
         g_hash_table_destroy(op->params);
     }
-    crm_free(op->user_data);
-    crm_free(op->output);
-    crm_free(op->rsc_id);
-    crm_free(op->op_type);
-    crm_free(op->app_name);
-    crm_free(op);
+    free(op->user_data);
+    free(op->output);
+    free(op->rsc_id);
+    free(op->op_type);
+    free(op->app_name);
+    free(op);
 }
 
 #if ENABLE_ACL

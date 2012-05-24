@@ -32,9 +32,9 @@ pe_free_ordering(GListPtr constraints)
 
         iterator = iterator->next;
 
-        crm_free(order->lh_action_task);
-        crm_free(order->rh_action_task);
-        crm_free(order);
+        free(order->lh_action_task);
+        free(order->rh_action_task);
+        free(order);
     }
     if (constraints != NULL) {
         g_list_free(constraints);
@@ -52,7 +52,7 @@ pe_free_rsc_to_node(GListPtr constraints)
         iterator = iterator->next;
 
         slist_basic_destroy(cons->node_list_rh);
-        crm_free(cons);
+        free(cons);
     }
     if (constraints != NULL) {
         g_list_free(constraints);
@@ -325,7 +325,7 @@ native_deallocate(resource_t * rsc)
         old->details->num_resources--;
         /* old->count--; */
         calculate_utilization(old, rsc, FALSE);
-        crm_free(old);
+        free(old);
     }
 }
 
@@ -368,7 +368,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
         }
 
         g_list_free(possible_matches);
-        crm_free(key);
+        free(key);
 
         key = generate_op_key(rsc->id, RSC_START, 0);
         possible_matches = find_actions(rsc->actions, key, NULL);
@@ -380,7 +380,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
         }
 
         g_list_free(possible_matches);
-        crm_free(key);
+        free(key);
 
         return FALSE;
     }

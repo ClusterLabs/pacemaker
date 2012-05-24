@@ -213,7 +213,7 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
         do_crm_log(log_level, "%d nodes with equal score (%s) for"
                    " running %s resources.  Chose %s.",
                    multiple, score, rsc->id, chosen->details->uname);
-        crm_free(score);
+        free(score);
     }
 
     result = native_assign_node(rsc, nodes, chosen, FALSE);
@@ -651,7 +651,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
     key = generate_op_key(rsc->id, name, interval_ms);
     if (find_rsc_op_entry(rsc, key) == NULL) {
         /* disabled */
-        crm_free(key);
+        free(key);
         return;
     }
 
@@ -688,7 +688,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 
             mon = custom_action(rsc, local_key, RSC_CANCEL, node, FALSE, TRUE, data_set);
 
-            crm_free(mon->task);
+            free(mon->task);
             mon->task = crm_strdup(RSC_CANCEL);
             add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
             add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
@@ -725,7 +725,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
                    result, key, value ? value : role2text(RSC_ROLE_SLAVE),
                    role2text(rsc->next_role));
 
-        crm_free(key);
+        free(key);
         key = NULL;
         return;
     }
@@ -753,7 +753,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
         char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
 
         add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
-        crm_free(running_master);
+        free(running_master);
     }
 
     if (node == NULL || is_set(rsc->flags, pe_rsc_managed)) {
@@ -846,7 +846,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
     key = generate_op_key(rsc->id, name, interval_ms);
     if (find_rsc_op_entry(rsc, key) == NULL) {
         /* disabled */
-        crm_free(key);
+        free(key);
         return;
     }
 
@@ -861,7 +861,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 
             cancel_op = custom_action(rsc, local_key, RSC_CANCEL, node, FALSE, TRUE, data_set);
 
-            crm_free(cancel_op->task);
+            free(cancel_op->task);
             cancel_op->task = crm_strdup(RSC_CANCEL);
             add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL, interval);
             add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, name);
@@ -916,7 +916,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 
         rc_inactive = crm_itoa(EXECRA_NOT_RUNNING);
         add_hash_param(stopped_mon->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
-        crm_free(rc_inactive);
+        free(rc_inactive);
 
         probe_complete_ops = find_actions(data_set->actions, CRM_OP_PROBED, NULL);
         for (local_gIter = probe_complete_ops; local_gIter != NULL; local_gIter = local_gIter->next) {
@@ -973,7 +973,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         if (stop_ops) {
             g_list_free(stop_ops);
         }
-        crm_free(stop_op_key);
+        free(stop_op_key);
 
         if (is_optional == FALSE && probe_is_optional && stop_is_optional
             && is_set(rsc->flags, pe_rsc_managed) == FALSE) {
@@ -999,7 +999,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         }
     }
 
-    crm_free(key);
+    free(key);
 }
 
 void
@@ -1236,7 +1236,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                                 rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL,
                                 pe_order_load, data_set);
 
-            crm_free(load_stopped_task);
+            free(load_stopped_task);
         }
     }
 }
@@ -1356,7 +1356,7 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
 
         crm_info("%s: Rolling back scores from %s (%d, %s)",
                  rsc_lh->id, rsc_rh->id, do_check, score);
-        crm_free(score);
+        free(score);
     }
 
     if (work) {
@@ -1824,7 +1824,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
     key = stop_key(rsc);
     possible_matches = find_actions(rsc->actions, key, next);
-    crm_free(key);
+    free(key);
 
     if (possible_matches) {
         stop = possible_matches->data;
@@ -1833,7 +1833,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
     key = start_key(rsc);
     possible_matches = find_actions(rsc->actions, key, next);
-    crm_free(key);
+    free(key);
 
     if (possible_matches) {
         start = possible_matches->data;
@@ -1843,7 +1843,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     if (rsc->role == rsc->next_role) {
         key = generate_op_key(rsc->id, RSC_MIGRATED, 0);
         possible_matches = find_actions(rsc->actions, key, next);
-        crm_free(key);
+        free(key);
 
         CRM_CHECK(next != NULL,);
         if (next == NULL) {
@@ -2025,7 +2025,7 @@ PromoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t 
 
     key = start_key(rsc);
     action_list = find_actions_exact(rsc->actions, key, next);
-    crm_free(key);
+    free(key);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *start = (action_t *) gIter->data;
@@ -2045,7 +2045,7 @@ PromoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t 
 
     key = promote_key(rsc);
     action_list = find_actions_exact(rsc->actions, key, next);
-    crm_free(key);
+    free(key);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *promote = (action_t *) gIter->data;
@@ -2167,14 +2167,14 @@ probe_grouped_clone(resource_t * rsc, node_t * node, pe_working_set_t * data_set
             if (running != NULL) {
                 /* we already know the status of the resource on this node */
                 crm_trace("Skipping active clone: %s", rsc->id);
-                crm_free(clone_id);
+                free(clone_id);
                 return running;
             }
             clone_id = increment_clone(clone_id);
             peer = pe_find_resource(data_set->resources, clone_id);
         }
 
-        crm_free(clone_id);
+        free(clone_id);
     }
     return running;
 }
@@ -2323,7 +2323,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
 
     key = stop_key(rsc);
     action_list = find_actions(rsc->actions, key, stonith_op->node);
-    crm_free(key);
+    free(key);
 
     /* add the stonith OP as a stop pre-req and the mark the stop
      * as a pseudo op - since its now redundant
@@ -2429,7 +2429,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
 
     key = demote_key(rsc);
     action_list = find_actions(rsc->actions, key, stonith_op->node);
-    crm_free(key);
+    free(key);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
@@ -2629,7 +2629,7 @@ at_stack_bottom(resource_t * rsc)
 
     key = start_key(rsc);
     action_list = find_actions(rsc->actions, key, NULL);
-    crm_free(key);
+    free(key);
 
     crm_trace("%s: processing", rsc->id);
     CRM_CHECK(action_list != NULL, return FALSE);
@@ -2692,7 +2692,7 @@ get_first_named_action(resource_t *rsc, const char *action, gboolean only_valid,
 
     action_list = find_actions(rsc->actions, key, current);
 
-    crm_free(key);
+    free(key);
     if (action_list == NULL || action_list->data == NULL) {
         crm_trace("%s: no %s action", rsc->id, action);
         return NULL;
@@ -2954,8 +2954,8 @@ ReloadRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t * 
     set_bit(rsc->flags, pe_rsc_reload);
     update_action_flags(rewrite, pe_action_optional|pe_action_clear);
 
-    crm_free(rewrite->uuid);
-    crm_free(rewrite->task);
+    free(rewrite->uuid);
+    free(rewrite->task);
     rewrite->task = crm_strdup("reload");
     rewrite->uuid = generate_op_key(rsc->id, rewrite->task, 0);
 }
@@ -3028,6 +3028,6 @@ native_append_meta(resource_t * rsc, xmlNode * xml)
 
         name = crm_meta_name(XML_RSC_ATTR_INCARNATION);
         crm_xml_add(xml, name, value);
-        crm_free(name);
+        free(name);
     }
 }

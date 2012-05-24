@@ -245,15 +245,15 @@ free_mem(fsa_data_t * msg_data)
         crm_debug("Full destroy: TE");
         qb_ipcs_disconnect(te_subsystem->client->ipc);
     }
-    crm_free(te_subsystem);
+    free(te_subsystem);
 
     if (pe_subsystem->client && pe_subsystem->client->ipc) {
         crm_debug("Full destroy: PE");
         qb_ipcs_disconnect(pe_subsystem->client->ipc);
     }
-    crm_free(pe_subsystem);
+    free(pe_subsystem);
 
-    crm_free(cib_subsystem);
+    free(cib_subsystem);
 
     if (integrated_nodes) {
         g_hash_table_destroy(integrated_nodes);
@@ -281,21 +281,21 @@ free_mem(fsa_data_t * msg_data)
         fsa_lrm_conn->lrm_ops->delete(fsa_lrm_conn);
     }
 
-    crm_free(transition_timer);
-    crm_free(integration_timer);
-    crm_free(finalization_timer);
-    crm_free(election_trigger);
-    crm_free(election_timeout);
-    crm_free(shutdown_escalation_timer);
-    crm_free(wait_timer);
-    crm_free(recheck_timer);
+    free(transition_timer);
+    free(integration_timer);
+    free(finalization_timer);
+    free(election_trigger);
+    free(election_timeout);
+    free(shutdown_escalation_timer);
+    free(wait_timer);
+    free(recheck_timer);
 
-    crm_free(fsa_our_dc_version);
-    crm_free(fsa_our_uname);
-    crm_free(fsa_our_uuid);
-    crm_free(fsa_our_dc);
+    free(fsa_our_dc_version);
+    free(fsa_our_uname);
+    free(fsa_our_uuid);
+    free(fsa_our_dc);
 
-    crm_free(max_generation_from);
+    free(max_generation_from);
     free_xml(max_generation_xml);
 
     crm_xml_cleanup();
@@ -599,11 +599,11 @@ crmd_ipc_destroy(qb_ipcs_connection_t *c)
     process_client_disconnect(client);
     
     crm_trace("Disconnecting client %s (%p)", client->table_key, client);
-    crm_free(client->table_key);
-    crm_free(client->sub_sys);
-    crm_free(client->uuid);
-    crm_free(client->user);
-    crm_free(client);
+    free(client->table_key);
+    free(client->sub_sys);
+    free(client->uuid);
+    free(client->user);
+    free(client);
 
     trigger_fsa(fsa_source);    
 }

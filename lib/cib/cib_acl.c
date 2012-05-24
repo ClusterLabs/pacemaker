@@ -375,7 +375,7 @@ free_acl(GListPtr acl)
     GListPtr iterator = acl;
 
     while (iterator != NULL) {
-        crm_free(iterator->data);
+        free(iterator->data);
         iterator = iterator->next;
     }
     if (acl != NULL) {
@@ -642,7 +642,7 @@ free_xml_perm(gpointer xml_perm)
         g_hash_table_destroy(perm->attribute_perms);
     }
 
-    crm_free(perm);
+    free(perm);
 }
 
 #define can_read(mode) (crm_str_eq(mode, XML_ACL_TAG_READ, TRUE) \

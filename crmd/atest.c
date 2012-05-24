@@ -75,7 +75,7 @@ main(int argc, char **argv)
         char *buf = dump_xml_formatted(xml);
 
         printf("%s\n", buf);
-        crm_free(buf);
+        free(buf);
     }
 
     free_xml(top);

@@ -62,7 +62,7 @@ get_heartbeat_uuid(uint32_t unused, const char *uname)
     if (heartbeat_cluster->llc_ops->get_uuid_by_name(heartbeat_cluster, uname, &uuid_raw) ==
         HA_FAIL) {
         crm_err("get_uuid_by_name() call failed for host %s", uname);
-        crm_free(uuid_calc);
+        free(uuid_calc);
         return NULL;
     }
 
@@ -71,7 +71,7 @@ get_heartbeat_uuid(uint32_t unused, const char *uname)
 
     if (safe_str_eq(uuid_calc, unknown)) {
         crm_warn("Could not calculate UUID for %s", uname);
-        crm_free(uuid_calc);
+        free(uuid_calc);
         return NULL;
     }
 #endif
@@ -348,8 +348,8 @@ get_uname(const char *uuid)
             if (heartbeat_cluster->llc_ops->get_name_by_uuid(heartbeat_cluster, &uuid_raw, hb_uname,
                                                              MAX_NAME) == HA_FAIL) {
                 crm_err("Could not calculate uname for %s", uuid);
-                crm_free(uuid_copy);
-                crm_free(hb_uname);
+                free(uuid_copy);
+                free(hb_uname);
 
             } else {
                 crm_trace("Storing %s = %s", uuid, uname);

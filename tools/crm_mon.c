@@ -407,7 +407,7 @@ main(int argc, char **argv)
                 print_tickets = TRUE;
                 break;
             case 'p':
-                crm_free(pid_file);
+                free(pid_file);
                 pid_file = crm_strdup(optarg);
                 break;
             case 'x':
@@ -700,7 +700,7 @@ print_rsc_summary(pe_working_set_t * data_set, node_t * node, resource_t * rsc, 
     int failcount = char2score(value);  /* Get the true value, not the effective one from get_failcount() */
 
     get_failcount(node, rsc, (int *)&last_failure, data_set);
-    crm_free(fail_attr);
+    free(fail_attr);
 
     if (all || failcount || last_failure > 0) {
         printed = TRUE;
@@ -1161,11 +1161,11 @@ print_status(pe_working_set_t * data_set)
 
     if (online_nodes) {
         print_as("Online: [%s ]\n", online_nodes);
-        crm_free(online_nodes);
+        free(online_nodes);
     }
     if (offline_nodes) {
         print_as("OFFLINE: [%s ]\n", offline_nodes);
-        crm_free(offline_nodes);
+        free(offline_nodes);
     }
 
     if (group_by_node == FALSE && inactive_resources) {
@@ -1429,7 +1429,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
         stream = fopen(filename_tmp, "w");
         if (stream == NULL) {
             crm_perror(LOG_ERR, "Cannot open %s for writing", filename_tmp);
-            crm_free(filename_tmp);
+            free(filename_tmp);
             return -1;
         }
     }
@@ -1568,7 +1568,7 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
         if (rename(filename_tmp, filename) != 0) {
             crm_perror(LOG_ERR, "Unable to rename %s->%s", filename_tmp, filename);
         }
-        crm_free(filename_tmp);
+        free(filename_tmp);
     }
     return 0;
 }
@@ -1874,9 +1874,9 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     }
 
     crm_trace("Finished running custom notification program '%s'.", external_agent);
-    crm_free(target_rc_s);
-    crm_free(status_s);
-    crm_free(rc_s);
+    free(target_rc_s);
+    free(status_s);
+    free(rc_s);
     return 0;
 }
 
@@ -2111,9 +2111,9 @@ handle_rsc_op(xmlNode * rsc_op)
         send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
     }
   bail:
-    crm_free(update_te_uuid);
-    crm_free(rsc);
-    crm_free(task);
+    free(update_te_uuid);
+    free(rsc);
+    free(task);
 }
 
 void
@@ -2279,9 +2279,9 @@ clean_up(int rc)
         cib = NULL;
     }
 
-    crm_free(as_html_file);
-    crm_free(xml_file);
-    crm_free(pid_file);
+    free(as_html_file);
+    free(xml_file);
+    free(pid_file);
 
     if (rc >= 0) {
         exit(rc);

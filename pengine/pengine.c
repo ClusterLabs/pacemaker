@@ -128,7 +128,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
             is_repoke = TRUE;
 
         } else {
-            crm_free(last_digest);
+            free(last_digest);
             last_digest = digest;
         }
 
@@ -158,7 +158,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
         CRM_ASSERT(reply != NULL);
 
         if (is_repoke == FALSE) {
-            crm_free(filename);
+            free(filename);
             filename =
                 generate_series_filename(PE_STATE_DIR, series[series_id].name, seq, compress);
         }
@@ -205,7 +205,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
         }
 
         free_xml(converted);
-        crm_free(graph_file);
+        free(graph_file);
 
     } else if (strcasecmp(op, CRM_OP_QUIT) == 0) {
         crm_warn("Received quit message, terminating");

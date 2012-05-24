@@ -563,7 +563,7 @@ ping_open(ping_node * node)
     }
     crm_debug("node->host[%s], addr[%s]", node->host, addr);
     ret_ga = getaddrinfo(addr, NULL, &hints, &res);
-    crm_free(addr);
+    free(addr);
     if (ret_ga) {
         crm_warn("getaddrinfo: %s", gai_strerror(ret_ga));
         goto bail;
@@ -899,7 +899,7 @@ ping_read(ping_node * node, int *lenp)
         gettimeofday(&recv_time, NULL);
         if ((recv_start_time.tv_sec + ping_timeout) < recv_time.tv_sec) {
             crm_warn("failed to receive for timeout.");
-            crm_free(packet);
+            free(packet);
             return FALSE;
         }
 
@@ -908,7 +908,7 @@ ping_read(ping_node * node, int *lenp)
             goto retry;
 
         } else if (rc > 0) {
-            crm_free(packet);
+            free(packet);
             return TRUE;
         }
 
@@ -916,7 +916,7 @@ ping_read(ping_node * node, int *lenp)
         crm_err("Unexpected reply");
     }
 
-    crm_free(packet);
+    free(packet);
     return FALSE;
 }
 
@@ -1010,7 +1010,7 @@ pingd_shutdown(int nsig)
     send_update(0);
 
     g_hash_table_destroy(ping_nodes);
-    slist_destroy(ping_node, p, ping_list, crm_free(p->host); crm_free(p););
+    slist_destroy(ping_node, p, ping_list, free(p->host); crm_free(p););
 
     exit(0);
 }
@@ -1379,8 +1379,8 @@ send_update(int num_active)
     value = crm_itoa(attr_multiplier * num_active);
     attrd_lazy_update('U', NULL, pingd_attr, value, attr_section, attr_set, damp);
 
-    crm_free(value);
-    crm_free(damp);
+    free(value);
+    free(damp);
 }
 
 void

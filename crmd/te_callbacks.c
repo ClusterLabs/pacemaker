@@ -322,7 +322,7 @@ te_update_diff(const char *event, xmlNode * msg)
                     if (op_match) {
                         xmlXPathFreeObject(op_match);
                     }
-                    crm_free(rsc_op_xpath);
+                    free(rsc_op_xpath);
                     goto bail;
 
                 } else {
@@ -334,7 +334,7 @@ te_update_diff(const char *event, xmlNode * msg)
             if (op_match) {
                 xmlXPathFreeObject(op_match);
             }
-            crm_free(rsc_op_xpath);
+            free(rsc_op_xpath);
         }
     }
 
@@ -460,8 +460,8 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
     trigger_graph();
 
   bail:
-    crm_free(userdata);
-    crm_free(uuid);
+    free(userdata);
+    free(uuid);
     return;
 }
 
@@ -477,7 +477,7 @@ cib_fencing_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     } else {
         crm_info("Fencing update %d for %s: complete", call_id, (char *)user_data);
     }
-    crm_free(user_data);
+    free(user_data);
 }
 
 void

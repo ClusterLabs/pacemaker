@@ -170,7 +170,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
     }
 
-    crm_free(join_id);
+    free(join_id);
     free_xml(generation);
 }
 

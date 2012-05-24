@@ -264,7 +264,7 @@ main(int argc, char **argv)
             update_attr(the_cib, cib_sync_call,
                         XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
                         "last-lrm-refresh", now_s, TRUE);
-            crm_free(now_s);
+            free(now_s);
         }
 
     } else if (command == 'v') {

@@ -69,8 +69,8 @@ create_request_adv(const char *task, xmlNode * msg_data,
     if (msg_data != NULL) {
         add_message_xml(request, F_CRM_DATA, msg_data);
     }
-    crm_free(reference);
-    crm_free(true_from);
+    free(reference);
+    free(true_from);
 
     return request;
 }
@@ -197,7 +197,7 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
     } else {
         crm_trace("%s %d sent, %d bytes to %p: %.120s", type, header.id, rc, c, buffer);
     }
-    crm_free(buffer);
+    free(buffer);
     return rc;
 }
 
@@ -443,7 +443,7 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
         crm_info("Request was %.120s", buffer);
     }
 
-    crm_free(buffer);
+    free(buffer);
     return rc;
 }
 

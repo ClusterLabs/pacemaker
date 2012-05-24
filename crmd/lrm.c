@@ -106,9 +106,9 @@ free_deletion_op(gpointer value)
 {
     struct pending_deletion_op_s *op = value;
 
-    crm_free(op->rsc);
+    free(op->rsc);
     delete_ha_msg_input(op->input);
-    crm_free(op);
+    free(op);
 }
 
 static void
@@ -116,9 +116,9 @@ free_recurring_op(gpointer value)
 {
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
-    crm_free(op->rsc_id);
-    crm_free(op->op_key);
-    crm_free(op);
+    free(op->rsc_id);
+    free(op->op_key);
+    free(op);
 }
 
 static char *
@@ -144,14 +144,14 @@ history_cache_destroy(gpointer data)
 {
     rsc_history_t *entry = data;
 
-    crm_free(entry->rsc.type);
-    crm_free(entry->rsc.class);
-    crm_free(entry->rsc.provider);
+    free(entry->rsc.type);
+    free(entry->rsc.class);
+    free(entry->rsc.provider);
 
     free_lrm_op(entry->failed);
     free_lrm_op(entry->last);
-    crm_free(entry->id);
-    crm_free(entry);
+    free(entry->id);
+    free(entry);
 }
 
 static void
@@ -473,10 +473,10 @@ g_hash_destroy_reload(gpointer data)
 {
     reload_data_t *reload = data;
 
-    crm_free(reload->key);
-    crm_free(reload->metadata);
+    free(reload->key);
+    free(reload->metadata);
     slist_basic_destroy(reload->restart_list);
-    crm_free(reload);
+    free(reload);
 }
 
 GHashTable *reload_hash = NULL;
@@ -571,7 +571,7 @@ get_rsc_restart_list(lrm_rsc_t * rsc, lrm_op_t * op)
     }
 
   cleanup:
-    crm_free(key);
+    free(key);
     free_xml(metadata);
     return reload ? reload->restart_list : NULL;
 }
@@ -643,8 +643,8 @@ append_restart_list(lrm_rsc_t * rsc, lrm_op_t * op, xmlNode * update, const char
 #endif
 
     free_xml(restart);
-    crm_free(digest);
-    crm_free(list);
+    free(digest);
+    free(list);
 }
 
 static gboolean
@@ -857,7 +857,7 @@ notify_deleted(ha_msg_input_t * input, const char *rsc_id, int rc)
 
         update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
                     NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s, FALSE);
-        crm_free(now_s);
+        free(now_s);
     }
 }
 
@@ -911,7 +911,7 @@ delete_rsc_status(const char *rsc_id, int call_options, const char *user_name)
     rc = fsa_cib_conn->cmds->delegated_variant_op(fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath,
                                                   NULL, NULL, call_options | cib_xpath, user_name);
 
-    crm_free(rsc_xpath);
+    free(rsc_xpath);
     return rc;
 }
 
@@ -934,7 +934,7 @@ delete_rsc_entry(ha_msg_input_t * input, const char *rsc_id, GHashTableIter *rsc
 
         g_hash_table_foreach_remove(pending_ops, lrm_remove_deleted_op, rsc_id_copy);
 
-        crm_free(rsc_id_copy);
+        free(rsc_id_copy);
     }
 
     if (input) {
@@ -969,7 +969,7 @@ delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id)
             char *op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
             /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
             crm_xml_add(xml_top, XML_ATTR_ID, op_id);
-            crm_free(op_id);
+            free(op_id);
         }
 
         crm_debug("async: Sending delete op for %s_%s_%d (call=%d)",
@@ -997,7 +997,7 @@ delete_op_entry(lrm_op_t * op, const char *rsc_id, const char *key, int call_id)
         crm_debug("sync: Sending delete op for %s (call=%d)", rsc_id, call_id);
         fsa_cib_conn->cmds->delete(fsa_cib_conn, op_xpath, NULL, cib_quorum_override | cib_xpath);
 
-        crm_free(op_xpath);
+        free(op_xpath);
 
     } else {
         crm_err("Not enough information to delete op entry: rsc=%p key=%p", rsc_id, key);
@@ -1016,7 +1016,7 @@ void lrm_clear_last_failure(const char *rsc_id)
 
     attr = generate_op_key(rsc_id, "last_failure", 0);
     delete_op_entry(NULL, rsc_id, attr, 0);
-    crm_free(attr);
+    free(attr);
 
     if (!resource_history) {
         return;
@@ -1408,15 +1408,15 @@ do_lrm_invoke(long long action,
 
             meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
             op_interval = crm_element_value(params, meta_key);
-            crm_free(meta_key);
+            free(meta_key);
 
             meta_key = crm_meta_name(XML_LRM_ATTR_TASK);
             op_task = crm_element_value(params, meta_key);
-            crm_free(meta_key);
+            free(meta_key);
 
             meta_key = crm_meta_name(XML_LRM_ATTR_CALLID);
             call_id = crm_element_value(params, meta_key);
-            crm_free(meta_key);
+            free(meta_key);
 
             CRM_CHECK(op_task != NULL, crm_log_xml_warn(input->xml, "Bad command");
                       return);
@@ -1453,7 +1453,7 @@ do_lrm_invoke(long long action,
             op->op_status = LRM_OP_DONE;
             send_direct_ack(from_host, from_sys, rsc, op, rsc->id);
 
-            crm_free(op_key);
+            free(op_key);
             free_lrm_op(op);
 
         } else if (safe_str_eq(operation, CRMD_ACTION_DELETE)) {
@@ -1737,7 +1737,7 @@ do_lrm_rsc_op(lrm_rsc_t * rsc, const char *operation, xmlNode * msg, xmlNode * r
             op->op_status = LRM_OP_ERROR;
             send_direct_ack(NULL, NULL, rsc, op, rsc->id);
             free_lrm_op(op);
-            crm_free(op_id);
+            free(op_id);
             return;
         }
     }
@@ -1782,7 +1782,7 @@ do_lrm_rsc_op(lrm_rsc_t * rsc, const char *operation, xmlNode * msg, xmlNode * r
             crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
 
             decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &target_rc);
-            crm_free(uuid);
+            free(uuid);
 
             op->rc = target_rc;
             op->op_status = LRM_OP_DONE;
@@ -1790,7 +1790,7 @@ do_lrm_rsc_op(lrm_rsc_t * rsc, const char *operation, xmlNode * msg, xmlNode * r
         }
     }
 
-    crm_free(op_id);
+    free(op_id);
     free_lrm_op(op);
     return;
 }
@@ -2088,8 +2088,8 @@ process_lrm_event(lrm_op_t * op)
     update_history_cache(rsc, op);
 
     lrm_free_rsc(rsc);
-    crm_free(op_key);
-    crm_free(op_id);
+    free(op_key);
+    free(op_id);
 
     return TRUE;
 }

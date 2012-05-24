@@ -500,7 +500,7 @@ create_cib_fragment_adv(xmlNode * update, const char *update_section, const char
         crm_xml_add(cib, XML_ATTR_ORIGIN, source);
     }
 
-    crm_free(local_section);
+    free(local_section);
     crm_trace("Verifying created fragment");
     return cib;
 }

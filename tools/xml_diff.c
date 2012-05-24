@@ -208,7 +208,7 @@ main(int argc, char **argv)
         char *buffer = dump_xml_formatted(output);
 
         fprintf(stdout, "%s\n", crm_str(buffer));
-        crm_free(buffer);
+        free(buffer);
 
         fflush(stdout);
 
@@ -216,7 +216,7 @@ main(int argc, char **argv)
             const char *version = crm_element_value(output, XML_ATTR_CRM_VERSION);
             buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
             crm_trace("Digest: %s\n", crm_str(buffer));
-            crm_free(buffer);
+            free(buffer);
         }
     }
 

@@ -371,8 +371,8 @@ phase_of_the_moon(ha_time_t * now)
 	} else if(value_high_i < time_field) {				\
 	    pass = FALSE;						\
 	}								\
-	crm_free(value_low);						\
-	crm_free(value_high);						\
+	free(value_low);						\
+	free(value_high);						\
 	if(pass == FALSE) {						\
 	    crm_debug("Condition '%s' in %s: failed", value, xml_field); \
 	    return pass;						\
@@ -459,14 +459,14 @@ test_date_expression(xmlNode * time_expr, ha_time_t * now)
         value_copy = crm_strdup(value);
         value_copy_start = value_copy;
         start = parse_date(&value_copy);
-        crm_free(value_copy_start);
+        free(value_copy_start);
     }
     value = crm_element_value(time_expr, "end");
     if (value != NULL) {
         value_copy = crm_strdup(value);
         value_copy_start = value_copy;
         end = parse_date(&value_copy);
-        crm_free(value_copy_start);
+        free(value_copy_start);
     }
 
     if (start != NULL && end == NULL && duration_spec != NULL) {

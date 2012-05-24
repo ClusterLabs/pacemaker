@@ -104,7 +104,7 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
     }
 
     new_graph->num_synapses++;
-    CRM_CHECK(new_synapse->id >= 0, crm_free(new_synapse); return NULL);
+    CRM_CHECK(new_synapse->id >= 0, free(new_synapse); return NULL);
 
     crm_trace("look for actions in synapse %s", crm_element_value(xml_synapse, XML_ATTR_ID));
 
@@ -195,11 +195,11 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
 
     if (xml_graph != NULL) {
         t_id = crm_element_value(xml_graph, "transition_id");
-        CRM_CHECK(t_id != NULL, crm_free(new_graph); return NULL);
+        CRM_CHECK(t_id != NULL, free(new_graph); return NULL);
         new_graph->id = crm_parse_int(t_id, "-1");
 
         time = crm_element_value(xml_graph, "cluster-delay");
-        CRM_CHECK(time != NULL, crm_free(new_graph); return NULL);
+        CRM_CHECK(time != NULL, free(new_graph); return NULL);
         new_graph->network_delay = crm_get_msec(time);
 
         time = crm_element_value(xml_graph, "stonith-timeout");
@@ -243,8 +243,8 @@ destroy_action(crm_action_t * action)
         g_hash_table_destroy(action->params);
     }
     free_xml(action->xml);
-    crm_free(action->timer);
-    crm_free(action);
+    free(action->timer);
+    free(action);
 }
 
 static void
@@ -263,7 +263,7 @@ destroy_synapse(synapse_t * synapse)
         synapse->inputs = g_list_remove(synapse->inputs, action);
         destroy_action(action);
     }
-    crm_free(synapse);
+    free(synapse);
 }
 
 void
@@ -280,8 +280,8 @@ destroy_graph(crm_graph_t * graph)
     }
 
     g_hash_table_destroy(graph->migrating);
-    crm_free(graph->source);
-    crm_free(graph);
+    free(graph->source);
+    free(graph);
 }
 
 lrm_op_t *

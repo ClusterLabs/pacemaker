@@ -274,8 +274,8 @@ append_const_arg(const char *key, const char *value, char **arg_list)
 
     append_arg(glib_sucks_key, glib_sucks_value, arg_list);
 
-    crm_free(glib_sucks_value);
-    crm_free(glib_sucks_key);
+    free(glib_sucks_value);
+    free(glib_sucks_key);
 }
 
 static void
@@ -298,7 +298,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
             /* keep going */
 
         } else if (map[lpc] == '=' || map[lpc] == ':') {
-            crm_free(name);
+            free(name);
             name = calloc(1, 1 + lpc - last);
             strncpy(name, map + last, lpc - last);
             crm_debug("Got name: %s", name);
@@ -315,7 +315,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
             crm_debug("Got key: %s", param);
             if (name == NULL) {
                 crm_err("Misparsed '%s', found '%s' without a name", map, param);
-                crm_free(param);
+                free(param);
                 continue;
             }
 
@@ -325,7 +325,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
                 char *key = crm_meta_name(param);
 
                 value = g_hash_table_lookup(params, key);
-                crm_free(key);
+                free(key);
             }
 
             if (value) {
@@ -336,9 +336,9 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
                 crm_err("No node attribute '%s' for '%s'", name, victim);
             }
 
-            crm_free(name);
+            free(name);
             name = NULL;
-            crm_free(param);
+            free(param);
             if (map[lpc] == 0) {
                 break;
             }
@@ -347,7 +347,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
             last = lpc;
         }
     }
-    crm_free(name);
+    free(name);
 }
 
 static char *
@@ -530,7 +530,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
 
             close(c_write_fd);
             close(c_read_fd);
-            crm_free(args);
+            free(args);
             return pid;
 
         } else {
@@ -606,7 +606,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
     }
 
   fail:
-    crm_free(args);
+    free(args);
 
     if (p_read_fd >= 0) {
         close(p_read_fd);
@@ -766,7 +766,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
                 crm_xml_add(tmp, "required", "0");
             }
 
-            crm_free(buffer);
+            free(buffer);
             buffer = dump_xml_formatted(xml);
             free_xml(xml);
         }
@@ -813,16 +813,16 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             stonith_delete(stonith_obj);
         }
 
-        crm_free(meta_shortdesc);
-        crm_free(meta_longdesc);
-        crm_free(meta_param);
+        free(meta_shortdesc);
+        free(meta_longdesc);
+        free(meta_param);
     }
 
     if (output) {
         *output = buffer;
 
     } else {
-        crm_free(buffer);
+        free(buffer);
     }
 
     return rc;
@@ -1142,8 +1142,8 @@ stonith_destroy_op_callback(gpointer data)
     if (blob->timer && blob->timer->ref > 0) {
         g_source_remove(blob->timer->ref);
     }
-    crm_free(blob->timer);
-    crm_free(blob);
+    free(blob->timer);
+    free(blob);
 }
 
 static int
@@ -1306,7 +1306,7 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
 
     if (list_item != NULL) {
         crm_warn("Callback already present");
-        crm_free(new_client);
+        free(new_client);
         return st_err_exists;
 
     } else {
@@ -1341,14 +1341,14 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
         stonith_notify_client_t *list_client = list_item->data;
 
         private->notify_list = g_list_remove(private->notify_list, list_client);
-        crm_free(list_client);
+        free(list_client);
 
         crm_trace("Removed callback");
 
     } else {
         crm_trace("Callback not present");
     }
-    crm_free(new_client);
+    free(new_client);
     return stonith_ok;
 }
 
@@ -1729,10 +1729,10 @@ stonith_api_free(stonith_t * stonith)
         stonith_private_t *private = stonith->private;
 
         g_hash_table_destroy(private->stonith_op_callback_table);
-        crm_free(private->token);
-        crm_free(stonith->private);
-        crm_free(stonith->cmds);
-        crm_free(stonith);
+        free(private->token);
+        free(stonith->private);
+        free(stonith->cmds);
+        free(stonith);
     }
 
     return rc;
@@ -1748,7 +1748,7 @@ stonith_api_delete(stonith_t * stonith)
         stonith_notify_client_t *client = g_list_nth_data(list, 0);
 
         list = g_list_remove(list, client);
-        crm_free(client);
+        free(client);
     }
 
     stonith->cmds->free(stonith);
@@ -1884,7 +1884,7 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
         stonith_api_delete(st);
     }
 
-    crm_free(name);
+    free(name);
     return rc;
 }
 
@@ -1937,6 +1937,6 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
         stonith_api_delete(st);
     }
 
-    crm_free(name);
+    free(name);
     return when;
 }

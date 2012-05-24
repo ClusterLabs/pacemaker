@@ -283,7 +283,7 @@ main(int argc, char ** argv)
 	        char *buffer = NULL;
 		st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, timeout);
 		printf("%s\n", buffer);
-		crm_free(buffer);
+		free(buffer);
 	    }
 	    break;
 	    
@@ -338,7 +338,7 @@ main(int argc, char ** argv)
 			       hp->origin, action_s, hp->target, hp->state, hp->completed);
 		    }
 		    
-		    crm_free(action_s);
+		    free(action_s);
 	        }
 
 		if(latest) {
@@ -359,7 +359,7 @@ main(int argc, char ** argv)
 			       latest->delegate?latest->delegate:"We", action_s, latest->target,
 			       latest->origin, ctime(&complete));
 			
-			crm_free(action_s);
+			free(action_s);
 		    }
 		}
 	    }

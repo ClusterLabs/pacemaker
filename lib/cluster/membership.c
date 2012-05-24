@@ -127,11 +127,11 @@ destroy_crm_node(gpointer data)
 
     crm_trace("Destroying entry for node %u", node->id);
 
-    crm_free(node->addr);
-    crm_free(node->uname);
-    crm_free(node->state);
-    crm_free(node->uuid);
-    crm_free(node);
+    free(node->addr);
+    free(node->uname);
+    free(node->state);
+    free(node->uuid);
+    free(node);
 }
 
 void
@@ -360,7 +360,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
         if (crm_status_callback) {
             crm_status_callback(crm_status_nstate, node, last);
         }
-        crm_free(last);
+        free(last);
     }
 
     if (seen != 0 && safe_str_eq(node->state, CRM_NODE_MEMBER)) {
@@ -370,7 +370,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
     if (addr != NULL) {
         if (node->addr == NULL || crm_str_eq(node->addr, addr, FALSE) == FALSE) {
             addr_changed = TRUE;
-            crm_free(node->addr);
+            free(node->addr);
             node->addr = crm_strdup(addr);
         }
     }

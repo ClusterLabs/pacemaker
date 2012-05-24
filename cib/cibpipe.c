@@ -256,7 +256,7 @@ main(int argc, char **argv)
 
         digest = calculate_on_disk_digest(current_cib);
         fprintf(stdout, "%s\n", crm_str(digest));
-        crm_free(digest);
+        free(digest);
         return 0;
     }
 

@@ -197,18 +197,18 @@ send_ais_text(int class, const char *data,
         rc = BZ2_bzBuffToBuffCompress(compressed, &len, uncompressed, ais_msg->size, CRM_BZ2_BLOCKS,
                                       0, CRM_BZ2_WORK);
 
-        crm_free(uncompressed);
+        free(uncompressed);
 
         if (rc != BZ_OK) {
             crm_err("Compression failed: %d", rc);
-            crm_free(compressed);
+            free(compressed);
             goto failback;
         }
 
         crm_realloc(ais_msg, sizeof(AIS_Message) + len + 1);
         memcpy(ais_msg->data, compressed, len);
         ais_msg->data[len] = 0;
-        crm_free(compressed);
+        free(compressed);
 
         ais_msg->is_compressed = TRUE;
         ais_msg->compressed_size = len;
@@ -265,8 +265,8 @@ send_ais_text(int class, const char *data,
         crm_trace("Message %d: sent", ais_msg->id);
     }
 
-    crm_free(buf);
-    crm_free(ais_msg);
+    free(buf);
+    free(ais_msg);
     return (rc == CS_OK);
 }
 
@@ -276,7 +276,7 @@ send_ais_message(xmlNode * msg, gboolean local, const char *node, enum crm_ais_m
     gboolean rc = TRUE;
     char *data = dump_xml_unformatted(msg);
     rc = send_ais_text(crm_class_cluster, data, local, node, dest);
-    crm_free(data);
+    free(data);
     return rc;
 }
 
@@ -353,7 +353,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
         char *pid_s = crm_itoa(pid);
 
         send_ais_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
-        crm_free(pid_s);
+        free(pid_s);
         goto done;
     }
 
@@ -376,7 +376,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
     }
 
   done:
-    crm_free(uncompressed);
+    free(uncompressed);
     free_xml(xml);
     return TRUE;
 

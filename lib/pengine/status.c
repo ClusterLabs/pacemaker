@@ -159,9 +159,9 @@ pe_free_nodes(GListPtr nodes)
             }
             g_list_free(details->running_rsc);
             g_list_free(details->allocated_rsc);
-            crm_free(details);
+            free(details);
         }
-        crm_free(node);
+        free(node);
     }
     if (nodes != NULL) {
         g_list_free(nodes);
@@ -189,7 +189,7 @@ cleanup_calculations(pe_working_set_t * data_set)
         g_hash_table_destroy(data_set->template_rsc_sets);
     }
 
-    crm_free(data_set->dc_uuid);
+    free(data_set->dc_uuid);
 
     crm_trace("deleting resources");
     pe_free_resources(data_set->resources);

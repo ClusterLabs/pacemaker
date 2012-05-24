@@ -266,7 +266,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
                 add_node_copy(rsc_ops, op);
             }
 
-            crm_free(key);
+            free(key);
         }
 
         if (rsc_ops_hash) {
@@ -380,7 +380,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     (*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
     if ((*rsc)->variant == pe_unknown) {
         pe_err("Unknown resource type: %s", crm_element_name(xml_obj));
-        crm_free(*rsc);
+        free(*rsc);
         return FALSE;
     }
 
@@ -668,11 +668,11 @@ common_free(resource_t * rsc)
         rsc->allowed_nodes = NULL;
     }
     g_list_free(rsc->rsc_location);
-    crm_free(rsc->id);
-    crm_free(rsc->long_name);
-    crm_free(rsc->clone_name);
-    crm_free(rsc->allocated_to);
-    crm_free(rsc->variant_opaque);
-    crm_free(rsc);
+    free(rsc->id);
+    free(rsc->long_name);
+    free(rsc->clone_name);
+    free(rsc->allocated_to);
+    free(rsc->variant_opaque);
+    free(rsc);
     crm_trace("Resource freed");
 }

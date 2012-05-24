@@ -157,7 +157,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
     }
 
   done:
-    crm_free(xpath_string);
+    free(xpath_string);
     free_xml(xml_search);
     return rc;
 }
@@ -264,7 +264,7 @@ update_attr_delegate(cib_t * the_cib, int call_options,
                     char *tmp_set_name = local_set_name;
 
                     local_set_name = crm_concat(tmp_set_name, set_type, '-');
-                    crm_free(tmp_set_name);
+                    free(tmp_set_name);
                 }
             } else {
                 local_set_name = crm_concat(section, "options", '-');
@@ -343,8 +343,8 @@ update_attr_delegate(cib_t * the_cib, int call_options,
         crm_log_xml_info(xml_top, "Update");
     }
 
-    crm_free(local_set_name);
-    crm_free(local_attr_id);
+    free(local_set_name);
+    free(local_attr_id);
     free_xml(xml_top);
 
     return rc;
@@ -411,7 +411,7 @@ delete_attr_delegate(cib_t * the_cib, int options,
                  attr_name ? " name=" : "", attr_name ? attr_name : "");
     }
 
-    crm_free(local_attr_id);
+    free(local_attr_id);
     free_xml(xml_obj);
     return rc;
 }
@@ -539,7 +539,7 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
     rc = update_attr(the_cib, cib_sync_call, scope, uuid, NULL, set_name,
                      attr_id, attr_name, standby_value, TRUE);
 
-    crm_free(attr_id);
-    crm_free(set_name);
+    free(attr_id);
+    free(set_name);
     return rc;
 }

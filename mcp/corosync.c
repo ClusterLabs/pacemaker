@@ -329,7 +329,7 @@ get_config_opt(confdb_handle_t config,
     char buffer[256];
 
     if (*value) {
-        crm_free(*value);
+        free(*value);
         *value = NULL;
     }
 
@@ -346,7 +346,7 @@ get_config_opt(confdb_handle_t config,
 
     env_key = crm_concat("HA", key, '_');
     env_value = getenv(env_key);
-    crm_free(env_key);
+    free(env_key);
 
     if (*value) {
         crm_info("Found '%s' in ENV for option: %s", *value, key);
@@ -543,18 +543,18 @@ read_config(void)
         local_handle = config_find_next(config, "service", top_handle);
 
         while (local_handle) {
-            crm_free(value);
+            free(value);
             get_config_opt(config, local_handle, "name", &value, NULL);
             if (safe_str_eq("pacemaker", value)) {
-                crm_free(value);
+                free(value);
                 get_config_opt(config, local_handle, "ver", &value, "0");
                 if (safe_str_eq(value, "1")) {
-                    crm_free(value);
+                    free(value);
                     get_config_opt(config, local_handle, "use_logd", &value, "no");
                     setenv("HA_use_logd", value, 1);
                     setenv("HA_LOGD", value, 1);
 
-                    crm_free(value);
+                    free(value);
                     get_config_opt(config, local_handle, "use_mgmtd", &value, "no");
                     enable_mgmtd(crm_is_true(value));
 
@@ -567,7 +567,7 @@ read_config(void)
             }
             local_handle = config_find_next(config, "service", top_handle);
         }
-        crm_free(value);
+        free(value);
 
 #endif
     } else {
@@ -677,7 +677,7 @@ read_config(void)
         } else {
             crm_err("Couldn't create logfile: %s", logging_logfile);
         }
-        crm_free(parent_dir);
+        free(parent_dir);
     }
 
     if (have_log && crm_is_true(logging_to_syslog) == FALSE) {

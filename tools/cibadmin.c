@@ -404,7 +404,7 @@ main(int argc, char **argv)
         digest = calculate_on_disk_digest(input);
         fprintf(stderr, "Digest: ");
         fprintf(stdout, "%s\n", crm_str(digest));
-        crm_free(digest);
+        free(digest);
         exit(0);
 
     } else if (safe_str_eq(cib_action, "md5-sum-versioned")) {
@@ -420,7 +420,7 @@ main(int argc, char **argv)
         digest = calculate_xml_versioned_digest(input, FALSE, TRUE, version);
         fprintf(stderr, "Versioned (%s) digest: ", version);
         fprintf(stdout, "%s\n", crm_str(digest));
-        crm_free(digest);
+        free(digest);
         exit(0);
     }
     
@@ -473,15 +473,15 @@ main(int argc, char **argv)
         char *buffer = dump_xml_formatted(output);
 
         fprintf(stdout, "%s\n", crm_str(buffer));
-        crm_free(buffer);
+        free(buffer);
         free_xml(output);
     }
 
     crm_trace("%s exiting normally", crm_system_name);
 
     free_xml(input);
-    crm_free(admin_input_xml);
-    crm_free(admin_input_file);
+    free(admin_input_xml);
+    free(admin_input_file);
     the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
     crm_xml_cleanup();
@@ -584,7 +584,7 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
         crm_info("Call passed");
         fprintf(stdout, "%s\n", crm_str(admin_input_xml));
     }
-    crm_free(admin_input_xml);
+    free(admin_input_xml);
 
     if (call_id == request_id) {
         g_main_quit(mainloop);

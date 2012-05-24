@@ -311,10 +311,10 @@ cib_native_free(cib_t * cib)
     if (cib->state == cib_disconnected) {
         cib_native_opaque_t *native = cib->variant_opaque;
 
-        crm_free(native->token);
-        crm_free(cib->variant_opaque);
-        crm_free(cib->cmds);
-        crm_free(cib);
+        free(native->token);
+        free(cib->variant_opaque);
+        free(cib->cmds);
+        free(cib);
     }
 
     return rc;

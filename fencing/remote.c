@@ -62,8 +62,8 @@ static void free_remote_query(gpointer data)
     if(data) {
 	st_query_result_t *query = data;
         crm_trace("Free'ing query result from %s", query->host);
-	crm_free(query->host);
-	crm_free(query);
+	free(query->host);
+	free(query);
     }
 }
 
@@ -74,11 +74,11 @@ static void free_remote_op(gpointer data)
     crm_trace("Free'ing op %s for %s", op->id, op->target);
     crm_log_xml_debug(op->request, "Destroying");
 
-    crm_free(op->id);
-    crm_free(op->action);
-    crm_free(op->target);
-    crm_free(op->client_id);
-    crm_free(op->originator);
+    free(op->id);
+    free(op->action);
+    free(op->target);
+    free(op->client_id);
+    free(op->originator);
 
     if(op->query_timer) {
 	g_source_remove(op->query_timer);
@@ -95,7 +95,7 @@ static void free_remote_op(gpointer data)
 	free_xml(op->request);
 	op->request = NULL;
     }
-    crm_free(op);
+    free(op);
 }
 
 static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc) 
@@ -313,7 +313,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
         op->call_options &= ~st_opt_cs_nodeid;
 
         if(node) {
-            crm_free(op->target);
+            free(op->target);
             op->target = crm_strdup(node->uname);
         }
     }

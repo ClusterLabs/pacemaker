@@ -56,14 +56,14 @@ static void st_child_done(GPid pid, gint status, gpointer user_data);
 
 static void free_async_command(async_command_t *cmd) 
 {
-    crm_free(cmd->device);
-    crm_free(cmd->action);
-    crm_free(cmd->victim);
-    crm_free(cmd->remote);
-    crm_free(cmd->client);
-    crm_free(cmd->origin);
-    crm_free(cmd->op);
-    crm_free(cmd);    
+    free(cmd->device);
+    free(cmd->action);
+    free(cmd->victim);
+    free(cmd->remote);
+    free(cmd->client);
+    free(cmd->origin);
+    free(cmd->op);
+    free(cmd);    
 }
 
 static async_command_t *create_async_command(xmlNode *msg) 
@@ -189,10 +189,10 @@ void free_device(gpointer data)
     g_list_free(device->pending_ops);
 
     slist_basic_destroy(device->targets);
-    crm_free(device->namespace);
-    crm_free(device->agent);
-    crm_free(device->id);
-    crm_free(device);
+    free(device->namespace);
+    free(device->agent);
+    free(device->id);
+    free(device);
 }
 
 static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets) 
@@ -212,7 +212,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 	    case '=':
 	    case ':':
 		if(lpc > last) {
-		    crm_free(name);
+		    free(name);
 		    name = calloc(1, 1 + lpc - last);
 		    strncpy(name, hostmap + last, lpc - last);
 		}
@@ -256,7 +256,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 	crm_info("No host mappings detected in '%s'", hostmap);
     }
     
-    crm_free(name);
+    free(name);
     return aliases;
 }
 
@@ -310,7 +310,7 @@ static void parse_host_line(const char *line, GListPtr *output)
 		entry = NULL;
 	    }
 	    
-	    crm_free(entry);
+	    free(entry);
 	    last = lpc + 1;
 	}
     }
@@ -335,7 +335,7 @@ static GListPtr parse_host_list(const char *hosts)
 	    line = calloc(1, 2 + lpc - last);
 	    snprintf(line, 1 + lpc - last, "%s", hosts+last);
 	    parse_host_line(line, &output);
-	    crm_free(line);
+	    free(line);
 
 	    last = lpc + 1;	    
 	}
@@ -417,8 +417,8 @@ void free_topology_entry(gpointer data)
             slist_basic_destroy(tp->levels[lpc]);
         }
     }
-    crm_free(tp->node);
-    crm_free(tp);
+    free(tp->node);
+    free(tp);
 }
 
 int stonith_level_register(xmlNode *msg) 
@@ -622,7 +622,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 		dev->targets_age = now;
 	    }
 	
-	    crm_free(output);
+	    free(output);
 	}
 	
 	if(string_in_list(dev->targets, alias)) {
@@ -770,7 +770,7 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 	    }
 	}
 	crm_debug("%s: %s (total %d bytes)", cmd->device, local_copy+last, more);
-	crm_free(local_copy);
+	free(local_copy);
     }
 }
 
@@ -866,7 +866,7 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
     reply = stonith_construct_async_reply(cmd, output, data, rc);
     if(safe_str_eq(cmd->action, "metadata")) {
 	/* Too verbose to log */
-	crm_free(output); output = NULL;
+	free(output); output = NULL;
 
     } else if(crm_str_eq(cmd->action, "reboot", TRUE)
 	   || crm_str_eq(cmd->action, "poweroff", TRUE)
@@ -897,7 +897,7 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
     free_async_command(cmd);
   done:
 
-    crm_free(output);
+    free(output);
     free_xml(reply);
     free_xml(data);
 }
@@ -1188,6 +1188,6 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	free_xml(reply);
     }
 
-    crm_free(output);
+    free(output);
     free_xml(data);
 }

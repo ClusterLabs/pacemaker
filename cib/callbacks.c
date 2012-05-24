@@ -98,7 +98,7 @@ cib_ipc_created(qb_ipcs_connection_t *c)
     new_client = calloc(1, sizeof(cib_client_t));
     new_client->ipc = c;
 
-    CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
+    CRM_CHECK(new_client->id == NULL, free(new_client->id));
     new_client->id = crm_generate_uuid();
     crm_trace("%p connected for client %s", c, new_client->id);
 
@@ -155,11 +155,11 @@ cib_ipc_destroy(qb_ipcs_connection_t *c)
     g_hash_table_remove(client_list, cib_client->id);
 
     crm_trace("Destroying %s (%p)", cib_client->name, c);
-    crm_free(cib_client->name);
-    crm_free(cib_client->callback_id);
-    crm_free(cib_client->id);
-    crm_free(cib_client->user);
-    crm_free(cib_client);
+    free(cib_client->name);
+    free(cib_client->callback_id);
+    free(cib_client->id);
+    free(cib_client->user);
+    free(cib_client);
     crm_trace("Freed the cib client");
 
     if (cib_shutdown_flag) {
@@ -524,7 +524,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
         crm_xml_add(result_diff, XML_ATTR_DIGEST, digest);
         crm_log_xml_trace(the_cib, digest);
-        crm_free(digest);
+        free(digest);
 
         add_message_xml(msg, F_CIB_UPDATE_DIFF, result_diff);
         crm_log_xml_trace(msg, "copy");

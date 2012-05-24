@@ -1081,7 +1081,7 @@ update_dc(xmlNode * msg)
         }
     }
 
-    crm_free(fsa_our_dc_version);
+    free(fsa_our_dc_version);
     fsa_our_dc_version = NULL;
 
     fsa_our_dc = NULL;          /* Free'd as last_dc */
@@ -1103,7 +1103,7 @@ update_dc(xmlNode * msg)
         crm_debug("Unset DC. Was %s", crm_str(last_dc));
     }
 
-    crm_free(last_dc);
+    free(last_dc);
     return TRUE;
 }
 
@@ -1115,7 +1115,7 @@ erase_xpath_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
 
     do_crm_log(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
                "Deletion of \"%s\": %s (rc=%d)", xpath, cib_error2string(rc), rc);
-    crm_free(xpath);
+    free(xpath);
 }
 
 void

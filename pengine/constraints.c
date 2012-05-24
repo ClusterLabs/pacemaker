@@ -573,7 +573,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
                 match_L = g_list_remove(match_L, delete);
                 crm_trace("node %s did not match", node->details->uname);
             }
-            crm_free(delete);
+            free(delete);
         }
     }
 
@@ -731,8 +731,8 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
     if ((lh_action == NULL && lh_rsc == NULL)
         || (rh_action == NULL && rh_rsc == NULL)) {
         crm_config_err("Invalid inputs %p.%p %p.%p", lh_rsc, lh_action, rh_rsc, rh_action);
-        crm_free(lh_action_task);
-        crm_free(rh_action_task);
+        free(lh_action_task);
+        free(rh_action_task);
         return -1;
     }
 
@@ -881,9 +881,9 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
      *end = get_pseudo_op(end_id, data_set);
      *begin = get_pseudo_op(begin_id, data_set);    
 
-     crm_free(pseudo_id);
-     crm_free(begin_id);
-     crm_free(end_id);
+     free(pseudo_id);
+     free(begin_id);
+     free(end_id);
      */
 
     set_iter = resources;
@@ -920,7 +920,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
             }
             last = resource;
         }
-        crm_free(key);
+        free(key);
     }
 
     if (crm_is_true(symmetrical) == FALSE) {
@@ -945,9 +945,9 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
        *inv_end = get_pseudo_op(end_id, data_set);
        *inv_begin = get_pseudo_op(begin_id, data_set);
 
-       crm_free(pseudo_id);
-       crm_free(begin_id);
-       crm_free(end_id);
+       free(pseudo_id);
+       free(begin_id);
+       free(end_id);
      */
 
     flags = get_flags(id, local_kind, action, action, TRUE);
@@ -1025,7 +1025,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         char *task = crm_concat(CRM_OP_RELAXED_SET, ID(set1), ':');
         action_t *unordered_action = get_pseudo_op(task, data_set);
 
-        crm_free(task);
+        free(task);
         update_action_flags(unordered_action, pe_action_requires_any);
 
         for (xml_rsc = __xml_first_child(set1); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {

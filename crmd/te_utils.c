@@ -398,7 +398,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
     }
 
     /* Make sure any queued calculations are discarded ASAP */
-    crm_free(fsa_pe_ref);
+    free(fsa_pe_ref);
     fsa_pe_ref = NULL;
 
     if (transition_graph->complete) {

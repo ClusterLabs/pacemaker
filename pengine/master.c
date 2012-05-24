@@ -457,7 +457,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
         score = char2score(attr_value);
     }
 
-    crm_free(attr_name);
+    free(attr_name);
     return score;
 }
 
@@ -689,7 +689,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             do_crm_log(scores_log_level, "%s promotion score on %s: %s",
                                 child_rsc->id, chosen ? chosen->details->uname : "none", score);
         }
-        crm_free(score);
+        free(score);
 
         chosen = NULL;          /* nuke 'chosen' so that we don't promote more than the
                                  * required number of instances
@@ -996,9 +996,9 @@ master_append_meta(resource_t * rsc, xmlNode * xml)
 
     name = crm_meta_name(XML_RSC_ATTR_MASTER_MAX);
     crm_xml_add_int(xml, name, clone_data->master_max);
-    crm_free(name);
+    free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_MASTER_NODEMAX);
     crm_xml_add_int(xml, name, clone_data->master_node_max);
-    crm_free(name);
+    free(name);
 }

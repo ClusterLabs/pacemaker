@@ -212,7 +212,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
     crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 
     rc = send_cluster_message(on_node, crm_msg_crmd, cmd, TRUE);
-    crm_free(counter);
+    free(counter);
     free_xml(cmd);
 
     if (rc == FALSE) {
@@ -415,7 +415,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         rc = send_cluster_message(on_node, crm_msg_lrmd, cmd, TRUE);
     }
 
-    crm_free(counter);
+    free(counter);
     free_xml(cmd);
 
     action->executed = TRUE;

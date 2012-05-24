@@ -452,12 +452,12 @@ cib_remote_free(cib_t * cib)
         if (rc == cib_ok) {
             cib_remote_opaque_t *private = cib->variant_opaque;
 
-            crm_free(private->server);
-            crm_free(private->user);
-            crm_free(private->passwd);
-            crm_free(cib->cmds);
-            crm_free(private);
-            crm_free(cib);
+            free(private->server);
+            free(private->user);
+            free(private->passwd);
+            free(cib->cmds);
+            free(private);
+            free(cib);
         }
     }
 

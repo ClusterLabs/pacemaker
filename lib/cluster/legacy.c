@@ -284,18 +284,18 @@ send_ais_text(int class, const char *data,
         rc = BZ2_bzBuffToBuffCompress(compressed, &len, uncompressed, ais_msg->size, CRM_BZ2_BLOCKS,
                                       0, CRM_BZ2_WORK);
 
-        crm_free(uncompressed);
+        free(uncompressed);
 
         if (rc != BZ_OK) {
             crm_err("Compression failed: %d", rc);
-            crm_free(compressed);
+            free(compressed);
             goto failback;
         }
 
         crm_realloc(ais_msg, sizeof(AIS_Message) + len + 1);
         memcpy(ais_msg->data, compressed, len);
         ais_msg->data[len] = 0;
-        crm_free(compressed);
+        free(compressed);
 
         ais_msg->is_compressed = TRUE;
         ais_msg->compressed_size = len;
@@ -382,8 +382,8 @@ send_ais_text(int class, const char *data,
         crm_trace("Message %d: sent", ais_msg->id);
     }
 
-    crm_free(buf);
-    crm_free(ais_msg);
+    free(buf);
+    free(ais_msg);
     return (rc == CS_OK);
 }
 
@@ -402,7 +402,7 @@ send_ais_message(xmlNode * msg, gboolean local, const char *node, enum crm_ais_m
 
     data = dump_xml_unformatted(msg);
     rc = send_ais_text(crm_class_cluster, data, local, node, dest);
-    crm_free(data);
+    free(data);
     return rc;
 }
 
@@ -517,7 +517,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
         char *pid_s = crm_itoa(pid);
 
         send_ais_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
-        crm_free(pid_s);
+        free(pid_s);
         goto done;
     }
 
@@ -575,7 +575,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
     }
 
   done:
-    crm_free(uncompressed);
+    free(uncompressed);
     free_xml(xml);
     return TRUE;
 
@@ -968,7 +968,7 @@ init_ais_connection_classic(gboolean(*dispatch) (AIS_Message *, char *, int),
     pid = getpid();
     pid_s = crm_itoa(pid);
     send_ais_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
-    crm_free(pid_s);
+    free(pid_s);
 
     if (uname(&name) < 0) {
         crm_perror(LOG_ERR, "Could not determin the current host");
@@ -1235,7 +1235,7 @@ get_config_opt(confdb_handle_t config,
     char buffer[256];
 
     if (*value) {
-        crm_free(*value);
+        free(*value);
         *value = NULL;
     }
 
@@ -1252,7 +1252,7 @@ get_config_opt(confdb_handle_t config,
 
     env_key = crm_concat("HA", key, '_');
     env_value = getenv(env_key);
-    crm_free(env_key);
+    free(env_key);
 
     if (*value) {
         crm_info("Found '%s' in ENV for option: %s", *value, key);
@@ -1329,12 +1329,12 @@ find_corosync_variant(void)
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "service", top_handle);
     while (local_handle) {
-        crm_free(value);
+        free(value);
         get_config_opt(config, local_handle, "name", &value, NULL);
         if (safe_str_eq("pacemaker", value)) {
             found = pcmk_cluster_classic_ais;
 
-            crm_free(value);
+            free(value);
             get_config_opt(config, local_handle, "ver", &value, "0");
             crm_trace("Found Pacemaker plugin version: %s", value);
             break;
@@ -1342,7 +1342,7 @@ find_corosync_variant(void)
 
         local_handle = config_find_next(config, "service", top_handle);
     }
-    crm_free(value);
+    free(value);
 
     if (found == pcmk_cluster_unknown) {
         top_handle = config_find_init(config);
@@ -1354,7 +1354,7 @@ find_corosync_variant(void)
             found = pcmk_cluster_cman;
         }
     }
-    crm_free(value);
+    free(value);
 
     confdb_finalize(config);
     return found;

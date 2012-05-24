@@ -56,7 +56,7 @@ initialize_join(gboolean before)
 
     if (before) {
         if (max_generation_from != NULL) {
-            crm_free(max_generation_from);
+            free(max_generation_from);
             max_generation_from = NULL;
         }
         if (max_generation_xml != NULL) {
@@ -330,7 +330,7 @@ do_dc_join_filter_offer(long long action,
         }
         crm_log_xml_debug(generation, "Their generation");
 
-        crm_free(max_generation_from);
+        free(max_generation_from);
         free_xml(max_generation_xml);
 
         max_generation_from = crm_strdup(join_from);
@@ -442,7 +442,7 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
                   AM_I_DC ? "DC" : "CRMd", fsa_state2string(fsa_state));
     }
 
-    crm_free(user_data);
+    free(user_data);
 }
 
 static void
@@ -626,11 +626,11 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
                     g_hash_table_size(integrated_nodes), g_hash_table_size(finalized_nodes));
             msg = crm_strdup("Integrated node");
             g_hash_table_foreach(integrated_nodes, ghash_print_node, msg);
-            crm_free(msg);
+            free(msg);
 
             msg = crm_strdup("Finalized node");
             g_hash_table_foreach(finalized_nodes, ghash_print_node, msg);
-            crm_free(msg);
+            free(msg);
 
         } else if (g_hash_table_size(integrated_nodes) != 0) {
             crm_debug("join-%d: Still waiting on %d integrated nodes",

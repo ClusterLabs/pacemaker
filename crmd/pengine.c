@@ -76,10 +76,10 @@ save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
             crm_notice("Saved CIB contents after PE crash to %s", filename);
         }
 
-        crm_free(filename);
+        free(filename);
     }
 
-    crm_free(id);
+    free(id);
 }
 
 static void
@@ -225,7 +225,7 @@ do_pe_invoke(long long action,
     crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query, fsa_state2string(fsa_state));
 
     /* Make sure any queued calculations are discarded */
-    crm_free(fsa_pe_ref);
+    free(fsa_pe_ref);
     fsa_pe_ref = NULL;
 
     fsa_cib_conn->cmds->register_callback(fsa_cib_conn, fsa_pe_query, 60, FALSE, NULL,
@@ -278,7 +278,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     cmd = create_request(CRM_OP_PECALC, output, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
-    crm_free(fsa_pe_ref);
+    free(fsa_pe_ref);
     fsa_pe_ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);
 
     sent = crm_ipc_send(mainloop_get_ipc_client(pe_subsystem->source), cmd, NULL, 0);

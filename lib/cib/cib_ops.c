@@ -151,8 +151,8 @@ cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
     crm_trace("%s %d(%s)->%s", field, int_value, crm_str(old_value), crm_str(new_value));
     crm_xml_add(xml_obj, field, new_value);
 
-    crm_free(new_value);
-    crm_free(old_value);
+    free(new_value);
+    free(old_value);
 
     return cib_ok;
 }
@@ -385,7 +385,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                               replace_item, crm_element_name(target));
                     zap_xml_from_parent(target, remove);
                 }
-                crm_free(replace_item);
+                free(replace_item);
                 last = lpc + 1;
             }
   incr:
@@ -815,7 +815,7 @@ diff_cib_object(xmlNode * old_cib, xmlNode * new_cib, gboolean suppress)
     digest = calculate_xml_versioned_digest(new_cib, FALSE, TRUE, version);
     crm_xml_add(diff, XML_ATTR_DIGEST, digest);
 
-    crm_free(digest);
+    free(digest);
 
     return diff;
 }

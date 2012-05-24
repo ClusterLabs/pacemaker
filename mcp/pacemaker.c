@@ -143,7 +143,7 @@ pcmk_user_lookup(const char *name, uid_t * uid, gid_t * gid)
         crm_err("Cluster user %s does not exist", name);
     }
 
-    crm_free(buffer);
+    free(buffer);
     return rc;
 }
 
@@ -449,7 +449,7 @@ build_path(const char *path_c, mode_t mode)
     if (mkdir(path, mode) < 0 && errno != EEXIST) {
         crm_perror(LOG_ERR, "Could not create directory '%s'", path);
     }
-    crm_free(path);
+    free(path);
 }
 
 static int32_t
@@ -605,7 +605,7 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
         if (node->uname == NULL || safe_str_eq(node->uname, uname) == FALSE) {
             crm_notice("%p Node %u now known as %s%s%s", node, id, uname,
                      node->uname?node->uname:", was: ", node->uname?node->uname:"");
-            crm_free(node->uname);
+            free(node->uname);
             node->uname = crm_strdup(uname);
             changed = TRUE;
         }

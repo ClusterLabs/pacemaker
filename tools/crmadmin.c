@@ -460,7 +460,7 @@ validate_crm_message(xmlNode * msg, const char *sys, const char *uuid, const cha
         action = NULL;
     }
 
-    crm_free(local_sys);
+    free(local_sys);
 
     if (type == NULL) {
         crm_info("No message type defined.");

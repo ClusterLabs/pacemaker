@@ -209,10 +209,10 @@ cib_file_free(cib_t * cib)
     if (rc == cib_ok) {
         cib_file_opaque_t *private = cib->variant_opaque;
 
-        crm_free(private->filename);
-        crm_free(cib->cmds);
-        crm_free(private);
-        crm_free(cib);
+        free(private->filename);
+        free(cib->cmds);
+        free(private);
+        free(cib);
 
     } else {
         fprintf(stderr, "Couldn't sign off: %d\n", rc);

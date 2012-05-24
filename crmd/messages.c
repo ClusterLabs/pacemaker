@@ -258,7 +258,7 @@ delete_fsa_input(fsa_data_t * fsa_data)
         crm_trace("%s data freed", fsa_cause2string(fsa_data->fsa_cause));
     }
 
-    crm_free(fsa_data);
+    free(fsa_data);
 }
 
 /* returns the next message */
@@ -588,8 +588,8 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
             crm_err("Client version (%d:%d) is not acceptable", mav, miv);
             auth_result = FALSE;
         }
-        crm_free(major_version);
-        crm_free(minor_version);
+        free(major_version);
+        free(minor_version);
     }
 
     table_key = (gpointer) generate_hash_key(client_name, uuid);
@@ -614,19 +614,19 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
         mainloop_set_trigger(fsa_source);
 
     } else {
-        crm_free(table_key);
+        free(table_key);
         crm_warn("Rejected client logon request");
         qb_ipcs_disconnect(curr_client->ipc);
     }
 
     if (uuid != NULL)
-        crm_free(uuid);
+        free(uuid);
     if (minor_version != NULL)
-        crm_free(minor_version);
+        free(minor_version);
     if (major_version != NULL)
-        crm_free(major_version);
+        free(major_version);
     if (client_name != NULL)
-        crm_free(client_name);
+        free(client_name);
 
     /* hello messages should never be processed further */
     return FALSE;
@@ -669,11 +669,11 @@ handle_failcount_op(xmlNode * stored_msg)
 
         attr = crm_concat("fail-count", rsc, '-');
         update_attrd(NULL, attr, NULL, NULL);
-        crm_free(attr);
+        free(attr);
 
         attr = crm_concat("last-failure", rsc, '-');
         update_attrd(NULL, attr, NULL, NULL);
-        crm_free(attr);
+        free(attr);
 
         lrm_clear_last_failure(rsc);
     } else {
@@ -916,7 +916,7 @@ handle_shutdown_request(xmlNode * stored_msg)
 
     now_s = crm_itoa(now);
     update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL);
-    crm_free(now_s);
+    free(now_s);
 
     /* will be picked up by the TE as long as its running */
     return I_NULL;
@@ -992,6 +992,6 @@ delete_ha_msg_input(ha_msg_input_t * orig)
         return;
     }
     free_xml(orig->msg);
-    crm_free(orig);
+    free(orig);
 }
 

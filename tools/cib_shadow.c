@@ -106,7 +106,7 @@ shadow_setup(char *name, gboolean do_switch)
     printf("  CIB_shadow=%s ; export CIB_shadow\n", name);
 
   done:
-    crm_free(new_prompt);
+    free(new_prompt);
 }
 
 static void
@@ -123,7 +123,7 @@ shadow_teardown(char *name)
             ("Please remember to unset the CIB_shadow variable by pasting the following into your shell:\n");
         printf("  unset CIB_shadow\n");
     }
-    crm_free(our_prompt);
+    free(our_prompt);
 }
 
 /* *INDENT-OFF* */
@@ -209,7 +209,7 @@ main(int argc, char **argv)
             case 'w':
             case 'F':
                 command = flag;
-                crm_free(shadow);
+                free(shadow);
                 shadow = crm_strdup(getenv("CIB_shadow"));
                 break;
             case 'e':
@@ -217,14 +217,14 @@ main(int argc, char **argv)
             case 's':
             case 'r':
                 command = flag;
-                crm_free(shadow);
+                free(shadow);
                 shadow = crm_strdup(optarg);
                 break;
             case 'C':
             case 'D':
                 command = flag;
                 dangerous_cmd = TRUE;
-                crm_free(shadow);
+                free(shadow);
                 shadow = crm_strdup(optarg);
                 break;
             case 'V':
@@ -416,7 +416,7 @@ main(int argc, char **argv)
         output_s = dump_xml_formatted(output);
         printf("%s", output_s);
 
-        crm_free(output_s);
+        free(output_s);
         free_xml(output);
 
     } else if (command == 'd') {
@@ -464,8 +464,8 @@ main(int argc, char **argv)
     }
   done:
     crm_xml_cleanup();
-    crm_free(shadow_file);
-    crm_free(shadow);
+    free(shadow_file);
+    free(shadow);
     return rc;
 }
 
@@ -575,7 +575,7 @@ print_xml_diff(FILE * where, xmlNode * diff)
     for (child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
         len = 0;
         max = 1024;
-        crm_free(buffer);
+        free(buffer);
         buffer = calloc(1, max);
 
         if (is_first) {
@@ -592,7 +592,7 @@ print_xml_diff(FILE * where, xmlNode * diff)
     for (child = __xml_first_child(added); child != NULL; child = __xml_next(child)) {
         len = 0;
         max = 1024;
-        crm_free(buffer);
+        free(buffer);
         buffer = calloc(1, max);
 
         if (is_first) {

@@ -226,13 +226,13 @@ destroy_topology(void)
 	while (topo_list) {
 		topo = topo_list;
 
-		crm_free(topo->node_name);
+		free(topo->node_name);
 		for (i = 0; i < topo->priority_levels_count; i++) {
-			crm_free(topo->priority_levels[i].device_name);
+			free(topo->priority_levels[i].device_name);
 		}
 
 		topo_list = topo->next;
-		crm_free(topo);
+		free(topo);
 	}
 	return 0;
 }
@@ -246,16 +246,16 @@ destroy_devices(void)
 	while (dev_list) {
 		dev = dev_list;
 
-		crm_free(dev->name);
-		crm_free(dev->agent);
-		crm_free(dev->hostlist);
-		crm_free(dev->hostmap);
+		free(dev->name);
+		free(dev->agent);
+		free(dev->hostlist);
+		free(dev->hostmap);
 		for (i = 0; i < dev->key_vals_count; i++) {
-			crm_free(dev->key_vals[i].key);
-			crm_free(dev->key_vals[i].val);
+			free(dev->key_vals[i].key);
+			free(dev->key_vals[i].val);
 		}
 		dev_list = dev->next;
-		crm_free(dev);
+		free(dev);
 	}
 
 	return 0;
@@ -281,7 +281,7 @@ cfg_register_topology(struct topology *topo)
 		crm_info("Standalone config level being added:\n%s", dump);
 
 		res |= stonith_level_register(data);
-		crm_free(dump);
+		free(dump);
 		free_xml(data);
 		stonith_key_value_freeall(devices, 1, 1);
 	}
@@ -320,7 +320,7 @@ cfg_register_device(struct device *dev)
 
 	res = stonith_device_register(data);
 
-	crm_free(dump);
+	free(dump);
 	free_xml(data);
 	stonith_key_value_freeall(params, 1, 1);
 	return res;

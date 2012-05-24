@@ -586,7 +586,7 @@ do_state_transition(long long actions,
                 crm_warn("%u cluster nodes failed to respond"
                          " to the join offer.", g_hash_table_size(welcomed_nodes));
                 g_hash_table_foreach(welcomed_nodes, ghash_print_node, msg);
-                crm_free(msg);
+                free(msg);
 
             } else {
                 crm_debug("All %d cluster nodes "
@@ -608,7 +608,7 @@ do_state_transition(long long actions,
                 crm_err("%u cluster nodes failed to confirm"
                         " their join.", g_hash_table_size(finalized_nodes));
                 g_hash_table_foreach(finalized_nodes, ghash_print_node, msg);
-                crm_free(msg);
+                free(msg);
 
             } else if (g_hash_table_size(confirmed_nodes)
                        == crm_active_peers()) {

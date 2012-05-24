@@ -750,11 +750,11 @@ child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         key = stop_key(child);
         stop = find_rsc_action(child, key, active_only, NULL);
-        crm_free(key);
+        free(key);
 
         key = start_key(child);
         start = find_rsc_action(child, key, active_only, NULL);
-        crm_free(key);
+        free(key);
 
         if (stop) {
             if (last_stop) {
@@ -1124,7 +1124,7 @@ clone_child_action(action_t * action)
 
                 crm_trace("Extracted action '%s' from '%s'", task_mutable, key);
                 result = get_complex_task(child, task_mutable, TRUE);
-                crm_free(task_mutable);
+                free(task_mutable);
                 break;
             }
         }
@@ -1552,17 +1552,17 @@ clone_append_meta(resource_t * rsc, xmlNode * xml)
 
     name = crm_meta_name(XML_RSC_ATTR_UNIQUE);
     crm_xml_add(xml, name, is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
-    crm_free(name);
+    free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_NOTIFY);
     crm_xml_add(xml, name, is_set(rsc->flags, pe_rsc_notify) ? "true" : "false");
-    crm_free(name);
+    free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_MAX);
     crm_xml_add_int(xml, name, clone_data->clone_max);
-    crm_free(name);
+    free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_NODEMAX);
     crm_xml_add_int(xml, name, clone_data->clone_node_max);
-    crm_free(name);
+    free(name);
 }

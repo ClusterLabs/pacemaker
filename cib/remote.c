@@ -318,7 +318,7 @@ cib_remote_listen(gpointer data)
     new_client = calloc(1, sizeof(cib_client_t));
     new_client->name = crm_element_value_copy(login, "name");
 
-    CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
+    CRM_CHECK(new_client->id == NULL, free(new_client->id));
     new_client->id = crm_generate_uuid();
 
 #if ENABLE_ACL
@@ -383,11 +383,11 @@ cib_remote_connection_destroy(gpointer user_data)
     crm_trace("Destroying %s (%p)", client->name, user_data);
     num_clients--;
     crm_trace("Num unfree'd clients: %d", num_clients);
-    crm_free(client->name);
-    crm_free(client->callback_id);
-    crm_free(client->id);
-    crm_free(client->user);
-    crm_free(client);
+    free(client->name);
+    free(client->callback_id);
+    free(client->id);
+    free(client->user);
+    free(client);
     crm_trace("Freed the cib client");
 
     if (cib_shutdown_flag) {

@@ -168,18 +168,18 @@ update_failcount(xmlNode * event, const char *event_node, int rc, int target_rc,
 
         attr_name = crm_concat("fail-count", rsc_id, '-');
         update_attrd(on_uname, attr_name, value, NULL);
-        crm_free(attr_name);
+        free(attr_name);
 
         attr_name = crm_concat("last-failure", rsc_id, '-');
         update_attrd(on_uname, attr_name, now, NULL);
-        crm_free(attr_name);
+        free(attr_name);
 
-        crm_free(now);
+        free(now);
     }
 
   bail:
-    crm_free(rsc_id);
-    crm_free(task);
+    free(rsc_id);
+    free(task);
     return TRUE;
 }
 
@@ -497,6 +497,6 @@ process_graph_event(xmlNode * event, const char *event_node)
     }
 
   bail:
-    crm_free(update_te_uuid);
+    free(update_te_uuid);
     return stop_early;
 }

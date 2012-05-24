@@ -312,7 +312,7 @@ find_rsc_or_clone(const char *rsc, pe_working_set_t * data_set)
         char *as_clone = crm_concat(rsc, "0", ':');
 
         the_rsc = pe_find_resource(data_set->resources, as_clone);
-        crm_free(as_clone);
+        free(as_clone);
     }
     return the_rsc;
 }
@@ -340,7 +340,7 @@ dump_resource(const char *rsc, pe_working_set_t * data_set, gboolean expanded)
 
     fprintf(stdout, "%sxml:\n%s\n", expanded ? "" : "raw ", rsc_xml);
 
-    crm_free(rsc_xml);
+    free(rsc_xml);
 
     return 0;
 }
@@ -457,7 +457,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
     }
 
   bail:
-    crm_free(xpath_string);
+    free(xpath_string);
     free_xml(xml_search);
     return rc;
 }
@@ -498,7 +498,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
         attr_id = local_attr_id;
 
     } else if (rc != cib_NOTEXISTS) {
-        crm_free(local_attr_id);
+        free(local_attr_id);
         return rc;
 
     } else {
@@ -557,8 +557,8 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 
     rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
     free_xml(xml_top);
-    crm_free(local_attr_id);
-    crm_free(local_attr_set);
+    free(local_attr_id);
+    free(local_attr_set);
     return rc;
 }
 
@@ -605,7 +605,7 @@ delete_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_
     }
 
     free_xml(xml_obj);
-    crm_free(local_attr_id);
+    free(local_attr_id);
     return rc;
 }
 
@@ -659,7 +659,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
 
     msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
     crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
-    crm_free(key);
+    free(key);
 
     xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
     if (rsc->clone_name) {
@@ -693,7 +693,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
 
     key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
     crm_xml_add(params, key, "60000");  /* 1 minute */
-    crm_free(key);
+    free(key);
 
     cmd = create_request(op, msg_data, host_uname, CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
@@ -758,7 +758,7 @@ delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
 
         attr_name = crm_concat("fail-count", id, '-');
         attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL, NULL, NULL);
-        crm_free(attr_name);
+        free(attr_name);
     }
     return rc;
 }
@@ -811,12 +811,12 @@ move_resource(const char *rsc_id,
     id = crm_concat("cli-prefer", rsc_id, '-');
     can_run = create_xml_node(NULL, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_add(can_run, XML_ATTR_ID, id);
-    crm_free(id);
+    free(id);
 
     id = crm_concat("cli-standby", rsc_id, '-');
     dont_run = create_xml_node(NULL, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_add(dont_run, XML_ATTR_ID, id);
-    crm_free(id);
+    free(id);
 
     if (move_lifetime) {
         char *life = crm_strdup(move_lifetime);
@@ -831,7 +831,7 @@ move_resource(const char *rsc_id,
             CMD_ERR("Please refer to"
                     " http://en.wikipedia.org/wiki/ISO_8601#Duration"
                     " for examples of valid durations\n");
-            crm_free(life);
+            free(life);
             return cib_invalid_argument;
         }
         now = new_ha_date(TRUE);
@@ -845,7 +845,7 @@ move_resource(const char *rsc_id,
         free_ha_date(duration);
         free_ha_date(later);
         free_ha_date(now);
-        crm_free(life);
+        free(life);
     }
 
     if (existing_node == NULL) {
@@ -879,14 +879,14 @@ move_resource(const char *rsc_id,
         expr = create_xml_node(rule, XML_TAG_EXPRESSION);
         id = crm_concat("cli-standby-rule", rsc_id, '-');
         crm_xml_add(rule, XML_ATTR_ID, id);
-        crm_free(id);
+        free(id);
 
         crm_xml_add(rule, XML_RULE_ATTR_SCORE, MINUS_INFINITY_S);
         crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
 
         id = crm_concat("cli-standby-expr", rsc_id, '-');
         crm_xml_add(expr, XML_ATTR_ID, id);
-        crm_free(id);
+        free(id);
 
         crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, "#uname");
         crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
@@ -897,7 +897,7 @@ move_resource(const char *rsc_id,
             expr = create_xml_node(rule, "date_expression");
             id = crm_concat("cli-standby-lifetime-end", rsc_id, '-');
             crm_xml_add(expr, XML_ATTR_ID, id);
-            crm_free(id);
+            free(id);
 
             crm_xml_add(expr, "operation", "lt");
             crm_xml_add(expr, "end", later_s);
@@ -923,14 +923,14 @@ move_resource(const char *rsc_id,
         expr = create_xml_node(rule, XML_TAG_EXPRESSION);
         id = crm_concat("cli-prefer-rule", rsc_id, '-');
         crm_xml_add(rule, XML_ATTR_ID, id);
-        crm_free(id);
+        free(id);
 
         crm_xml_add(rule, XML_RULE_ATTR_SCORE, INFINITY_S);
         crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
 
         id = crm_concat("cli-prefer-expr", rsc_id, '-');
         crm_xml_add(expr, XML_ATTR_ID, id);
-        crm_free(id);
+        free(id);
 
         crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, "#uname");
         crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
@@ -941,7 +941,7 @@ move_resource(const char *rsc_id,
             expr = create_xml_node(rule, "date_expression");
             id = crm_concat("cli-prefer-lifetime-end", rsc_id, '-');
             crm_xml_add(expr, XML_ATTR_ID, id);
-            crm_free(id);
+            free(id);
 
             crm_xml_add(expr, "operation", "lt");
             crm_xml_add(expr, "end", later_s);
@@ -959,7 +959,7 @@ move_resource(const char *rsc_id,
     free_xml(fragment);
     free_xml(dont_run);
     free_xml(can_run);
-    crm_free(later_s);
+    free(later_s);
     return rc;
 }
 
@@ -1024,7 +1024,7 @@ show_location(resource_t * rsc, const char *prefix)
 
             fprintf(stdout, "%s: Node %-*s (score=%s, id=%s)\n",
                     prefix ? prefix : "  ", 71 - offset, node->details->uname, score, cons->id);
-            crm_free(score);
+            free(score);
         }
     }
 }
@@ -1046,7 +1046,7 @@ show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int o
     if (is_set(rsc->flags, pe_rsc_allocating)) {
         /* Break colocation loops */
         printf("loop %s\n", rsc->id);
-        crm_free(prefix);
+        free(prefix);
         return;
     }
 
@@ -1083,13 +1083,13 @@ show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int o
                     peer->id, score, cons->id);
         }
         show_location(peer, prefix);
-        crm_free(score);
+        free(score);
 
         if (!dependants && recursive) {
             show_colocation(peer, dependants, recursive, offset + 1);
         }
     }
-    crm_free(prefix);
+    free(prefix);
 }
 
 /* *INDENT-OFF* */
