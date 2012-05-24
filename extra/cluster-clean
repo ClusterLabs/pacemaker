@@ -44,24 +44,33 @@ fi
 
 #logrotate -f $cluster_rotate
 echo "Cleaning files"
-files=""
-files="$files /dev/shm/qb-*"
-files="$files /var/lib/heartbeat/crm/cib-*"
-files="$files /var/lib/heartbeat/cores/*/core.*"
-files="$files /var/lib/heartbeat/hostcache"
-files="$files /var/lib/openais/core.*"
-files="$files /var/lib/corosync/core.*"
-files="$files /var/lib/oprofile/samples/cts.*"
-files="$files /var/log/messages*"
-files="$files /var/log/localmessages*"
-files="$files /var/log/cluster*.log"
-files="$files /var/log/corosync.log"
-files="$files /var/log/pacemaker.log"
-files="$files var/run/crm/blackbox*"
 
-cluster-helper $target -- "rm -f $files"
-cluster-helper $target -- "find /var/lib/pengine -name '*.bz2' -exec rm -f \{\} \;"
+log_files=""
+log_files="$log_files 'messages*'"
+log_files="$log_files 'localmessages*'"
+log_files="$log_files 'cluster*.log'"
+log_files="$log_files corosync.log"
+log_files="$log_files pacemaker.log"
+
+state_files=""
+state_files="$state_files 'cib-*'"
+state_files="$state_files 'core.*'"
+state_files="$state_files hostcache"
+state_files="$state_files 'cts.*'"
+state_files="$state_files 'pe*.bz2'"
+
+for f in $log_files; do
+    cluster-helper $target -- "find /var/log -name '$f' -exec rm -f \{\} \;"
+done
+
+for f in $state_files; do
+   cluster-helper $target -- "find /var/lib -name '$f' -exec rm -f \{\} \;"
+done
+
+cluster-helper $target -- "find /dev/shm -name 'qb-*' -exec rm -f \{\} \;"
+cluster-helper $target -- "find /var/run/crm -name 'blackbox*' -exec rm -f \{\} \;"
 cluster-helper $target -- "find /tmp -name 'cts-*.valgrind' -exec rm -f \{\} \;"
+
 cluster-helper $target -- service rsyslog restart  2>&1 > /dev/null
 cluster-helper $target -- logger -i -p daemon.info __clean_logs__
 
