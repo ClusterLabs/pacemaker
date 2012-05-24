@@ -675,7 +675,7 @@ crm_enable_blackbox(int nsig)
     }
 
     if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
-        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 1024*100); /* Any size change drops existing entries */
+        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 1024*1024); /* Any size change drops existing entries */
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE); /* Setting the size seems to disable it */
         qb_log_filter_ctl(QB_LOG_BLACKBOX, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", LOG_DEBUG);
 
