@@ -583,7 +583,7 @@ dnl             detach themselves from the controlling terminal and run in the
 dnl             background as system daemon
 dnl             A replacement function is supplied for it.
 
-AC_REPLACE_FUNCS(alphasort inet_pton NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup daemon strlcpy strlcat)
+AC_REPLACE_FUNCS(alphasort inet_pton NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup daemon)
 
 dnl ===============================================
 dnl Libraries

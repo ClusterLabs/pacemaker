@@ -431,7 +431,6 @@ copy_xml(xmlNode *src)
 
 
 static void crm_xml_err(void * ctx, const char * msg, ...) G_GNUC_PRINTF(2,3);
-extern size_t strlcat(char * dest, const char *source, size_t len);
 
 int
 write_file(const char *string, const char *filename) 
@@ -499,9 +498,10 @@ static void crm_xml_err(void * ctx, const char * msg, ...)
 	buf = NULL;
 
     } else {
+	buffer = realloc(buffer, 1+buffer_len+len);
+	memcpy(buffer+buffer_len, buf, len);
 	buffer_len += len;
-	buffer = realloc(buffer, buffer_len);
-	strlcat(buffer, buf, buffer_len);
+        buffer[buffer_len] = 0;
     }
     
     va_end(args);
