@@ -214,7 +214,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 		if(lpc > last) {
 		    free(name);
 		    name = calloc(1, 1 + lpc - last);
-		    strncpy(name, hostmap + last, lpc - last);
+		    memcpy(name, hostmap + last, lpc - last);
 		}
 		last = lpc + 1;
 		break;
@@ -228,7 +228,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 		if(name) {
 		    char *value = NULL;
 		    value = calloc(1, 1 + lpc - last);
-		    strncpy(value, hostmap + last, lpc - last);
+		    memcpy(value, hostmap + last, lpc - last);
 		    
 		    crm_debug("Adding alias '%s'='%s'", name, value);
 		    g_hash_table_replace(aliases, name, value);

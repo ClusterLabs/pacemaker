@@ -377,7 +377,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                 }
 
                 replace_item = calloc(1, lpc - last + 1);
-                strncpy(replace_item, replace + last, lpc - last);
+                memcpy(replace_item, replace + last, lpc - last);
 
                 remove = find_xml_node(target, replace_item, FALSE);
                 if (remove != NULL) {

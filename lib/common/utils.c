@@ -349,7 +349,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
                 if (*name == NULL) {
                     break;      /* and return FALSE */
                 }
-                strncpy(*name, srcstring, lpc);
+                memcpy(*name, srcstring, lpc);
                 (*name)[lpc] = '\0';
 
 /* this sucks but as the strtok manpage says..
@@ -367,7 +367,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
                         break;  /* and return FALSE */
                     }
                     temp = srcstring + lpc + 1;
-                    strncpy(*value, temp, len);
+                    memcpy(*value, temp, len);
                     (*value)[len] = '\0';
                 }
                 return TRUE;

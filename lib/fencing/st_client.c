@@ -300,7 +300,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
         } else if (map[lpc] == '=' || map[lpc] == ':') {
             free(name);
             name = calloc(1, 1 + lpc - last);
-            strncpy(name, map + last, lpc - last);
+            memcpy(name, map + last, lpc - last);
             crm_debug("Got name: %s", name);
             last = lpc + 1;
 
@@ -309,7 +309,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
             const char *value = NULL;
 
             param = calloc(1, 1 + lpc - last);
-            strncpy(param, map + last, lpc - last);
+            memcpy(param, map + last, lpc - last);
             last = lpc + 1;
 
             crm_debug("Got key: %s", param);
