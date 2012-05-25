@@ -431,11 +431,12 @@ static gboolean
 st_child_term(gpointer data)
 {
     int rc = 0;
-    int pid = GPOINTER_TO_INT(data);
-    crm_info("Child %d timed out, sending SIGTERM", pid);
-    rc = kill(pid, SIGTERM);
+    async_command_t * track = data;
+    crm_info("Child %d timed out, sending SIGTERM", track->pid);
+    track->timer_sigterm = 0;
+    rc = kill(track->pid, SIGTERM);
     if(rc < 0) {
-        crm_perror(LOG_ERR, "Couldn't send SIGTERM to %d", pid);
+        crm_perror(LOG_ERR, "Couldn't send SIGTERM to %d", track->pid);
     }
     return FALSE;
 }
@@ -444,11 +445,12 @@ static gboolean
 st_child_kill(gpointer data)
 {
     int rc = 0;
-    int pid = GPOINTER_TO_INT(data);
-    crm_info("Child %d timed out, sending SIGKILL", pid);
-    rc = kill(pid, SIGKILL);
+    async_command_t * track = data;
+    crm_info("Child %d timed out, sending SIGKILL", track->pid);
+    track->timer_sigkill = 0;
+    rc = kill(track->pid, SIGKILL);
     if(rc < 0) {
-        crm_perror(LOG_ERR, "Couldn't send SIGKILL to %d", pid);
+        crm_perror(LOG_ERR, "Couldn't send SIGKILL to %d", track->pid);
     }
     return FALSE;
 }
@@ -521,8 +523,9 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
             crm_trace("Op: %s on %s, pid: %d, timeout: %d", action, agent, pid, track->timeout);
 
             if (track->timeout) {
-                track->timer_sigterm = g_timeout_add(track->timeout, st_child_term, GINT_TO_POINTER(pid));
-                track->timer_sigkill = g_timeout_add(track->timeout+5000, st_child_kill, GINT_TO_POINTER(pid));
+                track->pid = pid;
+                track->timer_sigterm = g_timeout_add(track->timeout, st_child_term, track);
+                track->timer_sigkill = g_timeout_add(track->timeout+5000, st_child_kill, track);
 
             } else {
                 crm_err("No timeout set for stonith operation %s with device %s", action, agent);

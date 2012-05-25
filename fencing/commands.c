@@ -792,8 +792,12 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
     
     CRM_CHECK(cmd != NULL, return);
 
-    g_source_remove(cmd->timer_sigterm);
-    g_source_remove(cmd->timer_sigkill);
+    if(cmd->timer_sigterm > 0) {
+        g_source_remove(cmd->timer_sigterm);
+    }
+    if(cmd->timer_sigkill > 0) {
+        g_source_remove(cmd->timer_sigkill);
+    }
     
     if(WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);

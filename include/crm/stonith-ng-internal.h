@@ -25,6 +25,7 @@
 typedef struct async_command_s {
 
     int id;
+    int pid;
     int stdout;
     int options;
     int timeout;
