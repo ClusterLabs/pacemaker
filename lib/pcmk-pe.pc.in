@@ -15,5 +15,5 @@ Description:  Pacemaker Policy Engine v@PACKAGE_SERIES@
 Requires:  
 Conflicts:   
 Cflags:       -I${includedir}
-Libs:         -L${libdir} -lpe_state -lpe_rules
+Libs:         -L${libdir} -lpe_status -lpe_rules
 Libs.private: 
