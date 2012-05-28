@@ -367,7 +367,7 @@ class CIB11(CibBase):
                 self.CM.install_helper(ftype, destdir="/usr/sbin")
                 st = Resource(self.Factory, "FakeFencing", ftype, "stonith")
                 st["pcmk_host_list"] = string.join(self.CM.Env["nodes"], " ")
-                st["power_wait"] = "45" # Wait this many seconds before doing anything, handy for letting disks get flushed
+                st["power_timeout"] = "20" # Wait this many seconds before doing anything, handy for letting disks get flushed
                 st.commit()
 
                 stl = FencingTopology(self.Factory)

@@ -35,10 +35,6 @@ def set_power_status(conn, options):
 	global plug_status
 	plug_status = "unknown"
 
-	# Sleep for power_wait before returning
-	if options.has_key("-G"):
-		time.sleep(int(options["-G"]))
-
 def main():
 	device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",
 			"no_password", "power_wait", "power_timeout", "nodename" ]

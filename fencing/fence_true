@@ -39,14 +39,9 @@ def set_power_status(conn, options):
 	global plug_status
 	plug_status = "off"
 
-	# Sleep for power_wait seconds before returning
-	if options.has_key("-G"):
-		time.sleep(int(options["-G"]))
-
-
 def main():
 	device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",
-			"no_password", "power_wait", "power_timeout", "nodename" ]
+			"no_password", "power_wait", "power_timeout", ]
 
 	atexit.register(atexit_handler)
 
