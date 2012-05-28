@@ -285,7 +285,6 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
         crm_trace("Generated new stonith op: %s", op->id);
     }
 
-    crm_trace("Replacing op %s", op->id);
     g_hash_table_replace(remote_op_list, op->id, op);
     CRM_LOG_ASSERT(g_hash_table_lookup(remote_op_list, op->id) != NULL);
 
@@ -330,8 +329,6 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
     xmlNode *query = NULL;
     remote_fencing_op_t *op = NULL;
 
-    crm_log_xml_debug(request, "RemoteOp");
-    
     op = create_remote_stonith_op(client->id, request, FALSE);
     query = stonith_create_op(0, op->id, STONITH_OP_QUERY, NULL, 0);
 
@@ -479,8 +476,6 @@ int process_remote_stonith_query(xmlNode *msg)
     xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE, msg, LOG_ERR);
     xmlNode *child = NULL;
     
-    crm_log_xml_trace(msg, "QueryResult");
-
     CRM_CHECK(dev != NULL, return st_err_internal);
 
     id = crm_element_value(dev, F_STONITH_REMOTE);
@@ -501,6 +496,7 @@ int process_remote_stonith_query(xmlNode *msg)
 
     if(devices <= 0) {
         /* If we're doing 'known' then we might need to fire anyway */
+        crm_trace("Query result from %s (%d devices)", host, devices);
         return stonith_ok;
 
     } else if(op->call_options & st_opt_allow_suicide) {
@@ -511,7 +507,7 @@ int process_remote_stonith_query(xmlNode *msg)
         return stonith_ok;
     }
 
-    crm_trace("Query result from %s (%d devices)", host, devices);
+    crm_debug("Query result from %s (%d devices)", host, devices);
     result = calloc(1, sizeof(st_query_result_t));
     result->host = crm_strdup(host);
     result->devices = devices;
