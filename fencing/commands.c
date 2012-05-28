@@ -781,7 +781,7 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
 
     int len = 0;
     int more = 0;
-    gboolean bcast = FALSE;
+    gboolean bcast = TRUE;
     
     char *output = NULL;  
     xmlNode *data = NULL;
@@ -870,15 +870,17 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
     reply = stonith_construct_async_reply(cmd, output, data, rc);
     if(safe_str_eq(cmd->action, "metadata")) {
 	/* Too verbose to log */
+	bcast = FALSE;
 	free(output); output = NULL;
+        crm_trace("Directed reply: %s op", cmd->action);
+        
+    } else if(crm_str_eq(cmd->action, "monitor", TRUE)) {
+        crm_trace("Directed reply: %s op", cmd->action);
+	bcast = FALSE;
 
-    } else if(crm_str_eq(cmd->action, "reboot", TRUE)
-	   || crm_str_eq(cmd->action, "poweroff", TRUE)
-	   || crm_str_eq(cmd->action, "poweron", TRUE)
-	   || crm_str_eq(cmd->action, "off", TRUE)
-	   || crm_str_eq(cmd->action, "on", TRUE)) {
-        /* TODO: Invert this logic */
-	bcast = TRUE;
+    } else if(cmd->device_next) {
+        crm_trace("Directed reply: Complex op with %s", cmd->device_next->data);
+	bcast = FALSE;
     }
 
     log_operation(cmd, rc, pid, NULL, output);
@@ -888,13 +890,16 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
 	/* Send reply as T_STONITH_NOTIFY so everyone does notifications
 	 * Potentially limit to unsucessful operations to the originator?
 	 */
+        crm_trace("Broadcast reply");
 	crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
 	send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
 
     } else if(cmd->origin) {
+        crm_trace("Directed reply to %s", cmd->origin);
 	send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
 
     } else {
+        crm_trace("Directed local %ssync reply to %s", (cmd->options & st_opt_sync_call)?"":"a-", cmd->client);
 	do_local_reply(reply, cmd->client, cmd->options & st_opt_sync_call, FALSE);
     }
     
