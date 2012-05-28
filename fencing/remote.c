@@ -542,8 +542,6 @@ int process_remote_stonith_exec(xmlNode *msg)
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE, msg, LOG_ERR);
 
-    crm_log_xml_trace(msg, "ExecResult");
-
     CRM_CHECK(dev != NULL, return st_err_internal);
 
     id = crm_element_value(dev, F_STONITH_REMOTE);
