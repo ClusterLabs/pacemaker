@@ -965,7 +965,7 @@ log_data_element(
     name = crm_element_name(data);
     CRM_ASSERT(name != NULL);
 	
-    crm_trace("Dumping %s", name);
+    /* crm_trace("Dumping %s", name); */
     buffer = calloc(1, buffer_len);
 	
     if(formatted) {
@@ -989,8 +989,8 @@ log_data_element(
 	    prop_value = "*****";
 	}
 		
-	crm_trace("Dumping <%s %s=\"%s\"...",
-		    name, prop_name, prop_value);
+	/* crm_trace("Dumping <%s %s=\"%s\"...", */
+	/* 	    name, prop_name, prop_value); */
 	printed = snprintf(buffer + offset, buffer_len - offset,
 			   " %s=\"%s\"", prop_name, prop_value);
 	update_buffer();
