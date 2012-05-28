@@ -1684,7 +1684,8 @@ crm_abort(const char *file, const char *function, int line,
     int pid = 0;
     int status = 0;
 
-    crm_write_blackbox(0);
+    /* Implied by the parent's error logging below */
+    /* crm_write_blackbox(0); */
 
     if (do_core == FALSE) {
         crm_err("%s: Triggered assert at %s:%d : %s", function, file, line, assert_condition);
