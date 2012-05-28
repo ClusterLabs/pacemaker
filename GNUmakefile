@@ -225,7 +225,6 @@ clang:
 	test -e $(ccc_analyzer) || false
 	make CC=$(ccc_analyzer) check
 
-# Not available: strlcat
 # V3	= scandir unsetenv alphasort 
 # V2	= setenv strerror strchrnul strndup
 # http://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
