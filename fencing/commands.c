@@ -80,7 +80,6 @@ static async_command_t *create_async_command(xmlNode *msg)
     crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
     crm_element_value_int(msg, F_STONITH_TIMEOUT,  &(cmd->timeout));
 
-    cmd->timeout *= 1000;
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
     cmd->remote = crm_element_value_copy(msg, F_STONITH_REMOTE);
     cmd->client = crm_element_value_copy(msg, F_STONITH_CLIENTID);
@@ -142,9 +141,9 @@ static gboolean stonith_device_execute(stonith_device_t *device)
 				device->params, device->aliases, &rc, NULL, cmd);
 
     if(exec_rc > 0) {
-	crm_debug("Operation %s%s%s on %s is active with pid: %d",
+	crm_debug("Operation %s%s%s on %s now running with pid=%d, timeout=%dms",
 		  cmd->action, cmd->victim?" for node ":"", cmd->victim?cmd->victim:"",
-		  device->id, exec_rc);
+		  device->id, exec_rc, cmd->timeout);
 	device->active_pid = exec_rc;
 	
     } else {
@@ -166,7 +165,8 @@ static void schedule_stonith_command(async_command_t *cmd, stonith_device_t *dev
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(device != NULL, return);
 
-    crm_trace("Scheduling %s on %s", cmd->action, device->id);
+    crm_debug("Scheduling %s on %s for %s (timeout=%dms)", cmd->action, device->id,
+              cmd->remote?cmd->remote:cmd->client, cmd->timeout);
     device->pending_ops = g_list_append(device->pending_ops, cmd);
     mainloop_set_trigger(device->work);
 }
@@ -375,7 +375,7 @@ int stonith_device_register(xmlNode *msg)
 
     g_hash_table_replace(device_list, device->id, device);
 
-    crm_info("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
+    crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
     return stonith_ok;
 }
 

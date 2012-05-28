@@ -520,12 +520,12 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
         if (track && track->done) {
             track->stdout = p_read_fd;
             g_child_watch_add(pid, track->done, track);
-            crm_trace("Op: %s on %s, pid: %d, timeout: %d", action, agent, pid, track->timeout);
+            crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action, agent, pid, track->timeout);
 
             if (track->timeout) {
                 track->pid = pid;
-                track->timer_sigterm = g_timeout_add(track->timeout, st_child_term, track);
-                track->timer_sigkill = g_timeout_add(track->timeout+5000, st_child_kill, track);
+                track->timer_sigterm = g_timeout_add(1000*track->timeout, st_child_term, track);
+                track->timer_sigkill = g_timeout_add(1000*(track->timeout+5), st_child_kill, track);
 
             } else {
                 crm_err("No timeout set for stonith operation %s with device %s", action, agent);
@@ -1410,7 +1410,10 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, bool onl
 
         async_timer->stonith = stonith;
         async_timer->call_id = call_id;
-        async_timer->timeout = timeout * 1100;
+        /* Allow a fair bit of grace to allow the server to tell us of a timeout
+         * This is only a fallback
+         */
+        async_timer->timeout = (timeout + 60) * 1000;
         async_timer->ref =
             g_timeout_add(async_timer->timeout, stonith_async_timeout_handler, async_timer);
     }
@@ -1596,7 +1599,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
     crm_trace("Sending %s message to STONITH service, Timeout: %ds", op, timeout);
 
-    rc = crm_ipc_send(native->ipc, op_msg, &op_reply, 1000*timeout);
+    rc = crm_ipc_send(native->ipc, op_msg, &op_reply, 1000*(timeout + 60));
     free_xml(op_msg);
 
     if(rc < 0) {
