@@ -1360,7 +1360,7 @@ stonith_async_timeout_handler(gpointer data)
 {
     struct timer_rec_s *timer = data;
 
-    crm_debug("Async call %d timed out after %dms", timer->call_id, timer->timeout);
+    crm_err("Async call %d timed out after %dms", timer->call_id, timer->timeout);
     stonith_perform_callback(timer->stonith, NULL, timer->call_id, st_err_timeout);
 
     /* Always return TRUE, never remove the handler
