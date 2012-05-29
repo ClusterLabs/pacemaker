@@ -86,6 +86,8 @@ static async_command_t *create_async_command(xmlNode *msg)
     cmd->op     = crm_element_value_copy(msg, F_STONITH_OPERATION);
     cmd->action = crm_strdup(action);
     cmd->victim = crm_element_value_copy(op, F_STONITH_TARGET);
+    cmd->mode   = crm_element_value_copy(op, F_STONITH_MODE);
+    cmd->device = crm_element_value_copy(op, F_STONITH_DEVICE);
     cmd->done   = st_child_done;
 
     CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
@@ -878,8 +880,8 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
         crm_trace("Directed reply: %s op", cmd->action);
 	bcast = FALSE;
 
-    } else if(cmd->device_next) {
-        crm_trace("Directed reply: Complex op with %s", cmd->device_next->data);
+    } else if(safe_str_eq(cmd->mode, "slave")) {
+        crm_trace("Directed reply: Complex op with %s", cmd->device);
 	bcast = FALSE;
     }
 
@@ -1097,6 +1099,11 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	process_remote_stonith_exec(request);
 	return;
 	
+    } else if(is_reply && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
+        /* Reply to a complex fencing op */
+	process_remote_stonith_exec(request);
+	return;
+
     } else if(crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
 	const char *flag_name = NULL;
 

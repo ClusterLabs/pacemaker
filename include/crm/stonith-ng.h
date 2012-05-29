@@ -100,6 +100,7 @@ enum stonith_errors {
 
 #define F_STONITH_DEVICE	"st_device_id"
 #define F_STONITH_ACTION	"st_device_action"
+#define F_STONITH_MODE          "st_mode"
 
 
 #define T_STONITH_NOTIFY		"st_notify"

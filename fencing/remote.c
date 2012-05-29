@@ -423,14 +423,16 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         crm_xml_add(query, F_STONITH_TARGET, op->target);    
         crm_xml_add(query, F_STONITH_ACTION, op->action);    
         crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
-        crm_xml_add_int(query, F_STONITH_TIMEOUT, 900*op->base_timeout);
+        crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout/4); /* Allow a quarter of the timeout for querying */
 
         if(device) {
             crm_info("Requesting that %s perform op %s %s with %s", peer->host, op->action, op->target, device);
             crm_xml_add(query, F_STONITH_DEVICE, device);
+            crm_xml_add(query, F_STONITH_MODE, "slave");
 
         } else {
             crm_info("Requesting that %s perform op %s %s", peer->host, op->action, op->target);
+            crm_xml_add(query, F_STONITH_MODE, "smart");
         }
 
 	send_cluster_message(peer->host, crm_msg_stonith_ng, query, FALSE);

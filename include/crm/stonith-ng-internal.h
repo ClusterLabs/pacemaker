@@ -38,6 +38,7 @@ typedef struct async_command_s {
     char *victim;
     char *action;
     char *device;
+    char *mode;
 
     GListPtr device_list;
     GListPtr device_next;
