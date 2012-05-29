@@ -575,9 +575,12 @@ int process_remote_stonith_exec(xmlNode *msg)
     if(is_set(op->call_options, st_opt_topology)) {
         if(rc == stonith_ok && op->devices) {
             /* Success, are there any more? */
-            crm_info("Call to %s for %s passed, %s next", (char*)op->devices->data,
-                     op->target, op->devices->next?(char*)op->devices->next->data:"<none>");
+            crm_notice("Call to %s for %s passed, %s next", (char*)op->devices->data,
+                       op->target, op->devices->next?(char*)op->devices->next->data:"<none>");
             op->devices = op->devices->next;
+
+        } else {
+            crm_notice("Call to %s for %s failed: %d", (char*)op->devices->data, op->target, rc);
         }
     }
     
@@ -588,7 +591,7 @@ int process_remote_stonith_exec(xmlNode *msg)
 	
     } else {
         /* Retry on failure or execute the rest of the topology */
-        crm_trace("Next for %s", op->target);        
+        crm_trace("Next for %s (rc was %d)", op->target, rc);
 	call_remote_stonith(op, NULL);
     }
     return rc;
