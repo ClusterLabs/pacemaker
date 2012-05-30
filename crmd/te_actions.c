@@ -239,7 +239,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
 gboolean
 cib_action_update(crm_action_t * action, int status, int op_rc)
 {
-    lrm_op_t *op = NULL;
+    lrmd_event_data_t *op = NULL;
     xmlNode *state = NULL;
     xmlNode *rsc = NULL;
     xmlNode *xml_op = NULL;
@@ -258,7 +258,7 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     int call_options = cib_quorum_override | cib_scope_local;
     int target_rc = get_target_rc(action);
 
-    if (status == LRM_OP_PENDING) {
+    if (status == PCMK_LRM_OP_PENDING) {
         crm_debug("%s %d: Recording pending operation %s on %s",
                   crm_element_name(action->xml), action->id, task_uuid, target);
     } else {
@@ -311,7 +311,7 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     op->user_data = generate_transition_key(transition_graph->id, action->id, target_rc, te_uuid);
 
     xml_op = create_operation_update(rsc, op, CRM_FEATURE_SET, target_rc, __FUNCTION__, LOG_INFO);
-    free_lrm_op(op);
+    lrmd_free_event(op);
 
     crm_trace("Updating CIB with \"%s\" (%s): %s %s on %s",
                 status < 0 ? "new action" : XML_ATTR_TIMEOUT,
@@ -321,7 +321,7 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
 
     crm_trace("Updating CIB with %s action %d: %s on %s (call_id=%d)",
-                op_status2text(status), action->id, task_uuid, target, rc);
+                services_lrm_status_str(status), action->id, task_uuid, target, rc);
 
     add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, cib_action_updated);
     free_xml(state);
@@ -441,7 +441,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     if (crm_is_true(value)) {
         /* write a "pending" entry to the CIB, inhibit notification */
         crm_info("Recording pending op %s in the CIB", task_uuid);
-        cib_action_update(action, LRM_OP_PENDING, EXECRA_STATUS_UNKNOWN);
+        cib_action_update(action, PCMK_LRM_OP_PENDING, PCMK_EXECRA_STATUS_UNKNOWN);
     }
 
     return TRUE;

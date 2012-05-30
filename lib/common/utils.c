@@ -44,6 +44,8 @@
 #include <qb/qbdefs.h>
 
 #include <crm/crm.h>
+#include <crm/lrmd.h>
+#include <crm/services.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
@@ -1289,33 +1291,6 @@ crm_get_msec(const char *input)
     return msec;
 }
 
-const char *
-op_status2text(op_status_t status)
-{
-    switch (status) {
-        case LRM_OP_PENDING:
-            return "pending";
-            break;
-        case LRM_OP_DONE:
-            return "complete";
-            break;
-        case LRM_OP_ERROR:
-            return "Error";
-            break;
-        case LRM_OP_TIMEOUT:
-            return "Timed Out";
-            break;
-        case LRM_OP_NOTSUPPORTED:
-            return "NOT SUPPORTED";
-            break;
-        case LRM_OP_CANCELLED:
-            return "Cancelled";
-            break;
-    }
-    crm_err("Unknown status: %d", status);
-    return "UNKNOWN!";
-}
-
 char *
 generate_op_key(const char *rsc_id, const char *op_type, int interval)
 {
@@ -2484,7 +2459,7 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
 
 #define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 static void
-append_digest(lrm_op_t * op, xmlNode * update, const char *version, const char *magic, int level)
+append_digest(lrmd_event_data_t * op, xmlNode * update, const char *version, const char *magic, int level)
 {
     /* this will enable us to later determine that the
      *   resource's parameters have changed and we should force
@@ -2519,7 +2494,7 @@ append_digest(lrm_op_t * op, xmlNode * update, const char *version, const char *
 }
 
 int
-rsc_op_expected_rc(lrm_op_t * op)
+rsc_op_expected_rc(lrmd_event_data_t * op)
 {
     int rc = 0;
 
@@ -2534,17 +2509,17 @@ rsc_op_expected_rc(lrm_op_t * op)
 }
 
 gboolean
-did_rsc_op_fail(lrm_op_t * op, int target_rc)
+did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
 {
     switch (op->op_status) {
-        case LRM_OP_CANCELLED:
-        case LRM_OP_PENDING:
+        case PCMK_LRM_OP_CANCELLED:
+        case PCMK_LRM_OP_PENDING:
             return FALSE;
             break;
 
-        case LRM_OP_NOTSUPPORTED:
-        case LRM_OP_TIMEOUT:
-        case LRM_OP_ERROR:
+        case PCMK_LRM_OP_NOTSUPPORTED:
+        case PCMK_LRM_OP_TIMEOUT:
+        case PCMK_LRM_OP_ERROR:
             return TRUE;
             break;
 
@@ -2558,7 +2533,7 @@ did_rsc_op_fail(lrm_op_t * op, int target_rc)
 }
 
 xmlNode *
-create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_version, int target_rc,
+create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *caller_version, int target_rc,
                         const char *origin, int level)
 {
     char *key = NULL;
@@ -2573,9 +2548,9 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
 
     CRM_CHECK(op != NULL, return NULL);
     do_crm_log(level, "%s: Updating resouce %s after %s %s op (interval=%d)",
-               origin, op->rsc_id, op_status2text(op->op_status), op->op_type, op->interval);
+               origin, op->rsc_id, services_lrm_status_str(op->op_status), op->op_type, op->interval);
 
-    if (op->op_status == LRM_OP_CANCELLED) {
+    if (op->op_status == PCMK_LRM_OP_CANCELLED) {
         crm_trace("Ignoring cancelled op");
         return NULL;
     }
@@ -2587,7 +2562,7 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
      * this makes life easier for the PE when its trying determin the current state 
      */
     if (crm_str_eq(task, "reload", TRUE)) {
-        if (op->op_status == LRM_OP_DONE) {
+        if (op->op_status == PCMK_LRM_OP_DONE) {
             task = CRMD_ACTION_START;
         } else {
             task = CRMD_ACTION_STATUS;
@@ -2595,14 +2570,14 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
 
     } else if (dc_munges_migrate_ops && crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
         /* if the migrate_from fails it will have enough info to do the right thing */
-        if (op->op_status == LRM_OP_DONE) {
+        if (op->op_status == PCMK_LRM_OP_DONE) {
             task = CRMD_ACTION_STOP;
         } else {
             task = CRMD_ACTION_STATUS;
         }
 
     } else if (dc_munges_migrate_ops
-               && op->op_status == LRM_OP_DONE && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
+               && op->op_status == PCMK_LRM_OP_DONE && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
         task = CRMD_ACTION_START;
     }
 
@@ -2619,7 +2594,7 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
         op_id = generate_notify_key(op->rsc_id, n_type, n_task);
 
         /* these are not yet allowed to fail */
-        op->op_status = LRM_OP_DONE;
+        op->op_status = PCMK_LRM_OP_DONE;
         op->rc = 0;
 
     } else if (did_rsc_op_fail(op, target_rc)) {
@@ -2640,7 +2615,7 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
     if (op->user_data == NULL) {
         crm_debug("Generating fake transition key for:"
                   " %s_%s_%d %d from %s",
-                  op->rsc_id, op->op_type, op->interval, op->call_id, op->app_name);
+                  op->rsc_id, op->op_type, op->interval, op->call_id);
         local_user_data = generate_transition_key(-1, op->call_id, target_rc, FAKE_TE_ID);
         op->user_data = local_user_data;
     }
@@ -2698,23 +2673,6 @@ create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_vers
     crm_free(op_id);
     crm_free(key);
     return xml_op;
-}
-
-void
-free_lrm_op(lrm_op_t * op)
-{
-    if (op == NULL) {
-        return;
-    }
-    if (op->params) {
-        g_hash_table_destroy(op->params);
-    }
-    crm_free(op->user_data);
-    crm_free(op->output);
-    crm_free(op->rsc_id);
-    crm_free(op->op_type);
-    crm_free(op->app_name);
-    crm_free(op);
 }
 
 #if ENABLE_ACL

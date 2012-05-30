@@ -33,6 +33,7 @@
 #include <libgen.h>
 
 #include <crm/msg_xml.h>
+#include <crm/services.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
 
@@ -751,7 +752,6 @@ delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
         char *attr_name = NULL;
         const char *id = rsc->id;
 
-        crmd_replies_needed++;
         if (rsc->clone_name) {
             id = rsc->clone_name;
         }
@@ -768,9 +768,6 @@ fail_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
              const char *rsc_id, pe_working_set_t * data_set)
 {
     crm_warn("Failing: %s", rsc_id);
-#if HAVE_STRUCT_LRM_OPS_FAIL_RSC
-    crmd_replies_needed++;
-#endif
     return send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_FAIL, host_uname, rsc_id, FALSE, data_set);
 }
 
@@ -995,7 +992,7 @@ list_resource_operations(const char *rsc_id, const char *host_uname, gboolean ac
             fprintf(stdout, ", last-run=%s, exec=%sms\n",
                     ctime(&run_at), crm_element_value(xml_op, "exec_time"));
         }
-        fprintf(stdout, "): %s\n", op_status2text(status));
+        fprintf(stdout, "): %s\n", services_lrm_status_str(status));
     }
     return cib_ok;
 }

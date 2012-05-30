@@ -83,7 +83,6 @@ extern crm_node_t *crm_update_ccm_node(const oc_ev_membership_t * oc, int offset
 
 #  if SUPPORT_COROSYNC
 extern int ais_fd_sync;
-extern GFDSource *ais_source;
 gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 extern gboolean send_ais_text(int class, const char *data, gboolean local,
                               const char *node, enum crm_ais_msg_types dest);

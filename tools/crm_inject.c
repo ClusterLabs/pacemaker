@@ -274,15 +274,13 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
     return cib_resource;
 }
 
-static lrm_op_t *
+static lrmd_event_data_t *
 create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
 {
-    lrm_op_t *op = NULL;
+    lrmd_event_data_t *op = NULL;
     xmlNode *xop = NULL;
 
-    crm_malloc0(op, sizeof(lrm_op_t));
-
-    op->app_name = crm_strdup(crm_system_name);
+    crm_malloc0(op, sizeof(lrmd_event_data_t));
 
     op->rsc_id = crm_strdup(ID(cib_resource));
     op->interval = interval;
@@ -307,7 +305,7 @@ create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
 }
 
 static xmlNode *
-inject_op(xmlNode * cib_resource, lrm_op_t * op, int target_rc)
+inject_op(xmlNode * cib_resource, lrmd_event_data_t * op, int target_rc)
 {
     return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc, crm_system_name,
                                    LOG_DEBUG_2);
@@ -354,7 +352,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 {
     int rc = 0;
     GListPtr gIter = NULL;
-    lrm_op_t *op = NULL;
+    lrmd_event_data_t *op = NULL;
     int target_outcome = 0;
 
     const char *rtype = NULL;
@@ -413,7 +411,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
 
         if (strncasecmp(key, spec, strlen(key)) == 0) {
-            rc = sscanf(spec, "%*[^=]=%d", &op->rc);
+            rc = sscanf(spec, "%*[^=]=%d", (int *) &op->rc);
 
             action->failed = TRUE;
             graph->abort_priority = INFINITY;
@@ -426,7 +424,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     }
 
     inject_op(cib_resource, op, target_outcome);
-    free_lrm_op(op);
+    lrmd_free_event(op);
 
     rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                   cib_sync_call | cib_scope_local);
@@ -856,7 +854,7 @@ modify_configuration(pe_working_set_t * data_set,
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
 
-    lrm_op_t *op = NULL;
+    lrmd_event_data_t *op = NULL;
 
     if (quorum) {
         xmlNode *top = create_xml_node(NULL, XML_TAG_CIB);
@@ -996,7 +994,7 @@ modify_configuration(pe_working_set_t * data_set,
 
             cib_op = inject_op(cib_resource, op, 0);
             CRM_ASSERT(cib_op != NULL);
-            free_lrm_op(op);
+            lrmd_free_event(op);
 
             rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                           cib_sync_call | cib_scope_local);

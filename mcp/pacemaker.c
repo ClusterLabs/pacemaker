@@ -72,7 +72,7 @@ typedef struct pcmk_child_s {
 static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,		  NULL },
     { 0, crm_proc_plugin,        0, 0, FALSE, "ais",        NULL,		  NULL },
-    { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL,		  HB_DAEMON_DIR"/lrmd" },
+    { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL, CRM_DAEMON_DIR"/lrmd" },
     { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
     { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
     { 0, crm_proc_attrd,      4, 0, TRUE,  "attrd",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd" },

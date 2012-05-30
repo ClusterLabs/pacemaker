@@ -61,9 +61,6 @@ extern void create_node_entry(const char *uuid, const char *uname, const char *t
 extern gboolean stop_subsystem(struct crm_subsystem_s *centry, gboolean force_quit);
 extern gboolean start_subsystem(struct crm_subsystem_s *centry);
 
-extern lrm_op_t *copy_lrm_op(const lrm_op_t * op);
-extern lrm_rsc_t *copy_lrm_rsc(const lrm_rsc_t * rsc);
-
 extern void fsa_dump_actions(long long action, const char *text);
 extern void fsa_dump_inputs(int log_level, const char *text, long long input_register);
 

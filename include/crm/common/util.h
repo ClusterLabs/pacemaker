@@ -20,12 +20,12 @@
 
 #  include <clplumbing/lsb_exitcodes.h>
 
-#  include <lrm/lrm_api.h>
-
 #  include <sys/types.h>
 #  include <stdlib.h>
 #  include <limits.h>
 #  include <signal.h>
+
+#  include "crm/lrmd.h"
 
 #  if SUPPORT_HEARTBEAT
 #    include <heartbeat.h>
@@ -127,8 +127,6 @@ extern int crm_str_to_boolean(const char *s, int *ret);
 
 extern long long crm_get_msec(const char *input);
 extern unsigned long long crm_get_interval(const char *input);
-
-extern const char *op_status2text(op_status_t status);
 
 extern char *generate_op_key(const char *rsc_id, const char *op_type, int interval);
 
@@ -289,18 +287,16 @@ extern void crm_set_options(const char *short_options, const char *usage,
 extern int crm_get_option(int argc, char **argv, int *index);
 extern void crm_help(char cmd, int exit_code);
 
-extern int rsc_op_expected_rc(lrm_op_t * op);
-extern gboolean did_rsc_op_fail(lrm_op_t * op, int target_rc);
+extern int rsc_op_expected_rc(lrmd_event_data_t *event);
+extern gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
 
 extern int node_score_red;
 extern int node_score_green;
 extern int node_score_yellow;
 extern int node_score_infinity;
 
-#  include <lrm/lrm_api.h>
-extern xmlNode *create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_version,
+extern xmlNode *create_operation_update(xmlNode * parent, lrmd_event_data_t *event, const char *caller_version,
                                         int target_rc, const char *origin, int level);
-extern void free_lrm_op(lrm_op_t * op);
 
 #  if USE_GHASH_COMPAT
 

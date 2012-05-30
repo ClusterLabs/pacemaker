@@ -99,27 +99,10 @@ crmd_ha_msg_filter(xmlNode * msg)
     trigger_fsa(fsa_source);
 }
 
-extern GCHSource *lrm_source;
-
-gboolean
-lrm_dispatch(IPC_Channel * src_not_used, gpointer user_data)
-{
-    /* ?? src == lrm_channel ?? */
-    ll_lrm_t *lrm = (ll_lrm_t *) user_data;
-    IPC_Channel *lrm_channel = lrm->lrm_ops->ipcchan(lrm);
-
-    lrm->lrm_ops->rcvmsg(lrm, FALSE);
-    if (lrm_channel->ch_status != IPC_CONNECT) {
-        lrm_connection_destroy(NULL);
-        return FALSE;
-    }
-    return TRUE;
-}
-
-extern gboolean process_lrm_event(lrm_op_t * op);
+extern gboolean process_lrm_event(lrmd_event_data_t * op);
 
 void
-lrm_op_callback(lrm_op_t * op)
+lrm_op_callback(lrmd_event_data_t * op)
 {
     CRM_CHECK(op != NULL, return);
     process_lrm_event(op);

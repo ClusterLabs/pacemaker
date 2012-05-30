@@ -33,9 +33,7 @@ extern gboolean crmd_ipc_msg_callback(IPC_Channel * client, gpointer user_data);
 
 extern gboolean crmd_ipc_msg_callback(IPC_Channel * client, gpointer user_data);
 
-extern gboolean lrm_dispatch(IPC_Channel * src, gpointer user_data);
-
-extern void lrm_op_callback(lrm_op_t * op);
+extern void lrm_op_callback(lrmd_event_data_t * op);
 
 extern void crmd_ha_status_callback(const char *node, const char *status, void *private_data);
 

@@ -55,7 +55,7 @@ do_log(long long action,
         crm_log_xml_debug(input, __FUNCTION__);
 
     } else if (msg_data->data_type == fsa_dt_lrm) {
-        lrm_op_t *input = fsa_typed_data(msg_data->data_type);
+        lrmd_event_data_t *input = fsa_typed_data(msg_data->data_type);
 
         do_crm_log(log_type,
                    "Resource %s: Call ID %d returned %d (%d)."
