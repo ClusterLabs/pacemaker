@@ -414,16 +414,23 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     }
 
     if(is_set(op->call_options, st_opt_topology)) {
+        int timeout = op->base_timeout / (1+g_list_length(op->devices));
         device = op->devices->data;
+
+        if(op->base_timeout > timeout) {
+            crm_trace("Dividing the timeout (%ds) equally between %d devices: %ds",
+                      op->base_timeout, g_list_length(op->devices), timeout);
+            op->base_timeout = timeout;
+        }
     }
         
     if(peer) {
-        xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);;
+        xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);
         crm_xml_add(query, F_STONITH_REMOTE, op->id);
         crm_xml_add(query, F_STONITH_TARGET, op->target);    
         crm_xml_add(query, F_STONITH_ACTION, op->action);    
         crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
-        crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout/4); /* Allow a quarter of the timeout for querying */
+        crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
 
         if(device) {
             crm_info("Requesting that %s perform op %s %s with %s", peer->host, op->action, op->target, device);
