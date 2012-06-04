@@ -598,6 +598,7 @@ main(int argc, char **argv)
     free(attrd_uuid);
     empty_uuid_cache();
 
+    qb_log_fini();
     return 0;
 }
 

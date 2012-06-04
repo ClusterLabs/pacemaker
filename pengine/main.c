@@ -182,6 +182,7 @@ main(int argc, char **argv)
 #endif
 
     crm_info("Exiting %s", crm_system_name);
+    qb_log_fini();
     return 0;
 }
 

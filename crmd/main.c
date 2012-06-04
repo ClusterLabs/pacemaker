@@ -149,6 +149,8 @@ crmd_init(void)
     }
 
     crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
+    qb_log_fini();
+
     return exit_code;
 }
 

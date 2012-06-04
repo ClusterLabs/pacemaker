@@ -1329,6 +1329,7 @@ terminate_cib(const char *caller, gboolean fast)
     uninitializeCib();
 
     crm_info("%s: Exiting%s...", caller, fast?" fast":"");
+    qb_log_fini();
 
     if (fast) {
         exit(LSB_EXIT_GENERIC);
@@ -1339,5 +1340,4 @@ terminate_cib(const char *caller, gboolean fast)
     } else {
         exit(LSB_EXIT_OK);
     }
-
 }

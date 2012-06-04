@@ -832,6 +832,7 @@ main(int argc, char ** argv)
 #endif
 	
     crm_info("Done");
+    qb_log_fini();
 
     return rc;
 }
