@@ -59,7 +59,6 @@ extern enum cib_errors cib_update_counter(xmlNode * xml_obj, const char *field, 
 
 extern void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 
-void terminate_cib(const char *caller, gboolean fast);
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean can_write(int flags);
 void send_cib_replace(const xmlNode * sync_request, const char *host);
@@ -1329,7 +1328,7 @@ terminate_cib(const char *caller, gboolean fast)
 
     uninitializeCib();
 
-    crm_info("%s: Exiting...", caller);
+    crm_info("%s: Exiting%s...", caller, fast?" fast":"");
 
     if (fast) {
         exit(LSB_EXIT_GENERIC);

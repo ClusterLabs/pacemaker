@@ -88,6 +88,7 @@ extern void cib_common_callback_worker(xmlNode * op_request, cib_client_t * cib_
 
 void cib_shutdown(int nsig);
 void initiate_exit(void);
+void terminate_cib(const char *caller, gboolean fast);
 
 #if SUPPORT_HEARTBEAT
 extern int cib_ccm_dispatch(gpointer user_data);

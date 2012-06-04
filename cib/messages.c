@@ -66,7 +66,6 @@ enum cib_errors sync_our_cib(xmlNode * request, gboolean all);
 
 extern xmlNode *cib_msg_copy(const xmlNode * msg, gboolean with_data);
 extern gboolean cib_shutdown_flag;
-extern void terminate_cib(const char *caller);
 
 enum cib_errors
 cib_process_shutdown_req(const char *op, int options, const char *section, xmlNode * req,
@@ -87,7 +86,7 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
 
     } else if (cib_shutdown_flag) {
         crm_info("Shutdown ACK from %s", host);
-        terminate_cib(__FUNCTION__);
+        terminate_cib(__FUNCTION__, FALSE);
         return cib_ok;
 
     } else {
