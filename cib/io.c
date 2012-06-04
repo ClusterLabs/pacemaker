@@ -578,7 +578,18 @@ write_cib_contents(gpointer p)
         local_cib = copy_xml(p);
 
     } else {
-        int pid = fork();
+        int pid = 0;
+        int bb_state = qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0);
+
+        /* Turn it off before the fork() to avoid:
+         * - 2 processes writing to the same shared mem
+         * - the child needing to disable it
+         *   (which would close it from underneath the parent)
+         * This way, the shared mem files are already closed
+         */
+        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
+
+        pid = fork();
         if (pid < 0) {
             crm_perror(LOG_ERR, "Disabling disk writes after fork failure");
             cib_writes_enabled = FALSE;
@@ -588,6 +599,11 @@ write_cib_contents(gpointer p)
         if (pid) {
             /* Parent */
             g_child_watch_add(pid, cib_diskwrite_complete, NULL);
+            if(bb_state == QB_LOG_STATE_ENABLED) {
+                /* Re-enable now that it it safe */
+                qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
+            }
+
             return -1; /* -1 means 'still work to do' */
         }
         
