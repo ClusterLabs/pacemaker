@@ -110,7 +110,7 @@ main(int argc, char **argv)
             fprintf(stderr, "Invalid date/time specified: %s\n", input_s);
             crm_help('?', 1);
         }
-        log_date(LOG_INFO, "parsed", date_time, print_options | ha_log_date | ha_log_time);
+        log_date(-1, "parsed", date_time, print_options | ha_log_date | ha_log_time);
 
     } else if (command == 'p') {
         ha_time_period_t *interval = parse_time_period(&mutable_s);
@@ -119,7 +119,7 @@ main(int argc, char **argv)
             fprintf(stderr, "Invalid interval specified: %s\n", input_s);
             crm_help('?', 1);
         }
-        log_time_period(LOG_INFO, interval, print_options | ha_log_date | ha_log_time);
+        log_time_period(-1, interval, print_options | ha_log_date | ha_log_time);
 
     } else if (command == 'D') {
         ha_time_t *duration = parse_time_duration(&mutable_s);
@@ -128,7 +128,7 @@ main(int argc, char **argv)
             fprintf(stderr, "Invalid duration specified: %s\n", input_s);
             crm_help('?', 1);
         }
-        log_date(LOG_INFO, "Duration", duration,
+        log_date(-1, "Duration", duration,
                  print_options | ha_log_date | ha_log_time | ha_log_local);
 
     } else if (command == 'n') {
@@ -138,7 +138,7 @@ main(int argc, char **argv)
             fprintf(stderr, "Internal error: couldnt determin 'now' !\n");
             crm_help('?', 1);
         }
-        log_date(LOG_INFO, "Current date/time", now, print_options | ha_log_date | ha_log_time);
+        log_date(-1, "Current date/time", now, print_options | ha_log_date | ha_log_time);
     }
 
     return 0;

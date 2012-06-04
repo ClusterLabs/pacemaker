@@ -145,9 +145,13 @@ log_date(int log_level, const char *prefix, ha_time_t * date_time, int flags)
 {
     char *date_s = date_to_string(date_time, flags);
 
-    do_crm_log(log_level, "%s%s%s",
+    if(log_level < LOG_CRIT) {
+        printf("%s%s%s\n",
                prefix ? prefix : "", prefix ? ": " : "", date_s ? date_s : "__invalid_date__");
-
+    } else {
+        do_crm_log(log_level, "%s%s%s",
+                   prefix ? prefix : "", prefix ? ": " : "", date_s ? date_s : "__invalid_date__");
+    }
     free(date_s);
 }
 
