@@ -398,6 +398,7 @@ fi
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/heartbeat/crm
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pengine
+%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker
 %ghost %dir %attr (750, %{uname}, %{gname}) %{_var}/run/crm
 %dir /usr/lib/ocf
 %dir /usr/lib/ocf/resource.d

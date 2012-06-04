@@ -1026,6 +1026,10 @@ CRM_STATE_DIR=${localstatedir}/run/crm
 AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
 AC_SUBST(CRM_STATE_DIR)
 
+CRM_BLACKBOX_DIR=${localstatedir}/lib/pacemaker
+AC_DEFINE_UNQUOTED(CRM_BLACKBOX_DIR,"$CRM_BLACKBOX_DIR", Where to keep blackbox dumps)
+AC_SUBST(CRM_BLACKBOX_DIR)
+
 PE_STATE_DIR="${localstatedir}/lib/pengine"
 AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep PEngine outputs)
 AC_SUBST(PE_STATE_DIR)
