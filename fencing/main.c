@@ -101,6 +101,7 @@ st_ipc_created(qb_ipcs_connection_t *c)
      */
     g_hash_table_insert(client_list, new_client->id, new_client);
     qb_ipcs_context_set(c, new_client);
+    CRM_ASSERT(qb_ipcs_context_get(c) != NULL);
 }
 
 /* Exit code means? */
