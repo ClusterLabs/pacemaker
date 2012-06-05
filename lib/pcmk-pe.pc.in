@@ -1,6 +1,6 @@
 prefix=@prefix@
 libdir=@libdir@
-includedir=@includedir@
+includedir=@includedir@/@PACKAGE_TARNAME@
 
 build=@BUILD_VERSION@
 statedir=@PE_STATE_DIR@
@@ -15,5 +15,5 @@ Description:  Pacemaker Policy Engine v@PACKAGE_SERIES@
 Requires:  
 Conflicts:   
 Cflags:       -I${includedir}
-Libs:         -L${libdir} -lpe_state -lpe_rules
+Libs:         -L${libdir} -lpe_status -lpe_rules
 Libs.private: 
