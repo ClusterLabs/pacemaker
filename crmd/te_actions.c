@@ -479,6 +479,7 @@ notify_crmd(crm_graph_t * graph)
             type = "restart";
             if (fsa_state == S_TRANSITION_ENGINE) {
                 if (transition_timer->period_ms > 0) {
+                    crm_timer_stop(transition_timer);
                     crm_timer_start(transition_timer);
                 } else {
                     event = I_PE_CALC;

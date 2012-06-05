@@ -196,6 +196,11 @@ do_te_invoke(long long action,
             graph_data = filename2xml(graph_file);
         }
 
+        if (is_timer_started(transition_timer)) {
+            crm_debug("The transitioner wait for a transition timer");
+            return;
+        }
+
         CRM_CHECK(graph_data != NULL,
                   crm_err("Input raised by %s is invalid", msg_data->origin);
                   crm_log_xml_err(input->msg, "Bad command");
