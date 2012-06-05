@@ -1,0 +1,84 @@
+<cib epoch="24" num_updates="21" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Thu Apr 19 17:09:16 2012" have-quorum="0" dc-uuid="fc16-builder">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-ec9a806"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="fc16-builder" type="normal" uname="fc16-builder">
+        <instance_attributes id="fc16-builder-instance_attributes">
+          <nvpair id="fc16-builder-stuffs" name="give-me-A" value="false"/>
+        </instance_attributes>
+      </node>
+      <node id="fc16-builder2" uname="fc16-builder2" type="normal">
+        <instance_attributes id="fc16-builder2-instance_attributes">
+          <nvpair id="fc16-builder2-stuffs" name="give-me-A" value="false"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <master id="MASTER_RSC_A">
+        <meta_attributes id="MASTER_RSC_A-meta_attributes">
+          <nvpair id="MASTER_RSC_A-meta_attributes-master-max" name="master-max" value="0"/>
+          <nvpair id="MASTER_RSC_A-meta_attributes-master-node-max" name="master-node-max" value="0"/>
+          <nvpair id="MASTER_RSC_A-meta_attributes-clone-max" name="clone-max" value="1"/>
+          <nvpair id="MASTER_RSC_A-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="MASTER_RSC_A-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="MASTER_RSC_A-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="NATIVE_RSC_A" provider="pacemaker" type="Stateful">
+          <operations>
+            <op id="NATIVE_RSC_A-start-0" interval="0" name="start" timeout="240"/>
+            <op id="NATIVE_RSC_A-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="NATIVE_RSC_A-monitor-20" interval="20" name="monitor" role="Master" timeout="20"/>
+            <op id="NATIVE_RSC_A-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <primitive class="ocf" id="NATIVE_RSC_B" provider="pacemaker" type="Dummy">
+        <meta_attributes id="NATIVE_RSC_B-meta_attributes">
+          <nvpair id="NATIVE_RSC_B-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+        <operations>
+          <op id="NATIVE_RSC_B-start-0" interval="0" name="start" timeout="240"/>
+          <op id="NATIVE_RSC_B-stop-0" interval="0" name="stop" timeout="100"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="A-placement" rsc="MASTER_RSC_A">
+        <rule boolean-op="or" id="rule-A-placement" score="-INFINITY">
+          <expression attribute="give-me-A" id="whatever1" operation="not_defined"/>
+          <expression attribute="give-me-A" id="whatever2" operation="ne" value="true"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="fc16-builder" uname="fc16-builder" ha="active" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" expected="member" shutdown="0">
+      <transient_attributes id="fc16-builder">
+        <instance_attributes id="status-fc16-builder">
+          <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-fc16-builder-master-NATIVE_RSC_A.0" name="master-NATIVE_RSC_A:0" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="fc16-builder">
+        <lrm_resources>
+          <lrm_resource id="NATIVE_RSC_A:0" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="NATIVE_RSC_A:0_last_0" operation_key="NATIVE_RSC_A:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="4:4:0:e42da061-f8c3-4ee9-b939-4365931f173f" transition-magic="0:0;4:4:0:e42da061-f8c3-4ee9-b939-4365931f173f" call-id="7" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1334873355" last-rc-change="1334873355" exec-time="20" queue-time="0"/>
+            <lrm_rsc_op id="NATIVE_RSC_A:0_last_failure_0" operation_key="NATIVE_RSC_A:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="4:1:7:e42da061-f8c3-4ee9-b939-4365931f173f" transition-magic="0:0;4:1:7:e42da061-f8c3-4ee9-b939-4365931f173f" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="NATIVE_RSC_A:0_monitor_30000" operation_key="NATIVE_RSC_A:0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:5:0:e42da061-f8c3-4ee9-b939-4365931f173f" transition-magic="0:0;6:5:0:e42da061-f8c3-4ee9-b939-4365931f173f" call-id="9" rc-code="0" op-status="0" interval="30000" last-rc-change="1334873355" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="NATIVE_RSC_B" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="NATIVE_RSC_B_last_0" operation_key="NATIVE_RSC_B_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="30:4:0:e42da061-f8c3-4ee9-b939-4365931f173f" transition-magic="0:0;30:4:0:e42da061-f8c3-4ee9-b939-4365931f173f" call-id="6" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1334873355" last-rc-change="1334873355" exec-time="30" queue-time="0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
