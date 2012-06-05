@@ -86,6 +86,8 @@ class crm_ais(crm_lha):
                 r"Peer is not part of our cluster",
                 r"We appear to be in an election loop",
                 r"Unknown node -> we will not deliver message",
+                r"crm_write_blackbox",
+                r"pacemakerd.*Could not connect to Cluster Configuration Database API",
 
                 # Not inherently bad, but worth tracking
                 #r"No need to invoke the TE",
@@ -104,7 +106,7 @@ class crm_ais(crm_lha):
                 "crmadmin:",
                 "update_trace_data",
                 "async_notify: strange, client not found",
-                "(ERROR|error): Message hist queue is filling up"
+                "Parse error: Ignoring unknown option .*nodename",
                 ]
         return []
 
@@ -124,8 +126,6 @@ class crm_ais(crm_lha):
                     "Sending message to CIB service FAILED",
                     "apply_xml_diff: Diff application failed!",
                     "crmd.*Action A_RECOVER .* not supported",
-                    "pingd.*(ERROR|error): send_update: Could not send update",
-                    "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
                     "crmd.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
