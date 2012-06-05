@@ -20,6 +20,8 @@
 #include <pacemaker.h>
 
 #include <pwd.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
