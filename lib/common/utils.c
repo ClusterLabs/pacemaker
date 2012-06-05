@@ -2473,7 +2473,7 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
         } else {
             crm_ipc_close(ipc);
             connected = FALSE;
-            sleep(1);
+            sleep(5-max);
             max--;
         }
     }

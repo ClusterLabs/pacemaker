@@ -1139,13 +1139,27 @@ void
 update_attrd(const char *host, const char *name, const char *value, const char *user_name)
 {
     gboolean rc;
+    int max = 5;
 
     if(attrd_ipc == NULL) {
         attrd_ipc = crm_ipc_new(T_ATTRD, 0);
-        crm_ipc_connect(attrd_ipc);
     }
 
-    rc = attrd_update_delegate(attrd_ipc, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL, NULL, user_name);
+    do {
+        if (crm_ipc_connected(attrd_ipc) == FALSE) {
+            crm_info("Connecting to cluster... %d retries remaining", max);
+            crm_ipc_connect(attrd_ipc);
+        }
+
+        rc = attrd_update_delegate(attrd_ipc, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL, NULL, user_name);
+        if (rc > 0) {
+            break;
+        }
+
+        crm_ipc_close(attrd_ipc);
+        sleep(5-max);
+
+    } while(max--);
     
     if (rc == FALSE) {
         crm_err("Could not send %s %s %s (%d)", T_ATTRD, name ? "update" : "refresh",

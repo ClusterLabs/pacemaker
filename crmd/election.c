@@ -305,6 +305,7 @@ do_election_count_vote(long long action,
         we_loose = TRUE;
 
     } else if (your_node == NULL || crm_is_peer_active(your_node) == FALSE) {
+        /* Possibly we cached the message in the FSA queue at a point that it wasn't */
         reason = "Peer is not part of our cluster";
         log_level = LOG_WARNING;
         done = TRUE;
