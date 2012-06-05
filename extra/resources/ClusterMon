@@ -1,8 +1,9 @@
 #!/bin/sh
 #
 #
-#	ClusterMon OCF RA. Does nothing but wait a few seconds, can be
-#	configured to fail occassionally.
+#	ClusterMon OCF RA.
+#	Starts crm_mon in background which logs cluster status as
+#	html to the specified file.
 #
 # Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
 #                    All Rights Reserved.
@@ -52,7 +53,7 @@ meta_data() {
 This is a ClusterMon Resource Agent.
 It outputs current cluster status to the html.
 </longdesc>
-<shortdesc lang="en">ClusterMon resource agent</shortdesc>
+<shortdesc lang="en">Runs crm_mon in the background, recording the cluster status to an HTML file</shortdesc>
 
 <parameters>
 
@@ -98,9 +99,9 @@ Location to write HTML output to.
 </parameters>
 
 <actions>
-<action name="start"   timeout="90" />
-<action name="stop"    timeout="100" />
-<action name="monitor" depth="0"  timeout="20" interval="10" start-delay="1m" />
+<action name="start"   timeout="20" />
+<action name="stop"    timeout="20" />
+<action name="monitor" depth="0"  timeout="20" interval="10" />
 <action name="meta-data"  timeout="5" />
 <action name="validate-all"  timeout="30" />
 </actions>
@@ -140,14 +141,10 @@ ClusterMon_start() {
 ClusterMon_stop() {
     if [ -f $OCF_RESKEY_pidfile ]; then
 	pid=`cat $OCF_RESKEY_pidfile`
-    fi
-    if [ ! -z $pid ]; then
-	kill -9 $pid
-	rc=$?
-	if [ $rc = 0 ]; then
-	    rm $OCF_RESKEY_pidfile
+	if [ ! -z $pid ]; then
+	    kill -s 9 $pid
+	    rm -f $OCF_RESKEY_pidfile
 	fi
-	ClusterMon_exit $rc
     fi
     ClusterMon_exit 0
 }
@@ -155,11 +152,13 @@ ClusterMon_stop() {
 ClusterMon_monitor() {
     if [ -f $OCF_RESKEY_pidfile ]; then
 	pid=`cat $OCF_RESKEY_pidfile`
-    fi
-    if [ ! -z $pid ]; then
-	kill -0 $pid
-	if [ $? = 0 ]; then
-	    exit $OCF_SUCCESS
+	if [ ! -z $pid ]; then
+	    kill -s 0 $pid >/dev/null 2>&1; rc=$?
+	    case $rc in
+		0) exit $OCF_SUCCESS;;
+		1) exit $OCF_NOT_RUNNING;;
+		*) exit $OCF_ERR_GENERIC;;
+	    esac
 	fi
     fi
     exit $OCF_NOT_RUNNING

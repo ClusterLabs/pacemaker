@@ -1,6 +1,6 @@
 prefix=@prefix@
 libdir=@libdir@
-includedir=@includedir@
+includedir=@includedir@/@PACKAGE_TARNAME@
 
 build=@BUILD_VERSION@
 statedir=@CRM_STATE_DIR@

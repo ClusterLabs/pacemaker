@@ -223,6 +223,17 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         crm_trace("implies left: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
     }
 
+    if (type & pe_order_implies_first_master) {
+        processed = TRUE;
+        if (then->rsc) {
+            changed |=
+                then->rsc->cmds->update_actions(first, then, node, flags & pe_action_optional,
+                                                 pe_action_optional, pe_order_implies_first_master);
+        }
+        crm_trace("implies left when right rsc is Master role: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
+    }
+
+
     if (type & pe_order_one_or_more) {
         processed = TRUE;
         if (then->rsc) {

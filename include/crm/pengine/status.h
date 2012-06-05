@@ -322,6 +322,7 @@ enum pe_ordering {
 
     pe_order_implies_first         = 0x10,      /* If 'first' is required, ensure 'then' is too */
     pe_order_implies_then          = 0x20,       /* If 'then' is required, ensure 'first' is too */
+    pe_order_implies_first_master  = 0x40,      /* Imply 'first' is required when 'then' is required and then's rsc holds Master role. */
 
     pe_order_runnable_left         = 0x100,     /* 'then' requires 'first' to be runnable */
 
