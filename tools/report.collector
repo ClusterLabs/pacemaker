@@ -407,6 +407,18 @@ getpeinputs() {
     fi
 }
 
+getblackboxes() {
+    flist=$(
+	find_files $BLACKBOX_DIR $1 $2
+    )
+
+    for bb in $flist; do
+        bb_short=`basename $bb`
+	qb-blackbox $bb &> $3/$bb_short
+	info "Extracting contents of $bb_short"
+    done
+}
+
 #
 # some basic system info and stats
 #
@@ -620,6 +632,7 @@ getconfig $cluster "$REPORT_HOME/$REPORT_TARGET" "$cluster_cf" "$logd_cf" "$HA_S
 
 getpeinputs    $LOG_START $LOG_END $REPORT_HOME/$REPORT_TARGET
 getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$REPORT_TARGET/$BT_F
+getblackboxes  $LOG_START $LOG_END $REPORT_HOME/$REPORT_TARGET
 
 case $cluster in
     cman|corosync)

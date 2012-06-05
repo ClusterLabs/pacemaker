@@ -130,6 +130,9 @@ detect_host() {
     fi
     debug "PE files located in: $PE_STATE_DIR"
 
+    BLACKBOX_DIR=$local_state_dir/lib/pacemaker
+    debug "Pacemaker blackboxes located in: $BLACKBOX_DIR"
+
     HA_STATE_DIR=$local_state_dir/lib/heartbeat
     if [ ! -d $HA_STATE_DIR ]; then
 	# TODO: Go looking
