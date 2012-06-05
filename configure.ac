@@ -952,8 +952,10 @@ case $SUPPORT_GCOV in
 
 	dnl Turn off optimization so code coverage tool
 	dnl can get accurate line numbers
-	CFLAGS=`echo "$CFLAGS" | sed -e 's/-O[0-9]*//g'`
+	AC_MSG_NOTICE(Old CFLAGS: $CFLAGS) 
+	CFLAGS=`echo $CFLAGS | sed -e 's/-O.\ //g' -e 's/-Wp,-D_FORTIFY_SOURCE=.\ //g'`
 	CFLAGS="$CFLAGS -O0"
+	AC_MSG_NOTICE(New CFLAGS: $CFLAGS) 
 
 	dnl Update features
 	PCMK_FEATURES="$PCMK_FEATURES gcov"
