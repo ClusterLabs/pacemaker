@@ -618,8 +618,15 @@ void
 mainloop_del_fd(mainloop_io_t *client)
 {
     if(client != NULL) {
-        crm_trace("Removing client %s[%p]", client->name, client);
-        g_io_channel_unref(client->channel);
+        if (client->channel) {
+            crm_trace("Removing client %s[%p]", client->name, client);
+            g_io_channel_unref(client->channel);
+            client->channel = NULL;
+        }
+        if (client->source) {
+            g_source_remove(client->source);
+            client->source = 0;
+        }
         /* Results in mainloop_ipcc_destroy() being called once the source is removed from mainloop? */
     }
 }
