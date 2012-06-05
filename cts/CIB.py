@@ -383,7 +383,7 @@ class CIB11(CibBase):
         o = Option(self.Factory, "stonith-enabled", self.CM.Env["DoFencing"])
         o["start-failure-is-fatal"] = "false"
         o["pe-input-series-max"] = "5000"
-        o["default-action-timeout"] = "60s"
+        o["default-action-timeout"] = "90s"
         o["shutdown-escalation"] = "5min"
         o["batch-limit"] = "10"
         o["dc-deadtime"] = "5s"
