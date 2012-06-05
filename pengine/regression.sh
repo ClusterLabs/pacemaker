@@ -426,6 +426,15 @@ do_test monitor-onfail-restart "bug-5058 - Monitor failure with on-fail set to r
 do_test monitor-onfail-stop    "bug-5058 - Monitor failure wiht on-fail set to stop"
 do_test bug-5059 "No need to restart p_stateful1:*"
 
+do_test ignore_stonith_rsc_order1 "cl#5056- Ignore order constraint between stonith and non-stonith rsc."
+do_test ignore_stonith_rsc_order2 "cl#5056- Ignore order constraint with group rsc containing mixed stonith and non-stonith."
+do_test ignore_stonith_rsc_order3 "cl#5056- Ignore order constraint, stonith clone and mixed group"
+do_test ignore_stonith_rsc_order4 "cl#5056- Ignore order constraint, stonith clone and clone with nested mixed group"
+do_test honor_stonith_rsc_order1 "cl#5056- Honor order constraint, stonith clone and pure stonith group(single rsc)."
+do_test honor_stonith_rsc_order2 "cl#5056- Honor order constraint, stonith clone and pure stonith group(multiple rsc)"
+do_test honor_stonith_rsc_order3 "cl#5056- Honor order constraint, stonith clones with nested pure stonith group."
+do_test honor_stonith_rsc_order4 "cl#5056- Honor order constraint, between two native stonith rscs."
+
 echo ""
 do_test systemhealth1  "System Health ()               #1"
 do_test systemhealth2  "System Health ()               #2"

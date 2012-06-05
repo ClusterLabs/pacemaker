@@ -1,0 +1,9 @@
+Allocation scores:
+clone_color: S_A:0 allocation score on fc16-builder: 0
+clone_color: S_CLONE allocation score on fc16-builder: 0
+group_color: A allocation score on fc16-builder: 0
+group_color: MIXED_GROUP allocation score on fc16-builder: 0
+group_color: S_B allocation score on fc16-builder: 0
+native_color: A allocation score on fc16-builder: 0
+native_color: S_A:0 allocation score on fc16-builder: 0
+native_color: S_B allocation score on fc16-builder: 0

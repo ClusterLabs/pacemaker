@@ -170,27 +170,58 @@ get_ordering_type(xmlNode * xml_obj)
     return kind_e;
 }
 
-static gboolean
+enum contains_stonith_res {
+    contains_stonith_unknown = -1,
+    contains_stonith_false,
+    contains_stonith_true,
+    contains_stonith_mixed,
+};
+
+static enum contains_stonith_res
 contains_stonith(resource_t * rsc)
 {
+    enum contains_stonith_res res = contains_stonith_unknown;
     GListPtr gIter = rsc->children;
 
     if (gIter == FALSE) {
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
         if (safe_str_eq(class, "stonith")) {
-            return TRUE;
+            return contains_stonith_true;
         }
+        return contains_stonith_false;
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
+        enum contains_stonith_res tmp;
 
-        if (contains_stonith(child)) {
-            return TRUE;
+        tmp = contains_stonith(child);
+
+        if (tmp == contains_stonith_unknown) {
+            continue;
+        }
+
+        switch (res) {
+        case contains_stonith_unknown:
+            res = tmp;
+            break;
+        case contains_stonith_false:
+            res = tmp != contains_stonith_false ? contains_stonith_mixed : res;
+            break;
+        case contains_stonith_true:
+            res = tmp != contains_stonith_true ? contains_stonith_mixed : res;
+            break;
+        case contains_stonith_mixed:
+            break;
+        }
+
+        if (res == contains_stonith_mixed) {
+            break;
         }
     }
-    return FALSE;
+
+    return res;
 }
 
 static gboolean
@@ -288,15 +319,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
     }
 
-    if (safe_str_eq(action_first, RSC_STOP) && contains_stonith(rsc_then)) {
-        if (contains_stonith(rsc_first) == FALSE) {
-            crm_config_err
-                ("Constraint %s: Ordering STONITH resource (%s) to stop before %s is illegal", id,
-                 rsc_first->id, rsc_then->id);
-        }
-        return FALSE;
-    }
-
     cons_weight = pe_order_optional;
     kind = get_ordering_type(xml_obj);
 
@@ -332,15 +354,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         crm_config_err("Cannot invert rsc_order constraint %s."
                        " Please specify the inverse manually.", id);
         return TRUE;
-    }
-
-    if (safe_str_eq(action_first, RSC_STOP) && contains_stonith(rsc_then)) {
-        if (contains_stonith(rsc_first) == FALSE) {
-            crm_config_err
-                ("Constraint %s: Ordering STONITH resource (%s) to stop before %s is illegal", id,
-                 rsc_first->id, rsc_then->id);
-        }
-        return FALSE;
     }
 
     cons_weight = pe_order_optional;
@@ -693,6 +706,33 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
     return TRUE;
 }
 
+static int
+validate_order_resources(resource_t *lh_rsc, resource_t *rh_rsc)
+{
+    enum contains_stonith_res lh_flag = contains_stonith(lh_rsc);
+    enum contains_stonith_res rh_flag = contains_stonith(rh_rsc);
+
+    if (lh_flag == contains_stonith_mixed) {
+        crm_config_err("Order constraint, LH (%s) then RH (%s), can not be applied.  LH contains stonith resources mixed with other resource classes.",
+            lh_rsc->id, rh_rsc->id);
+        return -1;
+    } else if (rh_flag == contains_stonith_mixed) {
+        crm_config_err("Order constraint, LH (%s) then RH (%s), can not be applied.  RH contains stonith resources mixed with other resource classes.",
+            lh_rsc->id, rh_rsc->id);
+        return -1;
+    } else if (lh_flag == contains_stonith_true && (lh_flag != rh_flag)) {
+        crm_config_err("Order constraint, LH (%s) then RH (%s), can not be applied. LH is of class stonith and RH is not.",
+            lh_rsc->id, rh_rsc->id);
+        return -1;
+    } else if (rh_flag == contains_stonith_true && (rh_flag != lh_flag)) {
+        crm_config_err("Order constraint, LH (%s) then RH (%s), can not be applied. RH is of class stonith and LH is not.",
+            lh_rsc->id, rh_rsc->id);
+        return -1;
+    }
+
+    return 0;
+}
+
 /* LHS before RHS */
 int
 new_rsc_order(resource_t * lh_rsc, const char *lh_task,
@@ -706,6 +746,10 @@ new_rsc_order(resource_t * lh_rsc, const char *lh_task,
     CRM_CHECK(lh_task != NULL, return -1);
     CRM_CHECK(rh_rsc != NULL, return -1);
     CRM_CHECK(rh_task != NULL, return -1);
+
+    if (validate_order_resources(lh_rsc, rh_rsc)) {
+        return -1;
+    }
 
     lh_key = generate_op_key(lh_rsc->id, lh_task, 0);
     rh_key = generate_op_key(rh_rsc->id, rh_task, 0);
