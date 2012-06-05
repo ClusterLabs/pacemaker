@@ -482,7 +482,7 @@ read_config(void)
 
     do {
         rc = confdb_initialize(&config, &callbacks);
-	if(rc < 0) {
+	if(rc != CS_OK) {
 	    retries++;
 	    printf("Connection setup failed: %d.  Retrying in %ds\n", rc, retries);
 	    sleep(retries);
@@ -498,7 +498,7 @@ read_config(void)
     /* There can be only one (possibility if confdb isn't around) */
     do {
         rc = cmap_initialize(&local_handle);
-	if(rc < 0) {
+	if(rc != CS_OK) {
 	    retries++;
 	    printf("API connection setup failed: %s.  Retrying in %ds\n",
                    cs_strerror(rc), retries);
