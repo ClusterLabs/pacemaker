@@ -217,7 +217,7 @@ crm_ipcs_send_ack(
 #define MIN_MSG_SIZE    12336 /* sizeof(struct qb_ipc_connection_response) */
 #define MAX_MSG_SIZE    20*1024
 
-typedef struct crm_ipc_s
+struct crm_ipc_s
 {
         struct pollfd pfd;
         
@@ -228,7 +228,7 @@ typedef struct crm_ipc_s
 
         qb_ipcc_connection_t *ipc;
         
-} crm_ipc_t;
+};
 
 static int
 pick_ipc_buffer(int max)
