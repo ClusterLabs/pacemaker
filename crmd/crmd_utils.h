@@ -51,6 +51,7 @@ extern int last_peer_update;
 extern gboolean crm_timer_stop(fsa_timer_t * timer);
 extern gboolean crm_timer_start(fsa_timer_t * timer);
 extern gboolean crm_timer_popped(gpointer data);
+extern gboolean is_timer_started(fsa_timer_t *timer);
 
 extern xmlNode *create_node_state(const char *uname, const char *ha_state, const char *ccm_state,
                                   const char *crmd_state, const char *join_state,
