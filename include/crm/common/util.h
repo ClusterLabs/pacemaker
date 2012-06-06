@@ -20,12 +20,12 @@
 
 #  include <clplumbing/lsb_exitcodes.h>
 
-#  include <lrm/lrm_api.h>
-
 #  include <sys/types.h>
 #  include <stdlib.h>
 #  include <limits.h>
 #  include <signal.h>
+
+#  include "crm/lrmd.h"
 
 #  if SUPPORT_HEARTBEAT
 #    include <heartbeat.h>
@@ -128,8 +128,6 @@ int crm_str_to_boolean(const char *s, int *ret);
 long long crm_get_msec(const char *input);
 unsigned long long crm_get_interval(const char *input);
 
-const char *op_status2text(op_status_t status);
-
 char *generate_op_key(const char *rsc_id, const char *op_type, int interval);
 
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval);
@@ -156,6 +154,12 @@ gboolean decode_op_key(const char *key, char **rsc_id, char **op_type, int *inte
 
 void filter_action_parameters(xmlNode * param_set, const char *version);
 void filter_reload_parameters(xmlNode * param_set, const char *restart_string);
+
+static inline int
+crm_strlen_zero(const char *s)
+{
+    return !s || *s == '\0';
+}
 
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
@@ -283,18 +287,16 @@ void crm_set_options(const char *short_options, const char *usage,
 int crm_get_option(int argc, char **argv, int *index);
 void crm_help(char cmd, int exit_code);
 
-int rsc_op_expected_rc(lrm_op_t * op);
-gboolean did_rsc_op_fail(lrm_op_t * op, int target_rc);
+int rsc_op_expected_rc(lrmd_event_data_t *event);
+gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
 
 extern int node_score_red;
 extern int node_score_green;
 extern int node_score_yellow;
 extern int node_score_infinity;
 
-#  include <lrm/lrm_api.h>
-xmlNode *create_operation_update(xmlNode * parent, lrm_op_t * op, const char *caller_version,
+xmlNode *create_operation_update(xmlNode * parent, lrmd_event_data_t *event, const char *caller_version,
                                         int target_rc, const char *origin, int level);
-void free_lrm_op(lrm_op_t * op);
 
 #  if USE_GHASH_COMPAT
 

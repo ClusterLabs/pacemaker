@@ -365,7 +365,7 @@ fi
 
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
-%{_libdir}/heartbeat/*
+#%{_libdir}/heartbeat/*
 %{_libexecdir}/pacemaker/*
 
 %{_sbindir}/crm_attribute
@@ -451,6 +451,8 @@ fi
 %files -n %{name}-libs
 %defattr(-,root,root)
 %{_libdir}/libcib.so.*
+%{_libdir}/liblrmd.so.*
+%{_libdir}/libcrmservice.so.*
 %{_libdir}/libcrmcommon.so.*
 %{_libdir}/libpe_status.so.*
 %{_libdir}/libpe_rules.so.*

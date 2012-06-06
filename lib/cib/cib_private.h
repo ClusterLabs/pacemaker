@@ -62,7 +62,6 @@ extern xmlNode *cib_create_op(int call_id, const char *token, const char *op, co
                               const char *section, xmlNode * data, int call_options,
                               const char *user_name);
 
-extern int get_channel_token(IPC_Channel * ch, char **token);
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);
 int cib_native_register_notification(cib_t * cib, const char *callback, int enabled);

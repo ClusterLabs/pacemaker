@@ -1077,11 +1077,6 @@ OCF_RA_DIR=`try_extract_header_define $GLUE_HEADER OCF_RA_DIR $OCF_ROOT_DIR/reso
 AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
 AC_SUBST(OCF_RA_DIR)
 
-dnl Extract this value from glue_config.h once we no longer support anything else
-STONITH_PLUGIN_DIR="$libdir/stonith/plugins/stonith/"
-AC_DEFINE_UNQUOTED(STONITH_PLUGIN_DIR,"$STONITH_PLUGIN_DIR", Location for Stonith plugins)
-AC_SUBST(STONITH_PLUGIN_DIR)
-
 RH_STONITH_DIR="$sbindir"
 AC_DEFINE_UNQUOTED(RH_STONITH_DIR,"$RH_STONITH_DIR", Location for Red Hat Stonith agents)
 
@@ -1675,12 +1670,13 @@ lib/Makefile							\
 	lib/pengine/Makefile					\
 	lib/transition/Makefile					\
 	lib/fencing/Makefile					\
-	lib/plugins/Makefile					\
-		lib/plugins/lrm/Makefile			\
+	lib/lrmd/Makefile					\
+	lib/services/Makefile					\
 mcp/Makefile							\
 	mcp/pacemaker						\
 	mcp/pacemaker.service					\
 fencing/Makefile                                                \
+lrmd/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\
 	extra/rgmanager/Makefile				\

@@ -35,6 +35,8 @@
 #include <sys/utsname.h>
 
 #include <crm/msg_xml.h>
+#include <crm/services.h>
+#include <crm/lrmd.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
@@ -811,7 +813,7 @@ print_rsc_history(pe_working_set_t * data_set, node_t * node, xmlNode * rsc_entr
             }
         }
 
-        print_as(" rc=%s (%s)\n", op_rc, execra_code2string(rc));
+        print_as(" rc=%s (%s)\n", op_rc, lrmd_event_rc2str(rc));
     }
 
     /* no need to free the contents */
@@ -1233,7 +1235,7 @@ print_status(pe_working_set_t * data_set)
 
             val = crm_parse_int(status, "0");
             print_as("    %s (node=%s, call=%s, rc=%s, status=%s",
-                     op_key ? op_key : id, node, call, rc, op_status2text(val));
+                     op_key ? op_key : id, node, call, rc, services_lrm_status_str(val));
 
             if (last) {
                 time_t run_at = crm_parse_int(last, "0");
@@ -1245,7 +1247,7 @@ print_status(pe_working_set_t * data_set)
             }
 
             val = crm_parse_int(rc, "0");
-            print_as("): %s\n", execra_code2string(val));
+            print_as("): %s\n", lrmd_event_rc2str(val));
         }
     }
 
@@ -1946,13 +1948,13 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
 
     len += snprintf(crm_mail_body + len, BODY_MAX - len, "\r\nDetails:\r\n");
     len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                    "\toperation status: (%d) %s\r\n", status, op_status2text(status));
-    if (status == LRM_OP_DONE) {
+                    "\toperation status: (%d) %s\r\n", status, services_lrm_status_str(status));
+    if (status == PCMK_LRM_OP_DONE) {
         len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                        "\tscript returned: (%d) %s\r\n", rc, execra_code2string(rc));
+                        "\tscript returned: (%d) %s\r\n", rc, lrmd_event_rc2str(rc));
         len += snprintf(crm_mail_body + len, BODY_MAX - len,
                         "\texpected return value: (%d) %s\r\n", target_rc,
-                        execra_code2string(target_rc));
+                        lrmd_event_rc2str(target_rc));
     }
 
     auth_client_init();
@@ -2086,18 +2088,18 @@ handle_rsc_op(xmlNode * rsc_op)
 
     /* look up where we expected it to be? */
     desc = cib_error2string(cib_ok);
-    if (status == LRM_OP_DONE && target_rc == rc) {
+    if (status == PCMK_LRM_OP_DONE && target_rc == rc) {
         crm_notice("%s of %s on %s completed: %s", task, rsc, node, desc);
-        if (rc == EXECRA_NOT_RUNNING) {
+        if (rc == PCMK_EXECRA_NOT_RUNNING) {
             notify = FALSE;
         }
 
-    } else if (status == LRM_OP_DONE) {
-        desc = execra_code2string(rc);
+    } else if (status == PCMK_LRM_OP_DONE) {
+        desc = lrmd_event_rc2str(rc);
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
 
     } else {
-        desc = op_status2text(status);
+        desc = services_lrm_status_str(status);
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 

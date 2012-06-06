@@ -21,6 +21,7 @@
 #  include <crm/transition.h>
 #  include <crm/common/mainloop.h>
 #  include <crm/stonith-ng.h>
+#  include <crm/services.h>
 extern stonith_t *stonith_api;
 extern GListPtr stonith_cleanup_list;
 extern void send_stonith_update(crm_action_t * stonith_action, const char *target,
@@ -38,7 +39,7 @@ extern gboolean process_graph_event(xmlNode * event, const char *event_node);
 extern crm_action_t *get_action(int id, gboolean confirmed);
 extern gboolean start_global_timer(crm_action_timer_t * timer, int timeout);
 extern gboolean stop_te_timer(crm_action_timer_t * timer);
-extern const char *get_rsc_state(const char *task, op_status_t status);
+extern const char *get_rsc_state(const char *task, enum op_status status);
 
 /* unpack */
 extern gboolean process_te_message(xmlNode * msg, xmlNode * xml_data);

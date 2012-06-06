@@ -20,7 +20,6 @@
 
 #  include <fsa_defines.h>
 
-#  include <lrm/lrm_api.h>
 #  include <crm/crm.h>
 #  include <crm/cib.h>
 #  include <crm/common/xml.h>
@@ -95,7 +94,7 @@ extern volatile enum crmd_fsa_state fsa_state;
 extern volatile long long fsa_input_register;
 extern volatile long long fsa_actions;
 
-extern ll_lrm_t *fsa_lrm_conn;
+extern lrmd_t *fsa_lrm_conn;
 extern cib_t *fsa_cib_conn;
 
 extern char *fsa_our_uname;

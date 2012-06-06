@@ -278,7 +278,8 @@ free_mem(fsa_data_t * msg_data)
     fsa_cib_conn = NULL;
 
     if (fsa_lrm_conn) {
-        fsa_lrm_conn->lrm_ops->delete(fsa_lrm_conn);
+        lrmd_api_delete(fsa_lrm_conn);
+        fsa_lrm_conn = NULL;
     }
 
     free(transition_timer);
@@ -356,7 +357,7 @@ do_startup(long long action,
 
     crm_debug("Creating CIB and LRM objects");
     fsa_cib_conn = cib_new();
-    fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);
+    fsa_lrm_conn = lrmd_api_new();
 
     /* set up the timers */
     transition_timer = calloc(1, sizeof(fsa_timer_t));

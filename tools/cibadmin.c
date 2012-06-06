@@ -41,14 +41,12 @@ int message_timer_id = -1;
 int message_timeout_ms = 30;
 
 GMainLoop *mainloop = NULL;
-IPC_Channel *crmd_channel = NULL;
 
 const char *host = NULL;
 void usage(const char *cmd, int exit_status);
 enum cib_errors do_init(void);
 int do_work(xmlNode * input, int command_options, xmlNode ** output);
 
-gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 gboolean admin_message_timeout(gpointer data);
 void cib_connection_destroy(gpointer user_data);
 void cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);

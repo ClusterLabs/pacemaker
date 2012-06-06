@@ -24,8 +24,6 @@
 #include <time.h>
 #include <crmd_fsa.h>
 
-#include <lrm/lrm_api.h>
-
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
@@ -134,9 +132,9 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                 break;
 
             case C_LRM_OP_CALLBACK:
-                crm_trace("Copying %s data from %s as lrm_op_t",
+                crm_trace("Copying %s data from %s as lrmd_event_data_t",
                             fsa_cause2string(cause), raised_from);
-                fsa_data->data = copy_lrm_op((lrm_op_t *) data);
+                fsa_data->data = lrmd_copy_event((lrmd_event_data_t *) data);
                 fsa_data->data_type = fsa_dt_lrm;
                 break;
 
@@ -223,7 +221,7 @@ copy_ha_msg_input(ha_msg_input_t * orig)
 void
 delete_fsa_input(fsa_data_t * fsa_data)
 {
-    lrm_op_t *op = NULL;
+    lrmd_event_data_t *op = NULL;
     xmlNode *foo = NULL;
 
     if (fsa_data == NULL) {
@@ -243,8 +241,8 @@ delete_fsa_input(fsa_data_t * fsa_data)
                 break;
 
             case fsa_dt_lrm:
-                op = (lrm_op_t *) fsa_data->data;
-                free_lrm_op(op);
+                op = (lrmd_event_data_t *) fsa_data->data;
+                lrmd_free_event(op);
                 break;
 
             case fsa_dt_none:

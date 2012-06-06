@@ -84,8 +84,6 @@ gboolean have_wait_message(void);
 
 extern gboolean relay_message(xmlNode * relay_message, gboolean originated_locally);
 
-extern gboolean crmd_ipc_msg_callback(IPC_Channel * client, gpointer user_data);
-
 extern void process_message(xmlNode * msg, gboolean originated_locally, const char *src_node_name);
 
 extern gboolean crm_dc_process_message(xmlNode * whole_message,
@@ -106,7 +104,7 @@ extern gboolean send_request(xmlNode * msg, char **msg_reference);
 
 extern enum crmd_fsa_input handle_message(xmlNode * stored_msg);
 
-extern void lrm_op_callback(lrm_op_t * op);
+extern void lrm_op_callback(lrmd_event_data_t * op);
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 

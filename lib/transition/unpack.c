@@ -284,11 +284,11 @@ destroy_graph(crm_graph_t * graph)
     free(graph);
 }
 
-lrm_op_t *
+lrmd_event_data_t *
 convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int rc)
 {
     xmlNode *xop = NULL;
-    lrm_op_t *op = NULL;
+    lrmd_event_data_t *op = NULL;
     GHashTableIter iter;
     const char *name = NULL;
     const char *value = NULL;
@@ -300,8 +300,7 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
     action_resource = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
     CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "Bad"); return NULL);
 
-    op = calloc(1, sizeof(lrm_op_t));
-    op->app_name = crm_strdup(crm_system_name);
+    op = calloc(1, sizeof(lrmd_event_data_t));
 
     op->rsc_id = crm_strdup(ID(action_resource));
     op->interval = action->interval;

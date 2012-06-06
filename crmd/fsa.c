@@ -24,6 +24,7 @@
 #include <time.h>
 
 #include <crm/crm.h>
+#include <crm/lrmd.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -39,7 +40,7 @@ char *fsa_our_dc = NULL;
 cib_t *fsa_cib_conn = NULL;
 char *fsa_our_dc_version = NULL;
 
-ll_lrm_t *fsa_lrm_conn;
+lrmd_t *fsa_lrm_conn;
 char *fsa_our_uuid = NULL;
 char *fsa_our_uname = NULL;
 

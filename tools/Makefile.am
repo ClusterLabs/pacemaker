@@ -87,6 +87,7 @@ crm_simulate_CFLAGS	= -I$(top_srcdir)/pengine
 crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la		\
 			$(top_builddir)/pengine/libpengine.la 			\
 			$(top_builddir)/lib/cib/libcib.la			\
+			$(top_builddir)/lib/lrmd/liblrmd.la			\
 			$(top_builddir)/lib/transition/libtransitioner.la	\
 			$(COMMONLIBS)
 

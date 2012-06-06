@@ -39,7 +39,6 @@
 
 int exit_code = cib_ok;
 GMainLoop *mainloop = NULL;
-IPC_Channel *crmd_channel = NULL;
 
 const char *host = NULL;
 void usage(const char *cmd, int exit_status);

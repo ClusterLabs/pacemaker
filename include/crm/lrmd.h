@@ -1,0 +1,413 @@
+/*
+ * Copyright (c) 2012 David Vossel <dvossel@redhat.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
+#ifndef LRMD__H
+#define LRMD__H
+
+typedef struct lrmd_s lrmd_t;
+typedef struct lrmd_key_value_s lrmd_key_value_t;
+struct lrmd_key_value_t;
+
+/* *INDENT-OFF* */
+#define F_LRMD_OPERATION        "lrmd_op"
+#define F_LRMD_CLIENTNAME       "lrmd_clientname"
+#define F_LRMD_CLIENTID         "lrmd_clientid"
+#define F_LRMD_CALLBACK_TOKEN   "lrmd_async_id"
+#define F_LRMD_CALLID           "lrmd_callid"
+#define F_LRMD_CANCEL_CALLID    "lrmd_cancel_callid"
+#define F_LRMD_CALLOPTS         "lrmd_callopt"
+#define F_LRMD_CALLDATA         "lrmd_calldata"
+#define F_LRMD_RC               "lrmd_rc"
+#define F_LRMD_EXEC_RC          "lrmd_exec_rc"
+#define F_LRMD_OP_STATUS        "lrmd_exec_op_status"
+#define F_LRMD_TIMEOUT          "lrmd_timeout"
+#define F_LRMD_CLASS            "lrmd_class"
+#define F_LRMD_PROVIDER         "lrmd_provider"
+#define F_LRMD_TYPE             "lrmd_type"
+#define F_LRMD_ORIGIN           "lrmd_origin"
+
+#define F_LRMD_RSC_RUN_TIME      "lrmd_run_time"
+#define F_LRMD_RSC_RCCHANGE_TIME "lrmd_rcchange_time"
+#define F_LRMD_RSC_EXEC_TIME     "lrmd_exec_time"
+#define F_LRMD_RSC_QUEUE_TIME    "lrmd_queue_time"
+
+#define F_LRMD_RSC_ID           "lrmd_rsc_id"
+#define F_LRMD_RSC_ACTION       "lrmd_rsc_action"
+#define F_LRMD_RSC_USERDATA_STR "lrmd_rsc_userdata_str"
+#define F_LRMD_RSC_OUTPUT       "lrmd_rsc_output"
+#define F_LRMD_RSC_START_DELAY  "lrmd_rsc_start_delay"
+#define F_LRMD_RSC_INTERVAL     "lrmd_rsc_interval"
+#define F_LRMD_RSC_METADATA     "lrmd_rsc_metadata_res"
+#define F_LRMD_RSC_DELETED      "lrmd_rsc_deleted"
+#define F_LRMD_RSC              "lrmd_rsc"
+
+#define LRMD_OP_RSC_CHK_REG       "lrmd_rsc_check_register"
+#define LRMD_OP_RSC_REG           "lrmd_rsc_register"
+#define LRMD_OP_RSC_EXEC          "lrmd_rsc_exec"
+#define LRMD_OP_RSC_CANCEL        "lrmd_rsc_cancel"
+#define LRMD_OP_RSC_UNREG         "lrmd_rsc_unregister"
+#define LRMD_OP_RSC_INFO          "lrmd_rsc_info"
+#define LRMD_OP_RSC_METADATA      "lrmd_rsc_metadata"
+
+#define T_LRMD           "lrmd"
+#define T_LRMD_REPLY     "lrmd_reply"
+#define T_LRMD_NOTIFY    "lrmd_notify"
+/* *INDENT-ON* */
+
+lrmd_t *lrmd_api_new(void);
+bool lrmd_dispatch(lrmd_t *lrmd);
+void lrmd_api_delete(lrmd_t * lrmd);
+lrmd_key_value_t *lrmd_key_value_add(lrmd_key_value_t *kvp,
+	const char *key,
+	const char *value);
+
+/* *INDENT-OFF* */
+/* Reserved for future use */
+enum lrmd_call_options {
+	lrmd_opt_none = 0x00000000,
+	/* lrmd_opt_sync_call = 0x00000001, //Not implemented, patches welcome. */
+};
+
+enum lrmd_errors {
+	lrmd_ok                      =  0,
+	lrmd_pending                 = -1,
+	lrmd_err_generic             = -2,
+	lrmd_err_internal            = -3,
+	lrmd_err_not_supported       = -4,
+	lrmd_err_connection          = -5,
+	lrmd_err_missing             = -6,
+	lrmd_err_exists              = -7,
+	lrmd_err_timeout             = -8,
+	lrmd_err_ipc                 = -9,
+	lrmd_err_peer                = -10,
+	lrmd_err_unknown_operation   = -11,
+	lrmd_err_unknown_rsc         = -12,
+	lrmd_err_none_available      = -13,
+	lrmd_err_authentication      = -14,
+	lrmd_err_signal              = -15,
+	lrmd_err_exec_failed         = -16,
+	lrmd_err_no_metadata         = -17,
+	lrmd_err_stonith_connection  = -18,
+	lrmd_err_provider_required   = -19,
+};
+
+enum lrmd_callback_event {
+	lrmd_event_register,
+	lrmd_event_unregister,
+	lrmd_event_exec_complete,
+	lrmd_event_disconnect,
+};
+
+enum lrmd_exec_rc {
+	PCMK_EXECRA_OK                  = 0,
+	PCMK_EXECRA_UNKNOWN_ERROR       = 1,
+	PCMK_EXECRA_INVALID_PARAM       = 2,
+	PCMK_EXECRA_UNIMPLEMENT_FEATURE = 3,
+	PCMK_EXECRA_INSUFFICIENT_PRIV   = 4,
+	PCMK_EXECRA_NOT_INSTALLED       = 5,
+	PCMK_EXECRA_NOT_CONFIGURED      = 6,
+	PCMK_EXECRA_NOT_RUNNING         = 7,
+	PCMK_EXECRA_RUNNING_MASTER      = 8,
+	PCMK_EXECRA_FAILED_MASTER       = 9,
+
+	/* For status command only */
+	PCMK_EXECRA_STATUS_UNKNOWN      = 14,
+};
+/* *INDENT-ON* */
+
+typedef struct lrmd_event_data_s {
+	/*! Type of event, register, unregister, call_completed... */
+	enum lrmd_callback_event type;
+
+	/*! The resource this event occurred on. */
+	const char *rsc_id;
+	/*! The action performed, start, stop, monitor... */
+	const char *op_type;
+	/*! The userdata string given do exec() api function */
+	const char *user_data;
+
+	/*! The client api call id associated with this event */
+	int call_id;
+	/*! The operation's timeout period in ms. */
+	int timeout;
+	/*! The operation's recurring interval in ms. */
+	int interval;
+	/*! The operation's start delay value in ms. */
+	int start_delay;
+	/*! This operation that just completed is on a deleted rsc. */
+	int rsc_deleted;
+
+	/*! The executed ra return code */
+	enum lrmd_exec_rc rc;
+	/*! The lrmd status returned for exec_complete events */
+	int op_status;
+	/*! stdout from resource agent operation */
+	const char *output;
+	/*! Timestamp of when op ran */
+	unsigned int t_run;
+	/*! Timestamp of last rc change */
+	unsigned int t_rcchange;
+	/*! Time in length op took to execute */
+	unsigned int exec_time;
+	/*! Time in length spent in queue */
+	unsigned int queue_time;
+
+	/* This is a GHashTable containing the
+	 * parameters given to the operation */
+	void *params;
+} lrmd_event_data_t;
+
+lrmd_event_data_t *lrmd_copy_event(lrmd_event_data_t *event);
+void lrmd_free_event(lrmd_event_data_t *event);
+
+typedef struct lrmd_rsc_info_s {
+    char *id;
+    char *type;
+    char *class;
+    char *provider;
+} lrmd_rsc_info_t;
+
+lrmd_rsc_info_t *lrmd_copy_rsc_info(lrmd_rsc_info_t *rsc_info);
+void lrmd_free_rsc_info(lrmd_rsc_info_t *rsc_info);
+
+typedef void (*lrmd_event_callback)(lrmd_event_data_t *event);
+
+typedef struct lrmd_list_s {
+	const char *val;
+	struct lrmd_list_s *next;
+} lrmd_list_t;
+
+void lrmd_list_freeall(lrmd_list_t *head);
+
+typedef struct lrmd_api_operations_s
+{
+	/*!
+	 * \brief Connect from the lrmd.
+	 *
+	 * \retval 0, success
+	 * \retval negative error code on failure
+	 */
+	int (*connect) (lrmd_t *lrmd, const char *client_name, int *fd);
+
+	/*!
+	 * \brief Disconnect from the lrmd.
+	 *
+	 * \retval 0, success
+	 * \retval negative error code on failure
+	 */
+	int (*disconnect)(lrmd_t *lrmd);
+
+	/*!
+	 * \brief Register a resource with the lrmd.
+	 *
+	 * \note Synchronous, guaranteed to occur in daemon before function returns.
+	 *
+	 * \retval 0, success
+	 * \retval negative error code on failure
+	 */
+	int (*register_rsc) (lrmd_t *lrmd,
+		const char *rsc_id,
+		const char *class,
+		const char *provider,
+		const char *agent,
+		enum lrmd_call_options options);
+
+	/*!
+ 	 * \brief Retrieve registration info for a rsc
+ 	 *
+ 	 * \retval info on success
+ 	 * \retval NULL on failure
+ 	 */
+	lrmd_rsc_info_t *(*get_rsc_info) (lrmd_t *lrmd,
+		const char *rsc_id,
+		enum lrmd_call_options options);
+
+	/*!
+	 * \brief Unregister a resource from the lrmd.
+	 *
+	 * \note All pending and recurring operations will be cancelled
+	 *       automatically.
+	 *
+	 * \note Synchronous, guaranteed to occur in daemon before function returns.
+	 *
+	 * \retval 0, success
+	 * \retval -1, success, but operations are currently executing on the rsc which will
+	 *         return once they are completed.
+	 * \retval negative error code on failure
+	 *
+	 */
+	int (*unregister_rsc) (lrmd_t *lrmd,
+		const char *rsc_id,
+		enum lrmd_call_options options);
+
+	/*!
+	 * \brief Sets the callback to receive lrmd events on.
+	 */
+	void (*set_callback) (lrmd_t *lrmd,
+		lrmd_event_callback callback);
+
+	/*!
+	 * \brief Issue a command on a resource
+	 *
+	 * \note Asynchronous, command is queued in daemon on function return, but
+	 *       execution of command is not synced.
+	 *
+	 * \note Operations on individual resources are guaranteed to occur
+	 *       in the order the client api calls them in.
+	 *
+	 * \note Operations between different resources are not guaranteed
+	 *       to occur in any specific order in relation to one another
+	 *       regardless of what order the client api is called in.
+	 * \retval call_id to track async event result on success
+	 * \retval negative error code on failure
+	 */
+	int (*exec)(lrmd_t *lrmd,
+		const char *rsc_id,
+		const char *action,
+		const char *userdata, /* userdata string given back in event notification */
+		int interval, /* ms */
+		int timeout, /* ms */
+		int start_delay, /* ms */
+		enum lrmd_call_options options,
+		lrmd_key_value_t *params); /* ownership of params is given up to api here */
+
+	/*!
+	 * \brief Cancel a recurring command.
+	 *
+	 * \note Synchronous, guaranteed to occur in daemon before function returns.
+	 *
+	 * \note The cancel is completed async from this call.
+	 *       We can be guaranteed the cancel has completed once
+	 *       the callback receives an exec_complete event with
+	 *       the lrmd_op_status signifying that the operation is
+	 *       cancelled.
+	 * \note For each resource, cancel operations and exec operations
+	 *       are processed in the order they are received.
+	 *       It is safe to assume that for a single resource, a cancel
+	 *       will occur in the lrmd before an exec if the client's cancel
+	 *       api call occurs before the exec api call.
+	 *
+	 *       It is not however safe to assume any operation on one resource will
+	 *       occur before an operation on another resource regardless of
+	 *       the order the client api is called in.
+	 *
+	 * \retval 0, cancel command sent.
+	 * \retval negative error code on failure
+	 */
+	int (*cancel)(lrmd_t *lrmd,
+		const char *rsc_id,
+		const char *action,
+		int interval);
+
+	/*!
+	 * \brief Get the metadata documentation for a resource.
+	 *
+	 * \note Value is returned in output.  Output must be freed when set
+	 *
+	 * \retval lrmd_ok success
+	 * \retval negative error code on failure
+	 */
+	int (*get_metadata) (lrmd_t *lrmd,
+		const char *class,
+		const char *provider,
+		const char *agent,
+		char **output,
+		enum lrmd_call_options options);
+
+	/*!
+	 * \brief Retrieve a list of installed resource agents.
+	 *
+	 * \note if class is not provided, all known agents will be returned
+	 * \note list must be freed using lrmd_list_freeall()
+	 *
+	 * \retval num items in list on success
+	 * \retval negative error code on failure
+	 */
+	int (*list_agents)(lrmd_t *lrmd, lrmd_list_t **agents, const char *class, const char *provider);
+
+	/*!
+	 * \brief Retrieve a list of resource agent providers
+	 *
+	 * \note When the agent is provided, only the agent's provider will be returned
+	 * \note When no agent is supplied, all providers will be returned.
+	 * \note List must be freed using lrmd_list_freeall()
+	 *
+	 * \retval num items in list on success
+	 * \retval negative error code on failure
+	 */
+	int (*list_ocf_providers)(lrmd_t *lrmd,
+		const char *agent,
+		lrmd_list_t **providers);
+
+} lrmd_api_operations_t;
+
+struct lrmd_s {
+	lrmd_api_operations_t *cmds;
+	void *private;
+};
+
+static inline const char *
+lrmd_event_rc2str(enum lrmd_exec_rc rc)
+{
+	switch(rc) {
+	case PCMK_EXECRA_OK:
+		return "ok";
+	case PCMK_EXECRA_UNKNOWN_ERROR:
+		return "unknown error";
+	case PCMK_EXECRA_INVALID_PARAM:
+		return "invalid parameter";
+	case PCMK_EXECRA_UNIMPLEMENT_FEATURE:
+		return "unimplemented feature";
+	case PCMK_EXECRA_INSUFFICIENT_PRIV:
+		return "insufficient privileges";
+	case PCMK_EXECRA_NOT_INSTALLED:
+		return "not installed";
+	case PCMK_EXECRA_NOT_CONFIGURED:
+		return "not configured";
+	case PCMK_EXECRA_NOT_RUNNING:
+		return "not running";
+	case PCMK_EXECRA_RUNNING_MASTER:
+		return "master";
+	case PCMK_EXECRA_FAILED_MASTER:
+		return "master (failed)";
+	case PCMK_EXECRA_STATUS_UNKNOWN:
+		return "status: unknown";
+	default:
+		break;
+	}
+	return "<unknown>";
+}
+
+static inline const char *
+lrmd_event_type2str(enum lrmd_callback_event type)
+{
+	switch (type) {
+	case lrmd_event_register:
+		return "register";
+	case lrmd_event_unregister:
+		return "unregister";
+	case lrmd_event_exec_complete:
+		return "exec_complete";
+	case lrmd_event_disconnect:
+		return "disconnect";
+	}
+	return "unknown";
+}
+
+#endif
