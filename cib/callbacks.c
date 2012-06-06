@@ -237,18 +237,25 @@ int32_t
 cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean privileged)
 {
     int call_options = 0;
+    const char *op = NULL;
+    const char *call = NULL;
     xmlNode *op_request = crm_ipcs_recv(c, data, size);
     cib_client_t *cib_client = qb_ipcs_context_get(c);
 
     if(op_request) {
+        op = crm_element_value(op_request, F_CIB_OPERATION);
+        call = crm_element_value(op_request, F_CIB_CALLID);
         crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
     }
 
-    crm_trace("Inbound: %.120s", data);
+    crm_trace("Inbound: %.200s", data);
     if (op_request == NULL || cib_client == NULL) {
         xmlNode *ack = create_xml_node(NULL, "nack");
 
         crm_trace("Sending nack to %p", cib_client);
+        crm_xml_add(ack, F_CIB_CALLID, call);
+        crm_xml_add(ack, F_CIB_OPERATION, op);
+        crm_xml_add(ack, XML_ATTR_ORIGIN, __FUNCTION__);
         crm_ipcs_send(c, ack, FALSE);
         free_xml(ack);
         return 0;
@@ -256,7 +263,10 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean p
     } else if((call_options & cib_sync_call) == 0) {
         xmlNode *ack = create_xml_node(NULL, "ack");
 
-        crm_trace("Sending a-sync ack");
+        crm_trace("Sending a-sync ack to %p", cib_client);
+        crm_xml_add(ack, F_CIB_CALLID, call);
+        crm_xml_add(ack, F_CIB_OPERATION, op);
+        crm_xml_add(ack, XML_ATTR_ORIGIN, __FUNCTION__);
         crm_ipcs_send(c, ack, FALSE);
         free_xml(ack);
     }

@@ -142,7 +142,7 @@ xmlNode *
 crm_ipcs_recv(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     char *text = ((char*)data) + sizeof(struct qb_ipc_request_header);
-    crm_trace("Received %.120s", text);
+    crm_trace("Received %.200s", text);
     return string2xml(text);
 }
 
