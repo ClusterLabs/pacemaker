@@ -410,10 +410,6 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
 
     op->state = st_exec;
 
-    if(peer == NULL) {
-        peer = stonith_choose_peer(op);
-    }
-
     if(is_set(op->call_options, st_opt_topology)) {
         int num_devices = g_list_length(op->devices);
 
@@ -423,7 +419,12 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
                       op->base_timeout, num_devices, timeout);
         }
 
+        /* Ignore any preference, they might not have the device we need */
+        peer = stonith_choose_peer(op);
         device = op->devices->data;
+
+    } else if(peer == NULL) {
+        peer = stonith_choose_peer(op);
     }
         
     if(peer) {

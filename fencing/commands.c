@@ -934,8 +934,6 @@ static int stonith_fence(xmlNode *msg)
     async_command_t *cmd = create_async_command(msg);
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
 
-    crm_log_xml_trace(msg, "Exec");
-    
     if(cmd == NULL) {
 	return st_err_internal;
     }
@@ -943,6 +941,9 @@ static int stonith_fence(xmlNode *msg)
     device_id = crm_element_value(dev, F_STONITH_DEVICE);
     if(device_id) {
         device = g_hash_table_lookup(device_list, device_id);
+        if(device == NULL) {
+            crm_err("Requested device '%s' is not available", device_id);
+        }
         
     } else {
         search.capable = NULL;
