@@ -408,8 +408,6 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     const char *device = NULL;
     int timeout = op->base_timeout;
 
-    op->state = st_exec;
-
     if(is_set(op->call_options, st_opt_topology)) {
         int num_devices = g_list_length(op->devices);
 
@@ -445,6 +443,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
             crm_xml_add(query, F_STONITH_MODE, "smart");
         }
 
+        op->state = st_exec;
 	send_cluster_message(peer->host, crm_msg_stonith_ng, query, FALSE);
         free_xml(query);
         return;
