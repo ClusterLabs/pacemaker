@@ -382,8 +382,9 @@ crm_ipc_read(crm_ipc_t *client)
     client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer, client->buf_size-1, -1);
     if(client->msg_size >= 0) {
         struct qb_ipc_response_header *header = (struct qb_ipc_response_header *)client->buffer;
-        crm_trace("Recieved response %d, size=%d, rc=%d", header->id, header->size, client->msg_size);
         client->buffer[client->msg_size] = 0;
+
+        crm_trace("Recieved response %d, size=%d, rc=%d, text: %.200s", header->id, header->size, client->msg_size, client->buffer+sizeof(struct qb_ipc_response_header));
     }
 
     if(crm_ipc_connected(client) == FALSE || client->msg_size == -ENOTCONN) {
@@ -427,12 +428,19 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
         ms_timeout = 5000;
     }
     
-    crm_trace("Waiting for reply to %ld bytes: %.120s...", iov[1].iov_base, buffer);
+    crm_trace("Waiting for reply to %u bytes: %.200s...", header.size, buffer);
     rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer, client->buf_size, ms_timeout);
-    crm_trace("rc=%d, errno=%d", rc, errno);
 
-    if(rc > 0 && reply) {
-        *reply = string2xml(crm_ipc_buffer(client));
+    if(rc > 0) {
+        struct qb_ipc_response_header *hdr = (struct qb_ipc_response_header *)client->buffer;
+        crm_trace("Recieved response %d, size=%d, rc=%d, text: %.200s", hdr->id, hdr->size, rc, crm_ipc_buffer(client));
+
+        if(reply) {
+            *reply = string2xml(crm_ipc_buffer(client));
+        }
+
+    } else {
+        crm_trace("Response not recieved: rc=%d, errno=%d", rc, errno);
     }
 
     if(crm_ipc_connected(client) == FALSE) {
