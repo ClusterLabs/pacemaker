@@ -478,6 +478,7 @@ lrmd_api_disconnect(lrmd_t * lrmd)
 	}
 
 	free(native->token);
+        native->token = NULL;
 	return 0;
 }
 
