@@ -127,7 +127,7 @@ try_extract_header_define() {
 	  fi
 	  AC_MSG_RESULT($value)
 	  printf $value
-	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM
+	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM ${Cfile}.gcno
 	}
 
 extract_header_define() {
@@ -140,7 +140,7 @@ extract_header_define() {
 	  value=`${Cfile}`
 	  AC_MSG_RESULT($value)
 	  printf $value
-	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM
+	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM ${Cfile}.gcno
 	}
 
 dnl ===============================================
