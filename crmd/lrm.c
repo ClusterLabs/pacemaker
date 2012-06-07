@@ -172,7 +172,7 @@ update_history_cache(lrm_rsc_t * rsc, lrm_op_t * op)
         return;
     }
 
-    crm_debug("Appending %s op to history for '%s'", op->op_type, op->rsc_id);
+    crm_debug("Updating history for '%s' with %s op", op->rsc_id, op->op_type);
 
     entry = g_hash_table_lookup(resource_history, op->rsc_id);
     if (entry == NULL && rsc) {
@@ -196,9 +196,25 @@ update_history_cache(lrm_rsc_t * rsc, lrm_op_t * op)
 
     target_rc = rsc_op_expected_rc(op);
     if (op->op_status == LRM_OP_CANCELLED) {
-        crm_trace("Skipping %s_%s_%d rc=%d, status=%d", op->rsc_id, op->op_type, op->interval,
-                  op->rc, op->op_status);
+        if (op->interval > 0) {
+            GList *gIter, *gIterNext;
 
+            crm_trace("Removing cancelled recurring op: %s_%s_%d", op->rsc_id, op->op_type, op->interval);
+
+            for (gIter = entry->recurring_op_list; gIter != NULL; gIter = gIterNext) {
+                lrm_op_t *existing = gIter->data;
+                gIterNext = gIter->next;
+
+                if (safe_str_eq(op->rsc_id, existing->rsc_id)
+                    && safe_str_eq(op->op_type, existing->op_type)
+                    && op->interval == existing->interval) {
+                    free_lrm_op(existing);
+                    entry->recurring_op_list = g_list_delete_link(entry->recurring_op_list, gIter);
+                }
+            }
+
+            return;
+        }
     } else if (did_rsc_op_fail(op, target_rc)) {
         /* We must store failed monitors here
          * - otherwise the block below will cause them to be forgetten them when a stop happens
