@@ -140,22 +140,16 @@ stonith_recurring_op_helper(gpointer data)
 	cmd->stonith_recurring_id = 0;
 
 	rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
+        CRM_ASSERT(rsc != NULL);
 
-	if (!rsc) {
-		/* This will never happen, but for the sake of completion
-		 * this is what should happen if it did. */
-		cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
-		cmd_finalize(cmd, NULL);
-	} else {
-		/* take it out of recurring_ops list, and put it in the pending ops
-		 * to be executed */
-		rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
-		rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
+        /* take it out of recurring_ops list, and put it in the pending ops
+         * to be executed */
+        rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
+        rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef HAVE_SYS_TIMEB_H
-		ftime(&cmd->t_queue);
+        ftime(&cmd->t_queue);
 #endif
-		mainloop_set_trigger(rsc->work);
-	}
+        mainloop_set_trigger(rsc->work);
 
 	return FALSE;
 }
@@ -358,6 +352,7 @@ cmd_finalize(lrmd_cmd_t *cmd, lrmd_rsc_t *rsc)
 		memset(&cmd->t_run, 0, sizeof(cmd->t_run));
 		memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
 		free(cmd->output);
+                cmd->output = NULL;
 	}
 }
 
