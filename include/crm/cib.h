@@ -188,6 +188,7 @@ enum cib_section {
 #  define F_CIB_NOTIFY_ACTIVATE	"cib_notify_activate"
 #  define F_CIB_UPDATE_DIFF	"cib_update_diff"
 #  define F_CIB_USER		"cib_user"
+#  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
 
 #  define T_CIB			"cib"
 #  define T_CIB_NOTIFY		"cib_notify"

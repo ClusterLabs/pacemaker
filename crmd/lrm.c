@@ -1950,6 +1950,13 @@ do_update_resource(lrm_rsc_t * rsc, lrm_op_t * op)
      * the alternative however means blocking here for too long, which
      * isnt acceptable
      */
+
+    if (is_set(fsa_input_register, R_SHUTDOWN)) {
+        /* The update must be synchronous when shutting down to guarantee the update
+         * is received by everyone before the crmd leaves the cpg group. */
+        call_opt |= cib_sync_call;
+    }
+
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, rc, NULL);
 
     /* the return code is a call number, not an error code */
