@@ -117,6 +117,7 @@ enum stonith_errors {
 #define STONITH_OP_EXEC		"st_execute"
 #define STONITH_OP_QUERY	"st_query"
 #define STONITH_OP_FENCE	"st_fence"
+#define STONITH_OP_RELAY	"st_relay"
 #define STONITH_OP_CONFIRM	"st_confirm"
 #define STONITH_OP_DEVICE_ADD	"st_device_register"
 #define STONITH_OP_DEVICE_DEL	"st_device_remove"

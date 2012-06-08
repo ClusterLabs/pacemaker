@@ -327,9 +327,17 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
 remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request, gboolean manual_ack) 
 {
     xmlNode *query = NULL;
+    const char *client_id = NULL;
     remote_fencing_op_t *op = NULL;
 
-    op = create_remote_stonith_op(client->id, request, FALSE);
+    if(client) {
+        client_id = client->id;
+    } else {
+        client_id = crm_element_value(request, F_STONITH_CLIENTID);
+    }
+
+    CRM_LOG_ASSERT(client_id != NULL);
+    op = create_remote_stonith_op(client_id, request, FALSE);
     query = stonith_create_op(0, op->id, STONITH_OP_QUERY, NULL, 0);
 
     if(!manual_ack) {

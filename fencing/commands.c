@@ -1129,6 +1129,11 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     /* 	process_remote_stonith_exec(request); */
     /* 	return; */
 
+    } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_RELAY, TRUE)) {
+        if(initiate_remote_stonith_op(NULL, request, FALSE) != NULL) {
+            rc = stonith_pending;
+        }
+
     } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
 
         if(remote || stand_alone) {
@@ -1137,16 +1142,48 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
         } else if(call_options & st_opt_manual_ack) {
 	    remote_fencing_op_t *rop = initiate_remote_stonith_op(client, request, TRUE);
             rc = stonith_manual_ack(request, rop);
-            
-	} else if((call_options & st_opt_sync_call) == 0) {
-	    initiate_remote_stonith_op(client, request, FALSE);
-            crm_ipcs_send_ack(client->channel, "ack", __FUNCTION__, __LINE__);
-	    return;
 
         } else {
-	    initiate_remote_stonith_op(client, request, FALSE);
-	    return;
-	}
+            const char *alternate_host = NULL;
+            xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_TRACE);
+            const char *target = crm_element_value_copy(dev, F_STONITH_TARGET);
+
+            if((call_options & st_opt_sync_call) == 0) {
+                crm_ipcs_send_ack(client->channel, "ack", __FUNCTION__, __LINE__);
+            }
+
+            if(g_hash_table_lookup(topology, target) && safe_str_eq(target, stonith_our_uname)) {
+                GHashTableIter gIter;
+                crm_node_t *entry = NULL;
+                int membership = crm_proc_plugin | crm_proc_heartbeat | crm_proc_cpg;
+
+                g_hash_table_iter_init(&gIter, crm_peer_cache);
+                while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
+                    crm_trace("Checking for %s.%d != %s",
+                              entry->uname, entry->id, target);
+                    if(entry->uname
+                       && (entry->processes & membership)
+                       && safe_str_neq(entry->uname, target)) {
+                        alternate_host = entry->uname;
+                        break;
+                    }
+                }
+                if(alternate_host == NULL) {
+                    crm_err("No alternate host available to handle complex self fencing request");
+                }
+            }
+
+            if(alternate_host) {
+                crm_notice("Forwarding complex self fencing request to peer %s", alternate_host);
+                crm_xml_add(request, F_STONITH_OPERATION, STONITH_OP_RELAY);
+                crm_xml_add(request, F_STONITH_CLIENTID, client->id);
+                send_cluster_message(alternate_host, crm_msg_stonith_ng, request, FALSE);
+                rc = stonith_pending;
+
+            } else if(initiate_remote_stonith_op(client, request, FALSE) != NULL) {
+                rc = stonith_pending;
+            }
+        }
 
     } else if (crm_str_eq(op, STONITH_OP_FENCE_HISTORY, TRUE)) {
 	rc = stonith_fence_history(request, &data);
