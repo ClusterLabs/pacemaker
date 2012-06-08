@@ -86,6 +86,7 @@ extern int write_cib_contents(gpointer p);
 
 GHashTable *client_list = NULL;
 GHashTable *config_hash = NULL;
+GHashTable *local_notify_queue = NULL;
 
 char *channel1 = NULL;
 char *channel2 = NULL;
@@ -241,6 +242,9 @@ void
 cib_cleanup(void)
 {
     crm_peer_destroy();
+    if (local_notify_queue) {
+        g_hash_table_destroy(local_notify_queue);
+    }
     g_hash_table_destroy(config_hash);
     g_hash_table_destroy(client_list);
     crm_free(cib_our_uname);
