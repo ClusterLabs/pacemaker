@@ -1091,11 +1091,16 @@ get_lrm_resource(xmlNode * resource, xmlNode * op_msg, gboolean do_create)
     const char *type = crm_element_value(resource, XML_ATTR_TYPE);
     const char *class = crm_element_value(resource, XML_AGENT_ATTR_CLASS);
     const char *provider = crm_element_value(resource, XML_AGENT_ATTR_PROVIDER);
+    const char *long_id = crm_element_value(resource, XML_ATTR_ID_LONG);
 
     crm_trace("Retrieving %s from the LRM.", id);
     CRM_CHECK(id != NULL, return NULL);
 
     rsc = fsa_lrm_conn->cmds->get_rsc_info(fsa_lrm_conn, id, 0);
+
+    if (!rsc && long_id) {
+        rsc = fsa_lrm_conn->cmds->get_rsc_info(fsa_lrm_conn, long_id, 0);
+    }
 
     if (!rsc && do_create) {
         CRM_CHECK(class != NULL, return NULL);

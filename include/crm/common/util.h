@@ -25,7 +25,7 @@
 #  include <limits.h>
 #  include <signal.h>
 
-#  include "crm/lrmd.h"
+#  include <crm/lrmd.h>
 
 #  if SUPPORT_HEARTBEAT
 #    include <heartbeat.h>
