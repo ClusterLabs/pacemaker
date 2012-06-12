@@ -702,7 +702,10 @@ void
 crm_write_blackbox(int nsig)
 {
     static int counter = 1;
+    static time_t last = 0;
+
     char buffer[NAME_MAX];
+    time_t now = time(NULL);
 
     if(blackbox_file_prefix == NULL) {
         return;
@@ -714,11 +717,17 @@ crm_write_blackbox(int nsig)
             /* The graceful case - such as assertion failure or user request */
             snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
 
-            if(nsig == SIGTRAP) {
+            if(nsig == 0 && (now - last) < 2) {
+                /* Prevent over-dumping */
+                return;
+
+            } else if(nsig == SIGTRAP) {
                 crm_notice("Blackbox dump requested, please see %s for contents", buffer);
+
             } else {
                 crm_notice("Problem detected, please see %s for additional details", buffer);
             }
+            last = now;
             qb_log_blackbox_write_to_file(buffer);
 
             /* Flush the existing contents
