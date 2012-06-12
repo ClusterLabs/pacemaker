@@ -596,7 +596,15 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    /* Check for the target's presence in the output of the 'list' command */
 	    slist_basic_destroy(dev->targets);
 	    dev->targets = NULL;
-	    
+
+            while(dev->active_pid != 0 && kill(dev->active_pid, 0) == 0) {
+                /* This is a hack
+                 * The proper approach would be to do asynchronous replies
+                 */
+                crm_trace("Waiting for %u to exit for %s", dev->active_pid, dev->id);
+                sleep(1);
+            }
+
 	    exec_rc = run_stonith_agent(dev->agent, "list", NULL, dev->params, NULL, &rc, &output, NULL);
             if(rc != 0 && dev->active_pid == 0) {
                 /* This device probably only supports a single
