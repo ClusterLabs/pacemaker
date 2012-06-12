@@ -351,11 +351,16 @@ function patch_cs_config() {
     test $num_hosts != 2
     two_node=$?
 
+    priority="info"
+    if [ $do_debug = 1 ]; then
+	priority="debug"
+    fi
+
     ssh -l root ${host} -- sed -i.sed "s/.*mcastaddr:.*/mcastaddr:\ 226.94.1.1/g" $cs_conf
     ssh -l root ${host} -- sed -i.sed "s/.*mcastport:.*/mcastport:\ $cs_port$dsh_group/g" $cs_conf
     ssh -l root ${host} -- sed -i.sed "s/.*bindnetaddr:.*/bindnetaddr:\ $ip/g" $cs_conf
     ssh -l root ${host} -- sed -i.sed "s/.*syslog_facility:.*/syslog_facility:\ daemon/g" $cs_conf
-    ssh -l root ${host} -- sed -i.sed "s/.*debug:.*/debug:\ $do_debug/g" $cs_conf
+    ssh -l root ${host} -- sed -i.sed "s/.*logfile_priority:.*/logfile_priority:\ $priority/g" $cs_conf
     
     if [ ! -z $token ]; then
 	ssh -l root ${host} -- sed -i.sed "s/.*token:.*/token:\ $token/g" $cs_conf
@@ -404,6 +409,10 @@ function create_cs_config() {
     two_node=$?
 
     # Base config
+    priority="info"
+    if [ $do_debug = 1 ]; then
+	priority="debug"
+    fi
 
     cat <<-END >$cs_tmp
 totem {
@@ -449,7 +458,7 @@ totem {
 }
 
 logging {
-        debug: $do_debug
+        debug: off
         fileline: off
         to_syslog: yes
         to_stderr: no
@@ -457,10 +466,7 @@ logging {
         timestamp: on
         to_logfile: yes
         logfile: /var/log/corosync.log
-        logger_subsys {
-                 subsys: VOTEQ
-                 debug: off
-        }
+	logfile_priority: $priority
 }
 
 amf {
