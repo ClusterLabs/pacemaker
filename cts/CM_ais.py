@@ -152,6 +152,8 @@ class crm_ais(crm_lha):
                     "State transition .* S_RECOVERY",
                     "LRM Connection failed",
                     "Respawning .* crmd",
+                    "error: crm_ipc_read: Connection to lrmd failed",
+                    "error: mainloop_gio_callback: Connection to lrmd.* closed",
                     "crmd.*I_ERROR.*lrm_connection_destroy",
                     "Child process crmd exited .* rc=2",
                     "crmd.*Input I_TERMINATE from do_recover",
@@ -324,7 +326,7 @@ class crm_cs_v1(crm_cs_v0):
 
         self.update({
             "Name"           : "crm-plugin-v1",
-            "StartCmd"       : "service corosync start; service pacemaker start",
+            "StartCmd"       : "service corosync start && service pacemaker start",
             "StopCmd"        : "service pacemaker stop; service corosync stop",
 
             "EpocheCmd"      : "crm_node -e",
@@ -350,7 +352,7 @@ class crm_mcp(crm_cs_v0):
 
         self.update({
             "Name"           : "crm-mcp",
-            "StartCmd"       : "service corosync start; service pacemaker start",
+            "StartCmd"       : "service corosync start && service pacemaker start",
             "StopCmd"        : "service pacemaker stop; service corosync stop",
 
             "EpocheCmd"      : "crm_node -e",
@@ -382,7 +384,7 @@ class crm_cman(crm_cs_v0):
 
         self.update({
             "Name"           : "crm-cman",
-            "StartCmd"       : "service cman start; service pacemaker start",
+            "StartCmd"       : "service cman start && service pacemaker start",
             "StopCmd"        : "service pacemaker stop; service cman stop;",
 
             "EpocheCmd"      : "crm_node -e --cman",
