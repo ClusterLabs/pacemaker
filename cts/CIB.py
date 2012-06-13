@@ -145,7 +145,7 @@ class Resource(CibXml):
         
     def add_op(self, name, interval, **kwargs):
         self.op.append(
-            CibXml(self.Factory, "op", "%s-%s-%s" % (self.name, name, interval), name=name, interval=interval, **kwargs))
+            CibXml(self.Factory, "op", "%s-%s" % (name, interval), name=name, interval=interval, **kwargs))
 
     def add_param(self, name, value):
         self.param[name] = value
@@ -227,7 +227,10 @@ class Resource(CibXml):
         if len(self.op) > 0:
             text += '''<operations>'''
             for o in self.op:
+                key = o.name
+                o.name = "%s-%s" % (self.name, key)
                 text += o.show()
+                o.name = key
             text += '''</operations>'''
 
         text += '''</primitive>'''
@@ -357,27 +360,51 @@ class CIB11(CibBase):
 
             st.commit()
 
-            ftype=None
-            ftype="fence_true"
-            #ftype="fence_false"
+            # Test advanced fencing logic
+            if True:
+                stf_nodes = []
+                stt_nodes = []
 
-            if ftype:
-                # Test advanced fencing logic
-                ftype="fence_true"
-                self.CM.install_helper(ftype, destdir="/usr/sbin")
-                st = Resource(self.Factory, "FakeFencing", ftype, "stonith")
-                st["pcmk_host_list"] = string.join(self.CM.Env["nodes"], " ")
-                st["power_timeout"] = "20" # Wait this many seconds before doing anything, handy for letting disks get flushed
+                # Cheat to create a second copy of the real device
+                st.name = "FencingDup"
+                st.colocate("Fencing", "-INFINITY")
                 st.commit()
 
+                # Create the levels
                 stl = FencingTopology(self.Factory)
                 for node in self.CM.Env["nodes"]:
-                    if ftype == "fence_true":
-                        stl.level(1, node, "FakeFencing,Fencing")
-                    else:
-                        stl.level(1, node, "FakeFencing")
-                        stl.level(2, node, "Fencing")
+                    ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast"])
+                    self.CM.log(" - Using %s fencing for node: %s" % (ftype, node))
+                    if ftype == "levels-and":
+                        stl.level(1, node, "FencingPass,Fencing")
+                        stt_nodes.append(node)
 
+                    elif ftype == "levels-or ":
+                        stl.level(1, node, "FencingFail")
+                        stl.level(2, node, "Fencing")
+                        stf_nodes.append(node)
+
+                # Create a Dummy agent that always passes for levels-and
+                if len(stt_nodes):
+                    ftype="fence_true"
+                    self.CM.install_helper(ftype, destdir="/usr/sbin")
+                    stt = Resource(self.Factory, "FencingPass", ftype, "stonith")
+                    stt["pcmk_host_list"] = string.join(stt_nodes, " ")
+                    # Wait this many seconds before doing anything, handy for letting disks get flushed too
+                    stt["power_timeout"] = "20"
+                    stt.commit()
+
+                # Create a Dummy agent that always fails for levels-or
+                if len(stf_nodes):
+                    ftype="fence_false"
+                    self.CM.install_helper(ftype, destdir="/usr/sbin")
+                    stf = Resource(self.Factory, "FencingFail", ftype, "stonith")
+                    stf["pcmk_host_list"] = string.join(stf_nodes, " ")
+                    # Wait this many seconds before doing anything, handy for letting disks get flushed too
+                    stf["power_timeout"] = "20"
+                    stf.commit()
+                  
+                # Now commit the levels themselves
                 stl.commit()
 
         o = Option(self.Factory, "stonith-enabled", self.CM.Env["DoFencing"])
@@ -582,5 +609,5 @@ if __name__ == '__main__':
     manager.cluster_monitor = False
 
     CibFactory = ConfigFactory(manager)
-    cib = CibFactory.createConfig("pacemaker-1.0")
+    cib = CibFactory.createConfig("pacemaker-1.1")
     print cib.contents()
