@@ -139,4 +139,8 @@ recovery2text(enum rsc_recovery_type type)
     return "Unknown";
 }
 
+#define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc->id, fmt, ##args)
+#define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc->id, fmt, ##args)
+#define pe_rsc_trace(rsc, fmt, args...) crm_log_tag(LOG_TRACE, rsc->id, fmt, ##args)
+
 #endif

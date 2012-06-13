@@ -755,6 +755,15 @@ crm_log_cli_init(const char *entity)
     return crm_log_init(entity, LOG_ERR, FALSE, FALSE, 0, NULL, TRUE);
 }
 
+static const char *crm_quark_to_string(uint32_t tag)
+{
+    const char *text = g_quark_to_string(tag);
+    if(text) {
+        return text;
+    }
+    return "";
+}
+
 gboolean
 crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
              int argc, char **argv, gboolean quiet)
@@ -804,6 +813,7 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     }
     crm_log_level = level;
     qb_log_init(crm_system_name, qb_log_facility2int(facility), level);
+    qb_log_tags_stringify_fn_set(crm_quark_to_string);
 
     if (quiet) {
         /* Nuke any syslog activity */
