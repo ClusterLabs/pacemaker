@@ -1329,12 +1329,10 @@ find_corosync_variant(void)
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "service", top_handle);
     while (local_handle) {
-        free(value);
         get_config_opt(config, local_handle, "name", &value, NULL);
         if (safe_str_eq("pacemaker", value)) {
             found = pcmk_cluster_classic_ais;
 
-            free(value);
             get_config_opt(config, local_handle, "ver", &value, "0");
             crm_trace("Found Pacemaker plugin version: %s", value);
             break;
@@ -1342,7 +1340,6 @@ find_corosync_variant(void)
 
         local_handle = config_find_next(config, "service", top_handle);
     }
-    free(value);
 
     if (found == pcmk_cluster_unknown) {
         top_handle = config_find_init(config);
