@@ -1233,8 +1233,8 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	crm_log_xml_warn(request, "UnknownOp");
     }
 
-    do_crm_log(rc>0?LOG_DEBUG:LOG_INFO,"Processed %s%s from %s: rc=%d", op, is_reply?" reply":"",
-	       client?client->name:remote, rc);
+    do_crm_log(rc>0?LOG_DEBUG:LOG_INFO,"Processed %s%s from %s: %s (%d)", op, is_reply?" reply":"",
+	       client?client->name:remote, rc>0?"":stonith_error2string(rc), rc);
     
     if(is_reply || rc == stonith_pending) {
 	/* Nothing (yet) */
