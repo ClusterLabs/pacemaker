@@ -774,7 +774,7 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 	for(lpc = 0; lpc < more; lpc++) {
 	    if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
 		local_copy[lpc] = 0;
-		do_crm_log(rc==0?LOG_INFO:LOG_ERR, "%s: %s",
+		do_crm_log(rc==0?LOG_INFO:LOG_WARNING, "%s: %s",
 			   cmd->device, local_copy+last);
 		last = lpc+1;
 	    }
@@ -1040,6 +1040,7 @@ xmlNode *stonith_construct_async_reply(async_command_t *cmd, char *output, xmlNo
     crm_xml_add(reply, F_TYPE, T_STONITH_NG);
 
     crm_xml_add(reply, F_STONITH_OPERATION, cmd->op);
+    crm_xml_add(reply, F_STONITH_DEVICE, cmd->device);
     crm_xml_add(reply, F_STONITH_REMOTE, cmd->remote);
     crm_xml_add(reply, F_STONITH_CLIENTID, cmd->client);
     crm_xml_add(reply, F_STONITH_TARGET, cmd->victim);

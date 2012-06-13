@@ -290,7 +290,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
 
     op->state = st_query;
     op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
-    op->originator = crm_element_value_copy(dev, "src");
+    op->originator = crm_element_value_copy(dev, F_STONITH_OWNER);
 
     if(op->originator == NULL) {
 	/* Local request */
@@ -351,6 +351,7 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
     crm_xml_add(query, F_STONITH_REMOTE, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op->action);    
+    crm_xml_add(query, F_STONITH_OWNER,  op->originator);
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);    
     crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
     
@@ -417,7 +418,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     int timeout = op->base_timeout;
 
     if(is_set(op->call_options, st_opt_topology)) {
-        int num_devices = g_list_length(op->devices);
+        int num_devices = g_list_length(op->devices); /* Not accurate when there are multiple levels */
 
         if(num_devices) {
             timeout /= num_devices;
@@ -438,6 +439,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         crm_xml_add(query, F_STONITH_REMOTE, op->id);
         crm_xml_add(query, F_STONITH_TARGET, op->target);    
         crm_xml_add(query, F_STONITH_ACTION, op->action);    
+        crm_xml_add(query, F_STONITH_OWNER,  op->originator);
         crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
         crm_xml_add_int(query, F_STONITH_TIMEOUT, timeout);
 
@@ -590,39 +592,43 @@ int process_remote_stonith_exec(xmlNode *msg)
     }
 
     if(is_set(op->call_options, st_opt_topology)) {
-        if(op->state == st_done) {
-            remote_op_done(op, msg, rc);
+        const char *device = crm_element_value(msg, F_STONITH_DEVICE);
 
-        } else if(rc == stonith_ok && op->devices) {
-            /* Success, are there any more? */
-            crm_notice("Call to %s for %s passed, %s next", (char*)op->devices->data,
-                       op->target, op->devices->next?(char*)op->devices->next->data:"<none>");
-            op->devices = op->devices->next;
+        crm_notice("Call to %s for %s on behalf of %s: %s (%d)", device, op->target, op->originator, rc == stonith_ok?"passed":"failed", rc);
+        if(safe_str_eq(op->originator, stonith_our_uname)) {
 
-            if(op->devices == NULL) {
-                /* Done - Broadcast the result */
-                send_cluster_message(NULL, crm_msg_stonith_ng, msg, FALSE);
-                op->state = st_done;
+            if(op->state == st_done) {
+                remote_op_done(op, msg, rc);
+                return rc;
+
+            } else if(rc == stonith_ok && op->devices) {
+                /* Success, are there any more? */
+                op->devices = op->devices->next;
             }
 
-        } else if(op->devices) {
-            crm_notice("Call to %s for %s failed: %d", (char*)op->devices->data, op->target, rc);
-        }
-    }
-    
-    if(rc == stonith_ok && op->devices == NULL) {
-        crm_trace("All done for %s, state=%d", op->target, op->state);
-        op->state = st_done;
+            if(op->devices == NULL) {
+                crm_trace("Broadcasting completion of complex fencing op for %s", op->target);
+                send_cluster_message(NULL, crm_msg_stonith_ng, msg, FALSE);
+                op->state = st_done;
+                return rc;
+            }
 
-        if(is_not_set(op->call_options, st_opt_topology)) {
+        } else {
+            op->state = st_done;
             remote_op_done(op, msg, rc);
         }
 
-    } else {
-        /* Retry on failure or execute the rest of the topology */
-        crm_trace("Next for %s (rc was %d)", op->target, rc);
-	call_remote_stonith(op, NULL);
+    } else if(rc == stonith_ok && op->devices == NULL) {
+        crm_trace("All done for %s", op->target);
+
+        op->state = st_done;
+        remote_op_done(op, msg, rc);
+        return rc;
     }
+
+    /* Retry on failure or execute the rest of the topology */
+    crm_trace("Next for %s (rc was %d)", op->target, rc);
+    call_remote_stonith(op, NULL);
     return rc;
 }
 

@@ -94,6 +94,7 @@ enum stonith_errors {
 #define F_STONITH_DATE			"st_date"
 #define F_STONITH_STATE			"st_state"
 #define F_STONITH_LEVEL		        "st_level"
+#define F_STONITH_OWNER		        "st_owner"
 
 #define T_STONITH_NG		"stonith-ng"
 #define T_STONITH_REPLY		"st-reply"
