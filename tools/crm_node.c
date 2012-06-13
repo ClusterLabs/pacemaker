@@ -486,6 +486,56 @@ node_mcp_destroy(gpointer user_data)
     exit(1);
 }
 
+static int
+crmd_remove_node_cache(int id)
+{
+    int rc = -1;
+    char *admin_uuid = NULL;
+    crm_ipc_t *conn = crm_ipc_new(CRM_SYSTEM_CRMD, 0);
+    xmlNode *cmd = NULL;
+    xmlNode *hello = NULL;
+    xmlNode *msg_data = NULL;
+
+    if (!conn) {
+        goto rm_node_cleanup;
+    }
+
+    if (!crm_ipc_connect(conn)) {
+        goto rm_node_cleanup;
+    }
+
+    crm_malloc0(admin_uuid, 11);
+    snprintf(admin_uuid, 10, "%d", getpid());
+    admin_uuid[10] = '\0';
+
+    hello = create_hello_message(admin_uuid, "crm_node", "0", "1");
+    rc = crm_ipc_send(conn, hello, NULL, 0);
+    if (rc < 0) {
+        goto rm_node_cleanup;
+    }
+
+    msg_data = create_xml_node(NULL, XML_TAG_OPTIONS);
+    crm_xml_add_int(msg_data, XML_ATTR_ID, id);
+    cmd = create_request(CRM_OP_RM_NODE_CACHE,
+        msg_data,
+        NULL,
+        CRM_SYSTEM_CRMD,
+        "crm_node",
+        admin_uuid);
+
+    rc = crm_ipc_send(conn, cmd, NULL, 0);
+
+rm_node_cleanup:
+    if (conn) {
+        crm_ipc_close(conn);
+        crm_ipc_destroy(conn);
+    }
+    free_xml(cmd);
+    free_xml(hello);
+    free(admin_uuid);
+    return rc > 0 ? 0 : rc;
+}
+
 static gboolean
 try_corosync(int command, enum cluster_type_e stack)
 {
@@ -506,6 +556,10 @@ try_corosync(int command, enum cluster_type_e stack)
         };
 
     switch (command) {
+        case 'R':
+            if (crmd_remove_node_cache(atoi(target_uname))) {
+                crm_err("Failed to connect to crmd to remove node id %s", target_uname);
+            }
         case 'e':
             /* Age makes no sense (yet) in an AIS cluster */
             fprintf(stdout, "1\n");

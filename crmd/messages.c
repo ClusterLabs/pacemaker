@@ -777,6 +777,17 @@ handle_request(xmlNode * stored_msg)
         /* probably better to do this via signals on the
          * local node
          */
+
+    } else if (strcmp(op, CRM_OP_RM_NODE_CACHE) == 0) {
+        xmlNode *options = get_xpath_object("//"XML_TAG_OPTIONS, stored_msg, LOG_ERR);
+        int id = 0;
+
+        if (options) {
+           crm_element_value_int(options, XML_ATTR_ID, &id);
+        }
+        if (id) {
+            reap_crm_member(id);
+        }
     } else if (strcmp(op, CRM_OP_DEBUG_UP) == 0) {
         crm_bump_log_level();
         crm_info("Debug set to %d", get_crm_log_level());
