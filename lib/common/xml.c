@@ -939,7 +939,7 @@ print_spaces(char *buffer, int depth, int max)
 int
 log_data_element(
     int log_level, const char *file, const char *function, int line,
-    const char *prefix, xmlNode *data, int depth, gboolean formatted)
+    const char *prefix, xmlNode *data, int depth, int options)
 {
     xmlNode *a_child = NULL;
     int child_result = 0;
@@ -947,10 +947,14 @@ log_data_element(
     int offset = 0;
     int printed = 0;
     char *buffer = NULL;
+    char *prefix_m = NULL;
     int buffer_len = 1000;
 
     const char *name = NULL;
     const char *hidden = NULL;
+    gboolean formatted = (options & 0x1);
+    gboolean diff_plus = (options & 0x2);
+    gboolean diff_minus = (options & 0x4);
 
     /* Since we use the same file and line, to avoid confusing libqb, we need to use the same format strings */
     if(data == NULL) {
@@ -961,7 +965,7 @@ log_data_element(
     if(prefix == NULL) {
         prefix = "";
     }
-	
+
     name = crm_element_name(data);
     CRM_ASSERT(name != NULL);
 	
@@ -970,6 +974,16 @@ log_data_element(
 	
     if(formatted) {
 	offset = print_spaces(buffer, depth, buffer_len - offset);
+        if(diff_plus && crm_element_value(data, XML_DIFF_MARKER)) {
+            prefix_m = strdup(prefix);
+            prefix_m[1] = '+';
+            prefix = prefix_m;
+
+        } else if(diff_minus && crm_element_value(data, XML_DIFF_MARKER)) {
+            prefix_m = strdup(prefix);
+            prefix_m[1] = '-';
+            prefix = prefix_m;
+        }
     }
 
     printed = snprintf(buffer + offset, buffer_len - offset, "<%s", name);
@@ -982,6 +996,9 @@ log_data_element(
 	if(prop_name == NULL
 	   || safe_str_eq(F_XML_TAGNAME, prop_name)) {
 	    continue;
+
+        } else if((diff_plus || diff_minus) && safe_str_eq(XML_DIFF_MARKER, prop_name)) {
+            continue;
 
 	} else if(hidden != NULL
 		  && prop_name[0] != 0
@@ -1004,13 +1021,14 @@ log_data_element(
     do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
 	
     if(xml_has_children(data) == FALSE) {
+        free(prefix_m);
 	free(buffer);
 	return 0;
     }
 	
     for(a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
 	child_result = log_data_element(
-	    log_level, file, function, line, prefix, a_child, depth+1, formatted);
+	    log_level, file, function, line, prefix, a_child, depth+1, options);
     }
 
     if(formatted) {
@@ -1021,6 +1039,7 @@ log_data_element(
     update_buffer();
 
     do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
+    free(prefix_m);
     free(buffer);
     return 1;
 }
@@ -1092,7 +1111,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
     static struct qb_log_callsite *diff_cs = NULL;
 
     if(diff_cs == NULL) {
-        diff_cs = qb_log_callsite_get(function, __FILE__, "xml-blog", log_level, __LINE__, 0);
+        diff_cs = qb_log_callsite_get(function, __FILE__, "xml-diff", log_level, __LINE__, 0);
     }
 
     if (diff_cs == NULL || diff_cs->targets == 0) {
@@ -1100,7 +1119,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
     }
     
     for(child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
-	log_data_element(log_level, "", function, 0, "-", child, 0, TRUE);
+	log_data_element(log_level, __FILE__, function, __LINE__, "- ", child, 0, 5);
 	if(is_first) {
 	    is_first = FALSE;
 	} else {
@@ -1110,7 +1129,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
     
     is_first = TRUE;
     for(child = __xml_first_child(added); child != NULL; child = __xml_next(child)) {
-	log_data_element(log_level, "", function, 0, "+", child, 0, TRUE);
+	log_data_element(log_level, __FILE__, function, __LINE__, "+ ", child, 0, 3);
 	if(is_first) {
 	    is_first = FALSE;
 	} else {
