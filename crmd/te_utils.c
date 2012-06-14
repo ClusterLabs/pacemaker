@@ -182,10 +182,12 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
     }
 #endif
 
-    if (rc == stonith_ok && safe_str_eq(target, origin)) {
+    if (rc == stonith_ok) {
+        crm_notice("target=%s dc=%s", target, fsa_our_dc);
         if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, target)) {
-            crm_notice("Target was our leader %s (recorded: %s)",
-                       target, fsa_our_dc ? fsa_our_dc : "<unset>");
+            crm_notice("Target %s our leader %s (recorded: %s)",
+                       fsa_our_dc?"was":"may have been", target, fsa_our_dc ? fsa_our_dc : "<unset>");
+
             /* Given the CIB resyncing that occurs around elections,
              * have one node update the CIB now and, if the new DC is different,
              * have them do so too after the election
@@ -194,9 +196,8 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
                 const char *uuid = get_uuid(target);
 
                 send_stonith_update(NULL, target, uuid);
-            } else {
-                stonith_cleanup_list = g_list_append(stonith_cleanup_list, crm_strdup(target));
             }
+            stonith_cleanup_list = g_list_append(stonith_cleanup_list, crm_strdup(target));
         }
     }
 }
