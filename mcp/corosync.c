@@ -608,76 +608,15 @@ read_config(void)
     }
 
     if (crm_is_true(logging_to_logfile)) {
-        struct stat parent;
-        uid_t pcmk_uid = 0;
-        uid_t pcmk_gid = getegid();
-
-        FILE *logfile = NULL;
-        char *parent_dir = NULL;
-        struct passwd *pcmk_user = getpwnam(CRM_DAEMON_USER);
-
-        if(pcmk_user) { 
-            pcmk_uid = pcmk_user->pw_uid;
-
-        } else {
-            crm_err("User %s does not exist. Terminating", CRM_DAEMON_USER);
-            exit(100);
-        }
-
-        parent_dir = dirname(strdup(logging_logfile));
-        rc = stat(parent_dir, &parent);
-
-        if (rc != 0) {
-            crm_err("Directory '%s' does not exist for logfile '%s'", parent_dir, logging_logfile);
-
-        } else if (parent.st_uid == pcmk_uid && (parent.st_mode & (S_IRUSR | S_IWUSR))) {
-            /* all good - user */
-            logfile = fopen(logging_logfile, "a");
-
-        } else if (parent.st_gid == pcmk_gid && (parent.st_mode & S_IXGRP)) {
-            /* all good - group */
-            logfile = fopen(logging_logfile, "a");
-
-        } else {
-            crm_err
-                ("Daemons running as %s do not have permission to access '%s'. Logging to '%s' is disabled",
-                 CRM_DAEMON_USER, parent_dir, logging_logfile);
-            crm_err
-                ("Either %s must be owned by %s with rwx permissions, or have rwx permissions for group %d",
-                 parent_dir, CRM_DAEMON_USER, pcmk_gid);
-        }
-
-        if (logfile) {
-            int logfd = fileno(logfile);
-
+        if(crm_add_logfile(logging_logfile)) {
             setenv("HA_debugfile", logging_logfile, 1);
             setenv("HA_DEBUGLOG", logging_logfile, 1);
             setenv("HA_LOGFILE", logging_logfile, 1);
-
-            /* Ensure the file has the correct permissions */
-            rc = fchown(logfd, pcmk_uid, pcmk_gid);
-            if(rc < 0) {
-                crm_warn("Cannot change the ownership of %s to user %s and gid %d",
-                         logging_logfile, CRM_DAEMON_USER, pcmk_gid);
-            }
-            rc = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-            if(rc < 0) {
-                crm_warn("Cannot change the mode of %s to rw-rw----", logging_logfile);
-            }
-
             have_log = TRUE;
-            fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
-                    pcmk_uid, pcmk_gid, logging_logfile);
-            if(fflush(logfile) < 0 || fsync(logfd) < 0) {
-                crm_err("Couldn't write out logfile: %s", logging_logfile);
-                have_log = FALSE;
-            }
-            fclose(logfile);
 
         } else {
             crm_err("Couldn't create logfile: %s", logging_logfile);
         }
-        free(parent_dir);
     }
 
     if (have_log && crm_is_true(logging_to_syslog) == FALSE) {

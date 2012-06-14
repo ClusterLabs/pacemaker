@@ -121,34 +121,6 @@ get_process_list(void)
     return procs;
 }
 
-static int
-pcmk_user_lookup(const char *name, uid_t * uid, gid_t * gid)
-{
-    int rc = -1;
-    char *buffer = NULL;
-    struct passwd pwd;
-    struct passwd *pwentry = NULL;
-
-    buffer = calloc(1, PW_BUFFER_LEN);
-    getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
-    if (pwentry) {
-        rc = 0;
-        if (uid) {
-            *uid = pwentry->pw_uid;
-        }
-        if (gid) {
-            *gid = pwentry->pw_gid;
-        }
-        crm_trace("Cluster user %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
-
-    } else {
-        crm_err("Cluster user %s does not exist", name);
-    }
-
-    free(buffer);
-    return rc;
-}
-
 static void pcmk_child_exit(GPid pid, gint status, gpointer user_data) 
 {
     int exitcode = 0;
@@ -311,7 +283,7 @@ start_child(pcmk_child_t * child)
 #endif
 
         if (child->uid) {
-            if (pcmk_user_lookup(child->uid, &uid, NULL) < 0) {
+            if (crm_user_lookup(child->uid, &uid, NULL) < 0) {
                 crm_err("Invalid uid (%s) specified for %s", child->uid, child->name);
                 return TRUE;
             }
@@ -801,7 +773,7 @@ main(int argc, char **argv)
 #endif
     }
 
-    if (pcmk_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) < 0) {
+    if (crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) < 0) {
         crm_err("Cluster user %s does not exist, aborting Pacemaker startup", CRM_DAEMON_USER);
         return TRUE;
     }

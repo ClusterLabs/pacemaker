@@ -2,6 +2,21 @@
 
 #==#==# Variables that control logging
 
+# Enable debug logging globally or per-subsystem
+# Multiple subsystems may me listed separated by commas
+# eg. PCMK_debug=crmd,pengine
+# PCMK_debug=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
+
+# Send INFO (and higher) messages to the named log file
+# Additional messages may also appear here depending on any configured debug and trace settings
+# By default Pacemaker will inherit the logfile specified in corosync.conf
+# PCMK_debugfile=/var/log/pacemaker.log
+
+# Specify an alternate syslog target for NOTICE (and higher) messages 
+# Use 'none' to disable - not recommended
+# The default value is 'daemon'
+# PCMK_logfacility=none|daemon|user|local0|local1|local2|local3|local4|local5|local6|local7
+
 # Log all messages from a comma-separated list of functions
 # PCMK_trace_functions=function1,function2,function3
 
@@ -25,11 +40,6 @@
 # Multiple subsystems may me listed separated by commas
 # eg. PCMK_blackbox=crmd,pengine
 # PCMK_blackbox=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
-
-# Enable debug logging globally or per-subsystem
-# Multiple subsystems may me listed separated by commas
-# eg. PCMK_debug=crmd,pengine
-# PCMK_debug=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
 
 #==#==# Advanced use only
 

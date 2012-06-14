@@ -31,7 +31,6 @@
 #define crm_flag_none		0x00000000
 #define crm_flag_members	0x00000001
 #define MAX_RESPAWN		100
-#define PW_BUFFER_LEN		500
 
 extern uint32_t local_nodeid;
 

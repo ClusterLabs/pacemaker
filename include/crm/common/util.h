@@ -85,8 +85,6 @@ struct crm_option {
 
 void crm_log_deinit(void);
 
-gboolean daemon_option_enabled(const char *daemon, const char *option);
-
 gboolean crm_log_cli_init(const char *entity);
 
 gboolean crm_log_init(const char *entity, int level, gboolean daemon,
@@ -94,7 +92,7 @@ gboolean crm_log_init(const char *entity, int level, gboolean daemon,
 
 void crm_log_args(int argc, char **argv);
 
-int crm_should_log(int level);
+gboolean crm_add_logfile(const char *filename);
 
 void crm_bump_log_level(void);
 
@@ -400,5 +398,6 @@ void crm_enable_blackbox_tracing(int nsig);
 void crm_write_blackbox(int nsig);
 
 void crm_update_callsites(void);
+int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 
 #endif

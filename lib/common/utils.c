@@ -71,6 +71,10 @@
 #  include <getopt.h>
 #endif
 
+#ifndef PW_BUFFER_LEN
+#  define PW_BUFFER_LEN		500
+#endif
+
 CRM_TRACE_INIT_DATA(common);
 
 static uint ref_counter = 0;
@@ -487,6 +491,34 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
 }
 #endif
 
+int
+crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
+{
+    int rc = -1;
+    char *buffer = NULL;
+    struct passwd pwd;
+    struct passwd *pwentry = NULL;
+
+    buffer = calloc(1, PW_BUFFER_LEN);
+    getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
+    if (pwentry) {
+        rc = 0;
+        if (uid) {
+            *uid = pwentry->pw_uid;
+        }
+        if (gid) {
+            *gid = pwentry->pw_gid;
+        }
+        crm_trace("Cluster user %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
+
+    } else {
+        crm_err("Cluster user %s does not exist", name);
+    }
+
+    free(buffer);
+    return rc;
+}
+
 void
 crm_log_deinit(void)
 {
@@ -529,10 +561,14 @@ set_format_string(int method, const char *daemon)
     qb_log_format_set(method, fmt);
 }
 
-static void
+gboolean
 crm_add_logfile(const char *filename)
 {
-    int fd = 0;
+    struct stat parent;
+    int fd = 0, rc = 0;
+    FILE *logfile = NULL;
+    char *parent_dir = NULL;
+
     static gboolean have_logfile = FALSE;
 
     if(filename == NULL && have_logfile == FALSE) {
@@ -540,48 +576,124 @@ crm_add_logfile(const char *filename)
     }
     
     if (filename == NULL) {
-        return; /* Nothing to do */
+        return FALSE; /* Nothing to do */
     }
 
+    /* Check the parent directory and attempt to open */
+    parent_dir = dirname(strdup(filename));
+    rc = stat(parent_dir, &parent);
+
+    if (rc != 0) {
+        crm_err("Directory '%s' does not exist: logging to '%s' is disabled", parent_dir, filename);
+        return FALSE;
+        
+    } else if (parent.st_uid == geteuid() && (parent.st_mode & (S_IRUSR | S_IWUSR))) {
+        /* all good - user */
+        logfile = fopen(filename, "a");
+        
+    } else if (parent.st_gid == getegid() && (parent.st_mode & S_IXGRP)) {
+        /* all good - group */
+        logfile = fopen(filename, "a");
+
+    } else {
+        crm_err("We (uid=%u, gid=%u) do not have permission to access '%s': logging to '%s' is disabled",
+                geteuid(), getegid(), parent_dir, filename);
+        return FALSE;
+    }
+
+    /* Check/Set permissions if we're root */
+    if(logfile && geteuid() == 0) {
+        struct stat st;
+        uid_t pcmk_uid = 0;
+        gid_t pcmk_gid = 0;
+        gboolean fix = FALSE;
+        int logfd = fileno(logfile);
+
+        rc = fstat(logfd, &st);
+        if(rc < 0) {
+            crm_perror(LOG_WARNING, "Cannot stat %s", filename);
+            return FALSE;
+        }
+
+        crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid);
+        if(st.st_gid != pcmk_gid) {
+            /* Wrong group */
+            fix = TRUE;
+        } else if((st.st_mode & S_IRWXG) != (S_IRGRP|S_IWGRP)) {
+            /* Not read/writable by the correct group */
+            fix = TRUE;
+        }
+
+        if(fix) {
+            rc = fchown(logfd, pcmk_uid, pcmk_gid);
+            if(rc < 0) {
+                crm_warn("Cannot change the ownership of %s to user %s and gid %d",
+                         filename, CRM_DAEMON_USER, pcmk_gid);
+            }
+
+            rc = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+            if(rc < 0) {
+                crm_warn("Cannot change the mode of %s to rw-rw----", filename);
+            }
+
+            fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
+                    pcmk_uid, pcmk_gid, filename);
+            if(fflush(logfile) < 0 || fsync(logfd) < 0) {
+                crm_err("Couldn't write out logfile: %s", filename);
+            }
+        }
+        fclose(logfile);
+    }
+
+    /* Now open with libqb */
     fd = qb_log_file_open(filename);
 
     if(fd < 0) {
         crm_perror(LOG_WARNING, "Couldn't send additional logging to %s", filename);
-        return;
+        return FALSE;
     }
 
     crm_notice("Additional logging available in %s", filename);
     qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
 
-    /* Set the default log format */
-    set_format_string(fd, crm_system_name);
-
     /* Enable callsites */
     crm_update_callsites();
     have_logfile = TRUE;
+    return TRUE;
 }
 
 #ifndef NAME_MAX
 #  define NAME_MAX 256
 #endif
-gboolean
-daemon_option_enabled(const char *daemon, const char *option)
+static const char *
+daemon_option(const char *option)
 {
     char env_name[NAME_MAX];
     const char *value = NULL;
 
     snprintf(env_name, NAME_MAX, "PCMK_%s", option);
     value = getenv(env_name);
-    if (value != NULL && crm_is_true(value)) {
-        return TRUE;
-
-    } else if (value != NULL && strstr(value, daemon)) {
-        return TRUE;
+    if (value != NULL) {
+        return value;
     }
 
     snprintf(env_name, NAME_MAX, "HA_%s", option);
     value = getenv(env_name);
+    if (value != NULL) {
+        return value;
+    }
+
+    return NULL;
+}
+
+static gboolean
+daemon_option_enabled(const char *daemon, const char *option)
+{
+    const char *value = daemon_option(option);
     if (value != NULL && crm_is_true(value)) {
+        return TRUE;
+
+    } else if (value != NULL && strstr(value, daemon)) {
         return TRUE;
     }
 
@@ -799,8 +911,8 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
              int argc, char **argv, gboolean quiet)
 {
     int lpc = 0;
-    const char *logfile = getenv("HA_debugfile");
-    const char *facility = getenv("HA_logfacility");
+    const char *logfile = daemon_option("debugfile");
+    const char *facility = daemon_option("logfacility");
 
     /* Redirect messages from glib functions to our handler */
 #ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
@@ -846,6 +958,35 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     qb_log_init(crm_system_name, qb_log_facility2int(facility), level);
     qb_log_tags_stringify_fn_set(crm_quark_to_string);
 
+    /* Set default format strings */
+    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+        set_format_string(lpc, crm_system_name);
+    }
+
+    if (quiet) {
+        /* Nuke any syslog activity */
+        unsetenv("HA_logfacility");
+        unsetenv("PCMK_logfacility");
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+
+    } else {
+        crm_log_args(argc, argv);
+        if(daemon) {
+            setenv("HA_logfacility", facility, TRUE);
+            setenv("PCMK_logfacility", facility, TRUE);
+        }
+    }
+
+    if (daemon_option_enabled(crm_system_name, "blackbox")) {
+        crm_enable_blackbox(0);
+    }
+    
+    crm_enable_stderr(to_stderr);
+
+    if(logfile) {
+        crm_add_logfile(logfile);
+    }
+
     if(daemon
        && crm_tracing_enabled()
        && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED
@@ -855,34 +996,7 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     }
 
     crm_update_callsites();
-
-    if (quiet) {
-        /* Nuke any syslog activity */
-        unsetenv("HA_logfacility");
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
-
-    } else {
-        crm_log_args(argc, argv);
-        if(daemon) {
-            setenv("HA_logfacility", facility, TRUE);
-        }
-    }
-
-    if (daemon_option_enabled(crm_system_name, "blackbox")) {
-        crm_enable_blackbox(0);
-    }
-
-    /* Set default format strings */
-    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        set_format_string(lpc, crm_system_name);
-    }
     
-    crm_enable_stderr(to_stderr);
-
-    if(logfile) {
-        crm_add_logfile(logfile);
-    }
-
     /* Ok, now we can start logging... */
 
     if (daemon) {
@@ -961,15 +1075,6 @@ crm_bump_log_level(void)
         set_crm_log_level(crm_log_level + 1);
     }
     crm_enable_stderr(TRUE);
-}
-
-int
-crm_should_log(int level)
-{
-    if (level <= crm_log_level) {
-        return 1;
-    }
-    return 0;
 }
 
 unsigned int
