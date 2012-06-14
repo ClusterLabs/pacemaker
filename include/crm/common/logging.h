@@ -52,6 +52,8 @@ void crm_bump_log_level(void);
 
 void crm_enable_stderr(int enable);
 
+gboolean crm_is_callsite_active(struct qb_log_callsite *cs, int level);
+
 /* returns the old value */
 unsigned int set_crm_log_level(unsigned int level);
 
@@ -77,7 +79,7 @@ unsigned int get_crm_log_level(void);
         if(trace_cs == NULL) {                                          \
             trace_cs = qb_log_callsite_get(__func__, __FILE__, fmt, level, __LINE__, 0); \
         }                                                               \
-        if (trace_cs && trace_cs->targets) {                            \
+        if (crm_is_callsite_active(trace_cs, level)) {                  \
             qb_log_from_external_source(                                \
                 __func__, __FILE__, fmt, level, __LINE__, 0,  ##args);  \
         }                                                               \
@@ -111,7 +113,7 @@ unsigned int get_crm_log_level(void);
         if(xml_cs == NULL) {                                            \
             xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blog", level, __LINE__, 0); \
         }                                                               \
-        if (xml_cs && xml_cs->targets) {                              \
+        if (crm_is_callsite_active(xml_cs, level)) {                    \
             log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
         }                                                               \
         if((level) < LOG_WARNING) {                                     \

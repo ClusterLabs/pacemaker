@@ -1114,10 +1114,10 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
         diff_cs = qb_log_callsite_get(function, __FILE__, "xml-diff", log_level, __LINE__, 0);
     }
 
-    if (diff_cs == NULL || diff_cs->targets == 0) {
+    if (crm_is_callsite_active(diff_cs, log_level) == FALSE) {
         return;
     }
-    
+
     for(child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
 	log_data_element(log_level, __FILE__, function, __LINE__, "- ", child, 0, 5);
 	if(is_first) {

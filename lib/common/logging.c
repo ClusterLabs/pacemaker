@@ -450,6 +450,24 @@ crm_log_filter(struct qb_log_callsite *cs)
     }
 }
 
+gboolean
+crm_is_callsite_active(struct qb_log_callsite *cs, int level)
+{
+    if (cs == NULL) {
+        return FALSE;
+    }
+
+    if(cs->priority != level) {
+        cs->priority = level;
+        crm_log_filter(cs);
+    }
+
+    if (cs->targets == 0) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
 void
 crm_update_callsites(void)
 {
