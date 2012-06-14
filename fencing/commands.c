@@ -529,7 +529,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
 	rc = stonith_pending;
 	
     } else {
-	crm_notice("Device %s not found", id?id:"<none>");
+	crm_info("Device %s not found", id?id:"<none>");
 	rc = st_err_unknown_device;
     }
     return rc;

@@ -1089,11 +1089,16 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
     xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
     gboolean is_first = TRUE;
 
-    if(get_crm_log_level() < log_level) {
-	/* nothing will ever be printed */
-	return;
+    static struct qb_log_callsite *diff_cs = NULL;
+
+    if(diff_cs == NULL) {
+        diff_cs = qb_log_callsite_get(function, __FILE__, "xml-blog", log_level, __LINE__, 0);
     }
-	
+
+    if (diff_cs == NULL || diff_cs->targets == 0) {
+        return;
+    }
+    
     for(child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
 	log_data_element(log_level, "", function, 0, "-", child, 0, TRUE);
 	if(is_first) {

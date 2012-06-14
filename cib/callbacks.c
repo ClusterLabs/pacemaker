@@ -663,9 +663,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
             level = LOG_DEBUG_2;
         }
 
-        if (get_crm_log_level() >= level) {
-            /* Avoid all the xml lookups if we're not going to print the results */
-            do_crm_log(level,
+        do_crm_log_unlikely(level,
                        "Operation complete: op %s for section %s (origin=%s/%s/%s, version=%s.%s.%s): %s (rc=%d)",
                        op, section ? section : "'all'", originator ? originator : "local",
                        crm_element_value(request, F_CIB_CLIENTNAME), crm_element_value(request,
@@ -674,7 +672,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                        the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION) : "0",
                        the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0",
                        cib_error2string(rc), rc);
-        }
 
         if (op_reply == NULL && (needs_reply || local_notify)) {
             crm_err("Unexpected NULL reply to message");
@@ -1000,7 +997,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     } else if (config_changed) {
         log_level = LOG_DEBUG_3;
         if (cib_is_master) {
-            log_level = LOG_INFO;
+            log_level = LOG_NOTICE;
         }
 
     } else if (cib_is_master) {

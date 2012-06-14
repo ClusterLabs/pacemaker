@@ -272,7 +272,7 @@ do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * no
 
     crm_trace("=#=#=#=#= Summary =#=#=#=#=");
     crm_trace("\t========= Set %d (Un-runnable) =========", -1);
-    if (get_crm_log_level() > LOG_DEBUG) {
+    if (get_crm_log_level() >= LOG_TRACE) {
         gIter = data_set->actions;
         for (; gIter != NULL; gIter = gIter->next) {
             action_t *action = (action_t *) gIter->data;
@@ -280,7 +280,7 @@ do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * no
             if (is_set(action->flags, pe_action_optional) == FALSE
                 && is_set(action->flags, pe_action_runnable) == FALSE
                 && is_set(action->flags, pe_action_pseudo) == FALSE) {
-                log_action(LOG_DEBUG_2, "\t", action, TRUE);
+                log_action(LOG_TRACE, "\t", action, TRUE);
             }
         }
     }

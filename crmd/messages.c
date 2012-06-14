@@ -185,13 +185,10 @@ fsa_dump_queue(int log_level)
     int offset = 0;
     GListPtr lpc = NULL;
 
-    if (log_level < (int)get_crm_log_level()) {
-        return;
-    }
     for (lpc = fsa_message_queue; lpc != NULL; lpc = lpc->next) {
         fsa_data_t *data = (fsa_data_t *) lpc->data;
 
-        do_crm_log(log_level,
+        do_crm_log_unlikely(log_level,
                    "queue[%d(%d)]: input %s raised by %s()\t(cause=%s)",
                    offset++, data->id, fsa_input2string(data->fsa_input),
                    data->origin, fsa_cause2string(data->fsa_cause));
@@ -816,19 +813,6 @@ handle_request(xmlNode * stored_msg)
 
         free_xml(ping);
         free_xml(msg);
-
-        /* probably better to do this via signals on the
-         * local node
-         */
-    } else if (strcmp(op, CRM_OP_DEBUG_UP) == 0) {
-        crm_bump_log_level();
-        crm_info("Debug set to %d", get_crm_log_level());
-
-    } else if (strcmp(op, CRM_OP_DEBUG_DOWN) == 0) {
-        int level = get_crm_log_level();
-
-        set_crm_log_level(level - 1);
-        crm_info("Debug set to %d", get_crm_log_level());
 
     } else {
         crm_err("Unexpected request (%s) sent to %s", op, AM_I_DC ? "the DC" : "non-DC node");

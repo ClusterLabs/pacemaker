@@ -404,7 +404,7 @@ run_graph(crm_graph_t * graph)
     }
 
     do_crm_log(stat_log_level,
-               "==== Transition %d (Complete=%d, Pending=%d,"
+               "Transition %d (Complete=%d, Pending=%d,"
                " Fired=%d, Skipped=%d, Incomplete=%d, Source=%s): %s",
                graph->id, graph->completed, graph->pending, graph->fired,
                graph->skipped, graph->incomplete, graph->source, status);
