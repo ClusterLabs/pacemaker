@@ -438,7 +438,7 @@ class StonithdTest(CTSTest):
         watchpats.append("tengine_stonith_notify: Peer %s was terminated .*: OK" % node)
 
         if is_dc:
-            watchpats.append("tengine_stonith_notify: Target was our leader .*%s" % node)
+            watchpats.append("tengine_stonith_notify: Target .* our leader .*%s" % node)
 
         if self.CM.Env["LogWatcher"] != "remote" or not is_dc:
             # Often remote logs aren't flushed to disk by the time the node is shot,
@@ -487,7 +487,11 @@ class StonithdTest(CTSTest):
         return self.success()
 
     def errorstoignore(self):
-        return [ self.CM["Pat:We_fenced"] % ".*", self.CM["Pat:They_fenced"] % ".*" ]
+        return [ 
+            self.CM["Pat:We_fenced"] % ".*", 
+            self.CM["Pat:They_fenced"] % ".*",
+            "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
+            ]
 
     def is_applicable(self):
         if not self.is_applicable_common():
@@ -754,7 +758,7 @@ class StandbyTest(CTSTest):
         rsc_on_node = self.CM.active_resources(node)
 
         watchpats = []
-        watchpats.append("do_state_transition:.*input=I_PE_SUCCESS")
+        watchpats.append("do_state_transition:.*-> S_POLICY_ENGINE")
         watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
         watch.setwatch()
 
@@ -1102,13 +1106,11 @@ class ResourceRecover(CTSTest):
                     % (self.rid, self.action))
 
         if rsc.managed():
-            pats.append("te_rsc_command: Initiating action .* stop %s_stop_0" % self.rid)
+            pats.append("process_lrm_event: LRM operation %s_stop_0.*confirmed.*ok" % self.rid)
             if rsc.unique():
-                pats.append("te_rsc_command: Initiating action .* start %s_start_0" % self.rid)
                 pats.append("process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % self.rid)
             else:
                 # Anonymous clones may get restarted with a different clone number
-                pats.append("te_rsc_command: Initiating action .* start .*_start_0")
                 pats.append("process_lrm_event: LRM operation .*_start_0.*confirmed.*ok")
 
         watch = self.create_watch(pats, 60)
@@ -1518,11 +1520,11 @@ class Reattach(CTSTest):
             return self.failure("Resource management not disabled")
 
         pats = []
-        pats.append("te_rsc_command: Initiating action .* stop")
-        pats.append("te_rsc_command: Initiating action .* start")
-        pats.append("te_rsc_command: Initiating action .* promote")
-        pats.append("te_rsc_command: Initiating action .* demote")
-        pats.append("te_rsc_command: Initiating action .* migrate")
+        pats.append("process_lrm_event: .*_stop")
+        pats.append("process_lrm_event: .*_start")
+        pats.append("process_lrm_event: .*_promote")
+        pats.append("process_lrm_event: .*_demote")
+        pats.append("process_lrm_event: .*_migrate")
 
         watch = self.create_watch(pats, 60, "ShutdownActivity")
         watch.setwatch()
@@ -1569,8 +1571,9 @@ class Reattach(CTSTest):
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
                 if r.rclass == "stonith":
-                    self.CM.debug("Ignoring: te_rsc_command: Initiating action .* start %s_.*_0" % r.id)
-                    ignore.append("te_rsc_command: Initiating action .* start %s_.*_0" % r.id)
+
+                    self.CM.debug("Ignoring start actions for %s" % r.id)
+                    ignore.append("process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % r.id)
         
         if self.local_badnews("ResourceActivity:", watch, ignore):
             return self.failure("Resources stopped or started after resource management was re-enabled")
