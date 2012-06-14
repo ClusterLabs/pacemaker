@@ -819,7 +819,7 @@ crm_log_filter_source(int source, const char *trace_files, const char *trace_fns
     if (qb_log_ctl(source, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         return;
     } else if (source == QB_LOG_SYSLOG) { /* No tracing to syslog */
-        if(cs->priority <= LOG_INFO && cs->priority <= crm_log_level) {
+        if(cs->priority <= LOG_NOTICE && cs->priority <= crm_log_level) {
             qb_bit_set(cs->targets, source);
         }
         /* Tracing options... */
