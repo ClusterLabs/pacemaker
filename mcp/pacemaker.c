@@ -633,7 +633,6 @@ main(int argc, char **argv)
 
     int option_index = 0;
     gboolean shutdown = FALSE;
-    gboolean daemonize = TRUE;
     
     int start_seq = 1, lpc = 0;
     static int max = SIZEOF(pcmk_children);
@@ -666,7 +665,7 @@ main(int argc, char **argv)
                 crm_bump_log_level();
                 break;
             case 'f':
-                daemonize = FALSE;
+                /* Legacy */
                 break;
             case 'p':
                 pid_file = optarg;
@@ -731,14 +730,6 @@ main(int argc, char **argv)
     if (read_config() == FALSE) {
         crm_notice("Could not obtain corosync config data, exiting");
         return 1;
-    }
-
-    if (daemonize) {
-        crm_enable_stderr(FALSE);
-        crm_make_daemon(crm_system_name, TRUE, pid_file);
-
-        /* Only Re-init if we're running daemonized */
-        crm_log_init(NULL, LOG_INFO, TRUE, FALSE, 0, NULL, FALSE);
     }
 
     crm_notice("Starting Pacemaker %s (Build: %s): %s",
