@@ -551,6 +551,8 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
             }
 
             if (output != NULL) {
+                char *local_copy;
+                int lpc = 0, last = 0, more;
                 len = 0;
                 do {
                     char buf[500];
@@ -560,11 +562,22 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
                         buf[ret] = 0;
                         crm_realloc(*output, len + ret + 1);
                         sprintf((*output) + len, "%s", buf);
-                        crm_debug("%d: %s", ret, (*output) + len);
+                        crm_trace("%d: %s", ret, (*output) + len);
                         len += ret;
                     }
 
                 } while (ret == 500 || (ret < 0 && errno == EINTR));
+
+                local_copy = crm_strdup(*output);
+                more = strlen(local_copy);
+                for(lpc = 0; lpc < more; lpc++) {
+                    if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
+                        local_copy[lpc] = 0;
+                        crm_debug("%s: %s", agent, local_copy+last);
+                        last = lpc+1;
+                    }
+                }
+                crm_debug("%s: %s (total %d bytes)", agent, local_copy+last, more);
             }
 
             rc = st_err_agent;
