@@ -45,10 +45,6 @@
                                         /* Status of an offline client */
 #  endif
 
-extern unsigned int crm_log_level;
-extern gboolean crm_config_error;
-extern gboolean crm_config_warning;
-
 #  ifdef HAVE_GETOPT_H
 #    include <getopt.h>
 #  else
@@ -82,26 +78,6 @@ struct crm_option {
 
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
-
-void crm_log_deinit(void);
-
-gboolean crm_log_cli_init(const char *entity);
-
-gboolean crm_log_init(const char *entity, int level, gboolean daemon,
-                      gboolean to_stderr, int argc, char **argv, gboolean quiet);
-
-void crm_log_args(int argc, char **argv);
-
-gboolean crm_add_logfile(const char *filename);
-
-void crm_bump_log_level(void);
-
-void crm_enable_stderr(int enable);
-
-/* returns the old value */
-unsigned int set_crm_log_level(unsigned int level);
-
-unsigned int get_crm_log_level(void);
 
 char *crm_itoa(int an_int);
 
@@ -393,11 +369,6 @@ char *crm_generate_uuid(void);
 
 char *crm_md5sum(const char *buffer);
 
-void crm_enable_blackbox(int nsig);
-void crm_enable_blackbox_tracing(int nsig);
-void crm_write_blackbox(int nsig);
-
-void crm_update_callsites(void);
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 
 #endif

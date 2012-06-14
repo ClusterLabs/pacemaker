@@ -28,7 +28,6 @@
 #  undef MAX
 #  include <string.h>
 
-#  include <qb/qblog.h>
 #  include <libxml/tree.h>
 
 int log_data_element(int log_level, const char *file, const char *function, int line,
@@ -198,127 +197,8 @@ extern const char *crm_system_name;
 
 typedef GList *GListPtr;
 
-#  ifndef LOG_TRACE
-#    define LOG_TRACE    LOG_DEBUG+1
-#  endif
-#  define LOG_DEBUG_2  LOG_TRACE
-#  define LOG_DEBUG_3  LOG_TRACE
-#  define LOG_DEBUG_4  LOG_TRACE
-#  define LOG_DEBUG_5  LOG_TRACE
-#  define LOG_DEBUG_6  LOG_TRACE
-
-#  define LOG_MSG  LOG_TRACE
-
-/*
- * Throughout the macros below, note the leading, pre-comma, space in the
- * various ' , ##args' occurences to aid portability across versions of 'gcc'.
- *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
- */
-#    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
-
-#    define do_crm_log(level, fmt, args...) do {                        \
-        qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args); \
-        if((level) < LOG_WARNING) {                                     \
-            crm_write_blackbox(0);                                      \
-        }                                                               \
-    } while(0)
-
-/* level /MUST/ be a constant or compilation will fail */
-#    define do_crm_log_unlikely(level, fmt, args...) do {               \
-        static struct qb_log_callsite *trace_cs = NULL;                 \
-        if(trace_cs == NULL) {                                          \
-            trace_cs = qb_log_callsite_get(__func__, __FILE__, fmt, level, __LINE__, 0); \
-        }                                                               \
-        if (trace_cs && trace_cs->targets) {                            \
-            qb_log_from_external_source(                                \
-                __func__, __FILE__, fmt, level, __LINE__, 0,  ##args);  \
-        }                                                               \
-    } while(0)
-
-#    define CRM_LOG_ASSERT(expr) do {					\
-        if(__unlikely((expr) == FALSE)) {				\
-            static struct qb_log_callsite *core_cs = NULL;              \
-            if(core_cs == NULL) {                                       \
-                core_cs = qb_log_callsite_get(__func__, __FILE__, "log-assert", LOG_TRACE, __LINE__, 0); \
-            }                                                           \
-            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,   \
-                      core_cs?core_cs->targets:FALSE, TRUE);            \
-        }                                                               \
-    } while(0)
-
-#    define CRM_CHECK(expr, failure_action) do {				\
-	if(__unlikely((expr) == FALSE)) {				\
-            static struct qb_log_callsite *core_cs = NULL;              \
-            if(core_cs == NULL) {                                       \
-                core_cs = qb_log_callsite_get(__func__, __FILE__, "check-assert", LOG_TRACE, __LINE__, 0); \
-            }                                                           \
-	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
-		      core_cs?core_cs->targets:FALSE, TRUE);            \
-	    failure_action;						\
-	}								\
-    } while(0)
-
-#    define do_crm_log_xml(level, text, xml) do {                       \
-        static struct qb_log_callsite *xml_cs = NULL;                   \
-        if(xml_cs == NULL) {                                            \
-            xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blog", level, __LINE__, 0); \
-        }                                                               \
-        if (xml_cs && xml_cs->targets) {                              \
-            log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
-        }                                                               \
-        if((level) < LOG_WARNING) {                                     \
-            crm_write_blackbox(0);                                      \
-        }                                                               \
-    } while(0)
-
-#    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
-	qb_log_from_external_source(function, file, fmt, level, line, 0,  ##args); \
-    } while(0)
-
-#    define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
-
-#  define crm_perror(level, fmt, args...) do {				\
-	const char *err = strerror(errno);				\
-	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
-	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
-        if((level) < LOG_WARNING) {                                     \
-            crm_write_blackbox(0);                                      \
-        }                                                               \
-    } while(0)
-
-#    define crm_log_tag(level, tag, fmt, args...)    do {               \
-        qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, g_quark_try_string(tag), ##args); \
-    } while(0)
-
-
-#    define crm_crit(fmt, args...)    do {      \
-        qb_logt(LOG_CRIT,    0, fmt , ##args);  \
-        crm_write_blackbox(0);                  \
-    } while(0)
-
-#    define crm_err(fmt, args...)    do {      \
-        qb_logt(LOG_ERR,    0, fmt , ##args);  \
-        crm_write_blackbox(0);                  \
-    } while(0)
-
-#    define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
-#    define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
-#    define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
-
-#    define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
-#    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
-
+#  include <crm/common/logging.h>
 #  include <crm/common/util.h>
-
-#  define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)
-#  define crm_log_xml_err(xml, text)     do_crm_log_xml(LOG_ERR,     text, xml)
-#  define crm_log_xml_warn(xml, text)    do_crm_log_xml(LOG_WARNING, text, xml)
-#  define crm_log_xml_notice(xml, text)  do_crm_log_xml(LOG_NOTICE,  text, xml)
-#  define crm_log_xml_info(xml, text)    do_crm_log_xml(LOG_INFO,    text, xml)
-#  define crm_log_xml_debug(xml, text)   do_crm_log_xml(LOG_DEBUG,   text, xml)
-#  define crm_log_xml_trace(xml, text)   do_crm_log_xml(LOG_TRACE,   text, xml)
-
-#  define crm_str(x)    (const char*)(x?x:"<null>")
 
 #  define crm_malloc0(malloc_obj, length) do {				\
 	malloc_obj = malloc(length);					\
