@@ -287,7 +287,7 @@ typedef GList *GListPtr;
     } while(0)
 
 #    define crm_log_tag(level, tag, fmt, args...)    do {               \
-        qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, g_quark_from_string(tag), ##args); \
+        qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, g_quark_try_string(tag), ##args); \
     } while(0)
 
 

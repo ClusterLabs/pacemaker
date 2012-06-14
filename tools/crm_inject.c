@@ -1368,8 +1368,6 @@ main(int argc, char **argv)
         crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    /* update_all_trace_data();    /\* again, so we see which trace points got updated *\/ */
-
     if(test_dir != NULL) {
 	return profile_all(test_dir);
     }

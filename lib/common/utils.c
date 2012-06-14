@@ -85,7 +85,7 @@ int node_score_infinity = INFINITY;
 
 unsigned int crm_log_level = LOG_INFO;
 
-void set_format_string(int method, const char *daemon, gboolean trace);
+static gboolean crm_tracing_enabled(void);
 
 gboolean
 check_time(const char *value)
@@ -496,10 +496,9 @@ crm_log_deinit(void)
 }
 
 #define FMT_MAX 256
-void
-set_format_string(int method, const char *daemon, gboolean trace)
+static void
+set_format_string(int method, const char *daemon)
 {
-    static gboolean local_trace = FALSE;
     int offset = 0;
     char fmt[FMT_MAX];
 
@@ -516,8 +515,7 @@ set_format_string(int method, const char *daemon, gboolean trace)
         }
     }
 
-    local_trace |= trace;
-    if (local_trace && method >= QB_LOG_STDERR) {
+    if (crm_tracing_enabled() && method >= QB_LOG_STDERR) {
         offset += snprintf(fmt + offset, FMT_MAX - offset, "(%%-12f:%%5l %%g) %%-7p: %%n: ");
     } else {
         offset += snprintf(fmt + offset, FMT_MAX - offset, "%%g %%-7p: %%n: ");
@@ -553,74 +551,14 @@ crm_add_logfile(const char *filename)
     }
 
     crm_notice("Additional logging available in %s", filename);
-    qb_log_filter_ctl(fd, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", crm_log_level);
     qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
 
     /* Set the default log format */
-    set_format_string(fd, crm_system_name, FALSE);
+    set_format_string(fd, crm_system_name);
+
+    /* Enable callsites */
+    crm_update_callsites();
     have_logfile = TRUE;
-}
-
-void
-update_all_trace_data(void)
-{
-    int lpc = 0;
-
-    if(getenv("PCMK_trace_files") || getenv("PCMK_trace_functions") || getenv("PCMK_trace_formats")) {
-        if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED
-            && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
-            /* Make sure tracing goes somewhere */
-            crm_add_logfile(NULL);
-        }
-
-    } else {
-        return;
-    }
-    
-    /* No tracing to SYSLOG */
-    for (lpc = QB_LOG_STDERR; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        if (qb_log_ctl(lpc, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
-
-            const char *env_value = NULL;
-
-            env_value = getenv("PCMK_trace_files");
-            if (env_value) {
-                char token[500];
-                const char *offset = NULL;
-                const char *next = env_value;
-
-                do {
-                    offset = next;
-                    next = strchrnul(offset, ',');
-                    snprintf(token, 499, "%.*s", (int)(next - offset), offset);
-                    crm_info("Looking for %s from %s (%d)", token, env_value, lpc);
-
-                    qb_log_filter_ctl(lpc, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, token, LOG_TRACE);
-
-                    if (next[0] != 0) {
-                        next++;
-                    }
-
-                } while (next != NULL && next[0] != 0);
-            }
-
-            env_value = getenv("PCMK_trace_formats");
-            if (env_value) {
-                crm_info("Looking for format strings matching %s (%d)", env_value, lpc);
-                qb_log_filter_ctl(lpc,
-                                  QB_LOG_FILTER_ADD, QB_LOG_FILTER_FORMAT, env_value, LOG_TRACE);
-            }
-
-            env_value = getenv("PCMK_trace_functions");
-            if (env_value) {
-                crm_info("Looking for functions named %s (%d)", env_value, lpc);
-                qb_log_filter_ctl(lpc,
-                                  QB_LOG_FILTER_ADD, QB_LOG_FILTER_FUNCTION, env_value, LOG_TRACE);
-            }
-
-            set_format_string(lpc, crm_system_name, TRUE);
-        }
-    }
 }
 
 #ifndef NAME_MAX
@@ -651,20 +589,19 @@ daemon_option_enabled(const char *daemon, const char *option)
 }
 
 static char *blackbox_file_prefix = NULL;
+static gboolean blackbox_tracing_enabled = FALSE;
 
 void
 crm_enable_blackbox_tracing(int nsig) 
 {
-    static gboolean enabled = FALSE;
 
-    if(enabled) {
-        enabled = FALSE;
-        qb_log_filter_ctl(QB_LOG_BLACKBOX, QB_LOG_FILTER_REMOVE, QB_LOG_FILTER_FILE, "*", LOG_TRACE);
+    if(blackbox_tracing_enabled) {
+        blackbox_tracing_enabled = FALSE;
     } else {
-        enabled = TRUE;
-        qb_log_filter_ctl(QB_LOG_BLACKBOX, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", LOG_TRACE);
+        blackbox_tracing_enabled = TRUE;
     }
-    crm_debug("Blackbox tracing is %s", enabled?"on":"off");
+    crm_update_callsites();
+    crm_debug("Blackbox tracing is %s", blackbox_tracing_enabled?"on":"off");
 }
 
 void
@@ -680,10 +617,10 @@ crm_enable_blackbox(int nsig)
     if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 1024*1024); /* Any size change drops existing entries */
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE); /* Setting the size seems to disable it */
-        qb_log_filter_ctl(QB_LOG_BLACKBOX, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", LOG_DEBUG);
 
         crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
         crm_signal(SIGSEGV, crm_write_blackbox);
+        crm_update_callsites();
 
         /* Original meanings from signal(7) 
          *
@@ -764,6 +701,99 @@ static const char *crm_quark_to_string(uint32_t tag)
     return "";
 }
 
+static void
+crm_log_filter_source(int source, const char *trace_files, const char *trace_fns, const char *trace_fmts, const char *trace_tags, struct qb_log_callsite *cs)
+{
+    if (qb_log_ctl(source, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
+        return;
+    } else if (source == QB_LOG_SYSLOG) { /* No tracing to syslog */
+        if(cs->priority <= LOG_INFO && cs->priority <= crm_log_level) {
+            qb_bit_set(cs->targets, source);
+        }
+        /* Tracing options... */
+    } else if(source == QB_LOG_BLACKBOX && blackbox_tracing_enabled) {
+        qb_bit_set(cs->targets, source);
+    } else if (cs->priority <= crm_log_level) {
+        qb_bit_set(cs->targets, source);
+    } else if(trace_files && strstr(trace_files, cs->filename) != NULL) {
+        qb_bit_set(cs->targets, source);
+    } else if(trace_fns && strstr(trace_fns, cs->function) != NULL) {
+        qb_bit_set(cs->targets, source);
+    } else if(trace_fmts && strstr(trace_fmts, cs->format) != NULL) {
+        qb_bit_set(cs->targets, source);
+    } else if(trace_tags && cs->tags != 0 && g_quark_to_string(cs->tags) != NULL) {
+        qb_bit_set(cs->targets, source);
+    }
+}
+
+static void
+crm_log_filter(struct qb_log_callsite *cs)
+{
+    int lpc = 0;
+    static int need_init = 1;
+    static const char *trace_fns = NULL;
+    static const char *trace_tags = NULL;
+    static const char *trace_fmts = NULL;
+    static const char *trace_files = NULL;
+
+    if(need_init) {
+        need_init = 0;
+        trace_fns = getenv("PCMK_trace_functions");
+        trace_fmts = getenv("PCMK_trace_formats");
+        trace_tags = getenv("PCMK_trace_tags");
+        trace_files = getenv("PCMK_trace_files");
+
+        if (trace_tags != NULL) {
+            uint32_t tag;
+            char token[500];
+            const char *offset = NULL;
+            const char *next = trace_tags;
+
+            do {
+                offset = next;
+                next = strchrnul(offset, ',');
+                snprintf(token, 499, "%.*s", (int)(next - offset), offset);
+
+                tag = g_quark_from_string(token);
+                crm_info("Created GQuark %u from token '%s' in '%s'", tag, token, trace_tags);
+
+                if (next[0] != 0) {
+                    next++;
+                }
+
+            } while (next != NULL && next[0] != 0);
+        }
+    }
+
+    cs->targets = 0; /* Reset then find targets to enable */
+    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+        crm_log_filter_source(lpc, trace_files, trace_fns, trace_fmts, trace_tags, cs);
+    }
+}
+
+void
+crm_update_callsites(void)
+{
+    crm_notice("Enabling callsites based on priority=%d, files=%s, functions=%s, formats=%s, tags=%s",
+               crm_log_level, 
+               getenv("PCMK_trace_files"),
+               getenv("PCMK_trace_functions"),
+               getenv("PCMK_trace_formats"),
+               getenv("PCMK_trace_tags"));
+    qb_log_filter_fn_set(crm_log_filter);
+}
+
+static gboolean
+crm_tracing_enabled(void)
+{
+    if(crm_log_level >= LOG_TRACE) {
+        return TRUE;
+    } else if(getenv("PCMK_trace_files") || getenv("PCMK_trace_functions") || getenv("PCMK_trace_formats")  || getenv("PCMK_trace_tags")) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 gboolean
 crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
              int argc, char **argv, gboolean quiet)
@@ -811,9 +841,20 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         /* Override the default setting */
         to_stderr = TRUE;
     }
+
     crm_log_level = level;
     qb_log_init(crm_system_name, qb_log_facility2int(facility), level);
     qb_log_tags_stringify_fn_set(crm_quark_to_string);
+
+    if(daemon
+       && crm_tracing_enabled()
+       && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED
+       && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
+        /* Make sure tracing goes somewhere */
+        crm_add_logfile(NULL);
+    }
+
+    crm_update_callsites();
 
     if (quiet) {
         /* Nuke any syslog activity */
@@ -833,7 +874,7 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
 
     /* Set default format strings */
     for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        set_format_string(lpc, crm_system_name, FALSE);
+        set_format_string(lpc, crm_system_name);
     }
     
     crm_enable_stderr(to_stderr);
@@ -887,8 +928,6 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
     }
 
-    update_all_trace_data();
-
     return TRUE;
 }
 
@@ -897,29 +936,9 @@ unsigned int
 set_crm_log_level(unsigned int level)
 {
     unsigned int old = crm_log_level;
-
-    int lpc = 0;
-
-    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        if (qb_log_ctl(lpc, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
-
-            if (old > level) {
-                qb_log_filter_ctl(lpc, QB_LOG_FILTER_REMOVE, QB_LOG_FILTER_FILE, "*", old);
-            }
-
-            if (old != level) {
-                int rc = qb_log_filter_ctl(lpc, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", level);
-
-                crm_info("New log level: %d %d", level, rc);
-                /* qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_PRIORITY_BUMP, LOG_INFO - LOG_DEBUG);
-                 * Needed? Yes, if we want trace logging sent to syslog but the semantics suck
-                 */
-            }
-
-            set_format_string(lpc, crm_system_name, level > LOG_DEBUG);
-        }
-    }
     crm_log_level = level;
+    crm_update_callsites();
+    crm_info("New log level: %d", level);
     return old;
 }
 
@@ -927,12 +946,8 @@ void
 crm_enable_stderr(int enable)
 {
     if (enable && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
-        qb_log_filter_ctl(QB_LOG_STDERR, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", crm_log_level);
-        set_format_string(QB_LOG_STDERR, crm_system_name, crm_log_level > LOG_DEBUG);
         qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_TRUE);
-
-        /* Need to reprocess now that a new target is active */
-        update_all_trace_data();
+        crm_update_callsites();
 
     } else if (enable == FALSE) {
         qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_ENABLED, QB_FALSE);
