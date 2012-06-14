@@ -40,6 +40,10 @@ ltdl.m4
 ltmain.sh
 missing
 py-compile
+m4/ltoptions.m4
+m4/ltsugar.m4
+m4/ltversion.m4
+m4/lt~obsolete.m4
 
 # Configure targets
 cts/CTSvars.py
@@ -84,11 +88,14 @@ fencing/stonith-test
 fencing/stonith_admin
 fencing/stonithd
 fencing/stonithd.xml
+lrmd/lrmd
+lrmd/lrmd_test
 mcp/pacemakerd
 pengine/pengine
 pengine/pengine.xml
 pengine/ptest
 shell/regression/testcases/confbasic-xml.filter
+scratch
 tools/attrd
 tools/attrd_updater
 tools/cibadmin
@@ -103,6 +110,8 @@ tools/crm_uuid
 tools/crm_verify
 tools/crmadmin
 tools/iso8601
+tools/crm_ticket
+tools/report.collector.1
 xml/crm.dtd
 xml/pacemaker.rng
 extra/rgmanager/ccs2cib
@@ -138,6 +147,8 @@ compat_reports
 abi_dumps
 logs
 
+*.patch
+*.diff
 *.sed
 *.orig
 *.rej
