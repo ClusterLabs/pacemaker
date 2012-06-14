@@ -1878,7 +1878,7 @@ process_lrm_event(lrmd_event_data_t * op)
             log_level = LOG_INFO;
             break;
         case PCMK_LRM_OP_DONE:
-            log_level = LOG_INFO;
+            log_level = LOG_NOTICE;
             break;
         case PCMK_LRM_OP_TIMEOUT:
             log_level = LOG_DEBUG_3;

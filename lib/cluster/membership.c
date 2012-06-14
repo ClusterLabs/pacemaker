@@ -376,11 +376,12 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
     }
 
     if (state_changed || addr_changed || votes_changed) {
-        crm_info("%s: Node %s: id=%u state=%s%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
-                 " proc=%.32x%s", source, node->uname, node->id, node->state, state_changed ? " (new)" : "",
-                 node->addr, addr_changed ? " (new)" : "", node->votes,
-                 votes_changed ? " (new)" : "", node->born, node->last_seen, node->processes,
-                 procs_changed ? " (new)" : "");
+        do_crm_log(state_changed?LOG_NOTICE:LOG_INFO,
+                   "%s: Node %s: id=%u state=%s%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
+                   " proc=%.32x%s", source, node->uname, node->id, node->state, state_changed ? " (new)" : "",
+                   node->addr, addr_changed ? " (new)" : "", node->votes,
+                   votes_changed ? " (new)" : "", node->born, node->last_seen, node->processes,
+                   procs_changed ? " (new)" : "");
 
     } else if (procs_changed) {
         crm_debug("%s: Node %s: id=%u seen=" U64T
