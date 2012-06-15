@@ -31,7 +31,7 @@ libpe_rules_la_SOURCES	= rules.c common.c
 
 libpe_status_la_LDFLAGS	= -version-info 4:0:1
 libpe_status_la_SOURCES	=  status.c unpack.c utils.c complex.c native.c group.c clone.c rules.c common.c
-libpe_status_la_LIBADD	= -llrm @CURSESLIBS@
+libpe_status_la_LIBADD	=  @CURSESLIBS@
 
 clean-generic:
 	rm -f *.log *.debug *~
