@@ -1905,8 +1905,12 @@ process_lrm_event(lrmd_event_data_t * op)
         send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
 
     } else if (pending == NULL) {
-        crm_err("Op %s (call=%d): No 'pending' entry", op_key, op->call_id);
-
+        /* Operations that are cancelled may safely be removed
+         * from the pending op list before the lrmd completion event
+         * is received. Only report non-cancelled ops here. */
+        if (op->op_status != PCMK_LRM_OP_CANCELLED) {
+            crm_err("Op %s (call=%d): No 'pending' entry", op_key, op->call_id);
+        }
     } else if (op->user_data == NULL) {
         crm_err("Op %s (call=%d): No user data", op_key, op->call_id);
 
