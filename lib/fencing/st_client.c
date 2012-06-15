@@ -568,16 +568,18 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
 
                 } while (ret == 500 || (ret < 0 && errno == EINTR));
 
-                local_copy = crm_strdup(*output);
-                more = strlen(local_copy);
-                for(lpc = 0; lpc < more; lpc++) {
-                    if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
-                        local_copy[lpc] = 0;
-                        crm_debug("%s: %s", agent, local_copy+last);
-                        last = lpc+1;
+                if (*output) {
+                    local_copy = crm_strdup(*output);
+                    more = strlen(local_copy);
+                    for(lpc = 0; lpc < more; lpc++) {
+                        if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
+                            local_copy[lpc] = 0;
+                            crm_debug("%s: %s", agent, local_copy+last);
+                            last = lpc+1;
+                        }
                     }
+                    crm_debug("%s: %s (total %d bytes)", agent, local_copy+last, more);
                 }
-                crm_debug("%s: %s (total %d bytes)", agent, local_copy+last, more);
             }
 
             rc = st_err_agent;
