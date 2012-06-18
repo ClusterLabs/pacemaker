@@ -290,7 +290,8 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean p
     crm_log_xml_trace(op_request, "Client[inbound]");
 
     cib_common_callback_worker(op_request, cib_client, privileged);
-    
+    free_xml(op_request);
+
     return 0;
 }
 
