@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <grp.h>
 
 #include <stdlib.h>
 #include <errno.h>
@@ -81,25 +82,31 @@ gboolean cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, g
 static int32_t
 cib_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
+    cib_client_t *new_client = NULL;
+#if ENABLE_ACL
+    struct group *crm_grp = NULL;
+#endif
+
     crm_trace("Connecting %p for uid=%d gid=%d pid=%d", c, uid, gid, crm_ipcs_client_pid(c));
     if (cib_shutdown_flag) {
         crm_info("Ignoring new client [%d] during shutdown", crm_ipcs_client_pid(c));
         return -EPERM;
     }
-    return 0;
-}
 
-static void
-cib_ipc_created(qb_ipcs_connection_t *c)
-{
-    cib_client_t *new_client = NULL;
-    
     new_client = calloc(1, sizeof(cib_client_t));
     new_client->ipc = c;
 
     CRM_CHECK(new_client->id == NULL, free(new_client->id));
     new_client->id = crm_generate_uuid();
-    crm_trace("%p connected for client %s", c, new_client->id);
+
+#if ENABLE_ACL
+    crm_grp = getgrnam(CRM_DAEMON_GROUP);
+    if (crm_grp) {
+        qb_ipcs_connection_auth_set(c, -1, crm_grp->gr_gid, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    }
+
+    new_client->user = uid2username(uid);
+#endif
 
     /* make sure we can find ourselves later for sync calls
      * redirected to the master instance
@@ -107,6 +114,16 @@ cib_ipc_created(qb_ipcs_connection_t *c)
     g_hash_table_insert(client_list, new_client->id, new_client);
 
     qb_ipcs_context_set(c, new_client);
+
+    return 0;
+}
+
+static void
+cib_ipc_created(qb_ipcs_connection_t *c)
+{
+    cib_client_t *cib_client = qb_ipcs_context_get(c);
+
+    crm_trace("%p connected for client %s", c, cib_client->id);
 }
 
 static int32_t
@@ -284,7 +301,7 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean p
     crm_xml_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
 
 #if ENABLE_ACL
-    determine_request_user(&cib_client->user, channel, op_request, F_CIB_USER);
+    determine_request_user(cib_client->user, op_request, F_CIB_USER);
 #endif
 
     crm_log_xml_trace(op_request, "Client[inbound]");
