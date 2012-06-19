@@ -561,6 +561,7 @@ write_cib_contents(gpointer p)
     xmlNode *cib_status_root = NULL;
 
     xmlNode *local_cib = NULL;
+    xmlNode *tmp_cib = NULL;
 
     char *tmp1 = NULL;
     char *tmp2 = NULL;
@@ -705,7 +706,8 @@ write_cib_contents(gpointer p)
         goto cleanup;
     }
     crm_debug("Wrote digest %s to disk", digest);
-    CRM_ASSERT(retrieveCib(tmp1, tmp2, FALSE) != NULL);
+    tmp_cib = retrieveCib(tmp1, tmp2, FALSE);
+    CRM_ASSERT(tmp_cib != NULL);
     sync_directory(cib_root);
 
     crm_debug("Activating %s", tmp1);
@@ -722,6 +724,7 @@ write_cib_contents(gpointer p)
     free(tmp2);
     free(tmp1);
 
+    free_xml(tmp_cib);
     free_xml(local_cib);
 
     if (p == NULL) {
