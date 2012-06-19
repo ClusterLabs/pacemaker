@@ -26,6 +26,8 @@
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 
+#include <crm/pengine/status.h>
+#include <crm/cib.h>
 #include <crm/lrmd.h>
 
 /* *INDENT-OFF* */
@@ -40,6 +42,7 @@ static struct crm_option long_options[] = {
 	{"event-ver",        1, 0, 'e', "\tVersion of event to listen to"},
 	{"api-call",         1, 0, 'c', "\tDirectly relates to lrmd api functions"},
 	{"no-wait",          0, 0, 'w', "\tMake api call and do not wait for result."},
+	{"is-running",       0, 0, 'R', "\tDetermine if a resource is registered and running."},
 	{"-spacer-",         1, 0, '-', "\nParameters for api-call option"},
 	{"action",           1, 0, 'a'},
 	{"rsc-id",           1, 0, 'r'},
@@ -58,7 +61,10 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+cib_t *cib_conn = NULL;
 static int exec_call_id = 0;
+static int exec_call_opts = 0;
+extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
 static struct {
 	int verbose;
@@ -70,6 +76,7 @@ static struct {
 	int cancel_call_id;
 	int event_version;
 	int no_wait;
+	int is_running;
 	int no_connect;
 	const char *api_call;
 	const char *rsc_id;
@@ -118,7 +125,7 @@ read_events(lrmd_event_data_t *event)
 	}
 
 	if (exec_call_id && (event->call_id == exec_call_id)) {
-		if (event->op_status == 0) {
+		if (event->op_status == 0 && event->rc == 0) {
 			print_result(printf("API-CALL SUCCESSFUL for 'exec'\n"));
 		} else {
 			print_result(printf("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s\n",
@@ -192,7 +199,7 @@ start_test(gpointer user_data)
 			options.interval,
 			options.timeout,
 			options.start_delay,
-			0,
+			exec_call_opts,
 			options.params);
 
 		if (rc > 0) {
@@ -296,6 +303,111 @@ start_test(gpointer user_data)
 	return 0;
 }
 
+static resource_t *
+find_rsc_or_clone(const char *rsc, pe_working_set_t * data_set)
+{
+	resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
+
+	if (the_rsc == NULL) {
+		char *as_clone = crm_concat(rsc, "0", ':');
+
+		the_rsc = pe_find_resource(data_set->resources, as_clone);
+		free(as_clone);
+	}
+	return the_rsc;
+}
+
+static int
+generate_params(void)
+{
+	int rc = 0;
+	pe_working_set_t data_set;
+	xmlNode *cib_xml_copy = NULL;
+	resource_t *rsc = NULL;
+	GHashTable *params = NULL;
+	GHashTable *meta = NULL;
+	GHashTableIter iter;
+
+	if (options.params) {
+		return 0;
+	}
+
+	set_working_set_defaults(&data_set);
+
+	cib_conn = cib_new();
+	rc = cib_conn->cmds->signon(cib_conn, "lrmd_test", cib_query);
+	if (rc != cib_ok) {
+		crm_err("Error signing on to the CIB service: %s\n", cib_error2string(rc));
+		rc = -1;
+		goto param_gen_bail;
+	}
+
+	cib_xml_copy = get_cib_copy(cib_conn);
+
+	if (!cib_xml_copy) {
+		crm_err("Error retrieving cib copy.");
+		rc = -1;
+		goto param_gen_bail;
+	}
+
+	if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
+		crm_err("Error updating cib configuration");
+		rc = -1;
+		goto param_gen_bail;
+	}
+
+	data_set.input = cib_xml_copy;
+	data_set.now = new_ha_date(TRUE);
+
+	cluster_status(&data_set);
+	if (options.rsc_id) {
+		rsc = find_rsc_or_clone(options.rsc_id, &data_set);
+	}
+
+	if (!rsc) {
+		crm_err("Resource does not exist in config");
+		rc = -1;
+		goto param_gen_bail;
+	}
+
+	params = g_hash_table_new_full(crm_str_hash,
+		g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+	meta = g_hash_table_new_full(crm_str_hash,
+		g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+	get_rsc_attributes(params, rsc, NULL, &data_set);
+	get_meta_attributes(meta, rsc, NULL, &data_set);
+
+	if (params) {
+		char *key = NULL;
+		char *value = NULL;
+
+		g_hash_table_iter_init(&iter, params);
+		while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+			options.params = lrmd_key_value_add(options.params, key, value);
+		}
+		g_hash_table_destroy(params);
+	}
+
+	if (meta) {
+		char *key = NULL;
+		char *value = NULL;
+
+		g_hash_table_iter_init(&iter, meta);
+		while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+			char *crm_name = crm_meta_name(key);
+			options.params = lrmd_key_value_add(options.params, crm_name, value);
+			free(crm_name);
+		}
+		g_hash_table_destroy(meta);
+	}
+
+param_gen_bail:
+
+	cleanup_alloc_calculations(&data_set);
+	return rc;
+}
+
 int main(int argc, char ** argv)
 {
 	int option_index = 0;
@@ -332,6 +444,9 @@ int main(int argc, char ** argv)
 			break;
 		case 'w':
 			options.no_wait = 1;
+			break;
+		case 'R':
+			options.is_running = 1;
 			break;
 		case 'c':
 			options.api_call = optarg;
@@ -400,6 +515,26 @@ int main(int argc, char ** argv)
 
 	crm_log_init("lrmd_ctest", LOG_INFO, TRUE, options.verbose ? TRUE : FALSE, argc, argv, FALSE);
 
+	if (options.is_running) {
+		if (!options.timeout) {
+			options.timeout = 30000;
+		}
+		options.interval = 0;
+		if (!options.rsc_id) {
+			crm_err("rsc-id must be given when is-running is used");
+			exit(-1);
+		}
+
+		if (generate_params()) {
+			print_result(printf("Failed to retrieve rsc parameters from cib, can not determine if rsc is running.\n"));
+			exit(-1);
+		}
+		options.api_call = "exec";
+		options.action = "monitor";
+		exec_call_opts = lrmd_opt_notify_orig_only;
+	}
+
+
 	/* if we can't perform an api_call or listen for events, 
 	 * there is nothing to do */
 	if (!options.api_call && !options.listen) {
@@ -416,5 +551,11 @@ int main(int argc, char ** argv)
 	mainloop = g_main_new(FALSE);
 	g_main_run(mainloop);
 	lrmd_api_delete(lrmd_conn);
+
+	if (cib_conn != NULL) {
+		cib_conn->cmds->signoff(cib_conn);
+		cib_delete(cib_conn);
+	}
+
 	return 0;
 }

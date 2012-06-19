@@ -78,7 +78,7 @@ class crm_lha(ClusterManager):
             "ParitionCmd"    : "crm_node -H -p",
             "CibQuery"       : "cibadmin -Ql",
             # 300,000 == 5 minutes
-            "ExecuteRscOp"   : "lrmadmin -n %s -E %s %s 300000 %d EVERYTIME 2>&1",
+            "RscRunning"     : CTSvars.CTS_home + "/lrmd_test -R -r %s",
             "CIBfile"        : "%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml",
             "TmpDir"         : "/tmp",
 
@@ -361,48 +361,20 @@ class crm_lha(ClusterManager):
                     resources.append(tmp.id)
         return resources
 
-    def ResourceOp(self, resource, op, node, interval=0, app="lrmadmin"):
-        '''
-        Execute an operation on a resource
-        '''
-        cmd = self["ExecuteRscOp"] % (app, resource, op, interval)
-        (rc, lines) = self.rsh(node, cmd, None)
-
-        if rc == 127:
-            self.log("Command '%s' failed. Binary not installed?" % cmd)
-            for line in lines:
-                self.log("Output: "+line)
-
-        return rc
-
     def ResourceLocation(self, rid):
         ResourceNodes = []
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up":
-                dummy = 0
-                rc = self.ResourceOp(rid, "monitor", node)
-                # Strange error codes from remote_py
-                # 65024 == not installed
-                # 2048 == 8
-                # 1792 == 7
-                # 0    == 0
+
+                cmd = self["RscRunning"] % (rid)
+                (rc, lines) = self.rsh(node, cmd, None)
+
                 if rc == 127:
-                    dummy = 1
-
-                elif rc == 254 or rc == 65024:
-                    dummy = 1
-                    #self.debug("%s is not installed on %s: %d" % (rid, node, rc))
-
-                elif rc == 0 or rc == 2048 or rc == 8:
+                    self.log("Command '%s' failed. Binary not installed?" % cmd)
+                    for line in lines:
+                        self.log("Output: "+line)
+                elif rc == 0:
                     ResourceNodes.append(node)
-
-                elif rc == 7 or rc == 1792:
-                    dummy = 1
-                    #self.debug("%s is not running on %s: %d" % (rid, node, rc))
-
-                else:
-                    # not active on this node?
-                    self.log("Unknown rc code for %s on %s: %d" % (rid, node, rc))
 
         return ResourceNodes
 

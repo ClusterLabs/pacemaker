@@ -52,6 +52,7 @@ typedef struct lrmd_cmd_s {
 
 	int rsc_deleted;
 
+	char *only_notify_client;
 	char *origin;
 	char *rsc_id;
 	char *action;
@@ -89,12 +90,19 @@ build_rsc_from_xml(xmlNode *msg)
 }
 
 static lrmd_cmd_t *
-create_lrmd_cmd(xmlNode *msg)
+create_lrmd_cmd(xmlNode *msg, lrmd_client_t *client)
 {
+	int call_options = 0;
 	xmlNode *rsc_xml = get_xpath_object("//"F_LRMD_RSC, msg, LOG_ERR);
 	lrmd_cmd_t *cmd = NULL;
 
 	cmd = calloc(1, sizeof(lrmd_cmd_t));
+
+	crm_element_value_int(msg, F_LRMD_CALLOPTS, &call_options);
+
+	if (call_options & lrmd_opt_notify_orig_only) {
+		cmd->only_notify_client = crm_strdup(client->id);
+	}
 
 	crm_element_value_int(msg, F_LRMD_CALLID, &cmd->call_id);
 	crm_element_value_int(rsc_xml, F_LRMD_RSC_INTERVAL, &cmd->interval);
@@ -128,6 +136,7 @@ free_lrmd_cmd(lrmd_cmd_t *cmd)
 	free(cmd->userdata_str);
 	free(cmd->rsc_id);
 	free(cmd->output);
+	free(cmd->only_notify_client);
 	free(cmd);
 }
 
@@ -290,7 +299,15 @@ send_cmd_complete_notify(lrmd_cmd_t *cmd)
 		}
 	}
 
-	g_hash_table_foreach(client_list, send_client_notify, notify);
+	if (cmd->only_notify_client) {
+		lrmd_client_t *client = g_hash_table_lookup(client_list, cmd->only_notify_client);
+
+		if (client) {
+			send_client_notify(client->id, client, notify);
+		}
+	} else {
+		g_hash_table_foreach(client_list, send_client_notify, notify);
+	}
 
 	free_xml(notify);
 }
@@ -831,7 +848,7 @@ process_lrmd_rsc_exec(lrmd_client_t *client, xmlNode *request)
 		return lrmd_err_unknown_rsc;
 	}
 
-	cmd = create_lrmd_cmd(request);
+	cmd = create_lrmd_cmd(request, client);
 	schedule_lrmd_cmd(rsc, cmd);
 
 	return cmd->call_id;
@@ -912,14 +929,12 @@ void
 process_lrmd_message(lrmd_client_t *client, xmlNode *request)
 {
 	int rc = lrmd_ok;
-	int call_options = 0;
 	int call_id = 0;
 	const char *op = crm_element_value(request, F_LRMD_OPERATION);
 	int do_reply = 0;
 	int do_notify = 0;
 	int exit = 0;
 
-	crm_element_value_int(request, F_LRMD_CALLOPTS, &call_options);
 	crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
 	if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
