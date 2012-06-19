@@ -493,19 +493,30 @@ fi
 %doc AUTHORS
 
 %changelog
+
+* Wed Jun 20 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.8-0.1
+- 1.1.8 pre-releases
+
+* Wed Mar 28 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.7-1
+- Update source tarball to revision: bc7ff2c
+- Statistics:
+  Changesets: 513
+  Diff:       1171 files changed, 90472 insertions(+), 19368 deletions(-)
+- See included ChangeLog file or https://github.com/ClusterLabs/pacemaker/blob/master/ChangeLog for details
+
 * Wed Aug 31 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.6-1
 - Update source tarball to revision: 676e5f25aa46 tip
 - Statistics:
   Changesets: 376
   Diff:       1761 files changed, 36259 insertions(+), 140578 deletions(-)
-- See included ChangeLog file or http://hg.clusterlabs.org/pacemaker/1.1/file/tip/ChangeLog for details
+- See included ChangeLog file or https://github.com/ClusterLabs/pacemaker/blob/master/ChangeLog for details
 
 * Fri Feb 11 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.5-1
 - Update source tarball to revision: baad6636a053
 - Statistics:
   Changesets: 184
   Diff:       605 files changed, 46103 insertions(+), 26417 deletions(-)
-- See included ChangeLog file or http://hg.clusterlabs.org/pacemaker/1.1/file/tip/ChangeLog for details
+- See included ChangeLog file or https://github.com/ClusterLabs/pacemaker/blob/master/ChangeLog for details
 
 * Wed Oct 20 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.4-1
 - Moved all the interesting parts of the changelog into a separate file as per the Fedora policy :-/
