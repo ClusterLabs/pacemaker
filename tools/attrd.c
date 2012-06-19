@@ -138,7 +138,9 @@ attrd_ipc_created(qb_ipcs_connection_t *c)
 static int32_t
 attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
+#if ENABLE_ACL
     attrd_client_t *client = qb_ipcs_context_get(c);
+#endif
     xmlNode *msg = crm_ipcs_recv(c, data, size);
     xmlNode *ack = create_xml_node(NULL, "ack");
 
