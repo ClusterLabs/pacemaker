@@ -31,6 +31,7 @@
 #include <pwd.h>
 #include <glib.h>
 #include <bzlib.h>
+#include <grp.h>
 
 #include <crm/ais.h>
 #include "./utils.h"
@@ -168,6 +169,17 @@ spawn_child(crm_child_t * child)
             ais_perror("Could not set group to %d", gid);
         }
 #endif
+
+        if (uid) {
+            struct passwd *pwent = getpwuid(uid);
+
+            if(pwent == NULL) {
+                ais_perror("Cannot get password entry of uid: %d", uid);
+
+            } else if (initgroups(pwent->pw_name, pwent->pw_gid) < 0) {
+                ais_perror("Cannot initalize groups for %s (uid=%d)", pwent->pw_name, uid);
+            }
+        }
 
         if (uid && setuid(uid) < 0) {
             ais_perror("Could not set user to %d (%s)", uid, child->uid);
