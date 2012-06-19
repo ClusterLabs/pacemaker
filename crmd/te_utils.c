@@ -183,7 +183,7 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
 #endif
 
     if (rc == stonith_ok) {
-        crm_notice("target=%s dc=%s", target, fsa_our_dc);
+        crm_trace("target=%s dc=%s", target, fsa_our_dc);
         if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, target)) {
             crm_notice("Target %s our leader %s (recorded: %s)",
                        fsa_our_dc?"was":"may have been", target, fsa_our_dc ? fsa_our_dc : "<unset>");
