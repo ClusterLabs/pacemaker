@@ -420,6 +420,11 @@ scope=nodes  name=standby value=true
 * Passed: crm_standby    - Query standby value
 Deleted nodes attribute: id=nodes-clusterNode-UUID-standby name=standby
 
+Could not establish attrd connection: Connection refused (111)
+Could not establish attrd connection: Connection refused (111)
+Could not establish attrd connection: Connection refused (111)
+Could not establish attrd connection: Connection refused (111)
+Could not establish attrd connection: Connection refused (111)
 <cib epoch="12" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
@@ -616,6 +621,11 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
   </status>
 </cib>
 * Passed: crm_resource   - List the configured resources
+Could not establish attrd connection: Connection refused (111)
+Could not establish attrd connection: Connection refused (111)
+Could not establish attrd connection: Connection refused (111)
+Could not establish attrd connection: Connection refused (111)
+Could not establish attrd connection: Connection refused (111)
 <cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
