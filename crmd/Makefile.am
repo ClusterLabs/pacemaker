@@ -49,7 +49,7 @@ crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/services/libcrmservice.la		\
 		$(top_builddir)/lib/lrmd/liblrmd.la		\
-		$(CLUSTERLIBS) -llrm
+		$(CLUSTERLIBS)
 if BUILD_XML_HELP
 man7_MANS =	crmd.7
 
