@@ -193,7 +193,7 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
     if(rc < header.size) {
         do_crm_log((flags & ipcs_send_error)?LOG_ERR:LOG_INFO,
                    "%s %d failed, size=%d, to=%p[%d], rc=%d: %.120s",
-                   type, header.id, header.size, crm_ipcs_client_pid(c), rc, buffer);
+                   type, header.id, header.size, c, crm_ipcs_client_pid(c), rc, buffer);
     } else {
         crm_trace("%s %d sent, %d bytes to %p: %.120s", type, header.id, rc, c, buffer);
     }
