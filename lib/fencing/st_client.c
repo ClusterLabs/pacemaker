@@ -579,6 +579,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
                         }
                     }
                     crm_debug("%s: %s (total %d bytes)", agent, local_copy+last, more);
+                    free(local_copy);
                 }
             }
 
