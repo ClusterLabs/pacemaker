@@ -42,16 +42,8 @@ lib_LTLIBRARIES	= libpengine.la
 
 ## binary progs
 halib_PROGRAMS	= pengine
-sbin_PROGRAMS	= ptest
 
 man7_MANS =
-man8_MANS =
-
-if BUILD_HELP
-man8_MANS +=	ptest.8
-ptest.8:	ptest
-	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/pengine/$<
-endif
 
 if BUILD_XML_HELP
 man7_MANS +=	pengine.7

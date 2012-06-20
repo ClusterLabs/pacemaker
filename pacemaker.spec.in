@@ -299,7 +299,6 @@ mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
 
 # Scripts that should be executable
-chmod a+x %{buildroot}/%{_libexecdir}/pacemaker/hb2openais-helper.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
 
 # These are not actually scripts
@@ -313,8 +312,6 @@ find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
 # Do not package these either
-rm -f %{buildroot}/%{_libexecdir}/pacemaker/hb2openais-helper.*
-rm -f %{buildroot}/%{_libexecdir}/pacemaker/crm_primitive.*
 rm -f %{buildroot}/%{_libdir}/service_crm.so
 
 %if %{with gcov}
@@ -365,7 +362,6 @@ fi
 
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
-#%{_libdir}/heartbeat/*
 %{_libexecdir}/pacemaker/*
 
 %{_sbindir}/crm_attribute
@@ -427,9 +423,7 @@ fi
 %{_sbindir}/crm_verify
 %{_sbindir}/crmadmin
 %{_sbindir}/iso8601
-%{_sbindir}/ptest
 %{_sbindir}/crm_shadow
-%{_sbindir}/cibpipe
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket

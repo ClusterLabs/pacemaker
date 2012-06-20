@@ -31,7 +31,6 @@ COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 
 ## binary progs
 halib_PROGRAMS	= cib cibmon
-sbin_PROGRAMS   = cibpipe
 
 if BUILD_HELP
 man8_MANS =	
