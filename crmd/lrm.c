@@ -1036,6 +1036,7 @@ cancel_op(const char *rsc_id, const char *key, int op, gboolean remove)
 
     } else {
         crm_info("No pending op found for %s", key);
+        return TRUE;
     }
 
     crm_debug("Cancelling op %d for %s (%s)", op, rsc_id, key);
