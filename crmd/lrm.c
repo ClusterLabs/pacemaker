@@ -599,7 +599,7 @@ get_rsc_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
   cleanup:
     free(key);
     free_xml(metadata);
-    return reload ? reload->restart_list : NULL;
+    return reload->restart_list;
 }
 
 static void
