@@ -1126,7 +1126,7 @@ erase_xpath_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
 {
     char *xpath = user_data;
 
-    do_crm_log(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
+    do_crm_log_unlikely(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
                "Deletion of \"%s\": %s (rc=%d)", xpath, cib_error2string(rc), rc);
     free(xpath);
 }

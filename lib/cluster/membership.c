@@ -376,7 +376,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
     }
 
     if (state_changed || addr_changed || votes_changed) {
-        do_crm_log(state_changed?LOG_NOTICE:LOG_INFO,
+        do_crm_log_unlikely(state_changed?LOG_NOTICE:LOG_INFO,
                    "%s: Node %s: id=%u state=%s%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
                    " proc=%.32x%s", source, node->uname, node->id, node->state, state_changed ? " (new)" : "",
                    node->addr, addr_changed ? " (new)" : "", node->votes,
