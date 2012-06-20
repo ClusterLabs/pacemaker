@@ -779,7 +779,7 @@ lsb_get_metadata(const char *type, char **output)
 static int
 ocf_get_metadata(const char *provider, const char *type, char **output)
 {
-	svc_action_t *action = action = resources_action_create("get_meta",
+	svc_action_t *action = resources_action_create("get_meta",
 		"ocf",
 		provider,
 		type,
