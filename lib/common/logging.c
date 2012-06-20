@@ -216,6 +216,7 @@ crm_add_logfile(const char *filename)
         rc = fstat(logfd, &st);
         if(rc < 0) {
             crm_perror(LOG_WARNING, "Cannot stat %s", filename);
+            fclose(logfile);
             return FALSE;
         }
 
@@ -246,6 +247,8 @@ crm_add_logfile(const char *filename)
                 crm_err("Couldn't write out logfile: %s", filename);
             }
         }
+    }
+    if(logfile) {
         fclose(logfile);
     }
 
