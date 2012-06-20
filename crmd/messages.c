@@ -814,6 +814,17 @@ handle_request(xmlNode * stored_msg)
         free_xml(ping);
         free_xml(msg);
 
+    } else if (strcmp(op, CRM_OP_RM_NODE_CACHE) == 0) {
+        xmlNode *options = get_xpath_object("//"XML_TAG_OPTIONS, stored_msg, LOG_ERR);
+        int id = 0;
+
+        if (options) {
+           crm_element_value_int(options, XML_ATTR_ID, &id);
+        }
+        if (id) {
+            reap_crm_member(id);
+        }
+
     } else {
         crm_err("Unexpected request (%s) sent to %s", op, AM_I_DC ? "the DC" : "non-DC node");
         crm_log_xml_err(stored_msg, "Unexpected");

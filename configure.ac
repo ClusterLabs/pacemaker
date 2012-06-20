@@ -1423,25 +1423,29 @@ esac
 
 AC_MSG_CHECKING(for acl support)
 if test $SUPPORT_ACL = no; then
-   AC_MSG_RESULT(no (disabled))
-   SUPPORT_ACL=0
+    AC_MSG_RESULT(no (disabled))
+    SUPPORT_ACL=0
 else
-   AC_MSG_RESULT($SUPPORT_ACL)
+    AC_MSG_RESULT($SUPPORT_ACL)
 
-   AC_CHECK_MEMBERS([struct IPC_CHANNEL.farside_uid],
-		    [SUPPORT_ACL=1], [SUPPORT_ACL=0], [[#include <clplumbing/ipc.h>]])
+    AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
+    if test $ac_cv_lib_qb_qb_ipcs_connection_auth_set != yes; then
+        SUPPORT_ACL=0
+    else
+        SUPPORT_ACL=1
+    fi
 
-   if test $SUPPORT_ACL = 0; then
-     	if test $missingisfatal = 0; then
-	    AC_MSG_WARN(Unable to support ACL. You need to use cluster-glue >= 1.0.6) 
+    if test $SUPPORT_ACL = 0; then
+        if test $missingisfatal = 0; then
+            AC_MSG_WARN(Unable to support ACL. You need to use libqb > 0.13.0) 
         else
-	    AC_MSG_FAILURE(Unable to support ACL. You need to use cluster-glue >= 1.0.6) 
+            AC_MSG_FAILURE(Unable to support ACL. You need to use libqb > 0.13.0) 
         fi
-   fi
+    fi
 fi
 
 if test $SUPPORT_ACL = 1; then
-   PCMK_FEATURES="$PCMK_FEATURES acls"
+    PCMK_FEATURES="$PCMK_FEATURES acls"
 fi
 
 AM_CONDITIONAL(ENABLE_ACL, test "$SUPPORT_ACL" = "1")

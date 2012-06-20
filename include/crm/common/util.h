@@ -357,7 +357,8 @@ is_privileged(const char *user)
     return FALSE;
 }
 
-void determine_request_user(char **user, IPC_Channel * channel, xmlNode * request,
+char *uid2username(uid_t uid);
+void determine_request_user(char *user, xmlNode * request,
                                    const char *field);
 #  endif
 

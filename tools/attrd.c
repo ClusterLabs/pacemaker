@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -100,21 +101,36 @@ free_hash_entry(gpointer data)
 static int32_t
 attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
+    attrd_client_t *new_client = NULL;
+#if ENABLE_ACL
+    struct group *crm_grp = NULL;
+#endif
+
     crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
     if (need_shutdown) {
         crm_info("Ignoring connection request during shutdown");
         return FALSE;
     }
+
+    new_client = calloc(1, sizeof(attrd_client_t));
+
+#if ENABLE_ACL
+    crm_grp = getgrnam(CRM_DAEMON_GROUP);
+    if (crm_grp) {
+        qb_ipcs_connection_auth_set(c, -1, crm_grp->gr_gid, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    }
+
+    new_client->user = uid2username(uid);
+#endif
+
+    qb_ipcs_context_set(c, new_client);
+
     return 0;
 }
 
 static void
 attrd_ipc_created(qb_ipcs_connection_t *c)
 {
-    attrd_client_t *new_client = NULL;
-    new_client = calloc(1, sizeof(attrd_client_t));
-    qb_ipcs_context_set(c, new_client);
-    
     crm_trace("Client %p connected", c);
 }
 
@@ -122,6 +138,9 @@ attrd_ipc_created(qb_ipcs_connection_t *c)
 static int32_t
 attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
+#if ENABLE_ACL
+    attrd_client_t *client = qb_ipcs_context_get(c);
+#endif
     xmlNode *msg = crm_ipcs_recv(c, data, size);
     xmlNode *ack = create_xml_node(NULL, "ack");
 
@@ -133,7 +152,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     }
 
 #if ENABLE_ACL
-    determine_request_user(&curr_client->user, c, msg, F_ATTRD_USER);
+    determine_request_user(client->user, msg, F_ATTRD_USER);
 #endif
 
     crm_trace("Processing msg from %p", c);

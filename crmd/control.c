@@ -38,6 +38,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <grp.h>
 
 qb_ipcs_service_t *ipcs = NULL;
 
@@ -526,14 +527,12 @@ do_startup(long long action,
 static int32_t
 crmd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
-    return 0;
-}
-
-static void
-crmd_ipc_created(qb_ipcs_connection_t *c)
-{
     crmd_client_t *blank_client = NULL;
+#if ENABLE_ACL
+    struct group *crm_grp = NULL;
+#endif
+
+    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
 
     blank_client = calloc(1, sizeof(crmd_client_t));
     CRM_ASSERT(blank_client != NULL);
@@ -545,7 +544,24 @@ crmd_ipc_created(qb_ipcs_connection_t *c)
     blank_client->uuid = NULL;
     blank_client->table_key = NULL;
 
+#if ENABLE_ACL
+    crm_grp = getgrnam(CRM_DAEMON_GROUP);
+    if (crm_grp) {
+        qb_ipcs_connection_auth_set(c, -1, crm_grp->gr_gid, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    }
+
+    blank_client->user = uid2username(uid);
+#endif
+
     qb_ipcs_context_set(c, blank_client);
+
+    return 0;
+}
+
+static void
+crmd_ipc_created(qb_ipcs_connection_t *c)
+{
+    crm_trace("Client %p connected", c);
 }
 
 static int32_t
@@ -566,7 +582,7 @@ crmd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     }
 
 #if ENABLE_ACL
-    determine_request_user(&client->user, client, msg, F_CRM_USER);
+    determine_request_user(client->user, msg, F_CRM_USER);
 #endif
 
     crm_trace("Processing msg from %s", client->table_key);

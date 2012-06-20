@@ -429,6 +429,8 @@ do_test bug-5025-3 "Automatically clean up failcount after resource config chang
 do_test monitor-onfail-restart "bug-5058 - Monitor failure with on-fail set to restart"
 do_test monitor-onfail-stop    "bug-5058 - Monitor failure wiht on-fail set to stop"
 do_test bug-5059 "No need to restart p_stateful1:*"
+do_test bug-5069-op-enabled  "Test on-fail=ignore with failure when monitor is enabled."
+do_test bug-5069-op-disabled "Test on-fail-ignore with failure when monitor is disabled."
 
 do_test ignore_stonith_rsc_order1 "cl#5056- Ignore order constraint between stonith and non-stonith rsc."
 do_test ignore_stonith_rsc_order2 "cl#5056- Ignore order constraint with group rsc containing mixed stonith and non-stonith."
