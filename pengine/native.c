@@ -2700,9 +2700,9 @@ get_first_named_action(resource_t *rsc, const char *action, gboolean only_valid,
 
     action_list = find_actions(rsc->actions, key, current);
 
-    free(key);
     if (action_list == NULL || action_list->data == NULL) {
         crm_trace("%s: no %s action", rsc->id, action);
+        free(key);
         return NULL;
     }
 
@@ -2711,13 +2711,14 @@ get_first_named_action(resource_t *rsc, const char *action, gboolean only_valid,
 
     if(only_valid && is_set(a->flags, pe_action_pseudo)) {
         crm_trace("%s: pseudo", key);
-        return NULL;
+        a = NULL;
 
     } else if(only_valid && is_not_set(a->flags, pe_action_runnable)) {
         crm_trace("%s: runnable", key);
-        return NULL;
+        a = NULL;
     }
     
+    free(key);
     return a;
 }
 

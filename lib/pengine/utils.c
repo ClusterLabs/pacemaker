@@ -336,8 +336,6 @@ custom_action(resource_t * rsc, char *key, const char *task,
     }
 
     if (possible_matches != NULL) {
-        free(key);
-
         if (g_list_length(possible_matches) > 1) {
             pe_warn("Action %s for %s on %s exists %d times",
                     task, rsc ? rsc->id : "<NULL>",
@@ -509,6 +507,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
             }
         }
     }
+
+    free(key);
     return action;
 }
 
