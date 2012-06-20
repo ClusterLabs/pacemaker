@@ -90,9 +90,9 @@ shadow_setup(char *name, gboolean do_switch)
         printf("Type Ctrl-D to exit the crm_shadow shell\n");
 
         if (strstr(shell, "bash")) {
-            execl(shell, "--norc", "--noprofile", NULL);
+            execl(shell, shell, "--norc", "--noprofile", NULL);
         } else {
-            execl(shell, "--noprofile", NULL);
+            execl(shell, shell, "--noprofile", NULL);
         }
 
     } else if (do_switch) {
