@@ -412,8 +412,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
 
     if (node == NULL) {
         if(rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED) {
-            crm_trace("Ingoring master score for %s: unknown state on %s",
-                      rsc->id, node->details->uname);
+            crm_trace("Ingoring master score for %s: unknown state", rsc->id);
             return score;
         }
 
