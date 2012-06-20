@@ -369,7 +369,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
         if (on_node) {
             action->node = node_copy(on_node);
         }
-        action->uuid = key;
+        action->uuid = crm_strdup(key);
 
         pe_set_action_bit(action, pe_action_failure_is_fatal);
         pe_set_action_bit(action, pe_action_runnable);
