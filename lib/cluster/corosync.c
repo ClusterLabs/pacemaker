@@ -754,7 +754,6 @@ gboolean
 check_message_sanity(const AIS_Message * msg, const char *data)
 {
     gboolean sane = TRUE;
-    gboolean repaired = FALSE;
     int dest = msg->host.type;
     int tmp_size = msg->header.size - sizeof(AIS_Message);
 
@@ -803,12 +802,6 @@ check_message_sanity(const AIS_Message * msg, const char *data)
                 ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
                 msg->sender.pid, msg->is_compressed, ais_data_len(msg), msg->header.size);
 
-    } else if (repaired) {
-        crm_err
-            ("Repaired message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
-             msg->id, ais_dest(&(msg->host)), msg_type2text(dest), ais_dest(&(msg->sender)),
-             msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
-             ais_data_len(msg), msg->header.size);
     } else {
         crm_trace
             ("Verfied message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",

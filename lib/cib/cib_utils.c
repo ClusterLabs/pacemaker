@@ -755,7 +755,6 @@ xmlNode *
 cib_create_op(int call_id, const char *token, const char *op, const char *host, const char *section,
               xmlNode * data, int call_options, const char *user_name)
 {
-    int rc = HA_OK;
     xmlNode *op_msg = create_xml_node(NULL, "cib_command");
 
     CRM_CHECK(op_msg != NULL, return NULL);
@@ -779,13 +778,6 @@ cib_create_op(int call_id, const char *token, const char *op, const char *host, 
 
     if (data != NULL) {
         add_message_xml(op_msg, F_CIB_CALLDATA, data);
-    }
-
-    if (rc != HA_OK) {
-        crm_err("Failed to create CIB operation message");
-        crm_log_xml_err(op_msg, "op");
-        free_xml(op_msg);
-        return NULL;
     }
 
     if (call_options & cib_inhibit_bcast) {

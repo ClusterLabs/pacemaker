@@ -331,11 +331,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     type = crm_element_value(update_msg, F_SUBTYPE);
     CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
 
-    if(client == NULL) {
-	crm_trace("Skipping NULL client");
-	return;
-
-    } else if(client->channel == NULL) {
+    if(client->channel == NULL) {
 	crm_trace("Skipping client with NULL channel");
 	return;
 

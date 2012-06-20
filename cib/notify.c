@@ -83,11 +83,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
     CRM_CHECK(client != NULL, return TRUE);
     CRM_CHECK(update_msg != NULL, return TRUE);
 
-    if (client == NULL) {
-        crm_warn("Skipping NULL client");
-        return TRUE;
-
-    } else if (client->ipc == NULL) {
+    if (client->ipc == NULL) {
         crm_warn("Skipping client with NULL channel");
         return FALSE;
     }

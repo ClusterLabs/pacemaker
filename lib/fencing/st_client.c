@@ -1123,7 +1123,6 @@ stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
 xmlNode *
 stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data, int call_options)
 {
-    int rc = HA_OK;
     xmlNode *op_msg = create_xml_node(NULL, "stonith_command");
 
     CRM_CHECK(op_msg != NULL, return NULL);
@@ -1140,13 +1139,6 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
 
     if (data != NULL) {
         add_message_xml(op_msg, F_STONITH_CALLDATA, data);
-    }
-
-    if (rc != HA_OK) {
-        crm_err("Failed to create STONITH operation message");
-        crm_log_xml_err(op_msg, "BadOp");
-        free_xml(op_msg);
-        return NULL;
     }
 
     return op_msg;
@@ -1517,10 +1509,6 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
     } else {
         crm_trace("No callback found for call %d", call_id);
         local_blob.callback = NULL;
-    }
-
-    if (stonith == NULL) {
-        crm_debug("No stonith object supplied");
     }
 
     if (local_blob.callback != NULL && (rc == stonith_ok || local_blob.only_success == FALSE)) {

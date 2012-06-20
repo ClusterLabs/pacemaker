@@ -237,11 +237,7 @@ main(int argc, char **argv)
         determine_host(the_cib, &dest_uname, &dest_node);
     }
 
-    if (rc != cib_ok) {
-        crm_info("Error during setup of %s=%s update", attr_name,
-                 command == 'D' ? "<none>" : attr_value);
-
-    } else if ((command == 'v' || command == 'D')
+    if ((command == 'v' || command == 'D')
                && safe_str_eq(type, XML_CIB_TAG_STATUS)
                && attrd_update_delegate(NULL, command, dest_uname, attr_name, attr_value, type, set_name, NULL, NULL)) {
         crm_info("Update %s=%s sent via attrd", attr_name, command == 'D' ? "<none>" : attr_value);
