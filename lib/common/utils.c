@@ -358,7 +358,6 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 
                     *value = calloc(1, len + 1);
                     if (*value == NULL) {
-                        free(*name);
                         break;  /* and return FALSE */
                     }
                     temp = srcstring + lpc + 1;
@@ -373,6 +372,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 
     if (*name != NULL) {
         free(*name);
+        *name = NULL;
     }
     *name = NULL;
     *value = NULL;
