@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
@@ -77,17 +78,12 @@ lrmd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 static void
 lrmd_ipc_created(qb_ipcs_connection_t *c)
 {
-	cl_uuid_t client_id;
 	lrmd_client_t *new_client = NULL;
-	char uuid_str[UU_UNPARSE_SIZEOF];
 
 	new_client = calloc(1, sizeof(lrmd_client_t));
 	new_client->channel = c;
 
-	cl_uuid_generate(&client_id);
-	cl_uuid_unparse(&client_id, uuid_str);
-
-	new_client->id = crm_strdup(uuid_str);
+	new_client->id = crm_generate_uuid();
 	crm_trace("LRMD client connection established. %p id: %s", c, new_client->id);
 
 	g_hash_table_insert(client_list, new_client->id, new_client);
