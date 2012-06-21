@@ -33,6 +33,9 @@
 %bcond_without corosync
 %bcond_with heartbeat
 
+# Legacy stonithd fencing agents
+%bcond_with stonithd
+
 # ESMTP is not available in RHEL, only in EPEL. Allow people to build
 # the RPM without ESMTP in case they choose not to use EPEL packages
 %bcond_with esmtp
@@ -73,13 +76,24 @@ Group:         System Environment/Daemons
 Source0:       %{upstream_prefix}-%{upstream_version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
-Requires(pre): cluster-glue
 Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      python >= 2.4
 Conflicts:     heartbeat < 2.99
+
+%if %{defined _unitdir}
+# Needed for systemd unit
+Requires(post): systemd-sysv
+Requires(post): systemd-units
+Requires(preun): systemd-units
+Requires(postun): systemd-units
+%endif
+
+%if %{with heartbeat}
+Requires(pre): cluster-glue
+%endif
 
 %if %{with snmp}
 Requires:      perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
@@ -95,7 +109,7 @@ BuildRequires: python-curses python-xml
 
 # Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig python libtool-ltdl-devel
-BuildRequires: glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel 
+BuildRequires: glib2-devel libxml2-devel libxslt-devel
 BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel pam-devel libuuid-devel
 
 %if 0%{?suse_version} >= 1100
@@ -145,7 +159,11 @@ BuildRequires: corosynclib-devel
 
 %if %{with heartbeat}
 # Do not require heartbeat, the admin should select which stack to use and install it
-BuildRequires: heartbeat-devel heartbeat-libs >= 3.0.0
+BuildRequires: cluster-glue-libs-devel heartbeat-devel heartbeat-libs >= 3.0.0
+%endif
+
+%if %{with stonithd}
+BuildRequires: cluster-glue-libs-devel
 %endif
 
 %if !%{rawhide}
@@ -218,13 +236,13 @@ Summary:      Pacemaker development package
 Group:        Development/Libraries
 Requires:     %{name}-libs = %{version}-%{release}
 Requires:     %{name}-cluster-libs = %{version}-%{release}
-Requires:     cluster-glue-libs-devel libtool-ltdl-devel
+Requires:     libtool-ltdl-devel
 Requires:     libxml2-devel libxslt-devel bzip2-devel glib2-devel 
 %if %{with corosync}
 Requires:     corosynclib-devel
 %endif
 %if %{with heartbeat}
-Requires:     heartbeat-devel
+Requires:     cluster-glue-libs-devel heartbeat-devel
 %endif
 
 %description -n %{name}-libs-devel
@@ -295,6 +313,8 @@ make %{_smp_mflags} V=1 docdir=%{pcmk_docdir} all
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} V=1 install
 
+mkdir -p ${RPM_BUILD_ROOT}%{_var}/lib/heartbeat/cores
+
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
 
@@ -328,13 +348,22 @@ done
 rm -rf %{buildroot}
 
 %post
+%if %{defined _unitdir}
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+%endif
 /sbin/chkconfig --add pacemaker || :
 
 %preun
 if [ $1 -eq 0 ]; then
-        /sbin/service pacemaker stop &>/dev/null || :
-        /sbin/chkconfig --del pacemaker || :
+    # Package removal, not upgrade
+    /sbin/service pacemaker stop &>/dev/null || :
+    /sbin/chkconfig --del pacemaker || :
 fi
+
+%pre -n %{name}-libs
+getent group %{gname} >/dev/null || groupadd -r %{gname}
+getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -s /sbin/nologin -c "heartbeat user" %{uname}
+exit 0
 
 %post -n %{name}-libs -p /sbin/ldconfig
 
@@ -348,6 +377,7 @@ fi
 ###########################################################
 %defattr(-,root,root)
 
+%ghost %dir %attr (755, root, root) %{_var}/lib/heartbeat/cores
 %exclude %{_datadir}/pacemaker/tests
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
@@ -364,6 +394,10 @@ fi
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %{_libexecdir}/pacemaker/*
 
+%if %{with heartbeat}
+%{_libdir}/heartbeat/*
+%endif
+
 %{_sbindir}/crm_attribute
 %{_sbindir}/crm_master
 %{_sbindir}/crm_node
@@ -377,8 +411,6 @@ fi
 
 %if %{with heartbeat}
 %{_sbindir}/crm_uuid
-%else
-%exclude %{_sbindir}/crm_uuid
 %endif
 
 %doc %{_mandir}/man7/*
@@ -444,6 +476,7 @@ fi
 
 %files -n %{name}-libs
 %defattr(-,root,root)
+
 %{_libdir}/libcib.so.*
 %{_libdir}/liblrmd.so.*
 %{_libdir}/libcrmservice.so.*
