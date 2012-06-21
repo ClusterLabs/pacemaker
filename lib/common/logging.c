@@ -605,15 +605,14 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
             crm_perror(LOG_ERR, "Cannot get name for uid: %d", user);
 
         } else if (safe_str_neq(pwent->pw_name, "root")
-                   && safe_str_neq(pwent->pw_name, "nobody")
                    && safe_str_neq(pwent->pw_name, CRM_DAEMON_USER)) {
-            crm_debug("Don't change active directory for regular user: %s", pwent->pw_name);
+            crm_trace("Don't change active directory for regular user: %s", pwent->pw_name);
 
         } else if (chdir(base) < 0) {
-            crm_perror(LOG_ERR, "Cannot change active directory to %s", base);
+            crm_perror(LOG_INFO, "Cannot change active directory to %s", base);
 
         } else if (chdir(pwent->pw_name) < 0) {
-            crm_perror(LOG_ERR, "Cannot change active directory to %s/%s", base, pwent->pw_name);
+            crm_perror(LOG_INFO, "Cannot change active directory to %s/%s", base, pwent->pw_name);
         } else {
             crm_info("Changed active directory to %s/%s", base, pwent->pw_name);
 #if 0

@@ -784,6 +784,22 @@ main(int argc, char **argv)
     /* Used by RAs - Leave owned by root */
     build_path(CRM_RSCTMP_DIR, 0755);
 
+    /* Used to store core files in */
+    build_path(CRM_CORE_DIR, 0755);
+
+    /* Per-user core directories */
+    if (mkdir(CRM_CORE_DIR"/root", 0700) < 0 && errno != EEXIST) {
+        crm_perror(LOG_INFO, "Could not create %s", CRM_CORE_DIR"/root");
+    }
+
+    if (mkdir(CRM_CORE_DIR"/"CRM_DAEMON_USER, 0700) < 0 && errno != EEXIST) {
+        crm_perror(LOG_INFO, "Could not create %s", CRM_CORE_DIR"/"CRM_DAEMON_USER);
+    } else {
+        if(chown(CRM_CORE_DIR"/"CRM_DAEMON_USER, pcmk_uid, pcmk_gid) < 0) {
+            crm_perror(LOG_ERR, "Could not change the ownership of %s to %s", CRM_CORE_DIR"/"CRM_DAEMON_USER, CRM_DAEMON_USER);
+        }
+    }
+
     client_list = g_hash_table_new(g_direct_hash, g_direct_equal);
     peers = g_hash_table_new(g_direct_hash, g_direct_equal);
 
