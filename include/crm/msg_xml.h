@@ -18,16 +18,48 @@
 #ifndef XML_TAGS__H
 #  define XML_TAGS__H
 
+#ifndef F_ORIG
+#  define F_ORIG    "src"
+#endif
+
+#ifndef F_SEQ
+#  define F_SEQ		"seq"
+#endif
+
+#ifndef F_SUBTYPE
+#  define F_SUBTYPE "subt"
+#endif
+
+#ifndef F_TYPE
+#  define F_TYPE    "t"
+#endif
+
+#ifndef F_CLIENTNAME
+#  define	F_CLIENTNAME	"cn"
+#endif
+
+#ifndef F_XML_TAGNAME
+#  define F_XML_TAGNAME	"__name__"
+#endif
+
+#ifndef T_CRM
+#  define T_CRM     "crmd"
+#endif
+
+#ifndef T_ATTRD
+#  define T_ATTRD     "attrd"
+#endif
+
 #  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
 #  define F_CRM_DATA			"crm_xml"
 #  define F_CRM_TASK			"crm_task"
 #  define F_CRM_HOST_TO			"crm_host_to"
-#  define F_CRM_MSG_TYPE			F_SUBTYPE
+#  define F_CRM_MSG_TYPE		F_SUBTYPE
 #  define F_CRM_SYS_TO			"crm_sys_to"
-#  define F_CRM_SYS_FROM			"crm_sys_from"
-#  define F_CRM_HOST_FROM			F_ORIG
-#  define F_CRM_REFERENCE			XML_ATTR_REFERENCE
+#  define F_CRM_SYS_FROM		"crm_sys_from"
+#  define F_CRM_HOST_FROM		F_ORIG
+#  define F_CRM_REFERENCE		XML_ATTR_REFERENCE
 #  define F_CRM_VERSION			XML_ATTR_VERSION
 #  define F_CRM_ORIGIN			"origin"
 #  define F_CRM_USER			"crm_user"
@@ -40,24 +72,24 @@
 #  define F_CRM_TGRAPH_INPUT		"crm-tgraph-in"
 
 /*---- Common tags/attrs */
-#  define XML_DIFF_MARKER			"__crm_diff_marker__"
+#  define XML_DIFF_MARKER		"__crm_diff_marker__"
 #  define XML_ATTR_TAGNAME		F_XML_TAGNAME
 #  define XML_TAG_CIB			"cib"
-#  define XML_TAG_FAILED			"failed"
+#  define XML_TAG_FAILED		"failed"
 
 #  define XML_ATTR_CRM_VERSION		"crm_feature_set"
-#  define XML_ATTR_DIGEST			"digest"
+#  define XML_ATTR_DIGEST		"digest"
 #  define XML_ATTR_VALIDATION		"validate-with"
 
 #  define XML_ATTR_QUORUM_PANIC		"no-quorum-panic"
 #  define XML_ATTR_HAVE_QUORUM		"have-quorum"
-#  define XML_ATTR_EXPECTED_VOTES		"expected-quorum-votes"
+#  define XML_ATTR_EXPECTED_VOTES	"expected-quorum-votes"
 #  define XML_ATTR_GENERATION		"epoch"
 #  define XML_ATTR_GENERATION_ADMIN	"admin_epoch"
 #  define XML_ATTR_NUMUPDATES		"num_updates"
 #  define XML_ATTR_TIMEOUT		"timeout"
-#  define XML_ATTR_ORIGIN			"crm-debug-origin"
-#  define XML_ATTR_TSTAMP			"crm-timestamp"
+#  define XML_ATTR_ORIGIN		"crm-debug-origin"
+#  define XML_ATTR_TSTAMP		"crm-timestamp"
 #  define XML_CIB_ATTR_WRITTEN		"cib-last-written"
 #  define XML_ATTR_VERSION		"version"
 #  define XML_ATTR_DESC			"description"
@@ -73,15 +105,15 @@
 #  define XML_ATTR_DC			"is_dc"
 #  define XML_ATTR_DC_UUID		"dc-uuid"
 #  define XML_ATTR_UPDATE_ORIG		"update-origin"
-#  define XML_ATTR_UPDATE_CLIENT		"update-client"
+#  define XML_ATTR_UPDATE_CLIENT	"update-client"
 #  define XML_ATTR_UPDATE_USER		"update-user"
 
 #  define XML_BOOLEAN_TRUE		"true"
 #  define XML_BOOLEAN_FALSE		"false"
-#  define XML_BOOLEAN_YES			XML_BOOLEAN_TRUE
-#  define XML_BOOLEAN_NO			XML_BOOLEAN_FALSE
+#  define XML_BOOLEAN_YES		XML_BOOLEAN_TRUE
+#  define XML_BOOLEAN_NO		XML_BOOLEAN_FALSE
 
-#  define XML_TAG_OPTIONS			"options"
+#  define XML_TAG_OPTIONS		"options"
 
 /*---- top level tags/attrs */
 #  define XML_MSG_TAG			"crm_message"
@@ -89,14 +121,14 @@
 #  define XML_ATTR_REQUEST		"request"
 #  define XML_ATTR_RESPONSE		"response"
 
-#  define XML_ATTR_UNAME			"uname"
+#  define XML_ATTR_UNAME		"uname"
 #  define XML_ATTR_UUID			"id"
 #  define XML_ATTR_REFERENCE		"reference"
 
 #  define XML_FAIL_TAG_RESOURCE		"failed_resource"
 
-#  define XML_FAILRES_ATTR_RESID		"resource_id"
-#  define XML_FAILRES_ATTR_REASON		"reason"
+#  define XML_FAILRES_ATTR_RESID	"resource_id"
+#  define XML_FAILRES_ATTR_REASON	"reason"
 #  define XML_FAILRES_ATTR_RESSTATUS	"resource_status"
 
 #  define XML_CRM_TAG_PING		"ping_response"
@@ -104,7 +136,7 @@
 #  define XML_PING_ATTR_SYSFROM		"crm_subsystem"
 
 #  define XML_TAG_FRAGMENT		"cib_fragment"
-#  define XML_ATTR_RESULT			"result"
+#  define XML_ATTR_RESULT		"result"
 #  define XML_ATTR_SECTION		"section"
 
 #  define XML_FAIL_TAG_CIB		"failed_update"
@@ -112,10 +144,10 @@
 #  define XML_FAILCIB_ATTR_ID		"id"
 #  define XML_FAILCIB_ATTR_OBJTYPE	"object_type"
 #  define XML_FAILCIB_ATTR_OP		"operation"
-#  define XML_FAILCIB_ATTR_REASON		"reason"
+#  define XML_FAILCIB_ATTR_REASON	"reason"
 
 /*---- CIB specific tags/attrs */
-#  define XML_CIB_TAG_SECTION_ALL		"all"
+#  define XML_CIB_TAG_SECTION_ALL	"all"
 #  define XML_CIB_TAG_CONFIGURATION	"configuration"
 #  define XML_CIB_TAG_STATUS       	"status"
 #  define XML_CIB_TAG_RESOURCES		"resources"
@@ -137,51 +169,51 @@
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #  define XML_TAG_META_SETS	   	"meta_attributes"
 #  define XML_TAG_ATTRS			"attributes"
-#  define XML_TAG_PARAMS			"parameters"
+#  define XML_TAG_PARAMS		"parameters"
 #  define XML_TAG_PARAM			"param"
 #  define XML_TAG_UTILIZATION		"utilization"
 
 #  define XML_TAG_RESOURCE_REF		"resource_ref"
 #  define XML_CIB_TAG_RESOURCE	  	"primitive"
 #  define XML_CIB_TAG_GROUP	  	"group"
-#  define XML_CIB_TAG_INCARNATION		"clone"
+#  define XML_CIB_TAG_INCARNATION	"clone"
 #  define XML_CIB_TAG_MASTER		"master"
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
 #  define XML_RSC_ATTR_RESTART	  	"restart-type"
 #  define XML_RSC_ATTR_ORDERED		"ordered"
-#  define XML_RSC_ATTR_INTERLEAVE		"interleave"
+#  define XML_RSC_ATTR_INTERLEAVE	"interleave"
 #  define XML_RSC_ATTR_INCARNATION	"clone"
 #  define XML_RSC_ATTR_INCARNATION_MAX	"clone-max"
 #  define XML_RSC_ATTR_INCARNATION_NODEMAX	"clone-node-max"
-#  define XML_RSC_ATTR_MASTER_MAX		"master-max"
+#  define XML_RSC_ATTR_MASTER_MAX	"master-max"
 #  define XML_RSC_ATTR_MASTER_NODEMAX	"master-node-max"
 #  define XML_RSC_ATTR_STATE		"clone-state"
 #  define XML_RSC_ATTR_MANAGED		"is-managed"
 #  define XML_RSC_ATTR_TARGET_ROLE	"target-role"
 #  define XML_RSC_ATTR_UNIQUE		"globally-unique"
 #  define XML_RSC_ATTR_NOTIFY		"notify"
-#  define XML_RSC_ATTR_STICKINESS		"resource-stickiness"
+#  define XML_RSC_ATTR_STICKINESS	"resource-stickiness"
 #  define XML_RSC_ATTR_FAIL_STICKINESS	"migration-threshold"
 #  define XML_RSC_ATTR_FAIL_TIMEOUT	"failure-timeout"
 #  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
 #  define XML_RSC_ATTR_PRIORITY		"priority"
 #  define XML_OP_ATTR_ON_FAIL		"on-fail"
-#  define XML_OP_ATTR_START_DELAY		"start-delay"
+#  define XML_OP_ATTR_START_DELAY	"start-delay"
 #  define XML_OP_ATTR_ALLOW_MIGRATE	"allow-migrate"
 #  define XML_OP_ATTR_ORIGIN		"interval-origin"
 #  define XML_OP_ATTR_PENDING		"record-pending"
 
-#  define XML_CIB_TAG_LRM		  	"lrm"
+#  define XML_CIB_TAG_LRM		"lrm"
 #  define XML_LRM_TAG_RESOURCES     	"lrm_resources"
 #  define XML_LRM_TAG_RESOURCE     	"lrm_resource"
 #  define XML_LRM_TAG_AGENTS	     	"lrm_agents"
 #  define XML_LRM_TAG_AGENT		"lrm_agent"
 #  define XML_LRM_TAG_RSC_OP		"lrm_rsc_op"
 #  define XML_AGENT_ATTR_CLASS		"class"
-#  define XML_AGENT_ATTR_PROVIDER		"provider"
-#  define XML_LRM_TAG_ATTRIBUTES		"attributes"
+#  define XML_AGENT_ATTR_PROVIDER	"provider"
+#  define XML_LRM_TAG_ATTRIBUTES	"attributes"
 
 #  define XML_CIB_ATTR_REPLACE       	"replace"
 #  define XML_CIB_ATTR_SOURCE       	"source"
@@ -208,10 +240,10 @@
 #  define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
 #  define XML_LRM_ATTR_RSCID		"rsc-id"
 #  define XML_LRM_ATTR_OPSTATUS		"op-status"
-#  define XML_LRM_ATTR_RC			"rc-code"
+#  define XML_LRM_ATTR_RC		"rc-code"
 #  define XML_LRM_ATTR_CALLID		"call-id"
-#  define XML_LRM_ATTR_OP_DIGEST		"op-digest"
-#  define XML_LRM_ATTR_OP_RESTART		"op-force-restart"
+#  define XML_LRM_ATTR_OP_DIGEST	"op-digest"
+#  define XML_LRM_ATTR_OP_RESTART	"op-force-restart"
 #  define XML_LRM_ATTR_RESTART_DIGEST	"op-restart-digest"
 
 #  define XML_LRM_ATTR_MIGRATE_SOURCE	"migrate_source"
@@ -220,7 +252,7 @@
 #  define XML_TAG_GRAPH			"transition_graph"
 #  define XML_GRAPH_TAG_RSC_OP		"rsc_op"
 #  define XML_GRAPH_TAG_PSEUDO_EVENT	"pseudo_event"
-#  define XML_GRAPH_TAG_CRM_EVENT		"crm_event"
+#  define XML_GRAPH_TAG_CRM_EVENT	"crm_event"
 
 #  define XML_TAG_RULE			"rule"
 #  define XML_RULE_ATTR_SCORE		"score"
@@ -231,15 +263,15 @@
 #  define XML_RULE_ATTR_BOOLEAN_OP	"boolean-op"
 
 #  define XML_TAG_EXPRESSION		"expression"
-#  define XML_EXPR_ATTR_ATTRIBUTE		"attribute"
-#  define XML_EXPR_ATTR_OPERATION		"operation"
+#  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"
+#  define XML_EXPR_ATTR_OPERATION	"operation"
 #  define XML_EXPR_ATTR_VALUE		"value"
 #  define XML_EXPR_ATTR_TYPE		"type"
 
-#  define XML_CONS_TAG_RSC_DEPEND		"rsc_colocation"
-#  define XML_CONS_TAG_RSC_ORDER		"rsc_order"
+#  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
+#  define XML_CONS_TAG_RSC_ORDER	"rsc_order"
 #  define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
-#  define XML_CONS_TAG_RSC_TICKET		"rsc_ticket"
+#  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 #  define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
@@ -259,7 +291,7 @@
 #  define XML_ORDER_ATTR_THEN_INSTANCE	"then-instance"
 #  define XML_ORDER_ATTR_KIND		"kind"
 
-#  define XML_TICKET_ATTR_TICKET		"ticket"
+#  define XML_TICKET_ATTR_TICKET	"ticket"
 #  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
 
 #  define XML_NVPAIR_ATTR_NAME        	"name"
@@ -270,12 +302,12 @@
 #  define XML_CONFIG_ATTR_DC_DEADTIME	"dc-deadtime"
 #  define XML_CONFIG_ATTR_ELECTION_FAIL	"election-timeout"
 #  define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown-escalation"
-#  define XML_CONFIG_ATTR_RECHECK		"cluster-recheck-interval"
+#  define XML_CONFIG_ATTR_RECHECK	"cluster-recheck-interval"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
 #  define XML_ATTR_TRANSITION_MAGIC	"transition-magic"
-#  define XML_ATTR_TRANSITION_KEY		"transition-key"
+#  define XML_ATTR_TRANSITION_KEY	"transition-key"
 
 #  define XML_ATTR_TE_NOWAIT		"op_no_wait"
 #  define XML_ATTR_TE_TARGET_RC		"op_target_rc"
@@ -295,7 +327,7 @@
 #  define XML_ACL_ATTR_REF		"ref"
 #  define XML_ACL_ATTR_TAG		"tag"
 #  define XML_ACL_ATTR_XPATH		"xpath"
-#  define XML_ACL_ATTR_ATTRIBUTE		"attribute"
+#  define XML_ACL_ATTR_ATTRIBUTE	"attribute"
 
 #  define XML_CIB_TAG_TICKETS		"tickets"
 #  define XML_CIB_TAG_TICKET_STATE	"ticket_state"
