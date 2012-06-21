@@ -27,7 +27,6 @@
 #  include <fcntl.h>
 
 #  include <crm/crm.h>
-#  include <ha_msg.h>
 
 #  include <libxml/tree.h>
 #  include <libxml/xpath.h>
@@ -325,15 +324,17 @@ __xml_next(xmlNode * child)
 
 xmlNode *first_named_child(xmlNode * parent, const char *name);
 
-xmlNode *convert_ipc_message(IPC_Message * msg, const char *field);
-xmlNode *convert_ha_message(xmlNode * parent, HA_Message * msg, const char *field);
-
-HA_Message *convert_xml_message(xmlNode * msg);
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
 xmlXPathObjectPtr xpath_search(xmlNode * xml_top, const char *path);
 gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 xmlNode *expand_idref(xmlNode * input, xmlNode * top);
 
 xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
+
+#  if SUPPORT_HEARTBEAT
+#    include <ha_msg.h>
+xmlNode *convert_ha_message(xmlNode * parent, HA_Message * msg, const char *field);
+HA_Message *convert_xml_message(xmlNode * msg);
+#  endif
 
 #endif
