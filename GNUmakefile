@@ -45,7 +45,7 @@ ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 TAG     ?= $(shell git log --pretty="format:%h" -n 1)
-WITH    ?= 
+WITH    ?= --without doc
 
 LAST_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1)
 NEXT_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1 | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
