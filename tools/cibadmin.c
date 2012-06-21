@@ -367,7 +367,7 @@ main(int argc, char **argv)
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
         fflush(stderr);
-        exit(EX_USAGE);
+        exit(1);
     }
 
     if (admin_input_file != NULL) {
