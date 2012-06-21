@@ -28,7 +28,6 @@
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 
-GCHSource *stonith_src = NULL;
 crm_trigger_t *stonith_reconnect = NULL;
 GListPtr stonith_cleanup_list = NULL;
 

@@ -424,7 +424,7 @@ crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const 
 }
 
 int
-crm_terminate_member(int nodeid, const char *uname, IPC_Channel * cluster)
+crm_terminate_member(int nodeid, const char *uname, void * unused)
 {
     /* Always use the synchronous, non-mainloop version */
     return stonith_api_kick(nodeid, uname, 120, TRUE);

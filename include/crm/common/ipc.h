@@ -18,9 +18,6 @@
 #ifndef CRM_COMMON_IPC__H
 #  define CRM_COMMON_IPC__H
 
-#  include <clplumbing/ipc.h>
-#  include <clplumbing/GSource.h>
-
 #  include <crm/common/xml.h>
 
 /* clplumbing based IPC */

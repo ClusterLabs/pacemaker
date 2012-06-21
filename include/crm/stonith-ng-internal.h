@@ -20,7 +20,6 @@
 
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
-#  include <clplumbing/proctrack.h>
 
 typedef struct async_command_s {
 

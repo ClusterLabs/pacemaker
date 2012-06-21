@@ -47,7 +47,6 @@
 #include <crm/cib.h>
 #include <crmd.h>
 
-static GCHSource *pe_source = NULL;
 struct crm_subsystem_s *pe_subsystem = NULL;
 void do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
 
@@ -85,7 +84,6 @@ save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 static void
 pe_ipc_destroy(gpointer user_data)
 {
-    pe_source = NULL;
     clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
     if (is_set(fsa_input_register, pe_subsystem->flag_required)) {
         int rc = cib_ok;

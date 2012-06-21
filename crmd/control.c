@@ -332,10 +332,8 @@ do_exit(long long action,
         exit_code = 100;
     }
 
-    free_mem(msg_data);
-
     crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
-    cl_flush_logs();
+    free_mem(msg_data);
     exit(exit_code);
 }
 
