@@ -72,11 +72,6 @@ pengine_LDADD	= $(top_builddir)/lib/cib/libcib.la $(COMMONLIBS)
 # libcib for get_object_root()
 #		$(top_builddir)/lib/hbclient/libhbclient.la
 
-ptest_SOURCES	= ptest.c 
-ptest_LDADD	= $(top_builddir)/lib/cib/libcib.la			\
-		$(top_builddir)/lib/transition/libtransitioner.la	\
-		$(COMMONLIBS)
-
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(PE_STATE_DIR)
 	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(PE_STATE_DIR)

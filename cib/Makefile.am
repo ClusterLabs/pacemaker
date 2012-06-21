@@ -52,11 +52,6 @@ cib_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la \
 cibmon_SOURCES		= cibmon.c
 cibmon_LDADD		= $(COMMONLIBS) 
 
-cibpipe_SOURCES		= cibpipe.c
-
-cibpipe_LDADD		= $(COMMONLIBS) $(CRYPTOLIB)
-cibpipe_CFLAGS		= -DCIBPIPE=1
-
 clean-generic:
 	rm -f *.log *.debug *.xml *~
 

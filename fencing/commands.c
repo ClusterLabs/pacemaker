@@ -43,8 +43,6 @@
 
 #include <internal.h>
 
-#include <clplumbing/proctrack.h>
-
 GHashTable *device_list = NULL;
 GHashTable *topology = NULL;
 
