@@ -26,7 +26,6 @@ lib_LTLIBRARIES = libstonithd.la
 
 libstonithd_la_SOURCES = st_client.c
 libstonithd_la_LDFLAGS = -version-info 1:1:0
-libstonithd_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon.la 	\
-			-lplumb -lstonith
+libstonithd_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon.la $(LHA_STONITH_LIBS)
 
 AM_CFLAGS = $(INCLUDES)

@@ -37,7 +37,10 @@
 #include <crm/stonith-ng-internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <stonith/stonith.h>
+
+#if SUPPORT_LHA_STONITH
+#  include <stonith/stonith.h>
+#endif
 
 #include <crm/common/mainloop.h>
 
@@ -653,11 +656,12 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
 
     if (devices == NULL) {
         crm_err("Parameter error: stonith_api_device_list");
-        return -2;
+        return -EFAULT;
     }
 
     /* Include Heartbeat agents */
     if (namespace == NULL || safe_str_eq("heartbeat", namespace)) {
+#if SUPPORT_LHA_STONITH
         char **entry = NULL;
         char **type_list = stonith_types();
 
@@ -669,6 +673,11 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
         if (type_list) {
             stonith_free_hostlist(type_list);
         }
+#else
+        if(namespace != NULL) {
+            return -EINVAL; /* Heartbeat agents not supported */
+        }
+#endif
     }
 
     /* Include Red Hat agents, basically: ls -1 @sbin_dir@/fence_* */
@@ -721,10 +730,12 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
     char *meta_longdesc = NULL;
     char *meta_shortdesc = NULL;
     const char *provider = get_stonith_provider(agent, namespace);
-
-    Stonith *stonith_obj = NULL;
     static const char *no_parameter_info = "<!-- no value -->";
 
+#if SUPPORT_LHA_STONITH
+    Stonith *stonith_obj = NULL;
+#endif
+    
     crm_trace("looking up %s/%s metadata", agent, provider);
 
     /* By having this in a library, we can access it from stonith_admin
@@ -792,6 +803,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
         }
 
     } else {
+#if SUPPORT_LHA_STONITH
         stonith_obj = stonith_new(agent);
 
         meta_longdesc = crm_strdup(stonith_get_info(stonith_obj, ST_DEVICEDESCR));
@@ -811,6 +823,9 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             crm_warn("no list of parameters in %s's metadata.", agent);
             meta_param = crm_strdup(no_parameter_info);
         }
+#else
+        return -EINVAL; /* Heartbeat agents not supported */
+#endif
 
   build:
         xml_meta_longdesc =
@@ -829,9 +844,11 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
         xmlFree(xml_meta_longdesc);
         xmlFree(xml_meta_shortdesc);
 
+#if SUPPORT_LHA_STONITH
         if (stonith_obj) {
             stonith_delete(stonith_obj);
         }
+#endif
 
         free(meta_shortdesc);
         free(meta_longdesc);
@@ -1081,6 +1098,7 @@ get_stonith_provider(const char *agent, const char *provider)
     if (is_redhat_agent(agent)) {
         return "redhat";
 
+#if SUPPORT_LHA_STONITH
     } else {
         Stonith *stonith_obj = stonith_new(agent);
 
@@ -1088,6 +1106,7 @@ get_stonith_provider(const char *agent, const char *provider)
             stonith_delete(stonith_obj);
             return "heartbeat";
         }
+#endif
     }
 
     crm_err("No such device: %s", agent);

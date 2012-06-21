@@ -982,7 +982,7 @@ AC_CHECK_LIB(qb, qb_ipcc_is_connected)
 AC_CHECK_FUNCS(qb_ipcc_is_connected)
 
 LIBQB_LOG=1
-PCMK_FEATURES="$PCMK_FEATURES libqb-logging"
+PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
 
 if test $ac_cv_lib_qb_qb_ipcc_is_connected != yes; then
    AC_MSG_FAILURE(Version of IPC in libqb is not new enough)
@@ -997,15 +997,31 @@ AC_CHECK_HEADERS(hb_config.h)
 AC_CHECK_HEADERS(glue_config.h)
 AC_CHECK_HEADERS(agent_config.h)
 GLUE_HEADER=none
+HAVE_GLUE=0
 if test "$ac_cv_header_glue_config_h" = "yes";  then
+   PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
    GLUE_HEADER=glue_config.h
+   HAVE_GLUE=1
 
 elif test "$ac_cv_header_hb_config_h" = "yes"; then
+   PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
    GLUE_HEADER=hb_config.h
-
+   HAVE_GLUE=1
 else
    AC_MSG_WARN(cluster-glue development headers were not found)
 fi
+
+if test $HAVE_GLUE = 1; then
+   dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
+   dnl So check for all the depenancies (so they're added to LIBS) before checking for -lplumb
+   AC_CHECK_LIB(pils, PILLoadPlugin)
+   AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
+
+   LHA_STONITH_LIBS=-lstonith
+   AC_SUBST(LHA_STONITH_LIBS)
+fi
+
+AC_DEFINE_UNQUOTED(SUPPORT_LHA_STONITH, $HAVE_GLUE, Build support for the legacy Linux-HA stonith agents)
 
 dnl ===============================================
 dnl Variables needed for substitution
@@ -1120,11 +1136,6 @@ dnl ========================================================================
 case $SUPPORT_HEARTBEAT in
 1|yes|true|try)
    AC_MSG_CHECKING(for heartbeat support)
-
-   dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
-   dnl So check for all the depenancies (so they're added to LIBS) before checking for -lplumb
-   AC_CHECK_LIB(pils, PILLoadPlugin)
-   AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
    AC_CHECK_LIB(hbclient, ll_cluster_new, [SUPPORT_HEARTBEAT=1],
 		[if $SUPPORT_HEARTBEAT != try; then
 			AC_MSG_FAILURE(Unable to support Heartbeat: client libraries not found)
