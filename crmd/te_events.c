@@ -26,7 +26,6 @@
 #include <crm/common/xml.h>
 #include <tengine.h>
 
-#include <lrm/lrm_api.h>
 #include <crmd_fsa.h>
 
 char *failed_stop_offset = NULL;
@@ -190,17 +189,17 @@ status_from_rc(crm_action_t * action, int orig_status, int rc, int target_rc)
 
     if (target_rc == rc) {
         crm_trace("Target rc: == %d", rc);
-        if (status != LRM_OP_DONE) {
-            crm_trace("Re-mapping op status to" " LRM_OP_DONE for rc=%d", rc);
-            status = LRM_OP_DONE;
+        if (status != PCMK_LRM_OP_DONE) {
+            crm_trace("Re-mapping op status to" " PCMK_LRM_OP_DONE for rc=%d", rc);
+            status = PCMK_LRM_OP_DONE;
         }
 
     } else {
-        status = LRM_OP_ERROR;
+        status = PCMK_LRM_OP_ERROR;
     }
 
     /* 99 is the code we use for direct nack's */
-    if (rc != 99 && status != LRM_OP_DONE) {
+    if (rc != 99 && status != PCMK_LRM_OP_DONE) {
         const char *task, *uname;
 
         task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
@@ -233,24 +232,24 @@ match_graph_event(int action_id, xmlNode * event, const char *event_node,
     }
 
     op_status = status_from_rc(action, op_status, op_rc, target_rc);
-    if (op_status != LRM_OP_DONE) {
+    if (op_status != PCMK_LRM_OP_DONE) {
         update_failcount(event, event_node, op_rc, target_rc, FALSE);
     }
 
     /* Process OP status */
     switch (op_status) {
-        case LRM_OP_PENDING:
+        case PCMK_LRM_OP_PENDING:
             crm_debug("Ignoring pending operation");
             return action->id;
             break;
-        case LRM_OP_DONE:
+        case PCMK_LRM_OP_DONE:
             break;
-        case LRM_OP_ERROR:
-        case LRM_OP_TIMEOUT:
-        case LRM_OP_NOTSUPPORTED:
+        case PCMK_LRM_OP_ERROR:
+        case PCMK_LRM_OP_TIMEOUT:
+        case PCMK_LRM_OP_NOTSUPPORTED:
             action->failed = TRUE;
             break;
-        case LRM_OP_CANCELLED:
+        case PCMK_LRM_OP_CANCELLED:
             /* do nothing?? */
             crm_err("Dont know what to do for cancelled ops yet");
             break;
@@ -457,7 +456,7 @@ process_graph_event(xmlNode * event, const char *event_node)
         return FALSE;
     }
 
-    if (status == LRM_OP_PENDING) {
+    if (status == PCMK_LRM_OP_PENDING) {
         goto bail;
     }
 
