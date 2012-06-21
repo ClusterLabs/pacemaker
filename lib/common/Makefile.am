@@ -38,10 +38,6 @@ libcrmcommon_la_LDFLAGS	= -version-info 3:0:0
 libcrmcommon_la_LIBADD  = -ldl $(GNUTLSLIBS)
 libcrmcommon_la_SOURCES += $(top_builddir)/lib/gnu/md5.c
 
-if BUILD_HEARTBEAT_SUPPORT
-libcrmcommon_la_SOURCES += heartbeat.c
-endif
-
 clean-generic:
 	rm -f *.log *.debug *.xml *~
 

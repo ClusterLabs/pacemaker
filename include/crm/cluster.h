@@ -73,6 +73,7 @@ int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connect
 gboolean crm_get_cluster_name(char **cname);
 
 #  if SUPPORT_HEARTBEAT
+xmlNode *convert_ha_message(xmlNode * parent, HA_Message *msg, const char *field);
 gboolean crm_is_heartbeat_peer_active(const crm_node_t * node);
 gboolean ccm_have_quorum(oc_ed_t event);
 const char *ccm_event_name(oc_ed_t event);

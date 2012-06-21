@@ -331,10 +331,4 @@ xmlNode *expand_idref(xmlNode * input, xmlNode * top);
 
 xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
 
-#  if SUPPORT_HEARTBEAT
-#    include <ha_msg.h>
-xmlNode *convert_ha_message(xmlNode * parent, HA_Message * msg, const char *field);
-HA_Message *convert_xml_message(xmlNode * msg);
-#  endif
-
 #endif

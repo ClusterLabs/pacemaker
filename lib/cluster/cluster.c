@@ -43,8 +43,6 @@ void *hb_library = NULL;
 static GHashTable *crm_uuid_cache = NULL;
 static GHashTable *crm_uname_cache = NULL;
 
-xmlNode *create_common_message(xmlNode * original_request, xmlNode * xml_response_data);
-
 static char *
 get_heartbeat_uuid(uint32_t unused, const char *uname)
 {

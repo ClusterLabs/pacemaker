@@ -993,17 +993,17 @@ AC_DEFINE_UNQUOTED(LIBQB_IPC, 0, Use libqb for IPC)
 
 LIBS="$LIBS $libqb_LIBS"
 
-AC_CHECK_HEADERS(hb_config.h)
-AC_CHECK_HEADERS(glue_config.h)
+AC_CHECK_HEADERS(heartbeat/hb_config.h)
+AC_CHECK_HEADERS(heartbeat/glue_config.h)
 AC_CHECK_HEADERS(agent_config.h)
 GLUE_HEADER=none
 HAVE_GLUE=0
-if test "$ac_cv_header_glue_config_h" = "yes";  then
+if test "$ac_cv_header_heartbeat_glue_config_h" = "yes";  then
    PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
    GLUE_HEADER=glue_config.h
    HAVE_GLUE=1
 
-elif test "$ac_cv_header_hb_config_h" = "yes"; then
+elif test "$ac_cv_header_heartbeat_hb_config_h" = "yes"; then
    PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
    GLUE_HEADER=hb_config.h
    HAVE_GLUE=1
