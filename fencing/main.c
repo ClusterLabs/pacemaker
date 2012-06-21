@@ -212,15 +212,25 @@ stonith_peer_callback(xmlNode * msg, void* private_data)
     stonith_command(NULL, msg, remote);
 }
 
+#if SUPPORT_HEARTBEAT
 static void
 stonith_peer_hb_callback(HA_Message * msg, void* private_data)
 {
-#if SUPPORT_HEARTBEAT
     xmlNode *xml = convert_ha_message(NULL, msg, __FUNCTION__);
     stonith_peer_callback(xml, private_data);
     free_xml(xml);
-#endif
 }
+static void
+stonith_peer_hb_destroy(gpointer user_data)
+{
+    if(stonith_shutdown_flag) {
+	crm_info("Heartbeat disconnection complete... exiting");
+    } else {
+	crm_err("Heartbeat connection lost!  Exiting.");
+    }
+    stonith_shutdown(0);
+}
+#endif
 
 
 #if SUPPORT_COROSYNC	
@@ -256,16 +266,6 @@ stonith_peer_ais_destroy(gpointer user_data)
 }
 #endif
 
-static void
-stonith_peer_hb_destroy(gpointer user_data)
-{
-    if(stonith_shutdown_flag) {
-	crm_info("Heartbeat disconnection complete... exiting");
-    } else {
-	crm_err("Heartbeat connection lost!  Exiting.");
-    }
-    stonith_shutdown(0);
-}
 
 void do_local_reply(xmlNode *notify_src, const char *client_id,
 		     gboolean sync_reply, gboolean from_peer)
@@ -767,8 +767,13 @@ main(int argc, char ** argv)
     client_list = g_hash_table_new(crm_str_hash, g_str_equal);
 	
     if(stand_alone == FALSE) {
-	void *dispatch = stonith_peer_hb_callback;
-	void *destroy = stonith_peer_hb_destroy;
+	void *dispatch = NULL;
+	void *destroy = NULL;
+
+#if SUPPORT_HEARTBEAT
+	dispatch = stonith_peer_hb_callback;
+	destroy = stonith_peer_hb_destroy;
+#endif
 
 	if(is_openais_cluster()) {
 #if SUPPORT_COROSYNC

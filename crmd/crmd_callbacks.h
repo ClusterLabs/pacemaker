@@ -27,8 +27,6 @@ extern void crmd_ha_msg_filter(xmlNode * msg);
 
 extern void crmd_ipc_connection_destroy(gpointer user_data);
 
-extern void crmd_ha_msg_callback(HA_Message * hamsg, void *private_data);
-
 extern void lrm_op_callback(lrmd_event_data_t * op);
 
 extern void crmd_ha_status_callback(const char *node, const char *status, void *private_data);
@@ -43,3 +41,7 @@ extern void crmd_cib_connection_destroy(gpointer user_data);
 extern gboolean crm_fsa_trigger(gpointer user_data);
 
 extern void peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data);
+
+#if SUPPORT_HEARTBEAT
+extern void crmd_ha_msg_callback(HA_Message * hamsg, void *private_data);
+#endif

@@ -80,7 +80,6 @@ extern qb_ipcs_service_t *ipcs_ro;
 extern qb_ipcs_service_t *ipcs_rw;
 extern qb_ipcs_service_t *ipcs_shm;
 
-extern void cib_ha_peer_callback(HA_Message * msg, void *private_data);
 extern void cib_peer_callback(xmlNode * msg, void *private_data);
 extern void cib_client_status_callback(const char *node, const char *client,
                                        const char *status, void *private);
@@ -91,7 +90,7 @@ void initiate_exit(void);
 void terminate_cib(const char *caller, gboolean fast);
 
 #if SUPPORT_HEARTBEAT
+extern void cib_ha_peer_callback(HA_Message * msg, void *private_data);
 extern int cib_ccm_dispatch(gpointer user_data);
-
 extern void cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
 #endif
