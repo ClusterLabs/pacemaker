@@ -102,7 +102,7 @@ main(int argc, char **argv)
                 crm_bump_log_level();
                 break;
             case '?':
-                usage(crm_system_name, LSB_EXIT_OK);
+                usage(crm_system_name, EX_OK);
                 break;
             case 'd':
                 log_diffs = TRUE;
@@ -132,7 +132,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        usage(crm_system_name, LSB_EXIT_GENERIC);
+        usage(crm_system_name, EX_USAGE);
     }
 
     cib = cib_new();
@@ -249,5 +249,5 @@ cibmon_diff(const char *event, xmlNode * msg)
 void
 cibmon_shutdown(int nsig)
 {
-    exit(LSB_EXIT_OK);
+    exit(EX_OK);
 }

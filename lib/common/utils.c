@@ -1387,7 +1387,7 @@ crm_read_pidfile(const char *filename)
 
     if (sscanf(buf, "%lu", &pid) > 0) {
         if (pid <= 0) {
-            pid = -LSB_STATUS_STOPPED;
+            pid = -ESRCH;
         }
     }
 
@@ -1490,17 +1490,17 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
     if (pid < 0) {
         fprintf(stderr, "%s: could not start daemon\n", name);
         crm_perror(LOG_ERR, "fork");
-        exit(LSB_EXIT_GENERIC);
+        exit(EX_USAGE);
 
     } else if (pid > 0) {
-        exit(LSB_EXIT_OK);
+        exit(EX_OK);
     }
 
     if (crm_lock_pidfile(pidfile) < 0) {
         pid = crm_read_pidfile(pidfile);
         if (crm_pid_active(pid) > 0) {
             crm_warn("%s: already running [pid %ld] (%s).\n", name, pid, pidfile);
-            exit(LSB_EXIT_OK);
+            exit(EX_OK);
         }
     }
 

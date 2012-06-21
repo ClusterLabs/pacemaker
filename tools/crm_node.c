@@ -350,14 +350,14 @@ try_cman(int command, enum cluster_type_e stack)
 
         default:
             fprintf(stderr, "Unknown option '%c'\n", command);
-            crm_help('?', LSB_EXIT_GENERIC);
+            crm_help('?', EX_USAGE);
     }
     cman_finish(cman_handle);
     exit(0);
 
   cman_bail:
     cman_finish(cman_handle);
-    exit(LSB_EXIT_GENERIC);
+    exit(EX_USAGE);
 }
 #endif
 
@@ -657,7 +657,7 @@ try_openais(int command, enum cluster_type_e stack)
 
             default:
                 fprintf(stderr, "Unknown option '%c'\n", command);
-                crm_help('?', LSB_EXIT_GENERIC);
+                crm_help('?', EX_USAGE);
         }
         amainloop = g_main_new(FALSE);
         g_main_run(amainloop);
@@ -694,7 +694,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             case 'Q':
                 do_quiet = TRUE;
@@ -737,7 +737,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', EX_USAGE);
     }
 
     if (dangerous_cmd && force_flag == FALSE) {
@@ -745,7 +745,7 @@ main(int argc, char **argv)
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
         fflush(stderr);
-        exit(LSB_EXIT_GENERIC);
+        exit(EX_USAGE);
     }
 
     try_stack = get_cluster_type();

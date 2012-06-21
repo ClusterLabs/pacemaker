@@ -325,7 +325,7 @@ attrd_ha_connection_destroy(gpointer user_data)
         g_main_quit(mainloop);
         return;
     }
-    exit(LSB_EXIT_OK);
+    exit(EX_OK);
 }
 
 static void
@@ -406,7 +406,7 @@ attrd_ais_destroy(gpointer unused)
         g_main_quit(mainloop);
         return;
     }
-    exit(LSB_EXIT_GENERIC);
+    exit(EX_USAGE);
 }
 #endif
 
@@ -525,7 +525,7 @@ main(int argc, char **argv)
                 crm_bump_log_level();
                 break;
             case 'h':          /* Help message */
-                usage(T_ATTRD, LSB_EXIT_OK);
+                usage(T_ATTRD, EX_OK);
                 break;
             default:
                 ++argerr;
@@ -538,7 +538,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        usage(T_ATTRD, LSB_EXIT_GENERIC);
+        usage(T_ATTRD, EX_USAGE);
     }
 
     attr_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_hash_entry);

@@ -199,7 +199,7 @@ main(int argc, char **argv)
                     "\n\nWhere necessary, XML data will be obtained using the -X, -x, or -p options\n");
 
     if (argc < 2) {
-        crm_help('?', LSB_EXIT_EINVAL);
+        crm_help('?', EX_USAGE);
     }
 
     while (1) {
@@ -283,7 +283,7 @@ main(int argc, char **argv)
             case '?':
             case '$':
             case '!':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             case 'o':
                 crm_trace("Option %c => %s", flag, optarg);
@@ -351,7 +351,7 @@ main(int argc, char **argv)
         while (optind < argc)
             printf("%s ", argv[optind++]);
         printf("\n");
-        crm_help('?', LSB_EXIT_EINVAL);
+        crm_help('?', EX_USAGE);
     }
 
     if (optind > argc || cib_action == NULL) {
@@ -359,7 +359,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', EX_USAGE);
     }
 
     if (dangerous_cmd && force_flag == FALSE) {
@@ -367,7 +367,7 @@ main(int argc, char **argv)
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
         fflush(stderr);
-        exit(LSB_EXIT_GENERIC);
+        exit(EX_USAGE);
     }
 
     if (admin_input_file != NULL) {

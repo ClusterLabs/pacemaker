@@ -114,7 +114,7 @@ main(int argc, char **argv)
                 crm_bump_log_level();
                 break;
             case 'h':          /* Help message */
-                usage(crm_system_name, LSB_EXIT_OK);
+                usage(crm_system_name, EX_OK);
                 break;
             case 'c':
                 allow_cores = TRUE;
@@ -135,7 +135,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        usage(crm_system_name, LSB_EXIT_GENERIC);
+        usage(crm_system_name, EX_USAGE);
     }
 
     crm_log_init(NULL, LOG_NOTICE, TRUE, FALSE, argc, argv, FALSE);
@@ -208,5 +208,5 @@ void
 pengine_shutdown(int nsig)
 {
     mainloop_del_ipc_server(ipcs);
-    exit(LSB_EXIT_OK);
+    exit(EX_OK);
 }

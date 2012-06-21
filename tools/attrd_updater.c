@@ -79,7 +79,7 @@ main(int argc, char **argv)
                     "Tool for updating cluster node attributes");
 
     if (argc < 2) {
-        crm_help('?', LSB_EXIT_EINVAL);
+        crm_help('?', EX_USAGE);
     }
 
     while (1) {
@@ -93,7 +93,7 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             case 'n':
                 attr_name = crm_strdup(optarg);
@@ -138,12 +138,12 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', EX_USAGE);
     }
 
     if (command == 'Q') {
         fprintf(stderr, "-Q,--query is not yet implemented, use -D to delete existing values\n\n");
-        crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', EX_USAGE);
 
     } else
         if (FALSE == attrd_update_delegate(

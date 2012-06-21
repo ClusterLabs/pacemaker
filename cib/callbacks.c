@@ -1436,12 +1436,12 @@ terminate_cib(const char *caller, gboolean fast)
     qb_log_fini();
 
     if (fast) {
-        exit(LSB_EXIT_GENERIC);
+        exit(EX_USAGE);
 
     } else if(mainloop != NULL && g_main_is_running(mainloop)) {
         g_main_quit(mainloop);
 
     } else {
-        exit(LSB_EXIT_OK);
+        exit(EX_OK);
     }
 }

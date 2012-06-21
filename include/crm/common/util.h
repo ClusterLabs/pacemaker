@@ -18,12 +18,11 @@
 #ifndef CRM_COMMON_UTIL__H
 #  define CRM_COMMON_UTIL__H
 
-#  include <clplumbing/lsb_exitcodes.h>
-
 #  include <sys/types.h>
 #  include <stdlib.h>
 #  include <limits.h>
 #  include <signal.h>
+#  include <sysexits.h>
 
 #  include <crm/lrmd.h>
 

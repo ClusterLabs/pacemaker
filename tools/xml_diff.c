@@ -93,7 +93,7 @@ main(int argc, char **argv)
                     "The tool produces a custom (diff-like) output which it can also apply like a patch\n");
 
     if (argc < 2) {
-        crm_help('?', LSB_EXIT_EINVAL);
+        crm_help('?', EX_USAGE);
     }
 
     while (1) {
@@ -134,7 +134,7 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             default:
                 printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
@@ -155,7 +155,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', EX_USAGE);
     }
 
     if (raw_1) {

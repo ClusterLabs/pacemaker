@@ -1233,7 +1233,7 @@ main(int argc, char **argv)
                     long_options, "Tool for simulating the cluster's response to events");
 
     if (argc < 2) {
-        crm_help('?', LSB_EXIT_EINVAL);
+        crm_help('?', EX_USAGE);
     }
 
     while (1) {
@@ -1256,7 +1256,7 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             case 'p':
                 xml_file = "-";
@@ -1365,7 +1365,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', EX_USAGE);
     }
 
     if(test_dir != NULL) {

@@ -194,7 +194,7 @@ mon_cib_connection_destroy(gpointer user_data)
 static void
 mon_shutdown(int nsig)
 {
-    clean_up(LSB_EXIT_OK);
+    clean_up(EX_OK);
 }
 
 #if ON_DARWIN
@@ -463,7 +463,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -479,7 +479,7 @@ main(int argc, char **argv)
         printf("\n");
     }
     if (argerr) {
-        crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', EX_USAGE);
     }
 
     if (one_shot) {
@@ -492,7 +492,7 @@ main(int argc, char **argv)
         if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent && !as_xml) {
             printf
                 ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --mail-to, --snmp-target, --external-agent\n");
-            crm_help('?', LSB_EXIT_GENERIC);
+            crm_help('?', EX_USAGE);
         }
 
         crm_make_daemon(crm_system_name, TRUE, pid_file);
@@ -2216,7 +2216,7 @@ mon_refresh_display(gpointer user_data)
         if (as_console) {
             sleep(2);
         }
-        clean_up(LSB_EXIT_GENERIC);
+        clean_up(EX_USAGE);
         return FALSE;
     }
 
@@ -2227,12 +2227,12 @@ mon_refresh_display(gpointer user_data)
     if (as_html_file || web_cgi) {
         if (print_html_status(&data_set, as_html_file, web_cgi) != 0) {
             fprintf(stderr, "Critical: Unable to output html file\n");
-            clean_up(LSB_EXIT_GENERIC);
+            clean_up(EX_USAGE);
         }
     } else if (as_xml) {
         if (print_xml_status(&data_set) != 0) {
             fprintf(stderr, "Critical: Unable to output xml file\n");
-            clean_up(LSB_EXIT_GENERIC);
+            clean_up(EX_USAGE);
         }
     } else if (daemonize) {
         /* do nothing */
@@ -2240,7 +2240,7 @@ mon_refresh_display(gpointer user_data)
     } else if (simple_status) {
         print_simple_status(&data_set);
         if (has_warnings) {
-            clean_up(LSB_EXIT_GENERIC);
+            clean_up(EX_USAGE);
         }
 
     } else {

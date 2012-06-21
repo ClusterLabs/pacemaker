@@ -1197,7 +1197,7 @@ main(int argc, char **argv)
                     "Perform tasks related to cluster resources.\nAllows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
     if (argc < 2) {
-        crm_help('?', LSB_EXIT_EINVAL);
+        crm_help('?', EX_USAGE);
     }
 
     while (1) {
@@ -1211,7 +1211,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             case 'x':
                 xml_file = crm_strdup(optarg);
@@ -1303,7 +1303,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', EX_USAGE);
     }
 
     our_pid = calloc(1, 11);

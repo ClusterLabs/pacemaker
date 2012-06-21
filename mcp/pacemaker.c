@@ -672,7 +672,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             case 'S':
                 shutdown = TRUE;
@@ -695,7 +695,7 @@ main(int argc, char **argv)
         printf("\n");
     }
     if (argerr) {
-        crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', EX_USAGE);
     }
 
     crm_debug("Checking for old instances of %s", CRM_SYSTEM_MCP);

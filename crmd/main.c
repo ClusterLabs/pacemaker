@@ -59,7 +59,7 @@ main(int argc, char **argv)
                 crm_bump_log_level();
                 break;
             case 'h':          /* Help message */
-                usage(crm_system_name, LSB_EXIT_OK);
+                usage(crm_system_name, EX_OK);
                 break;
             default:
                 ++argerr;
@@ -85,7 +85,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        usage(crm_system_name, LSB_EXIT_GENERIC);
+        usage(crm_system_name, EX_USAGE);
     }
 
     if (crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {

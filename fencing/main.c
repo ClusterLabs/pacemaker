@@ -569,7 +569,7 @@ stonith_shutdown(int nsig)
         g_main_quit(mainloop);
     } else {
         stonith_cleanup();
-        exit(LSB_EXIT_OK);
+        exit(EX_OK);
     }
 }
 
@@ -686,7 +686,7 @@ main(int argc, char ** argv)
 		break;
 	    case '$':
 	    case '?':
-		crm_help(flag, LSB_EXIT_OK);
+		crm_help(flag, EX_OK);
 		break;
 	    default:
 		++argerr;
@@ -758,7 +758,7 @@ main(int argc, char ** argv)
     }
     
     if (argerr) {
-	crm_help('?', LSB_EXIT_GENERIC);
+	crm_help('?', EX_USAGE);
     }
 
     mainloop_add_signal(SIGTERM, stonith_shutdown);

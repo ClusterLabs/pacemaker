@@ -190,7 +190,7 @@ main(int argc, char **argv)
                     " for side-effects.\n");
 
     if (argc < 2) {
-        crm_help('?', LSB_EXIT_EINVAL);
+        crm_help('?', EX_USAGE);
     }
 
     while (1) {
@@ -232,7 +232,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             case 'f':
                 command_options |= cib_quorum_override;
@@ -253,7 +253,7 @@ main(int argc, char **argv)
         while (optind < argc)
             printf("%s ", argv[optind++]);
         printf("\n");
-        crm_help('?', LSB_EXIT_EINVAL);
+        crm_help('?', EX_USAGE);
     }
 
     if (optind > argc) {
@@ -261,7 +261,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', LSB_EXIT_GENERIC);
+        crm_help('?', EX_USAGE);
     }
 
     if (command == 'w') {
@@ -293,7 +293,7 @@ main(int argc, char **argv)
                     "  To prevent accidental destruction of the cluster,"
                     " the --force flag is required in order to proceed.\n", shadow, local);
             fflush(stderr);
-            rc = LSB_EXIT_GENERIC;
+            rc = EX_USAGE;
             goto done;
         }
     }
@@ -303,7 +303,7 @@ main(int argc, char **argv)
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
         fflush(stderr);
-        rc = LSB_EXIT_GENERIC;
+        rc = EX_USAGE;
         goto done;
     }
 

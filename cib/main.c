@@ -185,7 +185,7 @@ main(int argc, char **argv)
                 }
                 break;
             case '?':          /* Help message */
-                usage(crm_system_name, LSB_EXIT_OK);
+                usage(crm_system_name, EX_OK);
                 break;
             case 'w':
                 cib_writes_enabled = TRUE;
@@ -211,7 +211,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        usage(crm_system_name, LSB_EXIT_GENERIC);
+        usage(crm_system_name, EX_USAGE);
     }
 
     if (crm_is_writable(cib_root, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {

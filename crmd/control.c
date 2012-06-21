@@ -893,7 +893,7 @@ crm_shutdown(int nsig)
 
     } else {
         crm_info("exit from shutdown");
-        exit(LSB_EXIT_OK);
+        exit(EX_OK);
 
     }
 }

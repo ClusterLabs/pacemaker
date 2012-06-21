@@ -134,7 +134,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             default:
                 fprintf(stderr, "Option -%c is not yet supported\n", flag);
@@ -157,7 +157,7 @@ main(int argc, char **argv)
 
     if (argerr) {
         crm_err("%d errors in option parsing", argerr);
-        crm_help(flag, LSB_EXIT_GENERIC);
+        crm_help(flag, EX_USAGE);
     }
 
     crm_info("=#=#=#=#= Getting XML =#=#=#=#=");

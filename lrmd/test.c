@@ -427,7 +427,7 @@ int main(int argc, char ** argv)
 
 		switch(flag) {
 		case '?':
-			crm_help(flag, LSB_EXIT_OK);
+			crm_help(flag, EX_OK);
 			break;
 		case 'V':
 			options.verbose = 1;
@@ -499,7 +499,7 @@ int main(int argc, char ** argv)
 	}
 
 	if (argerr) {
-		crm_help('?', LSB_EXIT_GENERIC);
+		crm_help('?', EX_USAGE);
 	}
 	if (optind > argc) {
 		++argerr;

@@ -554,7 +554,7 @@ static void cib_diskwrite_complete(GPid pid, gint status, gpointer user_data)
 int
 write_cib_contents(gpointer p)
 {
-    int exit_rc = LSB_EXIT_OK;
+    int exit_rc = EX_OK;
     gboolean need_archive = FALSE;
     struct stat buf;
     char *digest = NULL;

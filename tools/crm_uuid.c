@@ -35,7 +35,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/util.h>
-#include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/cl_uuid.h>
 
 #ifdef HAVE_GETOPT_H
@@ -85,7 +84,7 @@ main(int argc, char **argv)
         switch (flag) {
             case '?':
             case '$':
-                crm_help(flag, LSB_EXIT_OK);
+                crm_help(flag, EX_OK);
                 break;
             case 'r':
                 rc = read_local_hb_uuid();
@@ -94,7 +93,7 @@ main(int argc, char **argv)
                 rc = write_local_hb_uuid(optarg);
                 break;
             default:
-                crm_help('?', LSB_EXIT_GENERIC);
+                crm_help('?', EX_USAGE);
                 break;
         }
     }
