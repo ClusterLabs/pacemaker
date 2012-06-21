@@ -373,7 +373,7 @@ class CIB11(CibBase):
                 # Create the levels
                 stl = FencingTopology(self.Factory)
                 for node in self.CM.Env["nodes"]:
-                    ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast"])
+                    ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast "])
                     self.CM.log(" - Using %s fencing for node: %s" % (ftype, node))
                     if ftype == "levels-and":
                         stl.level(1, node, "FencingPass,Fencing")
