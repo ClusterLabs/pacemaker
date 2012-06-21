@@ -24,6 +24,9 @@
 #include <string.h>
 #include <pwd.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <glib.h>
 
 #include <crm/crm.h>

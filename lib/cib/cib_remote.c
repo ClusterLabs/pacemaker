@@ -484,7 +484,7 @@ int
 cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
                       xmlNode * data, xmlNode ** output_data, int call_options)
 {
-    int rc = HA_OK;
+    int rc = cib_ok;
 
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;
@@ -536,7 +536,6 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         return cib->call_id;
     }
 
-    rc = IPC_OK;
     crm_trace("Waiting for a syncronous reply");
 
     if (cib->call_timeout > 0) {
@@ -599,12 +598,11 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     /* } */
 
     if (op_reply == NULL) {
-        crm_err("No reply message - empty - %d", rc);
+        crm_err("No reply message - empty");
         return cib_reply_failed;
     }
 
     crm_trace("Syncronous reply received");
-    rc = cib_ok;
 
     /* Start processing the reply... */
     if (crm_element_value_int(op_reply, F_CIB_RC, &rc) != 0) {

@@ -30,6 +30,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>
 #include <crm/pengine/common.h>
+#include <crm/msg_xml.h>
 
 #if HAVE_LIBXML2
 #  include <libxml/parser.h>

@@ -19,13 +19,13 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-
-#include <crm/crm.h>
-
 #include <stdio.h>
-#include <sys/types.h>
 #include <unistd.h>
+
+#include <sys/param.h>
+#include <crm/crm.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <stdlib.h>
 #include <errno.h>

@@ -18,16 +18,18 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <dirent.h>
+
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
 
 #include <crm/crm.h>
 
@@ -510,7 +512,6 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
             if (initializeCib(saved_cib) == FALSE) {
                 /* oh we are so dead  */
                 crm_crit("Couldn't re-initialize the old CIB!");
-                cl_flush_logs();
                 exit(1);
             }
 

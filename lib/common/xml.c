@@ -20,6 +20,7 @@
 #include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
 #include <string.h>
@@ -320,7 +321,7 @@ add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
 {
     add_node_copy(parent, child);
     free_xml(child);
-    return HA_OK;
+    return 1;
 }
 
 const char *
