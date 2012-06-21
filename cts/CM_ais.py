@@ -107,6 +107,7 @@ class crm_ais(crm_lha):
                 "update_trace_data",
                 "async_notify: strange, client not found",
                 "Parse error: Ignoring unknown option .*nodename",
+                "error: log_operation: Operation 'reboot' .* with device 'FencingFail' returned: -2",
                 ]
         return []
 
