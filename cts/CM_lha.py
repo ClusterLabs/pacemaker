@@ -78,7 +78,7 @@ class crm_lha(ClusterManager):
             "ParitionCmd"    : "crm_node -H -p",
             "CibQuery"       : "cibadmin -Ql",
             # 300,000 == 5 minutes
-            "RscRunning"     : CTSvars.CTS_home + "/lrmd_test -R -r %s",
+            "RscRunning"     : CTSvars.CRM_DAEMON_DIR + "/lrmd_test -R -r %s",
             "CIBfile"        : "%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml",
             "TmpDir"         : "/tmp",
 
@@ -370,7 +370,7 @@ class crm_lha(ClusterManager):
                 (rc, lines) = self.rsh(node, cmd, None)
 
                 if rc == 127:
-                    self.log("Command '%s' failed. Binary not installed?" % cmd)
+                    self.log("Command '%s' failed. Binary or pacemaker-cts package not installed?" % cmd)
                     for line in lines:
                         self.log("Output: "+line)
                 elif rc == 0:

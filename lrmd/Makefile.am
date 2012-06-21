@@ -19,11 +19,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 lrmdlibdir	= $(CRM_DAEMON_DIR)
 
-lrmdctsdir = $(datadir)/$(PACKAGE)/tests/cts
-
 ## binary progs
-lrmdlib_PROGRAMS = lrmd
-lrmdcts_PROGRAMS = lrmd_test
+lrmdlib_PROGRAMS = lrmd lrmd_test
 
 lrmd_SOURCES	= main.c lrmd.c
 lrmd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
