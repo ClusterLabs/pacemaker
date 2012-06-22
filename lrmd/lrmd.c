@@ -144,13 +144,17 @@ static gboolean
 stonith_recurring_op_helper(gpointer data)
 {
     lrmd_cmd_t *cmd = data;
-    lrmd_rsc_t *rsc = NULL;
+    lrmd_rsc_t *rsc;
 
     cmd->stonith_recurring_id = 0;
 
-    rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
-    CRM_ASSERT(rsc != NULL);
+    if (!cmd->rsc_id) {
+        return FALSE;
+    }
 
+    rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
+
+    CRM_ASSERT(rsc != NULL);
     /* take it out of recurring_ops list, and put it in the pending ops
      * to be executed */
     rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);

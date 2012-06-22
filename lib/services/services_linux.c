@@ -477,7 +477,10 @@ services_os_get_directory_list(const char *root, gboolean files)
 
         snprintf(buffer, sizeof(buffer), "%s/%s", root, namelist[lpc]->d_name);
 
-        stat(buffer, &sb);
+        if (stat(buffer, &sb)) {
+            continue;
+        }
+
         if (S_ISDIR(sb.st_mode)) {
             if (files) {
                 free(namelist[lpc]);
