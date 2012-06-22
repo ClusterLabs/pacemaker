@@ -105,6 +105,44 @@ svc_action_t *resources_action_create(
         goto return_error;
     }
 
+    if(strcasecmp(op->standard, "service") == 0) {
+        /* Work it out and then fall into the if-else block below.
+         * Priority is:
+         * - systemd
+         * - upstart
+         * - lsb
+         */
+        int rc = 0;
+        struct stat st;
+        char *path = NULL;
+
+#if SUPPORT_SYSTEMD
+        /* if(systemd_job_exists(op->agent)) { */
+        /*     free(op->standard); */
+        /*     op->standard = strdup("systemd"); */
+        /*     goto expanded; */
+        /* } */
+#endif
+
+#if SUPPORT_UPSTART
+        if(upstart_job_exists(op->agent)) {
+        free(op->standard);
+            op->standard = strdup("upstart");
+            goto expanded;
+        }
+#endif
+
+#ifdef LSB_ROOT_DIR
+        rc = asprintf(&path, "%s/%s", LSB_ROOT_DIR, op->agent);
+        if(rc > 0 && stat(path, &st) == 0) {
+        free(op->standard);
+        op->standard = strdup("lsb");
+            goto expanded;
+        }
+#endif
+    }
+
+      expanded:
     if(strcasecmp(op->standard, "ocf") == 0) {
         op->provider = strdup(provider);
         op->params = params;
