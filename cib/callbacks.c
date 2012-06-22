@@ -379,8 +379,8 @@ local_notify_destroy_callback(gpointer data)
     cib_local_notify_t *notify = data;
 
     free_xml(notify->notify_src);
-    crm_free(notify->client_id);
-    crm_free(notify);
+    free(notify->client_id);
+    free(notify);
 }
 
 static void
@@ -403,9 +403,7 @@ check_local_notify(int bcast_id)
 static void
 queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_reply, gboolean from_peer)
 {
-    cib_local_notify_t *notify;
-
-    crm_malloc0(notify, sizeof(cib_local_notify_t));
+    cib_local_notify_t *notify = calloc(1, sizeof(cib_local_notify_t));
 
     notify->notify_src = notify_src;
     notify->client_id = crm_strdup(client_id);

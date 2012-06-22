@@ -504,7 +504,7 @@ crmd_remove_node_cache(int id)
         goto rm_node_cleanup;
     }
 
-    crm_malloc0(admin_uuid, 11);
+    admin_uuid = calloc(1, 11);
     snprintf(admin_uuid, 10, "%d", getpid());
     admin_uuid[10] = '\0';
 
