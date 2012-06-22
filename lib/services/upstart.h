@@ -21,16 +21,14 @@
 #define _UPSTART_DBUS_H_
 
 #include <glib.h>
+#include "crm/services.h"
 
-typedef enum {
-	UPSTART_JOB_START,
-	UPSTART_JOB_STOP,
-	UPSTART_JOB_RESTART
-} UpstartJobCommand;
-
-G_GNUC_INTERNAL gchar **upstart_get_all_jobs(void);
-G_GNUC_INTERNAL gboolean upstart_job_do(const gchar *name, UpstartJobCommand cmd);
+G_GNUC_INTERNAL GList *upstart_get_all_jobs(void);
+G_GNUC_INTERNAL int upstart_job_do(svc_action_t* op, gboolean synchronous);
+G_GNUC_INTERNAL gboolean upstart_job_exists (const gchar *name);
 G_GNUC_INTERNAL gboolean upstart_job_is_running (const gchar *name);
+
+void upstart_cleanup(void);
 
 #endif /* _UPSTART_DBUS_H_ */
 
