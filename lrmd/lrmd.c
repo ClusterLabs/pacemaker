@@ -438,6 +438,10 @@ get_uniform_rc(const char *standard, const char *action, int rc)
         return ocf2uniform_rc(rc);
     } else if (safe_str_eq(standard, "stonith")) {
         return stonith2uniform_rc(action, rc);
+    } else if (safe_str_eq(standard, "systemd")) {
+        return lsb2uniform_rc(action, rc);
+    } else if (safe_str_eq(standard, "upstart")) {
+        return rc;
     } else {
         return lsb2uniform_rc(action, rc);
     }

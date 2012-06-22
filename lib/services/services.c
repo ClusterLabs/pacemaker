@@ -31,10 +31,14 @@
 #include <dirent.h>
 #include <fcntl.h>
 
-#include "crm/crm.h"
-#include "crm/common/mainloop.h"
-#include "crm/services.h"
+#include <crm/crm.h>
+#include <crm/common/mainloop.h>
+#include <crm/services.h>
 #include "services_private.h"
+
+#if SUPPORT_UPSTART
+#include <upstart.h>
+#endif
 
 /* TODO: Develop a rollover strategy */
 
@@ -101,7 +105,7 @@ svc_action_t *resources_action_create(
         goto return_error;
     }
 
-    if(strcasecmp(standard, "ocf") == 0) {
+    if(strcasecmp(op->standard, "ocf") == 0) {
         op->provider = strdup(provider);
         op->params = params;
 
@@ -112,7 +116,7 @@ svc_action_t *resources_action_create(
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(action);
 
-    } else if(strcasecmp(standard, "lsb") == 0) {
+    } else if(strcasecmp(op->standard, "lsb") == 0) {
         if (op->agent[0] == '/') {
              /* if given an absolute path, use that instead
              * of tacking on the LSB_ROOT_DIR path to the front */
@@ -123,7 +127,7 @@ svc_action_t *resources_action_create(
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;
-    } else if(strcasecmp(standard, "systemd") == 0) {
+    } else if(strcasecmp(op->standard, "systemd") == 0) {
         char *service;
         op->opaque->exec = strdup(SYSTEMCTL);
         op->opaque->args[0] = strdup(SYSTEMCTL);
@@ -132,13 +136,16 @@ svc_action_t *resources_action_create(
             goto return_error;
         }
         op->opaque->args[2] = service;
-    } else if(strcasecmp(standard, "service") == 0) {
+    } else if(strcasecmp(op->standard, "upstart") == 0) {
+        op->opaque->exec = strdup("upstart-dbus");
+
+    } else if(strcasecmp(op->standard, "service") == 0) {
         op->opaque->exec = strdup(SERVICE_SCRIPT);
         op->opaque->args[0] = strdup(SERVICE_SCRIPT);
         op->opaque->args[1] = strdup(agent);
         op->opaque->args[2] = strdup(action);
     } else {
-        crm_err("Unknown resource standard: %s", standard);
+        crm_err("Unknown resource standard: %s", op->standard);
         services_action_free(op);
         op = NULL;
     }
@@ -281,13 +288,23 @@ services_action_async(svc_action_t* op, void (*action_callback)(svc_action_t *))
         g_hash_table_replace(recurring_actions, op->id, op);
     }
 
+    if(strcasecmp(op->standard, "upstart") == 0) {
+	return upstart_job_do(op, FALSE);
+    }
     return services_os_action_execute(op, FALSE);
 }
 
 gboolean
 services_action_sync(svc_action_t* op)
 {
-    gboolean rc = services_os_action_execute(op, TRUE);
+    gboolean rc = TRUE;
+
+    if(strcasecmp(op->standard, "upstart") == 0) {
+	rc = upstart_job_do(op, TRUE);
+
+    } else {
+        rc = services_os_action_execute(op, TRUE);
+    }
     crm_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval,
              op->opaque->exec, op->rc);
     if (op->stdout_data) {
@@ -317,12 +334,13 @@ resources_list_standards(void)
     GList *standards = NULL;
     standards = g_list_append(standards, strdup("ocf"));
     standards = g_list_append(standards, strdup("lsb"));
+    standards = g_list_append(standards, strdup("service"));
     if (g_file_test(SYSTEMCTL, G_FILE_TEST_IS_REGULAR)) {
         standards = g_list_append(standards, strdup("systemd"));
 	}
-    if (g_file_test(SERVICE_SCRIPT, G_FILE_TEST_IS_REGULAR)) {
-        standards = g_list_append(standards, strdup("service"));
-	}
+#if SUPPORT_UPSTART
+        standards = g_list_append(standards, strdup("upstart"));
+#endif
     return standards;
 }
 
@@ -345,6 +363,10 @@ resources_list_agents(const char *standard, const char *provider)
         return resources_os_list_lsb_agents();
     } else if (strcasecmp(standard, "systemd") == 0) {
         return resources_os_list_systemd_services();
+#if SUPPORT_UPSTART
+    } else if (strcasecmp(standard, "upstart") == 0) {
+        return upstart_get_all_jobs();
+#endif
     } else if (strcasecmp(standard, "service") == 0) {
         GList *tmp1 = resources_os_list_lsb_agents();
         GList *tmp2 = resources_os_list_systemd_services();

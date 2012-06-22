@@ -31,11 +31,9 @@
 #include <glib.h>
 #include <dbus/dbus-glib.h>
 
-#include <dbus/dbus.h>
-
-#include "dbus/Upstart.h"
-#include "dbus/Upstart_Job.h"
-#include "dbus/Upstart_Instance.h"
+/* #include "dbus/Upstart.h" */
+/* #include "dbus/Upstart_Job.h" */
+/* #include "dbus/Upstart_Instance.h" */
 
 #include <stdio.h>
 
@@ -64,7 +62,7 @@ get_connection(void)
         g_error_free(error);
         error = NULL;
 
-        upstart_conn = dbus_g_connection_open("unix:abstract=/com/ubuntu/upstart", &error);
+        upstart_conn = dbus_g_connection_open(UPSTART_BUS_ADDRESS, &error);
 
         if (error) {
             crm_err("Can't connect to either system or Upstart DBus bus.");
@@ -110,7 +108,7 @@ get_object_property(DBusGProxy *obj, const gchar *iface, const char *name)
     }
 
     value = g_hash_table_lookup(asv, name);
-    if(value && G_VALUE_TYPE(val) == G_TYPE_STRING) {
+    if(value && G_VALUE_TYPE(value) == G_TYPE_STRING) {
         return g_value_dup_string(value);
     }
     g_hash_table_destroy(asv);
@@ -133,9 +131,10 @@ upstart_get_all_jobs(void)
 
     manager = new_proxy(conn, UPSTART_MANAGER_PATH, UPSTART_IFACE);
 
-    dbus_g_proxy_call(manager, "GetAllJobs", &error, G_TYPE_INVALID,
-                      dbus_g_type_get_collection("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
-                      &array, G_TYPE_INVALID);
+    dbus_g_proxy_call(manager, "GetAllJobs", &error,
+                      G_TYPE_INVALID,
+                      dbus_g_type_get_collection("GPtrArray", DBUS_TYPE_G_OBJECT_PATH), &array,
+                      G_TYPE_INVALID);
 
     if (error) {
         crm_err("Can't call GetAllJobs: %s", error->message);
@@ -160,12 +159,11 @@ upstart_get_all_jobs(void)
 
     g_ptr_array_free(array, TRUE);
     g_object_unref(manager);
-    return retval;
+    return list;
 }
 
 static DBusGProxy *
-upstart_get_job_by_name(DBusGConnection *conn, DBusGProxy *manager,
-                        const gchar *name)
+upstart_get_job_by_name(DBusGConnection *conn, DBusGProxy *manager, const gchar *name)
 {
     GError *error = NULL;
     gchar *object_path;
@@ -189,12 +187,12 @@ upstart_get_job_by_name(DBusGConnection *conn, DBusGProxy *manager,
     return retval;
 }
 
-static GList *
+static gchar **
 get_job_instances(DBusGProxy *job)
 {
     GError *error = NULL;
     GPtrArray *array;
-    GList *list = NULL;
+    gchar **retval;
     gint i;
 
     dbus_g_proxy_call(job, "GetAllInstances", &error, G_TYPE_INVALID,
@@ -202,17 +200,17 @@ get_job_instances(DBusGProxy *job)
                       &array, G_TYPE_INVALID);
 
     if (error) {
-        g_warning("Can't call GetAllInstances: %s", error->message);
+        crm_err("Can't call GetAllInstances: %s", error->message);
         g_error_free(error);
         return NULL;
     }
 
+    retval = g_new0(gchar *, array->len + 1);
     for (i = 0; i < array->len; i++) {
-        list = g_list_append(list, g_ptr_array_index(array, i));
+        retval[i] = g_ptr_array_index(array, i);
     }
-
     g_ptr_array_free(array, TRUE);
-    return list;
+    return retval;
 }
 
 static DBusGProxy *
@@ -295,7 +293,7 @@ upstart_job_is_running(const gchar *name)
 static char *
 upstart_job_metadata(const char *name) 
 {
-    static const char *template =
+    return g_strdup_printf(
         "<?xml version=\"1.0\"?>\n"
         "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
         "<resource-agent name=\"%s\" version=\"0.1\">\n"
@@ -316,49 +314,51 @@ upstart_job_metadata(const char *name)
         "  </actions>\n"
         "  <special tag=\"upstart\">\n"
         "  </special>\n"
-        "</resource-agent>\n";
-    
-    return g_strdup_printf(template, name, name, name);
+        "</resource-agent>\n",
+        name, name, name);
 }
 
-int
+gboolean
 upstart_job_do(svc_action_t* op, gboolean synchronous)
 {
     DBusGProxy *job;
     DBusGProxy *manager;
     DBusGConnection *conn = get_connection();
 
-    int ret = PCMK_EXECRA_OK;
 
     GError *error = NULL;
     gchar *instance_path = NULL;
     gchar *no_args[] = { NULL };
     const char *action = op->action;
 
+    op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+    
     if (!conn)
         return FALSE;
 
     manager = new_proxy(conn, UPSTART_MANAGER_PATH, UPSTART_IFACE);
 
-    job = upstart_get_job_by_name(conn, manager, op->name);
+    job = upstart_get_job_by_name(conn, manager, op->rsc);
     if (job == NULL) {
         goto cleanup;
     }
 
-    if (safe_str_eq(op_type, "meta-data")) {
-        op->stdout_data = upstart_job_metadata(rsc_type);
-        rc = PCMK_EXECRA_OK;
+    if (safe_str_eq(op->action, "meta-data")) {
+        op->stdout_data = upstart_job_metadata(op->rsc);
+        op->rc = PCMK_EXECRA_OK;
         goto cleanup;
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
-        gboolean running = upstart_job_is_running (op->name);
+        gboolean running = upstart_job_is_running (op->rsc);
         crm_trace("%s", running ? "running" : "stopped");
 		
         if (running) {
-            return PCMK_EXECRA_OK;
+            op->rc = PCMK_EXECRA_OK;
+            goto cleanup;
         }
-        return PCMK_EXECRA_NOT_RUNNING;
+        op->rc = PCMK_EXECRA_NOT_RUNNING;
+        goto cleanup;
 
     } else if (!g_strcmp0(action, "start")) {
         action = "Start";
@@ -381,14 +381,13 @@ upstart_job_do(svc_action_t* op, gboolean synchronous)
     if (error) {
         /* ignore "already started" or "not running" errors */
         if (safe_str_eq(action, "Start") && dbus_g_error_has_name(error, UPSTART_ERROR_ALREADY_STARTED)) {
-            crm_trace("Masking Start failure for %s: already started", op->name);
-            ret = PCMK_EXECRA_OK;
+            crm_trace("Masking Start failure for %s: already started", op->rsc);
+            op->rc = PCMK_EXECRA_OK;
         } else if (safe_str_eq(action, "Start") && dbus_g_error_has_name(error, UPSTART_ERROR_UNKNOWN_INSTANCE)) {
-            crm_trace("Masking Stop failure for %s: unknown services are stopped", op->name);
-            ret = PCMK_EXECRA_OK;
+            crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
+            op->rc = PCMK_EXECRA_OK;
         } else {
-            crm_err("Could not issue %s for %s: %s", action, op->name, error->message);
-            ret = PCMK_EXECRA_UNKNOWN_ERROR;
+            crm_err("Could not issue %s for %s: %s", action, op->rsc, error->message);
         }
         g_error_free(error);
     }
@@ -398,7 +397,7 @@ upstart_job_do(svc_action_t* op, gboolean synchronous)
         g_object_unref(job);
     }
     g_object_unref(manager);
-    return ret;
+    return op->rc == PCMK_EXECRA_OK;
 }
 
 void upstart_cleanup(void)

@@ -1126,6 +1126,28 @@ AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
 AC_SUBST(BUILD_VERSION)
 
 
+HAVE_dbus=1
+PKG_CHECK_MODULES(DBUS, dbus-glib-1, ,HAVE_dbus=0)
+AC_CHECK_HEADERS(dbus/Upstart.h)
+
+SUPPORT_UPSTART=0
+if test "x$DBUS_LIBS" != x -a "$ac_cv_header_dbus_Upstart_h" = "yes"; then
+   SUPPORT_UPSTART=1
+   PCMK_FEATURES="$PCMK_FEATURES upstart"
+fi
+
+AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $SUPPORT_UPSTART, Support upstart based system services)
+AM_CONDITIONAL(BUILD_UPSTART, test $SUPPORT_UPSTART = 1)
+
+SUPPORT_SYSTEMD=0
+dnl if test "x$ac_cv_header_dbus_dbus_glib_h" = xyes; then
+   SUPPORT_SYSTEMD=1
+   PCMK_FEATURES="$PCMK_FEATURES systemd"
+dnl fi
+AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $SUPPORT_SYSTEMD, Support systemd based system services)
+AM_CONDITIONAL(BUILD_SYSTEMD, test $SUPPORT_SYSTEMD = 1)
+
+
 STACKS=""
 CLUSTERLIBS=""
 
