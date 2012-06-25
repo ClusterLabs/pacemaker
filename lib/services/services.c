@@ -40,6 +40,10 @@
 #include <upstart.h>
 #endif
 
+#if SUPPORT_SYSTEMD
+#include <systemd.h>
+#endif
+
 /* TODO: Develop a rollover strategy */
 
 static int operations = 0;
@@ -117,16 +121,16 @@ svc_action_t *resources_action_create(
         char *path = NULL;
 
 #if SUPPORT_SYSTEMD
-        /* if(systemd_job_exists(op->agent)) { */
-        /*     free(op->standard); */
-        /*     op->standard = strdup("systemd"); */
-        /*     goto expanded; */
-        /* } */
+        if(systemd_unit_exists(op->agent)) {
+            free(op->standard);
+            op->standard = strdup("systemd");
+            goto expanded;
+        }
 #endif
 
 #if SUPPORT_UPSTART
         if(upstart_job_exists(op->agent)) {
-        free(op->standard);
+            free(op->standard);
             op->standard = strdup("upstart");
             goto expanded;
         }
@@ -135,14 +139,14 @@ svc_action_t *resources_action_create(
 #ifdef LSB_ROOT_DIR
         rc = asprintf(&path, "%s/%s", LSB_ROOT_DIR, op->agent);
         if(rc > 0 && stat(path, &st) == 0) {
-        free(op->standard);
-        op->standard = strdup("lsb");
+            free(op->standard);
+            op->standard = strdup("lsb");
             goto expanded;
         }
 #endif
     }
 
-      expanded:
+  expanded:
     if(strcasecmp(op->standard, "ocf") == 0) {
         op->provider = strdup(provider);
         op->params = params;
@@ -166,14 +170,8 @@ svc_action_t *resources_action_create(
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;
     } else if(strcasecmp(op->standard, "systemd") == 0) {
-        char *service;
-        op->opaque->exec = strdup(SYSTEMCTL);
-        op->opaque->args[0] = strdup(SYSTEMCTL);
-        op->opaque->args[1] = strdup(action);
-        if (asprintf(&service, "%s.service", agent) == -1) {
-            goto return_error;
-        }
-        op->opaque->args[2] = service;
+        op->opaque->exec = strdup("systemd-dbus");
+
     } else if(strcasecmp(op->standard, "upstart") == 0) {
         op->opaque->exec = strdup("upstart-dbus");
 
@@ -326,9 +324,16 @@ services_action_async(svc_action_t* op, void (*action_callback)(svc_action_t *))
         g_hash_table_replace(recurring_actions, op->id, op);
     }
 
+#if SUPPORT_UPSTART
     if(strcasecmp(op->standard, "upstart") == 0) {
-	return upstart_job_do(op, FALSE);
+	return upstart_job_exec(op, FALSE);
     }
+#endif
+#if SUPPORT_SYSTEMD
+    if(strcasecmp(op->standard, "systemd") == 0) {
+	return systemd_unit_exec(op, FALSE);
+    }
+#endif
     return services_os_action_execute(op, FALSE);
 }
 
@@ -338,8 +343,13 @@ services_action_sync(svc_action_t* op)
     gboolean rc = TRUE;
 
     if(strcasecmp(op->standard, "upstart") == 0) {
-	rc = upstart_job_do(op, TRUE);
-
+#if SUPPORT_UPSTART
+	rc = upstart_job_exec(op, TRUE);
+#endif
+    } else if(strcasecmp(op->standard, "systemd") == 0) {
+#if SUPPORT_SYSTEMD
+	rc = systemd_unit_exec(op, TRUE);
+#endif
     } else {
         rc = services_os_action_execute(op, TRUE);
     }
@@ -399,16 +409,35 @@ resources_list_agents(const char *standard, const char *provider)
         return resources_os_list_ocf_agents(provider);
     } else if (strcasecmp(standard, "lsb") == 0) {
         return resources_os_list_lsb_agents();
+#if SUPPORT_UPSTART
     } else if (strcasecmp(standard, "systemd") == 0) {
-        return resources_os_list_systemd_services();
+        return systemd_unit_listall();
+#endif
 #if SUPPORT_UPSTART
     } else if (strcasecmp(standard, "upstart") == 0) {
-        return upstart_get_all_jobs();
+        return upstart_job_listall();
 #endif
     } else if (strcasecmp(standard, "service") == 0) {
-        GList *tmp1 = resources_os_list_lsb_agents();
-        GList *tmp2 = resources_os_list_systemd_services();
-        return g_list_concat(tmp1, tmp2);
+        GList *tmp1;
+        GList *tmp2;
+        GList *result = resources_os_list_lsb_agents();
+
+        tmp1 = NULL;
+        tmp2 = NULL;
+
+#if SUPPORT_SYSTEMD
+        tmp1 = result;
+        tmp2 = systemd_unit_listall();
+        result = g_list_concat(tmp1, tmp2);
+#endif
+
+#if SUPPORT_UPSTART
+        tmp1 = result;
+        tmp2 = upstart_job_listall();
+        result = g_list_concat(tmp1, tmp2);
+#endif
+
+        return result;
     }
 
     return NULL;
