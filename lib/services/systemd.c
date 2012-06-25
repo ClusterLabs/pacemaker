@@ -19,9 +19,11 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/services.h>
+#include <crm/common/mainloop.h>
 
-#include <systemd.h>
 #include <gio/gio.h>
+#include <services_private.h>
+#include <systemd.h>
 
 #define BUS_NAME "org.freedesktop.systemd1"
 #define BUS_PATH "/org/freedesktop/systemd1"
@@ -295,6 +297,40 @@ systemd_unit_metadata(const char *name)
     return meta;
 }
 
+static void
+systemd_unit_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+    GError *error = NULL;
+    GVariant *_ret = NULL;
+    svc_action_t* op = user_data;
+    GDBusProxy *proxy = G_DBUS_PROXY (source_object);
+
+    /* Obtain rc and stderr/out */
+    _ret = g_dbus_proxy_call_finish (proxy, res, &error);
+
+    if (error) {
+        /* ignore "already started" or "not running" errors */
+        if (safe_str_eq(op->action, "stop")
+            && strstr(error->message, "systemd1.InvalidName")) {
+            crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
+            op->rc = PCMK_EXECRA_OK;
+
+        } else {
+            crm_err("Could not issue %s for %s: %s (%s)", op->action, op->rsc, error->message, "");
+        }
+        g_error_free(error);
+
+    } else {
+        char *path = NULL;
+        g_variant_get(_ret, "(o)", &path);
+        crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string (_ret), path);
+        op->rc = PCMK_EXECRA_OK;
+    }
+    
+    operation_finalize(op);
+}
+
+
 gboolean
 systemd_unit_exec(svc_action_t* op, gboolean synchronous)
 {
@@ -310,9 +346,11 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
 
     pass = systemd_unit_by_name (systemd_proxy, op->rsc, &unit, NULL, &error);
     if (error || pass == FALSE) {
-        crm_err("Call to ListUnits failed: %s", error->message);
+        crm_debug("Could not obtain unit named '%s': %s", op->rsc, error->message);
+        if(strstr(error->message, "systemd1.NoSuchUnit")) {
+            op->rc = PCMK_EXECRA_NOT_INSTALLED;
+        }
         g_error_free(error);
-        op->rc = PCMK_EXECRA_NOT_INSTALLED;
         return FALSE;
     }
     
@@ -324,14 +362,16 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
         char *state = systemd_unit_property(unit, BUS_NAME".Unit", "ActiveState");
-        gboolean running =  !g_strcmp0(state, "active");
-        crm_info("%s %s", state, running ? "running" : "stopped");
-		
-        if (running) {
+        if ( !g_strcmp0(state, "active")) {
             op->rc = PCMK_EXECRA_OK;
-            goto cleanup;
+        } else {
+            op->rc = PCMK_EXECRA_NOT_RUNNING;
         }
-        op->rc = PCMK_EXECRA_NOT_RUNNING;
+
+        if(synchronous == FALSE) {
+            operation_finalize(op);
+        }
+        free(state);
         goto cleanup;
 
     } else if (!g_strcmp0(action, "start")) {
@@ -344,19 +384,24 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
         return PCMK_EXECRA_UNIMPLEMENT_FEATURE;
     }
 
-    crm_info("Calling %s for %s: %s", action, op->rsc, unit);
+    crm_debug("Calling %s for %s: %s", action, op->rsc, unit);
+    if(synchronous == FALSE) {
+        g_dbus_proxy_call(
+            systemd_proxy, action, g_variant_new ("(ss)", name, "replace"),
+            G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, systemd_unit_exec_done, op);
+        free(unit);
+        free(name);
+        return TRUE;
+    }
+    
     _ret = g_dbus_proxy_call_sync (
         systemd_proxy, action, g_variant_new ("(ss)", name, "replace"),
-        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+        G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, &error);
     
     if (error) {
         /* ignore "already started" or "not running" errors */
-        if (safe_str_eq(action, "Start")
-            && strstr(error->message, "Error.AlreadyStarted")) {
-            crm_trace("Masking Start failure for %s: already started", op->rsc);
-            op->rc = PCMK_EXECRA_OK;
-        } else if (safe_str_eq(action, "Stop")
-                   && strstr(error->message, "systemd1.InvalidName")) {
+        if (safe_str_eq(op->action, "stop")
+            && strstr(error->message, "systemd1.InvalidName")) {
             crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
             op->rc = PCMK_EXECRA_OK;
         } else {
