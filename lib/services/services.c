@@ -380,15 +380,28 @@ GList *
 resources_list_standards(void)
 {
     GList *standards = NULL;
+    GList *agents = NULL;
     standards = g_list_append(standards, strdup("ocf"));
     standards = g_list_append(standards, strdup("lsb"));
     standards = g_list_append(standards, strdup("service"));
-    if (g_file_test(SYSTEMCTL, G_FILE_TEST_IS_REGULAR)) {
+
+#if SUPPORT_SYSTEMD
+    agents = systemd_unit_listall();
+    if(agents) {
         standards = g_list_append(standards, strdup("systemd"));
-	}
-#if SUPPORT_UPSTART
-        standards = g_list_append(standards, strdup("upstart"));
+        slist_basic_destroy(agents);
+    }
 #endif
+
+#if SUPPORT_UPSTART
+    agents = upstart_job_listall();
+    if(agents) {
+        standards = g_list_append(standards, strdup("upstart"));
+        slist_basic_destroy(agents);
+    }
+#endif
+
+    agents = NULL; /* Keep the compiler happy */
     return standards;
 }
 
@@ -422,19 +435,23 @@ resources_list_agents(const char *standard, const char *provider)
         GList *tmp2;
         GList *result = resources_os_list_lsb_agents();
 
-        tmp1 = NULL;
-        tmp2 = NULL;
+        tmp1 = NULL; /* Keep the compiler happy */
+        tmp2 = NULL; /* Keep the compiler happy */
 
 #if SUPPORT_SYSTEMD
         tmp1 = result;
         tmp2 = systemd_unit_listall();
-        result = g_list_concat(tmp1, tmp2);
+        if(tmp2) {
+            result = g_list_concat(tmp1, tmp2);
+        }
 #endif
 
 #if SUPPORT_UPSTART
         tmp1 = result;
         tmp2 = upstart_job_listall();
-        result = g_list_concat(tmp1, tmp2);
+        if(tmp2) {
+            result = g_list_concat(tmp1, tmp2);
+        }
 #endif
 
         return result;
