@@ -25,269 +25,250 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdio.h>
+
 #include <crm/crm.h>
 #include <upstart.h>
 
 #include <glib.h>
-#include <dbus/dbus-glib.h>
+#include <gio/gio.h>
 
-/* #include "dbus/Upstart.h" */
-/* #include "dbus/Upstart_Job.h" */
-/* #include "dbus/Upstart_Instance.h" */
+#define BUS_NAME "com.ubuntu.Upstart"
+#define BUS_PATH "/com/ubuntu/Upstart"
 
-#include <stdio.h>
+#define BUS_MANAGER_IFACE BUS_NAME"0_6"
+#define BUS_PROPERTY_IFACE "org.freedesktop.DBus.Properties"
 
-#define SYSTEM_BUS_ADDRESS "unix:path=/var/run/dbus/system_bus_socket"
-#define UPSTART_BUS_ADDRESS "unix:abstract=/com/ubuntu/upstart"
-#define UPSTART_SERVICE_NAME "com.ubuntu.Upstart"
-#define UPSTART_MANAGER_PATH "/com/ubuntu/Upstart"
-#define UPSTART_IFACE "com.ubuntu.Upstart0_6"
-#define UPSTART_JOB_IFACE UPSTART_IFACE ".Job"
-#define UPSTART_INSTANCE_IFACE UPSTART_IFACE ".Instance"
-#define UPSTART_ERROR_ALREADY_STARTED UPSTART_IFACE ".Error.AlreadyStarted"
-#define UPSTART_ERROR_UNKNOWN_INSTANCE UPSTART_IFACE ".Error.UnknownInstance"
+/*
+  http://upstart.ubuntu.com/wiki/DBusInterface
+*/
+static GDBusProxy *upstart_proxy = NULL;
 
-static DBusGConnection *upstart_conn = NULL;
-
-static DBusGConnection *
-get_connection(void)
+static GDBusProxy *
+get_proxy(const char *path, const char *interface) 
 {
     GError *error = NULL;
-    if(upstart_conn) {
-        return upstart_conn;
-    }
+    GDBusProxy *proxy = NULL;
     
-    upstart_conn = dbus_g_bus_get_private(DBUS_BUS_SYSTEM, NULL, &error);
-    if (error) {
-        g_error_free(error);
-        error = NULL;
+    g_type_init();
 
-        upstart_conn = dbus_g_connection_open(UPSTART_BUS_ADDRESS, &error);
-
-        if (error) {
-            crm_err("Can't connect to either system or Upstart DBus bus.");
-            g_error_free(error);
-            upstart_conn = NULL;
-        }
+    if(path == NULL) {
+        path = BUS_PATH;
     }
 
-    return upstart_conn;
+    proxy = g_dbus_proxy_new_for_bus_sync (
+        G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, NULL, /* GDBusInterfaceInfo */
+        BUS_NAME, path, interface,
+        NULL, /* GCancellable */ &error);
+    
+    if (error) {
+        crm_err("Can't connect obtain proxy to %s interface: %s", interface, error->message);
+        g_error_free(error);
+        proxy = NULL;
+    }
+    return proxy;
 }
 
-static DBusGProxy *
-new_proxy(DBusGConnection *conn, const gchar *object_path, const gchar *iface)
+static gboolean
+upstart_init(void) 
 {
-    return dbus_g_proxy_new_for_name(conn,
-                                     UPSTART_SERVICE_NAME,
-                                     object_path,
-                                     iface);
+    if(upstart_proxy == NULL) {
+        upstart_proxy = get_proxy(NULL, BUS_MANAGER_IFACE);
+    }
+    if(upstart_proxy == NULL) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+void upstart_cleanup(void)
+{
+    g_object_unref(upstart_proxy);
+    upstart_proxy = NULL;
+}
+
+static gboolean
+upstart_job_by_name (
+    GDBusProxy *proxy,
+    const gchar *arg_name,
+    gchar **out_unit,
+    GCancellable *cancellable,
+    GError **error)
+{
+/*
+  com.ubuntu.Upstart0_6.GetJobByName (in String name, out ObjectPath job)
+*/  
+    GVariant *_ret = g_dbus_proxy_call_sync (
+        proxy, "GetJobByName", g_variant_new ("(s)", arg_name),
+        G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
+
+    if (_ret) {
+        g_variant_get (_ret, "(o)", out_unit);
+        g_variant_unref (_ret);
+    }
+    
+    return _ret != NULL;
+}
+
+GList *
+upstart_job_listall(void) 
+{
+    GList *units = NULL;
+    GError *error = NULL;
+    GVariantIter *iter;
+    char *path = NULL;
+    GVariant *_ret = NULL;
+    int lpc = 0;
+
+    CRM_ASSERT(upstart_init());
+
+/*
+  com.ubuntu.Upstart0_6.GetAllJobs (out <Array of ObjectPath> jobs)
+*/  
+    _ret = g_dbus_proxy_call_sync (
+        upstart_proxy, "GetAllJobs", g_variant_new ("()"),
+        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+
+    if (error) {
+        crm_err("Call to GetAllJobs failed: %s", error->message);
+        g_error_free(error);
+    }
+
+    g_variant_get (_ret, "(ao)", &iter);
+    while (g_variant_iter_loop (iter, "o", &path)) {
+        lpc++;
+        crm_trace("%s\n", path);
+        units = g_list_append(units, strdup(path));
+    }
+    crm_info("Call to GetAllJobs passed: type '%s', count %d", g_variant_get_type_string (_ret), lpc);
+    
+    g_variant_iter_free(iter);
+    g_variant_unref(_ret);
+    return units;
+}
+
+gboolean
+upstart_job_exists(const char *name)
+{
+    char *path = NULL;
+    GError *error = NULL;
+    gboolean pass = FALSE;
+
+    CRM_ASSERT(upstart_init());
+    pass = upstart_job_by_name (upstart_proxy, name, &path, NULL, &error);
+
+    if (error || pass == FALSE) {
+        crm_trace("Call to ListUnits failed: %s", error->message);
+        g_error_free(error);
+        pass = FALSE;
+
+    } else {
+        crm_trace("Got %s", path);
+    }
+    /* free(path) */
+    return pass;
 }
 
 static char *
-get_object_property(DBusGProxy *obj, const gchar *iface, const char *name)
+upstart_job_property(const char *obj, const gchar *iface, const char *name)
 {
     GError *error = NULL;
-    DBusGProxy *proxy;
-    GHashTable *asv;
-    GValue *value;
+    GDBusProxy *proxy;
+    GVariant *asv = NULL;
+    GVariant *value = NULL;
+    GVariant *_ret = NULL;
+    char *output = NULL;
 
-    proxy = dbus_g_proxy_new_from_proxy(obj, DBUS_INTERFACE_PROPERTIES, NULL);
-
-    dbus_g_proxy_call(proxy, "GetAll", &error, G_TYPE_STRING,
-                      iface, G_TYPE_INVALID,
-                      dbus_g_type_get_map("GHashTable",
-                                          G_TYPE_STRING,
-                                          G_TYPE_VALUE),
-                      &asv, G_TYPE_INVALID);
+    crm_info("Calling GetAll on %s", obj);
+    proxy = get_proxy(obj, BUS_PROPERTY_IFACE);
+    
+    _ret = g_dbus_proxy_call_sync (
+        proxy, "GetAll", g_variant_new ("(s)", iface),
+        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
     if (error) {
-        crm_err("Cannot get properties for %s: %s", iface, error->message);
+        crm_err("Cannot get properties for %s: %s", g_dbus_proxy_get_object_path(proxy), error->message);
         g_error_free(error);
         g_object_unref(proxy);
         return NULL;
     }
+    crm_info("Call to GetAll passed: type '%s' %d\n", g_variant_get_type_string (_ret), g_variant_n_children (_ret));
 
-    value = g_hash_table_lookup(asv, name);
-    if(value && G_VALUE_TYPE(value) == G_TYPE_STRING) {
-        return g_value_dup_string(value);
+    asv = g_variant_get_child_value(_ret, 0);
+    crm_trace("asv type '%s' %d\n", g_variant_get_type_string (asv), g_variant_n_children (asv));
+    
+    value = g_variant_lookup_value(asv, name, NULL);
+    if(value && g_variant_is_of_type(value, G_VARIANT_TYPE_STRING)) {
+        crm_info("Got value '%s' for %s[%s]", g_variant_get_string(value, NULL), obj, name);
+        output = g_variant_dup_string(value, NULL);
+
+    } else {
+        crm_info("No value for %s[%s]", obj, name);
     }
-    g_hash_table_destroy(asv);
-    return NULL;
+
+    g_object_unref(proxy);
+    return output;
 }
 
-GList *
-upstart_get_all_jobs(void)
+static char *
+get_first_instance(const gchar *job)
 {
-    DBusGConnection *conn;
-    DBusGProxy *manager;
+    char *instance = NULL;
     GError *error = NULL;
-    GPtrArray *array;
-    GList *list = NULL;
-    gint i, j;
-
-    conn = get_connection();
-    if (!conn)
-        return NULL;
-
-    manager = new_proxy(conn, UPSTART_MANAGER_PATH, UPSTART_IFACE);
-
-    dbus_g_proxy_call(manager, "GetAllJobs", &error,
-                      G_TYPE_INVALID,
-                      dbus_g_type_get_collection("GPtrArray", DBUS_TYPE_G_OBJECT_PATH), &array,
-                      G_TYPE_INVALID);
-
+    GDBusProxy *proxy = get_proxy(job, BUS_MANAGER_IFACE".Job");
+    GVariant *_ret = g_dbus_proxy_call_sync (
+        proxy, "GetAllInstances", g_variant_new ("()"),
+        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+    
     if (error) {
-        crm_err("Can't call GetAllJobs: %s", error->message);
+        crm_err("Cannot call GetAllInstances for %s: %s", job, error->message);
         g_error_free(error);
-        g_object_unref(manager);
         return NULL;
     }
 
-    for (i = 0, j = 0; i < array->len; i++) {
-        DBusGProxy *job = new_proxy(conn, g_ptr_array_index(array, i),
-                                    UPSTART_JOB_IFACE);
-
-        if (job) {
-            char *name = get_object_property(job, UPSTART_JOB_IFACE, "name");
-            if (name) {
-                list = g_list_append(list, name);
-            }
-
-            g_object_unref(job);
+    crm_trace("Call to GetAllInstances passed: type '%s' %d\n", g_variant_get_type_string (_ret), g_variant_n_children (_ret));
+    if(g_variant_n_children (_ret)) {
+        GVariant *tmp1 = g_variant_get_child_value(_ret, 0);
+        if(g_variant_n_children (tmp1)) {
+            GVariant *tmp2 = g_variant_get_child_value(tmp1, 0);
+            instance = g_variant_dup_string(tmp2, NULL);
         }
     }
-
-    g_ptr_array_free(array, TRUE);
-    g_object_unref(manager);
-    return list;
-}
-
-static DBusGProxy *
-upstart_get_job_by_name(DBusGConnection *conn, DBusGProxy *manager, const gchar *name)
-{
-    GError *error = NULL;
-    gchar *object_path;
-    DBusGProxy *retval;
-
-    dbus_g_proxy_call(manager, "GetJobByName", &error, G_TYPE_STRING,
-                      name, G_TYPE_INVALID, DBUS_TYPE_G_OBJECT_PATH, &object_path,
-                      G_TYPE_INVALID);
-
-    if (error)
-    {
-        g_warning("Error calling GetJobByName: %s", error->message);
-        g_error_free(error);
-        return NULL;
-    }
-
-    retval = new_proxy(conn, object_path, UPSTART_JOB_IFACE);
-
-    g_free(object_path);
-
-    return retval;
-}
-
-static gchar **
-get_job_instances(DBusGProxy *job)
-{
-    GError *error = NULL;
-    GPtrArray *array;
-    gchar **retval;
-    gint i;
-
-    dbus_g_proxy_call(job, "GetAllInstances", &error, G_TYPE_INVALID,
-                      dbus_g_type_get_collection("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
-                      &array, G_TYPE_INVALID);
-
-    if (error) {
-        crm_err("Can't call GetAllInstances: %s", error->message);
-        g_error_free(error);
-        return NULL;
-    }
-
-    retval = g_new0(gchar *, array->len + 1);
-    for (i = 0; i < array->len; i++) {
-        retval[i] = g_ptr_array_index(array, i);
-    }
-    g_ptr_array_free(array, TRUE);
-    return retval;
-}
-
-static DBusGProxy *
-get_first_instance(DBusGConnection *conn, DBusGProxy *job)
-{
-    gchar **instances;
-    DBusGProxy *instance = NULL;
-
-    instances = get_job_instances(job);
-
-    if (!instances)
-        return NULL;
-
-    if (*instances)
-    {
-        instance = new_proxy(conn, instances[0],
-                             UPSTART_INSTANCE_IFACE);
-    }
-
-    g_strfreev(instances);
+    
+    crm_info("Result: %s", instance);
     return instance;
 }
 
 gboolean
-upstart_job_exists(const gchar *name)
+upstart_job_running(const gchar *name)
 {
-    DBusGConnection *conn;
-    DBusGProxy *manager;
-    DBusGProxy *job;
+    char *job = NULL;
+    GError *error = NULL;
+    gboolean pass = FALSE;
 
-    conn = get_connection();
-    if (!conn)
-        return FALSE;
+    pass = upstart_job_by_name (upstart_proxy, name, &job, NULL, &error);
+    if (error || pass == FALSE) {
+        crm_err("Call to ListUnits failed: %s", error->message);
+        g_error_free(error);
 
-    manager = new_proxy(conn, UPSTART_MANAGER_PATH, UPSTART_IFACE);
-
-    job = upstart_get_job_by_name(conn, manager, name);
-    if (job) {
-        return TRUE;
-    }
-
-    g_object_unref(job);
-    g_object_unref(manager);
-    return FALSE;
-}
-
-gboolean
-upstart_job_is_running(const gchar *name)
-{
-    DBusGConnection *conn;
-    DBusGProxy *manager;
-    DBusGProxy *job;
-    gboolean retval = FALSE;
-
-    conn = get_connection();
-    if (!conn)
-        return FALSE;
-
-    manager = new_proxy(conn, UPSTART_MANAGER_PATH, UPSTART_IFACE);
-
-    job = upstart_get_job_by_name(conn, manager, name);
-    if (job) {
-        DBusGProxy *instance = get_first_instance(conn, job);
-
-        if (instance) {
-            char *state = get_object_property(instance, UPSTART_INSTANCE_IFACE, "state");
-            retval = !g_strcmp0(state, "running");
-            free(state);
-
-            g_object_unref(instance);
+    } else {
+        char *instance = get_first_instance(job);
+        pass = FALSE;
+        if(instance) {
+            if (instance) {
+                char *state = upstart_job_property(instance, BUS_MANAGER_IFACE".Instance", "state");
+                crm_info("State of %s: %s", name, state);
+                if(state) {
+                    pass = !g_strcmp0(state, "running");
+                }
+                free(state);
+            }
         }
-
-        g_object_unref(job);
     }
 
-    g_object_unref(manager);
-    return retval;
+    crm_info("%s is%s running", name, pass?"":" not");
+    return pass;
 }
 
 static char *
@@ -319,30 +300,28 @@ upstart_job_metadata(const char *name)
 }
 
 gboolean
-upstart_job_do(svc_action_t* op, gboolean synchronous)
+upstart_job_exec(svc_action_t* op, gboolean synchronous)
 {
-    DBusGProxy *job;
-    DBusGProxy *manager;
-    DBusGConnection *conn = get_connection();
-
-
+    char *job = NULL;
     GError *error = NULL;
-    gchar *instance_path = NULL;
+    gboolean pass = FALSE;
     gchar *no_args[] = { NULL };
     const char *action = op->action;
 
-    op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+    GVariant *_ret = NULL;
+    GDBusProxy *job_proxy = NULL;
     
-    if (!conn)
+    op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+    CRM_ASSERT(upstart_init());
+
+    pass = upstart_job_by_name (upstart_proxy, op->rsc, &job, NULL, &error);
+    if (error || pass == FALSE) {
+        crm_err("Call to ListUnits failed: %s", error->message);
+        g_error_free(error);
+        op->rc = PCMK_EXECRA_NOT_INSTALLED;
         return FALSE;
-
-    manager = new_proxy(conn, UPSTART_MANAGER_PATH, UPSTART_IFACE);
-
-    job = upstart_get_job_by_name(conn, manager, op->rsc);
-    if (job == NULL) {
-        goto cleanup;
     }
-
+    
     if (safe_str_eq(op->action, "meta-data")) {
         op->stdout_data = upstart_job_metadata(op->rsc);
         op->rc = PCMK_EXECRA_OK;
@@ -350,7 +329,7 @@ upstart_job_do(svc_action_t* op, gboolean synchronous)
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
-        gboolean running = upstart_job_is_running (op->rsc);
+        gboolean running = upstart_job_running (op->rsc);
         crm_trace("%s", running ? "running" : "stopped");
 		
         if (running) {
@@ -370,40 +349,42 @@ upstart_job_do(svc_action_t* op, gboolean synchronous)
         return PCMK_EXECRA_UNIMPLEMENT_FEATURE;
     }
 
-    dbus_g_proxy_call (job, action, &error,
-                       G_TYPE_STRV, no_args,
-                       G_TYPE_BOOLEAN, TRUE,
-                       G_TYPE_INVALID,
-                       DBUS_TYPE_G_OBJECT_PATH, &instance_path,
-                       G_TYPE_INVALID);
-    g_free (instance_path);
+    /* TODO: Cache this */
+    job_proxy = get_proxy(job, BUS_MANAGER_IFACE".Job");
+    
+    crm_info("Calling %s for %s: %s", action, op->rsc, job);
+    _ret = g_dbus_proxy_call_sync (
+        job_proxy, action, g_variant_new ("(^asb)", no_args, TRUE),
+        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
     
     if (error) {
         /* ignore "already started" or "not running" errors */
-        if (safe_str_eq(action, "Start") && dbus_g_error_has_name(error, UPSTART_ERROR_ALREADY_STARTED)) {
+        if (safe_str_eq(action, "Start")
+            && strstr(error->message, BUS_MANAGER_IFACE".Error.AlreadyStarted")) {
             crm_trace("Masking Start failure for %s: already started", op->rsc);
             op->rc = PCMK_EXECRA_OK;
-        } else if (safe_str_eq(action, "Start") && dbus_g_error_has_name(error, UPSTART_ERROR_UNKNOWN_INSTANCE)) {
+        } else if (safe_str_eq(action, "Stop")
+                   && strstr(error->message, BUS_MANAGER_IFACE".Error.UnknownInstance")) {
             crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
             op->rc = PCMK_EXECRA_OK;
         } else {
-            crm_err("Could not issue %s for %s: %s", action, op->rsc, error->message);
+            crm_err("Could not issue %s for %s: %s (%s)", action, op->rsc, error->message, job);
         }
         g_error_free(error);
+
+    } else {
+        char *path = NULL;
+        g_variant_get(_ret, "(o)", &path);
+        crm_info("Call to %s passed: type '%s' %s", action, g_variant_get_type_string (_ret), path);
+        op->rc = PCMK_EXECRA_OK;
     }
 
   cleanup:
     if(job) {
-        g_object_unref(job);
+        free(job);
     }
-    g_object_unref(manager);
+    if(job_proxy) {
+        g_object_unref(job_proxy);
+    }
     return op->rc == PCMK_EXECRA_OK;
 }
-
-void upstart_cleanup(void)
-{
-    dbus_g_connection_unref(upstart_conn);
-    upstart_conn = NULL;
-}
-
-
