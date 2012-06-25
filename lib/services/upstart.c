@@ -29,6 +29,10 @@
 #include <stdio.h>
 
 #include <crm/crm.h>
+#include <crm/services.h>
+#include <crm/common/mainloop.h>
+
+#include <services_private.h>
 #include <upstart.h>
 
 #include <glib.h>
@@ -299,6 +303,45 @@ upstart_job_metadata(const char *name)
         name, name, name);
 }
 
+
+static void
+upstart_job_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+    GError *error = NULL;
+    GVariant *_ret = NULL;
+    svc_action_t* op = user_data;
+    GDBusProxy *proxy = G_DBUS_PROXY (source_object);
+
+    /* Obtain rc and stderr/out */
+    _ret = g_dbus_proxy_call_finish (proxy, res, &error);
+
+    if (error) {
+        /* ignore "already started" or "not running" errors */
+        if (safe_str_eq(op->action, "start")
+            && strstr(error->message, BUS_MANAGER_IFACE".Error.AlreadyStarted")) {
+            crm_trace("Masking Start failure for %s: already started", op->rsc);
+            op->rc = PCMK_EXECRA_OK;
+
+        } else if (safe_str_eq(op->action, "stop")
+                   && strstr(error->message, BUS_MANAGER_IFACE".Error.UnknownInstance")) {
+            crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
+            op->rc = PCMK_EXECRA_OK;
+        } else {
+            crm_err("Could not issue %s for %s: %s", op->action, op->rsc, error->message);
+        }
+        g_error_free(error);
+
+    } else {
+        char *path = NULL;
+        g_variant_get(_ret, "(o)", &path);
+        crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string (_ret), path);
+        op->rc = PCMK_EXECRA_OK;
+    }
+    
+    operation_finalize(op);
+    g_object_unref(proxy);
+}
+
 gboolean
 upstart_job_exec(svc_action_t* op, gboolean synchronous)
 {
@@ -316,9 +359,9 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
 
     pass = upstart_job_by_name (upstart_proxy, op->rsc, &job, NULL, &error);
     if (error || pass == FALSE) {
-        crm_err("Call to ListUnits failed: %s", error->message);
-        g_error_free(error);
+        crm_debug("Could not obtain job named '%s': %s", op->rsc, error->message);
         op->rc = PCMK_EXECRA_NOT_INSTALLED;
+        g_error_free(error);
         return FALSE;
     }
     
@@ -329,14 +372,15 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
-        gboolean running = upstart_job_running (op->rsc);
-        crm_trace("%s", running ? "running" : "stopped");
-		
-        if (running) {
+        if (upstart_job_running (op->rsc)) {
             op->rc = PCMK_EXECRA_OK;
-            goto cleanup;
+        } else {
+            op->rc = PCMK_EXECRA_NOT_RUNNING;
         }
-        op->rc = PCMK_EXECRA_NOT_RUNNING;
+
+        if(synchronous == FALSE) {
+            operation_finalize(op);
+        }
         goto cleanup;
 
     } else if (!g_strcmp0(action, "start")) {
@@ -349,13 +393,20 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
         return PCMK_EXECRA_UNIMPLEMENT_FEATURE;
     }
 
-    /* TODO: Cache this */
     job_proxy = get_proxy(job, BUS_MANAGER_IFACE".Job");
     
-    crm_info("Calling %s for %s: %s", action, op->rsc, job);
+    crm_debug("Calling %s for %s: %s", action, op->rsc, job);
+    if(synchronous == FALSE) { 
+        g_dbus_proxy_call(
+            job_proxy, action, g_variant_new ("(^asb)", no_args, TRUE),
+            G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, upstart_job_exec_done, op);
+        free(job);
+        return TRUE;
+    }
+
     _ret = g_dbus_proxy_call_sync (
         job_proxy, action, g_variant_new ("(^asb)", no_args, TRUE),
-        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+        G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, &error);
     
     if (error) {
         /* ignore "already started" or "not running" errors */
@@ -380,9 +431,7 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
     }
 
   cleanup:
-    if(job) {
-        free(job);
-    }
+    free(job);
     if(job_proxy) {
         g_object_unref(job_proxy);
     }
