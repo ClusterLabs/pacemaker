@@ -55,6 +55,7 @@ const char *prop_id = NULL;
 const char *prop_set = NULL;
 char *move_lifetime = NULL;
 char rsc_cmd = 'L';
+const char *rsc_long_cmd = NULL;
 char *our_pid = NULL;
 crm_ipc_t *crmd_channel = NULL;
 char *xml_file = NULL;
@@ -1089,6 +1090,57 @@ show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int o
     free(prefix);
 }
 
+static GHashTable *
+generate_resource_params(resource_t *rsc)
+{
+    int rc = 0;
+    pe_working_set_t data_set;
+    GHashTable *params = NULL;
+    GHashTable *meta = NULL;
+    GHashTable *combined = NULL;
+    GHashTableIter iter;
+
+    if (!rsc) {
+        crm_err("Resource does not exist in config");
+        rc = -1;
+        return NULL;
+    }
+
+    params = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    meta = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    combined = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+    get_rsc_attributes(params, rsc, NULL/* TODO: Pass in local node */, &data_set);
+    get_meta_attributes(meta, rsc, NULL/* TODO: Pass in local node */, &data_set);
+
+    if (params) {
+        char *key = NULL;
+        char *value = NULL;
+
+        g_hash_table_iter_init(&iter, params);
+        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+            g_hash_table_insert(combined, strdup(key), strdup(value));
+        }
+        g_hash_table_destroy(params);
+    }
+
+    if (meta) {
+        char *key = NULL;
+        char *value = NULL;
+
+        g_hash_table_iter_init(&iter, meta);
+        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+            char *crm_name = crm_meta_name(key);
+
+            g_hash_table_insert(combined, crm_name, strdup(value));
+        }
+        g_hash_table_destroy(meta);
+    }
+
+    return combined;
+}
+
+
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -1100,11 +1152,17 @@ static struct crm_option long_options[] = {
     {"resource",   1, 0, 'r', "\tResource ID" },
 
     {"-spacer-",1, 0, '-', "\nQueries:"},
-    {"list",       0, 0, 'L', "\t\tList all resources"},
+    {"list",       0, 0, 'L', "\t\tList all cluster resources"},
     {"list-raw",   0, 0, 'l', "\tList the IDs of all instantiated resources (no groups/clones/...)"},
     {"list-cts",   0, 0, 'c', NULL, 1},
     {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
     {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},    
+
+    {"list-standards",        0, 0, 0, "\tList supported standards"},
+    {"list-ocf-providers",    0, 0, 0, "List all available OCF providers"},
+    {"list-agents",           1, 0, 0, "List all agents available for the named standard and/or provider."},
+    {"list-ocf-alternatives", 1, 0, 0, "List all available providers for the named OCF agent\n"},
+
     {"query-xml",  0, 0, 'q', "\tQuery the definition of a resource (template expanded)"},
     {"query-xml-raw",  0, 0, 'w', "\tQuery the definition of a resource (raw xml)"},
     {"locate",     0, 0, 'W', "\t\tDisplay the current location(s) of a resource"},
@@ -1121,14 +1179,17 @@ static struct crm_option long_options[] = {
      "\t\tMove a resource from its current location, optionally specifying a destination (-N) and/or a period for which it should take effect (-u)"
      "\n\t\t\t\tIf -N is not specified, the cluster will force the resource to move by creating a rule for the current location and a score of -INFINITY"
      "\n\t\t\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U"},
-    {"un-move", 0, 0, 'U', "\tRemove all constraints created by a move command"},
+    {"un-move", 0, 0, 'U', "\t\tRemove all constraints created by a move command"},
     
     {"-spacer-",	1, 0, '-', "\nAdvanced Commands:"},
-    {"delete",     0, 0, 'D', "\t\tDelete a resource from the CIB"},
-    {"fail",       0, 0, 'F', "\t\tTell the cluster this resource has failed"},
+    {"delete",     0, 0, 'D', "\t\t(Advanced) Delete a resource from the CIB"},
+    {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
     {"refresh",    0, 0, 'R', "\t\t(Advanced) Refresh the CIB from the LRM"},
     {"cleanup",    0, 0, 'C', "\t\t(Advanced) Delete a resource from the LRM"},
-    {"reprobe",    0, 0, 'P', "\t\t(Advanced) Re-check for resources started outside of the CRM\n"},    
+    {"reprobe",    0, 0, 'P', "\t\t(Advanced) Re-check for resources started outside of the CRM\n"},
+    {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node"},
+    {"force-start",0, 0,  0,  "\t(Advanced) Bypass the cluster and start a resource on the local node"},
+    {"force-check",0, 0,  0,  "\t(Advanced) Bypass the cluster and check the state of a resource on the local node\n"},
     
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"node",		1, 0, 'N', "\tHost uname"},
@@ -1154,6 +1215,10 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "List the configured resources:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_resource --list", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "List the available OCF agents:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --list-agents ocf", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "List the available OCF agents from the linux-ha project:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --list-agents ocf:heartbeat", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Display the current location of 'myResource':", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --locate", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Move 'myResource' to another machine:", pcmk_option_paragraph},
@@ -1182,10 +1247,12 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char **argv)
 {
+    const char *longname = NULL;
     pe_working_set_t data_set;
     xmlNode *cib_xml_copy = NULL;
 
     cib_t *cib_conn = NULL;
+    lrmd_t *lrmd_conn = NULL;
     enum cib_errors rc = cib_ok;
 
     int option_index = 0;
@@ -1200,12 +1267,96 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
+    lrmd_conn = lrmd_api_new();
+
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = crm_get_option_long(argc, argv, &option_index, &longname);
         if (flag == -1)
             break;
 
         switch (flag) {
+            case 0:
+                if(safe_str_eq("force-stop", longname)
+                   || safe_str_eq("force-start", longname)
+                   || safe_str_eq("force-monitor", longname)) {
+                    rsc_id = optarg;
+                    rsc_cmd = flag;
+                    rsc_long_cmd = longname;
+
+                } else if(safe_str_eq("list-ocf-providers", longname)
+                          || safe_str_eq("list-ocf-alternatives", longname)
+                          || safe_str_eq("list-standards", longname)) {
+                    const char *text = NULL;
+                    lrmd_list_t *list = NULL;
+                    lrmd_list_t *iter = NULL;
+
+                    if(safe_str_eq("list-ocf-providers", longname) || safe_str_eq("list-ocf-alternatives", longname)) {
+                        rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, optarg, &list);
+                        text = "OCF providers";
+
+                    } else if(safe_str_eq("list-standards", longname)) {
+                        rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
+                        text = "standards";
+                    }
+
+                    if (rc > 0) {
+                        rc = 0;
+                        for (iter = list; iter != NULL; iter = iter->next) {
+                            rc++;
+                            printf("%s\n", iter->val);
+                        }
+                        lrmd_list_freeall(list);
+                        if(optarg) {
+                            fprintf(stderr, "%d %s found for %s\n", rc, text, optarg);
+                        } else {
+                            fprintf(stderr, "%d %s found\n", rc, text);
+                        }
+                        return 0;
+
+                    } else {
+                        if(optarg) {
+                            fprintf(stderr, "No %s found for %s\n", text, optarg);
+                        } else {
+                            fprintf(stderr, "No %s found\n", text);
+                        }
+                        return -1;
+                    }
+
+                } else if(safe_str_eq("list-agents", longname)) {
+                    lrmd_list_t *list = NULL;
+                    lrmd_list_t *iter = NULL;
+                    char standard[512];
+                    char provider[512];
+
+                    rc = sscanf(optarg, "%[^:]:%s", standard, provider);
+                    if(rc == 1) {
+                        rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, optarg, NULL);
+                        provider[0] = '*';
+                        provider[1] = 0;
+
+                    } else if(rc == 2) {
+                        rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, standard, provider);
+                    }
+
+                    if (rc > 0) {
+                        rc = 0;
+                        for (iter = list; iter != NULL; iter = iter->next) {
+                            printf("%s\n", iter->val);
+                            rc++;
+                        }
+                        lrmd_list_freeall(list);
+                        fprintf(stderr, "%d agents found for standard=%s, provider=%s\n", rc, standard, provider);
+                        rc = 0;
+                    } else {
+                        fprintf(stderr, "No agents found for standard=%s, provider=%s\n", standard, provider);
+                        rc = -1;
+                    }
+                    return rc;
+
+                } else {
+                    crm_err("Unhandled long option: %s", longname);
+                }
+                break;
             case 'V':
                 crm_bump_log_level();
                 break;
@@ -1389,6 +1540,76 @@ main(int argc, char **argv)
             rc = cib_NOTEXISTS;
             goto bail;
         }
+
+    } else if (rsc_cmd == 0 && rsc_long_cmd) {
+        svc_action_t *op = NULL;
+        const char *rtype  = NULL;
+        const char *rprov  = NULL;
+        const char *rclass = NULL;
+        const char *action = NULL;
+        GHashTable *params = NULL;
+        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+
+        if (rsc == NULL) {
+            CMD_ERR("Must supply a resource id with -r\n");
+            rc = cib_NOTEXISTS;
+            goto bail;
+        }
+
+        if(safe_str_eq(rsc_long_cmd, "force-stop")) {
+            action = "stop";
+        } else if(safe_str_eq(rsc_long_cmd, "force-start")) {
+            action = "start";
+        } else if(safe_str_eq(rsc_long_cmd, "force-monitor")) {
+            action = "monitor";
+        }
+
+        rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+        rprov  = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+        rtype  = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+        params = generate_resource_params(rsc);
+
+        op = resources_action_create(
+            rsc->id, rclass, rprov, rtype, action, 0, -1, params);
+
+        if(services_action_sync(op)) {
+            int more, lpc, last;
+            char *local_copy = NULL;
+            printf("Operation %s for %s (%s:%s:%s) returned %d",
+                   action, rsc->id, rclass, rprov?rprov:"", rtype, op->rc);
+
+            if (op->stdout_data) {
+                local_copy = crm_strdup(op->stdout_data);
+                more = strlen(local_copy);
+                last = 0;
+
+                for(lpc = 0; lpc < more; lpc++) {
+                    if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
+                        local_copy[lpc] = 0;
+                        printf(" >  stdout: %s\n", local_copy+last);
+                        last = lpc+1;
+                    }
+                }
+                free(local_copy);
+            }
+            if (op->stderr_data) {
+                local_copy = crm_strdup(op->stderr_data);
+                more = strlen(local_copy);
+                last = 0;
+
+                for(lpc = 0; lpc < more; lpc++) {
+                    if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
+                        local_copy[lpc] = 0;
+                        printf(" >  stderr: %s\n", local_copy+last);
+                        last = lpc+1;
+                    }
+                }
+                free(local_copy);
+            }
+        }
+        rc = op->rc;
+        services_action_free(op);
+        return rc;
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {
         GListPtr lpc = NULL;
