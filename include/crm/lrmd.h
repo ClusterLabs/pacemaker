@@ -94,13 +94,11 @@ enum lrmd_errors {
     lrmd_err_not_supported       = -4,
     lrmd_err_connection          = -5,
     lrmd_err_missing             = -6,
-    lrmd_err_exists              = -7,
     lrmd_err_timeout             = -8,
     lrmd_err_ipc                 = -9,
     lrmd_err_peer                = -10,
     lrmd_err_unknown_operation   = -11,
     lrmd_err_unknown_rsc         = -12,
-    lrmd_err_none_available      = -13,
     lrmd_err_authentication      = -14,
     lrmd_err_signal              = -15,
     lrmd_err_exec_failed         = -16,
@@ -420,6 +418,50 @@ lrmd_event_type2str(enum lrmd_callback_event type)
         return "disconnect";
     }
     return "unknown";
+}
+
+static inline const char *
+lrmd_api_error2str(enum lrmd_errors error)
+{
+    switch(error) {
+    case lrmd_ok:
+        return "ok";
+    case lrmd_pending:
+        return "pending";
+    case lrmd_err_generic:
+        return "generic error";
+    case lrmd_err_internal:
+        return "internal";
+    case lrmd_err_not_supported:
+        return "not supported";
+    case lrmd_err_connection:
+        return "connection";
+    case lrmd_err_missing:
+        return "missing";
+    case lrmd_err_timeout:
+        return "timeout";
+    case lrmd_err_ipc:
+        return "ipc";
+    case lrmd_err_peer:
+        return "peer";
+    case lrmd_err_unknown_operation:
+        return "unknown operation";
+    case lrmd_err_unknown_rsc:
+        return "unknown resource";
+    case lrmd_err_authentication:
+        return "authentication";
+    case lrmd_err_signal:
+        return "signal";
+    case lrmd_err_exec_failed:
+        return "exec_failed";
+    case lrmd_err_no_metadata:
+        return "no_metadata";
+    case lrmd_err_stonith_connection:
+        return "stonith connection";
+    case lrmd_err_provider_required:
+        return "provider required";
+    }
+    return "unknown error";
 }
 
 #endif
