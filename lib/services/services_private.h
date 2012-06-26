@@ -48,9 +48,6 @@ resources_os_list_ocf_providers(void);
 GList *
 resources_os_list_ocf_agents(const char *provider);
 
-GList *
-resources_os_list_systemd_services(void);
-
 gboolean
 cancel_recurring_action(svc_action_t *op);
 
