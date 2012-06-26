@@ -1161,6 +1161,7 @@ static struct crm_option long_options[] = {
     {"list-ocf-providers",    0, 0, 0, "List all available OCF providers"},
     {"list-agents",           1, 0, 0, "List all agents available for the named standard and/or provider."},
     {"list-ocf-alternatives", 1, 0, 0, "List all available providers for the named OCF agent\n"},
+    {"show-metadata",         1, 0, 0, "Show the metadata for the named class:provider:agent"},
 
     {"query-xml",  0, 0, 'q', "\tQuery the definition of a resource (template expanded)"},
     {"query-xml-raw",  0, 0, 'w', "\tQuery the definition of a resource (raw xml)"},
@@ -1317,6 +1318,36 @@ main(int argc, char **argv)
                         } else {
                             fprintf(stderr, "No %s found\n", text);
                         }
+                        return -1;
+                    }
+
+                } else if(safe_str_eq("show-metadata", longname)) {
+                    char standard[512];
+                    char provider[512];
+                    char type[512];
+                    char *metadata = NULL;
+
+                    rc = sscanf(optarg, "%[^:]:%[^:]:%s", standard, provider, type);
+                    if(rc == 3) {
+                        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard, provider, type, &metadata, 0);
+                        if(metadata) {
+                            printf("%s\n", metadata);
+                            return 0;
+                        }
+                        fprintf(stderr, "Metadata query for %s failed: %d\n", optarg, rc);
+                        return rc;
+
+                    } else if(rc == 2) {
+                        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard, NULL, provider, &metadata, 0);
+                        if(metadata) {
+                            printf("%s\n", metadata);
+                            return 0;
+                        }
+                        fprintf(stderr, "Metadata query for %s failed: %d\n", optarg, rc);
+                        return rc;
+
+                    } else if(rc < 2) {
+                        fprintf(stderr, "Please specify standard:type or standard:provider:type, not %s\n", optarg);
                         return -1;
                     }
 
