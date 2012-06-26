@@ -135,8 +135,9 @@ upstart_job_listall(void)
         G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
     if (error) {
-        crm_err("Call to GetAllJobs failed: %s", error->message);
+        crm_info("Call to GetAllJobs failed: %s", error->message);
         g_error_free(error);
+        return NULL;
     }
 
     g_variant_get (_ret, "(ao)", &iter);
