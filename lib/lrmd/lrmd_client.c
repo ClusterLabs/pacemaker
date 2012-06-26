@@ -764,10 +764,10 @@ lsb_get_metadata(const char *type, char **output)
 }
 
 static int
-ocf_get_metadata(const char *provider, const char *type, char **output)
+generic_get_metadata(const char *standard, const char *provider, const char *type, char **output)
 {
-    svc_action_t *action = resources_action_create("get_meta",
-                                                   "ocf",
+    svc_action_t *action = resources_action_create(type,
+                                                   standard,
                                                    provider,
                                                    type,
                                                    "meta-data",
@@ -776,13 +776,13 @@ ocf_get_metadata(const char *provider, const char *type, char **output)
                                                    NULL);
 
     if (!(services_action_sync(action))) {
-        crm_err("Failed to retrieve meta-data for ocf:%s:%s", provider, type);
+        crm_err("Failed to retrieve meta-data for %s:%s:%s", standard, provider, type);
         services_action_free(action);
         return lrmd_err_no_metadata;
     }
 
     if (!action->stdout_data) {
-        crm_err("Failed to retrieve meta-data for ocf:%s:%s", provider, type);
+        crm_err("Failed to retrieve meta-data for %s:%s:%s", standard, provider, type);
         services_action_free(action);
         return lrmd_err_no_metadata;
     }
@@ -799,20 +799,16 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
                       const char *provider,
                       const char *type, char **output, enum lrmd_call_options options)
 {
-
     if (!class || !type) {
         return lrmd_err_missing;
     }
 
     if (safe_str_eq(class, "stonith")) {
         return stonith_get_metadata(provider, type, output);
-    } else if (safe_str_eq(class, "ocf")) {
-        return ocf_get_metadata(provider, type, output);
     } else if (safe_str_eq(class, "lsb")) {
         return lsb_get_metadata(type, output);
     }
-
-    return lrmd_err_no_metadata;
+    return generic_get_metadata(class, provider, type, output);
 }
 
 static int
