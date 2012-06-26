@@ -92,6 +92,10 @@ svc_action_t *resources_action_create(
         return NULL;
     }
 
+    if (safe_str_eq(action, "monitor") && (safe_str_eq(standard, "lsb") || safe_str_eq(standard, "service"))) {
+        action = "status";
+    }
+
     /*
      * Sanity checks passed, proceed!
      */
