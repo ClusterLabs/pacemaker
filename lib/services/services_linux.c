@@ -401,7 +401,7 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
         int status = 0;
         int timeout = (1 + op->timeout) / 1000;
         crm_trace("Waiting for %d", op->pid);
-        while (timeout > 0 && waitpid(op->pid, &status, WNOHANG) <= 0) {
+        while ((op->timeout < 0 || timeout > 0) && waitpid(op->pid, &status, WNOHANG) <= 0) {
             sleep(1);
             read_output(op->opaque->stdout_fd, op);
             read_output(op->opaque->stderr_fd, op);
@@ -412,6 +412,7 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
         if (timeout == 0) {
             int killrc = kill(op->pid, 9 /*SIGKILL*/);
 
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
             op->status = PCMK_LRM_OP_TIMEOUT;
             crm_warn("%s:%d - timed out after %dms", op->id, op->pid,
                     op->timeout);
