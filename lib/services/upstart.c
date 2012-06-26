@@ -142,9 +142,18 @@ upstart_job_listall(void)
 
     g_variant_get (_ret, "(ao)", &iter);
     while (g_variant_iter_loop (iter, "o", &path)) {
+        int llpc = 0;
+        const char *job = path;
+
+        while(path[llpc] != 0) {
+            if(path[llpc] == '/') {
+                job = path+llpc+1;
+            }
+            llpc++;
+        }
         lpc++;
         crm_trace("%s\n", path);
-        units = g_list_append(units, strdup(path));
+        units = g_list_append(units, strdup(job));
     }
     crm_info("Call to GetAllJobs passed: type '%s', count %d", g_variant_get_type_string (_ret), lpc);
     
