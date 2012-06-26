@@ -258,6 +258,7 @@ const char *crm_meta_value(GHashTable * hash, const char *field);
 void crm_set_options(const char *short_options, const char *usage,
                             struct crm_option *long_options, const char *app_desc);
 int crm_get_option(int argc, char **argv, int *index);
+int crm_get_option_long(int argc, char **argv, int *index, const char **longname);
 void crm_help(char cmd, int exit_code);
 
 int rsc_op_expected_rc(lrmd_event_data_t *event);
