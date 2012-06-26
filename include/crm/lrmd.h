@@ -357,6 +357,16 @@ typedef struct lrmd_api_operations_s
         const char *agent,
         lrmd_list_t **providers);
 
+    /*!
+     * \brief Retrieve a list of standards supported by this machine/installation
+     *
+     * \note List must be freed using lrmd_list_freeall()
+     *
+     * \retval num items in list on success
+     * \retval negative error code on failure
+     */
+    int (*list_standards)(lrmd_t *lrmd, lrmd_list_t **standards);
+
 } lrmd_api_operations_t;
 
 struct lrmd_s {

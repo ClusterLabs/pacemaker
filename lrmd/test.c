@@ -32,32 +32,32 @@
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
-	{"help",             0, 0, '?'},
-	{"verbose",          0, 0, 'V', "\t\tPrint out logs and events to screen"},
-	{"quiet",            0, 0, 'Q', "\t\tSuppress all output to screen"},
-	/* just incase we have to add data to events,
-	 * we don't want break a billion regression tests. Instead
-	 * we'll create different versions */
-	{"listen",           1, 0, 'l', "\tListen for a specific event string"},
-	{"event-ver",        1, 0, 'e', "\tVersion of event to listen to"},
-	{"api-call",         1, 0, 'c', "\tDirectly relates to lrmd api functions"},
-	{"no-wait",          0, 0, 'w', "\tMake api call and do not wait for result."},
-	{"is-running",       0, 0, 'R', "\tDetermine if a resource is registered and running."},
-	{"-spacer-",         1, 0, '-', "\nParameters for api-call option"},
-	{"action",           1, 0, 'a'},
-	{"rsc-id",           1, 0, 'r'},
-	{"cancel-call-id",   1, 0, 'x'},
-	{"provider",         1, 0, 'P'},
-	{"class",            1, 0, 'C'},
-	{"type",             1, 0, 'T'},
-	{"interval",         1, 0, 'i'},
-	{"timeout",          1, 0, 't'},
-	{"start-delay",      1, 0, 's'},
-	{"param-key",        1, 0, 'k'},
-	{"param-val",        1, 0, 'v'},
-
-	{"-spacer-",         1, 0, '-'},
-	{0, 0, 0, 0}
+    {"help",             0, 0, '?'},
+    {"verbose",          0, 0, 'V', "\t\tPrint out logs and events to screen"},
+    {"quiet",            0, 0, 'Q', "\t\tSuppress all output to screen"},
+    /* just incase we have to add data to events,
+     * we don't want break a billion regression tests. Instead
+     * we'll create different versions */
+    {"listen",           1, 0, 'l', "\tListen for a specific event string"},
+    {"event-ver",        1, 0, 'e', "\tVersion of event to listen to"},
+    {"api-call",         1, 0, 'c', "\tDirectly relates to lrmd api functions"},
+    {"no-wait",          0, 0, 'w', "\tMake api call and do not wait for result."},
+    {"is-running",       0, 0, 'R', "\tDetermine if a resource is registered and running."},
+    {"-spacer-",         1, 0, '-', "\nParameters for api-call option"},
+    {"action",           1, 0, 'a'},
+    {"rsc-id",           1, 0, 'r'},
+    {"cancel-call-id",   1, 0, 'x'},
+    {"provider",         1, 0, 'P'},
+    {"class",            1, 0, 'C'},
+    {"type",             1, 0, 'T'},
+    {"interval",         1, 0, 'i'},
+    {"timeout",          1, 0, 't'},
+    {"start-delay",      1, 0, 's'},
+    {"param-key",        1, 0, 'k'},
+    {"param-val",        1, 0, 'v'},
+    
+    {"-spacer-",         1, 0, '-'},
+    {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
 
@@ -94,18 +94,18 @@ lrmd_t *lrmd_conn = NULL;
 static char event_buf_v0[1024];
 
 #define print_result(result) \
-	if (!options.quiet) { \
-		result; \
-	} \
-
-#define report_event(event)	\
-	snprintf(event_buf_v0, sizeof(event_buf_v0), "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s op_status:%s", \
-		lrmd_event_type2str(event->type),	\
-		event->rsc_id,	\
-		event->op_type ? event->op_type : "none",	\
-		lrmd_event_rc2str(event->rc),	\
-		services_lrm_status_str(event->op_status));	\
-	crm_info("%s", event_buf_v0);;
+    if (!options.quiet) {    \
+        result;              \
+    }                        \
+    
+#define report_event(event)                                             \
+    snprintf(event_buf_v0, sizeof(event_buf_v0), "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s op_status:%s", \
+             lrmd_event_type2str(event->type),                          \
+             event->rsc_id,                                             \
+             event->op_type ? event->op_type : "none",                  \
+             lrmd_event_rc2str(event->rc),                              \
+             services_lrm_status_str(event->op_status));                \
+    crm_info("%s", event_buf_v0);;
 
 static void
 test_shutdown(int nsig)
@@ -270,6 +270,25 @@ start_test(gpointer user_data)
             print_result(printf("API_CALL FAILURE - no providers found\n"));
             rc = -1;
         }
+
+    } else if (safe_str_eq(options.api_call, "list_standards")) {
+        lrmd_list_t *list = NULL;
+        lrmd_list_t *iter = NULL;
+
+        rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
+
+        if (rc > 0) {
+            print_result(printf("%d standards found\n", rc));
+            for (iter = list; iter != NULL; iter = iter->next) {
+                print_result(printf("%s\n", iter->val));
+            }
+            lrmd_list_freeall(list);
+            rc = 0;
+        } else {
+            print_result(printf("API_CALL FAILURE - no providers found\n"));
+            rc = -1;
+        }
+
     } else if (options.api_call) {
         print_result(printf("API-CALL FAILURE unknown action '%s'\n", options.action));
         exit(-1);
@@ -501,6 +520,7 @@ main(int argc, char **argv)
     if (!options.listen &&
         (safe_str_eq(options.api_call, "metadata") ||
          safe_str_eq(options.api_call, "list_agents") ||
+         safe_str_eq(options.api_call, "list_standards") ||
          safe_str_eq(options.api_call, "list_ocf_providers"))) {
         options.no_connect = 1;
     }

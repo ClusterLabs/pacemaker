@@ -1734,6 +1734,12 @@ crm_set_options(const char *short_options, const char *app_usage, struct crm_opt
 int
 crm_get_option(int argc, char **argv, int *index)
 {
+    return crm_get_option_long(argc, argv, index, NULL);
+}
+
+int
+crm_get_option_long(int argc, char **argv, int *index, const char **longname)
+{
 #ifdef HAVE_GETOPT_H
     static struct option *long_opts = NULL;
 
@@ -1746,7 +1752,14 @@ crm_get_option(int argc, char **argv, int *index)
 
         switch (flag) {
             case 0:
-                return long_opts[*index].val;
+                if(long_opts[*index].val) {
+                    return long_opts[*index].val;
+                } else if(longname) {
+                    *longname = long_opts[*index].name;
+                } else {
+                    crm_notice("Unhandled option --%s", long_opts[*index].name);
+                    return flag;
+                }
             case -1:           /* End of option processing */
                 break;
             case ':':
@@ -1807,7 +1820,7 @@ crm_help(char cmd, int exit_code)
 
             } else {
                 /* is val printable as char ? */
-                if (crm_long_options[i].val <= UCHAR_MAX) {
+                if (crm_long_options[i].val && crm_long_options[i].val <= UCHAR_MAX) {
                     fprintf(stream, " -%c,", crm_long_options[i].val);
                 } else {
                     fputs("    ", stream);

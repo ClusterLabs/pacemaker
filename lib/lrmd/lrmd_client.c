@@ -249,7 +249,6 @@ lrmd_dispatch(lrmd_t * lrmd)
 
     CRM_ASSERT(lrmd != NULL);
     private = lrmd->private;
-
     while (crm_ipc_ready(private->ipc)) {
         if (crm_ipc_read(private->ipc) > 0) {
             const char *msg = crm_ipc_buffer(private->ipc);
@@ -660,17 +659,17 @@ lsb_get_metadata(const char *type, char **output)
 #define SHORT_DSCR  "# Short-Description:"
 #define DESCRIPTION "# Description:"
 
-#define lsb_meta_helper_free_value(m)				\
-	if ((m) != NULL) {		\
-		xmlFree(m);		\
-		(m) = NULL;		\
-	}
+#define lsb_meta_helper_free_value(m)   \
+    if ((m) != NULL) {                  \
+        xmlFree(m);                     \
+        (m) = NULL;                     \
+    }
 
-#define lsb_meta_helper_get_value(buffer, ptr, keyword)	\
-	if (!ptr && !strncasecmp(buffer, keyword, strlen(keyword))) { \
-		(ptr) = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST buffer+strlen(keyword)); \
-		continue; \
-	}
+#define lsb_meta_helper_get_value(buffer, ptr, keyword)                 \
+    if (!ptr && !strncasecmp(buffer, keyword, strlen(keyword))) {       \
+        (ptr) = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST buffer+strlen(keyword)); \
+        continue;                                                       \
+    }
 
     char ra_pathname[PATH_MAX] = { 0, };
     FILE *fp;
@@ -764,10 +763,10 @@ lsb_get_metadata(const char *type, char **output)
 }
 
 static int
-ocf_get_metadata(const char *provider, const char *type, char **output)
+generic_get_metadata(const char *standard, const char *provider, const char *type, char **output)
 {
-    svc_action_t *action = resources_action_create("get_meta",
-                                                   "ocf",
+    svc_action_t *action = resources_action_create(type,
+                                                   standard,
                                                    provider,
                                                    type,
                                                    "meta-data",
@@ -776,13 +775,13 @@ ocf_get_metadata(const char *provider, const char *type, char **output)
                                                    NULL);
 
     if (!(services_action_sync(action))) {
-        crm_err("Failed to retrieve meta-data for ocf:%s:%s", provider, type);
+        crm_err("Failed to retrieve meta-data for %s:%s:%s", standard, provider, type);
         services_action_free(action);
         return lrmd_err_no_metadata;
     }
 
     if (!action->stdout_data) {
-        crm_err("Failed to retrieve meta-data for ocf:%s:%s", provider, type);
+        crm_err("Failed to retrieve meta-data for %s:%s:%s", standard, provider, type);
         services_action_free(action);
         return lrmd_err_no_metadata;
     }
@@ -799,20 +798,16 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
                       const char *provider,
                       const char *type, char **output, enum lrmd_call_options options)
 {
-
     if (!class || !type) {
         return lrmd_err_missing;
     }
 
     if (safe_str_eq(class, "stonith")) {
         return stonith_get_metadata(provider, type, output);
-    } else if (safe_str_eq(class, "ocf")) {
-        return ocf_get_metadata(provider, type, output);
     } else if (safe_str_eq(class, "lsb")) {
         return lsb_get_metadata(type, output);
     }
-
-    return lrmd_err_no_metadata;
+    return generic_get_metadata(class, provider, type, output);
 }
 
 static int
@@ -926,6 +921,22 @@ list_systemd_agents(lrmd_list_t ** resources)
 }
 
 static int
+list_upstart_agents(lrmd_list_t ** resources)
+{
+    int rc = 0;
+    GListPtr gIter = NULL;
+    GList *agents = NULL;
+
+    agents = resources_list_agents("upstart", NULL);
+    for (gIter = agents; gIter != NULL; gIter = gIter->next) {
+        *resources = lrmd_list_add(*resources, (const char *)gIter->data);
+        rc++;
+    }
+    g_list_free_full(agents, free);
+    return rc;
+}
+
+static int
 list_ocf_agents(lrmd_list_t ** resources, const char *list_provider)
 {
     int rc = 0;
@@ -967,6 +978,8 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
         rc += list_lsb_agents(resources);
     } else if (safe_str_eq(class, "systemd")) {
         rc += list_systemd_agents(resources);
+    } else if (safe_str_eq(class, "upstart")) {
+        rc += list_upstart_agents(resources);
     } else if (safe_str_eq(class, "service")) {
         rc += list_service_agents(resources);
     } else if (safe_str_eq(class, "stonith")) {
@@ -974,6 +987,7 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
     } else if (!class) {
         rc += list_ocf_agents(resources, provider);
         rc += list_systemd_agents(resources);
+        rc += list_upstart_agents(resources);
         rc += list_lsb_agents(resources);
         rc += list_stonith_agents(resources);
     } else {
@@ -1021,7 +1035,26 @@ lrmd_api_list_ocf_providers(lrmd_t * lrmd, const char *agent, lrmd_list_t ** pro
     }
 
     g_list_free_full(ocf_providers, free);
+    return rc;
+}
 
+static int
+lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
+{
+    int rc = 0;
+    char *standard = NULL;
+    GList *standards = NULL;
+    GListPtr gIter = NULL;
+
+    standards = resources_list_standards();
+
+    for (gIter = standards; gIter != NULL; gIter = gIter->next) {
+        standard = gIter->data;
+        *supported = lrmd_list_add(*supported, (const char *)gIter->data);
+        rc++;
+    }
+
+    g_list_free_full(standards, free);
     return rc;
 }
 
@@ -1048,6 +1081,7 @@ lrmd_api_new(void)
     new_lrmd->cmds->cancel = lrmd_api_cancel;
     new_lrmd->cmds->list_agents = lrmd_api_list_agents;
     new_lrmd->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
+    new_lrmd->cmds->list_standards = lrmd_api_list_standards;
 
     if (!stonith_api) {
         stonith_api = stonith_api_new();

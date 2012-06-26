@@ -1126,6 +1126,23 @@ AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
 AC_SUBST(BUILD_VERSION)
 
 
+HAVE_gio=1
+PKG_CHECK_MODULES(GIO, gio-2.0, ,HAVE_gio=0)
+
+if test $HAVE_gio = 1; then
+   PCMK_FEATURES="$PCMK_FEATURES upstart"
+fi
+
+AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_gio, Support upstart based system services)
+AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_gio = 1)
+
+if test $HAVE_gio = 1; then
+   PCMK_FEATURES="$PCMK_FEATURES systemd"
+fi
+AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_gio, Support systemd based system services)
+AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_gio = 1)
+
+
 STACKS=""
 CLUSTERLIBS=""
 

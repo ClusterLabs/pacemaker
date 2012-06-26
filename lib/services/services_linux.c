@@ -196,7 +196,7 @@ add_OCF_env_vars(svc_action_t *op)
     }
 }
 
-static gboolean recurring_action_timer(gpointer data)
+gboolean recurring_action_timer(gpointer data)
 {
     svc_action_t *op = data;
     crm_debug("Scheduling another invokation of %s", op->id);
@@ -209,13 +209,41 @@ static gboolean recurring_action_timer(gpointer data)
     return FALSE;
 }
 
+void
+operation_finalize(svc_action_t *op)
+{
+    int recurring = 0;
+    if (op->interval) {
+        if (op->cancel) {
+            op->status = PCMK_LRM_OP_CANCELLED;
+            cancel_recurring_action(op);
+        } else {
+            recurring = 1;
+            op->opaque->repeat_timer = g_timeout_add(op->interval,
+                recurring_action_timer,
+                (void *) op);
+        }
+    }
+
+    if (op->opaque->callback) {
+        op->opaque->callback(op);
+    }
+
+    if (!recurring) {
+        /*
+         * If this is a recurring action, do not free explicitly.
+         * It will get freed whenever the action gets cancelled.
+         */
+        services_action_free(op);
+    }
+}
+
 static void
 operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 {
     char *next = NULL;
     char *offset = NULL;
     svc_action_t *op = mainloop_get_child_userdata(p);
-    int recurring = 0;
     pid_t pid = mainloop_get_child_pid(p);
 
     mainloop_clear_child_userdata(p);
@@ -284,30 +312,7 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
     }
 
     op->pid = 0;
-
-    if (op->interval) {
-        if (op->cancel) {
-            op->status = PCMK_LRM_OP_CANCELLED;
-            cancel_recurring_action(op);
-        } else {
-            recurring = 1;
-            op->opaque->repeat_timer = g_timeout_add(op->interval,
-                recurring_action_timer,
-                (void *) op);
-        }
-    }
-
-    if (op->opaque->callback) {
-        op->opaque->callback(op);
-    }
-
-    if (!recurring) {
-        /*
-         * If this is a recurring action, do not free explicitly.
-         * It will get freed whenever the action gets cancelled.
-         */
-        services_action_free(op);
-    }
+    operation_finalize(op);
 }
 
 gboolean
@@ -396,7 +401,7 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
         int status = 0;
         int timeout = (1 + op->timeout) / 1000;
         crm_trace("Waiting for %d", op->pid);
-        while (timeout > 0 && waitpid(op->pid, &status, WNOHANG) <= 0) {
+        while ((op->timeout < 0 || timeout > 0) && waitpid(op->pid, &status, WNOHANG) <= 0) {
             sleep(1);
             read_output(op->opaque->stdout_fd, op);
             read_output(op->opaque->stderr_fd, op);
@@ -407,6 +412,7 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
         if (timeout == 0) {
             int killrc = kill(op->pid, 9 /*SIGKILL*/);
 
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
             op->status = PCMK_LRM_OP_TIMEOUT;
             crm_warn("%s:%d - timed out after %dms", op->id, op->pid,
                     op->timeout);

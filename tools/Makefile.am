@@ -111,6 +111,8 @@ crm_attribute_LDADD	= $(COMMONLIBS)
 
 crm_resource_SOURCES	= crm_resource.c
 crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \
+			$(top_builddir)/lib/lrmd/liblrmd.la \
+			$(top_builddir)/lib/services/libcrmservice.la \
 			$(top_builddir)/lib/pengine/libpe_status.la \
 			$(top_builddir)/pengine/libpengine.la \
 			$(COMMONLIBS)
