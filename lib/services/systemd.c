@@ -129,7 +129,7 @@ systemd_unit_by_name (
 
     if (_ret) {
         g_variant_get (_ret, "(o)", out_unit);
-        crm_info("%s = %s", arg_name, *out_unit);
+        crm_debug("%s = %s", arg_name, *out_unit);
         g_variant_unref (_ret);
     }
 
@@ -167,7 +167,7 @@ systemd_unit_property(const char *obj, const gchar *iface, const char *name)
     
     value = g_variant_lookup_value(asv, name, NULL);
     if(value && g_variant_is_of_type(value, G_VARIANT_TYPE_STRING)) {
-        crm_info("Got value '%s' for %s[%s]", g_variant_get_string(value, NULL), obj, name);
+        crm_debug("Got value '%s' for %s[%s]", g_variant_get_string(value, NULL), obj, name);
         output = g_variant_dup_string(value, NULL);
 
     } else {
@@ -202,7 +202,7 @@ systemd_unit_listall(void)
         G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
     if (error || _ret == NULL) {
-        crm_err("Call to ListUnits failed: %s", error->message);
+        crm_info("Call to ListUnits failed: %s", error->message);
         g_error_free(error);
         return NULL;
     }
@@ -226,7 +226,7 @@ systemd_unit_listall(void)
         if(match) {
             lpc++;
             match[0] = 0;
-            crm_trace("Got %s = %s", u.id, u.description);
+            crm_trace("Got %s[%s] = %s", u.id, u.active_state, u.description);
             units = g_list_append(units, strdup(u.id));
         }
     }
