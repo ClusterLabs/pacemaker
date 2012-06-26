@@ -21,7 +21,7 @@ MAINTAINERCLEANFILES = Makefile.in
 INCLUDES         = -I$(top_builddir)/include
 
 lib_LTLIBRARIES = libcrmservice.la
-noinst_HEADERS  = upstart.h services_private.h
+noinst_HEADERS  = upstart.h systemd.h services_private.h
 
 libcrmservice_la_SOURCES = services.c services_linux.c
 libcrmservice_la_LDFLAGS = -version-info 1:0:0
