@@ -69,7 +69,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      group_append_meta,
      },
     {
-     native_merge_weights,
+     clone_merge_weights,
      clone_color,
      clone_create_actions,
      clone_create_probe,
@@ -83,7 +83,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_append_meta,
      },
     {
-     native_merge_weights,
+     master_merge_weights,
      master_color,
      master_create_actions,
      clone_create_probe,

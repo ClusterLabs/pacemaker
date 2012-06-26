@@ -31,6 +31,9 @@ extern gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_
 extern int master_score(resource_t * rsc, node_t * node, int not_set_value);
 
 static void
+apply_master_prefs(resource_t * rsc);
+
+static void
 child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering type,
                             resource_t * rsc, resource_t * child, resource_t * last,
                             pe_working_set_t * data_set)
@@ -265,6 +268,29 @@ sort_master_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     return sort_clone_instance(a, b, data_set);
 }
 
+GHashTable *
+master_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
+                     float factor, enum pe_weights flags)
+{
+    GListPtr gIter = NULL;
+
+    /* We need to know preference scores before merging weights, make
+     * sure this has happened */
+    apply_master_prefs(rsc);
+    nodes = rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
+
+    gIter = rsc->children;
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child = (resource_t *) gIter->data;
+
+        nodes = child->cmds->merge_weights(child, rhs, nodes, attr, factor, flags | pe_weights_positive);
+    }
+
+    return nodes;
+}
+
+
 static void
 master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -318,15 +344,18 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
          * master instance should/must be colocated with
          */
         if (constraint->role_lh == RSC_ROLE_MASTER) {
+            enum pe_weights flags = constraint->score == INFINITY ? 0 : pe_weights_rollback;
+
+            /* make sure we have allocated before merging weights */
+            constraint->rsc_rh->cmds->allocate(constraint->rsc_rh, NULL, data_set);
             crm_trace("RHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
                         constraint->score);
             rsc->allowed_nodes =
                 constraint->rsc_rh->cmds->merge_weights(constraint->rsc_rh, rsc->id,
                                                         rsc->allowed_nodes,
                                                         constraint->node_attribute,
-                                                        constraint->score / INFINITY,
-                                                        constraint->score ==
-                                                        INFINITY ? FALSE : TRUE, FALSE);
+                                                        (float) constraint->score / INFINITY,
+                                                        flags);
         }
     }
 
@@ -344,7 +373,8 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
                 constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id,
                                                         rsc->allowed_nodes,
                                                         constraint->node_attribute,
-                                                        constraint->score / INFINITY, TRUE, TRUE);
+                                                        (float) constraint->score / INFINITY,
+                                                        (pe_weights_rollback | pe_weights_positive));
         }
     }
 
