@@ -1091,10 +1091,9 @@ show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int o
 }
 
 static GHashTable *
-generate_resource_params(resource_t *rsc)
+generate_resource_params(resource_t *rsc, pe_working_set_t * data_set)
 {
     int rc = 0;
-    pe_working_set_t data_set;
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
     GHashTable *combined = NULL;
@@ -1110,8 +1109,8 @@ generate_resource_params(resource_t *rsc)
     meta = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
     combined = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
-    get_rsc_attributes(params, rsc, NULL/* TODO: Pass in local node */, &data_set);
-    get_meta_attributes(meta, rsc, NULL/* TODO: Pass in local node */, &data_set);
+    get_rsc_attributes(params, rsc, NULL/* TODO: Pass in local node */, data_set);
+    get_meta_attributes(meta, rsc, NULL/* TODO: Pass in local node */, data_set);
 
     if (params) {
         char *key = NULL;
@@ -1278,8 +1277,7 @@ main(int argc, char **argv)
             case 0:
                 if(safe_str_eq("force-stop", longname)
                    || safe_str_eq("force-start", longname)
-                   || safe_str_eq("force-monitor", longname)) {
-                    rsc_id = optarg;
+                   || safe_str_eq("force-check", longname)) {
                     rsc_cmd = flag;
                     rsc_long_cmd = longname;
 
@@ -1560,14 +1558,14 @@ main(int argc, char **argv)
             action = "stop";
         } else if(safe_str_eq(rsc_long_cmd, "force-start")) {
             action = "start";
-        } else if(safe_str_eq(rsc_long_cmd, "force-monitor")) {
+        } else if(safe_str_eq(rsc_long_cmd, "force-check")) {
             action = "monitor";
         }
 
         rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
         rprov  = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
         rtype  = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-        params = generate_resource_params(rsc);
+        params = generate_resource_params(rsc, &data_set);
 
         op = resources_action_create(
             rsc->id, rclass, rprov, rtype, action, 0, -1, params);
@@ -1575,8 +1573,13 @@ main(int argc, char **argv)
         if(services_action_sync(op)) {
             int more, lpc, last;
             char *local_copy = NULL;
-            printf("Operation %s for %s (%s:%s:%s) returned %d",
-                   action, rsc->id, rclass, rprov?rprov:"", rtype, op->rc);
+            if(op->status == PCMK_LRM_OP_DONE) {
+                printf("Operation %s for %s (%s:%s:%s) returned %d\n",
+                       action, rsc->id, rclass, rprov?rprov:"", rtype, op->rc);
+            } else {
+                printf("Operation %s for %s (%s:%s:%s) failed: %d\n",
+                       action, rsc->id, rclass, rprov?rprov:"", rtype, op->status);
+            }
 
             if (op->stdout_data) {
                 local_copy = crm_strdup(op->stdout_data);
