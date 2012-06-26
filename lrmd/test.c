@@ -270,6 +270,23 @@ start_test(gpointer user_data)
             print_result(printf("API_CALL FAILURE - no providers found\n"));
             rc = -1;
         }
+    } else if (safe_str_eq(options.api_call, "list_standards")) {
+        lrmd_list_t *list = NULL;
+        lrmd_list_t *iter = NULL;
+
+        rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
+
+        if (rc > 0) {
+            print_result(printf("%d standards found\n", rc));
+            for (iter = list; iter != NULL; iter = iter->next) {
+                print_result(printf("%s\n", iter->val));
+            }
+            lrmd_list_freeall(list);
+            rc = 0;
+        } else {
+            print_result(printf("API_CALL FAILURE - no providers found\n"));
+            rc = -1;
+        }
     } else if (options.api_call) {
         print_result(printf("API-CALL FAILURE unknown action '%s'\n", options.action));
         exit(-1);
@@ -501,6 +518,7 @@ main(int argc, char **argv)
     if (!options.listen &&
         (safe_str_eq(options.api_call, "metadata") ||
          safe_str_eq(options.api_call, "list_agents") ||
+         safe_str_eq(options.api_call, "list_standards") ||
          safe_str_eq(options.api_call, "list_ocf_providers"))) {
         options.no_connect = 1;
     }

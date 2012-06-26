@@ -926,6 +926,22 @@ list_systemd_agents(lrmd_list_t ** resources)
 }
 
 static int
+list_upstart_agents(lrmd_list_t ** resources)
+{
+    int rc = 0;
+    GListPtr gIter = NULL;
+    GList *agents = NULL;
+
+    agents = resources_list_agents("upstart", NULL);
+    for (gIter = agents; gIter != NULL; gIter = gIter->next) {
+        *resources = lrmd_list_add(*resources, (const char *)gIter->data);
+        rc++;
+    }
+    g_list_free_full(agents, free);
+    return rc;
+}
+
+static int
 list_ocf_agents(lrmd_list_t ** resources, const char *list_provider)
 {
     int rc = 0;
@@ -967,6 +983,8 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
         rc += list_lsb_agents(resources);
     } else if (safe_str_eq(class, "systemd")) {
         rc += list_systemd_agents(resources);
+    } else if (safe_str_eq(class, "upstart")) {
+        rc += list_upstart_agents(resources);
     } else if (safe_str_eq(class, "service")) {
         rc += list_service_agents(resources);
     } else if (safe_str_eq(class, "stonith")) {
@@ -974,6 +992,7 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
     } else if (!class) {
         rc += list_ocf_agents(resources, provider);
         rc += list_systemd_agents(resources);
+        rc += list_upstart_agents(resources);
         rc += list_lsb_agents(resources);
         rc += list_stonith_agents(resources);
     } else {
@@ -1025,6 +1044,27 @@ lrmd_api_list_ocf_providers(lrmd_t * lrmd, const char *agent, lrmd_list_t ** pro
     return rc;
 }
 
+static int
+lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
+{
+    int rc = 0;
+    char *standard = NULL;
+    GList *standards = NULL;
+    GListPtr gIter = NULL;
+
+    standards = resources_list_standards();
+
+    for (gIter = standards; gIter != NULL; gIter = gIter->next) {
+        standard = gIter->data;
+        *supported = lrmd_list_add(*supported, (const char *)gIter->data);
+        rc++;
+    }
+
+    g_list_free_full(standards, free);
+
+    return rc;
+}
+
 lrmd_t *
 lrmd_api_new(void)
 {
@@ -1048,6 +1088,7 @@ lrmd_api_new(void)
     new_lrmd->cmds->cancel = lrmd_api_cancel;
     new_lrmd->cmds->list_agents = lrmd_api_list_agents;
     new_lrmd->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
+    new_lrmd->cmds->list_standards = lrmd_api_list_standards;
 
     if (!stonith_api) {
         stonith_api = stonith_api_new();
