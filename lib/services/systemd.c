@@ -105,6 +105,19 @@ systemd_service_name(const char *name)
     return g_strdup_printf("%s.service", name);
 }
 
+static void
+systemd_daemon_reload (GDBusProxy *proxy, GError **error)
+{
+    GVariant *_ret = g_dbus_proxy_call_sync (
+        proxy, "Reload", g_variant_new ("()"),
+        G_DBUS_CALL_FLAGS_NONE, -1, NULL, error);
+
+    if (_ret) {
+        g_variant_unref (_ret);
+    }
+}
+
+
 static gboolean
 systemd_unit_by_name (
     GDBusProxy *proxy,
@@ -113,8 +126,11 @@ systemd_unit_by_name (
     GCancellable *cancellable,
     GError **error)
 {
+    GError *reload_error;
     GVariant *_ret = NULL;
     char *name = NULL;
+    int retry = 0;
+
 /*
   "  <method name=\"GetUnit\">\n"                                 \
   "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
@@ -123,16 +139,54 @@ systemd_unit_by_name (
 */  
 
     name = systemd_service_name(arg_name);
+    crm_debug("Calling GetUnit");
     _ret = g_dbus_proxy_call_sync (
         proxy, "GetUnit", g_variant_new ("(s)", name),
         G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
 
     if (_ret) {
+        crm_debug("Checking output");
+        g_variant_get (_ret, "(o)", out_unit);
+        crm_debug("%s = %s", arg_name, *out_unit);
+        g_variant_unref (_ret);
+        goto done;
+    }
+
+    crm_debug("Reloading the systemd manager configuration");
+    systemd_daemon_reload (proxy, &reload_error);
+    retry++;
+
+    if (reload_error) {
+        crm_err("Cannot reload the systemd manager configuration: %s", reload_error->message);
+        g_error_free(reload_error);
+        goto done;
+    }
+
+    if(*error) {
+        crm_debug("Cannot find %s: %s", name, (*error)->message);
+        g_error_free(*error);
+        *error = NULL;
+    }
+
+/*
+  <method name="LoadUnit">
+   <arg name="name" type="s" direction="in"/>
+   <arg name="unit" type="o" direction="out"/>
+  </method>
+ */
+    crm_debug("Calling LoadUnit");
+    _ret = g_dbus_proxy_call_sync (
+        proxy, "LoadUnit", g_variant_new ("(s)", name),
+        G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
+
+    if (_ret) {
+        crm_debug("Checking output");
         g_variant_get (_ret, "(o)", out_unit);
         crm_debug("%s = %s", arg_name, *out_unit);
         g_variant_unref (_ret);
     }
 
+  done:
     free(name);
     return _ret != NULL;
 }
