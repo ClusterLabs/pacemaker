@@ -19,7 +19,7 @@ MAINTAINERCLEANFILES	= Makefile.in
 
 headerdir=$(pkgincludedir)/crm
 
-noinst_HEADERS		= stonith-ng-internal.h services.h
-header_HEADERS		= crm.h cib.h attrd.h msg_xml.h transition.h ais.h cib_util.h cib_ops.h stonith-ng.h cluster.h lrmd.h 
+noinst_HEADERS		= stonith-ng-internal.h 
+header_HEADERS		= crm.h cib.h attrd.h msg_xml.h transition.h ais.h cib_util.h cib_ops.h stonith-ng.h cluster.h lrmd.h services.h
 
 SUBDIRS                 = common pengine
