@@ -11,8 +11,9 @@
 
 ## Medium priority
 
+- Add upstart tests to lrmd/regression.py
+- Make lrmd/regression.py smart enough to only run upstart/systemd tests if the host supports it
 - Support heartbeat with the mcp
-- Use the DBus API for controlling systemd services
 - Reduce the amount of attrd logging
 - Reduce the amount of stonith-ng logging
 - Investigate the feasibility of using standard errno.h error codes for CIB, lrmd and Stonith-NG APIs
