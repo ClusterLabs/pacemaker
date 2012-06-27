@@ -393,14 +393,15 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     gboolean pass = FALSE;
     GVariant *_ret = NULL;
     const char *action = op->action;
-    char *name = systemd_service_name(op->rsc);
+    char *name = systemd_service_name(op->agent);
     
     op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
     CRM_ASSERT(systemd_init());
 
-    pass = systemd_unit_by_name (systemd_proxy, op->rsc, &unit, NULL, &error);
+    crm_debug("Performing %s op on systemd unit %s named '%s'", op->action, op->agent, op->rsc);
+    pass = systemd_unit_by_name (systemd_proxy, op->agent, &unit, NULL, &error);
     if (error || pass == FALSE) {
-        crm_debug("Could not obtain unit named '%s': %s", op->rsc, error->message);
+        crm_debug("Could not obtain unit named '%s': %s", op->agent, error->message);
         if(strstr(error->message, "systemd1.NoSuchUnit")) {
             op->rc = PCMK_EXECRA_NOT_INSTALLED;
         }
@@ -409,7 +410,7 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     }
     
     if (safe_str_eq(op->action, "meta-data")) {
-        op->stdout_data = systemd_unit_metadata(op->rsc);
+        op->stdout_data = systemd_unit_metadata(op->agent);
         op->rc = PCMK_EXECRA_OK;
         goto cleanup;
     }
