@@ -838,6 +838,8 @@ process_lrmd_rsc_exec(lrmd_client_t * client, xmlNode * request)
         return lrmd_err_missing;
     }
     if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
+        crm_info("Resource '%s' not found (%d active resources)",
+                 rsc_id, g_hash_table_size(rsc_list));
         return lrmd_err_unknown_rsc;
     }
 
@@ -928,6 +930,7 @@ process_lrmd_message(lrmd_client_t * client, xmlNode * request)
     int do_notify = 0;
     int exit = 0;
 
+    crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
     if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
@@ -960,6 +963,9 @@ process_lrmd_message(lrmd_client_t * client, xmlNode * request)
         crm_err("Unknown %s from %s", op, client->name);
         crm_log_xml_warn(request, "UnknownOp");
     }
+
+    crm_debug("Processed %s operation from %s: rc=%d, reply=%d, notify=%d, exit=%d",
+              op, client->id, rc, do_reply, do_notify, exit);
 
     if (do_reply) {
         send_reply(client, rc, call_id);
