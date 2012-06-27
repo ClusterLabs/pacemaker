@@ -116,16 +116,29 @@ svc_action_t *resources_action_create(
     if(strcasecmp(op->standard, "service") == 0) {
         /* Work it out and then fall into the if-else block below.
          * Priority is:
+         * - lsb
          * - systemd
          * - upstart
-         * - lsb
          */
         int rc = 0;
         struct stat st;
         char *path = NULL;
 
+#ifdef LSB_ROOT_DIR
+        rc = asprintf(&path, "%s/%s", LSB_ROOT_DIR, op->agent);
+        if(rc > 0 && stat(path, &st) == 0) {
+            crm_debug("Found an lsb agent for %s/% the", op->rsc, op->agent);
+            free(path);
+            free(op->standard);
+            op->standard = strdup("lsb");
+            goto expanded;
+        }
+        free(path);
+#endif
+
 #if SUPPORT_SYSTEMD
         if(systemd_unit_exists(op->agent)) {
+            crm_debug("Found a systemd agent for %s/%s", op->rsc, op->agent);
             free(op->standard);
             op->standard = strdup("systemd");
             goto expanded;
@@ -134,20 +147,14 @@ svc_action_t *resources_action_create(
 
 #if SUPPORT_UPSTART
         if(upstart_job_exists(op->agent)) {
+            crm_debug("Found an upstart agent for %s/%s", op->rsc, op->agent);
             free(op->standard);
             op->standard = strdup("upstart");
             goto expanded;
         }
 #endif
 
-#ifdef LSB_ROOT_DIR
-        rc = asprintf(&path, "%s/%s", LSB_ROOT_DIR, op->agent);
-        if(rc > 0 && stat(path, &st) == 0) {
-            free(op->standard);
-            op->standard = strdup("lsb");
-            goto expanded;
-        }
-#endif
+        crm_info("Cannot determine the standard for %s (%s)", op->rsc, op->agent);
     }
 
   expanded:
@@ -184,6 +191,7 @@ svc_action_t *resources_action_create(
         op->opaque->args[0] = strdup(SERVICE_SCRIPT);
         op->opaque->args[1] = strdup(agent);
         op->opaque->args[2] = strdup(action);
+
     } else {
         crm_err("Unknown resource standard: %s", op->standard);
         services_action_free(op);
