@@ -15,6 +15,6 @@ native_color: drbd_float:0 allocation score on sambuca.linbit: 51
 native_color: fs_float allocation score on raki.linbit: -INFINITY
 native_color: fs_float allocation score on sambuca.linbit: -INFINITY
 native_color: ip_float_right allocation score on raki.linbit: -INFINITY
-native_color: ip_float_right allocation score on sambuca.linbit: 0
+native_color: ip_float_right allocation score on sambuca.linbit: 51
 native_color: ip_nfs allocation score on raki.linbit: -INFINITY
 native_color: ip_nfs allocation score on sambuca.linbit: 51
