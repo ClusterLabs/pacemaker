@@ -20,6 +20,7 @@ import sys
 import subprocess
 import shlex
 import time
+from cts.CTSvars import *
 
 class Test:
 	def __init__(self, name, description, lrmd_location, test_tool_location, verbose = 0):
@@ -62,7 +63,7 @@ class Test:
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
-		self.stonith_process = subprocess.Popen(shlex.split("/usr/libexec/pacemaker/stonithd -s"))
+		self.stonith_process = subprocess.Popen(shlex.split(CTSvars.CRM_DAEMON_DIR + "/stonithd -s"))
 		self.lrmd_process = subprocess.Popen(self.daemon_location)
 
 		time.sleep(1)
@@ -637,6 +638,8 @@ def main(argv):
 	lrmd_loc = argv[0].replace("regression.py", "lrmd")
 	test_loc = argv[0].replace("regression.py", "lrmd_test")
 
+	lrmd_loc = CTSvars.CRM_DAEMON_DIR + "/lrmd"
+	test_loc = CTSvars.CTS_home + "/lrmd_test"
 	o = TestOptions()
 	o.build_options(argv)
 
