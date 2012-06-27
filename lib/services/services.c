@@ -180,12 +180,15 @@ svc_action_t *resources_action_create(
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;
+
+#if SUPPORT_SYSTEMD
     } else if(strcasecmp(op->standard, "systemd") == 0) {
         op->opaque->exec = strdup("systemd-dbus");
-
+#endif
+#if SUPPORT_UPSTART
     } else if(strcasecmp(op->standard, "upstart") == 0) {
         op->opaque->exec = strdup("upstart-dbus");
-
+#endif
     } else if(strcasecmp(op->standard, "service") == 0) {
         op->opaque->exec = strdup(SERVICE_SCRIPT);
         op->opaque->args[0] = strdup(SERVICE_SCRIPT);
