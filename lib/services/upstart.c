@@ -367,22 +367,22 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
     op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
     CRM_ASSERT(upstart_init());
 
-    pass = upstart_job_by_name (upstart_proxy, op->rsc, &job, NULL, &error);
+    pass = upstart_job_by_name (upstart_proxy, op->agent, &job, NULL, &error);
     if (error || pass == FALSE) {
-        crm_debug("Could not obtain job named '%s': %s", op->rsc, error->message);
+        crm_debug("Could not obtain job named '%s': %s", op->agent, error->message);
         op->rc = PCMK_EXECRA_NOT_INSTALLED;
         g_error_free(error);
         return FALSE;
     }
     
     if (safe_str_eq(op->action, "meta-data")) {
-        op->stdout_data = upstart_job_metadata(op->rsc);
+        op->stdout_data = upstart_job_metadata(op->agent);
         op->rc = PCMK_EXECRA_OK;
         goto cleanup;
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
-        if (upstart_job_running (op->rsc)) {
+        if (upstart_job_running (op->agent)) {
             op->rc = PCMK_EXECRA_OK;
         } else {
             op->rc = PCMK_EXECRA_NOT_RUNNING;
