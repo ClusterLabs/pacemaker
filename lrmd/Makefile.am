@@ -17,7 +17,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-testdir			= $(testdir)/lrmd
+testdir			= $(datadir)/$(PACKAGE)/tests/lrmd
 test_PYTHON		= regression.py
 
 lrmdlibdir	= $(CRM_DAEMON_DIR)
