@@ -1,0 +1,37 @@
+Allocation scores:
+clone_color: drbd_pgdrive:0 allocation score on node1: 0
+clone_color: drbd_pgdrive:0 allocation score on node2: 10010
+clone_color: drbd_pgdrive:1 allocation score on node1: 10010
+clone_color: drbd_pgdrive:1 allocation score on node2: 0
+clone_color: dummies allocation score on node1: -INFINITY
+clone_color: dummies allocation score on node2: 0
+clone_color: dummy:0 allocation score on node1: -INFINITY
+clone_color: dummy:0 allocation score on node2: 0
+clone_color: dummy:1 allocation score on node1: -INFINITY
+clone_color: dummy:1 allocation score on node2: 10
+clone_color: ms_drbd_pgdrive allocation score on node1: 30
+clone_color: ms_drbd_pgdrive allocation score on node2: 0
+drbd_pgdrive:0 promotion score on node2: 10000
+drbd_pgdrive:1 promotion score on node1: 31
+group_color: DBIP allocation score on node1: 10
+group_color: DBIP allocation score on node2: 0
+group_color: pgdrive_fs allocation score on node1: 10
+group_color: pgdrive_fs allocation score on node2: 0
+group_color: postgres allocation score on node1: 0
+group_color: postgres allocation score on node2: 0
+group_color: postgresql allocation score on node1: 10
+group_color: postgresql allocation score on node2: 0
+native_color: DBIP allocation score on node1: -INFINITY
+native_color: DBIP allocation score on node2: 0
+native_color: drbd_pgdrive:0 allocation score on node1: 0
+native_color: drbd_pgdrive:0 allocation score on node2: 10010
+native_color: drbd_pgdrive:1 allocation score on node1: 10010
+native_color: drbd_pgdrive:1 allocation score on node2: -INFINITY
+native_color: dummy:0 allocation score on node1: -INFINITY
+native_color: dummy:0 allocation score on node2: -INFINITY
+native_color: dummy:1 allocation score on node1: -INFINITY
+native_color: dummy:1 allocation score on node2: 10
+native_color: pgdrive_fs allocation score on node1: -INFINITY
+native_color: pgdrive_fs allocation score on node2: 10010
+native_color: postgresql allocation score on node1: -INFINITY
+native_color: postgresql allocation score on node2: 0
