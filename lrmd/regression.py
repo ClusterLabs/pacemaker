@@ -100,6 +100,8 @@ class Test:
 	def run_cmd(self, args):
 		cmd = shlex.split(args['args'])
 		cmd.insert(0, args['cmd'])
+		if self.verbose:
+			print "Running: "+" ".join(cmd)
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
 		if args['no_wait'] == 0:
