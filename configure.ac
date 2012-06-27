@@ -180,6 +180,14 @@ AC_ARG_ENABLE([no-stack],
     [  --enable-no-stack
        Only build the Policy Engine and pieces needed to support it [default=no]])
 
+AC_ARG_ENABLE([upstart],
+    [  --enable-upstart
+       Do not build support for the Upstart init system [default=yes]])
+
+AC_ARG_ENABLE([systemd],
+    [  --enable-systemd
+       Do not build support for the Systemd init system [default=yes]])
+
 AC_ARG_WITH(ais,
     [  --with-ais     
        Support the Corosync messaging and membership layer ],
@@ -1127,20 +1135,24 @@ AC_SUBST(BUILD_VERSION)
 
 
 HAVE_gio=1
+HAVE_upstart=0
+HAVE_systemd=0
 PKG_CHECK_MODULES(GIO, gio-2.0, ,HAVE_gio=0)
 
-if test $HAVE_gio = 1; then
+if test $HAVE_gio = 1 -a "x${enable_upstart}" != xno; then
+   HAVE_upstart=1
    PCMK_FEATURES="$PCMK_FEATURES upstart"
 fi
 
-AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_gio, Support upstart based system services)
-AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_gio = 1)
+AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system services)
+AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 
-if test $HAVE_gio = 1; then
+if test $HAVE_gio = 1 -a "x${enable_systemd}" != xno; then
+   HAVE_systemd=1
    PCMK_FEATURES="$PCMK_FEATURES systemd"
 fi
-AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_gio, Support systemd based system services)
-AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_gio = 1)
+AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
+AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
 
 
 STACKS=""
