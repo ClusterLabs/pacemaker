@@ -17,6 +17,9 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
+testdir			= $(testdir)/lrmd
+test_PYTHON		= regression.py
+
 lrmdlibdir	= $(CRM_DAEMON_DIR)
 
 ## binary progs
