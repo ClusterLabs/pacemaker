@@ -227,7 +227,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
             hash1 = native_merge_weights(constraint->rsc_rh, resource1->id, hash1,
                                          constraint->node_attribute,
-                                         constraint->score / INFINITY, FALSE, FALSE);
+                                         (float) constraint->score / INFINITY, 0);
         }
 
         for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
@@ -237,7 +237,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
             hash1 = native_merge_weights(constraint->rsc_lh, resource1->id, hash1,
                                          constraint->node_attribute,
-                                         constraint->score / INFINITY, FALSE, TRUE);
+                                         (float) constraint->score / INFINITY, pe_weights_positive);
         }
 
         for (gIter = resource2->parent->rsc_cons; gIter; gIter = gIter->next) {
@@ -247,7 +247,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
             hash2 = native_merge_weights(constraint->rsc_rh, resource2->id, hash2,
                                          constraint->node_attribute,
-                                         constraint->score / INFINITY, FALSE, FALSE);
+                                         (float) constraint->score / INFINITY, 0);
         }
 
         for (gIter = resource2->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
@@ -257,7 +257,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
             hash2 = native_merge_weights(constraint->rsc_lh, resource2->id, hash2,
                                          constraint->node_attribute,
-                                         constraint->score / INFINITY, FALSE, TRUE);
+                                         (float) constraint->score / INFINITY, pe_weights_positive);
         }
 
         /* Current location score */
@@ -514,7 +514,8 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         rsc->allowed_nodes =
             constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
                                                     constraint->node_attribute,
-                                                    constraint->score / INFINITY, TRUE, TRUE);
+                                                    (float) constraint->score / INFINITY,
+                                                    (pe_weights_rollback | pe_weights_positive));
     }
 
     gIter = rsc->rsc_tickets;
@@ -1565,4 +1566,59 @@ clone_append_meta(resource_t * rsc, xmlNode * xml)
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_NODEMAX);
     crm_xml_add_int(xml, name, clone_data->clone_node_max);
     free(name);
+}
+
+GHashTable *
+clone_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
+                     float factor, enum pe_weights flags)
+{
+    node_t *node = NULL;
+    GHashTable *allowed = NULL;
+    GListPtr gIter = NULL;
+    GHashTableIter iter;
+
+    nodes = rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
+
+    if (flags & pe_weights_positive) {
+        return nodes;
+    }
+
+    allowed = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
+
+    /* Check to see if there are any nodes in the allowed_nodes
+     * list that none of the children are capable of running on */
+    gIter = rsc->children;
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child = (resource_t *) gIter->data;
+
+        g_hash_table_iter_init(&iter, child->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+            gpointer p = g_hash_table_lookup(allowed, node->details->id);
+            int prev_score = p ? GPOINTER_TO_INT(p) : -INFINITY;
+            int new_score = node->weight > prev_score ? node->weight : prev_score;
+
+            g_hash_table_replace(allowed, (gpointer) (node->details->id), GINT_TO_POINTER(new_score));
+        }
+
+    }
+
+    g_hash_table_iter_init(&iter, nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+        gpointer p = g_hash_table_lookup(allowed, node->details->id);
+
+        if (!p) {
+            continue;
+        }
+
+        /* This basically says, if there are nodes none
+         * of the clones will run on, factor that into the colocation
+         * rule.  Otherwise ignore the native clone instances. */
+        if (GPOINTER_TO_INT(p) == -INFINITY) {
+            node->weight = merge_weights(-INFINITY * factor, node->weight);
+        }
+    }
+
+    g_hash_table_destroy(allowed);
+
+    return nodes;
 }

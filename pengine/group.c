@@ -479,7 +479,7 @@ group_expand(resource_t * rsc, pe_working_set_t * data_set)
 
 GHashTable *
 group_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                    int factor, gboolean allow_rollback, gboolean only_positive)
+                    float factor, enum pe_weights flags)
 {
     GListPtr gIter = rsc->rsc_cons_lhs;
     group_variant_data_t *group_data = NULL;
@@ -495,14 +495,14 @@ group_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const
 
     nodes =
         group_data->first_child->cmds->merge_weights(group_data->first_child, rhs, nodes, attr,
-                                                     factor, allow_rollback, only_positive);
+                                                     factor, flags);
 
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
         nodes = native_merge_weights(constraint->rsc_lh, rsc->id, nodes,
                                      constraint->node_attribute,
-                                     constraint->score / INFINITY, allow_rollback, only_positive);
+                                     (float) constraint->score / INFINITY, flags);
     }
 
     clear_bit(rsc->flags, pe_rsc_merging);

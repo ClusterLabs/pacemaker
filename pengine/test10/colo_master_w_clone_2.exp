@@ -1,0 +1,590 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="5" operation="stop" operation_key="dummy:0_stop_0" on_node="node1" on_node_uuid="node1">
+        <primitive id="dummy:0" long-id="dummies:dummy:0" class="ocf" provider="heartbeat" type="anything"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" binfile="/home/alqualos/dummy/dummy" crm_feature_set="3.0.6" logfile="/home/alqualos/dummy/dummy.log" pidfile="/home/alqualos/dummy/dummy.pid" user="alqualos"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="14" operation="stop" operation_key="dummies_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1" priority="1000000">
+    <action_set>
+      <pseudo_event id="15" operation="stopped" operation_key="dummies_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="5" operation="stop" operation_key="dummy:0_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="14" operation="stop" operation_key="dummies_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="14" operation="stop" operation_key="dummies_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3" priority="1000000">
+    <action_set>
+      <rsc_op id="77" operation="notify" operation_key="drbd_pgdrive:0_post_notify_demote_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="drbd_pgdrive:0" long-id="ms_drbd_pgdrive:drbd_pgdrive:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_pgdrive:1 " CRM_meta_notify_demote_uname="node1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_pgdrive:1 " CRM_meta_notify_master_uname="node1 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd_pgdrive:0 " CRM_meta_notify_promote_uname="node2 " CRM_meta_notify_slave_resource="drbd_pgdrive:0 " CRM_meta_notify_slave_uname="node2 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="45" operation="notify" operation_key="ms_drbd_pgdrive_post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="76" operation="notify" operation_key="drbd_pgdrive:0_pre_notify_demote_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="drbd_pgdrive:0" long-id="ms_drbd_pgdrive:drbd_pgdrive:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_pgdrive:1 " CRM_meta_notify_demote_uname="node1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_pgdrive:1 " CRM_meta_notify_master_uname="node1 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd_pgdrive:0 " CRM_meta_notify_promote_uname="node2 " CRM_meta_notify_slave_resource="drbd_pgdrive:0 " CRM_meta_notify_slave_uname="node2 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="notify" operation_key="ms_drbd_pgdrive_pre_notify_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5" priority="1000000">
+    <action_set>
+      <rsc_op id="73" operation="notify" operation_key="drbd_pgdrive:0_post_notify_promote_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="drbd_pgdrive:0" long-id="ms_drbd_pgdrive:drbd_pgdrive:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_pgdrive:1 " CRM_meta_notify_demote_uname="node1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_pgdrive:1 " CRM_meta_notify_master_uname="node1 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd_pgdrive:0 " CRM_meta_notify_promote_uname="node2 " CRM_meta_notify_slave_resource="drbd_pgdrive:0 " CRM_meta_notify_slave_uname="node2 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="39" operation="notify" operation_key="ms_drbd_pgdrive_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="72" operation="notify" operation_key="drbd_pgdrive:0_pre_notify_promote_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="drbd_pgdrive:0" long-id="ms_drbd_pgdrive:drbd_pgdrive:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_pgdrive:1 " CRM_meta_notify_demote_uname="node1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_pgdrive:1 " CRM_meta_notify_master_uname="node1 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd_pgdrive:0 " CRM_meta_notify_promote_uname="node2 " CRM_meta_notify_slave_resource="drbd_pgdrive:0 " CRM_meta_notify_slave_uname="node2 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="37" operation="notify" operation_key="ms_drbd_pgdrive_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="18" operation="promote" operation_key="drbd_pgdrive:0_promote_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="drbd_pgdrive:0" long-id="ms_drbd_pgdrive:drbd_pgdrive:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_pgdrive:1 " CRM_meta_notify_demote_uname="node1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_pgdrive:1 " CRM_meta_notify_master_uname="node1 " CRM_meta_notify_promote_resource="drbd_pgdrive:0 " CRM_meta_notify_promote_uname="node2 " CRM_meta_notify_slave_resource="drbd_pgdrive:0 " CRM_meta_notify_slave_uname="node2 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="1" operation="cancel" operation_key="drbd_pgdrive:0_monitor_15000" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="promote" operation_key="ms_drbd_pgdrive_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="1" operation="cancel" operation_key="drbd_pgdrive:0_monitor_15000" on_node="node2" on_node_uuid="node2">
+        <primitive id="drbd_pgdrive:0" long-id="ms_drbd_pgdrive:drbd_pgdrive:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_operation="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9" priority="1000000">
+    <action_set>
+      <rsc_op id="79" operation="notify" operation_key="drbd_pgdrive:1_post_notify_demote_0" on_node="node1" on_node_uuid="node1">
+        <primitive id="drbd_pgdrive:1" long-id="ms_drbd_pgdrive:drbd_pgdrive:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_pgdrive:1 " CRM_meta_notify_demote_uname="node1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_pgdrive:1 " CRM_meta_notify_master_uname="node1 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd_pgdrive:0 " CRM_meta_notify_promote_uname="node2 " CRM_meta_notify_slave_resource="drbd_pgdrive:0 " CRM_meta_notify_slave_uname="node2 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="45" operation="notify" operation_key="ms_drbd_pgdrive_post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="78" operation="notify" operation_key="drbd_pgdrive:1_pre_notify_demote_0" on_node="node1" on_node_uuid="node1">
+        <primitive id="drbd_pgdrive:1" long-id="ms_drbd_pgdrive:drbd_pgdrive:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_pgdrive:1 " CRM_meta_notify_demote_uname="node1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_pgdrive:1 " CRM_meta_notify_master_uname="node1 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd_pgdrive:0 " CRM_meta_notify_promote_uname="node2 " CRM_meta_notify_slave_resource="drbd_pgdrive:0 " CRM_meta_notify_slave_uname="node2 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="notify" operation_key="ms_drbd_pgdrive_pre_notify_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11" priority="1000000">
+    <action_set>
+      <rsc_op id="75" operation="notify" operation_key="drbd_pgdrive:1_post_notify_promote_0" on_node="node1" on_node_uuid="node1">
+        <primitive id="drbd_pgdrive:1" long-id="ms_drbd_pgdrive:drbd_pgdrive:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_pgdrive:1 " CRM_meta_notify_demote_uname="node1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_pgdrive:1 " CRM_meta_notify_master_uname="node1 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd_pgdrive:0 " CRM_meta_notify_promote_uname="node2 " CRM_meta_notify_slave_resource="drbd_pgdrive:0 " CRM_meta_notify_slave_uname="node2 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="39" operation="notify" operation_key="ms_drbd_pgdrive_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="74" operation="notify" operation_key="drbd_pgdrive:1_pre_notify_promote_0" on_node="node1" on_node_uuid="node1">
+        <primitive id="drbd_pgdrive:1" long-id="ms_drbd_pgdrive:drbd_pgdrive:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_pgdrive:1 " CRM_meta_notify_demote_uname="node1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_pgdrive:1 " CRM_meta_notify_master_uname="node1 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd_pgdrive:0 " CRM_meta_notify_promote_uname="node2 " CRM_meta_notify_slave_resource="drbd_pgdrive:0 " CRM_meta_notify_slave_uname="node2 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="37" operation="notify" operation_key="ms_drbd_pgdrive_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="22" operation="monitor" operation_key="drbd_pgdrive:1_monitor_15000" on_node="node1" on_node_uuid="node1">
+        <primitive id="drbd_pgdrive:1" long-id="ms_drbd_pgdrive:drbd_pgdrive:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="20" operation="demote" operation_key="drbd_pgdrive:1_demote_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-post_notify_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="46" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="20" operation="demote" operation_key="drbd_pgdrive:1_demote_0" on_node="node1" on_node_uuid="node1">
+        <primitive id="drbd_pgdrive:1" long-id="ms_drbd_pgdrive:drbd_pgdrive:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_pgdrive:1 " CRM_meta_notify_demote_uname="node1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_pgdrive:1 " CRM_meta_notify_master_uname="node1 " CRM_meta_notify_promote_resource="drbd_pgdrive:0 " CRM_meta_notify_promote_uname="node2 " CRM_meta_notify_slave_resource="drbd_pgdrive:0 " CRM_meta_notify_slave_uname="node2 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="pgdrive"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="41" operation="demote" operation_key="ms_drbd_pgdrive_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15" priority="1000000">
+    <action_set>
+      <pseudo_event id="46" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-post_notify_demoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="45" operation="notify" operation_key="ms_drbd_pgdrive_post_notify_demoted_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="77" operation="notify" operation_key="drbd_pgdrive:0_post_notify_demote_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="79" operation="notify" operation_key="drbd_pgdrive:1_post_notify_demote_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16" priority="1000000">
+    <action_set>
+      <pseudo_event id="45" operation="notify" operation_key="ms_drbd_pgdrive_post_notify_demoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="42" operation="demoted" operation_key="ms_drbd_pgdrive_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-pre_notify_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <pseudo_event id="44" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-pre_notify_demote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="notify" operation_key="ms_drbd_pgdrive_pre_notify_demote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="76" operation="notify" operation_key="drbd_pgdrive:0_pre_notify_demote_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="78" operation="notify" operation_key="drbd_pgdrive:1_pre_notify_demote_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <pseudo_event id="43" operation="notify" operation_key="ms_drbd_pgdrive_pre_notify_demote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="19" priority="1000000">
+    <action_set>
+      <pseudo_event id="42" operation="demoted" operation_key="ms_drbd_pgdrive_demoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="20" operation="demote" operation_key="drbd_pgdrive:1_demote_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="41" operation="demote" operation_key="ms_drbd_pgdrive_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <pseudo_event id="41" operation="demote" operation_key="ms_drbd_pgdrive_demote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="44" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-pre_notify_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="58" operation="stopped" operation_key="postgres_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21" priority="1000000">
+    <action_set>
+      <pseudo_event id="40" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="39" operation="notify" operation_key="ms_drbd_pgdrive_post_notify_promoted_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="73" operation="notify" operation_key="drbd_pgdrive:0_post_notify_promote_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="75" operation="notify" operation_key="drbd_pgdrive:1_post_notify_promote_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22" priority="1000000">
+    <action_set>
+      <pseudo_event id="39" operation="notify" operation_key="ms_drbd_pgdrive_post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="36" operation="promoted" operation_key="ms_drbd_pgdrive_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="38" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <pseudo_event id="38" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="37" operation="notify" operation_key="ms_drbd_pgdrive_pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="72" operation="notify" operation_key="drbd_pgdrive:0_pre_notify_promote_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="74" operation="notify" operation_key="drbd_pgdrive:1_pre_notify_promote_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <pseudo_event id="37" operation="notify" operation_key="ms_drbd_pgdrive_pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25" priority="1000000">
+    <action_set>
+      <pseudo_event id="36" operation="promoted" operation_key="ms_drbd_pgdrive_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="18" operation="promote" operation_key="drbd_pgdrive:0_promote_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <pseudo_event id="35" operation="promote" operation_key="ms_drbd_pgdrive_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="38" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="42" operation="demoted" operation_key="ms_drbd_pgdrive_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <pseudo_event id="58" operation="stopped" operation_key="postgres_stopped_0">
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="47" operation="stop" operation_key="pgdrive_fs_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="49" operation="stop" operation_key="DBIP_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="52" operation="stop" operation_key="postgresql_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="57" operation="stop" operation_key="postgres_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <pseudo_event id="57" operation="stop" operation_key="postgres_stop_0">
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <pseudo_event id="56" operation="running" operation_key="postgres_running_0">
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="48" operation="start" operation_key="pgdrive_fs_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="50" operation="start" operation_key="DBIP_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="53" operation="start" operation_key="postgresql_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="55" operation="start" operation_key="postgres_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <pseudo_event id="55" operation="start" operation_key="postgres_start_0">
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="40" operation="notified" operation_key="ms_drbd_pgdrive_confirmed-post_notify_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="58" operation="stopped" operation_key="postgres_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <rsc_op id="48" operation="start" operation_key="pgdrive_fs_start_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="pgdrive_fs" long-id="postgres:pgdrive_fs" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="/dev/drbd0" directory="/hd2" fstype="ext4"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="47" operation="stop" operation_key="pgdrive_fs_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="55" operation="start" operation_key="postgres_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <rsc_op id="47" operation="stop" operation_key="pgdrive_fs_stop_0" on_node="node1" on_node_uuid="node1">
+        <primitive id="pgdrive_fs" long-id="postgres:pgdrive_fs" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="/dev/drbd0" directory="/hd2" fstype="ext4"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="49" operation="stop" operation_key="DBIP_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="57" operation="stop" operation_key="postgres_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="51" operation="monitor" operation_key="DBIP_monitor_10000" on_node="node2" on_node_uuid="node2">
+        <primitive id="DBIP" long-id="postgres:DBIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.6" ip="192.168.220.17"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="50" operation="start" operation_key="DBIP_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <rsc_op id="50" operation="start" operation_key="DBIP_start_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="DBIP" long-id="postgres:DBIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.6" ip="192.168.220.17"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="48" operation="start" operation_key="pgdrive_fs_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="49" operation="stop" operation_key="DBIP_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="55" operation="start" operation_key="postgres_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <rsc_op id="49" operation="stop" operation_key="DBIP_stop_0" on_node="node1" on_node_uuid="node1">
+        <primitive id="DBIP" long-id="postgres:DBIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.6" ip="192.168.220.17"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="52" operation="stop" operation_key="postgresql_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="57" operation="stop" operation_key="postgres_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="36">
+    <action_set>
+      <rsc_op id="54" operation="monitor" operation_key="postgresql_monitor_30000" on_node="node2" on_node_uuid="node2">
+        <primitive id="postgresql" long-id="postgres:postgresql" class="ocf" provider="heartbeat" type="pgsql"/>
+        <attributes CRM_meta_depth="0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.6" depth="0" pgdata="/hd2/pgsql"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="53" operation="start" operation_key="postgresql_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <rsc_op id="53" operation="start" operation_key="postgresql_start_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="postgresql" long-id="postgres:postgresql" class="ocf" provider="heartbeat" type="pgsql"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="120000" crm_feature_set="3.0.6" pgdata="/hd2/pgsql"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="50" operation="start" operation_key="DBIP_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="52" operation="stop" operation_key="postgresql_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="55" operation="start" operation_key="postgres_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="38">
+    <action_set>
+      <rsc_op id="52" operation="stop" operation_key="postgresql_stop_0" on_node="node1" on_node_uuid="node1">
+        <primitive id="postgresql" long-id="postgres:postgresql" class="ocf" provider="heartbeat" type="pgsql"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="120000" crm_feature_set="3.0.6" pgdata="/hd2/pgsql"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="57" operation="stop" operation_key="postgres_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="39">
+    <action_set>
+      <pseudo_event id="6" operation="all_stopped" operation_key="all_stopped">
+        <attributes crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="5" operation="stop" operation_key="dummy:0_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="47" operation="stop" operation_key="pgdrive_fs_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="49" operation="stop" operation_key="DBIP_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="52" operation="stop" operation_key="postgresql_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
+

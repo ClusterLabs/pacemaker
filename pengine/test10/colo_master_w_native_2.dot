@@ -1,0 +1,9 @@
+ digraph "g" {
+"A_monitor_10000 node2" [ style=bold color="green" fontcolor="black"]
+"A_start_0 node2" -> "A_monitor_10000 node2" [ style = bold]
+"A_start_0 node2" [ style=bold color="green" fontcolor="black"]
+"A_stop_0 node1" -> "A_start_0 node2" [ style = bold]
+"A_stop_0 node1" -> "all_stopped" [ style = bold]
+"A_stop_0 node1" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+}

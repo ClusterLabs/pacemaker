@@ -6,7 +6,7 @@ clone_color: conntrackd-stateful:1 allocation score on box2: 105
 clone_color: ms-conntrackd allocation score on box1: 0
 clone_color: ms-conntrackd allocation score on box2: 0
 conntrackd-stateful:0 promotion score on box1: -INFINITY
-conntrackd-stateful:1 promotion score on box2: 605
+conntrackd-stateful:1 promotion score on box2: 710
 group_color: externalip allocation score on box1: 0
 group_color: externalip allocation score on box2: 100
 group_color: internalip allocation score on box1: 0
@@ -19,8 +19,8 @@ native_color: conntrackd-stateful:0 allocation score on box1: 105
 native_color: conntrackd-stateful:0 allocation score on box2: 0
 native_color: conntrackd-stateful:1 allocation score on box1: -INFINITY
 native_color: conntrackd-stateful:1 allocation score on box2: 105
-native_color: externalip allocation score on box1: 0
-native_color: externalip allocation score on box2: 300
+native_color: externalip allocation score on box1: 105
+native_color: externalip allocation score on box2: 405
 native_color: internalip allocation score on box1: -INFINITY
 native_color: internalip allocation score on box2: 200
 native_color: sship allocation score on box1: -INFINITY

@@ -1,0 +1,173 @@
+<cib epoch="53" num_updates="8" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="node1" update-client="crm_resource" cib-last-written="Sat Jun 23 19:42:56 2012" have-quorum="1" dc-uuid="node2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-2.fc16-ee0730e13d124c3d58f00016c3376a1de5323cff"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1340463792"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node2" type="normal" uname="node2"/>
+      <node id="node1" type="normal" uname="node1"/>
+    </nodes>
+    <resources>
+      <clone id="dummies">
+        <meta_attributes id="dummies-meta_attributes">
+          <nvpair id="dummies-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="dummy" provider="heartbeat" type="anything">
+          <instance_attributes id="dummy-instance_attributes">
+            <nvpair id="dummy-instance_attributes-binfile" name="binfile" value="/home/alqualos/dummy/dummy"/>
+            <nvpair id="dummy-instance_attributes-pidfile" name="pidfile" value="/home/alqualos/dummy/dummy.pid"/>
+            <nvpair id="dummy-instance_attributes-user" name="user" value="alqualos"/>
+            <nvpair id="dummy-instance_attributes-logfile" name="logfile" value="/home/alqualos/dummy/dummy.log"/>
+          </instance_attributes>
+          <operations>
+            <op id="dummy-monitor-10" interval="10" name="monitor"/>
+          </operations>
+        </primitive>
+      </clone>
+      <master id="ms_drbd_pgdrive">
+        <meta_attributes id="ms_drbd_pgdrive-meta_attributes">
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-notify" name="notify" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd_pgdrive" provider="linbit" type="drbd">
+          <instance_attributes id="drbd_pgdrive-instance_attributes">
+            <nvpair id="drbd_pgdrive-instance_attributes-drbd_resource" name="drbd_resource" value="pgdrive"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd_pgdrive-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd_pgdrive-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd_pgdrive-monitor-15" interval="15" name="monitor"/>
+          </operations>
+        </primitive>
+      </master>
+      <group id="postgres">
+        <primitive class="ocf" id="pgdrive_fs" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="pgdrive_fs-instance_attributes">
+            <nvpair id="pgdrive_fs-instance_attributes-device" name="device" value="/dev/drbd0"/>
+            <nvpair id="pgdrive_fs-instance_attributes-directory" name="directory" value="/hd2"/>
+            <nvpair id="pgdrive_fs-instance_attributes-fstype" name="fstype" value="ext4"/>
+          </instance_attributes>
+          <operations>
+            <op id="pgdrive_fs-start-0" interval="0" name="start" timeout="60"/>
+            <op id="pgdrive_fs-stop-0" interval="0" name="stop" timeout="60"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="DBIP" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="DBIP-instance_attributes">
+            <nvpair id="DBIP-instance_attributes-ip" name="ip" value="192.168.220.17"/>
+            <nvpair id="DBIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+          </instance_attributes>
+          <operations>
+            <op id="DBIP-monitor-10" interval="10" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="postgresql" provider="heartbeat" type="pgsql">
+          <instance_attributes id="postgresql-instance_attributes">
+            <nvpair id="postgresql-instance_attributes-pgdata" name="pgdata" value="/hd2/pgsql"/>
+          </instance_attributes>
+          <operations>
+            <op id="postgresql-monitor-30" interval="30" name="monitor" timeout="30">
+              <instance_attributes id="postgresql-monitor-30-instance_attributes">
+                <nvpair id="postgresql-monitor-30-instance_attributes-depth" name="depth" value="0"/>
+              </instance_attributes>
+            </op>
+            <op id="postgresql-start-0" interval="0" name="start" timeout="120"/>
+            <op id="postgresql-stop-0" interval="0" name="stop" timeout="120"/>
+          </operations>
+        </primitive>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_colocation id="postgres_on_drbd" rsc="postgres" score="INFINITY" with-rsc="ms_drbd_pgdrive" with-rsc-role="Master"/>
+      <rsc_order first="ms_drbd_pgdrive" first-action="promote" id="postgres_after_drbd" score="INFINITY" then="postgres" then-action="start"/>
+      <rsc_colocation id="drbd_on_dummy" with-rsc="ms_drbd_pgdrive" with-rsc-role="Master" score="50000" rsc="dummies"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair id="rsc-options-resource-stickiness" name="resource-stickiness" value="10"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="node2" uname="node2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="node2">
+        <instance_attributes id="status-node2">
+          <nvpair id="status-node2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-node2-last-failure-DBIP" name="last-failure-DBIP" value="1340450899"/>
+          <nvpair id="status-node2-last-failure-dummy.0" name="last-failure-dummy:0" value="1340451185"/>
+          <nvpair id="status-node2-master-drbd_pgdrive.0" name="master-drbd_pgdrive:0" value="10000"/>
+          <nvpair id="status-node2-last-failure-postgresql" name="last-failure-postgresql" value="1340452317"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="drbd_pgdrive:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd_pgdrive:0_last_0" operation_key="drbd_pgdrive:0_demote_0" operation="demote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="20:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;20:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="103" rc-code="0" op-status="0" interval="0" op-digest="c6eab4d1e87199b153e56d1a97d0e16f" last-run="1340466054" last-rc-change="1340466054" exec-time="100" queue-time="0"/>
+            <lrm_rsc_op id="drbd_pgdrive:0_monitor_15000" operation_key="drbd_pgdrive:0_monitor_15000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="21:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;21:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="107" rc-code="0" op-status="0" interval="15000" last-rc-change="1340466055" exec-time="120" queue-time="10" op-digest="97a5cebe345cfa3fc35fbb57201bc2ac"/>
+          </lrm_resource>
+          <lrm_resource id="pgdrive_fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pgdrive_fs_last_0" operation_key="pgdrive_fs_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="50:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;50:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="102" rc-code="0" op-status="0" interval="0" op-digest="0276d7c44908c77a9b830318d11487de" last-run="1340466054" last-rc-change="1340466054" exec-time="230" queue-time="0"/>
+            <lrm_rsc_op id="pgdrive_fs_last_failure_0" operation_key="pgdrive_fs_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="7:53:7:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;7:53:7:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="60" rc-code="0" op-status="0" interval="0" op-digest="0276d7c44908c77a9b830318d11487de"/>
+          </lrm_resource>
+          <lrm_resource id="postgresql" type="pgsql" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="postgresql_last_0" operation_key="postgresql_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="55:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;55:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="99" rc-code="0" op-status="0" interval="0" op-digest="d06ba306d8206358b128884971a338bf" last-run="1340466053" last-rc-change="1340466053" exec-time="1350" queue-time="0"/>
+            <lrm_rsc_op id="postgresql_monitor_30000" operation_key="postgresql_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="51:91:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;51:91:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="98" rc-code="0" op-status="0" interval="30000" op-digest="01e29dfc01c220857a1ff363b85e6507" last-rc-change="1340466046" exec-time="200" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="DBIP" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="DBIP_last_0" operation_key="DBIP_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="52:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;52:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="101" rc-code="0" op-status="0" interval="0" op-digest="7c14f16d01462efa7f8fe49495fc9f9f" last-run="1340466054" last-rc-change="1340466054" exec-time="120" queue-time="0"/>
+            <lrm_rsc_op id="DBIP_monitor_10000" operation_key="DBIP_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="49:91:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;49:91:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="96" rc-code="0" op-status="0" interval="10000" op-digest="e069aadd0e0a95a712d879c971aca48f" last-rc-change="1340466044" exec-time="160" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="dummy:1" type="anything" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dummy:1_last_0" operation_key="dummy:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="11:87:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;11:87:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="88" rc-code="0" op-status="0" interval="0" last-run="1340466029" last-rc-change="1340466029" exec-time="120" queue-time="0" op-digest="7851f4d523295b6f32a398ae4a74838a"/>
+            <lrm_rsc_op id="dummy:1_monitor_10000" operation_key="dummy:1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="12:87:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;12:87:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="89" rc-code="0" op-status="0" interval="10000" last-rc-change="1340466029" exec-time="30" queue-time="0" op-digest="bfe5fe8007a08f194ceeddccd2a27b2c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node1" uname="node1" crmd="online" crm-debug-origin="do_update_resource" ha="active" in_ccm="true" join="member" expected="member" shutdown="0">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1">
+          <nvpair id="status-node1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-node1-last-failure-DBIP" name="last-failure-DBIP" value="1340450898"/>
+          <nvpair id="status-node1-master-drbd_pgdrive.1" name="master-drbd_pgdrive:1" value="10000"/>
+          <nvpair id="status-node1-last-failure-pgdrive_fs" name="last-failure-pgdrive_fs" value="1340453835"/>
+          <nvpair id="status-node1-last-failure-dummy.1" name="last-failure-dummy:1" value="1340454512"/>
+          <nvpair id="status-node1-last-failure-dummy.0" name="last-failure-dummy:0" value="1340466176"/>
+          <nvpair id="status-node1-fail-count-dummy.0" name="fail-count-dummy:0" value="INFINITY"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="postgresql" type="pgsql" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="postgresql_last_0" operation_key="postgresql_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="56:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;56:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="93" rc-code="0" op-status="0" interval="0" op-digest="d06ba306d8206358b128884971a338bf" last-run="1340466057" last-rc-change="1340466057" exec-time="1910" queue-time="0"/>
+            <lrm_rsc_op id="postgresql_monitor_30000" operation_key="postgresql_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="57:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;57:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="94" rc-code="0" op-status="0" interval="30000" last-rc-change="1340466058" exec-time="220" queue-time="0" op-digest="01e29dfc01c220857a1ff363b85e6507"/>
+          </lrm_resource>
+          <lrm_resource id="pgdrive_fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pgdrive_fs_last_0" operation_key="pgdrive_fs_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="51:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;51:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="90" rc-code="0" op-status="0" interval="0" op-digest="0276d7c44908c77a9b830318d11487de" last-run="1340466056" last-rc-change="1340466056" exec-time="200" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="drbd_pgdrive:1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd_pgdrive:1_last_0" operation_key="drbd_pgdrive:1_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="25:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;25:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="88" rc-code="0" op-status="0" interval="0" op-digest="c6eab4d1e87199b153e56d1a97d0e16f" last-run="1340466055" last-rc-change="1340466055" exec-time="110" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="DBIP" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="DBIP_last_0" operation_key="DBIP_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="53:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;53:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="91" rc-code="0" op-status="0" interval="0" op-digest="7c14f16d01462efa7f8fe49495fc9f9f" last-run="1340466056" last-rc-change="1340466056" exec-time="340" queue-time="0"/>
+            <lrm_rsc_op id="DBIP_monitor_10000" operation_key="DBIP_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="54:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;54:92:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="92" rc-code="0" op-status="0" interval="10000" last-rc-change="1340466056" exec-time="250" queue-time="0" op-digest="e069aadd0e0a95a712d879c971aca48f"/>
+          </lrm_resource>
+          <lrm_resource id="dummy:0" type="anything" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dummy:0_last_0" operation_key="dummy:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:95:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;6:95:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="95" rc-code="0" op-status="0" interval="0" last-run="1340466176" last-rc-change="1340466176" exec-time="40" queue-time="0" op-digest="7851f4d523295b6f32a398ae4a74838a"/>
+            <lrm_rsc_op id="dummy:0_monitor_10000" operation_key="dummy:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="11:89:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:0;11:89:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="83" rc-code="0" op-status="0" interval="10000" last-rc-change="1340466035" exec-time="40" queue-time="0" op-digest="bfe5fe8007a08f194ceeddccd2a27b2c"/>
+            <lrm_rsc_op id="dummy:0_last_failure_0" operation_key="dummy:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="11:95:0:812264cc-9115-4c95-9dae-3ba792745a5d" transition-magic="0:1;11:95:0:812264cc-9115-4c95-9dae-3ba792745a5d" call-id="96" rc-code="1" op-status="0" interval="0" last-rc-change="1340466176" exec-time="120" queue-time="0" op-digest="7851f4d523295b6f32a398ae4a74838a" last-run="1340466176"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
