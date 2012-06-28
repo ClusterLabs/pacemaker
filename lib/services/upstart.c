@@ -88,8 +88,10 @@ upstart_init(void)
 
 void upstart_cleanup(void)
 {
-    g_object_unref(upstart_proxy);
-    upstart_proxy = NULL;
+    if (upstart_proxy) {
+        g_object_unref(upstart_proxy);
+        upstart_proxy = NULL;
+    }
 }
 
 static gboolean
@@ -196,7 +198,11 @@ upstart_job_property(const char *obj, const gchar *iface, const char *name)
 
     crm_info("Calling GetAll on %s", obj);
     proxy = get_proxy(obj, BUS_PROPERTY_IFACE);
-    
+
+    if (!proxy) {
+        return NULL;
+    }
+
     _ret = g_dbus_proxy_call_sync (
         proxy, "GetAll", g_variant_new ("(s)", iface),
         G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
@@ -222,6 +228,7 @@ upstart_job_property(const char *obj, const gchar *iface, const char *name)
     }
 
     g_object_unref(proxy);
+    g_variant_unref(_ret);
     return output;
 }
 
@@ -251,6 +258,7 @@ get_first_instance(const gchar *job)
     }
     
     crm_info("Result: %s", instance);
+    g_variant_unref(_ret);
     return instance;
 }
 
@@ -279,6 +287,7 @@ upstart_job_running(const gchar *name)
                 free(state);
             }
         }
+        free(instance);
     }
 
     crm_info("%s is%s running", name, pass?"":" not");
@@ -350,6 +359,9 @@ upstart_job_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_d
     
     operation_finalize(op);
     g_object_unref(proxy);
+    if (_ret) {
+        g_variant_unref(_ret);
+    }
 }
 
 gboolean
@@ -444,6 +456,9 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
     free(job);
     if(job_proxy) {
         g_object_unref(job_proxy);
+    }
+    if (_ret) {
+        g_variant_unref(_ret);
     }
     return op->rc == PCMK_EXECRA_OK;
 }
