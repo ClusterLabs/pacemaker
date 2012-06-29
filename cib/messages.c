@@ -339,7 +339,8 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
     } else if (xml_has_children(delete_spec) == FALSE) {
         /*  only leaves are deleted */
         crm_debug("Removing leaf: <%s id=%s>", crm_str(object_name), crm_str(object_id));
-        zap_xml_from_parent(parent, equiv_node);
+        free_xml_from_parent(parent, equiv_node);
+        equiv_node = NULL;
 
     } else {
         xmlNode *child = NULL;

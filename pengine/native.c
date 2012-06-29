@@ -680,7 +680,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
         const char *result = "Ignoring";
 
         if (is_optional) {
-            char *local_key = crm_strdup(key);
+            char *local_key = strdup(key);
 
             log_level = LOG_INFO;
             result = "Cancelling";
@@ -689,7 +689,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
             mon = custom_action(rsc, local_key, RSC_CANCEL, node, FALSE, TRUE, data_set);
 
             free(mon->task);
-            mon->task = crm_strdup(RSC_CANCEL);
+            mon->task = strdup(RSC_CANCEL);
             add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
             add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
 
@@ -758,7 +758,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 
     if (node == NULL || is_set(rsc->flags, pe_rsc_managed)) {
         custom_action_order(rsc, start_key(rsc), NULL,
-                            NULL, crm_strdup(key), mon,
+                            NULL, strdup(key), mon,
                             pe_order_implies_then | pe_order_runnable_left, data_set);
 
         if (rsc->next_role == RSC_ROLE_MASTER) {
@@ -855,14 +855,14 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         possible_matches = find_actions_exact(rsc->actions, key, node);
         if (possible_matches) {
             action_t *cancel_op = NULL;
-            char *local_key = crm_strdup(key);
+            char *local_key = strdup(key);
 
             g_list_free(possible_matches);
 
             cancel_op = custom_action(rsc, local_key, RSC_CANCEL, node, FALSE, TRUE, data_set);
 
             free(cancel_op->task);
-            cancel_op->task = crm_strdup(RSC_CANCEL);
+            cancel_op->task = strdup(RSC_CANCEL);
             add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL, interval);
             add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, name);
 
@@ -911,7 +911,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
             g_list_free(possible_matches);
         }
 
-        stopped_mon = custom_action(rsc, crm_strdup(key), name, stop_node,
+        stopped_mon = custom_action(rsc, strdup(key), name, stop_node,
                                     is_optional, TRUE, data_set);
 
         rc_inactive = crm_itoa(PCMK_EXECRA_NOT_RUNNING);
@@ -935,7 +935,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 
                 if (is_set(rsc->flags, pe_rsc_managed)) {
                     custom_action_order(NULL, NULL, probe_complete,
-                                        NULL, crm_strdup(key), stopped_mon,
+                                        NULL, strdup(key), stopped_mon,
                                         pe_order_optional, data_set);
                 }
                 break;
@@ -963,8 +963,8 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
             }
 
             if (is_set(rsc->flags, pe_rsc_managed)) {
-                custom_action_order(rsc, crm_strdup(stop_op_key), stop,
-                                    NULL, crm_strdup(key), stopped_mon,
+                custom_action_order(rsc, strdup(stop_op_key), stop,
+                                    NULL, strdup(key), stopped_mon,
                                     pe_order_implies_then | pe_order_runnable_left, data_set);
             }
 
@@ -1191,7 +1191,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 
         custom_action_order(rsc, stop_key(rsc), NULL,
-                            NULL, crm_strdup(all_stopped->task), all_stopped,
+                            NULL, strdup(all_stopped->task), all_stopped,
                             pe_order_implies_then | pe_order_runnable_left, data_set);
     }
 
@@ -1229,10 +1229,10 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                 update_action_flags(load_stopped, pe_action_optional | pe_action_clear);
             }
 
-            custom_action_order(NULL, crm_strdup(load_stopped_task), load_stopped,
+            custom_action_order(NULL, strdup(load_stopped_task), load_stopped,
                                 rsc, start_key(rsc), NULL, pe_order_load, data_set);
 
-            custom_action_order(NULL, crm_strdup(load_stopped_task), load_stopped,
+            custom_action_order(NULL, strdup(load_stopped_task), load_stopped,
                                 rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL,
                                 pe_order_load, data_set);
 
@@ -1972,7 +1972,7 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
         && rsc->variant == pe_native && safe_str_eq(class, "stonith")) {
         action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 
-        custom_action_order(NULL, crm_strdup(all_stopped->task), all_stopped,
+        custom_action_order(NULL, strdup(all_stopped->task), all_stopped,
                             rsc, stop_key(rsc), NULL,
                             pe_order_optional | pe_order_stonith_stop, data_set);
     }
@@ -2129,7 +2129,7 @@ DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t *
                   optional ? pe_order_implies_then : pe_order_optional, data_set);
 
 #if DELETE_THEN_REFRESH
-    refresh = custom_action(NULL, crm_strdup(CRM_OP_LRM_REFRESH), CRM_OP_LRM_REFRESH,
+    refresh = custom_action(NULL, strdup(CRM_OP_LRM_REFRESH), CRM_OP_LRM_REFRESH,
                             node, FALSE, TRUE, data_set);
 
     add_hash_param(refresh->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
@@ -2281,7 +2281,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_st
 
         crm_trace("Ordering %s action before stonith events", key);
         custom_action_order(rsc, key, NULL,
-                            NULL, crm_strdup(ready->task), ready,
+                            NULL, strdup(ready->task), ready,
                             pe_order_optional | pe_order_implies_then, data_set);
 
     } else {
@@ -2393,10 +2393,10 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
             crm_info("Creating secondary notification for %s", action->uuid);
 
             collect_notification_data(rsc, TRUE, FALSE, n_data);
-            g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_resource"),
-                                crm_strdup(rsc->id));
-            g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_uname"),
-                                crm_strdup(action->node->details->uname));
+            g_hash_table_insert(n_data->keys, strdup("notify_stop_resource"),
+                                strdup(rsc->id));
+            g_hash_table_insert(n_data->keys, strdup("notify_stop_uname"),
+                                strdup(action->node->details->uname));
             create_notifications(uber_parent(rsc), n_data, data_set);
             free_notification_data(n_data);
         }
@@ -2428,7 +2428,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
    *
    custom_action_order(
    rsc, stop_key(rsc), NULL,
-   NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
+   NULL,strdup(CRM_OP_FENCE),stonith_op,
    pe_order_optional, data_set);
 */
     }
@@ -2965,7 +2965,7 @@ ReloadRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t * 
 
     free(rewrite->uuid);
     free(rewrite->task);
-    rewrite->task = crm_strdup("reload");
+    rewrite->task = strdup("reload");
     rewrite->uuid = generate_op_key(rsc->id, rewrite->task, 0);
 }
 

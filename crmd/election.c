@@ -207,11 +207,11 @@ do_election_check(long long action,
         if (voted_size > num_members) {
             char *data = NULL;
 
-            data = crm_strdup("member");
+            data = strdup("member");
             g_hash_table_foreach(crm_peer_cache, log_member_uname, data);
             free(data);
 
-            data = crm_strdup("voted");
+            data = strdup("voted");
             g_hash_table_foreach(voted, log_node, data);
             free(data);
 
@@ -316,8 +316,8 @@ do_election_count_vote(long long action,
         done = TRUE;
 
     } else if (crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
-        char *op_copy = crm_strdup(op);
-        char *uname_copy = crm_strdup(vote_from);
+        char *op_copy = strdup(op);
+        char *uname_copy = strdup(vote_from);
 
         CRM_ASSERT(crm_str_eq(fsa_our_uuid, election_owner, TRUE));
 
@@ -327,8 +327,8 @@ do_election_count_vote(long long action,
         done = TRUE;
 
     } else if (crm_str_eq(vote_from, fsa_our_uname, TRUE)) {
-        char *op_copy = crm_strdup(op);
-        char *uname_copy = crm_strdup(vote_from);
+        char *op_copy = strdup(op);
+        char *uname_copy = strdup(vote_from);
 
         CRM_ASSERT(crm_str_eq(fsa_our_uuid, election_owner, TRUE));
 

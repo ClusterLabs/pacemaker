@@ -897,7 +897,7 @@ dump_xml(xmlNode *an_xml_node, gboolean formatted, gboolean for_digest)
 	    buffer = calloc(1, len);
 	    snprintf(buffer, len, " %s\n", (char *)xml_buffer->content);
 	} else {
-	    buffer = crm_strdup((char *)xml_buffer->content);	    
+	    buffer = strdup((char *)xml_buffer->content);	    
 	}
 
     } else {
@@ -1101,7 +1101,7 @@ crm_element_value_copy(xmlNode *data, const char *name)
     char *value_copy = NULL;
     const char *value = crm_element_value(data, name);
     if(value != NULL) {
-	value_copy = crm_strdup(value);
+	value_copy = strdup(value);
     }
     return value_copy;
 }
@@ -1879,7 +1879,7 @@ xml2list(xmlNode *parent)
 		
 	crm_trace("Added %s=%s", p_name, p_value);
 		
-	g_hash_table_insert(nvpair_hash, crm_strdup(p_name), crm_strdup(p_value));
+	g_hash_table_insert(nvpair_hash, strdup(p_name), strdup(p_value));
     }
 
     for(child = __xml_first_child(nvpair_list); child != NULL; child = __xml_next(child)) {
@@ -1888,7 +1888,7 @@ xml2list(xmlNode *parent)
 	    const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
 	    crm_trace("Added %s=%s", key, value);
 	    if(key != NULL && value != NULL) {
-		g_hash_table_insert(nvpair_hash, crm_strdup(key), crm_strdup(value));		
+		g_hash_table_insert(nvpair_hash, strdup(key), strdup(value));		
 	    }
 	}
     }
@@ -2440,7 +2440,7 @@ gboolean validate_xml_verbose(xmlNode *xml_blob)
     char *filename = NULL;
     static char *template = NULL;
     if(template == NULL) {
-	template = crm_strdup(CRM_STATE_DIR"/cib-invalid.XXXXXX");
+	template = strdup(CRM_STATE_DIR"/cib-invalid.XXXXXX");
     }
     
     filename = mktemp(template);
@@ -2844,7 +2844,7 @@ get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
     len += strlen(xpath_prefix);
     len += strlen(xpath);
 
-    xpath_full = crm_strdup(xpath_prefix);
+    xpath_full = strdup(xpath_prefix);
     xpath_full = realloc(xpath_full, len+1);
     strncat(xpath_full, xpath, len);
 

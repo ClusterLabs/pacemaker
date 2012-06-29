@@ -322,7 +322,7 @@ cib_remote_listen(gpointer data)
     new_client->id = crm_generate_uuid();
 
 #if ENABLE_ACL
-    new_client->user = crm_strdup(user);
+    new_client->user = strdup(user);
 #endif
 
     new_client->callback_id = NULL;
@@ -419,20 +419,20 @@ cib_remote_msg(gpointer data)
     if (client->name == NULL) {
         value = crm_element_value(command, F_CLIENTNAME);
         if (value == NULL) {
-            client->name = crm_strdup(client->id);
+            client->name = strdup(client->id);
         } else {
-            client->name = crm_strdup(value);
+            client->name = strdup(value);
         }
     }
 
     if (client->callback_id == NULL) {
         value = crm_element_value(command, F_CIB_CALLBACK_TOKEN);
         if (value != NULL) {
-            client->callback_id = crm_strdup(value);
+            client->callback_id = strdup(value);
             crm_trace("Callback channel for %s is %s", client->id, client->callback_id);
 
         } else {
-            client->callback_id = crm_strdup(client->id);
+            client->callback_id = strdup(client->id);
         }
     }
 

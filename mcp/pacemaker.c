@@ -263,19 +263,19 @@ start_child(pcmk_child_t * child)
         (void)setsid();
 
         /* Setup the two alternate arg arrarys */
-        opts_vgrind[0] = crm_strdup(VALGRIND_BIN);
+        opts_vgrind[0] = strdup(VALGRIND_BIN);
         if (use_callgrind) {
-            opts_vgrind[1] = crm_strdup("--tool=callgrind");
-            opts_vgrind[2] = crm_strdup("--callgrind-out-file=" CRM_STATE_DIR "/callgrind.out.%p");
-            opts_vgrind[3] = crm_strdup(child->command);
+            opts_vgrind[1] = strdup("--tool=callgrind");
+            opts_vgrind[2] = strdup("--callgrind-out-file=" CRM_STATE_DIR "/callgrind.out.%p");
+            opts_vgrind[3] = strdup(child->command);
             opts_vgrind[4] = NULL;
         } else {
-            opts_vgrind[1] = crm_strdup(child->command);
+            opts_vgrind[1] = strdup(child->command);
             opts_vgrind[2] = NULL;
             opts_vgrind[3] = NULL;
             opts_vgrind[4] = NULL;
         }
-        opts_default[0] = crm_strdup(child->command);;
+        opts_default[0] = strdup(child->command);;
 
 #if 0
         /* Dont set the group for now - it prevents connection to the cluster */
@@ -409,7 +409,7 @@ static void
 build_path(const char *path_c, mode_t mode)
 {
     int offset = 1, len = 0;
-    char *path = crm_strdup(path_c);
+    char *path = strdup(path_c);
 
     CRM_CHECK(path != NULL, return);
     for (len = strlen(path); offset < len; offset++) {
@@ -582,7 +582,7 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
             crm_notice("%p Node %u now known as %s%s%s", node, id, uname,
                      node->uname?node->uname:", was: ", node->uname?node->uname:"");
             free(node->uname);
-            node->uname = crm_strdup(uname);
+            node->uname = strdup(uname);
             changed = TRUE;
         }
 

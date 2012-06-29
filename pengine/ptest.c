@@ -101,7 +101,7 @@ create_action_name(action_t * action)
         action_name = crm_concat(action->uuid, action_host, ' ');
 
     } else if (is_set(action->flags, pe_action_pseudo)) {
-        action_name = crm_strdup(action->uuid);
+        action_name = strdup(action->uuid);
 
     } else {
         action_host = "<none>";

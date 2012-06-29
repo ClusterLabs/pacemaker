@@ -123,7 +123,7 @@ get_corosync_uuid(uint32_t id, const char *uname)
         }
 
     } else if (uname != NULL) {
-        return crm_strdup(uname);
+        return strdup(uname);
     }
 
     return NULL;
@@ -156,7 +156,7 @@ get_node_uuid(uint32_t id, const char *uname)
         case pcmk_cluster_cman:
         case pcmk_cluster_classic_ais:
             if (uname) {
-                uuid = crm_strdup(uname);
+                uuid = strdup(uname);
             }
             break;
 
@@ -175,7 +175,7 @@ get_node_uuid(uint32_t id, const char *uname)
     }
 
     if (uname) {
-        g_hash_table_insert(crm_uuid_cache, crm_strdup(uname), uuid);
+        g_hash_table_insert(crm_uuid_cache, strdup(uname), uuid);
         return g_hash_table_lookup(crm_uuid_cache, uname);
     }
 
@@ -328,7 +328,7 @@ get_uname(const char *uuid)
 
         if (uname) {
             crm_trace("Storing %s = %s", uuid, uname);
-            g_hash_table_insert(crm_uname_cache, crm_strdup(uuid), crm_strdup(uname));
+            g_hash_table_insert(crm_uname_cache, strdup(uuid), strdup(uname));
         }
     }
 #endif
@@ -338,7 +338,7 @@ get_uname(const char *uuid)
         if (heartbeat_cluster != NULL && uuid != NULL) {
             cl_uuid_t uuid_raw;
             char *hb_uname = NULL;
-            char *uuid_copy = crm_strdup(uuid);
+            char *uuid_copy = strdup(uuid);
 
             cl_uuid_parse(uuid_copy, &uuid_raw);
             hb_uname = malloc( MAX_NAME);

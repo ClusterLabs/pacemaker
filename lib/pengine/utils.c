@@ -365,11 +365,11 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
         action->rsc = rsc;
         CRM_ASSERT(task != NULL);
-        action->task = crm_strdup(task);
+        action->task = strdup(task);
         if (on_node) {
             action->node = node_copy(on_node);
         }
-        action->uuid = crm_strdup(key);
+        action->uuid = strdup(key);
 
         pe_set_action_bit(action, pe_action_failure_is_fatal);
         pe_set_action_bit(action, pe_action_runnable);
@@ -536,7 +536,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
             const char *prop_name = (const char *)xIter->name;
             const char *prop_value = crm_element_value(xml_obj, prop_name);
 
-            g_hash_table_replace(action->meta, crm_strdup(prop_name), crm_strdup(prop_value));
+            g_hash_table_replace(action->meta, strdup(prop_name), strdup(prop_value));
         }
     }
 
@@ -686,7 +686,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         interval = crm_get_interval(value);
         if (interval > 0) {
             value_ms = crm_itoa(interval);
-            g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
+            g_hash_table_replace(action->meta, strdup(field), value_ms);
 
         } else {
             g_hash_table_remove(action->meta, field);
@@ -702,7 +702,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         }
         start_delay = value_i;
         value_ms = crm_itoa(value_i);
-        g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
+        g_hash_table_replace(action->meta, strdup(field), value_ms);
 
     } else if (interval > 0 && g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN)) {
         char *date_str = NULL;
@@ -710,7 +710,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         ha_time_t *origin = NULL;
 
         value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN);
-        date_str = crm_strdup(value);
+        date_str = strdup(value);
         date_str_mutable = date_str;
         origin = parse_date(&date_str_mutable);
         free(date_str);
@@ -734,7 +734,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
             /* log_date(LOG_DEBUG_5, "delay", delay, ha_log_date|ha_log_time|ha_log_local); */
 
             crm_info("Calculated a start delay of %llus for %s", delay_s, ID(xml_obj));
-            g_hash_table_replace(action->meta, crm_strdup(XML_OP_ATTR_START_DELAY),
+            g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
                                  crm_itoa(delay_s * 1000));
             start_delay = delay_s * 1000;
             free_ha_date(origin);
@@ -753,7 +753,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
     }
     value_i += start_delay;
     value_ms = crm_itoa(value_i);
-    g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
+    g_hash_table_replace(action->meta, strdup(field), value_ms);
 }
 
 static xmlNode *
@@ -841,7 +841,7 @@ print_node(const char *pre_text, node_t * node, gboolean details)
               node->details->uname, node->weight, node->fixed ? "True" : "False");
 
     if (details && node != NULL && node->details != NULL) {
-        char *pe_mutable = crm_strdup("\t\t");
+        char *pe_mutable = strdup("\t\t");
         GListPtr gIter = node->details->running_rsc;
 
         crm_trace("\t\t===Node Attributes");
@@ -1292,7 +1292,7 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
 {
     struct fail_search search = { rsc, 0, 0, NULL };
 
-    search.key = crm_strdup(rsc->id);
+    search.key = strdup(rsc->id);
 
     if (is_not_set(rsc->flags, pe_rsc_unique)) {
         int lpc = 0;
@@ -1453,7 +1453,7 @@ get_pseudo_op(const char *name, pe_working_set_t * data_set)
         g_list_free(possible_matches);
 
     } else {
-        op = custom_action(NULL, crm_strdup(op_s), op_s, NULL, TRUE, TRUE, data_set);
+        op = custom_action(NULL, strdup(op_s), op_s, NULL, TRUE, TRUE, data_set);
         set_bit_inplace(op->flags, pe_action_pseudo);
         set_bit_inplace(op->flags, pe_action_runnable);
     }
@@ -1498,14 +1498,14 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 
         crm_trace("Creaing ticket entry for %s", ticket_id);
 
-        ticket->id = crm_strdup(ticket_id);
+        ticket->id = strdup(ticket_id);
         ticket->granted = FALSE;
         ticket->last_granted = -1;
         ticket->standby = FALSE;
         ticket->state = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                               g_hash_destroy_str, g_hash_destroy_str);
 
-        g_hash_table_insert(data_set->tickets, crm_strdup(ticket->id), ticket);
+        g_hash_table_insert(data_set->tickets, strdup(ticket->id), ticket);
     }
 
     return ticket;

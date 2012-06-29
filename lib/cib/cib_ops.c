@@ -145,7 +145,7 @@ cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
         int_value = atoi(old_value);
         sprintf(new_value, "%d", ++int_value);
     } else {
-        new_value = crm_strdup("1");
+        new_value = strdup("1");
     }
 
     crm_trace("%s %d(%s)->%s", field, int_value, crm_str(old_value), crm_str(new_value));
@@ -375,7 +375,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                 if (remove != NULL) {
                     crm_trace("Replacing node <%s> in <%s>",
                               replace_item, crm_element_name(target));
-                    zap_xml_from_parent(target, remove);
+                    free_xml_from_parent(target, remove);
+                    remove = NULL;
                 }
                 free(replace_item);
                 last = lpc + 1;

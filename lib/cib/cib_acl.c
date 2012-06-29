@@ -590,7 +590,7 @@ update_xml_perms(xmlNode * xml, acl_obj_t * acl_obj, GHashTable * xml_perms)
             }
 
             g_hash_table_insert(perm->attribute_perms,
-                                crm_strdup(acl_obj->attribute), crm_strdup(acl_obj->mode));
+                                strdup(acl_obj->attribute), strdup(acl_obj->mode));
             crm_trace("Permission for attribute: attribute_mode=%s, tag=%s, id=%s attribute=%s",
                       acl_obj->mode, crm_element_name(xml),
                       crm_element_value(xml, XML_ATTR_ID), acl_obj->attribute);

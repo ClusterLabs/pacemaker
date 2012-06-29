@@ -110,7 +110,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
         was_processing_error = FALSE;
         was_processing_warning = FALSE;
 
-        graph_file = crm_strdup(CRM_STATE_DIR "/graph.XXXXXX");
+        graph_file = strdup(CRM_STATE_DIR "/graph.XXXXXX");
         graph_file = mktemp(graph_file);
 
         set_working_set_defaults(&data_set);

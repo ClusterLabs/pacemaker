@@ -169,7 +169,7 @@ main(int argc, char **argv)
             case 'K':
                 DO_RESET = TRUE;
                 crm_trace("Option %c => %s", flag, optarg);
-                dest_node = crm_strdup(optarg);
+                dest_node = strdup(optarg);
                 crmd_operation = CRM_OP_LOCAL_SHUTDOWN;
                 break;
             case 'q':
@@ -178,17 +178,17 @@ main(int argc, char **argv)
             case 'i':
                 DO_DEBUG = debug_inc;
                 crm_trace("Option %c => %s", flag, optarg);
-                dest_node = crm_strdup(optarg);
+                dest_node = strdup(optarg);
                 break;
             case 'd':
                 DO_DEBUG = debug_dec;
                 crm_trace("Option %c => %s", flag, optarg);
-                dest_node = crm_strdup(optarg);
+                dest_node = strdup(optarg);
                 break;
             case 'S':
                 DO_HEALTH = TRUE;
                 crm_trace("Option %c => %s", flag, optarg);
-                dest_node = crm_strdup(optarg);
+                dest_node = strdup(optarg);
                 break;
             case 'E':
                 DO_ELECT_DC = TRUE;

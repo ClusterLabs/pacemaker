@@ -173,7 +173,7 @@ svc_action_t *resources_action_create(
         if (op->agent[0] == '/') {
              /* if given an absolute path, use that instead
              * of tacking on the LSB_ROOT_DIR path to the front */
-            op->opaque->exec = crm_strdup(op->agent);
+            op->opaque->exec = strdup(op->agent);
         } else if (asprintf(&op->opaque->exec, "%s/%s", LSB_ROOT_DIR, op->agent) == -1) {
             goto return_error;
         }

@@ -454,7 +454,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
         const char *tmp = crm_element_value(xml_search, attr);
 
         if (tmp) {
-            *value = crm_strdup(tmp);
+            *value = strdup(tmp);
         }
     }
 
@@ -817,7 +817,7 @@ move_resource(const char *rsc_id,
     free(id);
 
     if (move_lifetime) {
-        char *life = crm_strdup(move_lifetime);
+        char *life = strdup(move_lifetime);
         char *life_mutable = life;
 
         ha_time_t *now = NULL;
@@ -1394,7 +1394,7 @@ main(int argc, char **argv)
                 crm_help(flag, EX_OK);
                 break;
             case 'x':
-                xml_file = crm_strdup(optarg);
+                xml_file = strdup(optarg);
                 break;
             case 'Q':
                 BE_QUIET = TRUE;
@@ -1406,7 +1406,7 @@ main(int argc, char **argv)
                 attr_set_type = XML_TAG_UTILIZATION;
                 break;
             case 'u':
-                move_lifetime = crm_strdup(optarg);
+                move_lifetime = strdup(optarg);
                 break;
             case 'f':
                 do_force = TRUE;
@@ -1613,7 +1613,7 @@ main(int argc, char **argv)
             }
 
             if (op->stdout_data) {
-                local_copy = crm_strdup(op->stdout_data);
+                local_copy = strdup(op->stdout_data);
                 more = strlen(local_copy);
                 last = 0;
 
@@ -1627,7 +1627,7 @@ main(int argc, char **argv)
                 free(local_copy);
             }
             if (op->stderr_data) {
-                local_copy = crm_strdup(op->stderr_data);
+                local_copy = strdup(op->stderr_data);
                 more = strlen(local_copy);
                 last = 0;
 

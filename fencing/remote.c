@@ -290,11 +290,11 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
 
     if(op->originator == NULL) {
 	/* Local request */
-	op->originator = crm_strdup(stonith_our_uname);
+	op->originator = strdup(stonith_our_uname);
     }
 
     if(client) {
-        op->client_id = crm_strdup(client);
+        op->client_id = strdup(client);
     }
     op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
     op->request = copy_xml(request); /* TODO: Figure out how to avoid this */
@@ -309,7 +309,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
 
         if(node) {
             free(op->target);
-            op->target = crm_strdup(node->uname);
+            op->target = strdup(node->uname);
         }
     }
 
@@ -526,13 +526,13 @@ int process_remote_stonith_query(xmlNode *msg)
 
     crm_debug("Query result from %s (%d devices)", host, devices);
     result = calloc(1, sizeof(st_query_result_t));
-    result->host = crm_strdup(host);
+    result->host = strdup(host);
     result->devices = devices;
 
     for (child = __xml_first_child(dev); child != NULL; child = __xml_next(child)) {
         const char *device = ID(child);
         if(device) {
-            result->device_list = g_list_prepend(result->device_list, crm_strdup(device));
+            result->device_list = g_list_prepend(result->device_list, strdup(device));
         }
     }
 

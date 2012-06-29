@@ -314,11 +314,11 @@ main(int argc, char ** argv)
 		    if(quiet || !verbose) {
 			continue;
 		    } else if(hp->action == NULL) {
-			action_s = crm_strdup("unknown");
+			action_s = strdup("unknown");
 		    } else if(hp->action[0] != 'r') {
 			action_s = crm_concat("turn", hp->action, ' ');
 		    } else {
-			action_s = crm_strdup(hp->action);
+			action_s = strdup(hp->action);
 		    }
 			
 		    if(hp->state == st_failed) {
@@ -348,11 +348,11 @@ main(int argc, char ** argv)
 			char *action_s = NULL;
 			time_t complete = latest->completed;
 			if(latest->action == NULL) {
-			    action_s = crm_strdup("unknown");
+			    action_s = strdup("unknown");
 			} else if(latest->action[0] != 'r') {
 			    action_s = crm_concat("turn", latest->action, ' ');
 			} else {
-			    action_s = crm_strdup(latest->action);
+			    action_s = strdup(latest->action);
 			}
 			
 			printf("%s was able to %s node %s on behalf of %s at %s\n",

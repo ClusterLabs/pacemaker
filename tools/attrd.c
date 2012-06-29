@@ -265,7 +265,7 @@ find_hash_entry(xmlNode * msg)
         /* create one and add it */
         crm_info("Creating hash entry for %s", attr);
         hash_entry = calloc(1, sizeof(attr_hash_entry_t));
-        hash_entry->id = crm_strdup(attr);
+        hash_entry->id = strdup(attr);
 
         g_hash_table_insert(attr_hash, hash_entry->id, hash_entry);
         hash_entry = g_hash_table_lookup(attr_hash, attr);
@@ -275,7 +275,7 @@ find_hash_entry(xmlNode * msg)
     value = crm_element_value(msg, F_ATTRD_SET);
     if (value != NULL) {
         free(hash_entry->set);
-        hash_entry->set = crm_strdup(value);
+        hash_entry->set = strdup(value);
         crm_debug("\t%s->set: %s", attr, value);
     }
 
@@ -284,13 +284,13 @@ find_hash_entry(xmlNode * msg)
         value = XML_CIB_TAG_STATUS;
     }
     free(hash_entry->section);
-    hash_entry->section = crm_strdup(value);
+    hash_entry->section = strdup(value);
     crm_trace("\t%s->section: %s", attr, value);
 
     value = crm_element_value(msg, F_ATTRD_DAMPEN);
     if (value != NULL) {
         free(hash_entry->dampen);
-        hash_entry->dampen = crm_strdup(value);
+        hash_entry->dampen = strdup(value);
 
         hash_entry->timeout = crm_get_msec(value);
         crm_trace("\t%s->timeout: %s", attr, value);
@@ -300,7 +300,7 @@ find_hash_entry(xmlNode * msg)
 
     value = crm_element_value(msg, F_ATTRD_USER);
     if (value != NULL) {
-        hash_entry->user = crm_strdup(value);
+        hash_entry->user = strdup(value);
         crm_trace("\t%s->user: %s", attr, value);
     }
 #endif
@@ -645,7 +645,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
                 free(hash_entry->stored_value);
                 hash_entry->stored_value = NULL;
                 if (data->value != NULL) {
-                    hash_entry->stored_value = crm_strdup(data->value);
+                    hash_entry->stored_value = strdup(data->value);
                 }
             }
             break;
@@ -728,9 +728,9 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
     }
 
     data = calloc(1, sizeof(struct attrd_callback_s));
-    data->attr = crm_strdup(hash_entry->id);
+    data->attr = strdup(hash_entry->id);
     if (hash_entry->value != NULL) {
-        data->value = crm_strdup(hash_entry->value);
+        data->value = strdup(hash_entry->value);
     }
     add_cib_op_callback(cib_conn, rc, FALSE, data, attrd_cib_callback);
 
@@ -769,7 +769,7 @@ attrd_local_callback(xmlNode * msg)
         const char *key = crm_element_value(msg, F_ATTRD_KEY);
 
         if (key) {
-            hash_entry->uuid = crm_strdup(key);
+            hash_entry->uuid = strdup(key);
         }
     }
 
@@ -818,7 +818,7 @@ attrd_local_callback(xmlNode * msg)
     free(hash_entry->value);
     hash_entry->value = NULL;
     if (value != NULL) {
-        hash_entry->value = crm_strdup(value);
+        hash_entry->value = strdup(value);
         crm_debug("New value of %s is %s", attr, value);
     }
 

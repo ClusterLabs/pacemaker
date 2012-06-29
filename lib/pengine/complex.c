@@ -324,7 +324,7 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
         rsc_set = create_xml_node(NULL, XML_CONS_TAG_RSC_SET);
         crm_xml_add(rsc_set, XML_ATTR_ID, template_ref);
 
-        g_hash_table_insert(data_set->template_rsc_sets, crm_strdup(template_ref), rsc_set);
+        g_hash_table_insert(data_set->template_rsc_sets, strdup(template_ref), rsc_set);
     }
 
     rsc_ref = create_xml_node(rsc_set, XML_TAG_RESOURCE_REF);
@@ -401,13 +401,13 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         add_hash_param((*rsc)->meta, XML_RSC_ATTR_INCARNATION, value);
 
     } else {
-        (*rsc)->id = crm_strdup(id);
+        (*rsc)->id = strdup(id);
     }
 
     if (parent) {
         (*rsc)->long_name = crm_concat(parent->long_name, (*rsc)->id, ':');
     } else {
-        (*rsc)->long_name = crm_strdup((*rsc)->id);
+        (*rsc)->long_name = strdup((*rsc)->id);
     }
 
     (*rsc)->fns = &resource_class_functions[(*rsc)->variant];

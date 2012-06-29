@@ -283,9 +283,9 @@ create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
 
     op = calloc(1, sizeof(lrmd_event_data_t));
 
-    op->rsc_id = crm_strdup(ID(cib_resource));
+    op->rsc_id = strdup(ID(cib_resource));
     op->interval = interval;
-    op->op_type = crm_strdup(task);
+    op->op_type = strdup(task);
 
     op->rc = outcome;
     op->op_status = 0;
@@ -644,7 +644,7 @@ create_action_name(action_t * action)
         action_name = crm_concat(action->uuid, action_host, ' ');
 
     } else if (is_set(action->flags, pe_action_pseudo)) {
-        action_name = crm_strdup(action->uuid);
+        action_name = strdup(action->uuid);
 
     } else {
         action_host = "<none>";
@@ -1284,7 +1284,7 @@ main(int argc, char **argv)
                 node_fail = g_list_append(node_fail, optarg);
                 break;
             case 't':
-                use_date = crm_strdup(optarg);
+                use_date = strdup(optarg);
                 break;
             case 'i':
                 modified++;

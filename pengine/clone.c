@@ -1119,7 +1119,7 @@ clone_child_action(action_t * action)
                 char *task_mutable = NULL;
 
                 lpc++;
-                task_mutable = crm_strdup(key + lpc);
+                task_mutable = strdup(key + lpc);
                 task_mutable[stop - lpc] = 0;
 
                 crm_trace("Extracted action '%s' from '%s'", task_mutable, key);

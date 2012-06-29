@@ -142,7 +142,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         send_cluster_message(join_to, crm_msg_crmd, offer, TRUE);
         free_xml(offer);
 
-        g_hash_table_insert(welcomed_nodes, crm_strdup(join_to), join_offered);
+        g_hash_table_insert(welcomed_nodes, strdup(join_to), join_offered);
     } else {
         crm_info("Peer process on %s is not active (yet?): %.8lx %d",
                  join_to, (long)member->processes, g_hash_table_size(crm_peer_cache));
@@ -320,7 +320,7 @@ do_dc_join_filter_offer(long long action,
 
     } else if (max_generation_xml == NULL) {
         max_generation_xml = copy_xml(generation);
-        max_generation_from = crm_strdup(join_from);
+        max_generation_from = strdup(join_from);
 
     } else if (cmp < 0 || (cmp == 0 && safe_str_eq(join_from, fsa_our_uname))) {
         crm_debug("%s has a better generation number than"
@@ -333,7 +333,7 @@ do_dc_join_filter_offer(long long action,
         free(max_generation_from);
         free_xml(max_generation_xml);
 
-        max_generation_from = crm_strdup(join_from);
+        max_generation_from = strdup(join_from);
         max_generation_xml = copy_xml(join_ack->xml);
     }
 
@@ -346,7 +346,7 @@ do_dc_join_filter_offer(long long action,
     }
 
     /* add them to our list of CRMD_STATE_ACTIVE nodes */
-    g_hash_table_insert(integrated_nodes, crm_strdup(join_from), crm_strdup(ack_nack));
+    g_hash_table_insert(integrated_nodes, strdup(join_from), strdup(ack_nack));
 
     crm_debug("%u nodes have been integrated into join-%d",
               g_hash_table_size(integrated_nodes), join_id);
@@ -395,13 +395,13 @@ do_dc_join_finalize(long long action,
 
     if (is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
         /* ask for the agreed best CIB */
-        sync_from = crm_strdup(max_generation_from);
+        sync_from = strdup(max_generation_from);
         crm_log_xml_debug(max_generation_xml, "Requesting version");
         set_bit_inplace(fsa_input_register, R_CIB_ASKED);
 
     } else {
         /* Send _our_ CIB out to everyone */
-        sync_from = crm_strdup(fsa_our_uname);
+        sync_from = strdup(fsa_our_uname);
     }
 
     crm_info("join-%d: Syncing the CIB from %s to the rest of the cluster",
@@ -514,7 +514,7 @@ do_dc_join_ack(long long action,
         crm_err("join-%d: hash already contains confirmation from %s", join_id, join_from);
     }
 
-    g_hash_table_insert(confirmed_nodes, crm_strdup(join_from), crm_strdup(join_id_s));
+    g_hash_table_insert(confirmed_nodes, strdup(join_from), strdup(join_id_s));
 
     crm_info("join-%d: Updating node state to %s for %s",
              join_id, CRMD_JOINSTATE_MEMBER, join_from);
@@ -573,7 +573,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
                   current_join_id, join_to, join_state);
         crm_xml_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
         g_hash_table_insert(finalized_nodes,
-                            crm_strdup(join_to), crm_strdup(CRMD_JOINSTATE_MEMBER));
+                            strdup(join_to), strdup(CRMD_JOINSTATE_MEMBER));
     } else {
         crm_warn("join-%d: NACK'ing join request from %s, state %s",
                  current_join_id, join_to, join_state);
@@ -624,11 +624,11 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
                     " AND %d finalized nodes",
                     current_join_id,
                     g_hash_table_size(integrated_nodes), g_hash_table_size(finalized_nodes));
-            msg = crm_strdup("Integrated node");
+            msg = strdup("Integrated node");
             g_hash_table_foreach(integrated_nodes, ghash_print_node, msg);
             free(msg);
 
-            msg = crm_strdup("Finalized node");
+            msg = strdup("Finalized node");
             g_hash_table_foreach(finalized_nodes, ghash_print_node, msg);
             free(msg);
 

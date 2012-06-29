@@ -506,10 +506,10 @@ process_hello_message(xmlNode * hello,
         return FALSE;
     }
 
-    *uuid = crm_strdup(local_uuid);
-    *client_name = crm_strdup(local_client_name);
-    *major_version = crm_strdup(local_major_version);
-    *minor_version = crm_strdup(local_minor_version);
+    *uuid = strdup(local_uuid);
+    *client_name = strdup(local_client_name);
+    *major_version = strdup(local_major_version);
+    *minor_version = strdup(local_minor_version);
 
     crm_trace("Hello message ok");
     return TRUE;
@@ -592,8 +592,8 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
         crm_trace("Accepted client %s", crm_str(table_key));
 
         curr_client->table_key = table_key;
-        curr_client->sub_sys = crm_strdup(client_name);
-        curr_client->uuid = crm_strdup(uuid);
+        curr_client->sub_sys = strdup(client_name);
+        curr_client->uuid = strdup(uuid);
 
         g_hash_table_insert(ipc_clients, table_key, curr_client->ipc);
 

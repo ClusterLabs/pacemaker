@@ -156,13 +156,13 @@ main(int argc, char **argv)
                 break;
             case 'U':
             case 'N':
-                dest_uname = crm_strdup(optarg);
+                dest_uname = strdup(optarg);
                 break;
             case 'u':
-                dest_node = crm_strdup(optarg);
+                dest_node = strdup(optarg);
                 break;
             case 's':
-                set_name = crm_strdup(optarg);
+                set_name = strdup(optarg);
                 break;
             case 'l':
             case 't':
@@ -173,10 +173,10 @@ main(int argc, char **argv)
                 set_type = XML_TAG_UTILIZATION;
                 break;
             case 'n':
-                attr_name = crm_strdup(optarg);
+                attr_name = strdup(optarg);
                 break;
             case 'i':
-                attr_id = crm_strdup(optarg);
+                attr_id = strdup(optarg);
                 break;
             case 'r':
                 rsc_id = optarg;
@@ -279,7 +279,7 @@ main(int argc, char **argv)
                        attr_id, attr_name, &read_value, TRUE);
 
         if (rc == -ENXIO && attr_default) {
-            read_value = crm_strdup(attr_default);
+            read_value = strdup(attr_default);
             rc = pcmk_ok;
         }
 

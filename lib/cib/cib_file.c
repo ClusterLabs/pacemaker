@@ -81,7 +81,7 @@ cib_file_new(const char *cib_location)
     if (cib_location == NULL) {
         cib_location = getenv("CIB_file");
     }
-    private->filename = crm_strdup(cib_location);
+    private->filename = strdup(cib_location);
 
     /* assign variant specific ops */
     cib->cmds->variant_op = cib_file_perform_op;

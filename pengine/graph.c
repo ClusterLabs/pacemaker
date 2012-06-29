@@ -132,7 +132,7 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
 
   done:
     if (uuid == NULL) {
-        uuid = crm_strdup(old_uuid);
+        uuid = strdup(old_uuid);
     }
 
     if (free_original) {
@@ -467,7 +467,7 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
         crm_trace("Ordering %s before shutdown on %s", action->uuid, node->details->uname);
         clear_bit_inplace(action->flags, pe_action_optional);
         custom_action_order(action->rsc, NULL, action,
-                            NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
+                            NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,
                             pe_order_optional|pe_order_runnable_left, data_set);
     }
 

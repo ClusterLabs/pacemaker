@@ -186,7 +186,7 @@ crm_new_peer(unsigned int id, const char *uname)
     crm_debug("Creating entry for node %s/%u", uname, id);
 
     node = calloc(1, sizeof(crm_node_t));
-    node->state = crm_strdup("unknown");
+    node->state = strdup("unknown");
 
     if (id > 0) {
         node->id = id;
@@ -195,7 +195,7 @@ crm_new_peer(unsigned int id, const char *uname)
     }
 
     if (uname) {
-        node->uname = crm_strdup(uname);
+        node->uname = strdup(uname);
         CRM_ASSERT(node->uname != NULL);
         crm_info("Node %u is now known as %s", id, node->uname);
         g_hash_table_replace(crm_peer_cache, node->uname, node);
@@ -206,7 +206,7 @@ crm_new_peer(unsigned int id, const char *uname)
             if (node->uuid) {
                 crm_info("Node %u has uuid %s", id, node->uuid);
             } else {
-                node->uuid = crm_strdup(uuid);
+                node->uuid = strdup(uuid);
             }
         }
 
@@ -257,7 +257,7 @@ crm_get_peer(unsigned int id, const char *uname)
     CRM_ASSERT(node);
 
     if (node && uname && node->uname == NULL) {
-        node->uname = crm_strdup(uname);
+        node->uname = strdup(uname);
         crm_info("Node %u is now known as %s", id, uname);
         g_hash_table_insert(crm_peer_cache, node->uname, node);
         if (crm_status_callback) {
@@ -271,7 +271,7 @@ crm_get_peer(unsigned int id, const char *uname)
         if (node->uuid) {
             crm_info("Node %u has uuid %s", id, node->uuid);
         } else if (uuid) {
-            node->uuid = crm_strdup(uuid);
+            node->uuid = strdup(uuid);
         }
     }
 
@@ -317,7 +317,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
         node->votes = votes;
         node->processes = children;
         if (addr) {
-            node->addr = crm_strdup(addr);
+            node->addr = strdup(addr);
         }
     }
 
@@ -332,7 +332,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
             node->uuid = get_corosync_uuid(id, uname);
 
         } else if (uuid != NULL) {
-            node->uuid = crm_strdup(uuid);
+            node->uuid = strdup(uuid);
         }
     }
 
@@ -354,7 +354,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
     if (state != NULL && safe_str_neq(node->state, state)) {
         char *last = node->state;
 
-        node->state = crm_strdup(state);
+        node->state = strdup(state);
         state_changed = TRUE;
 
         if (crm_status_callback) {
@@ -371,7 +371,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
         if (node->addr == NULL || crm_str_eq(node->addr, addr, FALSE) == FALSE) {
             addr_changed = TRUE;
             free(node->addr);
-            node->addr = crm_strdup(addr);
+            node->addr = strdup(addr);
         }
     }
 

@@ -112,8 +112,8 @@ standalone_cfg_add_device(const char *device, const char *agent)
 	}
 	dev = calloc(1, sizeof(struct device));
 
-	dev->name = crm_strdup(device);
-	dev->agent = crm_strdup(agent);
+	dev->name = strdup(device);
+	dev->agent = strdup(agent);
 	add_device(dev);
 
 	return 0;
@@ -134,8 +134,8 @@ standalone_cfg_add_device_options(const char *device, const char *key, const cha
 		return -1;
 	}
 
-	dev->key_vals[dev->key_vals_count].key = crm_strdup(key);
-	dev->key_vals[dev->key_vals_count].val = crm_strdup(value);
+	dev->key_vals[dev->key_vals_count].key = strdup(key);
+	dev->key_vals[dev->key_vals_count].val = strdup(value);
 	dev->key_vals_count++;
 
 	return 0;
@@ -201,12 +201,12 @@ standalone_cfg_add_node_priority(const char *node, const char *device, unsigned 
 	if (!(topo = find_topology(node))) {
 		new = 1;
 		topo = calloc(1, sizeof(struct topology));
-		topo->node_name = crm_strdup(node);
+		topo->node_name = strdup(node);
 	} else if (topo->priority_levels_count >= STANDALONE_CFG_MAX_KEYVALS) {
 		return -1;
 	}
 
-	topo->priority_levels[topo->priority_levels_count].device_name = crm_strdup(device);
+	topo->priority_levels[topo->priority_levels_count].device_name = strdup(device);
 	topo->priority_levels[topo->priority_levels_count].level = level;
 	topo->priority_levels_count++;
 

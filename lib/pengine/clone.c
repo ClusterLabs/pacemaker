@@ -151,7 +151,7 @@ master_unpack(resource_t * rsc, pe_working_set_t * data_set)
     const char *master_max = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_MASTER_MAX);
     const char *master_node_max = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_MASTER_NODEMAX);
 
-    g_hash_table_replace(rsc->meta, crm_strdup("stateful"), crm_strdup(XML_BOOLEAN_TRUE));
+    g_hash_table_replace(rsc->meta, strdup("stateful"), strdup(XML_BOOLEAN_TRUE));
     if (clone_unpack(rsc, data_set)) {
         clone_variant_data_t *clone_data = NULL;
 

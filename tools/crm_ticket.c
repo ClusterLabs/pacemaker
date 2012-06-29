@@ -349,7 +349,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
         const char *tmp = crm_element_value(xml_search, attr);
 
         if (tmp) {
-            *value = crm_strdup(tmp);
+            *value = strdup(tmp);
         }
     }
 
@@ -725,7 +725,7 @@ main(int argc, char **argv)
                 do_force = TRUE;
                 break;
             case 'x':
-                xml_file = crm_strdup(optarg);
+                xml_file = strdup(optarg);
                 break;
             case 'n':
                 set_name = optarg;

@@ -66,7 +66,7 @@ lrmd_list_add(lrmd_list_t * head, const char *value)
     lrmd_list_t *p, *end;
 
     p = calloc(1, sizeof(lrmd_list_t));
-    p->val = crm_strdup(value);
+    p->val = strdup(value);
 
     end = head;
     while (end && end->next) {
@@ -103,8 +103,8 @@ lrmd_key_value_add(lrmd_key_value_t * head, const char *key, const char *value)
     lrmd_key_value_t *p, *end;
 
     p = calloc(1, sizeof(lrmd_key_value_t));
-    p->key = crm_strdup(key);
-    p->value = crm_strdup(value);
+    p->key = strdup(key);
+    p->value = strdup(value);
 
     end = head;
     while (end && end->next) {
@@ -137,7 +137,7 @@ lrmd_key_value_freeall(lrmd_key_value_t * head)
 static void
 dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-    g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
+    g_hash_table_replace(user_data, strdup(key), strdup(value));
 }
 
 lrmd_event_data_t *
@@ -152,10 +152,10 @@ lrmd_copy_event(lrmd_event_data_t * event)
      * dangling pointers to strings. */
     memcpy(copy, event, sizeof(lrmd_event_data_t));
 
-    copy->rsc_id = event->rsc_id ? crm_strdup(event->rsc_id) : NULL;
-    copy->op_type = event->op_type ? crm_strdup(event->op_type) : NULL;
-    copy->user_data = event->user_data ? crm_strdup(event->user_data) : NULL;
-    copy->output = event->output ? crm_strdup(event->output) : NULL;
+    copy->rsc_id = event->rsc_id ? strdup(event->rsc_id) : NULL;
+    copy->op_type = event->op_type ? strdup(event->op_type) : NULL;
+    copy->user_data = event->user_data ? strdup(event->user_data) : NULL;
+    copy->output = event->output ? strdup(event->output) : NULL;
 
     if (event->params) {
         copy->params = g_hash_table_new_full(crm_str_hash,
@@ -442,7 +442,7 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
                 rc = -EPROTO;
             } else {
                 crm_trace("Obtained registration token: %s", tmp_ticket);
-                native->token = crm_strdup(tmp_ticket);
+                native->token = strdup(tmp_ticket);
                 rc = pcmk_ok;
             }
         }
@@ -527,11 +527,11 @@ lrmd_copy_rsc_info(lrmd_rsc_info_t * rsc_info)
 
     copy = calloc(1, sizeof(lrmd_rsc_info_t));
 
-    copy->id = crm_strdup(rsc_info->id);
-    copy->type = crm_strdup(rsc_info->type);
-    copy->class = crm_strdup(rsc_info->class);
+    copy->id = strdup(rsc_info->id);
+    copy->type = strdup(rsc_info->type);
+    copy->class = strdup(rsc_info->class);
     if (rsc_info->provider) {
-        copy->provider = crm_strdup(rsc_info->provider);
+        copy->provider = strdup(rsc_info->provider);
     }
 
     return copy;
@@ -581,12 +581,12 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     }
 
     rsc_info = calloc(1, sizeof(lrmd_rsc_info_t));
-    rsc_info->id = crm_strdup(rsc_id);
-    rsc_info->class = crm_strdup(class);
+    rsc_info->id = strdup(rsc_id);
+    rsc_info->class = strdup(class);
     if (provider) {
-        rsc_info->provider = crm_strdup(provider);
+        rsc_info->provider = strdup(provider);
     }
-    rsc_info->type = crm_strdup(type);
+    rsc_info->type = strdup(type);
 
     free_xml(output);
     return rsc_info;
@@ -756,7 +756,7 @@ lsb_get_metadata(const char *type, char **output)
         g_string_free(l_dscrpt, TRUE);
     }
 
-    *output = crm_strdup(meta_data->str);
+    *output = strdup(meta_data->str);
     g_string_free(meta_data, TRUE);
 
     return pcmk_ok;
@@ -786,7 +786,7 @@ generic_get_metadata(const char *standard, const char *provider, const char *typ
         return -EIO;
     }
 
-    *output = crm_strdup(action->stdout_data);
+    *output = strdup(action->stdout_data);
     services_action_free(action);
 
     return pcmk_ok;

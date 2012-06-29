@@ -83,7 +83,7 @@ main(int argc, char **argv)
             case 'p':
             case 'D':
                 command = flag;
-                input_s = crm_strdup(optarg);
+                input_s = strdup(optarg);
                 break;
             case 'W':
                 print_options |= ha_date_weeks;

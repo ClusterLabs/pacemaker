@@ -119,11 +119,11 @@ update_failcount(xmlNode * event, const char *event_node, int rc, int target_rc,
     }
 
     if (failed_stop_offset == NULL) {
-        failed_stop_offset = crm_strdup(INFINITY_S);
+        failed_stop_offset = strdup(INFINITY_S);
     }
 
     if (failed_start_offset == NULL) {
-        failed_start_offset = crm_strdup(INFINITY_S);
+        failed_start_offset = strdup(INFINITY_S);
     }
 
     CRM_CHECK(on_uname != NULL, return TRUE);

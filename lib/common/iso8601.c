@@ -1368,7 +1368,7 @@ date_in_seconds_since_epoch(ha_time_t * a_date)
     normalize_time(a_date);
 
     if (the_epoch == NULL) {
-        char *EPOCH = crm_strdup("1970-01-01");
+        char *EPOCH = strdup("1970-01-01");
 
         the_epoch = parse_date(&EPOCH);
         normalize_time(the_epoch);

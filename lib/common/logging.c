@@ -519,7 +519,7 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         crm_system_name = entity;
 
     } else if (argc > 0 && argv != NULL) {
-        char *mutable = crm_strdup(argv[0]);
+        char *mutable = strdup(argv[0]);
 
         crm_system_name = basename(mutable);
         if (strstr(crm_system_name, "lt-") == crm_system_name) {

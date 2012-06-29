@@ -188,9 +188,9 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
                                                  g_hash_destroy_str, g_hash_destroy_str);
 
     if (reference) {
-        new_graph->source = crm_strdup(reference);
+        new_graph->source = strdup(reference);
     } else {
-        new_graph->source = crm_strdup("unknown");
+        new_graph->source = strdup("unknown");
     }
 
     if (xml_graph != NULL) {
@@ -302,9 +302,9 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
 
     op = calloc(1, sizeof(lrmd_event_data_t));
 
-    op->rsc_id = crm_strdup(ID(action_resource));
+    op->rsc_id = strdup(ID(action_resource));
     op->interval = action->interval;
-    op->op_type = crm_strdup(crm_element_value(action->xml, XML_LRM_ATTR_TASK));
+    op->op_type = strdup(crm_element_value(action->xml, XML_LRM_ATTR_TASK));
 
     op->rc = rc;
     op->op_status = status;
@@ -314,7 +314,7 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
 
     g_hash_table_iter_init(&iter, action->params);
     while (g_hash_table_iter_next(&iter, (void **)&name, (void **)&value)) {
-        g_hash_table_insert(op->params, crm_strdup(name), crm_strdup(value));
+        g_hash_table_insert(op->params, strdup(name), strdup(value));
     }
 
     for (xop = __xml_first_child(resource); xop != NULL; xop = __xml_next(xop)) {

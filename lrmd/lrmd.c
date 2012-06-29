@@ -101,7 +101,7 @@ create_lrmd_cmd(xmlNode * msg, lrmd_client_t * client)
     crm_element_value_int(msg, F_LRMD_CALLOPTS, &call_options);
 
     if (call_options & lrmd_opt_notify_orig_only) {
-        cmd->only_notify_client = crm_strdup(client->id);
+        cmd->only_notify_client = strdup(client->id);
     }
 
     crm_element_value_int(msg, F_LRMD_CALLID, &cmd->call_id);
@@ -468,7 +468,7 @@ action_complete(svc_action_t * action)
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
     if (action->stdout_data) {
-        cmd->output = crm_strdup(action->stdout_data);
+        cmd->output = strdup(action->stdout_data);
     }
 
     cmd_finalize(cmd, rsc);
@@ -561,7 +561,7 @@ normalize_action_name(lrmd_rsc_t * rsc, const char *action)
 static void
 dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-    g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
+    g_hash_table_replace(user_data, strdup(key), strdup(value));
 }
 
 static int

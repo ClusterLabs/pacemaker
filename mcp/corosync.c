@@ -335,7 +335,7 @@ get_config_opt(confdb_handle_t config,
 
     if (object_handle > 0) {
         if (CS_OK == confdb_key_get(config, object_handle, key, strlen(key), &buffer, &len)) {
-            *value = crm_strdup(buffer);
+            *value = strdup(buffer);
         }
     }
 
@@ -350,13 +350,13 @@ get_config_opt(confdb_handle_t config,
 
     if (*value) {
         crm_info("Found '%s' in ENV for option: %s", *value, key);
-        *value = crm_strdup(env_value);
+        *value = strdup(env_value);
         return 0;
     }
 
     if (fallback) {
         crm_info("Defaulting to '%s' for option: %s", fallback, key);
-        *value = crm_strdup(fallback);
+        *value = strdup(fallback);
 
     } else {
         crm_info("No default for option: %s", key);
@@ -411,7 +411,7 @@ get_config_opt(cmap_handle_t object_handle, const char *key, char **value, const
     if(rc != CS_OK) {
         crm_trace("Search for %s failed %d, defaulting to %s", key, rc, fallback);
         if(fallback) {
-            *value = crm_strdup(fallback);
+            *value = strdup(fallback);
         } else {
             *value = NULL;
         }
@@ -437,7 +437,7 @@ get_local_node_name(void)
         if (cman != NULL && cman_is_active(cman)) {
             us.cn_name[0] = 0;
             cman_get_node(cman, CMAN_NODEID_US, &us);
-            name = crm_strdup(us.cn_name);
+            name = strdup(us.cn_name);
             crm_info("Using CMAN node name: %s", name);
 
         } else {
@@ -452,7 +452,7 @@ get_local_node_name(void)
         exit(100);
 
     } else {
-        name = crm_strdup(res.nodename);
+        name = strdup(res.nodename);
     }
     return name;
 }

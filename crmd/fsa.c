@@ -582,7 +582,7 @@ do_state_transition(long long actions,
                          fsa_state2string(next_state), fsa_cause2string(cause));
             }
             if (g_hash_table_size(welcomed_nodes) > 0) {
-                char *msg = crm_strdup("  Welcome reply not received from");
+                char *msg = strdup("  Welcome reply not received from");
 
                 crm_warn("%u cluster nodes failed to respond"
                          " to the join offer.", g_hash_table_size(welcomed_nodes));
@@ -604,7 +604,7 @@ do_state_transition(long long actions,
             }
 
             if (g_hash_table_size(finalized_nodes) > 0) {
-                char *msg = crm_strdup("  Confirm not received from");
+                char *msg = strdup("  Confirm not received from");
 
                 crm_err("%u cluster nodes failed to confirm"
                         " their join.", g_hash_table_size(finalized_nodes));

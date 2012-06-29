@@ -188,8 +188,8 @@ get_ais_nodeid(uint32_t * id, char **uname)
     crm_info("Server details: id=%u uname=%s cname=%s", answer.id, answer.uname, answer.cname);
 
     *id = answer.id;
-    *uname = crm_strdup(answer.uname);
-    ais_cluster_name = crm_strdup(answer.cname);
+    *uname = strdup(answer.uname);
+    ais_cluster_name = strdup(answer.cname);
 
     return TRUE;
 }
@@ -199,7 +199,7 @@ crm_get_cluster_name(char **cname)
 {
     CRM_CHECK(cname != NULL, return FALSE);
     if (ais_cluster_name) {
-        *cname = crm_strdup(ais_cluster_name);
+        *cname = strdup(ais_cluster_name);
         return TRUE;
     }
     return FALSE;
@@ -275,7 +275,7 @@ send_ais_text(int class, const char *data,
 
     } else {
         char *compressed = NULL;
-        char *uncompressed = crm_strdup(data);
+        char *uncompressed = strdup(data);
         unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
 
         crm_trace("Compressing message payload");
@@ -740,7 +740,7 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
         crm_err("Couldn't query cman cluster details: %d %d", rc, errno);
         goto cman_bail;
     }
-    ais_cluster_name = crm_strdup(cluster.ci_name);
+    ais_cluster_name = strdup(cluster.ci_name);
 
     rc = cman_start_notification(pcmk_cman_handle, cman_event_callback);
     if (rc < 0) {
@@ -1075,7 +1075,7 @@ get_local_node_name(void)
         if (cman != NULL && cman_is_active(cman)) {
             us.cn_name[0] = 0;
             cman_get_node(cman, CMAN_NODEID_US, &us);
-            name = crm_strdup(us.cn_name);
+            name = strdup(us.cn_name);
             crm_info("Using CMAN node name: %s", name);
 
         } else {
@@ -1090,7 +1090,7 @@ get_local_node_name(void)
         exit(100);
 
     } else {
-        name = crm_strdup(res.nodename);
+        name = strdup(res.nodename);
     }
     return name;
 }
@@ -1144,7 +1144,7 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
     }
 
     if (our_uname != NULL) {
-        *our_uname = crm_strdup(pcmk_uname);
+        *our_uname = strdup(pcmk_uname);
     }
 
     if (nodeid != NULL) {
@@ -1241,7 +1241,7 @@ get_config_opt(confdb_handle_t config,
 
     if (object_handle > 0) {
         if (CS_OK == confdb_key_get(config, object_handle, key, strlen(key), &buffer, &len)) {
-            *value = crm_strdup(buffer);
+            *value = strdup(buffer);
         }
     }
 
@@ -1256,13 +1256,13 @@ get_config_opt(confdb_handle_t config,
 
     if (*value) {
         crm_info("Found '%s' in ENV for option: %s", *value, key);
-        *value = crm_strdup(env_value);
+        *value = strdup(env_value);
         return 0;
     }
 
     if (fallback) {
         crm_info("Defaulting to '%s' for option: %s", fallback, key);
-        *value = crm_strdup(fallback);
+        *value = strdup(fallback);
 
     } else {
         crm_info("No default for option: %s", key);

@@ -209,7 +209,7 @@ main(int argc, char **argv)
             case 'F':
                 command = flag;
                 free(shadow);
-                shadow = crm_strdup(getenv("CIB_shadow"));
+                shadow = strdup(getenv("CIB_shadow"));
                 break;
             case 'e':
             case 'c':
@@ -217,14 +217,14 @@ main(int argc, char **argv)
             case 'r':
                 command = flag;
                 free(shadow);
-                shadow = crm_strdup(optarg);
+                shadow = strdup(optarg);
                 break;
             case 'C':
             case 'D':
                 command = flag;
                 dangerous_cmd = TRUE;
                 free(shadow);
-                shadow = crm_strdup(optarg);
+                shadow = strdup(optarg);
                 break;
             case 'V':
                 command_options = command_options | cib_verbose;

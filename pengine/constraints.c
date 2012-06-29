@@ -792,11 +792,11 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
     order->rh_action_task = rh_action_task;
 
     if (order->lh_action_task == NULL && lh_action) {
-        order->lh_action_task = crm_strdup(lh_action->uuid);
+        order->lh_action_task = strdup(lh_action->uuid);
     }
 
     if (order->rh_action_task == NULL && rh_action) {
-        order->rh_action_task = crm_strdup(rh_action->uuid);
+        order->rh_action_task = strdup(rh_action->uuid);
     }
 
     if (order->lh_rsc == NULL && lh_action) {
@@ -938,10 +938,10 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
         key = generate_op_key(resource->id, action, 0);
 
         /*
-           custom_action_order(NULL, NULL, *begin, resource, crm_strdup(key), NULL,
+           custom_action_order(NULL, NULL, *begin, resource, strdup(key), NULL,
            flags|pe_order_implies_first_printed, data_set);
 
-           custom_action_order(resource, crm_strdup(key), NULL, NULL, NULL, *end,
+           custom_action_order(resource, strdup(key), NULL, NULL, NULL, *end,
            flags|pe_order_implies_then_printed, data_set);
          */
 
@@ -954,7 +954,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
                 resource_t *then_rsc = (resource_t *) gIter->data;
                 char *then_key = generate_op_key(then_rsc->id, action, 0);
 
-                custom_action_order(resource, crm_strdup(key), NULL, then_rsc, then_key, NULL,
+                custom_action_order(resource, strdup(key), NULL, then_rsc, then_key, NULL,
                                     flags, data_set);
             }
 
@@ -1004,7 +1004,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
         /*
            key = generate_op_key(resource->id, action, 0);
 
-           custom_action_order(NULL, NULL, *inv_begin, resource, crm_strdup(key), NULL,
+           custom_action_order(NULL, NULL, *inv_begin, resource, strdup(key), NULL,
            flags|pe_order_implies_first_printed, data_set);
 
            custom_action_order(resource, key, NULL, NULL, NULL, *inv_end,

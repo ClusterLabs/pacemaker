@@ -82,7 +82,7 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
 
     /* Delay processing the trigger until the update completes */
     crm_debug("Sending fencing update %d for %s", rc, target);
-    add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(target), cib_fencing_updated);
+    add_cib_op_callback(fsa_cib_conn, rc, FALSE, strdup(target), cib_fencing_updated);
 
     /* Make sure it sticks */
     /* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);    */

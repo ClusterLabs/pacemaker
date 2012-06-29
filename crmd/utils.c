@@ -1100,10 +1100,10 @@ update_dc(xmlNode * msg)
     fsa_our_dc = NULL;          /* Free'd as last_dc */
 
     if (welcome_from != NULL) {
-        fsa_our_dc = crm_strdup(welcome_from);
+        fsa_our_dc = strdup(welcome_from);
     }
     if (dc_version != NULL) {
-        fsa_our_dc_version = crm_strdup(dc_version);
+        fsa_our_dc_version = strdup(dc_version);
     }
 
     if (safe_str_eq(fsa_our_dc, last_dc)) {
@@ -1142,7 +1142,7 @@ erase_status_tag(const char *uname, const char *tag, int options)
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", uname, tag);
         crm_info("Deleting xpath: %s", xpath);
         rc = fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
-        add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(xpath), erase_xpath_callback);
+        add_cib_op_callback(fsa_cib_conn, rc, FALSE, strdup(xpath), erase_xpath_callback);
     }
 }
 

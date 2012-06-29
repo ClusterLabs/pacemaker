@@ -351,7 +351,7 @@ main(int argc, char **argv)
 
     int option_index = 0;
 
-    pid_file = crm_strdup("/tmp/ClusterMon.pid");
+    pid_file = strdup("/tmp/ClusterMon.pid");
     crm_log_cli_init("crm_mon");
     crm_set_options(NULL, "mode [options]", long_options,
                     "Provides a summary of cluster's current state."
@@ -410,14 +410,14 @@ main(int argc, char **argv)
                 break;
             case 'p':
                 free(pid_file);
-                pid_file = crm_strdup(optarg);
+                pid_file = strdup(optarg);
                 break;
             case 'x':
-                xml_file = crm_strdup(optarg);
+                xml_file = strdup(optarg);
                 one_shot = TRUE;
                 break;
             case 'h':
-                as_html_file = crm_strdup(optarg);
+                as_html_file = strdup(optarg);
                 break;
             case 'X':
                 as_xml = TRUE;
@@ -1640,7 +1640,7 @@ crm_snmp_init(const char *target, char *community)
     }
 
     if (get_crm_log_level() > LOG_INFO) {
-        char *debug_tokens = crm_strdup("run:shell,snmptrap,tdomain");
+        char *debug_tokens = strdup("run:shell,snmptrap,tdomain");
 
         debug_register_tokens(debug_tokens);
         snmp_set_do_debugging(1);

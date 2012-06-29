@@ -90,7 +90,7 @@ st_ipc_created(qb_ipcs_connection_t *c)
 
     new_client = calloc(1, sizeof(stonith_client_t));
     new_client->channel = c;
-    new_client->channel_name = crm_strdup("ipc");
+    new_client->channel_name = strdup("ipc");
 	
     CRM_CHECK(new_client->id == NULL, free(new_client->id));
     new_client->id = crm_generate_uuid();
@@ -123,7 +123,7 @@ st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         if(value == NULL) {
             client->name = crm_itoa(crm_ipcs_client_pid(c));
         } else {
-            client->name = crm_strdup(value);
+            client->name = strdup(value);
         }
     }
 
@@ -796,7 +796,7 @@ main(int argc, char ** argv)
         setup_cib();
 
     } else {
-	stonith_our_uname = crm_strdup("localhost");
+	stonith_our_uname = strdup("localhost");
     }
 
     device_list = g_hash_table_new_full(

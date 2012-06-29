@@ -119,6 +119,8 @@ slist_basic_destroy(GListPtr list)
     g_list_free(list);
 }
 
+#  define crm_strdup strdup
+
 #  define crm_malloc0(malloc_obj, length) do {				\
 	malloc_obj = malloc(length);					\
 	if(malloc_obj == NULL) {					\
@@ -207,6 +209,8 @@ slist_basic_destroy(GListPtr list)
 	    }								\
 	}								\
     } while(0)
+
+#  define zap_xml_from_parent(parent, xml_obj) free_xml_from_parent(parent, xml_obj); xml_obj = NULL
 
 /* Use something like this instead of the next macro:
 

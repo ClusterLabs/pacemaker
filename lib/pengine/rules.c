@@ -358,7 +358,7 @@ phase_of_the_moon(ha_time_t * now)
 	gboolean pass = TRUE;						\
 	decodeNVpair(value, '-', &value_low, &value_high);		\
 	if(value_low == NULL) {						\
-	    value_low = crm_strdup(value);				\
+	    value_low = strdup(value);				\
 	}								\
 	value_low_i = crm_parse_int(value_low, "0");			\
 	value_high_i = crm_parse_int(value_high, "-1");			\
@@ -456,14 +456,14 @@ test_date_expression(xmlNode * time_expr, ha_time_t * now)
 
     value = crm_element_value(time_expr, "start");
     if (value != NULL) {
-        value_copy = crm_strdup(value);
+        value_copy = strdup(value);
         value_copy_start = value_copy;
         start = parse_date(&value_copy);
         free(value_copy_start);
     }
     value = crm_element_value(time_expr, "end");
     if (value != NULL) {
-        value_copy = crm_strdup(value);
+        value_copy = strdup(value);
         value_copy_start = value_copy;
         end = parse_date(&value_copy);
         free(value_copy_start);
@@ -577,11 +577,11 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite)
                 continue;
 
             } else if (old_value == NULL) {
-                g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
+                g_hash_table_insert(hash, strdup(name), strdup(value));
 
             } else if (overwrite) {
                 crm_debug("Overwriting value of %s: %s -> %s", name, old_value, value);
-                g_hash_table_replace(hash, crm_strdup(name), crm_strdup(value));
+                g_hash_table_replace(hash, strdup(name), strdup(value));
             }
         }
     }

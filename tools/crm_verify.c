@@ -114,17 +114,17 @@ main(int argc, char **argv)
 
             case 'X':
                 crm_trace("Option %c => %s", flag, optarg);
-                xml_string = crm_strdup(optarg);
+                xml_string = strdup(optarg);
                 break;
             case 'x':
                 crm_trace("Option %c => %s", flag, optarg);
-                xml_file = crm_strdup(optarg);
+                xml_file = strdup(optarg);
                 break;
             case 'p':
                 xml_stdin = TRUE;
                 break;
             case 'S':
-                cib_save = crm_strdup(optarg);
+                cib_save = strdup(optarg);
                 break;
             case 'V':
                 crm_bump_log_level();

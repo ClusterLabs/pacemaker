@@ -152,7 +152,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
         const char *tmp = crm_element_value(xml_search, attr);
 
         if (tmp) {
-            *value = crm_strdup(tmp);
+            *value = strdup(tmp);
         }
     }
 
@@ -252,7 +252,7 @@ update_attr_delegate(cib_t * the_cib, int call_options,
 
         if (set_name == NULL) {
             if (safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-                local_set_name = crm_strdup(CIB_OPTIONS_FIRST);
+                local_set_name = strdup(CIB_OPTIONS_FIRST);
 
             } else if (safe_str_eq(node_type, XML_CIB_TAG_TICKETS)) {
                 local_set_name = crm_concat(section, XML_CIB_TAG_TICKETS, '-');
@@ -448,7 +448,7 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid)
             if (safe_str_eq(uname, child_name)) {
                 child_name = ID(a_child);
                 if (child_name != NULL) {
-                    *uuid = crm_strdup(child_name);
+                    *uuid = strdup(child_name);
                     rc = pcmk_ok;
                 }
                 break;
@@ -491,7 +491,7 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
             if (safe_str_eq(uuid, child_name)) {
                 child_name = crm_element_value(a_child, XML_ATTR_UNAME);
                 if (child_name != NULL) {
-                    *uname = crm_strdup(child_name);
+                    *uname = strdup(child_name);
                     rc = pcmk_ok;
                 }
                 break;

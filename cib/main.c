@@ -512,7 +512,7 @@ cib_init(void)
 #endif
 
     } else {
-        cib_our_uname = crm_strdup("localhost");
+        cib_our_uname = strdup("localhost");
     }
 
     ipcs_ro = mainloop_add_ipc_server(cib_channel_ro, QB_IPC_NATIVE, &ipc_ro_callbacks);

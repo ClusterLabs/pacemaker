@@ -189,14 +189,14 @@ update_history_cache(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
     entry = g_hash_table_lookup(resource_history, op->rsc_id);
     if (entry == NULL && rsc) {
         entry = calloc(1, sizeof(rsc_history_t));
-        entry->id = crm_strdup(op->rsc_id);
+        entry->id = strdup(op->rsc_id);
         g_hash_table_insert(resource_history, entry->id, entry);
 
         entry->rsc.id = entry->id;
-        entry->rsc.type = crm_strdup(rsc->type);
-        entry->rsc.class = crm_strdup(rsc->class);
+        entry->rsc.type = strdup(rsc->type);
+        entry->rsc.class = strdup(rsc->class);
         if (rsc->provider) {
-            entry->rsc.provider = crm_strdup(rsc->provider);
+            entry->rsc.provider = strdup(rsc->provider);
         } else {
             entry->rsc.provider = NULL;
         }
@@ -474,7 +474,7 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
         /* copy the metadata because the LRM likes using
          *   g_alloc instead of cl_malloc
          */
-        char *m_copy = crm_strdup(metadata);
+        char *m_copy = strdup(metadata);
 
         g_free(metadata);
         metadata = m_copy;
@@ -588,7 +588,7 @@ get_rsc_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
                         continue;
                     }
                     crm_debug("Attr %s is not reloadable", value);
-                    copy = crm_strdup(value);
+                    copy = strdup(value);
                     CRM_CHECK(copy != NULL, continue);
                     reload->restart_list = g_list_append(reload->restart_list, copy);
                 }
@@ -900,7 +900,7 @@ delete_rsc_entry(ha_msg_input_t * input, const char *rsc_id, GHashTableIter *rsc
     CRM_CHECK(rsc_id != NULL, return);
 
     if (rc == pcmk_ok) {
-        char *rsc_id_copy = crm_strdup(rsc_id);
+        char *rsc_id_copy = strdup(rsc_id);
 
         if (rsc_gIter)
             g_hash_table_iter_remove(rsc_gIter);
@@ -1165,7 +1165,7 @@ delete_resource(const char *id, lrmd_rsc_info_t * rsc, GHashTableIter *gIter,
             char *ref = crm_element_value_copy(request->msg, XML_ATTR_REFERENCE);
 
             op = calloc(1, sizeof(struct pending_deletion_op_s));
-            op->rsc = crm_strdup(rsc->id);
+            op->rsc = strdup(rsc->id);
             op->input = copy_ha_msg_input(request);
             g_hash_table_insert(deletion_ops, ref, op);
         }
@@ -1470,10 +1470,10 @@ construct_op(xmlNode * rsc_op, const char *rsc_id, const char *operation)
 
     op = calloc(1, sizeof(lrmd_event_data_t));
     op->type = lrmd_event_exec_complete;
-    op->op_type = crm_strdup(operation);
+    op->op_type = strdup(operation);
     op->op_status = PCMK_LRM_OP_PENDING;
     op->rc = -1;
-    op->rsc_id = crm_strdup(rsc_id);
+    op->rsc_id = strdup(rsc_id);
     op->interval = 0;
     op->timeout = 0;
     op->start_delay = 0;
@@ -1490,7 +1490,7 @@ construct_op(xmlNode * rsc_op, const char *rsc_id, const char *operation)
                                            g_hash_destroy_str, g_hash_destroy_str);
 
         g_hash_table_insert(op->params,
-                            crm_strdup(XML_ATTR_CRM_VERSION), crm_strdup(CRM_FEATURE_SET));
+                            strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
 
         crm_trace("Constructed %s op for %s", operation, rsc_id);
         return op;
@@ -1544,7 +1544,7 @@ construct_op(xmlNode * rsc_op, const char *rsc_id, const char *operation)
     transition = crm_element_value(rsc_op, XML_ATTR_TRANSITION_KEY);
     CRM_CHECK(transition != NULL, return op);
 
-    op->user_data = crm_strdup(transition);
+    op->user_data = strdup(transition);
 
     if (op->interval != 0) {
         if (safe_str_eq(operation, CRMD_ACTION_START)
@@ -1570,7 +1570,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
     CRM_CHECK(op != NULL, return);
     if (op->rsc_id == NULL) {
         CRM_LOG_ASSERT(rsc_id != NULL);
-        op->rsc_id = crm_strdup(rsc_id);
+        op->rsc_id = strdup(rsc_id);
     }
     if (to_sys == NULL) {
         to_sys = CRM_SYSTEM_TENGINE;
@@ -1722,9 +1722,9 @@ do_lrm_rsc_op(lrmd_rsc_info_t * rsc, const char *operation, xmlNode * msg, xmlNo
 
         pending->call_id = call_id;
         pending->interval = op->interval;
-        pending->op_type = crm_strdup(operation);
-        pending->op_key = crm_strdup(op_id);
-        pending->rsc_id = crm_strdup(rsc->id);
+        pending->op_type = strdup(operation);
+        pending->op_key = strdup(op_id);
+        pending->rsc_id = strdup(rsc->id);
         pending->last_rc = -1; /* All rc are positive, -1 indicates the last rc has not been set. */
         g_hash_table_replace(pending_ops, call_id_s, pending);
 

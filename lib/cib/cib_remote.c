@@ -126,15 +126,15 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->variant_opaque = private;
 
     if (server) {
-        private->server = crm_strdup(server);
+        private->server = strdup(server);
     }
 
     if (user) {
-        private->user = crm_strdup(user);
+        private->user = strdup(user);
     }
 
     if (passwd) {
-        private->passwd = crm_strdup(passwd);
+        private->passwd = strdup(passwd);
     }
 
     private->port = port;
@@ -308,7 +308,7 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection)
             rc = -EPROTO;
 
         } else {
-            connection->token = crm_strdup(tmp_ticket);
+            connection->token = strdup(tmp_ticket);
         }
     }
 

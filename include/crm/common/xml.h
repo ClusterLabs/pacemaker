@@ -71,8 +71,6 @@ void fix_plus_plus_recursive(xmlNode * target);
 
 void free_xml_from_parent(xmlNode * parent, xmlNode * a_node);
 
-#  define zap_xml_from_parent(parent, xml_obj) free_xml_from_parent(parent, xml_obj); xml_obj = NULL
-
 /*
  * Create a node named "name" as a child of "parent"
  * If parent is NULL, creates an unconnected node.

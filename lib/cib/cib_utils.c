@@ -703,7 +703,7 @@ determine_host(cib_t * cib_conn, char **node_uname, char **node_uuid)
             crm_perror(LOG_ERR, "uname(2) call failed");
             return FALSE;
         }
-        *node_uname = crm_strdup(name.nodename);
+        *node_uname = strdup(name.nodename);
         crm_info("Detected uname: %s", *node_uname);
     }
 

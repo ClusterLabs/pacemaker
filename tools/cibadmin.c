@@ -215,7 +215,7 @@ main(int argc, char **argv)
                 }
                 break;
             case 'A':
-                obj_type = crm_strdup(optarg);
+                obj_type = strdup(optarg);
                 command_options |= cib_xpath;
                 break;
             case 'u':
@@ -287,21 +287,21 @@ main(int argc, char **argv)
                 break;
             case 'o':
                 crm_trace("Option %c => %s", flag, optarg);
-                obj_type = crm_strdup(optarg);
+                obj_type = strdup(optarg);
                 break;
             case 'X':
                 crm_trace("Option %c => %s", flag, optarg);
-                admin_input_xml = crm_strdup(optarg);
+                admin_input_xml = strdup(optarg);
                 break;
             case 'x':
                 crm_trace("Option %c => %s", flag, optarg);
-                admin_input_file = crm_strdup(optarg);
+                admin_input_file = strdup(optarg);
                 break;
             case 'p':
                 admin_input_stdin = TRUE;
                 break;
             case 'h':
-                host = crm_strdup(optarg);
+                host = strdup(optarg);
                 break;
             case 'l':
                 command_options |= cib_scope_local;

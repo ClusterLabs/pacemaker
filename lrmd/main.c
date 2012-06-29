@@ -113,7 +113,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         if (value == NULL) {
             client->name = crm_itoa(crm_ipcs_client_pid(c));
         } else {
-            client->name = crm_strdup(value);
+            client->name = strdup(value);
         }
     }
 

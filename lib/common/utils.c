@@ -172,10 +172,10 @@ char *
 score2char(int score)
 {
     if (score >= node_score_infinity) {
-        return crm_strdup(INFINITY_S);
+        return strdup(INFINITY_S);
 
     } else if (score <= -node_score_infinity) {
-        return crm_strdup("-" INFINITY_S);
+        return strdup("-" INFINITY_S);
     }
     return crm_itoa(score);
 }
@@ -197,7 +197,7 @@ cluster_option(GHashTable * options, gboolean(*validate) (const char *),
         if (value != NULL) {
             crm_config_warn("Using deprecated name '%s' for"
                             " cluster option '%s'", old_name, name);
-            g_hash_table_insert(options, crm_strdup(name), crm_strdup(value));
+            g_hash_table_insert(options, strdup(name), strdup(value));
             value = g_hash_table_lookup(options, old_name);
         }
     }
@@ -209,14 +209,14 @@ cluster_option(GHashTable * options, gboolean(*validate) (const char *),
             return def_value;
         }
 
-        g_hash_table_insert(options, crm_strdup(name), crm_strdup(def_value));
+        g_hash_table_insert(options, strdup(name), strdup(def_value));
         value = g_hash_table_lookup(options, name);
     }
 
     if (validate && validate(value) == FALSE) {
         crm_config_err("Value '%s' for cluster option '%s' is invalid."
                        "  Defaulting to %s", value, name, def_value);
-        g_hash_table_replace(options, crm_strdup(name), crm_strdup(def_value));
+        g_hash_table_replace(options, strdup(name), strdup(def_value));
         value = g_hash_table_lookup(options, name);
     }
 
@@ -415,7 +415,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
     }
 
     if (strcasecmp(CRM_SYSTEM_DC, src_subsys) == 0) {
-        hash_value = crm_strdup(src_subsys);
+        hash_value = strdup(src_subsys);
         CRM_ASSERT(hash_value);
         return hash_value;
     }
@@ -510,8 +510,8 @@ compare_version(const char *version1, const char *version2)
         return 1;
     }
 
-    ver1_copy = crm_strdup(version1);
-    ver2_copy = crm_strdup(version2);
+    ver1_copy = strdup(version1);
+    ver2_copy = strdup(version2);
     rest1 = ver1_copy;
     rest2 = ver2_copy;
 
@@ -715,7 +715,7 @@ unsigned long long
 crm_get_interval(const char *input)
 {
     ha_time_t *interval = NULL;
-    char *input_copy = crm_strdup(input);
+    char *input_copy = strdup(input);
     char *input_copy_mutable = input_copy;
     unsigned long long msec = 0;
 
@@ -835,7 +835,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
     crm_trace("  Interval: %d", *interval);
     CRM_CHECK(key[offset] == '_', return FALSE);
 
-    mutable_key = crm_strdup(key);
+    mutable_key = strdup(key);
     mutable_key_ptr = mutable_key_ptr;
     mutable_key[offset] = 0;
     offset--;
@@ -850,7 +850,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 
     crm_trace("  Action: %s", mutable_key_ptr);
 
-    *op_type = crm_strdup(mutable_key_ptr);
+    *op_type = strdup(mutable_key_ptr);
 
     mutable_key[offset] = 0;
     offset--;
@@ -2091,7 +2091,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
 
     key = generate_op_key(op->rsc_id, task, op->interval);
     if (dc_needs_unique_ops && op->interval > 0) {
-        op_id = crm_strdup(key);
+        op_id = strdup(key);
 
     } else if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
@@ -2109,7 +2109,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
         op_id = generate_op_key(op->rsc_id, "last_failure", 0);
 
     } else if (op->interval > 0) {
-        op_id = crm_strdup(key);
+        op_id = strdup(key);
 
     } else {
         op_id = generate_op_key(op->rsc_id, "last", 0);
@@ -2194,7 +2194,7 @@ uid2username(uid_t uid)
         return NULL;
 
     } else {
-        return crm_strdup(pwent->pw_name);
+        return strdup(pwent->pw_name);
     }
 }
 

@@ -610,7 +610,7 @@ mainloop_add_fd(
     mainloop_io_t *client = NULL;
     if(fd > 0) {
         client = calloc(1, sizeof(mainloop_io_t));          
-        client->name = crm_strdup(name);
+        client->name = strdup(name);
         client->userdata = userdata;
 
         if(callbacks) {

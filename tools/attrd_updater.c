@@ -96,17 +96,17 @@ main(int argc, char **argv)
                 crm_help(flag, EX_OK);
                 break;
             case 'n':
-                attr_name = crm_strdup(optarg);
+                attr_name = strdup(optarg);
                 break;
             case 's':
-                attr_set = crm_strdup(optarg);
+                attr_set = strdup(optarg);
                 break;
             case 'd':
-                attr_dampen = crm_strdup(optarg);
+                attr_dampen = strdup(optarg);
                 break;
             case 'l':
             case 'S':
-                attr_section = crm_strdup(optarg);
+                attr_section = strdup(optarg);
                 break;
             case 'q':
                 BE_QUIET = TRUE;

@@ -83,7 +83,7 @@ static async_command_t *create_async_command(xmlNode *msg)
     cmd->remote = crm_element_value_copy(msg, F_STONITH_REMOTE);
     cmd->client = crm_element_value_copy(msg, F_STONITH_CLIENTID);
     cmd->op     = crm_element_value_copy(msg, F_STONITH_OPERATION);
-    cmd->action = crm_strdup(action);
+    cmd->action = strdup(action);
     cmd->victim = crm_element_value_copy(op, F_STONITH_TARGET);
     cmd->mode   = crm_element_value_copy(op, F_STONITH_MODE);
     cmd->device = crm_element_value_copy(op, F_STONITH_DEVICE);
@@ -103,8 +103,8 @@ static int stonith_manual_ack(xmlNode *msg, remote_fencing_op_t *op)
 	return -EINVAL;
     }
 
-    cmd->device = crm_strdup("manual_ack");
-    cmd->remote = crm_strdup(op->id);
+    cmd->device = strdup("manual_ack");
+    cmd->remote = strdup(op->id);
     
     crm_notice("Injecting manual confirmation that %s is safely off/down",
                crm_element_value(dev, F_STONITH_TARGET));
@@ -137,7 +137,7 @@ static gboolean stonith_device_execute(stonith_device_t *device)
 	return TRUE;
     }
     
-    cmd->device = crm_strdup(device->id);
+    cmd->device = strdup(device->id);
     exec_rc = run_stonith_agent(device->agent, cmd->action, cmd->victim,
 				device->params, device->aliases, &rc, NULL, cmd);
 
@@ -234,7 +234,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 		    crm_debug("Adding alias '%s'='%s'", name, value);
 		    g_hash_table_replace(aliases, name, value);
 		    if(targets) {
-			*targets = g_list_append(*targets, crm_strdup(value));
+			*targets = g_list_append(*targets, strdup(value));
 		    }
 		    value=NULL;
 		    name=NULL;
@@ -439,7 +439,7 @@ int stonith_level_register(xmlNode *msg)
     
     if(tp == NULL) {
         tp = calloc(1, sizeof(stonith_topology_t));
-        tp->node = crm_strdup(node);
+        tp->node = strdup(node);
         g_hash_table_replace(topology, tp->node, tp);
         crm_trace("Added %s to the topology (%d active entries)", node, g_hash_table_size(topology));
     }
@@ -451,7 +451,7 @@ int stonith_level_register(xmlNode *msg)
     for (child = __xml_first_child(level); child != NULL; child = __xml_next(child)) {
         const char *device = ID(child);
         crm_trace("Adding device '%s' for %s (%d)", device, node, id);
-        tp->levels[id] = g_list_append(tp->levels[id], crm_strdup(device));
+        tp->levels[id] = g_list_append(tp->levels[id], strdup(device));
     }
     
     crm_info("Node %s has %d active fencing levels", node, count_active_levels(tp));
@@ -623,7 +623,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 		dev->targets_age = -1;
 
                 /* Fall back to status */
-                g_hash_table_replace(dev->params, crm_strdup(STONITH_ATTR_HOSTCHECK), crm_strdup("status"));
+                g_hash_table_replace(dev->params, strdup(STONITH_ATTR_HOSTCHECK), strdup("status"));
 		
 	    } else {
 		crm_info("Refreshing port list for %s", dev->id);
@@ -768,7 +768,7 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 
     if(output) {
 	/* Logging the whole string confuses syslog when the string is xml */ 
-	char *local_copy = crm_strdup(output);
+	char *local_copy = strdup(output);
 	int lpc = 0, last = 0, more = strlen(local_copy);
 	for(lpc = 0; lpc < more; lpc++) {
 	    if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {

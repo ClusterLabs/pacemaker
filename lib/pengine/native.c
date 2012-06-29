@@ -241,7 +241,7 @@ native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *n
     }
 
     if (value != NULL) {
-        value_copy = crm_strdup(value);
+        value_copy = strdup(value);
     }
     if (local_hash != NULL) {
         g_hash_table_destroy(local_hash);

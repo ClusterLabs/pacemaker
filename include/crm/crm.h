@@ -34,7 +34,7 @@ int log_data_element(int log_level, const char *file, const char *function, int 
 
 #  define CRM_FEATURE_SET		"3.0.6"
 #  define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
-#  define LATEST_SCHEMA_VERSION	"pacemaker-"CRM_DTD_VERSION
+#  define LATEST_SCHEMA_VERSION         "pacemaker-"CRM_DTD_VERSION
 
 #  define EOS		'\0'
 #  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
@@ -185,7 +185,6 @@ typedef GList *GListPtr;
 #  include <crm/common/util.h>
 #  include <crm/error.h>
 
-#  define crm_strdup strdup
 #  define crm_str_hash g_str_hash_traditional
 
 guint g_str_hash_traditional(gconstpointer v);

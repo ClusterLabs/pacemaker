@@ -114,7 +114,7 @@ crm_get_cluster_name(char **cname)
 {
     CRM_CHECK(cname != NULL, return FALSE);
     if (ais_cluster_name) {
-        *cname = crm_strdup(ais_cluster_name);
+        *cname = strdup(ais_cluster_name);
         return TRUE;
     }
     return FALSE;
@@ -188,7 +188,7 @@ send_ais_text(int class, const char *data,
 
     } else {
         char *compressed = NULL;
-        char *uncompressed = crm_strdup(data);
+        char *uncompressed = strdup(data);
         unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
 
         crm_trace("Compressing message payload");
@@ -722,7 +722,7 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
         exit(100);
         
     } else {
-        pcmk_uname = crm_strdup(res.nodename);
+        pcmk_uname = strdup(res.nodename);
     }
 
     crm_info("Connection to '%s': established", name_for_cluster_type(stack));
@@ -740,7 +740,7 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
     }
 
     if (our_uname != NULL) {
-        *our_uname = crm_strdup(pcmk_uname);
+        *our_uname = strdup(pcmk_uname);
     }
 
     if (nodeid != NULL) {

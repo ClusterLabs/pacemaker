@@ -45,7 +45,7 @@ create_request_adv(const char *task, xmlNode * msg_data,
     if (uuid_from != NULL) {
         true_from = generate_hash_key(sys_from, uuid_from);
     } else if (sys_from != NULL) {
-        true_from = crm_strdup(sys_from);
+        true_from = strdup(sys_from);
     } else {
         crm_err("No sys from specified");
     }
@@ -258,7 +258,7 @@ crm_ipc_new(const char *name, size_t max_size)
     crm_ipc_t *client = NULL;
     client = calloc(1, sizeof(crm_ipc_t));
 
-    client->name = crm_strdup(name);
+    client->name = strdup(name);
     client->buf_size = pick_ipc_buffer(max_size);
     client->buffer = malloc(client->buf_size);
 

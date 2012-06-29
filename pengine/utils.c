@@ -289,7 +289,7 @@ do_calculate_utilization(gpointer key, gpointer value, gpointer user_data)
         } else {
             remain_capacity = crm_itoa(crm_parse_int(capacity, "0") + crm_parse_int(value, "0"));
         }
-        g_hash_table_replace(data->node->details->utilization, crm_strdup(key), remain_capacity);
+        g_hash_table_replace(data->node->details->utilization, strdup(key), remain_capacity);
     }
 }
 

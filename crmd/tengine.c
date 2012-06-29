@@ -215,13 +215,13 @@ do_te_invoke(long long action,
         value = crm_element_value(graph_data, "failed-stop-offset");
         if (value) {
             free(failed_stop_offset);
-            failed_stop_offset = crm_strdup(value);
+            failed_stop_offset = strdup(value);
         }
 
         value = crm_element_value(graph_data, "failed-start-offset");
         if (value) {
             free(failed_start_offset);
-            failed_start_offset = crm_strdup(value);
+            failed_start_offset = strdup(value);
         }
 
         trigger_graph();

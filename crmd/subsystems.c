@@ -174,7 +174,7 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
     (void)open(devnull, O_WRONLY);      /* Stderr: fd 2 */
 
     {
-        char *opts[] = { crm_strdup(the_subsystem->command), NULL };
+        char *opts[] = { strdup(the_subsystem->command), NULL };
         (void)execvp(the_subsystem->command, opts);
     }
 

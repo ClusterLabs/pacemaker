@@ -164,10 +164,10 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
     crm_info("Action %s on %s will be stopped: %s",
              key, active_node->details->uname, reason ? reason : "unknown");
 
-    cancel = custom_action(rsc, crm_strdup(key), RSC_CANCEL, active_node, FALSE, TRUE, data_set);
+    cancel = custom_action(rsc, strdup(key), RSC_CANCEL, active_node, FALSE, TRUE, data_set);
 
     free(cancel->task);
-    cancel->task = crm_strdup(RSC_CANCEL);
+    cancel->task = strdup(RSC_CANCEL);
 
     add_hash_param(cancel->meta, XML_LRM_ATTR_TASK, task);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
@@ -832,14 +832,14 @@ probe_resources(pe_working_set_t * data_set)
         }
 
         if (probed != NULL && crm_is_true(probed) == FALSE) {
-            action_t *probe_op = custom_action(NULL, crm_strdup(CRM_OP_REPROBE),
+            action_t *probe_op = custom_action(NULL, strdup(CRM_OP_REPROBE),
                                                CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
 
             add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
             continue;
         }
 
-        probe_node_complete = custom_action(NULL, crm_strdup(CRM_OP_PROBED),
+        probe_node_complete = custom_action(NULL, strdup(CRM_OP_PROBED),
                                             CRM_OP_PROBED, node, FALSE, TRUE, data_set);
         if (crm_is_true(probed)) {
             crm_trace("unset");
@@ -1254,7 +1254,7 @@ stage6(pe_working_set_t * data_set)
         if (node->details->unclean && need_stonith) {
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
-            stonith_op = custom_action(NULL, crm_strdup(CRM_OP_FENCE),
+            stonith_op = custom_action(NULL, strdup(CRM_OP_FENCE),
                                        CRM_OP_FENCE, node, FALSE, TRUE, data_set);
 
             add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
@@ -1285,7 +1285,7 @@ stage6(pe_working_set_t * data_set)
 
             crm_notice("Scheduling Node %s for shutdown", node->details->uname);
 
-            down_op = custom_action(NULL, crm_strdup(CRM_OP_SHUTDOWN),
+            down_op = custom_action(NULL, strdup(CRM_OP_SHUTDOWN),
                                     CRM_OP_SHUTDOWN, node, FALSE, TRUE, data_set);
 
             shutdown_constraints(node, down_op, data_set);
@@ -1625,10 +1625,10 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
 
     if (list == NULL) {
         if (rsc_list) {
-            *rsc_list = crm_strdup(" ");
+            *rsc_list = strdup(" ");
         }
         if (node_list) {
-            *node_list = crm_strdup(" ");
+            *node_list = strdup(" ");
         }
         return;
     }
@@ -1982,8 +1982,8 @@ expand_notification_data(notify_data_t * n_data)
             required = TRUE;
         }
     }
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_uname"), node_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_stop_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_stop_uname"), node_list);
 
     if (n_data->start) {
         n_data->start = g_list_sort(n_data->start, sort_notify_entries);
@@ -1992,8 +1992,8 @@ expand_notification_data(notify_data_t * n_data)
         }
     }
     expand_list(n_data->start, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_start_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_start_uname"), node_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_start_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_start_uname"), node_list);
 
     if (n_data->demote) {
         n_data->demote = g_list_sort(n_data->demote, sort_notify_entries);
@@ -2003,8 +2003,8 @@ expand_notification_data(notify_data_t * n_data)
     }
 
     expand_list(n_data->demote, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_demote_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_demote_uname"), node_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_demote_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_demote_uname"), node_list);
 
     if (n_data->promote) {
         n_data->promote = g_list_sort(n_data->promote, sort_notify_entries);
@@ -2013,35 +2013,35 @@ expand_notification_data(notify_data_t * n_data)
         }
     }
     expand_list(n_data->promote, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_promote_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_promote_uname"), node_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_promote_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_promote_uname"), node_list);
 
     if (n_data->active) {
         n_data->active = g_list_sort(n_data->active, sort_notify_entries);
     }
     expand_list(n_data->active, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_active_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_active_uname"), node_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_active_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_active_uname"), node_list);
 
     if (n_data->slave) {
         n_data->slave = g_list_sort(n_data->slave, sort_notify_entries);
     }
     expand_list(n_data->slave, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_slave_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_slave_uname"), node_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_slave_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_slave_uname"), node_list);
 
     if (n_data->master) {
         n_data->master = g_list_sort(n_data->master, sort_notify_entries);
     }
     expand_list(n_data->master, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_master_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_master_uname"), node_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_master_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_master_uname"), node_list);
 
     if (n_data->inactive) {
         n_data->inactive = g_list_sort(n_data->inactive, sort_notify_entries);
     }
     expand_list(n_data->inactive, &rsc_list, NULL);
-    g_hash_table_insert(n_data->keys, crm_strdup("notify_inactive_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, strdup("notify_inactive_resource"), rsc_list);
 
     if (required && n_data->pre) {
         update_action_flags(n_data->pre, pe_action_optional | pe_action_clear);

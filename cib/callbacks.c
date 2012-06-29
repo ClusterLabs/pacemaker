@@ -303,17 +303,17 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean p
         if (value == NULL) {
             cib_client->name = crm_itoa(crm_ipcs_client_pid(c));
         } else {
-            cib_client->name = crm_strdup(value);
+            cib_client->name = strdup(value);
         }
     }
 
     if (cib_client->callback_id == NULL) {
         const char *value = crm_element_value(op_request, F_CIB_CALLBACK_TOKEN);
         if (value != NULL) {
-            cib_client->callback_id = crm_strdup(value);
+            cib_client->callback_id = strdup(value);
             
         } else {
-            cib_client->callback_id = crm_strdup(cib_client->id);
+            cib_client->callback_id = strdup(cib_client->id);
         }
     }
     
@@ -406,7 +406,7 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
     cib_local_notify_t *notify = calloc(1, sizeof(cib_local_notify_t));
 
     notify->notify_src = notify_src;
-    notify->client_id = crm_strdup(client_id);
+    notify->client_id = strdup(client_id);
     notify->sync_reply = sync_reply;
     notify->from_peer = from_peer;
 

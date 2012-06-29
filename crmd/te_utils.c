@@ -146,7 +146,7 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
     if (rc == pcmk_ok && is_cman_cluster()) {
         int local_rc = 0;
         int confirm = 0;
-        char *target_copy = crm_strdup(target);
+        char *target_copy = strdup(target);
 
         /* In case fenced hasn't noticed yet */
         local_rc = fenced_external(target_copy);
@@ -196,7 +196,7 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
 
                 send_stonith_update(NULL, target, uuid);
             }
-            stonith_cleanup_list = g_list_append(stonith_cleanup_list, crm_strdup(target));
+            stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(target));
         }
     }
 }

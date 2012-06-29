@@ -194,7 +194,7 @@ static void add_ha_nocopy(HA_Message *parent, HA_Message *child, const char *fie
 	return;
     }
     
-    parent->names[next] = crm_strdup(field);
+    parent->names[next] = strdup(field);
     parent->nlens[next] = strlen(field);
     parent->values[next] = child;
     parent->vlens[next] = sizeof(HA_Message);
@@ -520,10 +520,10 @@ register_heartbeat_conn(ll_cluster_t * hb_cluster, char **uuid, char **uname,
     crm_info("UUID: %s", const_uuid);
 
     if (uname) {
-        *uname = crm_strdup(const_uname);
+        *uname = strdup(const_uname);
     }
     if (uuid) {
-        *uuid = crm_strdup(const_uuid);
+        *uuid = strdup(const_uuid);
     }
 
     return TRUE;

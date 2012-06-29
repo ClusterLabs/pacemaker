@@ -354,7 +354,7 @@ unpack_domains(xmlNode * xml_domains, pe_working_set_t * data_set)
 
             if (domain) {
                 crm_debug("Created domain %s with %d members", id, g_list_length(domain));
-                g_hash_table_replace(data_set->domains, crm_strdup(id), domain);
+                g_hash_table_replace(data_set->domains, strdup(id), domain);
             }
         }
     }
@@ -388,7 +388,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
             if (template_id && g_hash_table_lookup_extended(data_set->template_rsc_sets,
                                                             template_id, NULL, NULL) == FALSE) {
                 /* Record the template's ID for the knowledge of its existence anyway. */
-                g_hash_table_insert(data_set->template_rsc_sets, crm_strdup(template_id), NULL);
+                g_hash_table_insert(data_set->template_rsc_sets, strdup(template_id), NULL);
             }
             continue;
         }
@@ -455,7 +455,7 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
         if(crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
             continue;
         }
-        g_hash_table_replace(ticket->state, crm_strdup(prop_name), crm_strdup(prop_value));
+        g_hash_table_replace(ticket->state, strdup(prop_name), strdup(prop_value));
     }
 
     granted = g_hash_table_lookup(ticket->state, "granted");
@@ -534,13 +534,13 @@ get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
     if (strstr(long_key, granted_prefix) == long_key) {
         ticket_id = long_key + granted_prefix_strlen;
         if (strlen(ticket_id)) {
-            state_key = crm_strdup("granted");
+            state_key = strdup("granted");
             is_granted = value;
         }
     } else if (strstr(long_key, last_granted_prefix) == long_key) {
         ticket_id = long_key + last_granted_prefix_strlen;
         if (strlen(ticket_id)) {
-            state_key = crm_strdup("last-granted");
+            state_key = strdup("last-granted");
             last_granted = value;
         }
     } else if ((sep = strrchr(long_key, '-'))) {
@@ -567,7 +567,7 @@ get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
         }
     }
 
-    g_hash_table_replace(ticket->state, state_key, crm_strdup(value));
+    g_hash_table_replace(ticket->state, state_key, strdup(value));
 
     if (is_granted) {
         if (crm_is_true(is_granted)) {
@@ -1202,7 +1202,7 @@ find_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent, cons
         }
 
         if (parent->fns->find_rsc(parent, rsc_id, NULL, pe_find_current)) {
-            alt_rsc_id = crm_strdup(rsc_id);
+            alt_rsc_id = strdup(rsc_id);
         } else {
             alt_rsc_id = clone_zero(rsc_id);
         }
@@ -1241,7 +1241,7 @@ find_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent, cons
         crm_info("Internally renamed %s on %s to %s%s",
                  rsc_id, node->details->uname, rsc->id,
                  is_set(rsc->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
-        rsc->clone_name = crm_strdup(rsc_id);
+        rsc->clone_name = strdup(rsc_id);
     }
 
     free(alt_rsc_id);
@@ -1255,7 +1255,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
 {
     resource_t *rsc = NULL;
     resource_t *clone_parent = NULL;
-    char *alt_rsc_id = crm_strdup(rsc_id);
+    char *alt_rsc_id = strdup(rsc_id);
 
     crm_trace("looking for %s", rsc_id);
 
@@ -1951,7 +1951,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
     if (task_status_i == PCMK_LRM_OP_ERROR
         || task_status_i == PCMK_LRM_OP_TIMEOUT || task_status_i == PCMK_LRM_OP_NOTSUPPORTED) {
         const char *action_key = task_key ? task_key : id;
-        action = custom_action(rsc, crm_strdup(action_key), task, NULL, TRUE, FALSE, data_set);
+        action = custom_action(rsc, strdup(action_key), task, NULL, TRUE, FALSE, data_set);
         if (expired) {
             crm_notice("Ignoring expired failure (calculated) %s (rc=%d, magic=%s) on %s",
                        id, actual_rc_i, magic, node->details->uname);
@@ -2268,17 +2268,17 @@ gboolean
 add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_set_t * data_set)
 {
     g_hash_table_insert(node->details->attrs,
-                        crm_strdup("#" XML_ATTR_UNAME), crm_strdup(node->details->uname));
+                        strdup("#" XML_ATTR_UNAME), strdup(node->details->uname));
     g_hash_table_insert(node->details->attrs,
-                        crm_strdup("#" XML_ATTR_ID), crm_strdup(node->details->id));
+                        strdup("#" XML_ATTR_ID), strdup(node->details->id));
     if (safe_str_eq(node->details->id, data_set->dc_uuid)) {
         data_set->dc_node = node;
         node->details->is_dc = TRUE;
         g_hash_table_insert(node->details->attrs,
-                            crm_strdup("#" XML_ATTR_DC), crm_strdup(XML_BOOLEAN_TRUE));
+                            strdup("#" XML_ATTR_DC), strdup(XML_BOOLEAN_TRUE));
     } else {
         g_hash_table_insert(node->details->attrs,
-                            crm_strdup("#" XML_ATTR_DC), crm_strdup(XML_BOOLEAN_FALSE));
+                            strdup("#" XML_ATTR_DC), strdup(XML_BOOLEAN_FALSE));
     }
 
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,

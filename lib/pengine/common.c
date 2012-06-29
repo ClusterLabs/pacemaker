@@ -431,6 +431,6 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
         return;
 
     } else if (g_hash_table_lookup(hash, name) == NULL) {
-        g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
+        g_hash_table_insert(hash, strdup(name), strdup(value));
     }
 }

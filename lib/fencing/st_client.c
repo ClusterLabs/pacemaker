@@ -273,8 +273,8 @@ append_arg(gpointer key, gpointer value, gpointer user_data)
 static void
 append_const_arg(const char *key, const char *value, char **arg_list)
 {
-    char *glib_sucks_key = crm_strdup(key);
-    char *glib_sucks_value = crm_strdup(value);
+    char *glib_sucks_key = strdup(key);
+    char *glib_sucks_value = strdup(value);
 
     append_arg(glib_sucks_key, glib_sucks_value, arg_list);
 
@@ -573,7 +573,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
                 } while (ret == 500 || (ret < 0 && errno == EINTR));
 
                 if (*output) {
-                    local_copy = crm_strdup(*output);
+                    local_copy = strdup(*output);
                     more = strlen(local_copy);
                     for(lpc = 0; lpc < more; lpc++) {
                         if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
@@ -752,9 +752,9 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             crm_debug("Query failed: %d %d: %s", exec_rc, rc, crm_str(buffer));
 
             /* provide a fake metadata entry */
-            meta_longdesc = crm_strdup(no_parameter_info);
-            meta_shortdesc = crm_strdup(no_parameter_info);
-            meta_param = crm_strdup("  <parameters>\n"
+            meta_longdesc = strdup(no_parameter_info);
+            meta_shortdesc = strdup(no_parameter_info);
+            meta_param = strdup("  <parameters>\n"
                                     "    <parameter name=\"action\">\n"
                                     "      <getopt mixed=\"-o\" />\n"
                                     "      <content type=\"string\" default=\"reboot\" />\n"
@@ -806,22 +806,22 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 #if SUPPORT_LHA_STONITH
         stonith_obj = stonith_new(agent);
 
-        meta_longdesc = crm_strdup(stonith_get_info(stonith_obj, ST_DEVICEDESCR));
+        meta_longdesc = strdup(stonith_get_info(stonith_obj, ST_DEVICEDESCR));
         if (meta_longdesc == NULL) {
             crm_warn("no long description in %s's metadata.", agent);
-            meta_longdesc = crm_strdup(no_parameter_info);
+            meta_longdesc = strdup(no_parameter_info);
         }
 
-        meta_shortdesc = crm_strdup(stonith_get_info(stonith_obj, ST_DEVICEID));
+        meta_shortdesc = strdup(stonith_get_info(stonith_obj, ST_DEVICEID));
         if (meta_shortdesc == NULL) {
             crm_warn("no short description in %s's metadata.", agent);
-            meta_shortdesc = crm_strdup(no_parameter_info);
+            meta_shortdesc = strdup(no_parameter_info);
         }
 
-        meta_param = crm_strdup(stonith_get_info(stonith_obj, ST_CONF_XML));
+        meta_param = strdup(stonith_get_info(stonith_obj, ST_CONF_XML));
         if (meta_param == NULL) {
             crm_warn("no list of parameters in %s's metadata.", agent);
-            meta_param = crm_strdup(no_parameter_info);
+            meta_param = strdup(no_parameter_info);
         }
 #else
         return -EINVAL; /* Heartbeat agents not supported */
@@ -1187,7 +1187,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
                 
             } else {
                 crm_trace("Obtained registration token: %s", tmp_ticket);
-                native->token = crm_strdup(tmp_ticket);
+                native->token = strdup(tmp_ticket);
                 rc = pcmk_ok;
             }
         }
@@ -1758,10 +1758,10 @@ stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *v
 
     p = calloc(1, sizeof(stonith_key_value_t));
     if (key) {
-        p->key = crm_strdup(key);
+        p->key = strdup(key);
     }
     if (value) {
-        p->value = crm_strdup(value);
+        p->value = strdup(value);
     }
 
     end = head;
