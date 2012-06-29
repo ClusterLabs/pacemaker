@@ -498,7 +498,7 @@ add_list_element(char *list, const char *value)
     }
     len = last + 2;             /* +1 space, +1 EOS */
     len += strlen(value);
-    crm_realloc(list, len);
+    list = realloc(list, len);
     sprintf(list + last, " %s", value);
     return list;
 }

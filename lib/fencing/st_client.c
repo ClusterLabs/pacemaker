@@ -265,7 +265,7 @@ append_arg(gpointer key, gpointer value, gpointer user_data)
         last = strlen(*args);
     }
 
-    crm_realloc(*args, last + len);
+    *args = realloc(*args, last + len);
     crm_trace("Appending: %s=%s", (char *)key, (char *)value);
     sprintf((*args) + last, "%s=%s\n", (char *)key, (char *)value);
 }
@@ -564,7 +564,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
                     ret = read(p_read_fd, buf, 500);
                     if (ret > 0) {
                         buf[ret] = 0;
-                        crm_realloc(*output, len + ret + 1);
+                        *output = realloc(*output, len + ret + 1);
                         sprintf((*output) + len, "%s", buf);
                         crm_trace("%d: %s", ret, (*output) + len);
                         len += ret;

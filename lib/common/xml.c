@@ -574,7 +574,7 @@ stdin2xml(void)
     xmlNode *xml_obj = NULL;
   
     do {
-	crm_realloc(xml_buffer, XML_BUFFER_SIZE + data_length + 1);
+	xml_buffer = realloc(xml_buffer, XML_BUFFER_SIZE + data_length + 1);
 	read_chars = fread(xml_buffer + data_length, 1, XML_BUFFER_SIZE, stdin);
 	data_length += read_chars;
     } while (read_chars > 0);
@@ -619,7 +619,7 @@ decompress_file(const char *filename)
     
     rc = BZ_OK;
     while ( rc == BZ_OK ) {
-	crm_realloc(buffer, XML_BUFFER_SIZE + length + 1);
+	buffer = realloc(buffer, XML_BUFFER_SIZE + length + 1);
 	read_len = BZ2_bzRead (
 	    &rc, bz_file, buffer + length, XML_BUFFER_SIZE);
 	
@@ -2790,7 +2790,7 @@ get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
     len += strlen(xpath);
 
     xpath_full = crm_strdup(xpath_prefix);
-    crm_realloc(xpath_full, len+1);
+    xpath_full = realloc(xpath_full, len+1);
     strncat(xpath_full, xpath, len);
 
     result = get_xpath_object(xpath_full, xml_obj, error_level);

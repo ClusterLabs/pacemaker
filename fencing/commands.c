@@ -845,7 +845,7 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
 	}
 	
 	if(more > 0) {
-	    crm_realloc(output, len + more + 1);
+	    output = realloc(output, len + more + 1);
 	    sprintf(output+len, "%s", buffer);
 	    len += more;
 	}

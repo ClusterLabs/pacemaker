@@ -476,7 +476,7 @@ main(int argc, char **argv)
 	    (*buffer) = EOS; return -1;		\
 	} else if(((*max) - total) < 256) {	\
 	    (*max) *= 10;			\
-	    crm_realloc(*buffer, (*max));	\
+	    *buffer = realloc(*buffer, (*max));	\
 	}					\
 	(*offset) += len;			\
     } while(0)

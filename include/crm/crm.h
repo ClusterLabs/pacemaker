@@ -188,12 +188,6 @@ typedef GList *GListPtr;
 #  define crm_strdup strdup
 #  define crm_str_hash g_str_hash_traditional
 
-#  define crm_realloc(realloc_obj, length) do {				\
-	realloc_obj = realloc(realloc_obj, length);			\
-	CRM_ASSERT(realloc_obj != NULL);				\
-    } while(0)
-
-
 guint g_str_hash_traditional(gconstpointer v);
 
 /* These two macros are no longer to be used

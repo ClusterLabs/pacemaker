@@ -80,7 +80,7 @@ read_output(int fd, svc_action_t *op)
         rc = read(fd, buf, buf_read_len);
         if (rc > 0) {
             buf[rc] = 0;
-            crm_realloc(data, len + rc + 1);
+            data = realloc(data, len + rc + 1);
             sprintf(data + len, "%s", buf);
             len += rc;
         } else if (errno != EINTR) {

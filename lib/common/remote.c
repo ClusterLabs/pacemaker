@@ -181,7 +181,7 @@ cib_recv_tls(gnutls_session * session)
         } else if (rc == chunk_size) {
             len += rc;
             chunk_size *= 2;
-            crm_realloc(buf, len + chunk_size);
+            buf = realloc(buf, len + chunk_size);
             crm_trace("Retry with %d more bytes", (int)chunk_size);
             CRM_ASSERT(buf != NULL);
 
@@ -189,7 +189,7 @@ cib_recv_tls(gnutls_session * session)
             crm_trace("Last char is %d '%c'", buf[len + rc - 1], buf[len + rc - 1]);
             crm_trace("Retry with %d more bytes", (int)chunk_size);
             len += rc;
-            crm_realloc(buf, len + chunk_size);
+            buf = realloc(buf, len + chunk_size);
             CRM_ASSERT(buf != NULL);
 
         } else {
@@ -264,7 +264,7 @@ cib_recv_plaintext(int sock)
             crm_trace("Retry: %d", (int)rc);
             if (rc > 0) {
                 len += rc;
-                crm_realloc(buf, len + chunk_size);
+                buf = realloc(buf, len + chunk_size);
                 CRM_ASSERT(buf != NULL);
             }
 
@@ -275,7 +275,7 @@ cib_recv_plaintext(int sock)
         } else if (rc == chunk_size) {
             len += rc;
             chunk_size *= 2;
-            crm_realloc(buf, len + chunk_size);
+            buf = realloc(buf, len + chunk_size);
             crm_trace("Retry with %d more bytes", (int)chunk_size);
             CRM_ASSERT(buf != NULL);
 
@@ -283,7 +283,7 @@ cib_recv_plaintext(int sock)
             crm_trace("Last char is %d '%c'", buf[len + rc - 1], buf[len + rc - 1]);
             crm_trace("Retry with %d more bytes", (int)chunk_size);
             len += rc;
-            crm_realloc(buf, len + chunk_size);
+            buf = realloc(buf, len + chunk_size);
             CRM_ASSERT(buf != NULL);
 
         } else {

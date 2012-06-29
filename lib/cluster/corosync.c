@@ -183,7 +183,7 @@ send_ais_text(int class, const char *data,
 
     if (ais_msg->size < CRM_BZ2_THRESHOLD) {
   failback:
-        crm_realloc(ais_msg, sizeof(AIS_Message) + ais_msg->size);
+        ais_msg = realloc(ais_msg, sizeof(AIS_Message) + ais_msg->size);
         memcpy(ais_msg->data, data, ais_msg->size);
 
     } else {
@@ -205,7 +205,7 @@ send_ais_text(int class, const char *data,
             goto failback;
         }
 
-        crm_realloc(ais_msg, sizeof(AIS_Message) + len + 1);
+        ais_msg = realloc(ais_msg, sizeof(AIS_Message) + len + 1);
         memcpy(ais_msg->data, compressed, len);
         ais_msg->data[len] = 0;
         free(compressed);
@@ -225,7 +225,7 @@ send_ais_text(int class, const char *data,
 
     iov.iov_base = ais_msg;
     iov.iov_len = ais_msg->header.size;
-    crm_realloc(buf, buf_len);
+    buf = realloc(buf, buf_len);
 
     do {
         if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {

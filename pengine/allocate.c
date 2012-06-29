@@ -1663,7 +1663,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
             }
 
             crm_trace("Adding %s (%dc) at offset %d", rsc_id, len - 2, existing_len);
-            crm_realloc(*rsc_list, len + existing_len);
+            *rsc_list = realloc(*rsc_list, len + existing_len);
             sprintf(*rsc_list + existing_len, "%s ", rsc_id);
         }
 
@@ -1680,7 +1680,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
             }
 
             crm_trace("Adding %s (%dc) at offset %d", uname, len - 2, existing_len);
-            crm_realloc(*node_list, len + existing_len);
+            *node_list = realloc(*node_list, len + existing_len);
             sprintf(*node_list + existing_len, "%s ", uname);
         }
     }

@@ -171,7 +171,7 @@ standalone_cfg_add_node(const char *node, const char *device, const char *ports)
 
 	if (tmp) {
 		offset = strlen(tmp);
-		crm_realloc(tmp, len + offset + 1);
+		tmp = realloc(tmp, len + offset + 1);
 	} else {
 		tmp = malloc( len);
 	}
