@@ -501,7 +501,7 @@ g_hash_destroy_reload(gpointer data)
 
     free(reload->key);
     free(reload->metadata);
-    slist_basic_destroy(reload->restart_list);
+    g_list_free_full(reload->restart_list, free);
     free(reload);
 }
 
@@ -879,7 +879,7 @@ delete_rsc_status(const char *rsc_id, int call_options, const char *user_name)
     int max = 0;
     int rc = cib_ok;
 
-    CRM_CHECK(rsc_id != NULL, return cib_id_check);
+    CRM_CHECK(rsc_id != NULL, return cib_NOTEXISTS);
 
     max = strlen(rsc_template) + strlen(rsc_id) + strlen(fsa_our_uname) + 1;
     rsc_xpath = calloc(1, max);

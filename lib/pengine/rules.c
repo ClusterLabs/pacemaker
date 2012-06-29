@@ -656,5 +656,5 @@ unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_nam
 
     sorted = g_list_sort(unsorted, sort_pairs);
     g_list_foreach(sorted, unpack_attr_set, &data);
-    slist_basic_destroy(sorted);
+    g_list_free_full(sorted, free);
 }

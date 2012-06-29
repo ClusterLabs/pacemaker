@@ -2139,14 +2139,14 @@ free_notification_data(notify_data_t * n_data)
         return;
     }
 
-    slist_basic_destroy(n_data->stop);
-    slist_basic_destroy(n_data->start);
-    slist_basic_destroy(n_data->demote);
-    slist_basic_destroy(n_data->promote);
-    slist_basic_destroy(n_data->master);
-    slist_basic_destroy(n_data->slave);
-    slist_basic_destroy(n_data->active);
-    slist_basic_destroy(n_data->inactive);
+    g_list_free_full(n_data->stop, free);
+    g_list_free_full(n_data->start, free);
+    g_list_free_full(n_data->demote, free);
+    g_list_free_full(n_data->promote, free);
+    g_list_free_full(n_data->master, free);
+    g_list_free_full(n_data->slave, free);
+    g_list_free_full(n_data->active, free);
+    g_list_free_full(n_data->inactive, free);
     g_hash_table_destroy(n_data->keys);
     free(n_data);
 }
@@ -2258,12 +2258,12 @@ cleanup_alloc_calculations(pe_working_set_t * data_set)
 
     crm_trace("deleting %d inter-resource cons: %p",
                 g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
-    slist_basic_destroy(data_set->colocation_constraints);
+    g_list_free_full(data_set->colocation_constraints, free);
     data_set->colocation_constraints = NULL;
 
     crm_trace("deleting %d ticket deps: %p",
                 g_list_length(data_set->ticket_constraints), data_set->ticket_constraints);
-    slist_basic_destroy(data_set->ticket_constraints);
+    g_list_free_full(data_set->ticket_constraints, free);
     data_set->ticket_constraints = NULL;
 
     cleanup_calculations(data_set);

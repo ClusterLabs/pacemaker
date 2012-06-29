@@ -51,7 +51,7 @@ pe_free_rsc_to_node(GListPtr constraints)
 
         iterator = iterator->next;
 
-        slist_basic_destroy(cons->node_list_rh);
+        g_list_free_full(cons->node_list_rh, free);
         free(cons);
     }
     if (constraints != NULL) {

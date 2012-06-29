@@ -404,7 +404,7 @@ resources_list_standards(void)
     agents = systemd_unit_listall();
     if(agents) {
         standards = g_list_append(standards, strdup("systemd"));
-        slist_basic_destroy(agents);
+        g_list_free_full(agents, free);
     }
 #endif
 
@@ -412,7 +412,7 @@ resources_list_standards(void)
     agents = upstart_job_listall();
     if(agents) {
         standards = g_list_append(standards, strdup("upstart"));
-        slist_basic_destroy(agents);
+        g_list_free_full(agents, free);
     }
 #endif
 

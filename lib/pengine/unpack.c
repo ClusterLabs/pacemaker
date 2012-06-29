@@ -299,7 +299,7 @@ g_hash_destroy_node_list(gpointer data)
 {
     GListPtr domain = data;
 
-    slist_basic_destroy(domain);
+    g_list_free_full(domain, free);
 }
 
 gboolean

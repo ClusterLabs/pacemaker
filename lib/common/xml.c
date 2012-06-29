@@ -1914,7 +1914,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 
     sorted = g_list_sort(unsorted, sort_pairs);
     g_list_foreach(sorted, dump_pair, result);
-    slist_basic_destroy(sorted);
+    g_list_free_full(sorted, free);
 
     for(child = __xml_first_child(input); child != NULL; child = __xml_next(child)) {
 	if(recursive) {

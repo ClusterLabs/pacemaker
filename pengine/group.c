@@ -454,7 +454,7 @@ group_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
     }
 
     constraint->node_list_rh = saved;
-    slist_basic_destroy(zero);
+    g_list_free_full(zero, free);
 }
 
 void
