@@ -190,27 +190,4 @@ typedef GList *GListPtr;
 
 guint g_str_hash_traditional(gconstpointer v);
 
-/* These two macros are no longer to be used
- * They exist for compatability reasons and will be removed in a
- * future release
- * Use something like this instead:
-
-    GListPtr gIter = rsc->children;
-    for(; gIter != NULL; gIter = gIter->next) {
-	resource_t *child_rsc = (resource_t*)gIter->data;
-	...
-    }
- *
- */
-#  define slist_destroy(child_type, child, parent, a) do {		\
-	GListPtr __crm_iter_head = parent;				\
-	child_type *child = NULL;					\
-	while(__crm_iter_head != NULL) {				\
-	    child = (child_type *) __crm_iter_head->data;		\
-	    __crm_iter_head = __crm_iter_head->next;			\
-	    { a; }							\
-	}								\
-	g_list_free(parent);						\
-    } while(0)
-
 #endif

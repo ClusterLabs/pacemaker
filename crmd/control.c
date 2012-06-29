@@ -212,6 +212,8 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
 static void
 free_mem(fsa_data_t * msg_data)
 {
+    GListPtr gIter = NULL;
+
     crm_ipc_close(attrd_ipc);
     crm_ipc_destroy(attrd_ipc);
     g_main_loop_quit(crmd_mainloop);
@@ -223,13 +225,16 @@ free_mem(fsa_data_t * msg_data)
         fsa_cluster_conn = NULL;
     }
 #endif
-    slist_destroy(fsa_data_t, fsa_data, fsa_message_queue,
-                  crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
-                           fsa_input2string(fsa_data->fsa_input),
-                           fsa_state2string(fsa_state),
-                           fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
-                  delete_fsa_input(fsa_data);
-        );
+
+    for(gIter = fsa_message_queue; gIter != NULL; gIter = gIter->next) {
+        fsa_data_t *fsa_data = gIter->data;
+        crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
+                 fsa_input2string(fsa_data->fsa_input),
+                 fsa_state2string(fsa_state),
+                 fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
+        delete_fsa_input(fsa_data);
+    }
+    g_list_free(fsa_message_queue);
     delete_fsa_input(msg_data);
 
     if (ipc_clients) {

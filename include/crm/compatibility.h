@@ -178,4 +178,23 @@ slist_basic_destroy(GListPtr list)
 	}								\
     } while(0)
 
+/* Use something like this instead of the next macro:
+
+    GListPtr gIter = rsc->children;
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child_rsc = (resource_t*)gIter->data;
+	...
+    }
+ */
+#  define slist_destroy(child_type, child, parent, a) do {		\
+	GListPtr __crm_iter_head = parent;				\
+	child_type *child = NULL;					\
+	while(__crm_iter_head != NULL) {				\
+	    child = (child_type *) __crm_iter_head->data;		\
+	    __crm_iter_head = __crm_iter_head->next;			\
+	    { a; }							\
+	}								\
+	g_list_free(parent);						\
+    } while(0)
+
 #endif

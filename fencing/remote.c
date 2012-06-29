@@ -87,9 +87,7 @@ static void free_remote_op(gpointer data)
 	g_source_remove(op->op_timer);
     }
     if(op->query_results) {
-	slist_destroy(st_query_result_t, result, op->query_results,
-		      free_remote_query(result);
-	    );
+	g_list_free_full(op->query_results, free_remote_query);
     }
     if(op->request) {
 	free_xml(op->request);
@@ -167,9 +165,7 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
      * Keep the record around so we can query the history
      */
     if(op->query_results) {
-	slist_destroy(st_query_result_t, result, op->query_results,
-		      free_remote_query(result);
-	    );
+	g_list_free_full(op->query_results, free_remote_query);
 	op->query_results = NULL;
     }
 
