@@ -437,7 +437,7 @@ resources_list_agents(const char *standard, const char *provider)
         return resources_os_list_ocf_agents(provider);
     } else if (strcasecmp(standard, "lsb") == 0) {
         return resources_os_list_lsb_agents();
-#if SUPPORT_UPSTART
+#if SUPPORT_SYSTEMD
     } else if (strcasecmp(standard, "systemd") == 0) {
         return systemd_unit_listall();
 #endif
