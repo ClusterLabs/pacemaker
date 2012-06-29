@@ -141,9 +141,6 @@ find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
 {
     xmlNode *a_child = NULL;
     const char *name = "NULL";
-    if(must_find || root != NULL) {
-	crm_validate_data(root);
-    }
     if(root != NULL) {
 	name = crm_element_name(root);
     }
@@ -156,7 +153,6 @@ find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
     for(a_child = __xml_first_child(root); a_child != NULL; a_child = __xml_next(a_child)) {
 	if(crm_str_eq((const char *)a_child->name, search_path, TRUE)) {
 /* 		crm_trace("returning node (%s).", crm_element_name(a_child)); */
-	    crm_validate_data(a_child);
 	    return a_child;
 	}
     }
@@ -177,7 +173,6 @@ xmlNode*
 find_entity(xmlNode *parent, const char *node_name, const char *id)
 {
     xmlNode *a_child = NULL;
-    crm_validate_data(parent);
     for(a_child = __xml_first_child(parent); a_child != NULL; a_child = __xml_next(a_child)) {
 	/* Uncertain if node_name == NULL check is strictly necessary here */
 	if(node_name == NULL || crm_str_eq((const char *)a_child->name, node_name, TRUE)) {
@@ -197,9 +192,6 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
 void
 copy_in_properties(xmlNode* target, xmlNode *src)
 {
-    crm_validate_data(src);
-    crm_validate_data(target);
-
     if(src == NULL) {
 	crm_warn("No node to copy properties from");
 
@@ -211,7 +203,6 @@ copy_in_properties(xmlNode* target, xmlNode *src)
 	    src, local_prop_name, local_prop_value,
 	    expand_plus_plus(target, local_prop_name, local_prop_value)
 	    );
-	crm_validate_data(target);
     }
 	
     return;
@@ -754,7 +745,6 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
     CRM_CHECK(filename != NULL, return -1);
 
     crm_trace("Writing XML out to %s", filename);
-    crm_validate_data(xml_node);
     if (xml_node == NULL) {
 	crm_err("Cannot write NULL to %s", filename);
 	return -1;
@@ -775,7 +765,6 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
     now_str = ctime(&now);
     now_str[24] = EOS; /* replace the newline */
     crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN, now_str);
-    crm_validate_data(xml_node);
 	
     buffer = dump_xml_formatted(xml_node);
     CRM_CHECK(buffer != NULL && strlen(buffer) > 0,
@@ -1052,12 +1041,6 @@ xml_has_children(const xmlNode *xml_root)
 	return TRUE;
     }
     return FALSE;
-}
-
-void
-xml_validate(const xmlNode *xml_root)
-{
-    CRM_ASSERT(xml_root != NULL);
 }
 
 int

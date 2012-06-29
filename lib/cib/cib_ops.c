@@ -265,10 +265,6 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
     }
 
     obj_root = get_object_root(section, *result_cib);
-
-    crm_validate_data(input);
-    crm_validate_data(*result_cib);
-
     if (replace_xml_child(NULL, obj_root, input, TRUE) == FALSE) {
         crm_trace("No matching object to delete");
     }
@@ -295,10 +291,6 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
     }
 
     obj_root = get_object_root(section, *result_cib);
-
-    crm_validate_data(input);
-    crm_validate_data(*result_cib);
-
     if (obj_root == NULL) {
         xmlNode *tmp_section = NULL;
         const char *path = get_object_parent(section);
