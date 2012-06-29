@@ -272,7 +272,7 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
 {
     /* send callback to originating child */
     stonith_client_t *client_obj = NULL;
-    enum stonith_errors local_rc = stonith_ok;
+    int local_rc = pcmk_ok;
 
     crm_trace("Sending response");
 
@@ -296,10 +296,10 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
 	local_rc = crm_ipcs_send(client_obj->channel, notify_src, !sync_reply);
     } 
 	
-    if(local_rc < stonith_ok && client_obj != NULL) {
+    if(local_rc < pcmk_ok && client_obj != NULL) {
 	crm_warn("%sSync reply to %s failed: %s",
 		 sync_reply?"":"A-",
-		 client_obj?client_obj->name:"<unknown>", stonith_error2string(local_rc));
+		 client_obj?client_obj->name:"<unknown>", pcmk_strerror(local_rc));
     }
 }
 
@@ -351,7 +351,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 void
 do_stonith_notify(
-    int options, const char *type, enum stonith_errors result, xmlNode *data,
+    int options, const char *type, int result, xmlNode *data,
     const char *remote) 
 {
     /* TODO: Standardize the contents of data */
@@ -607,7 +607,7 @@ setup_cib(void)
 {
     static void *cib_library = NULL;
     static cib_t *(*cib_new_fn)(void) = NULL;
-    static const char *(*cib_err_fn)(enum cib_errors) = NULL;
+    static const char *(*cib_err_fn)(int) = NULL;
 
     int rc, retries = 0;
 
@@ -618,7 +618,7 @@ setup_cib(void)
         cib_new_fn = dlsym(cib_library, "cib_new");
     }
     if(cib_library && cib_err_fn == NULL) {
-        cib_err_fn = dlsym(cib_library, "cib_error2string");
+        cib_err_fn = dlsym(cib_library, "pcmk_strerror");
     }
     if(cib_new_fn != NULL) {
         cib = (*cib_new_fn)();
@@ -632,12 +632,12 @@ setup_cib(void)
     do {
         sleep(retries);
         rc = cib->cmds->signon(cib, CRM_SYSTEM_CRMD, cib_command);
-    } while(rc == cib_connection && ++retries < 5);
+    } while(rc == -ENOTCONN && ++retries < 5);
     
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         crm_err("Could not connect to the CIB service: %s", (*cib_err_fn)(rc));
         
-    } else if (cib_ok != cib->cmds->add_notify_callback(
+    } else if (pcmk_ok != cib->cmds->add_notify_callback(
                    cib, T_CIB_DIFF_NOTIFY, update_fencing_topology)) {
         crm_err("Could not set CIB notification callback");
         

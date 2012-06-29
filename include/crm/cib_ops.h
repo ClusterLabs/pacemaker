@@ -34,59 +34,59 @@
 #  include <crm/msg_xml.h>
 #  include <crm/common/xml.h>
 
-enum cib_errors
+int
 
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
 
-enum cib_errors
+int
 
 cib_process_erase(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
 
-enum cib_errors
+int
 
 cib_process_bump(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
 
-enum cib_errors
+int
 
 cib_process_replace(const char *op, int options, const char *section, xmlNode * req,
                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                     xmlNode ** answer);
 
-enum cib_errors
+int
 
 cib_process_create(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                    xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
 
-enum cib_errors
+int
 
 cib_process_modify(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                    xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
 
-enum cib_errors
+int
 
 cib_process_delete(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                    xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
 
-enum cib_errors
+int
 
 cib_process_diff(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
 
-enum cib_errors
+int
 
 cib_process_upgrade(const char *op, int options, const char *section, xmlNode * req,
                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                     xmlNode ** answer);
 
-enum cib_errors
+int
 
 cib_process_xpath(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
 
-enum cib_errors cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
+int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
 xmlNode *diff_cib_object(xmlNode * old_cib, xmlNode * new_cib, gboolean suppress);
 gboolean apply_cib_diff(xmlNode * old, xmlNode * diff, xmlNode ** new);
 gboolean cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff);

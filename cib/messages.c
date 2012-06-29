@@ -50,83 +50,83 @@ gboolean cib_is_master = FALSE;
 xmlNode *the_cib = NULL;
 gboolean syncd_once = FALSE;
 extern const char *cib_our_uname;
-enum cib_errors revision_check(xmlNode * cib_update, xmlNode * cib_copy, int flags);
+int revision_check(xmlNode * cib_update, xmlNode * cib_copy, int flags);
 int get_revision(xmlNode * xml_obj, int cur_revision);
 
-enum cib_errors updateList(xmlNode * local_cib, xmlNode * update_command, xmlNode * failed,
+int updateList(xmlNode * local_cib, xmlNode * update_command, xmlNode * failed,
                            int operation, const char *section);
 
 gboolean check_generation(xmlNode * newCib, xmlNode * oldCib);
 
 gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code);
 
-enum cib_errors cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
+int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
 
-enum cib_errors sync_our_cib(xmlNode * request, gboolean all);
+int sync_our_cib(xmlNode * request, gboolean all);
 
 extern xmlNode *cib_msg_copy(const xmlNode * msg, gboolean with_data);
 extern gboolean cib_shutdown_flag;
 
-enum cib_errors
+int
 cib_process_shutdown_req(const char *op, int options, const char *section, xmlNode * req,
                          xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                          xmlNode ** answer)
 {
 #ifdef CIBPIPE
-    return cib_invalid_argument;
+    return -EINVAL;
 #else
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
     const char *host = crm_element_value(req, F_ORIG);
 
     *answer = NULL;
 
     if (crm_element_value(req, F_CIB_ISREPLY) == NULL) {
         crm_info("Shutdown REQ from %s", host);
-        return cib_ok;
+        return pcmk_ok;
 
     } else if (cib_shutdown_flag) {
         crm_info("Shutdown ACK from %s", host);
         terminate_cib(__FUNCTION__, FALSE);
-        return cib_ok;
+        return pcmk_ok;
 
     } else {
         crm_err("Shutdown ACK from %s - not shutting down", host);
-        result = cib_unknown;
+        result = -EINVAL;
     }
 
     return result;
 #endif
 }
 
-enum cib_errors
+int
 cib_process_default(const char *op, int options, const char *section, xmlNode * req,
                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                     xmlNode ** answer)
 {
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event", op);
     *answer = NULL;
 
     if (op == NULL) {
-        result = cib_operation;
+        result = -EINVAL;
         crm_err("No operation specified");
 
     } else if (strcasecmp(CRM_OP_NOOP, op) == 0) {
         ;
 
     } else {
-        result = cib_NOTSUPPORTED;
+        result = -EPROTONOSUPPORT;
         crm_err("Action [%s] is not supported by the CIB", op);
     }
     return result;
 }
 
-enum cib_errors
+int
 cib_process_quit(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event", op);
 
@@ -135,23 +135,23 @@ cib_process_quit(const char *op, int options, const char *section, xmlNode * req
     return result;
 }
 
-enum cib_errors
+int
 cib_process_readwrite(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                       xmlNode ** answer)
 {
 #ifdef CIBPIPE
-    return cib_invalid_argument;
+    return -EINVAL;
 #else
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event", op);
 
     if (safe_str_eq(op, CIB_OP_ISMASTER)) {
         if (cib_is_master == TRUE) {
-            result = cib_ok;
+            result = pcmk_ok;
         } else {
-            result = cib_not_master;
+            result = -EPERM;
         }
         return result;
     }
@@ -175,14 +175,14 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 #endif
 }
 
-enum cib_errors
+int
 cib_process_ping(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
 #ifdef CIBPIPE
-    return cib_invalid_argument;
+    return -EINVAL;
 #else
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event", op);
     *answer = create_xml_node(NULL, XML_CRM_TAG_PING);
@@ -194,24 +194,24 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 #endif
 }
 
-enum cib_errors
+int
 cib_process_sync(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
 #ifdef CIBPIPE
-    return cib_invalid_argument;
+    return -EINVAL;
 #else
     return sync_our_cib(req, TRUE);
 #endif
 }
 
-enum cib_errors
+int
 cib_process_sync_one(const char *op, int options, const char *section, xmlNode * req,
                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                      xmlNode ** answer)
 {
 #ifdef CIBPIPE
-    return cib_invalid_argument;
+    return -EINVAL;
 #else
     return sync_our_cib(req, FALSE);
 #endif
@@ -219,12 +219,12 @@ cib_process_sync_one(const char *op, int options, const char *section, xmlNode *
 
 int sync_in_progress = 0;
 
-enum cib_errors
+int
 cib_server_process_diff(const char *op, int options, const char *section, xmlNode * req,
                         xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                         xmlNode ** answer)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
 
     if (cib_is_master) {
         /* the master is never waiting for a resync */
@@ -255,12 +255,12 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
         crm_notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in progress)",
                    diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
                    diff_add_admin_epoch, diff_add_epoch, diff_add_updates);
-        return cib_diff_resync;
+        return -pcmk_err_diff_resync;
     }
 
     rc = cib_process_diff(op, options, section, req, input, existing_cib, result_cib, answer);
 
-    if (rc == cib_diff_resync && cib_is_master == FALSE) {
+    if (rc == -pcmk_err_diff_resync && cib_is_master == FALSE) {
         xmlNode *sync_me = create_xml_node(NULL, "sync-me");
 
         free_xml(*result_cib);
@@ -273,12 +273,12 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
         crm_xml_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
 
         if (send_cluster_message(NULL, crm_msg_cib, sync_me, FALSE) == FALSE) {
-            rc = cib_not_connected;
+            rc = -ENOTCONN;
         }
         free_xml(sync_me);
 
-    } else if (rc == cib_diff_resync) {
-        rc = cib_diff_failed;
+    } else if (rc == -pcmk_err_diff_resync) {
+        rc = -pcmk_err_diff_failed;
         if (options & cib_force_diff) {
             crm_warn("Not requesting full refresh in R/W mode");
         }
@@ -287,15 +287,15 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
     return rc;
 }
 
-enum cib_errors
+int
 cib_process_replace_svr(const char *op, int options, const char *section, xmlNode * req,
                         xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                         xmlNode ** answer)
 {
     const char *tag = crm_element_name(input);
-    enum cib_errors rc =
+    int rc =
         cib_process_replace(op, options, section, req, input, existing_cib, result_cib, answer);
-    if (rc == cib_ok && safe_str_eq(tag, XML_TAG_CIB)) {
+    if (rc == pcmk_ok && safe_str_eq(tag, XML_TAG_CIB)) {
         sync_in_progress = 0;
     }
     return rc;
@@ -307,7 +307,7 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
     const char *object_name = NULL;
     const char *object_id = NULL;
     xmlNode *equiv_node = NULL;
-    int result = cib_ok;
+    int result = pcmk_ok;
 
     if (delete_spec != NULL) {
         object_name = crm_element_name(delete_spec);
@@ -317,10 +317,10 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
     crm_trace("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
 
     if (delete_spec == NULL) {
-        result = cib_NOOBJECT;
+        result = -EINVAL;
 
     } else if (parent == NULL) {
-        result = cib_NOPARENT;
+        result = -EINVAL;
 
     } else if (object_id == NULL) {
         /*  placeholder object */
@@ -330,11 +330,11 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
         equiv_node = find_entity(parent, object_name, object_id);
     }
 
-    if (result != cib_ok) {
+    if (result != pcmk_ok) {
         ;                       /* nothing */
 
     } else if (equiv_node == NULL) {
-        result = cib_ok;
+        result = pcmk_ok;
 
     } else if (xml_has_children(delete_spec) == FALSE) {
         /*  only leaves are deleted */
@@ -348,7 +348,7 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
             int tmp_result = delete_cib_object(equiv_node, child);
 
             /*  only the first error is likely to be interesting */
-            if (tmp_result != cib_ok && result == cib_ok) {
+            if (tmp_result != pcmk_ok && result == pcmk_ok) {
                 result = tmp_result;
             }
         }
@@ -357,13 +357,13 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
     return result;
 }
 
-enum cib_errors
+int
 cib_process_delete_absolute(const char *op, int options, const char *section, xmlNode * req,
                             xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                             xmlNode ** answer)
 {
     xmlNode *failed = NULL;
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
     xmlNode *update_section = NULL;
 
     crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
@@ -377,11 +377,11 @@ cib_process_delete_absolute(const char *op, int options, const char *section, xm
         section = NULL;
     }
 
-    CRM_CHECK(strcasecmp(CIB_OP_DELETE, op) == 0, return cib_operation);
+    CRM_CHECK(strcasecmp(CIB_OP_DELETE, op) == 0, return -EINVAL);
 
     if (input == NULL) {
         crm_err("Cannot perform modification with no data");
-        return cib_NOOBJECT;
+        return -EINVAL;
     }
 
     failed = create_xml_node(NULL, XML_TAG_FAILED);
@@ -391,10 +391,10 @@ cib_process_delete_absolute(const char *op, int options, const char *section, xm
     update_results(failed, input, op, result);
 
     if (xml_has_children(failed)) {
-        CRM_CHECK(result != cib_ok, result = cib_unknown);
+        CRM_CHECK(result != pcmk_ok, result = -EINVAL);
     }
 
-    if (result != cib_ok) {
+    if (result != pcmk_ok) {
         crm_log_xml_err(failed, "CIB Update failures");
         *answer = failed;
 
@@ -417,10 +417,10 @@ check_generation(xmlNode * newCib, xmlNode * oldCib)
 }
 
 #ifndef CIBPIPE
-enum cib_errors
+int
 sync_our_cib(xmlNode * request, gboolean all)
 {
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
     const char *host = crm_element_value(request, F_ORIG);
     const char *op = crm_element_value(request, F_CIB_OPERATION);
 
@@ -450,7 +450,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
 
     if (send_cluster_message(all ? NULL : host, crm_msg_cib, replace_request, FALSE) == FALSE) {
-        result = cib_not_connected;
+        result = -ENOTCONN;
     }
     free_xml(replace_request);
     return result;

@@ -36,7 +36,7 @@
 #include <crm/common/ipc.h>
 #include <crm/cib.h>
 
-int exit_code = cib_ok;
+int exit_code = pcmk_ok;
 int message_timer_id = -1;
 int message_timeout_ms = 30;
 
@@ -44,7 +44,7 @@ GMainLoop *mainloop = NULL;
 
 const char *host = NULL;
 void usage(const char *cmd, int exit_status);
-enum cib_errors do_init(void);
+int do_init(void);
 int do_work(xmlNode * input, int command_options, xmlNode ** output);
 
 gboolean admin_message_timeout(gpointer data);
@@ -423,7 +423,7 @@ main(int argc, char **argv)
     }
     
     exit_code = do_init();
-    if (exit_code != cib_ok) {
+    if (exit_code != pcmk_ok) {
         crm_err("Init failed, could not perform requested operations");
         fprintf(stderr, "Init failed, could not perform requested operations\n");
         return -exit_code;
@@ -447,17 +447,17 @@ main(int argc, char **argv)
         g_main_run(mainloop);
 
     } else if (exit_code < 0) {
-        crm_err("Call failed: %s", cib_error2string(exit_code));
-        fprintf(stderr, "Call failed: %s\n", cib_error2string(exit_code));
+        crm_err("Call failed: %s", pcmk_strerror(exit_code));
+        fprintf(stderr, "Call failed: %s\n", pcmk_strerror(exit_code));
         operation_status = exit_code;
 
-        if (exit_code == cib_dtd_validation) {
+        if (exit_code == -pcmk_err_dtd_validation) {
             if (crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
                 xmlNode *obj = NULL;
                 int version = 0, rc = 0;
 
                 rc = the_cib->cmds->query(the_cib, NULL, &obj, command_options);
-                if (rc == cib_ok) {
+                if (rc == pcmk_ok) {
                     update_validation(&obj, &version, TRUE, FALSE);
                 }
 
@@ -521,19 +521,19 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
     } else {
         crm_err("You must specify an operation");
     }
-    return cib_operation;
+    return -EINVAL;
 }
 
-enum cib_errors
+int
 do_init(void)
 {
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
 
     the_cib = cib_new();
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
-    if (rc != cib_ok) {
-        crm_err("Signon to CIB failed: %s", cib_error2string(rc));
-        fprintf(stderr, "Signon to CIB failed: %s\n", cib_error2string(rc));
+    if (rc != pcmk_ok) {
+        crm_err("Signon to CIB failed: %s", pcmk_strerror(rc));
+        fprintf(stderr, "Signon to CIB failed: %s\n", pcmk_strerror(rc));
     }
 
     return rc;
@@ -558,7 +558,7 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
         admin_input_xml = dump_xml_formatted(output);
     }
 
-    if (safe_str_eq(cib_action, CIB_OP_ISMASTER) && rc != cib_ok) {
+    if (safe_str_eq(cib_action, CIB_OP_ISMASTER) && rc != pcmk_ok) {
         crm_info("CIB on %s is _not_ the master instance", host ? host : "localhost");
         fprintf(stderr, "CIB on %s is _not_ the master instance\n", host ? host : "localhost");
 
@@ -567,8 +567,8 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
         fprintf(stderr, "CIB on %s _is_ the master instance\n", host ? host : "localhost");
 
     } else if (rc != 0) {
-        crm_warn("Call %s failed (%d): %s", cib_action, rc, cib_error2string(rc));
-        fprintf(stderr, "Call %s failed (%d): %s\n", cib_action, rc, cib_error2string(rc));
+        crm_warn("Call %s failed (%d): %s", cib_action, rc, pcmk_strerror(rc));
+        fprintf(stderr, "Call %s failed (%d): %s\n", cib_action, rc, pcmk_strerror(rc));
         fprintf(stdout, "%s\n", crm_str(admin_input_xml));
 
     } else if (safe_str_eq(cib_action, CIB_OP_QUERY) && output == NULL) {

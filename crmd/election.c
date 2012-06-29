@@ -465,7 +465,7 @@ do_election_timer_ctrl(long long action,
 static void
 feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
 
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -479,7 +479,7 @@ do_dc_takeover(long long action,
                enum crmd_fsa_state cur_state,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode *cib = NULL;
     GListPtr gIter = NULL;
     static const char *cluster_type = NULL;

@@ -161,7 +161,7 @@ blank_screen(void)
 static gboolean
 mon_timer_popped(gpointer data)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
 
     if (timer_id > 0) {
         g_source_remove(timer_id);
@@ -169,7 +169,7 @@ mon_timer_popped(gpointer data)
 
     rc = cib_connect(TRUE);
 
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         print_dot();
         timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     }
@@ -226,10 +226,10 @@ mon_winresize(int nsig)
 int
 cib_connect(gboolean full)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     static gboolean need_pass = TRUE;
 
-    CRM_CHECK(cib != NULL, return cib_missing);
+    CRM_CHECK(cib != NULL, return -EINVAL);
 
     if (getenv("CIB_passwd") != NULL) {
         need_pass = FALSE;
@@ -244,7 +244,7 @@ cib_connect(gboolean full)
 
         rc = cib->cmds->signon(cib, crm_system_name, cib_query);
 
-        if (rc != cib_ok) {
+        if (rc != pcmk_ok) {
             return rc;
         }
 
@@ -252,24 +252,24 @@ cib_connect(gboolean full)
         mon_refresh_display(NULL);
 
         if (full) {
-            if (rc == cib_ok) {
+            if (rc == pcmk_ok) {
                 rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy);
-                if (rc == cib_NOTSUPPORTED) {
+                if (rc == -EPROTONOSUPPORT) {
                     print_as("Notification setup failed, won't be able to reconnect after failure");
                     if (as_console) {
                         sleep(2);
                     }
-                    rc = cib_ok;
+                    rc = pcmk_ok;
                 }
 
             }
 
-            if (rc == cib_ok) {
+            if (rc == pcmk_ok) {
                 cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
                 rc = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
             }
 
-            if (rc != cib_ok) {
+            if (rc != pcmk_ok) {
                 print_as("Notification setup failed, could not monitor CIB actions");
                 if (as_console) {
                     sleep(2);
@@ -530,15 +530,15 @@ main(int argc, char **argv)
             if (one_shot) {
                 break;
 
-            } else if (exit_code != cib_ok) {
+            } else if (exit_code != pcmk_ok) {
                 print_dot();
                 sleep(reconnect_msec / 1000);
             }
 
-        } while (exit_code == cib_connection);
+        } while (exit_code == -ENOTCONN);
 
-        if (exit_code != cib_ok) {
-            print_as("\nConnection to cluster failed: %s\n", cib_error2string(exit_code));
+        if (exit_code != pcmk_ok) {
+            print_as("\nConnection to cluster failed: %s\n", pcmk_strerror(exit_code));
             if (as_console) {
                 sleep(2);
             }
@@ -2087,7 +2087,7 @@ handle_rsc_op(xmlNode * rsc_op)
     }
 
     /* look up where we expected it to be? */
-    desc = cib_error2string(cib_ok);
+    desc = pcmk_strerror(pcmk_ok);
     if (status == PCMK_LRM_OP_DONE && target_rc == rc) {
         crm_notice("%s of %s on %s completed: %s", task, rsc, node, desc);
         if (rc == PCMK_EXECRA_NOT_RUNNING) {
@@ -2141,9 +2141,9 @@ crm_diff_update(const char *event, xmlNode * msg)
     op = crm_element_value(msg, F_CIB_OPERATION);
     diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    if (rc < cib_ok) {
+    if (rc < pcmk_ok) {
         log_level = LOG_WARNING;
-        do_crm_log(log_level, "[%s] %s ABORTED: %s", event, op, cib_error2string(rc));
+        do_crm_log(log_level, "[%s] %s ABORTED: %s", event, op, pcmk_strerror(rc));
         return;
     }
 
@@ -2152,8 +2152,8 @@ crm_diff_update(const char *event, xmlNode * msg)
         current_cib = NULL;
         rc = cib_process_diff(op, cib_force_diff, NULL, NULL, diff, cib_last, &current_cib, NULL);
 
-        if (rc != cib_ok) {
-            crm_debug("Update didn't apply, requesting full copy: %s", cib_error2string(rc));
+        if (rc != pcmk_ok) {
+            crm_debug("Update didn't apply, requesting full copy: %s", pcmk_strerror(rc));
             free_xml(current_cib);
             current_cib = NULL;
         }
@@ -2212,7 +2212,7 @@ mon_refresh_display(gpointer user_data)
         if (cib) {
             cib->cmds->signoff(cib);
         }
-        print_as("Upgrade failed: %s", cib_error2string(cib_dtd_validation));
+        print_as("Upgrade failed: %s", pcmk_strerror(-pcmk_err_dtd_validation));
         if (as_console) {
             sleep(2);
         }

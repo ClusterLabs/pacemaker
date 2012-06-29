@@ -89,7 +89,7 @@ struct timer_rec_s {
     stonith_t *stonith;
 };
 
-typedef enum stonith_errors (*stonith_op_t) (const char *, int, const char *, xmlNode *,
+typedef int (*stonith_op_t) (const char *, int, const char *, xmlNode *,
                                              xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 
 static const char META_TEMPLATE[] =
@@ -466,7 +466,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
                   async_command_t * track)
 {
     char *args = make_args(action, victim, device_args, port_map);
-    int pid, status, len, rc = st_err_internal;
+    int pid, status, len, rc = -EPROTO;
     int p_read_fd, p_write_fd;  /* parent read/write file descriptors */
     int c_read_fd, c_write_fd;  /* child read/write file descriptors */
     int fd1[2];
@@ -491,7 +491,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
     crm_debug("forking");
     pid = fork();
     if (pid < 0) {
-        rc = st_err_agent_fork;
+        rc = -ECHILD;
         goto fail;
     }
 
@@ -514,7 +514,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
         if (total != len) {
             crm_perror(LOG_ERR, "Sent %d not %d bytes", total, len);
             if (ret >= 0) {
-                rc = st_err_agent_args;
+                rc = -EREMOTEIO;
             }
             goto fail;
         }
@@ -587,8 +587,8 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
                 }
             }
 
-            rc = st_err_agent;
-            *agent_result = st_err_agent;
+            rc = -ECONNABORTED;
+            *agent_result = -ECONNABORTED;
             if (WIFEXITED(status)) {
                 crm_debug("result = %d", WEXITSTATUS(status));
                 *agent_result = -WEXITSTATUS(status);
@@ -875,7 +875,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
     xmlNode *output = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
 
-    CRM_CHECK(devices != NULL, return st_err_missing);
+    CRM_CHECK(devices != NULL, return -EINVAL);
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
     crm_xml_add(data, "origin", __FUNCTION__);
@@ -992,88 +992,6 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
         }
     }
     return rc;
-}
-
-const char *
-stonith_error2string(enum stonith_errors return_code)
-{
-    const char *error_msg = NULL;
-
-    switch (return_code) {
-        case stonith_ok:
-            error_msg = "OK";
-            break;
-        case st_err_not_supported:
-            error_msg = "Not supported";
-            break;
-        case st_err_authentication:
-            error_msg = "Not authenticated";
-            break;
-        case st_err_generic:
-            error_msg = "Generic error";
-            break;
-        case st_err_internal:
-            error_msg = "Internal error";
-            break;
-        case st_err_unknown_device:
-            error_msg = "Unknown device";
-            break;
-        case st_err_unknown_operation:
-            error_msg = "Unknown operation";
-            break;
-        case st_err_unknown_port:
-            error_msg = "Unknown victim";
-            break;
-        case st_err_none_available:
-            error_msg = "No available fencing devices";
-            break;
-        case st_err_connection:
-            error_msg = "Not connected";
-            break;
-        case st_err_missing:
-            error_msg = "Missing input";
-            break;
-        case st_err_exists:
-            error_msg = "Device exists";
-            break;
-        case st_err_timeout:
-            error_msg = "Operation timed out";
-            break;
-        case st_err_signal:
-            error_msg = "Killed by signal";
-            break;
-        case st_err_ipc:
-            error_msg = "IPC connection failed";
-            break;
-        case st_err_peer:
-            error_msg = "Error from peer";
-            break;
-        case stonith_pending:
-            error_msg = "Stonith operation is in progress";
-            break;
-        case st_err_agent_fork:
-            error_msg = "Call to fork() failed";
-            break;
-        case st_err_agent_args:
-            error_msg = "Could not send arguments to the stonith device";
-            break;
-        case st_err_agent:
-            error_msg = "Execution of the stonith agent failed";
-            break;
-        case st_err_invalid_target:
-            error_msg = "Invalid target";
-            break;
-        case st_err_invalid_level:
-            error_msg = "Invalid fencing level specified";
-            break;
-    }
-
-    if (error_msg == NULL) {
-        crm_err("Unknown Stonith error code: %d", return_code);
-        error_msg = "<unknown error>";
-    }
-
-    return error_msg;
 }
 
 gboolean
@@ -1197,13 +1115,13 @@ stonith_api_signoff(stonith_t * stonith)
     }
 
     stonith->state = stonith_disconnected;
-    return stonith_ok;
+    return pcmk_ok;
 }
 
 static int
 stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 {
-    int rc = stonith_ok;
+    int rc = pcmk_ok;
     stonith_private_t *native = stonith->private;
     static struct ipc_client_callbacks st_callbacks = 
         {
@@ -1222,7 +1140,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             *stonith_fd = crm_ipc_get_fd(native->ipc);
 
         } else if(native->ipc) {
-            rc = st_err_connection;
+            rc = -ENOTCONN;
         }
 
     } else {
@@ -1233,10 +1151,10 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     
     if (native->ipc == NULL) {
         crm_debug("Could not connect to the Stonith API");
-        rc = st_err_connection;
+        rc = -ENOTCONN;
     }
 
-    if (rc == stonith_ok) {
+    if (rc == pcmk_ok) {
         xmlNode *reply = NULL;
         xmlNode *hello = create_xml_node(NULL, "stonith_command");
 
@@ -1247,11 +1165,11 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
         if(rc < 0) {
             crm_perror(LOG_DEBUG, "Couldn't complete registration with the fencing API: %d", rc);
-            rc = st_err_ipc;
+            rc = -ECOMM;
 
         } else if(reply == NULL) {
             crm_err("Did not receive registration reply");
-            rc = st_err_internal;
+            rc = -EPROTO;
 
         } else {
             const char *msg_type = crm_element_value(reply, F_STONITH_OPERATION);
@@ -1260,17 +1178,17 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
                 crm_err("Invalid registration message: %s", msg_type);
                 crm_log_xml_err(reply, "Bad reply");
-                rc = st_err_internal;
+                rc = -EPROTO;
                 
             } else if (tmp_ticket == NULL) {
                 crm_err("No registration token provided");
                 crm_log_xml_err(reply, "Bad reply");
-                rc = st_err_internal;
+                rc = -EPROTO;
                 
             } else {
                 crm_trace("Obtained registration token: %s", tmp_ticket);
                 native->token = crm_strdup(tmp_ticket);
-                rc = stonith_ok;
+                rc = pcmk_ok;
             }
         }
         
@@ -1278,15 +1196,15 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         free_xml(hello);
     }
 
-    if (rc == stonith_ok) {
+    if (rc == pcmk_ok) {
 #if HAVE_MSGFROMIPC_TIMEOUT
         stonith->call_timeout = MAX_IPC_DELAY;
 #endif
         crm_debug("Connection to STONITH successful");
-        return stonith_ok;
+        return pcmk_ok;
     }
 
-    crm_debug("Connection to STONITH failed: %s", stonith_error2string(rc));
+    crm_debug("Connection to STONITH failed: %s", pcmk_strerror(rc));
     stonith->cmds->disconnect(stonith);
     return rc;
 }
@@ -1309,12 +1227,12 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
         rc = crm_ipc_send(native->ipc, notify_msg, NULL, -1);
         if(rc < 0) {
             crm_perror(LOG_DEBUG, "Couldn't register for fencing notifications: %d", rc);
-            rc = st_err_ipc;
+            rc = -ECOMM;
         }
     }
 
     free_xml(notify_msg);
-    return stonith_ok;
+    return pcmk_ok;
 }
 
 static int
@@ -1338,7 +1256,7 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
     if (list_item != NULL) {
         crm_warn("Callback already present");
         free(new_client);
-        return st_err_exists;
+        return -ENOTUNIQ;
 
     } else {
         private->notify_list = g_list_append(private->notify_list, new_client);
@@ -1347,7 +1265,7 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
 
         crm_trace("Callback added (%d)", g_list_length(private->notify_list));
     }
-    return stonith_ok;
+    return pcmk_ok;
 }
 
 static int
@@ -1380,7 +1298,7 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
         crm_trace("Callback not present");
     }
     free(new_client);
-    return stonith_ok;
+    return pcmk_ok;
 }
 
 static gboolean
@@ -1389,7 +1307,7 @@ stonith_async_timeout_handler(gpointer data)
     struct timer_rec_s *timer = data;
 
     crm_err("Async call %d timed out after %dms", timer->call_id, timer->timeout);
-    stonith_perform_callback(timer->stonith, NULL, timer->call_id, st_err_timeout);
+    stonith_perform_callback(timer->stonith, NULL, timer->call_id, -ETIME);
 
     /* Always return TRUE, never remove the handler
      * We do that in stonith_del_callback()
@@ -1406,8 +1324,8 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, bool onl
     stonith_callback_client_t *blob = NULL;
     stonith_private_t *private = NULL;
 
-    CRM_CHECK(stonith != NULL, return st_err_missing);
-    CRM_CHECK(stonith->private != NULL, return st_err_missing);
+    CRM_CHECK(stonith != NULL, return -EINVAL);
+    CRM_CHECK(stonith->private != NULL, return -EINVAL);
     private = stonith->private;
 
     if (call_id == 0) {
@@ -1416,10 +1334,10 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, bool onl
     } else if (call_id < 0) {
         if (only_success == FALSE) {
             crm_trace("Call failed, calling %s: %s",
-                      callback_name, stonith_error2string(call_id));
+                      callback_name, pcmk_strerror(call_id));
             callback(stonith, NULL, call_id, call_id, NULL, user_data);
         } else {
-            crm_warn("STONITH call failed: %s", stonith_error2string(call_id));
+            crm_warn("STONITH call failed: %s", pcmk_strerror(call_id));
         }
         return FALSE;
     }
@@ -1470,7 +1388,7 @@ stonith_api_del_callback(stonith_t * stonith, int call_id, bool all_callbacks)
     } else {
         g_hash_table_remove(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
     }
-    return stonith_ok;
+    return pcmk_ok;
 }
 
 static void
@@ -1532,12 +1450,12 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
         local_blob.callback = NULL;
     }
 
-    if (local_blob.callback != NULL && (rc == stonith_ok || local_blob.only_success == FALSE)) {
+    if (local_blob.callback != NULL && (rc == pcmk_ok || local_blob.only_success == FALSE)) {
         crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
         local_blob.callback(stonith, msg, call_id, rc, output, local_blob.user_data);
 
-    } else if (private->op_callback == NULL && rc != stonith_ok) {
-        crm_warn("STONITH command failed: %s", stonith_error2string(rc));
+    } else if (private->op_callback == NULL && rc != pcmk_ok) {
+        crm_warn("STONITH command failed: %s", pcmk_strerror(rc));
         crm_log_xml_debug(msg, "Failed STONITH Update");
     }
 
@@ -1593,7 +1511,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     stonith_private_t *native = stonith->private;
 
     if (stonith->state == stonith_disconnected) {
-        return st_err_connection;
+        return -ENOTCONN;
     }
 
     if (output_data != NULL) {
@@ -1602,7 +1520,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 
     if (op == NULL) {
         crm_err("No operation specified");
-        return st_err_missing;
+        return -EINVAL;
     }
 
     stonith->call_id++;
@@ -1617,7 +1535,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     CRM_CHECK(native->token != NULL,;);
     op_msg = stonith_create_op(stonith->call_id, native->token, op, data, call_options);
     if (op_msg == NULL) {
-        return st_err_missing;
+        return -EINVAL;
     }
 
     crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
@@ -1628,7 +1546,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 
     if(rc < 0) {
         crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%ds): %d", op, timeout, rc);
-        rc = st_err_ipc;
+        rc = -ECOMM;
         goto done;
     }
 
@@ -1636,20 +1554,20 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     
     if (!(call_options & st_opt_sync_call)) {
         crm_trace("Async call %d, returning", stonith->call_id);
-        CRM_CHECK(stonith->call_id != 0, return st_err_internal);
+        CRM_CHECK(stonith->call_id != 0, return -EPROTO);
         free_xml(op_reply);
 
         return stonith->call_id;
     }
 
-    rc = stonith_ok;
+    rc = pcmk_ok;
     crm_element_value_int(op_reply, F_STONITH_CALLID, &reply_id);
 
     if (reply_id == stonith->call_id) {
         crm_trace("Syncronous reply %d received", reply_id);
 
         if (crm_element_value_int(op_reply, F_STONITH_RC, &rc) != 0) {
-            rc = st_err_peer;
+            rc = -ENOMSG;
         }
 
         if ((call_options & st_opt_discard_reply) || output_data == NULL) {
@@ -1664,13 +1582,13 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         crm_err("Recieved bad reply: No id set");
         crm_log_xml_err(op_reply, "Bad reply");
         free_xml(op_reply);
-        rc = st_err_peer;
+        rc = -ENOMSG;
         
     } else {
         crm_err("Recieved bad reply: %d (wanted %d)", reply_id, stonith->call_id);
         crm_log_xml_err(op_reply, "Old reply");
         free_xml(op_reply);
-        rc = st_err_peer;
+        rc = -ENOMSG;
     }
 
   done:
@@ -1749,7 +1667,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
 static int
 stonith_api_free(stonith_t * stonith)
 {
-    int rc = stonith_ok;
+    int rc = pcmk_ok;
 
     if (stonith->state != stonith_disconnected) {
         rc = stonith->cmds->disconnect(stonith);
@@ -1884,7 +1802,7 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
     char *name = NULL;
     const char *action = "reboot";
 
-    int rc = st_err_internal;
+    int rc = -EPROTO;
     stonith_t *st = NULL;
     enum stonith_call_options opts = st_opt_sync_call | st_opt_allow_suicide;
 
@@ -1905,7 +1823,7 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
         action = "off";
     }
 
-    if (rc == stonith_ok) {
+    if (rc == pcmk_ok) {
         rc = st->cmds->fence(st, opts, name, action, timeout);
     }
 
@@ -1943,7 +1861,7 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
         name = crm_itoa(nodeid);
     }
 
-    if (st && rc == stonith_ok) {
+    if (st && rc == pcmk_ok) {
         st->cmds->history(st, st_opt_sync_call | st_opt_cs_nodeid, name, &history, 120);
 
         for (hp = history; hp; hp = hp->next) {

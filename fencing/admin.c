@@ -368,7 +368,7 @@ main(int argc, char ** argv)
 
   done:
     if(rc < 0) {
-	printf("Command failed: %s\n", stonith_error2string(rc));
+	printf("Command failed: %s\n", pcmk_strerror(rc));
     }
     
     stonith_key_value_freeall(params, 1, 1);

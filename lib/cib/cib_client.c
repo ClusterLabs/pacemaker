@@ -50,9 +50,9 @@ gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b);
 
 #define op_common(cib) do {                                             \
         if(cib == NULL) {                                               \
-            return cib_missing;						\
+            return -EINVAL;						\
         } else if(cib->cmds->variant_op == NULL) {                      \
-            return cib_variant;						\
+            return -EPROTONOSUPPORT;						\
         }                                                               \
     } while(0)
 
@@ -102,7 +102,7 @@ cib_client_set_slave(cib_t * cib, int call_options)
 static int
 cib_client_set_slave_all(cib_t * cib, int call_options)
 {
-    return cib_NOTSUPPORTED;
+    return -EPROTONOSUPPORT;
 }
 
 static int
@@ -431,7 +431,7 @@ cib_client_set_op_callback(cib_t * cib, void (*callback) (const xmlNode * msg, i
         crm_trace("Setting operation callback");
     }
     cib->op_callback = callback;
-    return cib_ok;
+    return pcmk_ok;
 }
 
 int
@@ -442,7 +442,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
     cib_notify_client_t *new_client = NULL;
 
     if (cib->variant != cib_native && cib->variant != cib_remote) {
-        return cib_NOTSUPPORTED;
+        return -EPROTONOSUPPORT;
     }
 
     crm_trace("Adding callback for %s events (%d)", event, g_list_length(cib->notify_list));
@@ -456,7 +456,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
     if (list_item != NULL) {
         crm_warn("Callback already present");
         free(new_client);
-        return cib_EXISTS;
+        return -ENOTUNIQ;
 
     } else {
         cib->notify_list = g_list_append(cib->notify_list, new_client);
@@ -465,7 +465,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
 
         crm_trace("Callback added (%d)", g_list_length(cib->notify_list));
     }
-    return cib_ok;
+    return pcmk_ok;
 }
 
 int
@@ -476,7 +476,7 @@ cib_client_del_notify_callback(cib_t * cib, const char *event,
     cib_notify_client_t *new_client = NULL;
 
     if (cib->variant != cib_native && cib->variant != cib_remote) {
-        return cib_NOTSUPPORTED;
+        return -EPROTONOSUPPORT;
     }
 
     crm_debug("Removing callback for %s events", event);
@@ -501,7 +501,7 @@ cib_client_del_notify_callback(cib_t * cib, const char *event,
         crm_trace("Callback not present");
     }
     free(new_client);
-    return cib_ok;
+    return pcmk_ok;
 }
 
 gint
@@ -534,7 +534,7 @@ cib_async_timeout_handler(gpointer data)
     struct timer_rec_s *timer = data;
 
     crm_debug("Async call %d timed out after %ds", timer->call_id, timer->timeout);
-    cib_native_callback(timer->cib, NULL, timer->call_id, cib_remote_timeout);
+    cib_native_callback(timer->cib, NULL, timer->call_id, -ETIME);
 
     /* Always return TRUE, never remove the handler
      * We do that in remove_cib_op_callback()
@@ -553,7 +553,7 @@ cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean onl
         if (only_success == FALSE) {
             callback(NULL, call_id, call_id, NULL, user_data);
         } else {
-            crm_warn("CIB call failed: %s", cib_error2string(call_id));
+            crm_warn("CIB call failed: %s", pcmk_strerror(call_id));
         }
         return FALSE;
     }

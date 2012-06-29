@@ -86,29 +86,6 @@ enum lrmd_call_options {
     lrmd_opt_notify_orig_only = 0x00000002,
 };
 
-enum lrmd_errors {
-    lrmd_ok                      =  0,
-    lrmd_pending                 = -1,
-    lrmd_err_generic             = -2,
-    lrmd_err_internal            = -3,
-    lrmd_err_not_supported       = -4,
-    lrmd_err_connection          = -5,
-    lrmd_err_missing             = -6,
-    lrmd_err_exists              = -7,
-    lrmd_err_timeout             = -8,
-    lrmd_err_ipc                 = -9,
-    lrmd_err_peer                = -10,
-    lrmd_err_unknown_operation   = -11,
-    lrmd_err_unknown_rsc         = -12,
-    lrmd_err_none_available      = -13,
-    lrmd_err_authentication      = -14,
-    lrmd_err_signal              = -15,
-    lrmd_err_exec_failed         = -16,
-    lrmd_err_no_metadata         = -17,
-    lrmd_err_stonith_connection  = -18,
-    lrmd_err_provider_required   = -19,
-};
-
 enum lrmd_callback_event {
     lrmd_event_register,
     lrmd_event_unregister,

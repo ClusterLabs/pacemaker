@@ -90,7 +90,7 @@ print_ticket(ticket_t *ticket, gboolean raw, gboolean details)
 {
     if (raw) {
         fprintf(stdout, "%s\n", ticket->id); 
-        return cib_ok;
+        return pcmk_ok;
     }
 
     fprintf(stdout, "%s\t%s %s",
@@ -130,7 +130,7 @@ print_ticket(ticket_t *ticket, gboolean raw, gboolean details)
         fprintf(stdout, "\n");
     }
 
-    return cib_ok;
+    return pcmk_ok;
 }
 
 static int
@@ -145,7 +145,7 @@ print_ticket_list(pe_working_set_t * data_set, gboolean raw, gboolean details)
         print_ticket(ticket, raw, details);
     }
 
-    return cib_ok;
+    return pcmk_ok;
 }
 
 static int
@@ -153,7 +153,7 @@ find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_sta
 {
     int offset = 0;
     static int xpath_max = 1024;
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
     char *xpath_string = NULL;
@@ -173,7 +173,7 @@ find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_sta
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         goto bail;
     }
 
@@ -197,7 +197,7 @@ find_ticket_constraints(cib_t * the_cib, const char * ticket_id, xmlNode ** tick
 {
     int offset = 0;
     static int xpath_max = 1024;
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
     char *xpath_string = NULL;
@@ -218,7 +218,7 @@ find_ticket_constraints(cib_t * the_cib, const char * ticket_id, xmlNode ** tick
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         goto bail;
     }
 
@@ -233,7 +233,7 @@ find_ticket_constraints(cib_t * the_cib, const char * ticket_id, xmlNode ** tick
 static int
 dump_ticket_xml(cib_t * the_cib, const char *ticket_id)
 {
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode * state_xml = NULL;
 
     rc = find_ticket_state(the_cib, ticket_id, &state_xml);
@@ -252,13 +252,13 @@ dump_ticket_xml(cib_t * the_cib, const char *ticket_id)
         free(state_xml_str);
     }
 
-    return cib_ok;
+    return pcmk_ok;
 }
 
 static int
 dump_constraints(cib_t * the_cib, const char * ticket_id)
 {
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode * cons_xml = NULL;
     char *cons_xml_str = NULL;
 
@@ -273,7 +273,7 @@ dump_constraints(cib_t * the_cib, const char * ticket_id)
     free_xml(cons_xml);
     free(cons_xml_str);
 
-    return cib_ok;
+    return pcmk_ok;
 }
 
 static int
@@ -282,7 +282,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
 {
     int offset = 0;
     static int xpath_max = 1024;
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
     char *xpath_string = NULL;
@@ -329,7 +329,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         goto bail;
     }
 
@@ -337,7 +337,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
     if (xml_has_children(xml_search)) {
         xmlNode *child = NULL;
 
-        rc = cib_missing_data;
+        rc = -EINVAL;
         fprintf(stdout, "Multiple attributes match name=%s\n", attr_name);
 
         for (child = __xml_first_child(xml_search); child != NULL; child = __xml_next(child)) {
@@ -365,16 +365,16 @@ delete_ticket_state_attr_legacy(const char *ticket_id, const char *set_name, con
 {
     xmlNode *xml_obj = NULL;
 
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     char *local_attr_id = NULL;
 
     rc = find_ticket_state_attr_legacy(cib, XML_ATTR_ID, ticket_id, XML_TAG_ATTR_SETS, set_name, attr_id, attr_name,
                             &local_attr_id);
 
-    if (rc == cib_NOTEXISTS) {
-        return cib_ok;
+    if (rc == -ENXIO) {
+        return pcmk_ok;
 
-    } else if (rc != cib_ok) {
+    } else if (rc != pcmk_ok) {
         return rc;
     }
 
@@ -390,7 +390,7 @@ delete_ticket_state_attr_legacy(const char *ticket_id, const char *set_name, con
 
     rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, xml_obj, cib_options);
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         fprintf(stdout, "Deleted legacy %s state attribute: id=%s%s%s%s%s\n", ticket_id, local_attr_id,
                set_name ? " set=" : "", set_name ? set_name : "",
                attr_name ? " name=" : "", attr_name ? attr_name : "");
@@ -411,15 +411,15 @@ get_ticket_state_attr(const char *ticket_id, const char *attr_name, const char *
 
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
     if (ticket == NULL) {
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
     *attr_value = g_hash_table_lookup(ticket->state, attr_name);
     if (*attr_value == NULL) {
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
-    return cib_ok;
+    return pcmk_ok;
 }
 
 static int
@@ -427,21 +427,21 @@ delete_ticket_state_attr(const char *ticket_id, const char *attr_name, cib_t * c
 {
     xmlNode *ticket_state_xml = NULL;
 
-    int rc = cib_ok;
+    int rc = pcmk_ok;
 
     rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
 
-    if (rc == cib_NOTEXISTS) {
-        return cib_ok;
+    if (rc == -ENXIO) {
+        return pcmk_ok;
 
-    } else if (rc != cib_ok) {
+    } else if (rc != pcmk_ok) {
         return rc;
     }
 
     xml_remove_prop(ticket_state_xml, attr_name);
     rc = cib->cmds->replace(cib, XML_CIB_TAG_STATUS, ticket_state_xml, cib_options);
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         fprintf(stdout, "Deleted %s state attribute: %s%s\n", ticket_id,
                attr_name ? " name=" : "", attr_name ? attr_name : "");
     }
@@ -454,16 +454,16 @@ static int
 set_ticket_state_attr(const char *ticket_id, const char *attr_name,
                       const char *attr_value, cib_t * cib)
 {
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode *xml_top = NULL;
     xmlNode *ticket_state_xml = NULL;
 
     rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         crm_debug("Found a match state for ticket: id=%s", ticket_id);
         xml_top = ticket_state_xml;
 
-    } else if (rc != cib_NOTEXISTS) {
+    } else if (rc != -ENXIO) {
         return rc;
 
     } else {
@@ -491,14 +491,14 @@ delete_ticket_state(const char *ticket_id, cib_t * cib)
 {
     xmlNode *ticket_state_xml = NULL;
 
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
 
     rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
 
-    if (rc == cib_NOTEXISTS) {
-        return cib_ok;
+    if (rc == -ENXIO) {
+        return pcmk_ok;
 
-    } else if (rc != cib_ok) {
+    } else if (rc != pcmk_ok) {
         return rc;
     }
 
@@ -506,7 +506,7 @@ delete_ticket_state(const char *ticket_id, cib_t * cib)
 
     rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, ticket_state_xml, cib_options);
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         fprintf(stdout, "Cleaned up %s\n", ticket_id);
     }
 
@@ -660,7 +660,7 @@ main(int argc, char **argv)
     xmlNode *cib_constraints = NULL;
 
     cib_t *cib_conn = NULL;
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
 
     int option_index = 0;
     int argerr = 0;
@@ -766,15 +766,15 @@ main(int argc, char **argv)
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {
-        rc = cib_connection;
+        rc = -ENOTCONN;
         CMD_ERR("Error initiating the connection to the CIB service: %s\n",
-                cib_error2string(rc));
+                pcmk_strerror(rc));
         return rc;
     }
 
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-    if (rc != cib_ok) {
-        CMD_ERR("Error signing on to the CIB service: %s\n", cib_error2string(rc));
+    if (rc != pcmk_ok) {
+        CMD_ERR("Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
         return rc;
     }
 
@@ -786,7 +786,7 @@ main(int argc, char **argv)
     }
 
     if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
-        rc = cib_STALE;
+        rc = -ENOKEY;
         goto bail;
     }
 
@@ -803,7 +803,7 @@ main(int argc, char **argv)
     if (ticket_cmd == 'l' || ticket_cmd == 'L' || ticket_cmd == 'w') {
         gboolean raw = FALSE;
         gboolean details = FALSE;
-        rc = cib_ok;
+        rc = pcmk_ok;
 
         if (ticket_cmd == 'L') {
             details = TRUE;
@@ -814,7 +814,7 @@ main(int argc, char **argv)
         if (ticket_id) {
             ticket_t *ticket = find_ticket(ticket_id, &data_set);
             if (ticket == NULL) {
-                rc = cib_NOTEXISTS;
+                rc = -ENXIO;
                 goto bail;
             }
             rc = print_ticket(ticket, raw, details);
@@ -834,16 +834,16 @@ main(int argc, char **argv)
 
         if (ticket_id == NULL) {
             CMD_ERR("Must supply a ticket id with -t\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
 
         rc = get_ticket_state_attr(ticket_id, attr_name, &value, &data_set);
-        if (rc == cib_ok) {
+        if (rc == pcmk_ok) {
             fprintf(stdout, "%s\n", value);
-        } else if (rc == cib_NOTEXISTS && attr_default) {
+        } else if (rc == -ENXIO && attr_default) {
             fprintf(stdout, "%s\n", attr_default);
-            rc = cib_ok;
+            rc = pcmk_ok;
         }
 
     } else if (ticket_cmd == 'S' 
@@ -853,7 +853,7 @@ main(int argc, char **argv)
 
         if (ticket_id == NULL) {
             CMD_ERR("Must supply a ticket id with -t\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
 
@@ -876,19 +876,19 @@ main(int argc, char **argv)
 
         if (attr_value == NULL || strlen(attr_value) == 0) {
             CMD_ERR("You need to supply a value with the -v option\n");
-            rc = CIBRES_MISSING_FIELD;
+            rc = -EINVAL;
             goto bail;
         }
 
         if (safe_str_eq(attr_name, "granted") && do_force == FALSE) {
             if (crm_is_true(attr_value) && confirm(ticket_id, "grant") == FALSE) {
                 CMD_ERR("Cancelled\n");
-                rc = cib_ok;
+                rc = pcmk_ok;
                 goto bail;
 
             } else if (crm_is_true(attr_value) == FALSE && confirm(ticket_id, "revoke") == FALSE) {
                 CMD_ERR("Cancelled\n");
-                rc = cib_ok;
+                rc = pcmk_ok;
                 goto bail;
             }
         }
@@ -904,7 +904,7 @@ main(int argc, char **argv)
         rc = set_ticket_state_attr(ticket_id, attr_name, attr_value, cib_conn);
         delete_ticket_state_attr_legacy(ticket_id, set_name, attr_id, attr_name, cib_conn);
 
-        if(rc != cib_ok) {
+        if(rc != pcmk_ok) {
             goto bail;
         }
 
@@ -916,14 +916,14 @@ main(int argc, char **argv)
     } else if (ticket_cmd == 'D') {
         if (ticket_id == NULL) {
             CMD_ERR("Must supply a ticket id with -t\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
 
         if (safe_str_eq(attr_name, "granted") && do_force == FALSE
             && confirm(ticket_id, "revoke") == FALSE) {
             CMD_ERR("Cancelled\n");
-            rc = cib_ok;
+            rc = pcmk_ok;
             goto bail;
         }
 
@@ -933,7 +933,7 @@ main(int argc, char **argv)
     } else if (ticket_cmd == 'C') {
         if (ticket_id == NULL) {
             CMD_ERR("Must supply a ticket id with -t\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
         
@@ -942,13 +942,13 @@ main(int argc, char **argv)
 
             ticket = find_ticket(ticket_id, &data_set);
             if (ticket == NULL) {
-                rc = cib_NOTEXISTS;
+                rc = -ENXIO;
                 goto bail;
             }
 
             if (ticket->granted && confirm(ticket_id, "revoke") == FALSE) {
                 CMD_ERR("Cancelled\n");
-                rc = cib_ok;
+                rc = pcmk_ok;
                 goto bail;
             }
         }
@@ -969,12 +969,12 @@ main(int argc, char **argv)
 
     crm_xml_cleanup();
 
-    if (rc == cib_no_quorum) {
-        CMD_ERR("Error performing operation: %s\n", cib_error2string(rc));
+    if (rc == -pcmk_err_no_quorum) {
+        CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
         CMD_ERR("Try using -f\n");
 
-    } else if (rc != cib_ok) {
-        CMD_ERR("Error performing operation: %s\n", cib_error2string(rc));
+    } else if (rc != pcmk_ok) {
+        CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
     }
 
     return rc;

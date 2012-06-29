@@ -263,18 +263,18 @@ main(int argc, char **argv)
     }
 
     if (USE_LIVE_CIB) {
-        int rc = cib_ok;
+        int rc = pcmk_ok;
 
         source = "live cib";
         cib_conn = cib_new();
         rc = cib_conn->cmds->signon(cib_conn, "ptest", cib_command);
 
-        if (rc == cib_ok) {
+        if (rc == pcmk_ok) {
             crm_info("Reading XML from: live cluster");
             cib_object = get_cib_copy(cib_conn);
 
         } else {
-            fprintf(stderr, "Live CIB query failed: %s\n", cib_error2string(rc));
+            fprintf(stderr, "Live CIB query failed: %s\n", pcmk_strerror(rc));
             return 3;
         }
         if (cib_object == NULL) {
@@ -309,12 +309,12 @@ main(int argc, char **argv)
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
         free_xml(cib_object);
-        return cib_STALE;
+        return -ENOKEY;
     }
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
         free_xml(cib_object);
-        return cib_dtd_validation;
+        return -pcmk_err_dtd_validation;
     }
 
     if (input_file != NULL) {

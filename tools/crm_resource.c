@@ -137,7 +137,7 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
     }
 
     if (the_rsc == NULL) {
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
     if (the_rsc->variant > pe_clone) {
@@ -299,7 +299,7 @@ do_find_resource_list(pe_working_set_t * data_set, gboolean raw)
 
     if (found == 0) {
         printf("NO resources configured\n");
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
     return 0;
@@ -326,7 +326,7 @@ dump_resource(const char *rsc, pe_working_set_t * data_set, gboolean expanded)
     resource_t *the_rsc = find_rsc_or_clone(rsc, data_set);
 
     if (the_rsc == NULL) {
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
     the_rsc->fns->print(the_rsc, NULL, pe_print_printf, stdout);
 
@@ -350,14 +350,14 @@ dump_resource(const char *rsc, pe_working_set_t * data_set, gboolean expanded)
 static int
 dump_resource_attr(const char *rsc, const char *attr, pe_working_set_t * data_set)
 {
-    int rc = cib_NOTEXISTS;
+    int rc = -ENXIO;
     node_t *current = NULL;
     GHashTable *params = NULL;
     resource_t *the_rsc = find_rsc_or_clone(rsc, data_set);
     const char *value = NULL;
 
     if (the_rsc == NULL) {
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
     if (g_list_length(the_rsc->running_on) == 1) {
@@ -397,7 +397,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
 {
     int offset = 0;
     static int xpath_max = 1024;
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
     char *xpath_string = NULL;
@@ -434,7 +434,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         goto bail;
     }
 
@@ -442,7 +442,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
     if (xml_has_children(xml_search)) {
         xmlNode *child = NULL;
 
-        rc = cib_missing_data;
+        rc = -EINVAL;
         printf("Multiple attributes match name=%s\n", attr_name);
 
         for (child = __xml_first_child(xml_search); child != NULL; child = __xml_next(child)) {
@@ -469,7 +469,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
                   const char *attr_name, const char *attr_value,
                   cib_t * cib, pe_working_set_t * data_set)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
 
     char *local_attr_id = NULL;
     char *local_attr_set = NULL;
@@ -481,13 +481,13 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
     resource_t *rsc = find_rsc_or_clone(rsc_id, data_set);
 
     if (rsc == NULL) {
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
     if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
         rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, XML_TAG_META_SETS, attr_set, attr_id,
                                 attr_name, &local_attr_id);
-        if (rc == cib_ok) {
+        if (rc == pcmk_ok) {
             printf("WARNING: There is already a meta attribute called %s (id=%s)\n", attr_name,
                    local_attr_id);
         }
@@ -495,11 +495,11 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
     rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name,
                             &local_attr_id);
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         crm_debug("Found a match for name=%s: id=%s", attr_name, local_attr_id);
         attr_id = local_attr_id;
 
-    } else if (rc != cib_NOTEXISTS) {
+    } else if (rc != -ENXIO) {
         free(local_attr_id);
         return rc;
 
@@ -570,21 +570,21 @@ delete_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_
 {
     xmlNode *xml_obj = NULL;
 
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     char *local_attr_id = NULL;
     resource_t *rsc = find_rsc_or_clone(rsc_id, data_set);
 
     if (rsc == NULL) {
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
     rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name,
                             &local_attr_id);
 
-    if (rc == cib_NOTEXISTS) {
-        return cib_ok;
+    if (rc == -ENXIO) {
+        return pcmk_ok;
 
-    } else if (rc != cib_ok) {
+    } else if (rc != pcmk_ok) {
         return rc;
     }
 
@@ -600,7 +600,7 @@ delete_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_
 
     rc = cib->cmds->delete(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         printf("Deleted %s option: id=%s%s%s%s%s\n", rsc_id, local_attr_id,
                attr_set ? " set=" : "", attr_set ? attr_set : "",
                attr_name ? " name=" : "", attr_name ? attr_name : "");
@@ -618,7 +618,7 @@ dump_resource_prop(const char *rsc, const char *attr, pe_working_set_t * data_se
     resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
 
     if (the_rsc == NULL) {
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
     value = crm_element_value(the_rsc->xml, attr);
@@ -627,7 +627,7 @@ dump_resource_prop(const char *rsc, const char *attr, pe_working_set_t * data_se
         fprintf(stdout, "%s\n", value);
         return 0;
     }
-    return cib_NOTEXISTS;
+    return -ENXIO;
 }
 
 static int
@@ -636,7 +636,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
                 gboolean only_failed, pe_working_set_t * data_set)
 {
     char *key = NULL;
-    int rc = cib_send_failed;
+    int rc = -ECOMM;
     xmlNode *cmd = NULL;
     xmlNode *xml_rsc = NULL;
     const char *value = NULL;
@@ -646,15 +646,15 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
 
     if (rsc == NULL) {
         CMD_ERR("Resource %s not found\n", rsc_id);
-        return cib_NOTEXISTS;
+        return -ENXIO;
 
     } else if (rsc->variant != pe_native) {
         CMD_ERR("We can only process primitive resources, not %s\n", rsc_id);
-        return cib_invalid_argument;
+        return -EINVAL;
 
     } else if (host_uname == NULL) {
         CMD_ERR("Please supply a hostname with -H\n");
-        return cib_invalid_argument;
+        return -EINVAL;
     }
 
     key = crm_concat("0:0:crm-resource", our_pid, '-');
@@ -677,14 +677,14 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     crm_xml_add(xml_rsc, XML_ATTR_TYPE, value);
     if (value == NULL) {
         CMD_ERR("%s has no type!  Aborting...\n", rsc_id);
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
     value = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, value);
     if (value == NULL) {
         CMD_ERR("%s has no class!  Aborting...\n", rsc_id);
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
     value = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
@@ -707,7 +707,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
 
     } else {
         CMD_ERR("Could not send %s op to the crmd", op);
-        rc = cib_connection;
+        rc = -ENOTCONN;
     }
 
     free_xml(cmd);
@@ -718,10 +718,10 @@ static int
 delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
                resource_t * rsc, pe_working_set_t * data_set)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
 
     if (rsc == NULL) {
-        return cib_NOTEXISTS;
+        return -ENXIO;
 
     } else if (rsc->children) {
         GListPtr lpc = NULL;
@@ -731,7 +731,7 @@ delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
 
             delete_lrm_rsc(crmd_channel, host_uname, child, data_set);
         }
-        return cib_ok;
+        return pcmk_ok;
 
     } else if (host_uname == NULL) {
         GListPtr lpc = NULL;
@@ -744,12 +744,12 @@ delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
             }
         }
 
-        return cib_ok;
+        return pcmk_ok;
     }
 
     printf("Cleaning up %s on %s\n", rsc->id, host_uname);
     rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id, TRUE, data_set);
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         char *attr_name = NULL;
         const char *id = rsc->id;
 
@@ -776,7 +776,7 @@ static int
 refresh_lrm(crm_ipc_t * crmd_channel, const char *host_uname)
 {
     xmlNode *cmd = NULL;
-    int rc = cib_send_failed;
+    int rc = -ECOMM;
 
     cmd = create_request(CRM_OP_LRM_REFRESH, NULL, host_uname,
                          CRM_SYSTEM_CRMD, crm_system_name, our_pid);
@@ -793,7 +793,7 @@ move_resource(const char *rsc_id,
               const char *existing_node, const char *preferred_node, cib_t * cib_conn)
 {
     char *later_s = NULL;
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     char *id = NULL;
     xmlNode *rule = NULL;
     xmlNode *expr = NULL;
@@ -830,7 +830,7 @@ move_resource(const char *rsc_id,
                     " http://en.wikipedia.org/wiki/ISO_8601#Duration"
                     " for examples of valid durations\n");
             free(life);
-            return cib_invalid_argument;
+            return -EINVAL;
         }
         now = new_ha_date(TRUE);
         later = add_time(now, duration);
@@ -849,10 +849,10 @@ move_resource(const char *rsc_id,
     if (existing_node == NULL) {
         crm_log_xml_notice(can_run, "Deleting");
         rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS, dont_run, cib_options);
-        if (rc == cib_NOTEXISTS) {
-            rc = cib_ok;
+        if (rc == -ENXIO) {
+            rc = pcmk_ok;
 
-        } else if (rc != cib_ok) {
+        } else if (rc != pcmk_ok) {
             goto bail;
         }
 
@@ -907,10 +907,10 @@ move_resource(const char *rsc_id,
     if (preferred_node == NULL) {
         crm_log_xml_notice(can_run, "Deleting");
         rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS, can_run, cib_options);
-        if (rc == cib_NOTEXISTS) {
-            rc = cib_ok;
+        if (rc == -ENXIO) {
+            rc = pcmk_ok;
 
-        } else if (rc != cib_ok) {
+        } else if (rc != pcmk_ok) {
             goto bail;
         }
 
@@ -995,7 +995,7 @@ list_resource_operations(const char *rsc_id, const char *host_uname, gboolean ac
         }
         fprintf(stdout, "): %s\n", services_lrm_status_str(status));
     }
-    return cib_ok;
+    return pcmk_ok;
 }
 
 #include "../pengine/pengine.h"
@@ -1253,7 +1253,7 @@ main(int argc, char **argv)
 
     cib_t *cib_conn = NULL;
     lrmd_t *lrmd_conn = NULL;
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
 
     int option_index = 0;
     int argerr = 0;
@@ -1503,8 +1503,8 @@ main(int argc, char **argv)
 
         cib_conn = cib_new();
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-        if (rc != cib_ok) {
-            CMD_ERR("Error signing on to the CIB service: %s\n", cib_error2string(rc));
+        if (rc != pcmk_ok) {
+            CMD_ERR("Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
             return rc;
         }
 
@@ -1516,7 +1516,7 @@ main(int argc, char **argv)
         }
 
         if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
-            rc = cib_STALE;
+            rc = -ENOKEY;
             goto bail;
         }
 
@@ -1528,7 +1528,7 @@ main(int argc, char **argv)
             rsc = find_rsc_or_clone(rsc_id, &data_set);
         }
         if (rsc == NULL) {
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
         }
     }
 
@@ -1539,7 +1539,7 @@ main(int argc, char **argv)
 
         if (crmd_channel == NULL) {
             CMD_ERR("Error signing on to the CRMd service\n");
-            rc = cib_connection;
+            rc = -ENOTCONN;
             goto bail;
         }
 
@@ -1549,14 +1549,14 @@ main(int argc, char **argv)
     }
 
     if (rsc_cmd == 'L') {
-        rc = cib_ok;
+        rc = pcmk_ok;
         do_find_resource_list(&data_set, FALSE);
 
     } else if (rsc_cmd == 'l') {
         int found = 0;
         GListPtr lpc = NULL;
 
-        rc = cib_ok;
+        rc = pcmk_ok;
         for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
             resource_t *rsc = (resource_t *) lpc->data;
 
@@ -1566,7 +1566,7 @@ main(int argc, char **argv)
 
         if (found == 0) {
             printf("NO resources configured\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
 
@@ -1581,7 +1581,7 @@ main(int argc, char **argv)
 
         if (rsc == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
 
@@ -1652,7 +1652,7 @@ main(int argc, char **argv)
 
         if (rsc == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
 
@@ -1681,7 +1681,7 @@ main(int argc, char **argv)
         int found = 0;
         GListPtr lpc = NULL;
 
-        rc = cib_ok;
+        rc = pcmk_ok;
         for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
             resource_t *rsc = (resource_t *) lpc->data;
 
@@ -1694,13 +1694,13 @@ main(int argc, char **argv)
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 
         rc = delete_lrm_rsc(crmd_channel, host_uname, rsc, &data_set);
-        if (rc == cib_ok) {
+        if (rc == pcmk_ok) {
             start_mainloop();
         }
 
     } else if (rsc_cmd == 'F') {
         rc = fail_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
-        if (rc == cib_ok) {
+        if (rc == pcmk_ok) {
             start_mainloop();
         }
 
@@ -1710,13 +1710,13 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'o') {
         rc = list_resource_operations(rsc_id, host_uname, FALSE, &data_set);
 
-    } else if (rc == cib_NOTEXISTS) {
-        CMD_ERR("Resource %s not found: %s\n", crm_str(rsc_id), cib_error2string(rc));
+    } else if (rc == -ENXIO) {
+        CMD_ERR("Resource %s not found: %s\n", crm_str(rsc_id), pcmk_strerror(rc));
 
     } else if (rsc_cmd == 'W') {
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
         rc = do_find_resource(rsc_id, NULL, &data_set);
@@ -1724,7 +1724,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'q') {
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
         rc = dump_resource(rsc_id, &data_set, TRUE);
@@ -1732,7 +1732,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'w') {
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
         rc = dump_resource(rsc_id, &data_set, FALSE);
@@ -1740,7 +1740,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'U') {
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
         /* coverity[var_deref_model] False positive */
@@ -1771,7 +1771,7 @@ main(int argc, char **argv)
 
         } else if (host_uname != NULL && dest == NULL) {
             CMD_ERR("Error performing operation: " "%s is not a known node\n", host_uname);
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
 
         } else if (host_uname != NULL && safe_str_eq(current_uname, host_uname)) {
             CMD_ERR("Error performing operation: "
@@ -1788,13 +1788,13 @@ main(int argc, char **argv)
         } else {
             CMD_ERR("Resource %s not moved: "
                     "not-active and no preferred location" " specified.\n", rsc_id);
-            rc = cib_missing;
+            rc = -EINVAL;
         }
 
     } else if (rsc_cmd == 'G') {
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
         rc = dump_resource_prop(rsc_id, prop_name, &data_set);
@@ -1804,17 +1804,17 @@ main(int argc, char **argv)
 
         if (prop_value == NULL || strlen(prop_value) == 0) {
             CMD_ERR("You need to supply a value with the -v option\n");
-            rc = CIBRES_MISSING_FIELD;
+            rc = -EINVAL;
             goto bail;
 
         } else if (cib_conn == NULL) {
-            rc = cib_connection;
+            rc = -ENOTCONN;
             goto bail;
         }
 
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
         CRM_LOG_ASSERT(rsc_type != NULL);
@@ -1831,7 +1831,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'g') {
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
         rc = dump_resource_attr(rsc_id, prop_name, &data_set);
@@ -1839,12 +1839,12 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'p') {
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
         if (prop_value == NULL || strlen(prop_value) == 0) {
             CMD_ERR("You need to supply a value with the -v option\n");
-            rc = CIBRES_MISSING_FIELD;
+            rc = -EINVAL;
             goto bail;
         }
         /* coverity[var_deref_model] False positive */
@@ -1854,7 +1854,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'd') {
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
         }
         /* coverity[var_deref_model] False positive */
@@ -1872,7 +1872,7 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'R') {
         rc = refresh_lrm(crmd_channel, host_uname);
-        if (rc == cib_ok) {
+        if (rc == pcmk_ok) {
             start_mainloop();
         }
 
@@ -1881,17 +1881,17 @@ main(int argc, char **argv)
 
         if (rsc_id == NULL) {
             CMD_ERR("Must supply a resource id with -r\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
 
         }
         if (rsc_type == NULL) {
             CMD_ERR("You need to specify a resource type with -t");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto bail;
 
         } else if (cib_conn == NULL) {
-            rc = cib_connection;
+            rc = -ENOTCONN;
             goto bail;
         }
 
@@ -1915,12 +1915,12 @@ main(int argc, char **argv)
 
     crm_xml_cleanup();
 
-    if (rc == cib_no_quorum) {
-        CMD_ERR("Error performing operation: %s\n", cib_error2string(rc));
+    if (rc == -pcmk_err_no_quorum) {
+        CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
         CMD_ERR("Try using -f\n");
 
-    } else if (rc != cib_ok) {
-        CMD_ERR("Error performing operation: %s\n", cib_error2string(rc));
+    } else if (rc != pcmk_ok) {
+        CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
     }
 
     return rc;

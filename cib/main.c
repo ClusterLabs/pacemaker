@@ -59,7 +59,7 @@ extern int init_remote_listener(int port, gboolean encrypted);
 extern gboolean stand_alone;
 
 gboolean cib_shutdown_flag = FALSE;
-enum cib_errors cib_status = cib_ok;
+int cib_status = pcmk_ok;
 
 #if SUPPORT_HEARTBEAT
 oc_ev_t *cib_ev_token;

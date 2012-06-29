@@ -417,7 +417,7 @@ ocf2uniform_rc(int rc)
 static int
 stonith2uniform_rc(const char *action, int rc)
 {
-    if (rc == st_err_unknown_device) {
+    if (rc == -ENODEV) {
         if (safe_str_eq(action, "stop")) {
             rc = PCMK_EXECRA_OK;
         } else if (safe_str_eq(action, "start")) {
@@ -481,10 +481,10 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     stonith_t *stonith_api = get_stonith_connection();
 
     if (!stonith_api) {
-        cmd->exec_rc = get_uniform_rc("stonith", cmd->action, st_err_connection);
+        cmd->exec_rc = get_uniform_rc("stonith", cmd->action, -ENOTCONN);
         cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
         cmd_finalize(cmd, rsc);
-        return lrmd_err_stonith_connection;
+        return -EUNATCH;
     }
 
     if (safe_str_eq(cmd->action, "start")) {
@@ -525,10 +525,10 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     /* Attempt to map return codes to op status if possible */
     if (rc) {
         switch (rc) {
-            case st_err_not_supported:
+            case -EPROTONOSUPPORT:
                 cmd->lrmd_op_status = PCMK_LRM_OP_NOTSUPPORTED;
                 break;
-            case st_err_timeout:
+            case -ETIME:
                 cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
                 break;
             default:
@@ -722,13 +722,13 @@ process_lrmd_signon(lrmd_client_t * client, xmlNode * request)
     crm_ipcs_send(client->channel, reply, FALSE);
 
     free_xml(reply);
-    return lrmd_ok;
+    return pcmk_ok;
 }
 
 static int
 process_lrmd_rsc_register(lrmd_client_t * client, xmlNode * request)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     lrmd_rsc_t *rsc = build_rsc_from_xml(request);
     lrmd_rsc_t *dup = g_hash_table_lookup(rsc_list, rsc->rsc_id);
 
@@ -753,7 +753,7 @@ process_lrmd_rsc_register(lrmd_client_t * client, xmlNode * request)
 static void
 process_lrmd_get_rsc_info(lrmd_client_t * client, xmlNode * request)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     int send_rc = 0;
     int call_id = 0;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
@@ -764,14 +764,14 @@ process_lrmd_get_rsc_info(lrmd_client_t * client, xmlNode * request)
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
     if (!rsc_id) {
-        rc = lrmd_err_unknown_rsc;
+        rc = -ENODEV;
         goto get_rsc_done;
     }
 
     if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
         crm_info("Resource '%s' not found (%d active resources)",
                  rsc_id, g_hash_table_size(rsc_list));
-        rc = lrmd_err_unknown_rsc;
+        rc = -ENODEV;
         goto get_rsc_done;
     }
 
@@ -801,24 +801,24 @@ process_lrmd_get_rsc_info(lrmd_client_t * client, xmlNode * request)
 static int
 process_lrmd_rsc_unregister(lrmd_client_t * client, xmlNode * request)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     lrmd_rsc_t *rsc = NULL;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
 
     if (!rsc_id) {
-        return lrmd_err_unknown_rsc;
+        return -ENODEV;
     }
 
     if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
         crm_info("Resource '%s' not found (%d active resources)",
                  rsc_id, g_hash_table_size(rsc_list));
-        return lrmd_err_unknown_rsc;
+        return -ENODEV;
     }
 
     if (rsc->active) {
         /* let the caller know there are still active ops on this rsc to watch for */
-        rc = lrmd_pending;
+        rc = -EINPROGRESS;
     }
 
     g_hash_table_remove(rsc_list, rsc_id);
@@ -835,12 +835,12 @@ process_lrmd_rsc_exec(lrmd_client_t * client, xmlNode * request)
     const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
 
     if (!rsc_id) {
-        return lrmd_err_missing;
+        return -EINVAL;
     }
     if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
         crm_info("Resource '%s' not found (%d active resources)",
                  rsc_id, g_hash_table_size(rsc_list));
-        return lrmd_err_unknown_rsc;
+        return -ENODEV;
     }
 
     cmd = create_lrmd_cmd(request, client);
@@ -867,7 +867,7 @@ cancel_op(const char *rsc_id, const char *action, int interval)
      *    never existed.
      */
     if (!rsc) {
-        return lrmd_err_unknown_rsc;
+        return -ENODEV;
     }
 
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
@@ -876,7 +876,7 @@ cancel_op(const char *rsc_id, const char *action, int interval)
         if (safe_str_eq(cmd->action, action) && cmd->interval == interval) {
             cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
             cmd_finalize(cmd, rsc);
-            return lrmd_ok;
+            return pcmk_ok;
         }
     }
 
@@ -889,7 +889,7 @@ cancel_op(const char *rsc_id, const char *action, int interval)
             if (safe_str_eq(cmd->action, action) && cmd->interval == interval) {
                 cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
                 cmd_finalize(cmd, rsc);
-                return lrmd_ok;
+                return pcmk_ok;
             }
         }
     } else if (services_action_cancel(rsc_id, normalize_action_name(rsc, action), interval) == TRUE) {
@@ -897,10 +897,10 @@ cancel_op(const char *rsc_id, const char *action, int interval)
          * this action was cancelled, which will destroy the cmd and remove
          * it from the recurring_op list. Do not do that in this function
          * if the service library says it cancelled it. */
-        return lrmd_ok;
+        return pcmk_ok;
     }
 
-    return lrmd_err_unknown_operation;
+    return -EOPNOTSUPP;
 }
 
 static int
@@ -914,7 +914,7 @@ process_lrmd_rsc_cancel(lrmd_client_t * client, xmlNode * request)
     crm_element_value_int(rsc_xml, F_LRMD_RSC_INTERVAL, &interval);
 
     if (!rsc_id || !action) {
-        return lrmd_err_missing;
+        return -EINVAL;
     }
 
     return cancel_op(rsc_id, action, interval);
@@ -923,7 +923,7 @@ process_lrmd_rsc_cancel(lrmd_client_t * client, xmlNode * request)
 void
 process_lrmd_message(lrmd_client_t * client, xmlNode * request)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     int call_id = 0;
     const char *op = crm_element_value(request, F_LRMD_OPERATION);
     int do_reply = 0;
@@ -944,7 +944,7 @@ process_lrmd_message(lrmd_client_t * client, xmlNode * request)
     } else if (crm_str_eq(op, LRMD_OP_RSC_UNREG, TRUE)) {
         rc = process_lrmd_rsc_unregister(client, request);
         /* don't notify anyone about failed un-registers */
-        if (rc == lrmd_ok || rc == lrmd_pending) {
+        if (rc == pcmk_ok || rc == -EINPROGRESS) {
             do_notify = 1;
         }
         do_reply = 1;
@@ -958,7 +958,7 @@ process_lrmd_message(lrmd_client_t * client, xmlNode * request)
         do_reply = 1;
         exit = 1;
     } else {
-        rc = lrmd_err_unknown_operation;
+        rc = -EOPNOTSUPP;
         do_reply = 1;
         crm_err("Unknown %s from %s", op, client->name);
         crm_log_xml_warn(request, "UnknownOp");

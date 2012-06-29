@@ -49,7 +49,7 @@ get_stonith_connection(void)
         stonith_api = stonith_api_new();
         do {
             rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL);
-            if (rc == stonith_ok) {
+            if (rc == pcmk_ok) {
                 break;
             }
             sleep(1);
@@ -58,7 +58,7 @@ get_stonith_connection(void)
 
         if (rc) {
             crm_err("Unable to connect to stonith daemon to execute command. error: %s",
-                    stonith_error2string(rc));
+                    pcmk_strerror(rc));
             stonith_api_delete(stonith_api);
             stonith_api = NULL;
         }

@@ -307,19 +307,19 @@ static int
 lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** output_data, int timeout,   /* ms. defaults to 1000 if set to 0 */
                   enum lrmd_call_options options)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     int reply_id = -1;
     lrmd_private_t *native = lrmd->private;
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;
 
     if (!native->ipc) {
-        return lrmd_err_connection;
+        return -ENOTCONN;
     }
 
     if (op == NULL) {
         crm_err("No operation specified");
-        return lrmd_err_missing;
+        return -EINVAL;
     }
 
     native->call_id++;
@@ -332,7 +332,7 @@ lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** outp
     op_msg = lrmd_create_op(native->call_id, native->token, op, data, options);
 
     if (op_msg == NULL) {
-        return lrmd_err_missing;
+        return -EINVAL;
     }
 
     crm_xml_add_int(op_msg, F_LRMD_TIMEOUT, timeout);
@@ -342,16 +342,16 @@ lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** outp
 
     if (rc < 0) {
         crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%d): %d", op, timeout, rc);
-        rc = lrmd_err_ipc;
+        rc = -ECOMM;
         goto done;
     }
 
-    rc = lrmd_ok;
+    rc = pcmk_ok;
     crm_element_value_int(op_reply, F_LRMD_CALLID, &reply_id);
     if (reply_id == native->call_id) {
         crm_trace("reply received");
         if (crm_element_value_int(op_reply, F_LRMD_RC, &rc) != 0) {
-            rc = lrmd_err_peer;
+            rc = -ENOMSG;
             goto done;
         }
 
@@ -363,11 +363,11 @@ lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** outp
     } else if (reply_id <= 0) {
         crm_err("Recieved bad reply: No id set");
         crm_log_xml_err(op_reply, "Bad reply");
-        rc = lrmd_err_peer;
+        rc = -ENOMSG;
     } else {
         crm_err("Recieved bad reply: %d (wanted %d)", reply_id, native->call_id);
         crm_log_xml_err(op_reply, "Old reply");
-        rc = lrmd_err_peer;
+        rc = -ENOMSG;
     }
 
     crm_log_xml_trace(op_reply, "Reply");
@@ -384,7 +384,7 @@ lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** outp
 static int
 lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->private;
 
     static struct ipc_client_callbacks lrmd_callbacks = {
@@ -400,7 +400,7 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
         if (native->ipc && crm_ipc_connect(native->ipc)) {
             *fd = crm_ipc_get_fd(native->ipc);
         } else if (native->ipc) {
-            rc = lrmd_err_connection;
+            rc = -ENOTCONN;
         }
     } else {
         native->source = mainloop_add_ipc_client("lrmd", 0, lrmd, &lrmd_callbacks);
@@ -409,7 +409,7 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
 
     if (native->ipc == NULL) {
         crm_debug("Could not connect to the LRMD API");
-        rc = lrmd_err_connection;
+        rc = -ENOTCONN;
     }
 
     if (!rc) {
@@ -424,10 +424,10 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
 
         if (rc < 0) {
             crm_perror(LOG_DEBUG, "Couldn't complete registration with the lrmd API: %d", rc);
-            rc = lrmd_err_ipc;
+            rc = -ECOMM;
         } else if (reply == NULL) {
             crm_err("Did not receive registration reply");
-            rc = lrmd_err_internal;
+            rc = -EPROTO;
         } else {
             const char *msg_type = crm_element_value(reply, F_LRMD_OPERATION);
             const char *tmp_ticket = crm_element_value(reply, F_LRMD_CLIENTID);
@@ -435,15 +435,15 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
             if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
                 crm_err("Invalid registration message: %s", msg_type);
                 crm_log_xml_err(reply, "Bad reply");
-                rc = lrmd_err_internal;
+                rc = -EPROTO;
             } else if (tmp_ticket == NULL) {
                 crm_err("No registration token provided");
                 crm_log_xml_err(reply, "Bad reply");
-                rc = lrmd_err_internal;
+                rc = -EPROTO;
             } else {
                 crm_trace("Obtained registration token: %s", tmp_ticket);
                 native->token = crm_strdup(tmp_ticket);
-                rc = lrmd_ok;
+                rc = pcmk_ok;
             }
         }
 
@@ -483,14 +483,14 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
                       const char *class,
                       const char *provider, const char *type, enum lrmd_call_options options)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     xmlNode *data = NULL;
 
     if (!class || !type || !rsc_id) {
-        return lrmd_err_missing;
+        return -EINVAL;
     }
     if (safe_str_eq(class, "ocf") && !provider) {
-        return lrmd_err_provider_required;
+        return -EINVAL;
     }
 
     data = create_xml_node(NULL, F_LRMD_RSC);
@@ -509,7 +509,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
 static int
 lrmd_api_unregister_rsc(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
 
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
@@ -553,7 +553,7 @@ lrmd_free_rsc_info(lrmd_rsc_info_t * rsc_info)
 static lrmd_rsc_info_t *
 lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     lrmd_rsc_info_t *rsc_info = NULL;
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
     xmlNode *output = NULL;
@@ -603,11 +603,11 @@ lrmd_api_set_callback(lrmd_t * lrmd, lrmd_event_callback callback)
 static int
 stonith_get_metadata(const char *provider, const char *type, char **output)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
 
     stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, provider, output, 0);
     if (*output == NULL) {
-        rc = lrmd_err_no_metadata;
+        rc = -EIO;
     }
     return rc;
 }
@@ -690,7 +690,7 @@ lsb_get_metadata(const char *type, char **output)
              type[0] == '/' ? "" : LSB_ROOT_DIR, type[0] == '/' ? "" : "/", type);
 
     if (!(fp = fopen(ra_pathname, "r"))) {
-        return lrmd_err_no_metadata;
+        return -EIO;
     }
 
     /* Enter into the lsb-compliant comment block */
@@ -759,7 +759,7 @@ lsb_get_metadata(const char *type, char **output)
     *output = crm_strdup(meta_data->str);
     g_string_free(meta_data, TRUE);
 
-    return lrmd_ok;
+    return pcmk_ok;
 }
 
 static int
@@ -777,19 +777,19 @@ generic_get_metadata(const char *standard, const char *provider, const char *typ
     if (!(services_action_sync(action))) {
         crm_err("Failed to retrieve meta-data for %s:%s:%s", standard, provider, type);
         services_action_free(action);
-        return lrmd_err_no_metadata;
+        return -EIO;
     }
 
     if (!action->stdout_data) {
         crm_err("Failed to retrieve meta-data for %s:%s:%s", standard, provider, type);
         services_action_free(action);
-        return lrmd_err_no_metadata;
+        return -EIO;
     }
 
     *output = crm_strdup(action->stdout_data);
     services_action_free(action);
 
-    return lrmd_ok;
+    return pcmk_ok;
 }
 
 static int
@@ -799,7 +799,7 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
                       const char *type, char **output, enum lrmd_call_options options)
 {
     if (!class || !type) {
-        return lrmd_err_missing;
+        return -EINVAL;
     }
 
     if (safe_str_eq(class, "stonith")) {
@@ -816,7 +816,7 @@ lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char 
               int start_delay,  /* ms */
               enum lrmd_call_options options, lrmd_key_value_t * params)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
 
@@ -842,7 +842,7 @@ lrmd_api_exec(lrmd_t * lrmd, const char *rsc_id, const char *action, const char 
 static int
 lrmd_api_cancel(lrmd_t * lrmd, const char *rsc_id, const char *action, int interval)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
 
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
@@ -970,7 +970,7 @@ static int
 lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
                      const char *provider)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
 
     if (safe_str_eq(class, "ocf")) {
         rc += list_ocf_agents(resources, provider);
@@ -992,7 +992,7 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
         rc += list_stonith_agents(resources);
     } else {
         crm_err("Unknown class %s", class);
-        rc = lrmd_err_generic;
+        rc = -EPROTONOSUPPORT;
     }
 
     return rc;
@@ -1019,7 +1019,7 @@ does_provider_have_agent(const char *agent, const char *provider, const char *cl
 static int
 lrmd_api_list_ocf_providers(lrmd_t * lrmd, const char *agent, lrmd_list_t ** providers)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     char *provider = NULL;
     GList *ocf_providers = NULL;
     GListPtr gIter = NULL;

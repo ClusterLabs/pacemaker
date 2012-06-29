@@ -304,9 +304,9 @@ do_work(void)
         cib_t *the_cib = cib_new();
         xmlNode *output = NULL;
 
-        enum cib_errors rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+        int rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
-        if (rc != cib_ok) {
+        if (rc != pcmk_ok) {
             return -1;
         }
 

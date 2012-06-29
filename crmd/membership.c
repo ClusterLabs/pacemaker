@@ -129,7 +129,7 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
 
     last_peer_update = 0;
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         crm_trace("Node update %d complete", call_id);
 
     } else {
@@ -222,7 +222,7 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
 {
     fsa_data_t *msg_data = NULL;
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         crm_trace("Quorum update %d complete", call_id);
 
     } else {

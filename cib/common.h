@@ -20,7 +20,7 @@
 
 extern xmlNode *cib_msg_copy(xmlNode * msg, gboolean with_data);
 extern xmlNode *cib_construct_reply(xmlNode * request, xmlNode * output, int rc);
-extern enum cib_errors cib_get_operation_id(const char *op, int *operation);
+extern int cib_get_operation_id(const char *op, int *operation);
 
 extern cib_op_t *cib_op_func(int call_type);
 

@@ -25,7 +25,7 @@ xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 xmlNode *create_cib_fragment_adv(xmlNode * update, const char *section, const char *source);
 
 /* Error Interpretation*/
-const char *cib_error2string(enum cib_errors);
+const char *cib_error2string(int);
 
 xmlNode *createEmptyCib(void);
 gboolean verifyCibXml(xmlNode * cib);
@@ -46,14 +46,14 @@ gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, 
 
 gboolean cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates);
 
-enum cib_errors update_attr_delegate(cib_t * the_cib, int call_options,
+int update_attr_delegate(cib_t * the_cib, int call_options,
                                             const char *section, const char *node_uuid,
                                             const char *set_type, const char *set_name,
                                             const char *attr_id, const char *attr_name,
                                             const char *attr_value, gboolean to_console,
                                             const char *user_name);
 
-static inline enum cib_errors
+static inline int
 update_attr(cib_t * the_cib, int call_options,
             const char *section, const char *node_uuid, const char *set_type, const char *set_name,
             const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
@@ -62,14 +62,14 @@ update_attr(cib_t * the_cib, int call_options,
                                 attr_id, attr_name, attr_value, to_console, NULL);
 }
 
-enum cib_errors find_nvpair_attr_delegate(cib_t * the_cib, const char *attr,
+int find_nvpair_attr_delegate(cib_t * the_cib, const char *attr,
                                                  const char *section, const char *node_uuid,
                                                  const char *set_type, const char *set_name,
                                                  const char *attr_id, const char *attr_name,
                                                  gboolean to_console, char **value,
                                                  const char *user_name);
 
-static inline enum cib_errors
+static inline int
 find_nvpair_attr(cib_t * the_cib, const char *attr, const char *section, const char *node_uuid,
                  const char *set_type, const char *set_name, const char *attr_id,
                  const char *attr_name, gboolean to_console, char **value)
@@ -78,15 +78,14 @@ find_nvpair_attr(cib_t * the_cib, const char *attr, const char *section, const c
                                      set_name, attr_id, attr_name, to_console, value, NULL);
 }
 
-enum cib_errors read_attr_delegate(cib_t * the_cib,
+int read_attr_delegate(cib_t * the_cib,
                                           const char *section, const char *node_uuid,
                                           const char *set_type, const char *set_name,
                                           const char *attr_id, const char *attr_name,
                                           char **attr_value, gboolean to_console,
                                           const char *user_name);
 
-static inline enum
-    cib_errors
+static inline int
 read_attr(cib_t * the_cib,
           const char *section, const char *node_uuid, const char *set_type, const char *set_name,
           const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console)
@@ -95,15 +94,14 @@ read_attr(cib_t * the_cib,
                               attr_id, attr_name, attr_value, to_console, NULL);
 }
 
-enum cib_errors delete_attr_delegate(cib_t * the_cib, int options,
+int delete_attr_delegate(cib_t * the_cib, int options,
                                             const char *section, const char *node_uuid,
                                             const char *set_type, const char *set_name,
                                             const char *attr_id, const char *attr_name,
                                             const char *attr_value, gboolean to_console,
                                             const char *user_name);
 
-static inline enum
-    cib_errors
+static inline int
 delete_attr(cib_t * the_cib, int options,
             const char *section, const char *node_uuid, const char *set_type, const char *set_name,
             const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
@@ -112,11 +110,11 @@ delete_attr(cib_t * the_cib, int options,
                                 attr_id, attr_name, attr_value, to_console, NULL);
 }
 
-enum cib_errors query_node_uuid(cib_t * the_cib, const char *uname, char **uuid);
+int query_node_uuid(cib_t * the_cib, const char *uname, char **uuid);
 
-enum cib_errors query_node_uname(cib_t * the_cib, const char *uuid, char **uname);
+int query_node_uname(cib_t * the_cib, const char *uuid, char **uname);
 
-enum cib_errors set_standby(cib_t * the_cib,
+int set_standby(cib_t * the_cib,
                                    const char *uuid, const char *scope, const char *standby_value);
 
 const char *feature_set(xmlNode * xml_obj);

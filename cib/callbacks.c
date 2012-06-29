@@ -65,7 +65,7 @@ qb_ipcs_service_t *ipcs_shm = NULL;
 extern ll_cluster_t *hb_conn;
 #endif
 
-extern enum cib_errors cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
+extern int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
 
 extern void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 
@@ -82,9 +82,9 @@ int next_client_id = 0;
 extern const char *cib_our_uname;
 extern unsigned long cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail;
 extern unsigned long cib_bad_connects, cib_num_timeouts;
-extern enum cib_errors cib_status;
+extern int cib_status;
 
-enum cib_errors cib_process_command(xmlNode * request, xmlNode ** reply,
+int cib_process_command(xmlNode * request, xmlNode ** reply,
                                     xmlNode ** cib_diff, gboolean privileged);
 
 gboolean cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean privileged);
@@ -228,7 +228,7 @@ cib_common_callback_worker(xmlNode * op_request, cib_client_t * cib_client, gboo
     } else if (crm_str_eq(op, T_CIB_NOTIFY, TRUE)) {
         /* Update the notify filters for this client */
         int on_off = 0;
-        int rc = cib_ok;
+        int rc = pcmk_ok;
         const char *type = crm_element_value(op_request, F_CIB_NOTIFY_TYPE);
         crm_element_value_int(op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
 
@@ -250,7 +250,7 @@ cib_common_callback_worker(xmlNode * op_request, cib_client_t * cib_client, gboo
         } else if (safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
             cib_client->replace = on_off;
         } else {
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
         }
         /* Already ack'd */
         return;
@@ -338,7 +338,7 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
 {
     /* send callback to originating child */
     cib_client_t *client_obj = NULL;
-    enum cib_errors local_rc = cib_ok;
+    int local_rc = pcmk_ok;
 
     if (client_id != NULL) {
         client_obj = g_hash_table_lookup(client_list, client_id);
@@ -347,7 +347,7 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
     }
 
     if (client_obj == NULL) {
-        local_rc = cib_client_gone;
+        local_rc = -ECONNRESET;
 
     } else {
         crm_trace("Sending %ssync response to %s %s",
@@ -355,7 +355,7 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
                   from_peer ? "(originator of delegated request)" : "");
 
         if (client_obj->ipc && crm_ipcs_send(client_obj->ipc, notify_src, !sync_reply) < 0) {
-            local_rc = cib_reply_failed;
+            local_rc = -ENOMSG;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
         } else if (client_obj->session) {
@@ -366,10 +366,10 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
         }
     }
 
-    if (local_rc != cib_ok && client_obj != NULL) {
+    if (local_rc != pcmk_ok && client_obj != NULL) {
         crm_warn("%sSync reply to %s failed: %s",
                  sync_reply ? "" : "A-",
-                 client_obj ? client_obj->name : "<unknown>", cib_error2string(local_rc));
+                 client_obj ? client_obj->name : "<unknown>", pcmk_strerror(local_rc));
     }
 }
 
@@ -639,7 +639,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     xmlNode *op_reply = NULL;
     xmlNode *result_diff = NULL;
 
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *originator = crm_element_value(request, F_ORIG);
     const char *host = crm_element_value(request, F_CIB_HOST);
@@ -669,9 +669,9 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                 from_peer ? originator : cib_our_uname, host ? host : "master");
 
     rc = cib_get_operation_id(op, &call_type);
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         /* TODO: construct error reply? */
-        crm_err("Pre-processing of command failed: %s", cib_error2string(rc));
+        crm_err("Pre-processing of command failed: %s", pcmk_strerror(rc));
         return;
     }
 
@@ -700,10 +700,10 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         return;
     }
 
-    if (cib_status != cib_ok) {
+    if (cib_status != pcmk_ok) {
         rc = cib_status;
         crm_err("Operation ignored, cluster configuration is invalid."
-                " Please repair and restart: %s", cib_error2string(cib_status));
+                " Please repair and restart: %s", pcmk_strerror(cib_status));
         op_reply = cib_construct_reply(request, the_cib, cib_status);
 
     } else if (process) {
@@ -715,10 +715,10 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
 
         if (global_update) {
             switch (rc) {
-                case cib_ok:
-                case cib_old_data:
-                case cib_diff_resync:
-                case cib_diff_failed:
+                case pcmk_ok:
+                case -pcmk_err_old_data:
+                case -pcmk_err_diff_resync:
+                case -pcmk_err_diff_failed:
                     level = LOG_DEBUG_2;
                     break;
                 default:
@@ -728,7 +728,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         } else if (safe_str_eq(op, CIB_OP_QUERY)) {
             level = LOG_DEBUG_2;
 
-        } else if (rc != cib_ok) {
+        } else if (rc != pcmk_ok) {
             cib_num_fail++;
             level = LOG_WARNING;
 
@@ -747,7 +747,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                        the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN) : "0",
                        the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION) : "0",
                        the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0",
-                       cib_error2string(rc), rc);
+                       pcmk_strerror(rc), rc);
 
         if (op_reply == NULL && (needs_reply || local_notify)) {
             crm_err("Unexpected NULL reply to message");
@@ -765,7 +765,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
          */
         crm_trace("Completed slave update");
 
-    } else if (rc == cib_ok && result_diff != NULL && !(call_options & cib_inhibit_bcast)) {
+    } else if (rc == pcmk_ok && result_diff != NULL && !(call_options & cib_inhibit_bcast)) {
         gboolean broadcast = FALSE;
 
         cib_local_bcast_num++;
@@ -795,8 +795,8 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         } else if (call_options & cib_inhibit_bcast) {
             crm_trace("Request not broadcast: inhibited");
 
-        } else if (rc != cib_ok) {
-            crm_trace("Request not broadcast: call failed: %s", cib_error2string(rc));
+        } else if (rc != pcmk_ok) {
+            crm_trace("Request not broadcast: call failed: %s", pcmk_strerror(rc));
         } else {
             crm_trace("Directing reply to %s", originator);
         }
@@ -853,7 +853,7 @@ cib_construct_reply(xmlNode * request, xmlNode * output, int rc)
     return reply;
 }
 
-enum cib_errors
+int
 cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gboolean privileged)
 {
     xmlNode *input = NULL;
@@ -872,15 +872,15 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     const char *op = NULL;
     const char *section = NULL;
 
-    enum cib_errors rc = cib_ok;
-    enum cib_errors rc2 = cib_ok;
+    int rc = pcmk_ok;
+    int rc2 = pcmk_ok;
 
     gboolean send_r_notify = FALSE;
     gboolean global_update = FALSE;
     gboolean config_changed = FALSE;
     gboolean manage_counters = TRUE;
 
-    CRM_ASSERT(cib_status == cib_ok);
+    CRM_ASSERT(cib_status == pcmk_ok);
 
     *reply = NULL;
     *cib_diff = NULL;
@@ -891,17 +891,17 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
     rc = cib_get_operation_id(op, &call_type);
 
-    if (rc == cib_ok && privileged == FALSE) {
+    if (rc == pcmk_ok && privileged == FALSE) {
         rc = cib_op_can_run(call_type, call_options, privileged, global_update);
     }
 
     rc2 = cib_op_prepare(call_type, request, &input, &section);
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         rc = rc2;
     }
 
-    if (rc != cib_ok) {
-        crm_trace("Call setup failed: %s", cib_error2string(rc));
+    if (rc != pcmk_ok) {
+        crm_trace("Call setup failed: %s", pcmk_strerror(rc));
         goto done;
 
     } else if (cib_op_modifies(call_type) == FALSE) {
@@ -914,7 +914,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
         } else if (filtered_current_cib == NULL) {
             crm_debug("Pre-filtered the entire cib");
-            rc = cib_permission_denied;
+            rc = -EACCES;
 
         } else {
             crm_debug("Pre-filtered the queried cib according to the ACLs");
@@ -948,7 +948,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     }
 #endif
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         if (call_options & cib_inhibit_bcast) {
             /* skip */
             crm_trace("Skipping update: inhibit broadcast");
@@ -962,11 +962,11 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 #if ENABLE_ACL
         if (acl_enabled(config_hash) == TRUE
             && acl_check_diff(request, current_cib, result_cib, *cib_diff) == FALSE) {
-            rc = cib_permission_denied;
+            rc = -EACCES;
         }
 #endif
 
-        if (rc == cib_ok && config_changed) {
+        if (rc == pcmk_ok && config_changed) {
             time_t now;
             char *now_str = NULL;
             const char *validation = crm_element_value(result_cib, XML_ATTR_VALIDATION);
@@ -1008,9 +1008,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
     }
 
-    if (rc == cib_ok && (call_options & cib_dryrun) == 0) {
+    if (rc == pcmk_ok && (call_options & cib_dryrun) == 0) {
         rc = activateCibXml(result_cib, config_changed, op);
-        if (rc == cib_ok && cib_internal_config_changed(*cib_diff)) {
+        if (rc == pcmk_ok && cib_internal_config_changed(*cib_diff)) {
             cib_read_config(config_hash, result_cib);
         }
 
@@ -1032,7 +1032,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             send_r_notify = TRUE;
         }
 
-    } else if (rc == cib_dtd_validation) {
+    } else if (rc == -pcmk_err_dtd_validation) {
         if (output != NULL) {
             crm_log_xml_info(output, "cib:output");
             free_xml(output);
@@ -1078,9 +1078,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         cib_replace_notify(origin, the_cib, rc, *cib_diff);
     }
 
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         log_level = LOG_DEBUG_4;
-        if (rc == cib_dtd_validation && global_update) {
+        if (rc == -pcmk_err_dtd_validation && global_update) {
             log_level = LOG_WARNING;
             crm_log_xml_info(input, "cib:global_update");
         }

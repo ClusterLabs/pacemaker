@@ -37,7 +37,7 @@
 
 #include <crm/cib.h>
 
-int exit_code = cib_ok;
+int exit_code = pcmk_ok;
 GMainLoop *mainloop = NULL;
 
 const char *host = NULL;
@@ -270,7 +270,7 @@ main(int argc, char **argv)
 
         if (local == NULL) {
             fprintf(stderr, "No shadow instance provided\n");
-            rc = cib_NOTEXISTS;
+            rc = -ENXIO;
             goto done;
         }
         fprintf(stdout, "%s\n", local);
@@ -281,7 +281,7 @@ main(int argc, char **argv)
     if (shadow == NULL) {
         fprintf(stderr, "No shadow instance provided\n");
         fflush(stderr);
-        rc = CIBRES_MISSING_FIELD;
+        rc = -EINVAL;
         goto done;
 
     } else if (command != 's' && command != 'c') {
@@ -332,8 +332,8 @@ main(int argc, char **argv)
     if (command == 'd' || command == 'r' || command == 'c' || command == 'C') {
         real_cib = cib_new_no_shadow();
         rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
-        if (rc != cib_ok) {
-            fprintf(stderr, "Signon to CIB failed: %s\n", cib_error2string(rc));
+        if (rc != pcmk_ok) {
+            fprintf(stderr, "Signon to CIB failed: %s\n", pcmk_strerror(rc));
             goto done;
         }
     }
@@ -345,25 +345,25 @@ main(int argc, char **argv)
             fprintf(stderr, "A shadow instance '%s' already exists.\n"
                     "  To prevent accidental destruction of the cluster,"
                     " the --force flag is required in order to proceed.\n", shadow);
-            rc = cib_EXISTS;
+            rc = -ENOTUNIQ;
             goto done;
         }
 
     } else if (rc != 0) {
         fprintf(stderr, "Could not access shadow instance '%s': %s\n", shadow, strerror(errno));
-        rc = cib_NOTEXISTS;
+        rc = -ENXIO;
         goto done;
     }
 
-    rc = cib_ok;
+    rc = pcmk_ok;
     if (command == 'c' || command == 'e') {
         xmlNode *output = NULL;
 
         /* create a shadow instance based on the current cluster config */
         if (command == 'c') {
             rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
-            if (rc != cib_ok) {
-                fprintf(stderr, "Could not connect to the CIB: %s\n", cib_error2string(rc));
+            if (rc != pcmk_ok) {
+                fprintf(stderr, "Could not connect to the CIB: %s\n", pcmk_strerror(rc));
                 goto done;
             }
 
@@ -384,7 +384,7 @@ main(int argc, char **argv)
             goto done;
         }
         shadow_setup(shadow, FALSE);
-        rc = cib_ok;
+        rc = pcmk_ok;
 
     } else if (command == 'E') {
         const char *err = NULL;
@@ -392,14 +392,14 @@ main(int argc, char **argv)
 
         if (editor == NULL) {
             fprintf(stderr, "No value for $EDITOR defined\n");
-            rc = cib_missing;
+            rc = -EINVAL;
             goto done;
         }
 
         execlp(editor, "--", shadow_file, NULL);
         err = strerror(errno);
         fprintf(stderr, "Could not invoke $EDITOR (%s %s): %s\n", editor, shadow_file, err);
-        rc = cib_missing;
+        rc = -EINVAL;
         goto done;
 
     } else if (command == 's') {
@@ -426,8 +426,8 @@ main(int argc, char **argv)
 
         rc = real_cib->cmds->query(real_cib, NULL, &old_config, command_options);
 
-        if (rc != cib_ok) {
-            fprintf(stderr, "Could not query the CIB: %s\n", cib_error2string(rc));
+        if (rc != pcmk_ok) {
+            fprintf(stderr, "Could not query the CIB: %s\n", pcmk_strerror(rc));
             goto done;
         }
 
@@ -453,9 +453,9 @@ main(int argc, char **argv)
                                          command_options);
         }
 
-        if (rc != cib_ok) {
+        if (rc != pcmk_ok) {
             fprintf(stderr, "Could not commit shadow instance '%s' to the CIB: %s\n",
-                    shadow, cib_error2string(rc));
+                    shadow, pcmk_strerror(rc));
             return rc;
         }
         shadow_teardown(shadow);

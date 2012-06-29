@@ -98,8 +98,8 @@ te_update_diff(const char *event, xmlNode * msg)
         crm_trace("No graph");
         return;
 
-    } else if (rc < cib_ok) {
-        crm_trace("Filter rc=%d (%s)", rc, cib_error2string(rc));
+    } else if (rc < pcmk_ok) {
+        crm_trace("Filter rc=%d (%s)", rc, pcmk_strerror(rc));
         return;
 
     } else if (transition_graph->complete == TRUE
@@ -406,7 +406,7 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
     CRM_CHECK(userdata != NULL, return);
     crm_log_xml_trace(output, "StonithOp");
     crm_notice("Stonith operation %d/%s: %s (%d)", call_id, (char *)userdata,
-             stonith_error2string(rc), rc);
+             pcmk_strerror(rc), rc);
 
     if (AM_I_DC == FALSE) {
         return;
@@ -435,7 +435,7 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
     }
 
     stop_te_timer(action->timer);
-    if (rc == stonith_ok) {
+    if (rc == pcmk_ok) {
         const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
@@ -451,7 +451,7 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
 
         action->failed = TRUE;
         if (crm_is_true(allow_fail) == FALSE) {
-            crm_notice("Stonith operation %d for %s failed (%s): aborting transition.", call_id, target, stonith_error2string(rc));
+            crm_notice("Stonith operation %d for %s failed (%s): aborting transition.", call_id, target, pcmk_strerror(rc));
             abort_transition(INFINITY, tg_restart, "Stonith failed", NULL);
         }
     }
@@ -468,9 +468,9 @@ tengine_stonith_callback(stonith_t * stonith, const xmlNode * msg, int call_id, 
 void
 cib_fencing_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    if (rc < cib_ok) {
+    if (rc < pcmk_ok) {
         crm_err("Fencing update %d for %s: failed - %s (%d)",
-                call_id, (char *)user_data, cib_error2string(rc), rc);
+                call_id, (char *)user_data, pcmk_strerror(rc), rc);
         crm_log_xml_warn(msg, "Failed update");
         abort_transition(INFINITY, tg_shutdown, "CIB update failed", NULL);
 
@@ -483,16 +483,16 @@ cib_fencing_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 void
 cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    if (rc < cib_ok) {
-        crm_err("Update %d FAILED: %s", call_id, cib_error2string(rc));
+    if (rc < pcmk_ok) {
+        crm_err("Update %d FAILED: %s", call_id, pcmk_strerror(rc));
     }
 }
 
 void
 cib_failcount_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    if (rc < cib_ok) {
-        crm_err("Update %d FAILED: %s", call_id, cib_error2string(rc));
+    if (rc < pcmk_ok) {
+        crm_err("Update %d FAILED: %s", call_id, pcmk_strerror(rc));
     }
 }
 

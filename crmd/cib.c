@@ -59,8 +59,8 @@ do_cib_updated(const char *event, xmlNode * msg)
 
     CRM_CHECK(msg != NULL, return);
     crm_element_value_int(msg, F_CIB_RC, &rc);
-    if (rc < cib_ok) {
-        crm_trace("Filter rc=%d (%s)", rc, cib_error2string(rc));
+    if (rc < pcmk_ok) {
+        crm_trace("Filter rc=%d (%s)", rc, pcmk_strerror(rc));
         return;
     }
 
@@ -78,7 +78,7 @@ revision_check_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
     const char *revision = NULL;
     xmlNode *generation = NULL;
 
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
 
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -149,7 +149,7 @@ do_cib_control(long long action,
     }
 
     if (action & start_actions) {
-        int rc = cib_ok;
+        int rc = pcmk_ok;
 
         CRM_ASSERT(fsa_cib_conn != NULL);
 
@@ -160,26 +160,26 @@ do_cib_control(long long action,
 
         rc = fsa_cib_conn->cmds->signon(fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command_nonblocking);
 
-        if (rc != cib_ok) {
+        if (rc != pcmk_ok) {
             /* a short wait that usually avoids stalling the FSA */
             sleep(1);
             rc = fsa_cib_conn->cmds->signon(fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command_nonblocking);
         }
 
-        if (rc != cib_ok) {
-            crm_info("Could not connect to the CIB service: %s", cib_error2string(rc));
+        if (rc != pcmk_ok) {
+            crm_info("Could not connect to the CIB service: %s", pcmk_strerror(rc));
 
-        } else if (cib_ok !=
+        } else if (pcmk_ok !=
                    fsa_cib_conn->cmds->set_connection_dnotify(fsa_cib_conn,
                                                               crmd_cib_connection_destroy)) {
             crm_err("Could not set dnotify callback");
 
-        } else if (cib_ok !=
+        } else if (pcmk_ok !=
                    fsa_cib_conn->cmds->add_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY,
                                                            do_cib_replaced)) {
             crm_err("Could not set CIB notification callback (replace)");
 
-        } else if (cib_ok !=
+        } else if (pcmk_ok !=
                    fsa_cib_conn->cmds->add_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY,
                                                            do_cib_updated)) {
             crm_err("Could not set CIB notification callback (update)");

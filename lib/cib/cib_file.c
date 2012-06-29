@@ -52,19 +52,19 @@ int cib_file_free(cib_t * cib);
 static int
 cib_file_inputfd(cib_t * cib)
 {
-    return cib_NOTSUPPORTED;
+    return -EPROTONOSUPPORT;
 }
 
 static int
 cib_file_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
 {
-    return cib_NOTSUPPORTED;
+    return -EPROTONOSUPPORT;
 }
 
 static int
 cib_file_register_notification(cib_t * cib, const char *callback, int enabled)
 {
-    return cib_NOTSUPPORTED;
+    return -EPROTONOSUPPORT;
 }
 
 cib_t *
@@ -101,7 +101,7 @@ static xmlNode *in_mem_cib = NULL;
 static int
 load_file_cib(const char *filename)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     struct stat buf;
     xmlNode *root = NULL;
     gboolean dtd_ok = TRUE;
@@ -112,11 +112,11 @@ load_file_cib(const char *filename)
     if (rc == 0) {
         root = filename2xml(filename);
         if (root == NULL) {
-            return cib_dtd_validation;
+            return -pcmk_err_dtd_validation;
         }
 
     } else {
-        return cib_NOTEXISTS;
+        return -ENXIO;
     }
 
     rc = 0;
@@ -130,7 +130,7 @@ load_file_cib(const char *filename)
     dtd_ok = validate_xml(root, NULL, TRUE);
     if (dtd_ok == FALSE) {
         crm_err("CIB does not validate against %s", ignore_dtd);
-        rc = cib_dtd_validation;
+        rc = -pcmk_err_dtd_validation;
         goto bail;
     }
 
@@ -146,23 +146,23 @@ load_file_cib(const char *filename)
 int
 cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
 
     if (private->filename == FALSE) {
-        rc = cib_missing;
+        rc = -EINVAL;
     } else {
         rc = load_file_cib(private->filename);
     }
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         crm_debug("%s: Opened connection to local file '%s'", name, private->filename);
         cib->state = cib_connected_command;
         cib->type = cib_command;
 
     } else {
         fprintf(stderr, "%s: Connection to local file '%s' failed: %s\n",
-                name, private->filename, cib_error2string(rc));
+                name, private->filename, pcmk_strerror(rc));
     }
 
     return rc;
@@ -171,7 +171,7 @@ cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type)
 int
 cib_file_signoff(cib_t * cib)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
 
     crm_debug("Signing out of the CIB Service");
@@ -185,7 +185,7 @@ cib_file_signoff(cib_t * cib)
 
     if (rc > 0) {
         crm_info("Wrote CIB to %s", private->filename);
-        rc = cib_ok;
+        rc = pcmk_ok;
 
     } else {
         crm_err("Could not write CIB to %s", private->filename);
@@ -201,13 +201,13 @@ cib_file_signoff(cib_t * cib)
 int
 cib_file_free(cib_t * cib)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
 
     if (cib->state != cib_disconnected) {
         rc = cib_file_signoff(cib);
     }
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         cib_file_opaque_t *private = cib->variant_opaque;
 
         free(private->filename);
@@ -255,7 +255,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
                              xmlNode * data, xmlNode ** output_data, int call_options,
                              const char *user_name)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     gboolean query = FALSE;
     gboolean changed = FALSE;
     xmlNode *output = NULL;
@@ -268,7 +268,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     crm_info("%s on %s", op, section);
 
     if (cib->state == cib_disconnected) {
-        return cib_not_connected;
+        return -ENOTCONN;
     }
 
     if (output_data != NULL) {
@@ -276,7 +276,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     if (op == NULL) {
-        return cib_operation;
+        return -EINVAL;
     }
 
     for (lpc = 0; lpc < max_msg_types; lpc++) {
@@ -288,7 +288,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     if (fn == NULL) {
-        return cib_NOTSUPPORTED;
+        return -EPROTONOSUPPORT;
     }
 
     cib->call_id++;
@@ -296,11 +296,11 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
                         section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
                         &output);
 
-    if (rc == cib_dtd_validation) {
+    if (rc == -pcmk_err_dtd_validation) {
         validate_xml_verbose(result_cib);
     }
 
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         free_xml(result_cib);
 
     } else if (query == FALSE) {

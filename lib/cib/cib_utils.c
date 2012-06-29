@@ -64,189 +64,6 @@ struct config_root_s known_paths[] = {
 };
 /* *INDENT-ON* */
 
-const char *
-cib_error2string(enum cib_errors return_code)
-{
-    const char *error_msg = NULL;
-
-    switch (return_code) {
-        case cib_bad_permissions:
-            error_msg =
-                "bad permissions for the on-disk configuration. shutdown heartbeat and repair.";
-            break;
-        case cib_bad_digest:
-            error_msg =
-                "the on-disk configuration was manually altered. shutdown heartbeat and repair.";
-            break;
-        case cib_bad_config:
-            error_msg = "the on-disk configuration is not valid";
-            break;
-        case cib_msg_field_add:
-            error_msg = "failed adding field to cib message";
-            break;
-        case cib_id_check:
-            error_msg = "missing id or id-collision detected";
-            break;
-        case cib_operation:
-            error_msg = "invalid operation";
-            break;
-        case cib_create_msg:
-            error_msg = "couldnt create cib message";
-            break;
-        case cib_client_gone:
-            error_msg = "client left before we could send reply";
-            break;
-        case cib_not_connected:
-            error_msg = "not connected";
-            break;
-        case cib_not_authorized:
-            error_msg = "not authorized";
-            break;
-        case cib_send_failed:
-            error_msg = "send failed";
-            break;
-        case cib_reply_failed:
-            error_msg = "reply failed";
-            break;
-        case cib_return_code:
-            error_msg = "no return code";
-            break;
-        case cib_output_ptr:
-            error_msg = "nowhere to store output";
-            break;
-        case cib_output_data:
-            error_msg = "corrupt output data";
-            break;
-        case cib_connection:
-            error_msg = "connection failed";
-            break;
-        case cib_callback_register:
-            error_msg = "couldnt register callback channel";
-            break;
-        case cib_authentication:
-            error_msg = "";
-            break;
-        case cib_registration_msg:
-            error_msg = "invalid registration msg";
-            break;
-        case cib_callback_token:
-            error_msg = "callback token not found";
-            break;
-        case cib_missing:
-            error_msg = "cib object missing";
-            break;
-        case cib_variant:
-            error_msg = "unknown/corrupt cib variant";
-            break;
-        case CIBRES_MISSING_ID:
-            error_msg = "The id field is missing";
-            break;
-        case CIBRES_MISSING_TYPE:
-            error_msg = "The type field is missing";
-            break;
-        case CIBRES_MISSING_FIELD:
-            error_msg = "A required field is missing";
-            break;
-        case CIBRES_OBJTYPE_MISMATCH:
-            error_msg = "CIBRES_OBJTYPE_MISMATCH";
-            break;
-        case cib_EXISTS:
-            error_msg = "The object already exists";
-            break;
-        case cib_NOTEXISTS:
-            error_msg = "The object/attribute does not exist";
-            break;
-        case CIBRES_CORRUPT:
-            error_msg = "The CIB is corrupt";
-            break;
-        case cib_NOOBJECT:
-            error_msg = "The update was empty";
-            break;
-        case cib_NOPARENT:
-            error_msg = "The parent object does not exist";
-            break;
-        case cib_NODECOPY:
-            error_msg = "Failed while copying update";
-            break;
-        case CIBRES_OTHER:
-            error_msg = "CIBRES_OTHER";
-            break;
-        case cib_ok:
-            error_msg = "ok";
-            break;
-        case cib_unknown:
-            error_msg = "Unknown error";
-            break;
-        case cib_STALE:
-            error_msg = "Discarded old update";
-            break;
-        case cib_ACTIVATION:
-            error_msg = "Activation Failed";
-            break;
-        case cib_NOSECTION:
-            error_msg = "Required section was missing";
-            break;
-        case cib_NOTSUPPORTED:
-            error_msg = "The action/feature is not supported";
-            break;
-        case cib_not_master:
-            error_msg = "Local service is not the master instance";
-            break;
-        case cib_client_corrupt:
-            error_msg = "Service client not valid";
-            break;
-        case cib_remote_timeout:
-            error_msg = "Remote node did not respond";
-            break;
-        case cib_master_timeout:
-            error_msg = "No master service is currently active";
-            break;
-        case cib_revision_unsupported:
-            error_msg = "The required CIB revision number is not supported";
-            break;
-        case cib_revision_unknown:
-            error_msg = "The CIB revision number could not be determined";
-            break;
-        case cib_missing_data:
-            error_msg = "Required data for this CIB API call not found";
-            break;
-        case cib_no_quorum:
-            error_msg = "Write requires quorum";
-            break;
-        case cib_diff_failed:
-            error_msg = "Application of an update diff failed";
-            break;
-        case cib_diff_resync:
-            error_msg = "Application of an update diff failed, requesting a full refresh";
-            break;
-        case cib_bad_section:
-            error_msg = "Invalid CIB section specified";
-            break;
-        case cib_old_data:
-            error_msg = "Update was older than existing configuration";
-            break;
-        case cib_dtd_validation:
-            error_msg = "Update does not conform to the configured schema/DTD";
-            break;
-        case cib_invalid_argument:
-            error_msg = "Invalid argument";
-            break;
-        case cib_transform_failed:
-            error_msg = "Schema transform failed";
-            break;
-        case cib_permission_denied:
-            error_msg = "Permission Denied";
-            break;
-    }
-
-    if (error_msg == NULL) {
-        crm_err("Unknown CIB Error Code: %d", return_code);
-        error_msg = "<unknown error>";
-    }
-
-    return error_msg;
-}
-
 int
 cib_section2enum(const char *a_section)
 {
@@ -323,7 +140,7 @@ get_cib_copy(cib_t * cib)
     xmlNode *xml_cib;
     int options = cib_scope_local | cib_sync_call;
 
-    if (cib->cmds->query(cib, NULL, &xml_cib, options) != cib_ok) {
+    if (cib->cmds->query(cib, NULL, &xml_cib, options) != pcmk_ok) {
         crm_err("Couldnt retrieve the CIB");
         return NULL;
     } else if (xml_cib == NULL) {
@@ -595,29 +412,29 @@ fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean chan
     crm_log_xml_trace(local_diff, "Repaired-diff");
 }
 
-enum cib_errors
+int
 cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_query,
                const char *section, xmlNode * req, xmlNode * input,
                gboolean manage_counters, gboolean * config_changed,
                xmlNode * current_cib, xmlNode ** result_cib, xmlNode ** diff, xmlNode ** output)
 {
 
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     gboolean check_dtd = TRUE;
     xmlNode *scratch = NULL;
     xmlNode *local_diff = NULL;
     const char *current_dtd = "unknown";
 
-    CRM_CHECK(output != NULL, return cib_output_data);
-    CRM_CHECK(result_cib != NULL, return cib_output_data);
-    CRM_CHECK(config_changed != NULL, return cib_output_data);
+    CRM_CHECK(output != NULL, return -ENOMSG);
+    CRM_CHECK(result_cib != NULL, return -ENOMSG);
+    CRM_CHECK(config_changed != NULL, return -ENOMSG);
 
     *output = NULL;
     *result_cib = NULL;
     *config_changed = FALSE;
 
     if (fn == NULL) {
-        return cib_operation;
+        return -EINVAL;
     }
 
     if (is_query) {
@@ -628,23 +445,23 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     scratch = copy_xml(current_cib);
     rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
 
-    CRM_CHECK(current_cib != scratch, return cib_unknown);
+    CRM_CHECK(current_cib != scratch, return -EINVAL);
 
-    if (rc == cib_ok && scratch == NULL) {
-        rc = cib_unknown;
+    if (rc == pcmk_ok && scratch == NULL) {
+        rc = -EINVAL;
     }
 
-    if (rc == cib_ok && scratch) {
+    if (rc == pcmk_ok && scratch) {
         const char *new_version = crm_element_value(scratch, XML_ATTR_CRM_VERSION);
 
         if (new_version && compare_version(new_version, CRM_FEATURE_SET) > 0) {
             crm_err("Discarding update with feature set '%s' greater than our own '%s'",
                     new_version, CRM_FEATURE_SET);
-            rc = cib_NOTSUPPORTED;
+            rc = -EPROTONOSUPPORT;
         }
     }
 
-    if (rc == cib_ok && current_cib) {
+    if (rc == pcmk_ok && current_cib) {
         int old = 0;
         int new = 0;
 
@@ -656,7 +473,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
                     XML_ATTR_GENERATION_ADMIN, old, new, call_options);
             crm_log_xml_warn(req, "Bad Op");
             crm_log_xml_warn(input, "Bad Data");
-            rc = cib_old_data;
+            rc = -pcmk_err_old_data;
 
         } else if (old == new) {
             crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
@@ -666,12 +483,12 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
                         XML_ATTR_GENERATION, old, new, call_options);
                 crm_log_xml_warn(req, "Bad Op");
                 crm_log_xml_warn(input, "Bad Data");
-                rc = cib_old_data;
+                rc = -pcmk_err_old_data;
             }
         }
     }
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         fix_plus_plus_recursive(scratch);
         current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
@@ -741,9 +558,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
   done:
-    if (rc == cib_ok && check_dtd && validate_xml(scratch, NULL, TRUE) == FALSE) {
+    if (rc == pcmk_ok && check_dtd && validate_xml(scratch, NULL, TRUE) == FALSE) {
         crm_warn("Updated CIB does not validate against %s schema/dtd", crm_str(current_dtd));
-        rc = cib_dtd_validation;
+        rc = -pcmk_err_dtd_validation;
     }
 
     *result_cib = scratch;
@@ -821,17 +638,17 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         crm_debug("No cib object supplied");
     }
 
-    if (rc == cib_diff_resync) {
+    if (rc == -pcmk_err_diff_resync) {
         /* This is an internal value that clients do not and should not care about */
-        rc = cib_ok;
+        rc = pcmk_ok;
     }
 
-    if (local_blob.callback != NULL && (rc == cib_ok || local_blob.only_success == FALSE)) {
+    if (local_blob.callback != NULL && (rc == pcmk_ok || local_blob.only_success == FALSE)) {
         crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
         local_blob.callback(msg, call_id, rc, output, local_blob.user_data);
 
-    } else if (cib && cib->op_callback == NULL && rc != cib_ok) {
-        crm_warn("CIB command failed: %s", cib_error2string(rc));
+    } else if (cib && cib->op_callback == NULL && rc != pcmk_ok) {
+        crm_warn("CIB command failed: %s", pcmk_strerror(rc));
         crm_log_xml_debug(msg, "Failed CIB Update");
     }
 
@@ -893,9 +710,9 @@ determine_host(cib_t * cib_conn, char **node_uname, char **node_uuid)
     if (cib_conn && *node_uname != NULL && node_uuid != NULL && *node_uuid == NULL) {
         int rc = query_node_uuid(cib_conn, *node_uname, node_uuid);
 
-        if (rc != cib_ok) {
+        if (rc != pcmk_ok) {
             fprintf(stderr, "Could not map uname=%s to a UUID: %s\n",
-                    *node_uname, cib_error2string(rc));
+                    *node_uname, pcmk_strerror(rc));
             return FALSE;
         }
         crm_info("Mapped %s to %s", *node_uname, crm_str(*node_uuid));

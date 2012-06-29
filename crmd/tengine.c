@@ -111,13 +111,13 @@ do_te_control(long long action,
         transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger, NULL);
     }
 
-    if (cib_ok !=
+    if (pcmk_ok !=
         fsa_cib_conn->cmds->add_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
         crm_err("Could not set CIB notification callback");
         init_ok = FALSE;
     }
 
-    if (cib_ok != fsa_cib_conn->cmds->set_op_callback(fsa_cib_conn, global_cib_callback)) {
+    if (pcmk_ok != fsa_cib_conn->cmds->set_op_callback(fsa_cib_conn, global_cib_callback)) {
         crm_err("Could not set CIB global callback");
         init_ok = FALSE;
     }

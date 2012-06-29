@@ -71,7 +71,7 @@ xmlNode *resource_search = NULL;
 xmlNode *constraint_search = NULL;
 xmlNode *status_search = NULL;
 
-extern enum cib_errors cib_status;
+extern int cib_status;
 
 int set_connected_peers(xmlNode * xml_obj);
 void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
@@ -294,14 +294,14 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     xmlNode *status = NULL;
 
     if (!crm_is_writable(dir, file, CRM_DAEMON_USER, NULL, FALSE)) {
-        cib_status = cib_bad_permissions;
+        cib_status = -EACCES;
         return NULL;
     }
 
     filename = crm_concat(dir, file, '/');
     sigfile = crm_concat(filename, "sig", '.');
 
-    cib_status = cib_ok;
+    cib_status = pcmk_ok;
     root = retrieveCib(filename, sigfile, TRUE);
 
     if (root == NULL) {
@@ -396,7 +396,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     validation = crm_element_value(root, XML_ATTR_VALIDATION);
     if (validate_xml(root, NULL, TRUE) == FALSE) {
         crm_err("CIB does not validate with %s", crm_str(validation));
-        cib_status = cib_dtd_validation;
+        cib_status = -pcmk_err_dtd_validation;
 
     } else if (validation == NULL) {
         int version = 0;
@@ -407,7 +407,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
                        " the existing (sane) configuration", get_schema_name(version));
         } else {
             crm_err("CIB does not validate with any known DTD or schema");
-            cib_status = cib_dtd_validation;
+            cib_status = -pcmk_err_dtd_validation;
         }
     }
 
@@ -518,16 +518,16 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
         } else {
             crm_crit("Could not write out new CIB and no saved" " version to revert to");
         }
-        return cib_ACTIVATION;
+        return -ENODATA;
     }
 
     free_xml(saved_cib);
-    if (cib_writes_enabled && cib_status == cib_ok && to_disk) {
+    if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {
         crm_debug("Triggering CIB write for %s op", op);
         mainloop_set_trigger(cib_writer);
     }
 
-    return cib_ok;
+    return pcmk_ok;
 }
 
 static void cib_diskwrite_complete(GPid pid, gint status, gpointer user_data) 

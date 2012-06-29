@@ -34,12 +34,12 @@
 
 #include <crm/common/xml.h>
 
-enum cib_errors
+int
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
     xmlNode *obj_root = NULL;
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
 
@@ -58,25 +58,25 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     obj_root = get_object_root(section, existing_cib);
 
     if (obj_root == NULL) {
-        result = cib_NOTEXISTS;
+        result = -ENXIO;
 
     } else {
         *answer = obj_root;
     }
 
-    if (result == cib_ok && *answer == NULL) {
+    if (result == pcmk_ok && *answer == NULL) {
         crm_err("Error creating query response");
-        result = cib_output_data;
+        result = -ENOMSG;
     }
 
     return result;
 }
 
-enum cib_errors
+int
 cib_process_erase(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event", op);
     *answer = NULL;
@@ -89,7 +89,7 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
     return result;
 }
 
-enum cib_errors
+int
 cib_process_upgrade(const char *op, int options, const char *section, xmlNode * req,
                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                     xmlNode ** answer)
@@ -109,17 +109,17 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
 
     rc = update_validation(result_cib, &new_version, TRUE, TRUE);
     if (new_version > current_version) {
-        return cib_ok;
+        return pcmk_ok;
     }
 
     return rc;
 }
 
-enum cib_errors
+int
 cib_process_bump(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event for epoch=%s",
               op, crm_str(crm_element_value(existing_cib, XML_ATTR_GENERATION)));
@@ -130,7 +130,7 @@ cib_process_bump(const char *op, int options, const char *section, xmlNode * req
     return result;
 }
 
-enum cib_errors
+int
 cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
 {
     char *new_value = NULL;
@@ -154,17 +154,17 @@ cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
     free(new_value);
     free(old_value);
 
-    return cib_ok;
+    return pcmk_ok;
 }
 
-enum cib_errors
+int
 cib_process_replace(const char *op, int options, const char *section, xmlNode * req,
                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                     xmlNode ** answer)
 {
     const char *tag = NULL;
     gboolean verbose = FALSE;
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
 
@@ -176,7 +176,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
     *answer = NULL;
 
     if (input == NULL) {
-        return cib_NOOBJECT;
+        return -EINVAL;
     }
 
     tag = crm_element_name(input);
@@ -225,7 +225,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
                      " current %s is greater than the replacement",
                      replace_admin_epoch, replace_epoch,
                      replace_updates, admin_epoch, epoch, updates, reason);
-            result = cib_old_data;
+            result = -pcmk_err_old_data;
         }
 
         free_xml(*result_cib);
@@ -239,14 +239,14 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         ok = replace_xml_child(NULL, obj_root, input, FALSE);
         if (ok == FALSE) {
             crm_trace("No matching object to replace");
-            result = cib_NOTEXISTS;
+            result = -ENXIO;
         }
     }
 
     return result;
 }
 
-enum cib_errors
+int
 cib_process_delete(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                    xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
@@ -261,7 +261,7 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
 
     if (input == NULL) {
         crm_err("Cannot perform modification with no data");
-        return cib_NOOBJECT;
+        return -EINVAL;
     }
 
     obj_root = get_object_root(section, *result_cib);
@@ -273,10 +273,10 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
         crm_trace("No matching object to delete");
     }
 
-    return cib_ok;
+    return pcmk_ok;
 }
 
-enum cib_errors
+int
 cib_process_modify(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                    xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
@@ -291,7 +291,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 
     if (input == NULL) {
         crm_err("Cannot perform modification with no data");
-        return cib_NOOBJECT;
+        return -EINVAL;
     }
 
     obj_root = get_object_root(section, *result_cib);
@@ -304,7 +304,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         const char *path = get_object_parent(section);
 
         if (path == NULL) {
-            return cib_bad_section;
+            return -EINVAL;
         }
 
         tmp_section = create_xml_node(NULL, section);
@@ -314,34 +314,34 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         obj_root = get_object_root(section, *result_cib);
     }
 
-    CRM_CHECK(obj_root != NULL, return cib_unknown);
+    CRM_CHECK(obj_root != NULL, return -EINVAL);
 
     if (update_xml_child(obj_root, input) == FALSE) {
         if (options & cib_can_create) {
             add_node_copy(obj_root, input);
         } else {
-            return cib_NOTEXISTS;
+            return -ENXIO;
         }
     }
 
-    return cib_ok;
+    return pcmk_ok;
 }
 
 static int
 update_cib_object(xmlNode * parent, xmlNode * update)
 {
-    int result = cib_ok;
+    int result = pcmk_ok;
     xmlNode *target = NULL;
     xmlNode *a_child = NULL;
     const char *replace = NULL;
     const char *object_id = NULL;
     const char *object_name = NULL;
 
-    CRM_CHECK(update != NULL, return cib_NOOBJECT);
-    CRM_CHECK(parent != NULL, return cib_NOPARENT);
+    CRM_CHECK(update != NULL, return -EINVAL);
+    CRM_CHECK(parent != NULL, return -EINVAL);
 
     object_name = crm_element_name(update);
-    CRM_CHECK(object_name != NULL, return cib_NOOBJECT);
+    CRM_CHECK(object_name != NULL, return -EINVAL);
 
     object_id = ID(update);
     crm_trace("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
@@ -407,10 +407,10 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         tmp_result = update_cib_object(target, a_child);
 
         /*  only the first error is likely to be interesting */
-        if (tmp_result != cib_ok) {
+        if (tmp_result != pcmk_ok) {
             crm_err("Error updating child <%s id=%s>", crm_element_name(a_child), ID(a_child));
 
-            if (result == cib_ok) {
+            if (result == pcmk_ok) {
                 result = tmp_result;
             }
         }
@@ -424,7 +424,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 static int
 add_cib_object(xmlNode * parent, xmlNode * new_obj)
 {
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
     const char *object_name = NULL;
     const char *object_id = NULL;
     xmlNode *equiv_node = NULL;
@@ -437,10 +437,10 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     crm_trace("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
 
     if (new_obj == NULL || object_name == NULL) {
-        result = cib_NOOBJECT;
+        result = -EINVAL;
 
     } else if (parent == NULL) {
-        result = cib_NOPARENT;
+        result = -EINVAL;
 
     } else if (object_id == NULL) {
         /*  placeholder object */
@@ -450,11 +450,11 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
         equiv_node = find_entity(parent, object_name, object_id);
     }
 
-    if (result != cib_ok) {
+    if (result != pcmk_ok) {
         ;                       /* do nothing */
 
     } else if (equiv_node != NULL) {
-        result = cib_EXISTS;
+        result = -ENOTUNIQ;
 
     } else {
         result = update_cib_object(parent, new_obj);
@@ -463,12 +463,12 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     return result;
 }
 
-enum cib_errors
+int
 cib_process_create(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                    xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
     xmlNode *failed = NULL;
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
     xmlNode *update_section = NULL;
 
     crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
@@ -482,11 +482,11 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
         section = NULL;
     }
 
-    CRM_CHECK(strcasecmp(CIB_OP_CREATE, op) == 0, return cib_operation);
+    CRM_CHECK(strcasecmp(CIB_OP_CREATE, op) == 0, return -EINVAL);
 
     if (input == NULL) {
         crm_err("Cannot perform modification with no data");
-        return cib_NOOBJECT;
+        return -EINVAL;
     }
 
     if (section == NULL) {
@@ -513,10 +513,10 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     }
 
     if (xml_has_children(failed)) {
-        CRM_CHECK(result != cib_ok, result = cib_unknown);
+        CRM_CHECK(result != pcmk_ok, result = -EINVAL);
     }
 
-    if (result != cib_ok) {
+    if (result != pcmk_ok) {
         crm_log_xml_err(failed, "CIB Update failures");
         *answer = failed;
 
@@ -527,14 +527,14 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     return result;
 }
 
-enum cib_errors
+int
 cib_process_diff(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
     unsigned int log_level = LOG_DEBUG;
     const char *reason = NULL;
     gboolean apply_diff = TRUE;
-    enum cib_errors result = cib_ok;
+    int result = pcmk_ok;
 
     int this_updates = 0;
     int this_epoch = 0;
@@ -594,7 +594,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     }
 
     if (apply_diff && diff_del_admin_epoch > this_admin_epoch) {
-        result = cib_diff_resync;
+        result = -pcmk_err_diff_resync;
         apply_diff = FALSE;
         log_level = LOG_INFO;
         reason = "current \"" XML_ATTR_GENERATION_ADMIN "\" is less than required";
@@ -605,7 +605,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
         reason = "current \"" XML_ATTR_GENERATION_ADMIN "\" is greater than required";
 
     } else if (apply_diff && diff_del_epoch > this_epoch) {
-        result = cib_diff_resync;
+        result = -pcmk_err_diff_resync;
         apply_diff = FALSE;
         log_level = LOG_INFO;
         reason = "current \"" XML_ATTR_GENERATION "\" is less than required";
@@ -616,7 +616,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
         reason = "current \"" XML_ATTR_GENERATION "\" is greater than required";
 
     } else if (apply_diff && diff_del_updates > this_updates) {
-        result = cib_diff_resync;
+        result = -pcmk_err_diff_resync;
         apply_diff = FALSE;
         log_level = LOG_INFO;
         reason = "current \"" XML_ATTR_NUMUPDATES "\" is less than required";
@@ -635,7 +635,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
             reason = "Failed application of an update diff";
 
             if (options & cib_force_diff) {
-                result = cib_diff_resync;
+                result = -pcmk_err_diff_resync;
             }
         }
     }
@@ -648,8 +648,8 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
                    originator?originator:"local", this_admin_epoch, this_epoch, this_updates, reason);
 
         crm_log_xml_trace(input, "Discarded diff");
-        if (result == cib_ok) {
-            result = cib_diff_failed;
+        if (result == pcmk_ok) {
+            result = -pcmk_err_diff_failed;
         }
 
     } else if (apply_diff) {
@@ -820,13 +820,13 @@ diff_cib_object(xmlNode * old_cib, xmlNode * new_cib, gboolean suppress)
     return diff;
 }
 
-enum cib_errors
+int
 cib_process_xpath(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
     int lpc = 0;
     int max = 0;
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     gboolean is_query = safe_str_eq(op, CIB_OP_QUERY);
 
     xmlXPathObjectPtr xpathObj = NULL;
@@ -848,7 +848,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
 
     } else if (max < 1) {
         crm_debug("%s: %s does not exist", op, section);
-        rc = cib_NOTEXISTS;
+        rc = -ENXIO;
 
     } else if (is_query) {
         if (max > 1) {
@@ -876,7 +876,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
 
         } else if (safe_str_eq(op, CIB_OP_MODIFY)) {
             if (update_xml_child(match, input) == FALSE) {
-                rc = cib_NOTEXISTS;
+                rc = -ENXIO;
             } else if ((options & cib_multiple) == 0) {
                 break;
             }
@@ -933,8 +933,8 @@ update_results(xmlNode * failed, xmlNode * target, const char *operation, int re
     gboolean was_error = FALSE;
     const char *error_msg = NULL;
 
-    if (return_code != cib_ok) {
-        error_msg = cib_error2string(return_code);
+    if (return_code != pcmk_ok) {
+        error_msg = pcmk_strerror(return_code);
 
         was_error = TRUE;
         xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);

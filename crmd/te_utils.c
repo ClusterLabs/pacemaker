@@ -129,7 +129,7 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
     target = crm_element_value(action, F_STONITH_TARGET);
     executioner = crm_element_value(action, F_STONITH_DELEGATE);
 
-    if (rc == stonith_ok && crm_str_eq(target, fsa_our_uname, TRUE)) {
+    if (rc == pcmk_ok && crm_str_eq(target, fsa_our_uname, TRUE)) {
         crm_err("We were alegedly just fenced by %s for %s!", executioner, origin);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
         return;
@@ -137,13 +137,13 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
     }
 
     crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s)",
-               target, rc == stonith_ok?"":" not",
+               target, rc == pcmk_ok?"":" not",
                crm_element_value(action, F_STONITH_OPERATION),
                executioner ? executioner : "<anyone>", origin,
-               stonith_error2string(rc), crm_element_value(action, F_STONITH_REMOTE));
+               pcmk_strerror(rc), crm_element_value(action, F_STONITH_REMOTE));
 
 #if SUPPORT_CMAN
-    if (rc == stonith_ok && is_cman_cluster()) {
+    if (rc == pcmk_ok && is_cman_cluster()) {
         int local_rc = 0;
         int confirm = 0;
         char *target_copy = crm_strdup(target);
@@ -181,7 +181,7 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
     }
 #endif
 
-    if (rc == stonith_ok) {
+    if (rc == pcmk_ok) {
         crm_trace("target=%s dc=%s", target, fsa_our_dc);
         if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, target)) {
             crm_notice("Target %s our leader %s (recorded: %s)",
@@ -205,7 +205,7 @@ gboolean
 te_connect_stonith(gpointer user_data)
 {
     int lpc = 0;
-    int rc = stonith_ok;
+    int rc = pcmk_ok;
 
     if (stonith_api == NULL) {
         stonith_api = stonith_api_new();
@@ -222,7 +222,7 @@ te_connect_stonith(gpointer user_data)
         sleep(1);
         rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
 
-        if (rc == stonith_ok) {
+        if (rc == pcmk_ok) {
             break;
         }
 
@@ -236,7 +236,7 @@ te_connect_stonith(gpointer user_data)
         sleep(1);
     }
 
-    CRM_CHECK(rc == stonith_ok, return TRUE);   /* If not, we failed 30 times... just get out */
+    CRM_CHECK(rc == pcmk_ok, return TRUE);   /* If not, we failed 30 times... just get out */
     stonith_api->cmds->register_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT,
                                              tengine_stonith_connection_destroy);
 

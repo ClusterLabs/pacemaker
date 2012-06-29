@@ -1,74 +1,87 @@
-#define cib_ok				 0
-#define lrmd_ok                      	 0
-#define stonith_ok			 0
-#define st_err_generic			-1001
-#define cib_no_quorum			-1002
-#define cib_dtd_validation		-1003
-#define cib_transform_failed		-1004
-#define cib_bad_permissions		-EACCES
-#define cib_not_authorized		-EACCES
-#define cib_permission_denied		-EACCES
-#define st_err_agent_fork		-ECHILD
-#define cib_callback_register		-ECOMM
-#define cib_send_failed			-ECOMM
-#define lrmd_err_ipc                 	-ECOMM
-#define st_err_ipc			-ECOMM
-#define st_err_agent			-ECONNABORTED
-#define st_err_signal			-ECONNABORTED
-#define cib_client_gone			-ECONNRESET
-#define st_err_none_available		-EHOSTUNREACH
-#define lrmd_pending                 	-EINPROGRESS
-#define stonith_pending			-EINPROGRESS
-#define cib_bad_section			-EINVAL
-#define cib_invalid_argument		-EINVAL
-#define cib_missing_data		-EINVAL
-#define cib_missing			-EINVAL
-#define cib_NOOBJECT			-EINVAL
-#define cib_NOPARENT			-EINVAL
-#define cib_operation			-EINVAL
-#define CIBRES_MISSING_FIELD		-EINVAL
-#define cib_unknown			-EINVAL
-#define lrmd_err_missing             	-EINVAL
-#define lrmd_err_provider_required   	-EINVAL
-#define st_err_invalid_level		-EINVAL
-#define st_err_missing			-EINVAL
-#define lrmd_err_no_metadata         	-EIO
-#define cib_old_data			-EKEYEXPIRED
-#define cib_diff_failed			-EKEYREJECTED
-#define cib_diff_resync			-EL2NSYNC
-#define cib_ACTIVATION			-ENODATA
-#define lrmd_err_unknown_rsc         	-ENODEV
-#define st_err_unknown_device		-ENODEV
-#define cib_STALE			-ENOKEY
-#define cib_output_data			-ENOMSG
-#define cib_reply_failed		-ENOMSG
-#define lrmd_err_peer                	-ENOMSG
-#define st_err_peer			-ENOMSG
-#define cib_connection			-ENOTCONN
-#define cib_not_connected		-ENOTCONN
-#define lrmd_err_connection          	-ENOTCONN
-#define st_err_connection		-ENOTCONN
-#define cib_EXISTS			-ENOTUNIQ
-#define st_err_exists			-ENOTUNIQ
-#define cib_NOTEXISTS			-ENXIO
-#define lrmd_err_unknown_operation   	-EOPNOTSUPP
-#define st_err_unknown_operation	-EOPNOTSUPP
-#define cib_not_master			-EPERM
-#define cib_authentication		-EPROTO
-#define cib_callback_token		-EPROTO
-#define cib_create_msg			-EPROTO
-#define cib_registration_msg		-EPROTO
-#define cib_return_code			-EPROTO
-#define lrmd_err_internal            	-EPROTO
-#define st_err_internal			-EPROTO
-#define cib_NOTSUPPORTED		-EPROTONOSUPPORT
-#define cib_variant			-EPROTONOSUPPORT
-#define lrmd_err_generic             	-EPROTONOSUPPORT
-#define st_err_not_supported		-EPROTONOSUPPORT
-#define st_err_agent_args		-EREMOTEIO
-#define cib_remote_timeout		-ETIME
-#define st_err_timeout			-ETIME
-#define lrmd_err_stonith_connection  	-EUNATCH
+enum cib_errors {
+    cib_ok			=  pcmk_ok,
+    cib_operation		= -EINVAL,
+    cib_create_msg		= -EPROTO,
+    cib_not_connected           = -ENOTCONN,
+    cib_not_authorized          = -EACCES,
+    cib_send_failed		= -ECOMM,
+    cib_reply_failed            = -ENOMSG,
+    cib_return_code		= -EPROTO,
+    cib_output_data		= -ENOMSG,
+    cib_connection		= -ENOTCONN,
+    cib_authentication  	= -EPROTO,
+    cib_missing 		= -EINVAL,
+    cib_variant                 = -EPROTONOSUPPORT,
+    CIBRES_MISSING_FIELD	= -EINVAL,
+    cib_unknown                 = -EINVAL,
+    cib_STALE                   = -ENOKEY,
+    cib_EXISTS                  = -ENOTUNIQ,
+    cib_NOTEXISTS		= -ENXIO,
+    cib_ACTIVATION		= -ENODATA,
+    cib_NOOBJECT		= -EINVAL,
+    cib_NOPARENT		= -EINVAL,
+    cib_NOTSUPPORTED            = -EPROTONOSUPPORT,
+    cib_registration_msg	= -EPROTO,
+    cib_callback_token          = -EPROTO,
+    cib_callback_register	= -ECOMM,
+    cib_client_gone		= -ECONNRESET,
+    cib_not_master		= -EPERM,
+    cib_missing_data            = -EINVAL,
+    cib_remote_timeout          = -ETIME,
+    cib_no_quorum		= -pcmk_err_no_quorum,
+    cib_diff_failed		= -pcmk_err_diff_failed,
+    cib_diff_resync		= -pcmk_err_diff_resync,
+    cib_old_data		= -pcmk_err_old_data,
+    cib_dtd_validation  	= -pcmk_err_dtd_validation,
+    cib_bad_section		= -EINVAL,
+    cib_bad_permissions         = -EACCES,
+    cib_invalid_argument	= -EINVAL,
+    cib_transform_failed        = -pcmk_err_transform_failed,
+    cib_permission_denied	= -EACCES,
+};
+
+enum stonith_errors {
+    stonith_ok			=  pcmk_ok,
+    stonith_pending		= -EINPROGRESS,
+    st_err_generic		= -pcmk_err_generic,
+    st_err_internal		= -EPROTO,
+    st_err_not_supported	= -EPROTONOSUPPORT,
+    st_err_connection		= -ENOTCONN,
+    st_err_missing		= -EINVAL,
+    st_err_exists		= -ENOTUNIQ,
+    st_err_timeout		= -ETIME,
+    st_err_ipc			= -ECOMM,
+    st_err_peer			= -ENOMSG,
+    st_err_unknown_operation	= -EOPNOTSUPP,
+    st_err_unknown_device	= -ENODEV,
+    st_err_none_available	= -EHOSTUNREACH,
+    st_err_signal		= -ECONNABORTED,
+    st_err_agent_fork		= -ECHILD,
+    st_err_agent_args		= -EREMOTEIO,
+    st_err_agent		= -ECONNABORTED,
+    st_err_invalid_level	= -EINVAL,
+};
+
+
+enum lrmd_errors {
+    lrmd_ok                      =  pcmk_ok,
+    lrmd_pending                 = -EINPROGRESS,
+    lrmd_err_generic             = -EPROTONOSUPPORT,
+    lrmd_err_internal            = -EPROTO,
+    lrmd_err_connection          = -ENOTCONN,
+    lrmd_err_missing             = -EINVAL,
+    lrmd_err_ipc                 = -ECOMM,
+    lrmd_err_peer                = -ENOMSG,
+    lrmd_err_unknown_operation   = -EOPNOTSUPP,
+    lrmd_err_unknown_rsc         = -ENODEV,
+    lrmd_err_no_metadata         = -EIO,
+    lrmd_err_stonith_connection  = -EUNATCH,
+    lrmd_err_provider_required   = -EINVAL,
+};
+
+#define stonith_error2string pcmk_strerror
+#define lrmd_error2string    pcmk_strerror
+#define cib_error2string     pcmk_strerror
 
 static inline void
 slist_basic_destroy(GListPtr list)
@@ -139,3 +152,4 @@ slist_basic_destroy(GListPtr list)
 	    }								\
 	}								\
     } while(0)
+

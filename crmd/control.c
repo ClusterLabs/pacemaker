@@ -780,14 +780,13 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     GHashTable *config_hash = NULL;
     ha_time_t *now = new_ha_date(TRUE);
 
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
 
-        crm_err("Local CIB query resulted in an error: %s", cib_error2string(rc));
+        crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
-        if (rc == cib_bad_permissions
-            || rc == cib_dtd_validation || rc == cib_bad_digest || rc == cib_bad_config) {
+        if (rc == -EACCES || rc == -pcmk_err_dtd_validation) {
             crm_err("The cluster is mis-configured - shutting down and staying down");
             set_bit_inplace(fsa_input_register, R_STAYDOWN);
         }
@@ -899,10 +898,10 @@ crm_shutdown(int nsig)
 static void
 default_cib_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
 
-        crm_err("CIB Update failed: %s", cib_error2string(rc));
+        crm_err("CIB Update failed: %s", pcmk_strerror(rc));
         crm_log_xml_warn(output, "update:failed");
 
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);

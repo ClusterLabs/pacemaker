@@ -114,7 +114,7 @@ int
 main(int argc, char **argv)
 {
     cib_t *the_cib = NULL;
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
 
     int cib_opts = cib_sync_call;
     int argerr = 0;
@@ -217,8 +217,8 @@ main(int argc, char **argv)
     the_cib = cib_new();
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
-    if (rc != cib_ok) {
-        fprintf(stderr, "Error signing on to the CIB service: %s\n", cib_error2string(rc));
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
         return rc;
     }
 
@@ -246,13 +246,13 @@ main(int argc, char **argv)
         rc = delete_attr(the_cib, cib_opts, type, dest_node, set_type, set_name,
                          attr_id, attr_name, attr_value, TRUE);
 
-        if (rc == cib_NOTEXISTS) {
+        if (rc == -ENXIO) {
             /* Nothing to delete...
              * which means its not there...
              * which is what the admin wanted
              */
-            rc = cib_ok;
-        } else if (rc != cib_missing_data && safe_str_eq(crm_system_name, "crm_failcount")) {
+            rc = pcmk_ok;
+        } else if (rc != -EINVAL && safe_str_eq(crm_system_name, "crm_failcount")) {
             char *now_s = NULL;
             time_t now = time(NULL);
 
@@ -278,16 +278,16 @@ main(int argc, char **argv)
         rc = read_attr(the_cib, type, dest_node, set_type, set_name,
                        attr_id, attr_name, &read_value, TRUE);
 
-        if (rc == cib_NOTEXISTS && attr_default) {
+        if (rc == -ENXIO && attr_default) {
             read_value = crm_strdup(attr_default);
-            rc = cib_ok;
+            rc = pcmk_ok;
         }
 
         crm_info("Read %s=%s %s%s",
                  attr_name, crm_str(read_value), set_name ? "in " : "", set_name ? set_name : "");
 
-        if (rc == cib_missing_data) {
-            rc = cib_ok;
+        if (rc == -EINVAL) {
+            rc = pcmk_ok;
 
         } else if (BE_QUIET == FALSE) {
             fprintf(stdout, "%s%s %s%s %s%s value=%s\n",
@@ -301,10 +301,10 @@ main(int argc, char **argv)
         }
     }
 
-    if (rc == cib_missing_data) {
+    if (rc == -EINVAL) {
         printf("Please choose from one of the matches above and suppy the 'id' with --attr-id\n");
-    } else if (rc != cib_ok) {
-        fprintf(stderr, "Error performing operation: %s\n", cib_error2string(rc));
+    } else if (rc != pcmk_ok) {
+        fprintf(stderr, "Error performing operation: %s\n", pcmk_strerror(rc));
     }
 
     the_cib->cmds->signoff(the_cib);

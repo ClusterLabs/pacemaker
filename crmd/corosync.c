@@ -77,8 +77,8 @@ crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
                                          XML_ATTR_EXPECTED_VOTES, votes, FALSE);
 
                     crm_info("Setting expected votes to %s", votes);
-                    if (cib_ok > rc) {
-                        crm_err("Quorum update failed: %s", cib_error2string(rc));
+                    if (pcmk_ok > rc) {
+                        crm_err("Quorum update failed: %s", pcmk_strerror(rc));
                     }
                 }
             }

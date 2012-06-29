@@ -46,7 +46,7 @@
 #endif
 
 int max_failures = 30;
-int exit_code = cib_ok;
+int exit_code = pcmk_ok;
 
 gboolean log_diffs = FALSE;
 gboolean log_updates = FALSE;
@@ -141,13 +141,13 @@ main(int argc, char **argv)
         sleep(1);
         exit_code = cib->cmds->signon(cib, crm_system_name, cib_query);
 
-    } while (exit_code == cib_connection && attempts++ < max_failures);
+    } while (exit_code == -ENOTCONN && attempts++ < max_failures);
 
-    if (exit_code != cib_ok) {
-        crm_err("Signon to CIB failed: %s", cib_error2string(exit_code));
+    if (exit_code != pcmk_ok) {
+        crm_err("Signon to CIB failed: %s", pcmk_strerror(exit_code));
     }
 
-    if (exit_code == cib_ok) {
+    if (exit_code == pcmk_ok) {
         crm_debug("Setting dnotify");
         exit_code = cib->cmds->set_connection_dnotify(cib, cib_connection_destroy);
     }
@@ -155,11 +155,11 @@ main(int argc, char **argv)
     crm_debug("Setting diff callback");
     exit_code = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, cibmon_diff);
 
-    if (exit_code != cib_ok) {
-        crm_err("Failed to set %s callback: %s", T_CIB_DIFF_NOTIFY, cib_error2string(exit_code));
+    if (exit_code != pcmk_ok) {
+        crm_err("Failed to set %s callback: %s", T_CIB_DIFF_NOTIFY, pcmk_strerror(exit_code));
     }
 
-    if (exit_code != cib_ok) {
+    if (exit_code != pcmk_ok) {
         crm_err("Setup failed, could not monitor CIB actions");
         return -exit_code;
     }
@@ -213,9 +213,9 @@ cibmon_diff(const char *event, xmlNode * msg)
     op = crm_element_value(msg, F_CIB_OPERATION);
     diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    if (rc < cib_ok) {
+    if (rc < pcmk_ok) {
         log_level = LOG_WARNING;
-        do_crm_log(log_level, "[%s] %s ABORTED: %s", event, op, cib_error2string(rc));
+        do_crm_log(log_level, "[%s] %s ABORTED: %s", event, op, pcmk_strerror(rc));
         return;
     }
 
@@ -232,8 +232,8 @@ cibmon_diff(const char *event, xmlNode * msg)
         cib_copy = NULL;
         rc = cib_process_diff(op, cib_force_diff, NULL, NULL, diff, cib_last, &cib_copy, NULL);
 
-        if (rc != cib_ok) {
-            crm_debug("Update didn't apply, requesting full copy: %s", cib_error2string(rc));
+        if (rc != pcmk_ok) {
+            crm_debug("Update didn't apply, requesting full copy: %s", pcmk_strerror(rc));
             free_xml(cib_copy);
             cib_copy = NULL;
         }

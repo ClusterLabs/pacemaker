@@ -58,7 +58,7 @@ save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
     CRM_CHECK(id != NULL, return);
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         int len = 15;
         char *filename = NULL;
 
@@ -86,7 +86,7 @@ pe_ipc_destroy(gpointer user_data)
 {
     clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
     if (is_set(fsa_input_register, pe_subsystem->flag_required)) {
-        int rc = cib_ok;
+        int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
 
         crm_crit("Connection to the Policy Engine failed (pid=%d, uuid=%s)",
@@ -236,8 +236,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     int sent;
     xmlNode *cmd = NULL;
 
-    if (rc != cib_ok) {
-        crm_err("Cant retrieve the CIB: %s (call %d)", cib_error2string(rc), call_id);
+    if (rc != pcmk_ok) {
+        crm_err("Cant retrieve the CIB: %s (call %d)", pcmk_strerror(rc), call_id);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
         return;
 

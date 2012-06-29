@@ -458,18 +458,18 @@ cib_connect(void *user_data)
     }
 
     if (was_err == FALSE) {
-        enum cib_errors rc = cib_not_connected;
+        int rc = -ENOTCONN;
 
         if (attempts < max_retry) {
             crm_debug("CIB signon attempt %d", attempts);
             rc = local_conn->cmds->signon(local_conn, T_ATTRD, cib_command);
         }
 
-        if (rc != cib_ok && attempts > max_retry) {
-            crm_err("Signon to CIB failed: %s", cib_error2string(rc));
+        if (rc != pcmk_ok && attempts > max_retry) {
+            crm_err("Signon to CIB failed: %s", pcmk_strerror(rc));
             was_err = TRUE;
 
-        } else if (rc != cib_ok) {
+        } else if (rc != pcmk_ok) {
             attempts++;
             return TRUE;
         }
@@ -478,16 +478,16 @@ cib_connect(void *user_data)
     crm_info("Connected to the CIB after %d signon attempts", attempts);
 
     if (was_err == FALSE) {
-        enum cib_errors rc =
+        int rc =
             local_conn->cmds->set_connection_dnotify(local_conn, attrd_cib_connection_destroy);
-        if (rc != cib_ok) {
+        if (rc != pcmk_ok) {
             crm_err("Could not set dnotify callback");
             was_err = TRUE;
         }
     }
 
     if (was_err == FALSE) {
-        if (cib_ok !=
+        if (pcmk_ok !=
             local_conn->cmds->add_notify_callback(local_conn, T_CIB_REPLACE_NOTIFY,
                                                   do_cib_replaced)) {
             crm_err("Could not set CIB notification callback");
@@ -632,12 +632,12 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     attr_hash_entry_t *hash_entry = NULL;
     struct attrd_callback_s *data = user_data;
 
-    if (data->value == NULL && rc == cib_NOTEXISTS) {
-        rc = cib_ok;
+    if (data->value == NULL && rc == -ENXIO) {
+        rc = pcmk_ok;
     }
 
     switch (rc) {
-        case cib_ok:
+        case pcmk_ok:
             crm_debug("Update %d for %s=%s passed", call_id, data->attr, data->value);
             hash_entry = g_hash_table_lookup(attr_hash, data->attr);
 
@@ -649,17 +649,17 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
                 }
             }
             break;
-        case cib_diff_failed:  /* When an attr changes while the CIB is syncing */
-        case cib_remote_timeout:       /* When an attr changes while there is a DC election */
-        case cib_NOTEXISTS:    /* When an attr changes while the CIB is syncing a
+        case -pcmk_err_diff_failed:  /* When an attr changes while the CIB is syncing */
+        case -ETIME:       /* When an attr changes while there is a DC election */
+        case -ENXIO:    /* When an attr changes while the CIB is syncing a
                                  *   newer config from a node that just came up
                                  */
             crm_warn("Update %d for %s=%s failed: %s",
-                     call_id, data->attr, data->value, cib_error2string(rc));
+                     call_id, data->attr, data->value, pcmk_strerror(rc));
             break;
         default:
             crm_err("Update %d for %s=%s failed: %s",
-                    call_id, data->attr, data->value, cib_error2string(rc));
+                    call_id, data->attr, data->value, pcmk_strerror(rc));
     }
 
     free(data->value);
@@ -670,7 +670,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 void
 attrd_perform_update(attr_hash_entry_t * hash_entry)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     struct attrd_callback_s *data = NULL;
     const char *user_name = NULL;
 
@@ -702,11 +702,11 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
                        hash_entry->uuid ? hash_entry->uuid : "<n/a>", hash_entry->set,
                        hash_entry->section);
 
-        } else if (rc < 0 && rc != cib_NOTEXISTS) {
+        } else if (rc < 0 && rc != -ENXIO) {
             crm_notice
                 ("Delete operation failed: node=%s, attr=%s, id=%s, set=%s, section=%s: %s (%d)",
                  attrd_uuid, hash_entry->id, hash_entry->uuid ? hash_entry->uuid : "<n/a>",
-                 hash_entry->set, hash_entry->section, cib_error2string(rc), rc);
+                 hash_entry->set, hash_entry->section, pcmk_strerror(rc), rc);
 
         } else {
             crm_trace("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",

@@ -100,7 +100,7 @@ static int stonith_manual_ack(xmlNode *msg, remote_fencing_op_t *op)
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
     
     if(cmd == NULL) {
-	return st_err_missing;
+	return -EINVAL;
     }
 
     cmd->device = crm_strdup("manual_ack");
@@ -110,7 +110,7 @@ static int stonith_manual_ack(xmlNode *msg, remote_fencing_op_t *op)
                crm_element_value(dev, F_STONITH_TARGET));
 
     st_child_done(0, 0, cmd);
-    return stonith_ok;
+    return pcmk_ok;
 }
 
 static gboolean stonith_device_execute(stonith_device_t *device)
@@ -184,12 +184,12 @@ void free_device(gpointer data)
 	async_command_t *cmd = gIter->data;
 	
 	crm_warn("Removal of device '%s' purged operation %s", device->id, cmd->action);
-	st_child_done(0, st_err_unknown_device, cmd);
+	st_child_done(0, -ENODEV, cmd);
 	free_async_command(cmd);
     }
     g_list_free(device->pending_ops);
 
-    slist_basic_destroy(device->targets);
+    g_list_free_full(device->targets, free);
     free(device->namespace);
     free(device->agent);
     free(device->id);
@@ -377,7 +377,7 @@ int stonith_device_register(xmlNode *msg)
     g_hash_table_replace(device_list, device->id, device);
 
     crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
-    return stonith_ok;
+    return pcmk_ok;
 }
 
 
@@ -393,7 +393,7 @@ static int stonith_device_remove(xmlNode *msg)
 	crm_info("Device '%s' not found (%d active devices)",
 		 id, g_hash_table_size(device_list));
     }
-    return stonith_ok;
+    return pcmk_ok;
 }
 
 static int count_active_levels(stonith_topology_t *tp)
@@ -415,7 +415,7 @@ void free_topology_entry(gpointer data)
     int lpc = 0;
     for(lpc = 0; lpc < ST_LEVEL_MAX; lpc++) {
         if(tp->levels[lpc] != NULL) {
-            slist_basic_destroy(tp->levels[lpc]);
+            g_list_free_full(tp->levels[lpc], free);
         }
     }
     free(tp->node);
@@ -425,7 +425,7 @@ void free_topology_entry(gpointer data)
 int stonith_level_register(xmlNode *msg) 
 {
     int id = 0;
-    int rc = stonith_ok;
+    int rc = pcmk_ok;
     xmlNode *child = NULL;
     
     xmlNode *level = get_xpath_object("//"F_STONITH_LEVEL, msg, LOG_ERR);
@@ -434,7 +434,7 @@ int stonith_level_register(xmlNode *msg)
 
     crm_element_value_int(level, XML_ATTR_ID, &id);
     if(id <= 0 || id >= ST_LEVEL_MAX) {
-        return st_err_invalid_level;
+        return -EINVAL;
     }
     
     if(tp == NULL) {
@@ -468,12 +468,12 @@ int stonith_level_remove(xmlNode *msg)
     if(tp == NULL) {
 	crm_info("Node %s not found (%d active entries)",
 		 node, g_hash_table_size(topology));
-        return stonith_ok;
+        return pcmk_ok;
     }
 
     crm_element_value_int(level, XML_ATTR_ID, &id);
     if(id < 0 || id >= ST_LEVEL_MAX) {
-        return st_err_invalid_level;
+        return -EINVAL;
     }
 
     if(id == 0 && g_hash_table_remove(topology, node)) {
@@ -481,13 +481,13 @@ int stonith_level_remove(xmlNode *msg)
 		 node, g_hash_table_size(topology));
 
     } else if(id > 0 && tp->levels[id] != NULL) {
-        slist_basic_destroy(tp->levels[id]);
+        g_list_free_full(tp->levels[id], free);
         tp->levels[id] = NULL;
 
 	crm_info("Removed entry '%d' from %s's topology (%d active entries remaining)",
 		 id, node, count_active_levels(tp));
     }    
-    return stonith_ok;
+    return pcmk_ok;
 }
 
 static gboolean string_in_list(GListPtr list, const char *item)
@@ -505,7 +505,7 @@ static gboolean string_in_list(GListPtr list, const char *item)
 
 static int stonith_device_action(xmlNode *msg, char **output) 
 {
-    int rc = stonith_ok;
+    int rc = pcmk_ok;
     xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
     const char *id = crm_element_value(dev, F_STONITH_DEVICE);
 
@@ -521,15 +521,15 @@ static int stonith_device_action(xmlNode *msg, char **output)
 	cmd = create_async_command(msg);
 	if(cmd == NULL) {
 	    free_device(device);
-	    return st_err_internal;
+	    return -EPROTO;
 	}
 
 	schedule_stonith_command(cmd, device);
-	rc = stonith_pending;
+	rc = -EINPROGRESS;
 	
     } else {
 	crm_info("Device %s not found", id?id:"<none>");
-	rc = st_err_unknown_device;
+	rc = -ENODEV;
     }
     return rc;
 }
@@ -589,11 +589,11 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    
 	} else if(dev->targets == NULL || dev->targets_age + 60 < now) {
 	    char *output = NULL;
-	    int rc = stonith_ok;
-	    int exec_rc = stonith_ok;
+	    int rc = pcmk_ok;
+	    int exec_rc = pcmk_ok;
 	    
 	    /* Check for the target's presence in the output of the 'list' command */
-	    slist_basic_destroy(dev->targets);
+	    g_list_free_full(dev->targets, free);
 	    dev->targets = NULL;
 
             while(dev->active_pid != 0 && kill(dev->active_pid, 0) == 0) {
@@ -710,7 +710,7 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
             if(list) {
                 *list = NULL;
             }
-            return stonith_ok;
+            return pcmk_ok;
         }
     }
     
@@ -786,7 +786,7 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 #define READ_MAX 500
 static void st_child_done(GPid pid, gint status, gpointer user_data) 
 {
-    int rc = st_err_generic;
+    int rc = -pcmk_err_generic;
 
     int len = 0;
     int more = 0;
@@ -811,12 +811,10 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
     if(WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
 
-        if(signo) {
-            if(signo == SIGTERM || signo == SIGKILL) {
-                rc = st_err_timeout;
-            } else {
-                rc = st_err_signal;
-            }
+        if(signo == SIGTERM || signo == SIGKILL) {
+            rc = -ETIME;
+        } else {
+            rc = -ECONNABORTED;
         }
         crm_notice("Child process %d performing action '%s' with '%s' terminated with signal %d",
                    pid, cmd->action, cmd->device, signo);
@@ -873,7 +871,7 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
     }
 
     if(rc > 0) {
-	rc = st_err_generic;
+	rc = -pcmk_err_generic;
     }
     
     reply = stonith_construct_async_reply(cmd, output, data, rc);
@@ -941,7 +939,7 @@ static int stonith_fence(xmlNode *msg)
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
 
     if(cmd == NULL) {
-	return st_err_internal;
+	return -EPROTO;
     }
 
     device_id = crm_element_value(dev, F_STONITH_DEVICE);
@@ -987,11 +985,11 @@ static int stonith_fence(xmlNode *msg)
     if(device) {
         cmd->device = device->id;
         schedule_stonith_command(cmd, device);
-        return stonith_pending;
+        return -EINPROGRESS;
     }
 
     free_async_command(cmd);	
-    return st_err_none_available;
+    return -EHOSTUNREACH;
 }
 
 xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, int rc) 
@@ -1064,7 +1062,7 @@ void
 stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 {
     int call_options = 0;
-    int rc = st_err_generic;
+    int rc = -EOPNOTSUPP;
 
     gboolean is_reply = FALSE;
     gboolean always_reply = FALSE;
@@ -1142,7 +1140,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 
     } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_RELAY, TRUE)) {
         if(initiate_remote_stonith_op(NULL, request, FALSE) != NULL) {
-            rc = stonith_pending;
+            rc = -EINPROGRESS;
         }
 
     } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
@@ -1189,10 +1187,10 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
                 crm_xml_add(request, F_STONITH_OPERATION, STONITH_OP_RELAY);
                 crm_xml_add(request, F_STONITH_CLIENTID, client->id);
                 send_cluster_message(alternate_host, crm_msg_stonith_ng, request, FALSE);
-                rc = stonith_pending;
+                rc = -EINPROGRESS;
 
             } else if(initiate_remote_stonith_op(client, request, FALSE) != NULL) {
-                rc = stonith_pending;
+                rc = -EINPROGRESS;
             }
         }
 
@@ -1237,9 +1235,9 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     }
 
     do_crm_log_unlikely(rc>0?LOG_DEBUG:LOG_INFO,"Processed %s%s from %s: %s (%d)", op, is_reply?" reply":"",
-	       client?client->name:remote, rc>0?"":stonith_error2string(rc), rc);
+	       client?client->name:remote, rc>0?"":pcmk_strerror(rc), rc);
     
-    if(is_reply || rc == stonith_pending) {
+    if(is_reply || rc == -EINPROGRESS) {
 	/* Nothing (yet) */
 	
     } else if(remote) {
@@ -1247,7 +1245,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	send_cluster_message(remote, crm_msg_stonith_ng, reply, FALSE);
 	free_xml(reply);
 
-    } else if(rc <= stonith_ok || always_reply) {
+    } else if(rc <= pcmk_ok || always_reply) {
 	reply = stonith_construct_reply(request, output, data, rc);
 	do_local_reply(reply, client_id, call_options & st_opt_sync_call, remote!=NULL);
 	free_xml(reply);

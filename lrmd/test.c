@@ -218,7 +218,7 @@ start_test(gpointer user_data)
                                 rsc_info->provider ? rsc_info->provider : "<none>",
                                 rsc_info->type));
             lrmd_free_rsc_info(rsc_info);
-            rc = lrmd_ok;
+            rc = pcmk_ok;
         } else {
             rc = -1;
         }
@@ -232,7 +232,7 @@ start_test(gpointer user_data)
         rc = lrmd_conn->cmds->get_metadata(lrmd_conn,
                                            options.class,
                                            options.provider, options.type, &output, 0);
-        if (rc == lrmd_ok) {
+        if (rc == pcmk_ok) {
             print_result(printf("%s", output));
             free(output);
         }
@@ -299,7 +299,7 @@ start_test(gpointer user_data)
         exit(-1);
     }
 
-    if (options.api_call && rc == lrmd_ok) {
+    if (options.api_call && rc == pcmk_ok) {
         print_result(printf("API-CALL SUCCESSFUL for '%s'\n", options.api_call));
         if (!options.listen) {
             exit(0);
@@ -347,8 +347,8 @@ generate_params(void)
 
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, "lrmd_test", cib_query);
-    if (rc != cib_ok) {
-        crm_err("Error signing on to the CIB service: %s\n", cib_error2string(rc));
+    if (rc != pcmk_ok) {
+        crm_err("Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
         rc = -1;
         goto param_gen_bail;
     }

@@ -145,7 +145,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
     query_call_id = 0;
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         local_cib = output;
         CRM_LOG_ASSERT(safe_str_eq(crm_element_name(local_cib), XML_TAG_CIB));
     }
@@ -166,7 +166,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
     } else {
         crm_err("Could not retrieve Generation to attach to our"
-                " join acknowledgement: %s", cib_error2string(rc));
+                " join acknowledgement: %s", pcmk_strerror(rc));
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
     }
 

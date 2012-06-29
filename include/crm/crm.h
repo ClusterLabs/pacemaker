@@ -22,7 +22,6 @@
 #  include <stdlib.h>
 #  include <glib.h>
 #  include <stdbool.h>
-#  include <assert.h>
 
 #  undef MIN
 #  undef MAX
@@ -49,12 +48,6 @@ int log_data_element(int log_level, const char *file, const char *function, int 
 #  define __unlikely(expr) __builtin_expect(expr, 0)
 
 #  define CRM_META			"CRM_meta"
-
-#  define CRM_ASSERT(expr) do {						\
-	if(__unlikely((expr) == FALSE)) {				\
-	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
-	}								\
-    } while(0)
 
 extern const char *crm_system_name;
 
@@ -190,9 +183,16 @@ typedef GList *GListPtr;
 
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
+#  include <crm/error.h>
 
 #  define crm_strdup strdup
 #  define crm_str_hash g_str_hash_traditional
+
+#  define crm_realloc(realloc_obj, length) do {				\
+	realloc_obj = realloc(realloc_obj, length);			\
+	CRM_ASSERT(realloc_obj != NULL);				\
+    } while(0)
+
 
 guint g_str_hash_traditional(gconstpointer v);
 

@@ -307,7 +307,7 @@ try_cman(int command, enum cluster_type_e stack)
     switch (command) {
         case 'R':
             fprintf(stderr, "Node removal not supported for cman based clusters\n");
-            exit(cib_NOTSUPPORTED);
+            exit(-EPROTONOSUPPORT);
             break;
 
         case 'e':

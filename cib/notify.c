@@ -45,7 +45,7 @@ gboolean cib_notify_client(gpointer key, gpointer value, gpointer user_data);
 void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
 
 void do_cib_notify(int options, const char *op, xmlNode * update,
-                   enum cib_errors result, xmlNode * result_data, const char *msg_type);
+                   int result, xmlNode * result_data, const char *msg_type);
 
 static void
 need_pre_notify(gpointer key, gpointer value, gpointer user_data)
@@ -184,7 +184,7 @@ cib_pre_notify(int options, const char *op, xmlNode * existing, xmlNode * update
 
 void
 cib_post_notify(int options, const char *op, xmlNode * update,
-                enum cib_errors result, xmlNode * new_obj)
+                int result, xmlNode * new_obj)
 {
     gboolean needed = FALSE;
 
@@ -198,7 +198,7 @@ cib_post_notify(int options, const char *op, xmlNode * update,
 
 void
 cib_diff_notify(int options, const char *client, const char *call_id, const char *op,
-                xmlNode * update, enum cib_errors result, xmlNode * diff)
+                xmlNode * update, int result, xmlNode * diff)
 {
     int add_updates = 0;
     int add_epoch = 0;
@@ -214,7 +214,7 @@ cib_diff_notify(int options, const char *client, const char *call_id, const char
         return;
     }
 
-    if (result != cib_ok) {
+    if (result != pcmk_ok) {
         log_level = LOG_WARNING;
     }
 
@@ -226,13 +226,13 @@ cib_diff_notify(int options, const char *client, const char *call_id, const char
                    "Update (client: %s%s%s): %d.%d.%d -> %d.%d.%d (%s)",
                    client, call_id ? ", call:" : "", call_id ? call_id : "",
                    del_admin_epoch, del_epoch, del_updates,
-                   add_admin_epoch, add_epoch, add_updates, cib_error2string(result));
+                   add_admin_epoch, add_epoch, add_updates, pcmk_strerror(result));
 
     } else if (diff != NULL) {
         do_crm_log(log_level,
                    "Local-only Change (client:%s%s%s): %d.%d.%d (%s)",
                    client, call_id ? ", call: " : "", call_id ? call_id : "",
-                   add_admin_epoch, add_epoch, add_updates, cib_error2string(result));
+                   add_admin_epoch, add_epoch, add_updates, pcmk_strerror(result));
     }
 
     do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
@@ -240,7 +240,7 @@ cib_diff_notify(int options, const char *client, const char *call_id, const char
 
 void
 do_cib_notify(int options, const char *op, xmlNode * update,
-              enum cib_errors result, xmlNode * result_data, const char *msg_type)
+              int result, xmlNode * result_data, const char *msg_type)
 {
     xmlNode *update_msg = NULL;
     const char *id = NULL;
@@ -299,7 +299,7 @@ attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib)
 }
 
 void
-cib_replace_notify(const char *origin, xmlNode * update, enum cib_errors result, xmlNode * diff)
+cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * diff)
 {
     xmlNode *replace_msg = NULL;
 

@@ -60,7 +60,7 @@ te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
 void
 send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
 {
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
 
     /* zero out the node-status & remove all LRM status info */
     xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
@@ -245,7 +245,7 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     xmlNode *xml_op = NULL;
     xmlNode *action_rsc = NULL;
 
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
 
     const char *name = NULL;
     const char *value = NULL;
@@ -328,7 +328,7 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
 
     action->sent_update = TRUE;
 
-    if (rc < cib_ok) {
+    if (rc < pcmk_ok) {
         return FALSE;
     }
 

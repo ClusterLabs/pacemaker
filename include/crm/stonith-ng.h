@@ -47,31 +47,6 @@ enum stonith_call_options {
 
 #define stonith_default_options = stonith_none
 
-enum stonith_errors {
-    stonith_ok				=  0,
-    stonith_pending			= -1,
-    st_err_generic			= -2,
-    st_err_internal			= -3,
-    st_err_not_supported		= -4,
-    st_err_connection			= -5,
-    st_err_missing			= -6,
-    st_err_exists			= -7,
-    st_err_timeout			= -8,
-    st_err_ipc				= -9,
-    st_err_peer				= -10,
-    st_err_unknown_operation		= -11,
-    st_err_unknown_device		= -12,
-    st_err_unknown_port			= -13,
-    st_err_none_available		= -14,
-    st_err_authentication		= -15,
-    st_err_signal			= -16,
-    st_err_agent_fork			= -17,
-    st_err_agent_args			= -18,
-    st_err_agent			= -19,
-    st_err_invalid_target		= -20,
-    st_err_invalid_level		= -21,
-};
-
 #define ST_LEVEL_MAX 10
 
 #define F_STONITH_CLIENTID		"st_clientid"
@@ -218,7 +193,6 @@ struct stonith_s
 stonith_t *stonith_api_new(void);
 void stonith_api_delete(stonith_t * st);
 
-const char *stonith_error2string(enum stonith_errors return_code);
 void stonith_dump_pending_callbacks(stonith_t * st);
 
 const char *get_stonith_provider(const char *agent, const char *provider);
@@ -292,7 +266,7 @@ stonith_api_kick_helper(int nodeid, int timeout, bool off)
         st_kick_fn = dlsym(st_library, "stonith_api_kick");
     }
     if (st_kick_fn == NULL) {
-        return st_err_not_supported;
+        return -ELIBACC;
     }
 
     return (*st_kick_fn) (nodeid, NULL, timeout, off);

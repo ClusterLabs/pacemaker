@@ -313,7 +313,7 @@ do_lrm_control(long long action,
     }
 
     if (action & A_LRM_CONNECT) {
-        int ret = lrmd_ok;
+        int ret = pcmk_ok;
 
         deletion_ops = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                              g_hash_destroy_str, free_deletion_op);
@@ -327,7 +327,7 @@ do_lrm_control(long long action,
         crm_debug("Connecting to the LRM");
         ret = fsa_lrm_conn->cmds->connect(fsa_lrm_conn, CRM_SYSTEM_CRMD, NULL);
 
-        if (ret != lrmd_ok) {
+        if (ret != pcmk_ok) {
             if (++num_lrm_register_fails < max_lrm_register_fails) {
                 crm_warn("Failed to sign on to the LRM %d"
                          " (%d max) times", num_lrm_register_fails, max_lrm_register_fails);
@@ -338,12 +338,12 @@ do_lrm_control(long long action,
             }
         }
 
-        if (ret == lrmd_ok) {
+        if (ret == pcmk_ok) {
             crm_trace("LRM: set_lrm_callback...");
             fsa_lrm_conn->cmds->set_callback(fsa_lrm_conn, lrm_op_callback);
         }
 
-        if (ret != lrmd_ok) {
+        if (ret != pcmk_ok) {
             crm_err("Failed to sign on to the LRM %d" " (max) times", num_lrm_register_fails);
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
             return;
@@ -809,12 +809,12 @@ notify_deleted(ha_msg_input_t * input, const char *rsc_id, int rc)
     const char *from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
 
     crm_info("Notifying %s on %s that %s was%s deleted",
-             from_sys, from_host, rsc_id, rc == lrmd_ok ? "" : " not");
+             from_sys, from_host, rsc_id, rc == pcmk_ok ? "" : " not");
 
     op = construct_op(input->xml, rsc_id, CRMD_ACTION_DELETE);
     CRM_ASSERT(op != NULL);
 
-    if (rc == lrmd_ok) {
+    if (rc == pcmk_ok) {
         op->op_status = PCMK_LRM_OP_DONE;
         op->rc = PCMK_EXECRA_OK;
     } else {
@@ -877,9 +877,9 @@ delete_rsc_status(const char *rsc_id, int call_options, const char *user_name)
 {
     char *rsc_xpath = NULL;
     int max = 0;
-    int rc = cib_ok;
+    int rc = pcmk_ok;
 
-    CRM_CHECK(rsc_id != NULL, return cib_NOTEXISTS);
+    CRM_CHECK(rsc_id != NULL, return -ENXIO);
 
     max = strlen(rsc_template) + strlen(rsc_id) + strlen(fsa_our_uname) + 1;
     rsc_xpath = calloc(1, max);
@@ -899,7 +899,7 @@ delete_rsc_entry(ha_msg_input_t * input, const char *rsc_id, GHashTableIter *rsc
 
     CRM_CHECK(rsc_id != NULL, return);
 
-    if (rc == lrmd_ok) {
+    if (rc == pcmk_ok) {
         char *rsc_id_copy = crm_strdup(rsc_id);
 
         if (rsc_gIter)
@@ -1011,7 +1011,7 @@ void lrm_clear_last_failure(const char *rsc_id)
 static gboolean
 cancel_op(const char *rsc_id, const char *key, int op, gboolean remove)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
     struct recurring_op_s *pending = NULL;
 
     CRM_CHECK(op != 0, return FALSE);
@@ -1046,7 +1046,7 @@ cancel_op(const char *rsc_id, const char *key, int op, gboolean remove)
         pending->op_type,
         pending->interval);
 
-    if (rc == lrmd_ok) {
+    if (rc == pcmk_ok) {
         crm_debug("Op %d for %s (%s): cancelled", op, rsc_id, key);
     } else {
         crm_debug("Op %d for %s (%s): Nothing to cancel", op, rsc_id, key);
@@ -1148,7 +1148,7 @@ static void
 delete_resource(const char *id, lrmd_rsc_info_t * rsc, GHashTableIter *gIter,
                 const char *sys, const char *host, const char *user, ha_msg_input_t * request)
 {
-    int rc = lrmd_ok;
+    int rc = pcmk_ok;
 
     crm_info("Removing resource %s for %s (%s) on %s", id, sys, user ? user : "internal", host);
 
@@ -1156,9 +1156,9 @@ delete_resource(const char *id, lrmd_rsc_info_t * rsc, GHashTableIter *gIter,
         rc = fsa_lrm_conn->cmds->unregister_rsc(fsa_lrm_conn, id, 0);
     }
 
-    if (rc == lrmd_ok) {
+    if (rc == pcmk_ok) {
         crm_trace("Resource '%s' deleted", id);
-    } else if (rc == lrmd_pending) {
+    } else if (rc == -EINPROGRESS) {
         crm_info("Deletion of resource '%s' pending", id);
         if (request) {
             struct pending_deletion_op_s *op = NULL;
@@ -1278,7 +1278,7 @@ do_lrm_invoke(long long action,
     }
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
-        enum cib_errors rc = cib_ok;
+        int rc = pcmk_ok;
         xmlNode *fragment = do_lrm_query(TRUE);
 
         crm_info("Forcing a local LRM refresh");
@@ -1343,7 +1343,7 @@ do_lrm_invoke(long long action,
             lrmd_event_data_t *op = NULL;
 
             crm_notice("Not creating resource for a %s event: %s", operation, ID(input->xml));
-            delete_rsc_entry(input, ID(xml_rsc), NULL, lrmd_ok, user_name);
+            delete_rsc_entry(input, ID(xml_rsc), NULL, pcmk_ok, user_name);
 
             op = construct_op(input->xml, ID(xml_rsc), operation);
             op->op_status = PCMK_LRM_OP_DONE;
@@ -1415,23 +1415,23 @@ do_lrm_invoke(long long action,
             lrmd_free_event(op);
 
         } else if (safe_str_eq(operation, CRMD_ACTION_DELETE)) {
-            int cib_rc = cib_ok;
+            int cib_rc = pcmk_ok;
 
             CRM_ASSERT(rsc != NULL);
 
             cib_rc = delete_rsc_status(rsc->id, cib_dryrun | cib_sync_call, user_name);
-            if (cib_rc != cib_ok) {
+            if (cib_rc != pcmk_ok) {
                 lrmd_event_data_t *op = NULL;
 
                 crm_err
                     ("Attempt of deleting resource status '%s' from CIB for %s (user=%s) on %s failed: (rc=%d) %s",
                      rsc->id, from_sys, user_name ? user_name : "unknown", from_host, cib_rc,
-                     cib_error2string(cib_rc));
+                     pcmk_strerror(cib_rc));
 
                 op = construct_op(input->xml, rsc->id, operation);
                 op->op_status = PCMK_LRM_OP_ERROR;
 
-                if (cib_rc == cib_permission_denied) {
+                if (cib_rc == -EACCES) {
                     op->rc = PCMK_EXECRA_INSUFFICIENT_PRIV;
                 } else {
                     op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
@@ -1752,13 +1752,13 @@ static void
 cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     switch (rc) {
-        case cib_ok:
-        case cib_diff_failed:
-        case cib_diff_resync:
+        case pcmk_ok:
+        case -pcmk_err_diff_failed:
+        case -pcmk_err_diff_resync:
             crm_trace("Resource update %d complete: rc=%d", call_id, rc);
             break;
         default:
-            crm_warn("Resource update %d failed: (rc=%d) %s", call_id, rc, cib_error2string(rc));
+            crm_warn("Resource update %d failed: (rc=%d) %s", call_id, rc, pcmk_strerror(rc));
     }
 }
 
@@ -1773,7 +1773,7 @@ do_update_resource(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
   <lrm_resource id=...>
   </...>
 */
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode *update, *iter = NULL;
     int call_opt = cib_quorum_override;
 
@@ -1968,7 +1968,7 @@ process_lrm_event(lrmd_event_data_t * op)
 
     if (op->rsc_deleted) {
         crm_info("Deletion of resource '%s' complete after %s", op->rsc_id, op_key);
-        delete_rsc_entry(NULL, op->rsc_id, NULL, lrmd_ok, NULL);
+        delete_rsc_entry(NULL, op->rsc_id, NULL, pcmk_ok, NULL);
     }
 
     /* If a shutdown was escalated while operations were pending, 

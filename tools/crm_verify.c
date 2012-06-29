@@ -81,7 +81,7 @@ main(int argc, char **argv)
 
     pe_working_set_t data_set;
     cib_t *cib_conn = NULL;
-    int rc = cib_ok;
+    int rc = pcmk_ok;
 
     gboolean xml_stdin = FALSE;
     const char *xml_tag = NULL;
@@ -168,15 +168,15 @@ main(int argc, char **argv)
     }
 
     if (USE_LIVE_CIB) {
-        if (rc == cib_ok) {
+        if (rc == pcmk_ok) {
             int options = cib_scope_local | cib_sync_call;
 
             crm_info("Reading XML from: live cluster");
             rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object, options);
         }
 
-        if (rc != cib_ok) {
-            fprintf(stderr, "Live CIB query failed: %s\n", cib_error2string(rc));
+        if (rc != pcmk_ok) {
+            fprintf(stderr, "Live CIB query failed: %s\n", pcmk_strerror(rc));
             return 3;
         }
         if (cib_object == NULL) {

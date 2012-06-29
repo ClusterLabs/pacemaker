@@ -2496,11 +2496,11 @@ int update_validation(
 {
     xmlNode *xml = NULL;
     char *value = NULL;
-    int lpc = 0, match = -1, rc = cib_ok;
+    int lpc = 0, match = -1, rc = pcmk_ok;
 
-    CRM_CHECK(best != NULL, return cib_invalid_argument);
-    CRM_CHECK(xml_blob != NULL, return cib_invalid_argument);
-    CRM_CHECK(*xml_blob != NULL, return cib_invalid_argument);
+    CRM_CHECK(best != NULL, return -EINVAL);
+    CRM_CHECK(xml_blob != NULL, return -EINVAL);
+    CRM_CHECK(*xml_blob != NULL, return -EINVAL);
     
     *best = 0;
     xml = *xml_blob;
@@ -2523,7 +2523,7 @@ int update_validation(
 	/* nothing to do */
 	free(value);
 	*best = match;
-	return cib_ok;
+	return pcmk_ok;
     }
     
     for(; lpc < max_schemas; lpc++) {
@@ -2549,7 +2549,7 @@ int update_validation(
 		if(validate_with(xml, next, to_logs)) {
 		    crm_debug("Configuration valid for schema: %s", known_schemas[next].name);
 		    lpc = next; *best = next;
-		    rc = cib_ok;
+		    rc = pcmk_ok;
 
 		} else {
 		    crm_info("Configuration not valid for schema: %s", known_schemas[next].name);
@@ -2561,20 +2561,20 @@ int update_validation(
 #endif
 		if(upgrade == NULL) {
 		    crm_err("Transformation %s failed", known_schemas[lpc].transform);
-		    rc = cib_transform_failed;
+		    rc = -pcmk_err_transform_failed;
 		    
 		} else if(validate_with(upgrade, next, to_logs)) {
 		    crm_info("Transformation %s successful", known_schemas[lpc].transform);
 		    lpc = next; *best = next;
 		    free_xml(xml);
 		    xml = upgrade;
-		    rc = cib_ok;
+		    rc = pcmk_ok;
 		    
 		} else {
 		    crm_err("Transformation %s did not produce a valid configuration", known_schemas[lpc].transform);
 		    crm_log_xml_info(upgrade, "transform:bad");
 		    free_xml(upgrade);
-		    rc = cib_dtd_validation;
+		    rc = -pcmk_err_dtd_validation;
 		}
 	    }
 	}

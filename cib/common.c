@@ -44,9 +44,9 @@
 extern gboolean cib_is_master;
 extern const char *cib_root;
 gboolean stand_alone = FALSE;
-extern enum cib_errors cib_status;
+extern int cib_status;
 extern gboolean can_write(int flags);
-extern enum cib_errors cib_perform_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff,
+extern int cib_perform_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff,
                                            gboolean privileged);
 
 static xmlNode *
@@ -76,15 +76,15 @@ cib_prepare_common(xmlNode * root, const char *section)
     return data;
 }
 
-static enum cib_errors
+static int
 cib_prepare_none(xmlNode * request, xmlNode ** data, const char **section)
 {
     *data = NULL;
     *section = crm_element_value(request, F_CIB_SECTION);
-    return cib_ok;
+    return pcmk_ok;
 }
 
-static enum cib_errors
+static int
 cib_prepare_data(xmlNode * request, xmlNode ** data, const char **section)
 {
     xmlNode *input_fragment = get_message_xml(request, F_CIB_CALLDATA);
@@ -92,18 +92,18 @@ cib_prepare_data(xmlNode * request, xmlNode ** data, const char **section)
     *section = crm_element_value(request, F_CIB_SECTION);
     *data = cib_prepare_common(input_fragment, *section);
     /* crm_log_xml_debug(*data, "data"); */
-    return cib_ok;
+    return pcmk_ok;
 }
 
-static enum cib_errors
+static int
 cib_prepare_sync(xmlNode * request, xmlNode ** data, const char **section)
 {
     *data = NULL;
     *section = crm_element_value(request, F_CIB_SECTION);
-    return cib_ok;
+    return pcmk_ok;
 }
 
-static enum cib_errors
+static int
 cib_prepare_diff(xmlNode * request, xmlNode ** data, const char **section)
 {
     xmlNode *input_fragment = NULL;
@@ -121,10 +121,10 @@ cib_prepare_diff(xmlNode * request, xmlNode ** data, const char **section)
 
     CRM_CHECK(input_fragment != NULL, crm_log_xml_warn(request, "no input"));
     *data = cib_prepare_common(input_fragment, NULL);
-    return cib_ok;
+    return pcmk_ok;
 }
 
-static enum cib_errors
+static int
 cib_cleanup_query(int options, xmlNode ** data, xmlNode ** output)
 {
     CRM_LOG_ASSERT(*data == NULL);
@@ -132,39 +132,39 @@ cib_cleanup_query(int options, xmlNode ** data, xmlNode ** output)
         || safe_str_eq(crm_element_name(*output), "xpath-query")) {
         free_xml(*output);
     }
-    return cib_ok;
+    return pcmk_ok;
 }
 
-static enum cib_errors
+static int
 cib_cleanup_data(int options, xmlNode ** data, xmlNode ** output)
 {
     free_xml(*output);
     *data = NULL;
-    return cib_ok;
+    return pcmk_ok;
 }
 
-static enum cib_errors
+static int
 cib_cleanup_output(int options, xmlNode ** data, xmlNode ** output)
 {
     free_xml(*output);
-    return cib_ok;
+    return pcmk_ok;
 }
 
-static enum cib_errors
+static int
 cib_cleanup_none(int options, xmlNode ** data, xmlNode ** output)
 {
     CRM_LOG_ASSERT(*data == NULL);
     CRM_LOG_ASSERT(*output == NULL);
-    return cib_ok;
+    return pcmk_ok;
 }
 
-static enum cib_errors
+static int
 cib_cleanup_sync(int options, xmlNode ** data, xmlNode ** output)
 {
     /* data is non-NULL but doesnt need to be free'd */
     CRM_LOG_ASSERT(*data == NULL);
     CRM_LOG_ASSERT(*output == NULL);
-    return cib_ok;
+    return pcmk_ok;
 }
 
 /*
@@ -174,9 +174,9 @@ cib_cleanup_sync(int options, xmlNode ** data, xmlNode ** output)
   gboolean	modifies_cib;
   gboolean	needs_privileges;
   gboolean	needs_quorum;
-  enum cib_errors (*prepare)(xmlNode *, xmlNode**, const char **);
-  enum cib_errors (*cleanup)(xmlNode**, xmlNode**);
-  enum cib_errors (*fn)(
+  int (*prepare)(xmlNode *, xmlNode**, const char **);
+  int (*cleanup)(xmlNode**, xmlNode**);
+  int (*fn)(
   const char *, int, const char *,
   xmlNode*, xmlNode*, xmlNode**, xmlNode**);
   } cib_operation_t;
@@ -210,7 +210,7 @@ static cib_operation_t cib_server_ops[] = {
 };
 /* *INDENT-ON* */
 
-enum cib_errors
+int
 cib_get_operation_id(const char *op, int *operation)
 {
     static GHashTable *operation_hash = NULL;
@@ -233,12 +233,12 @@ cib_get_operation_id(const char *op, int *operation)
 
         if (value) {
             *operation = *value;
-            return cib_ok;
+            return pcmk_ok;
         }
     }
     crm_err("Operation %s is not valid", op);
     *operation = -1;
-    return cib_operation;
+    return -EINVAL;
 }
 
 xmlNode *
@@ -321,17 +321,17 @@ cib_op_can_run(int call_type, int call_options, gboolean privileged, gboolean gl
 {
     if (privileged == FALSE && cib_server_ops[call_type].needs_privileges) {
         /* abort */
-        return cib_not_authorized;
+        return -EACCES;
     }
 #if 0
-    if (rc == cib_ok
+    if (rc == pcmk_ok
         && stand_alone == FALSE
         && global_update == FALSE
         && (call_options & cib_quorum_override) == 0 && cib_server_ops[call_type].needs_quorum) {
-        return cib_no_quorum;
+        return -pcmk_err_no_quorum;
     }
 #endif
-    return cib_ok;
+    return pcmk_ok;
 }
 
 int

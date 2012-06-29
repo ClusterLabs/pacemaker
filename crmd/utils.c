@@ -1127,14 +1127,14 @@ erase_xpath_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
     char *xpath = user_data;
 
     do_crm_log_unlikely(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
-               "Deletion of \"%s\": %s (rc=%d)", xpath, cib_error2string(rc), rc);
+               "Deletion of \"%s\": %s (rc=%d)", xpath, pcmk_strerror(rc), rc);
     free(xpath);
 }
 
 void
 erase_status_tag(const char *uname, const char *tag, int options)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     char xpath[STATUS_PATH_MAX];
     int cib_opts = cib_quorum_override | cib_xpath | options;
 

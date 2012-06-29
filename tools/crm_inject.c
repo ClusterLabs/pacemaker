@@ -89,7 +89,7 @@ find_resource(xmlNode * cib_node, const char *resource)
 static void
 create_node_entry(cib_t * cib_conn, char *node)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     int max = strlen(new_node_template) + strlen(node) + 1;
     char *xpath = NULL;
 
@@ -98,7 +98,7 @@ create_node_entry(cib_t * cib_conn, char *node)
     snprintf(xpath, max, new_node_template, node);
     rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath | cib_sync_call | cib_scope_local);
 
-    if (rc == cib_NOTEXISTS) {
+    if (rc == -ENXIO) {
         xmlNode *cib_object = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
         /* Using node uname as uuid ala corosync/openais */
@@ -119,7 +119,7 @@ create_node_entry(cib_t * cib_conn, char *node)
 static xmlNode *
 inject_node_state(cib_t * cib_conn, char *node)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     int max = strlen(rsc_template) + strlen(node) + 1;
     char *xpath = NULL;
     xmlNode *cib_object = NULL;
@@ -138,7 +138,7 @@ inject_node_state(cib_t * cib_conn, char *node)
         exit(1);
     }
 
-    if (rc == cib_NOTEXISTS) {
+    if (rc == -ENXIO) {
         char *uuid = NULL;
 
         cib_object = create_xml_node(NULL, XML_CIB_TAG_STATE);
@@ -155,7 +155,7 @@ inject_node_state(cib_t * cib_conn, char *node)
     }
 
     free(xpath);
-    CRM_ASSERT(rc == cib_ok);
+    CRM_ASSERT(rc == pcmk_ok);
     return cib_object;
 }
 
@@ -389,7 +389,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     }
 
     CRM_ASSERT(global_cib->cmds->query(global_cib, NULL, NULL, cib_sync_call | cib_scope_local) ==
-               cib_ok);
+               pcmk_ok);
 
     cib_node = inject_node_state(global_cib, node);
     CRM_ASSERT(cib_node != NULL);
@@ -429,7 +429,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 
     rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                   cib_sync_call | cib_scope_local);
-    CRM_ASSERT(rc == cib_ok);
+    CRM_ASSERT(rc == pcmk_ok);
 
   done:
     free(node);
@@ -466,7 +466,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
     quiet_log(" * Fencing %s\n", target);
     rc = global_cib->cmds->replace(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                    cib_sync_call | cib_scope_local);
-    CRM_ASSERT(rc == cib_ok);
+    CRM_ASSERT(rc == pcmk_ok);
 
     snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target, XML_CIB_TAG_LRM);
     rc = global_cib->cmds->delete(global_cib, xpath, NULL,
@@ -617,7 +617,7 @@ run_simulation(pe_working_set_t * data_set)
         int rc =
             global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call | cib_scope_local);
 
-        CRM_ASSERT(rc == cib_ok);
+        CRM_ASSERT(rc == pcmk_ok);
         quiet_log("\nRevised cluster status:\n");
         cleanup_alloc_calculations(data_set);
         data_set->input = cib_object;
@@ -767,7 +767,7 @@ find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_sta
 {
     int offset = 0;
     static int xpath_max = 1024;
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
     char *xpath_string = NULL;
@@ -787,7 +787,7 @@ find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_sta
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 
-    if (rc != cib_ok) {
+    if (rc != pcmk_ok) {
         goto bail;
     }
 
@@ -810,16 +810,16 @@ static int
 set_ticket_state_attr(const char *ticket_id, const char *attr_name,
                       const char *attr_value, cib_t * cib, int cib_options)
 {
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
     xmlNode *xml_top = NULL;
     xmlNode *ticket_state_xml = NULL;
 
     rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         crm_debug("Found a match state for ticket: id=%s", ticket_id);
         xml_top = ticket_state_xml;
 
-    } else if (rc != cib_NOTEXISTS) {
+    } else if (rc != -ENXIO) {
         return rc;
 
     } else {
@@ -848,7 +848,7 @@ modify_configuration(pe_working_set_t * data_set,
                      GListPtr op_inject, GListPtr ticket_grant, GListPtr ticket_revoke,
                      GListPtr ticket_standby, GListPtr ticket_activate)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     GListPtr gIter = NULL;
 
     xmlNode *cib_op = NULL;
@@ -865,7 +865,7 @@ modify_configuration(pe_working_set_t * data_set,
         crm_xml_add(top, XML_ATTR_HAVE_QUORUM, quorum);
 
         rc = global_cib->cmds->modify(global_cib, NULL, top, cib_sync_call | cib_scope_local);
-        CRM_ASSERT(rc == cib_ok);
+        CRM_ASSERT(rc == pcmk_ok);
     }
 
     for (gIter = node_up; gIter != NULL; gIter = gIter->next) {
@@ -877,7 +877,7 @@ modify_configuration(pe_working_set_t * data_set,
 
         rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                       cib_sync_call | cib_scope_local);
-        CRM_ASSERT(rc == cib_ok);
+        CRM_ASSERT(rc == pcmk_ok);
     }
 
     for (gIter = node_down; gIter != NULL; gIter = gIter->next) {
@@ -889,7 +889,7 @@ modify_configuration(pe_working_set_t * data_set,
 
         rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                       cib_sync_call | cib_scope_local);
-        CRM_ASSERT(rc == cib_ok);
+        CRM_ASSERT(rc == pcmk_ok);
     }
 
     for (gIter = node_fail; gIter != NULL; gIter = gIter->next) {
@@ -902,7 +902,7 @@ modify_configuration(pe_working_set_t * data_set,
 
         rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                       cib_sync_call | cib_scope_local);
-        CRM_ASSERT(rc == cib_ok);
+        CRM_ASSERT(rc == pcmk_ok);
     }
 
     for (gIter = ticket_grant; gIter != NULL; gIter = gIter->next) {
@@ -912,7 +912,7 @@ modify_configuration(pe_working_set_t * data_set,
         rc = set_ticket_state_attr(ticket_id, "granted", "true",
                                   global_cib, cib_sync_call | cib_scope_local);
 
-        CRM_ASSERT(rc == cib_ok);
+        CRM_ASSERT(rc == pcmk_ok);
     }
 
     for (gIter = ticket_revoke; gIter != NULL; gIter = gIter->next) {
@@ -922,7 +922,7 @@ modify_configuration(pe_working_set_t * data_set,
         rc = set_ticket_state_attr(ticket_id, "granted", "false",
                                   global_cib, cib_sync_call | cib_scope_local);
 
-        CRM_ASSERT(rc == cib_ok);
+        CRM_ASSERT(rc == pcmk_ok);
     }
 
     for (gIter = ticket_standby; gIter != NULL; gIter = gIter->next) {
@@ -932,7 +932,7 @@ modify_configuration(pe_working_set_t * data_set,
         rc = set_ticket_state_attr(ticket_id, "standby", "true",
                                   global_cib, cib_sync_call | cib_scope_local);
 
-        CRM_ASSERT(rc == cib_ok);
+        CRM_ASSERT(rc == pcmk_ok);
     }
 
     for (gIter = ticket_activate; gIter != NULL; gIter = gIter->next) {
@@ -942,7 +942,7 @@ modify_configuration(pe_working_set_t * data_set,
         rc = set_ticket_state_attr(ticket_id, "standby", "false",
                                   global_cib, cib_sync_call | cib_scope_local);
 
-        CRM_ASSERT(rc == cib_ok);
+        CRM_ASSERT(rc == pcmk_ok);
     }
 
     for (gIter = op_inject; gIter != NULL; gIter = gIter->next) {
@@ -999,7 +999,7 @@ modify_configuration(pe_working_set_t * data_set,
 
             rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                           cib_sync_call | cib_scope_local);
-            CRM_ASSERT(rc == cib_ok);
+            CRM_ASSERT(rc == pcmk_ok);
         }
         free(task);
         free(node);
@@ -1010,7 +1010,7 @@ modify_configuration(pe_working_set_t * data_set,
 static void
 setup_input(const char *input, const char *output)
 {
-    int rc = cib_ok;
+    int rc = pcmk_ok;
     cib_t *cib_conn = NULL;
     xmlNode *cib_object = NULL;
     char *local_output = NULL;
@@ -1020,7 +1020,7 @@ setup_input(const char *input, const char *output)
         cib_conn = cib_new();
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
 
-        if (rc == cib_ok) {
+        if (rc == pcmk_ok) {
             cib_object = get_cib_copy(cib_conn);
         }
 
@@ -1046,12 +1046,12 @@ setup_input(const char *input, const char *output)
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
         free_xml(cib_object);
-        exit(cib_STALE);
+        exit(-ENOKEY);
     }
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
         free_xml(cib_object);
-        exit(cib_dtd_validation);
+        exit(-pcmk_err_dtd_validation);
     }
 
     if (output == NULL) {
@@ -1386,7 +1386,7 @@ main(int argc, char **argv)
     }
 
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
-    CRM_ASSERT(rc == cib_ok);
+    CRM_ASSERT(rc == pcmk_ok);
 
     data_set.input = input;
     data_set.now = get_date();
@@ -1403,8 +1403,8 @@ main(int argc, char **argv)
                              ticket_grant, ticket_revoke, ticket_standby, ticket_activate);
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
-        if (rc != cib_ok) {
-            fprintf(stderr, "Could not connect to the CIB for input: %s\n", cib_error2string(rc));
+        if (rc != pcmk_ok) {
+            fprintf(stderr, "Could not connect to the CIB for input: %s\n", pcmk_strerror(rc));
             goto done;
         }
 

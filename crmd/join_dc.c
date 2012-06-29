@@ -368,7 +368,7 @@ do_dc_join_finalize(long long action,
                     enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     char *sync_from = NULL;
-    enum cib_errors rc = cib_ok;
+    int rc = pcmk_ok;
 
     /* This we can do straight away and avoid clients timing us out
      *  while we compute the latest CIB
@@ -416,12 +416,12 @@ do_dc_join_finalize(long long action,
 void
 finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    CRM_LOG_ASSERT(cib_not_master != rc);
+    CRM_LOG_ASSERT(-EPERM != rc);
     clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
-    if (rc != cib_ok) {
-        do_crm_log((rc == cib_old_data ? LOG_WARNING : LOG_ERR),
+    if (rc != pcmk_ok) {
+        do_crm_log((rc == -pcmk_err_old_data ? LOG_WARNING : LOG_ERR),
                    "Sync from %s failed: %s",
-                   (char *)user_data, cib_error2string(rc));
+                   (char *)user_data, pcmk_strerror(rc));
 
         /* restart the whole join process */
         register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL, __FUNCTION__);
@@ -450,7 +450,7 @@ join_update_complete_callback(xmlNode * msg, int call_id, int rc, xmlNode * outp
 {
     fsa_data_t *msg_data = NULL;
 
-    if (rc == cib_ok) {
+    if (rc == pcmk_ok) {
         crm_debug("Join update %d complete", call_id);
         check_join_state(fsa_state, __FUNCTION__);
 
