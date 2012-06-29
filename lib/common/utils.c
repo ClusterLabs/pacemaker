@@ -671,17 +671,6 @@ safe_str_neq(const char *a, const char *b)
     return TRUE;
 }
 
-char *
-crm_strdup_fn(const char *src, const char *file, const char *fn, int line)
-{
-    char *dup = NULL;
-
-    CRM_CHECK(src != NULL, crm_err("Could not perform copy at %s:%d (%s)", file, line, fn);
-              return NULL);
-    dup = calloc(1, strlen(src) + 1);
-    return strcpy(dup, src);
-}
-
 gboolean
 crm_is_true(const char *s)
 {

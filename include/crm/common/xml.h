@@ -30,7 +30,6 @@
 
 #  include <libxml/tree.h>
 #  include <libxml/xpath.h>
-typedef xmlNode crm_data_t;
 
 /* Encryption costs a LOT, don't do it unless we're hitting message limits
  *
@@ -50,9 +49,6 @@ gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
 xmlNode *get_message_xml(xmlNode * msg, const char *field);
 GHashTable *xml2list(xmlNode * parent);
 
-#  if CRM_DEPRECATED_SINCE_2_0_3
-GHashTable *xml2list_202(xmlNode * parent);
-#  endif
 void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 void hash2field(gpointer key, gpointer value, gpointer user_data);
 void hash2metafield(gpointer key, gpointer value, gpointer user_data);
@@ -239,40 +235,6 @@ __xml_next(xmlNode * child)
     return child;
 }
 
-/* These two child iterator macros are no longer to be used
- * They exist for compatability reasons and will be removed in a
- * future release
- */
-#  define xml_child_iter(parent, child, code) do {			\
-	if(parent != NULL) {						\
-		xmlNode *child = NULL;					\
-		xmlNode *__crm_xml_iter = parent->children;		\
-		while(__crm_xml_iter != NULL) {				\
-			child = __crm_xml_iter;				\
-			__crm_xml_iter = __crm_xml_iter->next;		\
-			if(child->type == XML_ELEMENT_NODE) {		\
-			    code;					\
-			}						\
-		}							\
-	}								\
-    } while(0)
-
-#  define xml_child_iter_filter(parent, child, filter, code) do {	\
-	if(parent != NULL) {						\
-	    xmlNode *child = NULL;					\
-	    xmlNode *__crm_xml_iter = parent->children;			\
-	    while(__crm_xml_iter != NULL) {				\
-		child = __crm_xml_iter;					\
-		__crm_xml_iter = __crm_xml_iter->next;			\
-		if(child->type == XML_ELEMENT_NODE) {			\
-		    if(filter == NULL					\
-		       || crm_str_eq(filter, (const char *)child->name, TRUE)) { \
-			code;						\
-		    }							\
-		}							\
-	    }								\
-	}								\
-    } while(0)
 
 #  define xml_prop_iter(parent, prop_name, prop_value, code) do {	\
 	if(parent != NULL) {						\

@@ -48,16 +48,6 @@ int log_data_element(int log_level, const char *file, const char *function, int 
 #  define __likely(expr) __builtin_expect(expr, 1)
 #  define __unlikely(expr) __builtin_expect(expr, 0)
 
-#  define CRM_DEPRECATED_SINCE_2_0_1 0
-#  define CRM_DEPRECATED_SINCE_2_0_2 0
-#  define CRM_DEPRECATED_SINCE_2_0_3 0
-#  define CRM_DEPRECATED_SINCE_2_0_4 0
-#  define CRM_DEPRECATED_SINCE_2_0_5 0
-#  define CRM_DEPRECATED_SINCE_2_0_6 1
-#  define CRM_DEPRECATED_SINCE_2_0_7 1
-#  define CRM_DEPRECATED_SINCE_2_0_8 1
-#  define CRM_DEPRECATED_SINCE_2_1_0 1
-
 #  define CRM_META			"CRM_meta"
 
 #  define CRM_ASSERT(expr) do {						\
@@ -201,46 +191,10 @@ typedef GList *GListPtr;
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
 
-#  define crm_malloc0(malloc_obj, length) do {				\
-	malloc_obj = malloc(length);					\
-	if(malloc_obj == NULL) {					\
-	    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
-	    CRM_ASSERT(malloc_obj != NULL);				\
-	}								\
-	memset(malloc_obj, 0, length);					\
-    } while(0)
-
-#  define crm_malloc(malloc_obj, length) do {				\
-	malloc_obj = malloc(length);					\
-	if(malloc_obj == NULL) {					\
-	    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
-	    CRM_ASSERT(malloc_obj != NULL);				\
-	}								\
-    } while(0)
-
-#  define crm_realloc(realloc_obj, length) do {				\
-	realloc_obj = realloc(realloc_obj, length);			\
-	CRM_ASSERT(realloc_obj != NULL);				\
-    } while(0)
-
-#  define crm_free(free_obj) do { free(free_obj); free_obj=NULL; } while(0)
-#  define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
-
+#  define crm_strdup strdup
 #  define crm_str_hash g_str_hash_traditional
+
 guint g_str_hash_traditional(gconstpointer v);
-
-void update_all_trace_data(void);
-
-static inline void
-slist_basic_destroy(GListPtr list)
-{
-    GListPtr gIter = NULL;
-
-    for (gIter = list; gIter != NULL; gIter = gIter->next) {
-        free(gIter->data);
-    }
-    g_list_free(list);
-}
 
 /* These two macros are no longer to be used
  * They exist for compatability reasons and will be removed in a

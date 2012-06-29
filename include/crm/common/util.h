@@ -80,8 +80,6 @@ struct crm_option {
 
 char *crm_itoa(int an_int);
 
-char *crm_strdup_fn(const char *a, const char *file, const char *fn, int line);
-
 char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
 char *generate_hash_value(const char *src_node, const char *src_subsys);
