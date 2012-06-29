@@ -15,17 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
 #ifndef CRM_LOGGING__H
 #  define CRM_LOGGING__H
 #  include <qb/qblog.h>
 #  ifndef LOG_TRACE
 #    define LOG_TRACE    LOG_DEBUG+1
 #  endif
-#  define LOG_DEBUG_2  LOG_TRACE
-#  define LOG_DEBUG_3  LOG_TRACE
-#  define LOG_DEBUG_4  LOG_TRACE
-#  define LOG_DEBUG_5  LOG_TRACE
-#  define LOG_DEBUG_6  LOG_TRACE
 
 extern unsigned int crm_log_level;
 extern gboolean crm_config_error;
