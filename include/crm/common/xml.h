@@ -203,12 +203,6 @@ int get_schema_version(const char *name);
 const char *get_schema_name(int version);
 void crm_xml_cleanup(void);
 
-#  if XML_PARANOIA_CHECKS
-#    define crm_validate_data(obj) xml_validate(obj)
-#  else
-#    define crm_validate_data(obj) CRM_LOG_ASSERT(obj != NULL)
-#  endif
-
 static inline xmlNode *
 __xml_first_child(xmlNode * parent)
 {
@@ -234,37 +228,6 @@ __xml_next(xmlNode * child)
     }
     return child;
 }
-
-
-#  define xml_prop_iter(parent, prop_name, prop_value, code) do {	\
-	if(parent != NULL) {						\
-	    xmlAttrPtr prop_iter = parent->properties;			\
-	    const char *prop_name = NULL;				\
-	    const char *prop_value = NULL;				\
-	    while(prop_iter != NULL) {					\
-		prop_name = (const char *)prop_iter->name;		\
-		prop_value = crm_element_value(parent, prop_name);	\
-		prop_iter = prop_iter->next;				\
-		if(prop_name) {						\
-		    code;						\
-		}							\
-	    }								\
-	}								\
-    } while(0)
-
-#  define xml_prop_name_iter(parent, prop_name, code) do {		\
-	if(parent != NULL) {						\
-	    xmlAttrPtr prop_iter = parent->properties;			\
-	    const char *prop_name = NULL;				\
-	    while(prop_iter != NULL) {					\
-		prop_name = (const char *)prop_iter->name;		\
-		prop_iter = prop_iter->next;				\
-		if(prop_name) {						\
-		    code;						\
-		}							\
-	    }								\
-	}								\
-    } while(0)
 
 #  define free_xml(a_node) do {						\
 	if((a_node) != NULL) {						\

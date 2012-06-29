@@ -311,12 +311,19 @@ static HA_Message*
 convert_xml_message(xmlNode *xml) 
 {
     xmlNode *child = NULL;
+    xmlAttrPtr pIter = NULL;
     HA_Message *result = NULL;
 
     result = ha_msg_new(3);
     ha_msg_add(result, F_XML_TAGNAME, (const char *)xml->name);
 
-    xml_prop_iter(xml, name, value, ha_msg_add(result, name, value));
+    for(pIter = xml->properties; pIter != NULL; pIter = pIter->next) {
+        const char *p_name = (const char *)pIter->name;
+        if(pIter->children) {
+            const char *p_value = (const char *)pIter->children->content;
+            ha_msg_add(result, p_name, p_value);
+        }
+    }
     for(child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
 	convert_xml_child(result, child);
     }
