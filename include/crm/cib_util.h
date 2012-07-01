@@ -24,9 +24,6 @@ const char *get_object_parent(const char *object_type);
 xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 xmlNode *create_cib_fragment_adv(xmlNode * update, const char *section, const char *source);
 
-/* Error Interpretation*/
-const char *cib_error2string(int);
-
 xmlNode *createEmptyCib(void);
 gboolean verifyCibXml(xmlNode * cib);
 int cib_section2enum(const char *a_section);
