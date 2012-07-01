@@ -18,10 +18,7 @@ function assert() {
     if [ $rc -ne $target ]; then
 	num_errors=`expr $num_errors + 1`
 	printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$msg"
-	if [ ! -z $exit_code ]; then
-	    echo "Aborting tests"
-	    exit $exit_code
-	fi
+	return
 	exit 1
     else
 	printf "* Passed: %-14s - %s\n" $app "$msg"
@@ -86,7 +83,7 @@ function test_tools() {
     assert $? 0 cibadmin "Delete nvpair"
     
     $VALGRIND_CMD cibadmin -C -o crm_config --xml-file /tmp/$$.opt.xml 
-    assert $? 21 cibadmin "Create operaton should fail with: -21, The object already exists"
+    assert $? 76 cibadmin "Create operaton should fail with: -76, The object already exists"
     
     $VALGRIND_CMD cibadmin -M -o crm_config --xml-file /tmp/$$.opt.xml
     assert $? 0 cibadmin "Modify cluster options section"
@@ -98,7 +95,7 @@ function test_tools() {
     assert $? 0 crm_attribute "Set duplicate cluster option"
     
     $VALGRIND_CMD crm_attribute -n cluster-delay -v 30s 
-    assert $? 216 crm_attribute "Setting multiply defined cluster option should fail with -216, Could not set cluster option"
+    assert $? 234 crm_attribute "Setting multiply defined cluster option should fail with -216, Could not set cluster option"
     
     $VALGRIND_CMD crm_attribute -n cluster-delay -v 30s -s duplicate
     assert $? 0 crm_attribute "Set cluster option with -s"
@@ -123,7 +120,7 @@ function test_tools() {
     
     # This update will fail because it has version numbers
     $VALGRIND_CMD cibadmin -R --xml-file /tmp/$$.existing.xml
-    assert $? 45 cibadmin "Replace operation should fail with: -45, Update was older than existing configuration"
+    assert $? 237 cibadmin "Replace operation should fail with: -45, Update was older than existing configuration"
 
     crm_standby -N clusterNode-UNAME -G
     assert $? 0 crm_standby "Default standby value"
@@ -159,10 +156,10 @@ function test_tools() {
     assert $? 0 crm_resource "Set a resource's fail-count"
 
     $VALGRIND_CMD crm_resource -r dummy -M
-    assert $? 244 crm_resource "Require a destination when migrating a resource that is stopped"
+    assert $? 234 crm_resource "Require a destination when migrating a resource that is stopped"
 
     $VALGRIND_CMD crm_resource -r dummy -M -N i.dont.exist
-    assert $? 234 crm_resource "Don't support migration to non-existant locations"
+    assert $? 250 crm_resource "Don't support migration to non-existant locations"
 
     $VALGRIND_CMD crm_resource -r dummy -M -N clusterNode-UNAME
     assert $? 0 crm_resource "Migrate a resource"
@@ -195,26 +192,27 @@ function test_tools() {
     assert $? 0 crm_ticket "Delete ticket standby state"
  }
 
-test_tools 2>&1 | sed s/cib-last-written.*\>/\>/ > $test_home/regression.out
-rc=$?
+test_tools &> $test_home/regression.out
+sed -i.sed 's/cib-last-written.*>/>/' $test_home/regression.out
 
 if [ $do_save = 1 ]; then
     cp $test_home/regression.out $test_home/regression.exp
 fi
 
 grep -e "^*" $test_home/regression.out
-diff -u $test_home/regression.exp $test_home/regression.out 
-diff_rc=$?
 
-if [ $rc != 0 ]; then
-    echo Tests failed
+if [ $num_errors != 0 ]; then
+    echo $num_errors tests failed
+    diff -u $test_home/regression.exp $test_home/regression.out 
     exit 1
+fi
 
-elif [ $diff_rc != 0 ]; then
-    echo Tests passed but diff failed
+diff -u $test_home/regression.exp $test_home/regression.out 
+if [ $? != 0 ]; then
+    echo $num_passed tests passed but diff failed
     exit 2
 
 else
-    echo Tests passed
+    echo $num_passed tests passed
     exit 0
 fi

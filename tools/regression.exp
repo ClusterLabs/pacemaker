@@ -96,9 +96,9 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Delete nvpair
-Call failed: The object already exists
+Call failed: Name not unique on network
 <failed>
-  <failed_update id="cib-bootstrap-options" object_type="cluster_property_set" operation="cib_create" reason="The object already exists">
+  <failed_update id="cib-bootstrap-options" object_type="cluster_property_set" operation="cib_create" reason="Name not unique on network">
     <cluster_property_set id="cib-bootstrap-options">
       <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
     </cluster_property_set>
@@ -115,7 +115,7 @@ Call failed: The object already exists
   </configuration>
   <status/>
 </cib>
-* Passed: cibadmin       - Create operaton should fail with: -21, The object already exists
+* Passed: cibadmin       - Create operaton should fail with: -76, The object already exists
 <cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
@@ -344,7 +344,7 @@ Call failed: Update was older than existing configuration
   </status>
 </cib>
 * Passed: cibadmin       - Replace operation should fail with: -45, Update was older than existing configuration
-Error performing operation: The object/attribute does not exist
+Error performing operation: No such device or address
 scope=status  name=standby value=off
 <cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
@@ -663,7 +663,7 @@ Could not establish attrd connection: Connection refused (111)
 </cib>
 * Passed: crm_resource   - Set a resource's fail-count
 Resource dummy not moved: not-active and no preferred location specified.
-Error performing operation: cib object missing
+Error performing operation: Invalid argument
 <cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
@@ -701,7 +701,7 @@ Error performing operation: cib object missing
 </cib>
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
 Error performing operation: i.dont.exist is not a known node
-Error performing operation: The object/attribute does not exist
+Error performing operation: No such device or address
 <cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
