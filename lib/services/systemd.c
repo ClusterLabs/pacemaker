@@ -88,8 +88,10 @@ systemd_init(void)
 
 void systemd_cleanup(void)
 {
-    g_object_unref(systemd_proxy);
-    systemd_proxy = NULL;
+    if (systemd_proxy) {
+        g_object_unref(systemd_proxy);
+        systemd_proxy = NULL;
+    }
 }
 
 static char *
@@ -126,7 +128,7 @@ systemd_unit_by_name (
     GCancellable *cancellable,
     GError **error)
 {
-    GError *reload_error;
+    GError *reload_error = NULL;
     GVariant *_ret = NULL;
     char *name = NULL;
     int retry = 0;
@@ -203,7 +205,11 @@ systemd_unit_property(const char *obj, const gchar *iface, const char *name)
 
     crm_info("Calling GetAll on %s", obj);
     proxy = get_proxy(obj, BUS_PROPERTY_IFACE);
-    
+
+    if (!proxy) {
+        return NULL;
+    }
+
     _ret = g_dbus_proxy_call_sync (
         proxy, "GetAll", g_variant_new ("(s)", iface),
         G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
@@ -229,6 +235,7 @@ systemd_unit_property(const char *obj, const gchar *iface, const char *name)
     }
 
     g_object_unref(proxy);
+    g_variant_unref(_ret);
     return output;
 }
 
@@ -380,8 +387,11 @@ systemd_unit_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_
         crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string (_ret), path);
         op->rc = PCMK_EXECRA_OK;
     }
-    
+
     operation_finalize(op);
+    if (_ret) {
+        g_variant_unref(_ret);
+    }
 }
 
 
@@ -406,6 +416,7 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
             op->rc = PCMK_EXECRA_NOT_INSTALLED;
         }
         g_error_free(error);
+        free(name);
         return FALSE;
     }
     
@@ -475,5 +486,8 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     free(unit);
     free(name);
 
+    if (_ret) {
+        g_variant_unref(_ret);
+    }
     return op->rc == PCMK_EXECRA_OK;
 }

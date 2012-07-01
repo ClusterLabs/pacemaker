@@ -57,6 +57,7 @@ struct recurring_op_s {
     int call_id;
     int interval;
     int last_rc;
+    int last_op_status;
     gboolean remove;
     gboolean cancelled;
 };
@@ -181,6 +182,10 @@ update_history_cache(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
     if (op->rsc_deleted) {
         crm_debug("Purged history for '%s' after %s", op->rsc_id, op->op_type);
         delete_rsc_status(op->rsc_id, cib_quorum_override, NULL);
+        return;
+    }
+
+    if (safe_str_eq(op->op_type, RSC_NOTIFY)) {
         return;
     }
 
@@ -1726,6 +1731,7 @@ do_lrm_rsc_op(lrmd_rsc_info_t * rsc, const char *operation, xmlNode * msg, xmlNo
         pending->op_key = strdup(op_id);
         pending->rsc_id = strdup(rsc->id);
         pending->last_rc = -1; /* All rc are positive, -1 indicates the last rc has not been set. */
+        pending->last_op_status = -2;
         g_hash_table_replace(pending_ops, call_id_s, pending);
 
         if (op->interval > 0 && op->start_delay > START_DELAY_THRESHOLD) {
@@ -1878,13 +1884,17 @@ process_lrm_event(lrmd_event_data_t * op)
     pending = g_hash_table_lookup(pending_ops, op_id);
 
     /* ignore recurring ops that have not changed. */
-    if (op->interval && pending && (pending->last_rc == op->rc)) {
+    if (op->interval &&
+            pending &&
+            (pending->last_rc == op->rc) &&
+            (pending->last_op_status == op->op_status)) {
         free(op_id);
         return TRUE;
     }
 
     if (pending) {
         pending->last_rc = op->rc;
+        pending->last_op_status = op->op_status;
     }
 
     op_key = generate_op_key(op->rsc_id, op->op_type, op->interval);
@@ -1919,7 +1929,12 @@ process_lrm_event(lrmd_event_data_t * op)
     }
 
     if (op->op_status != PCMK_LRM_OP_CANCELLED) {
-        update_id = do_update_resource(rsc, op);
+        if (safe_str_eq(op->op_type, RSC_NOTIFY)) {
+            /* Keep notify ops out of the CIB */
+            send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
+        } else {
+            update_id = do_update_resource(rsc, op);
+        }
     } else if (op->interval == 0) {
         /* This will occur when "crm resource cleanup" is called while actions are in-flight */
         crm_err("Op %s (call=%d): Cancelled", op_key, op->call_id);
