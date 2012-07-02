@@ -360,7 +360,7 @@ void determine_request_user(char *user, xmlNode * request,
                                    const char *field);
 #  endif
 
-void *find_library_function(void **handle, const char *lib, const char *fn);
+void *find_library_function(void **handle, const char *lib, const char *fn, gboolean fatal);
 
 void *convert_const_pointer(const void *ptr);
 

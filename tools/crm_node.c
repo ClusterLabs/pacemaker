@@ -151,7 +151,7 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
     const oc_ev_membership_t *oc = (const oc_ev_membership_t *)data;
 
     int (*ccm_api_callback_done) (void *cookie) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_callback_done");
+        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_callback_done", 1);
 
     node_list_size = oc->m_n_member;
     if (command == 'q') {
@@ -175,7 +175,7 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 
         } else if (command == 'e') {
             int (*ccm_api_is_my_nodeid) (const oc_ev_t * token, const oc_node_t * node) =
-                find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_is_my_nodeid");
+                find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_is_my_nodeid", 1);
             if ((*ccm_api_is_my_nodeid) (ccm_token, &(oc->m_array[lpc]))) {
                 crm_debug("MATCH: nodeid=%d, uname=%s, born=%d",
                           oc->m_array[oc->m_memb_idx + lpc].node_id,
@@ -202,18 +202,18 @@ ccm_age_connect(int *ccm_fd)
     int ret = 0;
 
     int (*ccm_api_register) (oc_ev_t ** token) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_register");
+        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_register", 1);
 
     int (*ccm_api_set_callback) (const oc_ev_t * token,
                                  oc_ev_class_t class,
                                  oc_ev_callback_t * fn,
                                  oc_ev_callback_t ** prev_fn) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_set_callback");
+        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_set_callback", 1);
 
     void (*ccm_api_special) (const oc_ev_t *, oc_ev_class_t, int) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_special");
+        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_special", 1);
     int (*ccm_api_activate) (const oc_ev_t * token, int *fd) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_activate");
+        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_activate", 1);
 
     crm_debug("Registering with CCM");
     ret = (*ccm_api_register) (&ccm_token);
@@ -258,7 +258,7 @@ try_heartbeat(int command, enum cluster_type_e stack)
         int rc = 0;
         fd_set rset;
         int (*ccm_api_handle_event) (const oc_ev_t * token) =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event");
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event", 1);
 
         while (1) {
 

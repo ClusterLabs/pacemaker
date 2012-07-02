@@ -74,20 +74,20 @@ do_ccm_control(long long action,
 
     if (is_heartbeat_cluster()) {
         int (*ccm_api_register) (oc_ev_t ** token) =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_register");
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_register", 1);
 
         int (*ccm_api_set_callback) (const oc_ev_t * token,
                                      oc_ev_class_t class,
                                      oc_ev_callback_t * fn,
                                      oc_ev_callback_t ** prev_fn) =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_set_callback");
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_set_callback", 1);
 
         void (*ccm_api_special) (const oc_ev_t *, oc_ev_class_t, int) =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_special");
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_special", 1);
         int (*ccm_api_activate) (const oc_ev_t * token, int *fd) =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_activate");
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_activate", 1);
         int (*ccm_api_unregister) (oc_ev_t * token) =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_unregister");
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_unregister", 1);
 
         if (action & A_CCM_DISCONNECT) {
             set_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
@@ -278,7 +278,7 @@ ccm_dispatch(gpointer user_data)
     crm_trace("Invoked");
     if (ccm_api_handle_event == NULL) {
         ccm_api_handle_event =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event");
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event", 1);
     }
     rc = (*ccm_api_handle_event) (ccm_token);
 
@@ -373,7 +373,7 @@ crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data
 
     if (ccm_api_callback_done == NULL) {
         ccm_api_callback_done =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_callback_done");
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_callback_done", 1);
     }
     (*ccm_api_callback_done) (cookie);
     return;

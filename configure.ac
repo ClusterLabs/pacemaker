@@ -1003,20 +1003,23 @@ LIBS="$LIBS $libqb_LIBS"
 
 AC_CHECK_HEADERS(heartbeat/hb_config.h)
 AC_CHECK_HEADERS(heartbeat/glue_config.h)
+AC_CHECK_HEADERS(stonith/stonith.h)
 AC_CHECK_HEADERS(agent_config.h)
 GLUE_HEADER=none
 HAVE_GLUE=0
 if test "$ac_cv_header_heartbeat_glue_config_h" = "yes";  then
-   PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
    GLUE_HEADER=glue_config.h
    HAVE_GLUE=1
 
 elif test "$ac_cv_header_heartbeat_hb_config_h" = "yes"; then
-   PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
    GLUE_HEADER=hb_config.h
    HAVE_GLUE=1
 else
    AC_MSG_WARN(cluster-glue development headers were not found)
+fi
+
+if test "$ac_cv_header_stonith_stonith_h" = "yes";  then
+   PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
 fi
 
 if test $HAVE_GLUE = 1; then
@@ -1024,12 +1027,7 @@ if test $HAVE_GLUE = 1; then
    dnl So check for all the depenancies (so they're added to LIBS) before checking for -lplumb
    AC_CHECK_LIB(pils, PILLoadPlugin)
    AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
-
-   LHA_STONITH_LIBS=-lstonith
-   AC_SUBST(LHA_STONITH_LIBS)
 fi
-
-AC_DEFINE_UNQUOTED(SUPPORT_LHA_STONITH, $HAVE_GLUE, Build support for the legacy Linux-HA stonith agents)
 
 dnl ===============================================
 dnl Variables needed for substitution

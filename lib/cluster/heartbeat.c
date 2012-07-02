@@ -503,7 +503,7 @@ register_heartbeat_conn(ll_cluster_t * hb_cluster, char **uuid, char **uname,
                                                  gboolean(*dispatch) (ll_cluster_t * source_data,
                                                                       gpointer user_data),
                                                  gpointer userdata, GDestroyNotify notify) =
-            find_library_function(&handle, HEARTBEAT_LIBRARY, "G_main_add_ll_cluster");
+            find_library_function(&handle, HEARTBEAT_LIBRARY, "G_main_add_ll_cluster", 1);
 
         (*g_main_add_cluster) (G_PRIORITY_HIGH, hb_cluster,
                                FALSE, ha_msg_dispatch, hb_cluster, hb_destroy);

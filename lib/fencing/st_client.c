@@ -38,8 +38,9 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-#if SUPPORT_LHA_STONITH
+#ifdef HAVE_STONITH_STONITH_H
 #  include <stonith/stonith.h>
+#  define LHA_STONITH_LIBRARY "libstonith.so.1"
 #endif
 
 #include <crm/common/mainloop.h>
@@ -648,6 +649,8 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
     return rc;
 }
 
+static void *lha_agents_lib = NULL;
+
 static int
 stonith_api_device_list(stonith_t * stonith, int call_options, const char *namespace,
                         stonith_key_value_t ** devices, int timeout)
@@ -661,17 +664,31 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
 
     /* Include Heartbeat agents */
     if (namespace == NULL || safe_str_eq("heartbeat", namespace)) {
-#if SUPPORT_LHA_STONITH
+#if HAVE_STONITH_STONITH_H
+        static gboolean need_init = TRUE;
+
         char **entry = NULL;
-        char **type_list = stonith_types();
+        char **type_list = NULL;
+        static char **(*type_list_fn) (void) = NULL;
+        static void (*type_free_fn) (char **) = NULL;
+
+        if(need_init) {
+            need_init = FALSE;
+            type_list_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_types", FALSE);
+            type_free_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_free_hostlist", FALSE);
+        }
+
+        if(type_list_fn) {
+            type_list = (*type_list_fn)();
+        }
 
         for (entry = type_list; entry != NULL && *entry; ++entry) {
             crm_trace("Added: %s", *entry);
             *devices = stonith_key_value_add(*devices, NULL, *entry);
             count++;
         }
-        if (type_list) {
-            stonith_free_hostlist(type_list);
+        if (type_list && type_free_fn) {
+            (*type_free_fn)(type_list);
         }
 #else
         if(namespace != NULL) {
@@ -732,10 +749,6 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
     const char *provider = get_stonith_provider(agent, namespace);
     static const char *no_parameter_info = "<!-- no value -->";
 
-#if SUPPORT_LHA_STONITH
-    Stonith *stonith_obj = NULL;
-#endif
-    
     crm_trace("looking up %s/%s metadata", agent, provider);
 
     /* By having this in a library, we can access it from stonith_admin
@@ -803,25 +816,43 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
         }
 
     } else {
-#if SUPPORT_LHA_STONITH
-        stonith_obj = stonith_new(agent);
+#if HAVE_STONITH_STONITH_H
+        Stonith *stonith_obj = NULL;
 
-        meta_longdesc = strdup(stonith_get_info(stonith_obj, ST_DEVICEDESCR));
-        if (meta_longdesc == NULL) {
-            crm_warn("no long description in %s's metadata.", agent);
-            meta_longdesc = strdup(no_parameter_info);
+        static gboolean need_init = TRUE;
+        static Stonith *(*st_new_fn) (const char *) = NULL;
+        static const char *(*st_info_fn) (Stonith *, int) = NULL;
+        static void (*st_del_fn) (Stonith *) = NULL;
+
+        if(need_init) {
+            need_init = FALSE;
+            st_new_fn  = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_new", FALSE);
+            st_del_fn  = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_delete", FALSE);
+            st_info_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_get_info", FALSE);
         }
 
-        meta_shortdesc = strdup(stonith_get_info(stonith_obj, ST_DEVICEID));
-        if (meta_shortdesc == NULL) {
-            crm_warn("no short description in %s's metadata.", agent);
-            meta_shortdesc = strdup(no_parameter_info);
-        }
+        if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn) {
+            stonith_obj = (*st_new_fn) (agent);
 
-        meta_param = strdup(stonith_get_info(stonith_obj, ST_CONF_XML));
-        if (meta_param == NULL) {
-            crm_warn("no list of parameters in %s's metadata.", agent);
-            meta_param = strdup(no_parameter_info);
+            meta_longdesc = strdup((*st_info_fn)(stonith_obj, ST_DEVICEDESCR));
+            if (meta_longdesc == NULL) {
+                crm_warn("no long description in %s's metadata.", agent);
+                meta_longdesc = strdup(no_parameter_info);
+            }
+
+            meta_shortdesc = strdup((*st_info_fn)(stonith_obj, ST_DEVICEID));
+            if (meta_shortdesc == NULL) {
+                crm_warn("no short description in %s's metadata.", agent);
+                meta_shortdesc = strdup(no_parameter_info);
+            }
+
+            meta_param = strdup((*st_info_fn)(stonith_obj, ST_CONF_XML));
+            if (meta_param == NULL) {
+                crm_warn("no list of parameters in %s's metadata.", agent);
+                meta_param = strdup(no_parameter_info);
+            }
+
+            (*st_del_fn)(stonith_obj);
         }
 #else
         return -EINVAL; /* Heartbeat agents not supported */
@@ -843,12 +874,6 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 
         xmlFree(xml_meta_longdesc);
         xmlFree(xml_meta_shortdesc);
-
-#if SUPPORT_LHA_STONITH
-        if (stonith_obj) {
-            stonith_delete(stonith_obj);
-        }
-#endif
 
         free(meta_shortdesc);
         free(meta_longdesc);
@@ -1016,13 +1041,26 @@ get_stonith_provider(const char *agent, const char *provider)
     if (is_redhat_agent(agent)) {
         return "redhat";
 
-#if SUPPORT_LHA_STONITH
+#if HAVE_STONITH_STONITH_H
     } else {
-        Stonith *stonith_obj = stonith_new(agent);
+        Stonith *stonith_obj = NULL;
 
-        if (stonith_obj) {
-            stonith_delete(stonith_obj);
-            return "heartbeat";
+        static gboolean need_init = TRUE;
+        static Stonith *(*st_new_fn) (const char *) = NULL;
+        static void (*st_del_fn) (Stonith *) = NULL;
+
+        if(need_init) {
+            need_init = FALSE;
+            st_new_fn  = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_new", FALSE);
+            st_del_fn  = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_delete", FALSE);
+        }
+
+        if (lha_agents_lib && st_new_fn && st_del_fn) {
+            stonith_obj = (*st_new_fn) (agent);
+            if(stonith_obj) {
+                (*st_del_fn)(stonith_obj);
+                return "heartbeat";
+            }
         }
 #endif
     }

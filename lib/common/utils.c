@@ -2246,7 +2246,7 @@ g_str_hash_traditional(gconstpointer v)
 }
 
 void *
-find_library_function(void **handle, const char *lib, const char *fn)
+find_library_function(void **handle, const char *lib, const char *fn, gboolean fatal)
 {
     char *error;
     void *a_function;
@@ -2256,14 +2256,19 @@ find_library_function(void **handle, const char *lib, const char *fn)
     }
 
     if (!(*handle)) {
-        crm_err("Could not open %s: %s", lib, dlerror());
-        exit(100);
+        crm_err("%sCould not open %s: %s", fatal?"Fatal: ":"", lib, dlerror());
+        if(fatal) {
+            exit(100);
+        }
+        return NULL;
     }
 
     a_function = dlsym(*handle, fn);
     if ((error = dlerror()) != NULL) {
-        crm_err("Could not find %s in %s: %s", fn, lib, error);
-        exit(100);
+        crm_err("%sCould not find %s in %s: %s", fatal?"Fatal: ":"", fn, lib, error);
+        if(fatal) {
+            exit(100);
+        }
     }
 
     return a_function;

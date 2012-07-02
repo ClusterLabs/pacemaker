@@ -1222,7 +1222,7 @@ cib_ccm_dispatch(gpointer user_data)
 
     if (ccm_api_handle_event == NULL) {
         ccm_api_handle_event =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event");
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event", 1);
     }
 
     rc = (*ccm_api_handle_event) (ccm_token);
@@ -1294,7 +1294,7 @@ cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 
     if (ccm_api_callback_done == NULL) {
         ccm_api_callback_done =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_callback_done");
+            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_callback_done", 1);
     }
     (*ccm_api_callback_done) (cookie);
     return;

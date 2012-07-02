@@ -286,20 +286,20 @@ ccm_connect(void)
     int cib_ev_fd;
 
     int (*ccm_api_register) (oc_ev_t ** token) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_register");
+        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_register", 1);
 
     int (*ccm_api_set_callback) (const oc_ev_t * token,
                                  oc_ev_class_t class,
                                  oc_ev_callback_t * fn,
                                  oc_ev_callback_t ** prev_fn) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_set_callback");
+        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_set_callback", 1);
 
     void (*ccm_api_special) (const oc_ev_t *, oc_ev_class_t, int) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_special");
+        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_special", 1);
     int (*ccm_api_activate) (const oc_ev_t * token, int *fd) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_activate");
+        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_activate", 1);
     int (*ccm_api_unregister) (oc_ev_t * token) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_unregister");
+        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_unregister", 1);
 
     static struct mainloop_fd_callbacks ccm_fd_callbacks = 
         {

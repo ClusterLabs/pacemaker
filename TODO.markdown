@@ -2,7 +2,6 @@
 
 ## Targeted for 1.2
 - Add upstart tests to lrmd/regression.py
-- Determine if we can support legacy Linux-HA fencing agents at runtime using dlopen() 
 - Have crm_mon listen for stonith events (and send email/snmp traps)
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
 - Figure out how to sanely allow nodes with corosync but no pacemaker
@@ -10,6 +9,7 @@
 - Arrange for nodes that didnt complete the join to be fenced
 - Block after N stonith failures (per node)
 - Remove instance numbers from anonymous clones
+- Move private functions out of public headers (eg. much of include/common/util.h)
 
 ## Targeted for 1.2.x
 

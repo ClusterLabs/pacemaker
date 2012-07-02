@@ -215,7 +215,7 @@ crm_cluster_connect(char **our_uname, char **our_uuid, void *dispatch, void *des
         if (*hb_conn == NULL) {
             /* No object passed in, create a new one. */
             ll_cluster_t *(*new_cluster) (const char *llctype) =
-                find_library_function(&hb_library, HEARTBEAT_LIBRARY, "ll_cluster_new");
+                find_library_function(&hb_library, HEARTBEAT_LIBRARY, "ll_cluster_new", 1);
 
             *hb_conn = (*new_cluster) ("heartbeat");
             /* dlclose(handle); */
