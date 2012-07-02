@@ -1500,6 +1500,8 @@ void
 calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
 {
     int counter = -1;
+    int implied_monitor_start = -1;
+    int implied_master_start = -1;
     const char *task = NULL;
     const char *status = NULL;
     GListPtr gIter = sorted_op_list;
@@ -1520,18 +1522,25 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
             *stop_index = counter;
 
         } else if (safe_str_eq(task, CRMD_ACTION_START) ||
-            safe_str_eq(task, CRMD_ACTION_MIGRATED) ||
-            safe_str_eq(task, CRMD_ACTION_PROMOTE) ||
-            safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-
+            safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
             *start_index = counter;
 
-        } else if (*start_index <= *stop_index && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        } else if ((implied_monitor_start <= *stop_index) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
             const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
 
             if (safe_str_eq(rc, "0") || safe_str_eq(rc, "8")) {
-                *start_index = counter;
+                implied_monitor_start = counter;
             }
+        } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE) || safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+            implied_master_start = counter;
+        }
+    }
+
+    if (*start_index == -1) {
+        if (implied_master_start != -1) {
+            *start_index = implied_master_start;
+        } else if (implied_monitor_start != -1) {
+            *start_index = implied_monitor_start;
         }
     }
 }
