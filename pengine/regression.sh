@@ -345,6 +345,7 @@ do_test colocation_constraint_stops_master "cl#5054 - Ensure master is demoted w
 do_test colocation_constraint_stops_slave  "cl#5054 - Ensure slave is not demoted when stopped by colocation constraint"
 do_test order_constraint_stops_master      "cl#5054 - Ensure master is demoted when stopped by order constraint"
 do_test order_constraint_stops_slave       "cl#5054 - Ensure slave is not demoted when stopped by order constraint"
+do_test master_monitor_restart "cl#5072 - Ensure master monitor operation will start after promotion."
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"
