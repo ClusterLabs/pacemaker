@@ -1708,7 +1708,8 @@ mcp/Makefile							\
 	mcp/pacemaker						\
 	mcp/pacemaker.service					\
 fencing/Makefile                                                \
-lrmd/Makefile                                                \
+lrmd/Makefile                                                   \
+        lrmd/regression.py                                      \
 extra/Makefile							\
 	extra/resources/Makefile				\
 	extra/rgmanager/Makefile				\

@@ -23,13 +23,13 @@ import time
 from cts.CTSvars import *
 
 class Test:
-	def __init__(self, name, description, lrmd_location, test_tool_location, verbose = 0):
+	def __init__(self, name, description, verbose = 0):
 		self.name = name
 		self.description = description
 		self.cmds = []
 		self.iteration = 0;
-		self.daemon_location = lrmd_location
-		self.test_tool_location = test_tool_location
+		self.daemon_location = "@CRM_DAEMON_DIR@/lrmd"
+		self.test_tool_location = "@CRM_DAEMON_DIR@/lrmd_test"
 		self.verbose = verbose
 
 		self.result_txt = ""
@@ -157,9 +157,7 @@ class Test:
 		return res
 
 class Tests:
-	def __init__(self, lrmd_location, test_tool_location, verbose = 0):
-		self.daemon_location = lrmd_location
-		self.test_tool_location = test_tool_location
+	def __init__(self, verbose = 0):
 		self.tests = []
 		self.verbose = verbose
 
@@ -232,7 +230,7 @@ class Tests:
 		}
 
 	def new_test(self, name, description):
-		test = Test(name, description, self.daemon_location, self.test_tool_location, self.verbose)
+		test = Test(name, description, self.verbose)
 		self.tests.append(test)
 		return test
 
@@ -640,12 +638,10 @@ def main(argv):
 	lrmd_loc = argv[0].replace("regression.py", "lrmd")
 	test_loc = argv[0].replace("regression.py", "lrmd_test")
 
-	lrmd_loc = CTSvars.CRM_DAEMON_DIR + "/lrmd"
-	test_loc = CTSvars.CTS_home + "/lrmd_test"
 	o = TestOptions()
 	o.build_options(argv)
 
-	tests = Tests(lrmd_loc, test_loc, o.options['verbose'])
+	tests = Tests(o.options['verbose'])
 
 	tests.build_generic_tests()
 	tests.build_multi_rsc_tests()
