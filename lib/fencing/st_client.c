@@ -41,6 +41,7 @@
 #ifdef HAVE_STONITH_STONITH_H
 #  include <stonith/stonith.h>
 #  define LHA_STONITH_LIBRARY "libstonith.so.1"
+static void *lha_agents_lib = NULL;
 #endif
 
 #include <crm/common/mainloop.h>
@@ -649,8 +650,6 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
     return rc;
 }
 
-static void *lha_agents_lib = NULL;
-
 static int
 stonith_api_device_list(stonith_t * stonith, int call_options, const char *namespace,
                         stonith_key_value_t ** devices, int timeout)
@@ -851,7 +850,6 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
                 crm_warn("no list of parameters in %s's metadata.", agent);
                 meta_param = strdup(no_parameter_info);
             }
-
             (*st_del_fn)(stonith_obj);
         }
 #else
