@@ -577,22 +577,13 @@ dnl
 dnl     strerror: returns a string that corresponds to an errno.
 dnl             A replacement function is supplied for it.
 dnl
-dnl     unsetenv: is some bsdish function that should also be avoided (No 
-dnl             replacement)
-dnl             A replacement function is supplied for it.
-dnl
 dnl	strnlen: is a gnu function similar to strlen, but safer.
 dnl		We wrote a tolearably-fast replacement function for it.
 dnl
 dnl	strndup: is a gnu function similar to strdup, but safer.
 dnl		We wrote a tolearably-fast replacement function for it.
-dnl
-dnl	daemon: is a GNU function.  The daemon() function is for programs wishing to
-dnl             detach themselves from the controlling terminal and run in the
-dnl             background as system daemon
-dnl             A replacement function is supplied for it.
 
-AC_REPLACE_FUNCS(alphasort inet_pton NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup daemon)
+AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup)
 
 dnl ===============================================
 dnl Libraries

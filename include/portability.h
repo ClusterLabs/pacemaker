@@ -23,9 +23,6 @@
 
 #  define	EOS			'\0'
 #  define	DIMOF(a)		((int) (sizeof(a)/sizeof(a[0])) )
-#  define	STRLEN_CONST(conststr)  ((size_t)((sizeof(conststr)/sizeof(char))-1))
-#  define	STRNCMP_CONST(varstr, conststr) strncmp((varstr), conststr, STRLEN_CONST(conststr)+1)
-#  define	STRLEN(c)		STRLEN_CONST(c)
 
 /* Needs to be defined before any other includes, otherwise some system
  * headers do not behave as expected! Major black magic... */
@@ -37,18 +34,7 @@
 #    include <config.h>
 #  endif
 
-#  include <sys/param.h>
-#  ifdef BSD
-#    	define SCANSEL_CAST	(void *)
-#  else
-#    	define SCANSEL_CAST     /* Nothing */
-#  endif
-
-#  if defined(ANSI_ONLY) && !defined(inline)
-#    	define inline           /* nothing */
-#    	undef	NETSNMP_ENABLE_INLINE
-#    	define	NETSNMP_NO_INLINE 1
-#  endif
+/* Prototypes for libreplace functions */
 
 #  ifndef HAVE_DAEMON
   /* We supply a replacement function, but need a prototype */
@@ -71,13 +57,6 @@ int
  alphasort(const void *dirent1, const void *dirent2);
 #  endif                        /* HAVE_ALPHASORT */
 
-#  ifndef HAVE_INET_PTON
-  /* We supply a replacement function, but need a prototype */
-int
- inet_pton(int af, const char *src, void *dst);
-
-#  endif                        /* HAVE_INET_PTON */
-
 #  ifndef HAVE_STRNLEN
 size_t strnlen(const char *s, size_t maxlen);
 #  else
@@ -90,18 +69,15 @@ char *strndup(const char *str, size_t len);
 #    	define USE_GNU
 #  endif
 
-#  ifdef HAVE_STRUCT_UCRED_DARWIN
-#    	include <sys/utsname.h>
-#    	ifndef SYS_NMLN
-#    		define SYS_NMLN _SYS_NAMELEN
-#    	endif                   /* SYS_NMLN */
+/*
+ * Some compilers (eg. Sun studio) do not define __FUNCTION__
+ */
+#  ifdef __SUNPRO_C
+#    define __FUNCTION__ __func__
 #  endif
 
-#  define	POINTER_TO_SIZE_T(p)	((size_t)(p))
-                                                /*pointer cast as size_t */
-#  define	POINTER_TO_SSIZE_T(p)	((ssize_t)(p))
-                                                /*pointer cast as ssize_t */
-#  define	POINTER_TO_ULONG(p)	((unsigned long)(p))
-                                                        /*pointer cast as unsigned long */
+#  ifdef __MY_UNKNOWN_C
+#    define __FUNCTION__ "__FUNCTION__"
+#  endif
 
 #endif                          /* PORTABILITY_H */
