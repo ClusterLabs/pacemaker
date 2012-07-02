@@ -108,7 +108,7 @@ cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
     crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
     crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
     crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
-    cib_send_remote_msg(private->callback.session, notify_msg, private->callback.encrypted);
+    crm_send_remote_msg(private->callback.session, notify_msg, private->callback.encrypted);
     free_xml(notify_msg);
     return pcmk_ok;
 }
@@ -287,10 +287,10 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection)
     crm_xml_add(login, "password", private->passwd);
     crm_xml_add(login, "hidden", "password");
 
-    cib_send_remote_msg(connection->session, login, connection->encrypted);
+    crm_send_remote_msg(connection->session, login, connection->encrypted);
     free_xml(login);
 
-    answer = cib_recv_remote_msg(connection->session, connection->encrypted);
+    answer = crm_recv_remote_msg(connection->session, connection->encrypted);
     crm_log_xml_trace(answer, "Reply");
     if (answer == NULL) {
         rc = -EPROTO;
@@ -341,7 +341,7 @@ cib_remote_dispatch(gpointer user_data)
     const char *type = NULL;
 
     crm_info("Message on callback channel");
-    msg = cib_recv_remote_msg(private->callback.session, private->callback.encrypted);
+    msg = crm_recv_remote_msg(private->callback.session, private->callback.encrypted);
 
     type = crm_element_value(msg, F_TYPE);
     crm_trace("Activating %s callbacks...", type);
@@ -406,7 +406,7 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
         xmlNode *hello =
             cib_create_op(0, private->callback.token, CRM_OP_REGISTER, NULL, NULL, NULL, 0, NULL);
         crm_xml_add(hello, F_CIB_CLIENTNAME, name);
-        cib_send_remote_msg(private->command.session, hello, private->command.encrypted);
+        crm_send_remote_msg(private->command.session, hello, private->command.encrypted);
         free_xml(hello);
     }
 
@@ -525,7 +525,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     }
 
     crm_trace("Sending %s message to CIB service", op);
-    cib_send_remote_msg(private->command.session, op_msg, private->command.encrypted);
+    crm_send_remote_msg(private->command.session, op_msg, private->command.encrypted);
     free_xml(op_msg);
 
     if ((call_options & cib_discard_reply)) {
@@ -552,7 +552,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         int reply_id = -1;
         int msg_id = cib->call_id;
 
-        op_reply = cib_recv_remote_msg(private->command.session, private->command.encrypted);
+        op_reply = crm_recv_remote_msg(private->command.session, private->command.encrypted);
         if (op_reply == NULL) {
             break;
         }

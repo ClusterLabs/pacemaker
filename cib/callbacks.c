@@ -359,7 +359,7 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
         } else if (client_obj->session) {
-            cib_send_remote_msg(client_obj->session, notify_src, client_obj->encrypted);
+            crm_send_remote_msg(client_obj->session, notify_src, client_obj->encrypted);
 #endif
         } else if(client_obj->ipc == NULL) {
             crm_err("Unknown transport for %s", client_obj->name);

@@ -626,15 +626,10 @@ else
 fi
 AC_MSG_RESULT(using $GLIBCONFIG)
 
-USE_GHASH_COMPAT=0
 AC_CHECK_LIB(glib-2.0, g_hash_table_get_values)
 if test "x$ac_cv_lib_glib_2_0_g_hash_table_get_values" != x""yes; then
    AC_MSG_WARN(Your version of Glib is too old, you should have at least 2.14)
-   USE_GHASH_COMPAT=1
 fi
-AC_DEFINE_UNQUOTED(USE_GHASH_COMPAT, $USE_GHASH_COMPAT, Use g_hash_table compatibility functions)
-AC_SUBST(USE_GHASH_COMPAT)
-
 
 if 
     $PKGCONFIG --exists systemd

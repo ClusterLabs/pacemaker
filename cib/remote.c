@@ -263,10 +263,10 @@ cib_remote_listen(gpointer data)
         crm_trace("Iter: %d", lpc++);
         if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
-            login = cib_recv_remote_msg(session, TRUE);
+            login = crm_recv_remote_msg(session, TRUE);
 #endif
         } else {
-            login = cib_recv_remote_msg(GINT_TO_POINTER(csock), FALSE);
+            login = crm_recv_remote_msg(GINT_TO_POINTER(csock), FALSE);
         }
         if (login != NULL) {
             break;
@@ -339,7 +339,7 @@ cib_remote_listen(gpointer data)
     login = create_xml_node(NULL, "cib_result");
     crm_xml_add(login, F_CIB_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(login, F_CIB_CLIENTID, new_client->id);
-    cib_send_remote_msg(new_client->session, login, new_client->encrypted);
+    crm_send_remote_msg(new_client->session, login, new_client->encrypted);
     free_xml(login);
 
     new_client->remote = mainloop_add_fd(
@@ -405,7 +405,7 @@ cib_remote_msg(gpointer data)
 
     crm_trace("%s callback", client->encrypted ? "secure" : "clear-text");
 
-    command = cib_recv_remote_msg(client->session, client->encrypted);
+    command = crm_recv_remote_msg(client->session, client->encrypted);
     if (command == NULL) {
         return -1;
     }

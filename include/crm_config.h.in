@@ -69,7 +69,4 @@
 /* Compatability alias for SUPPORT_COROSYNC */
 #undef AIS_COROSYNC
 
-/* Use g_hash_table compatibility functions */
-#undef USE_GHASH_COMPAT
-
 #endif /* CRM_CONFIG__H__IN */

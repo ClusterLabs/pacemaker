@@ -29,9 +29,6 @@
 
 #  include <libxml/tree.h>
 
-int log_data_element(int log_level, const char *file, const char *function, int line,
-                            const char *prefix, xmlNode * data, int depth, gboolean formatted);
-
 #  define CRM_FEATURE_SET		"3.0.6"
 #  define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
 #  define LATEST_SCHEMA_VERSION         "pacemaker-"CRM_DTD_VERSION

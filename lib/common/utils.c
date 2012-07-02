@@ -69,7 +69,6 @@
 
 CRM_TRACE_INIT_DATA(common);
 
-static uint ref_counter = 0;
 gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
 const char *crm_system_name = "unknown";
@@ -293,94 +292,6 @@ verify_all_options(GHashTable * options, pe_cluster_option * option_list, int le
 }
 
 char *
-generateReference(const char *custom1, const char *custom2)
-{
-
-    const char *local_cust1 = custom1;
-    const char *local_cust2 = custom2;
-    int reference_len = 4;
-    char *since_epoch = NULL;
-
-    reference_len += 20;        /* too big */
-    reference_len += 40;        /* too big */
-
-    if (local_cust1 == NULL) {
-        local_cust1 = "_empty_";
-    }
-    reference_len += strlen(local_cust1);
-
-    if (local_cust2 == NULL) {
-        local_cust2 = "_empty_";
-    }
-    reference_len += strlen(local_cust2);
-
-    since_epoch = calloc(1, reference_len);
-
-    if (since_epoch != NULL) {
-        sprintf(since_epoch, "%s-%s-%ld-%u",
-                local_cust1, local_cust2, (unsigned long)time(NULL), ref_counter++);
-    }
-
-    return since_epoch;
-}
-
-gboolean
-decodeNVpair(const char *srcstring, char separator, char **name, char **value)
-{
-    int lpc = 0;
-    int len = 0;
-    const char *temp = NULL;
-
-    CRM_ASSERT(name != NULL && value != NULL);
-    *name = NULL;
-    *value = NULL;
-
-    crm_trace("Attempting to decode: [%s]", srcstring);
-    if (srcstring != NULL) {
-        len = strlen(srcstring);
-        while (lpc <= len) {
-            if (srcstring[lpc] == separator) {
-                *name = calloc(1, lpc + 1);
-                if (*name == NULL) {
-                    break;      /* and return FALSE */
-                }
-                memcpy(*name, srcstring, lpc);
-                (*name)[lpc] = '\0';
-
-/* this sucks but as the strtok manpage says..
- * it *is* a bug
- */
-                len = len - lpc;
-                len--;
-                if (len <= 0) {
-                    *value = NULL;
-                } else {
-
-                    *value = calloc(1, len + 1);
-                    if (*value == NULL) {
-                        break;  /* and return FALSE */
-                    }
-                    temp = srcstring + lpc + 1;
-                    memcpy(*value, temp, len);
-                    (*value)[len] = '\0';
-                }
-                return TRUE;
-            }
-            lpc++;
-        }
-    }
-
-    if (*name != NULL) {
-        free(*name);
-        *name = NULL;
-    }
-    *name = NULL;
-    *value = NULL;
-
-    return FALSE;
-}
-
-char *
 crm_concat(const char *prefix, const char *suffix, char join)
 {
     int len = 0;
@@ -403,26 +314,6 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 
     crm_trace("created hash key: (%s)", hash_key);
     return hash_key;
-}
-
-char *
-generate_hash_value(const char *src_node, const char *src_subsys)
-{
-    char *hash_value = NULL;
-
-    if (src_node == NULL || src_subsys == NULL) {
-        return NULL;
-    }
-
-    if (strcasecmp(CRM_SYSTEM_DC, src_subsys) == 0) {
-        hash_value = strdup(src_subsys);
-        CRM_ASSERT(hash_value);
-        return hash_value;
-    }
-
-    hash_value = crm_concat(src_node, src_subsys, '_');
-    crm_info("created hash value: (%s)", hash_value);
-    return hash_value;
 }
 
 char *
@@ -1314,7 +1205,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
 
 #define	LOCKSTRLEN	11
 
-int
+static int
 crm_pid_active(long pid)
 {
     if (pid <= 0) {
@@ -1359,7 +1250,7 @@ crm_pid_active(long pid)
 #endif
 }
 
-int
+static int
 crm_read_pidfile(const char *filename)
 {
     int fd;
@@ -1387,7 +1278,7 @@ crm_read_pidfile(const char *filename)
     return pid;
 }
 
-int
+static int
 crm_lock_pidfile(const char *filename)
 {
     struct stat sbuf;

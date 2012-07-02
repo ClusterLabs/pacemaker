@@ -116,7 +116,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 #ifdef HAVE_GNUTLS_GNUTLS_H
         } else if (client->session) {
             crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
-            cib_send_remote_msg(client->session, update_msg, client->encrypted);
+            crm_send_remote_msg(client->session, update_msg, client->encrypted);
 
 #endif
         } else {

@@ -297,7 +297,7 @@ cib_recv_plaintext(int sock)
 }
 
 void
-cib_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted)
+crm_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted)
 {
     if (encrypted) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -311,7 +311,7 @@ cib_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted)
 }
 
 xmlNode *
-cib_recv_remote_msg(void *session, gboolean encrypted)
+crm_recv_remote_msg(void *session, gboolean encrypted)
 {
     char *reply = NULL;
     xmlNode *xml = NULL;
