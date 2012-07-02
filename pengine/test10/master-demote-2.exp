@@ -1,179 +1,179 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="10" transition_id="0">
   <synapse id="0">
     <action_set>
-      <pseudo_event id="31" operation="running" operation_key="group-1_running_0">
+      <pseudo_event id="30" operation="running" operation_key="group-1_running_0">
         <attributes CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="24" operation="start" operation_key="r192.168.122.105_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="23" operation="start" operation_key="r192.168.122.105_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
       <trigger>
-        <rsc_op id="26" operation="start" operation_key="r192.168.122.106_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="25" operation="start" operation_key="r192.168.122.106_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
       <trigger>
-        <rsc_op id="28" operation="start" operation_key="r192.168.122.107_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="27" operation="start" operation_key="r192.168.122.107_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="group-1_start_0"/>
+        <pseudo_event id="29" operation="start" operation_key="group-1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <pseudo_event id="30" operation="start" operation_key="group-1_start_0">
+      <pseudo_event id="29" operation="start" operation_key="group-1_start_0">
         <attributes CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="73" operation="promoted" operation_key="master-1_promoted_0"/>
+        <pseudo_event id="72" operation="promoted" operation_key="master-1_promoted_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="25" operation="monitor" operation_key="r192.168.122.105_monitor_5000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="24" operation="monitor" operation_key="r192.168.122.105_monitor_5000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="r192.168.122.105" long-id="group-1:r192.168.122.105" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="60000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.105"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="24" operation="start" operation_key="r192.168.122.105_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="23" operation="start" operation_key="r192.168.122.105_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="24" operation="start" operation_key="r192.168.122.105_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="23" operation="start" operation_key="r192.168.122.105_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="r192.168.122.105" long-id="group-1:r192.168.122.105" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_timeout="60000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.105"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="group-1_start_0"/>
+        <pseudo_event id="29" operation="start" operation_key="group-1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="27" operation="monitor" operation_key="r192.168.122.106_monitor_5000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="26" operation="monitor" operation_key="r192.168.122.106_monitor_5000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="r192.168.122.106" long-id="group-1:r192.168.122.106" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="60000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.106"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="26" operation="start" operation_key="r192.168.122.106_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="25" operation="start" operation_key="r192.168.122.106_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
     <action_set>
-      <rsc_op id="26" operation="start" operation_key="r192.168.122.106_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="25" operation="start" operation_key="r192.168.122.106_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="r192.168.122.106" long-id="group-1:r192.168.122.106" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_timeout="60000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.106"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="24" operation="start" operation_key="r192.168.122.105_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="23" operation="start" operation_key="r192.168.122.105_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="group-1_start_0"/>
+        <pseudo_event id="29" operation="start" operation_key="group-1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="29" operation="monitor" operation_key="r192.168.122.107_monitor_5000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="28" operation="monitor" operation_key="r192.168.122.107_monitor_5000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="r192.168.122.107" long-id="group-1:r192.168.122.107" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="60000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.107"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="28" operation="start" operation_key="r192.168.122.107_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="27" operation="start" operation_key="r192.168.122.107_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="7">
     <action_set>
-      <rsc_op id="28" operation="start" operation_key="r192.168.122.107_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="27" operation="start" operation_key="r192.168.122.107_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="r192.168.122.107" long-id="group-1:r192.168.122.107" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_timeout="60000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.107"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="26" operation="start" operation_key="r192.168.122.106_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="25" operation="start" operation_key="r192.168.122.106_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="group-1_start_0"/>
+        <pseudo_event id="29" operation="start" operation_key="group-1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="43" operation="monitor" operation_key="lsb-dummy_monitor_5000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="42" operation="monitor" operation_key="lsb-dummy_monitor_5000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="lsb-dummy" long-id="lsb-dummy" class="lsb" type="/usr/share/pacemaker/tests/cts/LSBDummy"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="42" operation="start" operation_key="lsb-dummy_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="41" operation="start" operation_key="lsb-dummy_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="42" operation="start" operation_key="lsb-dummy_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="41" operation="start" operation_key="lsb-dummy_start_0" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="lsb-dummy" long-id="lsb-dummy" class="lsb" type="/usr/share/pacemaker/tests/cts/LSBDummy"/>
         <attributes CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="31" operation="running" operation_key="group-1_running_0"/>
+        <pseudo_event id="30" operation="running" operation_key="group-1_running_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="10">
     <action_set>
-      <rsc_op id="61" operation="monitor" operation_key="stateful-1:0_monitor_16000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="60" operation="monitor" operation_key="stateful-1:0_monitor_16000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="stateful-1:0" long-id="master-1:stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="16000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="60" operation="promote" operation_key="stateful-1:0_promote_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="59" operation="promote" operation_key="stateful-1:0_promote_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="11">
     <action_set>
-      <rsc_op id="60" operation="promote" operation_key="stateful-1:0_promote_0" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="59" operation="promote" operation_key="stateful-1:0_promote_0" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="stateful-1:0" long-id="master-1:stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="cancel" operation_key="stateful-1:0_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="5" operation="cancel" operation_key="stateful-1:0_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="72" operation="promote" operation_key="master-1_promote_0"/>
+        <pseudo_event id="71" operation="promote" operation_key="master-1_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="12">
     <action_set>
-      <rsc_op id="6" operation="cancel" operation_key="stateful-1:0_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="5" operation="cancel" operation_key="stateful-1:0_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="stateful-1:0" long-id="master-1:stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_operation="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
@@ -182,91 +182,91 @@
   </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="63" operation="monitor" operation_key="stateful-1:1_monitor_15000" on_node="pcmk-1" on_node_uuid="pcmk-1">
+      <rsc_op id="62" operation="monitor" operation_key="stateful-1:1_monitor_15000" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <primitive id="stateful-1:1" long-id="master-1:stateful-1:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="62" operation="start" operation_key="stateful-1:1_start_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+        <rsc_op id="61" operation="start" operation_key="stateful-1:1_start_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="14">
     <action_set>
-      <rsc_op id="62" operation="start" operation_key="stateful-1:1_start_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
+      <rsc_op id="61" operation="start" operation_key="stateful-1:1_start_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <primitive id="stateful-1:1" long-id="master-1:stateful-1:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="2" operation="stop" operation_key="stateful-1:1_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+        <rsc_op id="1" operation="stop" operation_key="stateful-1:1_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="68" operation="start" operation_key="master-1_start_0"/>
+        <pseudo_event id="67" operation="start" operation_key="master-1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="15">
     <action_set>
-      <rsc_op id="2" operation="stop" operation_key="stateful-1:1_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
+      <rsc_op id="1" operation="stop" operation_key="stateful-1:1_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <primitive id="stateful-1:1" long-id="master-1:stateful-1:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="70" operation="stop" operation_key="master-1_stop_0"/>
+        <pseudo_event id="69" operation="stop" operation_key="master-1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="16" priority="1000000">
     <action_set>
-      <pseudo_event id="73" operation="promoted" operation_key="master-1_promoted_0">
+      <pseudo_event id="72" operation="promoted" operation_key="master-1_promoted_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="60" operation="promote" operation_key="stateful-1:0_promote_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="59" operation="promote" operation_key="stateful-1:0_promote_0" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="17">
     <action_set>
-      <pseudo_event id="72" operation="promote" operation_key="master-1_promote_0">
+      <pseudo_event id="71" operation="promote" operation_key="master-1_promote_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="69" operation="running" operation_key="master-1_running_0"/>
+        <pseudo_event id="68" operation="running" operation_key="master-1_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="71" operation="stopped" operation_key="master-1_stopped_0"/>
+        <pseudo_event id="70" operation="stopped" operation_key="master-1_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="18" priority="1000000">
     <action_set>
-      <pseudo_event id="71" operation="stopped" operation_key="master-1_stopped_0">
+      <pseudo_event id="70" operation="stopped" operation_key="master-1_stopped_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="2" operation="stop" operation_key="stateful-1:1_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+        <rsc_op id="1" operation="stop" operation_key="stateful-1:1_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="70" operation="stop" operation_key="master-1_stop_0"/>
+        <pseudo_event id="69" operation="stop" operation_key="master-1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="19">
     <action_set>
-      <pseudo_event id="70" operation="stop" operation_key="master-1_stop_0">
+      <pseudo_event id="69" operation="stop" operation_key="master-1_stop_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -274,40 +274,40 @@
   </synapse>
   <synapse id="20" priority="1000000">
     <action_set>
-      <pseudo_event id="69" operation="running" operation_key="master-1_running_0">
+      <pseudo_event id="68" operation="running" operation_key="master-1_running_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="62" operation="start" operation_key="stateful-1:1_start_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+        <rsc_op id="61" operation="start" operation_key="stateful-1:1_start_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="68" operation="start" operation_key="master-1_start_0"/>
+        <pseudo_event id="67" operation="start" operation_key="master-1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="21">
     <action_set>
-      <pseudo_event id="68" operation="start" operation_key="master-1_start_0">
+      <pseudo_event id="67" operation="start" operation_key="master-1_start_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="71" operation="stopped" operation_key="master-1_stopped_0"/>
+        <pseudo_event id="70" operation="stopped" operation_key="master-1_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="22">
     <action_set>
-      <pseudo_event id="16" operation="all_stopped" operation_key="all_stopped">
+      <pseudo_event id="15" operation="all_stopped" operation_key="all_stopped">
         <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="2" operation="stop" operation_key="stateful-1:1_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+        <rsc_op id="1" operation="stop" operation_key="stateful-1:1_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
     </inputs>
   </synapse>
