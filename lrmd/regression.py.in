@@ -257,15 +257,40 @@ class Tests:
 			"[Service]\n"
 			"Type=simple\n"
 			"ExecStart=/usr/sbin/lrmd_dummy_daemon\n")
-		dummy_fence_agent = ("#!/usr/bin/python\n"
-			"import sys\n"
-			"def main():\n"
-			"    for line in sys.stdin.readlines():\n"
-			"        if line.count(\"monitor\") > 0:\n"
-			"            sys.exit(0)\n"
-			"    sys.exit(-1)\n"
-			"if __name__ == \"__main__\":\n"
-			"    main()\n")
+		dummy_fence_agent = ("""#!/usr/bin/python
+import sys
+def main():
+    for line in sys.stdin.readlines():
+        if line.count("monitor") > 0:
+            sys.exit(0)
+        if line.count("metadata") > 0:
+            print '<resource-agent name="fence_dummy_monitor" shortdesc="Dummy Fence agent for testing">'
+            print '  <longdesc>dummy description.</longdesc>'
+            print '  <vendor-url>http://www.example.com</vendor-url>'
+            print '  <parameters>'
+            print '    <parameter name="action" unique="0" required="1">'
+            print '      <getopt mixed="-o, --action=[action]"/>'
+            print '      <content type="string" default="reboot"/>'
+            print '      <shortdesc lang="en">Fencing Action</shortdesc>'
+            print '    </parameter>'
+            print '    <parameter name="port" unique="0" required="0">'
+            print '      <getopt mixed="-n, --plug=[id]"/>'
+            print '      <content type="string"/>'
+            print '      <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>'
+            print '    </parameter>'
+            print '  </parameters>'
+            print '  <actions>'
+            print '    <action name="on"/>'
+            print '    <action name="off"/>'
+            print '    <action name="monitor"/>'
+            print '    <action name="metadata"/>'
+            print '  </actions>'
+            print '</resource-agent>'
+            sys.exit(0)
+    sys.exit(-1)
+if __name__ == "__main__":
+    main()
+""")
 
 		os.system("cat <<-END >>/usr/sbin/lrmd_dummy_daemon\n%s\nEND" % (dummy_daemon))
 		os.system("cat <<-END >>/lib/systemd/system/lrmd_dummy_daemon.service\n%s\nEND" % (dummy_service_file))
