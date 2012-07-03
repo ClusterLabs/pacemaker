@@ -875,48 +875,17 @@ list_stonith_agents(lrmd_list_t ** resources)
 }
 
 static int
-list_ocf_agents(lrmd_list_t ** resources, const char *list_provider)
-{
-    int rc = 0;
-    char *provider = NULL;
-    GList *ocf_providers = NULL;
-    GList *agents = NULL;
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
-
-    ocf_providers = resources_list_providers("ocf");
-
-    for (gIter = ocf_providers; gIter != NULL; gIter = gIter->next) {
-        provider = gIter->data;
-
-        if (list_provider && !safe_str_eq(list_provider, provider)) {
-            continue;
-        }
-        agents = resources_list_agents("ocf", provider);
-        for (gIter2 = agents; gIter2 != NULL; gIter2 = gIter2->next) {
-            *resources = lrmd_list_add(*resources, (const char *)gIter2->data);
-            rc++;
-        }
-        g_list_free_full(agents, free);
-    }
-
-    g_list_free_full(ocf_providers, free);
-    return rc;
-}
-
-static int
 lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
                      const char *provider)
 {
     int rc = 0;
 
-    if (safe_str_eq(class, "ocf")) {
-        rc += list_ocf_agents(resources, provider);
-    } else if (safe_str_eq(class, "stonith")) {
+    if (safe_str_eq(class, "stonith")) {
         rc += list_stonith_agents(resources);
+
     } else {
         GListPtr gIter = NULL;
-        GList *agents = resources_list_agents(class, NULL);
+        GList *agents = resources_list_agents(class, provider);
 
         for (gIter = agents; gIter != NULL; gIter = gIter->next) {
             *resources = lrmd_list_add(*resources, (const char *)gIter->data);
@@ -926,7 +895,6 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
 
         if (!class) {
             rc += list_stonith_agents(resources);
-            rc += list_ocf_agents(resources, provider);
         }
     }
 
