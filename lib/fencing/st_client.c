@@ -736,17 +736,8 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
                             const char *namespace, char **output, int timeout)
 {
     int rc = 0;
-    int bufferlen = 0;
-
     char *buffer = NULL;
-    char *xml_meta_longdesc = NULL;
-    char *xml_meta_shortdesc = NULL;
-
-    char *meta_param = NULL;
-    char *meta_longdesc = NULL;
-    char *meta_shortdesc = NULL;
     const char *provider = get_stonith_provider(agent, namespace);
-    static const char *no_parameter_info = "<!-- no value -->";
 
     crm_trace("looking up %s/%s metadata", agent, provider);
 
@@ -760,20 +751,9 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
         int exec_rc = run_stonith_agent(agent, "metadata", NULL, NULL, NULL, &rc, &buffer, NULL);
 
         if (exec_rc < 0 || rc != 0 || buffer == NULL) {
-            /* failed */
             crm_debug("Query failed: %d %d: %s", exec_rc, rc, crm_str(buffer));
-
-            /* provide a fake metadata entry */
-            meta_longdesc = strdup(no_parameter_info);
-            meta_shortdesc = strdup(no_parameter_info);
-            meta_param = strdup("  <parameters>\n"
-                                    "    <parameter name=\"action\">\n"
-                                    "      <getopt mixed=\"-o\" />\n"
-                                    "      <content type=\"string\" default=\"reboot\" />\n"
-                                    "      <shortdesc lang=\"en\">Fencing action (null, off, on, [reboot], status, hostlist, devstatus)</shortdesc>\n"
-                                    "    </parameter>\n" "  </parameters>");
-
-            goto build;
+            free(buffer); /* Just in case */
+            return -EINVAL;
 
         } else {
 
@@ -815,7 +795,19 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
         }
 
     } else {
-#if HAVE_STONITH_STONITH_H
+#if !HAVE_STONITH_STONITH_H
+        return -EINVAL; /* Heartbeat agents not supported */
+#else
+        int bufferlen = 0;
+
+        char *xml_meta_longdesc = NULL;
+        char *xml_meta_shortdesc = NULL;
+        
+        char *meta_param = NULL;
+        char *meta_longdesc = NULL;
+        char *meta_shortdesc = NULL;
+        static const char *no_parameter_info = "<!-- no value -->";
+
         Stonith *stonith_obj = NULL;
 
         static gboolean need_init = TRUE;
@@ -855,11 +847,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
                 return -EINVAL; /* Heartbeat agents not supported */
             }
         }
-#else
-        return -EINVAL; /* Heartbeat agents not supported */
-#endif
 
-  build:
         xml_meta_longdesc =
             (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_longdesc);
         xml_meta_shortdesc =
@@ -879,6 +867,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
         free(meta_shortdesc);
         free(meta_longdesc);
         free(meta_param);
+#endif
     }
 
     if (output) {
