@@ -865,74 +865,12 @@ list_stonith_agents(lrmd_list_t ** resources)
 
     for (dIter = stonith_resources; dIter; dIter = dIter->next) {
         rc++;
-        *resources = lrmd_list_add(*resources, dIter->value);
+        if(resources) {
+            *resources = lrmd_list_add(*resources, dIter->value);
+        }
     }
 
     stonith_key_value_freeall(stonith_resources, 1, 0);
-    return rc;
-}
-
-static int
-list_lsb_agents(lrmd_list_t ** resources)
-{
-    int rc = 0;
-    GListPtr gIter = NULL;
-    GList *agents = NULL;
-
-    agents = resources_list_agents("lsb", NULL);
-    for (gIter = agents; gIter != NULL; gIter = gIter->next) {
-        *resources = lrmd_list_add(*resources, (const char *)gIter->data);
-        rc++;
-    }
-    g_list_free_full(agents, free);
-    return rc;
-}
-
-static int
-list_service_agents(lrmd_list_t ** resources)
-{
-    int rc = 0;
-    GListPtr gIter = NULL;
-    GList *agents = NULL;
-
-    agents = resources_list_agents("service", NULL);
-    for (gIter = agents; gIter != NULL; gIter = gIter->next) {
-        *resources = lrmd_list_add(*resources, (const char *)gIter->data);
-        rc++;
-    }
-    g_list_free_full(agents, free);
-    return rc;
-}
-
-static int
-list_systemd_agents(lrmd_list_t ** resources)
-{
-    int rc = 0;
-    GListPtr gIter = NULL;
-    GList *agents = NULL;
-
-    agents = resources_list_agents("systemd", NULL);
-    for (gIter = agents; gIter != NULL; gIter = gIter->next) {
-        *resources = lrmd_list_add(*resources, (const char *)gIter->data);
-        rc++;
-    }
-    g_list_free_full(agents, free);
-    return rc;
-}
-
-static int
-list_upstart_agents(lrmd_list_t ** resources)
-{
-    int rc = 0;
-    GListPtr gIter = NULL;
-    GList *agents = NULL;
-
-    agents = resources_list_agents("upstart", NULL);
-    for (gIter = agents; gIter != NULL; gIter = gIter->next) {
-        *resources = lrmd_list_add(*resources, (const char *)gIter->data);
-        rc++;
-    }
-    g_list_free_full(agents, free);
     return rc;
 }
 
@@ -970,31 +908,32 @@ static int
 lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
                      const char *provider)
 {
-    int rc = pcmk_ok;
+    int rc = 0;
 
     if (safe_str_eq(class, "ocf")) {
         rc += list_ocf_agents(resources, provider);
-    } else if (safe_str_eq(class, "lsb")) {
-        rc += list_lsb_agents(resources);
-    } else if (safe_str_eq(class, "systemd")) {
-        rc += list_systemd_agents(resources);
-    } else if (safe_str_eq(class, "upstart")) {
-        rc += list_upstart_agents(resources);
-    } else if (safe_str_eq(class, "service")) {
-        rc += list_service_agents(resources);
     } else if (safe_str_eq(class, "stonith")) {
         rc += list_stonith_agents(resources);
-    } else if (!class) {
-        rc += list_ocf_agents(resources, provider);
-        rc += list_systemd_agents(resources);
-        rc += list_upstart_agents(resources);
-        rc += list_lsb_agents(resources);
-        rc += list_stonith_agents(resources);
     } else {
-        crm_err("Unknown class %s", class);
-        rc = -EPROTONOSUPPORT;
+        GListPtr gIter = NULL;
+        GList *agents = resources_list_agents(class, NULL);
+
+        for (gIter = agents; gIter != NULL; gIter = gIter->next) {
+            *resources = lrmd_list_add(*resources, (const char *)gIter->data);
+            rc++;
+        }
+        g_list_free_full(agents, free);
+
+        if (!class) {
+            rc += list_stonith_agents(resources);
+            rc += list_ocf_agents(resources, provider);
+        }
     }
 
+    if(rc == 0) {
+        crm_notice("No agents found for class %s", class);
+        rc = -EPROTONOSUPPORT;
+    }
     return rc;
 }
 
