@@ -433,25 +433,18 @@ resources_list_providers(const char *standard)
 GList *
 resources_list_agents(const char *standard, const char *provider)
 {
-    if (strcasecmp(standard, "ocf") == 0) {
-        return resources_os_list_ocf_agents(provider);
-    } else if (strcasecmp(standard, "lsb") == 0) {
-        return resources_os_list_lsb_agents();
-#if SUPPORT_SYSTEMD
-    } else if (strcasecmp(standard, "systemd") == 0) {
-        return systemd_unit_listall();
-#endif
-#if SUPPORT_UPSTART
-    } else if (strcasecmp(standard, "upstart") == 0) {
-        return upstart_job_listall();
-#endif
-    } else if (strcasecmp(standard, "service") == 0) {
+    if (standard == NULL || strcasecmp(standard, "service") == 0) {
         GList *tmp1;
         GList *tmp2;
         GList *result = resources_os_list_lsb_agents();
 
-        tmp1 = NULL; /* Keep the compiler happy */
-        tmp2 = NULL; /* Keep the compiler happy */
+        if(standard == NULL) {
+            tmp1 = result;
+            tmp2 = resources_os_list_ocf_agents(NULL);
+            if(tmp2) {
+                result = g_list_concat(tmp1, tmp2);
+            }
+        }
 
 #if SUPPORT_SYSTEMD
         tmp1 = result;
@@ -470,6 +463,19 @@ resources_list_agents(const char *standard, const char *provider)
 #endif
 
         return result;
+
+    } else if (strcasecmp(standard, "ocf") == 0) {
+        return resources_os_list_ocf_agents(provider);
+    } else if (strcasecmp(standard, "lsb") == 0) {
+        return resources_os_list_lsb_agents();
+#if SUPPORT_SYSTEMD
+    } else if (strcasecmp(standard, "systemd") == 0) {
+        return systemd_unit_listall();
+#endif
+#if SUPPORT_UPSTART
+    } else if (strcasecmp(standard, "upstart") == 0) {
+        return upstart_job_listall();
+#endif
     }
 
     return NULL;
