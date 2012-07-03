@@ -77,7 +77,9 @@ get_proxy(const char *path, const char *interface)
 static gboolean
 systemd_init(void) 
 {
-    if(systemd_proxy == NULL) {
+    static int need_init = 1;
+    if(need_init) {
+        need_init = 0;
         systemd_proxy = get_proxy(NULL, BUS_NAME".Manager");
     }
     if(systemd_proxy == NULL) {
@@ -250,7 +252,9 @@ systemd_unit_listall(void)
     struct unit_info u;
     GVariant *_ret = NULL;
     
-    CRM_ASSERT(systemd_init());
+    if(systemd_init() == FALSE) {
+        return NULL;
+    }
 
 /*
         "  <method name=\"ListUnits\">\n"                               \

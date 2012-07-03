@@ -77,7 +77,9 @@ get_proxy(const char *path, const char *interface)
 static gboolean
 upstart_init(void) 
 {
-    if(upstart_proxy == NULL) {
+    static int need_init = 1;
+    if(need_init) {
+        need_init = 0;
         upstart_proxy = get_proxy(NULL, BUS_MANAGER_IFACE);
     }
     if(upstart_proxy == NULL) {
@@ -127,7 +129,9 @@ upstart_job_listall(void)
     GVariant *_ret = NULL;
     int lpc = 0;
 
-    CRM_ASSERT(upstart_init());
+    if(upstart_init() == FALSE) {
+        return NULL;
+    }
 
 /*
   com.ubuntu.Upstart0_6.GetAllJobs (out <Array of ObjectPath> jobs)
