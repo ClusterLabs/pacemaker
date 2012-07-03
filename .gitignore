@@ -61,9 +61,8 @@ shell/modules/ra.py
 shell/modules/ui.py
 shell/modules/vars.py
 tools/coverage.sh
-tools/crm_primitive.py
 tools/crm_report
-tools/hb2openais.sh
+lrmd/regression.py
 
 # Build targets
 *.7
