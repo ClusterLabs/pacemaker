@@ -227,12 +227,50 @@ try_server_create(void)
     return ipcs ? 0 : -1;
 }
 
+/* *INDENT-OFF* */
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",    0, 0, '?', "\tThis text"},
+    {"version", 0, 0, '$', "\tVersion information"  },
+    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
+    
+    {"logfile", 1, 0, 'l', "\tSend logs to the additional named logfile"},
+    {0, 0, 0, 0}
+};
+/* *INDENT-ON* */
+
 int
 main(int argc, char **argv)
 {
     int rc = 0;
+    int flag = 0;
+    int index = 0;
 
     crm_log_init("lrmd", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_set_options(NULL, "[options]", long_options, "Daemon for controlling services confirming to different standards");
+
+    while (1) {
+        flag = crm_get_option(argc, argv, &index);
+        if (flag == -1) {
+            break;
+        }
+
+        switch (flag) {
+            case 'l':
+                crm_add_logfile(optarg);
+                break;
+            case 'V':
+                set_crm_log_level(crm_log_level+1);
+                break;
+            case '?':
+            case '$':
+                crm_help(flag, EX_OK);
+                break;
+            default:
+                crm_help('?', EX_USAGE);
+                break;
+        }
+    }
 
     rsc_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_rsc);
     client_list = g_hash_table_new(crm_str_hash, g_str_equal);
