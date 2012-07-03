@@ -175,7 +175,10 @@ upstart_job_exists(const char *name)
     GError *error = NULL;
     gboolean pass = FALSE;
 
-    CRM_ASSERT(upstart_init());
+    if(upstart_init() == FALSE) {
+        return FALSE;
+    }
+
     pass = upstart_job_by_name (upstart_proxy, name, &path, NULL, &error);
 
     if (error || pass == FALSE) {

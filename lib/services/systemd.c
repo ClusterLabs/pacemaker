@@ -308,7 +308,9 @@ systemd_unit_exists(const char *name)
     GError *error = NULL;
     gboolean pass = FALSE;
 
-    CRM_ASSERT(systemd_init());
+    if(systemd_init() == FALSE) {
+        return FALSE;
+    }
 
     pass = systemd_unit_by_name(systemd_proxy, name, &path, NULL, &error);
 
