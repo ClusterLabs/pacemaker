@@ -281,9 +281,11 @@ main(int argc, char ** argv)
 		
 	    } else {
 	        char *buffer = NULL;
-		st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, timeout);
-		printf("%s\n", buffer);
-		free(buffer);
+		rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, timeout);
+                if(rc == pcmk_ok) {
+                    printf("%s\n", buffer);
+                }
+                free(buffer);
 	    }
 	    break;
 	    
