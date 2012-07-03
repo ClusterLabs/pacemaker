@@ -993,6 +993,11 @@ lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
         rc++;
     }
 
+    if(list_stonith_agents(NULL) > 0) {
+        *supported = lrmd_list_add(*supported, "stonith");
+        rc++;
+    }
+
     g_list_free_full(standards, free);
     return rc;
 }
