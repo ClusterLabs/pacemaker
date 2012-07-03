@@ -530,11 +530,25 @@ resources_os_list_ocf_providers(void)
 GList *
 resources_os_list_ocf_agents(const char *provider)
 {
+    GList *gIter = NULL;
+    GList *result = NULL;
+    GList *providers = NULL;
+
     if (provider) {
         char buffer[500];
         snprintf(buffer, sizeof(buffer), "%s/resource.d/%s", OCF_ROOT_DIR,
                  provider);
         return get_directory_list(buffer, TRUE);
     }
-    return NULL;
+
+    providers = resources_os_list_ocf_providers();
+    for (gIter = providers; gIter != NULL; gIter = gIter->next) {
+        GList *tmp1 = result;
+        GList *tmp2 = resources_os_list_ocf_agents(gIter->data);
+        if(tmp2) {
+            result = g_list_concat(tmp1, tmp2);
+        }
+    }
+    g_list_free_full(providers, free);
+    return result;
 }
