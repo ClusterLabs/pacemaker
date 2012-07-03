@@ -832,25 +832,28 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 
         if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn) {
             stonith_obj = (*st_new_fn) (agent);
+            if(stonith_obj) {
+                meta_longdesc = strdup((*st_info_fn)(stonith_obj, ST_DEVICEDESCR));
+                if (meta_longdesc == NULL) {
+                    crm_warn("no long description in %s's metadata.", agent);
+                    meta_longdesc = strdup(no_parameter_info);
+                }
 
-            meta_longdesc = strdup((*st_info_fn)(stonith_obj, ST_DEVICEDESCR));
-            if (meta_longdesc == NULL) {
-                crm_warn("no long description in %s's metadata.", agent);
-                meta_longdesc = strdup(no_parameter_info);
-            }
+                meta_shortdesc = strdup((*st_info_fn)(stonith_obj, ST_DEVICEID));
+                if (meta_shortdesc == NULL) {
+                    crm_warn("no short description in %s's metadata.", agent);
+                    meta_shortdesc = strdup(no_parameter_info);
+                }
 
-            meta_shortdesc = strdup((*st_info_fn)(stonith_obj, ST_DEVICEID));
-            if (meta_shortdesc == NULL) {
-                crm_warn("no short description in %s's metadata.", agent);
-                meta_shortdesc = strdup(no_parameter_info);
+                meta_param = strdup((*st_info_fn)(stonith_obj, ST_CONF_XML));
+                if (meta_param == NULL) {
+                    crm_warn("no list of parameters in %s's metadata.", agent);
+                    meta_param = strdup(no_parameter_info);
+                }
+                (*st_del_fn)(stonith_obj);
+            } else {
+                return -EINVAL; /* Heartbeat agents not supported */
             }
-
-            meta_param = strdup((*st_info_fn)(stonith_obj, ST_CONF_XML));
-            if (meta_param == NULL) {
-                crm_warn("no list of parameters in %s's metadata.", agent);
-                meta_param = strdup(no_parameter_info);
-            }
-            (*st_del_fn)(stonith_obj);
         }
 #else
         return -EINVAL; /* Heartbeat agents not supported */
