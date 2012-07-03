@@ -134,6 +134,12 @@ mock-%:
 	@echo "mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm"
 	mock --root=$* --no-cleanup-after --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
 
+mock-inst-%
+	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm
+
+mock-sh-%
+	mock --root=$* $(MOCK_OPTIONS) --shell
+
 srpm:	srpm-$(DISTRO)
 
 mock:   mock-$(MOCK_CFG)
