@@ -40,6 +40,7 @@ char *uid2username(uid_t uid);
 void determine_request_user(char *user, xmlNode * request, const char *field);
 
 #  if ENABLE_ACL
+#    include <string.h>
 static inline gboolean
 is_privileged(const char *user)
 {
