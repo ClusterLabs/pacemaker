@@ -37,6 +37,12 @@
 			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
 			  <revdescription><simplelist><member>Generate docbook content from asciidoc sources</member></simplelist></revdescription>
 			</revision>
+			<revision>
+			  <revnumber>6</revnumber>
+			  <date>Tues July 3 2012</date>
+			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
+			  <revdescription><simplelist><member>Updated for Fedora 17</member></simplelist></revdescription>
+			</revision>
 		</revhistory>
 	</simpara>
 </appendix>

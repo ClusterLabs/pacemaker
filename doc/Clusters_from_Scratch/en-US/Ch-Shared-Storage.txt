@@ -83,19 +83,19 @@ later holding the GFS2 metadata.
 [source,Bash]
 ----
 # vgdisplay | grep -e Name - e Free
-  VG Name               vg_fedora13
+  VG Name               vg_pcmk1
   Free  PE / Size       31 / 992.00 MiB
 # lvs
   LV        VG          Attr     LSize   Pool Origin Data%  Move Log Copy%  Convert
-  lv_root   vg_fedora13 -wi-ao--   8.56g                                           
-  lv_swap   vg_fedora13 -wi-ao-- 960.00m                                           
-# lvcreate -n drbd-demo -L 1G vg_fedora13
+  lv_root   vg_pcmk1 -wi-ao--   8.56g                                           
+  lv_swap   vg_pcmk1 -wi-ao-- 960.00m                                           
+# lvcreate -n drbd-demo -L 1G vg_pcmk1
 Logical volume "drbd-demo" created
 # lvs
   LV        VG          Attr     LSize   Pool Origin Data%  Move Log Copy%  Convert
-  drbd-demo vg_fedora13 -wi-a--- 1.00G
-  lv_root   vg_fedora13 -wi-ao--   8.56g                                           
-  lv_swap   vg_fedora13 -wi-ao-- 960.00m                                           
+  drbd-demo vg_pcmk1 -wi-a--- 1.00G
+  lv_root   vg_pcmk1 -wi-ao--   8.56g                                           
+  lv_swap   vg_pcmk1 -wi-ao-- 960.00m                                           
 ----
 
 Repeat this on the second node, be sure to use the same size partition.
@@ -104,15 +104,15 @@ Repeat this on the second node, be sure to use the same size partition.
 ----
 # ssh pcmk-2 -- lvs 
 LV   VG    Attr  LSize  Origin Snap% Move Log Copy% Convert
-  lv_root   vg_fedora13 -wi-ao--   8.56g                                           
-  lv_swap   vg_fedora13 -wi-ao-- 960.00m                                           
-# ssh pcmk-2 -- lvcreate -n drbd-demo -L 1G vg_fedora13
+  lv_root   vg_pcmk1 -wi-ao--   8.56g                                           
+  lv_swap   vg_pcmk1 -wi-ao-- 960.00m                                           
+# ssh pcmk-2 -- lvcreate -n drbd-demo -L 1G vg_pcmk1
 Logical volume "drbd-demo" created
 # ssh pcmk-2 -- lvs
 LV    VG    Attr  LSize  Origin Snap% Move Log Copy% Convert
-  drbd-demo vg_fedora13 -wi-a--- 1.00G
-  lv_root   vg_fedora13 -wi-ao--   8.56g                                           
-  lv_swap   vg_fedora13 -wi-ao-- 960.00m                                           
+  drbd-demo vg_pcmk1 -wi-a--- 1.00G
+  lv_root   vg_pcmk1 -wi-ao--   8.56g                                           
+  lv_swap   vg_pcmk1 -wi-ao-- 960.00m                                           
 ----
 
 === Write the DRBD Config ===
@@ -149,11 +149,11 @@ resource wwwdata {
   allow-two-primaries; 
  }
  on pcmk-1 {
-  disk   /dev/vg_fedora13/drbd-demo;
+  disk   /dev/vg_pcmk1/drbd-demo;
   address  192.168.122.101:7789;
  }
  on pcmk-2 {
-  disk   /dev/vg_fedora13/drbd-demo;
+  disk   /dev/vg_pcmk1/drbd-demo;
   address  192.168.122.102:7789;
  }
 }
