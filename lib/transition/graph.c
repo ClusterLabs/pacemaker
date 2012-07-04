@@ -186,7 +186,7 @@ initiate_action(crm_graph_t * graph, crm_action_t * action)
         return graph_fns->crmd(graph, action);
     }
 
-    te_log_action(LOG_ERR,
+    crm_err(
                   "Failed on unsupported command type: %s (id=%s)",
                   crm_element_name(action->xml), id);
     return FALSE;

@@ -142,14 +142,4 @@ void print_action(int log_level, const char *prefix, crm_action_t * action);
 void update_abort_priority(crm_graph_t * graph, int priority,
                                   enum transition_action action, const char *abort_reason);
 const char *actiontype2text(action_type_e type);
-
-#ifdef TESTING
-#  define te_log_action(log_level, fmt, args...) {			\
-		do_crm_log(log_level, fmt, ##args);			\
-		fprintf(stderr, fmt"\n", ##args);			\
-	}
-#else
-#  define te_log_action(log_level, fmt, args...) do_crm_log(log_level, fmt, ##args)
-#endif
-
 lrmd_event_data_t *convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int rc);

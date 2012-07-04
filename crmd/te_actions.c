@@ -124,7 +124,7 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
-    te_log_action(LOG_NOTICE,
+    crm_notice(
                   "Executing %s fencing operation (%s) on %s (timeout=%d)",
                   type, id, target, transition_graph->stonith_timeout);
 
@@ -177,11 +177,11 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
     CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
-              te_log_action(LOG_ERR, "Corrupted command (id=%s) %s: no node",
+              crm_err( "Corrupted command (id=%s) %s: no node",
                             crm_str(id), crm_str(task));
               return FALSE);
 
-    te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s%s%s",
+    crm_info( "Executing crm-event (%s): %s on %s%s%s",
                   crm_str(id), crm_str(task), on_node,
                   is_local ? " (local)" : "", no_wait ? " - no waiting" : "");
 
@@ -196,7 +196,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
 
     if (is_local && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
         /* defer until everything else completes */
-        te_log_action(LOG_INFO, "crm-event (%s) is a local shutdown", crm_str(id));
+        crm_info( "crm-event (%s) is a local shutdown", crm_str(id));
         graph->completion_action = tg_shutdown;
         graph->abort_reason = "local shutdown";
         action->confirmed = TRUE;
@@ -364,7 +364,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
     CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
-              te_log_action(LOG_ERR, "Corrupted command(id=%s) %s: no node",
+              crm_err( "Corrupted command(id=%s) %s: no node",
                             ID(action->xml), crm_str(task));
               return FALSE);
 
@@ -501,7 +501,7 @@ notify_crmd(crm_graph_t * graph)
             }
     }
 
-    te_log_action(LOG_DEBUG, "Transition %d status: %s - %s",
+    crm_debug( "Transition %d status: %s - %s",
                   graph->id, type, crm_str(graph->abort_reason));
 
     graph->abort_reason = NULL;
