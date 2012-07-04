@@ -119,6 +119,40 @@ upstart_job_by_name (
     return _ret != NULL;
 }
 
+static void
+fix(char *input, const char *search, char replace) 
+{
+    char *match = NULL;
+    int shuffle = strlen(search) - 1;
+
+    while(TRUE) {
+        int len, lpc;
+        match = strstr(input, search);
+        if(match == NULL) {
+            break;
+        }
+        crm_err("Found: %s", match);
+        match[0] = replace;
+        len = strlen(match) - shuffle;
+        for(lpc = 1; lpc <= len; lpc++) {
+            match[lpc] = match[lpc+shuffle];
+        }
+    }
+}
+
+static char *
+fix_upstart_name(const char *input) 
+{
+    char *output = strdup(input);
+    fix(output, "_2b", '+');
+    fix(output, "_2c", ',');
+    fix(output, "_2d", '-');
+    fix(output, "_2e", '.');
+    fix(output, "_40", '@');
+    fix(output, "_5f", '_');
+    return output;
+}
+
 GList *
 upstart_job_listall(void) 
 {
@@ -159,7 +193,7 @@ upstart_job_listall(void)
         }
         lpc++;
         crm_trace("%s\n", path);
-        units = g_list_append(units, strdup(job));
+        units = g_list_append(units, fix_upstart_name(job));
     }
     crm_info("Call to GetAllJobs passed: type '%s', count %d", g_variant_get_type_string (_ret), lpc);
     
@@ -310,7 +344,7 @@ upstart_job_metadata(const char *name)
         "<resource-agent name=\"%s\" version=\"0.1\">\n"
         "  <version>1.0</version>\n"
         "  <longdesc lang=\"en\">\n"
-        "    Upstart agent for controlling the system %s service"
+        "    Upstart agent for controlling the system %s service\n"
         "  </longdesc>\n"
         "  <shortdesc lang=\"en\">%s upstart agent</shortdesc>\n"
         "  <parameters>\n"
