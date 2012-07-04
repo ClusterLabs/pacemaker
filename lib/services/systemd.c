@@ -381,13 +381,20 @@ systemd_unit_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_
 
     if (error) {
         /* ignore "already started" or "not running" errors */
-        if (safe_str_eq(op->action, "stop")
-            && strstr(error->message, "systemd1.InvalidName")) {
-            crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
-            op->rc = PCMK_EXECRA_OK;
+        crm_trace("Could not issue %s for %s: %s", op->action, op->rsc, error->message);
+        if(strstr(error->message, "systemd1.LoadFailed")
+           || strstr(error->message, "systemd1.InvalidName")) {
+
+            if (safe_str_eq(op->action, "stop")) {
+                crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
+                op->rc = PCMK_EXECRA_OK;
+
+            } else {
+                op->rc = PCMK_EXECRA_NOT_INSTALLED;
+            }
 
         } else {
-            crm_err("Could not issue %s for %s: %s (%s)", op->action, op->rsc, error->message, "");
+            crm_err("Could not issue %s for %s: %s", op->action, op->rsc, error->message);
         }
         g_error_free(error);
 
