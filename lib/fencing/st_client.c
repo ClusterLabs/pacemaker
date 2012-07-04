@@ -34,7 +34,7 @@
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
-#include <crm/stonith-ng-internal.h>
+#include <crm/fencing/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 

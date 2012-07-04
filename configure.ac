@@ -1688,7 +1688,9 @@ doc/Makefile							\
 	doc/Clusters_from_Scratch/publican.cfg			\
 include/Makefile						\
 	include/crm/Makefile					\
+		include/crm/cib/Makefile			\
 		include/crm/common/Makefile			\
+		include/crm/fencing/Makefile			\
 		include/crm/pengine/Makefile			\
 replace/Makefile						\
 lib/Makefile							\

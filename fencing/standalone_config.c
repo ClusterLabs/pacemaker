@@ -22,7 +22,7 @@
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
-#include <crm/stonith-ng-internal.h>
+#include <crm/fencing/internal.h>
 #include <internal.h>
 #include <standalone_config.h>
 

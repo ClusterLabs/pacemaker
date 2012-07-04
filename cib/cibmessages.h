@@ -18,7 +18,7 @@
 #ifndef CIB_MESSAGES__H
 #  define CIB_MESSAGES__H
 
-#  include <crm/cib_ops.h>
+#  include <crm/cib/ops.h>
 extern xmlNode *createCibRequest(gboolean isLocal, const char *operation, const char *section,
                                  const char *verbose, xmlNode * data);
 

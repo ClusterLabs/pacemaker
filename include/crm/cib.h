@@ -247,8 +247,8 @@ void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
 #  define add_cib_op_callback(cib, id, flag, data, fn) cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn)
 
-#  include <crm/cib_util.h>
-#  include <crm/cib_ops.h>
+#  include <crm/cib/util.h>
+#  include <crm/cib/ops.h>
 
 #  define CIB_LIBRARY "libcib.so.1"
 
