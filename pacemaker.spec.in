@@ -4,7 +4,7 @@
 
 %global specversion 1
 %global upstream_version HEAD
-%global upstream_prefix pacemaker
+%global upstream_prefix ClusterLabs-pacemaker
 
 # Compatibility macros for distros (fedora) that don't provide Python macros by default
 # Do this instead of trying to conditionally include {_rpmconfigdir}/macros.python
@@ -29,9 +29,9 @@
 # to disable or enable specific features
 
 # Supported cluster stacks, must support at least one
-%bcond_without cman
 %bcond_without corosync
 %bcond_with heartbeat
+%bcond_with cman
 
 # Legacy stonithd fencing agents
 %bcond_with stonithd
@@ -85,9 +85,9 @@ Conflicts:     heartbeat < 2.99
 
 %if %{defined _unitdir}
 # Needed for systemd unit
-Requires(post): systemd-sysv
-Requires(post): systemd-units
-Requires(preun): systemd-units
+Requires(post):   systemd-sysv
+Requires(post):   systemd-units
+Requires(preun):  systemd-units
 Requires(postun): systemd-units
 %endif
 
@@ -109,8 +109,8 @@ BuildRequires: python-curses python-xml
 
 # Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig python libtool-ltdl-devel
-BuildRequires: glib2-devel libxml2-devel libxslt-devel
-BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel pam-devel libuuid-devel
+BuildRequires: glib2-devel libxml2-devel libxslt-devel libuuid-devel
+BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel pam-devel
 
 %if 0%{?suse_version} >= 1100
 # Renamed since opensuse-11.0
@@ -153,7 +153,7 @@ BuildRequires: net-snmp-devel
 %endif
 
 %if %{with corosync}
-Requires: corosync
+Requires:      corosync
 BuildRequires: corosynclib-devel
 %endif
 
