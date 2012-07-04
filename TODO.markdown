@@ -12,6 +12,7 @@
 - Arrange for nodes that didnt complete the join to be fenced
 
 - Remove instance numbers from anonymous clones
+- Create a proper struct for stonith notify events
 
 ## Targeted for 1.2.x
 
@@ -23,6 +24,7 @@
 - Reduce the amount of stonith-ng logging
 - Reduce the amount of attrd logging
 - Use dlopen for snmp
+
 
 ## Targeted for 1.4
 

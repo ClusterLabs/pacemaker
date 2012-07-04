@@ -27,6 +27,7 @@
 #include <tengine.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
+#include <crm/fencing/internal.h>
 
 crm_trigger_t *stonith_reconnect = NULL;
 GListPtr stonith_cleanup_list = NULL;
