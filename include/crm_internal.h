@@ -159,6 +159,18 @@ void crm_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted);
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
+#  define attrd_channel		T_ATTRD
+#  define F_ATTRD_KEY		"attr_key"
+#  define F_ATTRD_ATTRIBUTE	"attr_name"
+#  define F_ATTRD_TASK		"task"
+#  define F_ATTRD_VALUE		"attr_value"
+#  define F_ATTRD_SET		"attr_set"
+#  define F_ATTRD_SECTION	"attr_section"
+#  define F_ATTRD_DAMPEN	"attr_dampening"
+#  define F_ATTRD_IGNORE_LOCALLY "attr_ignore_locally"
+#  define F_ATTRD_HOST		"attr_host"
+#  define F_ATTRD_USER		"attr_user"
+
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB
 #      include <qb/qbipc_common.h>
