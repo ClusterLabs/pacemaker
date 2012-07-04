@@ -32,6 +32,7 @@
 #include <crm/crm.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/msg_xml.h>
 #include <crm/cib.h>
 
 int command = 0;

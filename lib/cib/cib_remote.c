@@ -30,11 +30,10 @@
 #include <glib.h>
 
 #include <crm/crm.h>
-#include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>
-#include <cib_private.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE

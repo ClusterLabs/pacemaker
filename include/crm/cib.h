@@ -22,7 +22,6 @@
 #  include <crm/common/xml.h>
 
 #  define CIB_FEATURE_SET "2.0"
-#  define USE_PESKY_FRAGMENTS 1
 
 /* use compare_version() for doing comparisons */
 
@@ -32,7 +31,6 @@ enum cib_variant {
     cib_file,
     cib_remote,
     cib_database,
-    cib_edir
 };
 
 enum cib_state {
@@ -69,82 +67,6 @@ enum cib_call_options {
 #define cib_default_options = cib_none
 
 /* *INDENT-ON* */
-
-enum cib_update_op {
-    CIB_UPDATE_OP_NONE = 0,
-    CIB_UPDATE_OP_ADD,
-    CIB_UPDATE_OP_MODIFY,
-    CIB_UPDATE_OP_DELETE,
-    CIB_UPDATE_OP_MAX
-};
-
-enum cib_section {
-    cib_section_none,
-    cib_section_all,
-    cib_section_nodes,
-    cib_section_constraints,
-    cib_section_resources,
-    cib_section_crmconfig,
-    cib_section_status
-};
-
-#  define CIB_OP_SLAVE	"cib_slave"
-#  define CIB_OP_SLAVEALL	"cib_slave_all"
-#  define CIB_OP_MASTER	"cib_master"
-#  define CIB_OP_SYNC	"cib_sync"
-#  define CIB_OP_SYNC_ONE	"cib_sync_one"
-#  define CIB_OP_ISMASTER	"cib_ismaster"
-#  define CIB_OP_BUMP	"cib_bump"
-#  define CIB_OP_QUERY	"cib_query"
-#  define CIB_OP_CREATE	"cib_create"
-#  define CIB_OP_UPDATE	"cib_update"
-#  define CIB_OP_MODIFY	"cib_modify"
-#  define CIB_OP_DELETE	"cib_delete"
-#  define CIB_OP_ERASE	"cib_erase"
-#  define CIB_OP_REPLACE	"cib_replace"
-#  define CIB_OP_NOTIFY	"cib_notify"
-#  define CIB_OP_APPLY_DIFF "cib_apply_diff"
-#  define CIB_OP_UPGRADE    "cib_upgrade"
-#  define CIB_OP_DELETE_ALT	"cib_delete_alt"
-
-#  define F_CIB_CLIENTID  "cib_clientid"
-#  define F_CIB_CALLOPTS  "cib_callopt"
-#  define F_CIB_CALLID    "cib_callid"
-#  define F_CIB_CALLDATA  "cib_calldata"
-#  define F_CIB_OPERATION "cib_op"
-#  define F_CIB_ISREPLY   "cib_isreplyto"
-#  define F_CIB_SECTION   "cib_section"
-#  define F_CIB_HOST	"cib_host"
-#  define F_CIB_RC	"cib_rc"
-#  define F_CIB_DELEGATED	"cib_delegated_from"
-#  define F_CIB_OBJID	"cib_object"
-#  define F_CIB_OBJTYPE	"cib_object_type"
-#  define F_CIB_EXISTING	"cib_existing_object"
-#  define F_CIB_SEENCOUNT	"cib_seen"
-#  define F_CIB_TIMEOUT	"cib_timeout"
-#  define F_CIB_UPDATE	"cib_update"
-#  define F_CIB_CALLBACK_TOKEN	"cib_async_id"
-#  define F_CIB_GLOBAL_UPDATE	"cib_update"
-#  define F_CIB_UPDATE_RESULT	"cib_update_result"
-#  define F_CIB_CLIENTNAME	"cib_clientname"
-#  define F_CIB_NOTIFY_TYPE	"cib_notify_type"
-#  define F_CIB_NOTIFY_ACTIVATE	"cib_notify_activate"
-#  define F_CIB_UPDATE_DIFF	"cib_update_diff"
-#  define F_CIB_USER		"cib_user"
-#  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
-
-#  define T_CIB			"cib"
-#  define T_CIB_NOTIFY		"cib_notify"
-/* notify sub-types */
-#  define T_CIB_PRE_NOTIFY	"cib_pre_notify"
-#  define T_CIB_POST_NOTIFY	"cib_post_notify"
-#  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
-#  define T_CIB_DIFF_NOTIFY	"cib_diff_notify"
-#  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
-
-#  define cib_channel_ro		"cib_ro"
-#  define cib_channel_rw		"cib_rw"
-#  define cib_channel_shm		"cib_shm"
 
 typedef struct cib_s cib_t;
 
@@ -248,7 +170,6 @@ void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 #  define add_cib_op_callback(cib, id, flag, data, fn) cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn)
 
 #  include <crm/cib/util.h>
-#  include <crm/cib/ops.h>
 
 #  define CIB_LIBRARY "libcib.so.1"
 

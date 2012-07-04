@@ -27,12 +27,10 @@
 #include <glib.h>
 
 #include <crm/crm.h>
-#include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
-
-#include <lib/cib/cib_private.h>
 
 struct config_root_s {
     const char *name;
@@ -63,32 +61,6 @@ struct config_root_s known_paths[] = {
     { XML_CIB_TAG_SECTION_ALL,  NULL,                 "//cib" },
 };
 /* *INDENT-ON* */
-
-int
-cib_section2enum(const char *a_section)
-{
-    if (a_section == NULL || strcasecmp(a_section, "all") == 0) {
-        return cib_section_all;
-
-    } else if (strcasecmp(a_section, XML_CIB_TAG_NODES) == 0) {
-        return cib_section_nodes;
-
-    } else if (strcasecmp(a_section, XML_CIB_TAG_STATUS) == 0) {
-        return cib_section_status;
-
-    } else if (strcasecmp(a_section, XML_CIB_TAG_CONSTRAINTS) == 0) {
-        return cib_section_constraints;
-
-    } else if (strcasecmp(a_section, XML_CIB_TAG_RESOURCES) == 0) {
-        return cib_section_resources;
-
-    } else if (strcasecmp(a_section, XML_CIB_TAG_CRMCONFIG) == 0) {
-        return cib_section_crmconfig;
-
-    }
-    crm_err("Unknown CIB section: %s", a_section);
-    return cib_section_none;
-}
 
 int
 cib_compare_generation(xmlNode * left, xmlNode * right)

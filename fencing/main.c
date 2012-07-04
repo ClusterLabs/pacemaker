@@ -40,7 +40,7 @@
 
 #include <crm/common/mainloop.h>
 
-#include <crm/cib.h>
+#include <crm/cib/internal.h>
 
 #include <internal.h>
 

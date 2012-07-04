@@ -30,7 +30,7 @@
 #include <grp.h>
 
 #include <crm/crm.h>
-#include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>

@@ -24,9 +24,9 @@ INCLUDES        = -I$(top_builddir)/include  -I$(top_srcdir)/include  \
 lib_LTLIBRARIES	= libcib.la
 
 ## SOURCES
-noinst_HEADERS		= cib_private.h
+noinst_HEADERS		= 
 libcib_la_SOURCES	= cib_ops.c cib_utils.c cib_client.c cib_native.c cib_attrs.c
-libcib_la_SOURCES      += cib_version.c cib_file.c cib_remote.c
+libcib_la_SOURCES      += cib_file.c cib_remote.c
 
 if ENABLE_ACL
 libcib_la_SOURCES       += cib_acl.c

@@ -20,9 +20,9 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/cib/internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/crm.h>
 #include <crmd_fsa.h>
@@ -527,11 +527,13 @@ do_dc_takeover(long long action,
     fsa_cib_update(XML_TAG_CIB, cib, cib_quorum_override, rc, NULL);
     add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, feature_update_callback);
 
-    update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                NULL, NULL, NULL, NULL, "dc-version", VERSION "-" BUILD_VERSION, FALSE);
+    update_attr_delegate(
+        fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+        "dc-version", VERSION "-" BUILD_VERSION, FALSE, NULL);
 
-    update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                NULL, NULL, NULL, NULL, "cluster-infrastructure", cluster_type, FALSE);
+    update_attr_delegate(
+        fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+        "cluster-infrastructure", cluster_type, FALSE, NULL);
 
     mainloop_set_trigger(config_read);
     free_xml(cib);

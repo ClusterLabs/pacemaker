@@ -24,7 +24,7 @@
 
 #include <crm/crm.h>
 #include <crm/services.h>
-#include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
@@ -837,8 +837,10 @@ notify_deleted(ha_msg_input_t * input, const char *rsc_id, int rc)
 
         crm_debug("Triggering a refresh after %s deleted %s from the LRM", from_sys, rsc_id);
 
-        update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s, FALSE);
+        update_attr_delegate(
+            fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+            "last-lrm-refresh", now_s, FALSE, NULL);
+
         free(now_s);
     }
 }

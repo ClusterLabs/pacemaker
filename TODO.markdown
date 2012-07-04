@@ -3,7 +3,6 @@
 ## Targeted for 1.2
 - Have crm_mon listen for stonith events (and send email/snmp traps)
 - Block after N stonith failures (per node)
-- Move private CIB functions out of public headers
 
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
 

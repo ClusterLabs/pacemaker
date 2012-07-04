@@ -71,10 +71,10 @@ crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
                     crm_log_xml_err(xml, "Invalid quorum/membership update");
 
                 } else {
-                    int rc = update_attr(fsa_cib_conn,
-                                         cib_quorum_override | cib_scope_local | cib_inhibit_notify,
-                                         XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                                         XML_ATTR_EXPECTED_VOTES, votes, FALSE);
+                    int rc = update_attr_delegate(
+                        fsa_cib_conn, cib_quorum_override | cib_scope_local | cib_inhibit_notify,
+                        XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                        XML_ATTR_EXPECTED_VOTES, votes, FALSE, NULL);
 
                     crm_info("Setting expected votes to %s", votes);
                     if (pcmk_ok > rc) {

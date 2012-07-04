@@ -243,8 +243,8 @@ main(int argc, char **argv)
         crm_info("Update %s=%s sent via attrd", attr_name, command == 'D' ? "<none>" : attr_value);
 
     } else if (command == 'D') {
-        rc = delete_attr(the_cib, cib_opts, type, dest_node, set_type, set_name,
-                         attr_id, attr_name, attr_value, TRUE);
+        rc = delete_attr_delegate(the_cib, cib_opts, type, dest_node, set_type, set_name,
+                                  attr_id, attr_name, attr_value, TRUE, NULL);
 
         if (rc == -ENXIO) {
             /* Nothing to delete...
@@ -257,9 +257,9 @@ main(int argc, char **argv)
             time_t now = time(NULL);
 
             now_s = crm_itoa(now);
-            update_attr(the_cib, cib_sync_call,
-                        XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                        "last-lrm-refresh", now_s, TRUE);
+            update_attr_delegate(
+                the_cib, cib_sync_call, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                "last-lrm-refresh", now_s, TRUE, NULL);
             free(now_s);
         }
 
@@ -268,15 +268,16 @@ main(int argc, char **argv)
         CRM_LOG_ASSERT(attr_name != NULL);
         CRM_LOG_ASSERT(attr_value != NULL);
 
-        rc = update_attr(the_cib, cib_opts, type, dest_node, set_type, set_name,
-                         attr_id, attr_name, attr_value, TRUE);
+        rc = update_attr_delegate(
+            the_cib, cib_opts, type, dest_node, set_type, set_name,
+            attr_id, attr_name, attr_value, TRUE, NULL);
 
     } else {                    /* query */
 
         char *read_value = NULL;
 
-        rc = read_attr(the_cib, type, dest_node, set_type, set_name,
-                       attr_id, attr_name, &read_value, TRUE);
+        rc = read_attr_delegate(the_cib, type, dest_node, set_type, set_name,
+                                attr_id, attr_name, &read_value, TRUE, NULL);
 
         if (rc == -ENXIO && attr_default) {
             read_value = strdup(attr_default);

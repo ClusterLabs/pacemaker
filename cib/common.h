@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "../lib/cib/cib_private.h"
+#include <crm/cib/internal.h>
 
 extern xmlNode *cib_msg_copy(xmlNode * msg, gboolean with_data);
 extern xmlNode *cib_construct_reply(xmlNode * request, xmlNode * output, int rc);

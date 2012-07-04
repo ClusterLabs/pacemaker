@@ -233,18 +233,7 @@ slist_basic_destroy(GListPtr list)
 	g_list_free(parent);						\
     } while(0)
 
-static inline gboolean attrd_update(
-    crm_ipc_t *cluster, char command, const char *host, const char *name,
-    const char *value, const char *section, const char *set, const char *dampen) QB_GNUC_DEPRECATED;
-
-static inline gboolean attrd_lazy_update(
-    char command, const char *host, const char *name, const char *value,
-    const char *section, const char *set, const char *dampen) QB_GNUC_DEPRECATED;
-
-static inline gboolean attrd_update_no_mainloop(
-    int *connection, char command, const char *host, const char *name, const char *value,
-    const char *section, const char *set, const char *dampen) QB_GNUC_DEPRECATED;
-
+#  ifdef CRM_ATTRD__H
 static inline gboolean
 attrd_update(crm_ipc_t *cluster, char command, const char *host, const char *name,
              const char *value, const char *section, const char *set, const char *dampen)
@@ -267,5 +256,44 @@ attrd_update_no_mainloop(int *connection, char command, const char *host,
 {
     return attrd_update_delegate(NULL, command, host, name, value, section, set, dampen, NULL);
 }
+#  endif
+
+# ifdef CIB_UTIL__H
+static inline int
+update_attr(cib_t * the_cib, int call_options,
+            const char *section, const char *node_uuid, const char *set_type, const char *set_name,
+            const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
+{
+    return update_attr_delegate(the_cib, call_options, section, node_uuid, set_type, set_name,
+                                attr_id, attr_name, attr_value, to_console, NULL);
+}
+
+static inline int
+find_nvpair_attr(cib_t * the_cib, const char *attr, const char *section, const char *node_uuid,
+                 const char *set_type, const char *set_name, const char *attr_id,
+                 const char *attr_name, gboolean to_console, char **value)
+{
+    return find_nvpair_attr_delegate(the_cib, attr, section, node_uuid, set_type,
+                                     set_name, attr_id, attr_name, to_console, value, NULL);
+}
+
+static inline int
+read_attr(cib_t * the_cib,
+          const char *section, const char *node_uuid, const char *set_type, const char *set_name,
+          const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console)
+{
+    return read_attr_delegate(the_cib, section, node_uuid, set_type, set_name,
+                              attr_id, attr_name, attr_value, to_console, NULL);
+}
+
+static inline int
+delete_attr(cib_t * the_cib, int options,
+            const char *section, const char *node_uuid, const char *set_type, const char *set_name,
+            const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
+{
+    return delete_attr_delegate(the_cib, options, section, node_uuid, set_type, set_name,
+                                attr_id, attr_name, attr_value, to_console, NULL);
+}
+#  endif
 
 #endif

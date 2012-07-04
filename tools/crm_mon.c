@@ -42,7 +42,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>
 
-#include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
 #include <../lib/pengine/unpack.h>
 #include <../pengine/pengine.h>

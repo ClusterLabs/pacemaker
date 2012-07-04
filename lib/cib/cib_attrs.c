@@ -33,7 +33,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/cib.h>
+#include <crm/cib/internal.h>
 
 #define attr_msg(level, fmt, args...) do {	\
 	if(to_console) {			\
@@ -536,8 +536,8 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
         sprintf(attr_id, "%s-%s", attr_name, uuid);
     }
 
-    rc = update_attr(the_cib, cib_sync_call, scope, uuid, NULL, set_name,
-                     attr_id, attr_name, standby_value, TRUE);
+    rc = update_attr_delegate(the_cib, cib_sync_call, scope, uuid, NULL, set_name,
+                              attr_id, attr_name, standby_value, TRUE, NULL);
 
     free(attr_id);
     free(set_name);

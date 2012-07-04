@@ -36,6 +36,7 @@
 
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
+#include <crm/cib/internal.h>
 
 #include "callbacks.h"
 /* #undef HAVE_PAM_PAM_APPL_H */
