@@ -1,15 +1,17 @@
 # Semi-random collection of tasks we'd like to get done
 
 ## Targeted for 1.2
-- Add upstart tests to lrmd/regression.py
 - Have crm_mon listen for stonith events (and send email/snmp traps)
+- Block after N stonith failures (per node)
+- Move more private functions out of public headers (eg. much of include/common/util.h)
+
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
+
 - Figure out how to sanely allow nodes with corosync but no pacemaker
   - sysconfig variable that tells pacemaker whether to fence members without pacemaker?
 - Arrange for nodes that didnt complete the join to be fenced
-- Block after N stonith failures (per node)
+
 - Remove instance numbers from anonymous clones
-- Move private functions out of public headers (eg. much of include/common/util.h)
 
 ## Targeted for 1.2.x
 
@@ -34,8 +36,7 @@
 
 # Testing
 - Write a regression test for Stonith-NG
-- Have lrmd/regression.py produce and keep debug logs from the lrmd
-- Make lrmd/regression.py smart enough to only run upstart/systemd tests if the host supports it - Convert BandwidthTest CTS test into a Scenario wrapper
+- Convert BandwidthTest CTS test into a Scenario wrapper
 - find_operations() is not covered by PE regression tests
 - Some node states in determine_online_status_fencing() are untested by PE regression tests
 - no_quorum_policy==suicide is not covered by PE regression tests
