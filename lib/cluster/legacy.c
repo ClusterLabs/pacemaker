@@ -18,12 +18,11 @@
 
 #include <crm_internal.h>
 #include <bzlib.h>
-#include <crm/ais.h>
 #include <crm/common/ipc.h>
 #include <crm/cluster.h>
 #include <crm/common/mainloop.h>
 #include <sys/utsname.h>
-#include "stack.h"
+
 #if SUPPORT_COROSYNC
 #    include <corosync/confdb.h>
 #    include <corosync/corodefs.h>

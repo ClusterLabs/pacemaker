@@ -32,7 +32,7 @@
 #  include <corosync/confdb.h>
 #endif
 
-#include <crm/cluster.h>
+#include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
 
 #if SUPPORT_CMAN

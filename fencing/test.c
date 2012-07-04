@@ -32,7 +32,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/cluster.h>
+#include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>

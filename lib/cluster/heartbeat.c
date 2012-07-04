@@ -31,8 +31,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/common/ipc.h>
-#include <crm/cluster.h>
-#include "stack.h"
+#include <crm/cluster/internal.h>
 
 #if HAVE_BZLIB_H
 #  include <bzlib.h>

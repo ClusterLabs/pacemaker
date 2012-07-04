@@ -25,7 +25,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/cluster.h>
+#include <crm/cluster/internal.h>
 #include <crmd_messages.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>

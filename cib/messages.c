@@ -33,7 +33,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
-#include <crm/cluster.h>
+#include <crm/cluster/internal.h>
 
 #include <cibio.h>
 #include <cibmessages.h>

@@ -33,7 +33,6 @@
 #include <bzlib.h>
 #include <grp.h>
 
-#include <crm/ais.h>
 #include "./utils.h"
 #include "./plugin.h"
 

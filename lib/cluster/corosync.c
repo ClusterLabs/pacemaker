@@ -22,12 +22,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <crm/ais.h>
 #include <crm/common/ipc.h>
-#include <crm/cluster.h>
+#include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
 #include <sys/utsname.h>
-#include "stack.h"
 
 #include <qb/qbipcc.h>
 #include <qb/qbutil.h>

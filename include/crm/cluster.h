@@ -20,7 +20,6 @@
 
 #  include <crm/common/xml.h>
 #  include <crm/common/util.h>
-#  include <crm/ais.h>
 
 #  if SUPPORT_HEARTBEAT
 #    include <heartbeat/hb_api.h>
@@ -31,6 +30,104 @@ extern gboolean crm_have_quorum;
 extern GHashTable *crm_peer_cache;
 extern GHashTable *crm_peer_id_cache;
 extern unsigned long long crm_peer_seq;
+
+#  ifndef CRM_SERVICE
+#    define CRM_SERVICE PCMK_SERVICE_ID
+#  endif
+
+/* *INDENT-OFF* */
+#define CRM_NODE_LOST      "lost"
+#define CRM_NODE_MEMBER    "member"
+#define CRM_NODE_ACTIVE    CRM_NODE_MEMBER
+#define CRM_NODE_INACTIVE  CRM_NODE_LOST
+#define CRM_NODE_EVICTED   "evicted"
+
+enum crm_proc_flag {
+    crm_proc_none      = 0x00000001,
+
+    /* 3 messaging types */
+    crm_proc_heartbeat = 0x01000000,
+    crm_proc_plugin    = 0x00000002,
+    crm_proc_cpg       = 0x04000000,
+
+    crm_proc_lrmd      = 0x00000010,
+    crm_proc_cib       = 0x00000100,
+    crm_proc_crmd      = 0x00000200,
+    crm_proc_attrd     = 0x00001000,
+
+    crm_proc_pe        = 0x00010000,
+    crm_proc_te        = 0x00020000,
+
+    crm_proc_stonithd  = 0x00002000,
+    crm_proc_stonith_ng= 0x00100000,
+
+    crm_proc_mgmtd     = 0x00040000,
+};
+/* *INDENT-ON* */
+
+typedef struct crm_peer_node_s {
+    uint32_t id;
+    uint64_t born;
+    uint64_t last_seen;
+
+    int32_t votes;
+    uint32_t processes;
+
+    char *uname;
+    char *state;
+    char *uuid;
+    char *addr;
+    char *version;
+} crm_node_t;
+
+static inline const char *
+peer2text(enum crm_proc_flag proc)
+{
+    const char *text = "unknown";
+
+    switch (proc) {
+        case crm_proc_none:
+            text = "unknown";
+            break;
+        case crm_proc_plugin:
+            text = "ais";
+            break;
+        case crm_proc_heartbeat:
+            text = "heartbeat";
+            break;
+        case crm_proc_cib:
+            text = "cib";
+            break;
+        case crm_proc_crmd:
+            text = "crmd";
+            break;
+        case crm_proc_pe:
+            text = "pengine";
+            break;
+        case crm_proc_te:
+            text = "tengine";
+            break;
+        case crm_proc_lrmd:
+            text = "lrmd";
+            break;
+        case crm_proc_attrd:
+            text = "attrd";
+            break;
+        case crm_proc_stonithd:
+            text = "stonithd";
+            break;
+        case crm_proc_stonith_ng:
+            text = "stonith-ng";
+            break;
+        case crm_proc_mgmtd:
+            text = "mgmtd";
+            break;
+        case crm_proc_cpg:
+            text = "corosync-cpg";
+            break;
+    }
+    return text;
+}
 
 void crm_peer_init(void);
 void crm_peer_destroy(void);
@@ -47,23 +144,13 @@ gboolean crm_cluster_connect(char **our_uname, char **our_uuid, void *dispatch,
 #  endif
     );
 
-gboolean init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean),
-                                     void (*destroy) (gpointer));
-
-gboolean init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
-                                       void (*destroy) (gpointer));
-
+enum crm_ais_msg_types;
 gboolean send_cluster_message(const char *node, enum crm_ais_msg_types service,
-                                     xmlNode * data, gboolean ordered);
+                              xmlNode * data, gboolean ordered);
 
-void destroy_crm_node(gpointer data);
+void destroy_crm_node(gpointer/* crm_node_t* */ data);
 
 crm_node_t *crm_get_peer(unsigned int id, const char *uname);
-
-void crm_update_peer_proc(const char *source, crm_node_t *peer, uint32_t flag, const char *status);
-crm_node_t *crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t seen, int32_t votes,
-                                   uint32_t children, const char *uuid, const char *uname,
-                                   const char *addr, const char *state);
 
 guint crm_active_peers(void);
 gboolean crm_is_peer_active(const crm_node_t * node);
@@ -73,12 +160,7 @@ int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connect
 gboolean crm_get_cluster_name(char **cname);
 
 #  if SUPPORT_HEARTBEAT
-xmlNode *convert_ha_message(xmlNode * parent, HA_Message *msg, const char *field);
 gboolean crm_is_heartbeat_peer_active(const crm_node_t * node);
-gboolean ccm_have_quorum(oc_ed_t event);
-const char *ccm_event_name(oc_ed_t event);
-crm_node_t *crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state,
-                                       uint64_t seq);
 #  endif
 
 #  if SUPPORT_COROSYNC
@@ -102,8 +184,7 @@ enum crm_status_type {
 };
 
 enum crm_ais_msg_types text2msg_type(const char *text);
-void
- crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
+void crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
 
 /* *INDENT-OFF* */
 enum cluster_type_e 

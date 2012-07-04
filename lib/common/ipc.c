@@ -31,7 +31,6 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/cluster.h>
 
 static char *
 generateReference(const char *custom1, const char *custom2)

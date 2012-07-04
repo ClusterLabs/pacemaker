@@ -21,7 +21,7 @@
 #  include <crm/crm.h>
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
-#  include <crm/cluster.h>
+#  include <crm/cluster/internal.h>
 #  include <crmd_fsa.h>
 
 typedef struct ha_msg_input_s {

@@ -159,4 +159,37 @@ void crm_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted);
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
+#  if SUPPORT_COROSYNC
+#    if CS_USES_LIBQB
+#      include <qb/qbipc_common.h>
+#      include <corosync/corotypes.h>
+typedef struct qb_ipc_request_header cs_ipc_header_request_t;
+typedef struct qb_ipc_response_header cs_ipc_header_response_t;
+#    else
+#      include <corosync/corodefs.h>
+#      include <corosync/coroipcc.h>
+#      include <corosync/coroipc_types.h>
+static inline int
+qb_to_cs_error(int a)
+{
+    return a;
+}
+
+typedef coroipc_request_header_t cs_ipc_header_request_t;
+typedef coroipc_response_header_t cs_ipc_header_response_t;
+#    endif
+#  else
+typedef struct {
+    int size __attribute__ ((aligned(8)));
+    int id __attribute__ ((aligned(8)));
+} __attribute__ ((aligned(8))) cs_ipc_header_request_t;
+
+typedef struct {
+    int size __attribute__ ((aligned(8)));
+    int id __attribute__ ((aligned(8)));
+    int error __attribute__ ((aligned(8)));
+} __attribute__ ((aligned(8))) cs_ipc_header_response_t;
+
+#  endif
+
 #endif                          /* CRM_INTERNAL__H */

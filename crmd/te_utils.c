@@ -106,7 +106,6 @@ tengine_stonith_connection_destroy(stonith_t * st, const char *event, xmlNode * 
 */
 #if SUPPORT_CMAN
 #  include <libfenced.h>
-#  include "../lib/cluster/stack.h"
 #endif
 
 static void

@@ -30,8 +30,7 @@
 #include <libgen.h>             /* for basename() */
 
 #include <crm/crm.h>
-#include <crm/ais.h>
-#include <crm/cluster.h>
+#include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/cib.h>
 
@@ -43,8 +42,6 @@ char *target_uuid = NULL;
 char *target_uname = NULL;
 const char *standby_value = NULL;
 const char *standby_scope = NULL;
-
-#include <../lib/cluster/stack.h>
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {

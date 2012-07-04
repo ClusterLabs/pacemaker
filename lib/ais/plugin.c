@@ -36,7 +36,6 @@
 #include <corosync/engine/config.h>
 
 #include <config.h>
-#include <crm/ais.h>
 #include "plugin.h"
 #include "utils.h"
 

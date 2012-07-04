@@ -36,6 +36,10 @@
 #  define EOS		'\0'
 #  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
 
+#  ifndef MAX_NAME
+#    define MAX_NAME	256
+#  endif
+
 #  ifndef __GNUC__
 #    define __builtin_expect(expr, result) (expr)
 #  endif
