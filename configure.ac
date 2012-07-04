@@ -1690,6 +1690,7 @@ include/Makefile						\
 	include/crm/Makefile					\
 		include/crm/cib/Makefile			\
 		include/crm/common/Makefile			\
+		include/crm/cluster/Makefile			\
 		include/crm/fencing/Makefile			\
 		include/crm/pengine/Makefile			\
 replace/Makefile						\

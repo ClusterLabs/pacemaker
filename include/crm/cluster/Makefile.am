@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+# Copyright (C) 2004 Andrew Beekhof
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,11 +15,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES	= Makefile.in
+MAINTAINERCLEANFILES    = Makefile.in
 
-headerdir=$(pkgincludedir)/crm
+headerdir=$(pkgincludedir)/crm/cluster
 
-noinst_HEADERS		= 
-header_HEADERS		= crm.h cib.h attrd.h msg_xml.h transition.h stonith-ng.h cluster.h lrmd.h services.h error.h
-
-SUBDIRS                 = common pengine cib fencing
+noinst_HEADERS		= internal.h
+header_HEADERS		= 
