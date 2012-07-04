@@ -419,6 +419,12 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     CRM_ASSERT(systemd_init());
 
     crm_debug("Performing %s op on systemd unit %s named '%s'", op->action, op->agent, op->rsc);
+    if (safe_str_eq(op->action, "meta-data")) {
+        op->stdout_data = systemd_unit_metadata(op->agent);
+        op->rc = PCMK_EXECRA_OK;
+        goto cleanup;
+    }
+
     pass = systemd_unit_by_name (systemd_proxy, op->agent, &unit, NULL, &error);
     if (error || pass == FALSE) {
         crm_debug("Could not obtain unit named '%s': %s", op->agent, error->message);
@@ -430,12 +436,6 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
         return FALSE;
     }
     
-    if (safe_str_eq(op->action, "meta-data")) {
-        op->stdout_data = systemd_unit_metadata(op->agent);
-        op->rc = PCMK_EXECRA_OK;
-        goto cleanup;
-    }
-
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
         char *state = systemd_unit_property(unit, BUS_NAME".Unit", "ActiveState");
         if ( !g_strcmp0(state, "active")) {
