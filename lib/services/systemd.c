@@ -418,7 +418,8 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
     CRM_ASSERT(systemd_init());
 
-    crm_debug("Performing %s op on systemd unit %s named '%s'", op->action, op->agent, op->rsc);
+    crm_debug("Performing %ssynchronous %s op on systemd unit %s named '%s'", synchronous?"":"a", op->action, op->agent, op->rsc);
+
     if (safe_str_eq(op->action, "meta-data")) {
         op->stdout_data = systemd_unit_metadata(op->agent);
         op->rc = PCMK_EXECRA_OK;
@@ -432,8 +433,7 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
             op->rc = PCMK_EXECRA_NOT_INSTALLED;
         }
         g_error_free(error);
-        free(name);
-        return FALSE;
+        goto cleanup;
     }
     
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
@@ -444,9 +444,6 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
             op->rc = PCMK_EXECRA_NOT_RUNNING;
         }
 
-        if(synchronous == FALSE) {
-            operation_finalize(op);
-        }
         free(state);
         goto cleanup;
 
@@ -457,7 +454,8 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     } else if (!g_strcmp0(action, "restart")) {
         action = "RestartUnit";
     } else {
-        return PCMK_EXECRA_UNIMPLEMENT_FEATURE;
+        op->rc = PCMK_EXECRA_UNIMPLEMENT_FEATURE;
+        goto cleanup;
     }
 
     crm_debug("Calling %s for %s: %s", action, op->rsc, unit);
@@ -498,6 +496,10 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
 
     if (_ret) {
         g_variant_unref(_ret);
+    }
+    if(synchronous == FALSE) {
+        operation_finalize(op);
+        return TRUE;
     }
     return op->rc == PCMK_EXECRA_OK;
 }

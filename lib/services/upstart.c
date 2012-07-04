@@ -443,10 +443,6 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
         } else {
             op->rc = PCMK_EXECRA_NOT_RUNNING;
         }
-
-        if(synchronous == FALSE) {
-            operation_finalize(op);
-        }
         goto cleanup;
 
     } else if (!g_strcmp0(action, "start")) {
@@ -456,7 +452,8 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
     } else if (!g_strcmp0(action, "restart")) {
         action = "Restart";
     } else {
-        return PCMK_EXECRA_UNIMPLEMENT_FEATURE;
+        op->rc = PCMK_EXECRA_UNIMPLEMENT_FEATURE;
+        goto cleanup;
     }
 
     job_proxy = get_proxy(job, BUS_MANAGER_IFACE".Job");
@@ -487,7 +484,6 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
         } else {
             crm_err("Could not issue %s for %s: %s (%s)", action, op->rsc, error->message, job);
         }
-        g_error_free(error);
 
     } else {
         char *path = NULL;
@@ -498,11 +494,18 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
 
   cleanup:
     free(job);
+    if(error) {
+        g_error_free(error);
+    }
     if(job_proxy) {
         g_object_unref(job_proxy);
     }
     if (_ret) {
         g_variant_unref(_ret);
+    }
+    if(synchronous == FALSE) {
+        operation_finalize(op);
+        return TRUE;
     }
     return op->rc == PCMK_EXECRA_OK;
 }

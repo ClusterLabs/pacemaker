@@ -343,7 +343,7 @@ send_generic_notify(int rc, xmlNode * request)
 static void
 cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 {
-    crm_trace("Resource operation rsc:%s action:%s completed", cmd->rsc_id, cmd->action);
+    crm_trace("Resource operation rsc:%s action:%s completed (%p %p)", cmd->rsc_id, cmd->action, rsc?rsc->active:NULL, cmd);
 
     if (rsc && (rsc->active == cmd)) {
         rsc->active = NULL;
@@ -443,7 +443,7 @@ get_uniform_rc(const char *standard, const char *action, int rc)
     } else if (safe_str_eq(standard, "stonith")) {
         return stonith2uniform_rc(action, rc);
     } else if (safe_str_eq(standard, "systemd")) {
-        return lsb2uniform_rc(action, rc);
+        return rc;
     } else if (safe_str_eq(standard, "upstart")) {
         return rc;
     } else {
@@ -600,21 +600,26 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 
     action->cb_data = cmd;
-    if (!services_action_async(action, action_complete)) {
-        services_action_free(action);
-        action = NULL;
-        cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
-        goto exec_done;
-    }
-
+    /* The cmd will be finalized by the action_complete callback after
+     * the service library is done with it */
+    rsc->active = cmd;          /* only one op at a time for a rsc */
     if (cmd->interval) {
         rsc->recurring_ops = g_list_append(rsc->recurring_ops, cmd);
     }
 
-    /* The cmd will be finalized by the action_complete callback after
-     * the service library is done with it */
-    rsc->active = cmd;          /* only one op at a time for a rsc */
-    cmd = NULL;
+    /* 'cmd' may not be valid after this point
+     *
+     * Upstart and systemd both synchronously determine monitor/status
+     * results and call action_complete (which may free 'cmd') if necessary
+     */
+    if (services_action_async(action, action_complete)) {
+        return TRUE;
+    }
+
+    cmd->exec_rc = action->rc;
+    cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
+    services_action_free(action);
+    action = NULL;
 
   exec_done:
     if (cmd) {
@@ -817,11 +822,12 @@ process_lrmd_rsc_unregister(lrmd_client_t * client, xmlNode * request)
     if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
         crm_info("Resource '%s' not found (%d active resources)",
                  rsc_id, g_hash_table_size(rsc_list));
-        return -ENODEV;
+        return pcmk_ok;
     }
 
     if (rsc->active) {
         /* let the caller know there are still active ops on this rsc to watch for */
+        crm_trace("Operation still in progress: %p", rsc->active);
         rc = -EINPROGRESS;
     }
 
