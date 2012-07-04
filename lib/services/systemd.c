@@ -331,12 +331,17 @@ systemd_unit_metadata(const char *name)
 {
     char *path = NULL;
     char *meta = NULL;
+    char *desc = NULL;
     GError *error = NULL;
     
     CRM_ASSERT(systemd_init());
     if(systemd_unit_by_name(systemd_proxy, name, &path, NULL, &error)) {
-        char *desc = systemd_unit_property(path, BUS_NAME".Unit", "Description");
-        meta = g_strdup_printf(
+        desc = systemd_unit_property(path, BUS_NAME".Unit", "Description");
+    } else {
+        desc = g_strdup_printf("systemd unit file for %s", name);
+    }
+    
+    meta = g_strdup_printf(
             "<?xml version=\"1.0\"?>\n"
             "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
             "<resource-agent name=\"%s\" version=\"0.1\">\n"
@@ -355,12 +360,11 @@ systemd_unit_metadata(const char *name)
             "    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
             "    <action name=\"meta-data\"  timeout=\"5\" />\n"
             "  </actions>\n"
-            "  <special tag=\"upstart\">\n"
+            "  <special tag=\"systemd\">\n"
             "  </special>\n"
             "</resource-agent>\n",
             name, desc, name);
-        free(desc);
-    }
+    free(desc);
     return meta;
 }
 
