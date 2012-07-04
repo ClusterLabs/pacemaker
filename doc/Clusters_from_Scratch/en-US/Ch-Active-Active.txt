@@ -17,58 +17,52 @@ Fedora 17.
 
 [source,Bash]
 -----
-# yum install -y gfs2-utils dlm
+# yum install -y gfs2-utils dlm kernel-modules-extra 
 Loaded plugins: langpacks, presto, refresh-packagekit
 Resolving Dependencies
 --> Running transaction check
----> Package dlm.x86_64 0:3.99.1-4.fc17 will be installed
---> Processing Dependency: dlm-lib = 3.99.1-4.fc17 for package: dlm-3.99.1-4.fc17.x86_64
---> Processing Dependency: libdlmcontrol.so.3()(64bit) for package: dlm-3.99.1-4.fc17.x86_64
---> Processing Dependency: libdlm.so.3()(64bit) for package: dlm-3.99.1-4.fc17.x86_64
+---> Package dlm.x86_64 0:3.99.4-1.fc17 will be installed
 ---> Package gfs2-utils.x86_64 0:3.1.4-3.fc17 will be installed
---> Running transaction check
----> Package dlm-lib.x86_64 0:3.99.1-4.fc17 will be installed
+---> Package kernel-modules-extra.x86_64 0:3.4.4-3.fc17 will be installed
 --> Finished Dependency Resolution
 
 Dependencies Resolved
 
-=====================================================================================
- Package             Arch            Version          Repository                Size
-=====================================================================================
+================================================================================
+ Package                Arch       Version          Repository           Size
+================================================================================
 Installing:
- dlm                 x86_64          3.99.1-4.fc17    updates-testing           77 k
- gfs2-utils          x86_64          3.1.4-3.fc17     fedora                   214 k
-Installing for dependencies:
- dlm-lib             x86_64          3.99.1-4.fc17    updates-testing           19 k
+ dlm                    x86_64     3.99.4-1.fc17    updates              83 k
+ gfs2-utils             x86_64     3.1.4-3.fc17     fedora              214 k
+ kernel-modules-extra   x86_64     3.4.4-3.fc17     updates             1.7 M
 
 Transaction Summary
-=====================================================================================
-Install  2 Packages (+1 Dependent package)
+================================================================================
+Install  3 Packages
 
-Total download size: 309 k
-Installed size: 879 k
+Total download size: 1.9 M
+Installed size: 7.7 M
 Downloading Packages:
-(1/3): dlm-3.99.1-4.fc17.x86_64.rpm                           |  77 kB     00:00     
-(2/3): dlm-lib-3.99.1-4.fc17.x86_64.rpm                       |  19 kB     00:00     
-(3/3): gfs2-utils-3.1.4-3.fc17.x86_64.rpm                     | 214 kB     00:00     
- -------------------------------------------------------------------------------------
-Total                                                241 kB/s | 309 kB     00:01     
+(1/3): dlm-3.99.4-1.fc17.x86_64.rpm                         |  83 kB     00:00
+(2/3): gfs2-utils-3.1.4-3.fc17.x86_64.rpm                   | 214 kB     00:00
+(3/3): kernel-modules-extra-3.4.4-3.fc17.x86_64.rpm         | 1.7 MB     00:01 
+--------------------------------------------------------------------------------
+Total                                              615 kB/s | 1.9 MB     00:03
 Running Transaction Check
 Running Transaction Test
 Transaction Test Succeeded
 Running Transaction
-  Installing : dlm-lib-3.99.1-4.fc17.x86_64                                      1/3 
-  Installing : dlm-3.99.1-4.fc17.x86_64                                          2/3 
-  Installing : gfs2-utils-3.1.4-3.fc17.x86_64                                    3/3 
-  Verifying  : dlm-lib-3.99.1-4.fc17.x86_64                                      1/3 
-  Verifying  : gfs2-utils-3.1.4-3.fc17.x86_64                                    2/3 
-  Verifying  : dlm-3.99.1-4.fc17.x86_64                                          3/3 
+  Installing : kernel-modules-extra-3.4.4-3.fc17.x86_64                 1/3 
+  Installing : gfs2-utils-3.1.4-3.fc17.x86_64                           2/3 
+  Installing : dlm-3.99.4-1.fc17.x86_64                                 3/3 
+  Verifying  : dlm-3.99.4-1.fc17.x86_64                                 1/3 
+  Verifying  : gfs2-utils-3.1.4-3.fc17.x86_64                           2/3 
+  Verifying  : kernel-modules-extra-3.4.4-3.fc17.x86_64                 3/3 
 
 Installed:
-  dlm.x86_64 0:3.99.1-4.fc17                 gfs2-utils.x86_64 0:3.1.4-3.fc17                
-
-Dependency Installed:
-  dlm-lib.x86_64 0:3.99.1-4.fc17                                                              
+  dlm.x86_64 0:3.99.4-1.fc17
+  gfs2-utils.x86_64 0:3.1.4-3.fc17
+  kernel-modules-extra.x86_64 0:3.4.4-3.fc17 
 
 Complete!
 -----
@@ -169,7 +163,7 @@ mounted.  Otherwise you will receive the message:
 
 [source,Bash]
 -----
-# ssh pcmk-2 -- mkfs.gfs2 -p lock_dlm -j 2 -t webtest /dev/drbd1
+# ssh pcmk-2 -- mkfs.gfs2 -p lock_dlm -j 2 -t webtest:web /dev/drbd1
 This will destroy any data on /dev/drbd1.
 It appears to contain: Linux rev 1.0 ext4 filesystem data, UUID=dc45fff3-c47a-4db2-96f7-a8049a323fe4 (extents) (large files) (huge files)
 Are you sure you want to proceed? [y/n]y
@@ -255,12 +249,6 @@ Online: [ pcmk-1 pcmk-2 ]
  Clone Set: dlm_clone [dlm]
      Started: [ pcmk-1 pcmk-2 ]
 -----
-
-
-[WARNING]
-=========
-Nothing has been updated past this point and is probably severely broken.
-=========
 
 Then (re)populate the new filesystem with data (web pages). For now we'll
 create another variation on our home page.
