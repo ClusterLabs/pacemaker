@@ -506,7 +506,7 @@ notify_crmd(crm_graph_t * graph)
 
     graph->abort_reason = NULL;
     graph->completion_action = tg_done;
-    clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
+    clear_bit(fsa_input_register, R_IN_TRANSITION);
 
     if (event != I_NULL) {
         register_fsa_input(C_FSA_INTERNAL, event, NULL);

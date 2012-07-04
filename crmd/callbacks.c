@@ -160,7 +160,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
     gboolean reset_status_entry = FALSE;
     uint32_t old = 0;
 
-    set_bit_inplace(fsa_input_register, R_PEER_DATA);
+    set_bit(fsa_input_register, R_PEER_DATA);
     if (node->uname == NULL) {
         return;
     }
@@ -223,7 +223,7 @@ crmd_cib_connection_destroy(gpointer user_data)
     /* eventually this will trigger a reconnect, not a shutdown */
     crm_err("Connection to the CIB terminated...");
     register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-    clear_bit_inplace(fsa_input_register, R_CIB_CONNECTED);
+    clear_bit(fsa_input_register, R_CIB_CONNECTED);
 
     return;
 }

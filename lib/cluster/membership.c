@@ -403,12 +403,12 @@ crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const 
     last = node->processes;
     if (safe_str_eq(status, ONLINESTATUS)) {
         if ((node->processes & flag) == 0) {
-            set_bit_inplace(node->processes, flag);
+            set_bit(node->processes, flag);
             changed = TRUE;
         }
 
     } else if (node->processes & flag) {
-        clear_bit_inplace(node->processes, flag);
+        clear_bit(node->processes, flag);
         changed = TRUE;
     }
 

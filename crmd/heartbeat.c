@@ -90,7 +90,7 @@ do_ccm_control(long long action,
             find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_unregister", 1);
 
         if (action & A_CCM_DISCONNECT) {
-            set_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
+            set_bit(fsa_input_register, R_CCM_DISCONNECTED);
             (*ccm_api_unregister) (fsa_ev_token);
         }
 
@@ -100,7 +100,7 @@ do_ccm_control(long long action,
             gboolean did_fail = FALSE;
 
             crm_trace("Registering with CCM");
-            clear_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
+            clear_bit(fsa_input_register, R_CCM_DISCONNECTED);
             ret = (*ccm_api_register) (&fsa_ev_token);
             if (ret != 0) {
                 crm_warn("CCM registration failed");
@@ -441,7 +441,7 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
 /* 		clear_shutdown = TRUE; */
     }
 
-    set_bit_inplace(fsa_input_register, R_PEER_DATA);
+    set_bit(fsa_input_register, R_PEER_DATA);
 
     crm_notice("Status update: Client %s/%s now has status [%s] (DC=%s)",
                node, client, status, AM_I_DC ? "true" : "false");

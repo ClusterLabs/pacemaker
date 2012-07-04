@@ -97,7 +97,7 @@ lrm_connection_destroy(void)
     if (is_set(fsa_input_register, R_LRM_CONNECTED)) {
         crm_crit("LRM Connection failed");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-        clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+        clear_bit(fsa_input_register, R_LRM_CONNECTED);
 
     } else {
         crm_info("LRM Connection disconnected");
@@ -303,7 +303,7 @@ do_lrm_control(long long action,
         }
 
         if (is_set(fsa_input_register, R_LRM_CONNECTED)) {
-            clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+            clear_bit(fsa_input_register, R_LRM_CONNECTED);
 
             fsa_lrm_conn->cmds->disconnect(fsa_lrm_conn);
             crm_info("Disconnected from the LRM");
@@ -354,7 +354,7 @@ do_lrm_control(long long action,
             return;
         }
 
-        set_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+        set_bit(fsa_input_register, R_LRM_CONNECTED);
         crm_debug("LRM connection established");
     }
 
@@ -452,7 +452,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
     }
 
   bail:
-    set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
+    set_bit(fsa_input_register, R_SENT_RSC_STOP);
 
     if (cur_state == S_TERMINATE) {
         rc = TRUE;

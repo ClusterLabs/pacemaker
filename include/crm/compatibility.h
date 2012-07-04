@@ -120,6 +120,8 @@ slist_basic_destroy(GListPtr list)
 }
 
 #  define crm_strdup strdup
+#  define set_bit_inplace set_bit
+#  define clear_bit_inplace clear_bit
 
 #  define crm_malloc0(malloc_obj, length) do {				\
 	malloc_obj = malloc(length);					\

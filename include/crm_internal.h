@@ -30,6 +30,7 @@
 #  include <libxml/tree.h>
 
 #  include <crm/lrmd.h>
+#  include <crm/common/logging.h>
 
 /* Dynamic loading of libraries */
 void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);
@@ -149,6 +150,49 @@ void write_last_sequence(const char *directory, const char *series, int sequence
 
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
 gboolean crm_is_writable(const char *dir, const char *file, const char *user, const char *group, gboolean need_both);
+
+char *generate_op_key(const char *rsc_id, const char *op_type, int interval);
+char *generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_type);
+char *generate_transition_magic_v202(const char *transition_key, int op_status);
+char *generate_transition_magic(const char *transition_key, int op_status, int op_rc);
+char *generate_transition_key(int action, int transition_id, int target_rc, const char *node);
+
+static inline long long
+crm_clear_bit(const char *function, const char *target, long long word, long long bit)
+{
+    long long rc = (word & ~bit);
+
+    if(rc == word) {
+        /* Unchanged */
+    } else if (target) {
+        crm_trace("Bit 0x%.8llx for %s cleared by %s", bit, target, function);
+    } else {
+        crm_trace("Bit 0x%.8llx cleared by %s", bit, function);
+    }
+
+    return rc;
+}
+
+static inline long long
+crm_set_bit(const char *function, const char *target, long long word, long long bit)
+{
+    long long rc = (word|bit);
+
+    if(rc == word) {
+        /* Unchanged */
+    } else if (target) {
+        crm_trace("Bit 0x%.8llx for %s set by %s", bit, target, function);
+    } else {
+        crm_trace("Bit 0x%.8llx set by %s", bit, function);
+    }
+
+    return rc;
+}
+
+#  define set_bit(word, bit) word = crm_set_bit(__PRETTY_FUNCTION__, NULL, word, bit)
+#  define clear_bit(word, bit) word = crm_clear_bit(__PRETTY_FUNCTION__, NULL, word, bit)
+
+void g_hash_destroy_str(gpointer data);
 
 long long crm_int_helper(const char *text, char **end_text);
 char *crm_concat(const char *prefix, const char *suffix, char join);

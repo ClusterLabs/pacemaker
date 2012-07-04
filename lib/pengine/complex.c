@@ -563,7 +563,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
               is_set((*rsc)->flags, pe_rsc_notify) ? "required" : "not required");
 
     if (safe_str_eq(class, "stonith")) {
-        set_bit_inplace(data_set->flags, pe_flag_have_stonith_resource);
+        set_bit(data_set->flags, pe_flag_have_stonith_resource);
     }
 
     (*rsc)->utilization =

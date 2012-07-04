@@ -100,7 +100,7 @@ post_cache_update(int instance)
     crm_debug("Updated cache after membership event %d.", instance);
 
     g_hash_table_foreach(crm_peer_cache, reap_dead_nodes, NULL);
-    set_bit_inplace(fsa_input_register, R_MEMBERSHIP);
+    set_bit(fsa_input_register, R_MEMBERSHIP);
 
     if (AM_I_DC) {
         populate_cib_nodes(FALSE);

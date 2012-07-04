@@ -137,7 +137,7 @@ do_cib_control(long long action,
 
     if (action & stop_actions) {
         crm_info("Disconnecting CIB");
-        clear_bit_inplace(fsa_input_register, R_CIB_CONNECTED);
+        clear_bit(fsa_input_register, R_CIB_CONNECTED);
         CRM_ASSERT(fsa_cib_conn != NULL);
 
         fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
@@ -185,7 +185,7 @@ do_cib_control(long long action,
             crm_err("Could not set CIB notification callback (update)");
 
         } else {
-            set_bit_inplace(fsa_input_register, R_CIB_CONNECTED);
+            set_bit(fsa_input_register, R_CIB_CONNECTED);
         }
 
         if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {

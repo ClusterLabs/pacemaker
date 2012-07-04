@@ -181,7 +181,7 @@ update_action_flags(action_t * action, enum pe_action_flags flags)
 
     if (last != action->flags) {
         changed = TRUE;
-        clear_bit_inplace(flags, pe_action_clear);
+        clear_bit(flags, pe_action_clear);
         crm_trace("%s on %s: %sset flags 0x%.6x (was 0x%.6x, now 0x%.6x)",
                   action->uuid, action->node ? action->node->details->uname : "[none]",
                   clear ? "un-" : "", flags, last, action->flags);

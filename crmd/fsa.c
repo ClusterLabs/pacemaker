@@ -228,7 +228,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
          * Remove certain actions during shutdown
          */
         if (fsa_state == S_STOPPING || ((fsa_input_register & R_SHUTDOWN) == R_SHUTDOWN)) {
-            clear_bit_inplace(fsa_actions, startup_actions);
+            clear_bit(fsa_actions, startup_actions);
         }
 
         /*
@@ -521,23 +521,23 @@ do_state_transition(long long actions,
     }
 #if 0
     if ((fsa_input_register & R_SHUTDOWN)) {
-        set_bit_inplace(tmp, A_DC_TIMER_STOP);
+        set_bit(tmp, A_DC_TIMER_STOP);
     }
 #endif
     if (next_state == S_INTEGRATION) {
-        set_bit_inplace(tmp, A_INTEGRATE_TIMER_START);
+        set_bit(tmp, A_INTEGRATE_TIMER_START);
     } else {
-        set_bit_inplace(tmp, A_INTEGRATE_TIMER_STOP);
+        set_bit(tmp, A_INTEGRATE_TIMER_STOP);
     }
 
     if (next_state == S_FINALIZE_JOIN) {
-        set_bit_inplace(tmp, A_FINALIZE_TIMER_START);
+        set_bit(tmp, A_FINALIZE_TIMER_START);
     } else {
-        set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
+        set_bit(tmp, A_FINALIZE_TIMER_STOP);
     }
 
     if (next_state != S_PENDING) {
-        set_bit_inplace(tmp, A_DC_TIMER_STOP);
+        set_bit(tmp, A_DC_TIMER_STOP);
     }
     if (next_state != S_ELECTION) {
         highest_born_on = 0;
@@ -564,7 +564,7 @@ do_state_transition(long long actions,
             election_trigger->counter = 0;
             if (is_set(fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we have a new DC");
-                set_bit_inplace(tmp, A_SHUTDOWN_REQ);
+                set_bit(tmp, A_SHUTDOWN_REQ);
             }
             CRM_LOG_ASSERT(fsa_our_dc != NULL);
             if (fsa_our_dc == NULL) {
@@ -638,7 +638,7 @@ do_state_transition(long long actions,
         case S_STOPPING:
         case S_TERMINATE:
             /* possibly redundant */
-            set_bit_inplace(fsa_input_register, R_SHUTDOWN);
+            set_bit(fsa_input_register, R_SHUTDOWN);
             break;
 
         case S_IDLE:
@@ -646,7 +646,7 @@ do_state_transition(long long actions,
             dump_rsc_info();
             if (is_set(fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we are the DC");
-                set_bit_inplace(tmp, A_SHUTDOWN_REQ);
+                set_bit(tmp, A_SHUTDOWN_REQ);
             }
             if (recheck_timer->period_ms > 0) {
                 crm_debug("Starting %s", get_timer_desc(recheck_timer));

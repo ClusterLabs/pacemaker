@@ -58,7 +58,7 @@ crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
         case crm_class_members:
             seq_s = crm_element_value(xml, "id");
             seq = crm_int_helper(seq_s, NULL);
-            set_bit_inplace(fsa_input_register, R_PEER_DATA);
+            set_bit(fsa_input_register, R_PEER_DATA);
             post_cache_update(seq);
 
             /* fall through */
@@ -173,7 +173,7 @@ crm_connect_corosync(void)
 #if SUPPORT_CMAN
     if (rc && is_cman_cluster()) {
         init_cman_connection(crmd_cman_dispatch, crmd_cman_destroy);
-        set_bit_inplace(fsa_input_register, R_MEMBERSHIP);
+        set_bit(fsa_input_register, R_MEMBERSHIP);
     }
 #endif
     return rc;

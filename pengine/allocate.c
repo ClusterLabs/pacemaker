@@ -420,7 +420,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
 
             key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
             action_clear = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
-            set_bit_inplace(action_clear->flags, pe_action_runnable);
+            set_bit(action_clear->flags, pe_action_runnable);
         }
     }
 
@@ -1266,7 +1266,7 @@ stage6(pe_working_set_t * data_set)
             order_actions(ready, stonith_op, pe_order_runnable_left);
             order_actions(stonith_op, all_stopped, pe_order_implies_then);
 
-            clear_bit_inplace(ready->flags, pe_action_optional);
+            clear_bit(ready->flags, pe_action_optional);
 
             if (node->details->is_dc) {
                 dc_down = stonith_op;
@@ -1421,7 +1421,7 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
 
     if (lh_action && lh_action->rsc == rsc && is_set(lh_action->flags, pe_action_dangle)) {
         crm_trace("Detected dangling operation %s -> %s", lh_action->uuid, order->rh_action_task);
-        clear_bit_inplace(type, pe_order_implies_then);
+        clear_bit(type, pe_order_implies_then);
     }
 
     gIter = rh_actions;

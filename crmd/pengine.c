@@ -84,7 +84,7 @@ save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 static void
 pe_ipc_destroy(gpointer user_data)
 {
-    clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
+    clear_bit(fsa_input_register, pe_subsystem->flag_connected);
     if (is_set(fsa_input_register, pe_subsystem->flag_required)) {
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
@@ -150,17 +150,17 @@ do_pe_control(long long action,
         };
     
     if (action & stop_actions) {
-        clear_bit_inplace(fsa_input_register, pe_subsystem->flag_required);
+        clear_bit(fsa_input_register, pe_subsystem->flag_required);
 
         mainloop_del_ipc_client(pe_subsystem->source);
         pe_subsystem->source = NULL;
         
-        clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
+        clear_bit(fsa_input_register, pe_subsystem->flag_connected);
     }
 
     if ((action & start_actions) && (is_set(fsa_input_register, R_PE_CONNECTED) == FALSE)) {
         if (cur_state != S_STOPPING) {
-            set_bit_inplace(fsa_input_register, pe_subsystem->flag_required);
+            set_bit(fsa_input_register, pe_subsystem->flag_required);
 
             pe_subsystem->source = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE, 5*1024*1024/* 5Mb */, NULL, &pe_callbacks);
 
@@ -174,7 +174,7 @@ do_pe_control(long long action,
             /*     pe_subsystem->pid = pe_subsystem->ipc->farside_pid; */
             /* } */
 
-            set_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
+            set_bit(fsa_input_register, pe_subsystem->flag_connected);
 
         } else {
             crm_info("Ignoring request to start %s while shutting down", this_subsys->name);

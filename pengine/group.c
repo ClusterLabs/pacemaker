@@ -114,34 +114,34 @@ group_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     op = start_action(rsc, NULL, TRUE /* !group_data->child_starting */ );
-    set_bit_inplace(op->flags, pe_action_pseudo | pe_action_runnable);
+    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
 
     op = custom_action(rsc, started_key(rsc),
                        RSC_STARTED, NULL, TRUE /* !group_data->child_starting */ , TRUE, data_set);
-    set_bit_inplace(op->flags, pe_action_pseudo | pe_action_runnable);
+    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
 
     op = stop_action(rsc, NULL, TRUE /* !group_data->child_stopping */ );
-    set_bit_inplace(op->flags, pe_action_pseudo | pe_action_runnable);
+    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
 
     op = custom_action(rsc, stopped_key(rsc),
                        RSC_STOPPED, NULL, TRUE /* !group_data->child_stopping */ , TRUE, data_set);
-    set_bit_inplace(op->flags, pe_action_pseudo | pe_action_runnable);
+    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
 
     value = g_hash_table_lookup(rsc->meta, "stateful");
     if (crm_is_true(value)) {
         op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE, data_set);
-        set_bit_inplace(op->flags, pe_action_pseudo);
-        set_bit_inplace(op->flags, pe_action_runnable);
+        set_bit(op->flags, pe_action_pseudo);
+        set_bit(op->flags, pe_action_runnable);
         op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE, data_set);
-        set_bit_inplace(op->flags, pe_action_pseudo);
-        set_bit_inplace(op->flags, pe_action_runnable);
+        set_bit(op->flags, pe_action_pseudo);
+        set_bit(op->flags, pe_action_runnable);
 
         op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE, data_set);
-        set_bit_inplace(op->flags, pe_action_pseudo);
-        set_bit_inplace(op->flags, pe_action_runnable);
+        set_bit(op->flags, pe_action_pseudo);
+        set_bit(op->flags, pe_action_runnable);
         op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE, TRUE, data_set);
-        set_bit_inplace(op->flags, pe_action_pseudo);
-        set_bit_inplace(op->flags, pe_action_runnable);
+        set_bit(op->flags, pe_action_pseudo);
+        set_bit(op->flags, pe_action_runnable);
     }
 }
 
@@ -384,21 +384,21 @@ group_action_flags(action_t * action, node_t * node)
             if (is_set(flags, pe_action_optional)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
                 crm_trace("%s is manditory because of %s", action->uuid, child_action->uuid);
-                clear_bit_inplace(flags, pe_action_optional);
+                clear_bit(flags, pe_action_optional);
                 pe_clear_action_bit(action, pe_action_optional);
             }
             if (safe_str_neq(task_s, action->task)
                 && is_set(flags, pe_action_runnable)
                 && is_set(child_flags, pe_action_runnable) == FALSE) {
                 crm_trace("%s is not runnable because of %s", action->uuid, child_action->uuid);
-                clear_bit_inplace(flags, pe_action_runnable);
+                clear_bit(flags, pe_action_runnable);
                 pe_clear_action_bit(action, pe_action_runnable);
             }
 
         } else if (task != stop_rsc) {
             crm_trace("%s is not runnable because of %s (not found in %s)", action->uuid, task_s,
                       child->id);
-            clear_bit_inplace(flags, pe_action_runnable);
+            clear_bit(flags, pe_action_runnable);
         }
     }
 

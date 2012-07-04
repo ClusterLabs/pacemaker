@@ -88,7 +88,7 @@ do_te_control(long long action,
                 fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff);
         }
 
-        clear_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
+        clear_bit(fsa_input_register, te_subsystem->flag_connected);
         crm_info("Transitioner is now inactive");
     }
 
@@ -132,7 +132,7 @@ do_te_control(long long action,
         /* create a blank one */
         crm_debug("Transitioner is now active");
         transition_graph = create_blank_graph();
-        set_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
+        set_bit(fsa_input_register, te_subsystem->flag_connected);
     }
 }
 

@@ -45,91 +45,31 @@
 #  endif
 
 char *crm_itoa(int an_int);
+gboolean crm_is_true(const char *s);
+int crm_str_to_boolean(const char *s, int *ret);
+int crm_parse_int(const char *text, const char *default_text);
+long long crm_get_msec(const char *input);
+unsigned long long crm_get_interval(const char *input);
+int char2score(const char *score);
+char *score2char(int score);
 
 int compare_version(const char *version1, const char *version2);
 
-void g_hash_destroy_str(gpointer data);
-
-gboolean crm_is_true(const char *s);
-
-int crm_str_to_boolean(const char *s, int *ret);
-
-long long crm_get_msec(const char *input);
-unsigned long long crm_get_interval(const char *input);
-
-char *generate_op_key(const char *rsc_id, const char *op_type, int interval);
-
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval);
-
-char *generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_type);
-
-char *generate_transition_magic_v202(const char *transition_key, int op_status);
-
-char *generate_transition_magic(const char *transition_key, int op_status, int op_rc);
-
-gboolean decode_transition_magic(const char *magic, char **uuid,
-                                        int *transition_id, int *action_id, int *op_status,
-                                        int *op_rc, int *target_rc);
-
-char *generate_transition_key(int action, int transition_id, int target_rc, const char *node);
-
-gboolean decode_transition_key(const char *key, char **uuid, int *action, int *transition_id, int *target_rc);
-
-gboolean decode_op_key(const char *key, char **rsc_id, char **op_type, int *interval);
-
+gboolean decode_transition_key(
+    const char *key, char **uuid, int *action, int *transition_id, int *target_rc);
+gboolean decode_transition_magic(
+    const char *magic, char **uuid, int *transition_id, int *action_id,
+    int *op_status, int *op_rc, int *target_rc);
 
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
-
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
-
 gboolean safe_str_neq(const char *a, const char *b);
-int crm_parse_int(const char *text, const char *default_text);
 
 #  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 
 void crm_abort(const char *file, const char *function, int line,
                       const char *condition, gboolean do_core, gboolean do_fork);
-
-int char2score(const char *score);
-char *score2char(int score);
-
-#  define set_bit(word, bit) word = crm_set_bit(__PRETTY_FUNCTION__, NULL, word, bit)
-#  define clear_bit(word, bit) word = crm_clear_bit(__PRETTY_FUNCTION__, NULL, word, bit)
-
-#  define set_bit_inplace set_bit
-#  define clear_bit_inplace clear_bit
-
-static inline long long
-crm_clear_bit(const char *function, const char *target, long long word, long long bit)
-{
-    long long rc = (word & ~bit);
-
-    if(rc == word) {
-        /* Unchanged */
-    } else if (target) {
-        crm_trace("Bit 0x%.8llx for %s cleared by %s", bit, target, function);
-    } else {
-        crm_trace("Bit 0x%.8llx cleared by %s", bit, function);
-    }
-
-    return rc;
-}
-
-static inline long long
-crm_set_bit(const char *function, const char *target, long long word, long long bit)
-{
-    long long rc = (word|bit);
-
-    if(rc == word) {
-        /* Unchanged */
-    } else if (target) {
-        crm_trace("Bit 0x%.8llx for %s set by %s", bit, target, function);
-    } else {
-        crm_trace("Bit 0x%.8llx set by %s", bit, function);
-    }
-
-    return rc;
-}
 
 static inline gboolean
 is_not_set(long long word, long long bit)

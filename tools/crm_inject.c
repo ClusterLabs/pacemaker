@@ -708,7 +708,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
                 );
         }
 
-        set_bit_inplace(action->flags, pe_action_dumped);
+        set_bit(action->flags, pe_action_dumped);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
                 action_name, style, color, font);
   dont_write:

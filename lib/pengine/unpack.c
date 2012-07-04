@@ -35,9 +35,9 @@ CRM_TRACE_INIT_DATA(pe_status);
 	const char *tmp = pe_pref(data_set->config_hash, option);	\
 	if(tmp) {							\
 	    if(crm_is_true(tmp)) {					\
-		set_bit_inplace(data_set->flags, flag);			\
+		set_bit(data_set->flags, flag);			\
 	    } else {							\
-		clear_bit_inplace(data_set->flags, flag);		\
+		clear_bit(data_set->flags, flag);		\
 	    }								\
 	}								\
     } while(0)
@@ -2103,7 +2103,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
                             }
                         } else {
                             /* Consider it failed here - forces a restart, prevents migration */
-                            set_bit_inplace(rsc->flags, pe_rsc_failed);
+                            set_bit(rsc->flags, pe_rsc_failed);
                         }
                     }
                 }

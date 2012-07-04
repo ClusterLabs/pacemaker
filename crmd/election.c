@@ -492,7 +492,7 @@ do_dc_takeover(long long action,
     }
 
     crm_info("Taking over DC status for this partition");
-    set_bit_inplace(fsa_input_register, R_THE_DC);
+    set_bit(fsa_input_register, R_THE_DC);
 
     for (gIter = stonith_cleanup_list; gIter != NULL; gIter = gIter->next) {
         char *target = gIter->data;
@@ -517,8 +517,8 @@ do_dc_takeover(long long action,
         voted = NULL;
     }
 
-    set_bit_inplace(fsa_input_register, R_JOIN_OK);
-    set_bit_inplace(fsa_input_register, R_INVOKE_PE);
+    set_bit(fsa_input_register, R_JOIN_OK);
+    set_bit(fsa_input_register, R_INVOKE_PE);
 
     fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_scope_local);
 
@@ -547,7 +547,7 @@ do_dc_release(long long action,
     if (action & A_DC_RELEASE) {
         GListPtr gIter = NULL;
         crm_debug("Releasing the role of DC");
-        clear_bit_inplace(fsa_input_register, R_THE_DC);
+        clear_bit(fsa_input_register, R_THE_DC);
 
         for (gIter = stonith_cleanup_list; gIter != NULL; gIter = gIter->next) {
             char *target = gIter->data;

@@ -1454,8 +1454,8 @@ get_pseudo_op(const char *name, pe_working_set_t * data_set)
 
     } else {
         op = custom_action(NULL, strdup(op_s), op_s, NULL, TRUE, TRUE, data_set);
-        set_bit_inplace(op->flags, pe_action_pseudo);
-        set_bit_inplace(op->flags, pe_action_runnable);
+        set_bit(op->flags, pe_action_pseudo);
+        set_bit(op->flags, pe_action_runnable);
     }
 
     return op;

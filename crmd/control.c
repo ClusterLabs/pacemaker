@@ -71,7 +71,7 @@ do_ha_control(long long action,
 
 #if SUPPORT_HEARTBEAT
         } else if (fsa_cluster_conn != NULL) {
-            set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
+            set_bit(fsa_input_register, R_HA_DISCONNECTED);
             fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn, FALSE);
             crm_info("Disconnected from Heartbeat");
 #endif
@@ -125,12 +125,12 @@ do_ha_control(long long action,
 #endif
 
         if (registered == FALSE) {
-            set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
+            set_bit(fsa_input_register, R_HA_DISCONNECTED);
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
             return;
         }
 
-        clear_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
+        clear_bit(fsa_input_register, R_HA_DISCONNECTED);
         crm_info("Connected to the cluster");
     }
 
@@ -146,7 +146,7 @@ do_shutdown(long long action,
             enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     /* just in case */
-    set_bit_inplace(fsa_input_register, R_SHUTDOWN);
+    set_bit(fsa_input_register, R_SHUTDOWN);
 
     if (is_heartbeat_cluster()) {
         if (is_set(fsa_input_register, pe_subsystem->flag_connected)) {
@@ -154,7 +154,7 @@ do_shutdown(long long action,
             if (stop_subsystem(pe_subsystem, TRUE) == FALSE) {
                 /* its gone... */
                 crm_err("Faking %s exit", pe_subsystem->name);
-                clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
+                clear_bit(fsa_input_register, pe_subsystem->flag_connected);
             } else {
                 crm_info("Waiting for subsystems to exit");
                 crmd_fsa_stall(NULL);
@@ -165,7 +165,7 @@ do_shutdown(long long action,
 
     if (stonith_api) {
         /* Prevent it from comming up again */
-        clear_bit_inplace(fsa_input_register, R_ST_REQUIRED);
+        clear_bit(fsa_input_register, R_ST_REQUIRED);
 
         crm_info("Disconnecting STONITH...");
         stonith_api->cmds->disconnect(stonith_api);
@@ -184,7 +184,7 @@ do_shutdown_req(long long action,
     crm_info("Sending shutdown request to %s", crm_str(fsa_our_dc));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
-/* 	set_bit_inplace(fsa_input_register, R_STAYDOWN); */
+/* 	set_bit(fsa_input_register, R_STAYDOWN); */
     if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
@@ -244,7 +244,7 @@ free_mem(fsa_data_t * msg_data)
 
     empty_uuid_cache();
     crm_peer_destroy();
-    clear_bit_inplace(fsa_input_register, R_MEMBERSHIP);
+    clear_bit(fsa_input_register, R_MEMBERSHIP);
 
     if (te_subsystem->client && te_subsystem->client->ipc) {
         crm_debug("Full destroy: TE");
@@ -716,11 +716,11 @@ do_started(long long action,
 
         stonith_reconnect = mainloop_add_trigger(G_PRIORITY_LOW, te_connect_stonith, &dummy);
     }
-    set_bit_inplace(fsa_input_register, R_ST_REQUIRED);
+    set_bit(fsa_input_register, R_ST_REQUIRED);
     mainloop_set_trigger(stonith_reconnect);
 
     crm_notice("The local CRM is operational");
-    clear_bit_inplace(fsa_input_register, R_STARTING);
+    clear_bit(fsa_input_register, R_STARTING);
     register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
 }
 
@@ -730,7 +730,7 @@ do_recover(long long action,
            enum crmd_fsa_cause cause,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    set_bit_inplace(fsa_input_register, R_IN_RECOVERY);
+    set_bit(fsa_input_register, R_IN_RECOVERY);
     crm_err("Action %s (%.16llx) not supported", fsa_action2string(action), action);
 
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
@@ -792,7 +792,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
         if (rc == -EACCES || rc == -pcmk_err_dtd_validation) {
             crm_err("The cluster is mis-configured - shutting down and staying down");
-            set_bit_inplace(fsa_input_register, R_STAYDOWN);
+            set_bit(fsa_input_register, R_STAYDOWN);
         }
         goto bail;
     }
@@ -837,7 +837,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 #endif
 
-    set_bit_inplace(fsa_input_register, R_READ_CONFIG);
+    set_bit(fsa_input_register, R_READ_CONFIG);
     crm_trace("Triggering FSA: %s", __FUNCTION__);
     mainloop_set_trigger(fsa_source);
 
@@ -876,7 +876,7 @@ crm_shutdown(int nsig)
             register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
 
         } else {
-            set_bit_inplace(fsa_input_register, R_SHUTDOWN);
+            set_bit(fsa_input_register, R_SHUTDOWN);
             register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
             if (shutdown_escalation_timer->period_ms < 1) {

@@ -317,7 +317,7 @@ native_deallocate(resource_t * rsc)
         node_t *old = rsc->allocated_to;
 
         crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
-        set_bit_inplace(rsc->flags, pe_rsc_provisional);
+        set_bit(rsc->flags, pe_rsc_provisional);
         rsc->allocated_to = NULL;
 
         old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc, rsc);

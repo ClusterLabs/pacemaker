@@ -420,7 +420,7 @@ main(int argc, char **argv)
                 );
         }
 
-        set_bit_inplace(action->flags, pe_action_dumped);
+        set_bit(action->flags, pe_action_dumped);
         dot_write("\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"  %s%s]",
                   action_name, style, color, font, fill ? "fillcolor=" : "", fill ? fill : "");
   dont_write:

@@ -71,7 +71,7 @@ stop_subsystem(struct crm_subsystem_s *the_subsystem, gboolean force_quit)
     int quit_signal = SIGTERM;
 
     crm_trace("Stopping sub-system \"%s\"", the_subsystem->name);
-    clear_bit_inplace(fsa_input_register, the_subsystem->flag_required);
+    clear_bit(fsa_input_register, the_subsystem->flag_required);
 
     if (the_subsystem->pid <= 0) {
         crm_trace("Client %s not running", the_subsystem->name);

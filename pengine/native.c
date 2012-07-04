@@ -324,10 +324,10 @@ native_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, cons
     enum pe_weights flags = pe_weights_none;
 
     if (only_positive) {
-        set_bit_inplace(flags, pe_weights_positive);
+        set_bit(flags, pe_weights_positive);
     }
     if (allow_rollback) {
-        set_bit_inplace(flags, pe_weights_rollback);
+        set_bit(flags, pe_weights_rollback);
     }
     return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
 }
@@ -364,7 +364,7 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
         } else {
             work = node_hash_dup(rsc->allowed_nodes);
         }
-        clear_bit_inplace(flags, pe_weights_init);
+        clear_bit(flags, pe_weights_init);
 
     } else {
         crm_trace("%s: Combining scores from %s", rhs, rsc->id);
@@ -1053,7 +1053,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
         action_t *stop = stop_action(rsc, current, FALSE);
 
-        set_bit_inplace(stop->flags, pe_action_dangle);
+        set_bit(stop->flags, pe_action_dangle);
         crm_trace("Forcing a cleanup of %s on %s", rsc->id, current->details->uname);
 
         if (is_set(data_set->flags, pe_flag_remove_after_stop)) {
@@ -1096,7 +1096,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
     if (is_set(rsc->flags, pe_rsc_start_pending)) {
         start = start_action(rsc, chosen, TRUE);
-        set_bit_inplace(start->flags, pe_action_print_always);
+        set_bit(start->flags, pe_action_print_always);
     }
 
     if(current && chosen && current->details != chosen->details) {
@@ -1617,7 +1617,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         if ((filter & pe_action_optional) &&
             ((then->flags & pe_action_optional) == FALSE) &&
             then->rsc && (then->rsc->role == RSC_ROLE_MASTER)) {
-            clear_bit_inplace(first->flags, pe_action_optional);
+            clear_bit(first->flags, pe_action_optional);
         }
     }
 

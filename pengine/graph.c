@@ -59,7 +59,7 @@ get_action_flags(action_t * action, node_t * node)
             if (is_not_set(clone_flags, pe_action_runnable)
                 && is_set(flags, pe_action_runnable)) {
                 crm_trace("Fixing up runnable flag for %s", action->uuid);
-                set_bit_inplace(clone_flags, pe_action_runnable);
+                set_bit(clone_flags, pe_action_runnable);
             }
             flags = clone_flags;
         }
@@ -318,7 +318,7 @@ update_action(action_t * then)
 
 
     if (is_set(then->flags, pe_action_requires_any)) {
-        clear_bit_inplace(then->flags, pe_action_runnable);
+        clear_bit(then->flags, pe_action_runnable);
     }
 
     for (lpc = then->actions_before; lpc != NULL; lpc = lpc->next) {
@@ -345,7 +345,7 @@ update_action(action_t * then)
             }
         }
 
-        clear_bit_inplace(changed, pe_graph_updated_first);
+        clear_bit(changed, pe_graph_updated_first);
 
         if (first->rsc != then->rsc
             && first->rsc != NULL && then->rsc != NULL && first->rsc != then->rsc->parent) {
@@ -373,7 +373,7 @@ update_action(action_t * then)
                   uname : "", other->type);
 
         if (first == other->action) {
-            clear_bit_inplace(first_flags, pe_action_pseudo);
+            clear_bit(first_flags, pe_action_pseudo);
             changed |= graph_update_action(first, then, then->node, first_flags, other->type);
 
         } else if (order_actions(first, then, other->type)) {
@@ -383,7 +383,7 @@ update_action(action_t * then)
 
         if (changed & pe_graph_disable) {
             crm_trace("Disabled constraint %s -> %s", other->action->uuid, then->uuid);
-            clear_bit_inplace(changed, pe_graph_disable);
+            clear_bit(changed, pe_graph_disable);
             other->type = pe_order_none;
         }
 
@@ -410,7 +410,7 @@ update_action(action_t * then)
         if (last_flags != then->flags) {
             changed |= pe_graph_updated_then;
         } else {
-            clear_bit_inplace(changed, pe_graph_updated_then);
+            clear_bit(changed, pe_graph_updated_then);
         }
     }
 
@@ -464,7 +464,7 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
         }
 
         crm_trace("Ordering %s before shutdown on %s", action->uuid, node->details->uname);
-        clear_bit_inplace(action->flags, pe_action_optional);
+        clear_bit(action->flags, pe_action_optional);
         custom_action_order(action->rsc, NULL, action,
                             NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,
                             pe_order_optional|pe_order_runnable_left, data_set);
@@ -853,7 +853,7 @@ graph_element_from_action(action_t * action, pe_working_set_t * data_set)
         return;
     }
 
-    set_bit_inplace(action->flags, pe_action_dumped);
+    set_bit(action->flags, pe_action_dumped);
 
     syn = create_xml_node(data_set->graph, "synapse");
     set = create_xml_node(syn, "action_set");

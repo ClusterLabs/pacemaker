@@ -63,8 +63,8 @@ initialize_join(gboolean before)
             free_xml(max_generation_xml);
             max_generation_xml = NULL;
         }
-        clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
-        clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
+        clear_bit(fsa_input_register, R_HAVE_CIB);
+        clear_bit(fsa_input_register, R_CIB_ASKED);
     }
 
     welcomed_nodes = g_hash_table_new_full(crm_str_hash, g_str_equal,
@@ -381,9 +381,9 @@ do_dc_join_finalize(long long action,
         return;
     }
 
-    clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
+    clear_bit(fsa_input_register, R_HAVE_CIB);
     if (max_generation_from == NULL || safe_str_eq(max_generation_from, fsa_our_uname)) {
-        set_bit_inplace(fsa_input_register, R_HAVE_CIB);
+        set_bit(fsa_input_register, R_HAVE_CIB);
     }
 
     if (is_set(fsa_input_register, R_IN_TRANSITION)) {
@@ -397,7 +397,7 @@ do_dc_join_finalize(long long action,
         /* ask for the agreed best CIB */
         sync_from = strdup(max_generation_from);
         crm_log_xml_debug(max_generation_xml, "Requesting version");
-        set_bit_inplace(fsa_input_register, R_CIB_ASKED);
+        set_bit(fsa_input_register, R_CIB_ASKED);
 
     } else {
         /* Send _our_ CIB out to everyone */
@@ -417,7 +417,7 @@ void
 finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     CRM_LOG_ASSERT(-EPERM != rc);
-    clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
+    clear_bit(fsa_input_register, R_CIB_ASKED);
     if (rc != pcmk_ok) {
         do_crm_log((rc == -pcmk_err_old_data ? LOG_WARNING : LOG_ERR),
                    "Sync from %s failed: %s",
@@ -427,8 +427,8 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
         register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL, __FUNCTION__);
 
     } else if (AM_I_DC && fsa_state == S_FINALIZE_JOIN) {
-        set_bit_inplace(fsa_input_register, R_HAVE_CIB);
-        clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
+        set_bit(fsa_input_register, R_HAVE_CIB);
+        clear_bit(fsa_input_register, R_CIB_ASKED);
 
         /* make sure dc_uuid is re-set to us */
         if (check_join_state(fsa_state, __FUNCTION__) == FALSE) {

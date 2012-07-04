@@ -79,9 +79,9 @@ cluster_status(pe_working_set_t * data_set)
         data_set->dc_uuid = crm_element_value_copy(data_set->input, XML_ATTR_DC_UUID);
     }
 
-    clear_bit_inplace(data_set->flags, pe_flag_have_quorum);
+    clear_bit(data_set->flags, pe_flag_have_quorum);
     if (crm_is_true(value)) {
-        set_bit_inplace(data_set->flags, pe_flag_have_quorum);
+        set_bit(data_set->flags, pe_flag_have_quorum);
     }
 
     data_set->op_defaults = get_object_root(XML_CIB_TAG_OPCONFIG, data_set->input);
@@ -99,7 +99,7 @@ cluster_status(pe_working_set_t * data_set)
     unpack_resources(cib_resources, data_set);
     unpack_status(cib_status, data_set);
 
-    set_bit_inplace(data_set->flags, pe_flag_have_status);
+    set_bit(data_set->flags, pe_flag_have_status);
     return TRUE;
 }
 
@@ -175,7 +175,7 @@ cleanup_calculations(pe_working_set_t * data_set)
         return;
     }
 
-    clear_bit_inplace(data_set->flags, pe_flag_have_status);
+    clear_bit(data_set->flags, pe_flag_have_status);
     if (data_set->config_hash != NULL) {
         g_hash_table_destroy(data_set->config_hash);
     }
@@ -225,10 +225,10 @@ set_working_set_defaults(pe_working_set_t * data_set)
     data_set->no_quorum_policy = no_quorum_freeze;
 
     data_set->flags = 0x0ULL;
-    set_bit_inplace(data_set->flags, pe_flag_stop_rsc_orphans);
-    set_bit_inplace(data_set->flags, pe_flag_symmetric_cluster);
-    set_bit_inplace(data_set->flags, pe_flag_is_managed_default);
-    set_bit_inplace(data_set->flags, pe_flag_stop_action_orphans);
+    set_bit(data_set->flags, pe_flag_stop_rsc_orphans);
+    set_bit(data_set->flags, pe_flag_symmetric_cluster);
+    set_bit(data_set->flags, pe_flag_is_managed_default);
+    set_bit(data_set->flags, pe_flag_stop_action_orphans);
 }
 
 resource_t *

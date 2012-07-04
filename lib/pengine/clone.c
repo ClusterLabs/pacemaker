@@ -51,7 +51,7 @@ clear_bit_recursive(resource_t * rsc, unsigned long long flag)
 {
     GListPtr gIter = rsc->children;
 
-    clear_bit_inplace(rsc->flags, flag);
+    clear_bit(rsc->flags, flag);
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
