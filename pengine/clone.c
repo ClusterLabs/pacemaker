@@ -21,7 +21,6 @@
 #include <crm/msg_xml.h>
 #include <allocate.h>
 #include <utils.h>
-#include <lib/pengine/utils.h>
 
 #define VARIANT_CLONE 1
 #include <lib/pengine/variant.h>

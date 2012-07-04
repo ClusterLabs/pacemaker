@@ -20,7 +20,6 @@
 
 #include <crm/msg_xml.h>
 #include <allocate.h>
-#include <lib/pengine/utils.h>
 #include <utils.h>
 
 #define VARIANT_CLONE 1

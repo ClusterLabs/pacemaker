@@ -24,7 +24,7 @@
 #include <glib.h>
 
 #include <crm/pengine/rules.h>
-#include <utils.h>
+#include <crm/pengine/internal.h>
 
 pe_working_set_t *pe_dataset = NULL;
 

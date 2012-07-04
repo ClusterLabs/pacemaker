@@ -23,8 +23,7 @@
 
 #include <glib.h>
 
-#include <crm/pengine/status.h>
-#include <crm/pengine/common.h>
+#include <crm/pengine/internal.h>
 
 gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;

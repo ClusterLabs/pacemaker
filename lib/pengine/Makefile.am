@@ -24,7 +24,7 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 lib_LTLIBRARIES	= libpe_rules.la libpe_status.la
 
 ## SOURCES
-noinst_HEADERS	= unpack.h utils.h variant.h
+noinst_HEADERS	= unpack.h variant.h
 
 libpe_rules_la_LDFLAGS	= -version-info 2:0:0
 libpe_rules_la_SOURCES	= rules.c common.c

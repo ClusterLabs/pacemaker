@@ -280,27 +280,6 @@ struct pe_action_s {
     GListPtr actions_after;     /* action_warpper_t* */
 };
 
-typedef struct notify_data_s {
-    GHashTable *keys;
-
-    const char *action;
-
-    action_t *pre;
-    action_t *post;
-    action_t *pre_done;
-    action_t *post_done;
-
-    GListPtr active;            /* notify_entry_t*  */
-    GListPtr inactive;          /* notify_entry_t*  */
-    GListPtr start;             /* notify_entry_t*  */
-    GListPtr stop;              /* notify_entry_t*  */
-    GListPtr demote;            /* notify_entry_t*  */
-    GListPtr promote;           /* notify_entry_t*  */
-    GListPtr master;            /* notify_entry_t*  */
-    GListPtr slave;             /* notify_entry_t*  */
-
-} notify_data_t;
-
 struct ticket_s {
     char *id;
     gboolean granted;
@@ -355,9 +334,5 @@ resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 node_t *pe_find_node(GListPtr node_list, const char *uname);
 node_t *pe_find_node_id(GListPtr node_list, const char *id);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
-                                pe_working_set_t * data_set);
-
-# define pe_set_action_bit(action, bit) action->flags = crm_set_bit(__FUNCTION__, action->uuid, action->flags, bit)
-# define pe_clear_action_bit(action, bit) action->flags = crm_clear_bit(__FUNCTION__, action->uuid, action->flags, bit)
-    
+                         pe_working_set_t * data_set);    
 #endif

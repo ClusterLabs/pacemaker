@@ -18,8 +18,8 @@
 
 #include <crm_internal.h>
 
-#include <utils.h>
 #include <crm/pengine/rules.h>
+#include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
 
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);

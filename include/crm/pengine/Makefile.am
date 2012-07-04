@@ -19,4 +19,5 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 headerdir=$(pkgincludedir)/crm/pengine
 
+noinst_HEADERS		= internal.h
 header_HEADERS		= common.h complex.h rules.h status.h

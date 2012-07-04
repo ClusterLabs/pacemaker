@@ -24,6 +24,7 @@
 #include <glib.h>
 
 #include <crm/pengine/rules.h>
+#include <crm/pengine/internal.h>
 
 CRM_TRACE_INIT_DATA(pe_rules);
 

@@ -19,7 +19,6 @@
 #include <crm_internal.h>
 
 #include <pengine.h>
-#include <lib/pengine/utils.h>
 #include <crm/msg_xml.h>
 
 #include <allocate.h>

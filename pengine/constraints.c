@@ -33,7 +33,6 @@
 #include <allocate.h>
 #include <utils.h>
 #include <crm/pengine/rules.h>
-#include <lib/pengine/utils.h>
 
 enum pe_order_kind {
     pe_order_kind_optional,

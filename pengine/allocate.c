@@ -32,7 +32,6 @@
 #include <pengine.h>
 #include <allocate.h>
 #include <utils.h>
-#include <lib/pengine/utils.h>
 
 CRM_TRACE_INIT_DATA(pe_allocate);
 

@@ -20,7 +20,6 @@
 #include <crm/msg_xml.h>
 #include <allocate.h>
 #include <utils.h>
-#include <lib/pengine/utils.h>
 
 void
 pe_free_ordering(GListPtr constraints)
@@ -403,9 +402,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
     const char *node_uuid = NULL;
 
     if (action == NULL) {
-
-        crm_trace( "%s%s: <NULL>",
-                            pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
+        crm_trace("%s%s: <NULL>", pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
         return;
     }
 
@@ -451,7 +448,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
                                                      pe_action_runnable) ? is_set(action->flags,
                                                                                   pe_action_processed)
                                 ? "" : "(Provisional) " : "!!Non-Startable!! ", action->id,
-                                action->uuid, safe_val3("<none>", action, rsc, id),
+                                action->uuid, action->rsc?action->rsc->id:"<none>",
                                 node_uname ? "\ton " : "", node_uname ? node_uname : "",
                                 node_uuid ? "\t\t(" : "", node_uuid ? node_uuid : "",
                                 node_uuid ? ")" : "");

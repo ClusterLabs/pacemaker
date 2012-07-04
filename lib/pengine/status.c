@@ -27,8 +27,7 @@
 
 #include <glib.h>
 
-#include <crm/pengine/status.h>
-#include <utils.h>
+#include <crm/pengine/internal.h>
 #include <unpack.h>
 
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);

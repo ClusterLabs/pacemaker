@@ -99,31 +99,14 @@ enum pe_print_options {
 };
 /* *INDENT-ON* */
 
-int merge_weights(int w1, int w2);
-
 const char *task2text(enum action_tasks task);
 enum action_tasks text2task(const char *task);
-
 enum rsc_role_e text2role(const char *role);
 const char *role2text(enum rsc_role_e role);
-
 const char *fail2text(enum action_fail_response fail);
 
-void add_hash_param(GHashTable * hash, const char *name, const char *value);
-void append_hashtable(gpointer key, gpointer value, gpointer user_data);
-void pe_metadata(void);
-void verify_pe_options(GHashTable * options);
 const char *pe_pref(GHashTable * options, const char *name);
 void calculate_active_ops(GList * sorted_op_list, int *start_index, int *stop_index);
-
-/* Helper macros to avoid NULL pointers */
-#  define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
-#  define safe_val5(def, t,u,v,w,x)   (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x:def:def:def:def)
-
-#  define pe_err(fmt...) { was_processing_error = TRUE; crm_config_error = TRUE; crm_err(fmt); }
-#  define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }
-#  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
-#  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
 
 static inline const char *
 recovery2text(enum rsc_recovery_type type)
@@ -138,9 +121,5 @@ recovery2text(enum rsc_recovery_type type)
     }
     return "Unknown";
 }
-
-#define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc->id, fmt, ##args)
-#define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc->id, fmt, ##args)
-#define pe_rsc_trace(rsc, fmt, args...) crm_log_tag(LOG_TRACE, rsc->id, fmt, ##args)
 
 #endif

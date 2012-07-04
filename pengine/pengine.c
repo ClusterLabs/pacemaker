@@ -31,7 +31,6 @@
 #include <crm/pengine/status.h>
 #include <pengine.h>
 #include <allocate.h>
-#include <lib/pengine/utils.h>
 #include <utils.h>
 
 xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * now);

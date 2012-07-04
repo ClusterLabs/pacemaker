@@ -22,6 +22,7 @@
 #  include <crm/common/xml.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/complex.h>
+#  include <crm/pengine/internal.h>
 #  include <pengine.h>
 
 typedef struct notify_entry_s {

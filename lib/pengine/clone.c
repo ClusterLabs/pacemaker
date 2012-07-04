@@ -20,8 +20,8 @@
 
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
+#include <crm/pengine/internal.h>
 #include <unpack.h>
-#include <utils.h>
 #include <crm/msg_xml.h>
 
 #define VARIANT_CLONE 1

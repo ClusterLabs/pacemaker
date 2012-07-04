@@ -20,7 +20,6 @@
 
 #include <pengine.h>
 #include <crm/pengine/rules.h>
-#include <lib/pengine/utils.h>
 #include <crm/msg_xml.h>
 #include <allocate.h>
 #include <utils.h>

@@ -25,9 +25,8 @@
 #include <crm/common/xml.h>
 
 #include <crm/common/util.h>
-#include <crm/pengine/status.h>
 #include <crm/pengine/rules.h>
-#include <utils.h>
+#include <crm/pengine/internal.h>
 #include <unpack.h>
 
 CRM_TRACE_INIT_DATA(pe_status);
