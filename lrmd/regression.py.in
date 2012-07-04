@@ -48,13 +48,14 @@ class Test:
 
 		self.executed = 0
 
-	def __new_cmd(self, cmd, args, exitcode, stdout_match = "", no_wait = 0, stdout_negative_match = ""):
+	def __new_cmd(self, cmd, args, exitcode, stdout_match = "", no_wait = 0, stdout_negative_match = "", kill=None):
 		if self.verbose and cmd == self.test_tool_location:
 			args = args + " -V "
 
 		self.cmds.append(
 			{
 				"cmd" : cmd,
+				"kill" : kill,
 				"args" : args,
 				"expected_exitcode" : exitcode,
 				"stdout_match" : stdout_match,
@@ -99,6 +100,9 @@ class Test:
 	def add_cmd(self, args):
 		self.__new_cmd(self.test_tool_location, args, 0, "")
 
+	def add_cmd_and_kill(self, killProc, args):
+		self.__new_cmd(self.test_tool_location, args, 0, "", kill=killProc)
+
 	def add_expected_fail_cmd(self, args):
 		self.__new_cmd(self.test_tool_location, args, 255, "")
 
@@ -112,8 +116,13 @@ class Test:
 		cmd = shlex.split(args['args'])
 		cmd.insert(0, args['cmd'])
 		if self.verbose:
-			print "Running: "+" ".join(cmd)
+			print "\n\nRunning: "+" ".join(cmd)
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+
+		if args['kill']:
+			if self.verbose:
+				print "Also running: "+args['kill']
+			subprocess.Popen(shlex.split(args['kill']))
 
 		if args['no_wait'] == 0:
 			test.wait()
@@ -154,7 +163,7 @@ class Test:
 				break
 			else:
 				if self.verbose:
-					print cmd['cmd_output']
+					print cmd['cmd_output'].strip()
 					print "Step %d SUCCESS" % (i)
 			i = i + 1
 		self.clean_environment()
@@ -201,6 +210,19 @@ class Tests:
 			"systemd_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:systemd_test_rsc action:monitor rc:ok op_status:complete\" -t 2000",
 			"systemd_cancel_line"   : "-c cancel -r \"systemd_test_rsc\" -a \"monitor\" -i \"1000\" -t \"1000\" ",
 			"systemd_cancel_event"  : "-l \"NEW_EVENT event_type:exec_complete rsc_id:systemd_test_rsc action:monitor rc:ok op_status:Cancelled\" ",
+
+			"upstart_reg_line"      : "-c register_rsc -r upstart_test_rsc -t 1000 -C upstart -T lrmd_dummy_daemon",
+			"upstart_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:upstart_test_rsc action:none rc:ok op_status:complete\"",
+			"upstart_unreg_line"    : "-c unregister_rsc -r \"upstart_test_rsc\" -t 1000",
+			"upstart_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:upstart_test_rsc action:none rc:ok op_status:complete\"",
+			"upstart_start_line"    : "-c exec -r \"upstart_test_rsc\" -a \"start\" -t 1000 ",
+			"upstart_start_event"   : "-l \"NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:start rc:ok op_status:complete\" ",
+			"upstart_stop_line"     : "-c exec -r \"upstart_test_rsc\" -a \"stop\" -t 1000 ",
+			"upstart_stop_event"    : "-l \"NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:stop rc:ok op_status:complete\" ",
+			"upstart_monitor_line"  : "-c exec -r \"upstart_test_rsc\" -a \"monitor\" -i \"1000\" -t 1000",
+			"upstart_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:monitor rc:ok op_status:complete\" -t 2000",
+			"upstart_cancel_line"   : "-c cancel -r \"upstart_test_rsc\" -a \"monitor\" -i \"1000\" -t \"1000\" ",
+			"upstart_cancel_event"  : "-l \"NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:monitor rc:ok op_status:Cancelled\" ",
 
 			"service_reg_line"      : "-c register_rsc -r service_test_rsc -t 1000 -C service -T lrmd_dummy_daemon",
 			"service_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:service_test_rsc action:none rc:ok op_status:complete\"",
@@ -257,6 +279,10 @@ class Tests:
 			"[Service]\n"
 			"Type=simple\n"
 			"ExecStart=/usr/sbin/lrmd_dummy_daemon\n")
+		dummy_upstart_job = ("""
+description     "Dummy service for regression tests"
+exec dd if=/dev/random of=/dev/null
+""")
 		dummy_fence_agent = ("""#!/usr/bin/python
 import sys
 def main():
@@ -292,6 +318,7 @@ if __name__ == "__main__":
     main()
 """)
 
+		os.system("cat <<-END >>/etc/init/lrmd_dummy_daemon.conf\n%s\nEND" % (dummy_upstart_job))
 		os.system("cat <<-END >>/usr/sbin/lrmd_dummy_daemon\n%s\nEND" % (dummy_daemon))
 		os.system("cat <<-END >>/lib/systemd/system/lrmd_dummy_daemon.service\n%s\nEND" % (dummy_service_file))
 		os.system("chmod u+x /usr/sbin/lrmd_dummy_daemon")
@@ -312,7 +339,7 @@ if __name__ == "__main__":
 		os.system("systemctl daemon-reload")
 
 	### These are tests that should apply to all resource classes ###
-	def build_generic_tests(self, systemd=0, upstart=0):
+	def build_generic_tests(self):
 		common_cmds = self.common_cmds
 
 		### register/unregister tests ###
@@ -392,8 +419,7 @@ if __name__ == "__main__":
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
 		test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
 		test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
-		test.add_sys_cmd("rm", "-f /var/run/Dummy-test_rsc.state")
-		test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 2000")
+		test.add_cmd_and_kill("rm -f /var/run/Dummy-test_rsc.state", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 2000")
 		test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"1000\" "
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
 		test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 1000")
@@ -403,7 +429,7 @@ if __name__ == "__main__":
 
 		### monitor fail for systemd resource ###
 		if "systemd" in self.rsc_classes:
-			test = self.new_test("monitor_fail_systemd", "Force systemd monitor to fial, verify failure is reported..")
+			test = self.new_test("monitor_fail_systemd", "Force systemd monitor to fail, verify failure is reported..")
 			test.add_cmd("-c register_rsc -r \"test_rsc\" -C systemd -T lrmd_dummy_daemon -t 1000 "
 				     "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 			test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 1000 "
@@ -414,10 +440,30 @@ if __name__ == "__main__":
 				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
 			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
 			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
-			test.add_sys_cmd("killall", "-q -9 lrmd_dummy_daemon")
-			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:unknown error op_status:complete\" -t 2000")
+			test.add_cmd_and_kill("killall -9 -q lrmd_dummy_daemon", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 5000")
 			test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"1000\" "
-				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:unknown error op_status:Cancelled\" ")
+				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
+			test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 1000")
+			test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 1000")
+			test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 1000 "
+				     "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+
+		### monitor fail for upstart resource ###
+		if "upstart" in self.rsc_classes:
+			test = self.new_test("monitor_fail_upstart", "Force upstart monitor to fail, verify failure is reported..")
+			test.add_cmd("-c register_rsc -r \"test_rsc\" -C upstart -T lrmd_dummy_daemon -t 1000 "
+				     "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+			test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 1000 "
+				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" ")
+			test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 1000 "
+				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" ")
+			test.add_cmd("-c exec -r \"test_rsc\" -a \"monitor\" -i \"100\" -t 1000 "
+				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
+			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
+			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
+			test.add_cmd_and_kill("killall -9 -q dd", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 5000")
+			test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"1000\" "
+				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
 			test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 1000")
 			test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 1000")
 			test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 1000 "
@@ -451,7 +497,7 @@ if __name__ == "__main__":
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
 		test.add_expected_fail_cmd("-c cancel -r test_rsc -a start -t 1000 "
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:Cancelled\" ")
-		test.add_expected_fail_cmd("-c unregister_rsc -r \"test_rsc\" -t 1000 "
+		test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 1000 "
 			"-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
 		### Register and start a resource that doesn't exist, systemd  ###
@@ -460,7 +506,16 @@ if __name__ == "__main__":
 			test.add_cmd("-c register_rsc -r \"test_rsc\" -C systemd -T this_is_fake1234 -t 1000 "
 				     "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 			test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 1000 "
-				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:unknown error op_status:complete\" ")
+				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:complete\" ")
+			test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 1000 "
+				     "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+
+		if "upstart" in self.rsc_classes:
+			test = self.new_test("start_uninstalled_upstart", "Register uninstalled upstart agent, try to start, verify expected failure")
+			test.add_cmd("-c register_rsc -r \"test_rsc\" -C upstart -T this_is_fake1234 -t 1000 "
+				     "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+			test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 1000 "
+				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:complete\" ")
 			test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 1000 "
 				     "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
@@ -488,7 +543,7 @@ if __name__ == "__main__":
 			"-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 		test.add_expected_fail_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 1000 "
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:Error\" ")
-		test.add_expected_fail_cmd("-c unregister_rsc -r \"test_rsc\" -t 1000 "
+		test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 1000 "
 			"-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
 	### These are tests that target specific cases ###
@@ -523,6 +578,12 @@ if __name__ == "__main__":
 		test = self.new_test("verify_get_rsc_info", "Register multiple resources, verify retrieval of rsc info.")
 		if "systemd" in self.rsc_classes:
 			test.add_cmd("-c register_rsc -r rsc1 -C systemd -T lrmd_dummy_daemon -t 1000 ")
+			test.add_cmd("-c get_rsc_info -r rsc1 ")
+			test.add_cmd("-c unregister_rsc -r rsc1 -t 1000 ")
+			test.add_expected_fail_cmd("-c get_rsc_info -r rsc1 ")
+
+		if "upstart" in self.rsc_classes:
+			test.add_cmd("-c register_rsc -r rsc1 -C upstart -T lrmd_dummy_daemon -t 1000 ")
 			test.add_cmd("-c get_rsc_info -r rsc1 ")
 			test.add_cmd("-c unregister_rsc -r rsc1 -t 1000 ")
 			test.add_expected_fail_cmd("-c get_rsc_info -r rsc1 ")
@@ -579,8 +640,14 @@ if __name__ == "__main__":
 			test.add_cmd_check_stdout("-c list_agents -C systemd", "lrmd_dummy_daemon")
 			test.add_cmd_check_stdout("-c list_agents -C systemd", "", "fence_dummy_monitor") ### should not exist
 			test.add_cmd_check_stdout("-c list_agents -C systemd", "", "LSBDummy")            ### should not exist
-		else:
-			test.add_cmd_check_stdout("-c list_agents -C service", "", "lrmd_dummy_daemon")   ### should not exist
+
+		if "upstart" in self.rsc_classes:
+			test.add_cmd_check_stdout("-c list_agents ", "lrmd_dummy_daemon")                 ### upstart ###
+			test.add_cmd_check_stdout("-c list_agents -C service", "lrmd_dummy_daemon")
+			test.add_cmd_check_stdout("-c list_agents -C upstart", "", "Stateful")		  ### should not exist
+			test.add_cmd_check_stdout("-c list_agents -C upstart", "lrmd_dummy_daemon")
+			test.add_cmd_check_stdout("-c list_agents -C upstart", "", "fence_dummy_monitor") ### should not exist
+			test.add_cmd_check_stdout("-c list_agents -C upstart", "", "LSBDummy")            ### should not exist
 
 		if "stonith" in self.rsc_classes:
 			test.add_cmd_check_stdout("-c list_agents -C stonith", "", "LSBDummy")            ### should not exist
