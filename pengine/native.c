@@ -259,7 +259,7 @@ node_list_attr_score(GHashTable * list, const char *attr, const char *value)
 }
 
 static void
-node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, int factor,
+node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float factor,
                  gboolean only_positive)
 {
     int score = 0;
@@ -284,24 +284,24 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, int f
              * TODO: Decide if we want to filter only if weight == -INFINITY
              *
              */
-            crm_trace("%s: Filtering %d + %d*%d (factor * score)",
+            crm_trace("%s: Filtering %d + %f*%d (factor * score)",
                       node->details->uname, node->weight, factor, score);
 
         } else if (node->weight == INFINITY_HACK) {
-            crm_trace("%s: Filtering %d + %d*%d (node < 0)",
+            crm_trace("%s: Filtering %d + %f*%d (node < 0)",
                       node->details->uname, node->weight, factor, score);
 
         } else if (only_positive && new_score < 0 && node->weight > 0) {
             node->weight = INFINITY_HACK;
-            crm_trace("%s: Filtering %d + %d*%d (score > 0)",
+            crm_trace("%s: Filtering %d + %f*%d (score > 0)",
                       node->details->uname, node->weight, factor, score);
 
         } else if (only_positive && new_score < 0 && node->weight == 0) {
-            crm_trace("%s: Filtering %d + %d*%d (score == 0)",
+            crm_trace("%s: Filtering %d + %f*%d (score == 0)",
                       node->details->uname, node->weight, factor, score);
 
         } else {
-            crm_trace("%s: %d + %d*%d", node->details->uname, node->weight, factor, score);
+            crm_trace("%s: %d + %f*%d", node->details->uname, node->weight, factor, score);
             node->weight = new_score;
         }
     }
@@ -320,22 +320,14 @@ node_hash_dup(GHashTable * hash)
 
 GHashTable *
 native_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                     int factor, gboolean allow_rollback, gboolean only_positive)
+                     float factor, enum pe_weights flags)
 {
-    enum pe_weights flags = pe_weights_none;
-
-    if (only_positive) {
-        set_bit_inplace(flags, pe_weights_positive);
-    }
-    if (allow_rollback) {
-        set_bit_inplace(flags, pe_weights_rollback);
-    }
     return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
 }
 
 GHashTable *
 rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                  int factor, enum pe_weights flags)
+                  float factor, enum pe_weights flags)
 {
     GHashTable *work = NULL;
     int multiplier = 1;
@@ -402,7 +394,7 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
 
             crm_trace("Applying %s (%s)", constraint->id, other->id);
             work = rsc_merge_weights(other, rhs, work, constraint->node_attribute,
-                                     multiplier * constraint->score / INFINITY, flags);
+                                     multiplier * (float) constraint->score / INFINITY, flags);
             dump_node_scores(LOG_TRACE, NULL, rhs, work);
         }
 
@@ -487,7 +479,8 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         rsc->allowed_nodes =
             constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
                                                     constraint->node_attribute,
-                                                    constraint->score / INFINITY, TRUE, FALSE);
+                                                    (float) constraint->score / INFINITY,
+                                                    pe_weights_rollback);
     }
 
     for (gIter = rsc->rsc_tickets; gIter != NULL; gIter = gIter->next) {
