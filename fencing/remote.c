@@ -155,7 +155,7 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     crm_xml_add(notify_data, F_STONITH_REMOTE,    op->id);
     crm_xml_add(notify_data, F_STONITH_ORIGIN,    op->originator);
     
-    do_stonith_notify(0, STONITH_OP_FENCE, rc, notify_data, NULL);
+    do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data, NULL);
     
     free_xml(notify_data);
     free_xml(local_data);

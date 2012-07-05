@@ -240,7 +240,7 @@ te_connect_stonith(gpointer user_data)
     stonith_api->cmds->register_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT,
                                              tengine_stonith_connection_destroy);
 
-    stonith_api->cmds->register_notification(stonith_api, STONITH_OP_FENCE, tengine_stonith_notify);
+    stonith_api->cmds->register_notification(stonith_api, T_STONITH_NOTIFY_FENCE, tengine_stonith_notify);
 
     crm_trace("Connected");
     return TRUE;

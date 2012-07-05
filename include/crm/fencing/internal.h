@@ -90,9 +90,7 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 
 #define T_STONITH_NG		        "stonith-ng"
 #define T_STONITH_REPLY		        "st-reply"
-
 #define T_STONITH_NOTIFY	        "st_notify"
-#define T_STONITH_NOTIFY_DISCONNECT     "st_notify_disconnect"
 
 #define STONITH_ATTR_ARGMAP	   "pcmk_arg_map"
 #define STONITH_ATTR_HOSTARG	   "pcmk_host_argument"

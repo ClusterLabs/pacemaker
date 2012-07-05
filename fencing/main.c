@@ -294,7 +294,7 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
 		    from_peer?"(originator of delegated request)":"");
 		
 	local_rc = crm_ipcs_send(client_obj->channel, notify_src, !sync_reply);
-    } 
+    }
 	
     if(local_rc < pcmk_ok && client_obj != NULL) {
 	crm_warn("%sSync reply to %s failed: %s",
@@ -305,7 +305,7 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
 
 long long get_stonith_flag(const char *name) 
 {
-    if(safe_str_eq(name, STONITH_OP_FENCE)) {
+    if(safe_str_eq(name, T_STONITH_NOTIFY_FENCE)) {
 	return 0x01;
 		
     } else if(safe_str_eq(name, STONITH_OP_DEVICE_ADD)) {

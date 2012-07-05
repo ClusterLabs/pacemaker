@@ -24,6 +24,9 @@
 /* TO-DO: Work out how to drop this requirement */
 #  include <libxml/tree.h>
 
+#define T_STONITH_NOTIFY_DISCONNECT     "st_notify_disconnect"
+#define T_STONITH_NOTIFY_FENCE          "st_notify_fence"
+
 /* *INDENT-OFF* */
 enum stonith_state {
     stonith_connected_command,
