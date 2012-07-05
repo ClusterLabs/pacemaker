@@ -21,8 +21,12 @@
 #define LRMD__H
 
 typedef struct lrmd_s lrmd_t;
-typedef struct lrmd_key_value_s lrmd_key_value_t;
-struct lrmd_key_value_t;
+typedef struct lrmd_key_value_s {
+    char *key;
+    char *value;
+    struct lrmd_key_value_s *next;
+} lrmd_key_value_t;
+
 
 /* *INDENT-OFF* */
 #define F_LRMD_OPERATION        "lrmd_op"
