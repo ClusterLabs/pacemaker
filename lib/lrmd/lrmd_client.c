@@ -43,11 +43,11 @@
 CRM_TRACE_INIT_DATA(lrmd);
 
 static stonith_t *stonith_api = NULL;
-typedef struct lrmd_key_value_s {
+struct lrmd_key_value_s {
     char *key;
     char *value;
     struct lrmd_key_value_s *next;
-} lrmd_key_value_t;
+};
 
 typedef struct lrmd_private_s {
     int call_id;
