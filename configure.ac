@@ -1123,6 +1123,13 @@ HAVE_upstart=0
 HAVE_systemd=0
 PKG_CHECK_MODULES(GIO, gio-2.0, ,HAVE_gio=0)
 
+AC_CHECK_TYPE([GDBusProxy],,,[[#include <gio/gio.h>]])
+
+if test x$ac_cv_type_GDBusProxy != xyes; then
+   HAVE_gio=0
+   AC_MSG_WARN(Unable to support systemd/upstart. You need to use glib >= 2.26)
+fi
+
 if test $HAVE_gio = 1 -a "x${enable_upstart}" != xno; then
    HAVE_upstart=1
    PCMK_FEATURES="$PCMK_FEATURES upstart"
