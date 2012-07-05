@@ -156,6 +156,7 @@ do_test coloc-negative-group "Negative colocation with a group"
 do_test coloc-intra-set "Intra-set colocation"
 do_test bug-lf-2435 "Colocation sets with a negative score"
 do_test coloc-clone-stays-active "Ensure clones don't get stopped/demoted because a dependant must stop"
+do_test coloc_fp_logic "Verify floating point calculations in colocation are working"
 
 echo ""
 do_test rsc-sets-seq-true "Resource Sets - sequential=false"
