@@ -160,4 +160,11 @@ char *crm_md5sum(const char *buffer);
 char *crm_generate_uuid(void);
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 
+static inline void 
+g_list_free_full (GList           *list,
+                  GDestroyNotify   free_func) 
+{
+    g_list_foreach (list, (GFunc) free_func, NULL);
+    g_list_free (list);
+}
 #endif
