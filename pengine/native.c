@@ -259,7 +259,7 @@ node_list_attr_score(GHashTable * list, const char *attr, const char *value)
 }
 
 static void
-node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, int factor,
+node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float factor,
                  gboolean only_positive)
 {
     int score = 0;
@@ -284,24 +284,24 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, int f
              * TODO: Decide if we want to filter only if weight == -INFINITY
              *
              */
-            crm_trace("%s: Filtering %d + %d*%d (factor * score)",
+            crm_trace("%s: Filtering %d + %f*%d (factor * score)",
                       node->details->uname, node->weight, factor, score);
 
         } else if (node->weight == INFINITY_HACK) {
-            crm_trace("%s: Filtering %d + %d*%d (node < 0)",
+            crm_trace("%s: Filtering %d + %f*%d (node < 0)",
                       node->details->uname, node->weight, factor, score);
 
         } else if (only_positive && new_score < 0 && node->weight > 0) {
             node->weight = INFINITY_HACK;
-            crm_trace("%s: Filtering %d + %d*%d (score > 0)",
+            crm_trace("%s: Filtering %d + %f*%d (score > 0)",
                       node->details->uname, node->weight, factor, score);
 
         } else if (only_positive && new_score < 0 && node->weight == 0) {
-            crm_trace("%s: Filtering %d + %d*%d (score == 0)",
+            crm_trace("%s: Filtering %d + %f*%d (score == 0)",
                       node->details->uname, node->weight, factor, score);
 
         } else {
-            crm_trace("%s: %d + %d*%d", node->details->uname, node->weight, factor, score);
+            crm_trace("%s: %d + %f*%d", node->details->uname, node->weight, factor, score);
             node->weight = new_score;
         }
     }
@@ -320,22 +320,14 @@ node_hash_dup(GHashTable * hash)
 
 GHashTable *
 native_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                     int factor, gboolean allow_rollback, gboolean only_positive)
+                     float factor, enum pe_weights flags)
 {
-    enum pe_weights flags = pe_weights_none;
-
-    if (only_positive) {
-        set_bit_inplace(flags, pe_weights_positive);
-    }
-    if (allow_rollback) {
-        set_bit_inplace(flags, pe_weights_rollback);
-    }
     return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
 }
 
 GHashTable *
 rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                  int factor, enum pe_weights flags)
+                  float factor, enum pe_weights flags)
 {
     GHashTable *work = NULL;
     int multiplier = 1;
@@ -402,7 +394,7 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
 
             crm_trace("Applying %s (%s)", constraint->id, other->id);
             work = rsc_merge_weights(other, rhs, work, constraint->node_attribute,
-                                     multiplier * constraint->score / INFINITY, flags);
+                                     multiplier * (float) constraint->score / INFINITY, flags);
             dump_node_scores(LOG_TRACE, NULL, rhs, work);
         }
 
@@ -487,7 +479,8 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         rsc->allowed_nodes =
             constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
                                                     constraint->node_attribute,
-                                                    constraint->score / INFINITY, TRUE, FALSE);
+                                                    (float) constraint->score / INFINITY,
+                                                    pe_weights_rollback);
     }
 
     for (gIter = rsc->rsc_tickets; gIter != NULL; gIter = gIter->next) {
@@ -1258,19 +1251,68 @@ native_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint);
 }
 
-static gboolean
+enum filter_colocation_res {
+    influence_nothing = 0,
+    influence_rsc_location,
+    influence_rsc_priority,
+};
+
+static enum filter_colocation_res
 filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
                              rsc_colocation_t * constraint)
 {
     if (constraint->score == 0) {
-        return FALSE;
+        return influence_nothing;
+    }
+
+    /* rh side must be allocated before we can process constraint */
+    if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
+        return influence_nothing;
+    }
+
+    if ((constraint->role_lh >= RSC_ROLE_SLAVE) &&
+        rsc_lh->parent &&
+        rsc_lh->parent->variant == pe_master &&
+        is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
+
+        /* LH and RH resources have already been allocated, place the correct
+         * priority oh LH rsc for the given multistate resource role */
+        return influence_rsc_priority;
+    }
+
+    if (is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
+        /* error check */
+        struct node_shared_s *details_lh;
+        struct node_shared_s *details_rh;
+
+
+        if ((constraint->score > -INFINITY) && (constraint->score < INFINITY)) {
+            return influence_nothing;
+        }
+
+        details_rh = rsc_rh->allocated_to ? rsc_rh->allocated_to->details : NULL;
+        details_lh = rsc_lh->allocated_to ? rsc_lh->allocated_to->details : NULL;
+
+        if (constraint->score == INFINITY && details_lh != details_rh) {
+            crm_err("%s and %s are both allocated"
+                    " but to different nodes: %s vs. %s",
+                    rsc_lh->id, rsc_rh->id,
+                    details_lh ? details_lh->uname : "n/a", details_rh ? details_rh->uname : "n/a");
+
+        } else if (constraint->score == -INFINITY && details_lh == details_rh) {
+            crm_err("%s and %s are both allocated"
+                    " but to the SAME node: %s",
+                    rsc_lh->id, rsc_rh->id, details_rh ? details_rh->uname : "n/a");
+        }
+
+        return influence_nothing;
     }
 
     if (constraint->score > 0
         && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh != rsc_lh->next_role) {
-        crm_trace( "LH: Skipping constraint: \"%s\" state filter",
-                            role2text(constraint->role_rh));
-        return FALSE;
+        crm_trace( "LH: Skipping constraint: \"%s\" state filter nextrole is %s",
+                            role2text(constraint->role_lh), role2text(rsc_lh->next_role));
+        return influence_nothing;
     }
 
     if (constraint->score > 0
@@ -1283,18 +1325,53 @@ filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
     if (constraint->score < 0
         && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh == rsc_lh->next_role) {
         crm_trace( "LH: Skipping -ve constraint: \"%s\" state filter",
-                            role2text(constraint->role_rh));
-        return FALSE;
+                            role2text(constraint->role_lh));
+        return influence_nothing;
     }
 
     if (constraint->score < 0
         && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh == rsc_rh->next_role) {
         crm_trace( "RH: Skipping -ve constraint: \"%s\" state filter",
                             role2text(constraint->role_rh));
-        return FALSE;
+        return influence_nothing;
     }
 
-    return TRUE;
+    return influence_rsc_location;
+}
+
+static void
+influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+{
+    const char *rh_value = NULL;
+    const char *lh_value = NULL;
+    const char *attribute = "#id";
+    int score_multiplier = 1;
+
+    if (constraint->node_attribute != NULL) {
+        attribute = constraint->node_attribute;
+    }
+
+    if (!rsc_rh->allocated_to || !rsc_lh->allocated_to) {
+        return;
+    }
+
+    lh_value = g_hash_table_lookup(rsc_lh->allocated_to->details->attrs, attribute);
+    rh_value = g_hash_table_lookup(rsc_rh->allocated_to->details->attrs, attribute);
+
+    if (!safe_str_eq(lh_value, rh_value)) {
+        return;
+    }
+
+    if (constraint->role_rh &&
+       (constraint->role_rh != rsc_rh->next_role)) {
+        return;
+    }
+
+    if (constraint->role_lh == RSC_ROLE_SLAVE) {
+        score_multiplier = -1;
+    }
+
+    rsc_lh->priority = merge_weights(score_multiplier * constraint->score, rsc_lh->priority);
 }
 
 static void
@@ -1367,45 +1444,23 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
 void
 native_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
 {
-    crm_trace("%sColocating %s with %s (%s, weight=%d)",
+    enum filter_colocation_res filter_results;
+
+    filter_results = filter_colocation_constraint(rsc_lh, rsc_rh, constraint);
+
+    switch (filter_results) {
+    case influence_rsc_priority:
+        influence_priority(rsc_lh, rsc_rh, constraint);
+        break;
+    case influence_rsc_location:
+        crm_trace("%sColocating %s with %s (%s, weight=%d)",
                 constraint->score >= 0 ? "" : "Anti-",
                 rsc_lh->id, rsc_rh->id, constraint->id, constraint->score);
-
-    if (filter_colocation_constraint(rsc_lh, rsc_rh, constraint) == FALSE) {
-        return;
-    }
-
-    if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
-        return;
-
-    } else if (is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
-        /* error check */
-        struct node_shared_s *details_lh;
-        struct node_shared_s *details_rh;
-
-        if ((constraint->score > -INFINITY) && (constraint->score < INFINITY)) {
-            return;
-        }
-
-        details_rh = rsc_rh->allocated_to ? rsc_rh->allocated_to->details : NULL;
-        details_lh = rsc_lh->allocated_to ? rsc_lh->allocated_to->details : NULL;
-
-        if (constraint->score == INFINITY && details_lh != details_rh) {
-            crm_err("%s and %s are both allocated"
-                    " but to different nodes: %s vs. %s",
-                    rsc_lh->id, rsc_rh->id,
-                    details_lh ? details_lh->uname : "n/a", details_rh ? details_rh->uname : "n/a");
-
-        } else if (constraint->score == -INFINITY && details_lh == details_rh) {
-            crm_err("%s and %s are both allocated"
-                    " but to the SAME node: %s",
-                    rsc_lh->id, rsc_rh->id, details_rh ? details_rh->uname : "n/a");
-        }
-
-        return;
-
-    } else {
         colocation_match(rsc_lh, rsc_rh, constraint);
+        break;
+    case influence_nothing:
+    default:
+        return;
     }
 }
 
