@@ -38,7 +38,7 @@ halibdir		= $(CRM_DAEMON_DIR)
 halib_PROGRAMS		= attrd
 
 sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
-			 crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket
+			 crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket crm_error
 
 testdir			= $(datadir)/$(PACKAGE)/tests
 test_SCRIPTS		= coverage.sh
@@ -68,6 +68,9 @@ noinst_HEADERS		=
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
 			  $(COMMONLIBS) $(CLUSTERLIBS)
+
+crm_error_SOURCES	= crm_error.c
+crm_error_LDADD		= $(COMMONLIBS)
 
 crm_uuid_SOURCES	= crm_uuid.c
 crm_uuid_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/cluster/libcrmcluster.la
