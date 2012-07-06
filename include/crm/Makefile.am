@@ -22,4 +22,4 @@ headerdir=$(pkgincludedir)/crm
 noinst_HEADERS		= 
 header_HEADERS		= crm.h cib.h attrd.h msg_xml.h transition.h stonith-ng.h cluster.h lrmd.h services.h error.h
 
-SUBDIRS                 = common pengine cib fencing
+SUBDIRS                 = common pengine cib fencing cluster
