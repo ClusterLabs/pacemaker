@@ -619,7 +619,8 @@ static struct crm_option long_options[] = {
     {"features",       0, 0, 'F', "\tDisplay the full version and list of features Pacemaker was built with"},
 
     {"-spacer-",       1, 0, '-', "\nAdditional Options:"},
-    {"foreground",     0, 0, 'f', "\tRun in the foreground instead of as a daemon"},
+    {"daemon",         0, 0, 'd', "\tRun as a daemon"},
+    {"foreground",     0, 0, 'f', "\tRun in the foreground instead of as a daemon (Legacy)"},
     {"pid-file",       1, 0, 'p', "\t(Advanced) Daemon pid file location"},
 
     {NULL, 0, 0, 0}
@@ -635,6 +636,7 @@ main(int argc, char **argv)
 
     int option_index = 0;
     gboolean shutdown = FALSE;
+    gboolean daemonize = FALSE;
     
     int start_seq = 1, lpc = 0;
     static int max = SIZEOF(pcmk_children);
@@ -683,6 +685,9 @@ main(int argc, char **argv)
                 printf("Pacemaker %s (Build: %s)\n Supporting: %s\n", VERSION, BUILD_VERSION,
                        CRM_FEATURES);
                 exit(0);
+            case 'd':
+                daemonize = TRUE;
+                break;
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
                 ++argerr;
@@ -732,6 +737,14 @@ main(int argc, char **argv)
     if (read_config() == FALSE) {
         crm_notice("Could not obtain corosync config data, exiting");
         return 1;
+    }
+
+    if (daemonize) {
+        crm_enable_stderr(FALSE);
+        crm_make_daemon(crm_system_name, TRUE, pid_file);
+
+        /* Only Re-init if we're running daemonized */
+        crm_log_init(NULL, LOG_INFO, TRUE, FALSE, 0, NULL, FALSE);
     }
 
     crm_notice("Starting Pacemaker %s (Build: %s): %s",
