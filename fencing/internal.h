@@ -64,9 +64,11 @@ extern long long get_stonith_flag(const char *name);
 
 extern void stonith_command(stonith_client_t * client, xmlNode * op_request, const char *remote);
 
-extern int stonith_device_register(xmlNode * msg);
+extern int stonith_device_register(xmlNode * msg, const char **desc);
 
-extern int stonith_level_register(xmlNode * msg);
+extern int stonith_level_register(xmlNode * msg, char **desc);
+
+extern int stonith_level_remove(xmlNode * msg, char **desc);
 
 extern void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                            gboolean from_peer);
@@ -93,9 +95,6 @@ extern void free_device(gpointer data);
 
 extern void free_topology_entry(gpointer data);
 
-extern int stonith_level_remove(xmlNode * msg);
-
-extern int stonith_level_register(xmlNode * msg);
 
 extern char *stonith_our_uname;
 extern gboolean stand_alone;

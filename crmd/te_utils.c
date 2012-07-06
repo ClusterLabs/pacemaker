@@ -79,7 +79,7 @@ fail_incompletable_stonith(crm_graph_t * graph)
 }
 
 static void
-tengine_stonith_connection_destroy(stonith_t * st, const char *event, xmlNode * msg)
+tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t *e)
 {
     if (is_set(fsa_input_register, R_ST_REQUIRED)) {
         crm_crit("Fencing daemon connection failed");
@@ -98,62 +98,43 @@ tengine_stonith_connection_destroy(stonith_t * st, const char *event, xmlNode * 
     }
 }
 
-/*
-<notify t="st_notify" subt="st_fence" st_op="st_fence" st_rc="0" >
-  <st_calldata >
-    <st-reply st_origin="stonith_construct_reply" t="stonith-ng" st_rc="0" st_op="st_query" st_callid="0" st_clientid="09fcbd8b-156a-4727-ab37-4f8b2071847c" st_remote_op="1230801d-dba5-42ac-8e2c-bf444fb2a401" st_callopt="0" st_delegate="pcmk-4" >
-      <st_calldata >
-        <st-reply st_origin="stonith_construct_async_reply" t="stonith-ng" st_op="reboot" st_remote_op="1230801d-dba5-42ac-8e2c-bf444fb2a401" st_callid="0" st_callopt="0" st_rc="0" src="pcmk-4" seq="2" state="0" st_target="pcmk-1" />
-*/
 #if SUPPORT_CMAN
 #  include <libfenced.h>
 #endif
 
-static void
-tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
-{
-    int rc = -99;
-    const char *origin = NULL;
-    const char *target = NULL;
-    const char *executioner = NULL;
-    xmlNode *action = get_xpath_object("//st-data", msg, LOG_ERR);
 
-    if (action == NULL) {
-        crm_log_xml_err(msg, "Notify data not found");
+static void
+tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
+{
+    if (st_event == NULL) {
+        crm_err("Notify data not found");
         return;
     }
 
-    crm_log_xml_debug(msg, "stonith_notify");
-    crm_element_value_int(msg, F_STONITH_RC, &rc);
-    origin = crm_element_value(action, F_STONITH_ORIGIN);
-    target = crm_element_value(action, F_STONITH_TARGET);
-    executioner = crm_element_value(action, F_STONITH_DELEGATE);
-
-    if (rc == pcmk_ok && crm_str_eq(target, fsa_our_uname, TRUE)) {
-        crm_err("We were alegedly just fenced by %s for %s!", executioner, origin);
+    if (st_event->result == pcmk_ok && crm_str_eq(st_event->target, fsa_our_uname, TRUE)) {
+        crm_err("We were alegedly just fenced by %s for %s!", st_event->executioner, st_event->origin);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
         return;
-        
     }
 
     crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s)",
-               target, rc == pcmk_ok?"":" not",
-               crm_element_value(action, F_STONITH_OPERATION),
-               executioner ? executioner : "<anyone>", origin,
-               pcmk_strerror(rc), crm_element_value(action, F_STONITH_REMOTE));
+               st_event->target, st_event->result == pcmk_ok?"":" not",
+               st_event->operation,
+               st_event->executioner ? st_event->executioner : "<anyone>",
+               st_event->origin, pcmk_strerror(st_event->result), st_event->id);
 
 #if SUPPORT_CMAN
     if (rc == pcmk_ok && is_cman_cluster()) {
         int local_rc = 0;
         int confirm = 0;
-        char *target_copy = strdup(target);
+        char *target_copy = strdup(st_event->target);
 
         /* In case fenced hasn't noticed yet */
         local_rc = fenced_external(target_copy);
         if (local_rc != 0) {
-            crm_err("Could not notify CMAN that '%s' is now fenced: %d", target, local_rc);
+            crm_err("Could not notify CMAN that '%s' is now fenced: %d", st_event->target, local_rc);
         } else {
-            crm_notice("Notified CMAN that '%s' is now fenced", target);
+            crm_notice("Notified CMAN that '%s' is now fenced", st_event->target);
         }
 
         /* In case fenced is already trying to shoot it */
@@ -167,36 +148,36 @@ tengine_stonith_notify(stonith_t * st, const char *event, xmlNode * msg)
             ignore = write(confirm, "\n", 1);
 
             if(errno == EBADF) {
-                crm_trace("CMAN not expecting %s to be fenced (yet)", target);
+                crm_trace("CMAN not expecting %s to be fenced (yet)", st_event->target);
                 
             } else if (local_rc < len) {
-                crm_perror(LOG_ERR, "Confirmation of CMAN fencing event for '%s' failed: %d", target, local_rc);
+                crm_perror(LOG_ERR, "Confirmation of CMAN fencing event for '%s' failed: %d", st_event->target, local_rc);
 
             } else {
                 fsync(confirm);
-                crm_notice("Confirmed CMAN fencing event for '%s'", target);
+                crm_notice("Confirmed CMAN fencing event for '%s'", st_event->target);
             }
             close(confirm);
         }
     }
 #endif
 
-    if (rc == pcmk_ok) {
-        crm_trace("target=%s dc=%s", target, fsa_our_dc);
-        if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, target)) {
+    if (st_event->result == pcmk_ok) {
+        crm_trace("target=%s dc=%s", st_event->target, fsa_our_dc);
+        if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, st_event->target)) {
             crm_notice("Target %s our leader %s (recorded: %s)",
-                       fsa_our_dc?"was":"may have been", target, fsa_our_dc ? fsa_our_dc : "<unset>");
+                       fsa_our_dc?"was":"may have been", st_event->target, fsa_our_dc ? fsa_our_dc : "<unset>");
 
             /* Given the CIB resyncing that occurs around elections,
              * have one node update the CIB now and, if the new DC is different,
              * have them do so too after the election
              */
-            if (safe_str_eq(executioner, fsa_our_uname)) {
-                const char *uuid = get_uuid(target);
+            if (safe_str_eq(st_event->executioner, fsa_our_uname)) {
+                const char *uuid = get_uuid(st_event->target);
 
-                send_stonith_update(NULL, target, uuid);
+                send_stonith_update(NULL, st_event->target, uuid);
             }
-            stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(target));
+            stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(st_event->target));
         }
     }
 }

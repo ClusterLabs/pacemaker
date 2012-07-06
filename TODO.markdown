@@ -3,6 +3,7 @@
 ## Targeted for 1.2
 - Have crm_mon listen for stonith events (and send email/snmp traps)
 - Block after N stonith failures (per node)
+- Promote any necessary items from the 1.1 schema
 
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
 
@@ -11,7 +12,6 @@
 - Arrange for nodes that didnt complete the join to be fenced
 
 - Remove instance numbers from anonymous clones
-- Create a proper struct for stonith notify events
 
 ## Targeted for 1.2.x
 

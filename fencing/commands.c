@@ -361,7 +361,7 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     return device;
 }
 
-int stonith_device_register(xmlNode *msg) 
+int stonith_device_register(xmlNode *msg, const char **desc) 
 {
     const char *value = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
@@ -377,12 +377,13 @@ int stonith_device_register(xmlNode *msg)
     g_hash_table_replace(device_list, device->id, device);
 
     crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
+    if(desc) {
+        *desc = device->id;
+    }
     return pcmk_ok;
 }
 
-
-
-static int stonith_device_remove(xmlNode *msg) 
+static int stonith_device_remove(xmlNode *msg, const char **desc) 
 {
     xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
     const char *id = crm_element_value(dev, XML_ATTR_ID);
@@ -392,6 +393,9 @@ static int stonith_device_remove(xmlNode *msg)
     } else {
 	crm_info("Device '%s' not found (%d active devices)",
 		 id, g_hash_table_size(device_list));
+    }
+    if(desc) {
+        *desc = id;
     }
     return pcmk_ok;
 }
@@ -422,7 +426,7 @@ void free_topology_entry(gpointer data)
     free(tp);
 }
 
-int stonith_level_register(xmlNode *msg) 
+int stonith_level_register(xmlNode *msg, char **desc) 
 {
     int id = 0;
     int rc = pcmk_ok;
@@ -431,8 +435,11 @@ int stonith_level_register(xmlNode *msg)
     xmlNode *level = get_xpath_object("//"F_STONITH_LEVEL, msg, LOG_ERR);
     const char *node = crm_element_value(level, F_STONITH_TARGET);
     stonith_topology_t *tp = g_hash_table_lookup(topology, node);
-
+    
     crm_element_value_int(level, XML_ATTR_ID, &id);
+    if(desc) {
+        *desc = g_strdup_printf("%s[%d]", node, id);
+    }
     if(id <= 0 || id >= ST_LEVEL_MAX) {
         return -EINVAL;
     }
@@ -458,21 +465,24 @@ int stonith_level_register(xmlNode *msg)
     return rc;
 }
 
-int stonith_level_remove(xmlNode *msg) 
+int stonith_level_remove(xmlNode *msg, char **desc) 
 {
     int id = 0;
     xmlNode *level = get_xpath_object("//"F_STONITH_LEVEL, msg, LOG_ERR);
     const char *node = crm_element_value(level, F_STONITH_TARGET);
     stonith_topology_t *tp = g_hash_table_lookup(topology, node);
 
+    if(desc) {
+        *desc = g_strdup_printf("%s[%d]", node, id);
+    }
+    crm_element_value_int(level, XML_ATTR_ID, &id);
+
     if(tp == NULL) {
 	crm_info("Node %s not found (%d active entries)",
 		 node, g_hash_table_size(topology));
         return pcmk_ok;
-    }
 
-    crm_element_value_int(level, XML_ATTR_ID, &id);
-    if(id < 0 || id >= ST_LEVEL_MAX) {
+    } else if(id < 0 || id >= ST_LEVEL_MAX) {
         return -EINVAL;
     }
 
@@ -557,6 +567,8 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 
 	if(g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTLIST)) {
 	    check_type = "static-list";
+	} else if(g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTMAP)) {
+	    check_type = "static-list";
 	} else {
 	    check_type = "dynamic-list";
 	}
@@ -572,6 +584,9 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	 */
 
 	if(string_in_list(dev->targets, host)) {
+	    can = TRUE;
+	} else if(g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTMAP)
+                  && g_hash_table_lookup(dev->aliases, host)) {
 	    can = TRUE;
 	}
 
@@ -909,7 +924,20 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
         crm_trace("Directed local %ssync reply to %s", (cmd->options & st_opt_sync_call)?"":"a-", cmd->client);
 	do_local_reply(reply, cmd->client, cmd->options & st_opt_sync_call, FALSE);
     }
-    
+
+    if(stand_alone) {
+        /* Do notification with a clean data object */
+        xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+        crm_xml_add_int(notify_data, F_STONITH_RC,    rc);
+        crm_xml_add(notify_data, F_STONITH_TARGET,    cmd->victim);
+        crm_xml_add(notify_data, F_STONITH_OPERATION, cmd->op); 
+        crm_xml_add(notify_data, F_STONITH_DELEGATE,  cmd->device);
+        crm_xml_add(notify_data, F_STONITH_REMOTE,    cmd->remote);
+        crm_xml_add(notify_data, F_STONITH_ORIGIN,    cmd->client);
+        
+        do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data, NULL);
+    }
+
     free_async_command(cmd);
   done:
 
@@ -1202,20 +1230,48 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	return;
 	    
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
-	rc = stonith_device_register(request);
-	do_stonith_notify(call_options, op, rc, request, NULL);
+        const char *id = NULL;
+        xmlNode *notify_data = create_xml_node(NULL, op);
+        rc = stonith_device_register(request, &id);
+
+        crm_xml_add(notify_data, F_STONITH_DEVICE, id);
+        crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(device_list));
+
+	do_stonith_notify(call_options, op, rc, notify_data, NULL);
+        free_xml(notify_data);
 
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
-	rc = stonith_device_remove(request);
-	do_stonith_notify(call_options, op, rc, request, NULL);
+        const char *id = NULL;
+        xmlNode *notify_data = create_xml_node(NULL, op);
+        rc = stonith_device_remove(request, &id);
+
+        crm_xml_add(notify_data, F_STONITH_DEVICE, id);
+        crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(device_list));
+
+	do_stonith_notify(call_options, op, rc, notify_data, NULL);
+        free_xml(notify_data);
 
     } else if(crm_str_eq(op, STONITH_OP_LEVEL_ADD, TRUE)) {
-	rc = stonith_level_register(request);
-	do_stonith_notify(call_options, op, rc, request, NULL);
+        char *id = NULL;
+        xmlNode *notify_data = create_xml_node(NULL, op);
+        rc = stonith_level_register(request, &id);
+
+        crm_xml_add(notify_data, F_STONITH_DEVICE, id);
+        crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
+
+	do_stonith_notify(call_options, op, rc, notify_data, NULL);
+        free_xml(notify_data);
 
     } else if(crm_str_eq(op, STONITH_OP_LEVEL_DEL, TRUE)) {
-	rc = stonith_level_remove(request);
-	do_stonith_notify(call_options, op, rc, request, NULL);
+        char *id = NULL;
+        xmlNode *notify_data = create_xml_node(NULL, op);
+        rc = stonith_level_remove(request, &id);
+
+        crm_xml_add(notify_data, F_STONITH_DEVICE, id);
+        crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
+
+	do_stonith_notify(call_options, op, rc, notify_data, NULL);
+        free_xml(notify_data);
 
     } else if(crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
 	async_command_t *cmd = create_async_command(request);

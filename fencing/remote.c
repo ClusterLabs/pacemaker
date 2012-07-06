@@ -146,7 +146,7 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     }
 
     /* Do notification with a clean data object */
-    notify_data = create_xml_node(NULL, "st-data");
+    notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
     crm_xml_add_int(notify_data, "state",	  op->state);
     crm_xml_add_int(notify_data, F_STONITH_RC,    rc);
     crm_xml_add(notify_data, F_STONITH_TARGET,    op->target);
@@ -154,7 +154,7 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     crm_xml_add(notify_data, F_STONITH_DELEGATE,  op->delegate);
     crm_xml_add(notify_data, F_STONITH_REMOTE,    op->id);
     crm_xml_add(notify_data, F_STONITH_ORIGIN,    op->originator);
-    
+
     do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data, NULL);
     
     free_xml(notify_data);

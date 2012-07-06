@@ -266,7 +266,6 @@ stonith_peer_ais_destroy(gpointer user_data)
 }
 #endif
 
-
 void do_local_reply(xmlNode *notify_src, const char *client_id,
 		     gboolean sync_reply, gboolean from_peer)
 {
@@ -404,20 +403,44 @@ static stonith_key_value_t *parse_device_list(const char *devices)
 
 static void topology_remove_helper(const char *node, int level) 
 {
+    int rc;
+    char *desc = NULL;
     xmlNode *data = create_xml_node(NULL, F_STONITH_LEVEL);
+    xmlNode *notify_data = create_xml_node(NULL, STONITH_OP_LEVEL_DEL);
+
     crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add_int(data, XML_ATTR_ID, level);
     crm_xml_add(data, F_STONITH_TARGET, node);
-    stonith_level_remove(data);
+
+    rc = stonith_level_remove(data, &desc);
+
+    crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
+    crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
+    
+    do_stonith_notify(0, STONITH_OP_LEVEL_DEL, rc, notify_data, NULL);
+
+    free_xml(notify_data);
     free_xml(data);
+    free(desc);
 }
 
 static void topology_register_helper(const char *node, int level, stonith_key_value_t *device_list) 
 {
+    int rc;
+    char *desc = NULL;
+    xmlNode *notify_data = create_xml_node(NULL, STONITH_OP_LEVEL_ADD);
     xmlNode *data = create_level_registration_xml(node, level, device_list);
 
-    stonith_level_register(data);
+    rc = stonith_level_register(data, &desc);
+
+    crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
+    crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
+    
+    do_stonith_notify(0, STONITH_OP_LEVEL_ADD, rc, notify_data, NULL);
+
+    free_xml(notify_data);
     free_xml(data);
+    free(desc);
 }
 
 static void remove_fencing_topology(xmlXPathObjectPtr xpathObj)

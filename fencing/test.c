@@ -52,10 +52,25 @@ static struct crm_option long_options[] = {
 
 int st_opts = st_opt_sync_call;
 
-static void st_callback(stonith_t *st, const char *event, xmlNode *msg)
+static void st_callback(stonith_t *st, stonith_event_t *e)
 {
-    crm_log_xml_notice(msg, event);
+    if(st->state == stonith_disconnected) {
+        exit(1);
+    }
+
+    crm_notice("Operation %s requested by %s %s for peer %s.  %s reported: %s (ref=%s)",
+               e->operation, e->origin, e->result == pcmk_ok?"completed":"failed",
+               e->target, e->executioner ? e->executioner : "<none>",
+               pcmk_strerror(e->result), e->id); 
 }
+
+static  void
+st_global_callback(stonith_t * stonith, const xmlNode * msg, int call_id, int rc,
+                   xmlNode * output, void *userdata)
+{
+    crm_log_xml_notice((xmlNode*)msg, "Event");
+}
+
 
 int
 main(int argc, char ** argv)
@@ -76,10 +91,7 @@ main(int argc, char ** argv)
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
-    params = stonith_key_value_add(params, "ipaddr",       "localhost");
-    params = stonith_key_value_add(params, "pcmk-portmal", "some-host=pcmk-1 pcmk-3=3,4");
-    params = stonith_key_value_add(params, "login",        "root");
-    params = stonith_key_value_add(params, "identity_file","/root/.ssh/id_dsa");
+    params = stonith_key_value_add(params, "pcmk_host_map", "some-host=pcmk-7 pcmk-3=3,4");
 
     while (1) {
 	flag = crm_get_option(argc, argv, &option_index);
@@ -120,9 +132,11 @@ main(int argc, char ** argv)
     rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
     
     if(passive_mode) {
-	rc = st->cmds->register_notification(st, STONITH_OP_FENCE, st_callback);
+	rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
 	rc = st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
 	rc = st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
+
+        st->cmds->register_callback(st, 0, 120, FALSE, NULL, "st_global_callback", st_global_callback);
 
 	crm_info("Looking for notification");
         pollfd.events = POLLIN;
@@ -135,7 +149,7 @@ main(int argc, char ** argv)
 	}
 
     } else {
-	rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_virsh", params);
+	rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_xvm", params);
 	crm_debug("Register: %d", rc);
 	
 	rc = st->cmds->call(st, st_opts, "test-id", "list", NULL, 10);

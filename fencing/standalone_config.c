@@ -280,7 +280,7 @@ cfg_register_topology(struct topology *topo)
 		dump = dump_xml_formatted(data);
 		crm_info("Standalone config level being added:\n%s", dump);
 
-		res |= stonith_level_register(data);
+		res |= stonith_level_register(data, NULL);
 		free(dump);
 		free_xml(data);
 		stonith_key_value_freeall(devices, 1, 1);
@@ -318,7 +318,7 @@ cfg_register_device(struct device *dev)
 	dump = dump_xml_formatted(data);
 	crm_info("Standalone device being added:\n%s", dump);
 
-	res = stonith_device_register(data);
+	res = stonith_device_register(data, NULL);
 
 	free(dump);
 	free_xml(data);

@@ -65,7 +65,7 @@ typedef struct stonith_notify_client_s {
     const char *event;
     const char *obj_id;         /* implement one day */
     const char *obj_type;       /* implement one day */
-    void (*notify) (stonith_t * st, const char *event, xmlNode * msg);
+    void (*notify) (stonith_t * st, stonith_event_t *e);
 
 } stonith_notify_client_t;
 
@@ -1265,8 +1265,7 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 
 static int
 stonith_api_add_notification(stonith_t * stonith, const char *event,
-                             void (*callback) (stonith_t * stonith, const char *event,
-                                               xmlNode * msg))
+                             void (*callback) (stonith_t * stonith, stonith_event_t *e))
 {
     GList *list_item = NULL;
     stonith_notify_client_t *new_client = NULL;
@@ -1494,11 +1493,55 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
     crm_trace("OP callback activated.");
 }
 
+/*
+ <notify t="st_notify" subt="st_device_register" st_op="st_device_register" st_rc="0" >
+   <st_calldata >
+     <stonith_command t="stonith-ng" st_async_id="088fb640-431a-48b9-b2fc-c4ff78d0a2d9" st_op="st_device_register" st_callid="2" st_callopt="4096" st_timeout="0" st_clientid="088fb640-431a-48b9-b2fc-c4ff78d0a2d9" st_clientname="stonith-test" >
+       <st_calldata >
+         <st_device_id id="test-id" origin="create_device_registration_xml" agent="fence_virsh" namespace="stonith-ng" >
+           <attributes ipaddr="localhost" pcmk-portmal="some-host=pcmk-1 pcmk-3=3,4" login="root" identity_file="/root/.ssh/id_dsa" />
+         </st_device_id>
+       </st_calldata>
+     </stonith_command>
+   </st_calldata>
+ </notify>
+ 
+ <notify t="st_notify" subt="st_notify_fence" st_op="st_notify_fence" st_rc="0" >
+   <st_calldata >
+     <st_notify_fence st_rc="0" st_target="some-host" st_op="st_fence" st_delegate="test-id" st_origin="61dd7759-e229-4be7-b1f8-ef49dd14d9f0" />
+   </st_calldata>
+ </notify>
+*/
+static stonith_event_t *
+xml_to_event(xmlNode *msg) 
+{
+    stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
+    const char *ntype = crm_element_value(msg, F_SUBTYPE);
+    char *data_addr = g_strdup_printf("//%s", ntype);
+    xmlNode *data = get_xpath_object(data_addr, msg, LOG_ERR);
+
+    crm_log_xml_trace(msg, "stonith_notify");
+    
+    crm_element_value_int(msg, F_STONITH_RC, &(event->result));
+
+    if(safe_str_eq(ntype, T_STONITH_NOTIFY_FENCE)) {
+        event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
+        event->target = crm_element_value_copy(data, F_STONITH_TARGET);
+        event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
+        event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
+        event->id = crm_element_value_copy(data, F_STONITH_REMOTE);
+    }
+
+    g_free(data_addr);
+    return event;
+}
+
 static void
 stonith_send_notification(gpointer data, gpointer user_data)
 {
     struct notify_blob_s *blob = user_data;
     stonith_notify_client_t *entry = data;
+    stonith_event_t *st_event = NULL;
     const char *event = NULL;
 
     if (blob->xml == NULL) {
@@ -1521,8 +1564,10 @@ stonith_send_notification(gpointer data, gpointer user_data)
         return;
     }
 
+    st_event = xml_to_event(blob->xml);
+    
     crm_trace("Invoking callback for %p/%s event...", entry, event);
-    entry->notify(blob->stonith, event, blob->xml);
+    entry->notify(blob->stonith, st_event);
     crm_trace("Callback invoked...");
 }
 
@@ -1667,6 +1712,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     CRM_ASSERT(st != NULL);
     private = st->private;
 
+    blob.stonith = st;
     blob.xml = string2xml(buffer);
     if (blob.xml == NULL) {
         crm_warn("Received a NULL msg from STONITH service: %s.", buffer);

@@ -83,6 +83,7 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #define F_STONITH_STATE			"st_state"
 #define F_STONITH_LEVEL		        "st_level"
 #define F_STONITH_OWNER		        "st_owner"
+#define F_STONITH_ACTIVE	        "st_active"
 
 #define F_STONITH_DEVICE	        "st_device_id"
 #define F_STONITH_ACTION	        "st_device_action"

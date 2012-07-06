@@ -78,6 +78,22 @@ typedef struct stonith_history_s {
 
 typedef struct stonith_s stonith_t;
 
+typedef struct stonith_event_s 
+{
+        char *id;
+        char *type;
+        char *message;
+        char *operation;
+
+        int result;
+        char *origin;
+        char *target;
+        char *executioner;
+
+        char *device;
+        
+} stonith_event_t;
+
 typedef struct stonith_api_operations_s
 {
 	int (*free) (stonith_t *st);
@@ -112,7 +128,7 @@ typedef struct stonith_api_operations_s
 		
 	int (*register_notification)(
 	    stonith_t *st, const char *event,
-	    void (*notify)(stonith_t *st, const char *event, xmlNode *msg));
+	    void (*notify)(stonith_t *st, stonith_event_t *e));
 	int (*remove_notification)(stonith_t *st, const char *event);
 
 	int (*register_callback)(

@@ -1468,7 +1468,11 @@ crm_is_writable(const char *dir, const char *file,
 gboolean
 crm_str_eq(const char *a, const char *b, gboolean use_case)
 {
-    if (a == b) {
+    if(use_case) {
+        return g_strcmp0(a, b) == 0;
+
+        /* TODO - Figure out which calls, if any, really need to be case independant */
+    } else if (a == b) {
         return TRUE;
 
     } else if (a == NULL || b == NULL) {
