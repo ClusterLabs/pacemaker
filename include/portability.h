@@ -140,6 +140,15 @@ g_hash_table_iter_next(GHashTableIter * iter, gpointer * key, gpointer * value)
 
 #  endif                        /* !HAVE_LIBGLIB_2_0 */
 
+
+#ifdef NEED_G_LIST_FREE_FULL
+static inline void g_list_free_full(GList *list, GDestroyNotify free_func)
+{
+   g_list_foreach(list, (GFunc) free_func, NULL);
+   g_list_free(list);
+}
+#endif
+
 /*
  * Some compilers (eg. Sun studio) do not define __FUNCTION__
  */
