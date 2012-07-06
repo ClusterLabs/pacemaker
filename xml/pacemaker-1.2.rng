@@ -104,6 +104,9 @@
 	  <optional>
 	    <attribute name="description"><text/></attribute>
 	  </optional>
+	  <optional>
+	    <externalRef href="score.rng"/>
+	  </optional>
 	  <zeroOrMore>
 	    <choice>
 	      <element name="instance_attributes">
