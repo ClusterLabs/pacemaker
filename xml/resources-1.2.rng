@@ -34,6 +34,8 @@
 		  <value>heartbeat</value>
 		  <value>stonith</value>
 		  <value>upstart</value>
+		  <value>service</value>
+		  <value>systemd</value>
 		</choice>
 	      </attribute>
 	    </choice>
