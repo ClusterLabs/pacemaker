@@ -448,6 +448,7 @@ exit 0
 %defattr(-,root,root)
 %{_sbindir}/cibadmin
 %{_sbindir}/crm_diff
+%{_sbindir}/crm_error
 %{_sbindir}/crm_failcount
 %{_sbindir}/crm_mon
 %{_sbindir}/crm_resource
