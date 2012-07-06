@@ -386,7 +386,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         if (transition_timer->period_ms > 0) {
             crm_timer_stop(transition_timer);
             crm_timer_start(transition_timer);
-        } else {
+        } else if(too_many_st_failures() == FALSE) {
             register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
         }
         return;

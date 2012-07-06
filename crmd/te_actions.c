@@ -124,9 +124,8 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
-    crm_notice(
-                  "Executing %s fencing operation (%s) on %s (timeout=%d)",
-                  type, id, target, transition_graph->stonith_timeout);
+    crm_notice("Executing %s fencing operation (%s) on %s (timeout=%d)",
+               type, id, target, transition_graph->stonith_timeout);
 
     /* Passing NULL means block until we can connect... */
     te_connect_stonith(NULL);
@@ -138,10 +137,10 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
     rc = stonith_api->cmds->fence(stonith_api, options, target, type,
                                   transition_graph->stonith_timeout / 1000);
 
-    stonith_api->cmds->register_callback(stonith_api, rc, transition_graph->stonith_timeout / 1000,
-                                         FALSE, generate_transition_key(transition_graph->id,
-                                                                        action->id, 0, te_uuid),
-                                         "tengine_stonith_callback", tengine_stonith_callback);
+    stonith_api->cmds->register_callback(
+        stonith_api, rc, transition_graph->stonith_timeout / 1000,
+        FALSE, generate_transition_key(transition_graph->id, action->id, 0, te_uuid),
+        "tengine_stonith_callback", tengine_stonith_callback);
 
     return TRUE;
 }
@@ -481,7 +480,7 @@ notify_crmd(crm_graph_t * graph)
                 if (transition_timer->period_ms > 0) {
                     crm_timer_stop(transition_timer);
                     crm_timer_start(transition_timer);
-                } else {
+                } else if(too_many_st_failures() == FALSE) {
                     event = I_PE_CALC;
                 }
 

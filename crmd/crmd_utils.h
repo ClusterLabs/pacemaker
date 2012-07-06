@@ -74,6 +74,7 @@ extern void update_attrd(const char *host, const char *name, const char *value,
                          const char *user_name);
 
 extern const char *get_timer_desc(fsa_timer_t * timer);
+gboolean too_many_st_failures(void);
 
 #  define start_transition(state) do {					\
 	switch(state) {							\
