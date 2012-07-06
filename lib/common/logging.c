@@ -694,3 +694,38 @@ crm_log_args(int argc, char **argv)
     do_crm_log_always(LOG_NOTICE, "Invoked: %s", arg_string);
     free(arg_string);
 }
+
+const char *
+pcmk_strerror(int rc)
+{
+    int error = rc;
+    if(rc < 0) {
+        error = 0 - rc;
+    }
+
+    if(error == 0) {
+        return "OK";
+    } else if(error < PCMK_ERROR_OFFSET) {
+        return strerror(error);
+    }
+
+    switch(error) {
+        case pcmk_err_generic:
+            return "Generic Pacemaker error";
+        case pcmk_err_no_quorum:
+            return "Operation requires quorum";
+        case pcmk_err_dtd_validation:
+            return "Update does not conform to the configured schema";
+        case pcmk_err_transform_failed:
+            return "Schema transform failed";
+        case pcmk_err_old_data:
+            return "Update was older than existing configuration";
+        case pcmk_err_diff_failed:
+            return "Application of an update diff failed";
+        case pcmk_err_diff_resync:
+            return "Application of an update diff failed, requesting a full refresh";
+    }
+
+    crm_err("Unknown error code: %d", rc);
+    return "Unknown error";
+}
