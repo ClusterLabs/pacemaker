@@ -100,6 +100,7 @@ crm_diff_LDADD		= $(COMMONLIBS)
 
 crm_mon_SOURCES		= crm_mon.c
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la		\
+			  $(top_builddir)/lib/fencing/libstonithd.la		\
 			  $(top_builddir)/pengine/libpengine.la \
 			  $(COMMONLIBS) $(SNMPLIBS) $(ESMTPLIBS)
 

@@ -46,6 +46,7 @@
 #include <crm/pengine/status.h>
 #include <../lib/pengine/unpack.h>
 #include <../pengine/pengine.h>
+#include <crm/stonith-ng.h>
 
 /* GMainLoop *mainloop = NULL; */
 
@@ -54,6 +55,7 @@ void clean_up(int rc);
 void crm_diff_update(const char *event, xmlNode * msg);
 gboolean mon_refresh_display(gpointer user_data);
 int cib_connect(gboolean full);
+void mon_st_callback(stonith_t *st, stonith_event_t *e);
 
 char *xml_file = NULL;
 char *as_html_file = NULL;
@@ -81,6 +83,7 @@ const char *external_agent = NULL;
 const char *external_recipient = NULL;
 
 cib_t *cib = NULL;
+stonith_t *st = NULL;
 xmlNode *current_cib = NULL;
 
 gboolean one_shot = FALSE;
@@ -92,6 +95,7 @@ gboolean print_nodes_attr = FALSE;
 gboolean print_last_updated = TRUE;
 gboolean print_last_change = TRUE;
 gboolean print_tickets = FALSE;
+gboolean watch_fencing = FALSE;
 
 #define FILTER_STR {"shutdown", "terminate", "standby", "fail-count",	\
 	    "last-failure", "probe_complete", "#id", "#uname",		\
@@ -235,6 +239,19 @@ cib_connect(gboolean full)
         need_pass = FALSE;
     }
 
+    if(watch_fencing && st == NULL) {
+        st = stonith_api_new();
+    }
+    
+    if(watch_fencing && st->state == stonith_disconnected) {
+        crm_trace("Connecting to stonith");
+        rc = st->cmds->connect(st, crm_system_name, NULL);
+        if(rc == pcmk_ok) {
+            crm_trace("Setting up stonith callbacks");
+            st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback);
+        }
+    }
+    
     if (cib->state != cib_connected_query && cib->state != cib_connected_command) {
         crm_trace("Connecting to the CIB");
         if (as_console && need_pass && cib->variant == cib_remote) {
@@ -304,8 +321,9 @@ static struct crm_option long_options[] = {
     {"failcounts",     0, 0, 'f', "\tDisplay resource fail counts"},
     {"operations",     0, 0, 'o', "\tDisplay resource operation history" },
     {"timing-details", 0, 0, 't', "\tDisplay resource operation history with timing details" },
-    {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
     {"tickets",        0, 0, 'c', "\t\tDisplay cluster tickets"},
+    {"watch-fencing",  0, 0, 'W', "\t\tListen for fencing events. For use with --external-agent, --mail-to and/or --snmp-traps where supported"},
+    {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
@@ -348,7 +366,6 @@ main(int argc, char **argv)
     int flag;
     int argerr = 0;
     int exit_code = 0;
-
     int option_index = 0;
 
     pid_file = strdup("/tmp/ClusterMon.pid");
@@ -388,6 +405,9 @@ main(int argc, char **argv)
                 break;
             case 'r':
                 inactive_resources = TRUE;
+                break;
+            case 'W':
+                watch_fencing = TRUE;
                 break;
             case 'd':
                 daemonize = TRUE;
@@ -2249,6 +2269,24 @@ mon_refresh_display(gpointer user_data)
 
     cleanup_calculations(&data_set);
     return TRUE;
+}
+
+void mon_st_callback(stonith_t *st, stonith_event_t *e)
+{
+    char *desc = g_strdup_printf(
+        "Operation %s requested by %s for peer %s: %s (ref=%s)",
+        e->operation, e->origin, e->target, pcmk_strerror(e->result), e->id); 
+
+    if (snmp_target) {
+        send_snmp_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
+    }
+    if (crm_mail_to) {
+        send_smtp_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
+    }
+    if (external_agent) {
+        send_custom_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
+    }
+    g_free(desc);
 }
 
 /*

@@ -1,9 +1,10 @@
 # Semi-random collection of tasks we'd like to get done
 
 ## Targeted for 1.2
-- Have crm_mon listen for stonith events (and send email/snmp traps)
 - Block after N stonith failures (per node)
 - Promote any necessary items from the 1.1 schema
+- Get fencing/test.c working again (with and without stonithd -s)
+- Avoid the use of xmlNode in fencing register_callback() call types
 
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
 
