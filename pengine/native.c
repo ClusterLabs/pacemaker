@@ -1780,6 +1780,8 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
     action_t *stop = NULL;
     action_t *start = NULL;
+    action_t *demote = NULL;
+    action_t *promote = NULL;
 
     char *key = NULL;
     gboolean moving = FALSE;
@@ -1830,21 +1832,35 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         moving = TRUE;
     }
 
+    key = start_key(rsc);
+    possible_matches = find_actions(rsc->actions, key, next);
+    free(key);
+    if (possible_matches) {
+        start = possible_matches->data;
+        g_list_free(possible_matches);
+    }
+
     key = stop_key(rsc);
     possible_matches = find_actions(rsc->actions, key, next);
     free(key);
-
     if (possible_matches) {
         stop = possible_matches->data;
         g_list_free(possible_matches);
     }
 
-    key = start_key(rsc);
+    key = promote_key(rsc);
     possible_matches = find_actions(rsc->actions, key, next);
     free(key);
-
     if (possible_matches) {
-        start = possible_matches->data;
+        promote = possible_matches->data;
+        g_list_free(possible_matches);
+    }
+
+    key = demote_key(rsc);
+    possible_matches = find_actions(rsc->actions, key, next);
+    free(key);
+    if (possible_matches) {
+        demote = possible_matches->data;
         g_list_free(possible_matches);
     }
 
@@ -1888,8 +1904,18 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     if (rsc->role > RSC_ROLE_SLAVE && rsc->role > rsc->next_role) {
         CRM_CHECK(current != NULL,);
         if (current != NULL) {
-            log_change("Demote  %s\t(%s -> %s %s)", rsc->id,
-                       role2text(rsc->role), role2text(rsc->next_role), current->details->uname);
+            gboolean allowed = FALSE;
+            if (demote != NULL && (demote->flags & pe_action_runnable)) {
+                allowed = TRUE;
+            }
+
+            log_change("Demote  %s\t(%s -> %s %s%s)",
+                rsc->id,
+                role2text(rsc->role),
+                role2text(rsc->next_role),
+                current->details->uname,
+                allowed ? "" : " - blocked");
+
             if (stop != NULL && is_not_set(stop->flags, pe_action_optional)
                 && rsc->next_role > RSC_ROLE_STOPPED) {
                 if (is_set(rsc->flags, pe_rsc_failed)) {
@@ -1939,6 +1965,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     }
 
     if (rsc->next_role > RSC_ROLE_SLAVE && rsc->role < rsc->next_role) {
+        gboolean allowed = FALSE;
         CRM_CHECK(next != NULL,);
         if (stop != NULL && is_not_set(stop->flags, pe_action_optional)
             && rsc->role > RSC_ROLE_STOPPED) {
@@ -1955,8 +1982,16 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             }
         }
 
-        log_change("Promote %s\t(%s -> %s %s)", rsc->id,
-                   role2text(rsc->role), role2text(rsc->next_role), next->details->uname);
+        if (promote && (promote->flags & pe_action_runnable)) {
+            allowed = TRUE;
+        }
+
+        log_change("Promote %s\t(%s -> %s %s%s)",
+            rsc->id,
+            role2text(rsc->role),
+            role2text(rsc->next_role),
+            next->details->uname,
+            allowed ? "" : " - blocked");
     }
 }
 
