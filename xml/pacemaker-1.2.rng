@@ -47,6 +47,9 @@
 	<optional>
 	  <externalRef href="acls-1.2.rng"/>
 	</optional>
+	<optional>
+	  <externalRef href="fencing.rng"/>
+	</optional>
       </interleave>
     </element>
     <element name="status">

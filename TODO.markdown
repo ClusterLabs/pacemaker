@@ -1,7 +1,6 @@
 # Semi-random collection of tasks we'd like to get done
 
 ## Targeted for 1.2
-- Promote any necessary items from the 1.1 schema
 - Get fencing/test.c working again (with and without stonithd -s)
 - Avoid the use of xmlNode in fencing register_callback() call types
 
@@ -34,6 +33,7 @@
 - Freeze/Thaw
 - Create Pacemaker plugin for snmpd - http://www.net-snmp.org/
 - Investigate using a DB as the back-end for the CIB
+- Decide whether to fully support or drop failover domains
 
 # Testing
 - Write a regression test for Stonith-NG
