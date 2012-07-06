@@ -631,6 +631,11 @@ if test "x$ac_cv_lib_glib_2_0_g_hash_table_get_values" != x""yes; then
    AC_MSG_WARN(Your version of Glib is too old, you should have at least 2.14)
 fi
 
+AC_CHECK_LIB(glib-2.0, g_list_free_full)
+if test "x$ac_cv_lib_glib_2_0_g_list_free_full" != x""yes; then
+   AC_DEFINE_UNQUOTED(NEED_G_LIST_FREE_FULL, 1, glib-2.0 has no g_list_free_full)
+fi
+
 if 
     $PKGCONFIG --exists systemd
 then
@@ -1122,6 +1127,13 @@ HAVE_gio=1
 HAVE_upstart=0
 HAVE_systemd=0
 PKG_CHECK_MODULES(GIO, gio-2.0, ,HAVE_gio=0)
+
+AC_CHECK_TYPE([GDBusProxy],,,[[#include <gio/gio.h>]])
+
+if test x$ac_cv_type_GDBusProxy != xyes; then
+   HAVE_gio=0
+   AC_MSG_WARN(Unable to support systemd/upstart. You need to use glib >= 2.26)
+fi
 
 if test $HAVE_gio = 1 -a "x${enable_upstart}" != xno; then
    HAVE_upstart=1
