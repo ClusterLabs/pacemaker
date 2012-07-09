@@ -7,7 +7,7 @@
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
 
 - Figure out how to sanely allow nodes with corosync but no pacemaker
-  - sysconfig variable that tells pacemaker whether to fence members without pacemaker?
+  - require symetric-cluster=false
 - Arrange for nodes that didnt complete the join to be fenced
 
 - Remove instance numbers from anonymous clones
@@ -21,7 +21,7 @@
 - Use crm_log_tag() in the PE to allow per-resource trace logging
 - Reduce the amount of stonith-ng logging
 - Reduce the amount of attrd logging
-- Use dlopen for snmp
+- Use dlopen for snmp in crm_mon
 
 
 ## Targeted for 1.4
