@@ -83,7 +83,7 @@ seems little interest in this.]
 Due to recent standardization within the cluster filesystem community,
 they make use of a common distributed lock manager which makes use of
 Corosync for its messaging capabilities and Pacemaker for its
-membership (which nodes are up/down) and fencing services.  
+membership (which nodes are up/down) and fencing services.
 
 .The Pacemaker Stack
 image::images/pcmk-stack.png["The Pacemaker StackThe Pacemaker stack when running on Corosync",align="center"]
@@ -105,7 +105,7 @@ The CIB uses XML to represent both the cluster's configuration and
 current state of all resources in the cluster. The contents of the CIB
 are automatically kept in sync across the entire cluster and are used
 by the PEngine to compute the ideal state of the cluster and how it
-should be achieved. 
+should be achieved.
 
 This list of instructions is then fed to the DC (Designated
 Co-ordinator).  Pacemaker centralizes all cluster decision making by
@@ -116,7 +116,7 @@ quickly established.
 The DC carries out the PEngine's instructions in the required order by
 passing them to either the LRMd (Local Resource Management daemon) or
 CRMd peers on other nodes via the cluster messaging infrastructure
-(which in turn passes them on to their LRMd process). 
+(which in turn passes them on to their LRMd process).
 
 The peer nodes all report the results of their operations back to the
 DC and based on the expected and actual results, will either execute

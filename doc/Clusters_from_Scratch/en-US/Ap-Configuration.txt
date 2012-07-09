@@ -126,7 +126,7 @@ both.
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
     params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
     op monitor interval="30s"
-clone WebIP ClusterIP 
+clone WebIP ClusterIP
     meta globally-unique="true" clone-max="2" clone-node-max="2"
 .....
 

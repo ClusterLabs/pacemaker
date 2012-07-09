@@ -1,4 +1,4 @@
-= Verify Cluster Installation = 
+= Verify Cluster Installation =
 
 == Verify Corosync Installation ==
 
@@ -34,7 +34,7 @@ Next we check the membership and quorum APIs:
 [source,Bash]
 ----
 # corosync-cmapctl  | grep members
-runtime.totem.pg.mrp.srp.members.1702537408.ip (str) = r(0) ip(192.168.122.101) 
+runtime.totem.pg.mrp.srp.members.1702537408.ip (str) = r(0) ip(192.168.122.101)
 runtime.totem.pg.mrp.srp.members.1702537408.join_count (u32) = 1
 runtime.totem.pg.mrp.srp.members.1702537408.status (str) = joined
 # corosync-quorumtool -l
@@ -73,10 +73,10 @@ usual suspects: network, firewall and selinux.
 [source,Bash]
 ----
 # corosync-cmapctl  | grep members
-runtime.totem.pg.mrp.srp.members.1702537408.ip (str) = r(0) ip(192.168.122.101) 
+runtime.totem.pg.mrp.srp.members.1702537408.ip (str) = r(0) ip(192.168.122.101)
 runtime.totem.pg.mrp.srp.members.1702537408.join_count (u32) = 1
 runtime.totem.pg.mrp.srp.members.1702537408.status (str) = joined
-runtime.totem.pg.mrp.srp.members.1719314624.ip (str) = r(0) ip(192.168.122.102) 
+runtime.totem.pg.mrp.srp.members.1719314624.ip (str) = r(0) ip(192.168.122.102)
 runtime.totem.pg.mrp.srp.members.1719314624.join_count (u32) = 1
 runtime.totem.pg.mrp.srp.members.1719314624.status (str) = joined
 
