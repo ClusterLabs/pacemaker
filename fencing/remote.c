@@ -46,9 +46,9 @@
 
 typedef struct st_query_result_s
 {
-	char *host;
-	int devices;
-        GListPtr device_list;
+    char *host;
+    int devices;
+    GListPtr device_list;
 
 } st_query_result_t;
 
@@ -60,10 +60,10 @@ extern xmlNode *stonith_create_op(
 static void free_remote_query(gpointer data)
 {
     if(data) {
-	st_query_result_t *query = data;
+        st_query_result_t *query = data;
         crm_trace("Free'ing query result from %s", query->host);
-	free(query->host);
-	free(query);
+        free(query->host);
+        free(query);
     }
 }
 
@@ -81,17 +81,17 @@ static void free_remote_op(gpointer data)
     free(op->originator);
 
     if(op->query_timer) {
-	g_source_remove(op->query_timer);
+        g_source_remove(op->query_timer);
     }
     if(op->op_timer) {
-	g_source_remove(op->op_timer);
+        g_source_remove(op->op_timer);
     }
     if(op->query_results) {
-	g_list_free_full(op->query_results, free_remote_query);
+        g_list_free_full(op->query_results, free_remote_query);
     }
     if(op->request) {
-	free_xml(op->request);
-	op->request = NULL;
+        free_xml(op->request);
+        op->request = NULL;
     }
     free(op);
 }
@@ -103,51 +103,49 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     xmlNode *notify_data = NULL;
 
     op->completed = time(NULL);
-    
+
     if(op->query_timer) {
-	g_source_remove(op->query_timer);
-	op->query_timer = 0;
+        g_source_remove(op->query_timer);
+        op->query_timer = 0;
     }
     if(op->op_timer) {
-	g_source_remove(op->op_timer);
-	op->op_timer = 0;
+        g_source_remove(op->op_timer);
+        op->op_timer = 0;
     }
-    
-    if(data == NULL) {
-	data = create_xml_node(NULL, "remote-op");
-	local_data = data;
 
+    if(data == NULL) {
+        data = create_xml_node(NULL, "remote-op");
+        local_data = data;
     } else {
-	op->delegate = crm_element_value_copy(data, F_ORIG);
+        op->delegate = crm_element_value_copy(data, F_ORIG);
     }
-    
+
     crm_xml_add_int(data, "state", op->state);
     crm_xml_add(data, F_STONITH_TARGET,    op->target);
     crm_xml_add(data, F_STONITH_OPERATION, op->action); 
 
     if(op->request != NULL) {
-	reply = stonith_construct_reply(op->request, NULL, data, rc);
-	crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
-	
+        reply = stonith_construct_reply(op->request, NULL, data, rc);
+        crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
         do_crm_log(rc==pcmk_ok?LOG_NOTICE:LOG_ERR,
-                   "Operation %s of %s by %s for %s[%s]: %s",
-                   op->action, op->target, op->delegate?op->delegate:"<no-one>",
-                   op->originator, op->client_id, pcmk_strerror(rc));
+               "Operation %s of %s by %s for %s[%s]: %s",
+               op->action, op->target, op->delegate?op->delegate:"<no-one>",
+               op->originator, op->client_id, pcmk_strerror(rc));
 
     } else {
         crm_err("Already sent notifications for '%s of %s by %s' (op=%s, for=%s, state=%d): %s",
                 op->action, op->target, op->delegate, op->id, op->client_id, op->state,
                 pcmk_strerror(rc));
-	return;
+        return;
     }
-    
+
     if(reply) {
-	do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
+        do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
     }
 
     /* Do notification with a clean data object */
     notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
-    crm_xml_add_int(notify_data, "state",	  op->state);
+    crm_xml_add_int(notify_data, "state", op->state);
     crm_xml_add_int(notify_data, F_STONITH_RC,    rc);
     crm_xml_add(notify_data, F_STONITH_TARGET,    op->target);
     crm_xml_add(notify_data, F_STONITH_OPERATION, op->action); 
@@ -156,7 +154,7 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     crm_xml_add(notify_data, F_STONITH_ORIGIN,    op->originator);
 
     do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data, NULL);
-    
+
     free_xml(notify_data);
     free_xml(local_data);
     free_xml(reply);
@@ -165,13 +163,13 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
      * Keep the record around so we can query the history
      */
     if(op->query_results) {
-	g_list_free_full(op->query_results, free_remote_query);
-	op->query_results = NULL;
+        g_list_free_full(op->query_results, free_remote_query);
+        op->query_results = NULL;
     }
 
     if(op->request) {
-	free_xml(op->request);
-	op->request = NULL;
+        free_xml(op->request);
+        op->request = NULL;
     }
 }
 
@@ -182,10 +180,10 @@ static gboolean remote_op_timeout(gpointer userdata)
     op->query_timer = 0;
 
     if(op->state == st_done) {
-	crm_debug("Action %s (%s) for %s already completed", op->action, op->id, op->target);
-	return FALSE;
+        crm_debug("Action %s (%s) for %s already completed", op->action, op->id, op->target);
+        return FALSE;
     }
-    
+
     crm_debug("Action %s (%s) for %s timed out", op->action, op->id, op->target);
     remote_op_done(op, NULL, -ETIME);
     op->state = st_failed;
@@ -199,24 +197,20 @@ static gboolean remote_op_query_timeout(gpointer data)
 
     op->query_timer = 0;
     if(op->state == st_done) {
-	crm_debug("Operation %s for %s already completed", op->id, op->target);
-	
+        crm_debug("Operation %s for %s already completed", op->id, op->target);
     } else if(op->state == st_exec) {
-	crm_debug("Operation %s for %s already in progress", op->id, op->target);
-	
+        crm_debug("Operation %s for %s already in progress", op->id, op->target);
     } else if(op->query_results) {
-	crm_debug("Query %s for %s complete: %d", op->id, op->target, op->state);
-	call_remote_stonith(op, NULL);
-
+        crm_debug("Query %s for %s complete: %d", op->id, op->target, op->state);
+        call_remote_stonith(op, NULL);
     } else {
-	if(op->op_timer) {
-	    g_source_remove(op->op_timer);
-	    op->op_timer = 0;
-	}
-	remote_op_timeout(op);
+        if(op->op_timer) {
+            g_source_remove(op->op_timer);
+            op->op_timer = 0;
+        }
+        remote_op_timeout(op);
     }
-    
-    
+
     return FALSE;
 }
 
@@ -252,32 +246,31 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
 {
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_TRACE);
-    
+
     if(remote_op_list == NULL) {
-	remote_op_list = g_hash_table_new_full(
-	    crm_str_hash, g_str_equal, NULL, free_remote_op);
+        remote_op_list = g_hash_table_new_full(
+        crm_str_hash, g_str_equal, NULL, free_remote_op);
     }
-    
+
     if(peer && dev) {
-	const char *peer_id = crm_element_value(dev, F_STONITH_REMOTE);
-	CRM_CHECK(peer_id != NULL, return NULL);
-	
-	op = g_hash_table_lookup(remote_op_list, peer_id);
-	if(op) {
-	    crm_debug("%s already exists", peer_id);
-	    return op;
-	}
+        const char *peer_id = crm_element_value(dev, F_STONITH_REMOTE);
+        CRM_CHECK(peer_id != NULL, return NULL);
+
+        op = g_hash_table_lookup(remote_op_list, peer_id);
+        if(op) {
+            crm_debug("%s already exists", peer_id);
+            return op;
+        }
     }
-    
+
     op = calloc(1, sizeof(remote_fencing_op_t));
     crm_element_value_int(request, F_STONITH_TIMEOUT, (int*)&(op->base_timeout));
 
     if(peer && dev) {
-	op->id = crm_element_value_copy(dev, F_STONITH_REMOTE);
+        op->id = crm_element_value_copy(dev, F_STONITH_REMOTE);
         crm_trace("Recorded new stonith op: %s", op->id);
-
     } else {
-	op->id = crm_generate_uuid();
+        op->id = crm_generate_uuid();
         crm_trace("Generated new stonith op: %s", op->id);
     }
 
@@ -289,8 +282,8 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     op->originator = crm_element_value_copy(dev, F_STONITH_OWNER);
 
     if(op->originator == NULL) {
-	/* Local request */
-	op->originator = strdup(stonith_our_uname);
+        /* Local request */
+        op->originator = strdup(stonith_our_uname);
     }
 
     if(client) {
@@ -319,8 +312,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     return op;
 }
 
-
-remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request, gboolean manual_ack) 
+remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request, gboolean manual_ack)
 {
     xmlNode *query = NULL;
     const char *client_id = NULL;
@@ -341,19 +333,19 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
         op->query_timer = g_timeout_add(100*op->base_timeout, remote_op_query_timeout, op);
 
     } else {
-        crm_xml_add(query, F_STONITH_DEVICE, "manual_ack");    
+        crm_xml_add(query, F_STONITH_DEVICE, "manual_ack");
     }
-    
+
     crm_xml_add(query, F_STONITH_REMOTE, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
-    crm_xml_add(query, F_STONITH_ACTION, op->action);    
+    crm_xml_add(query, F_STONITH_ACTION, op->action);
     crm_xml_add(query, F_STONITH_OWNER,  op->originator);
-    crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);    
+    crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
     crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
-    
+
     crm_info("Initiating remote operation %s for %s: %s", op->action, op->target, op->id);
     CRM_CHECK(op->action, return NULL);
-    
+
     send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
 
     free_xml(query);
@@ -429,12 +421,12 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     } else if(peer == NULL) {
         peer = stonith_choose_peer(op);
     }
-        
+
     if(peer) {
         xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);
         crm_xml_add(query, F_STONITH_REMOTE, op->id);
-        crm_xml_add(query, F_STONITH_TARGET, op->target);    
-        crm_xml_add(query, F_STONITH_ACTION, op->action);    
+        crm_xml_add(query, F_STONITH_TARGET, op->target);
+        crm_xml_add(query, F_STONITH_ACTION, op->action);
         crm_xml_add(query, F_STONITH_OWNER,  op->originator);
         crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
         crm_xml_add_int(query, F_STONITH_TIMEOUT, timeout);
@@ -450,22 +442,20 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         }
 
         op->state = st_exec;
-	send_cluster_message(peer->host, crm_msg_stonith_ng, query, FALSE);
+        send_cluster_message(peer->host, crm_msg_stonith_ng, query, FALSE);
         free_xml(query);
         return;
 
     } else if(op->query_timer == 0) {
-	/* We've exhausted all available peers */
-	crm_info("No remaining peers capable of terminating %s", op->target);
-	remote_op_timeout(op);
-	
+        /* We've exhausted all available peers */
+        crm_info("No remaining peers capable of terminating %s", op->target);
+        remote_op_timeout(op);
     } else if(device) {
-	crm_info("Waiting for additional peers capable of terminating %s with %s", op->target, device);
-
+        crm_info("Waiting for additional peers capable of terminating %s with %s", op->target, device);
     } else {
-	crm_info("Waiting for additional peers capable of terminating %s", op->target);
+        crm_info("Waiting for additional peers capable of terminating %s", op->target);
     }
-    
+
     free_remote_query(peer);
 }
 
@@ -475,10 +465,9 @@ static gint sort_peers(gconstpointer a, gconstpointer b)
     const st_query_result_t *peer_b = a;
 
     if(peer_a->devices > peer_b->devices) {
-	return -1;
-
+        return -1;
     } else if(peer_a->devices > peer_b->devices) {
-	return 1;
+        return 1;
     }
     return 0;
 }
@@ -492,20 +481,20 @@ int process_remote_stonith_query(xmlNode *msg)
     st_query_result_t *result = NULL;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE, msg, LOG_ERR);
     xmlNode *child = NULL;
-    
+
     CRM_CHECK(dev != NULL, return -EPROTO);
 
     id = crm_element_value(dev, F_STONITH_REMOTE);
     CRM_CHECK(id != NULL, return -EPROTO);
-    
+
     dev = get_xpath_object("//@st-available-devices", msg, LOG_ERR);
     CRM_CHECK(dev != NULL, return -EPROTO);
     crm_element_value_int(dev, "st-available-devices", &devices);
 
     op = g_hash_table_lookup(remote_op_list, id);
     if(op == NULL) {
-	crm_debug("Unknown or expired remote op: %s", id);
-	return -EOPNOTSUPP;
+        crm_debug("Unknown or expired remote op: %s", id);
+        return -EOPNOTSUPP;
     }
 
     op->replies++;
@@ -563,14 +552,14 @@ int process_remote_stonith_exec(xmlNode *msg)
 
     id = crm_element_value(dev, F_STONITH_REMOTE);
     CRM_CHECK(id != NULL, return -EPROTO);
-    
+
     dev = get_xpath_object("//@"F_STONITH_RC, msg, LOG_ERR);
     CRM_CHECK(dev != NULL, return -EPROTO);
 
     crm_element_value_int(dev, F_STONITH_RC, &rc);
 
     if(remote_op_list) {
-	op = g_hash_table_lookup(remote_op_list, id);
+        op = g_hash_table_lookup(remote_op_list, id);
     }
 
     if(op == NULL && rc == pcmk_ok) {
@@ -579,12 +568,12 @@ int process_remote_stonith_exec(xmlNode *msg)
 
         op = create_remote_stonith_op(client_id, msg, TRUE);
     }
-    
+
     if(op == NULL) {
-	/* Could be for an event that began before we started */
-	/* TODO: Record the op for later querying */
-	crm_info("Unknown or expired remote op: %s", id);
-	return -EOPNOTSUPP;
+        /* Could be for an event that began before we started */
+        /* TODO: Record the op for later querying */
+        crm_info("Unknown or expired remote op: %s", id);
+        return -EOPNOTSUPP;
     }
 
     if(is_set(op->call_options, st_opt_topology)) {
@@ -637,7 +626,7 @@ int stonith_fence_history(xmlNode *msg, xmlNode **output)
     if(dev) {
         int options = 0;
 
-	target = crm_element_value(dev, F_STONITH_TARGET);
+        target = crm_element_value(dev, F_STONITH_TARGET);
         crm_element_value_int(msg, F_STONITH_CALLOPTS, &options);
         if(target && (options & st_opt_cs_nodeid)) {
             int nodeid = crm_atoi(target, NULL);
@@ -651,24 +640,24 @@ int stonith_fence_history(xmlNode *msg, xmlNode **output)
 
     if (remote_op_list) {
         GHashTableIter iter;
-	remote_fencing_op_t *op = NULL;
+        remote_fencing_op_t *op = NULL;
 
-	g_hash_table_iter_init(&iter, remote_op_list); 
-	while(g_hash_table_iter_next(&iter, NULL, (void**)&op)) {
-	    xmlNode *entry = NULL;
-	    if (target && strcmp(op->target, target) != 0) {
-	        continue;
-	    }
+        g_hash_table_iter_init(&iter, remote_op_list); 
+        while(g_hash_table_iter_next(&iter, NULL, (void**)&op)) {
+            xmlNode *entry = NULL;
+            if (target && strcmp(op->target, target) != 0) {
+                continue;
+            }
 
-	    rc = 0;
-	    entry = create_xml_node(*output, STONITH_OP_EXEC);
-	    crm_xml_add(entry, F_STONITH_TARGET, op->target);	    
-	    crm_xml_add(entry, F_STONITH_ACTION, op->action);
-	    crm_xml_add(entry, F_STONITH_ORIGIN, op->originator);
-	    crm_xml_add(entry, F_STONITH_DELEGATE, op->delegate);
-	    crm_xml_add_int(entry, F_STONITH_DATE, op->completed);
-	    crm_xml_add_int(entry, F_STONITH_STATE, op->state);
-	}
+            rc = 0;
+            entry = create_xml_node(*output, STONITH_OP_EXEC);
+            crm_xml_add(entry, F_STONITH_TARGET, op->target);
+            crm_xml_add(entry, F_STONITH_ACTION, op->action);
+            crm_xml_add(entry, F_STONITH_ORIGIN, op->originator);
+            crm_xml_add(entry, F_STONITH_DELEGATE, op->delegate);
+            crm_xml_add_int(entry, F_STONITH_DATE, op->completed);
+            crm_xml_add_int(entry, F_STONITH_STATE, op->state);
+        }
     }
 
     return rc;
