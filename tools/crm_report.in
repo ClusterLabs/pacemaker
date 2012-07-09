@@ -76,7 +76,7 @@ Options:
 
 Examples: 
    crm_report -f "2011-12-14 13:05:00" unexplained-apache-failure
-   crm_report -f 2011-12-14 -t 2011-12-15 something-that-took-multiple days
+   crm_report -f 2011-12-14 -t 2011-12-15 something-that-took-multiple-days
    crm_report -f 13:05:00   -t 13:12:00   brief-outage 
 EOF
 }
