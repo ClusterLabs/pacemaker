@@ -4,7 +4,7 @@
 
 When Pacemaker starts up, it automatically records the number and details
 of the nodes in the cluster as well as which stack is being used and the
-version of Pacemaker being used. 
+version of Pacemaker being used.
 
 This is what the base configuration should look like.
 
@@ -71,7 +71,7 @@ For now, we will disable this feature and configure it later in the
 Configuring STONITH section. It is important to note that the use of
 STONITH is highly encouraged, turning it off tells the cluster to
 simply pretend that failed nodes are safely powered off. Some vendors
-will even refuse to support clusters that have it disabled. 
+will even refuse to support clusters that have it disabled.
 
 To disable STONITH, we set the stonith-enabled cluster option to
 false.
@@ -130,9 +130,9 @@ To obtain a list of the available resource classes, run
 
 [source,Bash]
 ----
-# crm ra classes 
+# crm ra classes
 heartbeat
-lsb 
+lsb
 ocf / heartbeat pacemaker
 stonith
 ----
@@ -144,7 +144,7 @@ Heartbeat, run
 ----
 # crm ra list ocf pacemaker
 ClusterMon    Dummy         HealthCPU     HealthSMART   Stateful      SysInfo
-SystemHealth  controld      o2cb          ping          pingd         
+SystemHealth  controld      o2cb          ping          pingd
 # crm ra list ocf heartbeat
 AoEtarget            AudibleAlarm         CTDB                 ClusterMon
 Delay                Dummy                EvmsSCC              Evmsd
@@ -163,7 +163,7 @@ lxc                  mysql                mysql-proxy          nfsserver
 nginx                oracle               oralsnr              pgsql
 pingd                portblock            postfix              proftpd
 rsyncd               scsi2reservation     sfex                 symlink
-syslog-ng            tomcat               vmware               
+syslog-ng            tomcat               vmware
 ----
 
 Now verify that the IP resource has been added and display the cluster's
@@ -200,7 +200,7 @@ Online: [ pcmk-1 pcmk-2 ]
 == Perform a Failover ==
 
 Being a high-availability cluster, we should test failover of our new
-resource before moving on. 
+resource before moving on.
 
 First, find the node on which the IP address is running.
 
@@ -311,7 +311,7 @@ check the cluster's status.
 [source,Bash]
 ----
 # service corosync start
-Starting Corosync Cluster Engine (corosync): [ OK ]      
+Starting Corosync Cluster Engine (corosync): [ OK ]
 # service pacemaker start
 Starting Pacemaker Cluster Manager: [ OK ]# crm_mon
 ============
