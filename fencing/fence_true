@@ -17,54 +17,54 @@ REDHAT_COPYRIGHT="Copyright (C) Red Hat, Inc. 2004-2010 All rights reserved."
 plug_status="on"
 
 def get_outlets_status(conn, options):
-	result={}
+    result={}
 
-        if (not (options["-n"])):
-                fail_usage("Failed: You have to enter existing machine!")
-        else:
-		port=options["-n"]
-		result[port]=[plug_status, "fake"]
+    if (not (options["-n"])):
+        fail_usage("Failed: You have to enter existing machine!")
+    else:
+        port=options["-n"]
+        result[port]=[plug_status, "fake"]
 
-	return result
+    return result
 
 def get_power_status(conn, options):
-	outlets=get_outlets_status(conn,options)
+    outlets=get_outlets_status(conn,options)
 
-        if (not (options["-n"] in outlets)):
-                fail_usage("Failed: You have to enter existing machine!")
-        else:
-                return outlets[options["-n"]][0]
+    if (not (options["-n"] in outlets)):
+        fail_usage("Failed: You have to enter existing machine!")
+    else:
+        return outlets[options["-n"]][0]
 
 def set_power_status(conn, options):
-	global plug_status
-	plug_status = "off"
+    global plug_status
+    plug_status = "off"
 
 def main():
-	device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",
-			"no_password", "power_wait", "power_timeout", ]
+    device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",
+            "no_password", "power_wait", "power_timeout", ]
 
-	atexit.register(atexit_handler)
+    atexit.register(atexit_handler)
 
-	pinput = process_input(device_opt)
+    pinput = process_input(device_opt)
 
-	# Fake options to keep the library happy
-	#pinput["-p"] = "none"
-	pinput["-a"] = "localhost"
-	pinput["-C"] = ","
+    # Fake options to keep the library happy
+    #pinput["-p"] = "none"
+    pinput["-a"] = "localhost"
+    pinput["-C"] = ","
 
-	options = check_input(device_opt, pinput)
-	if options["-o"] == "monitor":
-		sys.exit(0)
+    options = check_input(device_opt, pinput)
+    if options["-o"] == "monitor":
+        sys.exit(0)
 
-	## Defaults for fence agent
-	docs = { }
-	docs["shortdesc"] = "Fake fence agent"
-	docs["longdesc"] = "fence_true is a fake Fencing agent which always reports success without doing anything."
-	show_docs(options, docs)
+    ## Defaults for fence agent
+    docs = { }
+    docs["shortdesc"] = "Fake fence agent"
+    docs["longdesc"] = "fence_true is a fake Fencing agent which always reports success without doing anything."
+    show_docs(options, docs)
 
-	## Operate the fencing device
-	result = fence_action(None, options, set_power_status, get_power_status, get_outlets_status)
-	sys.exit(result)
+    ## Operate the fencing device
+    result = fence_action(None, options, set_power_status, get_power_status, get_outlets_status)
+    sys.exit(result)
 
 if __name__ == "__main__":
-	main()
+    main()
