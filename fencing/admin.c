@@ -181,7 +181,7 @@ main(int argc, char ** argv)
 		    ++argerr;
 		} else {
 		    crm_info("Got: '%s'='%s'", name, value);
-		    stonith_key_value_add(params, name, value);
+		    params = stonith_key_value_add(params, name, value);
 		}
 		break;
 	    case 'e':
@@ -194,7 +194,7 @@ main(int argc, char ** argv)
 			++argerr;
 		    } else {
 			crm_info("Got: '%s'='%s'", optarg, env);
-                        stonith_key_value_add( params, optarg, env);
+                        params = stonith_key_value_add( params, optarg, env);
 		    }
 		}
 		break;
