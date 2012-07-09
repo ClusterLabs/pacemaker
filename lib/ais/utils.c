@@ -17,6 +17,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/cluster/internal.h>
 #include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>

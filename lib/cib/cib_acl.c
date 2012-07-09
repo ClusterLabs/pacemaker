@@ -21,7 +21,8 @@
 #include <pwd.h>
 
 #include <crm/cib.h>
-#include <cib_private.h>
+#include <crm/cib/internal.h>
+#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 typedef struct acl_obj_s {
