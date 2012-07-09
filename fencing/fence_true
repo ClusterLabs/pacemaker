@@ -19,7 +19,7 @@ plug_status="on"
 def get_outlets_status(conn, options):
     result={}
 
-    if (not (options["-n"])):
+    if (options.has_key("-n") == 0):
         fail_usage("Failed: You have to enter existing machine!")
     else:
         port=options["-n"]
@@ -30,7 +30,7 @@ def get_outlets_status(conn, options):
 def get_power_status(conn, options):
     outlets=get_outlets_status(conn,options)
 
-    if (not (options["-n"] in outlets)):
+    if len(outlets) == 0 or options.has_key("-n") == 0:
         fail_usage("Failed: You have to enter existing machine!")
     else:
         return outlets[options["-n"]][0]
@@ -53,7 +53,7 @@ def main():
     pinput["-C"] = ","
 
     options = check_input(device_opt, pinput)
-    if options["-o"] == "monitor":
+    if options.has_key("-o") and (options["-o"] == "monitor"):
         sys.exit(0)
 
     ## Defaults for fence agent
