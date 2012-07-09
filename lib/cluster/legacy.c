@@ -17,6 +17,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/cluster/internal.h>
 #include <bzlib.h>
 #include <crm/common/ipc.h>
 #include <crm/cluster.h>
