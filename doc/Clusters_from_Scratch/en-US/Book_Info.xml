@@ -15,7 +15,7 @@
 			The purpose of this document is to provide a start-to-finish guide to building an example active/passive cluster with Pacemaker and show how it can be converted to an active/active one.
 		</para>
 		<para>
-			The example cluster will use: 
+			The example cluster will use:
 			<orderedlist>
 				<listitem>
 					<para>
