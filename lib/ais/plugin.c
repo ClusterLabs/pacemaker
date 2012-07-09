@@ -108,7 +108,7 @@ static crm_child_t pcmk_children[] = {
 /* *INDENT-ON* */
 
 void send_cluster_id(void);
-int send_cluster_msg_raw(const AIS_Message * ais_msg);
+int send_plugin_msg_raw(const AIS_Message * ais_msg);
 char *pcmk_generate_membership_data(void);
 gboolean check_message_sanity(const AIS_Message * msg, const char *data);
 
@@ -1244,7 +1244,7 @@ pcmk_remove_member(void *conn, ais_void_ptr * msg)
     if (data != NULL) {
         char *bcast = ais_concat("remove-peer", data, ':');
 
-        send_cluster_msg(crm_msg_ais, NULL, bcast);
+        send_plugin_msg(crm_msg_ais, NULL, bcast);
         ais_info("Sent: %s", bcast);
         ais_free(bcast);
     }
@@ -1545,7 +1545,7 @@ route_ais_message(const AIS_Message * msg, gboolean local_origin)
         /* forward to other hosts */
         ais_trace("Forwarding to cluster");
         reason = "cluster delivery failed";
-        rc = send_cluster_msg_raw(mutable);
+        rc = send_plugin_msg_raw(mutable);
     }
 
     if (rc != 0) {
@@ -1560,7 +1560,7 @@ route_ais_message(const AIS_Message * msg, gboolean local_origin)
 }
 
 int
-send_cluster_msg_raw(const AIS_Message * ais_msg)
+send_plugin_msg_raw(const AIS_Message * ais_msg)
 {
     int rc = 0;
     struct iovec iovec;

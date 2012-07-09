@@ -20,6 +20,6 @@
 #  define AIS_CRM_PLUGIN__H
 
 extern GHashTable *membership_notify_list;
-extern int send_cluster_msg_raw(const AIS_Message * ais_msg);
+extern int send_plugin_msg_raw(const AIS_Message * ais_msg);
 
 #endif

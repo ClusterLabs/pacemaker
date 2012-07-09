@@ -448,7 +448,7 @@ get_ais_data(const AIS_Message * msg)
 }
 
 int
-send_cluster_msg(enum crm_ais_msg_types type, const char *host, const char *data)
+send_plugin_msg(enum crm_ais_msg_types type, const char *host, const char *data)
 {
     int rc = 0;
     int data_len = 0;
@@ -487,7 +487,7 @@ send_cluster_msg(enum crm_ais_msg_types type, const char *host, const char *data
         memset(ais_msg->host.uname, 0, MAX_NAME);
     }
 
-    rc = send_cluster_msg_raw(ais_msg);
+    rc = send_plugin_msg_raw(ais_msg);
     ais_free(ais_msg);
 
     return rc;
