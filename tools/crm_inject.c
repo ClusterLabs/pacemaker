@@ -104,7 +104,6 @@ create_node_entry(cib_t * cib_conn, char *node)
         /* Using node uname as uuid ala corosync/openais */
         crm_xml_add(cib_object, XML_ATTR_ID, node);
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
-        crm_xml_add(cib_object, XML_ATTR_TYPE, NORMALNODE);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_NODES, cib_object,
                                cib_sync_call | cib_scope_local);
         /* Not bothering with subsequent query to see if it exists,

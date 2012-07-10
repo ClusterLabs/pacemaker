@@ -953,32 +953,6 @@ fsa_dump_actions(long long action, const char *text)
     }
 }
 
-void
-create_node_entry(const char *uuid, const char *uname, const char *type)
-{
-
-    /* make sure a node entry exists for the new node
-     *
-     * this will add anyone except the first ever node in the cluster
-     *   since it will also be the DC which doesnt go through the
-     *   join process (with itself).  We can include a special case
-     *   later if desired.
-     */
-    xmlNode *tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
-
-    crm_trace("Creating node entry for %s", uname);
-    set_uuid(tmp1, XML_ATTR_UUID, uname);
-
-    crm_xml_add(tmp1, XML_ATTR_UNAME, uname);
-    crm_xml_add(tmp1, XML_ATTR_TYPE, type);
-
-    fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1,
-                        cib_scope_local | cib_quorum_override | cib_can_create);
-
-    free_xml(tmp1);
-
-}
-
 xmlNode *
 create_node_state(const char *uname, const char *in_cluster,
                   const char *is_peer, const char *join_state, const char *exp_state,

@@ -57,8 +57,6 @@ extern xmlNode *create_node_state(const char *uname, const char *in_cluster,
                                   const char *is_peer, const char *join_state,
                                   const char *exp_state, gboolean clear_shutdown, const char *src);
 
-extern void create_node_entry(const char *uuid, const char *uname, const char *type);
-
 extern gboolean stop_subsystem(struct crm_subsystem_s *centry, gboolean force_quit);
 extern gboolean start_subsystem(struct crm_subsystem_s *centry);
 

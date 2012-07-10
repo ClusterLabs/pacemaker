@@ -536,6 +536,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     const char *join_to = NULL;
     const char *join_state = NULL;
     xmlNode *acknak = NULL;
+    xmlNode *tmp1 = NULL;
     crm_node_t *join_node = NULL;
 
     if (key == NULL || value == NULL) {
@@ -545,8 +546,15 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     join_to = (const char *)key;
     join_state = (const char *)value;
 
-    /* make sure the node exists in the config section */
-    create_node_entry(join_to, join_to, NORMALNODE);
+    /* make sure a node entry exists for the new node */
+    crm_trace("Creating node entry for %s", join_to);
+
+    tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
+    set_uuid(tmp1, XML_ATTR_UUID, join_to);
+    crm_xml_add(tmp1, XML_ATTR_UNAME, join_to);
+
+    fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1, cib_scope_local | cib_quorum_override | cib_can_create);
+    free_xml(tmp1);
 
     join_node = crm_get_peer(0, join_to);
     if (crm_is_peer_active(join_node) == FALSE) {

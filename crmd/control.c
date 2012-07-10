@@ -923,7 +923,6 @@ create_cib_node_definition(gpointer key, gpointer value, gpointer user_data)
     cib_new_node = create_xml_node(cib_nodes, XML_CIB_TAG_NODE);
     crm_xml_add(cib_new_node, XML_ATTR_ID, node->uuid);
     crm_xml_add(cib_new_node, XML_ATTR_UNAME, node->uname);
-    crm_xml_add(cib_new_node, XML_ATTR_TYPE, NORMALNODE);
 }
 
 void
