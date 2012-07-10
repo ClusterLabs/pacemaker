@@ -1,31 +1,31 @@
 <transition_graph cluster-delay="60s" stonith-timeout="430s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <pseudo_event id="50" operation="running" operation_key="UMgroup01_running_0">
+      <pseudo_event id="51" operation="running" operation_key="UMgroup01_running_0">
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="42" operation="start" operation_key="UmVIPcheck_start_0" on_node="srv04" on_node_uuid="srv04"/>
+        <rsc_op id="43" operation="start" operation_key="UmVIPcheck_start_0" on_node="srv04" on_node_uuid="srv04"/>
       </trigger>
       <trigger>
-        <rsc_op id="43" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04"/>
+        <rsc_op id="44" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04"/>
       </trigger>
       <trigger>
-        <rsc_op id="45" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04"/>
+        <rsc_op id="46" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04"/>
       </trigger>
       <trigger>
-        <rsc_op id="47" operation="start" operation_key="UmDummy02_start_0" on_node="srv04" on_node_uuid="srv04"/>
+        <rsc_op id="48" operation="start" operation_key="UmDummy02_start_0" on_node="srv04" on_node_uuid="srv04"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="start" operation_key="UMgroup01_start_0"/>
+        <pseudo_event id="50" operation="start" operation_key="UMgroup01_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <pseudo_event id="49" operation="start" operation_key="UMgroup01_start_0">
+      <pseudo_event id="50" operation="start" operation_key="UMgroup01_start_0">
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -33,103 +33,111 @@
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="42" operation="start" operation_key="UmVIPcheck_start_0" on_node="srv04" on_node_uuid="srv04">
+      <rsc_op id="43" operation="start" operation_key="UmVIPcheck_start_0" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmVIPcheck" long-id="UMgroup01:UmVIPcheck" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_start_delay="2000" CRM_meta_timeout="92000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="49" operation="start" operation_key="UMgroup01_start_0"/>
+        <pseudo_event id="50" operation="start" operation_key="UMgroup01_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="44" operation="monitor" operation_key="UmIPaddr_monitor_10000" on_node="srv04" on_node_uuid="srv04">
+      <rsc_op id="45" operation="monitor" operation_key="UmIPaddr_monitor_10000" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmIPaddr" long-id="UMgroup01:UmIPaddr" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="43" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04"/>
+        <rsc_op id="44" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="43" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04">
+      <rsc_op id="44" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmIPaddr" long-id="UMgroup01:UmIPaddr" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="42" operation="start" operation_key="UmVIPcheck_start_0" on_node="srv04" on_node_uuid="srv04"/>
+        <rsc_op id="43" operation="start" operation_key="UmVIPcheck_start_0" on_node="srv04" on_node_uuid="srv04"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="start" operation_key="UMgroup01_start_0"/>
+        <pseudo_event id="50" operation="start" operation_key="UMgroup01_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
     <action_set>
-      <rsc_op id="46" operation="monitor" operation_key="UmDummy01_monitor_10000" on_node="srv04" on_node_uuid="srv04">
+      <rsc_op id="47" operation="monitor" operation_key="UmDummy01_monitor_10000" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmDummy01" long-id="UMgroup01:UmDummy01" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="45" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04"/>
+        <rsc_op id="46" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="45" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04">
+      <rsc_op id="46" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmDummy01" long-id="UMgroup01:UmDummy01" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="43" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04"/>
+        <rsc_op id="44" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="start" operation_key="UMgroup01_start_0"/>
+        <pseudo_event id="50" operation="start" operation_key="UMgroup01_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="7">
     <action_set>
-      <rsc_op id="48" operation="monitor" operation_key="UmDummy02_monitor_10000" on_node="srv04" on_node_uuid="srv04">
+      <rsc_op id="49" operation="monitor" operation_key="UmDummy02_monitor_10000" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmDummy02" long-id="UMgroup01:UmDummy02" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="standby" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="47" operation="start" operation_key="UmDummy02_start_0" on_node="srv04" on_node_uuid="srv04"/>
+        <rsc_op id="48" operation="start" operation_key="UmDummy02_start_0" on_node="srv04" on_node_uuid="srv04"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="47" operation="start" operation_key="UmDummy02_start_0" on_node="srv04" on_node_uuid="srv04">
+      <rsc_op id="48" operation="start" operation_key="UmDummy02_start_0" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmDummy02" long-id="UMgroup01:UmDummy02" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="standby" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="45" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04"/>
+        <rsc_op id="46" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="start" operation_key="UMgroup01_start_0"/>
+        <pseudo_event id="50" operation="start" operation_key="UMgroup01_start_0"/>
       </trigger>
     </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <crm_event id="192" operation="do_shutdown" operation_key="do_shutdown" on_node="srv01" on_node_uuid="srv01">
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
   </synapse>
 </transition_graph>
 

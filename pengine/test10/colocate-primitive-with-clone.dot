@@ -23,4 +23,5 @@ digraph "g" {
 "UmVIPcheck_start_0 srv04" -> "UMgroup01_running_0" [ style = bold]
 "UmVIPcheck_start_0 srv04" -> "UmIPaddr_start_0 srv04" [ style = bold]
 "UmVIPcheck_start_0 srv04" [ style=bold color="green" fontcolor="black" ]
+"do_shutdown srv01" [ style=bold color="green" fontcolor="black"]
 }

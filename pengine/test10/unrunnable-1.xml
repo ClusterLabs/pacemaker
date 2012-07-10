@@ -103,7 +103,7 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" crmd="online" in_ccm="true" ha="active" expected="down" join="member">
+    <node_state id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" crmd="online" in_ccm="true" ha="active" expected="member" join="member">
       <transient_attributes id="transient_attributes.auto-1">
         <instance_attributes id="instance_attributes.id22562"><nvpair id="nvpair.id22569" name="probe_complete" value="true"/></instance_attributes>
       </transient_attributes>

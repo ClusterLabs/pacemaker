@@ -773,6 +773,13 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
     const char *terminate = g_hash_table_lookup(this_node->details->attrs, "terminate");
 
+/*
+  - XML_NODE_IN_CLUSTER    ::= true|false
+  - XML_NODE_IS_PEER       ::= true|false|online|offline
+  - XML_NODE_JOIN_STATE    ::= member|down|pending|banned
+  - XML_NODE_EXPECTED      ::= member|down
+*/
+
     if (crm_is_true(terminate)) {
         do_terminate = TRUE;
 
@@ -785,85 +792,62 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         }
     }
 
-    if (crm_is_true(in_cluster)
-        && safe_str_eq(is_peer, ONLINESTATUS)) {
+    crm_trace("%s: in_cluster=%s, is_peer=%s, join=%s, expected=%s, term=%d",
+              this_node->details->uname, crm_str(in_cluster), crm_str(is_peer),
+              crm_str(join), crm_str(exp_state), do_terminate);
 
-        if (safe_str_eq(join, CRMD_JOINSTATE_MEMBER)) {
-            online = TRUE;
-            if (do_terminate) {
-                pe_fence_node(data_set, this_node, "because termination was requested");
-            }
+    online = crm_is_true(in_cluster);
+    if(safe_str_eq(is_peer, ONLINESTATUS)) {
+        is_peer = XML_BOOLEAN_YES;
+    }
+    if(exp_state == NULL) {
+        exp_state = CRMD_JOINSTATE_DOWN;
+    }
 
-        } else if (join == exp_state /* == NULL */ ) {
-            crm_info("Node %s is coming up", this_node->details->uname);
-            crm_debug("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
-                      crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
+    if(this_node->details->shutdown) {
+        crm_debug("%s is shutting down", this_node->details->uname);
+        online = crm_is_true(is_peer); /* Slightly different criteria since we cant shut down a dead peer */
 
-        } else if (safe_str_eq(join, CRMD_JOINSTATE_PENDING)) {
-            crm_info("Node %s is not ready to run resources", this_node->details->uname);
+    } else if(do_terminate == FALSE && safe_str_eq(exp_state, CRMD_JOINSTATE_DOWN)) {
+
+        /* TO-DO: Have the crmd no longer pre-set CRMD_JOINSTATE_DOWN for shutdown */
+        if(crm_is_true(in_cluster) || crm_is_true(is_peer)) {
+            crm_info("- Node %s is not ready to run resources", this_node->details->uname);
             this_node->details->standby = TRUE;
             this_node->details->pending = TRUE;
-            online = TRUE;
-
-        } else if (safe_str_eq(join, CRMD_JOINSTATE_NACK)) {
-            crm_warn("Node %s is not part of the cluster", this_node->details->uname);
-            this_node->details->standby = TRUE;
-            this_node->details->pending = TRUE;
-            online = TRUE;
-
-        } else if (safe_str_eq(join, exp_state)) {
-            crm_info("Node %s is still coming up: %s", this_node->details->uname, join);
-            crm_info("\tin_cluster=%s, is_peer=%s",
-                     crm_str(in_cluster), crm_str(is_peer));
-            this_node->details->standby = TRUE;
-            this_node->details->pending = TRUE;
-            online = TRUE;
 
         } else {
-            crm_warn("Node %s (%s) is un-expectedly down",
-                     this_node->details->uname, this_node->details->id);
-            crm_info("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
-                     crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
-            pe_fence_node(data_set, this_node, "because it is un-expectedly down");
+            crm_trace("%s is down or still coming up", this_node->details->uname);
         }
 
-    } else if (crm_is_true(in_cluster) == FALSE
-               && safe_str_eq(is_peer, OFFLINESTATUS)
-               && this_node->details->expected_up == FALSE) {
-        crm_debug("Node %s is down: join=%s, expected=%s",
-                  this_node->details->uname, crm_str(join), crm_str(exp_state));
+    } else if(crm_is_true(in_cluster) == FALSE) {
+        pe_fence_node(data_set, this_node, "because the node was not part of the cluster");
 
-#if 0
-        /* While a nice optimization, it causes the cluster to block until the node
-         *  comes back online.  Which is a serious problem if the cluster software
-         *  is not configured to start at boot or stonith is configured to merely
-         *  stop the node instead of restart it.
-         * Easily triggered by setting terminate=true for the DC
-         */
+    } else if(crm_is_true(is_peer) == FALSE) {
+        pe_fence_node(data_set, this_node, "because our peer process was not available");
+
+        /* Everything is running at this point, now check join state */
+    } else if (safe_str_eq(join, CRMD_JOINSTATE_NACK)) {
+        pe_fence_node(data_set, this_node, "because it failed the pacemaker membership criteria");
+
     } else if (do_terminate) {
-        crm_info("Node %s is %s after forced termination",
-                 this_node->details->uname, crm_is_true(in_cluster) ? "coming up" : "going down");
-        crm_debug("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
-                  crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
+        pe_fence_node(data_set, this_node, "because termination was requested");
 
-        if (crm_is_true(in_cluster) == FALSE) {
-            this_node->details->standby = TRUE;
-            this_node->details->pending = TRUE;
-            online = TRUE;
-        }
-#endif
+    } else if (safe_str_eq(join, CRMD_JOINSTATE_MEMBER)) {
+        crm_info("Node %s is active", this_node->details->uname);
 
-    } else if (this_node->details->expected_up) {
-        /* mark it unclean */
-        pe_fence_node(data_set, this_node, "because it is un-expectedly down");
-        crm_info("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
-                 crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
+    } else if (safe_str_eq(join, CRMD_JOINSTATE_PENDING)) {
+        crm_info("+ Node %s is not ready to run resources", this_node->details->uname);
+        this_node->details->standby = TRUE;
+        this_node->details->pending = TRUE;
 
     } else {
-        crm_info("Node %s is down", this_node->details->uname);
-        crm_debug("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
-                  crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
+        pe_fence_node(data_set, this_node, "because the peer was in an unknown state");
+        crm_warn("%s: in-cluster=%s, is-peer=%s, join=%s, expected=%s, term=%d, shutdown=%d",
+                 this_node->details->uname, crm_str(in_cluster), crm_str(is_peer),
+                 crm_str(join), crm_str(exp_state), do_terminate, this_node->details->shutdown);
     }
+    
     return online;
 }
 
