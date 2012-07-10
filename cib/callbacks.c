@@ -1185,6 +1185,13 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     }
 }
 
+
+#if SUPPORT_HEARTBEAT
+extern oc_ev_t *cib_ev_token;
+static void *ccm_library = NULL;
+int (*ccm_api_callback_done) (void *cookie) = NULL;
+int (*ccm_api_handle_event) (const oc_ev_t * token) = NULL;
+
 void
 cib_client_status_callback(const char *node, const char *client, const char *status, void *private)
 {
@@ -1205,12 +1212,6 @@ cib_client_status_callback(const char *node, const char *client, const char *sta
     }
     return;
 }
-
-#if SUPPORT_HEARTBEAT
-extern oc_ev_t *cib_ev_token;
-static void *ccm_library = NULL;
-int (*ccm_api_callback_done) (void *cookie) = NULL;
-int (*ccm_api_handle_event) (const oc_ev_t * token) = NULL;
 
 int
 cib_ccm_dispatch(gpointer user_data)
