@@ -735,15 +735,10 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
     const char *join_state = crm_element_value(node_state, XML_NODE_JOIN_STATE);
     const char *crm_state = crm_element_value(node_state, XML_NODE_IS_PEER);
     const char *ccm_state = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
-    const char *ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
 
-    if (ha_state == NULL) {
-        ha_state = DEADSTATUS;
-    }
-
-    if (!crm_is_true(ccm_state) || safe_str_eq(ha_state, DEADSTATUS)) {
-        crm_trace("Node is down: ha_state=%s, ccm_state=%s", crm_str(ha_state), crm_str(ccm_state));
+    if (!crm_is_true(ccm_state)) {
+        crm_trace("Node is down: ccm_state=%s", crm_str(ccm_state));
 
     } else if (safe_str_eq(crm_state, ONLINESTATUS)) {
         if (safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
@@ -753,17 +748,15 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
         }
 
     } else if (this_node->details->expected_up == FALSE) {
-        crm_trace("CRMd is down: ha_state=%s, ccm_state=%s", crm_str(ha_state), crm_str(ccm_state));
+        crm_trace("CRMd is down: ccm_state=%s", crm_str(ccm_state));
         crm_trace("\tcrm_state=%s, join_state=%s, expected=%s",
                   crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
 
     } else {
         /* mark it unclean */
         pe_fence_node(data_set, this_node, "because it is partially and/or un-expectedly down");
-        crm_info("\tha_state=%s, ccm_state=%s,"
-                 " crm_state=%s, join_state=%s, expected=%s",
-                 crm_str(ha_state), crm_str(ccm_state),
-                 crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
+        crm_info("\tccm_state=%s, crm_state=%s, join_state=%s, expected=%s",
+                 crm_str(ccm_state), crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
     }
     return online;
 }
@@ -777,13 +770,8 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     const char *join_state = crm_element_value(node_state, XML_NODE_JOIN_STATE);
     const char *crm_state = crm_element_value(node_state, XML_NODE_IS_PEER);
     const char *ccm_state = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
-    const char *ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
     const char *terminate = g_hash_table_lookup(this_node->details->attrs, "terminate");
-
-    if (ha_state == NULL) {
-        ha_state = DEADSTATUS;
-    }
 
     if (crm_is_true(terminate)) {
         do_terminate = TRUE;
@@ -798,7 +786,6 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     }
 
     if (crm_is_true(ccm_state)
-        && safe_str_eq(ha_state, ACTIVESTATUS)
         && safe_str_eq(crm_state, ONLINESTATUS)) {
 
         if (safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
@@ -809,10 +796,8 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 
         } else if (join_state == exp_state /* == NULL */ ) {
             crm_info("Node %s is coming up", this_node->details->uname);
-            crm_debug("\tha_state=%s, ccm_state=%s,"
-                      " crm_state=%s, join_state=%s, expected=%s",
-                      crm_str(ha_state), crm_str(ccm_state),
-                      crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
+            crm_debug("\tccm_state=%s, crm_state=%s, join_state=%s, expected=%s",
+                      crm_str(ccm_state), crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
 
         } else if (safe_str_eq(join_state, CRMD_JOINSTATE_PENDING)) {
             crm_info("Node %s is not ready to run resources", this_node->details->uname);
@@ -828,8 +813,8 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 
         } else if (safe_str_eq(join_state, exp_state)) {
             crm_info("Node %s is still coming up: %s", this_node->details->uname, join_state);
-            crm_info("\tha_state=%s, ccm_state=%s, crm_state=%s",
-                     crm_str(ha_state), crm_str(ccm_state), crm_str(crm_state));
+            crm_info("\tccm_state=%s, crm_state=%s",
+                     crm_str(ccm_state), crm_str(crm_state));
             this_node->details->standby = TRUE;
             this_node->details->pending = TRUE;
             online = TRUE;
@@ -837,14 +822,12 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         } else {
             crm_warn("Node %s (%s) is un-expectedly down",
                      this_node->details->uname, this_node->details->id);
-            crm_info("\tha_state=%s, ccm_state=%s,"
-                     " crm_state=%s, join_state=%s, expected=%s",
-                     crm_str(ha_state), crm_str(ccm_state),
-                     crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
+            crm_info("\tccm_state=%s, crm_state=%s, join_state=%s, expected=%s",
+                     crm_str(ccm_state), crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
             pe_fence_node(data_set, this_node, "because it is un-expectedly down");
         }
 
-    } else if (crm_is_true(ccm_state) == FALSE && safe_str_eq(ha_state, DEADSTATUS)
+    } else if (crm_is_true(ccm_state) == FALSE
                && safe_str_eq(crm_state, OFFLINESTATUS)
                && this_node->details->expected_up == FALSE) {
         crm_debug("Node %s is down: join_state=%s, expected=%s",
@@ -860,10 +843,8 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     } else if (do_terminate) {
         crm_info("Node %s is %s after forced termination",
                  this_node->details->uname, crm_is_true(ccm_state) ? "coming up" : "going down");
-        crm_debug("\tha_state=%s, ccm_state=%s,"
-                  " crm_state=%s, join_state=%s, expected=%s",
-                  crm_str(ha_state), crm_str(ccm_state),
-                  crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
+        crm_debug("\tccm_state=%s, crm_state=%s, join_state=%s, expected=%s",
+                  crm_str(ccm_state), crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
 
         if (crm_is_true(ccm_state) == FALSE) {
             this_node->details->standby = TRUE;
@@ -875,17 +856,13 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     } else if (this_node->details->expected_up) {
         /* mark it unclean */
         pe_fence_node(data_set, this_node, "because it is un-expectedly down");
-        crm_info("\tha_state=%s, ccm_state=%s,"
-                 " crm_state=%s, join_state=%s, expected=%s",
-                 crm_str(ha_state), crm_str(ccm_state),
-                 crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
+        crm_info("\tccm_state=%s, crm_state=%s, join_state=%s, expected=%s",
+                 crm_str(ccm_state), crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
 
     } else {
         crm_info("Node %s is down", this_node->details->uname);
-        crm_debug("\tha_state=%s, ccm_state=%s,"
-                  " crm_state=%s, join_state=%s, expected=%s",
-                  crm_str(ha_state), crm_str(ccm_state),
-                  crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
+        crm_debug("\tccm_state=%s, crm_state=%s, join_state=%s, expected=%s",
+                  crm_str(ccm_state), crm_str(crm_state), crm_str(join_state), crm_str(exp_state));
     }
     return online;
 }

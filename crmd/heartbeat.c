@@ -397,14 +397,14 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
         /* this node is toast */
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, OFFLINESTATUS);
         if (AM_I_DC) {
-            update = create_node_state(node, DEADSTATUS, XML_BOOLEAN_NO, OFFLINESTATUS,
+            update = create_node_state(node, XML_BOOLEAN_NO, OFFLINESTATUS,
                                        CRMD_JOINSTATE_DOWN, NULL, TRUE, __FUNCTION__);
         }
 
     } else {
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, ONLINESTATUS);
         if (AM_I_DC) {
-            update = create_node_state(node, ACTIVESTATUS, NULL, NULL,
+            update = create_node_state(node, NULL, NULL,
                                        CRMD_JOINSTATE_PENDING, NULL, FALSE, __FUNCTION__);
         }
     }
@@ -459,7 +459,7 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
 
         crm_trace("Got client status callback");
         update =
-            create_node_state(node, NULL, NULL, status, join, NULL, clear_shutdown, __FUNCTION__);
+            create_node_state(node, NULL, status, join, NULL, clear_shutdown, __FUNCTION__);
 
         fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
                             cib_scope_local | cib_quorum_override | cib_can_create);

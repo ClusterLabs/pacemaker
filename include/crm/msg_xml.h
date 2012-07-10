@@ -228,7 +228,6 @@
 #  define XML_NODE_EXPECTED     	"expected"
 #  define XML_NODE_IN_CLUSTER        	"in_ccm"
 #  define XML_NODE_IS_PEER    	"crmd"
-#  define XML_CIB_ATTR_HASTATE    	"ha"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #  define XML_CIB_ATTR_STONITH	    	"stonith"

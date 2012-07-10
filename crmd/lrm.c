@@ -788,7 +788,7 @@ do_lrm_query(gboolean is_replace)
         shut_down = TRUE;
     }
 
-    xml_state = create_node_state(fsa_our_uname, ACTIVESTATUS, XML_BOOLEAN_TRUE,
+    xml_state = create_node_state(fsa_our_uname, XML_BOOLEAN_TRUE,
                                   ONLINESTATUS, CRMD_JOINSTATE_MEMBER, exp_state,
                                   !shut_down, __FUNCTION__);
 
@@ -1582,7 +1582,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
     if (to_sys == NULL) {
         to_sys = CRM_SYSTEM_TENGINE;
     }
-    update = create_node_state(fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
+    update = create_node_state(fsa_our_uname, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
 
     iter = create_xml_node(update, XML_CIB_TAG_LRM);
     crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);

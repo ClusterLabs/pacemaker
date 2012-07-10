@@ -894,7 +894,7 @@ handle_shutdown_request(xmlNode * stored_msg)
 
     crm_log_xml_trace(stored_msg, "message");
 
-    node_state = create_node_state(host_from, NULL, NULL, NULL, NULL,
+    node_state = create_node_state(host_from, NULL, NULL, NULL,
                                    CRMD_STATE_INACTIVE, FALSE, __FUNCTION__);
 
     fsa_cib_anon_update(XML_CIB_TAG_STATUS, node_state, cib_quorum_override);

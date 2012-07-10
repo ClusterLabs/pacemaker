@@ -165,14 +165,12 @@ modify_node(cib_t * cib_conn, char *node, gboolean up)
     xmlNode *cib_node = inject_node_state(cib_conn, node);
 
     if (up) {
-        crm_xml_add(cib_node, XML_CIB_ATTR_HASTATE, ACTIVESTATUS);
         crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_YES);
         crm_xml_add(cib_node, XML_NODE_IS_PEER, ONLINESTATUS);
         crm_xml_add(cib_node, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
         crm_xml_add(cib_node, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
 
     } else {
-        crm_xml_add(cib_node, XML_CIB_ATTR_HASTATE, DEADSTATUS);
         crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_NO);
         crm_xml_add(cib_node, XML_NODE_IS_PEER, OFFLINESTATUS);
         crm_xml_add(cib_node, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_DOWN);

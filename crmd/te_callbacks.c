@@ -208,12 +208,10 @@ te_update_diff(const char *event, xmlNode * msg)
             xmlNode *node = getXpathResult(xpathObj, lpc);
             const char *event_node = crm_element_value(node, XML_ATTR_ID);
             const char *ccm_state = crm_element_value(node, XML_NODE_IN_CLUSTER);
-            const char *ha_state = crm_element_value(node, XML_CIB_ATTR_HASTATE);
             const char *shutdown_s = crm_element_value(node, XML_CIB_ATTR_SHUTDOWN);
             const char *crmd_state = crm_element_value(node, XML_NODE_IS_PEER);
 
             if (safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
-                || safe_str_eq(ha_state, DEADSTATUS)
                 || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
                 crm_action_t *shutdown = match_down_event(0, event_node, NULL);
 

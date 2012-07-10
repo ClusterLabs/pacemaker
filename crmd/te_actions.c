@@ -70,7 +70,6 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
 
     crm_xml_add(node_state, XML_ATTR_UUID, uuid);
     crm_xml_add(node_state, XML_ATTR_UNAME, target);
-    crm_xml_add(node_state, XML_CIB_ATTR_HASTATE, DEADSTATUS);
     crm_xml_add(node_state, XML_NODE_IN_CLUSTER, XML_BOOLEAN_NO);
     crm_xml_add(node_state, XML_NODE_IS_PEER, OFFLINESTATUS);
     crm_xml_add(node_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_DOWN);

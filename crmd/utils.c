@@ -980,8 +980,8 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 }
 
 xmlNode *
-create_node_state(const char *uname, const char *ha_state, const char *ccm_state,
-                  const char *crmd_state, const char *join_state, const char *exp_state,
+create_node_state(const char *uname, const char *in_cluster,
+                  const char *is_peer, const char *join_state, const char *exp_state,
                   gboolean clear_shutdown, const char *src)
 {
     xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
@@ -996,9 +996,8 @@ create_node_state(const char *uname, const char *ha_state, const char *ccm_state
     }
 
     crm_xml_add(node_state, XML_ATTR_UNAME, uname);
-    crm_xml_add(node_state, XML_CIB_ATTR_HASTATE, ha_state);
-    crm_xml_add(node_state, XML_NODE_IN_CLUSTER, ccm_state);
-    crm_xml_add(node_state, XML_NODE_IS_PEER, crmd_state);
+    crm_xml_add(node_state, XML_NODE_IN_CLUSTER, in_cluster);
+    crm_xml_add(node_state, XML_NODE_IS_PEER, is_peer);
     crm_xml_add(node_state, XML_NODE_JOIN_STATE, join_state);
     crm_xml_add(node_state, XML_NODE_EXPECTED, exp_state);
     crm_xml_add(node_state, XML_ATTR_ORIGIN, src);

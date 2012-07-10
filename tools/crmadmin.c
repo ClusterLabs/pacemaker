@@ -567,18 +567,16 @@ is_node_online(xmlNode * node_state)
     const char *join_state = crm_element_value(node_state, XML_NODE_JOIN_STATE);
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
     const char *crm_state = crm_element_value(node_state, XML_NODE_IS_PEER);
-    const char *ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
     const char *ccm_state = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
 
     if (safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)
-        && (ha_state == NULL || safe_str_eq(ha_state, "active"))
         && crm_is_true(ccm_state)
         && safe_str_eq(crm_state, "online")) {
         crm_trace("Node %s is online", uname);
         return TRUE;
     }
-    crm_trace("Node %s: ha=%s ccm=%s join=%s exp=%s crm=%s",
-                uname, crm_str(ha_state), crm_str(ccm_state),
+    crm_trace("Node %s: ccm=%s join=%s exp=%s crm=%s",
+                uname, crm_str(ccm_state),
                 crm_str(join_state), crm_str(exp_state), crm_str(crm_state));
     crm_trace("Node %s is offline", uname);
     return FALSE;

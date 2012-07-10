@@ -146,7 +146,6 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
     const char *join = NULL;
     crm_node_t *node = value;
     struct update_data_s *data = (struct update_data_s *)user_data;
-    enum crm_proc_flag messaging = crm_proc_plugin | crm_proc_heartbeat | crm_proc_cpg;
 
     data->state = XML_BOOLEAN_NO;
     if (safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
@@ -173,7 +172,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
     }
 
     tmp1 =
-        create_node_state(node->uname, (node->processes & messaging) ? ACTIVESTATUS : DEADSTATUS,
+        create_node_state(node->uname,
                           data->state,
                           (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS, join,
                           NULL, FALSE, data->caller);

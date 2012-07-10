@@ -53,8 +53,8 @@ extern gboolean crm_timer_start(fsa_timer_t * timer);
 extern gboolean crm_timer_popped(gpointer data);
 extern gboolean is_timer_started(fsa_timer_t *timer);
 
-extern xmlNode *create_node_state(const char *uname, const char *ha_state, const char *ccm_state,
-                                  const char *crmd_state, const char *join_state,
+extern xmlNode *create_node_state(const char *uname, const char *in_cluster,
+                                  const char *is_peer, const char *join_state,
                                   const char *exp_state, gboolean clear_shutdown, const char *src);
 
 extern void create_node_entry(const char *uuid, const char *uname, const char *type);
