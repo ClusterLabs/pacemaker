@@ -71,10 +71,10 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     crm_xml_add(node_state, XML_ATTR_UUID, uuid);
     crm_xml_add(node_state, XML_ATTR_UNAME, target);
     crm_xml_add(node_state, XML_CIB_ATTR_HASTATE, DEADSTATUS);
-    crm_xml_add(node_state, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
-    crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
-    crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, CRMD_JOINSTATE_DOWN);
-    crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
+    crm_xml_add(node_state, XML_NODE_IN_CLUSTER, XML_BOOLEAN_NO);
+    crm_xml_add(node_state, XML_NODE_IS_PEER, OFFLINESTATUS);
+    crm_xml_add(node_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_DOWN);
+    crm_xml_add(node_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_DOWN);
     crm_xml_add(node_state, XML_ATTR_ORIGIN, __FUNCTION__);
 
     rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, node_state,

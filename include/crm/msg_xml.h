@@ -224,10 +224,10 @@
 #  define XML_CIB_ATTR_CLEAR        	"clear_on"
 #  define XML_CIB_ATTR_SOURCE       	"source"
 
-#  define XML_CIB_ATTR_JOINSTATE    	"join"
-#  define XML_CIB_ATTR_EXPSTATE     	"expected"
-#  define XML_CIB_ATTR_INCCM        	"in_ccm"
-#  define XML_CIB_ATTR_CRMDSTATE    	"crmd"
+#  define XML_NODE_JOIN_STATE    	"join"
+#  define XML_NODE_EXPECTED     	"expected"
+#  define XML_NODE_IN_CLUSTER        	"in_ccm"
+#  define XML_NODE_IS_PEER    	"crmd"
 #  define XML_CIB_ATTR_HASTATE    	"ha"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"

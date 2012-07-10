@@ -997,10 +997,10 @@ create_node_state(const char *uname, const char *ha_state, const char *ccm_state
 
     crm_xml_add(node_state, XML_ATTR_UNAME, uname);
     crm_xml_add(node_state, XML_CIB_ATTR_HASTATE, ha_state);
-    crm_xml_add(node_state, XML_CIB_ATTR_INCCM, ccm_state);
-    crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, crmd_state);
-    crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, join_state);
-    crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE, exp_state);
+    crm_xml_add(node_state, XML_NODE_IN_CLUSTER, ccm_state);
+    crm_xml_add(node_state, XML_NODE_IS_PEER, crmd_state);
+    crm_xml_add(node_state, XML_NODE_JOIN_STATE, join_state);
+    crm_xml_add(node_state, XML_NODE_EXPECTED, exp_state);
     crm_xml_add(node_state, XML_ATTR_ORIGIN, src);
 
     if (clear_shutdown) {

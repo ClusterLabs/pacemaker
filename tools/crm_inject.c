@@ -166,17 +166,17 @@ modify_node(cib_t * cib_conn, char *node, gboolean up)
 
     if (up) {
         crm_xml_add(cib_node, XML_CIB_ATTR_HASTATE, ACTIVESTATUS);
-        crm_xml_add(cib_node, XML_CIB_ATTR_INCCM, XML_BOOLEAN_YES);
-        crm_xml_add(cib_node, XML_CIB_ATTR_CRMDSTATE, ONLINESTATUS);
-        crm_xml_add(cib_node, XML_CIB_ATTR_JOINSTATE, CRMD_JOINSTATE_MEMBER);
-        crm_xml_add(cib_node, XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_MEMBER);
+        crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_YES);
+        crm_xml_add(cib_node, XML_NODE_IS_PEER, ONLINESTATUS);
+        crm_xml_add(cib_node, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
+        crm_xml_add(cib_node, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
 
     } else {
         crm_xml_add(cib_node, XML_CIB_ATTR_HASTATE, DEADSTATUS);
-        crm_xml_add(cib_node, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
-        crm_xml_add(cib_node, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
-        crm_xml_add(cib_node, XML_CIB_ATTR_JOINSTATE, CRMD_JOINSTATE_DOWN);
-        crm_xml_add(cib_node, XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
+        crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_NO);
+        crm_xml_add(cib_node, XML_NODE_IS_PEER, OFFLINESTATUS);
+        crm_xml_add(cib_node, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_DOWN);
+        crm_xml_add(cib_node, XML_NODE_EXPECTED, CRMD_JOINSTATE_DOWN);
     }
 
     crm_xml_add(cib_node, XML_ATTR_ORIGIN, crm_system_name);
@@ -897,7 +897,7 @@ modify_configuration(pe_working_set_t * data_set,
 
         quiet_log(" + Failing node %s\n", node);
         cib_node = modify_node(global_cib, node, TRUE);
-        crm_xml_add(cib_node, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
+        crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_NO);
         CRM_ASSERT(cib_node != NULL);
 
         rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,

@@ -202,7 +202,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
         }
 
-        /* TODO: potentially we also want to set XML_CIB_ATTR_JOINSTATE and XML_CIB_ATTR_EXPSTATE here */
+        /* TODO: potentially we also want to set XML_NODE_JOIN_STATE and XML_NODE_EXPECTED here */
     }
 }
 

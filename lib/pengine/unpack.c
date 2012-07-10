@@ -732,11 +732,11 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
                                    node_t * this_node)
 {
     gboolean online = FALSE;
-    const char *join_state = crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE);
-    const char *crm_state = crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
-    const char *ccm_state = crm_element_value(node_state, XML_CIB_ATTR_INCCM);
+    const char *join_state = crm_element_value(node_state, XML_NODE_JOIN_STATE);
+    const char *crm_state = crm_element_value(node_state, XML_NODE_IS_PEER);
+    const char *ccm_state = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
     const char *ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
-    const char *exp_state = crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
+    const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
 
     if (ha_state == NULL) {
         ha_state = DEADSTATUS;
@@ -774,11 +774,11 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 {
     gboolean online = FALSE;
     gboolean do_terminate = FALSE;
-    const char *join_state = crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE);
-    const char *crm_state = crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
-    const char *ccm_state = crm_element_value(node_state, XML_CIB_ATTR_INCCM);
+    const char *join_state = crm_element_value(node_state, XML_NODE_JOIN_STATE);
+    const char *crm_state = crm_element_value(node_state, XML_NODE_IS_PEER);
+    const char *ccm_state = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
     const char *ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
-    const char *exp_state = crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
+    const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
     const char *terminate = g_hash_table_lookup(this_node->details->attrs, "terminate");
 
     if (ha_state == NULL) {
@@ -895,7 +895,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
 {
     gboolean online = FALSE;
     const char *shutdown = NULL;
-    const char *exp_state = crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
+    const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
 
     if (this_node == NULL) {
         crm_config_err("No node to check");

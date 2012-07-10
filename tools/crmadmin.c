@@ -564,11 +564,11 @@ gboolean
 is_node_online(xmlNode * node_state)
 {
     const char *uname = crm_element_value(node_state, XML_ATTR_UNAME);
-    const char *join_state = crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE);
-    const char *exp_state = crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
-    const char *crm_state = crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
+    const char *join_state = crm_element_value(node_state, XML_NODE_JOIN_STATE);
+    const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
+    const char *crm_state = crm_element_value(node_state, XML_NODE_IS_PEER);
     const char *ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
-    const char *ccm_state = crm_element_value(node_state, XML_CIB_ATTR_INCCM);
+    const char *ccm_state = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
 
     if (safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)
         && (ha_state == NULL || safe_str_eq(ha_state, "active"))
