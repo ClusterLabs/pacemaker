@@ -19,7 +19,12 @@ plug_status="on"
 def get_outlets_status(conn, options):
     result={}
 
-    if (options.has_key("-n") == 0):
+    # This fake agent has no port data to list, so we have to make
+    # something up for the list action.
+    if options.has_key("-o") and options["-o"] == "list":
+        result["fake_port_1"]=[plug_status, "fake"]
+        result["fake_port_2"]=[plug_status, "fake"]
+    elif (options.has_key("-n") == 0):
         fail_usage("Failed: You have to enter existing machine!")
     else:
         port=options["-n"]
