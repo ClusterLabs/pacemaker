@@ -874,7 +874,14 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
         this_node->details->expected_up = TRUE;
     }
 
-    if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
+    if(this_node->details->type != node_member) {
+        this_node->details->unclean = FALSE;
+        online = FALSE; /* As far as resource management is concerned,
+                         * the node is safely offline.
+                         * Anyone caught abusing this logic will be shot
+                         */
+
+    } if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
         online = determine_online_status_no_fencing(data_set, node_state, this_node);
 
     } else {
