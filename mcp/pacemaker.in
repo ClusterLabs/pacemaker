@@ -75,7 +75,7 @@ start()
 	if status $prog > /dev/null 2>&1; then
 		success
 	else
-		$prog > /dev/null 2>&1
+		$prog > /dev/null 2>&1 &
 		
 		# Time to connect to corosync and fail
 		sleep 5
