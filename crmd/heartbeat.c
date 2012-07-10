@@ -32,6 +32,7 @@
 #include <crmd_callbacks.h>
 #include <tengine.h>
 #include <membership.h>
+#include <crm/cib/internal.h>
 
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>
@@ -550,4 +551,62 @@ crmd_ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
     }
 
     return stay_connected;
+}
+
+void
+populate_cib_nodes_ha(gboolean with_client_status)
+{
+    int call_id = 0;
+    const char *ha_node = NULL;
+    xmlNode *cib_node_list = NULL;
+
+    if (fsa_cluster_conn == NULL) {
+        crm_debug("Not connected");
+        return;
+    }
+
+    /* Async get client status information in the cluster */
+    crm_info("Requesting the list of configured nodes");
+    fsa_cluster_conn->llc_ops->init_nodewalk(fsa_cluster_conn);
+
+    cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
+    do {
+        const char *ha_node_type = NULL;
+        const char *ha_node_uuid = NULL;
+        xmlNode *cib_new_node = NULL;
+
+        ha_node = fsa_cluster_conn->llc_ops->nextnode(fsa_cluster_conn);
+        if (ha_node == NULL) {
+            continue;
+        }
+
+        ha_node_type = fsa_cluster_conn->llc_ops->node_type(fsa_cluster_conn, ha_node);
+        if (safe_str_neq(NORMALNODE, ha_node_type)) {
+            crm_debug("Node %s: skipping '%s'", ha_node, ha_node_type);
+            continue;
+        }
+
+        ha_node_uuid = get_uuid(ha_node);
+        if (ha_node_uuid == NULL) {
+            crm_warn("Node %s: no uuid found", ha_node);
+            continue;
+        }
+
+        crm_debug("Node: %s (uuid: %s)", ha_node, ha_node_uuid);
+        cib_new_node = create_xml_node(cib_node_list, XML_CIB_TAG_NODE);
+        crm_xml_add(cib_new_node, XML_ATTR_ID, ha_node_uuid);
+        crm_xml_add(cib_new_node, XML_ATTR_UNAME, ha_node);
+        crm_xml_add(cib_new_node, XML_ATTR_TYPE, ha_node_type);
+
+    } while (ha_node != NULL);
+
+    fsa_cluster_conn->llc_ops->end_nodewalk(fsa_cluster_conn);
+
+    /* Now update the CIB with the list of nodes */
+    fsa_cib_update(XML_CIB_TAG_NODES, cib_node_list,
+                   cib_scope_local | cib_quorum_override, call_id, NULL);
+    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
+
+    free_xml(cib_node_list);
+    crm_trace("Complete");
 }
