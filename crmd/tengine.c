@@ -43,7 +43,7 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 
-#include <crm/cib/internal.h>
+
 #include <crmd.h>
 #include <tengine.h>
 #include <te_callbacks.h>

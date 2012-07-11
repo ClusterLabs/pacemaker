@@ -21,7 +21,7 @@
 #include <sys/param.h>
 
 #include <crm/crm.h>
-#include <crm/cib/internal.h>
+
 #include <crm/msg_xml.h>
 
 #include <crm/pengine/rules.h>
@@ -939,10 +939,13 @@ populate_cib_nodes(gboolean with_client_status)
 #endif
 
     cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
-    g_hash_table_foreach(crm_peer_cache, create_cib_node_definition, cib_node_list);
+    /* if(uname_is_uuid()) { */
+    /*     g_hash_table_foreach(crm_peer_id_cache, create_cib_node_definition, cib_node_list); */
+    /* } else { */
+        g_hash_table_foreach(crm_peer_cache, create_cib_node_definition, cib_node_list);
+    /* } */
 
-    fsa_cib_update(XML_CIB_TAG_NODES, cib_node_list, cib_scope_local | cib_quorum_override, call_id,
-                   NULL);
+    fsa_cib_update(XML_CIB_TAG_NODES, cib_node_list, cib_scope_local | cib_quorum_override, call_id, NULL);
     add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
 
     free_xml(cib_node_list);

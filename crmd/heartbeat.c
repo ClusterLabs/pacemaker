@@ -32,7 +32,7 @@
 #include <crmd_callbacks.h>
 #include <tengine.h>
 #include <membership.h>
-#include <crm/cib/internal.h>
+
 
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>

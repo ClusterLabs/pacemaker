@@ -20,6 +20,7 @@
 
 #  include <crm/crm.h>
 #  include <crm/common/xml.h>
+#  include <crm/cib/internal.h> /* For CIB_OP_MODIFY */
 
 #  define CLIENT_EXIT_WAIT 30
 #  define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"

@@ -23,7 +23,7 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>
-#include <crm/cib/internal.h>
+
 
 #include <tengine.h>
 #include <te_callbacks.h>

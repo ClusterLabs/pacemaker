@@ -24,7 +24,7 @@
 
 #include <crm/crm.h>
 #include <crm/services.h>
-#include <crm/cib/internal.h>
+
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
