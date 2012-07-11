@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="5" operation="start" operation_key="ip_float_right_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
-        <primitive id="ip_float_right" long-id="ip_float_right" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <primitive id="ip_float_right" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.6" ip="192.168.42.124" nic="eth0"/>
       </rsc_op>
     </action_set>
@@ -11,7 +11,7 @@
   <synapse id="1" priority="1000000">
     <action_set>
       <rsc_op id="45" operation="notify" operation_key="drbd_float:0_post_notify_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
-        <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
+        <primitive id="drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource="drbd_float:0 " CRM_meta_notify_slave_uname="sambuca.linbit " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource="drbd_float:0 " CRM_meta_notify_stop_uname="sambuca.linbit " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="float"/>
       </rsc_op>
     </action_set>
@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="44" operation="notify" operation_key="drbd_float:0_pre_notify_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
-        <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
+        <primitive id="drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource="drbd_float:0 " CRM_meta_notify_slave_uname="sambuca.linbit " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource="drbd_float:0 " CRM_meta_notify_stop_uname="sambuca.linbit " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="float"/>
       </rsc_op>
     </action_set>
@@ -37,7 +37,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="43" operation="notify" operation_key="drbd_float:0_pre_notify_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
-        <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
+        <primitive id="drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource="drbd_float:0 " CRM_meta_notify_slave_uname="sambuca.linbit " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource="drbd_float:0 " CRM_meta_notify_stop_uname="sambuca.linbit " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="float"/>
       </rsc_op>
     </action_set>
@@ -50,7 +50,7 @@
   <synapse id="4" priority="1000000">
     <action_set>
       <rsc_op id="42" operation="notify" operation_key="drbd_float:0_post_notify_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
-        <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
+        <primitive id="drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource="drbd_float:0 " CRM_meta_notify_slave_uname="sambuca.linbit " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource="drbd_float:0 " CRM_meta_notify_stop_uname="sambuca.linbit " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="float"/>
       </rsc_op>
     </action_set>
@@ -63,7 +63,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="8" operation="promote" operation_key="drbd_float:0_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
-        <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
+        <primitive id="drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource="drbd_float:0 " CRM_meta_notify_slave_uname="sambuca.linbit " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource="drbd_float:0 " CRM_meta_notify_stop_uname="sambuca.linbit " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="float"/>
       </rsc_op>
     </action_set>
@@ -79,7 +79,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="7" operation="stop" operation_key="drbd_float:0_stop_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
-        <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
+        <primitive id="drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource="drbd_float:0 " CRM_meta_notify_slave_uname="sambuca.linbit " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource="drbd_float:0 " CRM_meta_notify_stop_uname="sambuca.linbit " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="float"/>
       </rsc_op>
     </action_set>
@@ -92,7 +92,7 @@
   <synapse id="7">
     <action_set>
       <rsc_op id="6" operation="start" operation_key="drbd_float:0_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
-        <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
+        <primitive id="drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource="drbd_float:0 " CRM_meta_notify_slave_uname="sambuca.linbit " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource="drbd_float:0 " CRM_meta_notify_stop_uname="sambuca.linbit " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="float"/>
       </rsc_op>
     </action_set>
@@ -374,7 +374,7 @@
   <synapse id="27">
     <action_set>
       <rsc_op id="33" operation="start" operation_key="ip_nfs_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
-        <primitive id="ip_nfs" long-id="nfsexport:ip_nfs" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <primitive id="ip_nfs" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.6" ip="10.9.9.180" nic="eth0"/>
       </rsc_op>
     </action_set>

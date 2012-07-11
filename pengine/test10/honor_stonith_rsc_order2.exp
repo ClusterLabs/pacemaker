@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="9" operation="start" operation_key="S_A:0_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="S_A:0" long-id="S_CLONE:S_A:0" class="stonith" type="fence_xvm"/>
+        <primitive id="S_A:0" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -18,7 +18,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="S_A:0_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="S_A:0" long-id="S_CLONE:S_A:0" class="stonith" type="fence_xvm"/>
+        <primitive id="S_A:0" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -83,7 +83,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="14" operation="start" operation_key="S_B_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="S_B" long-id="S_GROUP:S_B" class="stonith" type="fence_xvm"/>
+        <primitive id="S_B" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -99,7 +99,7 @@
   <synapse id="7">
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="S_B_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="S_B" long-id="S_GROUP:S_B" class="stonith" type="fence_xvm"/>
+        <primitive id="S_B" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -108,7 +108,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="15" operation="start" operation_key="S_C_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="S_C" long-id="S_GROUP:S_C" class="stonith" type="fence_xvm"/>
+        <primitive id="S_C" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -127,7 +127,7 @@
   <synapse id="9">
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="S_C_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="S_C" long-id="S_GROUP:S_C" class="stonith" type="fence_xvm"/>
+        <primitive id="S_C" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -136,7 +136,7 @@
   <synapse id="10">
     <action_set>
       <rsc_op id="16" operation="start" operation_key="S_D_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="S_D" long-id="S_GROUP:S_D" class="stonith" type="fence_xvm"/>
+        <primitive id="S_D" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -155,7 +155,7 @@
   <synapse id="11">
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="S_D_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="S_D" long-id="S_GROUP:S_D" class="stonith" type="fence_xvm"/>
+        <primitive id="S_D" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -164,7 +164,7 @@
   <synapse id="12">
     <action_set>
       <rsc_op id="21" operation="start" operation_key="A_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="A" long-id="A" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -177,7 +177,7 @@
   <synapse id="13">
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="A_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="A" long-id="A" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

@@ -25,7 +25,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="ClusterIP_monitor_30000" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="ClusterIP" long-id="group1:ClusterIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <primitive id="ClusterIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.101"/>
       </rsc_op>
     </action_set>
@@ -38,7 +38,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="4" operation="start" operation_key="ClusterIP_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="ClusterIP" long-id="group1:ClusterIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <primitive id="ClusterIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.101"/>
       </rsc_op>
     </action_set>
@@ -78,7 +78,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="ClusterIP2_monitor_30000" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="ClusterIP2" long-id="group2:ClusterIP2" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <primitive id="ClusterIP2" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.102"/>
       </rsc_op>
     </action_set>
@@ -91,7 +91,7 @@
   <synapse id="7">
     <action_set>
       <rsc_op id="10" operation="start" operation_key="ClusterIP2_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="ClusterIP2" long-id="group2:ClusterIP2" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <primitive id="ClusterIP2" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.102"/>
       </rsc_op>
     </action_set>

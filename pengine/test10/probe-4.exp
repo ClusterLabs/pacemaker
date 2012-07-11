@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="57" operation="monitor" operation_key="migrator_monitor_10000" on_node="pcmk-3" on_node_uuid="pcmk-3">
-        <primitive id="migrator" long-id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="56" operation="start" operation_key="migrator_start_0" on_node="pcmk-3" on_node_uuid="pcmk-3">
-        <primitive id="migrator" long-id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

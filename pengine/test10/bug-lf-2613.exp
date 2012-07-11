@@ -82,7 +82,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="66" operation="monitor" operation_key="prmExPostgreSQLDB1_monitor_5000" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmExPostgreSQLDB1" long-id="grpPostgreSQLDB1:prmExPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmExPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -95,7 +95,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="65" operation="start" operation_key="prmExPostgreSQLDB1_start_0" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmExPostgreSQLDB1" long-id="grpPostgreSQLDB1:prmExPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmExPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -114,7 +114,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="64" operation="stop" operation_key="prmExPostgreSQLDB1_stop_0" on_node="act1" on_node_uuid="act1">
-        <primitive id="prmExPostgreSQLDB1" long-id="grpPostgreSQLDB1:prmExPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmExPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -130,7 +130,7 @@
   <synapse id="7">
     <action_set>
       <rsc_op id="69" operation="monitor" operation_key="prmFsPostgreSQLDB1-1_monitor_5000" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmFsPostgreSQLDB1-1" long-id="grpPostgreSQLDB1:prmFsPostgreSQLDB1-1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmFsPostgreSQLDB1-1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -143,7 +143,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="68" operation="start" operation_key="prmFsPostgreSQLDB1-1_start_0" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmFsPostgreSQLDB1-1" long-id="grpPostgreSQLDB1:prmFsPostgreSQLDB1-1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmFsPostgreSQLDB1-1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -162,7 +162,7 @@
   <synapse id="9">
     <action_set>
       <rsc_op id="67" operation="stop" operation_key="prmFsPostgreSQLDB1-1_stop_0" on_node="act1" on_node_uuid="act1">
-        <primitive id="prmFsPostgreSQLDB1-1" long-id="grpPostgreSQLDB1:prmFsPostgreSQLDB1-1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmFsPostgreSQLDB1-1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -178,7 +178,7 @@
   <synapse id="10">
     <action_set>
       <rsc_op id="72" operation="monitor" operation_key="prmFsPostgreSQLDB1-2_monitor_5000" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmFsPostgreSQLDB1-2" long-id="grpPostgreSQLDB1:prmFsPostgreSQLDB1-2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmFsPostgreSQLDB1-2" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -191,7 +191,7 @@
   <synapse id="11">
     <action_set>
       <rsc_op id="71" operation="start" operation_key="prmFsPostgreSQLDB1-2_start_0" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmFsPostgreSQLDB1-2" long-id="grpPostgreSQLDB1:prmFsPostgreSQLDB1-2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmFsPostgreSQLDB1-2" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -210,7 +210,7 @@
   <synapse id="12">
     <action_set>
       <rsc_op id="70" operation="stop" operation_key="prmFsPostgreSQLDB1-2_stop_0" on_node="act1" on_node_uuid="act1">
-        <primitive id="prmFsPostgreSQLDB1-2" long-id="grpPostgreSQLDB1:prmFsPostgreSQLDB1-2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmFsPostgreSQLDB1-2" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -226,7 +226,7 @@
   <synapse id="13">
     <action_set>
       <rsc_op id="75" operation="monitor" operation_key="prmFsPostgreSQLDB1-3_monitor_5000" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmFsPostgreSQLDB1-3" long-id="grpPostgreSQLDB1:prmFsPostgreSQLDB1-3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmFsPostgreSQLDB1-3" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -239,7 +239,7 @@
   <synapse id="14">
     <action_set>
       <rsc_op id="74" operation="start" operation_key="prmFsPostgreSQLDB1-3_start_0" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmFsPostgreSQLDB1-3" long-id="grpPostgreSQLDB1:prmFsPostgreSQLDB1-3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmFsPostgreSQLDB1-3" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -258,7 +258,7 @@
   <synapse id="15">
     <action_set>
       <rsc_op id="73" operation="stop" operation_key="prmFsPostgreSQLDB1-3_stop_0" on_node="act1" on_node_uuid="act1">
-        <primitive id="prmFsPostgreSQLDB1-3" long-id="grpPostgreSQLDB1:prmFsPostgreSQLDB1-3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmFsPostgreSQLDB1-3" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -274,7 +274,7 @@
   <synapse id="16">
     <action_set>
       <rsc_op id="78" operation="monitor" operation_key="prmIpPostgreSQLDB1_monitor_5000" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmIpPostgreSQLDB1" long-id="grpPostgreSQLDB1:prmIpPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmIpPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -287,7 +287,7 @@
   <synapse id="17">
     <action_set>
       <rsc_op id="77" operation="start" operation_key="prmIpPostgreSQLDB1_start_0" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmIpPostgreSQLDB1" long-id="grpPostgreSQLDB1:prmIpPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmIpPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -306,7 +306,7 @@
   <synapse id="18">
     <action_set>
       <rsc_op id="76" operation="stop" operation_key="prmIpPostgreSQLDB1_stop_0" on_node="act1" on_node_uuid="act1">
-        <primitive id="prmIpPostgreSQLDB1" long-id="grpPostgreSQLDB1:prmIpPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmIpPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -322,7 +322,7 @@
   <synapse id="19">
     <action_set>
       <rsc_op id="80" operation="monitor" operation_key="prmApPostgreSQLDB1_monitor_5000" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmApPostgreSQLDB1" long-id="grpPostgreSQLDB1:prmApPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmApPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -335,7 +335,7 @@
   <synapse id="20">
     <action_set>
       <rsc_op id="79" operation="start" operation_key="prmApPostgreSQLDB1_start_0" on_node="sby1" on_node_uuid="sby1">
-        <primitive id="prmApPostgreSQLDB1" long-id="grpPostgreSQLDB1:prmApPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmApPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -354,7 +354,7 @@
   <synapse id="21">
     <action_set>
       <rsc_op id="2" operation="stop" operation_key="prmApPostgreSQLDB1_stop_0" on_node="act1" on_node_uuid="act1">
-        <primitive id="prmApPostgreSQLDB1" long-id="grpPostgreSQLDB1:prmApPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="prmApPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

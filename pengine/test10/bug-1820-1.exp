@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
       <rsc_op id="9" operation="start" operation_key="p1_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
-         <primitive id="p1" long-id="p1" class="ocf" provider="heartbeat" type="Xen"/>
+        <primitive id="p1" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -15,7 +15,7 @@
    <synapse id="1">
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="p1_monitor_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
-         <primitive id="p1" long-id="p1" class="ocf" provider="heartbeat" type="Xen"/>
+        <primitive id="p1" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -24,7 +24,7 @@
    <synapse id="2">
      <action_set>
       <rsc_op id="6" operation="monitor" operation_key="p1_monitor_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
-         <primitive id="p1" long-id="p1" class="ocf" provider="heartbeat" type="Xen"/>
+        <primitive id="p1" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -89,7 +89,7 @@
    <synapse id="7">
      <action_set>
       <rsc_op id="12" operation="monitor" operation_key="test1_monitor_10000" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
-         <primitive id="test1" long-id="gr1:test1" class="ocf" provider="heartbeat" type="Xen"/>
+        <primitive id="test1" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="60000" allow_migrate="true" crm_feature_set="3.0.6" xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
@@ -102,7 +102,7 @@
    <synapse id="8">
      <action_set>
       <rsc_op id="11" operation="start" operation_key="test1_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
-         <primitive id="test1" long-id="gr1:test1" class="ocf" provider="heartbeat" type="Xen"/>
+        <primitive id="test1" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.6" xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
@@ -118,7 +118,7 @@
    <synapse id="9">
      <action_set>
       <rsc_op id="10" operation="stop" operation_key="test1_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
-         <primitive id="test1" long-id="gr1:test1" class="ocf" provider="heartbeat" type="Xen"/>
+        <primitive id="test1" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_name="stop" CRM_meta_timeout="120000" allow_migrate="true" crm_feature_set="3.0.6" xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
@@ -137,7 +137,7 @@
    <synapse id="10">
      <action_set>
       <rsc_op id="15" operation="monitor" operation_key="test2_monitor_10000" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
-         <primitive id="test2" long-id="gr1:test2" class="ocf" provider="heartbeat" type="Xen"/>
+        <primitive id="test2" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="60000" allow_migrate="true" crm_feature_set="3.0.6" xmfile="/etc/xen/test2"/>
        </rsc_op>
      </action_set>
@@ -150,7 +150,7 @@
    <synapse id="11">
      <action_set>
       <rsc_op id="14" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
-         <primitive id="test2" long-id="gr1:test2" class="ocf" provider="heartbeat" type="Xen"/>
+        <primitive id="test2" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.6" xmfile="/etc/xen/test2"/>
        </rsc_op>
      </action_set>
@@ -169,7 +169,7 @@
    <synapse id="12">
      <action_set>
       <rsc_op id="13" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
-         <primitive id="test2" long-id="gr1:test2" class="ocf" provider="heartbeat" type="Xen"/>
+        <primitive id="test2" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_name="stop" CRM_meta_timeout="120000" allow_migrate="true" crm_feature_set="3.0.6" xmfile="/etc/xen/test2"/>
        </rsc_op>
      </action_set>

@@ -133,9 +133,6 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
         if (strstr(rsc->id, id) == rsc->id) {
             match = TRUE;
 
-        } else if (rsc->long_name && strstr(rsc->long_name, id) == rsc->long_name) {
-            match = TRUE;
-
         } else if (is_set(flags, pe_find_renamed) && rsc->clone_name
                    && strstr(rsc->clone_name, id) == rsc->clone_name) {
             match = TRUE;
@@ -158,9 +155,6 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
 
     } else {
         if (strcmp(rsc->id, id) == 0) {
-            match = TRUE;
-
-        } else if (rsc->long_name && strcmp(rsc->long_name, id) == 0) {
             match = TRUE;
 
         } else if (is_set(flags, pe_find_renamed) && rsc->clone_name

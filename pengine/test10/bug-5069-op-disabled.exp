@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <crm_event id="3" operation="clear_failcount" operation_key="A_clear_failcount_0" on_node="fc16-builder2" on_node_uuid="fc16-builder2">
-        <primitive id="A" long-id="A" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -11,7 +11,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="1" operation="cancel" operation_key="A_monitor_10000" on_node="fc16-builder2" on_node_uuid="fc16-builder2">
-        <primitive id="A" long-id="A" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_call_id="4" CRM_meta_enabled="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="ignore" CRM_meta_operation="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

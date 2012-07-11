@@ -73,7 +73,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="39" operation="start" operation_key="UmVIPcheck_start_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmVIPcheck" long-id="UMgroup01:UmVIPcheck" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmVIPcheck" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_start_delay="2000" CRM_meta_timeout="92000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -89,7 +89,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="38" operation="stop" operation_key="UmVIPcheck_stop_0" on_node="srv01" on_node_uuid="srv01">
-        <primitive id="UmVIPcheck" long-id="UMgroup01:UmVIPcheck" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmVIPcheck" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -105,7 +105,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="42" operation="monitor" operation_key="UmIPaddr_monitor_10000" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmIPaddr" long-id="UMgroup01:UmIPaddr" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmIPaddr" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -118,7 +118,7 @@
   <synapse id="7">
     <action_set>
       <rsc_op id="41" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmIPaddr" long-id="UMgroup01:UmIPaddr" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmIPaddr" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -137,7 +137,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="40" operation="stop" operation_key="UmIPaddr_stop_0" on_node="srv01" on_node_uuid="srv01">
-        <primitive id="UmIPaddr" long-id="UMgroup01:UmIPaddr" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmIPaddr" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -153,7 +153,7 @@
   <synapse id="9">
     <action_set>
       <rsc_op id="45" operation="monitor" operation_key="UmDummy01_monitor_10000" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmDummy01" long-id="UMgroup01:UmDummy01" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmDummy01" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -166,7 +166,7 @@
   <synapse id="10">
     <action_set>
       <rsc_op id="44" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmDummy01" long-id="UMgroup01:UmDummy01" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmDummy01" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -185,7 +185,7 @@
   <synapse id="11">
     <action_set>
       <rsc_op id="43" operation="stop" operation_key="UmDummy01_stop_0" on_node="srv01" on_node_uuid="srv01">
-        <primitive id="UmDummy01" long-id="UMgroup01:UmDummy01" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmDummy01" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="stop" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -201,7 +201,7 @@
   <synapse id="12">
     <action_set>
       <rsc_op id="48" operation="monitor" operation_key="UmDummy02_monitor_10000" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmDummy02" long-id="UMgroup01:UmDummy02" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmDummy02" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="standby" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -214,7 +214,7 @@
   <synapse id="13">
     <action_set>
       <rsc_op id="47" operation="start" operation_key="UmDummy02_start_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmDummy02" long-id="UMgroup01:UmDummy02" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmDummy02" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="standby" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -233,7 +233,7 @@
   <synapse id="14">
     <action_set>
       <rsc_op id="46" operation="stop" operation_key="UmDummy02_stop_0" on_node="srv01" on_node_uuid="srv01">
-        <primitive id="UmDummy02" long-id="UMgroup01:UmDummy02" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="UmDummy02" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -276,7 +276,7 @@
   <synapse id="17">
     <action_set>
       <rsc_op id="95" operation="stop" operation_key="clnUMdummy01:0_stop_0" on_node="srv01" on_node_uuid="srv01">
-        <primitive id="clnUMdummy01:0" long-id="clnUMgroup01:clnUmResource:0:clnUMdummy01:0" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="clnUMdummy01:0" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -292,7 +292,7 @@
   <synapse id="18">
     <action_set>
       <rsc_op id="96" operation="stop" operation_key="clnUMdummy02:0_stop_0" on_node="srv01" on_node_uuid="srv01">
-        <primitive id="clnUMdummy02:0" long-id="clnUMgroup01:clnUmResource:0:clnUMdummy02:0" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="clnUMdummy02:0" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -368,7 +368,7 @@
   <synapse id="23">
     <action_set>
       <rsc_op id="101" operation="start" operation_key="clnUMdummy01:1_start_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="clnUMdummy01:1" long-id="clnUMgroup01:clnUmResource:1:clnUMdummy01:1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="clnUMdummy01:1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -384,7 +384,7 @@
   <synapse id="24">
     <action_set>
       <rsc_op id="15" operation="stop" operation_key="clnUMdummy01:1_stop_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="clnUMdummy01:1" long-id="clnUMgroup01:clnUmResource:1:clnUMdummy01:1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="clnUMdummy01:1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -400,7 +400,7 @@
   <synapse id="25">
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="clnUMdummy01:1_monitor_10000" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="clnUMdummy01:1" long-id="clnUMgroup01:clnUmResource:1:clnUMdummy01:1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="clnUMdummy01:1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -413,7 +413,7 @@
   <synapse id="26">
     <action_set>
       <rsc_op id="103" operation="start" operation_key="clnUMdummy02:1_start_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="clnUMdummy02:1" long-id="clnUMgroup01:clnUmResource:1:clnUMdummy02:1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="clnUMdummy02:1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -432,7 +432,7 @@
   <synapse id="27">
     <action_set>
       <rsc_op id="102" operation="stop" operation_key="clnUMdummy02:1_stop_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="clnUMdummy02:1" long-id="clnUMgroup01:clnUmResource:1:clnUMdummy02:1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="clnUMdummy02:1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -445,7 +445,7 @@
   <synapse id="28">
     <action_set>
       <rsc_op id="16" operation="monitor" operation_key="clnUMdummy02:1_monitor_10000" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="clnUMdummy02:1" long-id="clnUMgroup01:clnUmResource:1:clnUMdummy02:1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="clnUMdummy02:1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

@@ -2,7 +2,7 @@
   <synapse id="0" priority="1000000">
      <action_set>
       <rsc_op id="61" operation="notify" operation_key="rsc_drbd_7788:0_post_notify_demote_0" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042">
-         <primitive id="rsc_drbd_7788:0" long-id="ms_drbd_7788:rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_notify_type="post" CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -15,7 +15,7 @@
    <synapse id="1">
      <action_set>
       <rsc_op id="60" operation="notify" operation_key="rsc_drbd_7788:0_pre_notify_demote_0" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042">
-         <primitive id="rsc_drbd_7788:0" long-id="ms_drbd_7788:rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -28,7 +28,7 @@
    <synapse id="2">
      <action_set>
       <rsc_op id="56" operation="notify" operation_key="rsc_drbd_7788:0_pre_notify_stop_0" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042">
-         <primitive id="rsc_drbd_7788:0" long-id="ms_drbd_7788:rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -41,7 +41,7 @@
   <synapse id="3">
      <action_set>
       <rsc_op id="8" operation="stop" operation_key="rsc_drbd_7788:0_stop_0" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042">
-         <primitive id="rsc_drbd_7788:0" long-id="ms_drbd_7788:rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -54,7 +54,7 @@
   <synapse id="4" priority="1000000">
      <action_set>
       <rsc_op id="63" operation="notify" operation_key="rsc_drbd_7788:1_post_notify_demote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_notify_type="post" CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -67,7 +67,7 @@
    <synapse id="5">
      <action_set>
       <rsc_op id="62" operation="notify" operation_key="rsc_drbd_7788:1_pre_notify_demote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -80,7 +80,7 @@
   <synapse id="6" priority="1000000">
      <action_set>
       <rsc_op id="59" operation="notify" operation_key="rsc_drbd_7788:1_post_notify_promote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_notify_type="post" CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -93,7 +93,7 @@
    <synapse id="7">
      <action_set>
       <rsc_op id="58" operation="notify" operation_key="rsc_drbd_7788:1_pre_notify_promote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -106,7 +106,7 @@
   <synapse id="8">
      <action_set>
       <rsc_op id="57" operation="notify" operation_key="rsc_drbd_7788:1_pre_notify_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -119,7 +119,7 @@
   <synapse id="9" priority="1000000">
      <action_set>
       <rsc_op id="55" operation="notify" operation_key="rsc_drbd_7788:1_post_notify_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_notify_type="post" CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -132,7 +132,7 @@
    <synapse id="10">
      <action_set>
       <rsc_op id="11" operation="promote" operation_key="rsc_drbd_7788:1_promote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -151,7 +151,7 @@
   <synapse id="11">
      <action_set>
       <rsc_op id="10" operation="stop" operation_key="rsc_drbd_7788:1_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -167,7 +167,7 @@
    <synapse id="12">
      <action_set>
       <rsc_op id="9" operation="demote" operation_key="rsc_drbd_7788:1_demote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -180,7 +180,7 @@
   <synapse id="13">
      <action_set>
       <rsc_op id="4" operation="start" operation_key="rsc_drbd_7788:1_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="rsc_drbd_7788:1 " CRM_meta_notify_demote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_inactive_resource="rsc_drbd_7788:2 " CRM_meta_notify_master_resource="rsc_drbd_7788:1 " CRM_meta_notify_master_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_promote_resource="rsc_drbd_7788:1 " CRM_meta_notify_promote_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_slave_resource="rsc_drbd_7788:0 " CRM_meta_notify_slave_uname="arc-dknightlx " CRM_meta_notify_start_resource="rsc_drbd_7788:1 " CRM_meta_notify_start_uname="arc-tkincaidlx.wsicorp.com " CRM_meta_notify_stop_resource="rsc_drbd_7788:0 rsc_drbd_7788:1 " CRM_meta_notify_stop_uname="arc-dknightlx arc-tkincaidlx.wsicorp.com " CRM_meta_timeout="120000" crm_feature_set="3.0.6" drbd_resource="pgsql" dummy="cause_restart"/>
        </rsc_op>
      </action_set>
@@ -626,7 +626,7 @@
    <synapse id="42">
      <action_set>
       <rsc_op id="37" operation="start" operation_key="fs_mirror_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="fs_mirror" long-id="grp_pgsql_mirror:fs_mirror" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="fs_mirror" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.6" device="/dev/drbd0" directory="/mirror" fstype="ext3" notify="true"/>
        </rsc_op>
      </action_set>
@@ -642,7 +642,7 @@
    <synapse id="43">
      <action_set>
       <rsc_op id="36" operation="stop" operation_key="fs_mirror_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="fs_mirror" long-id="grp_pgsql_mirror:fs_mirror" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="fs_mirror" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.6" device="/dev/drbd0" directory="/mirror" fstype="ext3" notify="true"/>
        </rsc_op>
      </action_set>
@@ -658,7 +658,7 @@
    <synapse id="44">
      <action_set>
       <rsc_op id="39" operation="start" operation_key="pgsql_5555_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="pgsql_5555" long-id="grp_pgsql_mirror:pgsql_5555" class="ocf" provider="heartbeat" type="pgsql"/>
+        <primitive id="pgsql_5555" class="ocf" provider="heartbeat" type="pgsql"/>
         <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.6" logfile="/var/log/pg.log" pgctl="/usr/local/pgsql/bin/pg_ctl" pgdata="/mirror/pgsql/data_hb" pgdba="postgres" pgport="5555" psql="/usr/local/pgsql/bin/psql" start_opt="-p 5555"/>
        </rsc_op>
      </action_set>
@@ -677,7 +677,7 @@
    <synapse id="45">
      <action_set>
       <rsc_op id="38" operation="stop" operation_key="pgsql_5555_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="pgsql_5555" long-id="grp_pgsql_mirror:pgsql_5555" class="ocf" provider="heartbeat" type="pgsql"/>
+        <primitive id="pgsql_5555" class="ocf" provider="heartbeat" type="pgsql"/>
         <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.6" logfile="/var/log/pg.log" pgctl="/usr/local/pgsql/bin/pg_ctl" pgdata="/mirror/pgsql/data_hb" pgdba="postgres" pgport="5555" psql="/usr/local/pgsql/bin/psql" start_opt="-p 5555"/>
        </rsc_op>
      </action_set>
@@ -693,7 +693,7 @@
    <synapse id="46">
      <action_set>
       <rsc_op id="2" operation="monitor" operation_key="pgsql_5555_monitor_30000" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="pgsql_5555" long-id="grp_pgsql_mirror:pgsql_5555" class="ocf" provider="heartbeat" type="pgsql"/>
+        <primitive id="pgsql_5555" class="ocf" provider="heartbeat" type="pgsql"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="40000" crm_feature_set="3.0.6" logfile="/var/log/pg.log" pgctl="/usr/local/pgsql/bin/pg_ctl" pgdata="/mirror/pgsql/data_hb" pgdba="postgres" pgport="5555" psql="/usr/local/pgsql/bin/psql" start_opt="-p 5555"/>
        </rsc_op>
      </action_set>
@@ -706,7 +706,7 @@
    <synapse id="47">
      <action_set>
       <rsc_op id="41" operation="start" operation_key="IPaddr_147_81_84_133_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="IPaddr_147_81_84_133" long-id="grp_pgsql_mirror:IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <primitive id="IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.6" ip="147.81.84.133"/>
        </rsc_op>
      </action_set>
@@ -725,7 +725,7 @@
    <synapse id="48">
      <action_set>
       <rsc_op id="40" operation="stop" operation_key="IPaddr_147_81_84_133_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="IPaddr_147_81_84_133" long-id="grp_pgsql_mirror:IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <primitive id="IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.6" ip="147.81.84.133"/>
        </rsc_op>
      </action_set>
@@ -738,7 +738,7 @@
    <synapse id="49">
      <action_set>
       <rsc_op id="1" operation="monitor" operation_key="IPaddr_147_81_84_133_monitor_25000" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
-         <primitive id="IPaddr_147_81_84_133" long-id="grp_pgsql_mirror:IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <primitive id="IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_enabled="true" CRM_meta_interval="25000" CRM_meta_name="monitor" CRM_meta_role="Started" CRM_meta_start_delay="0" CRM_meta_timeout="25000" crm_feature_set="3.0.6" ip="147.81.84.133"/>
        </rsc_op>
      </action_set>

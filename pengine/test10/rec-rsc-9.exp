@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
       <rsc_op id="6" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
+        <primitive id="rsc1" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -18,7 +18,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1">
-        <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
+        <primitive id="rsc1" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -80,7 +80,7 @@
    <synapse id="6">
      <action_set>
       <rsc_op id="8" operation="start" operation_key="rsc2_start_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="rsc2" long-id="foo:rsc2" class="heartbeat" type="apache"/>
+        <primitive id="rsc2" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -96,7 +96,7 @@
    <synapse id="7">
      <action_set>
       <rsc_op id="7" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="rsc2" long-id="foo:rsc2" class="heartbeat" type="apache"/>
+        <primitive id="rsc2" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -166,7 +166,7 @@
    <synapse id="12">
      <action_set>
       <rsc_op id="13" operation="start" operation_key="rsc3_start_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="rsc3" long-id="bar:rsc3" class="heartbeat" type="apache"/>
+        <primitive id="rsc3" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -182,7 +182,7 @@
    <synapse id="13">
      <action_set>
       <rsc_op id="1" operation="stop" operation_key="rsc3_stop_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="rsc3" long-id="bar:rsc3" class="heartbeat" type="apache"/>
+        <primitive id="rsc3" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>

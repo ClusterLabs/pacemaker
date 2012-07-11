@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="12" operation="start" operation_key="dummy2_start_0" on_node="c21.chepkov.lan" on_node_uuid="c21.chepkov.lan">
-        <primitive id="dummy2" long-id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="11" operation="stop" operation_key="dummy2_stop_0" on_node="c20.chepkov.lan" on_node_uuid="c20.chepkov.lan">
-        <primitive id="dummy2" long-id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -28,7 +28,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="dummy4_monitor_0" on_node="c21.chepkov.lan" on_node_uuid="c21.chepkov.lan">
-        <primitive id="dummy4" long-id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -37,7 +37,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="dummy4_monitor_0" on_node="c20.chepkov.lan" on_node_uuid="c20.chepkov.lan">
-        <primitive id="dummy4" long-id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -46,7 +46,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="dummy4_monitor_0" on_node="c19.chepkov.lan" on_node_uuid="c19.chepkov.lan">
-        <primitive id="dummy4" long-id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -55,7 +55,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="dummy3_stop_0" on_node="c21.chepkov.lan" on_node_uuid="c21.chepkov.lan">
-        <primitive id="dummy3" long-id="dummy3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="dummy3" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

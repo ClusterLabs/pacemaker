@@ -202,7 +202,6 @@ enum pe_action_flags {
 struct resource_s {
     char *id;
     char *clone_name;
-    char *long_name;
     xmlNode *xml;
     xmlNode *orig_xml;
     xmlNode *ops_xml;

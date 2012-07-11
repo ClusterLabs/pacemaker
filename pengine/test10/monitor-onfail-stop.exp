@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="A_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="A" long-id="A" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

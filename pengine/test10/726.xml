@@ -87,7 +87,7 @@
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22410">
-          <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" op-digest="08c815ac958ff8151d72300fda3a6c0e" operation="start" interval="0" transition-key="0:0" crm_feature_set="2.0" transition-magic="0:0;0:some_key" call-id="2" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_stop_0" operation="stop" interval="0" transition-key="0:1" crm_feature_set="2.0" transition-magic="0:0;1:some_key" call-id="5" rc-code="0" op-status="0"/>
           </lrm_resource>
@@ -103,7 +103,7 @@
             <lrm_rsc_op id="DcIPaddr_start_0" op-digest="21ccbd2b8e65014ca7b36a2070642a2e" operation="start" interval="0" transition-key="0:1" crm_feature_set="2.0" transition-magic="0:0;1:some_key" call-id="6" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DcIPaddr_monitor_5000" op-digest="517d7b3575d97d408fbe19f3cfcc69fe" interval="5000" operation="monitor" op-status="-1" rc-code="-1" transition-key="-1:1" crm_feature_set="2.0" transition-magic="-1:-1;1:some_key" call-id="-1"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:1" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_start_0" op-digest="08c815ac958ff8151d72300fda3a6c0e" operation="start" interval="0" op-status="-1" rc-code="-1" transition-key="-1:1" crm_feature_set="2.0" transition-magic="-1:-1;1:some_key" call-id="-1"/>
           </lrm_resource>
         </lrm_resources>
@@ -115,7 +115,7 @@
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22729">
-          <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" op-digest="08c815ac958ff8151d72300fda3a6c0e" operation="start" interval="0" op-status="-1" rc-code="-1" transition-key="-1:1" crm_feature_set="2.0" transition-magic="-1:-1;1:some_key" call-id="-1"/>
           </lrm_resource>
         </lrm_resources>

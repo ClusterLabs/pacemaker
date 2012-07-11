@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="4" operation="start" operation_key="dummy-10s-timeout_start_0" on_node="hex-14" on_node_uuid="hex-14">
-        <primitive id="dummy-10s-timeout" long-id="dummy-10s-timeout" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="dummy-10s-timeout" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -11,7 +11,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="5" operation="start" operation_key="dummy-default-timeout_start_0" on_node="hex-14" on_node_uuid="hex-14">
-        <primitive id="dummy-default-timeout" long-id="dummy-default-timeout" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="dummy-default-timeout" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="15000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

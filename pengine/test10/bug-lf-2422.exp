@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="sbd_stonith_monitor_15000" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
-        <primitive id="sbd_stonith" long-id="sbd_stonith" class="stonith" type="external/sbd"/>
+        <primitive id="sbd_stonith" class="stonith" type="external/sbd"/>
         <attributes CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_start_delay="15000" CRM_meta_timeout="30000" crm_feature_set="3.0.6" sbd_device="/dev/sda1"/>
       </rsc_op>
     </action_set>
@@ -44,7 +44,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="18" operation="stop" operation_key="o2cb:0_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4">
-        <primitive id="o2cb:0" long-id="c-o2stage:o2stage:0:o2cb:0" class="ocf" provider="ocfs2" type="o2cb"/>
+        <primitive id="o2cb:0" class="ocf" provider="ocfs2" type="o2cb"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -60,7 +60,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="19" operation="stop" operation_key="cmirror:0_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4">
-        <primitive id="cmirror:0" long-id="c-o2stage:o2stage:0:cmirror:0" class="ocf" provider="lvm2" type="cmirrord"/>
+        <primitive id="cmirror:0" class="ocf" provider="lvm2" type="cmirrord"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -106,7 +106,7 @@
   <synapse id="7">
     <action_set>
       <rsc_op id="28" operation="stop" operation_key="o2cb:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1">
-        <primitive id="o2cb:1" long-id="c-o2stage:o2stage:1:o2cb:1" class="ocf" provider="ocfs2" type="o2cb"/>
+        <primitive id="o2cb:1" class="ocf" provider="ocfs2" type="o2cb"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -122,7 +122,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="29" operation="stop" operation_key="cmirror:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1">
-        <primitive id="cmirror:1" long-id="c-o2stage:o2stage:1:cmirror:1" class="ocf" provider="lvm2" type="cmirrord"/>
+        <primitive id="cmirror:1" class="ocf" provider="lvm2" type="cmirrord"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -168,7 +168,7 @@
   <synapse id="11">
     <action_set>
       <rsc_op id="38" operation="stop" operation_key="o2cb:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3">
-        <primitive id="o2cb:2" long-id="c-o2stage:o2stage:2:o2cb:2" class="ocf" provider="ocfs2" type="o2cb"/>
+        <primitive id="o2cb:2" class="ocf" provider="ocfs2" type="o2cb"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -184,7 +184,7 @@
   <synapse id="12">
     <action_set>
       <rsc_op id="39" operation="stop" operation_key="cmirror:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3">
-        <primitive id="cmirror:2" long-id="c-o2stage:o2stage:2:cmirror:2" class="ocf" provider="lvm2" type="cmirrord"/>
+        <primitive id="cmirror:2" class="ocf" provider="lvm2" type="cmirrord"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -230,7 +230,7 @@
   <synapse id="15">
     <action_set>
       <rsc_op id="48" operation="stop" operation_key="o2cb:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
-        <primitive id="o2cb:3" long-id="c-o2stage:o2stage:3:o2cb:3" class="ocf" provider="ocfs2" type="o2cb"/>
+        <primitive id="o2cb:3" class="ocf" provider="ocfs2" type="o2cb"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -246,7 +246,7 @@
   <synapse id="16">
     <action_set>
       <rsc_op id="49" operation="stop" operation_key="cmirror:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
-        <primitive id="cmirror:3" long-id="c-o2stage:o2stage:3:cmirror:3" class="ocf" provider="lvm2" type="cmirrord"/>
+        <primitive id="cmirror:3" class="ocf" provider="lvm2" type="cmirrord"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -295,7 +295,7 @@
   <synapse id="19">
     <action_set>
       <rsc_op id="58" operation="stop" operation_key="ocfs:0_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4">
-        <primitive id="ocfs:0" long-id="c-ocfs:ocfs:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="ocfs:0" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
@@ -311,7 +311,7 @@
   <synapse id="20">
     <action_set>
       <rsc_op id="59" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1">
-        <primitive id="ocfs:1" long-id="c-ocfs:ocfs:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="ocfs:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
@@ -327,7 +327,7 @@
   <synapse id="21">
     <action_set>
       <rsc_op id="60" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3">
-        <primitive id="ocfs:2" long-id="c-ocfs:ocfs:2" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="ocfs:2" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
@@ -343,7 +343,7 @@
   <synapse id="22">
     <action_set>
       <rsc_op id="61" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
-        <primitive id="ocfs:3" long-id="c-ocfs:ocfs:3" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="ocfs:3" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>

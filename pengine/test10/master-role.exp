@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="10" operation="demote" operation_key="res_Stateful_1:1_demote_0" on_node="sles11-b" on_node_uuid="8165b1f7-da29-43db-8510-065ac1d33469">
-        <primitive id="res_Stateful_1:1" long-id="ms_res_Stateful_1:res_Stateful_1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <primitive id="res_Stateful_1:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

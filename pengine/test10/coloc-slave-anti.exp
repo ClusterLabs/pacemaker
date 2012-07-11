@@ -31,7 +31,7 @@
    <synapse id="2">
      <action_set>
       <rsc_op id="50" operation="monitor" operation_key="fs-1_monitor_20000" on_node="pollux" on_node_uuid="26cfbecf-dc25-42e1-84de-325ca9e457b5">
-         <primitive id="fs-1" long-id="group-1:fs-1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="fs-1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/drbd0" directory="/drbd" fstype="xfs" options="noatime,exec,nosuid,nodev"/>
        </rsc_op>
      </action_set>
@@ -44,7 +44,7 @@
    <synapse id="3">
      <action_set>
       <rsc_op id="49" operation="start" operation_key="fs-1_start_0" on_node="pollux" on_node_uuid="26cfbecf-dc25-42e1-84de-325ca9e457b5">
-         <primitive id="fs-1" long-id="group-1:fs-1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="fs-1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_name="start" CRM_meta_timeout="10000" crm_feature_set="3.0.6" device="/dev/drbd0" directory="/drbd" fstype="xfs" options="noatime,exec,nosuid,nodev"/>
        </rsc_op>
      </action_set>
@@ -57,7 +57,7 @@
    <synapse id="4">
      <action_set>
       <rsc_op id="52" operation="monitor" operation_key="ip-198_monitor_30000" on_node="pollux" on_node_uuid="26cfbecf-dc25-42e1-84de-325ca9e457b5">
-         <primitive id="ip-198" long-id="group-1:ip-198" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <primitive id="ip-198" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="25000" cidr_netmask="28" crm_feature_set="3.0.6" iflabel="198" ip="80.237.189.198" nic="eth1"/>
        </rsc_op>
      </action_set>
@@ -70,7 +70,7 @@
    <synapse id="5">
      <action_set>
       <rsc_op id="51" operation="start" operation_key="ip-198_start_0" on_node="pollux" on_node_uuid="26cfbecf-dc25-42e1-84de-325ca9e457b5">
-         <primitive id="ip-198" long-id="group-1:ip-198" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <primitive id="ip-198" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_name="start" CRM_meta_timeout="10000" cidr_netmask="28" crm_feature_set="3.0.6" iflabel="198" ip="80.237.189.198" nic="eth1"/>
        </rsc_op>
      </action_set>
@@ -86,7 +86,7 @@
    <synapse id="6">
      <action_set>
       <rsc_op id="54" operation="monitor" operation_key="apache_monitor_60000" on_node="pollux" on_node_uuid="26cfbecf-dc25-42e1-84de-325ca9e457b5">
-         <primitive id="apache" long-id="group-1:apache" class="ocf" provider="custom" type="apache2"/>
+        <primitive id="apache" class="ocf" provider="custom" type="apache2"/>
         <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_start_delay="10000" CRM_meta_timeout="40000" apache2_bin="/usr/sbin/apache2" apache2_config="/etc/apache2/httpd.conf" apache2_listening_check="80.237.189.198:80" apache2_opts="-D STATUS -D INFO -D LANGUAGE -D SSL -D SUEXEC -D PHP5" apache2_pidfile="/var/run/apache2.pid" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -99,7 +99,7 @@
    <synapse id="7">
      <action_set>
       <rsc_op id="53" operation="start" operation_key="apache_start_0" on_node="pollux" on_node_uuid="26cfbecf-dc25-42e1-84de-325ca9e457b5">
-         <primitive id="apache" long-id="group-1:apache" class="ocf" provider="custom" type="apache2"/>
+        <primitive id="apache" class="ocf" provider="custom" type="apache2"/>
         <attributes CRM_meta_name="start" CRM_meta_timeout="30000" apache2_bin="/usr/sbin/apache2" apache2_config="/etc/apache2/httpd.conf" apache2_listening_check="80.237.189.198:80" apache2_opts="-D STATUS -D INFO -D LANGUAGE -D SSL -D SUEXEC -D PHP5" apache2_pidfile="/var/run/apache2.pid" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>

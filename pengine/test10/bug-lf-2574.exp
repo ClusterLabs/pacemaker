@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="15" operation="monitor" operation_key="main_rsc_monitor_10000" on_node="srv03" on_node_uuid="e2ffc1ed-3ebe-47e2-b51b-b0f04b454311">
-        <primitive id="main_rsc" long-id="main_rsc" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="main_rsc" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="14" operation="start" operation_key="main_rsc_start_0" on_node="srv03" on_node_uuid="e2ffc1ed-3ebe-47e2-b51b-b0f04b454311">
-        <primitive id="main_rsc" long-id="main_rsc" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="main_rsc" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -28,7 +28,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="main_rsc_stop_0" on_node="srv01" on_node_uuid="45f985d7-e7c8-4834-b01b-16b99526672b">
-        <primitive id="main_rsc" long-id="main_rsc" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="main_rsc" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -37,7 +37,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="26" operation="stop" operation_key="prmPingd:0_stop_0" on_node="srv01" on_node_uuid="45f985d7-e7c8-4834-b01b-16b99526672b">
-        <primitive id="prmPingd:0" long-id="clnPingd:prmPingd:0" class="ocf" provider="pacemaker" type="ping"/>
+        <primitive id="prmPingd:0" class="ocf" provider="pacemaker" type="ping"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000" crm_feature_set="3.0.6" host_list="192.168.40.1"/>
       </rsc_op>
     </action_set>

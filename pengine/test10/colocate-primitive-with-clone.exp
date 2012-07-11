@@ -34,7 +34,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="43" operation="start" operation_key="UmVIPcheck_start_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmVIPcheck" long-id="UMgroup01:UmVIPcheck" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="UmVIPcheck" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_start_delay="2000" CRM_meta_timeout="92000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -47,7 +47,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="45" operation="monitor" operation_key="UmIPaddr_monitor_10000" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmIPaddr" long-id="UMgroup01:UmIPaddr" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="UmIPaddr" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -60,7 +60,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="44" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmIPaddr" long-id="UMgroup01:UmIPaddr" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="UmIPaddr" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -76,7 +76,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="47" operation="monitor" operation_key="UmDummy01_monitor_10000" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmDummy01" long-id="UMgroup01:UmDummy01" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="UmDummy01" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -89,7 +89,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="46" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmDummy01" long-id="UMgroup01:UmDummy01" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="UmDummy01" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -105,7 +105,7 @@
   <synapse id="7">
     <action_set>
       <rsc_op id="49" operation="monitor" operation_key="UmDummy02_monitor_10000" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmDummy02" long-id="UMgroup01:UmDummy02" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="UmDummy02" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="standby" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -118,7 +118,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="48" operation="start" operation_key="UmDummy02_start_0" on_node="srv04" on_node_uuid="srv04">
-        <primitive id="UmDummy02" long-id="UMgroup01:UmDummy02" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="UmDummy02" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="standby" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

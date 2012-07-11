@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="7" operation="start" operation_key="cups_lsb:0_start_0" on_node="pcw2058.see.ed.ac.uk" on_node_uuid="pcw2058.see.ed.ac.uk">
-        <primitive id="cups_lsb:0" long-id="cups_clone:cups_lsb:0" class="lsb" type="cups"/>
+        <primitive id="cups_lsb:0" class="lsb" type="cups"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="8" operation="start" operation_key="cups_lsb:1_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk">
-        <primitive id="cups_lsb:1" long-id="cups_clone:cups_lsb:1" class="lsb" type="cups"/>
+        <primitive id="cups_lsb:1" class="lsb" type="cups"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -58,7 +58,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="13" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2688.see.ed.ac.uk" on_node_uuid="pcw2688.see.ed.ac.uk">
-        <primitive id="smb_lsb" long-id="smb_lsb" class="lsb" type="smb"/>
+        <primitive id="smb_lsb" class="lsb" type="smb"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

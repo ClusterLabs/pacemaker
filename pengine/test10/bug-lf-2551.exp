@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="163" operation="start" operation_key="fencing-sbd_start_0" on_node="hex-0" on_node_uuid="hex-0">
-        <primitive id="fencing-sbd" long-id="fencing-sbd" class="stonith" type="external/sbd"/>
+        <primitive id="fencing-sbd" class="stonith" type="external/sbd"/>
         <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.6" sbd_device="/dev/disk/by-id/dm-uuid-part1-mpath-3600508b400105b5a0001500000250000"/>
       </rsc_op>
     </action_set>
@@ -23,7 +23,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="168" operation="monitor" operation_key="dummy1_monitor_300000" on_node="hex-8" on_node_uuid="hex-8">
-        <primitive id="dummy1" long-id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="300000" CRM_meta_name="monitor" CRM_meta_op_target_rc="7" CRM_meta_record_pending="false" CRM_meta_role="Stopped" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -32,7 +32,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="167" operation="monitor" operation_key="dummy1_monitor_300000" on_node="hex-7" on_node_uuid="hex-7">
-        <primitive id="dummy1" long-id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="300000" CRM_meta_name="monitor" CRM_meta_op_target_rc="7" CRM_meta_record_pending="false" CRM_meta_role="Stopped" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -41,7 +41,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="166" operation="monitor" operation_key="dummy1_monitor_30000" on_node="hex-0" on_node_uuid="hex-0">
-        <primitive id="dummy1" long-id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -54,7 +54,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="165" operation="start" operation_key="dummy1_start_0" on_node="hex-0" on_node_uuid="hex-0">
-        <primitive id="dummy1" long-id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

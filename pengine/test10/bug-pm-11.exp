@@ -29,7 +29,7 @@
    <synapse id="2">
      <action_set>
       <rsc_op id="11" operation="start" operation_key="stateful-2:0_start_0" on_node="node-b" on_node_uuid="9b262633-815c-4e5e-8f63-76486cab9ad2">
-         <primitive id="stateful-2:0" long-id="ms-sf:group:0:stateful-2:0" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="stateful-2:0" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -45,7 +45,7 @@
    <synapse id="3">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="stateful-2:0_monitor_0" on_node="node-a" on_node_uuid="babfee4b-9c89-4df2-8ccb-3de2a3587d8d">
-         <primitive id="stateful-2:0" long-id="ms-sf:group:0:stateful-2:0" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="stateful-2:0" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -54,7 +54,7 @@
    <synapse id="4">
      <action_set>
       <rsc_op id="4" operation="monitor" operation_key="stateful-2:0_monitor_0" on_node="node-b" on_node_uuid="9b262633-815c-4e5e-8f63-76486cab9ad2">
-         <primitive id="stateful-2:0" long-id="ms-sf:group:0:stateful-2:0" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="stateful-2:0" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -114,7 +114,7 @@
    <synapse id="9">
      <action_set>
       <rsc_op id="25" operation="promote" operation_key="stateful-2:1_promote_0" on_node="node-a" on_node_uuid="babfee4b-9c89-4df2-8ccb-3de2a3587d8d">
-         <primitive id="stateful-2:1" long-id="ms-sf:group:1:stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -130,7 +130,7 @@
    <synapse id="10">
      <action_set>
       <rsc_op id="24" operation="start" operation_key="stateful-2:1_start_0" on_node="node-a" on_node_uuid="babfee4b-9c89-4df2-8ccb-3de2a3587d8d">
-         <primitive id="stateful-2:1" long-id="ms-sf:group:1:stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -146,7 +146,7 @@
   <synapse id="11">
      <action_set>
       <rsc_op id="8" operation="monitor" operation_key="stateful-2:1_monitor_0" on_node="node-a" on_node_uuid="babfee4b-9c89-4df2-8ccb-3de2a3587d8d">
-         <primitive id="stateful-2:1" long-id="ms-sf:group:1:stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -155,7 +155,7 @@
   <synapse id="12">
      <action_set>
       <rsc_op id="5" operation="monitor" operation_key="stateful-2:1_monitor_0" on_node="node-b" on_node_uuid="9b262633-815c-4e5e-8f63-76486cab9ad2">
-        <primitive id="stateful-2:1" long-id="ms-sf:group:1:stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
      </action_set>

@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <crm_event id="4" operation="clear_failcount" operation_key="A_clear_failcount_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="A" long-id="A" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" allow-migrate="1" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -11,7 +11,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="3" operation="reload" operation_key="A_reload_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="A" long-id="A" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" allow-migrate="1" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -20,7 +20,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="1" operation="monitor" operation_key="A_monitor_30000" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="A" long-id="A" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="60000" allow-migrate="1" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

@@ -40,7 +40,7 @@
   <synapse id="3">
      <action_set>
       <rsc_op id="7" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc2" long-id="group1:rsc2" class="heartbeat" type="apache"/>
+        <primitive id="rsc2" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" target_role="Stopped"/>
        </rsc_op>
      </action_set>
@@ -56,7 +56,7 @@
   <synapse id="4">
      <action_set>
       <rsc_op id="8" operation="stop" operation_key="rsc3_stop_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc3" long-id="group1:rsc3" class="heartbeat" type="apache"/>
+        <primitive id="rsc3" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" target_role="started"/>
        </rsc_op>
      </action_set>

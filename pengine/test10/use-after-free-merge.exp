@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="13" operation="start" operation_key="fencing-sbd_start_0" on_node="hex-14" on_node_uuid="hex-14">
-        <primitive id="fencing-sbd" long-id="fencing-sbd" class="stonith" type="external/sbd"/>
+        <primitive id="fencing-sbd" class="stonith" type="external/sbd"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" sbd_device="/dev/disk/by-id/dm-uuid-part1-mpath-3600508b400105b5a0001500000280000"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="fencing-sbd_monitor_0" on_node="hex-14" on_node_uuid="hex-14">
-        <primitive id="fencing-sbd" long-id="fencing-sbd" class="stonith" type="external/sbd"/>
+        <primitive id="fencing-sbd" class="stonith" type="external/sbd"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" sbd_device="/dev/disk/by-id/dm-uuid-part1-mpath-3600508b400105b5a0001500000280000"/>
       </rsc_op>
     </action_set>
@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="fencing-sbd_monitor_0" on_node="hex-13" on_node_uuid="hex-13">
-        <primitive id="fencing-sbd" long-id="fencing-sbd" class="stonith" type="external/sbd"/>
+        <primitive id="fencing-sbd" class="stonith" type="external/sbd"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" sbd_device="/dev/disk/by-id/dm-uuid-part1-mpath-3600508b400105b5a0001500000280000"/>
       </rsc_op>
     </action_set>
@@ -33,7 +33,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="d0_monitor_0" on_node="hex-14" on_node_uuid="hex-14">
-        <primitive id="d0" long-id="g0:d0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="d0" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -42,7 +42,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="d0_monitor_0" on_node="hex-13" on_node_uuid="hex-13">
-        <primitive id="d0" long-id="g0:d0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="d0" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -51,7 +51,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="d1_monitor_0" on_node="hex-14" on_node_uuid="hex-14">
-        <primitive id="d1" long-id="g0:d1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="d1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -60,7 +60,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="d1_monitor_0" on_node="hex-13" on_node_uuid="hex-13">
-        <primitive id="d1" long-id="g0:d1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="d1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -69,7 +69,7 @@
   <synapse id="7">
     <action_set>
       <rsc_op id="18" operation="start" operation_key="s0:0_start_0" on_node="hex-13" on_node_uuid="hex-13">
-        <primitive id="s0:0" long-id="ms0:s0:0" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="s0:0" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -85,7 +85,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="s0:0_monitor_0" on_node="hex-13" on_node_uuid="hex-13">
-        <primitive id="s0:0" long-id="ms0:s0:0" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="s0:0" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -94,7 +94,7 @@
   <synapse id="9">
     <action_set>
       <rsc_op id="19" operation="start" operation_key="s0:1_start_0" on_node="hex-14" on_node_uuid="hex-14">
-        <primitive id="s0:1" long-id="ms0:s0:1" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="s0:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -110,7 +110,7 @@
   <synapse id="10">
     <action_set>
       <rsc_op id="12" operation="monitor" operation_key="s0:1_monitor_0" on_node="hex-14" on_node_uuid="hex-14">
-        <primitive id="s0:1" long-id="ms0:s0:1" class="ocf" provider="heartbeat" type="Stateful"/>
+        <primitive id="s0:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

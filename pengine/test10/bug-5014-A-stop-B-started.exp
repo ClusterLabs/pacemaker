@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="6" operation="stop" operation_key="ClusterIP_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="ClusterIP" long-id="ClusterIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <primitive id="ClusterIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.101"/>
       </rsc_op>
     </action_set>

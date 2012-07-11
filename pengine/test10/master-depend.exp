@@ -2,7 +2,7 @@
   <synapse id="0" priority="1000000">
      <action_set>
       <rsc_op id="56" operation="notify" operation_key="drbd0:0_post_notify_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-         <primitive id="drbd0:0" long-id="drbd:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="2" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd0:0 drbd0:1 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd0:0 " CRM_meta_notify_start_uname="vbox4 " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd0"/>
        </rsc_op>
      </action_set>
@@ -15,7 +15,7 @@
    <synapse id="1">
      <action_set>
       <rsc_op id="12" operation="monitor" operation_key="drbd0:0_monitor_60000" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-        <primitive id="drbd0:0" long-id="drbd:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_master_max="2" CRM_meta_master_node_max="2" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="10000" crm_feature_set="3.0.6" drbd_resource="drbd0"/>
        </rsc_op>
      </action_set>
@@ -31,7 +31,7 @@
    <synapse id="2">
      <action_set>
       <rsc_op id="11" operation="start" operation_key="drbd0:0_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-         <primitive id="drbd0:0" long-id="drbd:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="2" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd0:0 drbd0:1 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd0:0 " CRM_meta_notify_start_uname="vbox4 " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd0"/>
        </rsc_op>
      </action_set>
@@ -47,7 +47,7 @@
   <synapse id="3">
      <action_set>
       <rsc_op id="4" operation="monitor" operation_key="drbd0:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-        <primitive id="drbd0:0" long-id="drbd:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="2" CRM_meta_notify="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd0"/>
        </rsc_op>
      </action_set>
@@ -133,7 +133,7 @@
    <synapse id="10">
      <action_set>
        <rsc_op id="37" operation="start" operation_key="cman:0_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-         <primitive id="cman:0" long-id="cman_clone:cman:0" class="lsb" type="cman"/>
+        <primitive id="cman:0" class="lsb" type="cman"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -149,7 +149,7 @@
   <synapse id="11">
      <action_set>
       <rsc_op id="5" operation="monitor" operation_key="cman:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-        <primitive id="cman:0" long-id="cman_clone:cman:0" class="lsb" type="cman"/>
+        <primitive id="cman:0" class="lsb" type="cman"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
      </action_set>
@@ -181,7 +181,7 @@
   <synapse id="14">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="clvmd:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-         <primitive id="clvmd:0" long-id="clvmd_clone:clvmd:0" class="lsb" type="lxclvmd"/>
+        <primitive id="clvmd:0" class="lsb" type="lxclvmd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -190,7 +190,7 @@
   <synapse id="15">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="vmnci36_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-         <primitive id="vmnci36" long-id="vmnci36" class="ocf" provider="heartbeat" type="vm"/>
+        <primitive id="vmnci36" class="ocf" provider="heartbeat" type="vm"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" target_role="started" vmid="vmnci36"/>
        </rsc_op>
      </action_set>
@@ -199,7 +199,7 @@
   <synapse id="16">
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="vmnci37_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-         <primitive id="vmnci37" long-id="vmnci37" class="ocf" provider="heartbeat" type="vm"/>
+        <primitive id="vmnci37" class="ocf" provider="heartbeat" type="vm"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" target_role="stopped" vmid="vmnci37"/>
        </rsc_op>
      </action_set>
@@ -208,7 +208,7 @@
   <synapse id="17">
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="vmnci38_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-         <primitive id="vmnci38" long-id="vmnci38" class="ocf" provider="heartbeat" type="vm"/>
+        <primitive id="vmnci38" class="ocf" provider="heartbeat" type="vm"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" target_role="stopped" vmid="vmnci38"/>
        </rsc_op>
      </action_set>
@@ -217,7 +217,7 @@
   <synapse id="18">
      <action_set>
        <rsc_op id="10" operation="monitor" operation_key="vmnci55_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
-         <primitive id="vmnci55" long-id="vmnci55" class="ocf" provider="heartbeat" type="vm"/>
+        <primitive id="vmnci55" class="ocf" provider="heartbeat" type="vm"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" target_role="stopped" vmid="vmnci55"/>
        </rsc_op>
      </action_set>

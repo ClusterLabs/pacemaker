@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="11" operation="start" operation_key="rsc1_start_0" on_node="host2" on_node_uuid="host2">
-        <primitive id="rsc1" long-id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -18,7 +18,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="rsc1_monitor_0" on_node="host2" on_node_uuid="host2">
-        <primitive id="rsc1" long-id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -27,7 +27,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="rsc1_monitor_0" on_node="host1" on_node_uuid="host1">
-        <primitive id="rsc1" long-id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -36,7 +36,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="12" operation="start" operation_key="rsc2_start_0" on_node="host1" on_node_uuid="host1">
-        <primitive id="rsc2" long-id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -52,7 +52,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="rsc2_monitor_0" on_node="host2" on_node_uuid="host2">
-        <primitive id="rsc2" long-id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -61,7 +61,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="rsc2_monitor_0" on_node="host1" on_node_uuid="host1">
-        <primitive id="rsc2" long-id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="13" operation="start" operation_key="stonith-1_start_0" on_node="wc01" on_node_uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
-        <primitive id="stonith-1" long-id="stonith-1" class="stonith" type="dummy"/>
+        <primitive id="stonith-1" class="stonith" type="dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="12" operation="monitor" operation_key="stonith-1_monitor_0" on_node="wc03" on_node_uuid="f61edb1d-6f49-4ffa-a46a-42ceef796f6e">
-        <primitive id="stonith-1" long-id="stonith-1" class="stonith" type="dummy"/>
+        <primitive id="stonith-1" class="stonith" type="dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="stonith-1_monitor_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
-        <primitive id="stonith-1" long-id="stonith-1" class="stonith" type="dummy"/>
+        <primitive id="stonith-1" class="stonith" type="dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -33,7 +33,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="stonith-1_monitor_0" on_node="wc01" on_node_uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
-        <primitive id="stonith-1" long-id="stonith-1" class="stonith" type="dummy"/>
+        <primitive id="stonith-1" class="stonith" type="dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

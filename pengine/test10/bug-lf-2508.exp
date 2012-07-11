@@ -25,7 +25,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="24" operation="monitor" operation_key="Dummy01_monitor_10000" on_node="srv01" on_node_uuid="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb">
-        <primitive id="Dummy01" long-id="Group01:Dummy01" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="Dummy01" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -38,7 +38,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="23" operation="start" operation_key="Dummy01_start_0" on_node="srv01" on_node_uuid="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb">
-        <primitive id="Dummy01" long-id="Group01:Dummy01" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="Dummy01" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -108,7 +108,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="31" operation="monitor" operation_key="Dummy02_monitor_10000" on_node="srv04" on_node_uuid="82d8b53b-a29d-40f5-9a1d-156bf3b7af62">
-        <primitive id="Dummy02" long-id="Group02:Dummy02" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="Dummy02" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -121,7 +121,7 @@
   <synapse id="9">
     <action_set>
       <rsc_op id="30" operation="start" operation_key="Dummy02_start_0" on_node="srv04" on_node_uuid="82d8b53b-a29d-40f5-9a1d-156bf3b7af62">
-        <primitive id="Dummy02" long-id="Group02:Dummy02" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="Dummy02" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -265,7 +265,7 @@
   <synapse id="19" priority="1">
     <action_set>
       <rsc_op id="110" operation="monitor" operation_key="prmStonith3-1:1_monitor_3600000" on_node="srv01" on_node_uuid="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb">
-        <primitive id="prmStonith3-1:1" long-id="clnStonith3:grpStonith3:1:prmStonith3-1:1" class="stonith" type="external/stonith-helper"/>
+        <primitive id="prmStonith3-1:1" class="stonith" type="external/stonith-helper"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" dead_check_target="192.168.40.30" hostlist="srv03" priority="1" run_quorum_check="yes" run_standby_wait="no" stonith-timeout="60s"/>
       </rsc_op>
     </action_set>
@@ -274,7 +274,7 @@
   <synapse id="20" priority="3">
     <action_set>
       <rsc_op id="112" operation="monitor" operation_key="prmStonith3-3:1_monitor_3600000" on_node="srv01" on_node_uuid="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb">
-        <primitive id="prmStonith3-3:1" long-id="clnStonith3:grpStonith3:1:prmStonith3-3:1" class="stonith" type="external/ssh"/>
+        <primitive id="prmStonith3-3:1" class="stonith" type="external/ssh"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" hostlist="srv03" priority="3" stonith-timeout="60s"/>
       </rsc_op>
     </action_set>
@@ -287,7 +287,7 @@
   <synapse id="21" priority="3">
     <action_set>
       <rsc_op id="111" operation="start" operation_key="prmStonith3-3:1_start_0" on_node="srv01" on_node_uuid="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb">
-        <primitive id="prmStonith3-3:1" long-id="clnStonith3:grpStonith3:1:prmStonith3-3:1" class="stonith" type="external/ssh"/>
+        <primitive id="prmStonith3-3:1" class="stonith" type="external/ssh"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" hostlist="srv03" priority="3" stonith-timeout="60s"/>
       </rsc_op>
     </action_set>

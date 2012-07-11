@@ -456,18 +456,12 @@ find_rsc_list(GListPtr result, resource_t * rsc, const char *id, gboolean rename
         if (strstr(rsc->id, id)) {
             match = TRUE;
 
-        } else if (rsc->long_name && strstr(rsc->long_name, id)) {
-            match = TRUE;
-
         } else if (renamed_clones && rsc->clone_name && strstr(rsc->clone_name, id)) {
             match = TRUE;
         }
 
     } else {
         if (strcmp(rsc->id, id) == 0) {
-            match = TRUE;
-
-        } else if (rsc->long_name && strcmp(rsc->long_name, id) == 0) {
             match = TRUE;
 
         } else if (renamed_clones && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {

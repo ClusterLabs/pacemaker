@@ -600,7 +600,6 @@ action2xml(action_t * action, gboolean as_input)
 
             } else {
                 crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
-                crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->long_name);
             }
 
             for (lpc = 0; lpc < DIMOF(attr_list); lpc++) {

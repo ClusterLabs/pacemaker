@@ -25,7 +25,7 @@
    <synapse id="2">
      <action_set>
        <rsc_op id="4" operation="stop" operation_key="resource_nfs_stop_0" on_node="jamesltc" on_node_uuid="cd13842c-3f58-4e7d-8126-685259527532">
-         <primitive id="resource_nfs" long-id="nfs:resource_nfs" class="lsb" type="nfs"/>
+        <primitive id="resource_nfs" class="lsb" type="nfs"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>

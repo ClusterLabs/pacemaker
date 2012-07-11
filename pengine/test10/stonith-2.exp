@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="56" operation="monitor" operation_key="rsc_sles-5_monitor_5000" on_node="sles-6" on_node_uuid="e7840e57-67e1-44dc-9804-edd22d282394">
-        <primitive id="rsc_sles-5" long-id="rsc_sles-5" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <primitive id="rsc_sles-5" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.188"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="55" operation="start" operation_key="rsc_sles-5_start_0" on_node="sles-6" on_node_uuid="e7840e57-67e1-44dc-9804-edd22d282394">
-        <primitive id="rsc_sles-5" long-id="rsc_sles-5" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <primitive id="rsc_sles-5" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.188"/>
       </rsc_op>
     </action_set>

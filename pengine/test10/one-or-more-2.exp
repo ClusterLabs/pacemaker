@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="9" operation="start" operation_key="A_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="A" long-id="A" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="A_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="A" long-id="A" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="B_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="B" long-id="B" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="B" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -33,7 +33,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="10" operation="start" operation_key="C_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="C" long-id="C" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="C" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -49,7 +49,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="C_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="C" long-id="C" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="C" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -58,7 +58,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="11" operation="start" operation_key="D_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="D" long-id="D" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="D" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -74,7 +74,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="D_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="D" long-id="D" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="D" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

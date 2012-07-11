@@ -25,19 +25,19 @@
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id21961">
-          <lrm_resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc1:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc1:child_rsc1:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc1:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc1:child_rsc1:2" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc1:2" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-2_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc1:child_rsc1:3" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc1:3" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-3_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc1:child_rsc1:4" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc1:4" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-4_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
         </lrm_resources>

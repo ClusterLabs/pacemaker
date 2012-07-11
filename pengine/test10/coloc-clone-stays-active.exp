@@ -2,7 +2,7 @@
   <synapse id="0" priority="1000000">
     <action_set>
       <rsc_op id="673" operation="migrate_from" operation_key="mgmt-vm_migrate_from_0" on_node="s01-1" on_node_uuid="s01-1">
-        <primitive id="mgmt-vm" long-id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
+        <primitive id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_migrate_source="s01-0" CRM_meta_migrate_target="s01-1" CRM_meta_timeout="20000" config="/mnt/vm_meta/mgmt.prague.vds-ok.com.xml" crm_feature_set="3.0.6" hypervisor="qemu:///system" migration_transport="tls" refresh_config="1"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="672" operation="migrate_to" operation_key="mgmt-vm_migrate_to_0" on_node="s01-0" on_node_uuid="s01-0">
-        <primitive id="mgmt-vm" long-id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
+        <primitive id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_migrate_source="s01-0" CRM_meta_migrate_target="s01-1" CRM_meta_timeout="20000" config="/mnt/vm_meta/mgmt.prague.vds-ok.com.xml" crm_feature_set="3.0.6" hypervisor="qemu:///system" migration_transport="tls" refresh_config="1"/>
       </rsc_op>
     </action_set>
@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="609" operation="monitor" operation_key="mgmt-vm_monitor_10000" on_node="s01-1" on_node_uuid="s01-1">
-        <primitive id="mgmt-vm" long-id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
+        <primitive id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" config="/mnt/vm_meta/mgmt.prague.vds-ok.com.xml" crm_feature_set="3.0.6" hypervisor="qemu:///system" migration_transport="tls" refresh_config="1"/>
       </rsc_op>
     </action_set>
@@ -49,7 +49,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="607" operation="stop" operation_key="mgmt-vm_stop_0" on_node="s01-0" on_node_uuid="s01-0">
-        <primitive id="mgmt-vm" long-id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
+        <primitive id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_name="stop" CRM_meta_timeout="120000" config="/mnt/vm_meta/mgmt.prague.vds-ok.com.xml" crm_feature_set="3.0.6" hypervisor="qemu:///system" migration_transport="tls" refresh_config="1"/>
       </rsc_op>
     </action_set>

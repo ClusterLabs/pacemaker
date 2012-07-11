@@ -65,7 +65,7 @@
    <synapse id="4">
      <action_set>
       <rsc_op id="13" operation="stop" operation_key="apache2:1_stop_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="apache2:1" long-id="apache2_clone:grrr:1:apache2:1" class="ocf" provider="heartbeat" type="apache"/>
+        <primitive id="apache2:1" class="ocf" provider="heartbeat" type="apache"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf" crm_feature_set="3.0.6" httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
        </rsc_op>
      </action_set>
@@ -81,7 +81,7 @@
    <synapse id="5">
      <action_set>
       <rsc_op id="6" operation="start" operation_key="apache2:1_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="apache2:1" long-id="apache2_clone:grrr:1:apache2:1" class="ocf" provider="heartbeat" type="apache"/>
+        <primitive id="apache2:1" class="ocf" provider="heartbeat" type="apache"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf" crm_feature_set="3.0.6" httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
        </rsc_op>
      </action_set>
@@ -97,7 +97,7 @@
    <synapse id="6">
      <action_set>
       <rsc_op id="3" operation="monitor" operation_key="apache2:1_monitor_10000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="apache2:1" long-id="apache2_clone:grrr:1:apache2:1" class="ocf" provider="heartbeat" type="apache"/>
+        <primitive id="apache2:1" class="ocf" provider="heartbeat" type="apache"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf" crm_feature_set="3.0.6" httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
        </rsc_op>
      </action_set>
@@ -110,7 +110,7 @@
    <synapse id="7">
      <action_set>
       <rsc_op id="15" operation="start" operation_key="mysql-proxy:1_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="mysql-proxy:1" long-id="apache2_clone:grrr:1:mysql-proxy:1" class="lsb" type="mysql-proxy"/>
+        <primitive id="mysql-proxy:1" class="lsb" type="mysql-proxy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -129,7 +129,7 @@
    <synapse id="8">
      <action_set>
       <rsc_op id="14" operation="stop" operation_key="mysql-proxy:1_stop_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="mysql-proxy:1" long-id="apache2_clone:grrr:1:mysql-proxy:1" class="lsb" type="mysql-proxy"/>
+        <primitive id="mysql-proxy:1" class="lsb" type="mysql-proxy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -142,7 +142,7 @@
    <synapse id="9">
      <action_set>
       <rsc_op id="1" operation="monitor" operation_key="mysql-proxy:1_monitor_10000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="mysql-proxy:1" long-id="apache2_clone:grrr:1:mysql-proxy:1" class="lsb" type="mysql-proxy"/>
+        <primitive id="mysql-proxy:1" class="lsb" type="mysql-proxy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>

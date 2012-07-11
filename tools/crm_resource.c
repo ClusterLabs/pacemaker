@@ -670,7 +670,6 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
 
     } else {
         crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->id);
-        crm_xml_add(xml_rsc, XML_ATTR_ID_LONG, rsc->long_name);
     }
 
     value = crm_element_value(rsc->xml, XML_ATTR_TYPE);

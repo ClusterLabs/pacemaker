@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="conntrackd-stateful:0_monitor_29000" on_node="box1" on_node_uuid="box1">
-        <primitive id="conntrackd-stateful:0" long-id="ms-conntrackd:conntrackd-stateful:0" class="ocf" provider="dk" type="conn"/>
+        <primitive id="conntrackd-stateful:0" class="ocf" provider="dk" type="conn"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="29000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_role="Slave" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -11,7 +11,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="conntrackd-stateful:1_monitor_30000" on_node="box2" on_node_uuid="box2">
-        <primitive id="conntrackd-stateful:1" long-id="ms-conntrackd:conntrackd-stateful:1" class="ocf" provider="dk" type="conn"/>
+        <primitive id="conntrackd-stateful:1" class="ocf" provider="dk" type="conn"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="13" operation="promote" operation_key="conntrackd-stateful:1_promote_0" on_node="box2" on_node_uuid="box2">
-        <primitive id="conntrackd-stateful:1" long-id="ms-conntrackd:conntrackd-stateful:1" class="ocf" provider="dk" type="conn"/>
+        <primitive id="conntrackd-stateful:1" class="ocf" provider="dk" type="conn"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

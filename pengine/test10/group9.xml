@@ -30,23 +30,23 @@
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <lrm id="any">
         <lrm_resources id="lrm_resources.id21996">
-          <lrm_resource id="foo:rsc3" class="heartbeat" type="apache">
+          <lrm_resource id="rsc3" class="heartbeat" type="apache">
             <lrm_rsc_op id="foo-rsc3_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="foo:rsc4" class="heartbeat" type="apache">
+          <lrm_resource id="rsc4" class="heartbeat" type="apache">
             <lrm_rsc_op id="foo-rsc4_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
             <lrm_rsc_op id="foo-rsc4_monitor_0" interval="0" operation="monitor" op-status="2" rc-code="1" call-id="2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="foo:rsc5" class="heartbeat" type="apache">
+          <lrm_resource id="rsc5" class="heartbeat" type="apache">
             <lrm_rsc_op id="foo-rsc5_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="bar:rsc6" class="heartbeat" type="apache">
+          <lrm_resource id="rsc6" class="heartbeat" type="apache">
             <lrm_rsc_op id="bar-rsc6_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="bar:rsc7" class="heartbeat" type="apache">
+          <lrm_resource id="rsc7" class="heartbeat" type="apache">
             <lrm_rsc_op id="bar-rsc7_start_0" operation="start" interval="0" op-status="2" rc-code="1" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="bar:rsc8" class="heartbeat" type="apache">
+          <lrm_resource id="rsc8" class="heartbeat" type="apache">
             <lrm_rsc_op id="bar-rsc8_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">

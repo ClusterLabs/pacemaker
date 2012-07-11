@@ -18,7 +18,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="9" operation="stop" operation_key="dummy02_stop_0" on_node="bl460g6a" on_node_uuid="11111111-1111-1111-1111-111111111111">
-        <primitive id="dummy02" long-id="dummy-g:dummy02" class="ocf" provider="heartbeat" type="Dummy-stop-NG"/>
+        <primitive id="dummy02" class="ocf" provider="heartbeat" type="Dummy-stop-NG"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

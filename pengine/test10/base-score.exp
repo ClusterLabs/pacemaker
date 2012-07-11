@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="11" operation="start" operation_key="Dummy_start_0" on_node="puma1" on_node_uuid="puma1">
-        <primitive id="Dummy" long-id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma4" on_node_uuid="puma4">
-        <primitive id="Dummy" long-id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma3" on_node_uuid="puma3">
-        <primitive id="Dummy" long-id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -33,7 +33,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma2" on_node_uuid="puma2">
-        <primitive id="Dummy" long-id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -42,7 +42,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma1" on_node_uuid="puma1">
-        <primitive id="Dummy" long-id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

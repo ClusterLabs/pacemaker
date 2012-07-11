@@ -25,7 +25,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="7" operation="start" operation_key="resource_t11_start_0" on_node="power720-3" on_node_uuid="0e3b1105-0152-4dc3-9dcd-4fb9dbefd64f">
-        <primitive id="resource_t11" long-id="group_test1:resource_t11" class="lsb" type="nfsserver"/>
+        <primitive id="resource_t11" class="lsb" type="nfsserver"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -65,7 +65,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="12" operation="start" operation_key="resource_t21_start_0" on_node="power720-4" on_node_uuid="1e626dc7-fa07-492e-bb21-8c838bfe7f46">
-        <primitive id="resource_t21" long-id="group_test2:resource_t21" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="resource_t21" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

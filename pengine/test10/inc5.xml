@@ -66,28 +66,28 @@
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22337">
-          <lrm_resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc1:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc2:child_rsc2:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc2:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2-child_rsc2-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc2:child_rsc2:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc2:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2-child_rsc2-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc3:child_rsc3:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc3:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3-child_rsc3-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc4:child_rsc4:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc4:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4-child_rsc4-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc4:child_rsc4:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc4:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4-child_rsc4-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc6:child_rsc6:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc6:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc6-child_rsc6-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc8:child_rsc8:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc8:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc8-child_rsc8-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
         </lrm_resources>
@@ -99,28 +99,28 @@
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22630">
-          <lrm_resource id="rsc1:child_rsc1:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc1:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc3:child_rsc3:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc3:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3-child_rsc3-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc5:child_rsc5:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc5:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc5-child_rsc5-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc5:child_rsc5:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc5:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc5-child_rsc5-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc6:child_rsc6:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc6:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc6-child_rsc6-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc7:child_rsc7:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc7:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc7-child_rsc7-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc7:child_rsc7:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc7:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc7-child_rsc7-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
-          <lrm_resource id="rsc8:child_rsc8:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc8:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc8-child_rsc8-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
 	  </lrm_resource>
         </lrm_resources>

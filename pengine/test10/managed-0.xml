@@ -139,15 +139,15 @@
             <lrm_rsc_op id="rsc_c001n09_start_0" op-digest="fd54394d262d771b8cb48f31f8df7242" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="3" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n09_monitor_5000" op-digest="6d0c707e8887b775eee00abb63b80a67" interval="5000" operation="monitor" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="7" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:1" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="4" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_stop_0" operation="stop" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="9" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:3" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:3" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="10" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_stop_0" operation="stop" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="13" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:5" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:5" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="34" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="35" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_stop_0" operation="stop" interval="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="43" rc-code="0" op-status="0"/>
@@ -156,7 +156,7 @@
             <lrm_rsc_op id="DcIPaddr_start_0" op-digest="21ccbd2b8e65014ca7b36a2070642a2e" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="2" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DcIPaddr_monitor_5000" op-digest="517d7b3575d97d408fbe19f3cfcc69fe" interval="5000" operation="monitor" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="6" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:7" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:7" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-7_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="44"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-7_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="45"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-7_stop_0" operation="stop" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="33" rc-code="0" op-status="0"/>
@@ -180,11 +180,11 @@
             <lrm_rsc_op id="rsc_c001n02_monitor_5000" op-digest="7515405113757a8bc37db755be497fca" interval="5000" operation="monitor" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="60" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="47" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:2" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="4" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_stop_0" operation="stop" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="11" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:4" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:4" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="13" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_stop_0" operation="stop" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="19" rc-code="0" op-status="0"/>
           </lrm_resource>
@@ -192,7 +192,7 @@
             <lrm_rsc_op id="rsc_c001n06_start_0" op-digest="ab6dabe0c35e363af067aa9a7fe53ace" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="3" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n06_stop_0" operation="stop" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="9" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:6" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:6" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="20" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="22" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_stop_0" operation="stop" interval="0" transition-key="0:12" crm_feature_set="2.0" transition-magic="0:12:some_key" call-id="27" rc-code="0" op-status="0"/>
@@ -201,7 +201,7 @@
             <lrm_rsc_op id="rsc_c001n07_start_0" op-digest="0e7f0d1c4b199e35628b5c990e21f424" operation="start" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="12" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n07_stop_0" operation="stop" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="17" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="59"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="61"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_stop_0" operation="stop" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="49" rc-code="0" op-status="0"/>
@@ -219,7 +219,7 @@
             <lrm_rsc_op id="rsc_c001n08_start_0" op-digest="2ecad78afc8e17adb89dd475018ab1c0" operation="start" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="12" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="17" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="20" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="21" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_stop_0" operation="stop" interval="0" transition-key="0:12" crm_feature_set="2.0" transition-magic="0:12:some_key" call-id="23" rc-code="0" op-status="0"/>
@@ -228,11 +228,11 @@
             <lrm_rsc_op id="rsc_c001n03_start_0" op-digest="6e0f48b04277dfed400d2ffce5b5ae51" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="2" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n03_monitor_5000" op-digest="3b337ce52a3a88fb0a61ff74c5e42f0b" interval="5000" operation="monitor" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="5" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:3" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:3" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="4" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_stop_0" operation="stop" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="11" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:5" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:5" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="13" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_stop_0" operation="stop" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="19" rc-code="0" op-status="0"/>
           </lrm_resource>
@@ -240,12 +240,12 @@
             <lrm_rsc_op id="rsc_c001n07_start_0" op-digest="0e7f0d1c4b199e35628b5c990e21f424" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="3" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n07_stop_0" operation="stop" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="9" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:1" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="59"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="60"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_stop_0" operation="stop" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="41" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:6" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:6" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="42"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="44"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_stop_0" operation="stop" interval="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="58" rc-code="0" op-status="0"/>
@@ -268,12 +268,12 @@
             <lrm_rsc_op id="rsc_c001n08_start_0" op-digest="2ecad78afc8e17adb89dd475018ab1c0" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="3" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="9" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="36" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_stop_0" operation="stop" interval="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="45" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="37"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:1" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="16" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="17" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_stop_0" operation="stop" interval="0" transition-key="0:12" crm_feature_set="2.0" transition-magic="0:12:some_key" call-id="19" rc-code="0" op-status="0"/>
@@ -282,11 +282,11 @@
             <lrm_rsc_op id="rsc_c001n04_start_0" op-digest="74307acd7ffa84f71fe8a46100cdbbb0" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="2" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n04_monitor_5000" op-digest="fc615675937160e95e360e325cd67d82" interval="5000" operation="monitor" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="5" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:4" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:4" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="4" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_stop_0" operation="stop" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="11" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:2" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="46"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="47"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_stop_0" operation="stop" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="35" rc-code="0" op-status="0"/>
@@ -300,16 +300,16 @@
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id24889">
-          <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="3" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_stop_0" operation="stop" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="7" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:1" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="30" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_stop_0" operation="stop" interval="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="38" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="31"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:2" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="12" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="13" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_stop_0" operation="stop" interval="0" transition-key="0:12" crm_feature_set="2.0" transition-magic="0:12:some_key" call-id="15" rc-code="0" op-status="0"/>
@@ -318,7 +318,7 @@
             <lrm_rsc_op id="rsc_c001n05_start_0" op-digest="2fffd66ed122d7c60b5618c2a2f70c7c" operation="start" interval="0" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="2" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n05_monitor_5000" op-digest="a50a55dfd664c7ff58b087fa68044bd7" interval="5000" operation="monitor" transition-key="0:4" crm_feature_set="2.0" transition-magic="0:4:some_key" call-id="5" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:3" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:3" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="39"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="40"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_stop_0" operation="stop" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="29" rc-code="0" op-status="0"/>
@@ -340,11 +340,11 @@
             <lrm_rsc_op id="rsc_c001n09_start_0" op-digest="fd54394d262d771b8cb48f31f8df7242" operation="start" interval="0" transition-key="0:1" crm_feature_set="2.0" transition-magic="0:1:some_key" call-id="97" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n09_stop_0" operation="stop" interval="0" transition-key="0:-1" crm_feature_set="2.0" transition-magic="0:-1:some_key" call-id="199" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:1" crm_feature_set="2.0" transition-magic="0:1:some_key" call-id="186" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-0_stop_0" operation="stop" interval="0" transition-key="0:-1" crm_feature_set="2.0" transition-magic="0:-1:some_key" call-id="201" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:1" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:3" crm_feature_set="2.0" transition-magic="0:3:some_key" call-id="170" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-1_stop_0" operation="stop" interval="0" transition-key="0:0" crm_feature_set="2.0" transition-magic="0:0:some_key" call-id="175" rc-code="0" op-status="0"/>
           </lrm_resource>
@@ -352,7 +352,7 @@
             <lrm_rsc_op id="rsc_c001n02_start_0" op-digest="d8eeae5f6724dfcab8f57ef54367eb0a" operation="start" interval="0" transition-key="0:3" crm_feature_set="2.0" transition-magic="0:3:some_key" call-id="114" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" interval="0" transition-key="0:-1" crm_feature_set="2.0" transition-magic="0:-1:some_key" call-id="202" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:2" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="248" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_stop_0" operation="stop" interval="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="265" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-2_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="249"/>
@@ -361,7 +361,7 @@
             <lrm_rsc_op id="rsc_c001n03_start_0" op-digest="6e0f48b04277dfed400d2ffce5b5ae51" operation="start" interval="0" transition-key="0:1" crm_feature_set="2.0" transition-magic="0:1:some_key" call-id="132" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n03_stop_0" operation="stop" interval="0" transition-key="0:-1" crm_feature_set="2.0" transition-magic="0:-1:some_key" call-id="203" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:3" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:3" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="212" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="213" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_stop_0" operation="stop" interval="0" transition-key="0:12" crm_feature_set="2.0" transition-magic="0:12:some_key" call-id="215" rc-code="0" op-status="0"/>
@@ -371,7 +371,7 @@
             <lrm_rsc_op id="rsc_c001n04_monitor_5000" op-digest="74307acd7ffa84f71fe8a46100cdbbb0" interval="5000" operation="monitor" transition-key="0:0" crm_feature_set="2.0" transition-magic="0:0:some_key" call-id="150" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n04_stop_0" operation="stop" interval="0" transition-key="0:3" crm_feature_set="2.0" transition-magic="0:3:some_key" call-id="151" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:5" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:5" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:0" crm_feature_set="2.0" transition-magic="0:0:some_key" call-id="147" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" transition-key="0:0" crm_feature_set="2.0" transition-magic="0:0:some_key" call-id="149" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_stop_0" operation="stop" interval="0" transition-key="0:3" crm_feature_set="2.0" transition-magic="0:3:some_key" call-id="153" rc-code="0" op-status="0"/>
@@ -380,15 +380,15 @@
             <lrm_rsc_op id="rsc_c001n06_start_0" op-digest="ab6dabe0c35e363af067aa9a7fe53ace" operation="start" interval="0" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="206" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n06_monitor_5000" op-digest="d720fcc5f7e132da60eeb9a13563497c" interval="5000" operation="monitor" transition-key="0:10" crm_feature_set="2.0" transition-magic="0:10:some_key" call-id="209" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:6" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:6" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:0" crm_feature_set="2.0" transition-magic="0:0:some_key" call-id="178" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_stop_0" operation="stop" interval="0" transition-key="0:1" crm_feature_set="2.0" transition-magic="0:1:some_key" call-id="185" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:7" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:7" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-7_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:3" crm_feature_set="2.0" transition-magic="0:3:some_key" call-id="171" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-7_stop_0" operation="stop" interval="0" transition-key="0:0" crm_feature_set="2.0" transition-magic="0:0:some_key" call-id="177" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:4" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:4" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="266"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="267"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_stop_0" operation="stop" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="247" rc-code="0" op-status="0"/>
@@ -402,7 +402,7 @@
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id26274">
-          <lrm_resource id="DoFencing:child_DoFencing:4" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:4" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="2" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="4" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_stop_0" operation="stop" interval="0" transition-key="0:12" crm_feature_set="2.0" transition-magic="0:12:some_key" call-id="7" rc-code="0" op-status="0"/>
@@ -411,12 +411,12 @@
             <lrm_rsc_op id="rsc_c001n07_start_0" op-digest="0e7f0d1c4b199e35628b5c990e21f424" operation="start" interval="0" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="3" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n07_monitor_5000" op-digest="5482fe6ca8a29ecb5a93d1cebaab019a" interval="5000" operation="monitor" transition-key="0:11" crm_feature_set="2.0" transition-magic="0:11:some_key" call-id="5" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:5" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:5" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="26"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="27"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-5_stop_0" operation="stop" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="17" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:3" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:3" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="18"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="19"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-3_stop_0" operation="stop" interval="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="25" rc-code="0" op-status="0"/>
@@ -430,7 +430,7 @@
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id26619">
-          <lrm_resource id="DoFencing:child_DoFencing:6" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:6" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="19"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="20"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-6_stop_0" operation="stop" interval="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="11" rc-code="0" op-status="0"/>
@@ -439,7 +439,7 @@
             <lrm_rsc_op id="rsc_c001n08_start_0" op-digest="2ecad78afc8e17adb89dd475018ab1c0" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:12" crm_feature_set="2.0" transition-magic="0:12:some_key" call-id="3"/>
             <lrm_rsc_op id="rsc_c001n08_monitor_5000" op-digest="70702e7d737d116b18a1b3c108f3dde8" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:12" crm_feature_set="2.0" transition-magic="0:12:some_key" call-id="5"/>
           </lrm_resource>
-          <lrm_resource id="DoFencing:child_DoFencing:4" class="stonith" type="ssh">
+          <lrm_resource id="child_DoFencing:4" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_start_0" op-digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op-status="0" rc-code="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="12"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_monitor_5000" op-digest="8966cc6859b0628a3b4d39fc2efa0b9c" interval="5000" operation="monitor" op-status="0" rc-code="0" transition-key="0:13" crm_feature_set="2.0" transition-magic="0:13:some_key" call-id="13"/>
             <lrm_rsc_op id="DoFencing-child_DoFencing-4_stop_0" operation="stop" interval="0" transition-key="0:14" crm_feature_set="2.0" transition-magic="0:14:some_key" call-id="18" rc-code="0" op-status="0"/>

@@ -404,12 +404,6 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         (*rsc)->id = strdup(id);
     }
 
-    if (parent) {
-        (*rsc)->long_name = crm_concat(parent->long_name, (*rsc)->id, ':');
-    } else {
-        (*rsc)->long_name = strdup((*rsc)->id);
-    }
-
     (*rsc)->fns = &resource_class_functions[(*rsc)->variant];
     crm_trace("Unpacking resource...");
 
@@ -669,7 +663,6 @@ common_free(resource_t * rsc)
     }
     g_list_free(rsc->rsc_location);
     free(rsc->id);
-    free(rsc->long_name);
     free(rsc->clone_name);
     free(rsc->allocated_to);
     free(rsc->variant_opaque);

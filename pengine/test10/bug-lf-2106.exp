@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="32" operation="stop" operation_key="pingd:0_stop_0" on_node="cl-virt-1" on_node_uuid="cl-virt-1">
-        <primitive id="pingd:0" long-id="pingdclone:pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
+        <primitive id="pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" dampen="10" host_list="10.2.50.103 10.2.50.11 10.2.50.40 10.2.50.8" interval="5"/>
       </rsc_op>
     </action_set>
@@ -15,7 +15,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="25" operation="start" operation_key="pingd:0_start_0" on_node="cl-virt-1" on_node_uuid="cl-virt-1">
-        <primitive id="pingd:0" long-id="pingdclone:pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
+        <primitive id="pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" dampen="10" host_list="10.2.50.103 10.2.50.11 10.2.50.40 10.2.50.8" interval="5"/>
       </rsc_op>
     </action_set>
@@ -31,7 +31,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="3" operation="monitor" operation_key="pingd:0_monitor_30000" on_node="cl-virt-1" on_node_uuid="cl-virt-1">
-        <primitive id="pingd:0" long-id="pingdclone:pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
+        <primitive id="pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" crm_feature_set="3.0.6" dampen="10" host_list="10.2.50.103 10.2.50.11 10.2.50.40 10.2.50.8" interval="5"/>
       </rsc_op>
     </action_set>
@@ -44,7 +44,7 @@
   <synapse id="3">
     <action_set>
       <crm_event id="2" operation="clear_failcount" operation_key="pingd:0_clear_failcount" on_node="cl-virt-1" on_node_uuid="cl-virt-1">
-        <primitive id="pingd:0" long-id="pingdclone:pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
+        <primitive id="pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6" dampen="10" host_list="10.2.50.103 10.2.50.11 10.2.50.40 10.2.50.8" interval="5"/>
       </crm_event>
     </action_set>

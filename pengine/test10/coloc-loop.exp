@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
       <rsc_op id="15" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
+        <primitive id="rsc1" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -15,7 +15,7 @@
    <synapse id="1">
      <action_set>
       <rsc_op id="12" operation="monitor" operation_key="rsc1_monitor_0" on_node="node3" on_node_uuid="node3">
-         <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
+        <primitive id="rsc1" class="heartbeat" type="apache"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -24,7 +24,7 @@
    <synapse id="2">
      <action_set>
       <rsc_op id="8" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="node2">
-         <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
+        <primitive id="rsc1" class="heartbeat" type="apache"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -33,7 +33,7 @@
    <synapse id="3">
      <action_set>
       <rsc_op id="4" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
+        <primitive id="rsc1" class="heartbeat" type="apache"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -42,7 +42,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="16" operation="start" operation_key="rsc2_start_0" on_node="node1" on_node_uuid="node1">
-        <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
+        <primitive id="rsc2" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -55,7 +55,7 @@
   <synapse id="5">
      <action_set>
       <rsc_op id="13" operation="monitor" operation_key="rsc2_monitor_0" on_node="node3" on_node_uuid="node3">
-         <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
+        <primitive id="rsc2" class="heartbeat" type="apache"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -64,7 +64,7 @@
   <synapse id="6">
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="node2">
-         <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
+        <primitive id="rsc2" class="heartbeat" type="apache"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -73,7 +73,7 @@
   <synapse id="7">
      <action_set>
       <rsc_op id="5" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
+        <primitive id="rsc2" class="heartbeat" type="apache"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -82,7 +82,7 @@
   <synapse id="8">
      <action_set>
       <rsc_op id="17" operation="start" operation_key="rsc3_start_0" on_node="node1" on_node_uuid="node1">
-        <primitive id="rsc3" long-id="rsc3" class="heartbeat" type="apache"/>
+        <primitive id="rsc3" class="heartbeat" type="apache"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -95,7 +95,7 @@
   <synapse id="9">
      <action_set>
       <rsc_op id="14" operation="monitor" operation_key="rsc3_monitor_0" on_node="node3" on_node_uuid="node3">
-         <primitive id="rsc3" long-id="rsc3" class="heartbeat" type="apache"/>
+        <primitive id="rsc3" class="heartbeat" type="apache"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -104,7 +104,7 @@
   <synapse id="10">
      <action_set>
        <rsc_op id="10" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2">
-         <primitive id="rsc3" long-id="rsc3" class="heartbeat" type="apache"/>
+        <primitive id="rsc3" class="heartbeat" type="apache"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
@@ -113,7 +113,7 @@
   <synapse id="11">
      <action_set>
       <rsc_op id="6" operation="monitor" operation_key="rsc3_monitor_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="rsc3" long-id="rsc3" class="heartbeat" type="apache"/>
+        <primitive id="rsc3" class="heartbeat" type="apache"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
