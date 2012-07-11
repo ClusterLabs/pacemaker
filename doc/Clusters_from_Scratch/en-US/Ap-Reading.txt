@@ -5,8 +5,8 @@
 http://www.clusterlabs.org
 
 - Cluster Commands
-A comprehensive guide to cluster commands has been written by Novell and can be found at:
-  http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html
+A comprehensive guide to cluster commands has been written by SuSE and can be found at:
+  http://www.suse.com/documentation/sle_ha/book_sleha/?page=/documentation/sle_ha/book_sleha/data/book_sleha.html
 
 - Corosync
  http://www.corosync.org
