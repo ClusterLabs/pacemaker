@@ -28,7 +28,6 @@ This change was made at the author's request as it is now maintained as a separa
 * pkgconfig
 * python
 * glib2-devel
-* cluster-glue-libs-devel
 * libxml2-devel
 * libxslt-devel 
 * python-devel
@@ -46,7 +45,7 @@ This change was made at the author's request as it is now maintained as a separa
 * ncurses-devel
 * openssl-devel
 * libselinux-devel
-* docbook-style-xsl (documentation)
+* cluster-glue-libs-devel (LHA style fencing agents)
 * libesmtp-devel (Email alerts)
 * lm_sensors-devel (SNMP alerts)
 * net-snmp-devel (SNMP alerts)
@@ -54,6 +53,7 @@ This change was made at the author's request as it is now maintained as a separa
 * help2man (documentation)
 * publican (documentation)
 * inkscape (documentation)
+* docbook-style-xsl (documentation)
 
 ## Source Control (GIT)
 
@@ -73,6 +73,7 @@ If you find this project useful, you may want to consider supporting its future 
 There are a number of ways to support the project.
 
 * Test and report issues.
+* Tick something off our [todo list](https://github.com/ClusterLabs/pacemaker/blob/master/TODO.markdown)
 * Help others on the [mailing list](http://oss.clusterlabs.org/mailman/listinfo/pacemaker).
 * Contribute documentation, examples and test cases.
 * Contribute patches.

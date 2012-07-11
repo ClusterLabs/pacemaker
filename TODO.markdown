@@ -5,10 +5,10 @@
 - Avoid the use of xmlNode in fencing register_callback() call types
 
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
-
-- Figure out how to sanely allow nodes with corosync but no pacemaker
-  - require symetric-cluster=false
-- Arrange for nodes that didnt complete the join to be fenced
+- Test startup fencing with node lists
+  - Figure out how to distinguish between "down" and "down
+    but we've never seen them before so they need to be shot"
+- Attempt to obtain a node list from corosync if one exists
 
 - Remove instance numbers from anonymous clones
 
@@ -22,7 +22,6 @@
 - Reduce the amount of stonith-ng logging
 - Reduce the amount of attrd logging
 - Use dlopen for snmp in crm_mon
-
 
 ## Targeted for 1.4
 
@@ -56,5 +55,6 @@
 - Clusters from Scratch: Mail
 - Clusters from Scratch: MySQL
 - Document reload in Pacemaker Explained
+- Document advanced fencing logic in Pacemaker Explained
 - Use ann:defaultValue="..." instead of <optional> in the schema more often
 - Allow Clusters from Scratch to be built in two flavors - pcs and crm shell
