@@ -1,9 +1,9 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
-"bottom:1_stop_0 dom0-02" -> "all_stopped" [ style = bold]
-"bottom:1_stop_0 dom0-02" -> "clone-bottom_stopped_0" [ style = bold]
-"bottom:1_stop_0 dom0-02" [ style=bold color="green" fontcolor="black" ]
-"clone-bottom_stop_0" -> "bottom:1_stop_0 dom0-02" [ style = bold]
+"bottom:0_stop_0 dom0-02" -> "all_stopped" [ style = bold]
+"bottom:0_stop_0 dom0-02" -> "clone-bottom_stopped_0" [ style = bold]
+"bottom:0_stop_0 dom0-02" [ style=bold color="green" fontcolor="black"]
+"clone-bottom_stop_0" -> "bottom:0_stop_0 dom0-02" [ style = bold]
 "clone-bottom_stop_0" -> "clone-bottom_stopped_0" [ style = bold]
 "clone-bottom_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "clone-bottom_stopped_0" [ style=bold color="green" fontcolor="orange" ]

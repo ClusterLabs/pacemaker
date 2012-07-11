@@ -1,7 +1,7 @@
 digraph "g" {
 "apache-vip_monitor_60000 dktest1" [ style=bold color="green" fontcolor="black" ]
 "drbd1:0_monitor_10000 dktest1" [ style=bold color="green" fontcolor="black" ]
-"drbd1:1_monitor_11000 dktest2" [ style=bold color="green" fontcolor="black" ]
+"drbd1:0_monitor_11000 dktest2" [ style=bold color="green" fontcolor="black"]
 "mount_monitor_10000 dktest1" [ style=bold color="green" fontcolor="black" ]
 "probe_complete dktest1" [ style=bold color="green" fontcolor="black" ]
 "probe_complete dktest2" [ style=bold color="green" fontcolor="black" ]

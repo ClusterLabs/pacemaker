@@ -634,25 +634,53 @@ static char *
 create_action_name(action_t * action)
 {
     char *action_name = NULL;
+    const char *prefix = NULL;
     const char *action_host = NULL;
+    const char *task = action->task;
 
     if (action->node) {
         action_host = action->node->details->uname;
-        action_name = crm_concat(action->uuid, action_host, ' ');
+    } else if(is_not_set(action->flags, pe_action_pseudo)) {
+        action_host = "<none>";
+    }
 
-    } else if (is_set(action->flags, pe_action_pseudo)) {
-        action_name = strdup(action->uuid);
+    if (safe_str_eq(action->task, RSC_CANCEL)) {
+        prefix = "Cancel ";
+        task = "monitor"; /* TO-DO: Hack! */
+    }
+
+    if(action->rsc && action->rsc->clone_name) {
+        char *key = NULL;
+        const char *name = action->rsc->clone_name;
+        const char *interval_s = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
+
+        int interval = crm_parse_int(interval_s, "0");
+
+        if (safe_str_eq(action->task, RSC_NOTIFY)) {
+            const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
+            const char *n_task = g_hash_table_lookup(action->meta, "notify_operation");
+
+            CRM_ASSERT(n_type != NULL);
+            CRM_ASSERT(n_task != NULL);
+            key = generate_notify_key(name, n_type, n_task);
+
+        } else {
+            key = generate_op_key(name, task, interval);
+        }
+
+        if(action_host) {
+            action_name = g_strdup_printf("%s%s %s", prefix?prefix:"", key, action_host);
+        } else {
+            action_name = g_strdup_printf("%s%s", prefix?prefix:"", key);
+        }
+
+    } else if(action_host) {
+        action_name = g_strdup_printf("%s%s %s", prefix?prefix:"", action->uuid, action_host);
 
     } else {
-        action_host = "<none>";
-        action_name = crm_concat(action->uuid, action_host, ' ');
+        action_name = g_strdup_printf("%s", action->uuid);
     }
-    if (safe_str_eq(action->task, RSC_CANCEL)) {
-        char *tmp_action_name = action_name;
 
-        action_name = crm_concat("Cancel", tmp_action_name, ' ');
-        free(tmp_action_name);
-    }
 
     return action_name;
 }

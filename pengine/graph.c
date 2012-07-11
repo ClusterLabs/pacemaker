@@ -542,7 +542,7 @@ action2xml(action_t * action, gboolean as_input)
     crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
     if (action->rsc != NULL && action->rsc->clone_name != NULL) {
         char *clone_key = NULL;
-        const char *interval_s = g_hash_table_lookup(action->meta, "interval");
+        const char *interval_s = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
         int interval = crm_parse_int(interval_s, "0");
 
         if (safe_str_eq(action->task, RSC_NOTIFY)) {
