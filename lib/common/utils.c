@@ -2153,7 +2153,9 @@ convert_const_pointer(const void *ptr)
     return (void *)ptr;
 }
 
-#include <uuid/uuid.h>
+#ifdef HAVE_UUID_UUID_H
+#  include <uuid/uuid.h>
+#endif
 
 char *crm_generate_uuid(void) 
 {
