@@ -72,7 +72,7 @@ start()
 	# required subdirectories for proper operations
 	mkdir -p @localstatedir@/run
 
-	if status $prog > /dev/null 2>&1; then
+	if status $prog -d > /dev/null 2>&1; then
 		success
 	else
 		$prog > /dev/null 2>&1
