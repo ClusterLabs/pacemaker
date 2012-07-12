@@ -1,0 +1,20 @@
+
+Current cluster status:
+Online: [ hb2 hb1 ]
+OFFLINE: [ hb3 ]
+
+ the-future-of-vaj	(ocf::heartbeat:Dummy):	Started hb2 FAILED
+
+Transition Summary:
+ * Stop    the-future-of-vaj	(hb2)
+
+Executing cluster transition:
+ * Resource action: the-future-of-vaj stop on hb2
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ hb2 hb1 ]
+OFFLINE: [ hb3 ]
+
+ the-future-of-vaj	(ocf::heartbeat:Dummy):	Stopped 
+

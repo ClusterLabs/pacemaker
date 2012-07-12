@@ -1,0 +1,22 @@
+
+Current cluster status:
+Online: [ node-0 node-1 ]
+
+ Master/Slave Set: ms0 [s0]
+     Slaves: [ node-0 node-1 ]
+
+Transition Summary:
+ * Promote s0:1	(Slave -> Master node-1)
+
+Executing cluster transition:
+ * Pseudo action:   ms0_promote_0
+ * Resource action: s0:1            promote on node-1
+ * Pseudo action:   ms0_promoted_0
+
+Revised cluster status:
+Online: [ node-0 node-1 ]
+
+ Master/Slave Set: ms0 [s0]
+     Masters: [ node-1 ]
+     Slaves: [ node-0 ]
+

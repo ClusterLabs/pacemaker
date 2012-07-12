@@ -1,0 +1,73 @@
+
+Current cluster status:
+Node node1 (f6d93040-a9ad-4745-a647-57ed32444ca8): standby
+Online: [ node2 ]
+
+ Clone Set: stonithcloneset [stonithclone]
+     Started: [ node1 node2 ]
+ Clone Set: evmscloneset [evmsclone]
+     Started: [ node1 node2 ]
+ Clone Set: imagestorecloneset [imagestoreclone]
+     Started: [ node1 node2 ]
+ Clone Set: configstorecloneset [configstoreclone]
+     Started: [ node1 node2 ]
+
+Transition Summary:
+ * Stop    stonithclone:0	(node1)
+ * Stop    evmsclone:0	(node1)
+ * Stop    imagestoreclone:0	(node1)
+ * Stop    configstoreclone:0	(node1)
+
+Executing cluster transition:
+ * Pseudo action:   stonithcloneset_stop_0
+ * Pseudo action:   evmscloneset_pre_notify_stop_0
+ * Pseudo action:   imagestorecloneset_pre_notify_stop_0
+ * Pseudo action:   configstorecloneset_pre_notify_stop_0
+ * Resource action: evmsclone:0     notify on node1
+ * Resource action: evmsclone:1     notify on node2
+ * Pseudo action:   evmscloneset_confirmed-pre_notify_stop_0
+ * Resource action: imagestoreclone:0 notify on node1
+ * Resource action: imagestoreclone:1 notify on node2
+ * Pseudo action:   imagestorecloneset_confirmed-pre_notify_stop_0
+ * Pseudo action:   imagestorecloneset_stop_0
+ * Resource action: configstoreclone:0 notify on node1
+ * Resource action: configstoreclone:1 notify on node2
+ * Pseudo action:   configstorecloneset_confirmed-pre_notify_stop_0
+ * Pseudo action:   configstorecloneset_stop_0
+ * Resource action: imagestoreclone:0 stop on node1
+ * Pseudo action:   imagestorecloneset_stopped_0
+ * Resource action: configstoreclone:0 stop on node1
+ * Pseudo action:   configstorecloneset_stopped_0
+ * Pseudo action:   imagestorecloneset_post_notify_stopped_0
+ * Pseudo action:   configstorecloneset_post_notify_stopped_0
+ * Resource action: imagestoreclone:1 notify on node2
+ * Pseudo action:   imagestorecloneset_confirmed-post_notify_stopped_0
+ * Resource action: configstoreclone:1 notify on node2
+ * Pseudo action:   configstorecloneset_confirmed-post_notify_stopped_0
+ * Pseudo action:   evmscloneset_stop_0
+ * Resource action: evmsclone:0     stop on node1
+ * Pseudo action:   evmscloneset_stopped_0
+ * Pseudo action:   evmscloneset_post_notify_stopped_0
+ * Resource action: evmsclone:1     notify on node2
+ * Pseudo action:   evmscloneset_confirmed-post_notify_stopped_0
+ * Pseudo action:   all_stopped
+ * Resource action: stonithclone:0  stop on node1
+ * Pseudo action:   stonithcloneset_stopped_0
+
+Revised cluster status:
+Node node1 (f6d93040-a9ad-4745-a647-57ed32444ca8): standby
+Online: [ node2 ]
+
+ Clone Set: stonithcloneset [stonithclone]
+     Started: [ node2 ]
+     Stopped: [ stonithclone:0 ]
+ Clone Set: evmscloneset [evmsclone]
+     Started: [ node2 ]
+     Stopped: [ evmsclone:0 ]
+ Clone Set: imagestorecloneset [imagestoreclone]
+     Started: [ node2 ]
+     Stopped: [ imagestoreclone:0 ]
+ Clone Set: configstorecloneset [configstoreclone]
+     Started: [ node2 ]
+     Stopped: [ configstoreclone:0 ]
+

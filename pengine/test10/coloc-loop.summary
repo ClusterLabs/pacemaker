@@ -1,0 +1,35 @@
+
+Current cluster status:
+Online: [ node1 node2 node3 ]
+
+ rsc1	(heartbeat:apache):	Stopped 
+ rsc2	(heartbeat:apache):	Stopped 
+ rsc3	(heartbeat:apache):	Stopped 
+
+Transition Summary:
+ * Start   rsc1	(node1)
+ * Start   rsc2	(node1)
+ * Start   rsc3	(node1)
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on node3
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc1            monitor on node1
+ * Resource action: rsc2            monitor on node3
+ * Resource action: rsc2            monitor on node2
+ * Resource action: rsc2            monitor on node1
+ * Resource action: rsc3            monitor on node3
+ * Resource action: rsc3            monitor on node2
+ * Resource action: rsc3            monitor on node1
+ * Pseudo action:   probe_complete
+ * Resource action: rsc1            start on node1
+ * Resource action: rsc2            start on node1
+ * Resource action: rsc3            start on node1
+
+Revised cluster status:
+Online: [ node1 node2 node3 ]
+
+ rsc1	(heartbeat:apache):	Started node1
+ rsc2	(heartbeat:apache):	Started node1
+ rsc3	(heartbeat:apache):	Started node1
+

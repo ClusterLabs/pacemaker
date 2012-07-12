@@ -1,0 +1,53 @@
+
+Current cluster status:
+Online: [ node-0 node-1 ]
+
+ d00	(ocf::pacemaker:Dummy):	Started node-0
+ d01	(ocf::pacemaker:Dummy):	Started node-1
+ d02	(ocf::pacemaker:Dummy):	Started node-0
+ d03	(ocf::pacemaker:Dummy):	Started node-1
+ d04	(ocf::pacemaker:Dummy):	Started node-0
+ d05	(ocf::pacemaker:Dummy):	Started node-1
+ d06	(ocf::pacemaker:Dummy):	Started node-0
+ d07	(ocf::pacemaker:Dummy):	Started node-1
+ d08	(ocf::pacemaker:Dummy):	Started node-0
+ d09	(ocf::pacemaker:Dummy):	Started node-1
+ d10	(ocf::pacemaker:Dummy):	Started node-0
+ d11	(ocf::pacemaker:Dummy):	Started node-1
+ d12	(ocf::pacemaker:Dummy):	Started node-0
+ d13	(ocf::pacemaker:Dummy):	Started node-1
+ d14	(ocf::pacemaker:Dummy):	Started node-0
+ d15	(ocf::pacemaker:Dummy):	Started node-1
+ d16	(ocf::pacemaker:Dummy):	Started node-0
+ d17	(ocf::pacemaker:Dummy):	Started node-1
+ d18	(ocf::pacemaker:Dummy):	Started node-0
+ d19	(ocf::pacemaker:Dummy):	Started node-1
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+Online: [ node-0 node-1 ]
+
+ d00	(ocf::pacemaker:Dummy):	Started node-0
+ d01	(ocf::pacemaker:Dummy):	Started node-1
+ d02	(ocf::pacemaker:Dummy):	Started node-0
+ d03	(ocf::pacemaker:Dummy):	Started node-1
+ d04	(ocf::pacemaker:Dummy):	Started node-0
+ d05	(ocf::pacemaker:Dummy):	Started node-1
+ d06	(ocf::pacemaker:Dummy):	Started node-0
+ d07	(ocf::pacemaker:Dummy):	Started node-1
+ d08	(ocf::pacemaker:Dummy):	Started node-0
+ d09	(ocf::pacemaker:Dummy):	Started node-1
+ d10	(ocf::pacemaker:Dummy):	Started node-0
+ d11	(ocf::pacemaker:Dummy):	Started node-1
+ d12	(ocf::pacemaker:Dummy):	Started node-0
+ d13	(ocf::pacemaker:Dummy):	Started node-1
+ d14	(ocf::pacemaker:Dummy):	Started node-0
+ d15	(ocf::pacemaker:Dummy):	Started node-1
+ d16	(ocf::pacemaker:Dummy):	Started node-0
+ d17	(ocf::pacemaker:Dummy):	Started node-1
+ d18	(ocf::pacemaker:Dummy):	Started node-0
+ d19	(ocf::pacemaker:Dummy):	Started node-1
+

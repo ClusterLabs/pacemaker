@@ -1,0 +1,21 @@
+
+Current cluster status:
+Online: [ xen-2 xen-1 ]
+
+ fs_1	(ocf::heartbeat:Filesystem):	Started xen-1
+ Master/Slave Set: ms-drbd0 [drbd0]
+     Masters: [ xen-1 ]
+     Slaves: [ xen-2 ]
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+Online: [ xen-2 xen-1 ]
+
+ fs_1	(ocf::heartbeat:Filesystem):	Started xen-1
+ Master/Slave Set: ms-drbd0 [drbd0]
+     Masters: [ xen-1 ]
+     Slaves: [ xen-2 ]
+

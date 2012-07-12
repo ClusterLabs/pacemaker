@@ -1,0 +1,25 @@
+
+Current cluster status:
+Node hs21c (c97a3ee5-02d8-4fad-a9fb-a79ae2b35549): UNCLEAN (offline)
+Node hs21d (737318c6-0f92-4592-9754-45967d45aff7): UNCLEAN (offline)
+
+ stonith-1	(stonith:dummy):	Stopped 
+ apache_1	(ocf::heartbeat:apache):	Stopped 
+ nfs_1	(ocf::heartbeat:Filesystem):	Stopped 
+
+Transition Summary:
+
+Executing cluster transition:
+ * Pseudo action:   stonith_up
+ * Fencing hs21d
+ * Fencing hs21c
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+OFFLINE: [ hs21c hs21d ]
+
+ stonith-1	(stonith:dummy):	Stopped 
+ apache_1	(ocf::heartbeat:apache):	Stopped 
+ nfs_1	(ocf::heartbeat:Filesystem):	Stopped 
+

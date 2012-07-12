@@ -1,0 +1,90 @@
+
+Current cluster status:
+Online: [ cl-virt-1 cl-virt-2 ]
+
+ apcstonith	(stonith:apcmastersnmp):	Started cl-virt-1
+ Clone Set: pingdclone [pingd]
+     Started: [ cl-virt-1 cl-virt-2 ]
+ Resource Group: ssh
+     ssh-ip1	(ocf::heartbeat:IPaddr2):	Started cl-virt-2
+     ssh-ip2	(ocf::heartbeat:IPaddr2):	Started cl-virt-2
+     ssh-bin	(ocf::dk:opensshd):	Started cl-virt-2
+ itwiki	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-itwiki [drbd-itwiki]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+ bugtrack	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-bugtrack [drbd-bugtrack]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+ servsyslog	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-servsyslog [drbd-servsyslog]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+ smsprod2	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-smsprod2 [drbd-smsprod2]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+ medomus-cvs	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-medomus-cvs [drbd-medomus-cvs]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+ infotos	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-infotos [drbd-infotos]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+
+Transition Summary:
+ * Restart pingd:0	(Started cl-virt-1)
+ * Restart pingd:1	(Started cl-virt-2)
+
+Executing cluster transition:
+ * Cluster action:  clear_failcount on cl-virt-1
+ * Cluster action:  clear_failcount on cl-virt-2
+ * Pseudo action:   pingdclone_stop_0
+ * Resource action: pingd:0         stop on cl-virt-1
+ * Resource action: pingd:0         stop on cl-virt-2
+ * Pseudo action:   pingdclone_stopped_0
+ * Pseudo action:   pingdclone_start_0
+ * Pseudo action:   all_stopped
+ * Resource action: pingd:0         start on cl-virt-1
+ * Resource action: pingd:0         monitor=30000 on cl-virt-1
+ * Resource action: pingd:0         start on cl-virt-2
+ * Resource action: pingd:0         monitor=30000 on cl-virt-2
+ * Pseudo action:   pingdclone_running_0
+
+Revised cluster status:
+Online: [ cl-virt-1 cl-virt-2 ]
+
+ apcstonith	(stonith:apcmastersnmp):	Started cl-virt-1
+ Clone Set: pingdclone [pingd]
+     Started: [ cl-virt-1 cl-virt-2 ]
+ Resource Group: ssh
+     ssh-ip1	(ocf::heartbeat:IPaddr2):	Started cl-virt-2
+     ssh-ip2	(ocf::heartbeat:IPaddr2):	Started cl-virt-2
+     ssh-bin	(ocf::dk:opensshd):	Started cl-virt-2
+ itwiki	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-itwiki [drbd-itwiki]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+ bugtrack	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-bugtrack [drbd-bugtrack]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+ servsyslog	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-servsyslog [drbd-servsyslog]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+ smsprod2	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-smsprod2 [drbd-smsprod2]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+ medomus-cvs	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-medomus-cvs [drbd-medomus-cvs]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+ infotos	(ocf::heartbeat:VirtualDomain):	Started cl-virt-2
+ Master/Slave Set: ms-infotos [drbd-infotos]
+     Masters: [ cl-virt-2 ]
+     Slaves: [ cl-virt-1 ]
+

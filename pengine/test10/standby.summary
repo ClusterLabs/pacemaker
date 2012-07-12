@@ -1,0 +1,86 @@
+
+Current cluster status:
+Node sapcl03 (0bfb78a2-fcd2-4f52-8a06-2d17437a6750): standby
+Node sapcl02 (09fa194c-d7e1-41fa-a0d0-afd79a139181): standby
+Online: [ sapcl01 ]
+
+ Resource Group: app01
+     IPaddr_192_168_1_101	(ocf::heartbeat:IPaddr):	Started sapcl01
+     LVM_2	(ocf::heartbeat:LVM):	Started sapcl01
+     Filesystem_3	(ocf::heartbeat:Filesystem):	Started sapcl01
+ Resource Group: app02
+     IPaddr_192_168_1_102	(ocf::heartbeat:IPaddr):	Started sapcl02
+     LVM_12	(ocf::heartbeat:LVM):	Started sapcl02
+     Filesystem_13	(ocf::heartbeat:Filesystem):	Started sapcl02
+ Resource Group: oracle
+     IPaddr_192_168_1_104	(ocf::heartbeat:IPaddr):	Started sapcl03
+     LVM_22	(ocf::heartbeat:LVM):	Started sapcl03
+     Filesystem_23	(ocf::heartbeat:Filesystem):	Started sapcl03
+     oracle_24	(ocf::heartbeat:oracle):	Started sapcl03
+     oralsnr_25	(ocf::heartbeat:oralsnr):	Started sapcl03
+
+Transition Summary:
+ * Move    IPaddr_192_168_1_102	(Started sapcl02 -> sapcl01)
+ * Move    LVM_12	(Started sapcl02 -> sapcl01)
+ * Move    Filesystem_13	(Started sapcl02 -> sapcl01)
+ * Move    IPaddr_192_168_1_104	(Started sapcl03 -> sapcl01)
+ * Move    LVM_22	(Started sapcl03 -> sapcl01)
+ * Move    Filesystem_23	(Started sapcl03 -> sapcl01)
+ * Move    oracle_24	(Started sapcl03 -> sapcl01)
+ * Move    oralsnr_25	(Started sapcl03 -> sapcl01)
+
+Executing cluster transition:
+ * Pseudo action:   app02_stop_0
+ * Resource action: Filesystem_13   stop on sapcl02
+ * Pseudo action:   oracle_stop_0
+ * Resource action: oralsnr_25      stop on sapcl03
+ * Resource action: LVM_12          stop on sapcl02
+ * Resource action: oracle_24       stop on sapcl03
+ * Resource action: IPaddr_192_168_1_102 stop on sapcl02
+ * Resource action: Filesystem_23   stop on sapcl03
+ * Pseudo action:   app02_stopped_0
+ * Pseudo action:   app02_start_0
+ * Resource action: IPaddr_192_168_1_102 start on sapcl01
+ * Resource action: LVM_12          start on sapcl01
+ * Resource action: Filesystem_13   start on sapcl01
+ * Resource action: LVM_22          stop on sapcl03
+ * Pseudo action:   app02_running_0
+ * Resource action: IPaddr_192_168_1_102 monitor=5000 on sapcl01
+ * Resource action: LVM_12          monitor=120000 on sapcl01
+ * Resource action: Filesystem_13   monitor=120000 on sapcl01
+ * Resource action: IPaddr_192_168_1_104 stop on sapcl03
+ * Pseudo action:   all_stopped
+ * Pseudo action:   oracle_stopped_0
+ * Pseudo action:   oracle_start_0
+ * Resource action: IPaddr_192_168_1_104 start on sapcl01
+ * Resource action: LVM_22          start on sapcl01
+ * Resource action: Filesystem_23   start on sapcl01
+ * Resource action: oracle_24       start on sapcl01
+ * Resource action: oralsnr_25      start on sapcl01
+ * Pseudo action:   oracle_running_0
+ * Resource action: IPaddr_192_168_1_104 monitor=5000 on sapcl01
+ * Resource action: LVM_22          monitor=120000 on sapcl01
+ * Resource action: Filesystem_23   monitor=120000 on sapcl01
+ * Resource action: oracle_24       monitor=120000 on sapcl01
+ * Resource action: oralsnr_25      monitor=120000 on sapcl01
+
+Revised cluster status:
+Node sapcl03 (0bfb78a2-fcd2-4f52-8a06-2d17437a6750): standby
+Node sapcl02 (09fa194c-d7e1-41fa-a0d0-afd79a139181): standby
+Online: [ sapcl01 ]
+
+ Resource Group: app01
+     IPaddr_192_168_1_101	(ocf::heartbeat:IPaddr):	Started sapcl01
+     LVM_2	(ocf::heartbeat:LVM):	Started sapcl01
+     Filesystem_3	(ocf::heartbeat:Filesystem):	Started sapcl01
+ Resource Group: app02
+     IPaddr_192_168_1_102	(ocf::heartbeat:IPaddr):	Started sapcl01
+     LVM_12	(ocf::heartbeat:LVM):	Started sapcl01
+     Filesystem_13	(ocf::heartbeat:Filesystem):	Started sapcl01
+ Resource Group: oracle
+     IPaddr_192_168_1_104	(ocf::heartbeat:IPaddr):	Started sapcl01
+     LVM_22	(ocf::heartbeat:LVM):	Started sapcl01
+     Filesystem_23	(ocf::heartbeat:Filesystem):	Started sapcl01
+     oracle_24	(ocf::heartbeat:oracle):	Started sapcl01
+     oralsnr_25	(ocf::heartbeat:oralsnr):	Started sapcl01
+

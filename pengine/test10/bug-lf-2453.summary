@@ -1,0 +1,38 @@
+
+Current cluster status:
+Online: [ domu1 domu2 ]
+
+ PrimitiveResource1	(ocf::heartbeat:IPaddr2):	Started domu1
+ Clone Set: CloneResource1 [apache]
+     Started: [ domu2 domu1 ]
+ Clone Set: CloneResource2 [DummyResource]
+     Started: [ domu2 domu1 ]
+
+Transition Summary:
+ * Stop    PrimitiveResource1	(Started domu1)
+ * Stop    apache:0	(domu2)
+ * Stop    apache:1	(domu1)
+ * Stop    DummyResource:0	(Started domu2)
+ * Stop    DummyResource:1	(Started domu1)
+
+Executing cluster transition:
+ * Resource action: PrimitiveResource1 stop on domu1
+ * Pseudo action:   CloneResource2_stop_0
+ * Resource action: DummyResource:0 stop on domu2
+ * Resource action: DummyResource:1 stop on domu1
+ * Pseudo action:   CloneResource2_stopped_0
+ * Pseudo action:   CloneResource1_stop_0
+ * Resource action: apache:0        stop on domu2
+ * Resource action: apache:1        stop on domu1
+ * Pseudo action:   CloneResource1_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ domu1 domu2 ]
+
+ PrimitiveResource1	(ocf::heartbeat:IPaddr2):	Stopped 
+ Clone Set: CloneResource1 [apache]
+     Stopped: [ apache:0 apache:1 ]
+ Clone Set: CloneResource2 [DummyResource]
+     Stopped: [ DummyResource:0 DummyResource:1 ]
+

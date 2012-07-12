@@ -1,0 +1,24 @@
+
+Current cluster status:
+Online: [ node2 ]
+OFFLINE: [ node1 ]
+
+ rsc1	(heartbeat:apache):	Stopped 
+ rsc2	(heartbeat:apache):	Stopped 
+
+Transition Summary:
+ * Start   rsc1	(node2 - blocked)
+ * Start   rsc2	(node2 - blocked)
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc2            monitor on node2
+ * Pseudo action:   probe_complete
+
+Revised cluster status:
+Online: [ node2 ]
+OFFLINE: [ node1 ]
+
+ rsc1	(heartbeat:apache):	Stopped 
+ rsc2	(heartbeat:apache):	Stopped 
+

@@ -1,0 +1,31 @@
+
+Current cluster status:
+Online: [ sel3 sel4 ]
+
+ Master/Slave Set: ms-drbd0 [drbd0]
+     Masters: [ sel3 ]
+     Slaves: [ sel4 ]
+ Master/Slave Set: ms-sf [sf] (unique)
+     sf:0	(ocf::heartbeat:Stateful):	Started sel3
+     sf:1	(ocf::heartbeat:Stateful):	Started sel4
+ fs0	(ocf::heartbeat:Filesystem):	Started sel3
+
+Transition Summary:
+ * Promote sf:0	(Slave -> Master sel3)
+
+Executing cluster transition:
+ * Pseudo action:   ms-sf_promote_0
+ * Resource action: sf:0            promote on sel3
+ * Pseudo action:   ms-sf_promoted_0
+
+Revised cluster status:
+Online: [ sel3 sel4 ]
+
+ Master/Slave Set: ms-drbd0 [drbd0]
+     Masters: [ sel3 ]
+     Slaves: [ sel4 ]
+ Master/Slave Set: ms-sf [sf] (unique)
+     sf:0	(ocf::heartbeat:Stateful):	Master sel3
+     sf:1	(ocf::heartbeat:Stateful):	Started sel4
+ fs0	(ocf::heartbeat:Filesystem):	Started sel3
+

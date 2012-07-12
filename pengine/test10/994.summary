@@ -1,0 +1,32 @@
+
+Current cluster status:
+Online: [ paul ]
+
+ Resource Group: group_1
+     datadisk_1	(heartbeat:datadisk):	Started paul
+     Filesystem_2	(ocf::heartbeat:Filesystem):	Started paul
+     IPaddr_5	(ocf::heartbeat:IPaddr):	Started paul
+     postfix_9	(lsb:postfix):	Started paul FAILED
+
+Transition Summary:
+ * Recover postfix_9	(Started paul)
+
+Executing cluster transition:
+ * Pseudo action:   group_1_stop_0
+ * Resource action: postfix_9       stop on paul
+ * Pseudo action:   all_stopped
+ * Pseudo action:   group_1_stopped_0
+ * Pseudo action:   group_1_start_0
+ * Resource action: postfix_9       start on paul
+ * Resource action: postfix_9       monitor=120000 on paul
+ * Pseudo action:   group_1_running_0
+
+Revised cluster status:
+Online: [ paul ]
+
+ Resource Group: group_1
+     datadisk_1	(heartbeat:datadisk):	Started paul
+     Filesystem_2	(ocf::heartbeat:Filesystem):	Started paul
+     IPaddr_5	(ocf::heartbeat:IPaddr):	Started paul
+     postfix_9	(lsb:postfix):	Started paul
+

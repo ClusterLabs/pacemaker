@@ -1,0 +1,24 @@
+
+Current cluster status:
+Online: [ fc16-builder ]
+OFFLINE: [ fc16-builder2 ]
+
+ A	(ocf::pacemaker:Dummy):	Started fc16-builder
+ B	(ocf::pacemaker:Dummy):	Started fc16-builder
+ C	(ocf::pacemaker:Dummy):	Started fc16-builder
+
+Transition Summary:
+ * Stop    C	(fc16-builder)
+
+Executing cluster transition:
+ * Resource action: C               stop on fc16-builder
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ fc16-builder ]
+OFFLINE: [ fc16-builder2 ]
+
+ A	(ocf::pacemaker:Dummy):	Started fc16-builder
+ B	(ocf::pacemaker:Dummy):	Started fc16-builder
+ C	(ocf::pacemaker:Dummy):	Stopped 
+

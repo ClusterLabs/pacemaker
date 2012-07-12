@@ -1,0 +1,27 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ Clone Set: C [P] (unique)
+     P:0	(ocf::pacemaker:Dummy):	Started node1
+     P:1	(ocf::pacemaker:Dummy):	Started node1
+
+Transition Summary:
+ * Move    P:1	(Started node1 -> node2)
+
+Executing cluster transition:
+ * Pseudo action:   C_stop_0
+ * Resource action: P:1             stop on node1
+ * Pseudo action:   C_stopped_0
+ * Pseudo action:   C_start_0
+ * Pseudo action:   all_stopped
+ * Resource action: P:1             start on node2
+ * Pseudo action:   C_running_0
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ Clone Set: C [P] (unique)
+     P:0	(ocf::pacemaker:Dummy):	Started node1
+     P:1	(ocf::pacemaker:Dummy):	Started node2
+

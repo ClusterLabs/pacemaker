@@ -1,0 +1,48 @@
+
+Current cluster status:
+Online: [ node-b node-a ]
+
+ Master/Slave Set: ms-sf [group] (unique)
+     Resource Group: group:0
+         stateful-1:0	(ocf::heartbeat:Stateful):	Started node-b
+         stateful-2:0	(ocf::heartbeat:Stateful):	Stopped 
+     Resource Group: group:1
+         stateful-1:1	(ocf::heartbeat:Stateful):	Master node-a
+         stateful-2:1	(ocf::heartbeat:Stateful):	Stopped 
+
+Transition Summary:
+ * Start   stateful-2:0	(node-b)
+ * Start   stateful-2:1	(node-a)
+ * Promote stateful-2:1	(Stopped -> Master node-a)
+
+Executing cluster transition:
+ * Resource action: stateful-2:0    monitor on node-a
+ * Resource action: stateful-2:0    monitor on node-b
+ * Resource action: stateful-2:1    monitor on node-a
+ * Resource action: stateful-2:1    monitor on node-b
+ * Pseudo action:   ms-sf_start_0
+ * Pseudo action:   probe_complete
+ * Pseudo action:   group:0_start_0
+ * Resource action: stateful-2:0    start on node-b
+ * Pseudo action:   group:1_start_0
+ * Resource action: stateful-2:1    start on node-a
+ * Pseudo action:   group:0_running_0
+ * Pseudo action:   group:1_running_0
+ * Pseudo action:   ms-sf_running_0
+ * Pseudo action:   ms-sf_promote_0
+ * Pseudo action:   group:1_promote_0
+ * Resource action: stateful-2:1    promote on node-a
+ * Pseudo action:   group:1_promoted_0
+ * Pseudo action:   ms-sf_promoted_0
+
+Revised cluster status:
+Online: [ node-b node-a ]
+
+ Master/Slave Set: ms-sf [group] (unique)
+     Resource Group: group:0
+         stateful-1:0	(ocf::heartbeat:Stateful):	Started node-b
+         stateful-2:0	(ocf::heartbeat:Stateful):	Started node-b
+     Resource Group: group:1
+         stateful-1:1	(ocf::heartbeat:Stateful):	Master node-a
+         stateful-2:1	(ocf::heartbeat:Stateful):	Master node-a
+

@@ -1,0 +1,91 @@
+
+Current cluster status:
+Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+
+ Fencing	(stonith:fence_xvm):	Started pcmk-1
+ Resource Group: group-1
+     r192.168.122.105	(ocf::heartbeat:IPaddr):	Started pcmk-2
+     r192.168.122.106	(ocf::heartbeat:IPaddr):	Started pcmk-2
+     r192.168.122.107	(ocf::heartbeat:IPaddr):	Started pcmk-2
+ rsc_pcmk-1	(ocf::heartbeat:IPaddr):	Started pcmk-1
+ rsc_pcmk-2	(ocf::heartbeat:IPaddr):	Started pcmk-2
+ rsc_pcmk-3	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_pcmk-4	(ocf::heartbeat:IPaddr):	Started pcmk-4
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Started pcmk-2
+ migrator	(ocf::pacemaker:Dummy):	Started pcmk-1
+ Clone Set: Connectivity [ping-1]
+     Started: [ pcmk-1 pcmk-2 pcmk-4 ]
+     Stopped: [ ping-1:2 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Masters: [ pcmk-2 ]
+     Slaves: [ pcmk-1 pcmk-4 ]
+     Stopped: [ stateful-1:1 ]
+
+Transition Summary:
+ * Stop    Fencing	(pcmk-1)
+ * Stop    r192.168.122.105	(pcmk-2)
+ * Stop    r192.168.122.106	(pcmk-2)
+ * Stop    r192.168.122.107	(pcmk-2)
+ * Stop    rsc_pcmk-1	(pcmk-1)
+ * Stop    rsc_pcmk-2	(pcmk-2)
+ * Stop    rsc_pcmk-4	(pcmk-4)
+ * Stop    lsb-dummy	(pcmk-2)
+ * Stop    migrator	(pcmk-1)
+ * Stop    ping-1:0	(pcmk-1)
+ * Stop    ping-1:1	(pcmk-2)
+ * Stop    ping-1:3	(pcmk-4)
+ * Demote  stateful-1:0	(Master -> Stopped pcmk-2)
+ * Stop    stateful-1:2	(pcmk-1)
+ * Stop    stateful-1:3	(pcmk-4)
+
+Executing cluster transition:
+ * Resource action: rsc_pcmk-1      stop on pcmk-1
+ * Resource action: rsc_pcmk-2      stop on pcmk-2
+ * Resource action: rsc_pcmk-4      stop on pcmk-4
+ * Resource action: lsb-dummy       stop on pcmk-2
+ * Resource action: migrator        stop on pcmk-1
+ * Resource action: migrator        stop on pcmk-3
+ * Pseudo action:   Connectivity_stop_0
+ * Cluster action:  do_shutdown on pcmk-3
+ * Pseudo action:   group-1_stop_0
+ * Resource action: r192.168.122.107 stop on pcmk-2
+ * Resource action: ping-1:0        stop on pcmk-1
+ * Resource action: ping-1:1        stop on pcmk-2
+ * Resource action: ping-1:3        stop on pcmk-4
+ * Pseudo action:   Connectivity_stopped_0
+ * Resource action: r192.168.122.106 stop on pcmk-2
+ * Resource action: r192.168.122.105 stop on pcmk-2
+ * Pseudo action:   group-1_stopped_0
+ * Pseudo action:   master-1_demote_0
+ * Resource action: stateful-1:0    demote on pcmk-2
+ * Pseudo action:   master-1_demoted_0
+ * Pseudo action:   master-1_stop_0
+ * Resource action: stateful-1:0    stop on pcmk-2
+ * Resource action: stateful-1:2    stop on pcmk-1
+ * Resource action: stateful-1:3    stop on pcmk-4
+ * Pseudo action:   master-1_stopped_0
+ * Cluster action:  do_shutdown on pcmk-4
+ * Cluster action:  do_shutdown on pcmk-2
+ * Pseudo action:   all_stopped
+ * Resource action: Fencing         stop on pcmk-1
+ * Cluster action:  do_shutdown on pcmk-1
+
+Revised cluster status:
+Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+
+ Fencing	(stonith:fence_xvm):	Stopped 
+ Resource Group: group-1
+     r192.168.122.105	(ocf::heartbeat:IPaddr):	Stopped 
+     r192.168.122.106	(ocf::heartbeat:IPaddr):	Stopped 
+     r192.168.122.107	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_pcmk-1	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_pcmk-2	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_pcmk-3	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_pcmk-4	(ocf::heartbeat:IPaddr):	Stopped 
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Stopped 
+ migrator	(ocf::pacemaker:Dummy):	Stopped 
+ Clone Set: Connectivity [ping-1]
+     Stopped: [ ping-1:0 ping-1:1 ping-1:2 ping-1:3 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Stopped: [ stateful-1:0 stateful-1:1 stateful-1:2 stateful-1:3 ]
+

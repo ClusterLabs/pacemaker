@@ -1,0 +1,32 @@
+
+Current cluster status:
+Online: [ hex-13 hex-14 ]
+
+ fencing-sbd	(stonith:external/sbd):	Started hex-13
+ dummy0	(ocf::heartbeat:Dummy):	Started hex-14
+ dummy1	(ocf::heartbeat:Dummy):	Started hex-13
+ dummy2	(ocf::heartbeat:Dummy):	Started hex-14
+ dummy3	(ocf::heartbeat:Dummy):	Started hex-13
+
+Transition Summary:
+ * Move    dummy1	(Started hex-13 -> hex-14)
+ * Move    dummy3	(Started hex-13 -> hex-14)
+
+Executing cluster transition:
+ * Resource action: dummy1          stop on hex-13
+ * Resource action: dummy3          stop on hex-13
+ * Pseudo action:   all_stopped
+ * Resource action: dummy1          start on hex-14
+ * Resource action: dummy3          start on hex-14
+ * Resource action: dummy1          monitor=15000 on hex-14
+ * Resource action: dummy3          monitor=15000 on hex-14
+
+Revised cluster status:
+Online: [ hex-13 hex-14 ]
+
+ fencing-sbd	(stonith:external/sbd):	Started hex-13
+ dummy0	(ocf::heartbeat:Dummy):	Started hex-14
+ dummy1	(ocf::heartbeat:Dummy):	Started hex-14
+ dummy2	(ocf::heartbeat:Dummy):	Started hex-14
+ dummy3	(ocf::heartbeat:Dummy):	Started hex-14
+

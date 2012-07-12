@@ -1,0 +1,40 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ simple-rsc	(heartbeat:apache):	Stopped 
+ Master/Slave Set: rsc1 [child_rsc1] (unique)
+     child_rsc1:0	(heartbeat:apache):	Stopped 
+     child_rsc1:1	(heartbeat:apache):	Stopped 
+
+Transition Summary:
+ * Start   simple-rsc	(node2)
+ * Start   child_rsc1:0	(node1)
+ * Start   child_rsc1:1	(node2)
+ * Promote child_rsc1:1	(Stopped -> Master node2)
+
+Executing cluster transition:
+ * Resource action: simple-rsc      monitor on node2
+ * Resource action: simple-rsc      monitor on node1
+ * Resource action: child_rsc1:0    monitor on node2
+ * Resource action: child_rsc1:0    monitor on node1
+ * Resource action: child_rsc1:1    monitor on node2
+ * Resource action: child_rsc1:1    monitor on node1
+ * Pseudo action:   rsc1_start_0
+ * Pseudo action:   probe_complete
+ * Resource action: simple-rsc      start on node2
+ * Resource action: child_rsc1:0    start on node1
+ * Resource action: child_rsc1:1    start on node2
+ * Pseudo action:   rsc1_running_0
+ * Pseudo action:   rsc1_promote_0
+ * Resource action: child_rsc1:1    promote on node2
+ * Pseudo action:   rsc1_promoted_0
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ simple-rsc	(heartbeat:apache):	Started node2
+ Master/Slave Set: rsc1 [child_rsc1] (unique)
+     child_rsc1:0	(heartbeat:apache):	Started node1
+     child_rsc1:1	(heartbeat:apache):	Master node2
+

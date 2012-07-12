@@ -1,0 +1,22 @@
+
+Current cluster status:
+Online: [ fc16-builder ]
+
+ Resource Group: group1
+     ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
+ Resource Group: group2
+     ClusterIP2	(ocf::heartbeat:IPaddr2):	Stopped 
+
+Transition Summary:
+ * Start   ClusterIP2	(fc16-builder - blocked)
+
+Executing cluster transition:
+
+Revised cluster status:
+Online: [ fc16-builder ]
+
+ Resource Group: group1
+     ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
+ Resource Group: group2
+     ClusterIP2	(ocf::heartbeat:IPaddr2):	Stopped 
+

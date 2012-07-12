@@ -1,0 +1,84 @@
+
+Current cluster status:
+Online: [ arc-dknightlx arc-tkincaidlx.wsicorp.com ]
+
+ Master/Slave Set: ms_drbd_7788 [rsc_drbd_7788]
+     Masters: [ arc-tkincaidlx.wsicorp.com ]
+     Slaves: [ arc-dknightlx ]
+ Resource Group: grp_pgsql_mirror
+     fs_mirror	(ocf::heartbeat:Filesystem):	Started arc-tkincaidlx.wsicorp.com
+     pgsql_5555	(ocf::heartbeat:pgsql):	Started arc-tkincaidlx.wsicorp.com
+     IPaddr_147_81_84_133	(ocf::heartbeat:IPaddr):	Started arc-tkincaidlx.wsicorp.com
+
+Transition Summary:
+ * Stop    rsc_drbd_7788:0	(arc-dknightlx)
+ * Restart rsc_drbd_7788:1	(Master arc-tkincaidlx.wsicorp.com)
+ * Restart fs_mirror	(Started arc-tkincaidlx.wsicorp.com)
+ * Restart pgsql_5555	(Started arc-tkincaidlx.wsicorp.com)
+ * Restart IPaddr_147_81_84_133	(Started arc-tkincaidlx.wsicorp.com)
+
+Executing cluster transition:
+ * Pseudo action:   ms_drbd_7788_pre_notify_demote_0
+ * Pseudo action:   grp_pgsql_mirror_stop_0
+ * Resource action: IPaddr_147_81_84_133 stop on arc-tkincaidlx.wsicorp.com
+ * Resource action: rsc_drbd_7788:0 notify on arc-dknightlx
+ * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   ms_drbd_7788_confirmed-pre_notify_demote_0
+ * Resource action: pgsql_5555      stop on arc-tkincaidlx.wsicorp.com
+ * Resource action: fs_mirror       stop on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   grp_pgsql_mirror_stopped_0
+ * Pseudo action:   ms_drbd_7788_demote_0
+ * Resource action: rsc_drbd_7788:1 demote on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   ms_drbd_7788_demoted_0
+ * Pseudo action:   ms_drbd_7788_post_notify_demoted_0
+ * Resource action: rsc_drbd_7788:0 notify on arc-dknightlx
+ * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   ms_drbd_7788_confirmed-post_notify_demoted_0
+ * Pseudo action:   ms_drbd_7788_pre_notify_stop_0
+ * Resource action: rsc_drbd_7788:0 notify on arc-dknightlx
+ * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   ms_drbd_7788_confirmed-pre_notify_stop_0
+ * Pseudo action:   ms_drbd_7788_stop_0
+ * Resource action: rsc_drbd_7788:0 stop on arc-dknightlx
+ * Resource action: rsc_drbd_7788:1 stop on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   ms_drbd_7788_stopped_0
+ * Cluster action:  do_shutdown on arc-dknightlx
+ * Pseudo action:   ms_drbd_7788_post_notify_stopped_0
+ * Pseudo action:   ms_drbd_7788_confirmed-post_notify_stopped_0
+ * Pseudo action:   ms_drbd_7788_pre_notify_start_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   ms_drbd_7788_confirmed-pre_notify_start_0
+ * Pseudo action:   ms_drbd_7788_start_0
+ * Resource action: rsc_drbd_7788:1 start on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   ms_drbd_7788_running_0
+ * Pseudo action:   ms_drbd_7788_post_notify_running_0
+ * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   ms_drbd_7788_confirmed-post_notify_running_0
+ * Pseudo action:   ms_drbd_7788_pre_notify_promote_0
+ * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   ms_drbd_7788_confirmed-pre_notify_promote_0
+ * Pseudo action:   ms_drbd_7788_promote_0
+ * Resource action: rsc_drbd_7788:1 promote on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   ms_drbd_7788_promoted_0
+ * Pseudo action:   ms_drbd_7788_post_notify_promoted_0
+ * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   ms_drbd_7788_confirmed-post_notify_promoted_0
+ * Pseudo action:   grp_pgsql_mirror_start_0
+ * Resource action: fs_mirror       start on arc-tkincaidlx.wsicorp.com
+ * Resource action: pgsql_5555      start on arc-tkincaidlx.wsicorp.com
+ * Resource action: pgsql_5555      monitor=30000 on arc-tkincaidlx.wsicorp.com
+ * Resource action: IPaddr_147_81_84_133 start on arc-tkincaidlx.wsicorp.com
+ * Resource action: IPaddr_147_81_84_133 monitor=25000 on arc-tkincaidlx.wsicorp.com
+ * Pseudo action:   grp_pgsql_mirror_running_0
+
+Revised cluster status:
+Online: [ arc-dknightlx arc-tkincaidlx.wsicorp.com ]
+
+ Master/Slave Set: ms_drbd_7788 [rsc_drbd_7788]
+     Masters: [ arc-tkincaidlx.wsicorp.com ]
+     Stopped: [ rsc_drbd_7788:0 ]
+ Resource Group: grp_pgsql_mirror
+     fs_mirror	(ocf::heartbeat:Filesystem):	Started arc-tkincaidlx.wsicorp.com
+     pgsql_5555	(ocf::heartbeat:pgsql):	Started arc-tkincaidlx.wsicorp.com
+     IPaddr_147_81_84_133	(ocf::heartbeat:IPaddr):	Started arc-tkincaidlx.wsicorp.com
+

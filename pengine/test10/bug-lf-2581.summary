@@ -1,0 +1,58 @@
+
+Current cluster status:
+Online: [ elvis queen ]
+
+ Clone Set: AZ-clone [AZ-group]
+     Started: [ elvis ]
+     Stopped: [ AZ-group:1 ]
+ Resource Group: BC-group-1
+     B-1	(ocf::rgk:typeB):	Started elvis
+     C-1	(ocf::rgk:typeC):	Started elvis
+ Resource Group: BC-group-2
+     B-2	(ocf::rgk:typeB):	Started elvis
+     C-2	(ocf::rgk:typeC):	Started elvis
+ Clone Set: stonith-l2network-set [stonith-l2network]
+     Started: [ elvis ]
+     Stopped: [ stonith-l2network:1 ]
+
+Transition Summary:
+ * Start   A:1	(queen)
+ * Start   Z:1	(queen)
+ * Start   stonith-l2network:1	(queen)
+
+Executing cluster transition:
+ * Resource action: A:1             monitor on queen
+ * Resource action: Z:1             monitor on queen
+ * Pseudo action:   AZ-clone_start_0
+ * Resource action: B-1             monitor on queen
+ * Resource action: C-1             monitor on queen
+ * Resource action: B-2             monitor on queen
+ * Resource action: C-2             monitor on queen
+ * Resource action: stonith-l2network:1 monitor on queen
+ * Pseudo action:   stonith-l2network-set_start_0
+ * Pseudo action:   probe_complete
+ * Pseudo action:   AZ-group:1_start_0
+ * Resource action: A:1             start on queen
+ * Resource action: Z:1             start on queen
+ * Resource action: stonith-l2network:1 start on queen
+ * Pseudo action:   stonith-l2network-set_running_0
+ * Pseudo action:   AZ-group:1_running_0
+ * Resource action: A:1             monitor=120000 on queen
+ * Resource action: Z:1             monitor=120000 on queen
+ * Pseudo action:   AZ-clone_running_0
+ * Resource action: stonith-l2network:1 monitor=300000 on queen
+
+Revised cluster status:
+Online: [ elvis queen ]
+
+ Clone Set: AZ-clone [AZ-group]
+     Started: [ elvis queen ]
+ Resource Group: BC-group-1
+     B-1	(ocf::rgk:typeB):	Started elvis
+     C-1	(ocf::rgk:typeC):	Started elvis
+ Resource Group: BC-group-2
+     B-2	(ocf::rgk:typeB):	Started elvis
+     C-2	(ocf::rgk:typeC):	Started elvis
+ Clone Set: stonith-l2network-set [stonith-l2network]
+     Started: [ elvis queen ]
+

@@ -1,0 +1,24 @@
+
+Current cluster status:
+Node node1: standby
+Online: [ node2 ]
+
+ rsc2	(ocf::pacemaker:Dummy):	Started node2
+ rsc1	(ocf::pacemaker:Dummy):	Started node1
+
+Transition Summary:
+ * Stop    rsc1	(node1)
+
+Executing cluster transition:
+ * Resource action: rsc1            stop on node1
+ * Pseudo action:   load_stopped_node1
+ * Pseudo action:   load_stopped_node2
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Node node1: standby
+Online: [ node2 ]
+
+ rsc2	(ocf::pacemaker:Dummy):	Started node2
+ rsc1	(ocf::pacemaker:Dummy):	Stopped 
+

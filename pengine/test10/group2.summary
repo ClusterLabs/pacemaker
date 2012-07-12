@@ -1,0 +1,48 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(heartbeat:apache):	Stopped 
+ Resource Group: rsc2
+     child_rsc1	(heartbeat:apache):	Stopped 
+     child_rsc2	(heartbeat:apache):	Stopped 
+     child_rsc3	(heartbeat:apache):	Stopped 
+ rsc3	(heartbeat:apache):	Stopped 
+
+Transition Summary:
+ * Start   rsc1	(node1)
+ * Start   child_rsc1	(node2)
+ * Start   child_rsc2	(node2)
+ * Start   child_rsc3	(node2)
+ * Start   rsc3	(node1)
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc1            monitor on node1
+ * Resource action: child_rsc1      monitor on node2
+ * Resource action: child_rsc1      monitor on node1
+ * Resource action: child_rsc2      monitor on node2
+ * Resource action: child_rsc2      monitor on node1
+ * Resource action: child_rsc3      monitor on node2
+ * Resource action: child_rsc3      monitor on node1
+ * Resource action: rsc3            monitor on node2
+ * Resource action: rsc3            monitor on node1
+ * Pseudo action:   probe_complete
+ * Resource action: rsc1            start on node1
+ * Pseudo action:   rsc2_start_0
+ * Resource action: child_rsc1      start on node2
+ * Resource action: child_rsc2      start on node2
+ * Resource action: child_rsc3      start on node2
+ * Pseudo action:   rsc2_running_0
+ * Resource action: rsc3            start on node1
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(heartbeat:apache):	Started node1
+ Resource Group: rsc2
+     child_rsc1	(heartbeat:apache):	Started node2
+     child_rsc2	(heartbeat:apache):	Started node2
+     child_rsc3	(heartbeat:apache):	Started node2
+ rsc3	(heartbeat:apache):	Started node1
+

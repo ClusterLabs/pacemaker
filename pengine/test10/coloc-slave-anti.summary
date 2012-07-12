@@ -1,0 +1,46 @@
+
+Current cluster status:
+Online: [ sirius pollux ]
+
+ Clone Set: pingd-clone [pingd-1]
+     Started: [ sirius pollux ]
+ Master/Slave Set: drbd-msr [drbd-r0]
+     Masters: [ pollux ]
+     Slaves: [ sirius ]
+ Resource Group: group-1
+     fs-1	(ocf::heartbeat:Filesystem):	Stopped 
+     ip-198	(ocf::heartbeat:IPaddr2):	Stopped 
+     apache	(ocf::custom:apache2):	Stopped 
+ pollux-fencing	(stonith:external/ipmi-soft):	Started sirius
+ sirius-fencing	(stonith:external/ipmi-soft):	Started pollux
+
+Transition Summary:
+ * Start   fs-1	(pollux)
+ * Start   ip-198	(pollux)
+ * Start   apache	(pollux)
+
+Executing cluster transition:
+ * Pseudo action:   group-1_start_0
+ * Resource action: fs-1            start on pollux
+ * Resource action: ip-198          start on pollux
+ * Resource action: apache          start on pollux
+ * Pseudo action:   group-1_running_0
+ * Resource action: fs-1            monitor=20000 on pollux
+ * Resource action: ip-198          monitor=30000 on pollux
+ * Resource action: apache          monitor=60000 on pollux
+
+Revised cluster status:
+Online: [ sirius pollux ]
+
+ Clone Set: pingd-clone [pingd-1]
+     Started: [ sirius pollux ]
+ Master/Slave Set: drbd-msr [drbd-r0]
+     Masters: [ pollux ]
+     Slaves: [ sirius ]
+ Resource Group: group-1
+     fs-1	(ocf::heartbeat:Filesystem):	Started pollux
+     ip-198	(ocf::heartbeat:IPaddr2):	Started pollux
+     apache	(ocf::custom:apache2):	Started pollux
+ pollux-fencing	(stonith:external/ipmi-soft):	Started sirius
+ sirius-fencing	(stonith:external/ipmi-soft):	Started pollux
+

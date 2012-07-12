@@ -1,0 +1,56 @@
+
+Current cluster status:
+Node hadev3 (879e65f8-4b38-4c56-9552-4752ad436669): UNCLEAN (offline)
+Online: [ hadev2 hadev1 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Started hadev2
+ rsc_hadev3	(ocf::heartbeat:IPaddr):	Started hadev1
+ rsc_hadev2	(ocf::heartbeat:IPaddr):	Started hadev2
+ rsc_hadev1	(ocf::heartbeat:IPaddr):	Started hadev1
+ Clone Set: DoFencing [child_DoFencing] (unique)
+     child_DoFencing:0	(stonith:ssh):	Started hadev2
+     child_DoFencing:1	(stonith:ssh):	Started hadev1
+     child_DoFencing:2	(stonith:ssh):	Started hadev1
+
+Transition Summary:
+ * Move    DcIPaddr	(Started hadev2 -> hadev1)
+ * Move    rsc_hadev2	(Started hadev2 -> hadev1)
+ * Stop    child_DoFencing:0	(hadev2)
+ * Stop    child_DoFencing:2	(hadev1)
+
+Executing cluster transition:
+ * Resource action: DcIPaddr        monitor on hadev1
+ * Resource action: rsc_hadev3      monitor on hadev2
+ * Resource action: rsc_hadev2      monitor on hadev1
+ * Resource action: child_DoFencing:0 monitor on hadev1
+ * Resource action: child_DoFencing:2 monitor on hadev2
+ * Pseudo action:   DoFencing_stop_0
+ * Pseudo action:   stonith_up
+ * Pseudo action:   probe_complete
+ * Resource action: DcIPaddr        stop on hadev2
+ * Resource action: rsc_hadev2      stop on hadev2
+ * Fencing hadev3
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   all_stopped
+ * Resource action: DcIPaddr        start on hadev1
+ * Resource action: rsc_hadev2      start on hadev1
+ * Resource action: child_DoFencing:0 stop on hadev2
+ * Resource action: child_DoFencing:2 stop on hadev1
+ * Pseudo action:   DoFencing_stopped_0
+ * Cluster action:  do_shutdown on hadev2
+ * Resource action: DcIPaddr        monitor=5000 on hadev1
+ * Resource action: rsc_hadev2      monitor=5000 on hadev1
+
+Revised cluster status:
+Online: [ hadev2 hadev1 ]
+OFFLINE: [ hadev3 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Started hadev1
+ rsc_hadev3	(ocf::heartbeat:IPaddr):	Started hadev1
+ rsc_hadev2	(ocf::heartbeat:IPaddr):	Started hadev1
+ rsc_hadev1	(ocf::heartbeat:IPaddr):	Started hadev1
+ Clone Set: DoFencing [child_DoFencing] (unique)
+     child_DoFencing:0	(stonith:ssh):	Stopped 
+     child_DoFencing:1	(stonith:ssh):	Started hadev1
+     child_DoFencing:2	(stonith:ssh):	Stopped 
+

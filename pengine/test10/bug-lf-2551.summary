@@ -1,0 +1,219 @@
+
+Current cluster status:
+Node hex-9: UNCLEAN (offline)
+Online: [ hex-7 hex-8 hex-0 ]
+
+ vm-00	(ocf::heartbeat:Xen):	Started hex-0
+ Clone Set: base-clone [base-group]
+     Started: [ hex-0 hex-7 hex-8 hex-9 ]
+ vm-01	(ocf::heartbeat:Xen):	Started hex-7
+ vm-02	(ocf::heartbeat:Xen):	Started hex-8
+ vm-03	(ocf::heartbeat:Xen):	Started hex-9
+ vm-04	(ocf::heartbeat:Xen):	Started hex-7
+ vm-05	(ocf::heartbeat:Xen):	Started hex-8
+ fencing-sbd	(stonith:external/sbd):	Started hex-9
+ vm-06	(ocf::heartbeat:Xen):	Started hex-9
+ vm-07	(ocf::heartbeat:Xen):	Started hex-7
+ vm-08	(ocf::heartbeat:Xen):	Started hex-8
+ vm-09	(ocf::heartbeat:Xen):	Started hex-9
+ vm-10	(ocf::heartbeat:Xen):	Started hex-0
+ vm-11	(ocf::heartbeat:Xen):	Started hex-7
+ vm-12	(ocf::heartbeat:Xen):	Started hex-8
+ vm-13	(ocf::heartbeat:Xen):	Started hex-9
+ vm-14	(ocf::heartbeat:Xen):	Started hex-0
+ vm-15	(ocf::heartbeat:Xen):	Started hex-7
+ vm-16	(ocf::heartbeat:Xen):	Started hex-8
+ vm-17	(ocf::heartbeat:Xen):	Started hex-9
+ vm-18	(ocf::heartbeat:Xen):	Started hex-0
+ vm-19	(ocf::heartbeat:Xen):	Started hex-7
+ vm-20	(ocf::heartbeat:Xen):	Started hex-8
+ vm-21	(ocf::heartbeat:Xen):	Started hex-9
+ vm-22	(ocf::heartbeat:Xen):	Started hex-0
+ vm-23	(ocf::heartbeat:Xen):	Started hex-7
+ vm-24	(ocf::heartbeat:Xen):	Started hex-8
+ vm-25	(ocf::heartbeat:Xen):	Started hex-9
+ vm-26	(ocf::heartbeat:Xen):	Started hex-0
+ vm-27	(ocf::heartbeat:Xen):	Started hex-7
+ vm-28	(ocf::heartbeat:Xen):	Started hex-8
+ vm-29	(ocf::heartbeat:Xen):	Started hex-9
+ vm-30	(ocf::heartbeat:Xen):	Started hex-0
+ vm-31	(ocf::heartbeat:Xen):	Started hex-7
+ vm-32	(ocf::heartbeat:Xen):	Started hex-8
+ dummy1	(ocf::heartbeat:Dummy):	Started hex-9
+ vm-33	(ocf::heartbeat:Xen):	Started hex-9
+ vm-34	(ocf::heartbeat:Xen):	Started hex-0
+ vm-35	(ocf::heartbeat:Xen):	Started hex-7
+ vm-36	(ocf::heartbeat:Xen):	Started hex-8
+ vm-37	(ocf::heartbeat:Xen):	Started hex-9
+ vm-38	(ocf::heartbeat:Xen):	Started hex-0
+ vm-39	(ocf::heartbeat:Xen):	Started hex-7
+ vm-40	(ocf::heartbeat:Xen):	Started hex-8
+ vm-41	(ocf::heartbeat:Xen):	Started hex-9
+ vm-42	(ocf::heartbeat:Xen):	Started hex-0
+ vm-43	(ocf::heartbeat:Xen):	Started hex-7
+ vm-44	(ocf::heartbeat:Xen):	Started hex-8
+ vm-45	(ocf::heartbeat:Xen):	Started hex-9
+ vm-46	(ocf::heartbeat:Xen):	Started hex-0
+ vm-47	(ocf::heartbeat:Xen):	Started hex-7
+ vm-48	(ocf::heartbeat:Xen):	Started hex-8
+ vm-49	(ocf::heartbeat:Xen):	Started hex-9
+ vm-50	(ocf::heartbeat:Xen):	Started hex-0
+ vm-51	(ocf::heartbeat:Xen):	Started hex-7
+ vm-52	(ocf::heartbeat:Xen):	Started hex-8
+ vm-53	(ocf::heartbeat:Xen):	Started hex-9
+ vm-54	(ocf::heartbeat:Xen):	Started hex-0
+ vm-55	(ocf::heartbeat:Xen):	Started hex-7
+ vm-56	(ocf::heartbeat:Xen):	Started hex-8
+ vm-57	(ocf::heartbeat:Xen):	Started hex-9
+ vm-58	(ocf::heartbeat:Xen):	Started hex-0
+ vm-59	(ocf::heartbeat:Xen):	Started hex-7
+ vm-60	(ocf::heartbeat:Xen):	Started hex-8
+ vm-61	(ocf::heartbeat:Xen):	Started hex-9
+ vm-62	(ocf::heartbeat:Xen):	Stopped 
+ vm-63	(ocf::heartbeat:Xen):	Stopped 
+ vm-64	(ocf::heartbeat:Xen):	Stopped 
+
+Transition Summary:
+ * Move    fencing-sbd	(Started hex-9 -> hex-0)
+ * Move    dummy1	(Started hex-9 -> hex-0)
+ * Stop    dlm:3	(hex-9)
+ * Stop    o2cb:3	(hex-9)
+ * Stop    clvm:3	(hex-9)
+ * Stop    cmirrord:3	(hex-9)
+ * Stop    vg1:3	(hex-9)
+ * Stop    ocfs2-1:3	(hex-9)
+ * Stop    vm-03	(hex-9)
+ * Stop    vm-06	(hex-9)
+ * Stop    vm-09	(hex-9)
+ * Stop    vm-13	(hex-9)
+ * Stop    vm-17	(hex-9)
+ * Stop    vm-21	(hex-9)
+ * Stop    vm-25	(hex-9)
+ * Stop    vm-29	(hex-9)
+ * Stop    vm-33	(hex-9)
+ * Stop    vm-37	(hex-9)
+ * Stop    vm-41	(hex-9)
+ * Stop    vm-45	(hex-9)
+ * Stop    vm-49	(hex-9)
+ * Stop    vm-53	(hex-9)
+ * Stop    vm-57	(hex-9)
+ * Stop    vm-61	(hex-9)
+
+Executing cluster transition:
+ * Pseudo action:   fencing-sbd_stop_0
+ * Resource action: dummy1          monitor=300000 on hex-8
+ * Resource action: dummy1          monitor=300000 on hex-7
+ * Pseudo action:   load_stopped_hex-8
+ * Pseudo action:   load_stopped_hex-7
+ * Pseudo action:   load_stopped_hex-0
+ * Resource action: fencing-sbd     start on hex-0
+ * Pseudo action:   stonith_up
+ * Fencing hex-9
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   dummy1_stop_0
+ * Pseudo action:   vm-03_stop_0
+ * Pseudo action:   vm-06_stop_0
+ * Pseudo action:   vm-09_stop_0
+ * Pseudo action:   vm-13_stop_0
+ * Pseudo action:   vm-17_stop_0
+ * Pseudo action:   vm-21_stop_0
+ * Pseudo action:   vm-25_stop_0
+ * Pseudo action:   vm-29_stop_0
+ * Pseudo action:   vm-33_stop_0
+ * Pseudo action:   vm-37_stop_0
+ * Pseudo action:   vm-41_stop_0
+ * Pseudo action:   vm-45_stop_0
+ * Pseudo action:   vm-49_stop_0
+ * Pseudo action:   vm-53_stop_0
+ * Pseudo action:   vm-57_stop_0
+ * Pseudo action:   vm-61_stop_0
+ * Pseudo action:   load_stopped_hex-9
+ * Resource action: dummy1          start on hex-0
+ * Pseudo action:   base-clone_stop_0
+ * Resource action: dummy1          monitor=30000 on hex-0
+ * Pseudo action:   base-group:3_stop_0
+ * Pseudo action:   ocfs2-1:3_stop_0
+ * Pseudo action:   vg1:3_stop_0
+ * Pseudo action:   cmirrord:3_stop_0
+ * Pseudo action:   clvm:3_stop_0
+ * Pseudo action:   o2cb:3_stop_0
+ * Pseudo action:   dlm:3_stop_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   base-group:3_stopped_0
+ * Pseudo action:   base-clone_stopped_0
+
+Revised cluster status:
+Online: [ hex-7 hex-8 hex-0 ]
+OFFLINE: [ hex-9 ]
+
+ vm-00	(ocf::heartbeat:Xen):	Started hex-0
+ Clone Set: base-clone [base-group]
+     Started: [ hex-0 hex-7 hex-8 ]
+     Stopped: [ base-group:3 ]
+ vm-01	(ocf::heartbeat:Xen):	Started hex-7
+ vm-02	(ocf::heartbeat:Xen):	Started hex-8
+ vm-03	(ocf::heartbeat:Xen):	Stopped 
+ vm-04	(ocf::heartbeat:Xen):	Started hex-7
+ vm-05	(ocf::heartbeat:Xen):	Started hex-8
+ fencing-sbd	(stonith:external/sbd):	Started hex-0
+ vm-06	(ocf::heartbeat:Xen):	Stopped 
+ vm-07	(ocf::heartbeat:Xen):	Started hex-7
+ vm-08	(ocf::heartbeat:Xen):	Started hex-8
+ vm-09	(ocf::heartbeat:Xen):	Stopped 
+ vm-10	(ocf::heartbeat:Xen):	Started hex-0
+ vm-11	(ocf::heartbeat:Xen):	Started hex-7
+ vm-12	(ocf::heartbeat:Xen):	Started hex-8
+ vm-13	(ocf::heartbeat:Xen):	Stopped 
+ vm-14	(ocf::heartbeat:Xen):	Started hex-0
+ vm-15	(ocf::heartbeat:Xen):	Started hex-7
+ vm-16	(ocf::heartbeat:Xen):	Started hex-8
+ vm-17	(ocf::heartbeat:Xen):	Stopped 
+ vm-18	(ocf::heartbeat:Xen):	Started hex-0
+ vm-19	(ocf::heartbeat:Xen):	Started hex-7
+ vm-20	(ocf::heartbeat:Xen):	Started hex-8
+ vm-21	(ocf::heartbeat:Xen):	Stopped 
+ vm-22	(ocf::heartbeat:Xen):	Started hex-0
+ vm-23	(ocf::heartbeat:Xen):	Started hex-7
+ vm-24	(ocf::heartbeat:Xen):	Started hex-8
+ vm-25	(ocf::heartbeat:Xen):	Stopped 
+ vm-26	(ocf::heartbeat:Xen):	Started hex-0
+ vm-27	(ocf::heartbeat:Xen):	Started hex-7
+ vm-28	(ocf::heartbeat:Xen):	Started hex-8
+ vm-29	(ocf::heartbeat:Xen):	Stopped 
+ vm-30	(ocf::heartbeat:Xen):	Started hex-0
+ vm-31	(ocf::heartbeat:Xen):	Started hex-7
+ vm-32	(ocf::heartbeat:Xen):	Started hex-8
+ dummy1	(ocf::heartbeat:Dummy):	Started hex-0
+ vm-33	(ocf::heartbeat:Xen):	Stopped 
+ vm-34	(ocf::heartbeat:Xen):	Started hex-0
+ vm-35	(ocf::heartbeat:Xen):	Started hex-7
+ vm-36	(ocf::heartbeat:Xen):	Started hex-8
+ vm-37	(ocf::heartbeat:Xen):	Stopped 
+ vm-38	(ocf::heartbeat:Xen):	Started hex-0
+ vm-39	(ocf::heartbeat:Xen):	Started hex-7
+ vm-40	(ocf::heartbeat:Xen):	Started hex-8
+ vm-41	(ocf::heartbeat:Xen):	Stopped 
+ vm-42	(ocf::heartbeat:Xen):	Started hex-0
+ vm-43	(ocf::heartbeat:Xen):	Started hex-7
+ vm-44	(ocf::heartbeat:Xen):	Started hex-8
+ vm-45	(ocf::heartbeat:Xen):	Stopped 
+ vm-46	(ocf::heartbeat:Xen):	Started hex-0
+ vm-47	(ocf::heartbeat:Xen):	Started hex-7
+ vm-48	(ocf::heartbeat:Xen):	Started hex-8
+ vm-49	(ocf::heartbeat:Xen):	Stopped 
+ vm-50	(ocf::heartbeat:Xen):	Started hex-0
+ vm-51	(ocf::heartbeat:Xen):	Started hex-7
+ vm-52	(ocf::heartbeat:Xen):	Started hex-8
+ vm-53	(ocf::heartbeat:Xen):	Stopped 
+ vm-54	(ocf::heartbeat:Xen):	Started hex-0
+ vm-55	(ocf::heartbeat:Xen):	Started hex-7
+ vm-56	(ocf::heartbeat:Xen):	Started hex-8
+ vm-57	(ocf::heartbeat:Xen):	Stopped 
+ vm-58	(ocf::heartbeat:Xen):	Started hex-0
+ vm-59	(ocf::heartbeat:Xen):	Started hex-7
+ vm-60	(ocf::heartbeat:Xen):	Started hex-8
+ vm-61	(ocf::heartbeat:Xen):	Stopped 
+ vm-62	(ocf::heartbeat:Xen):	Stopped 
+ vm-63	(ocf::heartbeat:Xen):	Stopped 
+ vm-64	(ocf::heartbeat:Xen):	Stopped 
+

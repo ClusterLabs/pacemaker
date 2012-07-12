@@ -1,0 +1,70 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc0	(heartbeat:apache):	Stopped 
+ Clone Set: rsc1 [child_rsc1] (unique)
+     child_rsc1:0	(heartbeat:apache):	Stopped 
+     child_rsc1:1	(heartbeat:apache):	Stopped 
+     child_rsc1:2	(heartbeat:apache):	Stopped 
+     child_rsc1:3	(heartbeat:apache):	Stopped 
+     child_rsc1:4	(heartbeat:apache):	Stopped 
+ Clone Set: rsc2 [child_rsc2] (unique)
+     child_rsc2:0	(heartbeat:apache):	Stopped 
+     child_rsc2:1	(heartbeat:apache):	Stopped 
+     child_rsc2:2	(heartbeat:apache):	Stopped 
+     child_rsc2:3	(heartbeat:apache):	Stopped 
+     child_rsc2:4	(heartbeat:apache):	Stopped 
+
+Transition Summary:
+ * Start   rsc0	(node1)
+ * Start   child_rsc2:0	(node2)
+ * Start   child_rsc2:1	(node1)
+
+Executing cluster transition:
+ * Resource action: rsc0            monitor on node2
+ * Resource action: rsc0            monitor on node1
+ * Resource action: child_rsc1:0    monitor on node2
+ * Resource action: child_rsc1:0    monitor on node1
+ * Resource action: child_rsc1:1    monitor on node2
+ * Resource action: child_rsc1:1    monitor on node1
+ * Resource action: child_rsc1:2    monitor on node2
+ * Resource action: child_rsc1:2    monitor on node1
+ * Resource action: child_rsc1:3    monitor on node2
+ * Resource action: child_rsc1:3    monitor on node1
+ * Resource action: child_rsc1:4    monitor on node2
+ * Resource action: child_rsc1:4    monitor on node1
+ * Resource action: child_rsc2:0    monitor on node2
+ * Resource action: child_rsc2:0    monitor on node1
+ * Resource action: child_rsc2:1    monitor on node2
+ * Resource action: child_rsc2:1    monitor on node1
+ * Resource action: child_rsc2:2    monitor on node2
+ * Resource action: child_rsc2:2    monitor on node1
+ * Resource action: child_rsc2:3    monitor on node2
+ * Resource action: child_rsc2:3    monitor on node1
+ * Resource action: child_rsc2:4    monitor on node2
+ * Resource action: child_rsc2:4    monitor on node1
+ * Pseudo action:   rsc2_start_0
+ * Pseudo action:   probe_complete
+ * Resource action: rsc0            start on node1
+ * Resource action: child_rsc2:0    start on node2
+ * Resource action: child_rsc2:1    start on node1
+ * Pseudo action:   rsc2_running_0
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ rsc0	(heartbeat:apache):	Started node1
+ Clone Set: rsc1 [child_rsc1] (unique)
+     child_rsc1:0	(heartbeat:apache):	Stopped 
+     child_rsc1:1	(heartbeat:apache):	Stopped 
+     child_rsc1:2	(heartbeat:apache):	Stopped 
+     child_rsc1:3	(heartbeat:apache):	Stopped 
+     child_rsc1:4	(heartbeat:apache):	Stopped 
+ Clone Set: rsc2 [child_rsc2] (unique)
+     child_rsc2:0	(heartbeat:apache):	Started node2
+     child_rsc2:1	(heartbeat:apache):	Started node1
+     child_rsc2:2	(heartbeat:apache):	Stopped 
+     child_rsc2:3	(heartbeat:apache):	Stopped 
+     child_rsc2:4	(heartbeat:apache):	Stopped 
+

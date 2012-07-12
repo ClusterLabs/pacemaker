@@ -1,0 +1,55 @@
+
+Current cluster status:
+Node pcmk-4: pending
+Online: [ pcmk-1 pcmk-2 pcmk-3 ]
+
+ Resource Group: group-1
+     r192.168.101.181	(ocf::heartbeat:IPaddr):	Started pcmk-1
+     r192.168.101.182	(heartbeat:IPaddr):	Started pcmk-1
+     r192.168.101.183	(ocf::heartbeat:IPaddr):	Started pcmk-1
+ rsc_pcmk-1	(ocf::heartbeat:IPaddr):	Started pcmk-1
+ rsc_pcmk-2	(ocf::heartbeat:IPaddr):	Started pcmk-2
+ rsc_pcmk-3	(ocf::heartbeat:IPaddr):	Started pcmk-3
+ rsc_pcmk-4	(ocf::heartbeat:IPaddr):	Started pcmk-2
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Started pcmk-1
+ migrator	(ocf::pacemaker:Dummy):	Started pcmk-3
+ Clone Set: Connectivity [ping-1]
+     Started: [ pcmk-1 pcmk-2 pcmk-3 ]
+     Stopped: [ ping-1:3 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 pcmk-3 ]
+     Stopped: [ stateful-1:3 ]
+ Clone Set: Fencing [FencingChild]
+     Started: [ pcmk-3 pcmk-2 pcmk-1 ]
+     Stopped: [ FencingChild:1 ]
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+Node pcmk-4: pending
+Online: [ pcmk-1 pcmk-2 pcmk-3 ]
+
+ Resource Group: group-1
+     r192.168.101.181	(ocf::heartbeat:IPaddr):	Started pcmk-1
+     r192.168.101.182	(heartbeat:IPaddr):	Started pcmk-1
+     r192.168.101.183	(ocf::heartbeat:IPaddr):	Started pcmk-1
+ rsc_pcmk-1	(ocf::heartbeat:IPaddr):	Started pcmk-1
+ rsc_pcmk-2	(ocf::heartbeat:IPaddr):	Started pcmk-2
+ rsc_pcmk-3	(ocf::heartbeat:IPaddr):	Started pcmk-3
+ rsc_pcmk-4	(ocf::heartbeat:IPaddr):	Started pcmk-2
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Started pcmk-1
+ migrator	(ocf::pacemaker:Dummy):	Started pcmk-3
+ Clone Set: Connectivity [ping-1]
+     Started: [ pcmk-1 pcmk-2 pcmk-3 ]
+     Stopped: [ ping-1:3 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 pcmk-3 ]
+     Stopped: [ stateful-1:3 ]
+ Clone Set: Fencing [FencingChild]
+     Started: [ pcmk-3 pcmk-2 pcmk-1 ]
+     Stopped: [ FencingChild:1 ]
+

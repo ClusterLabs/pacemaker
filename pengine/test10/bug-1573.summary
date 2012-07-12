@@ -1,0 +1,33 @@
+
+Current cluster status:
+Online: [ xen-b ]
+OFFLINE: [ xen-c ]
+
+ Resource Group: group_1
+     IPaddr_192_168_1_101	(ocf::heartbeat:IPaddr):	Stopped 
+     apache_2	(ocf::heartbeat:apache):	Stopped 
+ Resource Group: group_11
+     IPaddr_192_168_1_102	(ocf::heartbeat:IPaddr):	Started xen-b
+     apache_6	(ocf::heartbeat:apache):	Stopped 
+
+Transition Summary:
+ * Stop    IPaddr_192_168_1_102	(xen-b)
+
+Executing cluster transition:
+ * Pseudo action:   group_11_stop_0
+ * Resource action: IPaddr_192_168_1_102 stop on xen-b
+ * Cluster action:  do_shutdown on xen-b
+ * Pseudo action:   all_stopped
+ * Pseudo action:   group_11_stopped_0
+
+Revised cluster status:
+Online: [ xen-b ]
+OFFLINE: [ xen-c ]
+
+ Resource Group: group_1
+     IPaddr_192_168_1_101	(ocf::heartbeat:IPaddr):	Stopped 
+     apache_2	(ocf::heartbeat:apache):	Stopped 
+ Resource Group: group_11
+     IPaddr_192_168_1_102	(ocf::heartbeat:IPaddr):	Stopped 
+     apache_6	(ocf::heartbeat:apache):	Stopped 
+

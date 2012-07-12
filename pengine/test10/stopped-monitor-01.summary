@@ -1,0 +1,20 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Started node1 FAILED
+
+Transition Summary:
+ * Recover rsc1	(Started node1)
+
+Executing cluster transition:
+ * Resource action: rsc1            stop on node1
+ * Pseudo action:   all_stopped
+ * Resource action: rsc1            start on node1
+ * Resource action: rsc1            monitor=10000 on node1
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Started node1
+

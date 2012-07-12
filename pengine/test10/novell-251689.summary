@@ -1,0 +1,38 @@
+
+Current cluster status:
+Online: [ node2 node1 ]
+
+ Clone Set: stonithcloneset [stonithclone]
+     Started: [ node2 node1 ]
+ Clone Set: evmsdcloneset [evmsdclone]
+     Started: [ node2 node1 ]
+ Clone Set: evmscloneset [evmsclone]
+     Started: [ node2 node1 ]
+ Clone Set: imagestorecloneset [imagestoreclone]
+     Started: [ node2 node1 ]
+ Clone Set: configstorecloneset [configstoreclone]
+     Started: [ node2 node1 ]
+ sles10	(ocf::heartbeat:Xen):	Started node2
+
+Transition Summary:
+ * Stop    sles10	(node2)
+
+Executing cluster transition:
+ * Resource action: sles10          stop on node2
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ node2 node1 ]
+
+ Clone Set: stonithcloneset [stonithclone]
+     Started: [ node2 node1 ]
+ Clone Set: evmsdcloneset [evmsdclone]
+     Started: [ node2 node1 ]
+ Clone Set: evmscloneset [evmsclone]
+     Started: [ node2 node1 ]
+ Clone Set: imagestorecloneset [imagestoreclone]
+     Started: [ node2 node1 ]
+ Clone Set: configstorecloneset [configstoreclone]
+     Started: [ node2 node1 ]
+ sles10	(ocf::heartbeat:Xen):	Stopped 
+

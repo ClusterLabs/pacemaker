@@ -1,0 +1,22 @@
+
+Current cluster status:
+Node node2 (1048225984): standby
+Online: [ node1 ]
+
+ Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
+     Masters: [ node1 ]
+     Stopped: [ MS_RSC_NATIVE:1 ]
+
+Transition Summary:
+
+Executing cluster transition:
+ * Resource action: MS_RSC_NATIVE:0 monitor=5000 on node1
+
+Revised cluster status:
+Node node2 (1048225984): standby
+Online: [ node1 ]
+
+ Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
+     Masters: [ node1 ]
+     Stopped: [ MS_RSC_NATIVE:1 ]
+

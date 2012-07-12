@@ -1,0 +1,16 @@
+
+Current cluster status:
+Online: [ dktest2sles10 dktest1sles10 ]
+
+ mysql-bin	(ocf::heartbeat:mysql):	Started dktest2sles10
+
+Transition Summary:
+
+Executing cluster transition:
+ * Resource action: mysql-bin       monitor=30000 on dktest2sles10
+
+Revised cluster status:
+Online: [ dktest2sles10 dktest1sles10 ]
+
+ mysql-bin	(ocf::heartbeat:mysql):	Started dktest2sles10
+

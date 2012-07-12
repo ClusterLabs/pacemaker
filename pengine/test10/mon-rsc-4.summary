@@ -1,0 +1,24 @@
+
+Current cluster status:
+Node node2 (uuid2): standby
+Online: [ node1 ]
+
+ rsc1	(heartbeat:apache):	Started node2
+
+Transition Summary:
+ * Move    rsc1	(Started node2 -> node1)
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on node1
+ * Pseudo action:   probe_complete
+ * Resource action: rsc1            stop on node2
+ * Resource action: rsc1            start on node1
+ * Pseudo action:   all_stopped
+ * Resource action: rsc1            monitor=5000 on node1
+
+Revised cluster status:
+Node node2 (uuid2): standby
+Online: [ node1 ]
+
+ rsc1	(heartbeat:apache) Started [	node1	node2 ]
+

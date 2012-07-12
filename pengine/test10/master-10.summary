@@ -1,0 +1,74 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ Master/Slave Set: rsc1 [child_rsc1] (unique)
+     child_rsc1:0	(heartbeat:apache):	Stopped 
+     child_rsc1:1	(heartbeat:apache):	Stopped 
+     child_rsc1:2	(heartbeat:apache):	Stopped 
+     child_rsc1:3	(heartbeat:apache):	Stopped 
+     child_rsc1:4	(heartbeat:apache):	Stopped 
+
+Transition Summary:
+ * Start   child_rsc1:0	(node1)
+ * Promote child_rsc1:0	(Stopped -> Master node1)
+ * Start   child_rsc1:1	(node2)
+ * Start   child_rsc1:2	(node1)
+ * Start   child_rsc1:3	(node2)
+
+Executing cluster transition:
+ * Resource action: child_rsc1:0    monitor on node2
+ * Resource action: child_rsc1:0    monitor on node1
+ * Resource action: child_rsc1:1    monitor on node2
+ * Resource action: child_rsc1:1    monitor on node1
+ * Resource action: child_rsc1:2    monitor on node2
+ * Resource action: child_rsc1:2    monitor on node1
+ * Resource action: child_rsc1:3    monitor on node2
+ * Resource action: child_rsc1:3    monitor on node1
+ * Resource action: child_rsc1:4    monitor on node2
+ * Resource action: child_rsc1:4    monitor on node1
+ * Pseudo action:   rsc1_pre_notify_start_0
+ * Pseudo action:   probe_complete
+ * Pseudo action:   rsc1_confirmed-pre_notify_start_0
+ * Pseudo action:   rsc1_start_0
+ * Resource action: child_rsc1:0    start on node1
+ * Resource action: child_rsc1:1    start on node2
+ * Resource action: child_rsc1:2    start on node1
+ * Resource action: child_rsc1:3    start on node2
+ * Pseudo action:   rsc1_running_0
+ * Pseudo action:   rsc1_post_notify_running_0
+ * Resource action: child_rsc1:0    notify on node1
+ * Resource action: child_rsc1:1    notify on node2
+ * Resource action: child_rsc1:2    notify on node1
+ * Resource action: child_rsc1:3    notify on node2
+ * Pseudo action:   rsc1_confirmed-post_notify_running_0
+ * Pseudo action:   rsc1_pre_notify_promote_0
+ * Resource action: child_rsc1:0    notify on node1
+ * Resource action: child_rsc1:1    notify on node2
+ * Resource action: child_rsc1:2    notify on node1
+ * Resource action: child_rsc1:3    notify on node2
+ * Pseudo action:   rsc1_confirmed-pre_notify_promote_0
+ * Pseudo action:   rsc1_promote_0
+ * Resource action: child_rsc1:0    promote on node1
+ * Pseudo action:   rsc1_promoted_0
+ * Pseudo action:   rsc1_post_notify_promoted_0
+ * Resource action: child_rsc1:0    notify on node1
+ * Resource action: child_rsc1:1    notify on node2
+ * Resource action: child_rsc1:2    notify on node1
+ * Resource action: child_rsc1:3    notify on node2
+ * Pseudo action:   rsc1_confirmed-post_notify_promoted_0
+ * Resource action: child_rsc1:0    monitor=11000 on node1
+ * Resource action: child_rsc1:1    monitor=1000 on node2
+ * Resource action: child_rsc1:2    monitor=1000 on node1
+ * Resource action: child_rsc1:3    monitor=1000 on node2
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ Master/Slave Set: rsc1 [child_rsc1] (unique)
+     child_rsc1:0	(heartbeat:apache):	Master node1
+     child_rsc1:1	(heartbeat:apache):	Started node2
+     child_rsc1:2	(heartbeat:apache):	Started node1
+     child_rsc1:3	(heartbeat:apache):	Started node2
+     child_rsc1:4	(heartbeat:apache):	Stopped 
+

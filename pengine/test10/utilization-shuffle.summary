@@ -1,0 +1,92 @@
+
+Current cluster status:
+Online: [ act1 act2 act3 sby2 sby1 ]
+
+ Resource Group: grpPostgreSQLDB1
+     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	Stopped 
+     prmFsPostgreSQLDB1-1	(ocf::pacemaker:Dummy):	Stopped 
+     prmFsPostgreSQLDB1-2	(ocf::pacemaker:Dummy):	Stopped 
+     prmFsPostgreSQLDB1-3	(ocf::pacemaker:Dummy):	Stopped 
+     prmIpPostgreSQLDB1	(ocf::pacemaker:Dummy):	Stopped 
+     prmApPostgreSQLDB1	(ocf::pacemaker:Dummy):	Stopped 
+ Resource Group: grpPostgreSQLDB2
+     prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started act2
+     prmFsPostgreSQLDB2-1	(ocf::pacemaker:Dummy):	Started act2
+     prmFsPostgreSQLDB2-2	(ocf::pacemaker:Dummy):	Started act2
+     prmFsPostgreSQLDB2-3	(ocf::pacemaker:Dummy):	Started act2
+     prmIpPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started act2
+     prmApPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started act2
+ Resource Group: grpPostgreSQLDB3
+     prmExPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act1
+     prmFsPostgreSQLDB3-1	(ocf::pacemaker:Dummy):	Started act1
+     prmFsPostgreSQLDB3-2	(ocf::pacemaker:Dummy):	Started act1
+     prmFsPostgreSQLDB3-3	(ocf::pacemaker:Dummy):	Started act1
+     prmIpPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act1
+     prmApPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act1
+ Clone Set: clnPingd [prmPingd]
+     Started: [ act1 act2 act3 sby1 sby2 ]
+ Clone Set: clnDiskd1 [prmDiskd1]
+     Started: [ act1 act2 act3 sby1 sby2 ]
+ Clone Set: clnDiskd2 [prmDiskd2]
+     Started: [ act1 act2 act3 sby1 sby2 ]
+
+Transition Summary:
+ * Start   prmExPostgreSQLDB1	(act3)
+ * Start   prmFsPostgreSQLDB1-1	(act3)
+ * Start   prmFsPostgreSQLDB1-2	(act3)
+ * Start   prmFsPostgreSQLDB1-3	(act3)
+ * Start   prmIpPostgreSQLDB1	(act3)
+ * Start   prmApPostgreSQLDB1	(act3)
+
+Executing cluster transition:
+ * Pseudo action:   grpPostgreSQLDB1_start_0
+ * Pseudo action:   load_stopped_sby1
+ * Pseudo action:   load_stopped_sby2
+ * Pseudo action:   load_stopped_act3
+ * Pseudo action:   load_stopped_act2
+ * Pseudo action:   load_stopped_act1
+ * Resource action: prmExPostgreSQLDB1 start on act3
+ * Resource action: prmFsPostgreSQLDB1-1 start on act3
+ * Resource action: prmFsPostgreSQLDB1-2 start on act3
+ * Resource action: prmFsPostgreSQLDB1-3 start on act3
+ * Resource action: prmIpPostgreSQLDB1 start on act3
+ * Resource action: prmApPostgreSQLDB1 start on act3
+ * Pseudo action:   grpPostgreSQLDB1_running_0
+ * Resource action: prmExPostgreSQLDB1 monitor=5000 on act3
+ * Resource action: prmFsPostgreSQLDB1-1 monitor=5000 on act3
+ * Resource action: prmFsPostgreSQLDB1-2 monitor=5000 on act3
+ * Resource action: prmFsPostgreSQLDB1-3 monitor=5000 on act3
+ * Resource action: prmIpPostgreSQLDB1 monitor=5000 on act3
+ * Resource action: prmApPostgreSQLDB1 monitor=5000 on act3
+
+Revised cluster status:
+Online: [ act1 act2 act3 sby2 sby1 ]
+
+ Resource Group: grpPostgreSQLDB1
+     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started act3
+     prmFsPostgreSQLDB1-1	(ocf::pacemaker:Dummy):	Started act3
+     prmFsPostgreSQLDB1-2	(ocf::pacemaker:Dummy):	Started act3
+     prmFsPostgreSQLDB1-3	(ocf::pacemaker:Dummy):	Started act3
+     prmIpPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started act3
+     prmApPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started act3
+ Resource Group: grpPostgreSQLDB2
+     prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started act2
+     prmFsPostgreSQLDB2-1	(ocf::pacemaker:Dummy):	Started act2
+     prmFsPostgreSQLDB2-2	(ocf::pacemaker:Dummy):	Started act2
+     prmFsPostgreSQLDB2-3	(ocf::pacemaker:Dummy):	Started act2
+     prmIpPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started act2
+     prmApPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started act2
+ Resource Group: grpPostgreSQLDB3
+     prmExPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act1
+     prmFsPostgreSQLDB3-1	(ocf::pacemaker:Dummy):	Started act1
+     prmFsPostgreSQLDB3-2	(ocf::pacemaker:Dummy):	Started act1
+     prmFsPostgreSQLDB3-3	(ocf::pacemaker:Dummy):	Started act1
+     prmIpPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act1
+     prmApPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act1
+ Clone Set: clnPingd [prmPingd]
+     Started: [ act1 act2 act3 sby1 sby2 ]
+ Clone Set: clnDiskd1 [prmDiskd1]
+     Started: [ act1 act2 act3 sby1 sby2 ]
+ Clone Set: clnDiskd2 [prmDiskd2]
+     Started: [ act1 act2 act3 sby1 sby2 ]
+

@@ -1,0 +1,45 @@
+
+Current cluster status:
+Online: [ fc16-builder ]
+
+ Clone Set: S_CLONE [S_A]
+     Stopped: [ S_A:0 ]
+ Clone Set: S_CLONE2 [S_GROUP]
+     Stopped: [ S_GROUP:0 ]
+ A	(ocf::pacemaker:Dummy):	Stopped 
+
+Transition Summary:
+ * Start   S_A:0	(fc16-builder)
+ * Start   S_B:0	(fc16-builder)
+ * Start   S_C:0	(fc16-builder)
+ * Start   S_D:0	(fc16-builder)
+ * Start   A	(fc16-builder)
+
+Executing cluster transition:
+ * Resource action: S_A:0           monitor on fc16-builder
+ * Resource action: S_B:0           monitor on fc16-builder
+ * Resource action: S_C:0           monitor on fc16-builder
+ * Resource action: S_D:0           monitor on fc16-builder
+ * Pseudo action:   S_CLONE2_start_0
+ * Resource action: A               monitor on fc16-builder
+ * Pseudo action:   probe_complete
+ * Pseudo action:   S_GROUP:0_start_0
+ * Resource action: S_B:0           start on fc16-builder
+ * Resource action: S_C:0           start on fc16-builder
+ * Resource action: S_D:0           start on fc16-builder
+ * Resource action: A               start on fc16-builder
+ * Pseudo action:   S_GROUP:0_running_0
+ * Pseudo action:   S_CLONE2_running_0
+ * Pseudo action:   S_CLONE_start_0
+ * Resource action: S_A:0           start on fc16-builder
+ * Pseudo action:   S_CLONE_running_0
+
+Revised cluster status:
+Online: [ fc16-builder ]
+
+ Clone Set: S_CLONE [S_A]
+     Started: [ fc16-builder ]
+ Clone Set: S_CLONE2 [S_GROUP]
+     Started: [ fc16-builder ]
+ A	(ocf::pacemaker:Dummy):	Started fc16-builder
+

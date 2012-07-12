@@ -1,0 +1,52 @@
+
+Current cluster status:
+Online: [ hadev2 hadev3 ]
+OFFLINE: [ hadev1 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Started hadev2
+ rsc_hadev1	(ocf::heartbeat:IPaddr):	Started hadev2
+ rsc_hadev2	(ocf::heartbeat:IPaddr):	Started hadev2
+ rsc_hadev3	(ocf::heartbeat:IPaddr):	Stopped 
+ Clone Set: DoFencing [child_DoFencing] (unique)
+     child_DoFencing:0	(stonith:ssh):	Stopped 
+     child_DoFencing:1	(stonith:ssh):	Stopped 
+     child_DoFencing:2	(stonith:ssh):	Stopped 
+
+Transition Summary:
+ * Move    rsc_hadev1	(Started hadev2 -> hadev3)
+ * Start   rsc_hadev3	(hadev3)
+ * Start   child_DoFencing:0	(hadev2)
+ * Start   child_DoFencing:1	(hadev3)
+
+Executing cluster transition:
+ * Resource action: DcIPaddr        monitor on hadev3
+ * Resource action: rsc_hadev2      monitor on hadev3
+ * Resource action: rsc_hadev3      start on hadev3
+ * Resource action: child_DoFencing:0 monitor on hadev3
+ * Resource action: child_DoFencing:2 monitor on hadev3
+ * Pseudo action:   DoFencing_start_0
+ * Pseudo action:   probe_complete
+ * Resource action: rsc_hadev1      stop on hadev2
+ * Resource action: rsc_hadev1      start on hadev3
+ * Resource action: rsc_hadev3      monitor=5000 on hadev3
+ * Resource action: child_DoFencing:0 start on hadev2
+ * Resource action: child_DoFencing:1 start on hadev3
+ * Pseudo action:   DoFencing_running_0
+ * Pseudo action:   all_stopped
+ * Resource action: rsc_hadev1      monitor=5000 on hadev3
+ * Resource action: child_DoFencing:0 monitor=5000 on hadev2
+ * Resource action: child_DoFencing:1 monitor=5000 on hadev3
+
+Revised cluster status:
+Online: [ hadev2 hadev3 ]
+OFFLINE: [ hadev1 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Started hadev2
+ rsc_hadev1	(ocf::heartbeat:IPaddr):	Started hadev2
+ rsc_hadev2	(ocf::heartbeat:IPaddr):	Started hadev2
+ rsc_hadev3	(ocf::heartbeat:IPaddr):	Started hadev3
+ Clone Set: DoFencing [child_DoFencing] (unique)
+     child_DoFencing:0	(stonith:ssh):	Started hadev2
+     child_DoFencing:1	(stonith:ssh):	Started hadev3
+     child_DoFencing:2	(stonith:ssh):	Stopped 
+

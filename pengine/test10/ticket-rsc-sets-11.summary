@@ -1,0 +1,31 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc_stonith	(stonith:null):	Started node1
+ rsc1	(ocf::pacemaker:Dummy):	Stopped 
+ Resource Group: group2
+     rsc2	(ocf::pacemaker:Dummy):	Stopped 
+     rsc3	(ocf::pacemaker:Dummy):	Stopped 
+ Clone Set: clone4 [rsc4]
+     Stopped: [ rsc4:0 rsc4:1 ]
+ Master/Slave Set: ms5 [rsc5]
+     Slaves: [ node2 node1 ]
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ rsc_stonith	(stonith:null):	Started node1
+ rsc1	(ocf::pacemaker:Dummy):	Stopped 
+ Resource Group: group2
+     rsc2	(ocf::pacemaker:Dummy):	Stopped 
+     rsc3	(ocf::pacemaker:Dummy):	Stopped 
+ Clone Set: clone4 [rsc4]
+     Stopped: [ rsc4:0 rsc4:1 ]
+ Master/Slave Set: ms5 [rsc5]
+     Slaves: [ node2 node1 ]
+

@@ -1,0 +1,30 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc_stonith	(stonith:null):	Started node1
+ Clone Set: clone1 [rsc1]
+     Started: [ node2 node1 ]
+
+Transition Summary:
+ * Stop    rsc1:0	(node2)
+ * Stop    rsc1:1	(node1)
+
+Executing cluster transition:
+ * Pseudo action:   stonith_up
+ * Fencing node1
+ * Fencing node2
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   clone1_stop_0
+ * Pseudo action:   rsc1:0_stop_0
+ * Pseudo action:   rsc1:1_stop_0
+ * Pseudo action:   clone1_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+OFFLINE: [ node1 node2 ]
+
+ rsc_stonith	(stonith:null):	Stopped 
+ Clone Set: clone1 [rsc1]
+     Stopped: [ rsc1:0 rsc1:1 ]
+

@@ -1,0 +1,101 @@
+
+Current cluster status:
+Online: [ c001n06 c001n07 ]
+OFFLINE: [ c001n03 c001n02 c001n04 c001n05 ]
+
+ DcIPaddr	(heartbeat:IPaddr):	Stopped 
+ Resource Group: group-1
+     r192.168.100.181	(ocf::heartbeat:IPaddr):	Started c001n06
+     r192.168.100.182	(ocf::heartbeat:IPaddr):	Stopped 
+     r192.168.100.183	(ocf::heartbeat:IPaddr):	Stopped 
+ lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Stopped 
+ migrator	(ocf::heartbeat:Dummy):	Stopped 
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_c001n04	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_c001n05	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_c001n06	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_c001n07	(ocf::heartbeat:IPaddr):	Stopped 
+ Clone Set: DoFencing [child_DoFencing]
+     Stopped: [ child_DoFencing:0 child_DoFencing:1 child_DoFencing:2 child_DoFencing:3 child_DoFencing:4 child_DoFencing:5 ]
+ Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
+     ocf_msdummy:0	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:1	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:2	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:3	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:4	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:5	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:6	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:7	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:8	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:9	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:10	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:11	(ocf::heartbeat:Stateful):	Stopped 
+
+Transition Summary:
+ * Start   DcIPaddr	(c001n06 - blocked)
+ * Move    r192.168.100.181	(Started c001n06 -> c001n07)
+ * Start   r192.168.100.182	(c001n07 - blocked)
+ * Start   r192.168.100.183	(c001n07 - blocked)
+ * Start   lsb_dummy	(c001n06 - blocked)
+ * Start   migrator	(c001n06 - blocked)
+ * Start   rsc_c001n03	(c001n06 - blocked)
+ * Start   rsc_c001n02	(c001n07 - blocked)
+ * Start   rsc_c001n04	(c001n06 - blocked)
+ * Start   rsc_c001n05	(c001n07 - blocked)
+ * Start   rsc_c001n06	(c001n06 - blocked)
+ * Start   rsc_c001n07	(c001n07 - blocked)
+ * Start   child_DoFencing:0	(c001n06)
+ * Start   child_DoFencing:1	(c001n07)
+ * Start   ocf_msdummy:0	(c001n06 - blocked)
+ * Start   ocf_msdummy:1	(c001n07 - blocked)
+ * Start   ocf_msdummy:2	(c001n06 - blocked)
+ * Start   ocf_msdummy:3	(c001n07 - blocked)
+
+Executing cluster transition:
+ * Pseudo action:   group-1_stop_0
+ * Resource action: r192.168.100.181 stop on c001n06
+ * Pseudo action:   DoFencing_start_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   group-1_stopped_0
+ * Pseudo action:   group-1_start_0
+ * Resource action: child_DoFencing:0 start on c001n06
+ * Resource action: child_DoFencing:1 start on c001n07
+ * Pseudo action:   DoFencing_running_0
+ * Resource action: child_DoFencing:0 monitor=20000 on c001n06
+ * Resource action: child_DoFencing:1 monitor=20000 on c001n07
+
+Revised cluster status:
+Online: [ c001n06 c001n07 ]
+OFFLINE: [ c001n03 c001n02 c001n04 c001n05 ]
+
+ DcIPaddr	(heartbeat:IPaddr):	Stopped 
+ Resource Group: group-1
+     r192.168.100.181	(ocf::heartbeat:IPaddr):	Stopped 
+     r192.168.100.182	(ocf::heartbeat:IPaddr):	Stopped 
+     r192.168.100.183	(ocf::heartbeat:IPaddr):	Stopped 
+ lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Stopped 
+ migrator	(ocf::heartbeat:Dummy):	Stopped 
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_c001n04	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_c001n05	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_c001n06	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_c001n07	(ocf::heartbeat:IPaddr):	Stopped 
+ Clone Set: DoFencing [child_DoFencing]
+     Started: [ c001n06 c001n07 ]
+     Stopped: [ child_DoFencing:2 child_DoFencing:3 child_DoFencing:4 child_DoFencing:5 ]
+ Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
+     ocf_msdummy:0	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:1	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:2	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:3	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:4	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:5	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:6	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:7	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:8	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:9	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:10	(ocf::heartbeat:Stateful):	Stopped 
+     ocf_msdummy:11	(ocf::heartbeat:Stateful):	Stopped 
+

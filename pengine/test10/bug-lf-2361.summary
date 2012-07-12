@@ -1,0 +1,37 @@
+
+Current cluster status:
+Online: [ alice.demo bob.demo ]
+
+ dummy1	(ocf::heartbeat:Dummy):	Stopped 
+ Master/Slave Set: ms_stateful [stateful]
+     Stopped: [ stateful:0 stateful:1 ]
+ Clone Set: cl_dummy2 [dummy2]
+     Stopped: [ dummy2:0 dummy2:1 ]
+
+Transition Summary:
+ * Start   stateful:0	(alice.demo)
+ * Start   stateful:1	(bob.demo)
+ * Start   dummy2:0	(alice.demo - blocked)
+ * Start   dummy2:1	(bob.demo - blocked)
+
+Executing cluster transition:
+ * Pseudo action:   ms_stateful_pre_notify_start_0
+ * Pseudo action:   ms_stateful_confirmed-pre_notify_start_0
+ * Pseudo action:   ms_stateful_start_0
+ * Resource action: stateful:0      start on alice.demo
+ * Resource action: stateful:1      start on bob.demo
+ * Pseudo action:   ms_stateful_running_0
+ * Pseudo action:   ms_stateful_post_notify_running_0
+ * Resource action: stateful:0      notify on alice.demo
+ * Resource action: stateful:1      notify on bob.demo
+ * Pseudo action:   ms_stateful_confirmed-post_notify_running_0
+
+Revised cluster status:
+Online: [ alice.demo bob.demo ]
+
+ dummy1	(ocf::heartbeat:Dummy):	Stopped 
+ Master/Slave Set: ms_stateful [stateful]
+     Slaves: [ alice.demo bob.demo ]
+ Clone Set: cl_dummy2 [dummy2]
+     Stopped: [ dummy2:0 dummy2:1 ]
+

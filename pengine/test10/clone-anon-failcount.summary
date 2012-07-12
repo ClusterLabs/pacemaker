@@ -1,0 +1,114 @@
+
+Current cluster status:
+Online: [ srv01 srv02 srv03 srv04 ]
+
+ Resource Group: UMgroup01
+     UmVIPcheck	(ocf::pacemaker:Dummy):	Started srv01
+     UmIPaddr	(ocf::pacemaker:Dummy):	Started srv01
+     UmDummy01	(ocf::pacemaker:Dummy):	Started srv01
+     UmDummy02	(ocf::pacemaker:Dummy):	Started srv01
+ Resource Group: OVDBgroup02-1
+     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started srv01
+ Resource Group: OVDBgroup02-2
+     prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started srv02
+ Resource Group: OVDBgroup02-3
+     prmExPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started srv03
+ Resource Group: grpStonith1
+     prmStonithN1	(stonith:external/ssh):	Started srv04
+ Resource Group: grpStonith2
+     prmStonithN2	(stonith:external/ssh):	Started srv01
+ Resource Group: grpStonith3
+     prmStonithN3	(stonith:external/ssh):	Started srv02
+ Resource Group: grpStonith4
+     prmStonithN4	(stonith:external/ssh):	Started srv03
+ Clone Set: clnUMgroup01 [clnUmResource]
+     Started: [ srv01 srv04 ]
+ Clone Set: clnPingd [clnPrmPingd]
+     Started: [ srv01 srv02 srv03 srv04 ]
+ Clone Set: clnDiskd1 [clnPrmDiskd1]
+     Started: [ srv01 srv02 srv03 srv04 ]
+ Clone Set: clnG3dummy1 [clnG3dummy01]
+     Started: [ srv01 srv02 srv03 srv04 ]
+ Clone Set: clnG3dummy2 [clnG3dummy02]
+     Started: [ srv01 srv02 srv03 srv04 ]
+
+Transition Summary:
+ * Move    UmVIPcheck	(Started srv01 -> srv04)
+ * Move    UmIPaddr	(Started srv01 -> srv04)
+ * Move    UmDummy01	(Started srv01 -> srv04)
+ * Move    UmDummy02	(Started srv01 -> srv04)
+ * Stop    clnUMdummy01:0	(srv01)
+ * Stop    clnUMdummy02:0	(srv01)
+ * Recover clnUMdummy01:1	(Started srv04)
+ * Restart clnUMdummy02:1	(Started srv04)
+
+Executing cluster transition:
+ * Pseudo action:   UMgroup01_stop_0
+ * Resource action: UmDummy02       stop on srv01
+ * Resource action: UmDummy01       stop on srv01
+ * Resource action: UmIPaddr        stop on srv01
+ * Resource action: UmVIPcheck      stop on srv01
+ * Pseudo action:   UMgroup01_stopped_0
+ * Pseudo action:   clnUMgroup01_stop_0
+ * Pseudo action:   clnUmResource:0_stop_0
+ * Resource action: clnUMdummy02:0  stop on srv01
+ * Pseudo action:   clnUmResource:1_stop_0
+ * Resource action: clnUMdummy02:1  stop on srv04
+ * Resource action: clnUMdummy01:0  stop on srv01
+ * Resource action: clnUMdummy01:1  stop on srv04
+ * Pseudo action:   all_stopped
+ * Pseudo action:   clnUmResource:0_stopped_0
+ * Pseudo action:   clnUmResource:1_stopped_0
+ * Pseudo action:   clnUMgroup01_stopped_0
+ * Pseudo action:   clnUMgroup01_start_0
+ * Pseudo action:   clnUmResource:1_start_0
+ * Resource action: clnUMdummy01:1  start on srv04
+ * Resource action: clnUMdummy01:1  monitor=10000 on srv04
+ * Resource action: clnUMdummy02:1  start on srv04
+ * Resource action: clnUMdummy02:1  monitor=10000 on srv04
+ * Pseudo action:   clnUmResource:1_running_0
+ * Pseudo action:   clnUMgroup01_running_0
+ * Pseudo action:   UMgroup01_start_0
+ * Resource action: UmVIPcheck      start on srv04
+ * Resource action: UmIPaddr        start on srv04
+ * Resource action: UmDummy01       start on srv04
+ * Resource action: UmDummy02       start on srv04
+ * Pseudo action:   UMgroup01_running_0
+ * Resource action: UmIPaddr        monitor=10000 on srv04
+ * Resource action: UmDummy01       monitor=10000 on srv04
+ * Resource action: UmDummy02       monitor=10000 on srv04
+
+Revised cluster status:
+Online: [ srv01 srv02 srv03 srv04 ]
+
+ Resource Group: UMgroup01
+     UmVIPcheck	(ocf::pacemaker:Dummy):	Started srv04
+     UmIPaddr	(ocf::pacemaker:Dummy):	Started srv04
+     UmDummy01	(ocf::pacemaker:Dummy):	Started srv04
+     UmDummy02	(ocf::pacemaker:Dummy):	Started srv04
+ Resource Group: OVDBgroup02-1
+     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started srv01
+ Resource Group: OVDBgroup02-2
+     prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started srv02
+ Resource Group: OVDBgroup02-3
+     prmExPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started srv03
+ Resource Group: grpStonith1
+     prmStonithN1	(stonith:external/ssh):	Started srv04
+ Resource Group: grpStonith2
+     prmStonithN2	(stonith:external/ssh):	Started srv01
+ Resource Group: grpStonith3
+     prmStonithN3	(stonith:external/ssh):	Started srv02
+ Resource Group: grpStonith4
+     prmStonithN4	(stonith:external/ssh):	Started srv03
+ Clone Set: clnUMgroup01 [clnUmResource]
+     Started: [ srv04 ]
+     Stopped: [ clnUmResource:0 ]
+ Clone Set: clnPingd [clnPrmPingd]
+     Started: [ srv01 srv02 srv03 srv04 ]
+ Clone Set: clnDiskd1 [clnPrmDiskd1]
+     Started: [ srv01 srv02 srv03 srv04 ]
+ Clone Set: clnG3dummy1 [clnG3dummy01]
+     Started: [ srv01 srv02 srv03 srv04 ]
+ Clone Set: clnG3dummy2 [clnG3dummy02]
+     Started: [ srv01 srv02 srv03 srv04 ]
+

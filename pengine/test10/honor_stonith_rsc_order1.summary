@@ -1,0 +1,37 @@
+
+Current cluster status:
+Online: [ fc16-builder ]
+
+ Clone Set: S_CLONE [S_A]
+     Stopped: [ S_A:0 ]
+ Resource Group: S_GROUP
+     S_B	(stonith:fence_xvm):	Stopped 
+ A	(ocf::pacemaker:Dummy):	Stopped 
+
+Transition Summary:
+ * Start   S_A:0	(fc16-builder)
+ * Start   S_B	(fc16-builder)
+ * Start   A	(fc16-builder)
+
+Executing cluster transition:
+ * Resource action: S_A:0           monitor on fc16-builder
+ * Pseudo action:   S_GROUP_start_0
+ * Resource action: S_B             monitor on fc16-builder
+ * Resource action: A               monitor on fc16-builder
+ * Pseudo action:   probe_complete
+ * Resource action: S_B             start on fc16-builder
+ * Resource action: A               start on fc16-builder
+ * Pseudo action:   S_GROUP_running_0
+ * Pseudo action:   S_CLONE_start_0
+ * Resource action: S_A:0           start on fc16-builder
+ * Pseudo action:   S_CLONE_running_0
+
+Revised cluster status:
+Online: [ fc16-builder ]
+
+ Clone Set: S_CLONE [S_A]
+     Started: [ fc16-builder ]
+ Resource Group: S_GROUP
+     S_B	(stonith:fence_xvm):	Started fc16-builder
+ A	(ocf::pacemaker:Dummy):	Started fc16-builder
+

@@ -1,0 +1,41 @@
+
+Current cluster status:
+Online: [ hex-7 hex-8 hex-9 hex-0 ]
+
+ fencing-sbd	(stonith:external/sbd):	Stopped 
+ Clone Set: o2cb-clone [o2cb]
+     Stopped: [ o2cb:0 o2cb:1 o2cb:2 o2cb:3 ]
+ Clone Set: vg1-clone [vg1]
+     Stopped: [ vg1:0 vg1:1 vg1:2 vg1:3 ]
+ Clone Set: fs2-clone [ocfs2-2]
+     Stopped: [ ocfs2-2:0 ocfs2-2:1 ocfs2-2:2 ocfs2-2:3 ]
+ Clone Set: fs1-clone [ocfs2-1]
+     Stopped: [ ocfs2-1:0 ocfs2-1:1 ocfs2-1:2 ocfs2-1:3 ]
+ Clone Set: dlm-clone [dlm]
+     Stopped: [ dlm:0 dlm:1 dlm:2 dlm:3 ]
+ Clone Set: clvm-clone [clvm]
+     Stopped: [ clvm:0 clvm:1 clvm:2 clvm:3 ]
+
+Transition Summary:
+ * Start   fencing-sbd	(hex-0)
+
+Executing cluster transition:
+ * Resource action: fencing-sbd     start on hex-0
+
+Revised cluster status:
+Online: [ hex-7 hex-8 hex-9 hex-0 ]
+
+ fencing-sbd	(stonith:external/sbd):	Started hex-0
+ Clone Set: o2cb-clone [o2cb]
+     Stopped: [ o2cb:0 o2cb:1 o2cb:2 o2cb:3 ]
+ Clone Set: vg1-clone [vg1]
+     Stopped: [ vg1:0 vg1:1 vg1:2 vg1:3 ]
+ Clone Set: fs2-clone [ocfs2-2]
+     Stopped: [ ocfs2-2:0 ocfs2-2:1 ocfs2-2:2 ocfs2-2:3 ]
+ Clone Set: fs1-clone [ocfs2-1]
+     Stopped: [ ocfs2-1:0 ocfs2-1:1 ocfs2-1:2 ocfs2-1:3 ]
+ Clone Set: dlm-clone [dlm]
+     Stopped: [ dlm:0 dlm:1 dlm:2 dlm:3 ]
+ Clone Set: clvm-clone [clvm]
+     Stopped: [ clvm:0 clvm:1 clvm:2 clvm:3 ]
+

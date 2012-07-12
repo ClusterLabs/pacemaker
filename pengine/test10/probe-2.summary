@@ -1,0 +1,162 @@
+
+Current cluster status:
+Node wc02 (f36760d8-d84a-46b2-b452-4c8cac8b3396): standby
+Online: [ wc01 ]
+
+ Resource Group: group_www_data
+     fs_www_data	(ocf::heartbeat:Filesystem):	Started wc01
+     nfs-kernel-server	(lsb:nfs-kernel-server):	Started wc01
+     intip_nfs	(ocf::heartbeat:IPaddr2):	Started wc01
+ Master/Slave Set: ms_drbd_mysql [drbd_mysql]
+     Masters: [ wc02 ]
+     Slaves: [ wc01 ]
+ Resource Group: group_mysql
+     fs_mysql	(ocf::heartbeat:Filesystem):	Started wc02
+     intip_sql	(ocf::heartbeat:IPaddr2):	Started wc02
+     mysql-server	(ocf::heartbeat:mysql):	Started wc02
+ Master/Slave Set: ms_drbd_www [drbd_www]
+     Masters: [ wc01 ]
+     Slaves: [ wc02 ]
+ Clone Set: clone_nfs-common [group_nfs-common]
+     Started: [ wc01 wc02 ]
+ Clone Set: clone_mysql-proxy [group_mysql-proxy]
+     Started: [ wc01 wc02 ]
+ Clone Set: clone_webservice [group_webservice]
+     Started: [ wc01 wc02 ]
+ Resource Group: group_ftpd
+     extip_ftp	(ocf::heartbeat:IPaddr2):	Started wc01
+     pure-ftpd	(ocf::heartbeat:Pure-FTPd):	Started wc01
+ Clone Set: DoFencing [stonith_rackpdu] (unique)
+     stonith_rackpdu:0	(stonith:external/rackpdu):	Started wc01
+     stonith_rackpdu:1	(stonith:external/rackpdu):	Started wc02
+
+Transition Summary:
+ * Promote drbd_mysql:0	(Slave -> Master wc01)
+ * Demote  drbd_mysql:1	(Master -> Stopped wc02)
+ * Move    fs_mysql	(Started wc02 -> wc01)
+ * Move    intip_sql	(Started wc02 -> wc01)
+ * Move    mysql-server	(Started wc02 -> wc01)
+ * Stop    drbd_www:1	(wc02)
+ * Stop    nfs-common:1	(wc02)
+ * Stop    mysql-proxy:1	(wc02)
+ * Stop    fs_www:1	(wc02)
+ * Stop    apache2:1	(wc02)
+ * Restart stonith_rackpdu:0	(Started wc01)
+ * Stop    stonith_rackpdu:1	(wc02)
+
+Executing cluster transition:
+ * Resource action: drbd_mysql:0    cancel=10000 on wc01
+ * Pseudo action:   ms_drbd_mysql_pre_notify_demote_0
+ * Pseudo action:   group_mysql_stop_0
+ * Resource action: mysql-server    stop on wc02
+ * Pseudo action:   ms_drbd_www_pre_notify_stop_0
+ * Pseudo action:   clone_mysql-proxy_stop_0
+ * Pseudo action:   clone_webservice_stop_0
+ * Pseudo action:   DoFencing_stop_0
+ * Resource action: drbd_mysql:0    notify on wc01
+ * Resource action: drbd_mysql:1    notify on wc02
+ * Pseudo action:   ms_drbd_mysql_confirmed-pre_notify_demote_0
+ * Resource action: intip_sql       stop on wc02
+ * Resource action: drbd_www:0      notify on wc01
+ * Resource action: drbd_www:1      notify on wc02
+ * Pseudo action:   ms_drbd_www_confirmed-pre_notify_stop_0
+ * Pseudo action:   ms_drbd_www_stop_0
+ * Pseudo action:   group_mysql-proxy:1_stop_0
+ * Resource action: mysql-proxy:1   stop on wc02
+ * Pseudo action:   group_webservice:1_stop_0
+ * Resource action: apache2:1       stop on wc02
+ * Resource action: stonith_rackpdu:0 stop on wc01
+ * Resource action: fs_mysql        stop on wc02
+ * Resource action: drbd_www:1      stop on wc02
+ * Pseudo action:   ms_drbd_www_stopped_0
+ * Pseudo action:   group_mysql-proxy:1_stopped_0
+ * Pseudo action:   clone_mysql-proxy_stopped_0
+ * Resource action: fs_www:1        stop on wc02
+ * Pseudo action:   group_mysql_stopped_0
+ * Pseudo action:   ms_drbd_www_post_notify_stopped_0
+ * Pseudo action:   group_webservice:1_stopped_0
+ * Pseudo action:   clone_webservice_stopped_0
+ * Pseudo action:   ms_drbd_mysql_demote_0
+ * Resource action: drbd_www:0      notify on wc01
+ * Pseudo action:   ms_drbd_www_confirmed-post_notify_stopped_0
+ * Pseudo action:   clone_nfs-common_stop_0
+ * Resource action: drbd_mysql:1    demote on wc02
+ * Pseudo action:   ms_drbd_mysql_demoted_0
+ * Pseudo action:   group_nfs-common:1_stop_0
+ * Resource action: nfs-common:1    stop on wc02
+ * Pseudo action:   ms_drbd_mysql_post_notify_demoted_0
+ * Pseudo action:   group_nfs-common:1_stopped_0
+ * Pseudo action:   clone_nfs-common_stopped_0
+ * Resource action: drbd_mysql:0    notify on wc01
+ * Resource action: drbd_mysql:1    notify on wc02
+ * Pseudo action:   ms_drbd_mysql_confirmed-post_notify_demoted_0
+ * Pseudo action:   ms_drbd_mysql_pre_notify_stop_0
+ * Resource action: drbd_mysql:0    notify on wc01
+ * Resource action: drbd_mysql:1    notify on wc02
+ * Pseudo action:   ms_drbd_mysql_confirmed-pre_notify_stop_0
+ * Pseudo action:   ms_drbd_mysql_stop_0
+ * Resource action: drbd_mysql:1    stop on wc02
+ * Pseudo action:   ms_drbd_mysql_stopped_0
+ * Pseudo action:   ms_drbd_mysql_post_notify_stopped_0
+ * Resource action: drbd_mysql:0    notify on wc01
+ * Pseudo action:   ms_drbd_mysql_confirmed-post_notify_stopped_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   ms_drbd_mysql_pre_notify_promote_0
+ * Resource action: stonith_rackpdu:1 stop on wc02
+ * Pseudo action:   DoFencing_stopped_0
+ * Pseudo action:   DoFencing_start_0
+ * Resource action: drbd_mysql:0    notify on wc01
+ * Pseudo action:   ms_drbd_mysql_confirmed-pre_notify_promote_0
+ * Pseudo action:   ms_drbd_mysql_promote_0
+ * Resource action: stonith_rackpdu:0 start on wc01
+ * Pseudo action:   DoFencing_running_0
+ * Resource action: drbd_mysql:0    promote on wc01
+ * Pseudo action:   ms_drbd_mysql_promoted_0
+ * Resource action: stonith_rackpdu:0 monitor=5000 on wc01
+ * Pseudo action:   ms_drbd_mysql_post_notify_promoted_0
+ * Resource action: drbd_mysql:0    notify on wc01
+ * Pseudo action:   ms_drbd_mysql_confirmed-post_notify_promoted_0
+ * Pseudo action:   group_mysql_start_0
+ * Resource action: fs_mysql        start on wc01
+ * Resource action: intip_sql       start on wc01
+ * Resource action: mysql-server    start on wc01
+ * Resource action: drbd_mysql:0    monitor=5000 on wc01
+ * Pseudo action:   group_mysql_running_0
+ * Resource action: fs_mysql        monitor=30000 on wc01
+ * Resource action: intip_sql       monitor=30000 on wc01
+ * Resource action: mysql-server    monitor=30000 on wc01
+
+Revised cluster status:
+Node wc02 (f36760d8-d84a-46b2-b452-4c8cac8b3396): standby
+Online: [ wc01 ]
+
+ Resource Group: group_www_data
+     fs_www_data	(ocf::heartbeat:Filesystem):	Started wc01
+     nfs-kernel-server	(lsb:nfs-kernel-server):	Started wc01
+     intip_nfs	(ocf::heartbeat:IPaddr2):	Started wc01
+ Master/Slave Set: ms_drbd_mysql [drbd_mysql]
+     Masters: [ wc01 ]
+     Stopped: [ drbd_mysql:1 ]
+ Resource Group: group_mysql
+     fs_mysql	(ocf::heartbeat:Filesystem):	Started wc01
+     intip_sql	(ocf::heartbeat:IPaddr2):	Started wc01
+     mysql-server	(ocf::heartbeat:mysql):	Started wc01
+ Master/Slave Set: ms_drbd_www [drbd_www]
+     Masters: [ wc01 ]
+     Stopped: [ drbd_www:1 ]
+ Clone Set: clone_nfs-common [group_nfs-common]
+     Started: [ wc01 ]
+     Stopped: [ group_nfs-common:1 ]
+ Clone Set: clone_mysql-proxy [group_mysql-proxy]
+     Started: [ wc01 ]
+     Stopped: [ group_mysql-proxy:1 ]
+ Clone Set: clone_webservice [group_webservice]
+     Started: [ wc01 ]
+     Stopped: [ group_webservice:1 ]
+ Resource Group: group_ftpd
+     extip_ftp	(ocf::heartbeat:IPaddr2):	Started wc01
+     pure-ftpd	(ocf::heartbeat:Pure-FTPd):	Started wc01
+ Clone Set: DoFencing [stonith_rackpdu] (unique)
+     stonith_rackpdu:0	(stonith:external/rackpdu):	Started wc01
+     stonith_rackpdu:1	(stonith:external/rackpdu):	Stopped 
+

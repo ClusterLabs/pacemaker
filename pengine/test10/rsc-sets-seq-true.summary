@@ -1,0 +1,46 @@
+
+Current cluster status:
+Node node1: standby
+Online: [ node2 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Started node1
+ rsc2	(ocf::pacemaker:Dummy):	Started node1
+ rsc3	(ocf::pacemaker:Dummy):	Started node1
+ rsc4	(ocf::pacemaker:Dummy):	Started node1
+ rsc5	(ocf::pacemaker:Dummy):	Started node1
+ rsc6	(ocf::pacemaker:Dummy):	Started node1
+
+Transition Summary:
+ * Move    rsc1	(Started node1 -> node2)
+ * Move    rsc2	(Started node1 -> node2)
+ * Move    rsc3	(Started node1 -> node2)
+ * Move    rsc4	(Started node1 -> node2)
+ * Move    rsc5	(Started node1 -> node2)
+ * Move    rsc6	(Started node1 -> node2)
+
+Executing cluster transition:
+ * Resource action: rsc6            stop on node1
+ * Resource action: rsc5            stop on node1
+ * Resource action: rsc4            stop on node1
+ * Resource action: rsc3            stop on node1
+ * Resource action: rsc2            stop on node1
+ * Resource action: rsc1            stop on node1
+ * Pseudo action:   all_stopped
+ * Resource action: rsc1            start on node2
+ * Resource action: rsc2            start on node2
+ * Resource action: rsc3            start on node2
+ * Resource action: rsc4            start on node2
+ * Resource action: rsc5            start on node2
+ * Resource action: rsc6            start on node2
+
+Revised cluster status:
+Node node1: standby
+Online: [ node2 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Started node2
+ rsc2	(ocf::pacemaker:Dummy):	Started node2
+ rsc3	(ocf::pacemaker:Dummy):	Started node2
+ rsc4	(ocf::pacemaker:Dummy):	Started node2
+ rsc5	(ocf::pacemaker:Dummy):	Started node2
+ rsc6	(ocf::pacemaker:Dummy):	Started node2
+

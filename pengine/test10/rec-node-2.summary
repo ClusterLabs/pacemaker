@@ -1,0 +1,63 @@
+
+Current cluster status:
+Node node1 (uuid1): UNCLEAN (offline)
+Online: [ node2 ]
+
+ stonith-1	(stonith:dummy):	Stopped 
+ rsc1	(heartbeat:apache):	Stopped 
+ rsc2	(heartbeat:apache):	Stopped 
+ Resource Group: group1
+     rsc3	(heartbeat:apache):	Stopped 
+     rsc4	(heartbeat:apache):	Stopped 
+ Resource Group: group2
+     rsc5	(heartbeat:apache):	Stopped 
+     rsc6	(heartbeat:apache):	Stopped 
+
+Transition Summary:
+ * Start   stonith-1	(node2)
+ * Start   rsc1	(node2)
+ * Start   rsc2	(node2)
+ * Start   rsc3	(node2)
+ * Start   rsc4	(node2)
+ * Start   rsc5	(node2)
+ * Start   rsc6	(node2)
+
+Executing cluster transition:
+ * Resource action: stonith-1       monitor on node2
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc2            monitor on node2
+ * Pseudo action:   group1_start_0
+ * Resource action: rsc3            monitor on node2
+ * Resource action: rsc4            monitor on node2
+ * Pseudo action:   group2_start_0
+ * Resource action: rsc5            monitor on node2
+ * Resource action: rsc6            monitor on node2
+ * Pseudo action:   probe_complete
+ * Resource action: stonith-1       start on node2
+ * Pseudo action:   stonith_up
+ * Fencing node1
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   all_stopped
+ * Resource action: rsc1            start on node2
+ * Resource action: rsc2            start on node2
+ * Resource action: rsc3            start on node2
+ * Resource action: rsc4            start on node2
+ * Resource action: rsc5            start on node2
+ * Resource action: rsc6            start on node2
+ * Pseudo action:   group1_running_0
+ * Pseudo action:   group2_running_0
+
+Revised cluster status:
+Online: [ node2 ]
+OFFLINE: [ node1 ]
+
+ stonith-1	(stonith:dummy):	Started node2
+ rsc1	(heartbeat:apache):	Started node2
+ rsc2	(heartbeat:apache):	Started node2
+ Resource Group: group1
+     rsc3	(heartbeat:apache):	Started node2
+     rsc4	(heartbeat:apache):	Started node2
+ Resource Group: group2
+     rsc5	(heartbeat:apache):	Started node2
+     rsc6	(heartbeat:apache):	Started node2
+

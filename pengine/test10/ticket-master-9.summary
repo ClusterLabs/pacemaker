@@ -1,0 +1,33 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc_stonith	(stonith:null):	Started node1
+ Master/Slave Set: ms1 [rsc1]
+     Masters: [ node1 ]
+     Slaves: [ node2 ]
+
+Transition Summary:
+ * Demote  rsc1:1	(Master -> Stopped node1)
+
+Executing cluster transition:
+ * Pseudo action:   ms1_demote_0
+ * Pseudo action:   stonith_up
+ * Fencing node1
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   rsc1:1_demote_0
+ * Pseudo action:   ms1_demoted_0
+ * Pseudo action:   ms1_stop_0
+ * Pseudo action:   rsc1:1_stop_0
+ * Pseudo action:   ms1_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ node2 ]
+OFFLINE: [ node1 ]
+
+ rsc_stonith	(stonith:null):	Stopped 
+ Master/Slave Set: ms1 [rsc1]
+     Slaves: [ node2 ]
+     Stopped: [ rsc1:1 ]
+

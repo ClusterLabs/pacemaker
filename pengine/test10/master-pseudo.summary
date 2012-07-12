@@ -1,0 +1,60 @@
+
+Current cluster status:
+Node raki.linbit: standby
+Online: [ sambuca.linbit ]
+
+ ip_float_right	(ocf::heartbeat:IPaddr2):	Stopped 
+ Master/Slave Set: ms_drbd_float [drbd_float]
+     Slaves: [ sambuca.linbit ]
+ Resource Group: nfsexport
+     ip_nfs	(ocf::heartbeat:IPaddr2):	Stopped 
+     fs_float	(ocf::heartbeat:Filesystem):	Stopped 
+
+Transition Summary:
+ * Start   ip_float_right	(sambuca.linbit)
+ * Restart drbd_float:0	(Slave sambuca.linbit)
+ * Promote drbd_float:0	(Slave -> Master sambuca.linbit)
+ * Start   ip_nfs	(sambuca.linbit)
+
+Executing cluster transition:
+ * Resource action: ip_float_right  start on sambuca.linbit
+ * Pseudo action:   ms_drbd_float_pre_notify_stop_0
+ * Resource action: drbd_float:0    notify on sambuca.linbit
+ * Pseudo action:   ms_drbd_float_confirmed-pre_notify_stop_0
+ * Pseudo action:   ms_drbd_float_stop_0
+ * Resource action: drbd_float:0    stop on sambuca.linbit
+ * Pseudo action:   ms_drbd_float_stopped_0
+ * Pseudo action:   ms_drbd_float_post_notify_stopped_0
+ * Pseudo action:   ms_drbd_float_confirmed-post_notify_stopped_0
+ * Pseudo action:   ms_drbd_float_pre_notify_start_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   ms_drbd_float_confirmed-pre_notify_start_0
+ * Pseudo action:   ms_drbd_float_start_0
+ * Resource action: drbd_float:0    start on sambuca.linbit
+ * Pseudo action:   ms_drbd_float_running_0
+ * Pseudo action:   ms_drbd_float_post_notify_running_0
+ * Resource action: drbd_float:0    notify on sambuca.linbit
+ * Pseudo action:   ms_drbd_float_confirmed-post_notify_running_0
+ * Pseudo action:   ms_drbd_float_pre_notify_promote_0
+ * Resource action: drbd_float:0    notify on sambuca.linbit
+ * Pseudo action:   ms_drbd_float_confirmed-pre_notify_promote_0
+ * Pseudo action:   ms_drbd_float_promote_0
+ * Resource action: drbd_float:0    promote on sambuca.linbit
+ * Pseudo action:   ms_drbd_float_promoted_0
+ * Pseudo action:   ms_drbd_float_post_notify_promoted_0
+ * Resource action: drbd_float:0    notify on sambuca.linbit
+ * Pseudo action:   ms_drbd_float_confirmed-post_notify_promoted_0
+ * Pseudo action:   nfsexport_start_0
+ * Resource action: ip_nfs          start on sambuca.linbit
+
+Revised cluster status:
+Node raki.linbit: standby
+Online: [ sambuca.linbit ]
+
+ ip_float_right	(ocf::heartbeat:IPaddr2):	Started sambuca.linbit
+ Master/Slave Set: ms_drbd_float [drbd_float]
+     Masters: [ sambuca.linbit ]
+ Resource Group: nfsexport
+     ip_nfs	(ocf::heartbeat:IPaddr2):	Started sambuca.linbit
+     fs_float	(ocf::heartbeat:Filesystem):	Stopped 
+

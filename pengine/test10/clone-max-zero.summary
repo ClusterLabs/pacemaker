@@ -1,0 +1,50 @@
+
+Current cluster status:
+Online: [ c001n11 c001n12 ]
+
+ fencing	(stonith:external/ssh):	Started c001n11
+ Clone Set: dlm-clone [dlm]
+     dlm:0	(ocf::pacemaker:controld):	 ORPHANED Started c001n12
+     dlm:1	(ocf::pacemaker:controld):	 ORPHANED Started c001n11
+ Clone Set: o2cb-clone [o2cb]
+     Started: [ c001n11 c001n12 ]
+ Clone Set: clone-drbd0 [drbd0]
+     Started: [ c001n11 c001n12 ]
+ Clone Set: c-ocfs2-1 [ocfs2-1]
+     Started: [ c001n11 c001n12 ]
+
+Transition Summary:
+ * Stop    dlm:0	(c001n12)
+ * Stop    dlm:1	(c001n11)
+ * Stop    o2cb:0	(c001n11)
+ * Stop    o2cb:1	(c001n12)
+ * Stop    ocfs2-1:0	(c001n11)
+ * Stop    ocfs2-1:1	(c001n12)
+
+Executing cluster transition:
+ * Pseudo action:   c-ocfs2-1_stop_0
+ * Resource action: ocfs2-1:0       stop on c001n11
+ * Resource action: ocfs2-1:1       stop on c001n12
+ * Pseudo action:   c-ocfs2-1_stopped_0
+ * Pseudo action:   o2cb-clone_stop_0
+ * Resource action: o2cb:0          stop on c001n11
+ * Resource action: o2cb:1          stop on c001n12
+ * Pseudo action:   o2cb-clone_stopped_0
+ * Pseudo action:   dlm-clone_stop_0
+ * Resource action: dlm:1           stop on c001n12
+ * Resource action: dlm:0           stop on c001n11
+ * Pseudo action:   dlm-clone_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ c001n11 c001n12 ]
+
+ fencing	(stonith:external/ssh):	Started c001n11
+ Clone Set: dlm-clone [dlm]
+ Clone Set: o2cb-clone [o2cb]
+     Stopped: [ o2cb:0 o2cb:1 ]
+ Clone Set: clone-drbd0 [drbd0]
+     Started: [ c001n11 c001n12 ]
+ Clone Set: c-ocfs2-1 [ocfs2-1]
+     Stopped: [ ocfs2-1:0 ocfs2-1:1 ]
+

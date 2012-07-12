@@ -1,0 +1,89 @@
+
+Current cluster status:
+Online: [ test03 test02 sgi2 ibm1 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Started test03
+ rsc_sgi2	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_ibm1	(ocf::heartbeat:IPaddr):	Started test03
+ rsc_test02	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_test03	(ocf::heartbeat:IPaddr):	Started test03
+ Clone Set: DoFencing [child_DoFencing] (unique)
+     child_DoFencing:0	(stonith:ssh):	Started test02
+     child_DoFencing:1	(stonith:ssh):	Started test03
+     child_DoFencing:2	(stonith:ssh):	Stopped 
+     child_DoFencing:3	(stonith:ssh):	Stopped 
+
+Transition Summary:
+ * Start   rsc_sgi2	(sgi2)
+ * Move    rsc_ibm1	(Started test03 -> ibm1)
+ * Start   rsc_test02	(test02)
+ * Start   child_DoFencing:2	(ibm1)
+ * Start   child_DoFencing:3	(sgi2)
+
+Executing cluster transition:
+ * Resource action: DcIPaddr        monitor=5000 on test03
+ * Resource action: DcIPaddr        monitor on ibm1
+ * Resource action: DcIPaddr        monitor on sgi2
+ * Resource action: DcIPaddr        monitor on test02
+ * Resource action: rsc_sgi2        monitor on ibm1
+ * Resource action: rsc_sgi2        monitor on sgi2
+ * Resource action: rsc_sgi2        monitor on test02
+ * Resource action: rsc_sgi2        monitor on test03
+ * Resource action: rsc_ibm1        monitor on ibm1
+ * Resource action: rsc_ibm1        monitor on sgi2
+ * Resource action: rsc_ibm1        monitor on test02
+ * Resource action: rsc_test02      monitor on ibm1
+ * Resource action: rsc_test02      monitor on sgi2
+ * Resource action: rsc_test02      monitor on test02
+ * Resource action: rsc_test02      monitor on test03
+ * Resource action: rsc_test03      monitor=5000 on test03
+ * Resource action: rsc_test03      monitor on ibm1
+ * Resource action: rsc_test03      monitor on sgi2
+ * Resource action: rsc_test03      monitor on test02
+ * Resource action: child_DoFencing:0 monitor on ibm1
+ * Resource action: child_DoFencing:0 monitor on sgi2
+ * Resource action: child_DoFencing:1 monitor on ibm1
+ * Resource action: child_DoFencing:1 monitor on sgi2
+ * Resource action: child_DoFencing:1 monitor on test02
+ * Resource action: child_DoFencing:2 monitor on ibm1
+ * Resource action: child_DoFencing:2 monitor on sgi2
+ * Resource action: child_DoFencing:2 monitor on test02
+ * Resource action: child_DoFencing:2 monitor on test03
+ * Resource action: child_DoFencing:3 monitor on ibm1
+ * Resource action: child_DoFencing:3 monitor on sgi2
+ * Resource action: child_DoFencing:3 monitor on test02
+ * Resource action: child_DoFencing:3 monitor on test03
+ * Pseudo action:   DoFencing_start_0
+ * Pseudo action:   probe_complete
+ * Resource action: rsc_sgi2        start on sgi2
+ * Resource action: rsc_ibm1        stop on test03
+ * Resource action: rsc_test02      start on test02
+ * Resource action: child_DoFencing:0 start on test02
+ * Resource action: child_DoFencing:1 start on test03
+ * Resource action: child_DoFencing:2 start on ibm1
+ * Resource action: child_DoFencing:3 start on sgi2
+ * Pseudo action:   DoFencing_running_0
+ * Pseudo action:   all_stopped
+ * Resource action: rsc_sgi2        monitor=5000 on sgi2
+ * Resource action: rsc_ibm1        start on ibm1
+ * Resource action: rsc_test02      monitor=5000 on test02
+ * Resource action: child_DoFencing:0 monitor=5000 on test02
+ * Resource action: child_DoFencing:1 monitor=5000 on test03
+ * Resource action: child_DoFencing:2 monitor=5000 on ibm1
+ * Resource action: child_DoFencing:3 monitor=5000 on sgi2
+ * Resource action: rsc_ibm1        monitor=5000 on ibm1
+
+Revised cluster status:
+Online: [ test03 test02 sgi2 ibm1 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Started test03
+ rsc_sgi2	(ocf::heartbeat:IPaddr):	Started sgi2
+ rsc_ibm1	(ocf::heartbeat:IPaddr):	Started ibm1
+ rsc_test02	(ocf::heartbeat:IPaddr):	Started test02
+ rsc_test03	(ocf::heartbeat:IPaddr):	Started test03
+ Clone Set: DoFencing [child_DoFencing] (unique)
+     child_DoFencing:0	(stonith:ssh):	Started test02
+     child_DoFencing:1	(stonith:ssh):	Started test03
+     child_DoFencing:2	(stonith:ssh):	Started ibm1
+     child_DoFencing:3	(stonith:ssh):	Started sgi2
+

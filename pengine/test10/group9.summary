@@ -1,0 +1,66 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(heartbeat:apache):	Started node1
+ rsc2	(heartbeat:apache):	Started node1
+ Resource Group: foo
+     rsc3	(heartbeat:apache):	Started node1
+     rsc4	(heartbeat:apache):	Started node1 FAILED
+     rsc5	(heartbeat:apache):	Started node1
+ Resource Group: bar
+     rsc6	(heartbeat:apache):	Started node1
+     rsc7	(heartbeat:apache):	Started node1 FAILED
+     rsc8	(heartbeat:apache):	Started node1
+
+Transition Summary:
+ * Recover rsc4	(Started node1)
+ * Restart rsc5	(Started node1)
+ * Move    rsc6	(Started node1 -> node2)
+ * Move    rsc7	(Started node1 -> node2)
+ * Move    rsc8	(Started node1 -> node2)
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc2            monitor on node2
+ * Pseudo action:   foo_stop_0
+ * Resource action: rsc3            monitor on node2
+ * Resource action: rsc4            monitor on node2
+ * Resource action: rsc5            monitor on node2
+ * Pseudo action:   bar_stop_0
+ * Resource action: rsc6            monitor on node2
+ * Resource action: rsc7            monitor on node2
+ * Resource action: rsc8            monitor on node2
+ * Pseudo action:   probe_complete
+ * Resource action: rsc5            stop on node1
+ * Resource action: rsc8            stop on node1
+ * Resource action: rsc4            stop on node1
+ * Resource action: rsc7            stop on node1
+ * Pseudo action:   foo_stopped_0
+ * Pseudo action:   foo_start_0
+ * Resource action: rsc4            start on node1
+ * Resource action: rsc5            start on node1
+ * Resource action: rsc6            stop on node1
+ * Pseudo action:   all_stopped
+ * Pseudo action:   foo_running_0
+ * Pseudo action:   bar_stopped_0
+ * Pseudo action:   bar_start_0
+ * Resource action: rsc6            start on node2
+ * Resource action: rsc7            start on node2
+ * Resource action: rsc8            start on node2
+ * Pseudo action:   bar_running_0
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(heartbeat:apache):	Started node1
+ rsc2	(heartbeat:apache):	Started node1
+ Resource Group: foo
+     rsc3	(heartbeat:apache):	Started node1
+     rsc4	(heartbeat:apache):	Started node1
+     rsc5	(heartbeat:apache):	Started node1
+ Resource Group: bar
+     rsc6	(heartbeat:apache):	Started node2
+     rsc7	(heartbeat:apache):	Started node2
+     rsc8	(heartbeat:apache):	Started node2
+

@@ -1,0 +1,28 @@
+
+Current cluster status:
+Online: [ host1 host2 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Stopped 
+ rsc2	(ocf::pacemaker:Dummy):	Stopped 
+
+Transition Summary:
+ * Start   rsc1	(host1)
+ * Start   rsc2	(host1)
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on host2
+ * Resource action: rsc1            monitor on host1
+ * Resource action: rsc2            monitor on host2
+ * Resource action: rsc2            monitor on host1
+ * Pseudo action:   probe_complete
+ * Pseudo action:   load_stopped_host2
+ * Pseudo action:   load_stopped_host1
+ * Resource action: rsc1            start on host1
+ * Resource action: rsc2            start on host1
+
+Revised cluster status:
+Online: [ host1 host2 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Started host1
+ rsc2	(ocf::pacemaker:Dummy):	Started host1
+

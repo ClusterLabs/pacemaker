@@ -1,0 +1,64 @@
+
+Current cluster status:
+Online: [ alice.demo bob.demo ]
+
+ Master/Slave Set: ms_drbd_nfsexport [res_drbd_nfsexport]
+     Stopped: [ res_drbd_nfsexport:0 res_drbd_nfsexport:1 ]
+ Resource Group: rg_nfs
+     res_fs_nfsexport	(ocf::heartbeat:Filesystem):	Stopped 
+     res_ip_nfs	(ocf::heartbeat:IPaddr2):	Stopped 
+     res_nfs	(lsb:nfs):	Stopped 
+ Resource Group: rg_mysql1
+     res_fs_mysql1	(ocf::heartbeat:Filesystem):	Started bob.demo
+     res_ip_mysql1	(ocf::heartbeat:IPaddr2):	Started bob.demo
+     res_mysql1	(ocf::heartbeat:mysql):	Started bob.demo
+ Master/Slave Set: ms_drbd_mysql1 [res_drbd_mysql1]
+     Masters: [ bob.demo ]
+     Stopped: [ res_drbd_mysql1:1 ]
+ Master/Slave Set: ms_drbd_mysql2 [res_drbd_mysql2]
+     Masters: [ alice.demo ]
+     Slaves: [ bob.demo ]
+ Resource Group: rg_mysql2
+     res_fs_mysql2	(ocf::heartbeat:Filesystem):	Started alice.demo
+     res_ip_mysql2	(ocf::heartbeat:IPaddr2):	Started alice.demo
+     res_mysql2	(ocf::heartbeat:mysql):	Started alice.demo
+
+Transition Summary:
+ * Start   res_drbd_mysql1:1	(alice.demo)
+
+Executing cluster transition:
+ * Pseudo action:   ms_drbd_mysql1_pre_notify_start_0
+ * Resource action: res_drbd_mysql1:0 notify on bob.demo
+ * Pseudo action:   ms_drbd_mysql1_confirmed-pre_notify_start_0
+ * Pseudo action:   ms_drbd_mysql1_start_0
+ * Resource action: res_drbd_mysql1:1 start on alice.demo
+ * Pseudo action:   ms_drbd_mysql1_running_0
+ * Pseudo action:   ms_drbd_mysql1_post_notify_running_0
+ * Resource action: res_drbd_mysql1:0 notify on bob.demo
+ * Resource action: res_drbd_mysql1:1 notify on alice.demo
+ * Pseudo action:   ms_drbd_mysql1_confirmed-post_notify_running_0
+
+Revised cluster status:
+Online: [ alice.demo bob.demo ]
+
+ Master/Slave Set: ms_drbd_nfsexport [res_drbd_nfsexport]
+     Stopped: [ res_drbd_nfsexport:0 res_drbd_nfsexport:1 ]
+ Resource Group: rg_nfs
+     res_fs_nfsexport	(ocf::heartbeat:Filesystem):	Stopped 
+     res_ip_nfs	(ocf::heartbeat:IPaddr2):	Stopped 
+     res_nfs	(lsb:nfs):	Stopped 
+ Resource Group: rg_mysql1
+     res_fs_mysql1	(ocf::heartbeat:Filesystem):	Started bob.demo
+     res_ip_mysql1	(ocf::heartbeat:IPaddr2):	Started bob.demo
+     res_mysql1	(ocf::heartbeat:mysql):	Started bob.demo
+ Master/Slave Set: ms_drbd_mysql1 [res_drbd_mysql1]
+     Masters: [ bob.demo ]
+     Slaves: [ alice.demo ]
+ Master/Slave Set: ms_drbd_mysql2 [res_drbd_mysql2]
+     Masters: [ alice.demo ]
+     Slaves: [ bob.demo ]
+ Resource Group: rg_mysql2
+     res_fs_mysql2	(ocf::heartbeat:Filesystem):	Started alice.demo
+     res_ip_mysql2	(ocf::heartbeat:IPaddr2):	Started alice.demo
+     res_mysql2	(ocf::heartbeat:mysql):	Started alice.demo
+

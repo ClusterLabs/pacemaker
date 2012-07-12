@@ -1,0 +1,25 @@
+
+Current cluster status:
+Node node1 (uuid1): UNCLEAN (offline)
+Node node2 (uuid2): UNCLEAN (offline)
+Node node3 (uuid3): UNCLEAN (offline)
+
+ stonith-1	(stonith:dummy):	Stopped 
+ lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Stopped 
+
+Transition Summary:
+
+Executing cluster transition:
+ * Pseudo action:   stonith_up
+ * Fencing node1
+ * Fencing node3
+ * Fencing node2
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+OFFLINE: [ node1 node2 node3 ]
+
+ stonith-1	(stonith:dummy):	Stopped 
+ lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Stopped 
+

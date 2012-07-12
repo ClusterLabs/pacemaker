@@ -1,0 +1,26 @@
+
+Current cluster status:
+Online: [ fc16-builder ]
+
+ Clone Set: clone1 [ClusterIP]
+     Started: [ fc16-builder ]
+ Clone Set: clone2 [ClusterIP2]
+     Started: [ fc16-builder ]
+
+Transition Summary:
+ * Stop    ClusterIP:0	(fc16-builder)
+
+Executing cluster transition:
+ * Pseudo action:   clone1_stop_0
+ * Resource action: ClusterIP:0     stop on fc16-builder
+ * Pseudo action:   clone1_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ fc16-builder ]
+
+ Clone Set: clone1 [ClusterIP]
+     Stopped: [ ClusterIP:0 ]
+ Clone Set: clone2 [ClusterIP2]
+     Started: [ fc16-builder ]
+

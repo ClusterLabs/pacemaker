@@ -1,0 +1,80 @@
+
+Current cluster status:
+Online: [ qa-suse-2 qa-suse-3 qa-suse-4 qa-suse-1 ]
+
+ sbd_stonith	(stonith:external/sbd):	Started qa-suse-2
+ Clone Set: c-o2stage [o2stage]
+     Started: [ qa-suse-4 qa-suse-1 qa-suse-3 qa-suse-2 ]
+ Clone Set: c-ocfs [ocfs]
+     Started: [ qa-suse-4 qa-suse-1 qa-suse-3 qa-suse-2 ]
+
+Transition Summary:
+ * Stop    o2cb:0	(qa-suse-4)
+ * Stop    cmirror:0	(qa-suse-4)
+ * Stop    o2cb:1	(qa-suse-1)
+ * Stop    cmirror:1	(qa-suse-1)
+ * Stop    o2cb:2	(qa-suse-3)
+ * Stop    cmirror:2	(qa-suse-3)
+ * Stop    o2cb:3	(qa-suse-2)
+ * Stop    cmirror:3	(qa-suse-2)
+ * Stop    ocfs:0	(qa-suse-4)
+ * Stop    ocfs:1	(qa-suse-1)
+ * Stop    ocfs:2	(qa-suse-3)
+ * Stop    ocfs:3	(qa-suse-2)
+
+Executing cluster transition:
+ * Resource action: sbd_stonith     monitor=15000 on qa-suse-2
+ * Pseudo action:   c-ocfs_stop_0
+ * Resource action: ocfs:3          stop on qa-suse-2
+ * Resource action: ocfs:2          stop on qa-suse-3
+ * Resource action: ocfs:1          stop on qa-suse-1
+ * Resource action: ocfs:0          stop on qa-suse-4
+ * Pseudo action:   c-ocfs_stopped_0
+ * Pseudo action:   c-o2stage_stop_0
+ * Pseudo action:   o2stage:0_stop_0
+ * Resource action: cmirror:0       stop on qa-suse-4
+ * Pseudo action:   o2stage:1_stop_0
+ * Resource action: cmirror:1       stop on qa-suse-1
+ * Pseudo action:   o2stage:2_stop_0
+ * Resource action: cmirror:2       stop on qa-suse-3
+ * Pseudo action:   o2stage:3_stop_0
+ * Resource action: cmirror:3       stop on qa-suse-2
+ * Resource action: o2cb:0          stop on qa-suse-4
+ * Resource action: o2cb:1          stop on qa-suse-1
+ * Resource action: o2cb:2          stop on qa-suse-3
+ * Resource action: o2cb:3          stop on qa-suse-2
+ * Pseudo action:   all_stopped
+ * Pseudo action:   o2stage:0_stopped_0
+ * Pseudo action:   o2stage:1_stopped_0
+ * Pseudo action:   o2stage:2_stopped_0
+ * Pseudo action:   o2stage:3_stopped_0
+ * Pseudo action:   c-o2stage_stopped_0
+
+Revised cluster status:
+Online: [ qa-suse-2 qa-suse-3 qa-suse-4 qa-suse-1 ]
+
+ sbd_stonith	(stonith:external/sbd):	Started qa-suse-2
+ Clone Set: c-o2stage [o2stage]
+     Resource Group: o2stage:0
+         dlm:0	(ocf::pacemaker:controld):	Started qa-suse-4
+         clvm:0	(ocf::lvm2:clvmd):	Started qa-suse-4
+         o2cb:0	(ocf::ocfs2:o2cb):	Stopped 
+         cmirror:0	(ocf::lvm2:cmirrord):	Stopped 
+     Resource Group: o2stage:1
+         dlm:1	(ocf::pacemaker:controld):	Started qa-suse-1
+         clvm:1	(ocf::lvm2:clvmd):	Started qa-suse-1
+         o2cb:1	(ocf::ocfs2:o2cb):	Stopped 
+         cmirror:1	(ocf::lvm2:cmirrord):	Stopped 
+     Resource Group: o2stage:2
+         dlm:2	(ocf::pacemaker:controld):	Started qa-suse-3
+         clvm:2	(ocf::lvm2:clvmd):	Started qa-suse-3
+         o2cb:2	(ocf::ocfs2:o2cb):	Stopped 
+         cmirror:2	(ocf::lvm2:cmirrord):	Stopped 
+     Resource Group: o2stage:3
+         dlm:3	(ocf::pacemaker:controld):	Started qa-suse-2
+         clvm:3	(ocf::lvm2:clvmd):	Started qa-suse-2
+         o2cb:3	(ocf::ocfs2:o2cb):	Stopped 
+         cmirror:3	(ocf::lvm2:cmirrord):	Stopped 
+ Clone Set: c-ocfs [ocfs]
+     Stopped: [ ocfs:0 ocfs:1 ocfs:2 ocfs:3 ]
+

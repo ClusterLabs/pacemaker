@@ -1,0 +1,17 @@
+
+Current cluster status:
+Online: [ fc16-builder2 ]
+OFFLINE: [ fc16-builder fc16-builder3 ]
+
+ A	(ocf::pacemaker:Dummy):	Started fc16-builder2 (failure ignored)
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+Online: [ fc16-builder2 ]
+OFFLINE: [ fc16-builder fc16-builder3 ]
+
+ A	(ocf::pacemaker:Dummy):	Started fc16-builder2 (failure ignored)
+

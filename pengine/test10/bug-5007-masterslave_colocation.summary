@@ -1,0 +1,30 @@
+
+Current cluster status:
+Online: [ fc16-builder fc16-builder2 ]
+
+ Master/Slave Set: MS_DUMMY [DUMMY]
+     Masters: [ fc16-builder ]
+     Slaves: [ fc16-builder2 ]
+ SLAVE_IP	(ocf::pacemaker:Dummy):	Started fc16-builder
+ MASTER_IP	(ocf::pacemaker:Dummy):	Started fc16-builder2
+
+Transition Summary:
+ * Move    SLAVE_IP	(Started fc16-builder -> fc16-builder2)
+ * Move    MASTER_IP	(Started fc16-builder2 -> fc16-builder)
+
+Executing cluster transition:
+ * Resource action: SLAVE_IP        stop on fc16-builder
+ * Resource action: MASTER_IP       stop on fc16-builder2
+ * Pseudo action:   all_stopped
+ * Resource action: SLAVE_IP        start on fc16-builder2
+ * Resource action: MASTER_IP       start on fc16-builder
+
+Revised cluster status:
+Online: [ fc16-builder fc16-builder2 ]
+
+ Master/Slave Set: MS_DUMMY [DUMMY]
+     Masters: [ fc16-builder ]
+     Slaves: [ fc16-builder2 ]
+ SLAVE_IP	(ocf::pacemaker:Dummy):	Started fc16-builder2
+ MASTER_IP	(ocf::pacemaker:Dummy):	Started fc16-builder
+

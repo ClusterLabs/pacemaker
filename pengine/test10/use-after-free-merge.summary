@@ -1,0 +1,42 @@
+
+Current cluster status:
+Online: [ hex-13 hex-14 ]
+
+ fencing-sbd	(stonith:external/sbd):	Stopped 
+ Resource Group: g0
+     d0	(ocf::heartbeat:Dummy):	Stopped 
+     d1	(ocf::heartbeat:Dummy):	Stopped 
+ Master/Slave Set: ms0 [s0]
+     Stopped: [ s0:0 s0:1 ]
+
+Transition Summary:
+ * Start   fencing-sbd	(hex-14)
+ * Start   s0:0	(hex-13)
+ * Start   s0:1	(hex-14)
+
+Executing cluster transition:
+ * Resource action: fencing-sbd     monitor on hex-14
+ * Resource action: fencing-sbd     monitor on hex-13
+ * Resource action: d0              monitor on hex-14
+ * Resource action: d0              monitor on hex-13
+ * Resource action: d1              monitor on hex-14
+ * Resource action: d1              monitor on hex-13
+ * Resource action: s0:0            monitor on hex-13
+ * Resource action: s0:1            monitor on hex-14
+ * Pseudo action:   ms0_start_0
+ * Pseudo action:   probe_complete
+ * Resource action: fencing-sbd     start on hex-14
+ * Resource action: s0:0            start on hex-13
+ * Resource action: s0:1            start on hex-14
+ * Pseudo action:   ms0_running_0
+
+Revised cluster status:
+Online: [ hex-13 hex-14 ]
+
+ fencing-sbd	(stonith:external/sbd):	Started hex-14
+ Resource Group: g0
+     d0	(ocf::heartbeat:Dummy):	Stopped 
+     d1	(ocf::heartbeat:Dummy):	Stopped 
+ Master/Slave Set: ms0 [s0]
+     Slaves: [ hex-13 hex-14 ]
+

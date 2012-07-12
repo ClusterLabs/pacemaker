@@ -1,0 +1,165 @@
+
+Current cluster status:
+Online: [ c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n09
+ rsc_c001n09	(ocf::heartbeat:IPaddr):	Started c001n09
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n03
+ rsc_c001n04	(ocf::heartbeat:IPaddr):	Started c001n04
+ rsc_c001n05	(ocf::heartbeat:IPaddr):	Started c001n05
+ rsc_c001n06	(ocf::heartbeat:IPaddr):	Started c001n06
+ rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n07
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
+ Clone Set: DoFencing [child_DoFencing] (unique) (unmanaged)
+     child_DoFencing:0	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:1	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:2	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:3	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:4	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:5	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:6	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:7	(stonith:ssh):	Stopped  (unmanaged)
+
+Transition Summary:
+
+Executing cluster transition:
+ * Resource action: DcIPaddr        monitor on c001n08
+ * Resource action: DcIPaddr        monitor on c001n07
+ * Resource action: DcIPaddr        monitor on c001n06
+ * Resource action: DcIPaddr        monitor on c001n05
+ * Resource action: DcIPaddr        monitor on c001n04
+ * Resource action: DcIPaddr        monitor on c001n03
+ * Resource action: DcIPaddr        monitor on c001n02
+ * Resource action: rsc_c001n09     monitor on c001n08
+ * Resource action: rsc_c001n09     monitor on c001n07
+ * Resource action: rsc_c001n09     monitor on c001n05
+ * Resource action: rsc_c001n09     monitor on c001n04
+ * Resource action: rsc_c001n09     monitor on c001n03
+ * Resource action: rsc_c001n09     monitor on c001n02
+ * Resource action: rsc_c001n02     monitor on c001n08
+ * Resource action: rsc_c001n02     monitor on c001n07
+ * Resource action: rsc_c001n02     monitor on c001n05
+ * Resource action: rsc_c001n02     monitor on c001n04
+ * Resource action: rsc_c001n02     monitor on c001n09
+ * Resource action: rsc_c001n03     monitor on c001n08
+ * Resource action: rsc_c001n03     monitor on c001n07
+ * Resource action: rsc_c001n03     monitor on c001n05
+ * Resource action: rsc_c001n03     monitor on c001n04
+ * Resource action: rsc_c001n03     monitor on c001n02
+ * Resource action: rsc_c001n03     monitor on c001n09
+ * Resource action: rsc_c001n04     monitor on c001n08
+ * Resource action: rsc_c001n04     monitor on c001n07
+ * Resource action: rsc_c001n04     monitor on c001n05
+ * Resource action: rsc_c001n04     monitor on c001n03
+ * Resource action: rsc_c001n04     monitor on c001n02
+ * Resource action: rsc_c001n04     monitor on c001n09
+ * Resource action: rsc_c001n05     monitor on c001n08
+ * Resource action: rsc_c001n05     monitor on c001n07
+ * Resource action: rsc_c001n05     monitor on c001n06
+ * Resource action: rsc_c001n05     monitor on c001n04
+ * Resource action: rsc_c001n05     monitor on c001n03
+ * Resource action: rsc_c001n05     monitor on c001n02
+ * Resource action: rsc_c001n05     monitor on c001n09
+ * Resource action: rsc_c001n06     monitor on c001n08
+ * Resource action: rsc_c001n06     monitor on c001n07
+ * Resource action: rsc_c001n06     monitor on c001n05
+ * Resource action: rsc_c001n06     monitor on c001n04
+ * Resource action: rsc_c001n06     monitor on c001n03
+ * Resource action: rsc_c001n06     monitor on c001n09
+ * Resource action: rsc_c001n07     monitor on c001n08
+ * Resource action: rsc_c001n07     monitor on c001n06
+ * Resource action: rsc_c001n07     monitor on c001n05
+ * Resource action: rsc_c001n07     monitor on c001n04
+ * Resource action: rsc_c001n07     monitor on c001n09
+ * Resource action: rsc_c001n08     monitor on c001n07
+ * Resource action: rsc_c001n08     monitor on c001n05
+ * Resource action: rsc_c001n08     monitor on c001n09
+ * Resource action: child_DoFencing:0 monitor on c001n08
+ * Resource action: child_DoFencing:0 monitor on c001n07
+ * Resource action: child_DoFencing:0 monitor on c001n06
+ * Resource action: child_DoFencing:0 monitor on c001n05
+ * Resource action: child_DoFencing:0 monitor on c001n04
+ * Resource action: child_DoFencing:0 monitor on c001n03
+ * Resource action: child_DoFencing:0 monitor on c001n02
+ * Resource action: child_DoFencing:0 monitor on c001n09
+ * Resource action: child_DoFencing:1 monitor on c001n08
+ * Resource action: child_DoFencing:1 monitor on c001n07
+ * Resource action: child_DoFencing:1 monitor on c001n06
+ * Resource action: child_DoFencing:1 monitor on c001n05
+ * Resource action: child_DoFencing:1 monitor on c001n04
+ * Resource action: child_DoFencing:1 monitor on c001n03
+ * Resource action: child_DoFencing:1 monitor on c001n02
+ * Resource action: child_DoFencing:1 monitor on c001n09
+ * Resource action: child_DoFencing:2 monitor on c001n08
+ * Resource action: child_DoFencing:2 monitor on c001n07
+ * Resource action: child_DoFencing:2 monitor on c001n06
+ * Resource action: child_DoFencing:2 monitor on c001n05
+ * Resource action: child_DoFencing:2 monitor on c001n04
+ * Resource action: child_DoFencing:2 monitor on c001n03
+ * Resource action: child_DoFencing:2 monitor on c001n02
+ * Resource action: child_DoFencing:2 monitor on c001n09
+ * Resource action: child_DoFencing:3 monitor on c001n08
+ * Resource action: child_DoFencing:3 monitor on c001n07
+ * Resource action: child_DoFencing:3 monitor on c001n06
+ * Resource action: child_DoFencing:3 monitor on c001n05
+ * Resource action: child_DoFencing:3 monitor on c001n04
+ * Resource action: child_DoFencing:3 monitor on c001n03
+ * Resource action: child_DoFencing:3 monitor on c001n02
+ * Resource action: child_DoFencing:3 monitor on c001n09
+ * Resource action: child_DoFencing:4 monitor on c001n08
+ * Resource action: child_DoFencing:4 monitor on c001n07
+ * Resource action: child_DoFencing:4 monitor on c001n06
+ * Resource action: child_DoFencing:4 monitor on c001n05
+ * Resource action: child_DoFencing:4 monitor on c001n04
+ * Resource action: child_DoFencing:4 monitor on c001n03
+ * Resource action: child_DoFencing:4 monitor on c001n02
+ * Resource action: child_DoFencing:4 monitor on c001n09
+ * Resource action: child_DoFencing:5 monitor on c001n08
+ * Resource action: child_DoFencing:5 monitor on c001n07
+ * Resource action: child_DoFencing:5 monitor on c001n06
+ * Resource action: child_DoFencing:5 monitor on c001n05
+ * Resource action: child_DoFencing:5 monitor on c001n04
+ * Resource action: child_DoFencing:5 monitor on c001n03
+ * Resource action: child_DoFencing:5 monitor on c001n02
+ * Resource action: child_DoFencing:5 monitor on c001n09
+ * Resource action: child_DoFencing:6 monitor on c001n08
+ * Resource action: child_DoFencing:6 monitor on c001n07
+ * Resource action: child_DoFencing:6 monitor on c001n06
+ * Resource action: child_DoFencing:6 monitor on c001n05
+ * Resource action: child_DoFencing:6 monitor on c001n04
+ * Resource action: child_DoFencing:6 monitor on c001n03
+ * Resource action: child_DoFencing:6 monitor on c001n02
+ * Resource action: child_DoFencing:6 monitor on c001n09
+ * Resource action: child_DoFencing:7 monitor on c001n08
+ * Resource action: child_DoFencing:7 monitor on c001n07
+ * Resource action: child_DoFencing:7 monitor on c001n06
+ * Resource action: child_DoFencing:7 monitor on c001n05
+ * Resource action: child_DoFencing:7 monitor on c001n04
+ * Resource action: child_DoFencing:7 monitor on c001n03
+ * Resource action: child_DoFencing:7 monitor on c001n02
+ * Resource action: child_DoFencing:7 monitor on c001n09
+ * Pseudo action:   probe_complete
+
+Revised cluster status:
+Online: [ c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n09
+ rsc_c001n09	(ocf::heartbeat:IPaddr):	Started c001n09
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n03
+ rsc_c001n04	(ocf::heartbeat:IPaddr):	Started c001n04
+ rsc_c001n05	(ocf::heartbeat:IPaddr):	Started c001n05
+ rsc_c001n06	(ocf::heartbeat:IPaddr):	Started c001n06
+ rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n07
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
+ Clone Set: DoFencing [child_DoFencing] (unique) (unmanaged)
+     child_DoFencing:0	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:1	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:2	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:3	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:4	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:5	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:6	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:7	(stonith:ssh):	Stopped  (unmanaged)
+

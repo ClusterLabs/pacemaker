@@ -1,0 +1,36 @@
+
+Current cluster status:
+Online: [ sles236 sles238 ]
+
+ Master/Slave Set: ms-drbd0 [drbd0]
+     Masters: [ sles236 ]
+     Stopped: [ drbd0:1 ]
+ Master/Slave Set: ms-drbd1 [drbd1]
+     Masters: [ sles236 ]
+     Slaves: [ sles238 ]
+
+Transition Summary:
+ * Start   drbd0:1	(sles238)
+
+Executing cluster transition:
+ * Pseudo action:   ms-drbd0_pre_notify_start_0
+ * Resource action: drbd0:0         notify on sles236
+ * Pseudo action:   ms-drbd0_confirmed-pre_notify_start_0
+ * Pseudo action:   ms-drbd0_start_0
+ * Resource action: drbd0:1         start on sles238
+ * Pseudo action:   ms-drbd0_running_0
+ * Pseudo action:   ms-drbd0_post_notify_running_0
+ * Resource action: drbd0:0         notify on sles236
+ * Resource action: drbd0:1         notify on sles238
+ * Pseudo action:   ms-drbd0_confirmed-post_notify_running_0
+
+Revised cluster status:
+Online: [ sles236 sles238 ]
+
+ Master/Slave Set: ms-drbd0 [drbd0]
+     Masters: [ sles236 ]
+     Slaves: [ sles238 ]
+ Master/Slave Set: ms-drbd1 [drbd1]
+     Masters: [ sles236 ]
+     Slaves: [ sles238 ]
+

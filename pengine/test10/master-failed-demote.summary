@@ -1,0 +1,63 @@
+
+Current cluster status:
+Online: [ dl380g5b dl380g5a ]
+
+ Master/Slave Set: ms-sf [group] (unique)
+     Resource Group: group:0
+         stateful-1:0	(ocf::heartbeat:Stateful):	Slave dl380g5b FAILED
+         stateful-2:0	(ocf::heartbeat:Stateful):	Stopped 
+     Resource Group: group:1
+         stateful-1:1	(ocf::heartbeat:Stateful):	Started dl380g5a
+         stateful-2:1	(ocf::heartbeat:Stateful):	Started dl380g5a
+
+Transition Summary:
+ * Stop    stateful-1:0	(dl380g5b)
+ * Promote stateful-1:1	(Slave -> Master dl380g5a)
+ * Promote stateful-2:1	(Slave -> Master dl380g5a)
+
+Executing cluster transition:
+ * Resource action: stateful-1:1    cancel=20000 on dl380g5a
+ * Resource action: stateful-2:1    cancel=20000 on dl380g5a
+ * Pseudo action:   ms-sf_pre_notify_stop_0
+ * Resource action: stateful-1:0    notify on dl380g5b
+ * Resource action: stateful-1:1    notify on dl380g5a
+ * Resource action: stateful-2:1    notify on dl380g5a
+ * Pseudo action:   ms-sf_confirmed-pre_notify_stop_0
+ * Pseudo action:   ms-sf_stop_0
+ * Pseudo action:   group:0_stop_0
+ * Resource action: stateful-1:0    stop on dl380g5b
+ * Pseudo action:   group:0_stopped_0
+ * Pseudo action:   ms-sf_stopped_0
+ * Pseudo action:   ms-sf_post_notify_stopped_0
+ * Resource action: stateful-1:1    notify on dl380g5a
+ * Resource action: stateful-2:1    notify on dl380g5a
+ * Pseudo action:   ms-sf_confirmed-post_notify_stopped_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   ms-sf_pre_notify_promote_0
+ * Resource action: stateful-1:1    notify on dl380g5a
+ * Resource action: stateful-2:1    notify on dl380g5a
+ * Pseudo action:   ms-sf_confirmed-pre_notify_promote_0
+ * Pseudo action:   ms-sf_promote_0
+ * Pseudo action:   group:1_promote_0
+ * Resource action: stateful-1:1    promote on dl380g5a
+ * Resource action: stateful-2:1    promote on dl380g5a
+ * Pseudo action:   group:1_promoted_0
+ * Pseudo action:   ms-sf_promoted_0
+ * Pseudo action:   ms-sf_post_notify_promoted_0
+ * Resource action: stateful-1:1    notify on dl380g5a
+ * Resource action: stateful-2:1    notify on dl380g5a
+ * Pseudo action:   ms-sf_confirmed-post_notify_promoted_0
+ * Resource action: stateful-1:1    monitor=10000 on dl380g5a
+ * Resource action: stateful-2:1    monitor=10000 on dl380g5a
+
+Revised cluster status:
+Online: [ dl380g5b dl380g5a ]
+
+ Master/Slave Set: ms-sf [group] (unique)
+     Resource Group: group:0
+         stateful-1:0	(ocf::heartbeat:Stateful):	Stopped 
+         stateful-2:0	(ocf::heartbeat:Stateful):	Stopped 
+     Resource Group: group:1
+         stateful-1:1	(ocf::heartbeat:Stateful):	Master dl380g5a
+         stateful-2:1	(ocf::heartbeat:Stateful):	Master dl380g5a
+

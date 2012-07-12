@@ -1,0 +1,60 @@
+
+Current cluster status:
+Node deglxen002: standby
+Online: [ deglxen001 ]
+
+ degllx62-vm	(ocf::heartbeat:Xen):	Started deglxen002
+ degllx63-vm	(ocf::heartbeat:Xen):	Stopped 
+ degllx61-vm	(ocf::heartbeat:Xen):	Started deglxen001
+ degllx64-vm	(ocf::heartbeat:Xen):	Stopped 
+ stonith_sbd	(stonith:external/sbd):	Started deglxen001
+ Clone Set: clone-nfs [grp-nfs]
+     Started: [ deglxen001 deglxen002 ]
+ Clone Set: clone-ping [prim-ping]
+     Started: [ deglxen002 deglxen001 ]
+
+Transition Summary:
+ * Migrate degllx62-vm	(Started deglxen002 -> deglxen001)
+ * Stop    degllx61-vm	(deglxen001)
+ * Stop    nfs-xen_config:1	(deglxen002)
+ * Stop    nfs-xen_swapfiles:1	(deglxen002)
+ * Stop    nfs-xen_images:1	(deglxen002)
+ * Stop    prim-ping:0	(deglxen002)
+
+Executing cluster transition:
+ * Resource action: degllx61-vm     stop on deglxen001
+ * Pseudo action:   load_stopped_deglxen001
+ * Resource action: degllx62-vm     migrate_to on deglxen002
+ * Resource action: degllx62-vm     migrate_from on deglxen001
+ * Resource action: degllx62-vm     stop on deglxen002
+ * Pseudo action:   clone-nfs_stop_0
+ * Pseudo action:   load_stopped_deglxen002
+ * Pseudo action:   degllx62-vm_start_0
+ * Pseudo action:   grp-nfs:1_stop_0
+ * Resource action: nfs-xen_images:1 stop on deglxen002
+ * Resource action: degllx62-vm     monitor=30000 on deglxen001
+ * Resource action: nfs-xen_swapfiles:1 stop on deglxen002
+ * Resource action: nfs-xen_config:1 stop on deglxen002
+ * Pseudo action:   grp-nfs:1_stopped_0
+ * Pseudo action:   clone-nfs_stopped_0
+ * Pseudo action:   clone-ping_stop_0
+ * Resource action: prim-ping:0     stop on deglxen002
+ * Pseudo action:   clone-ping_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Node deglxen002: standby
+Online: [ deglxen001 ]
+
+ degllx62-vm	(ocf::heartbeat:Xen):	Started deglxen001
+ degllx63-vm	(ocf::heartbeat:Xen):	Stopped 
+ degllx61-vm	(ocf::heartbeat:Xen):	Stopped deglxen002
+ degllx64-vm	(ocf::heartbeat:Xen):	Stopped 
+ stonith_sbd	(stonith:external/sbd):	Started deglxen001
+ Clone Set: clone-nfs [grp-nfs]
+     Started: [ deglxen001 ]
+     Stopped: [ grp-nfs:1 ]
+ Clone Set: clone-ping [prim-ping]
+     Started: [ deglxen001 ]
+     Stopped: [ prim-ping:0 ]
+

@@ -1,0 +1,57 @@
+
+Current cluster status:
+Online: [ posic041 posic043 ]
+OFFLINE: [ posic042 posic044 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Started posic043
+ rsc_posic041	(ocf::heartbeat:IPaddr):	Started posic041
+ rsc_posic042	(ocf::heartbeat:IPaddr):	Started posic041
+ rsc_posic043	(ocf::heartbeat:IPaddr):	Started posic043
+ rsc_posic044	(ocf::heartbeat:IPaddr):	Started posic041
+ Clone Set: DoFencing [child_DoFencing] (unique)
+     child_DoFencing:0	(stonith:ssh):	Started posic043
+     child_DoFencing:1	(stonith:ssh):	Started posic041
+     child_DoFencing:2	(stonith:ssh):	Stopped 
+     child_DoFencing:3	(stonith:ssh):	Stopped 
+
+Transition Summary:
+ * Stop    DcIPaddr	(Started posic043)
+ * Stop    rsc_posic041	(Started posic041)
+ * Stop    rsc_posic042	(Started posic041)
+ * Stop    rsc_posic043	(Started posic043)
+ * Stop    rsc_posic044	(Started posic041)
+
+Executing cluster transition:
+ * Resource action: DcIPaddr        monitor on posic041
+ * Resource action: rsc_posic041    monitor on posic043
+ * Resource action: rsc_posic042    monitor on posic043
+ * Resource action: rsc_posic043    monitor on posic041
+ * Resource action: rsc_posic044    monitor on posic043
+ * Resource action: child_DoFencing:0 monitor=5000 on posic043
+ * Resource action: child_DoFencing:1 monitor=5000 on posic041
+ * Resource action: child_DoFencing:1 monitor on posic043
+ * Resource action: child_DoFencing:2 monitor on posic041
+ * Resource action: child_DoFencing:3 monitor on posic041
+ * Pseudo action:   probe_complete
+ * Resource action: DcIPaddr        stop on posic043
+ * Resource action: rsc_posic041    stop on posic041
+ * Resource action: rsc_posic042    stop on posic041
+ * Resource action: rsc_posic043    stop on posic043
+ * Resource action: rsc_posic044    stop on posic041
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ posic041 posic043 ]
+OFFLINE: [ posic042 posic044 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_posic041	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_posic042	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_posic043	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_posic044	(ocf::heartbeat:IPaddr):	Started posic041
+ Clone Set: DoFencing [child_DoFencing] (unique)
+     child_DoFencing:0	(stonith:ssh):	Started posic043
+     child_DoFencing:1	(stonith:ssh):	Started posic041
+     child_DoFencing:2	(stonith:ssh):	Stopped 
+     child_DoFencing:3	(stonith:ssh):	Stopped 
+

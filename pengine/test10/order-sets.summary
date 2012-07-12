@@ -1,0 +1,40 @@
+
+Current cluster status:
+Node ubuntu_2: standby
+Online: [ ubuntu_1 ]
+
+ world1	(ocf::bbnd:world1test):	Started ubuntu_2
+ world2	(ocf::bbnd:world2test):	Started ubuntu_2
+ world3	(ocf::bbnd:world3test):	Started ubuntu_2
+ world4	(ocf::bbnd:world4test):	Started ubuntu_2
+
+Transition Summary:
+ * Move    world1	(Started ubuntu_2 -> ubuntu_1)
+ * Move    world2	(Started ubuntu_2 -> ubuntu_1)
+ * Move    world3	(Started ubuntu_2 -> ubuntu_1)
+ * Move    world4	(Started ubuntu_2 -> ubuntu_1)
+
+Executing cluster transition:
+ * Resource action: world4          stop on ubuntu_2
+ * Resource action: world3          stop on ubuntu_2
+ * Resource action: world2          stop on ubuntu_2
+ * Resource action: world1          stop on ubuntu_2
+ * Pseudo action:   all_stopped
+ * Resource action: world1          start on ubuntu_1
+ * Resource action: world2          start on ubuntu_1
+ * Resource action: world3          start on ubuntu_1
+ * Resource action: world4          start on ubuntu_1
+ * Resource action: world1          monitor=10000 on ubuntu_1
+ * Resource action: world2          monitor=10000 on ubuntu_1
+ * Resource action: world3          monitor=10000 on ubuntu_1
+ * Resource action: world4          monitor=10000 on ubuntu_1
+
+Revised cluster status:
+Node ubuntu_2: standby
+Online: [ ubuntu_1 ]
+
+ world1	(ocf::bbnd:world1test):	Started ubuntu_1
+ world2	(ocf::bbnd:world2test):	Started ubuntu_1
+ world3	(ocf::bbnd:world3test):	Started ubuntu_1
+ world4	(ocf::bbnd:world4test):	Started ubuntu_1
+

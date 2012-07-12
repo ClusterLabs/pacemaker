@@ -1,0 +1,17 @@
+
+Current cluster status:
+Node node1: standby
+Online: [ node2 ]
+
+ rsc3	(heartbeat:apache):	Started node2
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+Node node1: standby
+Online: [ node2 ]
+
+ rsc3	(heartbeat:apache):	Started node2
+

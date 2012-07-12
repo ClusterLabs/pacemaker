@@ -1,0 +1,74 @@
+
+Current cluster status:
+Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+
+ Fencing	(stonith:fence_xvm):	Started pcmk-1
+ Resource Group: group-1
+     r192.168.122.105	(ocf::heartbeat:IPaddr):	Stopped 
+     r192.168.122.106	(ocf::heartbeat:IPaddr):	Stopped 
+     r192.168.122.107	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_pcmk-1	(ocf::heartbeat:IPaddr):	Started pcmk-1
+ rsc_pcmk-2	(ocf::heartbeat:IPaddr):	Started pcmk-2
+ rsc_pcmk-3	(ocf::heartbeat:IPaddr):	Started pcmk-3
+ rsc_pcmk-4	(ocf::heartbeat:IPaddr):	Started pcmk-4
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Stopped 
+ migrator	(ocf::pacemaker:Dummy):	Started pcmk-4
+ Clone Set: Connectivity [ping-1]
+     Started: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+ Master/Slave Set: master-1 [stateful-1]
+     stateful-1:1	(ocf::pacemaker:Stateful):	Slave pcmk-1 FAILED
+     Slaves: [ pcmk-2 pcmk-3 pcmk-4 ]
+
+Transition Summary:
+ * Start   r192.168.122.105	(pcmk-2)
+ * Start   r192.168.122.106	(pcmk-2)
+ * Start   r192.168.122.107	(pcmk-2)
+ * Start   lsb-dummy	(pcmk-2)
+ * Promote stateful-1:0	(Slave -> Master pcmk-2)
+ * Recover stateful-1:1	(Slave pcmk-1)
+
+Executing cluster transition:
+ * Resource action: stateful-1:0    cancel=15000 on pcmk-2
+ * Pseudo action:   master-1_stop_0
+ * Resource action: stateful-1:1    stop on pcmk-1
+ * Pseudo action:   master-1_stopped_0
+ * Pseudo action:   master-1_start_0
+ * Pseudo action:   all_stopped
+ * Resource action: stateful-1:1    start on pcmk-1
+ * Pseudo action:   master-1_running_0
+ * Resource action: stateful-1:1    monitor=15000 on pcmk-1
+ * Pseudo action:   master-1_promote_0
+ * Resource action: stateful-1:0    promote on pcmk-2
+ * Pseudo action:   master-1_promoted_0
+ * Pseudo action:   group-1_start_0
+ * Resource action: r192.168.122.105 start on pcmk-2
+ * Resource action: r192.168.122.106 start on pcmk-2
+ * Resource action: r192.168.122.107 start on pcmk-2
+ * Resource action: stateful-1:0    monitor=16000 on pcmk-2
+ * Pseudo action:   group-1_running_0
+ * Resource action: r192.168.122.105 monitor=5000 on pcmk-2
+ * Resource action: r192.168.122.106 monitor=5000 on pcmk-2
+ * Resource action: r192.168.122.107 monitor=5000 on pcmk-2
+ * Resource action: lsb-dummy       start on pcmk-2
+ * Resource action: lsb-dummy       monitor=5000 on pcmk-2
+
+Revised cluster status:
+Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+
+ Fencing	(stonith:fence_xvm):	Started pcmk-1
+ Resource Group: group-1
+     r192.168.122.105	(ocf::heartbeat:IPaddr):	Started pcmk-2
+     r192.168.122.106	(ocf::heartbeat:IPaddr):	Started pcmk-2
+     r192.168.122.107	(ocf::heartbeat:IPaddr):	Started pcmk-2
+ rsc_pcmk-1	(ocf::heartbeat:IPaddr):	Started pcmk-1
+ rsc_pcmk-2	(ocf::heartbeat:IPaddr):	Started pcmk-2
+ rsc_pcmk-3	(ocf::heartbeat:IPaddr):	Started pcmk-3
+ rsc_pcmk-4	(ocf::heartbeat:IPaddr):	Started pcmk-4
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Started pcmk-2
+ migrator	(ocf::pacemaker:Dummy):	Started pcmk-4
+ Clone Set: Connectivity [ping-1]
+     Started: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Masters: [ pcmk-2 ]
+     Slaves: [ pcmk-1 pcmk-3 pcmk-4 ]
+

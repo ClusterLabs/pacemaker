@@ -1,0 +1,58 @@
+
+Current cluster status:
+Online: [ xen-2 xen-1 ]
+
+ fs_1	(ocf::heartbeat:Filesystem):	Started xen-1
+ Master/Slave Set: ms-drbd0 [drbd0]
+     Masters: [ xen-1 ]
+     Slaves: [ xen-2 ]
+
+Transition Summary:
+ * Move    fs_1	(Started xen-1 -> xen-2)
+ * Promote drbd0:0	(Slave -> Master xen-2)
+ * Demote  drbd0:1	(Master -> Stopped xen-1)
+
+Executing cluster transition:
+ * Resource action: fs_1            stop on xen-1
+ * Pseudo action:   ms-drbd0_pre_notify_demote_0
+ * Resource action: drbd0:0         notify on xen-2
+ * Resource action: drbd0:1         notify on xen-1
+ * Pseudo action:   ms-drbd0_confirmed-pre_notify_demote_0
+ * Pseudo action:   ms-drbd0_demote_0
+ * Resource action: drbd0:1         demote on xen-1
+ * Pseudo action:   ms-drbd0_demoted_0
+ * Pseudo action:   ms-drbd0_post_notify_demoted_0
+ * Resource action: drbd0:0         notify on xen-2
+ * Resource action: drbd0:1         notify on xen-1
+ * Pseudo action:   ms-drbd0_confirmed-post_notify_demoted_0
+ * Pseudo action:   ms-drbd0_pre_notify_stop_0
+ * Resource action: drbd0:0         notify on xen-2
+ * Resource action: drbd0:1         notify on xen-1
+ * Pseudo action:   ms-drbd0_confirmed-pre_notify_stop_0
+ * Pseudo action:   ms-drbd0_stop_0
+ * Resource action: drbd0:1         stop on xen-1
+ * Pseudo action:   ms-drbd0_stopped_0
+ * Cluster action:  do_shutdown on xen-1
+ * Pseudo action:   ms-drbd0_post_notify_stopped_0
+ * Resource action: drbd0:0         notify on xen-2
+ * Pseudo action:   ms-drbd0_confirmed-post_notify_stopped_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   ms-drbd0_pre_notify_promote_0
+ * Resource action: drbd0:0         notify on xen-2
+ * Pseudo action:   ms-drbd0_confirmed-pre_notify_promote_0
+ * Pseudo action:   ms-drbd0_promote_0
+ * Resource action: drbd0:0         promote on xen-2
+ * Pseudo action:   ms-drbd0_promoted_0
+ * Pseudo action:   ms-drbd0_post_notify_promoted_0
+ * Resource action: drbd0:0         notify on xen-2
+ * Pseudo action:   ms-drbd0_confirmed-post_notify_promoted_0
+ * Resource action: fs_1            start on xen-2
+
+Revised cluster status:
+Online: [ xen-2 xen-1 ]
+
+ fs_1	(ocf::heartbeat:Filesystem):	Started xen-2
+ Master/Slave Set: ms-drbd0 [drbd0]
+     Masters: [ xen-2 ]
+     Stopped: [ drbd0:1 ]
+

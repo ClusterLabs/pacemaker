@@ -1,0 +1,20 @@
+
+Current cluster status:
+Online: [ bl460g6a bl460g6b ]
+
+ Resource Group: dummy-g
+     dummy01	(ocf::heartbeat:Dummy):	Started bl460g6a (unmanaged)
+     dummy02	(ocf::heartbeat:Dummy-stop-NG):	Started bl460g6a (unmanaged) FAILED
+
+Transition Summary:
+
+Executing cluster transition:
+ * Cluster action:  do_shutdown on bl460g6a
+
+Revised cluster status:
+Online: [ bl460g6a bl460g6b ]
+
+ Resource Group: dummy-g
+     dummy01	(ocf::heartbeat:Dummy):	Started bl460g6a (unmanaged)
+     dummy02	(ocf::heartbeat:Dummy-stop-NG):	Started bl460g6a (unmanaged) FAILED
+

@@ -1,0 +1,61 @@
+
+Current cluster status:
+Online: [ dktest2sles10 dktest1sles10 ]
+
+ stonith-1	(stonith:dummy):	Stopped 
+ Master/Slave Set: ms-drbd1 [drbd1]
+     Masters: [ dktest2sles10 ]
+     Stopped: [ drbd1:1 ]
+ testip	(ocf::heartbeat:IPaddr2):	Started dktest2sles10
+
+Transition Summary:
+ * Start   stonith-1	(dktest1sles10)
+ * Demote  drbd1:0	(Master -> Stopped dktest2sles10)
+ * Start   drbd1:1	(dktest1sles10)
+ * Stop    testip	(dktest2sles10)
+
+Executing cluster transition:
+ * Resource action: stonith-1       monitor on dktest1sles10
+ * Resource action: stonith-1       monitor on dktest2sles10
+ * Resource action: drbd1:1         monitor on dktest1sles10
+ * Pseudo action:   ms-drbd1_pre_notify_demote_0
+ * Resource action: testip          monitor on dktest1sles10
+ * Pseudo action:   probe_complete
+ * Resource action: stonith-1       start on dktest1sles10
+ * Resource action: drbd1:0         notify on dktest2sles10
+ * Pseudo action:   ms-drbd1_confirmed-pre_notify_demote_0
+ * Resource action: testip          stop on dktest2sles10
+ * Pseudo action:   ms-drbd1_demote_0
+ * Resource action: drbd1:0         demote on dktest2sles10
+ * Pseudo action:   ms-drbd1_demoted_0
+ * Pseudo action:   ms-drbd1_post_notify_demoted_0
+ * Resource action: drbd1:0         notify on dktest2sles10
+ * Pseudo action:   ms-drbd1_confirmed-post_notify_demoted_0
+ * Pseudo action:   ms-drbd1_pre_notify_stop_0
+ * Resource action: drbd1:0         notify on dktest2sles10
+ * Pseudo action:   ms-drbd1_confirmed-pre_notify_stop_0
+ * Pseudo action:   ms-drbd1_stop_0
+ * Resource action: drbd1:0         stop on dktest2sles10
+ * Pseudo action:   ms-drbd1_stopped_0
+ * Pseudo action:   ms-drbd1_post_notify_stopped_0
+ * Pseudo action:   ms-drbd1_confirmed-post_notify_stopped_0
+ * Pseudo action:   ms-drbd1_pre_notify_start_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   ms-drbd1_confirmed-pre_notify_start_0
+ * Pseudo action:   ms-drbd1_start_0
+ * Resource action: drbd1:1         start on dktest1sles10
+ * Pseudo action:   ms-drbd1_running_0
+ * Pseudo action:   ms-drbd1_post_notify_running_0
+ * Resource action: drbd1:1         notify on dktest1sles10
+ * Pseudo action:   ms-drbd1_confirmed-post_notify_running_0
+ * Resource action: drbd1:1         monitor=11000 on dktest1sles10
+
+Revised cluster status:
+Online: [ dktest2sles10 dktest1sles10 ]
+
+ stonith-1	(stonith:dummy):	Started dktest1sles10
+ Master/Slave Set: ms-drbd1 [drbd1]
+     Slaves: [ dktest1sles10 ]
+     Stopped: [ drbd1:0 ]
+ testip	(ocf::heartbeat:IPaddr2):	Stopped 
+

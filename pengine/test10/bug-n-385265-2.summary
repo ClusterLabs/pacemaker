@@ -1,0 +1,32 @@
+
+Current cluster status:
+Online: [ ih01 ih02 ]
+
+ Resource Group: group_common
+     resource_ip_common	(ocf::heartbeat:IPaddr2):	Started ih02 FAILED
+     resource_idvscommon	(ocf::dfs:idvs):	Started ih02
+
+Transition Summary:
+ * Move    resource_ip_common	(Started ih02 -> ih01)
+ * Move    resource_idvscommon	(Started ih02 -> ih01)
+
+Executing cluster transition:
+ * Pseudo action:   group_common_stop_0
+ * Resource action: resource_idvscommon stop on ih02
+ * Resource action: resource_ip_common stop on ih02
+ * Pseudo action:   all_stopped
+ * Pseudo action:   group_common_stopped_0
+ * Pseudo action:   group_common_start_0
+ * Resource action: resource_ip_common start on ih01
+ * Resource action: resource_idvscommon start on ih01
+ * Pseudo action:   group_common_running_0
+ * Resource action: resource_ip_common monitor=30000 on ih01
+ * Resource action: resource_idvscommon monitor=30000 on ih01
+
+Revised cluster status:
+Online: [ ih01 ih02 ]
+
+ Resource Group: group_common
+     resource_ip_common	(ocf::heartbeat:IPaddr2):	Started ih01
+     resource_idvscommon	(ocf::dfs:idvs):	Started ih01
+

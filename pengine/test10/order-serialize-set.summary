@@ -1,0 +1,72 @@
+
+Current cluster status:
+Node xen-a (445a93d5-655e-430b-b45d-47d79a2f78c7): standby
+Online: [ xen-b ]
+
+ xen-a-fencing	(stonith:external/ipmi):	Started xen-b
+ xen-b-fencing	(stonith:external/ipmi):	Started xen-a
+ db	(ocf::heartbeat:Xen):	Started xen-a
+ dbreplica	(ocf::heartbeat:Xen):	Started xen-b
+ core-101	(ocf::heartbeat:Xen):	Started xen-a
+ core-200	(ocf::heartbeat:Xen):	Started xen-a
+ sysadmin	(ocf::heartbeat:Xen):	Started xen-b
+ edge	(ocf::heartbeat:Xen):	Started xen-a
+ base	(ocf::heartbeat:Xen):	Started xen-a
+ Email_Alerting	(ocf::heartbeat:MailTo):	Started xen-b
+
+Transition Summary:
+ * Restart xen-a-fencing	(Started xen-b)
+ * Stop    xen-b-fencing	(xen-a)
+ * Migrate db	(Started xen-a -> xen-b)
+ * Migrate core-101	(Started xen-a -> xen-b)
+ * Migrate core-200	(Started xen-a -> xen-b)
+ * Migrate edge	(Started xen-a -> xen-b)
+ * Migrate base	(Started xen-a -> xen-b)
+
+Executing cluster transition:
+ * Resource action: xen-a-fencing   stop on xen-b
+ * Resource action: xen-a-fencing   start on xen-b
+ * Resource action: xen-a-fencing   monitor=60000 on xen-b
+ * Resource action: db              migrate_to on xen-a
+ * Resource action: db              migrate_from on xen-b
+ * Resource action: db              stop on xen-a
+ * Pseudo action:   db_start_0
+ * Resource action: core-101        migrate_to on xen-a
+ * Resource action: db              monitor=10000 on xen-b
+ * Resource action: core-101        migrate_from on xen-b
+ * Resource action: core-101        stop on xen-a
+ * Pseudo action:   core-101_start_0
+ * Resource action: core-200        migrate_to on xen-a
+ * Resource action: core-101        monitor=10000 on xen-b
+ * Resource action: core-200        migrate_from on xen-b
+ * Resource action: core-200        stop on xen-a
+ * Pseudo action:   core-200_start_0
+ * Resource action: edge            migrate_to on xen-a
+ * Resource action: core-200        monitor=10000 on xen-b
+ * Resource action: edge            migrate_from on xen-b
+ * Resource action: edge            stop on xen-a
+ * Pseudo action:   edge_start_0
+ * Resource action: base            migrate_to on xen-a
+ * Resource action: edge            monitor=10000 on xen-b
+ * Resource action: base            migrate_from on xen-b
+ * Resource action: base            stop on xen-a
+ * Pseudo action:   all_stopped
+ * Resource action: xen-b-fencing   stop on xen-a
+ * Pseudo action:   base_start_0
+ * Resource action: base            monitor=10000 on xen-b
+
+Revised cluster status:
+Node xen-a (445a93d5-655e-430b-b45d-47d79a2f78c7): standby
+Online: [ xen-b ]
+
+ xen-a-fencing	(stonith:external/ipmi):	Started xen-b
+ xen-b-fencing	(stonith:external/ipmi):	Stopped 
+ db	(ocf::heartbeat:Xen):	Started xen-b
+ dbreplica	(ocf::heartbeat:Xen):	Started xen-b
+ core-101	(ocf::heartbeat:Xen):	Started xen-b
+ core-200	(ocf::heartbeat:Xen):	Started xen-b
+ sysadmin	(ocf::heartbeat:Xen):	Started xen-b
+ edge	(ocf::heartbeat:Xen):	Started xen-b
+ base	(ocf::heartbeat:Xen):	Started xen-b
+ Email_Alerting	(ocf::heartbeat:MailTo):	Started xen-b
+

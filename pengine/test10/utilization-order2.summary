@@ -1,0 +1,38 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc4	(ocf::pacemaker:Dummy):	Stopped 
+ rsc3	(ocf::pacemaker:Dummy):	Started node1
+ Clone Set: clone-rsc2 [rsc2]
+     Started: [ node2 node1 ]
+ rsc1	(ocf::pacemaker:Dummy):	Started node2
+
+Transition Summary:
+ * Start   rsc4	(node1)
+ * Move    rsc3	(Started node1 -> node2)
+ * Stop    rsc2:1	(node1)
+ * Stop    rsc1	(node2)
+
+Executing cluster transition:
+ * Resource action: rsc3            stop on node1
+ * Pseudo action:   clone-rsc2_stop_0
+ * Resource action: rsc1            stop on node2
+ * Pseudo action:   load_stopped_node2
+ * Resource action: rsc3            start on node2
+ * Resource action: rsc2:1          stop on node1
+ * Pseudo action:   clone-rsc2_stopped_0
+ * Pseudo action:   load_stopped_node1
+ * Pseudo action:   all_stopped
+ * Resource action: rsc4            start on node1
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ rsc4	(ocf::pacemaker:Dummy):	Started node1
+ rsc3	(ocf::pacemaker:Dummy):	Started node2
+ Clone Set: clone-rsc2 [rsc2]
+     Started: [ node2 ]
+     Stopped: [ rsc2:1 ]
+ rsc1	(ocf::pacemaker:Dummy):	Stopped 
+

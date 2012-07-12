@@ -1,0 +1,83 @@
+
+Current cluster status:
+Online: [ sys2 sys3 ]
+
+ vm1	(ocf::heartbeat:Xen):	Started sys2
+ vm2	(ocf::heartbeat:Xen):	Stopped 
+ vm3	(ocf::heartbeat:Xen):	Stopped 
+ vm4	(ocf::heartbeat:Xen):	Stopped 
+ stonithsys2	(stonith:external/ipmi):	Stopped 
+ stonithsys3	(stonith:external/ipmi):	Started sys2
+ Clone Set: baseclone [basegrp]
+     Started: [ sys2 ]
+     Stopped: [ basegrp:1 ]
+ Clone Set: fs1 [nfs1]
+     Stopped: [ nfs1:0 nfs1:1 ]
+
+Transition Summary:
+ * Restart stonithsys3	(Started sys2)
+ * Start   controld:1	(sys3)
+ * Start   clvmd:1	(sys3)
+ * Start   o2cb:1	(sys3)
+ * Start   iscsi1:1	(sys3)
+ * Start   iscsi2:1	(sys3)
+ * Start   vg1:1	(sys3)
+ * Start   vg2:1	(sys3)
+ * Start   fs2:1	(sys3)
+ * Start   stonithsys2	(sys3)
+
+Executing cluster transition:
+ * Resource action: vm1             monitor on sys3
+ * Resource action: vm2             monitor on sys3
+ * Resource action: vm3             monitor on sys3
+ * Resource action: vm4             monitor on sys3
+ * Resource action: stonithsys3     monitor on sys3
+ * Resource action: controld:1      monitor on sys3
+ * Resource action: clvmd:1         monitor on sys3
+ * Resource action: o2cb:1          monitor on sys3
+ * Resource action: iscsi1:1        monitor on sys3
+ * Resource action: iscsi2:1        monitor on sys3
+ * Resource action: vg1:1           monitor on sys3
+ * Resource action: vg2:1           monitor on sys3
+ * Resource action: fs2:1           monitor on sys3
+ * Pseudo action:   baseclone_start_0
+ * Resource action: nfs1:0          monitor on sys3
+ * Resource action: stonithsys2     monitor on sys3
+ * Pseudo action:   probe_complete
+ * Pseudo action:   load_stopped_sys3
+ * Pseudo action:   load_stopped_sys2
+ * Resource action: stonithsys3     stop on sys2
+ * Resource action: stonithsys3     start on sys2
+ * Resource action: stonithsys3     monitor=15000 on sys2
+ * Pseudo action:   basegrp:1_start_0
+ * Resource action: controld:1      start on sys3
+ * Resource action: clvmd:1         start on sys3
+ * Resource action: o2cb:1          start on sys3
+ * Resource action: iscsi1:1        start on sys3
+ * Resource action: iscsi2:1        start on sys3
+ * Resource action: vg1:1           start on sys3
+ * Resource action: vg2:1           start on sys3
+ * Resource action: fs2:1           start on sys3
+ * Resource action: stonithsys2     start on sys3
+ * Pseudo action:   basegrp:1_running_0
+ * Resource action: controld:1      monitor=10000 on sys3
+ * Resource action: iscsi1:1        monitor=120000 on sys3
+ * Resource action: iscsi2:1        monitor=120000 on sys3
+ * Resource action: fs2:1           monitor=20000 on sys3
+ * Pseudo action:   baseclone_running_0
+ * Resource action: stonithsys2     monitor=15000 on sys3
+
+Revised cluster status:
+Online: [ sys2 sys3 ]
+
+ vm1	(ocf::heartbeat:Xen):	Started sys2
+ vm2	(ocf::heartbeat:Xen):	Stopped 
+ vm3	(ocf::heartbeat:Xen):	Stopped 
+ vm4	(ocf::heartbeat:Xen):	Stopped 
+ stonithsys2	(stonith:external/ipmi):	Started sys3
+ stonithsys3	(stonith:external/ipmi):	Started sys2
+ Clone Set: baseclone [basegrp]
+     Started: [ sys2 sys3 ]
+ Clone Set: fs1 [nfs1]
+     Stopped: [ nfs1:0 nfs1:1 ]
+

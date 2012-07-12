@@ -1,0 +1,35 @@
+
+Current cluster status:
+Online: [ rh44-1 rh44-2 ]
+
+ Resource Group: test
+     resource_1	(ocf::heartbeat:IPaddr):	Started rh44-1
+ Master/Slave Set: ms-sf [grp_ms_sf] (unique)
+     Resource Group: grp_ms_sf:0
+         master_slave_Stateful:0	(ocf::heartbeat:Stateful):	Started rh44-2
+     Resource Group: grp_ms_sf:1
+         master_slave_Stateful:1	(ocf::heartbeat:Stateful):	Started rh44-1
+
+Transition Summary:
+ * Promote master_slave_Stateful:1	(Slave -> Master rh44-1)
+
+Executing cluster transition:
+ * Resource action: master_slave_Stateful:1 cancel=5000 on rh44-1
+ * Pseudo action:   ms-sf_promote_0
+ * Pseudo action:   grp_ms_sf:1_promote_0
+ * Resource action: master_slave_Stateful:1 promote on rh44-1
+ * Pseudo action:   grp_ms_sf:1_promoted_0
+ * Resource action: master_slave_Stateful:1 monitor=6000 on rh44-1
+ * Pseudo action:   ms-sf_promoted_0
+
+Revised cluster status:
+Online: [ rh44-1 rh44-2 ]
+
+ Resource Group: test
+     resource_1	(ocf::heartbeat:IPaddr):	Started rh44-1
+ Master/Slave Set: ms-sf [grp_ms_sf] (unique)
+     Resource Group: grp_ms_sf:0
+         master_slave_Stateful:0	(ocf::heartbeat:Stateful):	Started rh44-2
+     Resource Group: grp_ms_sf:1
+         master_slave_Stateful:1	(ocf::heartbeat:Stateful):	Master rh44-1
+

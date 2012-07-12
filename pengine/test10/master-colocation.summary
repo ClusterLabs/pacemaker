@@ -1,0 +1,32 @@
+
+Current cluster status:
+Online: [ box1 box2 ]
+
+ Master/Slave Set: ms-conntrackd [conntrackd-stateful]
+     Slaves: [ box1 box2 ]
+ Resource Group: virtualips
+     externalip	(ocf::heartbeat:IPaddr2):	Started box2
+     internalip	(ocf::heartbeat:IPaddr2):	Started box2
+     sship	(ocf::heartbeat:IPaddr2):	Started box2
+
+Transition Summary:
+ * Promote conntrackd-stateful:1	(Slave -> Master box2)
+
+Executing cluster transition:
+ * Resource action: conntrackd-stateful:0 monitor=29000 on box1
+ * Pseudo action:   ms-conntrackd_promote_0
+ * Resource action: conntrackd-stateful:1 promote on box2
+ * Pseudo action:   ms-conntrackd_promoted_0
+ * Resource action: conntrackd-stateful:1 monitor=30000 on box2
+
+Revised cluster status:
+Online: [ box1 box2 ]
+
+ Master/Slave Set: ms-conntrackd [conntrackd-stateful]
+     Masters: [ box2 ]
+     Slaves: [ box1 ]
+ Resource Group: virtualips
+     externalip	(ocf::heartbeat:IPaddr2):	Started box2
+     internalip	(ocf::heartbeat:IPaddr2):	Started box2
+     sship	(ocf::heartbeat:IPaddr2):	Started box2
+

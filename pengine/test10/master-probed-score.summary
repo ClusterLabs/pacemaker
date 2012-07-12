@@ -1,0 +1,328 @@
+
+Current cluster status:
+Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
+
+ Master/Slave Set: AdminClone [AdminDrbd]
+     Stopped: [ AdminDrbd:0 AdminDrbd:1 ]
+ CronAmbientTemperature	(ocf::heartbeat:symlink):	Stopped 
+ StonithHypatia	(stonith:fence_nut):	Stopped 
+ StonithOrestes	(stonith:fence_nut):	Stopped 
+ Resource Group: DhcpGroup
+     SymlinkDhcpdConf	(ocf::heartbeat:symlink):	Stopped 
+     SymlinkSysconfigDhcpd	(ocf::heartbeat:symlink):	Stopped 
+     SymlinkDhcpdLeases	(ocf::heartbeat:symlink):	Stopped 
+     Dhcpd	(lsb:dhcpd):	Stopped 
+     DhcpIP	(ocf::heartbeat:IPaddr2):	Stopped 
+ Clone Set: CupsClone [CupsGroup]
+     Stopped: [ CupsGroup:0 CupsGroup:1 ]
+ Clone Set: IPClone [IPGroup] (unique)
+     Resource Group: IPGroup:0
+         ClusterIP:0	(ocf::heartbeat:IPaddr2):	Stopped 
+         ClusterIPLocal:0	(ocf::heartbeat:IPaddr2):	Stopped 
+         ClusterIPSandbox:0	(ocf::heartbeat:IPaddr2):	Stopped 
+     Resource Group: IPGroup:1
+         ClusterIP:1	(ocf::heartbeat:IPaddr2):	Stopped 
+         ClusterIPLocal:1	(ocf::heartbeat:IPaddr2):	Stopped 
+         ClusterIPSandbox:1	(ocf::heartbeat:IPaddr2):	Stopped 
+ Clone Set: LibvirtdClone [LibvirtdGroup]
+     Stopped: [ LibvirtdGroup:0 LibvirtdGroup:1 ]
+ Clone Set: TftpClone [TftpGroup]
+     Stopped: [ TftpGroup:0 TftpGroup:1 ]
+ Clone Set: ExportsClone [ExportsGroup]
+     Stopped: [ ExportsGroup:0 ExportsGroup:1 ]
+ Clone Set: FilesystemClone [FilesystemGroup]
+     Stopped: [ FilesystemGroup:0 FilesystemGroup:1 ]
+ KVM-guest	(ocf::heartbeat:VirtualDomain):	Stopped 
+ Proxy	(ocf::heartbeat:VirtualDomain):	Stopped 
+
+Transition Summary:
+ * Start   AdminDrbd:0	(hypatia-corosync.nevis.columbia.edu)
+ * Promote AdminDrbd:0	(Stopped -> Master hypatia-corosync.nevis.columbia.edu)
+ * Start   AdminDrbd:1	(orestes-corosync.nevis.columbia.edu)
+ * Promote AdminDrbd:1	(Stopped -> Master orestes-corosync.nevis.columbia.edu)
+ * Start   CronAmbientTemperature	(hypatia-corosync.nevis.columbia.edu)
+ * Start   StonithHypatia	(orestes-corosync.nevis.columbia.edu)
+ * Start   StonithOrestes	(hypatia-corosync.nevis.columbia.edu)
+ * Start   SymlinkDhcpdConf	(orestes-corosync.nevis.columbia.edu)
+ * Start   SymlinkSysconfigDhcpd	(orestes-corosync.nevis.columbia.edu)
+ * Start   SymlinkDhcpdLeases	(orestes-corosync.nevis.columbia.edu)
+ * Start   SymlinkUsrShareCups:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   SymlinkCupsdConf:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   Cups:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   SymlinkUsrShareCups:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   SymlinkCupsdConf:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   Cups:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ClusterIP:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ClusterIPLocal:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ClusterIPSandbox:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ClusterIP:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ClusterIPLocal:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ClusterIPSandbox:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   SymlinkEtcLibvirt:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   Libvirtd:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   SymlinkEtcLibvirt:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   Libvirtd:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   SymlinkTftp:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   Xinetd:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   SymlinkTftp:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   Xinetd:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ExportMail:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ExportMailInbox:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ExportMailFolders:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ExportMailForward:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ExportMailProcmailrc:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ExportUsrNevis:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ExportUsrNevisOffsite:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ExportWWW:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   ExportMail:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ExportMailInbox:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ExportMailFolders:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ExportMailForward:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ExportMailProcmailrc:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ExportUsrNevis:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ExportUsrNevisOffsite:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   ExportWWW:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   AdminLvm:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   FSUsrNevis:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   FSVarNevis:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   FSVirtualMachines:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   FSMail:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   FSWork:0	(hypatia-corosync.nevis.columbia.edu)
+ * Start   AdminLvm:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   FSUsrNevis:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   FSVarNevis:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   FSVirtualMachines:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   FSMail:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   FSWork:1	(orestes-corosync.nevis.columbia.edu)
+ * Start   KVM-guest	(hypatia-corosync.nevis.columbia.edu)
+ * Start   Proxy	(orestes-corosync.nevis.columbia.edu)
+
+Executing cluster transition:
+ * Pseudo action:   AdminClone_pre_notify_start_0
+ * Resource action: StonithHypatia  start on orestes-corosync.nevis.columbia.edu
+ * Resource action: StonithOrestes  start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: SymlinkEtcLibvirt:0 monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: Libvirtd:0      monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: Libvirtd:0      monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: SymlinkTftp:0   monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: Xinetd:0        monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: SymlinkTftp:1   monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: Xinetd:1        monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportMail:0    monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportMailInbox:0 monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportMailFolders:0 monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportMailForward:0 monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportMailProcmailrc:0 monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportUsrNevis:0 monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportUsrNevisOffsite:0 monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportWWW:0     monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportMail:1    monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportMailInbox:1 monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportMailFolders:1 monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportMailForward:1 monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportMailProcmailrc:1 monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportUsrNevis:1 monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportUsrNevisOffsite:1 monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportWWW:1     monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: AdminLvm:0      monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSUsrNevis:0    monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSVarNevis:0    monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSVirtualMachines:0 monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSMail:0        monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSWork:0        monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: AdminLvm:1      monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSUsrNevis:1    monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSVarNevis:1    monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSVirtualMachines:1 monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSMail:1        monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSWork:1        monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: KVM-guest       monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: KVM-guest       monitor on hypatia-corosync.nevis.columbia.edu
+ * Resource action: Proxy           monitor on orestes-corosync.nevis.columbia.edu
+ * Resource action: Proxy           monitor on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   probe_complete
+ * Pseudo action:   AdminClone_confirmed-pre_notify_start_0
+ * Pseudo action:   AdminClone_start_0
+ * Resource action: AdminDrbd:0     start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: AdminDrbd:1     start on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   AdminClone_running_0
+ * Pseudo action:   AdminClone_post_notify_running_0
+ * Resource action: AdminDrbd:0     notify on hypatia-corosync.nevis.columbia.edu
+ * Resource action: AdminDrbd:1     notify on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   AdminClone_confirmed-post_notify_running_0
+ * Pseudo action:   AdminClone_pre_notify_promote_0
+ * Resource action: AdminDrbd:0     notify on hypatia-corosync.nevis.columbia.edu
+ * Resource action: AdminDrbd:1     notify on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   AdminClone_confirmed-pre_notify_promote_0
+ * Pseudo action:   AdminClone_promote_0
+ * Resource action: AdminDrbd:0     promote on hypatia-corosync.nevis.columbia.edu
+ * Resource action: AdminDrbd:1     promote on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   AdminClone_promoted_0
+ * Pseudo action:   AdminClone_post_notify_promoted_0
+ * Resource action: AdminDrbd:0     notify on hypatia-corosync.nevis.columbia.edu
+ * Resource action: AdminDrbd:1     notify on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   AdminClone_confirmed-post_notify_promoted_0
+ * Pseudo action:   FilesystemClone_start_0
+ * Resource action: AdminDrbd:0     monitor=59000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: AdminDrbd:1     monitor=59000 on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   FilesystemGroup:0_start_0
+ * Resource action: AdminLvm:0      start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSUsrNevis:0    start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSVarNevis:0    start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSVirtualMachines:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSMail:0        start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSWork:0        start on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   FilesystemGroup:1_start_0
+ * Resource action: AdminLvm:1      start on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSUsrNevis:1    start on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSVarNevis:1    start on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSVirtualMachines:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSMail:1        start on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSWork:1        start on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   FilesystemGroup:0_running_0
+ * Resource action: AdminLvm:0      monitor=30000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSUsrNevis:0    monitor=20000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSVarNevis:0    monitor=20000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSVirtualMachines:0 monitor=20000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSMail:0        monitor=20000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: FSWork:0        monitor=20000 on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   FilesystemGroup:1_running_0
+ * Resource action: AdminLvm:1      monitor=30000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSUsrNevis:1    monitor=20000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSVarNevis:1    monitor=20000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSVirtualMachines:1 monitor=20000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSMail:1        monitor=20000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: FSWork:1        monitor=20000 on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   FilesystemClone_running_0
+ * Resource action: CronAmbientTemperature start on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   DhcpGroup_start_0
+ * Resource action: SymlinkDhcpdConf start on orestes-corosync.nevis.columbia.edu
+ * Resource action: SymlinkSysconfigDhcpd start on orestes-corosync.nevis.columbia.edu
+ * Resource action: SymlinkDhcpdLeases start on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   CupsClone_start_0
+ * Pseudo action:   IPClone_start_0
+ * Pseudo action:   LibvirtdClone_start_0
+ * Pseudo action:   TftpClone_start_0
+ * Pseudo action:   ExportsClone_start_0
+ * Resource action: CronAmbientTemperature monitor=60000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: SymlinkDhcpdConf monitor=60000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: SymlinkSysconfigDhcpd monitor=60000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: SymlinkDhcpdLeases monitor=60000 on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   CupsGroup:0_start_0
+ * Resource action: SymlinkUsrShareCups:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: SymlinkCupsdConf:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: Cups:0          start on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   CupsGroup:1_start_0
+ * Resource action: SymlinkUsrShareCups:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: SymlinkCupsdConf:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: Cups:1          start on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   IPGroup:0_start_0
+ * Resource action: ClusterIP:0     start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ClusterIPLocal:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ClusterIPSandbox:0 start on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   IPGroup:1_start_0
+ * Resource action: ClusterIP:1     start on orestes-corosync.nevis.columbia.edu
+ * Resource action: ClusterIPLocal:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: ClusterIPSandbox:1 start on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   LibvirtdGroup:0_start_0
+ * Resource action: SymlinkEtcLibvirt:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: Libvirtd:0      start on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   LibvirtdGroup:1_start_0
+ * Resource action: SymlinkEtcLibvirt:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: Libvirtd:1      start on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   TftpGroup:0_start_0
+ * Resource action: SymlinkTftp:0   start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: Xinetd:0        start on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   TftpGroup:1_start_0
+ * Resource action: SymlinkTftp:1   start on orestes-corosync.nevis.columbia.edu
+ * Resource action: Xinetd:1        start on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   ExportsGroup:0_start_0
+ * Resource action: ExportMail:0    start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportMailInbox:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportMailFolders:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportMailForward:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportMailProcmailrc:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportUsrNevis:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportUsrNevisOffsite:0 start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ExportWWW:0     start on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   ExportsGroup:1_start_0
+ * Resource action: ExportMail:1    start on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportMailInbox:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportMailFolders:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportMailForward:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportMailProcmailrc:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportUsrNevis:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportUsrNevisOffsite:1 start on orestes-corosync.nevis.columbia.edu
+ * Resource action: ExportWWW:1     start on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   CupsGroup:0_running_0
+ * Resource action: SymlinkUsrShareCups:0 monitor=60000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: SymlinkCupsdConf:0 monitor=60000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: Cups:0          monitor=30000 on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   CupsGroup:1_running_0
+ * Resource action: SymlinkUsrShareCups:1 monitor=60000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: SymlinkCupsdConf:1 monitor=60000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: Cups:1          monitor=30000 on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   CupsClone_running_0
+ * Pseudo action:   IPGroup:0_running_0
+ * Resource action: ClusterIP:0     monitor=30000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ClusterIPLocal:0 monitor=31000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: ClusterIPSandbox:0 monitor=32000 on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   IPGroup:1_running_0
+ * Resource action: ClusterIP:1     monitor=30000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: ClusterIPLocal:1 monitor=31000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: ClusterIPSandbox:1 monitor=32000 on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   IPClone_running_0
+ * Pseudo action:   LibvirtdGroup:0_running_0
+ * Resource action: SymlinkEtcLibvirt:0 monitor=60000 on hypatia-corosync.nevis.columbia.edu
+ * Resource action: Libvirtd:0      monitor=30000 on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   LibvirtdGroup:1_running_0
+ * Resource action: SymlinkEtcLibvirt:1 monitor=60000 on orestes-corosync.nevis.columbia.edu
+ * Resource action: Libvirtd:1      monitor=30000 on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   LibvirtdClone_running_0
+ * Pseudo action:   TftpGroup:0_running_0
+ * Resource action: SymlinkTftp:0   monitor=60000 on hypatia-corosync.nevis.columbia.edu
+ * Pseudo action:   TftpGroup:1_running_0
+ * Resource action: SymlinkTftp:1   monitor=60000 on orestes-corosync.nevis.columbia.edu
+ * Pseudo action:   TftpClone_running_0
+ * Pseudo action:   ExportsGroup:0_running_0
+ * Pseudo action:   ExportsGroup:1_running_0
+ * Pseudo action:   ExportsClone_running_0
+ * Resource action: KVM-guest       start on hypatia-corosync.nevis.columbia.edu
+ * Resource action: Proxy           start on orestes-corosync.nevis.columbia.edu
+
+Revised cluster status:
+Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
+
+ Master/Slave Set: AdminClone [AdminDrbd]
+     Masters: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
+ CronAmbientTemperature	(ocf::heartbeat:symlink):	Started hypatia-corosync.nevis.columbia.edu
+ StonithHypatia	(stonith:fence_nut):	Started orestes-corosync.nevis.columbia.edu
+ StonithOrestes	(stonith:fence_nut):	Started hypatia-corosync.nevis.columbia.edu
+ Resource Group: DhcpGroup
+     SymlinkDhcpdConf	(ocf::heartbeat:symlink):	Started orestes-corosync.nevis.columbia.edu
+     SymlinkSysconfigDhcpd	(ocf::heartbeat:symlink):	Started orestes-corosync.nevis.columbia.edu
+     SymlinkDhcpdLeases	(ocf::heartbeat:symlink):	Started orestes-corosync.nevis.columbia.edu
+     Dhcpd	(lsb:dhcpd):	Stopped 
+     DhcpIP	(ocf::heartbeat:IPaddr2):	Stopped 
+ Clone Set: CupsClone [CupsGroup]
+     Started: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
+ Clone Set: IPClone [IPGroup] (unique)
+     Resource Group: IPGroup:0
+         ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started hypatia-corosync.nevis.columbia.edu
+         ClusterIPLocal:0	(ocf::heartbeat:IPaddr2):	Started hypatia-corosync.nevis.columbia.edu
+         ClusterIPSandbox:0	(ocf::heartbeat:IPaddr2):	Started hypatia-corosync.nevis.columbia.edu
+     Resource Group: IPGroup:1
+         ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started orestes-corosync.nevis.columbia.edu
+         ClusterIPLocal:1	(ocf::heartbeat:IPaddr2):	Started orestes-corosync.nevis.columbia.edu
+         ClusterIPSandbox:1	(ocf::heartbeat:IPaddr2):	Started orestes-corosync.nevis.columbia.edu
+ Clone Set: LibvirtdClone [LibvirtdGroup]
+     Started: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
+ Clone Set: TftpClone [TftpGroup]
+     Started: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
+ Clone Set: ExportsClone [ExportsGroup]
+     Started: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
+ Clone Set: FilesystemClone [FilesystemGroup]
+     Started: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
+ KVM-guest	(ocf::heartbeat:VirtualDomain):	Started hypatia-corosync.nevis.columbia.edu
+ Proxy	(ocf::heartbeat:VirtualDomain):	Started orestes-corosync.nevis.columbia.edu
+

@@ -1,0 +1,41 @@
+
+Current cluster status:
+Online: [ node1 ]
+
+ rsc1	(heartbeat:apache):	Started node1
+ Resource Group: foo
+     rsc2	(heartbeat:apache):	Started node1
+ Resource Group: bar
+     rsc3	(heartbeat:apache):	Started node1 FAILED
+
+Transition Summary:
+ * Restart rsc1	(Started node1)
+ * Restart rsc2	(Started node1)
+ * Recover rsc3	(Started node1)
+
+Executing cluster transition:
+ * Resource action: rsc1            stop on node1
+ * Pseudo action:   foo_stop_0
+ * Resource action: rsc2            stop on node1
+ * Pseudo action:   foo_stopped_0
+ * Pseudo action:   bar_stop_0
+ * Resource action: rsc3            stop on node1
+ * Pseudo action:   all_stopped
+ * Pseudo action:   bar_stopped_0
+ * Pseudo action:   bar_start_0
+ * Resource action: rsc3            start on node1
+ * Pseudo action:   bar_running_0
+ * Resource action: rsc1            start on node1
+ * Pseudo action:   foo_start_0
+ * Resource action: rsc2            start on node1
+ * Pseudo action:   foo_running_0
+
+Revised cluster status:
+Online: [ node1 ]
+
+ rsc1	(heartbeat:apache):	Started node1
+ Resource Group: foo
+     rsc2	(heartbeat:apache):	Started node1
+ Resource Group: bar
+     rsc3	(heartbeat:apache):	Started node1
+

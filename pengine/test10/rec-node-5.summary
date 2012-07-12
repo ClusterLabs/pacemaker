@@ -1,0 +1,26 @@
+
+Current cluster status:
+Node node1 (uuid1): UNCLEAN (offline)
+Online: [ node2 ]
+
+ rsc1	(heartbeat:apache):	Stopped 
+ rsc2	(heartbeat:apache):	Stopped 
+
+Transition Summary:
+ * Start   rsc1	(node2)
+ * Start   rsc2	(node2)
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc2            monitor on node2
+ * Pseudo action:   probe_complete
+ * Resource action: rsc1            start on node2
+ * Resource action: rsc2            start on node2
+
+Revised cluster status:
+Node node1 (uuid1): UNCLEAN (offline)
+Online: [ node2 ]
+
+ rsc1	(heartbeat:apache):	Started node2
+ rsc2	(heartbeat:apache):	Started node2
+

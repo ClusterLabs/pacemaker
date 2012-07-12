@@ -1,0 +1,36 @@
+
+Current cluster status:
+Online: [ redun2 redun1 ]
+
+ Master/Slave Set: shared_storage [prim_shared_storage]
+     Slaves: [ redun2 redun1 ]
+ shared_filesystem	(ocf::heartbeat:Filesystem):	Stopped 
+
+Transition Summary:
+ * Promote prim_shared_storage:0	(Slave -> Master redun2)
+ * Start   shared_filesystem	(redun2)
+
+Executing cluster transition:
+ * Pseudo action:   shared_storage_pre_notify_promote_0
+ * Resource action: prim_shared_storage:0 notify on redun2
+ * Resource action: prim_shared_storage:1 notify on redun1
+ * Pseudo action:   shared_storage_confirmed-pre_notify_promote_0
+ * Pseudo action:   shared_storage_promote_0
+ * Resource action: prim_shared_storage:0 promote on redun2
+ * Pseudo action:   shared_storage_promoted_0
+ * Pseudo action:   shared_storage_post_notify_promoted_0
+ * Resource action: prim_shared_storage:0 notify on redun2
+ * Resource action: prim_shared_storage:1 notify on redun1
+ * Pseudo action:   shared_storage_confirmed-post_notify_promoted_0
+ * Resource action: shared_filesystem start on redun2
+ * Resource action: prim_shared_storage:1 monitor=120000 on redun1
+ * Resource action: shared_filesystem monitor=120000 on redun2
+
+Revised cluster status:
+Online: [ redun2 redun1 ]
+
+ Master/Slave Set: shared_storage [prim_shared_storage]
+     Masters: [ redun2 ]
+     Slaves: [ redun1 ]
+ shared_filesystem	(ocf::heartbeat:Filesystem):	Started redun2
+

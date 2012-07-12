@@ -1,0 +1,43 @@
+
+Current cluster status:
+Online: [ process1a process2b ]
+
+ Master/Slave Set: ms-sf [ms-sf_group] (unique)
+     Resource Group: ms-sf_group:0
+         master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	Started process2b
+         master_slave_procdctl:0	(ocf::heartbeat:procdctl):	Stopped 
+     Resource Group: ms-sf_group:1
+         master_slave_Stateful:1	(ocf::heartbeat:Dummy-statful):	Master process1a
+         master_slave_procdctl:1	(ocf::heartbeat:procdctl):	Master process1a
+
+Transition Summary:
+ * Demote  master_slave_Stateful:1	(Master -> Stopped process1a)
+ * Demote  master_slave_procdctl:1	(Master -> Stopped process1a)
+
+Executing cluster transition:
+ * Pseudo action:   ms-sf_demote_0
+ * Pseudo action:   ms-sf_group:1_demote_0
+ * Resource action: master_slave_Stateful:1 demote on process1a
+ * Resource action: master_slave_procdctl:1 demote on process1a
+ * Pseudo action:   ms-sf_group:1_demoted_0
+ * Pseudo action:   ms-sf_demoted_0
+ * Pseudo action:   ms-sf_stop_0
+ * Pseudo action:   ms-sf_group:1_stop_0
+ * Resource action: master_slave_Stateful:1 stop on process1a
+ * Resource action: master_slave_procdctl:1 stop on process1a
+ * Cluster action:  do_shutdown on process1a
+ * Pseudo action:   all_stopped
+ * Pseudo action:   ms-sf_group:1_stopped_0
+ * Pseudo action:   ms-sf_stopped_0
+
+Revised cluster status:
+Online: [ process1a process2b ]
+
+ Master/Slave Set: ms-sf [ms-sf_group] (unique)
+     Resource Group: ms-sf_group:0
+         master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	Started process2b
+         master_slave_procdctl:0	(ocf::heartbeat:procdctl):	Stopped 
+     Resource Group: ms-sf_group:1
+         master_slave_Stateful:1	(ocf::heartbeat:Dummy-statful):	Stopped 
+         master_slave_procdctl:1	(ocf::heartbeat:procdctl):	Stopped 
+

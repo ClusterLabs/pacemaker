@@ -123,9 +123,13 @@ function do_test {
 
     scores=$io_dir/${base}.scores
     score_output=$io_dir/${base}.scores.pe
+    stderr_output=$io_dir/${base}.stderr
+
+    summary=$io_dir/${base}.summary
+    summary_output=$io_dir/${base}.summary.pe
+
     valgrind_output=$io_dir/${base}.valgrind
     export valgrind_output
-    stderr_output=$io_dir/${base}.stderr
 
     if [ "x$1" = "x--rc" ]; then
 	expected_rc=$2
@@ -150,10 +154,13 @@ function do_test {
     if [ ! -z $single_test ]; then
 	echo CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $*
 	CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $*
+    else
+	CIB_shadow_dir=$io_dir $test_cmd -x $input -S &> $summary_output
     fi
 
     CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* 2> $stderr_output > $score_output
     rc=$?
+
     if [ $rc != $expected_rc ]; then
 	failed "Test returned: $rc";
 	did_fail=1
@@ -222,7 +229,17 @@ function do_test {
 	cp "$output" "$expected"
 	cp "$dot_output" "$dot_expected"
 	cp "$score_output" "$scores"
+	cp "$summary_output" "$summary"
 	info "	Created expected outputs" 
+    fi
+
+    diff $diff_opts $summary $summary_output >/dev/null
+    rc2=$?
+    if [ $rc2 != 0 ]; then
+	failed "summary changed";
+	diff $diff_opts $summary $summary_output 2>/dev/null >> $failed
+	echo "" >> $failed
+	did_fail=1
     fi
 
     diff $diff_opts $dot_expected $dot_output >/dev/null

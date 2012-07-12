@@ -1,0 +1,34 @@
+
+Current cluster status:
+Online: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
+
+ Clone Set: Stinith_Clone_Resource [Stonith_Resource]
+     Started: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
+ Resource Group: GRP_Web_Server
+     PRIM_Web_IP1	(ocf::heartbeat:IPaddr):	Stopped 
+ Clone Set: pingd_Gateway [Res_Pingd_Gateway]
+     Started: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
+ Clone Set: Pingd_Public [Res_Pingd_Public]
+     Started: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
+
+Transition Summary:
+ * Start   PRIM_Web_IP1	(sles11-ha2)
+
+Executing cluster transition:
+ * Pseudo action:   GRP_Web_Server_start_0
+ * Resource action: PRIM_Web_IP1    start on sles11-ha2
+ * Pseudo action:   GRP_Web_Server_running_0
+ * Resource action: PRIM_Web_IP1    monitor=5000 on sles11-ha2
+
+Revised cluster status:
+Online: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
+
+ Clone Set: Stinith_Clone_Resource [Stonith_Resource]
+     Started: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
+ Resource Group: GRP_Web_Server
+     PRIM_Web_IP1	(ocf::heartbeat:IPaddr):	Started sles11-ha2
+ Clone Set: pingd_Gateway [Res_Pingd_Gateway]
+     Started: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
+ Clone Set: Pingd_Public [Res_Pingd_Public]
+     Started: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
+

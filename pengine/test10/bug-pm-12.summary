@@ -1,0 +1,56 @@
+
+Current cluster status:
+Online: [ node-b node-a ]
+
+ Master/Slave Set: ms-sf [group] (unique)
+     Resource Group: group:0
+         stateful-1:0	(ocf::heartbeat:Stateful):	Started node-b
+         stateful-2:0	(ocf::heartbeat:Stateful):	Started node-b
+     Resource Group: group:1
+         stateful-1:1	(ocf::heartbeat:Stateful):	Master node-a
+         stateful-2:1	(ocf::heartbeat:Stateful):	Master node-a
+
+Transition Summary:
+ * Restart stateful-2:0	(Slave node-b)
+ * Restart stateful-2:1	(Master node-a)
+
+Executing cluster transition:
+ * Pseudo action:   ms-sf_demote_0
+ * Pseudo action:   group:1_demote_0
+ * Resource action: stateful-2:1    demote on node-a
+ * Pseudo action:   group:1_demoted_0
+ * Pseudo action:   ms-sf_demoted_0
+ * Pseudo action:   ms-sf_stop_0
+ * Pseudo action:   group:0_stop_0
+ * Resource action: stateful-2:0    stop on node-b
+ * Pseudo action:   group:1_stop_0
+ * Resource action: stateful-2:1    stop on node-a
+ * Pseudo action:   all_stopped
+ * Pseudo action:   group:0_stopped_0
+ * Pseudo action:   group:1_stopped_0
+ * Pseudo action:   ms-sf_stopped_0
+ * Pseudo action:   ms-sf_start_0
+ * Pseudo action:   group:0_start_0
+ * Resource action: stateful-2:0    start on node-b
+ * Pseudo action:   group:1_start_0
+ * Resource action: stateful-2:1    start on node-a
+ * Pseudo action:   group:0_running_0
+ * Pseudo action:   group:1_running_0
+ * Pseudo action:   ms-sf_running_0
+ * Pseudo action:   ms-sf_promote_0
+ * Pseudo action:   group:1_promote_0
+ * Resource action: stateful-2:1    promote on node-a
+ * Pseudo action:   group:1_promoted_0
+ * Pseudo action:   ms-sf_promoted_0
+
+Revised cluster status:
+Online: [ node-b node-a ]
+
+ Master/Slave Set: ms-sf [group] (unique)
+     Resource Group: group:0
+         stateful-1:0	(ocf::heartbeat:Stateful):	Started node-b
+         stateful-2:0	(ocf::heartbeat:Stateful):	Started node-b
+     Resource Group: group:1
+         stateful-1:1	(ocf::heartbeat:Stateful):	Master node-a
+         stateful-2:1	(ocf::heartbeat:Stateful):	Master node-a
+

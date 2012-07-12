@@ -1,0 +1,30 @@
+
+Current cluster status:
+Online: [ hex-13 hex-14 ]
+OFFLINE: [ hex-15 ]
+
+ test-vm	(ocf::heartbeat:Xen):	Started hex-14 FAILED
+ Clone Set: c-clusterfs [dlm]
+     Started: [ hex-13 hex-14 ]
+     Stopped: [ dlm:2 ]
+
+Transition Summary:
+ * Move    test-vm	(Started hex-14 -> hex-13)
+
+Executing cluster transition:
+ * Resource action: test-vm         stop on hex-14
+ * Pseudo action:   load_stopped_hex-15
+ * Pseudo action:   load_stopped_hex-13
+ * Pseudo action:   load_stopped_hex-14
+ * Pseudo action:   all_stopped
+ * Resource action: test-vm         start on hex-13
+
+Revised cluster status:
+Online: [ hex-13 hex-14 ]
+OFFLINE: [ hex-15 ]
+
+ test-vm	(ocf::heartbeat:Xen):	Started hex-13
+ Clone Set: c-clusterfs [dlm]
+     Started: [ hex-13 hex-14 ]
+     Stopped: [ dlm:2 ]
+

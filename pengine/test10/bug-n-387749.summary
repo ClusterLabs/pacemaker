@@ -1,0 +1,59 @@
+
+Current cluster status:
+Online: [ power720-1 power720-2 ]
+OFFLINE: [ power720-4 ]
+
+ Clone Set: export_home_ocfs2_clone_set [export_home_ocfs2] (unique)
+     export_home_ocfs2:0	(ocf::heartbeat:Filesystem):	Stopped 
+     export_home_ocfs2:1	(ocf::heartbeat:Filesystem):	Started power720-2
+     export_home_ocfs2:2	(ocf::heartbeat:Filesystem):	Stopped 
+ Resource Group: group_nfs
+     resource_ipaddr1_single	(ocf::heartbeat:IPaddr):	Started power720-2
+     resource_nfsserver_single	(lsb:nfsserver):	Started power720-2
+
+Transition Summary:
+ * Start   export_home_ocfs2:0	(power720-1)
+ * Move    resource_ipaddr1_single	(Started power720-2 -> power720-1)
+ * Move    resource_nfsserver_single	(Started power720-2 -> power720-1)
+
+Executing cluster transition:
+ * Resource action: export_home_ocfs2:0 monitor on power720-1
+ * Resource action: export_home_ocfs2:1 monitor on power720-1
+ * Resource action: export_home_ocfs2:2 monitor on power720-1
+ * Pseudo action:   export_home_ocfs2_clone_set_pre_notify_start_0
+ * Pseudo action:   group_nfs_stop_0
+ * Resource action: resource_ipaddr1_single monitor on power720-1
+ * Resource action: resource_nfsserver_single monitor on power720-1
+ * Pseudo action:   probe_complete
+ * Resource action: export_home_ocfs2:1 notify on power720-2
+ * Pseudo action:   export_home_ocfs2_clone_set_confirmed-pre_notify_start_0
+ * Pseudo action:   export_home_ocfs2_clone_set_start_0
+ * Resource action: resource_nfsserver_single stop on power720-2
+ * Resource action: export_home_ocfs2:0 start on power720-1
+ * Pseudo action:   export_home_ocfs2_clone_set_running_0
+ * Resource action: resource_ipaddr1_single stop on power720-2
+ * Pseudo action:   all_stopped
+ * Pseudo action:   export_home_ocfs2_clone_set_post_notify_running_0
+ * Pseudo action:   group_nfs_stopped_0
+ * Resource action: export_home_ocfs2:0 notify on power720-1
+ * Resource action: export_home_ocfs2:1 notify on power720-2
+ * Pseudo action:   export_home_ocfs2_clone_set_confirmed-post_notify_running_0
+ * Pseudo action:   group_nfs_start_0
+ * Resource action: resource_ipaddr1_single start on power720-1
+ * Resource action: resource_nfsserver_single start on power720-1
+ * Pseudo action:   group_nfs_running_0
+ * Resource action: resource_ipaddr1_single monitor=5000 on power720-1
+ * Resource action: resource_nfsserver_single monitor=15000 on power720-1
+
+Revised cluster status:
+Online: [ power720-1 power720-2 ]
+OFFLINE: [ power720-4 ]
+
+ Clone Set: export_home_ocfs2_clone_set [export_home_ocfs2] (unique)
+     export_home_ocfs2:0	(ocf::heartbeat:Filesystem):	Started power720-1
+     export_home_ocfs2:1	(ocf::heartbeat:Filesystem):	Started power720-2
+     export_home_ocfs2:2	(ocf::heartbeat:Filesystem):	Stopped 
+ Resource Group: group_nfs
+     resource_ipaddr1_single	(ocf::heartbeat:IPaddr):	Started power720-1
+     resource_nfsserver_single	(lsb:nfsserver):	Started power720-1
+

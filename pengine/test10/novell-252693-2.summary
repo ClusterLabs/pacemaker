@@ -1,0 +1,99 @@
+
+Current cluster status:
+Online: [ node2 node1 ]
+
+ Clone Set: stonithcloneset [stonithclone]
+     Started: [ node2 ]
+     Stopped: [ stonithclone:1 ]
+ Clone Set: evmsdcloneset [evmsdclone]
+     Started: [ node2 ]
+     Stopped: [ evmsdclone:1 ]
+ Clone Set: evmscloneset [evmsclone]
+     Started: [ node2 ]
+     Stopped: [ evmsclone:1 ]
+ Clone Set: imagestorecloneset [imagestoreclone]
+     Started: [ node2 ]
+     Stopped: [ imagestoreclone:1 ]
+ Clone Set: configstorecloneset [configstoreclone]
+     Started: [ node2 ]
+     Stopped: [ configstoreclone:1 ]
+ sles10	(ocf::heartbeat:Xen):	Started node2
+
+Transition Summary:
+ * Start   stonithclone:1	(node1)
+ * Start   evmsdclone:1	(node1)
+ * Start   evmsclone:1	(node1)
+ * Start   imagestoreclone:1	(node1)
+ * Start   configstoreclone:1	(node1)
+ * Migrate sles10	(Started node2 -> node1)
+
+Executing cluster transition:
+ * Resource action: stonithclone:1  monitor on node1
+ * Pseudo action:   stonithcloneset_start_0
+ * Resource action: evmsdclone:1    monitor on node1
+ * Pseudo action:   evmsdcloneset_start_0
+ * Resource action: evmsclone:1     monitor on node1
+ * Pseudo action:   evmscloneset_pre_notify_start_0
+ * Resource action: imagestoreclone:1 monitor on node1
+ * Pseudo action:   imagestorecloneset_pre_notify_start_0
+ * Resource action: configstoreclone:1 monitor on node1
+ * Pseudo action:   configstorecloneset_pre_notify_start_0
+ * Resource action: sles10          monitor on node1
+ * Pseudo action:   probe_complete
+ * Resource action: stonithclone:1  start on node1
+ * Pseudo action:   stonithcloneset_running_0
+ * Resource action: evmsdclone:1    start on node1
+ * Pseudo action:   evmsdcloneset_running_0
+ * Resource action: evmsclone:0     notify on node2
+ * Pseudo action:   evmscloneset_confirmed-pre_notify_start_0
+ * Pseudo action:   evmscloneset_start_0
+ * Resource action: imagestoreclone:0 notify on node2
+ * Pseudo action:   imagestorecloneset_confirmed-pre_notify_start_0
+ * Resource action: configstoreclone:0 notify on node2
+ * Pseudo action:   configstorecloneset_confirmed-pre_notify_start_0
+ * Resource action: stonithclone:1  monitor=5000 on node1
+ * Resource action: evmsdclone:1    monitor=5000 on node1
+ * Resource action: evmsclone:1     start on node1
+ * Pseudo action:   evmscloneset_running_0
+ * Pseudo action:   evmscloneset_post_notify_running_0
+ * Resource action: evmsclone:0     notify on node2
+ * Resource action: evmsclone:1     notify on node1
+ * Pseudo action:   evmscloneset_confirmed-post_notify_running_0
+ * Pseudo action:   imagestorecloneset_start_0
+ * Pseudo action:   configstorecloneset_start_0
+ * Resource action: imagestoreclone:1 start on node1
+ * Pseudo action:   imagestorecloneset_running_0
+ * Resource action: configstoreclone:1 start on node1
+ * Pseudo action:   configstorecloneset_running_0
+ * Pseudo action:   imagestorecloneset_post_notify_running_0
+ * Pseudo action:   configstorecloneset_post_notify_running_0
+ * Resource action: imagestoreclone:0 notify on node2
+ * Resource action: imagestoreclone:1 notify on node1
+ * Pseudo action:   imagestorecloneset_confirmed-post_notify_running_0
+ * Resource action: configstoreclone:0 notify on node2
+ * Resource action: configstoreclone:1 notify on node1
+ * Pseudo action:   configstorecloneset_confirmed-post_notify_running_0
+ * Resource action: sles10          migrate_to on node2
+ * Resource action: imagestoreclone:1 monitor=20000 on node1
+ * Resource action: configstoreclone:1 monitor=20000 on node1
+ * Resource action: sles10          migrate_from on node1
+ * Resource action: sles10          stop on node2
+ * Pseudo action:   all_stopped
+ * Pseudo action:   sles10_start_0
+ * Resource action: sles10          monitor=10000 on node1
+
+Revised cluster status:
+Online: [ node2 node1 ]
+
+ Clone Set: stonithcloneset [stonithclone]
+     Started: [ node2 node1 ]
+ Clone Set: evmsdcloneset [evmsdclone]
+     Started: [ node2 node1 ]
+ Clone Set: evmscloneset [evmsclone]
+     Started: [ node2 node1 ]
+ Clone Set: imagestorecloneset [imagestoreclone]
+     Started: [ node2 node1 ]
+ Clone Set: configstorecloneset [configstoreclone]
+     Started: [ node2 node1 ]
+ sles10	(ocf::heartbeat:Xen):	Started node1
+

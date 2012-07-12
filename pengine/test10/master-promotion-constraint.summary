@@ -1,0 +1,32 @@
+
+Current cluster status:
+Online: [ hex-13 hex-14 ]
+
+ fencing-sbd	(stonith:external/sbd):	Started hex-13
+ Resource Group: g0
+     d0	(ocf::pacemaker:Dummy):	Stopped 
+     d1	(ocf::pacemaker:Dummy):	Stopped 
+ Master/Slave Set: ms0 [s0]
+     Masters: [ hex-14 ]
+     Slaves: [ hex-13 ]
+
+Transition Summary:
+ * Demote  s0:1	(Master -> Slave hex-14)
+
+Executing cluster transition:
+ * Resource action: s0:1            cancel=20000 on hex-14
+ * Pseudo action:   ms0_demote_0
+ * Resource action: s0:1            demote on hex-14
+ * Pseudo action:   ms0_demoted_0
+ * Resource action: s0:1            monitor=21000 on hex-14
+
+Revised cluster status:
+Online: [ hex-13 hex-14 ]
+
+ fencing-sbd	(stonith:external/sbd):	Started hex-13
+ Resource Group: g0
+     d0	(ocf::pacemaker:Dummy):	Stopped 
+     d1	(ocf::pacemaker:Dummy):	Stopped 
+ Master/Slave Set: ms0 [s0]
+     Slaves: [ hex-13 hex-14 ]
+

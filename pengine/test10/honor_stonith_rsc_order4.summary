@@ -1,0 +1,29 @@
+
+Current cluster status:
+Online: [ fc16-builder ]
+
+ S_A	(stonith:fence_xvm):	Stopped 
+ S_B	(stonith:fence_xvm):	Stopped 
+ A	(ocf::pacemaker:Dummy):	Stopped 
+
+Transition Summary:
+ * Start   S_A	(fc16-builder)
+ * Start   S_B	(fc16-builder)
+ * Start   A	(fc16-builder)
+
+Executing cluster transition:
+ * Resource action: S_A             monitor on fc16-builder
+ * Resource action: S_B             monitor on fc16-builder
+ * Resource action: A               monitor on fc16-builder
+ * Pseudo action:   probe_complete
+ * Resource action: S_B             start on fc16-builder
+ * Resource action: A               start on fc16-builder
+ * Resource action: S_A             start on fc16-builder
+
+Revised cluster status:
+Online: [ fc16-builder ]
+
+ S_A	(stonith:fence_xvm):	Started fc16-builder
+ S_B	(stonith:fence_xvm):	Started fc16-builder
+ A	(ocf::pacemaker:Dummy):	Started fc16-builder
+

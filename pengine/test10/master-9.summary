@@ -1,0 +1,99 @@
+
+Current cluster status:
+Node test02 (f75e684a-be1e-4036-89e5-a14f8dcdc947): UNCLEAN (offline)
+Node sgi2 (619e8a37-147a-4782-ac11-46afad7c32b8): UNCLEAN (offline)
+Online: [ va1 ibm1 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
+ Resource Group: group-1
+     ocf_127.0.0.11	(ocf::heartbeat:IPaddr):	Stopped 
+     heartbeat_127.0.0.12	(heartbeat:IPaddr):	Stopped 
+     ocf_127.0.0.13	(ocf::heartbeat:IPaddr):	Stopped 
+ lsb_dummy	(lsb:/usr/lib64/heartbeat/cts/LSBDummy):	Stopped 
+ rsc_sgi2	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_ibm1	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_va1	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_test02	(ocf::heartbeat:IPaddr):	Stopped 
+ Clone Set: DoFencing [child_DoFencing] (unique)
+     child_DoFencing:0	(stonith:ssh):	Started va1
+     child_DoFencing:1	(stonith:ssh):	Started ibm1
+     child_DoFencing:2	(stonith:ssh):	Stopped 
+     child_DoFencing:3	(stonith:ssh):	Stopped 
+ Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
+     ocf_msdummy:0	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:1	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:2	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:3	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:4	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:5	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:6	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:7	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+
+Transition Summary:
+ * Start   DcIPaddr	(va1 - blocked)
+ * Start   ocf_127.0.0.11	(va1 - blocked)
+ * Start   heartbeat_127.0.0.12	(va1 - blocked)
+ * Start   ocf_127.0.0.13	(va1 - blocked)
+ * Start   lsb_dummy	(va1 - blocked)
+ * Start   rsc_sgi2	(va1 - blocked)
+ * Start   rsc_ibm1	(va1 - blocked)
+ * Start   rsc_va1	(va1 - blocked)
+ * Start   rsc_test02	(va1 - blocked)
+ * Stop    child_DoFencing:1	(ibm1)
+ * Start   ocf_msdummy:0	(va1 - blocked)
+ * Start   ocf_msdummy:1	(va1 - blocked)
+
+Executing cluster transition:
+ * Resource action: child_DoFencing:1 monitor on va1
+ * Resource action: child_DoFencing:2 monitor on ibm1
+ * Resource action: child_DoFencing:2 monitor on va1
+ * Resource action: child_DoFencing:3 monitor on ibm1
+ * Resource action: child_DoFencing:3 monitor on va1
+ * Pseudo action:   DoFencing_stop_0
+ * Resource action: ocf_msdummy:2   monitor on ibm1
+ * Resource action: ocf_msdummy:2   monitor on va1
+ * Resource action: ocf_msdummy:3   monitor on ibm1
+ * Resource action: ocf_msdummy:3   monitor on va1
+ * Resource action: ocf_msdummy:4   monitor on ibm1
+ * Resource action: ocf_msdummy:4   monitor on va1
+ * Resource action: ocf_msdummy:5   monitor on ibm1
+ * Resource action: ocf_msdummy:5   monitor on va1
+ * Resource action: ocf_msdummy:6   monitor on ibm1
+ * Resource action: ocf_msdummy:6   monitor on va1
+ * Resource action: ocf_msdummy:7   monitor on ibm1
+ * Resource action: ocf_msdummy:7   monitor on va1
+ * Pseudo action:   probe_complete
+ * Resource action: child_DoFencing:1 stop on ibm1
+ * Pseudo action:   DoFencing_stopped_0
+ * Cluster action:  do_shutdown on ibm1
+
+Revised cluster status:
+Node test02 (f75e684a-be1e-4036-89e5-a14f8dcdc947): UNCLEAN (offline)
+Node sgi2 (619e8a37-147a-4782-ac11-46afad7c32b8): UNCLEAN (offline)
+Online: [ va1 ibm1 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
+ Resource Group: group-1
+     ocf_127.0.0.11	(ocf::heartbeat:IPaddr):	Stopped 
+     heartbeat_127.0.0.12	(heartbeat:IPaddr):	Stopped 
+     ocf_127.0.0.13	(ocf::heartbeat:IPaddr):	Stopped 
+ lsb_dummy	(lsb:/usr/lib64/heartbeat/cts/LSBDummy):	Stopped 
+ rsc_sgi2	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_ibm1	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_va1	(ocf::heartbeat:IPaddr):	Stopped 
+ rsc_test02	(ocf::heartbeat:IPaddr):	Stopped 
+ Clone Set: DoFencing [child_DoFencing] (unique)
+     child_DoFencing:0	(stonith:ssh):	Started va1
+     child_DoFencing:1	(stonith:ssh):	Stopped 
+     child_DoFencing:2	(stonith:ssh):	Stopped 
+     child_DoFencing:3	(stonith:ssh):	Stopped 
+ Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
+     ocf_msdummy:0	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:1	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:2	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:3	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:4	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:5	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:6	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:7	(ocf::heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	Stopped 
+

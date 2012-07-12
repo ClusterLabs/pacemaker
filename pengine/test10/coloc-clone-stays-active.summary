@@ -1,0 +1,206 @@
+
+Current cluster status:
+Online: [ s01-1 s01-0 ]
+
+ stonith-s01-0	(stonith:external/ipmi):	Started s01-1
+ stonith-s01-1	(stonith:external/ipmi):	Started s01-0
+ Resource Group: iscsi-pool-0-target-all
+     iscsi-pool-0-target	(ocf::vds-ok:iSCSITarget):	Started s01-0
+     iscsi-pool-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Started s01-0
+ Resource Group: iscsi-pool-0-vips
+     vip-235	(ocf::heartbeat:IPaddr2):	Started s01-0
+     vip-236	(ocf::heartbeat:IPaddr2):	Started s01-0
+ Resource Group: iscsi-pool-1-target-all
+     iscsi-pool-1-target	(ocf::vds-ok:iSCSITarget):	Started s01-1
+     iscsi-pool-1-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Started s01-1
+ Resource Group: iscsi-pool-1-vips
+     vip-237	(ocf::heartbeat:IPaddr2):	Started s01-1
+     vip-238	(ocf::heartbeat:IPaddr2):	Started s01-1
+ Master/Slave Set: ms-drbd-pool-0 [drbd-pool-0]
+     Masters: [ s01-0 ]
+     Slaves: [ s01-1 ]
+ Master/Slave Set: ms-drbd-pool-1 [drbd-pool-1]
+     Masters: [ s01-1 ]
+     Slaves: [ s01-0 ]
+ Master/Slave Set: ms-iscsi-pool-0-vips-fw [iscsi-pool-0-vips-fw]
+     Masters: [ s01-0 ]
+     Slaves: [ s01-1 ]
+ Master/Slave Set: ms-iscsi-pool-1-vips-fw [iscsi-pool-1-vips-fw]
+     Masters: [ s01-1 ]
+     Slaves: [ s01-0 ]
+ Clone Set: cl-o2cb [o2cb]
+     Stopped: [ o2cb:0 o2cb:1 ]
+ Master/Slave Set: ms-drbd-s01-service [drbd-s01-service]
+     Masters: [ s01-1 s01-0 ]
+ Clone Set: cl-s01-service-fs [s01-service-fs]
+     Started: [ s01-1 s01-0 ]
+ Clone Set: cl-ietd [ietd]
+     Started: [ s01-0 s01-1 ]
+ Clone Set: cl-dhcpd [dhcpd]
+     Stopped: [ dhcpd:0 dhcpd:1 ]
+ Resource Group: http-server
+     vip-233	(ocf::heartbeat:IPaddr2):	Started s01-0
+     nginx	(lsb:nginx):	Stopped 
+ Master/Slave Set: ms-drbd-s01-logs [drbd-s01-logs]
+     Masters: [ s01-1 s01-0 ]
+ Clone Set: cl-s01-logs-fs [s01-logs-fs]
+     Started: [ s01-0 s01-1 ]
+ Resource Group: syslog-server
+     vip-234	(ocf::heartbeat:IPaddr2):	Started s01-1
+     syslog-ng	(ocf::heartbeat:syslog-ng):	Started s01-1
+ Resource Group: tftp-server
+     vip-232	(ocf::heartbeat:IPaddr2):	Stopped 
+     tftpd	(ocf::heartbeat:Xinetd):	Stopped 
+ Clone Set: cl-xinetd [xinetd]
+     Started: [ s01-0 s01-1 ]
+ Clone Set: cl-ospf-routing [ospf-routing]
+     Started: [ s01-0 s01-1 ]
+ Clone Set: connected-outer [ping-bmc-and-switch]
+     Started: [ s01-0 s01-1 ]
+ Resource Group: iscsi-vds-dom0-stateless-0-target-all
+     iscsi-vds-dom0-stateless-0-target	(ocf::vds-ok:iSCSITarget):	Stopped 
+     iscsi-vds-dom0-stateless-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Stopped 
+ Resource Group: iscsi-vds-dom0-stateless-0-vips
+     vip-227	(ocf::heartbeat:IPaddr2):	Stopped 
+     vip-228	(ocf::heartbeat:IPaddr2):	Stopped 
+ Master/Slave Set: ms-drbd-vds-dom0-stateless-0 [drbd-vds-dom0-stateless-0]
+     Masters: [ s01-0 ]
+     Slaves: [ s01-1 ]
+ Master/Slave Set: ms-iscsi-vds-dom0-stateless-0-vips-fw [iscsi-vds-dom0-stateless-0-vips-fw]
+     Slaves: [ s01-0 s01-1 ]
+ Clone Set: cl-dlm [dlm]
+     Started: [ s01-0 s01-1 ]
+ Master/Slave Set: ms-drbd-vds-tftpboot [drbd-vds-tftpboot]
+     Masters: [ s01-1 s01-0 ]
+ Clone Set: cl-vds-tftpboot-fs [vds-tftpboot-fs]
+     Stopped: [ vds-tftpboot-fs:0 vds-tftpboot-fs:1 ]
+ Clone Set: cl-gfs2 [gfs2]
+     Started: [ s01-0 s01-1 ]
+ Master/Slave Set: ms-drbd-vds-http [drbd-vds-http]
+     Masters: [ s01-1 s01-0 ]
+ Clone Set: cl-vds-http-fs [vds-http-fs]
+     Started: [ s01-1 s01-0 ]
+ Clone Set: cl-clvmd [clvmd]
+     Started: [ s01-1 s01-0 ]
+ Master/Slave Set: ms-drbd-s01-vm-data [drbd-s01-vm-data]
+     Masters: [ s01-1 s01-0 ]
+ Clone Set: cl-s01-vm-data-metadata-fs [s01-vm-data-metadata-fs]
+     Started: [ s01-1 s01-0 ]
+ Clone Set: cl-vg-s01-vm-data [vg-s01-vm-data]
+     Started: [ s01-1 s01-0 ]
+ mgmt-vm	(ocf::vds-ok:VirtualDomain):	Started s01-0
+ Clone Set: cl-drbdlinks-s01-service [drbdlinks-s01-service]
+     Started: [ s01-1 s01-0 ]
+ Clone Set: cl-libvirtd [libvirtd]
+     Started: [ s01-1 s01-0 ]
+ Clone Set: cl-s01-vm-data-storage-pool [s01-vm-data-storage-pool]
+     Started: [ s01-1 s01-0 ]
+
+Transition Summary:
+ * Migrate mgmt-vm	(Started s01-0 -> s01-1)
+
+Executing cluster transition:
+ * Resource action: mgmt-vm         migrate_to on s01-0
+ * Resource action: mgmt-vm         migrate_from on s01-1
+ * Resource action: mgmt-vm         stop on s01-0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   mgmt-vm_start_0
+ * Resource action: mgmt-vm         monitor=10000 on s01-1
+
+Revised cluster status:
+Online: [ s01-1 s01-0 ]
+
+ stonith-s01-0	(stonith:external/ipmi):	Started s01-1
+ stonith-s01-1	(stonith:external/ipmi):	Started s01-0
+ Resource Group: iscsi-pool-0-target-all
+     iscsi-pool-0-target	(ocf::vds-ok:iSCSITarget):	Started s01-0
+     iscsi-pool-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Started s01-0
+ Resource Group: iscsi-pool-0-vips
+     vip-235	(ocf::heartbeat:IPaddr2):	Started s01-0
+     vip-236	(ocf::heartbeat:IPaddr2):	Started s01-0
+ Resource Group: iscsi-pool-1-target-all
+     iscsi-pool-1-target	(ocf::vds-ok:iSCSITarget):	Started s01-1
+     iscsi-pool-1-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Started s01-1
+ Resource Group: iscsi-pool-1-vips
+     vip-237	(ocf::heartbeat:IPaddr2):	Started s01-1
+     vip-238	(ocf::heartbeat:IPaddr2):	Started s01-1
+ Master/Slave Set: ms-drbd-pool-0 [drbd-pool-0]
+     Masters: [ s01-0 ]
+     Slaves: [ s01-1 ]
+ Master/Slave Set: ms-drbd-pool-1 [drbd-pool-1]
+     Masters: [ s01-1 ]
+     Slaves: [ s01-0 ]
+ Master/Slave Set: ms-iscsi-pool-0-vips-fw [iscsi-pool-0-vips-fw]
+     Masters: [ s01-0 ]
+     Slaves: [ s01-1 ]
+ Master/Slave Set: ms-iscsi-pool-1-vips-fw [iscsi-pool-1-vips-fw]
+     Masters: [ s01-1 ]
+     Slaves: [ s01-0 ]
+ Clone Set: cl-o2cb [o2cb]
+     Stopped: [ o2cb:0 o2cb:1 ]
+ Master/Slave Set: ms-drbd-s01-service [drbd-s01-service]
+     Masters: [ s01-1 s01-0 ]
+ Clone Set: cl-s01-service-fs [s01-service-fs]
+     Started: [ s01-1 s01-0 ]
+ Clone Set: cl-ietd [ietd]
+     Started: [ s01-0 s01-1 ]
+ Clone Set: cl-dhcpd [dhcpd]
+     Stopped: [ dhcpd:0 dhcpd:1 ]
+ Resource Group: http-server
+     vip-233	(ocf::heartbeat:IPaddr2):	Started s01-0
+     nginx	(lsb:nginx):	Stopped 
+ Master/Slave Set: ms-drbd-s01-logs [drbd-s01-logs]
+     Masters: [ s01-1 s01-0 ]
+ Clone Set: cl-s01-logs-fs [s01-logs-fs]
+     Started: [ s01-0 s01-1 ]
+ Resource Group: syslog-server
+     vip-234	(ocf::heartbeat:IPaddr2):	Started s01-1
+     syslog-ng	(ocf::heartbeat:syslog-ng):	Started s01-1
+ Resource Group: tftp-server
+     vip-232	(ocf::heartbeat:IPaddr2):	Stopped 
+     tftpd	(ocf::heartbeat:Xinetd):	Stopped 
+ Clone Set: cl-xinetd [xinetd]
+     Started: [ s01-0 s01-1 ]
+ Clone Set: cl-ospf-routing [ospf-routing]
+     Started: [ s01-0 s01-1 ]
+ Clone Set: connected-outer [ping-bmc-and-switch]
+     Started: [ s01-0 s01-1 ]
+ Resource Group: iscsi-vds-dom0-stateless-0-target-all
+     iscsi-vds-dom0-stateless-0-target	(ocf::vds-ok:iSCSITarget):	Stopped 
+     iscsi-vds-dom0-stateless-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Stopped 
+ Resource Group: iscsi-vds-dom0-stateless-0-vips
+     vip-227	(ocf::heartbeat:IPaddr2):	Stopped 
+     vip-228	(ocf::heartbeat:IPaddr2):	Stopped 
+ Master/Slave Set: ms-drbd-vds-dom0-stateless-0 [drbd-vds-dom0-stateless-0]
+     Masters: [ s01-0 ]
+     Slaves: [ s01-1 ]
+ Master/Slave Set: ms-iscsi-vds-dom0-stateless-0-vips-fw [iscsi-vds-dom0-stateless-0-vips-fw]
+     Slaves: [ s01-0 s01-1 ]
+ Clone Set: cl-dlm [dlm]
+     Started: [ s01-0 s01-1 ]
+ Master/Slave Set: ms-drbd-vds-tftpboot [drbd-vds-tftpboot]
+     Masters: [ s01-1 s01-0 ]
+ Clone Set: cl-vds-tftpboot-fs [vds-tftpboot-fs]
+     Stopped: [ vds-tftpboot-fs:0 vds-tftpboot-fs:1 ]
+ Clone Set: cl-gfs2 [gfs2]
+     Started: [ s01-0 s01-1 ]
+ Master/Slave Set: ms-drbd-vds-http [drbd-vds-http]
+     Masters: [ s01-1 s01-0 ]
+ Clone Set: cl-vds-http-fs [vds-http-fs]
+     Started: [ s01-1 s01-0 ]
+ Clone Set: cl-clvmd [clvmd]
+     Started: [ s01-1 s01-0 ]
+ Master/Slave Set: ms-drbd-s01-vm-data [drbd-s01-vm-data]
+     Masters: [ s01-1 s01-0 ]
+ Clone Set: cl-s01-vm-data-metadata-fs [s01-vm-data-metadata-fs]
+     Started: [ s01-1 s01-0 ]
+ Clone Set: cl-vg-s01-vm-data [vg-s01-vm-data]
+     Started: [ s01-1 s01-0 ]
+ mgmt-vm	(ocf::vds-ok:VirtualDomain):	Started s01-1
+ Clone Set: cl-drbdlinks-s01-service [drbdlinks-s01-service]
+     Started: [ s01-1 s01-0 ]
+ Clone Set: cl-libvirtd [libvirtd]
+     Started: [ s01-1 s01-0 ]
+ Clone Set: cl-s01-vm-data-storage-pool [s01-vm-data-storage-pool]
+     Started: [ s01-1 s01-0 ]
+

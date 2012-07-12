@@ -1,0 +1,18 @@
+
+Current cluster status:
+Online: [ node1 node2 node3 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Started node1
+
+Transition Summary:
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on node3
+ * Pseudo action:   probe_complete
+ * Resource action: rsc1            monitor=20000 on node3
+
+Revised cluster status:
+Online: [ node1 node2 node3 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Started node1
+

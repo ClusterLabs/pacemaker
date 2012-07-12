@@ -1,0 +1,38 @@
+
+Current cluster status:
+Online: [ alice.demo bob.demo ]
+
+ dummy1	(ocf::heartbeat:Dummy):	Stopped 
+ dummy2	(ocf::heartbeat:Dummy):	Stopped 
+ Clone Set: cl_dummy [dummy]
+     Stopped: [ dummy:0 dummy:1 ]
+
+Transition Summary:
+ * Start   dummy1	(alice.demo)
+ * Start   dummy2	(bob.demo)
+ * Start   dummy:0	(alice.demo)
+ * Start   dummy:1	(bob.demo)
+
+Executing cluster transition:
+ * Resource action: dummy1          monitor on bob.demo
+ * Resource action: dummy1          monitor on alice.demo
+ * Resource action: dummy2          monitor on bob.demo
+ * Resource action: dummy2          monitor on alice.demo
+ * Resource action: dummy:0         monitor on alice.demo
+ * Resource action: dummy:1         monitor on bob.demo
+ * Pseudo action:   cl_dummy_start_0
+ * Pseudo action:   probe_complete
+ * Resource action: dummy1          start on alice.demo
+ * Resource action: dummy2          start on bob.demo
+ * Resource action: dummy:0         start on alice.demo
+ * Resource action: dummy:1         start on bob.demo
+ * Pseudo action:   cl_dummy_running_0
+
+Revised cluster status:
+Online: [ alice.demo bob.demo ]
+
+ dummy1	(ocf::heartbeat:Dummy):	Started alice.demo
+ dummy2	(ocf::heartbeat:Dummy):	Started bob.demo
+ Clone Set: cl_dummy [dummy]
+     Started: [ alice.demo bob.demo ]
+

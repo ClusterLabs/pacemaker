@@ -1,0 +1,23 @@
+
+Current cluster status:
+Online: [ lenny-a lenny-b ]
+
+ Resource Group: grp_1
+     res_Dummy_1	(ocf::heartbeat:Dummy):	Started lenny-b
+     res_Dummy_2	(ocf::heartbeat:Dummy):	Started lenny-b (unmanaged)
+ res_Dummy_3	(ocf::heartbeat:Dummy):	Started lenny-a
+
+Transition Summary:
+
+Executing cluster transition:
+ * Resource action: res_Dummy_1     cancel=10000 on lenny-b
+ * Resource action: res_Dummy_3     cancel=10000 on lenny-a
+
+Revised cluster status:
+Online: [ lenny-a lenny-b ]
+
+ Resource Group: grp_1
+     res_Dummy_1	(ocf::heartbeat:Dummy):	Started lenny-b
+     res_Dummy_2	(ocf::heartbeat:Dummy):	Started lenny-b (unmanaged)
+ res_Dummy_3	(ocf::heartbeat:Dummy):	Started lenny-a
+

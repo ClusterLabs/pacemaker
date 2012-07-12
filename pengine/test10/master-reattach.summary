@@ -1,0 +1,32 @@
+
+Current cluster status:
+Online: [ dktest1 dktest2 ]
+
+ Master/Slave Set: ms-drbd1 [drbd1] (unmanaged)
+     drbd1:0	(ocf::heartbeat:drbd):	Master dktest1 (unmanaged)
+     drbd1:1	(ocf::heartbeat:drbd):	Slave dktest2 (unmanaged)
+ Resource Group: apache
+     apache-vip	(ocf::heartbeat:IPaddr2):	Started dktest1 (unmanaged)
+     mount	(ocf::heartbeat:Filesystem):	Started dktest1 (unmanaged)
+     webserver	(ocf::heartbeat:apache):	Started dktest1 (unmanaged)
+
+Transition Summary:
+
+Executing cluster transition:
+ * Resource action: drbd1:0         monitor=10000 on dktest1
+ * Resource action: drbd1:0         monitor=11000 on dktest2
+ * Resource action: apache-vip      monitor=60000 on dktest1
+ * Resource action: mount           monitor=10000 on dktest1
+ * Resource action: webserver       monitor=30000 on dktest1
+
+Revised cluster status:
+Online: [ dktest1 dktest2 ]
+
+ Master/Slave Set: ms-drbd1 [drbd1] (unmanaged)
+     drbd1:0	(ocf::heartbeat:drbd):	Master dktest1 (unmanaged)
+     drbd1:1	(ocf::heartbeat:drbd):	Slave dktest2 (unmanaged)
+ Resource Group: apache
+     apache-vip	(ocf::heartbeat:IPaddr2):	Started dktest1 (unmanaged)
+     mount	(ocf::heartbeat:Filesystem):	Started dktest1 (unmanaged)
+     webserver	(ocf::heartbeat:apache):	Started dktest1 (unmanaged)
+

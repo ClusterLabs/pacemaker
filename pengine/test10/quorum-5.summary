@@ -1,0 +1,34 @@
+
+Current cluster status:
+Node hadev1 (6125a0df-456a-4395-829a-418e9a380d36): UNCLEAN (offline)
+Node hadev3 (879e65f8-4b38-4c56-9552-4752ad436669): UNCLEAN (offline)
+Online: [ hadev2 ]
+
+ Resource Group: group1
+     child_DoFencing_1	(stonith:ssh):	Stopped 
+     child_DoFencing_2	(stonith:ssh):	Stopped 
+
+Transition Summary:
+ * Start   child_DoFencing_1	(hadev2)
+ * Start   child_DoFencing_2	(hadev2)
+
+Executing cluster transition:
+ * Pseudo action:   group1_start_0
+ * Resource action: child_DoFencing_1 monitor on hadev2
+ * Resource action: child_DoFencing_2 monitor on hadev2
+ * Pseudo action:   probe_complete
+ * Resource action: child_DoFencing_1 start on hadev2
+ * Resource action: child_DoFencing_2 start on hadev2
+ * Pseudo action:   group1_running_0
+ * Resource action: child_DoFencing_1 monitor=5000 on hadev2
+ * Resource action: child_DoFencing_2 monitor=5000 on hadev2
+
+Revised cluster status:
+Node hadev1 (6125a0df-456a-4395-829a-418e9a380d36): UNCLEAN (offline)
+Node hadev3 (879e65f8-4b38-4c56-9552-4752ad436669): UNCLEAN (offline)
+Online: [ hadev2 ]
+
+ Resource Group: group1
+     child_DoFencing_1	(stonith:ssh):	Started hadev2
+     child_DoFencing_2	(stonith:ssh):	Started hadev2
+

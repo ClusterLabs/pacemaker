@@ -1,0 +1,21 @@
+
+Current cluster status:
+Node node1: standby
+Online: [ node2 ]
+
+ rsc3	(heartbeat:apache):	Started node2 FAILED
+
+Transition Summary:
+ * Recover rsc3	(Started node2)
+
+Executing cluster transition:
+ * Resource action: rsc3            stop on node2
+ * Pseudo action:   all_stopped
+ * Resource action: rsc3            start on node2
+
+Revised cluster status:
+Node node1: standby
+Online: [ node2 ]
+
+ rsc3	(heartbeat:apache):	Started node2
+

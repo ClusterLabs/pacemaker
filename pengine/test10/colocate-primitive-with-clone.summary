@@ -1,0 +1,125 @@
+
+Current cluster status:
+Online: [ srv01 srv02 srv03 srv04 ]
+
+ Resource Group: UMgroup01
+     UmVIPcheck	(ocf::heartbeat:Dummy):	Stopped 
+     UmIPaddr	(ocf::heartbeat:Dummy):	Stopped 
+     UmDummy01	(ocf::heartbeat:Dummy):	Stopped 
+     UmDummy02	(ocf::heartbeat:Dummy):	Stopped 
+ Resource Group: OVDBgroup02-1
+     prmExPostgreSQLDB1	(ocf::heartbeat:Dummy):	Started srv04
+     prmFsPostgreSQLDB1-1	(ocf::heartbeat:Dummy):	Started srv04
+     prmFsPostgreSQLDB1-2	(ocf::heartbeat:Dummy):	Started srv04
+     prmFsPostgreSQLDB1-3	(ocf::heartbeat:Dummy):	Started srv04
+     prmIpPostgreSQLDB1	(ocf::heartbeat:Dummy):	Started srv04
+     prmApPostgreSQLDB1	(ocf::heartbeat:Dummy):	Started srv04
+ Resource Group: OVDBgroup02-2
+     prmExPostgreSQLDB2	(ocf::heartbeat:Dummy):	Started srv02
+     prmFsPostgreSQLDB2-1	(ocf::heartbeat:Dummy):	Started srv02
+     prmFsPostgreSQLDB2-2	(ocf::heartbeat:Dummy):	Started srv02
+     prmFsPostgreSQLDB2-3	(ocf::heartbeat:Dummy):	Started srv02
+     prmIpPostgreSQLDB2	(ocf::heartbeat:Dummy):	Started srv02
+     prmApPostgreSQLDB2	(ocf::heartbeat:Dummy):	Started srv02
+ Resource Group: OVDBgroup02-3
+     prmExPostgreSQLDB3	(ocf::heartbeat:Dummy):	Started srv03
+     prmFsPostgreSQLDB3-1	(ocf::heartbeat:Dummy):	Started srv03
+     prmFsPostgreSQLDB3-2	(ocf::heartbeat:Dummy):	Started srv03
+     prmFsPostgreSQLDB3-3	(ocf::heartbeat:Dummy):	Started srv03
+     prmIpPostgreSQLDB3	(ocf::heartbeat:Dummy):	Started srv03
+     prmApPostgreSQLDB3	(ocf::heartbeat:Dummy):	Started srv03
+ Resource Group: grpStonith1
+     prmStonithN1	(stonith:external/ssh):	Started srv04
+ Resource Group: grpStonith2
+     prmStonithN2	(stonith:external/ssh):	Started srv03
+ Resource Group: grpStonith3
+     prmStonithN3	(stonith:external/ssh):	Started srv02
+ Resource Group: grpStonith4
+     prmStonithN4	(stonith:external/ssh):	Started srv03
+ Clone Set: clnUMgroup01 [clnUmResource]
+     Started: [ srv04 ]
+     Stopped: [ clnUmResource:1 ]
+ Clone Set: clnPingd [clnPrmPingd]
+     Started: [ srv02 srv03 srv04 ]
+     Stopped: [ clnPrmPingd:0 ]
+ Clone Set: clnDiskd1 [clnPrmDiskd1]
+     Started: [ srv02 srv03 srv04 ]
+     Stopped: [ clnPrmDiskd1:0 ]
+ Clone Set: clnG3dummy1 [clnG3dummy01]
+     Started: [ srv02 srv03 srv04 ]
+     Stopped: [ clnG3dummy01:0 ]
+ Clone Set: clnG3dummy2 [clnG3dummy02]
+     Started: [ srv02 srv03 srv04 ]
+     Stopped: [ clnG3dummy02:0 ]
+
+Transition Summary:
+ * Start   UmVIPcheck	(srv04)
+ * Start   UmIPaddr	(srv04)
+ * Start   UmDummy01	(srv04)
+ * Start   UmDummy02	(srv04)
+
+Executing cluster transition:
+ * Pseudo action:   UMgroup01_start_0
+ * Resource action: UmVIPcheck      start on srv04
+ * Resource action: UmIPaddr        start on srv04
+ * Resource action: UmDummy01       start on srv04
+ * Resource action: UmDummy02       start on srv04
+ * Cluster action:  do_shutdown on srv01
+ * Pseudo action:   UMgroup01_running_0
+ * Resource action: UmIPaddr        monitor=10000 on srv04
+ * Resource action: UmDummy01       monitor=10000 on srv04
+ * Resource action: UmDummy02       monitor=10000 on srv04
+
+Revised cluster status:
+Online: [ srv01 srv02 srv03 srv04 ]
+
+ Resource Group: UMgroup01
+     UmVIPcheck	(ocf::heartbeat:Dummy):	Started srv04
+     UmIPaddr	(ocf::heartbeat:Dummy):	Started srv04
+     UmDummy01	(ocf::heartbeat:Dummy):	Started srv04
+     UmDummy02	(ocf::heartbeat:Dummy):	Started srv04
+ Resource Group: OVDBgroup02-1
+     prmExPostgreSQLDB1	(ocf::heartbeat:Dummy):	Started srv04
+     prmFsPostgreSQLDB1-1	(ocf::heartbeat:Dummy):	Started srv04
+     prmFsPostgreSQLDB1-2	(ocf::heartbeat:Dummy):	Started srv04
+     prmFsPostgreSQLDB1-3	(ocf::heartbeat:Dummy):	Started srv04
+     prmIpPostgreSQLDB1	(ocf::heartbeat:Dummy):	Started srv04
+     prmApPostgreSQLDB1	(ocf::heartbeat:Dummy):	Started srv04
+ Resource Group: OVDBgroup02-2
+     prmExPostgreSQLDB2	(ocf::heartbeat:Dummy):	Started srv02
+     prmFsPostgreSQLDB2-1	(ocf::heartbeat:Dummy):	Started srv02
+     prmFsPostgreSQLDB2-2	(ocf::heartbeat:Dummy):	Started srv02
+     prmFsPostgreSQLDB2-3	(ocf::heartbeat:Dummy):	Started srv02
+     prmIpPostgreSQLDB2	(ocf::heartbeat:Dummy):	Started srv02
+     prmApPostgreSQLDB2	(ocf::heartbeat:Dummy):	Started srv02
+ Resource Group: OVDBgroup02-3
+     prmExPostgreSQLDB3	(ocf::heartbeat:Dummy):	Started srv03
+     prmFsPostgreSQLDB3-1	(ocf::heartbeat:Dummy):	Started srv03
+     prmFsPostgreSQLDB3-2	(ocf::heartbeat:Dummy):	Started srv03
+     prmFsPostgreSQLDB3-3	(ocf::heartbeat:Dummy):	Started srv03
+     prmIpPostgreSQLDB3	(ocf::heartbeat:Dummy):	Started srv03
+     prmApPostgreSQLDB3	(ocf::heartbeat:Dummy):	Started srv03
+ Resource Group: grpStonith1
+     prmStonithN1	(stonith:external/ssh):	Started srv04
+ Resource Group: grpStonith2
+     prmStonithN2	(stonith:external/ssh):	Started srv03
+ Resource Group: grpStonith3
+     prmStonithN3	(stonith:external/ssh):	Started srv02
+ Resource Group: grpStonith4
+     prmStonithN4	(stonith:external/ssh):	Started srv03
+ Clone Set: clnUMgroup01 [clnUmResource]
+     Started: [ srv04 ]
+     Stopped: [ clnUmResource:1 ]
+ Clone Set: clnPingd [clnPrmPingd]
+     Started: [ srv02 srv03 srv04 ]
+     Stopped: [ clnPrmPingd:0 ]
+ Clone Set: clnDiskd1 [clnPrmDiskd1]
+     Started: [ srv02 srv03 srv04 ]
+     Stopped: [ clnPrmDiskd1:0 ]
+ Clone Set: clnG3dummy1 [clnG3dummy01]
+     Started: [ srv02 srv03 srv04 ]
+     Stopped: [ clnG3dummy01:0 ]
+ Clone Set: clnG3dummy2 [clnG3dummy02]
+     Started: [ srv02 srv03 srv04 ]
+     Stopped: [ clnG3dummy02:0 ]
+

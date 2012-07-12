@@ -1,0 +1,395 @@
+
+Current cluster status:
+Online: [ mgmt01 v03-a v03-b ]
+
+ stonith-v02-a	(stonith:fence_ipmilan):	Stopped 
+ stonith-v02-b	(stonith:fence_ipmilan):	Stopped 
+ stonith-v02-c	(stonith:fence_ipmilan):	Stopped 
+ stonith-v02-d	(stonith:fence_ipmilan):	Stopped 
+ stonith-mgmt01	(stonith:fence_xvm):	Started v03-a
+ stonith-mgmt02	(stonith:meatware):	Started v03-a
+ stonith-v03-c	(stonith:fence_ipmilan):	Stopped 
+ stonith-v03-a	(stonith:fence_ipmilan):	Started v03-b
+ stonith-v03-b	(stonith:fence_ipmilan):	Started mgmt01
+ stonith-v03-d	(stonith:fence_ipmilan):	Stopped 
+ Clone Set: cl-clvmd [clvmd]
+     Started: [ mgmt01 v03-a v03-b ]
+     Stopped: [ clvmd:3 clvmd:4 clvmd:5 clvmd:6 clvmd:7 clvmd:8 ]
+ Clone Set: cl-dlm [dlm]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ dlm:3 dlm:4 dlm:5 dlm:6 dlm:7 dlm:8 ]
+ Clone Set: cl-iscsid [iscsid]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ iscsid:3 iscsid:4 iscsid:5 iscsid:6 iscsid:7 iscsid:8 ]
+ Clone Set: cl-libvirtd [libvirtd]
+     Started: [ v03-a v03-b ]
+     Stopped: [ libvirtd:2 libvirtd:3 libvirtd:4 libvirtd:5 libvirtd:6 libvirtd:7 ]
+ Clone Set: cl-multipathd [multipathd]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ multipathd:3 multipathd:4 multipathd:5 multipathd:6 multipathd:7 multipathd:8 ]
+ Clone Set: cl-node-params [node-params]
+     Started: [ v03-a v03-b ]
+     Stopped: [ node-params:2 node-params:3 node-params:4 node-params:5 node-params:6 node-params:7 ]
+ Clone Set: cl-vlan1-if [vlan1-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan1-if:2 vlan1-if:3 vlan1-if:4 vlan1-if:5 vlan1-if:6 vlan1-if:7 ]
+ Clone Set: cl-vlan101-if [vlan101-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan101-if:2 vlan101-if:3 vlan101-if:4 vlan101-if:5 vlan101-if:6 vlan101-if:7 ]
+ Clone Set: cl-vlan102-if [vlan102-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan102-if:2 vlan102-if:3 vlan102-if:4 vlan102-if:5 vlan102-if:6 vlan102-if:7 ]
+ Clone Set: cl-vlan103-if [vlan103-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan103-if:2 vlan103-if:3 vlan103-if:4 vlan103-if:5 vlan103-if:6 vlan103-if:7 ]
+ Clone Set: cl-vlan104-if [vlan104-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan104-if:2 vlan104-if:3 vlan104-if:4 vlan104-if:5 vlan104-if:6 vlan104-if:7 ]
+ Clone Set: cl-vlan3-if [vlan3-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan3-if:2 vlan3-if:3 vlan3-if:4 vlan3-if:5 vlan3-if:6 vlan3-if:7 ]
+ Clone Set: cl-vlan4-if [vlan4-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan4-if:2 vlan4-if:3 vlan4-if:4 vlan4-if:5 vlan4-if:6 vlan4-if:7 ]
+ Clone Set: cl-vlan5-if [vlan5-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan5-if:2 vlan5-if:3 vlan5-if:4 vlan5-if:5 vlan5-if:6 vlan5-if:7 ]
+ Clone Set: cl-vlan900-if [vlan900-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan900-if:2 vlan900-if:3 vlan900-if:4 vlan900-if:5 vlan900-if:6 vlan900-if:7 ]
+ Clone Set: cl-vlan909-if [vlan909-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan909-if:2 vlan909-if:3 vlan909-if:4 vlan909-if:5 vlan909-if:6 vlan909-if:7 ]
+ Clone Set: cl-libvirt-images-fs [libvirt-images-fs]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ libvirt-images-fs:3 libvirt-images-fs:4 libvirt-images-fs:5 libvirt-images-fs:6 libvirt-images-fs:7 libvirt-images-fs:8 ]
+ Clone Set: cl-libvirt-install-fs [libvirt-install-fs]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ libvirt-install-fs:3 libvirt-install-fs:4 libvirt-install-fs:5 libvirt-install-fs:6 libvirt-install-fs:7 libvirt-install-fs:8 ]
+ Clone Set: cl-vds-ok-pool-0-iscsi [vds-ok-pool-0-iscsi]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ vds-ok-pool-0-iscsi:3 vds-ok-pool-0-iscsi:4 vds-ok-pool-0-iscsi:5 vds-ok-pool-0-iscsi:6 vds-ok-pool-0-iscsi:7 vds-ok-pool-0-iscsi:8 ]
+ Clone Set: cl-vds-ok-pool-0-vg [vds-ok-pool-0-vg]
+     Started: [ mgmt01 v03-a v03-b ]
+     Stopped: [ vds-ok-pool-0-vg:3 vds-ok-pool-0-vg:4 vds-ok-pool-0-vg:5 vds-ok-pool-0-vg:6 vds-ok-pool-0-vg:7 vds-ok-pool-0-vg:8 ]
+ Clone Set: cl-vds-ok-pool-1-iscsi [vds-ok-pool-1-iscsi]
+     Started: [ mgmt01 v03-a v03-b ]
+     Stopped: [ vds-ok-pool-1-iscsi:3 vds-ok-pool-1-iscsi:4 vds-ok-pool-1-iscsi:5 vds-ok-pool-1-iscsi:6 vds-ok-pool-1-iscsi:7 vds-ok-pool-1-iscsi:8 ]
+ Clone Set: cl-vds-ok-pool-1-vg [vds-ok-pool-1-vg]
+     Started: [ mgmt01 v03-a v03-b ]
+     Stopped: [ vds-ok-pool-1-vg:3 vds-ok-pool-1-vg:4 vds-ok-pool-1-vg:5 vds-ok-pool-1-vg:6 vds-ok-pool-1-vg:7 vds-ok-pool-1-vg:8 ]
+ Clone Set: cl-libvirt-images-pool [libvirt-images-pool]
+     Started: [ v03-a v03-b ]
+     Stopped: [ libvirt-images-pool:2 libvirt-images-pool:3 libvirt-images-pool:4 libvirt-images-pool:5 libvirt-images-pool:6 libvirt-images-pool:7 ]
+ Clone Set: cl-vds-ok-pool-0-pool [vds-ok-pool-0-pool]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vds-ok-pool-0-pool:2 vds-ok-pool-0-pool:3 vds-ok-pool-0-pool:4 vds-ok-pool-0-pool:5 vds-ok-pool-0-pool:6 vds-ok-pool-0-pool:7 ]
+ Clone Set: cl-vds-ok-pool-1-pool [vds-ok-pool-1-pool]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vds-ok-pool-1-pool:2 vds-ok-pool-1-pool:3 vds-ok-pool-1-pool:4 vds-ok-pool-1-pool:5 vds-ok-pool-1-pool:6 vds-ok-pool-1-pool:7 ]
+ git.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ Clone Set: cl-libvirt-qpid [libvirt-qpid]
+     Started: [ v03-a v03-b ]
+     Stopped: [ libvirt-qpid:2 libvirt-qpid:3 libvirt-qpid:4 libvirt-qpid:5 libvirt-qpid:6 libvirt-qpid:7 ]
+ vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
+ vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
+ vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
+ vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
+ vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ f13-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
+ eu2.ca-pages.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
+ zakaz.transferrus.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ Clone Set: cl-vlan200-if [vlan200-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan200-if:2 vlan200-if:3 vlan200-if:4 vlan200-if:5 vlan200-if:6 vlan200-if:7 ]
+ anbriz-gw-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ anbriz-work-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ lenny-x32-devel-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
+ vptest1.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest2.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest3.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest4.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest5.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest6.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest7.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest8.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest9.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest10.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest11.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest12.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest13.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest14.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest15.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest16.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest17.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest18.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest19.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest20.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest21.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest22.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest23.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest24.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest25.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest26.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest27.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest28.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest29.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest30.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest31.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest32.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest33.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest34.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest35.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest36.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest37.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest38.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest39.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest40.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest41.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest42.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest43.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest44.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest45.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest46.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest47.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest48.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest49.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest50.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest51.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest52.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest53.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest54.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest55.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest56.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest57.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest58.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest59.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest60.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ sl6-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
+ dist.express-consult.org-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ eu1.ca-pages.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ gotin-bbb-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ maxb-c55-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ metae.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ rodovoepomestie.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ ubuntu9.10-gotin-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ c5-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
+ Clone Set: cl-mcast-test-net [mcast-test-net]
+     Started: [ v03-a v03-b ]
+     Stopped: [ mcast-test-net:2 mcast-test-net:3 mcast-test-net:4 mcast-test-net:5 mcast-test-net:6 mcast-test-net:7 ]
+ dist.fly-uni.org-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+
+Transition Summary:
+ * Reload  c5-x64-devel.vds-ok.com-vm	(Started v03-a)
+
+Executing cluster transition:
+ * Resource action: vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm monitor=10000 on v03-b
+ * Resource action: vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm monitor=10000 on v03-b
+ * Pseudo action:   load_stopped_mgmt01
+ * Pseudo action:   load_stopped_v03-b
+ * Pseudo action:   load_stopped_v03-a
+ * Resource action: c5-x64-devel.vds-ok.com-vm reload on v03-a
+ * Resource action: c5-x64-devel.vds-ok.com-vm monitor=10000 on v03-a
+
+Revised cluster status:
+Online: [ mgmt01 v03-a v03-b ]
+
+ stonith-v02-a	(stonith:fence_ipmilan):	Stopped 
+ stonith-v02-b	(stonith:fence_ipmilan):	Stopped 
+ stonith-v02-c	(stonith:fence_ipmilan):	Stopped 
+ stonith-v02-d	(stonith:fence_ipmilan):	Stopped 
+ stonith-mgmt01	(stonith:fence_xvm):	Started v03-a
+ stonith-mgmt02	(stonith:meatware):	Started v03-a
+ stonith-v03-c	(stonith:fence_ipmilan):	Stopped 
+ stonith-v03-a	(stonith:fence_ipmilan):	Started v03-b
+ stonith-v03-b	(stonith:fence_ipmilan):	Started mgmt01
+ stonith-v03-d	(stonith:fence_ipmilan):	Stopped 
+ Clone Set: cl-clvmd [clvmd]
+     Started: [ mgmt01 v03-a v03-b ]
+     Stopped: [ clvmd:3 clvmd:4 clvmd:5 clvmd:6 clvmd:7 clvmd:8 ]
+ Clone Set: cl-dlm [dlm]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ dlm:3 dlm:4 dlm:5 dlm:6 dlm:7 dlm:8 ]
+ Clone Set: cl-iscsid [iscsid]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ iscsid:3 iscsid:4 iscsid:5 iscsid:6 iscsid:7 iscsid:8 ]
+ Clone Set: cl-libvirtd [libvirtd]
+     Started: [ v03-a v03-b ]
+     Stopped: [ libvirtd:2 libvirtd:3 libvirtd:4 libvirtd:5 libvirtd:6 libvirtd:7 ]
+ Clone Set: cl-multipathd [multipathd]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ multipathd:3 multipathd:4 multipathd:5 multipathd:6 multipathd:7 multipathd:8 ]
+ Clone Set: cl-node-params [node-params]
+     Started: [ v03-a v03-b ]
+     Stopped: [ node-params:2 node-params:3 node-params:4 node-params:5 node-params:6 node-params:7 ]
+ Clone Set: cl-vlan1-if [vlan1-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan1-if:2 vlan1-if:3 vlan1-if:4 vlan1-if:5 vlan1-if:6 vlan1-if:7 ]
+ Clone Set: cl-vlan101-if [vlan101-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan101-if:2 vlan101-if:3 vlan101-if:4 vlan101-if:5 vlan101-if:6 vlan101-if:7 ]
+ Clone Set: cl-vlan102-if [vlan102-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan102-if:2 vlan102-if:3 vlan102-if:4 vlan102-if:5 vlan102-if:6 vlan102-if:7 ]
+ Clone Set: cl-vlan103-if [vlan103-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan103-if:2 vlan103-if:3 vlan103-if:4 vlan103-if:5 vlan103-if:6 vlan103-if:7 ]
+ Clone Set: cl-vlan104-if [vlan104-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan104-if:2 vlan104-if:3 vlan104-if:4 vlan104-if:5 vlan104-if:6 vlan104-if:7 ]
+ Clone Set: cl-vlan3-if [vlan3-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan3-if:2 vlan3-if:3 vlan3-if:4 vlan3-if:5 vlan3-if:6 vlan3-if:7 ]
+ Clone Set: cl-vlan4-if [vlan4-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan4-if:2 vlan4-if:3 vlan4-if:4 vlan4-if:5 vlan4-if:6 vlan4-if:7 ]
+ Clone Set: cl-vlan5-if [vlan5-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan5-if:2 vlan5-if:3 vlan5-if:4 vlan5-if:5 vlan5-if:6 vlan5-if:7 ]
+ Clone Set: cl-vlan900-if [vlan900-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan900-if:2 vlan900-if:3 vlan900-if:4 vlan900-if:5 vlan900-if:6 vlan900-if:7 ]
+ Clone Set: cl-vlan909-if [vlan909-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan909-if:2 vlan909-if:3 vlan909-if:4 vlan909-if:5 vlan909-if:6 vlan909-if:7 ]
+ Clone Set: cl-libvirt-images-fs [libvirt-images-fs]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ libvirt-images-fs:3 libvirt-images-fs:4 libvirt-images-fs:5 libvirt-images-fs:6 libvirt-images-fs:7 libvirt-images-fs:8 ]
+ Clone Set: cl-libvirt-install-fs [libvirt-install-fs]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ libvirt-install-fs:3 libvirt-install-fs:4 libvirt-install-fs:5 libvirt-install-fs:6 libvirt-install-fs:7 libvirt-install-fs:8 ]
+ Clone Set: cl-vds-ok-pool-0-iscsi [vds-ok-pool-0-iscsi]
+     Started: [ v03-a mgmt01 v03-b ]
+     Stopped: [ vds-ok-pool-0-iscsi:3 vds-ok-pool-0-iscsi:4 vds-ok-pool-0-iscsi:5 vds-ok-pool-0-iscsi:6 vds-ok-pool-0-iscsi:7 vds-ok-pool-0-iscsi:8 ]
+ Clone Set: cl-vds-ok-pool-0-vg [vds-ok-pool-0-vg]
+     Started: [ mgmt01 v03-a v03-b ]
+     Stopped: [ vds-ok-pool-0-vg:3 vds-ok-pool-0-vg:4 vds-ok-pool-0-vg:5 vds-ok-pool-0-vg:6 vds-ok-pool-0-vg:7 vds-ok-pool-0-vg:8 ]
+ Clone Set: cl-vds-ok-pool-1-iscsi [vds-ok-pool-1-iscsi]
+     Started: [ mgmt01 v03-a v03-b ]
+     Stopped: [ vds-ok-pool-1-iscsi:3 vds-ok-pool-1-iscsi:4 vds-ok-pool-1-iscsi:5 vds-ok-pool-1-iscsi:6 vds-ok-pool-1-iscsi:7 vds-ok-pool-1-iscsi:8 ]
+ Clone Set: cl-vds-ok-pool-1-vg [vds-ok-pool-1-vg]
+     Started: [ mgmt01 v03-a v03-b ]
+     Stopped: [ vds-ok-pool-1-vg:3 vds-ok-pool-1-vg:4 vds-ok-pool-1-vg:5 vds-ok-pool-1-vg:6 vds-ok-pool-1-vg:7 vds-ok-pool-1-vg:8 ]
+ Clone Set: cl-libvirt-images-pool [libvirt-images-pool]
+     Started: [ v03-a v03-b ]
+     Stopped: [ libvirt-images-pool:2 libvirt-images-pool:3 libvirt-images-pool:4 libvirt-images-pool:5 libvirt-images-pool:6 libvirt-images-pool:7 ]
+ Clone Set: cl-vds-ok-pool-0-pool [vds-ok-pool-0-pool]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vds-ok-pool-0-pool:2 vds-ok-pool-0-pool:3 vds-ok-pool-0-pool:4 vds-ok-pool-0-pool:5 vds-ok-pool-0-pool:6 vds-ok-pool-0-pool:7 ]
+ Clone Set: cl-vds-ok-pool-1-pool [vds-ok-pool-1-pool]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vds-ok-pool-1-pool:2 vds-ok-pool-1-pool:3 vds-ok-pool-1-pool:4 vds-ok-pool-1-pool:5 vds-ok-pool-1-pool:6 vds-ok-pool-1-pool:7 ]
+ git.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ Clone Set: cl-libvirt-qpid [libvirt-qpid]
+     Started: [ v03-a v03-b ]
+     Stopped: [ libvirt-qpid:2 libvirt-qpid:3 libvirt-qpid:4 libvirt-qpid:5 libvirt-qpid:6 libvirt-qpid:7 ]
+ vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
+ vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
+ vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
+ vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
+ vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ f13-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
+ eu2.ca-pages.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
+ zakaz.transferrus.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ Clone Set: cl-vlan200-if [vlan200-if]
+     Started: [ v03-a v03-b ]
+     Stopped: [ vlan200-if:2 vlan200-if:3 vlan200-if:4 vlan200-if:5 vlan200-if:6 vlan200-if:7 ]
+ anbriz-gw-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ anbriz-work-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ lenny-x32-devel-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
+ vptest1.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest2.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest3.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest4.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest5.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest6.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest7.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest8.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest9.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest10.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest11.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest12.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest13.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest14.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest15.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest16.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest17.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest18.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest19.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest20.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest21.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest22.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest23.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest24.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest25.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest26.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest27.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest28.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest29.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest30.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest31.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest32.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest33.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest34.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest35.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest36.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest37.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest38.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest39.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest40.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest41.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest42.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest43.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest44.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest45.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest46.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest47.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest48.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest49.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest50.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest51.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest52.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest53.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest54.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest55.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest56.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest57.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest58.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest59.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ vptest60.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ sl6-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-b
+ dist.express-consult.org-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ eu1.ca-pages.com-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ gotin-bbb-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ maxb-c55-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ metae.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ rodovoepomestie.ru-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ ubuntu9.10-gotin-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+ c5-x64-devel.vds-ok.com-vm	(ocf::vds-ok:VirtualDomain):	Started v03-a
+ Clone Set: cl-mcast-test-net [mcast-test-net]
+     Started: [ v03-a v03-b ]
+     Stopped: [ mcast-test-net:2 mcast-test-net:3 mcast-test-net:4 mcast-test-net:5 mcast-test-net:6 mcast-test-net:7 ]
+ dist.fly-uni.org-vm	(ocf::vds-ok:VirtualDomain):	Stopped 
+

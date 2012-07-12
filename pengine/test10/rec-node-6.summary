@@ -1,0 +1,37 @@
+
+Current cluster status:
+Node node1 (uuid1): UNCLEAN (online)
+Online: [ node2 ]
+
+ stonith-1	(stonith:dummy):	Stopped 
+ rsc1	(heartbeat:apache):	Started node1
+ rsc2	(heartbeat:apache):	Started node1
+
+Transition Summary:
+ * Start   stonith-1	(node2)
+ * Move    rsc1	(Started node1 -> node2)
+ * Move    rsc2	(Started node1 -> node2)
+
+Executing cluster transition:
+ * Resource action: stonith-1       monitor on node2
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc2            monitor on node2
+ * Pseudo action:   probe_complete
+ * Resource action: stonith-1       start on node2
+ * Pseudo action:   stonith_up
+ * Fencing node1
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   rsc1_stop_0
+ * Pseudo action:   rsc2_stop_0
+ * Pseudo action:   all_stopped
+ * Resource action: rsc1            start on node2
+ * Resource action: rsc2            start on node2
+
+Revised cluster status:
+Online: [ node2 ]
+OFFLINE: [ node1 ]
+
+ stonith-1	(stonith:dummy):	Started node2
+ rsc1	(heartbeat:apache):	Started node2
+ rsc2	(heartbeat:apache):	Started node2
+

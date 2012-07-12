@@ -1,0 +1,27 @@
+
+Current cluster status:
+Online: [ pcw2709.see.ed.ac.uk pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk ]
+
+ Clone Set: cups_clone [cups_lsb]
+     Stopped: [ cups_lsb:0 cups_lsb:1 ]
+ smb_lsb	(lsb:smb):	Stopped 
+
+Transition Summary:
+ * Start   cups_lsb:0	(pcw2058.see.ed.ac.uk)
+ * Start   cups_lsb:1	(pcw2059.see.ed.ac.uk)
+ * Start   smb_lsb	(pcw2688.see.ed.ac.uk)
+
+Executing cluster transition:
+ * Resource action: smb_lsb         start on pcw2688.see.ed.ac.uk
+ * Pseudo action:   cups_clone_start_0
+ * Resource action: cups_lsb:0      start on pcw2058.see.ed.ac.uk
+ * Resource action: cups_lsb:1      start on pcw2059.see.ed.ac.uk
+ * Pseudo action:   cups_clone_running_0
+
+Revised cluster status:
+Online: [ pcw2709.see.ed.ac.uk pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk ]
+
+ Clone Set: cups_clone [cups_lsb]
+     Started: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk ]
+ smb_lsb	(lsb:smb):	Started pcw2688.see.ed.ac.uk
+

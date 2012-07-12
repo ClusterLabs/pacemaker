@@ -1,0 +1,36 @@
+
+Current cluster status:
+Online: [ heartbeat.ds9 ops.ds9 biggame.ds9 ]
+OFFLINE: [ defiant.ds9 warbird.ds9 ]
+
+ Resource Group: Web_Group
+     Apache_IP	(ocf::heartbeat:IPaddr):	Started heartbeat.ds9
+     resource_IP2	(ocf::heartbeat:IPaddr):	Stopped 
+     resource_dummyweb	(ocf::heartbeat:Dummy):	Stopped 
+ Resource Group: group_fUN
+     resource_IP3	(ocf::heartbeat:IPaddr):	Started ops.ds9
+     resource_dummy	(ocf::heartbeat:Dummy):	Started ops.ds9
+
+Transition Summary:
+ * Stop    resource_IP3	(Started ops.ds9)
+ * Stop    resource_dummy	(Started ops.ds9)
+
+Executing cluster transition:
+ * Pseudo action:   group_fUN_stop_0
+ * Resource action: resource_dummy  stop on ops.ds9
+ * Resource action: resource_IP3    stop on ops.ds9
+ * Pseudo action:   all_stopped
+ * Pseudo action:   group_fUN_stopped_0
+
+Revised cluster status:
+Online: [ heartbeat.ds9 ops.ds9 biggame.ds9 ]
+OFFLINE: [ defiant.ds9 warbird.ds9 ]
+
+ Resource Group: Web_Group
+     Apache_IP	(ocf::heartbeat:IPaddr):	Started heartbeat.ds9
+     resource_IP2	(ocf::heartbeat:IPaddr):	Stopped 
+     resource_dummyweb	(ocf::heartbeat:Dummy):	Stopped 
+ Resource Group: group_fUN
+     resource_IP3	(ocf::heartbeat:IPaddr):	Stopped 
+     resource_dummy	(ocf::heartbeat:Dummy):	Stopped 
+

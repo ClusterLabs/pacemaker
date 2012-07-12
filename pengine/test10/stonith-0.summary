@@ -1,0 +1,110 @@
+
+Current cluster status:
+Node c001n03 (f5e1d2de-73da-432a-9d5c-37472253c2ee): UNCLEAN (online)
+Node c001n05 (52a5ea5e-86ee-442c-b251-0bc9825c517e): UNCLEAN (online)
+Online: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
+ Resource Group: group-1
+     ocf_192.168.100.181	(ocf::heartbeat:IPaddr) Started [	c001n03	c001n05 ]
+     heartbeat_192.168.100.182	(heartbeat:IPaddr):	Started c001n03
+     ocf_192.168.100.183	(ocf::heartbeat:IPaddr) Started  FAILED[	c001n03	c001n05 ]
+ lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Started c001n04
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n06
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02
+ rsc_c001n04	(ocf::heartbeat:IPaddr):	Started c001n04
+ rsc_c001n05	(ocf::heartbeat:IPaddr):	Started c001n05
+ rsc_c001n06	(ocf::heartbeat:IPaddr):	Started c001n06
+ rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n03
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
+ Clone Set: DoFencing [child_DoFencing]
+     Started: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
+     Stopped: [ child_DoFencing:5 child_DoFencing:6 ]
+ Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
+     ocf_msdummy:0	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Master c001n02
+     ocf_msdummy:1	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n02
+     ocf_msdummy:2	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n07
+     ocf_msdummy:3	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n07
+     ocf_msdummy:4	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n08
+     ocf_msdummy:5	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n08
+     ocf_msdummy:6	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:7	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:8	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:9	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:10	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n04
+     ocf_msdummy:11	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n04
+     ocf_msdummy:12	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n06
+     ocf_msdummy:13	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n06
+
+Transition Summary:
+ * Move    ocf_192.168.100.181	(Started c001n03 -> c001n02)
+ * Move    heartbeat_192.168.100.182	(Started c001n03 -> c001n02)
+ * Move    ocf_192.168.100.183	(Started c001n03 -> c001n02)
+ * Move    rsc_c001n05	(Started c001n05 -> c001n07)
+ * Move    rsc_c001n07	(Started c001n03 -> c001n07)
+
+Executing cluster transition:
+ * Resource action: child_DoFencing:4 monitor=20000 on c001n08
+ * Pseudo action:   stonith_up
+ * Fencing c001n05
+ * Fencing c001n03
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   group-1_stop_0
+ * Pseudo action:   ocf_192.168.100.183_stop_0
+ * Pseudo action:   ocf_192.168.100.183_stop_0
+ * Pseudo action:   rsc_c001n05_stop_0
+ * Pseudo action:   rsc_c001n07_stop_0
+ * Pseudo action:   heartbeat_192.168.100.182_stop_0
+ * Resource action: rsc_c001n05     start on c001n07
+ * Resource action: rsc_c001n07     start on c001n07
+ * Pseudo action:   ocf_192.168.100.181_stop_0
+ * Pseudo action:   ocf_192.168.100.181_stop_0
+ * Resource action: rsc_c001n05     monitor=5000 on c001n07
+ * Resource action: rsc_c001n07     monitor=5000 on c001n07
+ * Pseudo action:   all_stopped
+ * Pseudo action:   group-1_stopped_0
+ * Pseudo action:   group-1_start_0
+ * Resource action: ocf_192.168.100.181 start on c001n02
+ * Resource action: heartbeat_192.168.100.182 start on c001n02
+ * Resource action: ocf_192.168.100.183 start on c001n02
+ * Pseudo action:   group-1_running_0
+ * Resource action: ocf_192.168.100.181 monitor=5000 on c001n02
+ * Resource action: heartbeat_192.168.100.182 monitor=5000 on c001n02
+ * Resource action: ocf_192.168.100.183 monitor=5000 on c001n02
+
+Revised cluster status:
+Online: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
+OFFLINE: [ c001n03 c001n05 ]
+
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
+ Resource Group: group-1
+     ocf_192.168.100.181	(ocf::heartbeat:IPaddr):	Started c001n02
+     heartbeat_192.168.100.182	(heartbeat:IPaddr):	Started c001n02
+     ocf_192.168.100.183	(ocf::heartbeat:IPaddr):	Started c001n02
+ lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Started c001n04
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n06
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02
+ rsc_c001n04	(ocf::heartbeat:IPaddr):	Started c001n04
+ rsc_c001n05	(ocf::heartbeat:IPaddr):	Started c001n07
+ rsc_c001n06	(ocf::heartbeat:IPaddr):	Started c001n06
+ rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n07
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
+ Clone Set: DoFencing [child_DoFencing]
+     Started: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
+     Stopped: [ child_DoFencing:5 child_DoFencing:6 ]
+ Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
+     ocf_msdummy:0	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Master c001n02
+     ocf_msdummy:1	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n02
+     ocf_msdummy:2	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n07
+     ocf_msdummy:3	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n07
+     ocf_msdummy:4	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n08
+     ocf_msdummy:5	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n08
+     ocf_msdummy:6	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:7	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:8	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:9	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
+     ocf_msdummy:10	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n04
+     ocf_msdummy:11	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n04
+     ocf_msdummy:12	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n06
+     ocf_msdummy:13	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n06
+
