@@ -919,7 +919,45 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
     return online;
 }
 
-#define set_char(x) last_rsc_id[lpc] = x; complete = TRUE;
+char *
+clone_strip(const char *last_rsc_id)
+{
+    int lpc = 0;
+    char *zero = NULL;
+
+    CRM_CHECK(last_rsc_id != NULL, return NULL);
+    if (last_rsc_id != NULL) {
+        lpc = strlen(last_rsc_id);
+    }
+
+    while (--lpc > 0) {
+        switch (last_rsc_id[lpc]) {
+            case 0:
+                return NULL;
+                break;
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                break;
+            case ':':
+                zero = calloc(1, lpc + 1);
+                memcpy(zero, last_rsc_id, lpc);
+                zero[lpc] = 0;
+                return zero;
+            default:
+                zero = strdup(last_rsc_id);
+                return zero;
+        }
+    }
+    return NULL;
+}
 
 char *
 clone_zero(const char *last_rsc_id)
@@ -955,118 +993,18 @@ clone_zero(const char *last_rsc_id)
                 zero[lpc + 1] = '0';
                 zero[lpc + 2] = 0;
                 return zero;
+            default:
+                lpc = strlen(last_rsc_id);
+                zero = calloc(1, lpc + 3);
+                memcpy(zero, last_rsc_id, lpc);
+                zero[lpc] = ':';
+                zero[lpc + 1] = '0';
+                zero[lpc + 2] = 0;
+                crm_trace("%s -> %s", last_rsc_id, zero);
+                return zero;
         }
     }
     return NULL;
-}
-
-char *
-increment_clone(char *last_rsc_id)
-{
-    int lpc = 0;
-    int len = 0;
-    char *tmp = NULL;
-    gboolean complete = FALSE;
-
-    CRM_CHECK(last_rsc_id != NULL, return NULL);
-    if (last_rsc_id != NULL) {
-        len = strlen(last_rsc_id);
-    }
-
-    lpc = len - 1;
-    while (complete == FALSE && lpc > 0) {
-        switch (last_rsc_id[lpc]) {
-            case 0:
-                lpc--;
-                break;
-            case '0':
-                set_char('1');
-                break;
-            case '1':
-                set_char('2');
-                break;
-            case '2':
-                set_char('3');
-                break;
-            case '3':
-                set_char('4');
-                break;
-            case '4':
-                set_char('5');
-                break;
-            case '5':
-                set_char('6');
-                break;
-            case '6':
-                set_char('7');
-                break;
-            case '7':
-                set_char('8');
-                break;
-            case '8':
-                set_char('9');
-                break;
-            case '9':
-                last_rsc_id[lpc] = '0';
-                lpc--;
-                break;
-            case ':':
-                tmp = last_rsc_id;
-                last_rsc_id = calloc(1, len + 2);
-                memcpy(last_rsc_id, tmp, len);
-                last_rsc_id[++lpc] = '1';
-                last_rsc_id[len] = '0';
-                last_rsc_id[len + 1] = 0;
-                complete = TRUE;
-                free(tmp);
-                break;
-            default:
-                crm_err("Unexpected char: %c (%d)", last_rsc_id[lpc], lpc);
-                return NULL;
-                break;
-        }
-    }
-    return last_rsc_id;
-}
-
-static int
-get_clone(char *last_rsc_id)
-{
-    int clone = 0;
-    int lpc = 0;
-    int len = 0;
-
-    CRM_CHECK(last_rsc_id != NULL, return -1);
-    if (last_rsc_id != NULL) {
-        len = strlen(last_rsc_id);
-    }
-
-    lpc = len - 1;
-    while (lpc > 0) {
-        switch (last_rsc_id[lpc]) {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                clone += (int)(last_rsc_id[lpc] - '0') * (len - lpc);
-                lpc--;
-                break;
-            case ':':
-                return clone;
-                break;
-            default:
-                crm_err("Unexpected char: %d (%c)", lpc, last_rsc_id[lpc]);
-                return clone;
-                break;
-        }
-    }
-    return -1;
 }
 
 static resource_t *
@@ -1091,128 +1029,85 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
 extern resource_t *create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set);
 
 static resource_t *
-find_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent, const char *rsc_id)
+find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent, const char *rsc_id)
 {
-    int len = 0;
+    GListPtr rIter = NULL;
     resource_t *rsc = NULL;
-    char *base = clone_zero(rsc_id);
-    char *alt_rsc_id = NULL;
+    gboolean skip_inactive = FALSE;
 
     CRM_ASSERT(parent != NULL);
     CRM_ASSERT(parent->variant == pe_clone || parent->variant == pe_master);
+    CRM_ASSERT(is_not_set(parent->flags, pe_rsc_unique));
 
-    if (base) {
-        len = strlen(base);
-    }
-    if (len > 0) {
-        base[len - 1] = 0;
-    }
+    /* Find an instance active (or partially active for grouped clones) on the specified node */
+    crm_trace("Looking for %s on %s in %s", rsc_id, node->details->uname, parent->id);
+    for(rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
+        GListPtr nIter = NULL;
+        GListPtr locations = NULL;
+        resource_t *child = rIter->data;
+        
+        child->fns->location(child, &locations, TRUE);
+        if (locations == NULL) {
+            crm_trace("Resource %s, skip inactive", child->id);
+            continue;
+        }
+        
+        for(nIter = locations; nIter && rsc == NULL; nIter = nIter->next) {
+            node_t *childnode = nIter->data;
+            if(childnode->details == node->details) {
+                /* ->find_rsc() because we might be a cloned group */
+                rsc = parent->fns->find_rsc(child, rsc_id, NULL, 0);
+                crm_trace("Resource %s, active", rsc->id);
+            }
 
-    crm_trace("Looking for %s on %s in %s %d",
-              rsc_id, node->details->uname, parent->id, is_set(parent->flags, pe_rsc_unique));
-
-    if (is_set(parent->flags, pe_rsc_unique)) {
-        crm_trace("Looking for %s", rsc_id);
-        rsc = parent->fns->find_rsc(parent, rsc_id, NULL, pe_find_current);
-
-    } else {
-        crm_trace("Looking for %s on %s", base, node->details->uname);
-        rsc = parent->fns->find_rsc(parent, base, node, pe_find_partial | pe_find_current);
-        if (rsc != NULL && rsc->running_on) {
-            GListPtr gIter = parent->children;
-
-            rsc = NULL;
-            crm_trace("Looking for an existing orphan for %s: %s on %s", parent->id, rsc_id,
-                      node->details->uname);
-
-            /* There is already an instance of this _anonymous_ clone active on "node".
-             *
-             * If there is a partially active orphan (only applies to clone groups) on
-             * the same node, use that.
-             * Otherwise create a new (orphaned) instance at "orphan_check:".
+            /* TODO - drop this block?
+             * Anonymous clones should no longer be able to have multiple entries on a node
              */
-
-            for (; gIter != NULL; gIter = gIter->next) {
-                resource_t *child = (resource_t *) gIter->data;
-                node_t *loc = child->fns->location(child, NULL, TRUE);
-
-                if (loc && loc->details == node->details) {
-                    resource_t *tmp =
-                        child->fns->find_rsc(child, base, NULL, pe_find_partial | pe_find_current);
-                    if (tmp && tmp->running_on == NULL) {
-                        rsc = tmp;
-                        break;
-                    }
-                }
-            }
-
-            goto orphan_check;
-
-        } else if (((resource_t *) parent->children->data)->variant == pe_group) {
-            /* If we're grouped, we need to look for a peer thats active on $node
-             * and use their clone instance number
-             */
-            resource_t *peer =
-                parent->fns->find_rsc(parent, NULL, node, pe_find_clone | pe_find_current);
-            if (peer && peer->running_on) {
-                char buffer[256];
-                int clone_num = get_clone(peer->id);
-
-                snprintf(buffer, 256, "%s%d", base, clone_num);
-                rsc =
-                    parent->fns->find_rsc(parent, buffer, node, pe_find_current | pe_find_inactive);
-                if (rsc) {
-                    crm_trace("Found someone active: %s on %s, becoming %s", peer->id,
-                              ((node_t *) peer->running_on->data)->details->uname, buffer);
-                }
+            if(rsc && rsc->running_on) {
+                crm_debug("/Anonymous/ clone %s is already running on %s",
+                          parent->id, node->details->uname);
+                skip_inactive = TRUE;
+                rsc = NULL;
             }
         }
 
-        if (parent->fns->find_rsc(parent, rsc_id, NULL, pe_find_current)) {
-            alt_rsc_id = strdup(rsc_id);
-        } else {
-            alt_rsc_id = clone_zero(rsc_id);
-        }
+        g_list_free(locations);
+    }
 
-        while (rsc == NULL) {
-            rsc = parent->fns->find_rsc(parent, alt_rsc_id, NULL, pe_find_current);
-            if (rsc == NULL) {
-                crm_trace("Unknown resource: %s", alt_rsc_id);
-                break;
+    /* Find an inactive instance */
+    if(skip_inactive == FALSE) {
+        crm_trace("Looking for %s anywhere", rsc_id);
+        for(rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
+            GListPtr locations = NULL;
+            resource_t *child = rIter->data;
+            
+            child->fns->location(child, &locations, TRUE);
+            if (locations == NULL) {
+                /* ->find_rsc() because we might be a cloned group */
+                rsc = parent->fns->find_rsc(child, rsc_id, NULL, 0);
+                crm_trace("Resource %s, empty slot", rsc->id);
             }
-
-            if (rsc->running_on == NULL) {
-                crm_trace("Resource %s: just right", alt_rsc_id);
-                break;
-            }
-
-            crm_trace("Resource %s: already active", alt_rsc_id);
-            alt_rsc_id = increment_clone(alt_rsc_id);
-            rsc = NULL;
+            g_list_free(locations);
         }
     }
 
-  orphan_check:
     if (rsc == NULL) {
         /* Create an extra orphan */
         resource_t *top = create_child_clone(parent, -1, data_set);
 
-        crm_debug("Created orphan for %s: %s on %s", parent->id, rsc_id, node->details->uname);
-        rsc = top->fns->find_rsc(top, base, NULL, pe_find_current | pe_find_partial);
+        /* ->find_rsc() because we might be a cloned group */
+        rsc = top->fns->find_rsc(top, rsc_id, NULL, pe_find_current | pe_find_partial);
         CRM_ASSERT(rsc != NULL);
+
+        crm_debug("Created orphan %s for %s: %s on %s", top->id, parent->id, rsc_id, node->details->uname);
     }
 
-    free(rsc->clone_name);
-    rsc->clone_name = NULL;
     if (safe_str_neq(rsc_id, rsc->id)) {
         crm_info("Internally renamed %s on %s to %s%s",
                  rsc_id, node->details->uname, rsc->id,
                  is_set(rsc->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
-        rsc->clone_name = strdup(rsc_id);
     }
 
-    free(alt_rsc_id);
-    free(base);
     return rsc;
 }
 
@@ -1221,7 +1116,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
                      xmlNode * rsc_entry)
 {
     resource_t *rsc = NULL;
-    resource_t *clone_parent = NULL;
+    resource_t *parent = NULL;
     char *alt_rsc_id = strdup(rsc_id);
 
     crm_trace("looking for %s", rsc_id);
@@ -1233,18 +1128,28 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
         char *tmp = clone_zero(alt_rsc_id);
         resource_t *clone0 = pe_find_resource(data_set->resources, tmp);
 
-        clone_parent = uber_parent(clone0);
+        parent = uber_parent(clone0);
         free(tmp);
 
-        crm_trace("%s not found: %s", alt_rsc_id, clone_parent ? clone_parent->id : "orphan");
+        crm_trace("%s not found: %s", alt_rsc_id, parent ? parent->id : "orphan");
 
     } else {
-        clone_parent = uber_parent(rsc);
+        parent = uber_parent(rsc);
     }
 
-    if (clone_parent && clone_parent->variant > pe_group) {
-        rsc = find_clone(data_set, node, clone_parent, rsc_id);
-        CRM_ASSERT(rsc != NULL);
+    if (parent
+        && parent->variant > pe_group) {
+        if(is_not_set(parent->flags, pe_rsc_unique)) {
+            char *base = clone_strip(rsc_id);
+            rsc = find_anonymous_clone(data_set, node, parent, base);
+            CRM_ASSERT(rsc != NULL);
+            free(base);
+        }
+
+        if (safe_str_neq(rsc_id, rsc->id)) {
+            free(rsc->clone_name);
+            rsc->clone_name = strdup(rsc_id);
+        }
     }
 
     free(alt_rsc_id);
@@ -1309,6 +1214,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
             if (g_hash_table_lookup(iter->known_on, node->details->id) == NULL) {
                 node_t *n = node_copy(node);
 
+                crm_trace("%s (aka. %s) known on %s", rsc->id, rsc->clone_name, n->details->uname);
                 g_hash_table_insert(iter->known_on, (gpointer) n->details->id, n);
             }
             if (is_set(iter->flags, pe_rsc_unique)) {

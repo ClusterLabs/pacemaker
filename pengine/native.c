@@ -2140,6 +2140,75 @@ DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t *
 }
 
 #include <../lib/pengine/unpack.h>
+#define set_char(x) last_rsc_id[lpc] = x; complete = TRUE;
+static char *
+increment_clone(char *last_rsc_id)
+{
+    int lpc = 0;
+    int len = 0;
+    char *tmp = NULL;
+    gboolean complete = FALSE;
+
+    CRM_CHECK(last_rsc_id != NULL, return NULL);
+    if (last_rsc_id != NULL) {
+        len = strlen(last_rsc_id);
+    }
+
+    lpc = len - 1;
+    while (complete == FALSE && lpc > 0) {
+        switch (last_rsc_id[lpc]) {
+            case 0:
+                lpc--;
+                break;
+            case '0':
+                set_char('1');
+                break;
+            case '1':
+                set_char('2');
+                break;
+            case '2':
+                set_char('3');
+                break;
+            case '3':
+                set_char('4');
+                break;
+            case '4':
+                set_char('5');
+                break;
+            case '5':
+                set_char('6');
+                break;
+            case '6':
+                set_char('7');
+                break;
+            case '7':
+                set_char('8');
+                break;
+            case '8':
+                set_char('9');
+                break;
+            case '9':
+                last_rsc_id[lpc] = '0';
+                lpc--;
+                break;
+            case ':':
+                tmp = last_rsc_id;
+                last_rsc_id = calloc(1, len + 2);
+                memcpy(last_rsc_id, tmp, len);
+                last_rsc_id[++lpc] = '1';
+                last_rsc_id[len] = '0';
+                last_rsc_id[len + 1] = 0;
+                complete = TRUE;
+                free(tmp);
+                break;
+            default:
+                crm_err("Unexpected char: %c (%d)", last_rsc_id[lpc], lpc);
+                return NULL;
+                break;
+        }
+    }
+    return last_rsc_id;
+}
 
 static node_t *
 probe_grouped_clone(resource_t * rsc, node_t * node, pe_working_set_t * data_set)

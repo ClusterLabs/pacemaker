@@ -27,7 +27,7 @@
 
 extern gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 
-extern int master_score(resource_t * rsc, node_t * node, int not_set_value);
+static int master_score(resource_t * rsc, node_t * node, int not_set_value);
 
 static void
 child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering type,
@@ -385,7 +385,30 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
     clear_bit(rsc->flags, pe_rsc_merging);
 }
 
-int
+static gboolean
+anonymous_known_on(resource_t * rsc, node_t *node) 
+{
+    GListPtr rIter = NULL;
+    char *key = clone_strip(rsc->id);
+    resource_t *parent = uber_parent(rsc);
+
+    for(rIter = parent->children; rIter; rIter = rIter->next) {
+        resource_t *child = rIter->data;
+
+        /* ->find_rsc() because we might be a cloned group
+         * and knowing that other members of the group are
+         * known here implies nothing
+         */
+        rsc = parent->fns->find_rsc(child, key, NULL, 0);
+        crm_trace("Checking %s for %s on %s", rsc->id, key, node->details->uname);
+        if(g_hash_table_lookup(rsc->known_on, node->details->id)) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static int
 master_score(resource_t * rsc, node_t * node, int not_set_value)
 {
     char *attr_name;
@@ -419,8 +442,11 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
         node_t *match = pe_find_node_id(rsc->running_on, node->details->id);
         node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
 
-        if (match == NULL && known == NULL) {
-            crm_trace("%s is not active on %s - ignoring", rsc->id, node->details->uname);
+        if(is_not_set(rsc->flags, pe_rsc_unique) && anonymous_known_on(rsc, node)) {
+            crm_trace("Anonymous clone %s is known on %s", rsc->id, node->details->uname);
+
+        } else if (match == NULL && known == NULL) {
+            crm_trace("%s (aka. %s) is not known on %s - ignoring", rsc->id, rsc->clone_name, node->details->uname);
             return score;
         }
 

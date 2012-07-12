@@ -1800,8 +1800,12 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
 
         update_action_flags(n_data->pre, pe_action_pseudo);
         update_action_flags(n_data->pre, pe_action_runnable);
+
         add_hash_param(n_data->pre->meta, "notify_type", "pre");
         add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
+
+        add_hash_param(n_data->pre->meta, "notify_key_type", "pre");
+        add_hash_param(n_data->pre->meta, "notify_key_operation", start->task);
 
         /* create pre_notify_complete */
         key = generate_notify_key(rsc->id, "confirmed-pre", start->task);
@@ -1811,8 +1815,12 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
 
         update_action_flags(n_data->pre_done, pe_action_pseudo);
         update_action_flags(n_data->pre_done, pe_action_runnable);
+
         add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
         add_hash_param(n_data->pre_done->meta, "notify_operation", n_data->action);
+
+        add_hash_param(n_data->pre_done->meta, "notify_key_type", "confirmed-pre");
+        add_hash_param(n_data->pre_done->meta, "notify_key_operation", start->task);
 
         order_actions(n_data->pre_done, start, pe_order_optional);
         order_actions(n_data->pre, n_data->pre_done, pe_order_optional);
@@ -1836,6 +1844,9 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
         add_hash_param(n_data->post->meta, "notify_type", "post");
         add_hash_param(n_data->post->meta, "notify_operation", n_data->action);
 
+        add_hash_param(n_data->post->meta, "notify_key_type", "post");
+        add_hash_param(n_data->post->meta, "notify_key_operation", end->task);
+
         /* create post_notify_complete */
         key = generate_notify_key(rsc->id, "confirmed-post", end->task);
         n_data->post_done =
@@ -1850,8 +1861,11 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
             update_action_flags(n_data->post_done, pe_action_runnable | pe_action_clear);
         }
 
-        add_hash_param(n_data->post_done->meta, "notify_type", "pre");
+        add_hash_param(n_data->post_done->meta, "notify_type", "post");
         add_hash_param(n_data->post_done->meta, "notify_operation", n_data->action);
+
+        add_hash_param(n_data->post_done->meta, "notify_key_type", "confirmed-post");
+        add_hash_param(n_data->post_done->meta, "notify_key_operation", end->task);
 
         order_actions(end, n_data->post, pe_order_implies_then);
         order_actions(n_data->post, n_data->post_done, pe_order_implies_then);

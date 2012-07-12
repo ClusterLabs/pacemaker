@@ -1290,14 +1290,28 @@ get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer user_data)
 int
 get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set_t * data_set)
 {
+    char *key = NULL;
+    const char *value = NULL;
     struct fail_search search = { rsc, 0, 0, NULL };
 
-    search.key = strdup(rsc->id);
+    /* Optimize the "normal" case */
+    key = crm_concat("fail-count", rsc->clone_name?rsc->clone_name:rsc->id, '-');
+    value = g_hash_table_lookup(node->details->attrs, key);
+    search.count = char2score(value);
+    free(key);
+    
+    if(value) {
+        key = crm_concat("last-failure", rsc->clone_name?rsc->clone_name:rsc->id, '-');
+        value = g_hash_table_lookup(node->details->attrs, key);
+        search.last = crm_int_helper(value, NULL);
+        free(key);
 
-    if (is_not_set(rsc->flags, pe_rsc_unique)) {
+        /* This block wont be relevant once we omit anonymous instance numbers */
+    } else if (is_not_set(rsc->flags, pe_rsc_unique)) {
         int lpc = 0;
 
         search.rsc = uber_parent(rsc);
+        search.key = strdup(rsc->id);
 
         /* Strip the clone incarnation */
         for (lpc = strlen(search.key); lpc > 0; lpc--) {
@@ -1308,21 +1322,7 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
         }
 
         g_hash_table_foreach(node->details->attrs, get_failcount_by_prefix, &search);
-
-    } else {
-        /* Optimize the "normal" case */
-        char *key = NULL;
-        const char *value = NULL;
-
-        key = crm_concat("fail-count", rsc->id, '-');
-        value = g_hash_table_lookup(node->details->attrs, key);
-        search.count = char2score(value);
-        free(key);
-
-        key = crm_concat("last-failure", rsc->id, '-');
-        value = g_hash_table_lookup(node->details->attrs, key);
-        search.last = crm_int_helper(value, NULL);
-        free(key);
+        free(search.key);
     }
 
     if (search.count != 0 && search.last != 0 && rsc->failure_timeout) {
@@ -1347,7 +1347,6 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
         free(score);
     }
 
-    free(search.key);
     return search.count;
 }
 

@@ -656,9 +656,10 @@ create_action_name(action_t * action)
 
         int interval = crm_parse_int(interval_s, "0");
 
-        if (safe_str_eq(action->task, RSC_NOTIFY)) {
-            const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
-            const char *n_task = g_hash_table_lookup(action->meta, "notify_operation");
+        if (safe_str_eq(action->task, RSC_NOTIFY)
+            || safe_str_eq(action->task, RSC_NOTIFIED)) {
+            const char *n_type = g_hash_table_lookup(action->meta, "notify_key_type");
+            const char *n_task = g_hash_table_lookup(action->meta, "notify_key_operation");
 
             CRM_ASSERT(n_type != NULL);
             CRM_ASSERT(n_task != NULL);

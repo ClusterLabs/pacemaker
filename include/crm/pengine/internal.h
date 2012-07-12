@@ -228,4 +228,7 @@ extern resource_t *find_clone_instance(resource_t * rsc, const char *sub_id,
 extern void destroy_ticket(gpointer data);
 extern ticket_t *ticket_new(const char * ticket_id, pe_working_set_t * data_set);
 
+char *clone_strip(const char *last_rsc_id);
+char *clone_zero(const char *last_rsc_id);
+
 #endif

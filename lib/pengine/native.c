@@ -160,10 +160,19 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
         } else if (is_set(flags, pe_find_renamed) && rsc->clone_name
                    && strcmp(rsc->clone_name, id) == 0) {
             match = TRUE;
+
+        } else if (rsc->parent && is_set(rsc->flags, pe_rsc_unique) == FALSE) {
+            const char *rid = ID(rsc->xml);
+            crm_trace("Checking %s against %s", rid, id);
+
+            if(safe_str_eq(rid, id)) {
+                match = TRUE;
+            }
         }
     }
 
     if (match && on_node) {
+        crm_trace("Now checking %s is on %s", rsc->id, on_node->details->uname);
         if (is_set(flags, pe_find_current) && rsc->running_on) {
 
             GListPtr gIter = rsc->running_on;
