@@ -45,7 +45,7 @@ static struct crm_option long_options[] = {
     {"version",     0, 0, '$'},
     {"help",        0, 0, '?'},
     {"passive",     0, 0, 'p'},
-    
+
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -61,7 +61,7 @@ static void st_callback(stonith_t *st, stonith_event_t *e)
     crm_notice("Operation %s requested by %s %s for peer %s.  %s reported: %s (ref=%s)",
                e->operation, e->origin, e->result == pcmk_ok?"completed":"failed",
                e->target, e->executioner ? e->executioner : "<none>",
-               pcmk_strerror(e->result), e->id); 
+               pcmk_strerror(e->result), e->id);
 }
 
 static  void
@@ -86,42 +86,43 @@ main(int argc, char ** argv)
 
     stonith_key_value_t *params = NULL;
     gboolean passive_mode = FALSE;
-    
+
     crm_log_cli_init("stonith-test");
     crm_set_options(NULL, "mode [options]", long_options,
-		    "Provides a summary of cluster's current state."
-		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
+            "Provides a summary of cluster's current state."
+            "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
     params = stonith_key_value_add(params, "pcmk_host_map", "some-host=pcmk-7 pcmk-3=3,4");
 
     while (1) {
-	flag = crm_get_option(argc, argv, &option_index);
-	if (flag == -1)
-	    break;
-		
-	switch(flag) {
-	    case 'V':
-		crm_bump_log_level();
-		break;
-	    case '$':
-	    case '?':
-		crm_help(flag, EX_OK);
-		break;
-	    case 'p':
-		passive_mode = TRUE;
-		break;
-	    default:
-		++argerr;
-		break;
-	}
+        flag = crm_get_option(argc, argv, &option_index);
+        if (flag == -1) {
+            break;
+        }
+
+        switch(flag) {
+        case 'V':
+            crm_bump_log_level();
+            break;
+        case '$':
+        case '?':
+            crm_help(flag, EX_OK);
+            break;
+        case 'p':
+            passive_mode = TRUE;
+            break;
+            default:
+            ++argerr;
+            break;
+        }
     }
 
     if (optind > argc) {
-	++argerr;
+        ++argerr;
     }
-    
+
     if (argerr) {
-	crm_help('?', EX_USAGE);
+        crm_help('?', EX_USAGE);
     }
 
     crm_debug("Create");
@@ -131,71 +132,71 @@ main(int argc, char ** argv)
     crm_debug("Connect: %d", rc);
 
     rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
-    
+
     if(passive_mode) {
-	rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
-	rc = st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
-	rc = st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
+        rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
+        rc = st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
+        rc = st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
 
         st->cmds->register_callback(st, 0, 120, FALSE, NULL, "st_global_callback", st_global_callback);
 
-	crm_info("Looking for notification");
+        crm_info("Looking for notification");
         pollfd.events = POLLIN;
         while(true) {
-	    rc = poll( &pollfd, 1, 600 * 1000 );    /* wait 10 minutes, -1 forever */
+            rc = poll( &pollfd, 1, 600 * 1000 );    /* wait 10 minutes, -1 forever */
             if (rc > 0 )
-	       stonith_dispatch( st );  
-	    else
-	        break;            
-	}
+               stonith_dispatch( st );
+            else
+                break;
+        }
 
     } else {
-	rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_xvm", params);
-	crm_debug("Register: %d", rc);
-	
-	rc = st->cmds->list(st, st_opts, "test-id", &tmp, 10);
-	crm_debug("List: %d output: %s\n", rc, tmp ? tmp : "<none>");
-	
-	rc = st->cmds->monitor(st, st_opts, "test-id", 10);
-	crm_debug("Monitor: %d", rc);
-	
-	rc = st->cmds->status(st, st_opts, "test-id", "pcmk-2", 10);
-	crm_debug("Status pcmk-2: %d", rc);
-	
-	rc = st->cmds->status(st, st_opts, "test-id", "pcmk-1", 10);
-	crm_debug("Status pcmk-1: %d", rc);
-	
-	rc = st->cmds->fence(st, st_opts, "unknown-host", "off", 60);
-	crm_debug("Fence unknown-host: %d", rc);
-	
-	rc = st->cmds->status(st, st_opts,  "test-id", "pcmk-1", 10);
-	crm_debug("Status pcmk-1: %d", rc);
-	
-	rc = st->cmds->fence(st, st_opts, "pcmk-1", "off", 60);
-	crm_debug("Fence pcmk-1: %d", rc);
-	
-	rc = st->cmds->status(st, st_opts, "test-id", "pcmk-1", 10);
-	crm_debug("Status pcmk-1: %d", rc);
-	
-	rc = st->cmds->fence(st, st_opts, "pcmk-1", "on", 10);
-	crm_debug("Unfence pcmk-1: %d", rc);
-	
-	rc = st->cmds->status(st, st_opts, "test-id", "pcmk-1", 10);
-	crm_debug("Status pcmk-1: %d", rc);
-	
-	rc = st->cmds->fence(st, st_opts, "some-host", "off", 10);
-	crm_debug("Fence alias: %d", rc);
-	
-	rc = st->cmds->status(st, st_opts, "test-id", "some-host", 10);
-	crm_debug("Status alias: %d", rc);
-	
-	rc = st->cmds->fence(st, st_opts, "pcmk-1", "on", 10);
-	crm_debug("Unfence pcmk-1: %d", rc);
-	
-	rc = st->cmds->remove_device(st, st_opts, "test-id");
-	crm_debug("Remove test-id: %d", rc);
-    }    
-    
+        rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_xvm", params);
+        crm_debug("Register: %d", rc);
+
+        rc = st->cmds->list(st, st_opts, "test-id", &tmp, 10);
+        crm_debug("List: %d output: %s\n", rc, tmp ? tmp : "<none>");
+
+        rc = st->cmds->monitor(st, st_opts, "test-id", 10);
+        crm_debug("Monitor: %d", rc);
+
+        rc = st->cmds->status(st, st_opts, "test-id", "pcmk-2", 10);
+        crm_debug("Status pcmk-2: %d", rc);
+
+        rc = st->cmds->status(st, st_opts, "test-id", "pcmk-1", 10);
+        crm_debug("Status pcmk-1: %d", rc);
+
+        rc = st->cmds->fence(st, st_opts, "unknown-host", "off", 60);
+        crm_debug("Fence unknown-host: %d", rc);
+
+        rc = st->cmds->status(st, st_opts,  "test-id", "pcmk-1", 10);
+        crm_debug("Status pcmk-1: %d", rc);
+
+        rc = st->cmds->fence(st, st_opts, "pcmk-1", "off", 60);
+        crm_debug("Fence pcmk-1: %d", rc);
+
+        rc = st->cmds->status(st, st_opts, "test-id", "pcmk-1", 10);
+        crm_debug("Status pcmk-1: %d", rc);
+
+        rc = st->cmds->fence(st, st_opts, "pcmk-1", "on", 10);
+        crm_debug("Unfence pcmk-1: %d", rc);
+
+        rc = st->cmds->status(st, st_opts, "test-id", "pcmk-1", 10);
+        crm_debug("Status pcmk-1: %d", rc);
+
+        rc = st->cmds->fence(st, st_opts, "some-host", "off", 10);
+        crm_debug("Fence alias: %d", rc);
+
+        rc = st->cmds->status(st, st_opts, "test-id", "some-host", 10);
+        crm_debug("Status alias: %d", rc);
+
+        rc = st->cmds->fence(st, st_opts, "pcmk-1", "on", 10);
+        crm_debug("Unfence pcmk-1: %d", rc);
+
+        rc = st->cmds->remove_device(st, st_opts, "test-id");
+        crm_debug("Remove test-id: %d", rc);
+    }
+
     stonith_key_value_freeall(params, 1, 1);
 
     rc = st->cmds->disconnect(st);
@@ -203,6 +204,6 @@ main(int argc, char ** argv)
 
     crm_debug("Destroy");
     stonith_api_delete(st);
-    
+
     return rc;
 }
