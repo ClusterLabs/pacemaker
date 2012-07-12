@@ -894,7 +894,9 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
         free(output); output = NULL;
         crm_trace("Directed reply: %s op", cmd->action);
 
-    } else if(crm_str_eq(cmd->action, "monitor", TRUE)) {
+    } else if(crm_str_eq(cmd->action, "monitor", TRUE) ||
+            crm_str_eq(cmd->action, "list", TRUE) ||
+            crm_str_eq(cmd->action, "status", TRUE)) {
         crm_trace("Directed reply: %s op", cmd->action);
         bcast = FALSE;
 
