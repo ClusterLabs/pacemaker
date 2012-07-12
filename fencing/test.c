@@ -80,6 +80,7 @@ main(int argc, char ** argv)
     int option_index = 0;
     int rc = 0;
 
+    char *tmp = NULL;
     struct pollfd pollfd;
     stonith_t *st = NULL;
 
@@ -152,40 +153,40 @@ main(int argc, char ** argv)
 	rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_xvm", params);
 	crm_debug("Register: %d", rc);
 	
-	rc = st->cmds->call(st, st_opts, "test-id", "list", NULL, 10);
-	crm_debug("List: %d", rc);
+	rc = st->cmds->list(st, st_opts, "test-id", &tmp, 10);
+	crm_debug("List: %d output: %s\n", rc, tmp ? tmp : "<none>");
 	
-	rc = st->cmds->call(st, st_opts, "test-id", "monitor", NULL, 10);
+	rc = st->cmds->monitor(st, st_opts, "test-id", 10);
 	crm_debug("Monitor: %d", rc);
 	
-	rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-2", 10);
+	rc = st->cmds->status(st, st_opts, "test-id", "pcmk-2", 10);
 	crm_debug("Status pcmk-2: %d", rc);
 	
-	rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
+	rc = st->cmds->status(st, st_opts, "test-id", "pcmk-1", 10);
 	crm_debug("Status pcmk-1: %d", rc);
 	
 	rc = st->cmds->fence(st, st_opts, "unknown-host", "off", 60);
 	crm_debug("Fence unknown-host: %d", rc);
 	
-	rc = st->cmds->call(st, st_opts,  "test-id", "status", "pcmk-1", 10);
+	rc = st->cmds->status(st, st_opts,  "test-id", "pcmk-1", 10);
 	crm_debug("Status pcmk-1: %d", rc);
 	
 	rc = st->cmds->fence(st, st_opts, "pcmk-1", "off", 60);
 	crm_debug("Fence pcmk-1: %d", rc);
 	
-	rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
+	rc = st->cmds->status(st, st_opts, "test-id", "pcmk-1", 10);
 	crm_debug("Status pcmk-1: %d", rc);
 	
 	rc = st->cmds->fence(st, st_opts, "pcmk-1", "on", 10);
 	crm_debug("Unfence pcmk-1: %d", rc);
 	
-	rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
+	rc = st->cmds->status(st, st_opts, "test-id", "pcmk-1", 10);
 	crm_debug("Status pcmk-1: %d", rc);
 	
 	rc = st->cmds->fence(st, st_opts, "some-host", "off", 10);
 	crm_debug("Fence alias: %d", rc);
 	
-	rc = st->cmds->call(st, st_opts, "test-id", "status", "some-host", 10);
+	rc = st->cmds->status(st, st_opts, "test-id", "some-host", 10);
 	crm_debug("Status alias: %d", rc);
 	
 	rc = st->cmds->fence(st, st_opts, "pcmk-1", "on", 10);

@@ -95,34 +95,160 @@ typedef struct stonith_event_s
 
 typedef struct stonith_api_operations_s
 {
+    /*!
+     * \brief Destroy the stonith api structure.
+     */
     int (*free) (stonith_t *st);
+
+    /*!
+     * \brief Connect to the local stonith daemon.
+     *
+     * \retval 0, success
+     * \retval negative error code on failure
+     */
     int (*connect) (stonith_t *st, const char *name, int *stonith_fd);
+
+    /*!
+     * \brief Disconnect from the local stonith daemon.
+     *
+     * \retval 0, success
+     * \retval negative error code on failure
+     */
     int (*disconnect)(stonith_t *st);
 
+    /*!
+     * \brief Remove a registered stonith device with the local stonith daemon.
+     *
+     * \note Synchronous, guaranteed to occur in daemon before function returns.
+     *
+     * \retval 0, success
+     * \retval negative error code on failure
+     */
     int (*remove_device)(
         stonith_t *st, int options, const char *name);
+
+    /*!
+     * \brief Register a stonith device with the local stonith daemon.
+     *
+     * \note Synchronous, guaranteed to occur in daemon before function returns.
+     *
+     * \retval 0, success
+     * \retval negative error code on failure
+     */
     int (*register_device)(
         stonith_t *st, int options, const char *id,
         const char *namespace, const char *agent, stonith_key_value_t *params);
 
+    /*!
+     * \brief Remove a fencing level for a specific node.
+     *
+     * \note This feature is not available when stonith is in standalone mode.
+     *
+     * \retval 0, success
+     * \retval negative error code on failure
+     */
     int (*remove_level)(
         stonith_t *st, int options, const char *node, int level);
+
+    /*!
+     * \brief Register a fencing level containing the fencing devices to be used
+     *        at that level for a specific node.
+     *
+     * \note This feature is not available when stonith is in standalone mode.
+     *
+     * \retval 0, success
+     * \retval negative error code on failure
+     */
     int (*register_level)(
         stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list);
 
+    /*!
+     * \brief Get the metadata documentation for a resource.
+     *
+     * \note Value is returned in output.  Output must be freed when set.
+     *
+     * \retval 0 success
+     * \retval negative error code on failure
+     */
     int (*metadata)(stonith_t *st, int options,
             const char *device, const char *namespace, char **output, int timeout);
-    int (*list)(stonith_t *stonith, int call_options, const char *namespace,
+
+    /*!
+     * \brief Retrieve a list of installed stonith agents
+     *
+     * \note if namespace is not provided, all known agents will be returned
+     * \note list must be freed using stonith_key_value_freeall()
+     * \note call_options parameter is not used, it is reserved for future use.
+     *
+     * \retval num items in list on success
+     * \retval negative error code on failure
+     */
+    int (*list_agents)(stonith_t *stonith, int call_options, const char *namespace,
             stonith_key_value_t **devices, int timeout);
 
-    int (*call)(stonith_t *st, int options, const char *id,
-            const char *action, const char *port, int timeout);
+    /*!
+     * \brief Retrieve string listing hosts and port assignments from a local stonith device.
+     *
+     * \retval 0 on success
+     * \retval negative error code on failure
+     */
+    int (*list)(stonith_t *st, int options, const char *id, char **list_output, int timeout);
 
+    /*!
+     * \brief Check to see if a local stonith device is reachable
+     *
+     * \retval 0 on success
+     * \retval negative error code on failure
+     */
+    int (*monitor)(stonith_t *st, int options, const char *id, int timeout);
+
+    /*!
+     * \brief Check to see if a local stonith device's port is reachable
+     *
+     * \retval 0 on success
+     * \retval negative error code on failure
+     */
+    int (*status)(stonith_t *st, int options, const char *id, const char *port, int timeout);
+
+    /*!
+     * \brief Retrieve a list of registered stonith devices.
+     *
+     * \note If node is provided, only devices that can fence the node id
+     *       will be returned.
+     *
+     * \retval num items in list on success
+     * \retval negative error code on failure
+     */
     int (*query)(stonith_t *st, int options, const char *node,
             stonith_key_value_t **devices, int timeout);
+
+    /*!
+     * \brief Issue a fencing action against a node.
+     *
+     * \note Possible actions are, 'on', 'off', and 'reboot'.
+     *
+     * \retval 0 success
+     * \retval negative error code on failure.
+     */
     int (*fence)(stonith_t *st, int options, const char *node, const char *action,
             int timeout);
+
+    /*!
+     * \brief Manually confirm that a node is down.
+     *
+     * \retval 0 success
+     * \retval negative error code on failure.
+     */
     int (*confirm)(stonith_t *st, int options, const char *node);
+
+    /*!
+     * \brief Retrieve a list of fencing operations that have occurred for a specific node.
+     *
+     * \note History is not available in standalone mode.
+     *
+     * \retval 0 success
+     * \retval negative error code on failure.
+     */
     int (*history)(stonith_t *st, int options, const char *node, stonith_history_t **output, int timeout);
 
     int (*register_notification)(
