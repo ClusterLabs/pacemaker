@@ -383,14 +383,23 @@ clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
     free(child_text);
 }
 
+static gint sort_node_uname(gconstpointer a, gconstpointer b) 
+{
+    node_t *node_a = (node_t*)a;
+    node_t *node_b = (node_t*)b;
+    return strcmp(node_a->details->uname, node_b->details->uname);
+}
+
 void
 clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
+    char *list_text = NULL;
     char *child_text = NULL;
-    char *master_list = NULL;
-    char *started_list = NULL;
     char *stopped_list = NULL;
     const char *type = "Clone";
+
+    GListPtr master_list = NULL;
+    GListPtr started_list = NULL;
     GListPtr gIter = rsc->children;
 
     clone_variant_data_t *clone_data = NULL;
@@ -452,16 +461,15 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
             node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
 
             if (location) {
-                const char *host = location->details->uname;
                 enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, TRUE);
 
                 if (a_role > RSC_ROLE_SLAVE) {
                     /* And active on a single node as master */
-                    master_list = add_list_element(master_list, host);
+                    master_list = g_list_append(master_list, location);
 
                 } else {
                     /* And active on a single node as started/slave */
-                    started_list = add_list_element(started_list, host);
+                    started_list = g_list_append(started_list, location);
                 }
 
             } else {
@@ -485,13 +493,32 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
         }
     }
 
-    short_print(master_list, child_text, "Masters", options, print_data);
-    short_print(started_list, child_text, rsc->variant == pe_master ? "Slaves" : "Started", options,
-                print_data);
-    short_print(stopped_list, child_text, "Stopped", options, print_data);
+    /* Masters */
+    master_list = g_list_sort(master_list, sort_node_uname);
+    for(gIter = master_list; gIter; gIter = gIter->next) {
+        node_t *host = gIter->data;
+        list_text = add_list_element(list_text, host->details->uname);
+    }
 
-    free(master_list);
-    free(started_list);
+    short_print(list_text, child_text, "Masters", options, print_data);
+    g_list_free(master_list);
+    free(list_text);
+    list_text = NULL;
+
+    /* Started/Slaves */
+    started_list = g_list_sort(started_list, sort_node_uname);
+    for(gIter = started_list; gIter; gIter = gIter->next) {
+        node_t *host = gIter->data;
+        list_text = add_list_element(list_text, host->details->uname);
+    }
+
+    short_print(list_text, child_text, rsc->variant == pe_master ? "Slaves" : "Started", options, print_data);
+    g_list_free(started_list);
+    free(list_text);
+    list_text = NULL;
+
+    /* Stopped */
+    short_print(stopped_list, child_text, "Stopped", options, print_data);
     free(stopped_list);
 
     if (options & pe_print_html) {
