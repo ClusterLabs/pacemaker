@@ -19,10 +19,10 @@ clone_color: nfs-xen_swapfiles:0 allocation score on deglxen001: 1
 clone_color: nfs-xen_swapfiles:0 allocation score on deglxen002: 0
 clone_color: nfs-xen_swapfiles:1 allocation score on deglxen001: 0
 clone_color: nfs-xen_swapfiles:1 allocation score on deglxen002: 1
-clone_color: prim-ping:0 allocation score on deglxen001: 0
-clone_color: prim-ping:0 allocation score on deglxen002: 1
-clone_color: prim-ping:1 allocation score on deglxen001: 1
-clone_color: prim-ping:1 allocation score on deglxen002: 0
+clone_color: prim-ping:0 allocation score on deglxen001: 1
+clone_color: prim-ping:0 allocation score on deglxen002: 0
+clone_color: prim-ping:1 allocation score on deglxen001: 0
+clone_color: prim-ping:1 allocation score on deglxen002: 1
 group_color: grp-nfs:0 allocation score on deglxen001: 0
 group_color: grp-nfs:0 allocation score on deglxen002: -INFINITY
 group_color: grp-nfs:1 allocation score on deglxen001: -INFINITY
@@ -59,9 +59,9 @@ native_color: nfs-xen_swapfiles:0 allocation score on deglxen001: 2
 native_color: nfs-xen_swapfiles:0 allocation score on deglxen002: -INFINITY
 native_color: nfs-xen_swapfiles:1 allocation score on deglxen001: -INFINITY
 native_color: nfs-xen_swapfiles:1 allocation score on deglxen002: -INFINITY
-native_color: prim-ping:0 allocation score on deglxen001: -INFINITY
+native_color: prim-ping:0 allocation score on deglxen001: 1
 native_color: prim-ping:0 allocation score on deglxen002: -INFINITY
-native_color: prim-ping:1 allocation score on deglxen001: 1
+native_color: prim-ping:1 allocation score on deglxen001: -INFINITY
 native_color: prim-ping:1 allocation score on deglxen002: -INFINITY
 native_color: stonith_sbd allocation score on deglxen001: 100000
 native_color: stonith_sbd allocation score on deglxen002: 0

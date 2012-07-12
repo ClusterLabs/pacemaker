@@ -3,14 +3,14 @@ Current cluster status:
 Online: [ xenserver2 xenserver1 ]
 
  Clone Set: cl_res_Dummy1 [res_Dummy1]
-     Started: [ xenserver2 xenserver1 ]
+     Started: [ xenserver1 xenserver2 ]
  Resource Group: gr_Dummy
      res_Dummy2	(ocf::heartbeat:Dummy):	Started xenserver1
      res_Dummy3	(ocf::heartbeat:Dummy):	Started xenserver1
 
 Transition Summary:
- * Stop    res_Dummy1:0	(xenserver2)
- * Stop    res_Dummy1:1	(xenserver1)
+ * Stop    res_Dummy1:0	(xenserver1)
+ * Stop    res_Dummy1:1	(xenserver2)
  * Stop    res_Dummy2	(Started xenserver1)
  * Stop    res_Dummy3	(Started xenserver1)
 
@@ -20,8 +20,8 @@ Executing cluster transition:
  * Resource action: res_Dummy3      stop on xenserver1
  * Pseudo action:   gr_Dummy_stopped_0
  * Pseudo action:   cl_res_Dummy1_stop_0
- * Resource action: res_Dummy1:0    stop on xenserver2
  * Resource action: res_Dummy1:1    stop on xenserver1
+ * Resource action: res_Dummy1:0    stop on xenserver2
  * Pseudo action:   cl_res_Dummy1_stopped_0
  * Pseudo action:   all_stopped
 

@@ -4,10 +4,10 @@ Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	Started node1
  Master/Slave Set: ms1 [rsc1]
-     Slaves: [ node2 node1 ]
+     Slaves: [ node1 node2 ]
 
 Transition Summary:
- * Promote rsc1:1	(Slave -> Master node1)
+ * Promote rsc1:0	(Slave -> Master node1)
 
 Executing cluster transition:
  * Pseudo action:   ms1_promote_0

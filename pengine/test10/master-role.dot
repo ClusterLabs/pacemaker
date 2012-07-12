@@ -1,8 +1,8 @@
 digraph "g" {
 "ms_res_Stateful_1_demote_0" -> "ms_res_Stateful_1_demoted_0" [ style = bold]
-"ms_res_Stateful_1_demote_0" -> "res_Stateful_1:1_demote_0 sles11-b" [ style = bold]
+"ms_res_Stateful_1_demote_0" -> "res_Stateful_1:0_demote_0 sles11-a" [ style = bold]
 "ms_res_Stateful_1_demote_0" [ style=bold color="green" fontcolor="orange" ]
 "ms_res_Stateful_1_demoted_0" [ style=bold color="green" fontcolor="orange" ]
-"res_Stateful_1:1_demote_0 sles11-b" -> "ms_res_Stateful_1_demoted_0" [ style = bold]
-"res_Stateful_1:1_demote_0 sles11-b" [ style=bold color="green" fontcolor="black" ]
+"res_Stateful_1:0_demote_0 sles11-a" -> "ms_res_Stateful_1_demoted_0" [ style = bold]
+"res_Stateful_1:0_demote_0 sles11-a" [ style=bold color="green" fontcolor="black"]
 }

@@ -11,7 +11,7 @@ Online: [ hex-13 hex-14 ]
      Slaves: [ hex-13 ]
 
 Transition Summary:
- * Demote  s0:1	(Master -> Slave hex-14)
+ * Demote  s0:0	(Master -> Slave hex-14)
 
 Executing cluster transition:
  * Resource action: s0:1            cancel=20000 on hex-14

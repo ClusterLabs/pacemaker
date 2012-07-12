@@ -4,7 +4,7 @@ Online: [ dualamd3 dualamd1 cardhu ]
 
  domU-test01	(ocf::heartbeat:Xen):	Started dualamd1
  Clone Set: clone-dom0-iscsi1 [dom0-iscsi1-cnx1]
-     Started: [ dualamd3 dualamd1 ]
+     Started: [ dualamd1 dualamd3 ]
 
 Transition Summary:
 
@@ -18,5 +18,5 @@ Online: [ dualamd3 dualamd1 cardhu ]
 
  domU-test01	(ocf::heartbeat:Xen):	Started dualamd1
  Clone Set: clone-dom0-iscsi1 [dom0-iscsi1-cnx1]
-     Started: [ dualamd3 dualamd1 ]
+     Started: [ dualamd1 dualamd3 ]
 

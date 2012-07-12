@@ -80,22 +80,22 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <pseudo_event id="13" operation="stopped" operation_key="dom0-iscsi1:0_stopped_0">
+      <pseudo_event id="19" operation="stopped" operation_key="dom0-iscsi1:1_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="stop" operation_key="dom0-iscsi1-cnx1:0_stop_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
+        <rsc_op id="15" operation="stop" operation_key="dom0-iscsi1-cnx1:0_stop_0" internal_operation_key="dom0-iscsi1-cnx1:1_stop_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
       </trigger>
       <trigger>
-        <pseudo_event id="12" operation="stop" operation_key="dom0-iscsi1:0_stop_0"/>
+        <pseudo_event id="18" operation="stop" operation_key="dom0-iscsi1:1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="7">
     <action_set>
-      <pseudo_event id="12" operation="stop" operation_key="dom0-iscsi1:0_stop_0">
+      <pseudo_event id="18" operation="stop" operation_key="dom0-iscsi1:1_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -107,14 +107,14 @@
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="9" operation="stop" operation_key="dom0-iscsi1-cnx1:0_stop_0" on_node="dom0-02" on_node_uuid="dom0-02">
-        <primitive id="dom0-iscsi1-cnx1:0" class="ocf" provider="heartbeat" type="iscsi"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" portal="192.168.99.1" target="frontal-01:test01"/>
+      <rsc_op id="15" operation="stop" operation_key="dom0-iscsi1-cnx1:0_stop_0" internal_operation_key="dom0-iscsi1-cnx1:1_stop_0" on_node="dom0-02" on_node_uuid="dom0-02">
+        <primitive id="dom0-iscsi1-cnx1:0" long-id="dom0-iscsi1-cnx1:1" class="ocf" provider="heartbeat" type="iscsi"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" portal="192.168.99.1" target="frontal-01:test01"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="12" operation="stop" operation_key="dom0-iscsi1:0_stop_0"/>
+        <pseudo_event id="18" operation="stop" operation_key="dom0-iscsi1:1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -126,7 +126,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="13" operation="stopped" operation_key="dom0-iscsi1:0_stopped_0"/>
+        <pseudo_event id="19" operation="stopped" operation_key="dom0-iscsi1:1_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="22" operation="stop" operation_key="clone-dom0-iscsi1_stop_0"/>
@@ -199,7 +199,7 @@
         <rsc_op id="7" operation="stop" operation_key="domU-test01_stop_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
       </trigger>
       <trigger>
-        <rsc_op id="9" operation="stop" operation_key="dom0-iscsi1-cnx1:0_stop_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
+        <rsc_op id="15" operation="stop" operation_key="dom0-iscsi1-cnx1:0_stop_0" internal_operation_key="dom0-iscsi1-cnx1:1_stop_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
       </trigger>
       <trigger>
         <rsc_op id="26" operation="stop" operation_key="bottom:0_stop_0" internal_operation_key="bottom:1_stop_0" on_node="dom0-02" on_node_uuid="dom0-02"/>

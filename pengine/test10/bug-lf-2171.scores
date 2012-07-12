@@ -1,10 +1,10 @@
 Allocation scores:
 clone_color: cl_res_Dummy1 allocation score on xenserver1: 0
 clone_color: cl_res_Dummy1 allocation score on xenserver2: 0
-clone_color: res_Dummy1:0 allocation score on xenserver1: 0
-clone_color: res_Dummy1:0 allocation score on xenserver2: 200
-clone_color: res_Dummy1:1 allocation score on xenserver1: 200
-clone_color: res_Dummy1:1 allocation score on xenserver2: 0
+clone_color: res_Dummy1:0 allocation score on xenserver1: 200
+clone_color: res_Dummy1:0 allocation score on xenserver2: 0
+clone_color: res_Dummy1:1 allocation score on xenserver1: 0
+clone_color: res_Dummy1:1 allocation score on xenserver2: 200
 group_color: gr_Dummy allocation score on xenserver1: 0
 group_color: gr_Dummy allocation score on xenserver2: 0
 group_color: res_Dummy2 allocation score on xenserver1: 200

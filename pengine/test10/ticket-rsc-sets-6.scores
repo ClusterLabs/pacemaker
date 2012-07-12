@@ -7,10 +7,10 @@ clone_color: rsc4:0 allocation score on node1: 0
 clone_color: rsc4:0 allocation score on node2: 0
 clone_color: rsc4:1 allocation score on node1: 0
 clone_color: rsc4:1 allocation score on node2: 0
-clone_color: rsc5:0 allocation score on node1: 0
-clone_color: rsc5:0 allocation score on node2: 1
-clone_color: rsc5:1 allocation score on node1: 1
-clone_color: rsc5:1 allocation score on node2: 0
+clone_color: rsc5:0 allocation score on node1: 1
+clone_color: rsc5:0 allocation score on node2: 0
+clone_color: rsc5:1 allocation score on node1: 0
+clone_color: rsc5:1 allocation score on node2: 1
 group_color: group2 allocation score on node1: 0
 group_color: group2 allocation score on node2: 0
 group_color: rsc2 allocation score on node1: 0
@@ -27,11 +27,11 @@ native_color: rsc4:0 allocation score on node1: 0
 native_color: rsc4:0 allocation score on node2: 0
 native_color: rsc4:1 allocation score on node1: 0
 native_color: rsc4:1 allocation score on node2: -INFINITY
-native_color: rsc5:0 allocation score on node1: 0
-native_color: rsc5:0 allocation score on node2: 1
-native_color: rsc5:1 allocation score on node1: 1
-native_color: rsc5:1 allocation score on node2: -INFINITY
+native_color: rsc5:0 allocation score on node1: 1
+native_color: rsc5:0 allocation score on node2: -INFINITY
+native_color: rsc5:1 allocation score on node1: 0
+native_color: rsc5:1 allocation score on node2: 1
 native_color: rsc_stonith allocation score on node1: 0
 native_color: rsc_stonith allocation score on node2: 0
-rsc5:0 promotion score on node2: -1
-rsc5:1 promotion score on node1: 9
+rsc5:0 promotion score on node1: 9
+rsc5:1 promotion score on node2: -1

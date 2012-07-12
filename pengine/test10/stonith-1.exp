@@ -173,27 +173,27 @@
   </synapse>
   <synapse id="14">
     <action_set>
-      <rsc_op id="42" operation="monitor" operation_key="child_DoFencing:2_monitor_60000" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
+      <rsc_op id="44" operation="monitor" operation_key="child_DoFencing:2_monitor_60000" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
         <primitive id="child_DoFencing:2" class="stonith" type="external/vmware"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_requires="nothing" CRM_meta_timeout="300000" crm_feature_set="3.0.6" device_host="vmhost"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="41" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee"/>
+        <rsc_op id="43" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="15">
     <action_set>
-      <rsc_op id="41" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
+      <rsc_op id="43" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
         <primitive id="child_DoFencing:2" class="stonith" type="external/vmware"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_requires="nothing" CRM_meta_timeout="180000" crm_feature_set="3.0.6" device_host="vmhost"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="40" operation="stop" operation_key="child_DoFencing:2_stop_0"/>
+        <pseudo_event id="42" operation="stop" operation_key="child_DoFencing:2_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="45" operation="start" operation_key="DoFencing_start_0"/>
@@ -202,7 +202,7 @@
   </synapse>
   <synapse id="16">
     <action_set>
-      <pseudo_event id="40" operation="stop" operation_key="child_DoFencing:2_stop_0">
+      <pseudo_event id="42" operation="stop" operation_key="child_DoFencing:2_stop_0">
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="180000" crm_feature_set="3.0.6" device_host="vmhost"/>
       </pseudo_event>
     </action_set>
@@ -220,7 +220,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="40" operation="stop" operation_key="child_DoFencing:2_stop_0"/>
+        <pseudo_event id="42" operation="stop" operation_key="child_DoFencing:2_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="47" operation="stop" operation_key="DoFencing_stop_0"/>
@@ -243,7 +243,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="41" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee"/>
+        <rsc_op id="43" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee"/>
       </trigger>
       <trigger>
         <pseudo_event id="45" operation="start" operation_key="DoFencing_start_0"/>
@@ -579,7 +579,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="41" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee"/>
+        <rsc_op id="43" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee"/>
       </trigger>
     </inputs>
   </synapse>

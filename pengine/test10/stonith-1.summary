@@ -14,8 +14,8 @@ Online: [ sles-1 sles-2 sles-4 ]
  rsc_sles-3	(ocf::heartbeat:IPaddr):	Started sles-3
  rsc_sles-4	(ocf::heartbeat:IPaddr):	Started sles-4
  Clone Set: DoFencing [child_DoFencing]
-     Started: [ sles-2 sles-3 sles-1 ]
-     Stopped: [ child_DoFencing:0 ]
+     Started: [ sles-1 sles-2 sles-3 ]
+     Stopped: [ child_DoFencing:3 ]
  Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
      ocf_msdummy:0	(ocf::heartbeat:Stateful):	Stopped 
      ocf_msdummy:1	(ocf::heartbeat:Stateful):	Stopped 
@@ -98,8 +98,8 @@ OFFLINE: [ sles-3 ]
  rsc_sles-3	(ocf::heartbeat:IPaddr):	Started sles-4
  rsc_sles-4	(ocf::heartbeat:IPaddr):	Started sles-4
  Clone Set: DoFencing [child_DoFencing]
-     Started: [ sles-2 sles-4 sles-1 ]
-     Stopped: [ child_DoFencing:0 ]
+     Started: [ sles-1 sles-2 sles-4 ]
+     Stopped: [ child_DoFencing:3 ]
  Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
      ocf_msdummy:0	(ocf::heartbeat:Stateful):	Started sles-4
      ocf_msdummy:1	(ocf::heartbeat:Stateful):	Started sles-1

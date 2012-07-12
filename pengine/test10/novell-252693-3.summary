@@ -94,14 +94,14 @@ Revised cluster status:
 Online: [ node2 node1 ]
 
  Clone Set: stonithcloneset [stonithclone]
-     Started: [ node2 node1 ]
+     Started: [ node1 node2 ]
  Clone Set: evmsdcloneset [evmsdclone]
-     Started: [ node2 node1 ]
+     Started: [ node1 node2 ]
  Clone Set: evmscloneset [evmsclone]
-     Started: [ node2 node1 ]
+     Started: [ node1 node2 ]
  Clone Set: imagestorecloneset [imagestoreclone]
      Started: [ node1 node2 ]
  Clone Set: configstorecloneset [configstoreclone]
-     Started: [ node2 node1 ]
+     Started: [ node1 node2 ]
  sles10	(ocf::heartbeat:Xen):	Started node1
 

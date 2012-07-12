@@ -28,7 +28,7 @@ Transition Summary:
  * Start   vm-01	(hex-9 - blocked)
 
 Executing cluster transition:
- * Resource action: vg1:0           monitor on hex-9
+ * Resource action: vg1:1           monitor on hex-9
  * Pseudo action:   base-clone_start_0
  * Pseudo action:   probe_complete
  * Pseudo action:   load_stopped_hex-0

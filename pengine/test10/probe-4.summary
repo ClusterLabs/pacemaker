@@ -21,8 +21,8 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
      Slaves: [ pcmk-2 pcmk-3 ]
      Stopped: [ stateful-1:3 ]
  Clone Set: Fencing [FencingChild]
-     Started: [ pcmk-3 pcmk-2 pcmk-1 ]
-     Stopped: [ FencingChild:1 ]
+     Started: [ pcmk-1 pcmk-2 pcmk-3 ]
+     Stopped: [ FencingChild:3 ]
 
 Transition Summary:
  * Start   migrator	(pcmk-3)
@@ -53,6 +53,6 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
      Slaves: [ pcmk-2 pcmk-3 ]
      Stopped: [ stateful-1:3 ]
  Clone Set: Fencing [FencingChild]
-     Started: [ pcmk-3 pcmk-2 pcmk-1 ]
-     Stopped: [ FencingChild:1 ]
+     Started: [ pcmk-1 pcmk-2 pcmk-3 ]
+     Stopped: [ FencingChild:3 ]
 

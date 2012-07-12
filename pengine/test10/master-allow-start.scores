@@ -1,13 +1,13 @@
 Allocation scores:
 clone_color: ms_res_Stateful_1 allocation score on sles11-a: 0
 clone_color: ms_res_Stateful_1 allocation score on sles11-b: 0
-clone_color: res_Stateful_1:0 allocation score on sles11-a: 11
-clone_color: res_Stateful_1:0 allocation score on sles11-b: 0
-clone_color: res_Stateful_1:1 allocation score on sles11-a: 0
-clone_color: res_Stateful_1:1 allocation score on sles11-b: 1
-native_color: res_Stateful_1:0 allocation score on sles11-a: 11
-native_color: res_Stateful_1:0 allocation score on sles11-b: 0
-native_color: res_Stateful_1:1 allocation score on sles11-a: -INFINITY
-native_color: res_Stateful_1:1 allocation score on sles11-b: 1
-res_Stateful_1:0 promotion score on sles11-a: 10
-res_Stateful_1:1 promotion score on sles11-b: -5
+clone_color: res_Stateful_1:0 allocation score on sles11-a: 0
+clone_color: res_Stateful_1:0 allocation score on sles11-b: 1
+clone_color: res_Stateful_1:1 allocation score on sles11-a: 11
+clone_color: res_Stateful_1:1 allocation score on sles11-b: 0
+native_color: res_Stateful_1:0 allocation score on sles11-a: -INFINITY
+native_color: res_Stateful_1:0 allocation score on sles11-b: 1
+native_color: res_Stateful_1:1 allocation score on sles11-a: 11
+native_color: res_Stateful_1:1 allocation score on sles11-b: 0
+res_Stateful_1:0 promotion score on sles11-b: -5
+res_Stateful_1:1 promotion score on sles11-a: 10

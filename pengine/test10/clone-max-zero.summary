@@ -16,19 +16,19 @@ Online: [ c001n11 c001n12 ]
 Transition Summary:
  * Stop    dlm:0	(c001n12)
  * Stop    dlm:1	(c001n11)
- * Stop    o2cb:0	(c001n11)
- * Stop    o2cb:1	(c001n12)
- * Stop    ocfs2-1:0	(c001n11)
- * Stop    ocfs2-1:1	(c001n12)
+ * Stop    o2cb:0	(c001n12)
+ * Stop    o2cb:1	(c001n11)
+ * Stop    ocfs2-1:0	(c001n12)
+ * Stop    ocfs2-1:1	(c001n11)
 
 Executing cluster transition:
  * Pseudo action:   c-ocfs2-1_stop_0
- * Resource action: ocfs2-1:0       stop on c001n11
  * Resource action: ocfs2-1:1       stop on c001n12
+ * Resource action: ocfs2-1:0       stop on c001n11
  * Pseudo action:   c-ocfs2-1_stopped_0
  * Pseudo action:   o2cb-clone_stop_0
- * Resource action: o2cb:0          stop on c001n11
  * Resource action: o2cb:1          stop on c001n12
+ * Resource action: o2cb:0          stop on c001n11
  * Pseudo action:   o2cb-clone_stopped_0
  * Pseudo action:   dlm-clone_stop_0
  * Resource action: dlm:1           stop on c001n12

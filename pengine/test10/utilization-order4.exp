@@ -185,9 +185,9 @@
   </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="44" operation="stop" operation_key="prim-ping:0_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
-        <primitive id="prim-ping:0" class="ocf" provider="pacemaker" type="ping"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" host_list="77.77.77.138 77.77.77.139" multiplier="2000" name="ping-hosts"/>
+      <rsc_op id="46" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
+        <primitive id="prim-ping:0" long-id="prim-ping:1" class="ocf" provider="pacemaker" type="ping"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" host_list="77.77.77.138 77.77.77.139" multiplier="2000" name="ping-hosts"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -207,7 +207,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="44" operation="stop" operation_key="prim-ping:0_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="46" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
         <pseudo_event id="49" operation="stop" operation_key="clone-ping_stop_0"/>
@@ -273,7 +273,7 @@
         <rsc_op id="35" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <rsc_op id="44" operation="stop" operation_key="prim-ping:0_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="46" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
     </inputs>
   </synapse>

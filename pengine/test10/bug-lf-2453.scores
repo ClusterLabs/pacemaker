@@ -11,9 +11,9 @@ clone_color: apache:0 allocation score on domu1: INFINITY
 clone_color: apache:0 allocation score on domu2: INFINITY
 clone_color: apache:1 allocation score on domu1: INFINITY
 clone_color: apache:1 allocation score on domu2: INFINITY
-native_color: DummyResource:0 allocation score on domu1: -INFINITY
+native_color: DummyResource:0 allocation score on domu1: INFINITY
 native_color: DummyResource:0 allocation score on domu2: INFINITY
-native_color: DummyResource:1 allocation score on domu1: INFINITY
+native_color: DummyResource:1 allocation score on domu1: -INFINITY
 native_color: DummyResource:1 allocation score on domu2: INFINITY
 native_color: PrimitiveResource1 allocation score on domu1: INFINITY
 native_color: apache:0 allocation score on domu1: -INFINITY

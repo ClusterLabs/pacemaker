@@ -5,11 +5,11 @@ Online: [ dom0-01 ]
 
  domU-test01	(ocf::heartbeat:Xen):	Started dom0-02
  Clone Set: clone-dom0-iscsi1 [dom0-iscsi1]
-     Started: [ dom0-02 dom0-01 ]
+     Started: [ dom0-01 dom0-02 ]
 
 Transition Summary:
  * Migrate domU-test01	(Started dom0-02 -> dom0-01)
- * Stop    dom0-iscsi1-cnx1:0	(dom0-02)
+ * Stop    dom0-iscsi1-cnx1:1	(dom0-02)
 
 Executing cluster transition:
  * Resource action: domU-test01     migrate_to on dom0-02
@@ -17,10 +17,10 @@ Executing cluster transition:
  * Resource action: domU-test01     stop on dom0-02
  * Pseudo action:   clone-dom0-iscsi1_stop_0
  * Pseudo action:   domU-test01_start_0
- * Pseudo action:   dom0-iscsi1:0_stop_0
+ * Pseudo action:   dom0-iscsi1:1_stop_0
  * Resource action: dom0-iscsi1-cnx1:0 stop on dom0-02
  * Pseudo action:   all_stopped
- * Pseudo action:   dom0-iscsi1:0_stopped_0
+ * Pseudo action:   dom0-iscsi1:1_stopped_0
  * Pseudo action:   clone-dom0-iscsi1_stopped_0
 
 Revised cluster status:
@@ -30,5 +30,5 @@ Online: [ dom0-01 ]
  domU-test01	(ocf::heartbeat:Xen):	Started dom0-01
  Clone Set: clone-dom0-iscsi1 [dom0-iscsi1]
      Started: [ dom0-01 ]
-     Stopped: [ dom0-iscsi1:0 ]
+     Stopped: [ dom0-iscsi1:1 ]
 

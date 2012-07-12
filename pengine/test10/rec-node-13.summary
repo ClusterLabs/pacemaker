@@ -6,7 +6,7 @@ OFFLINE: [ c001n03 c001n05 ]
 
  Clone Set: DoFencing [child_DoFencing]
      Started: [ c001n02 c001n06 c001n07 ]
-     Stopped: [ child_DoFencing:0 child_DoFencing:1 child_DoFencing:2 ]
+     Stopped: [ child_DoFencing:3 child_DoFencing:4 child_DoFencing:5 ]
  DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
  Resource Group: group-1
      ocf_192.168.100.181	(ocf::heartbeat:IPaddr):	Started c001n02
@@ -51,7 +51,7 @@ OFFLINE: [ c001n03 c001n04 c001n05 ]
 
  Clone Set: DoFencing [child_DoFencing]
      Started: [ c001n02 c001n06 c001n07 ]
-     Stopped: [ child_DoFencing:0 child_DoFencing:1 child_DoFencing:2 ]
+     Stopped: [ child_DoFencing:3 child_DoFencing:4 child_DoFencing:5 ]
  DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
  Resource Group: group-1
      ocf_192.168.100.181	(ocf::heartbeat:IPaddr):	Started c001n02

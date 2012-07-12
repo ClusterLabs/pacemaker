@@ -8,7 +8,7 @@ Online: [ node1 node2 ]
      Slaves: [ node2 ]
 
 Transition Summary:
- * Demote  rsc1:1	(Master -> Slave node1)
+ * Demote  rsc1:0	(Master -> Slave node1)
 
 Executing cluster transition:
  * Pseudo action:   ms1_demote_0
@@ -20,5 +20,5 @@ Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	Started node1
  Master/Slave Set: ms1 [rsc1]
-     Slaves: [ node2 node1 ]
+     Slaves: [ node1 node2 ]
 

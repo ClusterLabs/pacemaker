@@ -1,8 +1,8 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="9" operation="stop" operation_key="res_Dummy1:0_stop_0" on_node="xenserver2" on_node_uuid="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6">
-        <primitive id="res_Dummy1:0" class="ocf" provider="heartbeat" type="Dummy"/>
+      <rsc_op id="9" operation="stop" operation_key="res_Dummy1:1_stop_0" internal_operation_key="res_Dummy1:0_stop_0" on_node="xenserver1" on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64">
+        <primitive id="res_Dummy1:1" long-id="res_Dummy1:0" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -14,8 +14,8 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="10" operation="stop" operation_key="res_Dummy1:1_stop_0" on_node="xenserver1" on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64">
-        <primitive id="res_Dummy1:1" class="ocf" provider="heartbeat" type="Dummy"/>
+      <rsc_op id="10" operation="stop" operation_key="res_Dummy1:0_stop_0" internal_operation_key="res_Dummy1:1_stop_0" on_node="xenserver2" on_node_uuid="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6">
+        <primitive id="res_Dummy1:0" long-id="res_Dummy1:1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -33,10 +33,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="stop" operation_key="res_Dummy1:0_stop_0" on_node="xenserver2" on_node_uuid="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6"/>
+        <rsc_op id="9" operation="stop" operation_key="res_Dummy1:1_stop_0" internal_operation_key="res_Dummy1:0_stop_0" on_node="xenserver1" on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="stop" operation_key="res_Dummy1:1_stop_0" on_node="xenserver1" on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64"/>
+        <rsc_op id="10" operation="stop" operation_key="res_Dummy1:0_stop_0" internal_operation_key="res_Dummy1:1_stop_0" on_node="xenserver2" on_node_uuid="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6"/>
       </trigger>
       <trigger>
         <pseudo_event id="13" operation="stop" operation_key="cl_res_Dummy1_stop_0"/>
@@ -115,10 +115,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="stop" operation_key="res_Dummy1:0_stop_0" on_node="xenserver2" on_node_uuid="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6"/>
+        <rsc_op id="9" operation="stop" operation_key="res_Dummy1:1_stop_0" internal_operation_key="res_Dummy1:0_stop_0" on_node="xenserver1" on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="stop" operation_key="res_Dummy1:1_stop_0" on_node="xenserver1" on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64"/>
+        <rsc_op id="10" operation="stop" operation_key="res_Dummy1:0_stop_0" internal_operation_key="res_Dummy1:1_stop_0" on_node="xenserver2" on_node_uuid="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6"/>
       </trigger>
       <trigger>
         <rsc_op id="15" operation="stop" operation_key="res_Dummy2_stop_0" on_node="xenserver1" on_node_uuid="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64"/>

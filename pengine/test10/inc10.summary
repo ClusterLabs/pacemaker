@@ -4,29 +4,29 @@ Node xen-2 (e3aa8547-3d52-47df-a8a3-ca94538a5282): standby
 Online: [ xen-4 xen-3 xen-1 ]
 
  Clone Set: DoFencing [child_DoFencing]
-     Started: [ xen-4 xen-3 xen-2 xen-1 ]
+     Started: [ xen-1 xen-2 xen-3 xen-4 ]
  Clone Set: ocfs2-clone [ocfs2]
-     Started: [ xen-4 xen-3 xen-2 xen-1 ]
+     Started: [ xen-1 xen-2 xen-3 xen-4 ]
 
 Transition Summary:
- * Stop    child_DoFencing:2	(xen-2)
- * Stop    ocfs2:2	(xen-2)
+ * Stop    child_DoFencing:1	(xen-2)
+ * Stop    ocfs2:1	(xen-2)
 
 Executing cluster transition:
  * Pseudo action:   DoFencing_stop_0
  * Pseudo action:   ocfs2-clone_pre_notify_stop_0
- * Resource action: ocfs2:0         notify on xen-4
  * Resource action: ocfs2:1         notify on xen-3
  * Resource action: ocfs2:1         notify on xen-2
  * Resource action: ocfs2:3         notify on xen-1
+ * Resource action: ocfs2:0         notify on xen-4
  * Pseudo action:   ocfs2-clone_confirmed-pre_notify_stop_0
  * Pseudo action:   ocfs2-clone_stop_0
  * Resource action: ocfs2:1         stop on xen-2
  * Pseudo action:   ocfs2-clone_stopped_0
  * Pseudo action:   ocfs2-clone_post_notify_stopped_0
- * Resource action: ocfs2:0         notify on xen-4
  * Resource action: ocfs2:1         notify on xen-3
  * Resource action: ocfs2:3         notify on xen-1
+ * Resource action: ocfs2:0         notify on xen-4
  * Pseudo action:   ocfs2-clone_confirmed-post_notify_stopped_0
  * Pseudo action:   all_stopped
  * Resource action: child_DoFencing:2 stop on xen-2
@@ -37,9 +37,9 @@ Node xen-2 (e3aa8547-3d52-47df-a8a3-ca94538a5282): standby
 Online: [ xen-4 xen-3 xen-1 ]
 
  Clone Set: DoFencing [child_DoFencing]
-     Started: [ xen-4 xen-3 xen-1 ]
-     Stopped: [ child_DoFencing:2 ]
+     Started: [ xen-1 xen-3 xen-4 ]
+     Stopped: [ child_DoFencing:3 ]
  Clone Set: ocfs2-clone [ocfs2]
-     Started: [ xen-4 xen-3 xen-1 ]
-     Stopped: [ ocfs2:2 ]
+     Started: [ xen-1 xen-3 xen-4 ]
+     Stopped: [ ocfs2:3 ]
 

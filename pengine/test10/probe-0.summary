@@ -3,9 +3,9 @@ Current cluster status:
 Online: [ x32c48 x32c47 ]
 
  Clone Set: stonithcloneset [stonithclone]
-     Started: [ x32c48 x32c47 ]
+     Started: [ x32c47 x32c48 ]
  Clone Set: imagestorecloneset [imagestoreclone]
-     Started: [ x32c48 x32c47 ]
+     Started: [ x32c47 x32c48 ]
  Clone Set: configstorecloneset [configstoreclone]
      Stopped: [ configstoreclone:0 configstoreclone:1 ]
 
@@ -32,9 +32,9 @@ Revised cluster status:
 Online: [ x32c48 x32c47 ]
 
  Clone Set: stonithcloneset [stonithclone]
-     Started: [ x32c48 x32c47 ]
+     Started: [ x32c47 x32c48 ]
  Clone Set: imagestorecloneset [imagestoreclone]
-     Started: [ x32c48 x32c47 ]
+     Started: [ x32c47 x32c48 ]
  Clone Set: configstorecloneset [configstoreclone]
      Started: [ x32c47 x32c48 ]
 

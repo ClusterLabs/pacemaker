@@ -3,7 +3,7 @@
      <action_set>
       <rsc_op id="40" operation="notify" operation_key="export_home_ocfs2:0_post_notify_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
         <primitive id="export_home_ocfs2:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_active_resource="export_home_ocfs2:1 " CRM_meta_notify_active_uname="power720-2 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="export_home_ocfs2:0 export_home_ocfs2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="export_home_ocfs2:0 " CRM_meta_notify_start_uname="power720-1 " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/sda" directory="/mnt" fstype="ocfs2" options="rw,sync"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_active_resource="export_home_ocfs2:1 " CRM_meta_notify_active_uname="power720-2 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="export_home_ocfs2:0 export_home_ocfs2:2 " CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="export_home_ocfs2:0 " CRM_meta_notify_start_uname="power720-1 " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/sda" directory="/mnt" fstype="ocfs2" options="rw,sync"/>
        </rsc_op>
      </action_set>
     <inputs>
@@ -41,7 +41,7 @@
      <action_set>
       <rsc_op id="42" operation="notify" operation_key="export_home_ocfs2:1_post_notify_start_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
         <primitive id="export_home_ocfs2:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_active_resource="export_home_ocfs2:1 " CRM_meta_notify_active_uname="power720-2 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="export_home_ocfs2:0 export_home_ocfs2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="export_home_ocfs2:0 " CRM_meta_notify_start_uname="power720-1 " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/sda" directory="/mnt" fstype="ocfs2" options="rw,sync"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_active_resource="export_home_ocfs2:1 " CRM_meta_notify_active_uname="power720-2 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="export_home_ocfs2:0 export_home_ocfs2:2 " CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="export_home_ocfs2:0 " CRM_meta_notify_start_uname="power720-1 " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/sda" directory="/mnt" fstype="ocfs2" options="rw,sync"/>
        </rsc_op>
      </action_set>
     <inputs>
@@ -54,7 +54,7 @@
      <action_set>
       <rsc_op id="41" operation="notify" operation_key="export_home_ocfs2:1_pre_notify_start_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
         <primitive id="export_home_ocfs2:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_active_resource="export_home_ocfs2:1 " CRM_meta_notify_active_uname="power720-2 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="export_home_ocfs2:0 export_home_ocfs2:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="export_home_ocfs2:0 " CRM_meta_notify_start_uname="power720-1 " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/sda" directory="/mnt" fstype="ocfs2" options="rw,sync"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_active_resource="export_home_ocfs2:1 " CRM_meta_notify_active_uname="power720-2 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="export_home_ocfs2:0 export_home_ocfs2:2 " CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="export_home_ocfs2:0 " CRM_meta_notify_start_uname="power720-1 " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/sda" directory="/mnt" fstype="ocfs2" options="rw,sync"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -84,7 +84,7 @@
   <synapse id="7" priority="1000000">
      <action_set>
       <pseudo_event id="20" operation="notified" operation_key="export_home_ocfs2_clone_set_confirmed-post_notify_running_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -102,7 +102,7 @@
    <synapse id="8" priority="1000000">
      <action_set>
       <pseudo_event id="19" operation="notify" operation_key="export_home_ocfs2_clone_set_post_notify_running_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -117,7 +117,7 @@
    <synapse id="9">
      <action_set>
        <pseudo_event id="18" operation="notified" operation_key="export_home_ocfs2_clone_set_confirmed-pre_notify_start_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -132,7 +132,7 @@
   <synapse id="10">
     <action_set>
       <pseudo_event id="17" operation="notify" operation_key="export_home_ocfs2_clone_set_pre_notify_start_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs/>

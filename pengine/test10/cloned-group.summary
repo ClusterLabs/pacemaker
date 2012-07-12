@@ -8,33 +8,33 @@ OFFLINE: [ webcluster02 ]
          apache2:2	(ocf::heartbeat:apache):	 ORPHANED Started webcluster01
          mysql-proxy:2	(lsb:mysql-proxy):	 ORPHANED Started webcluster01
      Started: [ webcluster01 ]
-     Stopped: [ grrr:0 ]
+     Stopped: [ grrr:1 ]
 
 Transition Summary:
- * Restart apache2:1	(Started webcluster01)
- * Restart mysql-proxy:1	(Started webcluster01)
+ * Restart apache2:0	(Started webcluster01)
+ * Restart mysql-proxy:0	(Started webcluster01)
  * Stop    apache2:2	(webcluster01)
  * Stop    mysql-proxy:2	(webcluster01)
 
 Executing cluster transition:
  * Pseudo action:   apache2_clone_stop_0
- * Pseudo action:   grrr:1_stop_0
+ * Pseudo action:   grrr:0_stop_0
  * Resource action: mysql-proxy:1   stop on webcluster01
  * Pseudo action:   grrr:2_stop_0
  * Resource action: mysql-proxy:0   stop on webcluster01
  * Resource action: apache2:1       stop on webcluster01
  * Resource action: apache2:0       stop on webcluster01
  * Pseudo action:   all_stopped
- * Pseudo action:   grrr:1_stopped_0
+ * Pseudo action:   grrr:0_stopped_0
  * Pseudo action:   grrr:2_stopped_0
  * Pseudo action:   apache2_clone_stopped_0
  * Pseudo action:   apache2_clone_start_0
- * Pseudo action:   grrr:1_start_0
+ * Pseudo action:   grrr:0_start_0
  * Resource action: apache2:1       start on webcluster01
  * Resource action: apache2:1       monitor=10000 on webcluster01
  * Resource action: mysql-proxy:1   start on webcluster01
  * Resource action: mysql-proxy:1   monitor=10000 on webcluster01
- * Pseudo action:   grrr:1_running_0
+ * Pseudo action:   grrr:0_running_0
  * Pseudo action:   apache2_clone_running_0
 
 Revised cluster status:
@@ -43,5 +43,5 @@ OFFLINE: [ webcluster02 ]
 
  Clone Set: apache2_clone [grrr]
      Started: [ webcluster01 ]
-     Stopped: [ grrr:0 ]
+     Stopped: [ grrr:1 ]
 

@@ -6,7 +6,7 @@ Online: [ srv01 srv02 srv03 ]
  main_rsc2	(ocf::pacemaker:Dummy):	Started srv02
  Clone Set: clnDummy1 [prmDummy1]
      Started: [ srv02 srv03 ]
-     Stopped: [ prmDummy1:0 ]
+     Stopped: [ prmDummy1:2 ]
  Clone Set: clnPingd [prmPingd]
      Started: [ srv01 srv02 srv03 ]
 
@@ -30,8 +30,8 @@ Online: [ srv01 srv02 srv03 ]
  main_rsc2	(ocf::pacemaker:Dummy):	Started srv02
  Clone Set: clnDummy1 [prmDummy1]
      Started: [ srv02 srv03 ]
-     Stopped: [ prmDummy1:0 ]
+     Stopped: [ prmDummy1:2 ]
  Clone Set: clnPingd [prmPingd]
      Started: [ srv02 srv03 ]
-     Stopped: [ prmPingd:0 ]
+     Stopped: [ prmPingd:2 ]
 

@@ -16,7 +16,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  Clone Set: Connectivity [ping-1]
      Started: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  Master/Slave Set: master-1 [stateful-1]
-     stateful-1:1	(ocf::pacemaker:Stateful):	Slave pcmk-1 FAILED
+     stateful-1:0	(ocf::pacemaker:Stateful):	Slave pcmk-1 FAILED
      Slaves: [ pcmk-2 pcmk-3 pcmk-4 ]
 
 Transition Summary:
@@ -24,8 +24,8 @@ Transition Summary:
  * Start   r192.168.122.106	(pcmk-2)
  * Start   r192.168.122.107	(pcmk-2)
  * Start   lsb-dummy	(pcmk-2)
- * Promote stateful-1:0	(Slave -> Master pcmk-2)
- * Recover stateful-1:1	(Slave pcmk-1)
+ * Recover stateful-1:0	(Slave pcmk-1)
+ * Promote stateful-1:1	(Slave -> Master pcmk-2)
 
 Executing cluster transition:
  * Resource action: stateful-1:0    cancel=15000 on pcmk-2

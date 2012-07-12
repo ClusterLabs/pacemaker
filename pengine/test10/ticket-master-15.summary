@@ -8,16 +8,16 @@ Online: [ node1 node2 ]
      Slaves: [ node2 ]
 
 Transition Summary:
- * Stop    rsc1:0	(node2)
- * Demote  rsc1:1	(Master -> Stopped node1)
+ * Demote  rsc1:0	(Master -> Stopped node1)
+ * Stop    rsc1:1	(node2)
 
 Executing cluster transition:
  * Pseudo action:   ms1_demote_0
  * Resource action: rsc1:1          demote on node1
  * Pseudo action:   ms1_demoted_0
  * Pseudo action:   ms1_stop_0
- * Resource action: rsc1:0          stop on node2
  * Resource action: rsc1:1          stop on node1
+ * Resource action: rsc1:0          stop on node2
  * Pseudo action:   ms1_stopped_0
  * Pseudo action:   all_stopped
 

@@ -18,5 +18,5 @@ Revised cluster status:
 Online: [ mysql-02 mysql-01 ]
 
  Clone Set: ms-drbd0 [drbd0]
-     Started: [ mysql-02 mysql-01 ]
+     Started: [ mysql-01 mysql-02 ]
 

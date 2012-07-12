@@ -13,25 +13,25 @@ Online: [ node2 ]
      Started: [ node1 node2 ]
 
 Transition Summary:
- * Stop    stonithclone:0	(node1)
- * Stop    evmsclone:0	(node1)
- * Stop    imagestoreclone:0	(node1)
- * Stop    configstoreclone:0	(node1)
+ * Stop    stonithclone:1	(node1)
+ * Stop    evmsclone:1	(node1)
+ * Stop    imagestoreclone:1	(node1)
+ * Stop    configstoreclone:1	(node1)
 
 Executing cluster transition:
  * Pseudo action:   stonithcloneset_stop_0
  * Pseudo action:   evmscloneset_pre_notify_stop_0
  * Pseudo action:   imagestorecloneset_pre_notify_stop_0
  * Pseudo action:   configstorecloneset_pre_notify_stop_0
- * Resource action: evmsclone:0     notify on node1
  * Resource action: evmsclone:1     notify on node2
+ * Resource action: evmsclone:0     notify on node1
  * Pseudo action:   evmscloneset_confirmed-pre_notify_stop_0
- * Resource action: imagestoreclone:0 notify on node1
  * Resource action: imagestoreclone:1 notify on node2
+ * Resource action: imagestoreclone:0 notify on node1
  * Pseudo action:   imagestorecloneset_confirmed-pre_notify_stop_0
  * Pseudo action:   imagestorecloneset_stop_0
- * Resource action: configstoreclone:0 notify on node1
  * Resource action: configstoreclone:1 notify on node2
+ * Resource action: configstoreclone:0 notify on node1
  * Pseudo action:   configstorecloneset_confirmed-pre_notify_stop_0
  * Pseudo action:   configstorecloneset_stop_0
  * Resource action: imagestoreclone:0 stop on node1
@@ -60,14 +60,14 @@ Online: [ node2 ]
 
  Clone Set: stonithcloneset [stonithclone]
      Started: [ node2 ]
-     Stopped: [ stonithclone:0 ]
+     Stopped: [ stonithclone:1 ]
  Clone Set: evmscloneset [evmsclone]
      Started: [ node2 ]
-     Stopped: [ evmsclone:0 ]
+     Stopped: [ evmsclone:1 ]
  Clone Set: imagestorecloneset [imagestoreclone]
      Started: [ node2 ]
-     Stopped: [ imagestoreclone:0 ]
+     Stopped: [ imagestoreclone:1 ]
  Clone Set: configstorecloneset [configstoreclone]
      Started: [ node2 ]
-     Stopped: [ configstoreclone:0 ]
+     Stopped: [ configstoreclone:1 ]
 

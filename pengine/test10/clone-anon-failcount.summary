@@ -37,10 +37,10 @@ Transition Summary:
  * Move    UmIPaddr	(Started srv01 -> srv04)
  * Move    UmDummy01	(Started srv01 -> srv04)
  * Move    UmDummy02	(Started srv01 -> srv04)
- * Stop    clnUMdummy01:0	(srv01)
- * Stop    clnUMdummy02:0	(srv01)
- * Recover clnUMdummy01:1	(Started srv04)
- * Restart clnUMdummy02:1	(Started srv04)
+ * Recover clnUMdummy01:0	(Started srv04)
+ * Restart clnUMdummy02:0	(Started srv04)
+ * Stop    clnUMdummy01:1	(srv01)
+ * Stop    clnUMdummy02:1	(srv01)
 
 Executing cluster transition:
  * Pseudo action:   UMgroup01_stop_0
@@ -51,22 +51,22 @@ Executing cluster transition:
  * Pseudo action:   UMgroup01_stopped_0
  * Pseudo action:   clnUMgroup01_stop_0
  * Pseudo action:   clnUmResource:0_stop_0
- * Resource action: clnUMdummy02:0  stop on srv01
- * Pseudo action:   clnUmResource:1_stop_0
  * Resource action: clnUMdummy02:1  stop on srv04
- * Resource action: clnUMdummy01:0  stop on srv01
+ * Pseudo action:   clnUmResource:1_stop_0
+ * Resource action: clnUMdummy02:0  stop on srv01
  * Resource action: clnUMdummy01:1  stop on srv04
+ * Resource action: clnUMdummy01:0  stop on srv01
  * Pseudo action:   all_stopped
  * Pseudo action:   clnUmResource:0_stopped_0
  * Pseudo action:   clnUmResource:1_stopped_0
  * Pseudo action:   clnUMgroup01_stopped_0
  * Pseudo action:   clnUMgroup01_start_0
- * Pseudo action:   clnUmResource:1_start_0
+ * Pseudo action:   clnUmResource:0_start_0
  * Resource action: clnUMdummy01:1  start on srv04
  * Resource action: clnUMdummy01:1  monitor=10000 on srv04
  * Resource action: clnUMdummy02:1  start on srv04
  * Resource action: clnUMdummy02:1  monitor=10000 on srv04
- * Pseudo action:   clnUmResource:1_running_0
+ * Pseudo action:   clnUmResource:0_running_0
  * Pseudo action:   clnUMgroup01_running_0
  * Pseudo action:   UMgroup01_start_0
  * Resource action: UmVIPcheck      start on srv04
@@ -102,7 +102,7 @@ Online: [ srv01 srv02 srv03 srv04 ]
      prmStonithN4	(stonith:external/ssh):	Started srv03
  Clone Set: clnUMgroup01 [clnUmResource]
      Started: [ srv04 ]
-     Stopped: [ clnUmResource:0 ]
+     Stopped: [ clnUmResource:1 ]
  Clone Set: clnPingd [clnPrmPingd]
      Started: [ srv01 srv02 srv03 srv04 ]
  Clone Set: clnDiskd1 [clnPrmDiskd1]

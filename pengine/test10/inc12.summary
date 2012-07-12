@@ -16,7 +16,7 @@ Online: [ c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 ]
  rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n07
  Clone Set: DoFencing [child_DoFencing]
      Started: [ c001n02 c001n04 c001n05 c001n06 c001n07 ]
-     Stopped: [ child_DoFencing:0 ]
+     Stopped: [ child_DoFencing:5 ]
  Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
      ocf_msdummy:0	(ocf::heartbeat:Stateful):	Stopped 
      ocf_msdummy:1	(ocf::heartbeat:Stateful):	Stopped 
@@ -42,11 +42,11 @@ Transition Summary:
  * Stop    rsc_c001n05	(c001n05)
  * Stop    rsc_c001n06	(c001n06)
  * Stop    rsc_c001n07	(c001n07)
- * Stop    child_DoFencing:1	(c001n02)
- * Stop    child_DoFencing:2	(c001n04)
- * Stop    child_DoFencing:3	(c001n05)
- * Stop    child_DoFencing:4	(c001n06)
- * Stop    child_DoFencing:5	(c001n07)
+ * Stop    child_DoFencing:0	(c001n02)
+ * Stop    child_DoFencing:1	(c001n04)
+ * Stop    child_DoFencing:2	(c001n05)
+ * Stop    child_DoFencing:3	(c001n06)
+ * Stop    child_DoFencing:4	(c001n07)
  * Stop    ocf_msdummy:10	(c001n02)
  * Stop    ocf_msdummy:11	(c001n02)
  * Stop    ocf_msdummy:2	(c001n04)

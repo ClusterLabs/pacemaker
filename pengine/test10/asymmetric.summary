@@ -11,8 +11,8 @@ Online: [ puma3 puma1 ]
 Transition Summary:
 
 Executing cluster transition:
- * Resource action: ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0 monitor=20000 on puma3
  * Resource action: ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1 monitor=19000 on puma1
+ * Resource action: ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0 monitor=20000 on puma3
  * Resource action: drbd_target_poolA monitor on puma1
  * Resource action: drbd_target_poolA monitor on puma3
  * Pseudo action:   probe_complete

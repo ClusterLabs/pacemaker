@@ -182,9 +182,9 @@
   </synapse>
   <synapse id="14">
     <action_set>
-      <rsc_op id="29" operation="promote" operation_key="rsc5:1_promote_0" on_node="node1" on_node_uuid="node1">
-        <primitive id="rsc5:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      <rsc_op id="27" operation="promote" operation_key="rsc5:1_promote_0" internal_operation_key="rsc5:0_promote_0" on_node="node1" on_node_uuid="node1">
+        <primitive id="rsc5:1" long-id="rsc5:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -201,7 +201,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="29" operation="promote" operation_key="rsc5:1_promote_0" on_node="node1" on_node_uuid="node1"/>
+        <rsc_op id="27" operation="promote" operation_key="rsc5:1_promote_0" internal_operation_key="rsc5:0_promote_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
     </inputs>
   </synapse>

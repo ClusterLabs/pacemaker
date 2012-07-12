@@ -28,5 +28,5 @@ Online: [ alice.demo bob.demo ]
 
  dummy1	(ocf::heartbeat:Dummy):	Started alice.demo
  Clone Set: cl_dummy [dummy]
-     Started: [ bob.demo alice.demo ]
+     Started: [ alice.demo bob.demo ]
 

@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ sirius pollux ]
 
  Clone Set: pingd-clone [pingd-1]
-     Started: [ sirius pollux ]
+     Started: [ pollux sirius ]
  Master/Slave Set: drbd-msr [drbd-r0]
      Masters: [ pollux ]
      Slaves: [ sirius ]
@@ -33,7 +33,7 @@ Revised cluster status:
 Online: [ sirius pollux ]
 
  Clone Set: pingd-clone [pingd-1]
-     Started: [ sirius pollux ]
+     Started: [ pollux sirius ]
  Master/Slave Set: drbd-msr [drbd-r0]
      Masters: [ pollux ]
      Slaves: [ sirius ]

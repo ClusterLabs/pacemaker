@@ -10,7 +10,7 @@ Online: [ node1 node2 ]
  Clone Set: clone4 [rsc4]
      Stopped: [ rsc4:0 rsc4:1 ]
  Master/Slave Set: ms5 [rsc5]
-     Slaves: [ node2 node1 ]
+     Slaves: [ node1 node2 ]
 
 Transition Summary:
  * Start   rsc1	(node2)
@@ -38,5 +38,5 @@ Online: [ node1 node2 ]
  Clone Set: clone4 [rsc4]
      Stopped: [ rsc4:0 rsc4:1 ]
  Master/Slave Set: ms5 [rsc5]
-     Slaves: [ node2 node1 ]
+     Slaves: [ node1 node2 ]
 

@@ -4,7 +4,7 @@ clone_color: c_dummy allocation score on gluster02.h: 0
 clone_color: c_dummy allocation score on gluster03.h: 0
 clone_color: c_dummy allocation score on gluster04.h: 0
 clone_color: g_stateful:0 allocation score on gluster01.h: 5
-clone_color: g_stateful:0 allocation score on gluster02.h: 0
+clone_color: g_stateful:0 allocation score on gluster02.h: 10
 clone_color: g_stateful:0 allocation score on gluster03.h: 0
 clone_color: g_stateful:0 allocation score on gluster04.h: 0
 clone_color: g_stateful:1 allocation score on gluster01.h: 0

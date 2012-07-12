@@ -8,20 +8,20 @@ Online: [ ibm2.isg.si ibm1.isg.si ]
      Slaves: [ ibm1.isg.si ]
 
 Transition Summary:
- * Promote drbd_r0:0	(Slave -> Master ibm1.isg.si)
+ * Promote drbd_r0:1	(Slave -> Master ibm1.isg.si)
 
 Executing cluster transition:
  * Resource action: drbd_r0:0       cancel=30000 on ibm1.isg.si
  * Pseudo action:   ms_drbd_r0_pre_notify_promote_0
- * Resource action: drbd_r0:0       notify on ibm1.isg.si
  * Resource action: drbd_r0:1       notify on ibm2.isg.si
+ * Resource action: drbd_r0:0       notify on ibm1.isg.si
  * Pseudo action:   ms_drbd_r0_confirmed-pre_notify_promote_0
  * Pseudo action:   ms_drbd_r0_promote_0
  * Resource action: drbd_r0:0       promote on ibm1.isg.si
  * Pseudo action:   ms_drbd_r0_promoted_0
  * Pseudo action:   ms_drbd_r0_post_notify_promoted_0
- * Resource action: drbd_r0:0       notify on ibm1.isg.si
  * Resource action: drbd_r0:1       notify on ibm2.isg.si
+ * Resource action: drbd_r0:0       notify on ibm1.isg.si
  * Pseudo action:   ms_drbd_r0_confirmed-post_notify_promoted_0
  * Resource action: drbd_r0:0       monitor=15000 on ibm1.isg.si
 

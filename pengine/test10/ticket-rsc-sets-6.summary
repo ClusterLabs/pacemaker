@@ -10,12 +10,12 @@ Online: [ node1 node2 ]
  Clone Set: clone4 [rsc4]
      Stopped: [ rsc4:0 rsc4:1 ]
  Master/Slave Set: ms5 [rsc5]
-     Slaves: [ node2 node1 ]
+     Slaves: [ node1 node2 ]
 
 Transition Summary:
  * Start   rsc4:0	(node2)
  * Start   rsc4:1	(node1)
- * Promote rsc5:1	(Slave -> Master node1)
+ * Promote rsc5:0	(Slave -> Master node1)
 
 Executing cluster transition:
  * Pseudo action:   clone4_start_0
@@ -37,7 +37,7 @@ Online: [ node1 node2 ]
      rsc2	(ocf::pacemaker:Dummy):	Started node1
      rsc3	(ocf::pacemaker:Dummy):	Started node1
  Clone Set: clone4 [rsc4]
-     Started: [ node2 node1 ]
+     Started: [ node1 node2 ]
  Master/Slave Set: ms5 [rsc5]
      Masters: [ node1 ]
      Slaves: [ node2 ]

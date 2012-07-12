@@ -4,16 +4,16 @@ Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	Started node1
  Clone Set: clone1 [rsc1]
-     Started: [ node2 node1 ]
+     Started: [ node1 node2 ]
 
 Transition Summary:
- * Stop    rsc1:0	(node2)
- * Stop    rsc1:1	(node1)
+ * Stop    rsc1:0	(node1)
+ * Stop    rsc1:1	(node2)
 
 Executing cluster transition:
  * Pseudo action:   clone1_stop_0
- * Resource action: rsc1:0          stop on node2
  * Resource action: rsc1:1          stop on node1
+ * Resource action: rsc1:0          stop on node2
  * Pseudo action:   clone1_stopped_0
  * Pseudo action:   all_stopped
 

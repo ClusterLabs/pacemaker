@@ -76,7 +76,7 @@ Online: [ arc-dknightlx arc-tkincaidlx.wsicorp.com ]
 
  Master/Slave Set: ms_drbd_7788 [rsc_drbd_7788]
      Masters: [ arc-tkincaidlx.wsicorp.com ]
-     Stopped: [ rsc_drbd_7788:0 ]
+     Stopped: [ rsc_drbd_7788:1 ]
  Resource Group: grp_pgsql_mirror
      fs_mirror	(ocf::heartbeat:Filesystem):	Started arc-tkincaidlx.wsicorp.com
      pgsql_5555	(ocf::heartbeat:pgsql):	Started arc-tkincaidlx.wsicorp.com

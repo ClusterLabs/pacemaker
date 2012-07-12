@@ -95,5 +95,5 @@ Online: [ act1 act2 act3 sby2 sby1 ]
      prmApPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act3
  Clone Set: clnPingd [prmPingd]
      Started: [ act2 act3 sby1 sby2 ]
-     Stopped: [ prmPingd:0 ]
+     Stopped: [ prmPingd:4 ]
 

@@ -11,7 +11,7 @@ Online: [ deglxen001 ]
  Clone Set: clone-nfs [grp-nfs]
      Started: [ deglxen001 deglxen002 ]
  Clone Set: clone-ping [prim-ping]
-     Started: [ deglxen002 deglxen001 ]
+     Started: [ deglxen001 deglxen002 ]
 
 Transition Summary:
  * Migrate degllx62-vm	(Started deglxen002 -> deglxen001)
@@ -19,7 +19,7 @@ Transition Summary:
  * Stop    nfs-xen_config:1	(deglxen002)
  * Stop    nfs-xen_swapfiles:1	(deglxen002)
  * Stop    nfs-xen_images:1	(deglxen002)
- * Stop    prim-ping:0	(deglxen002)
+ * Stop    prim-ping:1	(deglxen002)
 
 Executing cluster transition:
  * Resource action: degllx61-vm     stop on deglxen001
@@ -56,5 +56,5 @@ Online: [ deglxen001 ]
      Stopped: [ grp-nfs:1 ]
  Clone Set: clone-ping [prim-ping]
      Started: [ deglxen001 ]
-     Stopped: [ prim-ping:0 ]
+     Stopped: [ prim-ping:1 ]
 

@@ -10,31 +10,31 @@ Online: [ srv01 srv03 srv04 ]
  Resource Group: Group03
      Dummy03	(ocf::heartbeat:Dummy):	Started srv03
  Clone Set: clnStonith1 [grpStonith1]
-     Started: [ srv04 srv02 srv03 ]
+     Started: [ srv02 srv03 srv04 ]
      Stopped: [ grpStonith1:3 ]
  Clone Set: clnStonith2 [grpStonith2]
-     Started: [ srv01 srv04 srv03 ]
+     Started: [ srv01 srv03 srv04 ]
      Stopped: [ grpStonith2:3 ]
  Clone Set: clnStonith3 [grpStonith3]
-     Resource Group: grpStonith3:1
-         prmStonith3-1:1	(stonith:external/stonith-helper):	Started srv01
-         prmStonith3-3:1	(stonith:external/ssh):	Stopped 
-     Started: [ srv04 srv02 ]
-     Stopped: [ grpStonith3:0 ]
+     Resource Group: grpStonith3:0
+         prmStonith3-1:0	(stonith:external/stonith-helper):	Started srv01
+         prmStonith3-3:0	(stonith:external/ssh):	Stopped 
+     Started: [ srv02 srv04 ]
+     Stopped: [ grpStonith3:3 ]
  Clone Set: clnStonith4 [grpStonith4]
-     Started: [ srv01 srv03 srv02 ]
-     Stopped: [ grpStonith4:0 ]
+     Started: [ srv01 srv02 srv03 ]
+     Stopped: [ grpStonith4:3 ]
 
 Transition Summary:
  * Start   Dummy01	(srv01)
  * Move    Dummy02	(Started srv02 -> srv04)
- * Stop    prmStonith1-1:1	(srv02)
- * Stop    prmStonith1-3:1	(srv02)
- * Start   prmStonith3-3:1	(srv01)
- * Stop    prmStonith3-1:3	(srv02)
- * Stop    prmStonith3-3:3	(srv02)
- * Stop    prmStonith4-1:3	(srv02)
- * Stop    prmStonith4-3:3	(srv02)
+ * Stop    prmStonith1-1:2	(srv02)
+ * Stop    prmStonith1-3:2	(srv02)
+ * Start   prmStonith3-3:0	(srv01)
+ * Stop    prmStonith3-1:2	(srv02)
+ * Stop    prmStonith3-3:2	(srv02)
+ * Stop    prmStonith4-1:2	(srv02)
+ * Stop    prmStonith4-3:2	(srv02)
 
 Executing cluster transition:
  * Pseudo action:   Group01_start_0
@@ -42,27 +42,27 @@ Executing cluster transition:
  * Resource action: prmStonith3-1:1 monitor=3600000 on srv01
  * Pseudo action:   clnStonith3_stop_0
  * Pseudo action:   clnStonith4_stop_0
- * Pseudo action:   grpStonith1:1_stop_0
+ * Pseudo action:   grpStonith1:2_stop_0
  * Pseudo action:   prmStonith1-3:1_stop_0
- * Pseudo action:   grpStonith3:3_stop_0
+ * Pseudo action:   grpStonith3:2_stop_0
  * Pseudo action:   prmStonith3-3:1_stop_0
- * Pseudo action:   grpStonith4:3_stop_0
+ * Pseudo action:   grpStonith4:2_stop_0
  * Pseudo action:   prmStonith4-3:1_stop_0
  * Pseudo action:   prmStonith1-1:1_stop_0
  * Pseudo action:   prmStonith3-1:1_stop_0
  * Pseudo action:   prmStonith4-1:1_stop_0
- * Pseudo action:   grpStonith1:1_stopped_0
+ * Pseudo action:   grpStonith1:2_stopped_0
  * Pseudo action:   clnStonith1_stopped_0
- * Pseudo action:   grpStonith3:3_stopped_0
+ * Pseudo action:   grpStonith3:2_stopped_0
  * Pseudo action:   clnStonith3_stopped_0
  * Pseudo action:   clnStonith3_start_0
- * Pseudo action:   grpStonith4:3_stopped_0
+ * Pseudo action:   grpStonith4:2_stopped_0
  * Pseudo action:   clnStonith4_stopped_0
- * Pseudo action:   grpStonith3:1_start_0
- * Resource action: prmStonith3-3:1 start on srv01
+ * Pseudo action:   grpStonith3:0_start_0
+ * Resource action: prmStonith3-3:0 start on srv01
  * Pseudo action:   stonith_up
- * Pseudo action:   grpStonith3:1_running_0
- * Resource action: prmStonith3-3:1 monitor=3600000 on srv01
+ * Pseudo action:   grpStonith3:0_running_0
+ * Resource action: prmStonith3-3:0 monitor=3600000 on srv01
  * Pseudo action:   clnStonith3_running_0
  * Fencing srv02
  * Pseudo action:   stonith_complete
@@ -89,15 +89,15 @@ OFFLINE: [ srv02 ]
  Resource Group: Group03
      Dummy03	(ocf::heartbeat:Dummy):	Started srv03
  Clone Set: clnStonith1 [grpStonith1]
-     Started: [ srv04 srv03 ]
-     Stopped: [ grpStonith1:1 grpStonith1:3 ]
+     Started: [ srv03 srv04 ]
+     Stopped: [ grpStonith1:2 grpStonith1:3 ]
  Clone Set: clnStonith2 [grpStonith2]
-     Started: [ srv01 srv04 srv03 ]
+     Started: [ srv01 srv03 srv04 ]
      Stopped: [ grpStonith2:3 ]
  Clone Set: clnStonith3 [grpStonith3]
      Started: [ srv01 srv04 ]
-     Stopped: [ grpStonith3:0 grpStonith3:3 ]
+     Stopped: [ grpStonith3:2 grpStonith3:3 ]
  Clone Set: clnStonith4 [grpStonith4]
      Started: [ srv01 srv03 ]
-     Stopped: [ grpStonith4:0 grpStonith4:3 ]
+     Stopped: [ grpStonith4:2 grpStonith4:3 ]
 

@@ -5,7 +5,7 @@ Online: [ node1 node2 ]
  Clone Set: stonithcloneset [stonithclone]
      Started: [ node1 node2 ]
  Clone Set: evmscloneset [evmsclone]
-     evmsclone:0	(ocf::heartbeat:EvmsSCC):	Started node1 FAILED
+     evmsclone:1	(ocf::heartbeat:EvmsSCC):	Started node1 FAILED
      Started: [ node2 ]
  Clone Set: imagestorecloneset [imagestoreclone]
      Started: [ node1 node2 ]
@@ -13,23 +13,23 @@ Online: [ node1 node2 ]
      Started: [ node1 node2 ]
 
 Transition Summary:
- * Recover evmsclone:0	(Started node1)
- * Restart imagestoreclone:0	(Started node1)
- * Restart configstoreclone:0	(Started node1)
+ * Recover evmsclone:1	(Started node1)
+ * Restart imagestoreclone:1	(Started node1)
+ * Restart configstoreclone:1	(Started node1)
 
 Executing cluster transition:
  * Pseudo action:   evmscloneset_pre_notify_stop_0
  * Pseudo action:   imagestorecloneset_pre_notify_stop_0
  * Pseudo action:   configstorecloneset_pre_notify_stop_0
- * Resource action: evmsclone:0     notify on node1
  * Resource action: evmsclone:1     notify on node2
+ * Resource action: evmsclone:0     notify on node1
  * Pseudo action:   evmscloneset_confirmed-pre_notify_stop_0
- * Resource action: imagestoreclone:0 notify on node1
  * Resource action: imagestoreclone:1 notify on node2
+ * Resource action: imagestoreclone:0 notify on node1
  * Pseudo action:   imagestorecloneset_confirmed-pre_notify_stop_0
  * Pseudo action:   imagestorecloneset_stop_0
- * Resource action: configstoreclone:0 notify on node1
  * Resource action: configstoreclone:1 notify on node2
+ * Resource action: configstoreclone:0 notify on node1
  * Pseudo action:   configstorecloneset_confirmed-pre_notify_stop_0
  * Pseudo action:   configstorecloneset_stop_0
  * Resource action: imagestoreclone:0 stop on node1
@@ -62,8 +62,8 @@ Executing cluster transition:
  * Resource action: evmsclone:0     start on node1
  * Pseudo action:   evmscloneset_running_0
  * Pseudo action:   evmscloneset_post_notify_running_0
- * Resource action: evmsclone:0     notify on node1
  * Resource action: evmsclone:1     notify on node2
+ * Resource action: evmsclone:0     notify on node1
  * Pseudo action:   evmscloneset_confirmed-post_notify_running_0
  * Pseudo action:   imagestorecloneset_start_0
  * Pseudo action:   configstorecloneset_start_0
@@ -73,11 +73,11 @@ Executing cluster transition:
  * Pseudo action:   configstorecloneset_running_0
  * Pseudo action:   imagestorecloneset_post_notify_running_0
  * Pseudo action:   configstorecloneset_post_notify_running_0
- * Resource action: imagestoreclone:0 notify on node1
  * Resource action: imagestoreclone:1 notify on node2
+ * Resource action: imagestoreclone:0 notify on node1
  * Pseudo action:   imagestorecloneset_confirmed-post_notify_running_0
- * Resource action: configstoreclone:0 notify on node1
  * Resource action: configstoreclone:1 notify on node2
+ * Resource action: configstoreclone:0 notify on node1
  * Pseudo action:   configstorecloneset_confirmed-post_notify_running_0
  * Resource action: imagestoreclone:0 monitor=20000 on node1
  * Resource action: configstoreclone:0 monitor=20000 on node1

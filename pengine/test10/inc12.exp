@@ -140,9 +140,9 @@
    </synapse>
    <synapse id="12">
      <action_set>
-       <rsc_op id="47" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
-        <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 "/>
+      <rsc_op id="47" operation="stop" operation_key="child_DoFencing:1_stop_0" internal_operation_key="child_DoFencing:0_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
+        <primitive id="child_DoFencing:1" long-id="child_DoFencing:0" class="stonith" type="ssh"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -156,9 +156,9 @@
    </synapse>
    <synapse id="13">
      <action_set>
-       <rsc_op id="48" operation="stop" operation_key="child_DoFencing:2_stop_0" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d">
-        <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 "/>
+      <rsc_op id="48" operation="stop" operation_key="child_DoFencing:2_stop_0" internal_operation_key="child_DoFencing:1_stop_0" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d">
+        <primitive id="child_DoFencing:2" long-id="child_DoFencing:1" class="stonith" type="ssh"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -172,9 +172,9 @@
    </synapse>
    <synapse id="14">
      <action_set>
-       <rsc_op id="49" operation="stop" operation_key="child_DoFencing:3_stop_0" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e">
-        <primitive id="child_DoFencing:3" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 "/>
+      <rsc_op id="49" operation="stop" operation_key="child_DoFencing:3_stop_0" internal_operation_key="child_DoFencing:2_stop_0" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e">
+        <primitive id="child_DoFencing:3" long-id="child_DoFencing:2" class="stonith" type="ssh"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -188,9 +188,9 @@
    </synapse>
    <synapse id="15">
      <action_set>
-       <rsc_op id="50" operation="stop" operation_key="child_DoFencing:4_stop_0" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431">
-        <primitive id="child_DoFencing:4" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 "/>
+      <rsc_op id="50" operation="stop" operation_key="child_DoFencing:4_stop_0" internal_operation_key="child_DoFencing:3_stop_0" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431">
+        <primitive id="child_DoFencing:4" long-id="child_DoFencing:3" class="stonith" type="ssh"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -204,9 +204,9 @@
    </synapse>
    <synapse id="16">
      <action_set>
-       <rsc_op id="51" operation="stop" operation_key="child_DoFencing:5_stop_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
-        <primitive id="child_DoFencing:5" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="5" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 "/>
+      <rsc_op id="51" operation="stop" operation_key="child_DoFencing:5_stop_0" internal_operation_key="child_DoFencing:4_stop_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
+        <primitive id="child_DoFencing:5" long-id="child_DoFencing:4" class="stonith" type="ssh"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="10000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -226,19 +226,19 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="47" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+        <rsc_op id="47" operation="stop" operation_key="child_DoFencing:1_stop_0" internal_operation_key="child_DoFencing:0_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
        </trigger>
        <trigger>
-         <rsc_op id="48" operation="stop" operation_key="child_DoFencing:2_stop_0" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
+        <rsc_op id="48" operation="stop" operation_key="child_DoFencing:2_stop_0" internal_operation_key="child_DoFencing:1_stop_0" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
        </trigger>
        <trigger>
-         <rsc_op id="49" operation="stop" operation_key="child_DoFencing:3_stop_0" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+        <rsc_op id="49" operation="stop" operation_key="child_DoFencing:3_stop_0" internal_operation_key="child_DoFencing:2_stop_0" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
        </trigger>
        <trigger>
-         <rsc_op id="50" operation="stop" operation_key="child_DoFencing:4_stop_0" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431"/>
+        <rsc_op id="50" operation="stop" operation_key="child_DoFencing:4_stop_0" internal_operation_key="child_DoFencing:3_stop_0" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431"/>
        </trigger>
        <trigger>
-         <rsc_op id="51" operation="stop" operation_key="child_DoFencing:5_stop_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
+        <rsc_op id="51" operation="stop" operation_key="child_DoFencing:5_stop_0" internal_operation_key="child_DoFencing:4_stop_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
        </trigger>
        <trigger>
          <pseudo_event id="54" operation="stop" operation_key="DoFencing_stop_0"/>
@@ -444,7 +444,7 @@
         <rsc_op id="46" operation="stop" operation_key="rsc_c001n07_stop_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
        </trigger>
        <trigger>
-        <rsc_op id="51" operation="stop" operation_key="child_DoFencing:5_stop_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
+        <rsc_op id="51" operation="stop" operation_key="child_DoFencing:5_stop_0" internal_operation_key="child_DoFencing:4_stop_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
        </trigger>
        <trigger>
         <rsc_op id="64" operation="stop" operation_key="ocf_msdummy:8_stop_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
@@ -465,7 +465,7 @@
         <rsc_op id="45" operation="stop" operation_key="rsc_c001n06_stop_0" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431"/>
        </trigger>
        <trigger>
-        <rsc_op id="50" operation="stop" operation_key="child_DoFencing:4_stop_0" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431"/>
+        <rsc_op id="50" operation="stop" operation_key="child_DoFencing:4_stop_0" internal_operation_key="child_DoFencing:3_stop_0" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431"/>
        </trigger>
        <trigger>
         <rsc_op id="62" operation="stop" operation_key="ocf_msdummy:6_stop_0" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431"/>
@@ -489,7 +489,7 @@
         <rsc_op id="44" operation="stop" operation_key="rsc_c001n05_stop_0" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
        </trigger>
        <trigger>
-        <rsc_op id="49" operation="stop" operation_key="child_DoFencing:3_stop_0" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+        <rsc_op id="49" operation="stop" operation_key="child_DoFencing:3_stop_0" internal_operation_key="child_DoFencing:2_stop_0" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
        </trigger>
        <trigger>
          <rsc_op id="60" operation="stop" operation_key="ocf_msdummy:4_stop_0" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
@@ -513,7 +513,7 @@
         <rsc_op id="43" operation="stop" operation_key="rsc_c001n04_stop_0" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
        </trigger>
        <trigger>
-        <rsc_op id="48" operation="stop" operation_key="child_DoFencing:2_stop_0" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
+        <rsc_op id="48" operation="stop" operation_key="child_DoFencing:2_stop_0" internal_operation_key="child_DoFencing:1_stop_0" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
        </trigger>
        <trigger>
         <rsc_op id="58" operation="stop" operation_key="ocf_msdummy:2_stop_0" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
@@ -543,7 +543,7 @@
          <rsc_op id="42" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
        </trigger>
        <trigger>
-         <rsc_op id="47" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+        <rsc_op id="47" operation="stop" operation_key="child_DoFencing:1_stop_0" internal_operation_key="child_DoFencing:0_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
        </trigger>
        <trigger>
          <rsc_op id="56" operation="stop" operation_key="ocf_msdummy:10_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
