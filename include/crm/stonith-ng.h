@@ -39,10 +39,10 @@ enum stonith_call_options {
     st_opt_verbose         = 0x00000001,
     st_opt_allow_suicide   = 0x00000002,
 
-    st_opt_manual_ack	   = 0x00000008,
+    st_opt_manual_ack      = 0x00000008,
     st_opt_discard_reply   = 0x00000010,
-    st_opt_all_replies	   = 0x00000020,
-    st_opt_topology	   = 0x00000040,
+    st_opt_all_replies     = 0x00000020,
+    st_opt_topology        = 0x00000040,
     st_opt_scope_local     = 0x00000100,
     st_opt_cs_nodeid       = 0x00000200,
     st_opt_sync_call       = 0x00001000,
@@ -50,8 +50,7 @@ enum stonith_call_options {
 
 #define stonith_default_options = stonith_none
 
-
-enum op_state 
+enum op_state
 {
     st_query,
     st_exec,
@@ -60,94 +59,94 @@ enum op_state
 };
 
 typedef struct stonith_key_value_s {
-	char *key;
-	char *value;
+    char *key;
+    char *value;
         struct stonith_key_value_s *next;
 } stonith_key_value_t;
 
 typedef struct stonith_history_s {
-	char *target;
-	char *action;
-	char *origin;
-	char *delegate;
-	int completed;
-	int state;
-	
-        struct stonith_history_s *next;
+    char *target;
+    char *action;
+    char *origin;
+    char *delegate;
+    int completed;
+    int state;
+
+    struct stonith_history_s *next;
 } stonith_history_t;
 
 typedef struct stonith_s stonith_t;
 
-typedef struct stonith_event_s 
+typedef struct stonith_event_s
 {
-        char *id;
-        char *type;
-        char *message;
-        char *operation;
+    char *id;
+    char *type;
+    char *message;
+    char *operation;
 
-        int result;
-        char *origin;
-        char *target;
-        char *executioner;
+    int result;
+    char *origin;
+    char *target;
+    char *executioner;
 
-        char *device;
-        
+    char *device;
+
 } stonith_event_t;
 
 typedef struct stonith_api_operations_s
 {
-	int (*free) (stonith_t *st);
-	int (*connect) (stonith_t *st, const char *name, int *stonith_fd);
-	int (*disconnect)(stonith_t *st);
+    int (*free) (stonith_t *st);
+    int (*connect) (stonith_t *st, const char *name, int *stonith_fd);
+    int (*disconnect)(stonith_t *st);
 
-	int (*remove_device)(
-	    stonith_t *st, int options, const char *name);
-	int (*register_device)(
-	    stonith_t *st, int options, const char *id,
-	    const char *namespace, const char *agent, stonith_key_value_t *params);
+    int (*remove_device)(
+        stonith_t *st, int options, const char *name);
+    int (*register_device)(
+        stonith_t *st, int options, const char *id,
+        const char *namespace, const char *agent, stonith_key_value_t *params);
 
-	int (*remove_level)(
-	    stonith_t *st, int options, const char *node, int level);
-	int (*register_level)(
-	    stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list);
-        
-	int (*metadata)(stonith_t *st, int options,
-			const char *device, const char *namespace, char **output, int timeout);
-	int (*list)(stonith_t *stonith, int call_options, const char *namespace,
-		    stonith_key_value_t **devices, int timeout);
+    int (*remove_level)(
+        stonith_t *st, int options, const char *node, int level);
+    int (*register_level)(
+        stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list);
 
-	int (*call)(stonith_t *st, int options, const char *id,
-		    const char *action, const char *port, int timeout);
-
-	int (*query)(stonith_t *st, int options, const char *node,
+    int (*metadata)(stonith_t *st, int options,
+            const char *device, const char *namespace, char **output, int timeout);
+    int (*list)(stonith_t *stonith, int call_options, const char *namespace,
             stonith_key_value_t **devices, int timeout);
-	int (*fence)(stonith_t *st, int options, const char *node, const char *action,
-            int timeout);
-	int (*confirm)(stonith_t *st, int options, const char *node);
-	int (*history)(stonith_t *st, int options, const char *node, stonith_history_t **output, int timeout);
-		
-	int (*register_notification)(
-	    stonith_t *st, const char *event,
-	    void (*notify)(stonith_t *st, stonith_event_t *e));
-	int (*remove_notification)(stonith_t *st, const char *event);
 
-	int (*register_callback)(
-	    stonith_t *st, int call_id, int timeout, bool only_success,
-	    void *userdata, const char *callback_name,
-	    void (*callback)(stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata));
-	int (*remove_callback)(stonith_t *st, int call_id, bool all_callbacks);
-	
+    int (*call)(stonith_t *st, int options, const char *id,
+            const char *action, const char *port, int timeout);
+
+    int (*query)(stonith_t *st, int options, const char *node,
+            stonith_key_value_t **devices, int timeout);
+    int (*fence)(stonith_t *st, int options, const char *node, const char *action,
+            int timeout);
+    int (*confirm)(stonith_t *st, int options, const char *node);
+    int (*history)(stonith_t *st, int options, const char *node, stonith_history_t **output, int timeout);
+
+    int (*register_notification)(
+        stonith_t *st, const char *event,
+        void (*notify)(stonith_t *st, stonith_event_t *e));
+    int (*remove_notification)(stonith_t *st, const char *event);
+
+    int (*register_callback)(
+        stonith_t *st, int call_id, int timeout, bool only_success,
+        void *userdata, const char *callback_name,
+        void (*callback)(stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata));
+    int (*remove_callback)(stonith_t *st, int call_id, bool all_callbacks);
+
 } stonith_api_operations_t;
 
 struct stonith_s
 {
-	enum stonith_state	state;
+    enum stonith_state state;
 
-	int   call_id;
-	int   call_timeout;
-	void  *private;
-	
-	stonith_api_operations_t *cmds;
+    int call_id;
+    int call_timeout;
+    void *private;
+
+    stonith_api_operations_t *cmds;
 };
 /* *INDENT-ON* */
 
