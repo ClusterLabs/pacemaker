@@ -724,6 +724,20 @@ pcmk_strerror(int rc)
             return "Application of an update diff failed";
         case pcmk_err_diff_resync:
             return "Application of an update diff failed, requesting a full refresh";
+
+            /* The following cases will only be hit on systems for which they are non-standard */
+        case ENOTUNIQ:
+            return "Name not unique on network";
+        case ECOMM:
+            return "Communication error on send";
+        case ELIBACC:
+            return "Can not access a needed shared library";
+        case EREMOTEIO:
+            return "Remote I/O error";
+        case EUNATCH:
+            return "Protocol driver not attached";
+        case ENOKEY:
+            return "Required key not available";
     }
 
     crm_err("Unknown error code: %d", rc);

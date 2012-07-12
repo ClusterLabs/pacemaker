@@ -51,6 +51,11 @@ int setenv(const char *name, const char *value, int why);
 char *strerror(int errnum);
 #  endif                        /* HAVE_STRERROR */
 
+#  ifndef HAVE_STRCHRNUL
+  /* We supply a replacement function, but need a prototype */
+char *strchrnul (const char *s, int c_in);
+#  endif                        /* HAVE_STRCHRNUL */
+
 #  ifndef HAVE_ALPHASORT
 #    include <dirent.h>
 int
@@ -140,7 +145,6 @@ g_hash_table_iter_next(GHashTableIter * iter, gpointer * key, gpointer * value)
 
 #  endif                        /* !HAVE_LIBGLIB_2_0 */
 
-
 #ifdef NEED_G_LIST_FREE_FULL
 #  include <glib.h>
 static inline void g_list_free_full(GList *list, GDestroyNotify free_func)
@@ -148,6 +152,31 @@ static inline void g_list_free_full(GList *list, GDestroyNotify free_func)
    g_list_foreach(list, (GFunc) free_func, NULL);
    g_list_free(list);
 }
+#endif
+
+/* Replacement error codes for non-linux */
+#ifndef ENOTUNIQ
+#  define ENOTUNIQ  900
+#endif
+
+#ifndef ECOMM
+#  define ECOMM     901
+#endif
+
+#ifndef ELIBACC
+#  define ELIBACC   902
+#endif
+
+#ifndef EREMOTEIO
+#  define EREMOTEIO 903
+#endif
+
+#ifndef EUNATCH
+#  define EUNATCH   904
+#endif
+
+#ifndef ENOKEY
+#  define ENOKEY    905
 #endif
 
 /*
