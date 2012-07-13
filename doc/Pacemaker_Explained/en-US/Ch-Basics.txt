@@ -219,8 +219,8 @@ it the name of a configuration to create footnote:[Shadow copies are
 identified with a name, making it possible to have more than one.]  ;
 be sure to follow the simple on-screen instructions.
 
-Read the above carefully, failure to do so could result in you
-destroying the cluster's active configuration!</warning>
+WARNING: Read the above carefully, failure to do so could result in you
+destroying the cluster's active configuration!
       
       
 .Creating and displaying the active sandbox

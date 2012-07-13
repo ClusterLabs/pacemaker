@@ -319,7 +319,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Read the above carefully, failure to do so could result in you destroying the cluster’s active configuration!&lt;/warning&gt;"
+msgid "Read the above carefully, failure to do so could result in you destroying the cluster’s active configuration!"
 msgstr ""
 
 #. Tag: programlisting
