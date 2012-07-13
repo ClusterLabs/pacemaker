@@ -1,0 +1,47 @@
+
+Current cluster status:
+Online: [ node2 node1 ]
+
+ A	(ocf::pacemaker:Dummy):	Started node1
+ Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
+     Masters: [ node2 ]
+     Slaves: [ node1 ]
+
+Transition Summary:
+ * Demote  MS_RSC_NATIVE:0	(Master -> Slave node2)
+ * Promote MS_RSC_NATIVE:1	(Slave -> Master node1)
+
+Executing cluster transition:
+ * Resource action: MS_RSC_NATIVE:1 cancel=15000 on node1
+ * Pseudo action:   MS_RSC_pre_notify_demote_0
+ * Resource action: MS_RSC_NATIVE:0 notify on node2
+ * Resource action: MS_RSC_NATIVE:1 notify on node1
+ * Pseudo action:   MS_RSC_confirmed-pre_notify_demote_0
+ * Pseudo action:   MS_RSC_demote_0
+ * Resource action: MS_RSC_NATIVE:0 demote on node2
+ * Pseudo action:   MS_RSC_demoted_0
+ * Pseudo action:   MS_RSC_post_notify_demoted_0
+ * Resource action: MS_RSC_NATIVE:0 notify on node2
+ * Resource action: MS_RSC_NATIVE:1 notify on node1
+ * Pseudo action:   MS_RSC_confirmed-post_notify_demoted_0
+ * Pseudo action:   MS_RSC_pre_notify_promote_0
+ * Resource action: MS_RSC_NATIVE:0 notify on node2
+ * Resource action: MS_RSC_NATIVE:1 notify on node1
+ * Pseudo action:   MS_RSC_confirmed-pre_notify_promote_0
+ * Pseudo action:   MS_RSC_promote_0
+ * Resource action: MS_RSC_NATIVE:1 promote on node1
+ * Pseudo action:   MS_RSC_promoted_0
+ * Pseudo action:   MS_RSC_post_notify_promoted_0
+ * Resource action: MS_RSC_NATIVE:0 notify on node2
+ * Resource action: MS_RSC_NATIVE:1 notify on node1
+ * Pseudo action:   MS_RSC_confirmed-post_notify_promoted_0
+ * Resource action: MS_RSC_NATIVE:0 monitor=15000 on node2
+
+Revised cluster status:
+Online: [ node2 node1 ]
+
+ A	(ocf::pacemaker:Dummy):	Started node1
+ Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
+     Masters: [ node1 ]
+     Slaves: [ node2 ]
+

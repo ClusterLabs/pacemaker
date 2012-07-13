@@ -31,8 +31,7 @@ typedef struct notify_entry_s {
 } notify_entry_t;
 
 struct resource_alloc_functions_s {
-    GHashTable *(*merge_weights) (resource_t *, const char *, GHashTable *, const char *, int,
-                                  gboolean, gboolean);
+    GHashTable *(*merge_weights) (resource_t *, const char *, GHashTable *, const char *, float, enum pe_weights);
     node_t *(*allocate) (resource_t *, node_t *, pe_working_set_t *);
     void (*create_actions) (resource_t *, pe_working_set_t *);
      gboolean(*create_probe) (resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
@@ -52,15 +51,19 @@ struct resource_alloc_functions_s {
 };
 
 extern GHashTable *rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                     const char *attr, int factor, enum pe_weights flags);
+                                     const char *attr, float factor, enum pe_weights flags);
+
+extern GHashTable *clone_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
+                                     const char *attr, float factor, enum pe_weights flags);
+
+extern GHashTable *master_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
+                                     const char *attr, float factor, enum pe_weights flags);
 
 extern GHashTable *native_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                        const char *attr, int factor, gboolean allow_rollback,
-                                        gboolean only_positive);
+                                     const char *attr, float factor, enum pe_weights flags);
 
 extern GHashTable *group_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                       const char *attr, int factor, gboolean allow_rollback,
-                                       gboolean only_positive);
+                                     const char *attr, float factor, enum pe_weights flags);
 
 extern node_t *native_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
 extern void native_create_actions(resource_t * rsc, pe_working_set_t * data_set);

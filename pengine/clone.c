@@ -226,7 +226,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
             hash1 = native_merge_weights(constraint->rsc_rh, resource1->id, hash1,
                                          constraint->node_attribute,
-                                         constraint->score / INFINITY, FALSE, FALSE);
+                                         (float) constraint->score / INFINITY, 0);
         }
 
         for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
@@ -236,7 +236,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
             hash1 = native_merge_weights(constraint->rsc_lh, resource1->id, hash1,
                                          constraint->node_attribute,
-                                         constraint->score / INFINITY, FALSE, TRUE);
+                                         (float) constraint->score / INFINITY, pe_weights_positive);
         }
 
         for (gIter = resource2->parent->rsc_cons; gIter; gIter = gIter->next) {
@@ -246,7 +246,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
             hash2 = native_merge_weights(constraint->rsc_rh, resource2->id, hash2,
                                          constraint->node_attribute,
-                                         constraint->score / INFINITY, FALSE, FALSE);
+                                         (float) constraint->score / INFINITY, 0);
         }
 
         for (gIter = resource2->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
@@ -256,7 +256,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
             hash2 = native_merge_weights(constraint->rsc_lh, resource2->id, hash2,
                                          constraint->node_attribute,
-                                         constraint->score / INFINITY, FALSE, TRUE);
+                                         (float) constraint->score / INFINITY, pe_weights_positive);
         }
 
         /* Current location score */
@@ -513,7 +513,8 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         rsc->allowed_nodes =
             constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
                                                     constraint->node_attribute,
-                                                    constraint->score / INFINITY, TRUE, TRUE);
+                                                    (float) constraint->score / INFINITY,
+                                                    (pe_weights_rollback | pe_weights_positive));
     }
 
     gIter = rsc->rsc_tickets;
@@ -1564,4 +1565,11 @@ clone_append_meta(resource_t * rsc, xmlNode * xml)
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_NODEMAX);
     crm_xml_add_int(xml, name, clone_data->clone_node_max);
     free(name);
+}
+
+GHashTable *
+clone_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
+                     float factor, enum pe_weights flags)
+{
+    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
 }

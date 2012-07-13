@@ -1,0 +1,22 @@
+
+Current cluster status:
+Online: [ node2 node1 ]
+
+ A	(ocf::pacemaker:Dummy):	Started node1
+ B	(ocf::pacemaker:Dummy):	Started node2
+
+Transition Summary:
+ * Move    A	(Started node1 -> node2)
+
+Executing cluster transition:
+ * Resource action: A               stop on node1
+ * Pseudo action:   all_stopped
+ * Resource action: A               start on node2
+ * Resource action: A               monitor=10000 on node2
+
+Revised cluster status:
+Online: [ node2 node1 ]
+
+ A	(ocf::pacemaker:Dummy):	Started node2
+ B	(ocf::pacemaker:Dummy):	Started node2
+

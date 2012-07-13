@@ -1,0 +1,84 @@
+<cib epoch="9" num_updates="27" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="node1" update-client="cibadmin" cib-last-written="Mon Jun 25 16:10:07 2012" have-quorum="1" dc-uuid="1031448768">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-82fbb43"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1048225984" type="normal" uname="node2"/>
+      <node id="1031448768" type="normal" uname="node1"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="A" provider="pacemaker" type="Dummy">
+        <operations>
+          <op id="A-monitor-10s" interval="10s" name="monitor"/>
+        </operations>
+      </primitive>
+      <master id="MS_RSC">
+        <meta_attributes id="ms_drbd_pgdrive-meta_attributes">
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-notify" name="notify" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="MS_RSC_NATIVE" provider="pacemaker" type="Stateful">
+          <operations>
+            <op id="drbd_pgdrive-start-0" interval="0" name="start" timeout="240"/>
+            <op id="drbd_pgdrive-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="drbd_pgdrive-monitor-15" interval="15" name="monitor"/>
+          </operations>
+        </primitive>
+      </master>
+    </resources>
+    <constraints>
+      <rsc_colocation id="ms_w_dummy" rsc="MS_RSC" rsc-role="Master" score="INFINITY" with-rsc="A"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1048225984" uname="node2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="1048225984">
+        <instance_attributes id="status-1048225984">
+          <nvpair id="status-1048225984-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-1048225984-master-MS_RSC_NATIVE.0" name="master-MS_RSC_NATIVE:0" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1048225984">
+        <lrm_resources>
+          <lrm_resource id="A" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="A_last_0" operation_key="A_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="4:3:7:07f842b7-036e-4af3-bfee-413b9fbc5d29" transition-magic="0:7;4:3:7:07f842b7-036e-4af3-bfee-413b9fbc5d29" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1340658390" last-rc-change="1340658390" exec-time="303" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="MS_RSC_NATIVE:0" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="MS_RSC_NATIVE:0_post_notify_promote_0" operation_key="MS_RSC_NATIVE:0_notify_0" operation="notify" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="52:5:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" transition-magic="0:0;52:5:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1340658544" last-rc-change="1340658544" exec-time="24" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="MS_RSC_NATIVE:0_last_failure_0" operation_key="MS_RSC_NATIVE:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:7:7:07f842b7-036e-4af3-bfee-413b9fbc5d29" transition-magic="0:8;6:7:7:07f842b7-036e-4af3-bfee-413b9fbc5d29" call-id="29" rc-code="8" op-status="0" interval="0" last-run="1340658609" last-rc-change="1340658610" exec-time="275" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1031448768" uname="node1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="1031448768">
+        <instance_attributes id="status-1031448768">
+          <nvpair id="status-1031448768-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-1031448768-master-MS_RSC_NATIVE.1" name="master-MS_RSC_NATIVE:1" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1031448768">
+        <lrm_resources>
+          <lrm_resource id="A" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="A_last_0" operation_key="A_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="7:3:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" transition-magic="0:0;7:3:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1340658390" last-rc-change="0" exec-time="21" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="A_monitor_10000" operation_key="A_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="8:3:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" transition-magic="0:0;8:3:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" call-id="11" rc-code="0" op-status="0" interval="10000" last-rc-change="0" exec-time="8" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="MS_RSC_NATIVE:1" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="MS_RSC_NATIVE:1_post_notify_promote_0" operation_key="MS_RSC_NATIVE:1_notify_0" operation="notify" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="54:5:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" transition-magic="0:0;54:5:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1340658543" last-rc-change="1340658543" exec-time="64" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="MS_RSC_NATIVE:1_monitor_15000" operation_key="MS_RSC_NATIVE:1_monitor_15000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="14:6:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" transition-magic="0:0;14:6:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" call-id="32" rc-code="0" op-status="0" interval="15000" last-rc-change="0" exec-time="16" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+            <lrm_rsc_op id="MS_RSC_NATIVE:1_pre_notify_start_0" operation_key="MS_RSC_NATIVE:1_notify_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="45:7:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" transition-magic="0:0;45:7:0:07f842b7-036e-4af3-bfee-413b9fbc5d29" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1340658609" last-rc-change="1340658609" exec-time="127" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
