@@ -326,7 +326,7 @@ msgstr "Căutând pentru elemente de configurare legate de STONITH"
 
 #. Tag: screen
 #, no-c-format
-msgid "<command># cibadmin -Q | grep stonith</command>\n"
+msgid "<command># cibadmin -Q | grep stonith\n"
 "\n"
 "   &lt;nvpair id=\"cib-bootstrap-options-stonith-action\" name=\"stonith-action\" value=\"reboot\"/&gt;\n"
 "   &lt;nvpair id=\"cib-bootstrap-options-stonith-enabled\" name=\"stonith-enabled\" value=\"1\"/&gt;\n"
@@ -340,7 +340,7 @@ msgid "<command># cibadmin -Q | grep stonith</command>\n"
 "   &lt;lrm_resource id=\"child_DoFencing:3\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
 ""
 msgstr ""
-"<command># cibadmin -Q | grep stonith</command>\n"                                                                                            
+"<command># cibadmin -Q | grep stonith\n"
 "\n"                                                                                                                                           
 "   &lt;nvpair id=\"cib-bootstrap-options-stonith-action\" name=\"stonith-action\" value=\"reboot\"/&gt;\n"                                    
 "   &lt;nvpair id=\"cib-bootstrap-options-stonith-enabled\" name=\"stonith-enabled\" value=\"1\"/&gt;\n"                                       
@@ -360,8 +360,8 @@ msgstr "Apoi identificaţi numele tag-ului resursei şi id-ul (în acest caz vom
 
 #. Tag: para
 #, no-c-format
-msgid "<command>cibadmin --delete --crm_xml ‘&lt;primitive id=\"child_DoFencing\"/&gt;'</command>"
-msgstr "<command>cibadmin --delete --crm_xml ‘&lt;primitive id=\"child_DoFencing\"/&gt;'</command>"
+msgid "<command>cibadmin --delete --crm_xml '&lt;primitive id=\"child_DoFencing\"/&gt;'</command>"
+msgstr "<command>cibadmin --delete --crm_xml '&lt;primitive id=\"child_DoFencing\"/&gt;'</command>"
 
 #. Tag: title
 #, no-c-format

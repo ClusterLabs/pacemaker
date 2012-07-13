@@ -169,7 +169,7 @@ Identify the object you wish to delete. Eg. run
 .Searching for STONITH related configuration items
 [source,Bash]
 --------
-# cibadmin -Q | grep stonith</command>
+# cibadmin -Q | grep stonith
    <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
    <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
   <primitive id="child_DoFencing" class="stonith" type="external/vmware">
@@ -186,7 +186,7 @@ Next identify the resource's tag name and id (in this case we'll
 choose +primitive+ and +child_DoFencing+).  Then simply execute:
       
 
-pass:[<command>cibadmin --delete --crm_xml ‘&lt;primitive id="child_DoFencing"/>'</command>]
+pass:[<command>cibadmin --delete --crm_xml '&lt;primitive id="child_DoFencing"/>'</command>]
 
 == Updating the Configuration Without Using XML ==
 

@@ -239,7 +239,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "# cibadmin -Q | grep stonith&lt;/command&gt;\n"
+msgid "# cibadmin -Q | grep stonith\n"
 "   &lt;nvpair id=\"cib-bootstrap-options-stonith-action\" name=\"stonith-action\" value=\"reboot\"/&gt;\n"
 "   &lt;nvpair id=\"cib-bootstrap-options-stonith-enabled\" name=\"stonith-enabled\" value=\"1\"/&gt;\n"
 "  &lt;primitive id=\"child_DoFencing\" class=\"stonith\" type=\"external/vmware\"&gt;\n"
@@ -259,7 +259,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<command>cibadmin --delete --crm_xml ‘&lt;primitive id=\"child_DoFencing\"/&gt;'</command>"
+msgid "<command>cibadmin --delete --crm_xml '&lt;primitive id=\"child_DoFencing\"/&gt;'</command>"
 msgstr ""
 
 #. Tag: title
