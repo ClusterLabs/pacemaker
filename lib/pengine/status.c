@@ -234,18 +234,12 @@ set_working_set_defaults(pe_working_set_t * data_set)
 resource_t *
 pe_find_resource(GListPtr rsc_list, const char *id)
 {
-    unsigned lpc = 0;
-    resource_t *rsc = NULL;
-    resource_t *match = NULL;
+    GListPtr rIter = NULL;
 
-    if (id == NULL) {
-        return NULL;
-    }
+    for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
+        resource_t *parent = rIter->data;
 
-    for (lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
-        rsc = g_list_nth_data(rsc_list, lpc);
-
-        match = rsc->fns->find_rsc(rsc, id, NULL, pe_find_renamed | pe_find_current);
+        resource_t *match = parent->fns->find_rsc(parent, id, NULL, pe_find_renamed | pe_find_current);
         if (match != NULL) {
             return match;
         }
