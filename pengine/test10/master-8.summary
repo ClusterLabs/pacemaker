@@ -36,7 +36,7 @@ Transition Summary:
  * Move    lsb_dummy	(Started c001n02 -> c001n08)
  * Move    rsc_c001n01	(Started c001n01 -> c001n03)
  * Stop    child_DoFencing:0	(c001n01)
- * Demote  ocf_msdummy:0	(Master -> Slave c001n01)
+ * Demote  ocf_msdummy:0	(Master -> Slave c001n01 - blocked)
  * Move    ocf_msdummy:0	(Slave c001n01 -> c001n03)
 
 Executing cluster transition:
