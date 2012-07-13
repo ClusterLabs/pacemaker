@@ -125,10 +125,10 @@ passive_test(void)
         dispatch_helper(500);  \
     } \
     if (rc != expected_rc) { \
-        printf("FAILURE - expected rc %d != %d(%s) for cmd - %s\n", expected_rc, rc, pcmk_strerror(rc), str); \
+        crm_info("FAILURE - expected rc %d != %d(%s) for cmd - %s\n", expected_rc, rc, pcmk_strerror(rc), str); \
         exit(-1); \
     } else if (expected_notifications) { \
-        printf("FAILURE - expected %d notifications, got only %d for cmd - %s\n", \
+        crm_info("FAILURE - expected %d notifications, got only %d for cmd - %s\n", \
             num_notifications, num_notifications - expected_notifications, str); \
         exit(-1); \
     } else { \
@@ -236,18 +236,11 @@ sanity_tests(void)
     st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
     st->cmds->register_callback(st, 0, 120, FALSE, NULL, "st_global_callback", st_global_callback);
 
-    printf("--- Running API sanity test ---\n");
-
-    printf("\nRunning Standard Tests\n");
+	crm_info("Starting API Sanity Tests");
     run_standard_test();
-
-    printf("\nRunning Fencing Failure Tests\n");
     run_fence_failure_test();
-
-    printf("\nRunning Fencing Device Rollover Tests\n");
     run_fence_failure_rollover_test();
-
-    printf("\n--- Sanity Tests Passed ---\n");
+	crm_info("Sanity Tests Passed");
 }
 
 static void
