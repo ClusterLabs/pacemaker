@@ -1,113 +1,148 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="1" epoch="22" num_updates="330" dc-uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21849" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21858" name="no_quorum-policy" value="stop"/><nvpair id="nvpair.id21867" name="default-resource-stickiness" value="0"/><nvpair id="nvpair.id21877" name="default-migration-threshold" value="0"/><nvpair id="nvpair.id21886" name="stonith-enabled" value="false"/><nvpair id="nvpair.id21895" name="stonith-action" value="reboot"/><nvpair id="nvpair.id21904" name="stop-orphan-resources" value="true"/><nvpair id="nvpair.id21914" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21923" name="remove-after-stop" value="false"/><nvpair id="nvpair.id21932" name="short-resource-names" value="true"/><nvpair id="nvpair.id21942" name="transition-idle-timeout" value="5min"/><nvpair id="nvpair.id21951" name="default-action-timeout" value="15s"/><nvpair id="nvpair.id21960" name="is-managed-default" value="true"/><nvpair id="nvpair.id21969" name="last-lrm-refresh" value="1179263353"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="50e1f0d4-391f-4d48-a087-98972f612b8b" uname="xen-c" type="normal"/>
-       <node id="6a0b1629-ab27-47c7-a6a4-461c94e477f2" uname="xen-b" type="normal"/>
-     </nodes>
-     <resources>
-       <group id="group_1">
-         <primitive id="IPaddr_192_168_1_101" class="ocf" provider="heartbeat" type="IPaddr">
-           <operations>
-             <op name="monitor" interval="5s" id="IPaddr_192_168_1_101_mon" timeout="5s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22035"><nvpair id="nvpair.id22042" name="ip" value="192.168.1.101"/></instance_attributes>
-         <meta_attributes id="primitive-IPaddr_192_168_1_101.meta"/></primitive>
-         <primitive id="apache_2" class="ocf" provider="heartbeat" type="apache">
-           <operations>
-             <op name="monitor" interval="120s" id="apache_2_mon" timeout="60s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22078"><nvpair id="nvpair.id22084" name="configfile" value="/etc/apache2/apache2.conf"/></instance_attributes>
-         <meta_attributes id="primitive-apache_2.meta"/></primitive>
-       <meta_attributes id="group-group_1.meta"/></group>
-       <group id="group_11">
-         <primitive id="IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr">
-           <operations>
-             <op name="monitor" interval="5s" id="IPaddr_192_168_1_102_mon" timeout="5s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22126"><nvpair id="nvpair.id22133" name="ip" value="192.168.1.102"/></instance_attributes>
-         <meta_attributes id="primitive-IPaddr_192_168_1_102.meta"/></primitive>
-         <primitive id="apache_6" class="ocf" provider="heartbeat" type="apache">
-           <operations>
-             <op name="monitor" interval="120s" id="apache_6_mon" timeout="60s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22168"><nvpair id="nvpair.id22175" name="configfile" value="/etc/apache2/apache6.conf"/></instance_attributes>
-           <instance_attributes id="instance_attributes.id22186"><nvpair id="nvpair.id22192" name="target_role" value="started"/></instance_attributes>
-         <meta_attributes id="primitive-apache_6.meta"><nvpair id="nvpair.meta.auto-123" name="target-role" value="started"/></meta_attributes></primitive>
-       <meta_attributes id="group-group_11.meta"/></group>
-     </resources>
-     <constraints>
-       <rsc_location id="rsc_location_group_1" rsc="group_1">
-         <rule id="preferred_location_group_1" score="100">
-           <expression attribute="#uname" id="expression.id22223" operation="eq" value="xen-b"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="rsc_location_group_11" rsc="group_11">
-         <rule id="preferred_location_group_11" score="100">
-           <expression attribute="#uname" id="expression.id22249" operation="eq" value="xen-c"/>
-         </rule>
-       </rsc_location>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="50e1f0d4-391f-4d48-a087-98972f612b8b" uname="xen-c" crmd="offline" shutdown="0" in_ccm="false" join="down" ha="dead" expected="down">
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22294">
-           <lrm_resource id="IPaddr_192_168_1_101" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="IPaddr_192_168_1_101_monitor_0" operation="monitor" transition-key="7:2:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;7:2:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="2" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
-             <lrm_rsc_op id="IPaddr_192_168_1_101_start_0" operation="start" transition-key="8:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;8:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="7" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
-             <lrm_rsc_op id="IPaddr_192_168_1_101_monitor_5000" operation="monitor" transition-key="9:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;9:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="8" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="5000" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
-             <lrm_rsc_op id="IPaddr_192_168_1_101_stop_0" operation="stop" transition-key="7:8:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;7:8:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="14" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
-           </lrm_resource>
-           <lrm_resource id="IPaddr_192_168_1_102" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="IPaddr_192_168_1_102_monitor_0" operation="monitor" transition-key="9:2:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;9:2:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="4" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="105f96828c0a3406ad0dfd513b0d7d89"/>
-           </lrm_resource>
-           <lrm_resource id="apache_2" type="apache" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="apache_2_monitor_0" operation="monitor" transition-key="8:2:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;8:2:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="3" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
-             <lrm_rsc_op id="apache_2_start_0" operation="start" transition-key="11:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;11:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="9" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
-             <lrm_rsc_op id="apache_2_monitor_120000" operation="monitor" transition-key="12:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;12:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="10" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="120000" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
-             <lrm_rsc_op id="apache_2_stop_0" operation="stop" transition-key="8:8:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;8:8:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="12" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
-           </lrm_resource>
-           <lrm_resource id="apache_6" type="apache" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="apache_6_monitor_0" operation="monitor" transition-key="6:5:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:7;6:5:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="6" crm_feature_set="1.0.8" rc-code="7" op-status="0" interval="0" op-digest="ebd004b8d4d6599c3442470c38f212c3"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="transient_attributes.auto-0">
-       </transient_attributes>
-     </node_state>
-     <node_state id="6a0b1629-ab27-47c7-a6a4-461c94e477f2" uname="xen-b" crmd="online" in_ccm="true" join="member" ha="active" expected="down" shutdown="1179263400">
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.shutdown"><nvpair id="nvp.shutdown" name="shutdown" value="1234"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id22637"><nvpair id="nvpair.id22644" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-2">
-         <lrm_resources id="lrm_resources.id22662">
-           <lrm_resource id="IPaddr_192_168_1_101" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="IPaddr_192_168_1_101_monitor_0" operation="monitor" transition-key="3:0:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;3:0:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="2" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
-             <lrm_rsc_op id="IPaddr_192_168_1_101_start_0" operation="start" transition-key="4:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;4:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="8" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
-             <lrm_rsc_op id="IPaddr_192_168_1_101_monitor_5000" operation="monitor" transition-key="5:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;5:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="12" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="5000" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
-             <lrm_rsc_op id="IPaddr_192_168_1_101_stop_0" operation="stop" transition-key="7:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;7:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="22" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
-           </lrm_resource>
-           <lrm_resource id="IPaddr_192_168_1_102" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="IPaddr_192_168_1_102_monitor_0" operation="monitor" transition-key="5:0:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;5:0:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="4" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="105f96828c0a3406ad0dfd513b0d7d89"/>
-             <lrm_rsc_op id="IPaddr_192_168_1_102_start_0" operation="start" transition-key="13:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;13:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="9" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="105f96828c0a3406ad0dfd513b0d7d89"/>
-             <lrm_rsc_op id="IPaddr_192_168_1_102_monitor_5000" operation="monitor" transition-key="14:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;14:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="10" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="5000" op-digest="105f96828c0a3406ad0dfd513b0d7d89"/>
-           </lrm_resource>
-           <lrm_resource id="apache_2" type="apache" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="apache_2_monitor_0" operation="monitor" transition-key="4:0:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;4:0:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="3" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
-             <lrm_rsc_op id="apache_2_start_0" operation="start" transition-key="6:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;6:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="13" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
-             <lrm_rsc_op id="apache_2_monitor_120000" operation="monitor" transition-key="7:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;7:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="15" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="120000" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
-             <lrm_rsc_op id="apache_2_stop_0" operation="stop" transition-key="10:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;10:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="20" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
-           </lrm_resource>
-           <lrm_resource id="apache_6" type="apache" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="apache_6_monitor_0" operation="monitor" transition-key="8:5:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:7;8:5:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="18" crm_feature_set="1.0.8" rc-code="7" op-status="0" interval="0" op-digest="ebd004b8d4d6599c3442470c38f212c3"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="1" epoch="22" num_updates="330" dc-uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:00 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21849" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21858" name="no_quorum-policy" value="stop"/>
+        <nvpair id="nvpair.id21867" name="default-resource-stickiness" value="0"/>
+        <nvpair id="nvpair.id21877" name="default-migration-threshold" value="0"/>
+        <nvpair id="nvpair.id21886" name="stonith-enabled" value="false"/>
+        <nvpair id="nvpair.id21895" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21904" name="stop-orphan-resources" value="true"/>
+        <nvpair id="nvpair.id21914" name="stop-orphan-actions" value="true"/>
+        <nvpair id="nvpair.id21923" name="remove-after-stop" value="false"/>
+        <nvpair id="nvpair.id21932" name="short-resource-names" value="true"/>
+        <nvpair id="nvpair.id21942" name="transition-idle-timeout" value="5min"/>
+        <nvpair id="nvpair.id21951" name="default-action-timeout" value="15s"/>
+        <nvpair id="nvpair.id21960" name="is-managed-default" value="true"/>
+        <nvpair id="nvpair.id21969" name="last-lrm-refresh" value="1179263353"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="50e1f0d4-391f-4d48-a087-98972f612b8b" uname="xen-c" type="normal"/>
+      <node id="6a0b1629-ab27-47c7-a6a4-461c94e477f2" uname="xen-b" type="normal"/>
+    </nodes>
+    <resources>
+      <group id="group_1">
+        <primitive id="IPaddr_192_168_1_101" class="ocf" provider="heartbeat" type="IPaddr">
+          <operations>
+            <op name="monitor" interval="5s" id="IPaddr_192_168_1_101_mon" timeout="5s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22035">
+            <nvpair id="nvpair.id22042" name="ip" value="192.168.1.101"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-IPaddr_192_168_1_101.meta"/>
+        </primitive>
+        <primitive id="apache_2" class="ocf" provider="heartbeat" type="apache">
+          <operations>
+            <op name="monitor" interval="120s" id="apache_2_mon" timeout="60s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22078">
+            <nvpair id="nvpair.id22084" name="configfile" value="/etc/apache2/apache2.conf"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-apache_2.meta"/>
+        </primitive>
+        <meta_attributes id="group-group_1.meta"/>
+      </group>
+      <group id="group_11">
+        <primitive id="IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr">
+          <operations>
+            <op name="monitor" interval="5s" id="IPaddr_192_168_1_102_mon" timeout="5s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22126">
+            <nvpair id="nvpair.id22133" name="ip" value="192.168.1.102"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-IPaddr_192_168_1_102.meta"/>
+        </primitive>
+        <primitive id="apache_6" class="ocf" provider="heartbeat" type="apache">
+          <operations>
+            <op name="monitor" interval="120s" id="apache_6_mon" timeout="60s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22168">
+            <nvpair id="nvpair.id22175" name="configfile" value="/etc/apache2/apache6.conf"/>
+          </instance_attributes>
+          <instance_attributes id="instance_attributes.id22186">
+            <nvpair id="nvpair.id22192" name="target_role" value="started"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-apache_6.meta">
+            <nvpair id="nvpair.meta.auto-123" name="target-role" value="started"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="group-group_11.meta"/>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_location id="rsc_location_group_1" rsc="group_1">
+        <rule id="preferred_location_group_1" score="100">
+          <expression attribute="#uname" id="expression.id22223" operation="eq" value="xen-b"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location_group_11" rsc="group_11">
+        <rule id="preferred_location_group_11" score="100">
+          <expression attribute="#uname" id="expression.id22249" operation="eq" value="xen-c"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="50e1f0d4-391f-4d48-a087-98972f612b8b" uname="xen-c" crmd="offline" shutdown="0" in_ccm="false" join="down" ha="dead" expected="down">
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22294">
+          <lrm_resource id="IPaddr_192_168_1_101" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="IPaddr_192_168_1_101_monitor_0" operation="monitor" transition-key="7:2:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;7:2:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="2" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
+            <lrm_rsc_op id="IPaddr_192_168_1_101_start_0" operation="start" transition-key="8:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;8:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="7" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
+            <lrm_rsc_op id="IPaddr_192_168_1_101_monitor_5000" operation="monitor" transition-key="9:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;9:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="8" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="5000" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
+            <lrm_rsc_op id="IPaddr_192_168_1_101_stop_0" operation="stop" transition-key="7:8:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;7:8:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="14" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
+          </lrm_resource>
+          <lrm_resource id="IPaddr_192_168_1_102" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="IPaddr_192_168_1_102_monitor_0" operation="monitor" transition-key="9:2:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;9:2:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="4" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="105f96828c0a3406ad0dfd513b0d7d89"/>
+          </lrm_resource>
+          <lrm_resource id="apache_2" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache_2_monitor_0" operation="monitor" transition-key="8:2:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;8:2:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="3" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
+            <lrm_rsc_op id="apache_2_start_0" operation="start" transition-key="11:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;11:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="9" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
+            <lrm_rsc_op id="apache_2_monitor_120000" operation="monitor" transition-key="12:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;12:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="10" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="120000" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
+            <lrm_rsc_op id="apache_2_stop_0" operation="stop" transition-key="8:8:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;8:8:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="12" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
+          </lrm_resource>
+          <lrm_resource id="apache_6" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache_6_monitor_0" operation="monitor" transition-key="6:5:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:7;6:5:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="6" crm_feature_set="1.0.8" rc-code="7" op-status="0" interval="0" op-digest="ebd004b8d4d6599c3442470c38f212c3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="transient_attributes.auto-0"/>
+    </node_state>
+    <node_state id="6a0b1629-ab27-47c7-a6a4-461c94e477f2" uname="xen-b" crmd="online" in_ccm="true" join="member" ha="active" expected="down" shutdown="1179263400">
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.shutdown">
+          <nvpair id="nvp.shutdown" name="shutdown" value="1234"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id22637">
+          <nvpair id="nvpair.id22644" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-2">
+        <lrm_resources id="lrm_resources.id22662">
+          <lrm_resource id="IPaddr_192_168_1_101" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="IPaddr_192_168_1_101_monitor_0" operation="monitor" transition-key="3:0:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;3:0:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="2" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
+            <lrm_rsc_op id="IPaddr_192_168_1_101_start_0" operation="start" transition-key="4:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;4:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="8" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
+            <lrm_rsc_op id="IPaddr_192_168_1_101_monitor_5000" operation="monitor" transition-key="5:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;5:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="12" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="5000" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
+            <lrm_rsc_op id="IPaddr_192_168_1_101_stop_0" operation="stop" transition-key="7:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;7:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="22" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8604f7a18ecf196f44e3c0ad4613cd94"/>
+          </lrm_resource>
+          <lrm_resource id="IPaddr_192_168_1_102" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="IPaddr_192_168_1_102_monitor_0" operation="monitor" transition-key="5:0:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;5:0:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="4" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="105f96828c0a3406ad0dfd513b0d7d89"/>
+            <lrm_rsc_op id="IPaddr_192_168_1_102_start_0" operation="start" transition-key="13:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;13:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="9" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="105f96828c0a3406ad0dfd513b0d7d89"/>
+            <lrm_rsc_op id="IPaddr_192_168_1_102_monitor_5000" operation="monitor" transition-key="14:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;14:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="10" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="5000" op-digest="105f96828c0a3406ad0dfd513b0d7d89"/>
+          </lrm_resource>
+          <lrm_resource id="apache_2" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache_2_monitor_0" operation="monitor" transition-key="4:0:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="4:7;4:0:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="3" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
+            <lrm_rsc_op id="apache_2_start_0" operation="start" transition-key="6:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;6:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="13" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
+            <lrm_rsc_op id="apache_2_monitor_120000" operation="monitor" transition-key="7:1:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;7:1:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="15" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="120000" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
+            <lrm_rsc_op id="apache_2_stop_0" operation="stop" transition-key="10:7:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:0;10:7:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="20" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="9f0c90d3ddf56d768fb5756ba84e0042"/>
+          </lrm_resource>
+          <lrm_resource id="apache_6" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache_6_monitor_0" operation="monitor" transition-key="8:5:91d2f8d5-5403-47ed-9113-51276e32a70b" transition-magic="0:7;8:5:91d2f8d5-5403-47ed-9113-51276e32a70b" call-id="18" crm_feature_set="1.0.8" rc-code="7" op-status="0" interval="0" op-digest="ebd004b8d4d6599c3442470c38f212c3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

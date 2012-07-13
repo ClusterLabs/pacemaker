@@ -1,29 +1,38 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
-      <node id="uuid1" uname="node1" type="member">
-      </node>
-      <node id="uuid2" uname="node2" type="member">
-      </node>
+      <node id="uuid1" uname="node1" type="member"/>
+      <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
       <master id="rsc1">
-	<primitive id="child_rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc1.meta"/></primitive>
-      <meta_attributes id="master_slave-rsc1.meta"><nvpair id="nvpair.meta.auto-37" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-29" name="clone-max" value="5"/><nvpair id="nvpair.meta.auto-31" name="clone-node-max" value="2"/><nvpair id="nvpair.meta.auto-33" name="master-max" value="2"/><nvpair id="nvpair.meta.auto-35" name="master-node-max" value="1"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></master>
+        <primitive id="child_rsc1" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc1.meta"/>
+        </primitive>
+        <meta_attributes id="master_slave-rsc1.meta">
+          <nvpair id="nvpair.meta.auto-37" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-29" name="clone-max" value="5"/>
+          <nvpair id="nvpair.meta.auto-31" name="clone-node-max" value="2"/>
+          <nvpair id="nvpair.meta.auto-33" name="master-max" value="2"/>
+          <nvpair id="nvpair.meta.auto-35" name="master-node-max" value="1"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </master>
     </resources>
     <constraints>
       <rsc_location id="rsc1_master" rsc="rsc1">
-	<rule id="pref_rsc1_master-1" score="100" role="Master">
+        <rule id="pref_rsc1_master-1" score="100" role="Master">
           <expression id="expression.id21950" attribute="#uname" operation="eq" value="node2"/>
         </rule>
-	<rule id="pref_rsc1_master-2" score="-INFINITY" role="Master">
+        <rule id="pref_rsc1_master-2" score="-INFINITY" role="Master">
           <expression id="expression.id21969" attribute="#uname" operation="eq" value="node1"/>
         </rule>
       </rsc_location>
@@ -32,12 +41,16 @@
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="transient_attributes.id22002">
-        <instance_attributes id="instance_attributes.id22005"><nvpair id="nvpair.id22011" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22005">
+          <nvpair id="nvpair.id22011" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="transient_attributes.id22041">
-        <instance_attributes id="instance_attributes.id22043"><nvpair id="nvpair.id22049" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22043">
+          <nvpair id="nvpair.id22049" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
     </node_state>
   </status>

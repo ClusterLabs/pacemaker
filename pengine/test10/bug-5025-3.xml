@@ -1,4 +1,4 @@
-<cib epoch="335" num_updates="26" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="crmd" cib-last-written="Mon Mar 19 16:41:29 2012" have-quorum="0" dc-uuid="fc16-builder">
+<cib epoch="335" num_updates="26" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="crmd" cib-last-written="Fri Jul 13 13:51:01 2012" have-quorum="0" dc-uuid="fc16-builder">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -25,8 +25,7 @@
         </instance_attributes>
       </primitive>
       <primitive class="ocf" id="A" provider="pacemaker" type="Dummy">
-        <meta_attributes id="A-meta_attributes">
-        </meta_attributes>
+        <meta_attributes id="A-meta_attributes"/>
         <instance_attributes id="A-instance_attributes">
           <nvpair id="A-instance_attributes-target-role" name="target-role" value="started"/>
           <nvpair id="A-instance_attributes-state" name="state" value="anywhere"/>

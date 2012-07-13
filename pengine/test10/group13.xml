@@ -1,47 +1,56 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="4" num_updates="637" dc-uuid="cd13842c-3f58-4e7d-8126-685259527532" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="cd13842c-3f58-4e7d-8126-685259527532" uname="jamesltc" type="normal"/>
-     </nodes>
-     <resources>
-       <group id="nfs">
-         <primitive id="resource_nfs" class="lsb" type="nfs">
-           <instance_attributes id="instance_attributes.id21871"/>
-         <meta_attributes id="primitive-resource_nfs.meta"/></primitive>
-       <meta_attributes id="group-nfs.meta"/></group>
-       <group id="fs">
-         <primitive id="resource_fs" class="ocf" type="Filesystem" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id21896"><nvpair id="nvpair.id21903" name="device" value="/dev/hdb"/><nvpair id="nvpair.id21912" name="directory" value="/data"/><nvpair id="nvpair.id21921" name="fstype" value="ext2"/></instance_attributes>
-         <meta_attributes id="primitive-resource_fs.meta"/></primitive>
-       <meta_attributes id="group-fs.meta"/></group>
-     </resources>
-     <constraints>
-       <rsc_colocation id="colocation_beekhof" rsc="nfs" with-rsc="fs" score="INFINITY"/>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="cd13842c-3f58-4e7d-8126-685259527532" uname="jamesltc" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
-       <lrm id="cd13842c-3f58-4e7d-8126-685259527532">
-         <lrm_resources id="lrm_resources.id21980">
-           <lrm_resource id="resource_nfs" type="nfs" class="lsb">
-             <lrm_rsc_op id="resource_nfs_monitor_0" operation="monitor" transition-key="0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="0:0;0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="2" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="resource_fs" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_fs_monitor_0" operation="monitor" transition-key="0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="4:7;0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="3" crm_feature_set="1.0.6" rc-code="7" op-status="4" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747"/>
-             <lrm_rsc_op id="resource_fs_start_0" operation="start" transition-key="251:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="4:2;251:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="504" crm_feature_set="1.0.6" rc-code="1" op-status="4" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747"/>
-             <lrm_rsc_op id="resource_fs_stop_0" operation="stop" transition-key="253:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="0:0;253:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="505" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="cd13842c-3f58-4e7d-8126-685259527532">
-         <instance_attributes id="instance_attributes.id22121"><nvpair id="nvpair.id22128" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="4" num_updates="637" dc-uuid="cd13842c-3f58-4e7d-8126-685259527532" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="cd13842c-3f58-4e7d-8126-685259527532" uname="jamesltc" type="normal"/>
+    </nodes>
+    <resources>
+      <group id="nfs">
+        <primitive id="resource_nfs" class="lsb" type="nfs">
+          <instance_attributes id="instance_attributes.id21871"/>
+          <meta_attributes id="primitive-resource_nfs.meta"/>
+        </primitive>
+        <meta_attributes id="group-nfs.meta"/>
+      </group>
+      <group id="fs">
+        <primitive id="resource_fs" class="ocf" type="Filesystem" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id21896">
+            <nvpair id="nvpair.id21903" name="device" value="/dev/hdb"/>
+            <nvpair id="nvpair.id21912" name="directory" value="/data"/>
+            <nvpair id="nvpair.id21921" name="fstype" value="ext2"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-resource_fs.meta"/>
+        </primitive>
+        <meta_attributes id="group-fs.meta"/>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_colocation id="colocation_beekhof" rsc="nfs" with-rsc="fs" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="cd13842c-3f58-4e7d-8126-685259527532" uname="jamesltc" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
+      <lrm id="cd13842c-3f58-4e7d-8126-685259527532">
+        <lrm_resources id="lrm_resources.id21980">
+          <lrm_resource id="resource_nfs" type="nfs" class="lsb">
+            <lrm_rsc_op id="resource_nfs_monitor_0" operation="monitor" transition-key="0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="0:0;0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="2" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="resource_fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_fs_monitor_0" operation="monitor" transition-key="0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="4:7;0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="3" crm_feature_set="1.0.6" rc-code="7" op-status="4" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747"/>
+            <lrm_rsc_op id="resource_fs_start_0" operation="start" transition-key="251:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="4:2;251:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="504" crm_feature_set="1.0.6" rc-code="1" op-status="4" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747"/>
+            <lrm_rsc_op id="resource_fs_stop_0" operation="stop" transition-key="253:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="0:0;253:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="505" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="cd13842c-3f58-4e7d-8126-685259527532">
+        <instance_attributes id="instance_attributes.id22121">
+          <nvpair id="nvpair.id22128" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

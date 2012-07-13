@@ -1,16 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:13 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc1.meta"><nvpair id="multiple_active.meta.auto-21" name="multiple-active" value="stop_only"/></meta_attributes></primitive>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc1.meta">
+          <nvpair id="multiple_active.meta.auto-21" name="multiple-active" value="stop_only"/>
+        </meta_attributes>
+      </primitive>
     </resources>
     <constraints/>
   </configuration>
@@ -20,7 +27,7 @@
         <lrm_resources id="lrm_resources.id21904">
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>
@@ -29,7 +36,7 @@
         <lrm_resources id="lrm_resources.id21962">
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>

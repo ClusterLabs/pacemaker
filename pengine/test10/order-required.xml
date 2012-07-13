@@ -1,23 +1,35 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:11 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21833" name="symetric_cluster" value="false"/><nvpair id="nvpair.id21842" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21833" name="symetric_cluster" value="false"/>
+        <nvpair id="nvpair.id21842" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <rsc_defaults>
       <meta_attributes id="nvpair.id218777">
-	<nvpair id="nvpair.id21877" name="migration-threshold" value="1"/>
+        <nvpair id="nvpair.id21877" name="migration-threshold" value="1"/>
       </meta_attributes>
     </rsc_defaults>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc1.meta"/></primitive>
-      <primitive id="rsc2" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc2.meta"/></primitive>
-      <primitive id="rsc3" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc3.meta"/></primitive>
-      <primitive id="rsc4" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc4.meta"/></primitive>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc1.meta"/>
+      </primitive>
+      <primitive id="rsc2" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc2.meta"/>
+      </primitive>
+      <primitive id="rsc3" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc3.meta"/>
+      </primitive>
+      <primitive id="rsc4" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc4.meta"/>
+      </primitive>
     </resources>
     <constraints>
       <rsc_order id="order1" first="rsc1" then="rsc2" then-action="start" first-action="start" score="INFINITY"/>
@@ -26,14 +38,16 @@
   </configuration>
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-       <transient_attributes id="uuid1">
-         <instance_attributes id="instance_attributes.id21961"><nvpair id="nvpair.id21968" name="fail-count-rsc3" value="1"/></instance_attributes>
-       </transient_attributes>
+      <transient_attributes id="uuid1">
+        <instance_attributes id="instance_attributes.id21961">
+          <nvpair id="nvpair.id21968" name="fail-count-rsc3" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id21984">
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_monitor_0" operation="monitor" interval="0" op-status="0" rc-code="7" call-id="2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="rsc2" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
@@ -42,7 +56,7 @@
           </lrm_resource>
           <lrm_resource id="rsc4" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4_monitor_0" operation="monitor" interval="0" op-status="0" rc-code="0" call-id="2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>

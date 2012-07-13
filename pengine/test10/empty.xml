@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config/>
     <nodes/>

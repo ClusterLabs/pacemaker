@@ -1,31 +1,61 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib crm_feature_set="2.0" admin_epoch="0" epoch="894" num_updates="1" dc-uuid="4191b454-c985-4423-a95e-95b287630cff" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib crm_feature_set="2.0" admin_epoch="0" epoch="894" num_updates="1" dc-uuid="4191b454-c985-4423-a95e-95b287630cff" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config>
-      <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id22355" name="dc-version" value="2.1.4-node: 73f24cbe8ed77837a75df445272edf2674d50f00"/><nvpair id="nvpair.id22365" name="default-resource-stickiness" value="100"/><nvpair id="nvpair.id22374" name="default-resource-failure-stickiness" value="-100"/><nvpair id="nvpair.id22384" name="last-lrm-refresh" value="1232108721"/><nvpair id="nvpair.id22394" name="stonith-enabled" value="false"/><nvpair id="nvpair.id22403" name="startup-fencing" value="false"/></cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id22355" name="dc-version" value="2.1.4-node: 73f24cbe8ed77837a75df445272edf2674d50f00"/>
+        <nvpair id="nvpair.id22365" name="default-resource-stickiness" value="100"/>
+        <nvpair id="nvpair.id22374" name="default-resource-failure-stickiness" value="-100"/>
+        <nvpair id="nvpair.id22384" name="last-lrm-refresh" value="1232108721"/>
+        <nvpair id="nvpair.id22394" name="stonith-enabled" value="false"/>
+        <nvpair id="nvpair.id22403" name="startup-fencing" value="false"/>
+      </cluster_property_set>
     </crm_config>
     <nodes>
       <node id="11764fd4-c643-4dfe-8687-c50540a00104" uname="power720-1" type="normal">
-        <instance_attributes id="instance_attributes.id22426"><nvpair name="cluster_group" value="frontline" id="nvpair.id22433"/><nvpair id="nvpair.id22442" name="standby" value="off"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22426">
+          <nvpair name="cluster_group" value="frontline" id="nvpair.id22433"/>
+          <nvpair id="nvpair.id22442" name="standby" value="off"/>
+        </instance_attributes>
       </node>
       <node id="4191b454-c985-4423-a95e-95b287630cff" uname="power720-2" type="normal">
-        <instance_attributes id="instance_attributes.id22462"><nvpair name="cluster_group" value="frontline" id="nvpair.id22469"/><nvpair id="nvpair.id22478" name="standby" value="off"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22462">
+          <nvpair name="cluster_group" value="frontline" id="nvpair.id22469"/>
+          <nvpair id="nvpair.id22478" name="standby" value="off"/>
+        </instance_attributes>
       </node>
       <node id="0e3b1105-0152-4dc3-9dcd-4fb9dbefd64f" uname="power720-3" type="normal">
-        <instance_attributes id="instance_attributes.id22499"><nvpair name="cluster_group" value="backline" id="nvpair.id22506"/><nvpair id="nvpair.id22515" name="standby" value="off"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22499">
+          <nvpair name="cluster_group" value="backline" id="nvpair.id22506"/>
+          <nvpair id="nvpair.id22515" name="standby" value="off"/>
+        </instance_attributes>
       </node>
       <node id="1e626dc7-fa07-492e-bb21-8c838bfe7f46" uname="power720-4" type="normal">
-        <instance_attributes id="instance_attributes.id22536"><nvpair name="cluster_group" value="backline" id="nvpair.id22543"/><nvpair id="nvpair.id22552" name="standby" value="off"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22536">
+          <nvpair name="cluster_group" value="backline" id="nvpair.id22543"/>
+          <nvpair id="nvpair.id22552" name="standby" value="off"/>
+        </instance_attributes>
       </node>
     </nodes>
     <resources>
-      <group id="group_test1"><meta_attributes id="group-group_test1.meta"/>
-        <meta_attributes id="meta_attributes.id22572"><nvpair id="nvpair.id22578" name="ordered" value="true"/><nvpair id="nvpair.id22587" name="collocated" value="true"/></meta_attributes>
-        <primitive id="resource_t11" class="lsb" type="nfsserver"><meta_attributes id="primitive-resource_t11.meta"/></primitive>
+      <group id="group_test1">
+        <meta_attributes id="group-group_test1.meta"/>
+        <meta_attributes id="meta_attributes.id22572">
+          <nvpair id="nvpair.id22578" name="ordered" value="true"/>
+          <nvpair id="nvpair.id22587" name="collocated" value="true"/>
+        </meta_attributes>
+        <primitive id="resource_t11" class="lsb" type="nfsserver">
+          <meta_attributes id="primitive-resource_t11.meta"/>
+        </primitive>
       </group>
-      <group id="group_test2"><meta_attributes id="group-group_test2.meta"/>
-        <meta_attributes id="meta_attributes.id22614"><nvpair id="nvpair.id22620" name="ordered" value="true"/><nvpair id="nvpair.id22629" name="collocated" value="true"/></meta_attributes>
-        <primitive id="resource_t21" class="ocf" type="Dummy" provider="heartbeat"><meta_attributes id="primitive-resource_t21.meta"/></primitive>
+      <group id="group_test2">
+        <meta_attributes id="group-group_test2.meta"/>
+        <meta_attributes id="meta_attributes.id22614">
+          <nvpair id="nvpair.id22620" name="ordered" value="true"/>
+          <nvpair id="nvpair.id22629" name="collocated" value="true"/>
+        </meta_attributes>
+        <primitive id="resource_t21" class="ocf" type="Dummy" provider="heartbeat">
+          <meta_attributes id="primitive-resource_t21.meta"/>
+        </primitive>
       </group>
     </resources>
     <constraints>
@@ -41,7 +71,9 @@
   <status>
     <node_state id="4191b454-c985-4423-a95e-95b287630cff" uname="power720-2" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
       <transient_attributes id="transient_attributes.auto-1">
-        <instance_attributes id="instance_attributes.id22765"><nvpair id="nvpair.id22772" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22765">
+          <nvpair id="nvpair.id22772" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22789">
@@ -56,7 +88,9 @@
     </node_state>
     <node_state id="1e626dc7-fa07-492e-bb21-8c838bfe7f46" uname="power720-4" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
       <transient_attributes id="transient_attributes.auto-2">
-        <instance_attributes id="instance_attributes.id22898"><nvpair id="nvpair.id22905" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22898">
+          <nvpair id="nvpair.id22905" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="lrm.auto-2">
         <lrm_resources id="lrm_resources.id22922">
@@ -71,7 +105,9 @@
     </node_state>
     <node_state id="11764fd4-c643-4dfe-8687-c50540a00104" uname="power720-1" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
       <transient_attributes id="transient_attributes.auto-3">
-        <instance_attributes id="instance_attributes.id23031"><nvpair id="nvpair.id23038" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id23031">
+          <nvpair id="nvpair.id23038" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="lrm.auto-3">
         <lrm_resources id="lrm_resources.id23055">
@@ -86,7 +122,9 @@
     </node_state>
     <node_state id="0e3b1105-0152-4dc3-9dcd-4fb9dbefd64f" uname="power720-3" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
       <transient_attributes id="transient_attributes.auto-4">
-        <instance_attributes id="instance_attributes.id23164"><nvpair id="nvpair.id23170" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id23164">
+          <nvpair id="nvpair.id23170" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="lrm.auto-4">
         <lrm_resources id="lrm_resources.id23188">

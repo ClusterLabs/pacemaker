@@ -1,4 +1,4 @@
-<cib epoch="1" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Thu Mar 24 16:15:36 2011" have-quorum="1">
+<cib epoch="1" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Fri Jul 13 13:51:14 2012" have-quorum="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -20,7 +20,7 @@
           <op id="rsc1-monitor-20" interval="20" name="monitor" role="Stopped"/>
         </operations>
       </primitive>
-   </resources>
+    </resources>
     <constraints/>
   </configuration>
   <status>

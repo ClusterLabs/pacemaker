@@ -1,90 +1,129 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib crm_feature_set="2.0" admin_epoch="0" epoch="570" num_updates="44" dc-uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21849" name="dc-version" value="2.1.3-node: a3184d5240c6e7032aef9cce6e5b7752ded544b3"/><nvpair id="nvpair.id21859" name="no-quorum-policy" value="ignore"/><nvpair name="last-lrm-refresh" id="nvpair.id21868" value="1210070991"/><nvpair id="nvpair.id21878" name="stonith-enabled" value="false"/><nvpair id="nvpair.id21887" name="default-resource-stickiness" value="1000"/><nvpair id="nvpair.id21896" name="default-action-timeout" value="20s"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="ac446085-4c9d-4d4a-a94d-5e63b6e421e3" uname="power720-1" type="normal">
-         <instance_attributes id="instance_attributes.id21920"><nvpair name="standby" id="nvpair.id21927" value="false"/></instance_attributes>
-       </node>
-       <node id="1a1ecd04-01a0-43bf-9392-11b89f7d6f10" uname="power720-2" type="normal">
-         <instance_attributes id="instance_attributes.id21948"><nvpair id="nvpair.id21955" name="standby" value="false"/></instance_attributes>
-       </node>
-       <node id="5df3fddd-936b-4577-81b9-ed9c8949fac8" uname="power720-4" type="normal">
-         <instance_attributes id="instance_attributes.id21977"><nvpair id="nvpair.id21984" name="standby" value="off"/></instance_attributes>
-       </node>
-     </nodes>
-     <resources>
-       <clone id="export_home_ocfs2_clone_set">
-         <primitive id="export_home_ocfs2" class="ocf" type="Filesystem" provider="heartbeat">
-           <operations/>
-           <instance_attributes id="instance_attributes.id22048"><nvpair id="nvpair.id22054" name="device" value="/dev/sda"/><nvpair id="nvpair.id22063" name="directory" value="/mnt"/><nvpair id="nvpair.id22072" name="fstype" value="ocfs2"/><nvpair name="options" id="nvpair.id22081" value="rw,sync"/></instance_attributes>
-         <meta_attributes id="primitive-export_home_ocfs2.meta"/></primitive>
-         <meta_attributes id="meta_attributes.id22093"><nvpair id="nvpair.id22100" name="globally-unique" value="true"/><nvpair id="nvpair.id22109" name="notify" value="true"/></meta_attributes>
-       <meta_attributes id="clone-export_home_ocfs2_clone_set.meta"><nvpair id="notify.meta.auto-64" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-64" name="globally-unique" value="true"/><nvpair id="nvpair.meta.auto-72" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-70" name="clone-node-max" value="1"/></meta_attributes></clone>
-       <group id="group_nfs">
-         <instance_attributes id="instance_attributes.id22126"/>
-         <primitive id="resource_ipaddr1_single" class="ocf" type="IPaddr" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id22144"><nvpair id="nvpair.id22151" name="target_role" value="started"/><nvpair id="nvpair.id22160" name="ip" value="192.168.2.6"/><nvpair id="nvpair.id22169" name="nic" value="eth1"/><nvpair id="nvpair.id22177" name="cidr_netmask" value="24"/></instance_attributes>
-           <operations>
-             <op name="monitor" interval="5s" id="c4685e11-27e2-4ea7-8893-94c3fce7c1ac" timeout="20s" start-delay="1s" on-fail="restart"/>
-           </operations>
-         <meta_attributes id="primitive-resource_ipaddr1_single.meta"><nvpair id="nvpair.meta.auto-119" name="target-role" value="started"/></meta_attributes></primitive>
-         <primitive id="resource_nfsserver_single" class="lsb" type="nfsserver">
-           <instance_attributes id="instance_attributes.id22219"/>
-           <operations>
-             <op name="monitor" interval="15" id="op.auto-2" timeout="15" start-delay="15" on-fail="stop" enabled="true" role="Started"/>
-           </operations>
-         <meta_attributes id="primitive-resource_nfsserver_single.meta"/></primitive>
-         <meta_attributes id="meta_attributes.id22250"/>
-       <meta_attributes id="group-group_nfs.meta"/></group>
-     </resources>
-     <constraints>
-       <rsc_order id="order_ocfs_home_before_nfs" first="export_home_ocfs2_clone_set" then="group_nfs" then-action="start" first-action="start"/>
-       <rsc_location id="location_" rsc="group_nfs">
-         <rule id="preferred_location_" score="INFINITY">
-           <expression attribute="#uname" id="expression.id22288" operation="eq" value="power720-1"/>
-         </rule>
-       </rsc_location>
-       <rsc_colocation id="colocation_rolf" rsc="group_nfs" with-rsc="export_home_ocfs2_clone_set" score="INFINITY"/>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="1a1ecd04-01a0-43bf-9392-11b89f7d6f10" uname="power720-2" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.id22345"><nvpair id="nvpair.id22352" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22370">
-           <lrm_resource id="resource_ipaddr1_single" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_ipaddr1_single_monitor_0" operation="monitor" transition-key="13:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:7;13:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="bb94f885c21ceec5e315606403dfaa0f"/>
-             <lrm_rsc_op id="resource_ipaddr1_single_start_0" operation="start" transition-key="23:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;23:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="10" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="0c75e99e5cd5902da1e1fdcb20f8700d"/>
-             <lrm_rsc_op id="resource_ipaddr1_single_monitor_5000" operation="monitor" transition-key="24:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;24:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="11" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="4768dd77f3e05ed2c4dfb01236551fbb"/>
-           </lrm_resource>
-           <lrm_resource id="export_home_ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="export_home_ocfs2-0_monitor_0" operation="monitor" transition-key="10:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:7;10:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="76083682f012c0a85c98413b2238f387"/>
-           </lrm_resource>
-           <lrm_resource id="export_home_ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="export_home_ocfs2-1_monitor_0" operation="monitor" transition-key="11:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:7;11:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="76083682f012c0a85c98413b2238f387"/>
-             <lrm_rsc_op id="export_home_ocfs2-1_start_0" operation="start" transition-key="6:1:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;6:1:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="76083682f012c0a85c98413b2238f387"/>
-             <lrm_rsc_op id="export_home_ocfs2-1_post_notify_stop_0" operation="notify" transition-key="41:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;41:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="14" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="76083682f012c0a85c98413b2238f387"/>
-           </lrm_resource>
-           <lrm_resource id="export_home_ocfs2:2" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="export_home_ocfs2-2_monitor_0" operation="monitor" transition-key="12:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:7;12:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="76083682f012c0a85c98413b2238f387"/>
-           </lrm_resource>
-           <lrm_resource id="resource_nfsserver_single" type="nfsserver" class="lsb">
-             <lrm_rsc_op id="resource_nfsserver_single_monitor_0" operation="monitor" transition-key="14:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:7;14:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="resource_nfsserver_single_start_0" operation="start" transition-key="26:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;26:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="12" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="resource_nfsserver_single_monitor_15000" operation="monitor" transition-key="27:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;27:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="13" crm_feature_set="2.0" rc-code="0" op-status="0" interval="15000" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="ac446085-4c9d-4d4a-a94d-5e63b6e421e3" uname="power720-1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <lrm id="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
-         <lrm_resources id="lrm_resources.id22756"/>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib crm_feature_set="2.0" admin_epoch="0" epoch="570" num_updates="44" dc-uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:03 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21849" name="dc-version" value="2.1.3-node: a3184d5240c6e7032aef9cce6e5b7752ded544b3"/>
+        <nvpair id="nvpair.id21859" name="no-quorum-policy" value="ignore"/>
+        <nvpair name="last-lrm-refresh" id="nvpair.id21868" value="1210070991"/>
+        <nvpair id="nvpair.id21878" name="stonith-enabled" value="false"/>
+        <nvpair id="nvpair.id21887" name="default-resource-stickiness" value="1000"/>
+        <nvpair id="nvpair.id21896" name="default-action-timeout" value="20s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="ac446085-4c9d-4d4a-a94d-5e63b6e421e3" uname="power720-1" type="normal">
+        <instance_attributes id="instance_attributes.id21920">
+          <nvpair name="standby" id="nvpair.id21927" value="false"/>
+        </instance_attributes>
+      </node>
+      <node id="1a1ecd04-01a0-43bf-9392-11b89f7d6f10" uname="power720-2" type="normal">
+        <instance_attributes id="instance_attributes.id21948">
+          <nvpair id="nvpair.id21955" name="standby" value="false"/>
+        </instance_attributes>
+      </node>
+      <node id="5df3fddd-936b-4577-81b9-ed9c8949fac8" uname="power720-4" type="normal">
+        <instance_attributes id="instance_attributes.id21977">
+          <nvpair id="nvpair.id21984" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <clone id="export_home_ocfs2_clone_set">
+        <primitive id="export_home_ocfs2" class="ocf" type="Filesystem" provider="heartbeat">
+          <operations/>
+          <instance_attributes id="instance_attributes.id22048">
+            <nvpair id="nvpair.id22054" name="device" value="/dev/sda"/>
+            <nvpair id="nvpair.id22063" name="directory" value="/mnt"/>
+            <nvpair id="nvpair.id22072" name="fstype" value="ocfs2"/>
+            <nvpair name="options" id="nvpair.id22081" value="rw,sync"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-export_home_ocfs2.meta"/>
+        </primitive>
+        <meta_attributes id="meta_attributes.id22093">
+          <nvpair id="nvpair.id22100" name="globally-unique" value="true"/>
+          <nvpair id="nvpair.id22109" name="notify" value="true"/>
+        </meta_attributes>
+        <meta_attributes id="clone-export_home_ocfs2_clone_set.meta">
+          <nvpair id="notify.meta.auto-64" name="notify" value="true"/>
+          <nvpair id="globally_unique.meta.auto-64" name="globally-unique" value="true"/>
+          <nvpair id="nvpair.meta.auto-72" name="target-role" value="started"/>
+          <nvpair id="nvpair.meta.auto-70" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+      <group id="group_nfs">
+        <instance_attributes id="instance_attributes.id22126"/>
+        <primitive id="resource_ipaddr1_single" class="ocf" type="IPaddr" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id22144">
+            <nvpair id="nvpair.id22151" name="target_role" value="started"/>
+            <nvpair id="nvpair.id22160" name="ip" value="192.168.2.6"/>
+            <nvpair id="nvpair.id22169" name="nic" value="eth1"/>
+            <nvpair id="nvpair.id22177" name="cidr_netmask" value="24"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="5s" id="c4685e11-27e2-4ea7-8893-94c3fce7c1ac" timeout="20s" start-delay="1s" on-fail="restart"/>
+          </operations>
+          <meta_attributes id="primitive-resource_ipaddr1_single.meta">
+            <nvpair id="nvpair.meta.auto-119" name="target-role" value="started"/>
+          </meta_attributes>
+        </primitive>
+        <primitive id="resource_nfsserver_single" class="lsb" type="nfsserver">
+          <instance_attributes id="instance_attributes.id22219"/>
+          <operations>
+            <op name="monitor" interval="15" id="op.auto-2" timeout="15" start-delay="15" on-fail="stop" enabled="true" role="Started"/>
+          </operations>
+          <meta_attributes id="primitive-resource_nfsserver_single.meta"/>
+        </primitive>
+        <meta_attributes id="meta_attributes.id22250"/>
+        <meta_attributes id="group-group_nfs.meta"/>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_order id="order_ocfs_home_before_nfs" first="export_home_ocfs2_clone_set" then="group_nfs" then-action="start" first-action="start"/>
+      <rsc_location id="location_" rsc="group_nfs">
+        <rule id="preferred_location_" score="INFINITY">
+          <expression attribute="#uname" id="expression.id22288" operation="eq" value="power720-1"/>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="colocation_rolf" rsc="group_nfs" with-rsc="export_home_ocfs2_clone_set" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1a1ecd04-01a0-43bf-9392-11b89f7d6f10" uname="power720-2" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id22345">
+          <nvpair id="nvpair.id22352" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22370">
+          <lrm_resource id="resource_ipaddr1_single" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_ipaddr1_single_monitor_0" operation="monitor" transition-key="13:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:7;13:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="bb94f885c21ceec5e315606403dfaa0f"/>
+            <lrm_rsc_op id="resource_ipaddr1_single_start_0" operation="start" transition-key="23:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;23:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="10" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="0c75e99e5cd5902da1e1fdcb20f8700d"/>
+            <lrm_rsc_op id="resource_ipaddr1_single_monitor_5000" operation="monitor" transition-key="24:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;24:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="11" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="4768dd77f3e05ed2c4dfb01236551fbb"/>
+          </lrm_resource>
+          <lrm_resource id="export_home_ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="export_home_ocfs2-0_monitor_0" operation="monitor" transition-key="10:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:7;10:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="76083682f012c0a85c98413b2238f387"/>
+          </lrm_resource>
+          <lrm_resource id="export_home_ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="export_home_ocfs2-1_monitor_0" operation="monitor" transition-key="11:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:7;11:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="76083682f012c0a85c98413b2238f387"/>
+            <lrm_rsc_op id="export_home_ocfs2-1_start_0" operation="start" transition-key="6:1:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;6:1:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="76083682f012c0a85c98413b2238f387"/>
+            <lrm_rsc_op id="export_home_ocfs2-1_post_notify_stop_0" operation="notify" transition-key="41:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;41:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="14" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="76083682f012c0a85c98413b2238f387"/>
+          </lrm_resource>
+          <lrm_resource id="export_home_ocfs2:2" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="export_home_ocfs2-2_monitor_0" operation="monitor" transition-key="12:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:7;12:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="76083682f012c0a85c98413b2238f387"/>
+          </lrm_resource>
+          <lrm_resource id="resource_nfsserver_single" type="nfsserver" class="lsb">
+            <lrm_rsc_op id="resource_nfsserver_single_monitor_0" operation="monitor" transition-key="14:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:7;14:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_nfsserver_single_start_0" operation="start" transition-key="26:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;26:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="12" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_nfsserver_single_monitor_15000" operation="monitor" transition-key="27:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition-magic="0:0;27:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call-id="13" crm_feature_set="2.0" rc-code="0" op-status="0" interval="15000" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="ac446085-4c9d-4d4a-a94d-5e63b6e421e3" uname="power720-1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <lrm id="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
+        <lrm_resources id="lrm_resources.id22756"/>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

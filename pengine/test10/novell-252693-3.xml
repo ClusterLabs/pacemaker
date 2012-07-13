@@ -1,128 +1,186 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="3" num_updates="158" dc-uuid="2c826922-d092-4862-bedc-de9ae2312117" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cibbootstrap"><nvpair id="nvpair.id21849" name="cluster-delay" value="60"/><nvpair id="nvpair.id21858" name="stonith-enabled" value="true"/><nvpair id="nvpair.id21866" name="stonith-action" value="reboot"/><nvpair id="nvpair.id21875" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21884" name="no-quorum-policy" value="stop"/><nvpair id="nvpair.id21893" name="stop-orphan-resources" value="true"/><nvpair id="nvpair.id21901" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21910" name="is-managed-default" value="true"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="2c826922-d092-4862-bedc-de9ae2312117" uname="node2" type="normal"/>
-       <node id="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" uname="node1" type="normal"/>
-     </nodes>
-     <resources>
-       <clone id="stonithcloneset">
-         <primitive id="stonithclone" class="stonith" type="external/ssh">
-           <operations>
-             <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s" requires="nothing"/>
-             <op name="start" interval="0" id="stonithclone-op-02" timeout="20s" requires="nothing"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22008"><nvpair id="nvpair.id22014" name="hostlist" value="node1,node2"/></instance_attributes>
-         <meta_attributes id="primitive-stonithclone.meta"/></primitive>
-       <meta_attributes id="clone-stonithcloneset.meta"><nvpair id="globally_unique.meta.auto-39" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-45" name="clone-node-max" value="1"/></meta_attributes></clone>
-       <clone id="evmsdcloneset">
-         <primitive id="evmsdclone" class="ocf" type="Evmsd" provider="heartbeat">
-           <operations>
-             <op name="monitor" interval="5s" id="evmsdclone-op-01" timeout="20s" requires="nothing"/>
-           </operations>
-         <meta_attributes id="primitive-evmsdclone.meta"/></primitive>
-       <meta_attributes id="clone-evmsdcloneset.meta"><nvpair id="notify.meta.auto-68" name="notify" value="false"/><nvpair id="globally_unique.meta.auto-68" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-74" name="clone-node-max" value="1"/></meta_attributes></clone>
-       <clone id="evmscloneset">
-         <primitive id="evmsclone" class="ocf" type="EvmsSCC" provider="heartbeat"><meta_attributes id="primitive-evmsclone.meta"/></primitive>
-       <meta_attributes id="clone-evmscloneset.meta"><nvpair id="notify.meta.auto-87" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-87" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-93" name="clone-node-max" value="1"/></meta_attributes></clone>
-       <clone id="imagestorecloneset">
-         <primitive id="imagestoreclone" class="ocf" type="Filesystem" provider="heartbeat">
-           <operations>
-             <op name="monitor" interval="20s" id="imagestoreclone-op-01" timeout="60s" requires="nothing"/>
-             <op name="stop" interval="0" id="imagestoreclone-op-02" timeout="600s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22197"><nvpair id="nvpair.id22204" name="device" value="/dev/evms/vmsharedclustercontainer/imagestore"/><nvpair id="nvpair.id22213" name="directory" value="/var/lib/xen/images"/><nvpair id="nvpair.id22222" name="fstype" value="ocfs2"/></instance_attributes>
-         <meta_attributes id="primitive-imagestoreclone.meta"/></primitive>
-       <meta_attributes id="clone-imagestorecloneset.meta"><nvpair id="notify.meta.auto-100" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-100" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-106" name="resource-stickiness" value="0"/><nvpair id="nvpair.meta.auto-110" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-108" name="clone-node-max" value="1"/></meta_attributes></clone>
-       <clone id="configstorecloneset">
-         <primitive id="configstoreclone" class="ocf" type="Filesystem" provider="heartbeat">
-           <operations>
-             <op name="monitor" interval="20s" id="configstoreclone-op-01" timeout="60s" requires="nothing"/>
-             <op name="stop" interval="0" id="configstoreclone-op-02" timeout="60s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22305"><nvpair id="nvpair.id22312" name="device" value="/dev/evms/vmsharedclustercontainer/configstore"/><nvpair id="nvpair.id22321" name="directory" value="/etc/xen/vm"/><nvpair id="nvpair.id22330" name="fstype" value="ocfs2"/></instance_attributes>
-         <meta_attributes id="primitive-configstoreclone.meta"/></primitive>
-       <meta_attributes id="clone-configstorecloneset.meta"><nvpair id="notify.meta.auto-137" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-137" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-145" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-143" name="clone-node-max" value="1"/></meta_attributes></clone>
-       <primitive id="sles10" class="ocf" type="Xen" provider="heartbeat">
-         <operations>
-           <op name="monitor" interval="10s" id="xen-op-01" timeout="60s" requires="nothing"/>
-           <op name="stop" interval="0" id="xen-op-02" timeout="60s"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22377"><nvpair id="nvpair.id22383" name="xmfile" value="/etc/xen/vm/sles10"/></instance_attributes>
-         <meta_attributes id="meta_attributes.id22394"><nvpair id="nvpair.id22401" name="allow-migrate" value="true"/></meta_attributes>
-       <meta_attributes id="primitive-sles10.meta"/></primitive>
-     </resources>
-     <constraints>
-       <rsc_order id="evmsdorderconstraints-01" first="evmsdcloneset" then="evmscloneset" then-action="start" first-action="start" score="0"/>
-       <rsc_order id="evmsorderconstraints-02" first="evmscloneset" then="configstorecloneset" then-action="start" first-action="start" score="0"/>
-       <rsc_order id="evmsorderconstraints-01" first="evmscloneset" then="imagestorecloneset" then-action="start" first-action="start" score="0"/>
-       <rsc_location id="sles10_location" rsc="sles10">
-         <rule id="pref_sles10_location" score="INFINITY">
-           <expression attribute="#uname" operation="eq" value="node1" id="expression.id22462"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="image_location" rsc="imagestorecloneset">
-         <rule id="pref_image_location" score="100">
-           <expression attribute="#uname" operation="eq" value="node1" id="expression.id22463"/>
-         </rule>
-       </rsc_location>
-       <rsc_order id="vm1orderconstraints-01" first="imagestorecloneset" then="sles10" then-action="start" first-action="start" score="0"/>
-       <rsc_order id="vm1orderconstraints-02" first="configstorecloneset" then="sles10" then-action="start" first-action="start" score="0"/>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="2c826922-d092-4862-bedc-de9ae2312117" uname="node2" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.id22530"><nvpair id="nvpair.id22537" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22555">
-           <lrm_resource id="imagestoreclone:1" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="imagestoreclone-1_monitor_0" operation="monitor" transition-key="7:9:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;7:9:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="12" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
-           </lrm_resource>
-           <lrm_resource id="evmsdclone:0" type="Evmsd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="evmsdclone-0_monitor_0" operation="monitor" transition-key="5:5:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;5:5:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="5" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="evmsdclone-0_start_0" operation="start" transition-key="16:5:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;16:5:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="6" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="evmsdclone-0_monitor_5000" operation="monitor" transition-key="17:5:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;17:5:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="7" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="5000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="sles10" type="Xen" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="sles10_monitor_0" operation="monitor" transition-key="11:12:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;11:12:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="20" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="3c8346271b6a1d45f558b3cf24a01304"/>
-             <lrm_rsc_op id="sles10_stop_0" operation="stop" transition-key="78:18:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;78:18:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="30" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="3c8346271b6a1d45f558b3cf24a01304"/>
-             <lrm_rsc_op id="sles10_start_0" operation="start" transition-key="73:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;73:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="43" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="3c8346271b6a1d45f558b3cf24a01304"/>
-             <lrm_rsc_op id="sles10_monitor_10000" operation="monitor" transition-key="74:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;74:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="44" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="10000" op-digest="3c8346271b6a1d45f558b3cf24a01304"/>
-           </lrm_resource>
-           <lrm_resource id="stonithclone:0" type="external/ssh" class="stonith">
-             <lrm_rsc_op id="stonithclone-0_monitor_0" operation="monitor" transition-key="3:4:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;3:4:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="2" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8a8474d1c962554c4cedf5d66aca0808"/>
-             <lrm_rsc_op id="stonithclone-0_start_0" operation="start" transition-key="6:4:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;6:4:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="3" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8a8474d1c962554c4cedf5d66aca0808"/>
-             <lrm_rsc_op id="stonithclone-0_monitor_5000" operation="monitor" transition-key="7:4:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;7:4:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="4" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="5000" op-digest="8a8474d1c962554c4cedf5d66aca0808"/>
-           </lrm_resource>
-           <lrm_resource id="evmsclone:0" type="EvmsSCC" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="evmsclone-0_monitor_0" operation="monitor" transition-key="7:6:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;7:6:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="8" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="evmsclone-0_start_0" operation="start" transition-key="26:6:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;26:6:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="9" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="evmsclone-0_post_notify_stop_0" operation="notify" transition-key="79:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;79:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="47" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="imagestoreclone-0_monitor_0" operation="monitor" transition-key="7:8:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;7:8:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="11" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
-             <lrm_rsc_op id="imagestoreclone-0_start_0" operation="start" transition-key="44:9:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;44:9:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="14" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
-             <lrm_rsc_op id="imagestoreclone-0_monitor_20000" operation="monitor" transition-key="42:10:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:1;42:10:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="18" crm_feature_set="1.0.8" rc-code="1" op-status="0" interval="20000" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
-             <lrm_rsc_op id="imagestoreclone-0_post_notify_stop_0" operation="notify" transition-key="84:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;84:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="46" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
-           </lrm_resource>
-           <lrm_resource id="configstoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="configstoreclone-0_monitor_0" operation="monitor" transition-key="8:9:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;8:9:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="13" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="2098c97dc977d4458c5375661d720934"/>
-             <lrm_rsc_op id="configstoreclone-0_start_0" operation="start" transition-key="60:9:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;60:9:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="15" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="2098c97dc977d4458c5375661d720934"/>
-             <lrm_rsc_op id="configstoreclone-0_monitor_20000" operation="monitor" transition-key="60:10:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;60:10:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="19" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="20000" op-digest="2098c97dc977d4458c5375661d720934"/>
-             <lrm_rsc_op id="configstoreclone-0_post_notify_stop_0" operation="notify" transition-key="89:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;89:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="45" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="2098c97dc977d4458c5375661d720934"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" uname="node1" crmd="online" in_ccm="true" ha="active" join="member" expected="member" shutdown="0">
-       <lrm id="lrm.auto-2">
-         <lrm_resources id="lrm_resources.id23251"/>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="3" num_updates="158" dc-uuid="2c826922-d092-4862-bedc-de9ae2312117" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:10 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cibbootstrap">
+        <nvpair id="nvpair.id21849" name="cluster-delay" value="60"/>
+        <nvpair id="nvpair.id21858" name="stonith-enabled" value="true"/>
+        <nvpair id="nvpair.id21866" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21875" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21884" name="no-quorum-policy" value="stop"/>
+        <nvpair id="nvpair.id21893" name="stop-orphan-resources" value="true"/>
+        <nvpair id="nvpair.id21901" name="stop-orphan-actions" value="true"/>
+        <nvpair id="nvpair.id21910" name="is-managed-default" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="2c826922-d092-4862-bedc-de9ae2312117" uname="node2" type="normal"/>
+      <node id="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" uname="node1" type="normal"/>
+    </nodes>
+    <resources>
+      <clone id="stonithcloneset">
+        <primitive id="stonithclone" class="stonith" type="external/ssh">
+          <operations>
+            <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s" requires="nothing"/>
+            <op name="start" interval="0" id="stonithclone-op-02" timeout="20s" requires="nothing"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22008">
+            <nvpair id="nvpair.id22014" name="hostlist" value="node1,node2"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-stonithclone.meta"/>
+        </primitive>
+        <meta_attributes id="clone-stonithcloneset.meta">
+          <nvpair id="globally_unique.meta.auto-39" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.meta.auto-45" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+      <clone id="evmsdcloneset">
+        <primitive id="evmsdclone" class="ocf" type="Evmsd" provider="heartbeat">
+          <operations>
+            <op name="monitor" interval="5s" id="evmsdclone-op-01" timeout="20s" requires="nothing"/>
+          </operations>
+          <meta_attributes id="primitive-evmsdclone.meta"/>
+        </primitive>
+        <meta_attributes id="clone-evmsdcloneset.meta">
+          <nvpair id="notify.meta.auto-68" name="notify" value="false"/>
+          <nvpair id="globally_unique.meta.auto-68" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.meta.auto-74" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+      <clone id="evmscloneset">
+        <primitive id="evmsclone" class="ocf" type="EvmsSCC" provider="heartbeat">
+          <meta_attributes id="primitive-evmsclone.meta"/>
+        </primitive>
+        <meta_attributes id="clone-evmscloneset.meta">
+          <nvpair id="notify.meta.auto-87" name="notify" value="true"/>
+          <nvpair id="globally_unique.meta.auto-87" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.meta.auto-93" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+      <clone id="imagestorecloneset">
+        <primitive id="imagestoreclone" class="ocf" type="Filesystem" provider="heartbeat">
+          <operations>
+            <op name="monitor" interval="20s" id="imagestoreclone-op-01" timeout="60s" requires="nothing"/>
+            <op name="stop" interval="0" id="imagestoreclone-op-02" timeout="600s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22197">
+            <nvpair id="nvpair.id22204" name="device" value="/dev/evms/vmsharedclustercontainer/imagestore"/>
+            <nvpair id="nvpair.id22213" name="directory" value="/var/lib/xen/images"/>
+            <nvpair id="nvpair.id22222" name="fstype" value="ocfs2"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-imagestoreclone.meta"/>
+        </primitive>
+        <meta_attributes id="clone-imagestorecloneset.meta">
+          <nvpair id="notify.meta.auto-100" name="notify" value="true"/>
+          <nvpair id="globally_unique.meta.auto-100" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.meta.auto-106" name="resource-stickiness" value="0"/>
+          <nvpair id="nvpair.meta.auto-110" name="target-role" value="started"/>
+          <nvpair id="nvpair.meta.auto-108" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+      <clone id="configstorecloneset">
+        <primitive id="configstoreclone" class="ocf" type="Filesystem" provider="heartbeat">
+          <operations>
+            <op name="monitor" interval="20s" id="configstoreclone-op-01" timeout="60s" requires="nothing"/>
+            <op name="stop" interval="0" id="configstoreclone-op-02" timeout="60s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22305">
+            <nvpair id="nvpair.id22312" name="device" value="/dev/evms/vmsharedclustercontainer/configstore"/>
+            <nvpair id="nvpair.id22321" name="directory" value="/etc/xen/vm"/>
+            <nvpair id="nvpair.id22330" name="fstype" value="ocfs2"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-configstoreclone.meta"/>
+        </primitive>
+        <meta_attributes id="clone-configstorecloneset.meta">
+          <nvpair id="notify.meta.auto-137" name="notify" value="true"/>
+          <nvpair id="globally_unique.meta.auto-137" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.meta.auto-145" name="target-role" value="started"/>
+          <nvpair id="nvpair.meta.auto-143" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+      <primitive id="sles10" class="ocf" type="Xen" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="10s" id="xen-op-01" timeout="60s" requires="nothing"/>
+          <op name="stop" interval="0" id="xen-op-02" timeout="60s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22377">
+          <nvpair id="nvpair.id22383" name="xmfile" value="/etc/xen/vm/sles10"/>
+        </instance_attributes>
+        <meta_attributes id="meta_attributes.id22394">
+          <nvpair id="nvpair.id22401" name="allow-migrate" value="true"/>
+        </meta_attributes>
+        <meta_attributes id="primitive-sles10.meta"/>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_order id="evmsdorderconstraints-01" first="evmsdcloneset" then="evmscloneset" then-action="start" first-action="start" score="0"/>
+      <rsc_order id="evmsorderconstraints-02" first="evmscloneset" then="configstorecloneset" then-action="start" first-action="start" score="0"/>
+      <rsc_order id="evmsorderconstraints-01" first="evmscloneset" then="imagestorecloneset" then-action="start" first-action="start" score="0"/>
+      <rsc_location id="sles10_location" rsc="sles10">
+        <rule id="pref_sles10_location" score="INFINITY">
+          <expression attribute="#uname" operation="eq" value="node1" id="expression.id22462"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="image_location" rsc="imagestorecloneset">
+        <rule id="pref_image_location" score="100">
+          <expression attribute="#uname" operation="eq" value="node1" id="expression.id22463"/>
+        </rule>
+      </rsc_location>
+      <rsc_order id="vm1orderconstraints-01" first="imagestorecloneset" then="sles10" then-action="start" first-action="start" score="0"/>
+      <rsc_order id="vm1orderconstraints-02" first="configstorecloneset" then="sles10" then-action="start" first-action="start" score="0"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="2c826922-d092-4862-bedc-de9ae2312117" uname="node2" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id22530">
+          <nvpair id="nvpair.id22537" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22555">
+          <lrm_resource id="imagestoreclone:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="imagestoreclone-1_monitor_0" operation="monitor" transition-key="7:9:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;7:9:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="12" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
+          </lrm_resource>
+          <lrm_resource id="evmsdclone:0" type="Evmsd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="evmsdclone-0_monitor_0" operation="monitor" transition-key="5:5:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;5:5:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="5" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="evmsdclone-0_start_0" operation="start" transition-key="16:5:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;16:5:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="6" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="evmsdclone-0_monitor_5000" operation="monitor" transition-key="17:5:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;17:5:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="7" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="5000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="sles10" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sles10_monitor_0" operation="monitor" transition-key="11:12:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;11:12:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="20" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="3c8346271b6a1d45f558b3cf24a01304"/>
+            <lrm_rsc_op id="sles10_stop_0" operation="stop" transition-key="78:18:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;78:18:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="30" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="3c8346271b6a1d45f558b3cf24a01304"/>
+            <lrm_rsc_op id="sles10_start_0" operation="start" transition-key="73:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;73:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="43" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="3c8346271b6a1d45f558b3cf24a01304"/>
+            <lrm_rsc_op id="sles10_monitor_10000" operation="monitor" transition-key="74:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;74:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="44" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="10000" op-digest="3c8346271b6a1d45f558b3cf24a01304"/>
+          </lrm_resource>
+          <lrm_resource id="stonithclone:0" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="stonithclone-0_monitor_0" operation="monitor" transition-key="3:4:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;3:4:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="2" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8a8474d1c962554c4cedf5d66aca0808"/>
+            <lrm_rsc_op id="stonithclone-0_start_0" operation="start" transition-key="6:4:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;6:4:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="3" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8a8474d1c962554c4cedf5d66aca0808"/>
+            <lrm_rsc_op id="stonithclone-0_monitor_5000" operation="monitor" transition-key="7:4:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;7:4:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="4" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="5000" op-digest="8a8474d1c962554c4cedf5d66aca0808"/>
+          </lrm_resource>
+          <lrm_resource id="evmsclone:0" type="EvmsSCC" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="evmsclone-0_monitor_0" operation="monitor" transition-key="7:6:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;7:6:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="8" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="evmsclone-0_start_0" operation="start" transition-key="26:6:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;26:6:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="9" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="evmsclone-0_post_notify_stop_0" operation="notify" transition-key="79:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;79:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="47" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="imagestoreclone-0_monitor_0" operation="monitor" transition-key="7:8:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;7:8:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="11" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
+            <lrm_rsc_op id="imagestoreclone-0_start_0" operation="start" transition-key="44:9:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;44:9:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="14" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
+            <lrm_rsc_op id="imagestoreclone-0_monitor_20000" operation="monitor" transition-key="42:10:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:1;42:10:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="18" crm_feature_set="1.0.8" rc-code="1" op-status="0" interval="20000" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
+            <lrm_rsc_op id="imagestoreclone-0_post_notify_stop_0" operation="notify" transition-key="84:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;84:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="46" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
+          </lrm_resource>
+          <lrm_resource id="configstoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="configstoreclone-0_monitor_0" operation="monitor" transition-key="8:9:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;8:9:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="13" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="2098c97dc977d4458c5375661d720934"/>
+            <lrm_rsc_op id="configstoreclone-0_start_0" operation="start" transition-key="60:9:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;60:9:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="15" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="2098c97dc977d4458c5375661d720934"/>
+            <lrm_rsc_op id="configstoreclone-0_monitor_20000" operation="monitor" transition-key="60:10:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;60:10:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="19" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="20000" op-digest="2098c97dc977d4458c5375661d720934"/>
+            <lrm_rsc_op id="configstoreclone-0_post_notify_stop_0" operation="notify" transition-key="89:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;89:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="45" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="2098c97dc977d4458c5375661d720934"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" uname="node1" crmd="online" in_ccm="true" ha="active" join="member" expected="member" shutdown="0">
+      <lrm id="lrm.auto-2">
+        <lrm_resources id="lrm_resources.id23251"/>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

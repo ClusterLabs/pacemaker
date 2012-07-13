@@ -1,4 +1,4 @@
-<cib epoch="59" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Wed Feb 22 10:43:45 2012" have-quorum="0" dc-uuid="fc16-builder">
+<cib epoch="59" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Fri Jul 13 13:51:01 2012" have-quorum="0" dc-uuid="fc16-builder">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -22,9 +22,7 @@
           <operations>
             <op id="ClusterIP-monitor-30s" interval="30s" name="monitor"/>
           </operations>
-          <meta_attributes id="ClusterIP-meta_attributes">
-        
-      </meta_attributes>
+          <meta_attributes id="ClusterIP-meta_attributes"/>
         </primitive>
         <meta_attributes id="group1-meta_attributes">
           <nvpair id="group1-meta_attributes-target-role" name="target-role" value="Stopped"/>
@@ -39,9 +37,7 @@
           <operations>
             <op id="ClusterIP2-monitor-30s" interval="30s" name="monitor"/>
           </operations>
-          <meta_attributes id="ClusterIP2-meta_attributes">
-        
-      </meta_attributes>
+          <meta_attributes id="ClusterIP2-meta_attributes"/>
         </primitive>
         <meta_attributes id="group2-meta_attributes">
           <nvpair id="group2-meta_attributes-target-role" name="target-role" value="Started"/>

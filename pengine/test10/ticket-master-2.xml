@@ -1,4 +1,4 @@
-<cib epoch="1" num_updates="22" admin_epoch="0" validate-with="pacemaker-1.1" cib-last-written="Tue Jun 14 18:07:46 2011" have-quorum="1">
+<cib epoch="1" num_updates="22" admin_epoch="0" validate-with="pacemaker-1.1" cib-last-written="Fri Jul 13 13:51:20 2012" have-quorum="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

@@ -1,82 +1,104 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="20" num_updates="21" dc-uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21849" name="dc-version" value="2.1.3-node: b143f7c497816922783be3294320414fc5d99f76"/><nvpair id="nvpair.id21858" name="symmetric-cluster" value="false"/><nvpair id="nvpair.id21868" name="no-quorum-policy" value="ignore"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="3f368213-61d5-409a-a30e-1428efe70f63" uname="star" type="normal"/>
-       <node id="e4603bf6-d10f-4af2-b53b-ba72de6164d0" uname="world" type="normal"/>
-     </nodes>
-     <resources>
-       <group id="gr1">
-         <primitive id="test1" class="ocf" type="Xen" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id21918"><nvpair id="nvpair.id21925" name="xmfile" value="/etc/xen/test1"/><nvpair id="nvpair.id21934" name="allow_migrate" value="true"/></instance_attributes>
-           <operations>
-             <op name="stop" interval="0" id="test1-stop" timeout="120s"/>
-             <op name="migrate_to" interval="0" id="test1-migrate_to" timeout="120s"/>
-             <op name="monitor" interval="10s" id="test1-monitor" timeout="30s" start-delay="30s"/>
-           </operations>
-         <meta_attributes id="primitive-test1.meta"><nvpair id="nvpair.meta.auto-39" name="allow-migrate" value="true"/></meta_attributes></primitive>
-         <primitive id="test2" class="ocf" type="Xen" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id21989"><nvpair id="nvpair.id21996" name="xmfile" value="/etc/xen/test2"/><nvpair id="nvpair.id22004" name="allow_migrate" value="true"/></instance_attributes>
-           <operations>
-             <op name="stop" interval="0" id="test2-stop" timeout="120s"/>
-             <op name="migrate_to" interval="0" id="test2-migrate_to" timeout="120s"/>
-             <op name="monitor" interval="10s" id="test2-monitor" timeout="30s" start-delay="30s"/>
-           </operations>
-         <meta_attributes id="primitive-test2.meta"><nvpair id="nvpair.meta.auto-61" name="allow-migrate" value="true"/></meta_attributes></primitive>
-       <meta_attributes id="group-gr1.meta"/></group>
-     </resources>
-     <constraints>
-       <rsc_location id="loc1" rsc="gr1">
-         <rule id="loc1-rule1" score="INFINITY">
-           <expression id="expression.id22067" attribute="#uname" operation="eq" value="star"/>
-         </rule>
-         <rule id="loc1-rule2" score="1000">
-           <expression id="expression.id22085" attribute="#uname" operation="eq" value="world"/>
-         </rule>
-       </rsc_location>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="e4603bf6-d10f-4af2-b53b-ba72de6164d0" uname="world" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <lrm id="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
-         <lrm_resources id="lrm_resources.id22130">
-           <lrm_resource id="test1" type="Xen" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="test1_monitor_0" operation="monitor" transition-key="6:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:7;6:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="9c83951f290ac297e9ec99519c42fb86"/>
-           </lrm_resource>
-           <lrm_resource id="test2" type="Xen" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="test2_monitor_0" operation="monitor" transition-key="7:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:7;7:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="6d93c4a17ba53be83e1d0786795fb6a5"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
-         <instance_attributes id="instance_attributes.id22217"><nvpair id="nvpair.id22224" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-     <node_state id="3f368213-61d5-409a-a30e-1428efe70f63" uname="star" crmd="online" shutdown="1200981458" in_ccm="true" ha="active" join="member" expected="down">
-       <lrm id="lrm.auto-2">
-         <lrm_resources id="lrm_resources.id22264">
-           <lrm_resource id="test2" type="Xen" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="test2_monitor_0" operation="monitor" transition-key="4:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:7;4:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="6d93c4a17ba53be83e1d0786795fb6a5"/>
-             <lrm_rsc_op id="test2_start_0" operation="start" transition-key="8:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:0;8:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="6d93c4a17ba53be83e1d0786795fb6a5"/>
-             <lrm_rsc_op id="test2_monitor_10000" operation="monitor" transition-key="9:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:0;9:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="a18d6c16e7c509e8b59761cf4a77f6d8"/>
-           </lrm_resource>
-           <lrm_resource id="test1" type="Xen" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="test1_monitor_0" operation="monitor" transition-key="3:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:7;3:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="9c83951f290ac297e9ec99519c42fb86"/>
-             <lrm_rsc_op id="test1_start_0" operation="start" transition-key="6:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:0;6:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="5" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="9c83951f290ac297e9ec99519c42fb86"/>
-             <lrm_rsc_op id="test1_monitor_10000" operation="monitor" transition-key="7:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:0;7:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="14db426a05d630d7e98c9ec87fb6508e"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="transient_attributes.auto-2">
-         <instance_attributes id="instance_attributes.shutdown"><nvpair id="nvp.shutdown" name="shutdown" value="1234"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id22454"><nvpair id="nvpair.id22461" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="20" num_updates="21" dc-uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:00 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21849" name="dc-version" value="2.1.3-node: b143f7c497816922783be3294320414fc5d99f76"/>
+        <nvpair id="nvpair.id21858" name="symmetric-cluster" value="false"/>
+        <nvpair id="nvpair.id21868" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="3f368213-61d5-409a-a30e-1428efe70f63" uname="star" type="normal"/>
+      <node id="e4603bf6-d10f-4af2-b53b-ba72de6164d0" uname="world" type="normal"/>
+    </nodes>
+    <resources>
+      <group id="gr1">
+        <primitive id="test1" class="ocf" type="Xen" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id21918">
+            <nvpair id="nvpair.id21925" name="xmfile" value="/etc/xen/test1"/>
+            <nvpair id="nvpair.id21934" name="allow_migrate" value="true"/>
+          </instance_attributes>
+          <operations>
+            <op name="stop" interval="0" id="test1-stop" timeout="120s"/>
+            <op name="migrate_to" interval="0" id="test1-migrate_to" timeout="120s"/>
+            <op name="monitor" interval="10s" id="test1-monitor" timeout="30s" start-delay="30s"/>
+          </operations>
+          <meta_attributes id="primitive-test1.meta">
+            <nvpair id="nvpair.meta.auto-39" name="allow-migrate" value="true"/>
+          </meta_attributes>
+        </primitive>
+        <primitive id="test2" class="ocf" type="Xen" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id21989">
+            <nvpair id="nvpair.id21996" name="xmfile" value="/etc/xen/test2"/>
+            <nvpair id="nvpair.id22004" name="allow_migrate" value="true"/>
+          </instance_attributes>
+          <operations>
+            <op name="stop" interval="0" id="test2-stop" timeout="120s"/>
+            <op name="migrate_to" interval="0" id="test2-migrate_to" timeout="120s"/>
+            <op name="monitor" interval="10s" id="test2-monitor" timeout="30s" start-delay="30s"/>
+          </operations>
+          <meta_attributes id="primitive-test2.meta">
+            <nvpair id="nvpair.meta.auto-61" name="allow-migrate" value="true"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="group-gr1.meta"/>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_location id="loc1" rsc="gr1">
+        <rule id="loc1-rule1" score="INFINITY">
+          <expression id="expression.id22067" attribute="#uname" operation="eq" value="star"/>
+        </rule>
+        <rule id="loc1-rule2" score="1000">
+          <expression id="expression.id22085" attribute="#uname" operation="eq" value="world"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="e4603bf6-d10f-4af2-b53b-ba72de6164d0" uname="world" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <lrm id="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
+        <lrm_resources id="lrm_resources.id22130">
+          <lrm_resource id="test1" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test1_monitor_0" operation="monitor" transition-key="6:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:7;6:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="9c83951f290ac297e9ec99519c42fb86"/>
+          </lrm_resource>
+          <lrm_resource id="test2" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test2_monitor_0" operation="monitor" transition-key="7:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:7;7:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="6d93c4a17ba53be83e1d0786795fb6a5"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
+        <instance_attributes id="instance_attributes.id22217">
+          <nvpair id="nvpair.id22224" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3f368213-61d5-409a-a30e-1428efe70f63" uname="star" crmd="online" shutdown="1200981458" in_ccm="true" ha="active" join="member" expected="down">
+      <lrm id="lrm.auto-2">
+        <lrm_resources id="lrm_resources.id22264">
+          <lrm_resource id="test2" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test2_monitor_0" operation="monitor" transition-key="4:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:7;4:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="6d93c4a17ba53be83e1d0786795fb6a5"/>
+            <lrm_rsc_op id="test2_start_0" operation="start" transition-key="8:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:0;8:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="6d93c4a17ba53be83e1d0786795fb6a5"/>
+            <lrm_rsc_op id="test2_monitor_10000" operation="monitor" transition-key="9:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:0;9:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="a18d6c16e7c509e8b59761cf4a77f6d8"/>
+          </lrm_resource>
+          <lrm_resource id="test1" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test1_monitor_0" operation="monitor" transition-key="3:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:7;3:0:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="9c83951f290ac297e9ec99519c42fb86"/>
+            <lrm_rsc_op id="test1_start_0" operation="start" transition-key="6:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:0;6:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="5" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="9c83951f290ac297e9ec99519c42fb86"/>
+            <lrm_rsc_op id="test1_monitor_10000" operation="monitor" transition-key="7:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" transition-magic="0:0;7:2:cfd5bebf-7d08-4278-88b1-97d4d479dbc0" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="14db426a05d630d7e98c9ec87fb6508e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="transient_attributes.auto-2">
+        <instance_attributes id="instance_attributes.shutdown">
+          <nvpair id="nvp.shutdown" name="shutdown" value="1234"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id22454">
+          <nvpair id="nvpair.id22461" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

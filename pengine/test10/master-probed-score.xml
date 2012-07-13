@@ -1,4 +1,4 @@
-<cib epoch="1022" num_updates="54" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.5" cib-last-written="Fri Mar 30 11:24:47 2012" have-quorum="1" update-origin="orestes-corosync.nevis.columbia.edu" update-client="crmd" dc-uuid="hypatia-corosync.nevis.columbia.edu">
+<cib epoch="1022" num_updates="54" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.5" cib-last-written="Fri Jul 13 13:51:08 2012" have-quorum="1" update-origin="orestes-corosync.nevis.columbia.edu" update-client="crmd" dc-uuid="hypatia-corosync.nevis.columbia.edu">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

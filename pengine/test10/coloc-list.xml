@@ -1,13 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21836" name="no-quorum-policy" value="ignore"/><nvpair id="nvpair.id21845" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21854" name="default-migration-threshold" value="1"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21836" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="nvpair.id21845" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21854" name="default-migration-threshold" value="1"/>
+      </cluster_property_set>
+    </crm_config>
     <rsc_defaults>
       <meta_attributes id="nvpair.id218777">
-	<nvpair id="nvpair.id21877" name="migration-threshold" value="1"/>
+        <nvpair id="nvpair.id21877" name="migration-threshold" value="1"/>
       </meta_attributes>
     </rsc_defaults>
     <nodes>
@@ -16,11 +21,21 @@
       <node id="node3" uname="node3" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc1.meta"/></primitive>
-      <primitive id="rsc2" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc2.meta"/></primitive>
-      <primitive id="rsc3" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc3.meta"/></primitive>
-      <primitive id="rsc4" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc4.meta"/></primitive>
-      <primitive id="rsc5" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc5.meta"/></primitive>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc1.meta"/>
+      </primitive>
+      <primitive id="rsc2" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc2.meta"/>
+      </primitive>
+      <primitive id="rsc3" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc3.meta"/>
+      </primitive>
+      <primitive id="rsc4" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc4.meta"/>
+      </primitive>
+      <primitive id="rsc5" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc5.meta"/>
+      </primitive>
     </resources>
     <constraints>
       <rsc_colocation id="colo-2-1" rsc="rsc2" with-rsc="rsc1" score="INFINITY"/>
@@ -31,43 +46,50 @@
   </configuration>
   <status>
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-       <transient_attributes id="node1">
-         <instance_attributes id="instance_attributes.id22010"><nvpair id="nvpair.id22017" name="fail-count-rsc2" value="1"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="node1">
-         <lrm_resources id="lrm_resources.id22033">
-           <lrm_resource id="rsc2" type="apache" class="heartbeat">
-             <lrm_rsc_op id="rsc2_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
+      <transient_attributes id="node1">
+        <instance_attributes id="instance_attributes.id22010">
+          <nvpair id="nvpair.id22017" name="fail-count-rsc2" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="node1">
+        <lrm_resources id="lrm_resources.id22033">
+          <lrm_resource id="rsc2" type="apache" class="heartbeat">
+            <lrm_rsc_op id="rsc2_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
     </node_state>
     <node_state id="node2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
-       <transient_attributes id="node2">
-         <instance_attributes id="instance_attributes.id22097"><nvpair id="nvpair.id22103" name="fail-count-rsc5" value="1"/><nvpair id="nvpair.id22112" name="fail-count-rsc3" value="1"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="node2">
-         <lrm_resources id="lrm_resources.id22128">
-           <lrm_resource id="rsc3" type="apache" class="heartbeat">
-             <lrm_rsc_op id="rsc3_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="rsc5" type="apache" class="heartbeat">
-             <lrm_rsc_op id="rsc5_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
+      <transient_attributes id="node2">
+        <instance_attributes id="instance_attributes.id22097">
+          <nvpair id="nvpair.id22103" name="fail-count-rsc5" value="1"/>
+          <nvpair id="nvpair.id22112" name="fail-count-rsc3" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="node2">
+        <lrm_resources id="lrm_resources.id22128">
+          <lrm_resource id="rsc3" type="apache" class="heartbeat">
+            <lrm_rsc_op id="rsc3_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc5" type="apache" class="heartbeat">
+            <lrm_rsc_op id="rsc5_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
     </node_state>
     <node_state id="node3" ha="active" uname="node3" crmd="online" join="member" expected="member" in_ccm="true">
-       <transient_attributes id="node3">
-         <instance_attributes id="instance_attributes.id22225"><nvpair id="nvpair.id22232" name="fail-count-rsc2" value="1"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="node3">
-         <lrm_resources id="lrm_resources.id22248">
-           <lrm_resource id="rsc2" type="apache" class="heartbeat">
-             <lrm_rsc_op id="rsc2_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
+      <transient_attributes id="node3">
+        <instance_attributes id="instance_attributes.id22225">
+          <nvpair id="nvpair.id22232" name="fail-count-rsc2" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="node3">
+        <lrm_resources id="lrm_resources.id22248">
+          <lrm_resource id="rsc2" type="apache" class="heartbeat">
+            <lrm_rsc_op id="rsc2_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
     </node_state>
   </status>
 </cib>

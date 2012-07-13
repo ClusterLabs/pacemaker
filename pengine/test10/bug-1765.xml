@@ -1,141 +1,196 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="61" num_updates="26" dc-uuid="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21846" name="dc-version" value="2.1.2-node: 394e7c3241c59ee0e538643fde4b60cddaf5d3f4"/><nvpair id="nvpair.id21856" name="last-lrm-refresh" value="1193843111"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="aa584ceb-0d17-48ed-97c2-250b062e7407" uname="sles236" type="normal">
-         <instance_attributes id="instance_attributes.id21880"><nvpair id="nvpair.id21887" name="standby" value="off"/></instance_attributes>
-       </node>
-       <node id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" uname="sles238" type="normal">
-         <instance_attributes id="instance_attributes.id21908"><nvpair name="standby" id="nvpair.id21915" value="off"/></instance_attributes>
-       </node>
-     </nodes>
-     <resources>
-       <master id="ms-drbd0">
-         <meta_attributes id="meta_attributes.id21934"><nvpair id="nvpair.id21941" name="clone-max" value="2"/><nvpair id="nvpair.id21949" name="clone-node-max" value="1"/><nvpair id="nvpair.id21957" name="master-max" value="1"/><nvpair id="nvpair.id21966" name="master-node-max" value="1"/><nvpair id="nvpair.id21974" name="notify" value="yes"/><nvpair id="nvpair.id21982" name="globally-unique" value="false"/><nvpair id="nvpair.id21991" name="interleave" value="true"/><nvpair id="nvpair.id22000" name="target-role" value="started"/></meta_attributes>
-         <primitive id="drbd0" class="ocf" provider="heartbeat" type="drbd">
-           <instance_attributes id="instance_attributes.id22021"><nvpair id="nvpair.id22028" name="drbd_resource" value="tr2"/></instance_attributes>
-           <operations>
-             <op name="monitor" interval="12s" id="drbd0_mon_0" timeout="5s" start-delay="0" enabled="true" role="Started"/>
-             <op name="monitor" interval="10s" id="drbd0_mon_1" timeout="5s" role="Master" start-delay="0" enabled="true"/>
-           </operations>
-           <meta_attributes id="meta_attributes.id22075"><nvpair id="nvpair.id22082" name="target-role" value="started"/></meta_attributes>
-         <meta_attributes id="primitive-drbd0.meta"/></primitive>
-       <meta_attributes id="master_slave-ms-drbd0.meta"/></master>
-       <master id="ms-drbd1">
-         <meta_attributes id="meta_attributes.id22099"><nvpair id="nvpair.id22105" name="clone-max" value="2"/><nvpair id="nvpair.id22114" name="clone-node-max" value="1"/><nvpair id="nvpair.id22122" name="master-max" value="1"/><nvpair id="nvpair.id22130" name="master-node-max" value="1"/><nvpair id="nvpair.id22138" name="notify" value="yes"/><nvpair id="nvpair.id22147" name="globally-unique" value="false"/><nvpair id="nvpair.id22155" name="target-role" value="started"/><nvpair id="nvpair.id22164" name="interleave" value="true"/></meta_attributes>
-         <primitive id="drbd1" class="ocf" provider="heartbeat" type="drbd">
-           <instance_attributes id="instance_attributes.id22185"><nvpair id="nvpair.id22191" name="drbd_resource" value="tr2-var"/></instance_attributes>
-           <operations>
-             <op name="monitor" interval="12s" id="drbd1_mon_0" timeout="5s"/>
-             <op name="monitor" interval="10s" id="drbd1_mon_1" timeout="5s" role="Master"/>
-           </operations>
-           <meta_attributes id="meta_attributes.id22228"><nvpair id="nvpair.id22234" name="target-role" value="started"/></meta_attributes>
-         <meta_attributes id="primitive-drbd1.meta"/></primitive>
-       <meta_attributes id="master_slave-ms-drbd1.meta"/></master>
-     </resources>
-     <constraints>
-       <rsc_colocation id="drbd0_drbd1_master" rsc="ms-drbd0" with-rsc="ms-drbd1" rsc-role="Master" with-rsc-role="Master" score="INFINITY"/>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" uname="sles238" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <transient_attributes id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78">
-         <instance_attributes id="instance_attributes.id22297"><nvpair id="nvpair.id22304" name="probe_complete" value="true"/><nvpair id="nvpair.id22313" name="fail-count-drbd0:0" value="2"/><nvpair id="nvpair.id22322" name="fail-count-drbd0:1" value="1"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id22334"><nvpair id="nvpair.id22341" name="master-drbd0:1" value="5"/><nvpair name="master-drbd1:1" id="nvpair.id22350" value="75"/><nvpair name="master-drbd0:0" id="nvpair.id22359" value="75"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78">
-         <lrm_resources id="lrm_resources.id22376">
-           <lrm_resource id="drbd1:1" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd1-1_promote_0" operation="promote" transition-key="39:33:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;39:33:3282115e-0c7f-4f4e-925f-94870134713a" call-id="102" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-1_demote_0" operation="demote" transition-key="45:36:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;45:36:3282115e-0c7f-4f4e-925f-94870134713a" call-id="114" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-1_stop_0" operation="stop" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" transition-key="43:128:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;43:128:3282115e-0c7f-4f4e-925f-94870134713a" call-id="239" op-digest="45c27a3fb903b07d748f5d7809222ed4"/>
-             <lrm_rsc_op id="drbd1-1_start_0" operation="start" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac" transition-key="37:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;37:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="247"/>
-             <lrm_rsc_op id="drbd1-1_post_notify_promote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac" transition-key="102:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;102:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="253"/>
-             <lrm_rsc_op id="drbd1-1_notify_0" operation="notify" crm_feature_set="2.0" op-status="-1" call-id="-1" interval="0" rc-code="-1" transition-key="92:126:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="-1:-1;92:126:3282115e-0c7f-4f4e-925f-94870134713a" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-1_pre_notify_stop_0" operation="notify" transition-key="93:128:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;93:128:3282115e-0c7f-4f4e-925f-94870134713a" call-id="238" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="45c27a3fb903b07d748f5d7809222ed4"/>
-             <lrm_rsc_op id="drbd1-1_post_notify_start_0" operation="notify" transition-key="86:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;86:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="249" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-1_pre_notify_promote_0" operation="notify" transition-key="101:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;101:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="251" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-1_monitor_12000" operation="monitor" transition-key="45:134:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;45:134:3282115e-0c7f-4f4e-925f-94870134713a" call-id="254" crm_feature_set="2.0" rc-code="0" op-status="0" interval="12000" op-digest="001ce1a2346263e1fb90f626ba0799a1"/>
-           </lrm_resource>
-           <lrm_resource id="drbd0:0" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd0-0_start_0" operation="start" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="7:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;7:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="246"/>
-             <lrm_rsc_op id="drbd0-0_promote_0" operation="promote" transition-key="10:119:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;10:119:3282115e-0c7f-4f4e-925f-94870134713a" call-id="231" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-0_pre_notify_start_0" operation="notify" transition-key="75:122:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;75:122:3282115e-0c7f-4f4e-925f-94870134713a" call-id="234" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-0_pre_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="78:136:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;78:136:3282115e-0c7f-4f4e-925f-94870134713a" call-id="255"/>
-             <lrm_rsc_op id="drbd0-0_demote_0" operation="demote" transition-key="13:128:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;13:128:3282115e-0c7f-4f4e-925f-94870134713a" call-id="240" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-0_post_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="79:136:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;79:136:3282115e-0c7f-4f4e-925f-94870134713a" call-id="256"/>
-             <lrm_rsc_op id="drbd0-0_pre_notify_stop_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="75:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;75:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="258"/>
-             <lrm_rsc_op id="drbd0-0_stop_0" operation="stop" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="10:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;10:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="259"/>
-             <lrm_rsc_op id="drbd0-0_post_notify_start_0" operation="notify" transition-key="75:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;75:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="248" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-0_pre_notify_promote_0" operation="notify" transition-key="85:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;85:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="250" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-0_post_notify_promote_0" operation="notify" transition-key="86:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;86:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="252" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-           </lrm_resource>
-           <lrm_resource id="drbd1:0" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd1-0_monitor_0" operation="monitor" transition-key="7:129:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:7;7:129:3282115e-0c7f-4f4e-925f-94870134713a" call-id="242" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-           </lrm_resource>
-           <lrm_resource id="drbd0:1" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd0-1_monitor_0" operation="monitor" transition-key="5:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:7;5:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="245" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="aa584ceb-0d17-48ed-97c2-250b062e7407" uname="sles236" crmd="online" in_ccm="true" ha="active" join="member" expected="member" shutdown="0">
-       <transient_attributes id="aa584ceb-0d17-48ed-97c2-250b062e7407">
-         <instance_attributes id="instance_attributes.id23046"><nvpair id="nvpair.id23053" name="probe_complete" value="true"/><nvpair id="nvpair.id23062" name="fail-count-drbd1:0" value="2"/><nvpair id="nvpair.id23072" name="fail-count-drbd0:0" value="2"/><nvpair id="nvpair.id23081" name="fail-count-drbd1:1" value="2"/><nvpair id="nvpair.id23090" name="fail-count-drbd0:1" value="3"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id23102"><nvpair name="master-drbd0:0" id="nvpair.id23109" value="75"/><nvpair name="master-drbd1:0" id="nvpair.id23118" value="75"/><nvpair name="master-drbd0:1" id="nvpair.id23127" value="10"/><nvpair id="nvpair.id23136" name="master-drbd1:1" value="10"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="aa584ceb-0d17-48ed-97c2-250b062e7407">
-         <lrm_resources id="lrm_resources.id23153">
-           <lrm_resource id="drbd1:0" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd1-0_monitor_0" operation="monitor" transition-key="5:126:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:8;5:126:3282115e-0c7f-4f4e-925f-94870134713a" call-id="261" crm_feature_set="2.0" rc-code="8" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_pre_notify_stop_0" operation="notify" transition-key="87:128:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;87:128:3282115e-0c7f-4f4e-925f-94870134713a" call-id="265" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_post_notify_stop_0" operation="notify" transition-key="88:128:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;88:128:3282115e-0c7f-4f4e-925f-94870134713a" call-id="267" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_pre_notify_start_0" operation="notify" transition-key="89:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;89:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="286" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_pre_notify_demote_0" operation="notify" transition-key="95:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;95:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="287" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_demote_0" operation="demote" transition-key="42:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;42:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="289" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_post_notify_demote_0" operation="notify" transition-key="96:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;96:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="291" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_post_notify_start_0" operation="notify" transition-key="90:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;90:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="293" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_pre_notify_promote_0" operation="notify" transition-key="93:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;93:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="295" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_promote_0" operation="promote" transition-key="40:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;40:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="297" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_post_notify_promote_0" operation="notify" transition-key="94:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;94:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="299" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
-             <lrm_rsc_op id="drbd1-0_monitor_10000" operation="monitor" transition-key="41:134:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:8;41:134:3282115e-0c7f-4f4e-925f-94870134713a" call-id="301" crm_feature_set="2.0" rc-code="8" op-status="0" interval="10000" op-digest="001ce1a2346263e1fb90f626ba0799a1"/>
-           </lrm_resource>
-           <lrm_resource id="drbd0:0" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd0-0_demote_0" operation="demote" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="10:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;10:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="274"/>
-             <lrm_rsc_op id="drbd0-0_pre_notify_stop_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="76:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;76:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="276"/>
-             <lrm_rsc_op id="drbd0-0_stop_0" operation="stop" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="11:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;11:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="277"/>
-             <lrm_rsc_op id="drbd0-0_monitor_0" operation="monitor" transition-key="6:122:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;6:122:3282115e-0c7f-4f4e-925f-94870134713a" call-id="260" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-0_pre_notify_promote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="76:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;76:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="310"/>
-             <lrm_rsc_op id="drbd0-0_pre_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="77:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;77:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="273"/>
-             <lrm_rsc_op id="drbd0-0_post_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="78:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;78:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="275"/>
-             <lrm_rsc_op id="drbd0-0_promote_0" operation="promote" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="12:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;12:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="311"/>
-             <lrm_rsc_op id="drbd0-0_post_notify_stop_0" operation="notify" transition-key="77:129:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;77:129:3282115e-0c7f-4f4e-925f-94870134713a" call-id="271" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-0_post_notify_promote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="77:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;77:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="312"/>
-             <lrm_rsc_op id="drbd0-0_start_0" operation="start" transition-key="11:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;11:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="308" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-0_post_notify_start_0" operation="notify" transition-key="74:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;74:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="309" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-0_monitor_10000" operation="monitor" transition-key="13:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:8;13:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="313" crm_feature_set="2.0" rc-code="8" op-status="0" interval="10000" op-digest="841c5dd8e61e623af01d5b7f0ec80a2c"/>
-           </lrm_resource>
-           <lrm_resource id="drbd0:1" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd0-1_start_0" operation="start" transition-key="7:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;7:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="278" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-1_post_notify_start_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="79:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;79:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="292"/>
-             <lrm_rsc_op id="drbd0-1_pre_notify_promote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="77:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;77:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="294"/>
-             <lrm_rsc_op id="drbd0-1_promote_0" operation="promote" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="8:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;8:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="296"/>
-             <lrm_rsc_op id="drbd0-1_post_notify_promote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="78:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;78:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="298"/>
-             <lrm_rsc_op id="drbd0-1_pre_notify_start_0" operation="notify" transition-key="78:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;78:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="284" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-             <lrm_rsc_op id="drbd0-1_pre_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="81:136:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;81:136:3282115e-0c7f-4f4e-925f-94870134713a" call-id="302"/>
-             <lrm_rsc_op id="drbd0-1_demote_0" operation="demote" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="13:136:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;13:136:3282115e-0c7f-4f4e-925f-94870134713a" call-id="303"/>
-             <lrm_rsc_op id="drbd0-1_post_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="82:136:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;82:136:3282115e-0c7f-4f4e-925f-94870134713a" call-id="304"/>
-             <lrm_rsc_op id="drbd0-1_pre_notify_stop_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="80:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;80:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="306"/>
-             <lrm_rsc_op id="drbd0-1_stop_0" operation="stop" transition-key="4:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;4:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="307" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="61" num_updates="26" dc-uuid="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:00 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21846" name="dc-version" value="2.1.2-node: 394e7c3241c59ee0e538643fde4b60cddaf5d3f4"/>
+        <nvpair id="nvpair.id21856" name="last-lrm-refresh" value="1193843111"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="aa584ceb-0d17-48ed-97c2-250b062e7407" uname="sles236" type="normal">
+        <instance_attributes id="instance_attributes.id21880">
+          <nvpair id="nvpair.id21887" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" uname="sles238" type="normal">
+        <instance_attributes id="instance_attributes.id21908">
+          <nvpair name="standby" id="nvpair.id21915" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <master id="ms-drbd0">
+        <meta_attributes id="meta_attributes.id21934">
+          <nvpair id="nvpair.id21941" name="clone-max" value="2"/>
+          <nvpair id="nvpair.id21949" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair.id21957" name="master-max" value="1"/>
+          <nvpair id="nvpair.id21966" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id21974" name="notify" value="yes"/>
+          <nvpair id="nvpair.id21982" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.id21991" name="interleave" value="true"/>
+          <nvpair id="nvpair.id22000" name="target-role" value="started"/>
+        </meta_attributes>
+        <primitive id="drbd0" class="ocf" provider="heartbeat" type="drbd">
+          <instance_attributes id="instance_attributes.id22021">
+            <nvpair id="nvpair.id22028" name="drbd_resource" value="tr2"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="12s" id="drbd0_mon_0" timeout="5s" start-delay="0" enabled="true" role="Started"/>
+            <op name="monitor" interval="10s" id="drbd0_mon_1" timeout="5s" role="Master" start-delay="0" enabled="true"/>
+          </operations>
+          <meta_attributes id="meta_attributes.id22075">
+            <nvpair id="nvpair.id22082" name="target-role" value="started"/>
+          </meta_attributes>
+          <meta_attributes id="primitive-drbd0.meta"/>
+        </primitive>
+        <meta_attributes id="master_slave-ms-drbd0.meta"/>
+      </master>
+      <master id="ms-drbd1">
+        <meta_attributes id="meta_attributes.id22099">
+          <nvpair id="nvpair.id22105" name="clone-max" value="2"/>
+          <nvpair id="nvpair.id22114" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair.id22122" name="master-max" value="1"/>
+          <nvpair id="nvpair.id22130" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22138" name="notify" value="yes"/>
+          <nvpair id="nvpair.id22147" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.id22155" name="target-role" value="started"/>
+          <nvpair id="nvpair.id22164" name="interleave" value="true"/>
+        </meta_attributes>
+        <primitive id="drbd1" class="ocf" provider="heartbeat" type="drbd">
+          <instance_attributes id="instance_attributes.id22185">
+            <nvpair id="nvpair.id22191" name="drbd_resource" value="tr2-var"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="12s" id="drbd1_mon_0" timeout="5s"/>
+            <op name="monitor" interval="10s" id="drbd1_mon_1" timeout="5s" role="Master"/>
+          </operations>
+          <meta_attributes id="meta_attributes.id22228">
+            <nvpair id="nvpair.id22234" name="target-role" value="started"/>
+          </meta_attributes>
+          <meta_attributes id="primitive-drbd1.meta"/>
+        </primitive>
+        <meta_attributes id="master_slave-ms-drbd1.meta"/>
+      </master>
+    </resources>
+    <constraints>
+      <rsc_colocation id="drbd0_drbd1_master" rsc="ms-drbd0" with-rsc="ms-drbd1" rsc-role="Master" with-rsc-role="Master" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" uname="sles238" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <transient_attributes id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78">
+        <instance_attributes id="instance_attributes.id22297">
+          <nvpair id="nvpair.id22304" name="probe_complete" value="true"/>
+          <nvpair id="nvpair.id22313" name="fail-count-drbd0:0" value="2"/>
+          <nvpair id="nvpair.id22322" name="fail-count-drbd0:1" value="1"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id22334">
+          <nvpair id="nvpair.id22341" name="master-drbd0:1" value="5"/>
+          <nvpair name="master-drbd1:1" id="nvpair.id22350" value="75"/>
+          <nvpair name="master-drbd0:0" id="nvpair.id22359" value="75"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78">
+        <lrm_resources id="lrm_resources.id22376">
+          <lrm_resource id="drbd1:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd1-1_promote_0" operation="promote" transition-key="39:33:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;39:33:3282115e-0c7f-4f4e-925f-94870134713a" call-id="102" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-1_demote_0" operation="demote" transition-key="45:36:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;45:36:3282115e-0c7f-4f4e-925f-94870134713a" call-id="114" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-1_stop_0" operation="stop" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" transition-key="43:128:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;43:128:3282115e-0c7f-4f4e-925f-94870134713a" call-id="239" op-digest="45c27a3fb903b07d748f5d7809222ed4"/>
+            <lrm_rsc_op id="drbd1-1_start_0" operation="start" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac" transition-key="37:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;37:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="247"/>
+            <lrm_rsc_op id="drbd1-1_post_notify_promote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac" transition-key="102:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;102:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="253"/>
+            <lrm_rsc_op id="drbd1-1_notify_0" operation="notify" crm_feature_set="2.0" op-status="-1" call-id="-1" interval="0" rc-code="-1" transition-key="92:126:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="-1:-1;92:126:3282115e-0c7f-4f4e-925f-94870134713a" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-1_pre_notify_stop_0" operation="notify" transition-key="93:128:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;93:128:3282115e-0c7f-4f4e-925f-94870134713a" call-id="238" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="45c27a3fb903b07d748f5d7809222ed4"/>
+            <lrm_rsc_op id="drbd1-1_post_notify_start_0" operation="notify" transition-key="86:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;86:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="249" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-1_pre_notify_promote_0" operation="notify" transition-key="101:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;101:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="251" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-1_monitor_12000" operation="monitor" transition-key="45:134:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;45:134:3282115e-0c7f-4f4e-925f-94870134713a" call-id="254" crm_feature_set="2.0" rc-code="0" op-status="0" interval="12000" op-digest="001ce1a2346263e1fb90f626ba0799a1"/>
+          </lrm_resource>
+          <lrm_resource id="drbd0:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd0-0_start_0" operation="start" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="7:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;7:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="246"/>
+            <lrm_rsc_op id="drbd0-0_promote_0" operation="promote" transition-key="10:119:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;10:119:3282115e-0c7f-4f4e-925f-94870134713a" call-id="231" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-0_pre_notify_start_0" operation="notify" transition-key="75:122:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;75:122:3282115e-0c7f-4f4e-925f-94870134713a" call-id="234" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-0_pre_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="78:136:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;78:136:3282115e-0c7f-4f4e-925f-94870134713a" call-id="255"/>
+            <lrm_rsc_op id="drbd0-0_demote_0" operation="demote" transition-key="13:128:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;13:128:3282115e-0c7f-4f4e-925f-94870134713a" call-id="240" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-0_post_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="79:136:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;79:136:3282115e-0c7f-4f4e-925f-94870134713a" call-id="256"/>
+            <lrm_rsc_op id="drbd0-0_pre_notify_stop_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="75:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;75:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="258"/>
+            <lrm_rsc_op id="drbd0-0_stop_0" operation="stop" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="10:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;10:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="259"/>
+            <lrm_rsc_op id="drbd0-0_post_notify_start_0" operation="notify" transition-key="75:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;75:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="248" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-0_pre_notify_promote_0" operation="notify" transition-key="85:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;85:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="250" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-0_post_notify_promote_0" operation="notify" transition-key="86:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;86:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="252" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+          </lrm_resource>
+          <lrm_resource id="drbd1:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd1-0_monitor_0" operation="monitor" transition-key="7:129:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:7;7:129:3282115e-0c7f-4f4e-925f-94870134713a" call-id="242" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+          </lrm_resource>
+          <lrm_resource id="drbd0:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd0-1_monitor_0" operation="monitor" transition-key="5:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:7;5:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="245" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="aa584ceb-0d17-48ed-97c2-250b062e7407" uname="sles236" crmd="online" in_ccm="true" ha="active" join="member" expected="member" shutdown="0">
+      <transient_attributes id="aa584ceb-0d17-48ed-97c2-250b062e7407">
+        <instance_attributes id="instance_attributes.id23046">
+          <nvpair id="nvpair.id23053" name="probe_complete" value="true"/>
+          <nvpair id="nvpair.id23062" name="fail-count-drbd1:0" value="2"/>
+          <nvpair id="nvpair.id23072" name="fail-count-drbd0:0" value="2"/>
+          <nvpair id="nvpair.id23081" name="fail-count-drbd1:1" value="2"/>
+          <nvpair id="nvpair.id23090" name="fail-count-drbd0:1" value="3"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id23102">
+          <nvpair name="master-drbd0:0" id="nvpair.id23109" value="75"/>
+          <nvpair name="master-drbd1:0" id="nvpair.id23118" value="75"/>
+          <nvpair name="master-drbd0:1" id="nvpair.id23127" value="10"/>
+          <nvpair id="nvpair.id23136" name="master-drbd1:1" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="aa584ceb-0d17-48ed-97c2-250b062e7407">
+        <lrm_resources id="lrm_resources.id23153">
+          <lrm_resource id="drbd1:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd1-0_monitor_0" operation="monitor" transition-key="5:126:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:8;5:126:3282115e-0c7f-4f4e-925f-94870134713a" call-id="261" crm_feature_set="2.0" rc-code="8" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_pre_notify_stop_0" operation="notify" transition-key="87:128:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;87:128:3282115e-0c7f-4f4e-925f-94870134713a" call-id="265" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_post_notify_stop_0" operation="notify" transition-key="88:128:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;88:128:3282115e-0c7f-4f4e-925f-94870134713a" call-id="267" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_pre_notify_start_0" operation="notify" transition-key="89:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;89:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="286" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_pre_notify_demote_0" operation="notify" transition-key="95:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;95:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="287" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_demote_0" operation="demote" transition-key="42:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;42:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="289" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_post_notify_demote_0" operation="notify" transition-key="96:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;96:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="291" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_post_notify_start_0" operation="notify" transition-key="90:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;90:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="293" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_pre_notify_promote_0" operation="notify" transition-key="93:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;93:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="295" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_promote_0" operation="promote" transition-key="40:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;40:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="297" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_post_notify_promote_0" operation="notify" transition-key="94:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;94:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="299" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4951be763ef4103d2ecb25a71430ccac"/>
+            <lrm_rsc_op id="drbd1-0_monitor_10000" operation="monitor" transition-key="41:134:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:8;41:134:3282115e-0c7f-4f4e-925f-94870134713a" call-id="301" crm_feature_set="2.0" rc-code="8" op-status="0" interval="10000" op-digest="001ce1a2346263e1fb90f626ba0799a1"/>
+          </lrm_resource>
+          <lrm_resource id="drbd0:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd0-0_demote_0" operation="demote" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="10:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;10:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="274"/>
+            <lrm_rsc_op id="drbd0-0_pre_notify_stop_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="76:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;76:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="276"/>
+            <lrm_rsc_op id="drbd0-0_stop_0" operation="stop" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="11:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;11:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="277"/>
+            <lrm_rsc_op id="drbd0-0_monitor_0" operation="monitor" transition-key="6:122:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;6:122:3282115e-0c7f-4f4e-925f-94870134713a" call-id="260" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-0_pre_notify_promote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="76:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;76:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="310"/>
+            <lrm_rsc_op id="drbd0-0_pre_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="77:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;77:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="273"/>
+            <lrm_rsc_op id="drbd0-0_post_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="78:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;78:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="275"/>
+            <lrm_rsc_op id="drbd0-0_promote_0" operation="promote" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="12:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;12:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="311"/>
+            <lrm_rsc_op id="drbd0-0_post_notify_stop_0" operation="notify" transition-key="77:129:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;77:129:3282115e-0c7f-4f4e-925f-94870134713a" call-id="271" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-0_post_notify_promote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="77:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;77:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="312"/>
+            <lrm_rsc_op id="drbd0-0_start_0" operation="start" transition-key="11:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;11:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="308" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-0_post_notify_start_0" operation="notify" transition-key="74:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;74:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="309" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-0_monitor_10000" operation="monitor" transition-key="13:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:8;13:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="313" crm_feature_set="2.0" rc-code="8" op-status="0" interval="10000" op-digest="841c5dd8e61e623af01d5b7f0ec80a2c"/>
+          </lrm_resource>
+          <lrm_resource id="drbd0:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd0-1_start_0" operation="start" transition-key="7:130:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;7:130:3282115e-0c7f-4f4e-925f-94870134713a" call-id="278" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-1_post_notify_start_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="79:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;79:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="292"/>
+            <lrm_rsc_op id="drbd0-1_pre_notify_promote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="77:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;77:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="294"/>
+            <lrm_rsc_op id="drbd0-1_promote_0" operation="promote" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="8:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;8:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="296"/>
+            <lrm_rsc_op id="drbd0-1_post_notify_promote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="78:133:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;78:133:3282115e-0c7f-4f4e-925f-94870134713a" call-id="298"/>
+            <lrm_rsc_op id="drbd0-1_pre_notify_start_0" operation="notify" transition-key="78:132:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;78:132:3282115e-0c7f-4f4e-925f-94870134713a" call-id="284" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+            <lrm_rsc_op id="drbd0-1_pre_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="81:136:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;81:136:3282115e-0c7f-4f4e-925f-94870134713a" call-id="302"/>
+            <lrm_rsc_op id="drbd0-1_demote_0" operation="demote" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="13:136:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;13:136:3282115e-0c7f-4f4e-925f-94870134713a" call-id="303"/>
+            <lrm_rsc_op id="drbd0-1_post_notify_demote_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="82:136:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;82:136:3282115e-0c7f-4f4e-925f-94870134713a" call-id="304"/>
+            <lrm_rsc_op id="drbd0-1_pre_notify_stop_0" operation="notify" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31" transition-key="80:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;80:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="306"/>
+            <lrm_rsc_op id="drbd0-1_stop_0" operation="stop" transition-key="4:137:3282115e-0c7f-4f4e-925f-94870134713a" transition-magic="0:0;4:137:3282115e-0c7f-4f4e-925f-94870134713a" call-id="307" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="de2c06ba097c43235d6dca55f93d4f31"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

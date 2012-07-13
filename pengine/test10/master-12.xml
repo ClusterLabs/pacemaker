@@ -1,116 +1,146 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="13" num_updates="99" dc-uuid="5d98a2ff-f9bf-45be-964b-27e4246c0085" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set>
-       <cluster_property_set id="cib-bootstrap-options"/>
-     </crm_config>
-     <nodes>
-       <node id="1ee1b756-2292-49bf-aed2-8ff15e8cc503" uname="sel3" type="normal"/>
-       <node id="5d98a2ff-f9bf-45be-964b-27e4246c0085" uname="sel4" type="normal"/>
-     </nodes>
-     <resources>
-       <master id="ms-drbd0">
-         <meta_attributes id="meta_attributes.id21876"><nvpair id="nvpair.id21883" name="clone-max" value="2"/><nvpair id="nvpair.id21891" name="clone-node-max" value="1"/><nvpair id="nvpair.id21900" name="master-max" value="1"/><nvpair id="nvpair.id21908" name="master-node-max" value="1"/><nvpair id="nvpair.id21916" name="notify" value="yes"/><nvpair id="nvpair.id21925" name="globally-unique" value="false"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes>
-         <primitive id="drbd0" class="ocf" provider="heartbeat" type="drbd">
-           <instance_attributes id="instance_attributes.id21946"><nvpair id="nvpair.id21953" name="drbd_resource" value="drbd0"/></instance_attributes>
-         <meta_attributes id="primitive-drbd0.meta"/></primitive>
-       <meta_attributes id="master_slave-ms-drbd0.meta"/></master>
-       <master id="ms-sf">
-         <meta_attributes id="meta_attributes.id21970"><nvpair id="nvpair.id21976" name="clone-max" value="2"/><nvpair id="nvpair.id21984" name="clone-node-max" value="1"/><nvpair id="nvpair.id21993" name="master-max" value="1"/><nvpair id="nvpair.id22001" name="master-node-max" value="1"/>
-	<nvpair id="unique-2" name="globally-unique" value="true"/>
-      </meta_attributes>
-         <primitive id="sf" class="ocf" provider="heartbeat" type="Stateful">
-           <instance_attributes id="instance_attributes.id22021"/>
-         <meta_attributes id="primitive-sf.meta"/></primitive>
-       <meta_attributes id="master_slave-ms-sf.meta"/></master>
-       <primitive id="fs0" class="ocf" provider="heartbeat" type="Filesystem">
-         <meta_attributes id="meta_attributes.id22041"/>
-         <instance_attributes id="instance_attributes.id22049"><nvpair id="nvpair.id22055" name="fstype" value="ext3"/><nvpair id="nvpair.id22064" name="directory" value="/drbd"/><nvpair id="nvpair.id22072" name="device" value="/dev/drbd0"/></instance_attributes>
-       <meta_attributes id="primitive-fs0.meta"/></primitive>
-     </resources>
-     <constraints>
-       <rsc_location id="rsc_location_group_0" rsc="ms-sf">
-         <rule id="preferred_location_group_0" role="Master" score="100">
-           <expression id="expression.id22103" attribute="#uname" operation="eq" value="sel3"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="rsc_location_group_1" rsc="ms-drbd0">
-         <rule id="preferred_location_group_1" role="Master" score="100">
-           <expression id="expression.id22131" attribute="#uname" operation="eq" value="sel3"/>
-         </rule>
-       </rsc_location>
-       <rsc_order id="drbd0_before_fs0" first="ms-drbd0" then="fs0" then-action="start" first-action="promote" score="0"/>
-       <rsc_order id="sf_before_fs0" first="ms-sf" then="fs0" then-action="start" first-action="promote" score="0"/>
-       <rsc_colocation id="fs0_on_drbd0" rsc="fs0" with-rsc="ms-drbd0" with-rsc-role="Master" score="INFINITY"/>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="5d98a2ff-f9bf-45be-964b-27e4246c0085" uname="sel4" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.id22212"><nvpair id="nvpair.id22219" name="default_ping_set" value="100"/><nvpair id="nvpair.id22228" name="probe_complete" value="true"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id22240"><nvpair name="master-drbd0:1" id="nvpair.id22246" value="75"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22264">
-           <lrm_resource id="sf:1" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="sf-1_monitor_0" operation="monitor" transition-key="10:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;10:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="sf-1_start_0" operation="start" transition-key="33:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;33:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="7" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="sf:0" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="sf-0_monitor_0" operation="monitor" transition-key="9:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;9:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="fs0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="fs0_monitor_0" operation="monitor" transition-key="11:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;11:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="5" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="fce792c58e596a12a9b098046d505dc8"/>
-           </lrm_resource>
-           <lrm_resource id="drbd0:0" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd0-0_monitor_0" operation="monitor" transition-key="8:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;8:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-           </lrm_resource>
-           <lrm_resource id="drbd0:1" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd0-1_monitor_0" operation="monitor" transition-key="5:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;5:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="6" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-             <lrm_rsc_op id="drbd0-1_start_0" operation="start" transition-key="5:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;5:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="8" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-             <lrm_rsc_op id="drbd0-1_post_notify_start_0" operation="notify" transition-key="56:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;56:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="9" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-             <lrm_rsc_op id="drbd0-1_pre_notify_promote_0" operation="notify" transition-key="66:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;66:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="10" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-             <lrm_rsc_op id="drbd0-1_post_notify_promote_0" operation="notify" transition-key="67:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;67:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="11" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="1ee1b756-2292-49bf-aed2-8ff15e8cc503" uname="sel3" crmd="online" in_ccm="true" ha="active" join="member" expected="member" shutdown="0">
-       <transient_attributes id="transient_attributes.auto-2">
-         <instance_attributes id="instance_attributes.id22620"><nvpair id="nvpair.id22626" name="default_ping_set" value="100"/><nvpair id="nvpair.id22636" name="probe_complete" value="true"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id22647"><nvpair id="nvpair.id22654" name="master-drbd0:0" value="75"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-2">
-         <lrm_resources id="lrm_resources.id22671">
-           <lrm_resource id="sf:1" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="sf-1_monitor_0" operation="monitor" transition-key="5:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;5:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="sf:0" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="sf-0_monitor_0" operation="monitor" transition-key="4:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;4:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="sf-0_start_0" operation="start" transition-key="32:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;32:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="7" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="fs0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="fs0_monitor_0" operation="monitor" transition-key="6:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;6:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="5" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="fce792c58e596a12a9b098046d505dc8"/>
-             <lrm_rsc_op id="fs0_start_0" operation="start" transition-key="46:4:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;46:4:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="13" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="fce792c58e596a12a9b098046d505dc8"/>
-           </lrm_resource>
-           <lrm_resource id="drbd0:0" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd0-0_monitor_0" operation="monitor" transition-key="3:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;3:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-             <lrm_rsc_op id="drbd0-0_start_0" operation="start" transition-key="4:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;4:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="8" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-             <lrm_rsc_op id="drbd0-0_post_notify_start_0" operation="notify" transition-key="53:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;53:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="9" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-             <lrm_rsc_op id="drbd0-0_pre_notify_promote_0" operation="notify" transition-key="58:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;58:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="10" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-             <lrm_rsc_op id="drbd0-0_promote_0" operation="promote" transition-key="6:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;6:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="11" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-             <lrm_rsc_op id="drbd0-0_post_notify_promote_0" operation="notify" transition-key="59:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;59:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="12" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-           </lrm_resource>
-           <lrm_resource id="drbd0:1" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd0-1_monitor_0" operation="monitor" transition-key="3:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;3:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="6" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="13" num_updates="99" dc-uuid="5d98a2ff-f9bf-45be-964b-27e4246c0085" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:07 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options"/>
+    </crm_config>
+    <nodes>
+      <node id="1ee1b756-2292-49bf-aed2-8ff15e8cc503" uname="sel3" type="normal"/>
+      <node id="5d98a2ff-f9bf-45be-964b-27e4246c0085" uname="sel4" type="normal"/>
+    </nodes>
+    <resources>
+      <master id="ms-drbd0">
+        <meta_attributes id="meta_attributes.id21876">
+          <nvpair id="nvpair.id21883" name="clone-max" value="2"/>
+          <nvpair id="nvpair.id21891" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair.id21900" name="master-max" value="1"/>
+          <nvpair id="nvpair.id21908" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id21916" name="notify" value="yes"/>
+          <nvpair id="nvpair.id21925" name="globally-unique" value="false"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+        <primitive id="drbd0" class="ocf" provider="heartbeat" type="drbd">
+          <instance_attributes id="instance_attributes.id21946">
+            <nvpair id="nvpair.id21953" name="drbd_resource" value="drbd0"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-drbd0.meta"/>
+        </primitive>
+        <meta_attributes id="master_slave-ms-drbd0.meta"/>
+      </master>
+      <master id="ms-sf">
+        <meta_attributes id="meta_attributes.id21970">
+          <nvpair id="nvpair.id21976" name="clone-max" value="2"/>
+          <nvpair id="nvpair.id21984" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair.id21993" name="master-max" value="1"/>
+          <nvpair id="nvpair.id22001" name="master-node-max" value="1"/>
+          <nvpair id="unique-2" name="globally-unique" value="true"/>
+        </meta_attributes>
+        <primitive id="sf" class="ocf" provider="heartbeat" type="Stateful">
+          <instance_attributes id="instance_attributes.id22021"/>
+          <meta_attributes id="primitive-sf.meta"/>
+        </primitive>
+        <meta_attributes id="master_slave-ms-sf.meta"/>
+      </master>
+      <primitive id="fs0" class="ocf" provider="heartbeat" type="Filesystem">
+        <meta_attributes id="meta_attributes.id22041"/>
+        <instance_attributes id="instance_attributes.id22049">
+          <nvpair id="nvpair.id22055" name="fstype" value="ext3"/>
+          <nvpair id="nvpair.id22064" name="directory" value="/drbd"/>
+          <nvpair id="nvpair.id22072" name="device" value="/dev/drbd0"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-fs0.meta"/>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="rsc_location_group_0" rsc="ms-sf">
+        <rule id="preferred_location_group_0" role="Master" score="100">
+          <expression id="expression.id22103" attribute="#uname" operation="eq" value="sel3"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location_group_1" rsc="ms-drbd0">
+        <rule id="preferred_location_group_1" role="Master" score="100">
+          <expression id="expression.id22131" attribute="#uname" operation="eq" value="sel3"/>
+        </rule>
+      </rsc_location>
+      <rsc_order id="drbd0_before_fs0" first="ms-drbd0" then="fs0" then-action="start" first-action="promote" score="0"/>
+      <rsc_order id="sf_before_fs0" first="ms-sf" then="fs0" then-action="start" first-action="promote" score="0"/>
+      <rsc_colocation id="fs0_on_drbd0" rsc="fs0" with-rsc="ms-drbd0" with-rsc-role="Master" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="5d98a2ff-f9bf-45be-964b-27e4246c0085" uname="sel4" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id22212">
+          <nvpair id="nvpair.id22219" name="default_ping_set" value="100"/>
+          <nvpair id="nvpair.id22228" name="probe_complete" value="true"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id22240">
+          <nvpair name="master-drbd0:1" id="nvpair.id22246" value="75"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22264">
+          <lrm_resource id="sf:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sf-1_monitor_0" operation="monitor" transition-key="10:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;10:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="sf-1_start_0" operation="start" transition-key="33:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;33:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="7" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="sf:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sf-0_monitor_0" operation="monitor" transition-key="9:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;9:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="fs0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs0_monitor_0" operation="monitor" transition-key="11:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;11:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="5" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="fce792c58e596a12a9b098046d505dc8"/>
+          </lrm_resource>
+          <lrm_resource id="drbd0:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd0-0_monitor_0" operation="monitor" transition-key="8:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;8:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+          </lrm_resource>
+          <lrm_resource id="drbd0:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd0-1_monitor_0" operation="monitor" transition-key="5:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;5:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="6" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+            <lrm_rsc_op id="drbd0-1_start_0" operation="start" transition-key="5:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;5:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="8" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+            <lrm_rsc_op id="drbd0-1_post_notify_start_0" operation="notify" transition-key="56:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;56:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="9" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+            <lrm_rsc_op id="drbd0-1_pre_notify_promote_0" operation="notify" transition-key="66:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;66:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="10" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+            <lrm_rsc_op id="drbd0-1_post_notify_promote_0" operation="notify" transition-key="67:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;67:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="11" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1ee1b756-2292-49bf-aed2-8ff15e8cc503" uname="sel3" crmd="online" in_ccm="true" ha="active" join="member" expected="member" shutdown="0">
+      <transient_attributes id="transient_attributes.auto-2">
+        <instance_attributes id="instance_attributes.id22620">
+          <nvpair id="nvpair.id22626" name="default_ping_set" value="100"/>
+          <nvpair id="nvpair.id22636" name="probe_complete" value="true"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id22647">
+          <nvpair id="nvpair.id22654" name="master-drbd0:0" value="75"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-2">
+        <lrm_resources id="lrm_resources.id22671">
+          <lrm_resource id="sf:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sf-1_monitor_0" operation="monitor" transition-key="5:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;5:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="sf:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sf-0_monitor_0" operation="monitor" transition-key="4:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;4:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="sf-0_start_0" operation="start" transition-key="32:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;32:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="7" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="fs0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs0_monitor_0" operation="monitor" transition-key="6:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;6:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="5" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="fce792c58e596a12a9b098046d505dc8"/>
+            <lrm_rsc_op id="fs0_start_0" operation="start" transition-key="46:4:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;46:4:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="13" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="fce792c58e596a12a9b098046d505dc8"/>
+          </lrm_resource>
+          <lrm_resource id="drbd0:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd0-0_monitor_0" operation="monitor" transition-key="3:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;3:0:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+            <lrm_rsc_op id="drbd0-0_start_0" operation="start" transition-key="4:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;4:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="8" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+            <lrm_rsc_op id="drbd0-0_post_notify_start_0" operation="notify" transition-key="53:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;53:2:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="9" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+            <lrm_rsc_op id="drbd0-0_pre_notify_promote_0" operation="notify" transition-key="58:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;58:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="10" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+            <lrm_rsc_op id="drbd0-0_promote_0" operation="promote" transition-key="6:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;6:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="11" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+            <lrm_rsc_op id="drbd0-0_post_notify_promote_0" operation="notify" transition-key="59:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:0;59:3:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="12" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+          </lrm_resource>
+          <lrm_resource id="drbd0:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd0-1_monitor_0" operation="monitor" transition-key="3:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" transition-magic="0:7;3:1:ab83eef1-2912-43cf-8a88-910f72f1f57b" call-id="6" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="1243523f1dae58b4aafa2650a7f3d441"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

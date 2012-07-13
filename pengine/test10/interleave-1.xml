@@ -1,11 +1,20 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="9" num_updates="372" dc-uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="9" num_updates="372" dc-uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:06 2012">
   <configuration>
-    <crm_config><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21843" name="cluster-delay" value="120s"/><nvpair id="nvpair.id21852" name="require_quorum" value="true"/><nvpair id="nvpair.id21860" name="symetric_cluster" value="true"/><nvpair id="nvpair.id21869" name="suppress_cib_writes" value="true"/><nvpair id="nvpair.id21878" name="no-quorum-policy" value="stop"/></cluster_property_set></crm_config>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21843" name="cluster-delay" value="120s"/>
+        <nvpair id="nvpair.id21852" name="require_quorum" value="true"/>
+        <nvpair id="nvpair.id21860" name="symetric_cluster" value="true"/>
+        <nvpair id="nvpair.id21869" name="suppress_cib_writes" value="true"/>
+        <nvpair id="nvpair.id21878" name="no-quorum-policy" value="stop"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" uname="c001n09" type="member"/>
       <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="member">
-        <instance_attributes id="instance_attributes.id21909"><nvpair id="nvpair.id21916" name="standby" value="off"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id21909">
+          <nvpair id="nvpair.id21916" name="standby" value="off"/>
+        </instance_attributes>
       </node>
       <node id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" type="member"/>
       <node id="c2896699-96b8-4dbc-a94e-6c3b9252b559" uname="c001n04" type="member"/>
@@ -19,76 +28,134 @@
         <operations>
           <op name="monitor" interval="5s" id="op.auto-1" timeout="20s"/>
         </operations>
-        <instance_attributes id="instance_attributes.id22011"><nvpair id="nvpair.id22017" name="ip" value="127.0.0.10"/></instance_attributes>
-      <meta_attributes id="primitive-DcIPaddr.meta"><nvpair id="is_managed.meta.auto-50" name="is-managed" value="1"/></meta_attributes></primitive>
+        <instance_attributes id="instance_attributes.id22011">
+          <nvpair id="nvpair.id22017" name="ip" value="127.0.0.10"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-DcIPaddr.meta">
+          <nvpair id="is_managed.meta.auto-50" name="is-managed" value="1"/>
+        </meta_attributes>
+      </primitive>
       <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
           <op name="monitor" interval="5s" id="op.auto-2" timeout="20s"/>
         </operations>
-        <instance_attributes id="instance_attributes.id22054"><nvpair id="nvpair.id22060" name="ip" value="127.0.0.11"/></instance_attributes>
-      <meta_attributes id="primitive-rsc_c001n09.meta"><nvpair id="is_managed.meta.auto-66" name="is-managed" value="0"/></meta_attributes></primitive>
+        <instance_attributes id="instance_attributes.id22054">
+          <nvpair id="nvpair.id22060" name="ip" value="127.0.0.11"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_c001n09.meta">
+          <nvpair id="is_managed.meta.auto-66" name="is-managed" value="0"/>
+        </meta_attributes>
+      </primitive>
       <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
           <op name="monitor" interval="5s" id="op.auto-3" timeout="20s"/>
         </operations>
-        <instance_attributes id="instance_attributes.id22097"><nvpair id="nvpair.id22103" name="ip" value="127.0.0.12"/></instance_attributes>
-      <meta_attributes id="primitive-rsc_c001n02.meta"><nvpair id="is_managed.meta.auto-82" name="is-managed" value="0"/></meta_attributes></primitive>
+        <instance_attributes id="instance_attributes.id22097">
+          <nvpair id="nvpair.id22103" name="ip" value="127.0.0.12"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_c001n02.meta">
+          <nvpair id="is_managed.meta.auto-82" name="is-managed" value="0"/>
+        </meta_attributes>
+      </primitive>
       <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
           <op name="monitor" interval="5s" id="op.auto-4" timeout="20s"/>
         </operations>
-        <instance_attributes id="instance_attributes.id22139"><nvpair id="nvpair.id22145" name="ip" value="127.0.0.13"/></instance_attributes>
-      <meta_attributes id="primitive-rsc_c001n03.meta"><nvpair id="is_managed.meta.auto-98" name="is-managed" value="0"/></meta_attributes></primitive>
+        <instance_attributes id="instance_attributes.id22139">
+          <nvpair id="nvpair.id22145" name="ip" value="127.0.0.13"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_c001n03.meta">
+          <nvpair id="is_managed.meta.auto-98" name="is-managed" value="0"/>
+        </meta_attributes>
+      </primitive>
       <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
           <op name="monitor" interval="5s" id="op.auto-5" timeout="20s"/>
         </operations>
-        <instance_attributes id="instance_attributes.id22181"><nvpair id="nvpair.id22187" name="ip" value="127.0.0.14"/></instance_attributes>
-      <meta_attributes id="primitive-rsc_c001n04.meta"><nvpair id="is_managed.meta.auto-114" name="is-managed" value="0"/></meta_attributes></primitive>
+        <instance_attributes id="instance_attributes.id22181">
+          <nvpair id="nvpair.id22187" name="ip" value="127.0.0.14"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_c001n04.meta">
+          <nvpair id="is_managed.meta.auto-114" name="is-managed" value="0"/>
+        </meta_attributes>
+      </primitive>
       <primitive id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
           <op name="monitor" interval="5s" id="op.auto-6" timeout="20s"/>
         </operations>
-        <instance_attributes id="instance_attributes.id22222"><nvpair id="nvpair.id22229" name="ip" value="127.0.0.15"/></instance_attributes>
-      <meta_attributes id="primitive-rsc_c001n05.meta"><nvpair id="is_managed.meta.auto-130" name="is-managed" value="0"/></meta_attributes></primitive>
+        <instance_attributes id="instance_attributes.id22222">
+          <nvpair id="nvpair.id22229" name="ip" value="127.0.0.15"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_c001n05.meta">
+          <nvpair id="is_managed.meta.auto-130" name="is-managed" value="0"/>
+        </meta_attributes>
+      </primitive>
       <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
           <op name="monitor" interval="5s" id="op.auto-7" timeout="20s"/>
         </operations>
-        <instance_attributes id="instance_attributes.id22265"><nvpair id="nvpair.id22271" name="ip" value="127.0.0.16"/></instance_attributes>
-      <meta_attributes id="primitive-rsc_c001n06.meta"><nvpair id="is_managed.meta.auto-146" name="is-managed" value="0"/></meta_attributes></primitive>
+        <instance_attributes id="instance_attributes.id22265">
+          <nvpair id="nvpair.id22271" name="ip" value="127.0.0.16"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_c001n06.meta">
+          <nvpair id="is_managed.meta.auto-146" name="is-managed" value="0"/>
+        </meta_attributes>
+      </primitive>
       <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
           <op name="monitor" interval="5s" id="op.auto-8" timeout="20s"/>
         </operations>
-        <instance_attributes id="instance_attributes.id22308"><nvpair id="nvpair.id22314" name="ip" value="127.0.0.17"/></instance_attributes>
-      <meta_attributes id="primitive-rsc_c001n07.meta"><nvpair id="is_managed.meta.auto-162" name="is-managed" value="0"/></meta_attributes></primitive>
+        <instance_attributes id="instance_attributes.id22308">
+          <nvpair id="nvpair.id22314" name="ip" value="127.0.0.17"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_c001n07.meta">
+          <nvpair id="is_managed.meta.auto-162" name="is-managed" value="0"/>
+        </meta_attributes>
+      </primitive>
       <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
           <op name="monitor" interval="5s" id="op.auto-9" timeout="20s"/>
         </operations>
-        <instance_attributes id="instance_attributes.id22350"><nvpair id="nvpair.id22357" name="ip" value="127.0.0.18"/></instance_attributes>
-      <meta_attributes id="primitive-rsc_c001n08.meta"><nvpair id="is_managed.meta.auto-178" name="is-managed" value="0"/></meta_attributes></primitive>
+        <instance_attributes id="instance_attributes.id22350">
+          <nvpair id="nvpair.id22357" name="ip" value="127.0.0.18"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_c001n08.meta">
+          <nvpair id="is_managed.meta.auto-178" name="is-managed" value="0"/>
+        </meta_attributes>
+      </primitive>
       <clone id="DoFencing">
         <primitive id="child_DoFencing" class="stonith" type="ssh">
           <operations>
             <op name="monitor" interval="5s" id="op.auto-10" timeout="20s"/>
           </operations>
-          <instance_attributes id="instance_attributes.id22420"><nvpair id="nvpair.id22426" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/></instance_attributes>
-        <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-      <meta_attributes id="clone-DoFencing.meta"><nvpair id="resource_stickiness.meta.auto-194" name="resource-stickiness" value="200"/><nvpair id="nvpair.meta.auto-200" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-202" name="clone-node-max" value="1"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+          <instance_attributes id="instance_attributes.id22420">
+            <nvpair id="nvpair.id22426" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+          </instance_attributes>
+          <meta_attributes id="primitive-child_DoFencing.meta"/>
+        </primitive>
+        <meta_attributes id="clone-DoFencing.meta">
+          <nvpair id="resource_stickiness.meta.auto-194" name="resource-stickiness" value="200"/>
+          <nvpair id="nvpair.meta.auto-200" name="clone-max" value="8"/>
+          <nvpair id="nvpair.meta.auto-202" name="clone-node-max" value="1"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
       <clone id="CloneSet">
         <primitive id="child_CloneSet" class="stonith" type="ssh">
           <operations>
             <op name="monitor" interval="5s" id="op.auto-11" timeout="20s"/>
           </operations>
-          <instance_attributes id="instance_attributes.id22490"><nvpair id="nvpair.id22496" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/></instance_attributes>
-        <meta_attributes id="primitive-child_CloneSet.meta"/></primitive>
-      <meta_attributes id="clone-CloneSet.meta"><nvpair id="nvpair.meta.auto-229" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-231" name="clone-node-max" value="1"/>
-	<nvpair id="unique-2" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+          <instance_attributes id="instance_attributes.id22490">
+            <nvpair id="nvpair.id22496" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+          </instance_attributes>
+          <meta_attributes id="primitive-child_CloneSet.meta"/>
+        </primitive>
+        <meta_attributes id="clone-CloneSet.meta">
+          <nvpair id="nvpair.meta.auto-229" name="clone-max" value="8"/>
+          <nvpair id="nvpair.meta.auto-231" name="clone-node-max" value="1"/>
+          <nvpair id="unique-2" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
     </resources>
     <constraints>
       <rsc_colocation id="coloc-1" rsc="CloneSet" with-rsc="DoFencing" score="INFINITY"/>
@@ -142,7 +209,9 @@
   <status>
     <node_state id="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" uname="c001n09" in_ccm="true" join="member" crmd="online" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id22789">
-        <instance_attributes id="instance_attributes.id22791"><nvpair id="nvpair.id22797" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22791">
+          <nvpair id="nvpair.id22797" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22813">
@@ -173,7 +242,9 @@
     </node_state>
     <node_state id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id23168">
-        <instance_attributes id="instance_attributes.id23170"><nvpair id="nvpair.id23176" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id23170">
+          <nvpair id="nvpair.id23176" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id23192">
@@ -218,7 +289,9 @@
     </node_state>
     <node_state id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id23769">
-        <instance_attributes id="instance_attributes.id23771"><nvpair id="nvpair.id23777" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id23771">
+          <nvpair id="nvpair.id23777" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id23793">
@@ -267,7 +340,9 @@
     </node_state>
     <node_state id="c2896699-96b8-4dbc-a94e-6c3b9252b559" uname="c001n04" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id24425">
-        <instance_attributes id="instance_attributes.id24427"><nvpair id="nvpair.id24433" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id24427">
+          <nvpair id="nvpair.id24433" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id24449">
@@ -303,7 +378,9 @@
     </node_state>
     <node_state id="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" uname="c001n05" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id24886">
-        <instance_attributes id="instance_attributes.id24889"><nvpair id="nvpair.id24895" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id24889">
+          <nvpair id="nvpair.id24895" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id24910">
@@ -335,7 +412,9 @@
     </node_state>
     <node_state id="f91e6074-699d-48af-80d6-223132f291e2" uname="c001n06" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id25288">
-        <instance_attributes id="instance_attributes.id25290"><nvpair id="nvpair.id25297" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id25290">
+          <nvpair id="nvpair.id25297" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id25312">
@@ -405,7 +484,9 @@
     </node_state>
     <node_state id="208d89a6-e052-4e9d-973d-07c9036c506b" uname="c001n07" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id26272">
-        <instance_attributes id="instance_attributes.id26274"><nvpair id="nvpair.id26280" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id26274">
+          <nvpair id="nvpair.id26280" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id26296">
@@ -433,7 +514,9 @@
     </node_state>
     <node_state id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id26616">
-        <instance_attributes id="instance_attributes.id26618"><nvpair id="nvpair.id26625" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id26618">
+          <nvpair id="nvpair.id26625" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id26640">

@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-1.1" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="167" num_updates="5" cib-last-written="Fri Feb 26 11:15:53 2010" dc-uuid="0af1add7-22b5-4342-9816-67e6351605de">
+<cib validate-with="pacemaker-1.1" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="167" num_updates="5" cib-last-written="Fri Jul 13 13:51:03 2012" dc-uuid="0af1add7-22b5-4342-9816-67e6351605de">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -19,7 +19,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="c-0" first="dummy1" then="cl_dummy" then-instance="1" score="INFINITY" />
+      <rsc_order id="c-0" first="dummy1" then="cl_dummy" then-instance="1" score="INFINITY"/>
     </constraints>
     <rsc_defaults/>
     <op_defaults/>

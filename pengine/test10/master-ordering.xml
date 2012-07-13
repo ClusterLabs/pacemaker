@@ -1,157 +1,285 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="340" num_updates="42004" dc-uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="default"><nvpair id="nvpair.id21850" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21859" name="transition-idle-timeout" value="60"/><nvpair id="nvpair.id21868" name="default-resource-stickiness" value="0"/><nvpair id="nvpair.id21876" name="short-resource-names" value="true"/><nvpair id="nvpair.id21885" name="no-quorum-policy" value="stop"/><nvpair id="nvpair.id21894" name="stop-orphan-resources" value="false"/><nvpair id="nvpair.id21904" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21913" name="remove-after-stop" value="false"/><nvpair id="nvpair.id21922" name="is-managed-default" value="true"/><nvpair id="nvpair.id21931" name="stonith-enabled" value="false"/><nvpair id="nvpair.id21939" name="stonith-action" value="reboot"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" type="normal"/>
-       <node id="917954cd-0285-4fcd-9cd2-671736c4de66" uname="webcluster02" type="normal"/>
-     </nodes>
-     <resources>
-       <primitive id="extip_1" class="ocf" type="IPaddr2" provider="heartbeat">
-         <operations>
-           <op name="monitor" interval="30s" id="extip_1_mon" timeout="30s"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id21999"><nvpair id="nvpair.id22005" name="ip" value="85.125.191.221"/><nvpair id="nvpair.id22014" name="netmask" value="28"/><nvpair id="nvpair.id22022" name="nic" value="eth0"/><nvpair id="nvpair.id22030" name="target_role" value="started"/></instance_attributes>
-       <meta_attributes id="primitive-extip_1.meta"><nvpair id="nvpair.meta.auto-62" name="target-role" value="started"/></meta_attributes></primitive>
-       <primitive id="extip_2" class="ocf" type="IPaddr2" provider="heartbeat">
-         <operations>
-           <op name="monitor" interval="30s" id="extip_2_mon" timeout="30s"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22066"><nvpair id="nvpair.id22072" name="ip" value="85.125.191.222"/><nvpair id="nvpair.id22081" name="netmask" value="28"/><nvpair id="nvpair.id22089" name="nic" value="eth0"/><nvpair id="nvpair.id22097" name="target_role" value="started"/></instance_attributes>
-       <meta_attributes id="primitive-extip_2.meta"><nvpair id="nvpair.meta.auto-84" name="target-role" value="started"/></meta_attributes></primitive>
-       <group id="group_main">
-         <primitive id="intip_0_main" class="ocf" type="IPaddr2" provider="heartbeat">
-           <operations>
-             <op name="monitor" interval="30s" id="intip_0_mon" timeout="30s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22137"><nvpair id="nvpair.id22144" name="ip" value="192.168.100.200"/><nvpair id="nvpair.id22152" name="netmask" value="24"/><nvpair id="nvpair.id22160" name="nic" value="eth1"/><nvpair id="nvpair.id22168" name="target_role" value="started"/></instance_attributes>
-         <meta_attributes id="primitive-intip_0_main.meta"><nvpair id="nvpair.meta.auto-108" name="target-role" value="started"/></meta_attributes></primitive>
-       <meta_attributes id="group-group_main.meta"/></group>
-       <primitive id="intip_1_master" class="ocf" type="IPaddr2" provider="heartbeat">
-         <operations>
-           <op name="monitor" interval="30s" id="intip_1_mon" timeout="30s"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22205"><nvpair id="nvpair.id22211" name="ip" value="192.168.100.201"/><nvpair id="nvpair.id22220" name="netmask" value="24"/><nvpair id="nvpair.id22228" name="nic" value="eth1"/><nvpair id="nvpair.id22236" name="target_role" value="started"/></instance_attributes>
-       <meta_attributes id="primitive-intip_1_master.meta"><nvpair id="nvpair.meta.auto-131" name="target-role" value="started"/></meta_attributes></primitive>
-       <primitive id="intip_2_slave" class="ocf" type="IPaddr2" provider="heartbeat">
-         <operations>
-           <op name="monitor" interval="30s" id="intip_2_mon" timeout="30s"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22272"><nvpair id="nvpair.id22278" name="ip" value="192.168.100.202"/><nvpair id="nvpair.id22286" name="netmask" value="24"/><nvpair id="nvpair.id22294" name="nic" value="eth1"/><nvpair id="nvpair.id22303" name="target_role" value="started"/></instance_attributes>
-       <meta_attributes id="primitive-intip_2_slave.meta"><nvpair id="nvpair.meta.auto-153" name="target-role" value="started"/></meta_attributes></primitive>
-       <master id="ms_drbd_www">
-         <meta_attributes id="meta_attributes.id22319"><nvpair id="nvpair.id22325" name="master-max" value="2"/><nvpair id="nvpair.id22334" name="master-node-max" value="1"/><nvpair id="nvpair.id22342" name="clone-max" value="2"/><nvpair id="nvpair.id22351" name="clone-node-max" value="1"/><nvpair id="nvpair.id22360" name="target-role" value="started"/><nvpair id="nvpair.id22368" name="globally-unique" value="false"/><nvpair id="nvpair.id22377" name="notify" value="yes"/></meta_attributes>
-         <primitive id="drbd_www" class="ocf" provider="heartbeat" type="drbd">
-           <operations>
-             <op name="monitor" interval="5s" id="drbd_www_mon_normal" timeout="10s" role="Started"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22415"><nvpair id="nvpair.id22421" name="drbd_resource" value="www"/><nvpair id="nvpair.id22430" name="clone_overrides_hostname" value="yes"/><nvpair id="nvpair.id22439" name="target_role" value="started"/></instance_attributes>
-         <meta_attributes id="primitive-drbd_www.meta"><nvpair id="nvpair.meta.auto-195" name="target-role" value="started"/></meta_attributes></primitive>
-       <meta_attributes id="master_slave-ms_drbd_www.meta"/></master>
-       <clone id="clone_ocfs2_www">
-         <primitive id="ocfs2_www" class="ocf" provider="heartbeat" type="Filesystem">
-           <operations>
-             <op name="monitor" interval="120s" id="ocfs2_www_mon" timeout="60s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22515"><nvpair id="nvpair.id22521" name="device" value="/dev/drbd0"/><nvpair id="nvpair.id22530" name="directory" value="/data/www"/><nvpair id="nvpair.id22539" name="fstype" value="ocfs2"/></instance_attributes>
-         <meta_attributes id="primitive-ocfs2_www.meta"/></primitive>
-       <meta_attributes id="clone-clone_ocfs2_www.meta"><nvpair id="nvpair.meta.auto-211" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-207" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-209" name="clone-node-max" value="1"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
-       <clone id="clone_webservice">
-         <group id="group_webservice">
-           <primitive id="apache2" class="ocf" type="apache" provider="heartbeat">
-             <operations>
-               <op name="monitor" interval="60s" id="apache2_mon" timeout="300s"/>
-             </operations>
-             <instance_attributes id="instance_attributes.id22620"><nvpair id="nvpair.id22626" name="httpd" value="/usr/sbin/apache2"/><nvpair id="nvpair.id22635" name="options" value="-k start"/><nvpair id="nvpair.id22644" name="configfile" value="/etc/apache2/apache2.conf"/><nvpair id="nvpair.id22653" name="target_role" value="started"/></instance_attributes>
-           <meta_attributes id="primitive-apache2.meta"><nvpair id="nvpair.meta.auto-269" name="target-role" value="started"/></meta_attributes></primitive>
-           <primitive id="mysql-proxy" class="lsb" type="mysql-proxy">
-             <operations>
-               <op name="monitor" interval="10s" id="mysql-proxy_mon" timeout="20s"/>
-             </operations>
-             <instance_attributes id="instance_attributes.id22689"><nvpair id="nvpair.id22695" name="target_role" value="started"/></instance_attributes>
-           <meta_attributes id="primitive-mysql-proxy.meta"><nvpair id="nvpair.meta.auto-285" name="target-role" value="started"/></meta_attributes></primitive>
-         <meta_attributes id="group-group_webservice.meta"/></group>
-       <meta_attributes id="clone-clone_webservice.meta"><nvpair id="nvpair.meta.auto-246" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-242" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-244" name="clone-node-max" value="1"/>
-	<nvpair id="unique-2" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
-       <master id="ms_drbd_mysql">
-         <meta_attributes id="meta_attributes.id22714"><nvpair id="nvpair.id22720" name="master-max" value="1"/><nvpair id="nvpair.id22729" name="master-node-max" value="1"/><nvpair id="nvpair.id22737" name="clone-max" value="2"/><nvpair id="nvpair.id22746" name="clone-node-max" value="1"/><nvpair id="nvpair.id22754" name="target-role" value="started"/><nvpair id="nvpair.id22763" name="globally-unique" value="false"/><nvpair id="nvpair.id22772" name="notify" value="yes"/>
-	<nvpair id="unique-3" name="globally-unique" value="true"/>
-      </meta_attributes>
-         <primitive id="drbd_mysql" class="ocf" provider="heartbeat" type="drbd">
-           <operations>
-             <op name="monitor" interval="5s" id="drbd_mysql_mon_normal" timeout="10s" role="Started"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22809"><nvpair id="nvpair.id22815" name="drbd_resource" value="mysql1"/><nvpair id="nvpair.id22824" name="clone_overrides_hostname" value="yes"/><nvpair id="nvpair.id22833" name="target_role" value="started"/></instance_attributes>
-         <meta_attributes id="primitive-drbd_mysql.meta"><nvpair id="nvpair.meta.auto-329" name="target-role" value="started"/></meta_attributes></primitive>
-       <meta_attributes id="master_slave-ms_drbd_mysql.meta"/></master>
-       <primitive id="fs_mysql" class="ocf" provider="heartbeat" type="Filesystem">
-         <operations>
-           <op name="monitor" interval="30s" id="fs_mysql_mon" timeout="30s"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22870"><nvpair id="nvpair.id22876" name="device" value="/dev/drbd1"/><nvpair id="nvpair.id22885" name="directory" value="/data/mysql"/><nvpair id="nvpair.id22893" name="fstype" value="ext3"/></instance_attributes>
-       <meta_attributes id="primitive-fs_mysql.meta"/></primitive>
-       <primitive id="mysql-server" class="ocf" provider="heartbeat" type="mysql">
-         <operations>
-           <op name="monitor" interval="30s" id="mysql-server_mon" timeout="30s"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22929"><nvpair id="nvpair.id22935" name="target_role" value="started"/><nvpair id="nvpair.id22944" name="priority" value="1000"/><nvpair id="nvpair.id22953" name="config" value="/etc/mysql/my.cnf"/><nvpair id="nvpair.id22962" name="socket" value="/var/run/mysqld/mysqld.sock"/><nvpair id="nvpair.id22971" name="pid" value="/var/run/mysqld/mysqld.pid"/><nvpair id="nvpair.id22980" name="datadir" value="/data/mysql/"/><nvpair id="nvpair.id22989" name="binary" value="/usr/sbin/mysqld"/><nvpair id="nvpair.id22998" name="additional_parameters" value="--basedir=/usr --skip-external-locking --port=42006"/></instance_attributes>
-       <meta_attributes id="primitive-mysql-server.meta"><nvpair id="nvpair.meta.auto-366" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-368" name="priority" value="1000"/></meta_attributes></primitive>
-     </resources>
-     <constraints>
-       <rsc_location id="run_extip_1" rsc="extip_1">
-         <rule id="pref_run_extip_1" score="100">
-           <expression attribute="#uname" operation="eq" value="webcluster01" id="expression.id23028"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="run_extip_2" rsc="extip_2">
-         <rule id="pref_run_extip_2" score="100">
-           <expression attribute="#uname" operation="eq" value="webcluster02" id="expression.id23052"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="run_intip_0_main" rsc="group_main">
-         <rule id="pref_run_intip_0" score="100">
-           <expression attribute="#uname" operation="eq" value="webcluster01" id="expression.id23076"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="run_intip_1_master" rsc="intip_1_master">
-         <rule id="pref_run_intip_1" score="200">
-           <expression attribute="#uname" operation="eq" value="webcluster01" id="expression.id23101"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="run_intip_2_slave" rsc="intip_2_slave">
-         <rule id="pref_run_intip_2_wc2" score="100">
-           <expression attribute="#uname" operation="eq" value="webcluster02" id="expression.id23125"/>
-         </rule>
-       </rsc_location>
-       <rsc_order id="order_drbd_mysql_ip0" first-action="start" first="intip_1_master" then="ms_drbd_mysql" score="100"/>
-       <rsc_order id="order_drbd_mysql_ip1" first-action="start" first="intip_2_slave" then="ms_drbd_mysql" score="100"/>
-       <rsc_order id="order_drbd_www_ip0" first-action="start" first="intip_1_master" then="ms_drbd_www" score="100"/>
-       <rsc_order id="order_drbd_www_ip1" first-action="start" first="intip_2_slave" then="ms_drbd_www" score="100"/>
-       <rsc_colocation id="colo_drbd_mysql_ip0" rsc="drbd_mysql" with-rsc="intip_1_master" rsc-role="Master" score="100"/>
-       <rsc_colocation id="colo_drbd_mysql_ip1" rsc="drbd_mysql" with-rsc="intip_2_slave" rsc-role="Slave" score="100"/>
-       <rsc_colocation id="colo_drbd_www_ip0" rsc="drbd_www" with-rsc="intip_1_master" rsc-role="Master" score="100"/>
-       <rsc_colocation id="colo_drbd_www_ip1" rsc="drbd_www" with-rsc="intip_2_slave" rsc-role="Slave" score="100"/>
-       <rsc_order id="drbd_before_fs_mysql" first="ms_drbd_mysql" then="fs_mysql" then-action="start" first-action="promote" score="INFINITY"/>
-       <rsc_colocation id="colo_drbd_fs_mysql" rsc="fs_mysql" with-rsc="ms_drbd_mysql" with-rsc-role="Master" score="INFINITY"/>
-       <rsc_order id="drbd_before_ocfs2_www" first="ms_drbd_www" then="clone_ocfs2_www" then-action="start" first-action="promote"/>
-       <rsc_colocation id="colo_ddrbd_ocfs2_www" rsc="clone_ocfs2_www" with-rsc="ms_drbd_www" with-rsc-role="Master" score="INFINITY"/>
-       <rsc_order id="mysql-server_after_fs_mysql" first="fs_mysql" then="mysql-server" then-action="start" first-action="start"/>
-       <rsc_colocation id="colo_mysql-server_and_fs_mysql" rsc="mysql-server" with-rsc="fs_mysql" with-rsc-role="Started" score="INFINITY"/>
-       <rsc_order id="webservices_after_ocfs2_www" first="clone_ocfs2_www" then="clone_webservice" then-action="start" first-action="start"/>
-       <rsc_colocation id="colo_webservices_and_ocfs2_www" rsc="clone_webservice" with-rsc="clone_ocfs2_www" with-rsc-role="Started" score="INFINITY"/>
-       <rsc_colocation id="colocate_mysql-server_ip0" rsc="intip_0_main" with-rsc="mysql-server" with-rsc-role="Started" score="INFINITY"/>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id23409"/>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="340" num_updates="42004" dc-uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:08 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="default">
+        <nvpair id="nvpair.id21850" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21859" name="transition-idle-timeout" value="60"/>
+        <nvpair id="nvpair.id21868" name="default-resource-stickiness" value="0"/>
+        <nvpair id="nvpair.id21876" name="short-resource-names" value="true"/>
+        <nvpair id="nvpair.id21885" name="no-quorum-policy" value="stop"/>
+        <nvpair id="nvpair.id21894" name="stop-orphan-resources" value="false"/>
+        <nvpair id="nvpair.id21904" name="stop-orphan-actions" value="true"/>
+        <nvpair id="nvpair.id21913" name="remove-after-stop" value="false"/>
+        <nvpair id="nvpair.id21922" name="is-managed-default" value="true"/>
+        <nvpair id="nvpair.id21931" name="stonith-enabled" value="false"/>
+        <nvpair id="nvpair.id21939" name="stonith-action" value="reboot"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" type="normal"/>
+      <node id="917954cd-0285-4fcd-9cd2-671736c4de66" uname="webcluster02" type="normal"/>
+    </nodes>
+    <resources>
+      <primitive id="extip_1" class="ocf" type="IPaddr2" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="30s" id="extip_1_mon" timeout="30s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id21999">
+          <nvpair id="nvpair.id22005" name="ip" value="85.125.191.221"/>
+          <nvpair id="nvpair.id22014" name="netmask" value="28"/>
+          <nvpair id="nvpair.id22022" name="nic" value="eth0"/>
+          <nvpair id="nvpair.id22030" name="target_role" value="started"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-extip_1.meta">
+          <nvpair id="nvpair.meta.auto-62" name="target-role" value="started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="extip_2" class="ocf" type="IPaddr2" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="30s" id="extip_2_mon" timeout="30s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22066">
+          <nvpair id="nvpair.id22072" name="ip" value="85.125.191.222"/>
+          <nvpair id="nvpair.id22081" name="netmask" value="28"/>
+          <nvpair id="nvpair.id22089" name="nic" value="eth0"/>
+          <nvpair id="nvpair.id22097" name="target_role" value="started"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-extip_2.meta">
+          <nvpair id="nvpair.meta.auto-84" name="target-role" value="started"/>
+        </meta_attributes>
+      </primitive>
+      <group id="group_main">
+        <primitive id="intip_0_main" class="ocf" type="IPaddr2" provider="heartbeat">
+          <operations>
+            <op name="monitor" interval="30s" id="intip_0_mon" timeout="30s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22137">
+            <nvpair id="nvpair.id22144" name="ip" value="192.168.100.200"/>
+            <nvpair id="nvpair.id22152" name="netmask" value="24"/>
+            <nvpair id="nvpair.id22160" name="nic" value="eth1"/>
+            <nvpair id="nvpair.id22168" name="target_role" value="started"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-intip_0_main.meta">
+            <nvpair id="nvpair.meta.auto-108" name="target-role" value="started"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="group-group_main.meta"/>
+      </group>
+      <primitive id="intip_1_master" class="ocf" type="IPaddr2" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="30s" id="intip_1_mon" timeout="30s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22205">
+          <nvpair id="nvpair.id22211" name="ip" value="192.168.100.201"/>
+          <nvpair id="nvpair.id22220" name="netmask" value="24"/>
+          <nvpair id="nvpair.id22228" name="nic" value="eth1"/>
+          <nvpair id="nvpair.id22236" name="target_role" value="started"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-intip_1_master.meta">
+          <nvpair id="nvpair.meta.auto-131" name="target-role" value="started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="intip_2_slave" class="ocf" type="IPaddr2" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="30s" id="intip_2_mon" timeout="30s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22272">
+          <nvpair id="nvpair.id22278" name="ip" value="192.168.100.202"/>
+          <nvpair id="nvpair.id22286" name="netmask" value="24"/>
+          <nvpair id="nvpair.id22294" name="nic" value="eth1"/>
+          <nvpair id="nvpair.id22303" name="target_role" value="started"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-intip_2_slave.meta">
+          <nvpair id="nvpair.meta.auto-153" name="target-role" value="started"/>
+        </meta_attributes>
+      </primitive>
+      <master id="ms_drbd_www">
+        <meta_attributes id="meta_attributes.id22319">
+          <nvpair id="nvpair.id22325" name="master-max" value="2"/>
+          <nvpair id="nvpair.id22334" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22342" name="clone-max" value="2"/>
+          <nvpair id="nvpair.id22351" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair.id22360" name="target-role" value="started"/>
+          <nvpair id="nvpair.id22368" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.id22377" name="notify" value="yes"/>
+        </meta_attributes>
+        <primitive id="drbd_www" class="ocf" provider="heartbeat" type="drbd">
+          <operations>
+            <op name="monitor" interval="5s" id="drbd_www_mon_normal" timeout="10s" role="Started"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22415">
+            <nvpair id="nvpair.id22421" name="drbd_resource" value="www"/>
+            <nvpair id="nvpair.id22430" name="clone_overrides_hostname" value="yes"/>
+            <nvpair id="nvpair.id22439" name="target_role" value="started"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-drbd_www.meta">
+            <nvpair id="nvpair.meta.auto-195" name="target-role" value="started"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="master_slave-ms_drbd_www.meta"/>
+      </master>
+      <clone id="clone_ocfs2_www">
+        <primitive id="ocfs2_www" class="ocf" provider="heartbeat" type="Filesystem">
+          <operations>
+            <op name="monitor" interval="120s" id="ocfs2_www_mon" timeout="60s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22515">
+            <nvpair id="nvpair.id22521" name="device" value="/dev/drbd0"/>
+            <nvpair id="nvpair.id22530" name="directory" value="/data/www"/>
+            <nvpair id="nvpair.id22539" name="fstype" value="ocfs2"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-ocfs2_www.meta"/>
+        </primitive>
+        <meta_attributes id="clone-clone_ocfs2_www.meta">
+          <nvpair id="nvpair.meta.auto-211" name="target-role" value="started"/>
+          <nvpair id="nvpair.meta.auto-207" name="clone-max" value="2"/>
+          <nvpair id="nvpair.meta.auto-209" name="clone-node-max" value="1"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="clone_webservice">
+        <group id="group_webservice">
+          <primitive id="apache2" class="ocf" type="apache" provider="heartbeat">
+            <operations>
+              <op name="monitor" interval="60s" id="apache2_mon" timeout="300s"/>
+            </operations>
+            <instance_attributes id="instance_attributes.id22620">
+              <nvpair id="nvpair.id22626" name="httpd" value="/usr/sbin/apache2"/>
+              <nvpair id="nvpair.id22635" name="options" value="-k start"/>
+              <nvpair id="nvpair.id22644" name="configfile" value="/etc/apache2/apache2.conf"/>
+              <nvpair id="nvpair.id22653" name="target_role" value="started"/>
+            </instance_attributes>
+            <meta_attributes id="primitive-apache2.meta">
+              <nvpair id="nvpair.meta.auto-269" name="target-role" value="started"/>
+            </meta_attributes>
+          </primitive>
+          <primitive id="mysql-proxy" class="lsb" type="mysql-proxy">
+            <operations>
+              <op name="monitor" interval="10s" id="mysql-proxy_mon" timeout="20s"/>
+            </operations>
+            <instance_attributes id="instance_attributes.id22689">
+              <nvpair id="nvpair.id22695" name="target_role" value="started"/>
+            </instance_attributes>
+            <meta_attributes id="primitive-mysql-proxy.meta">
+              <nvpair id="nvpair.meta.auto-285" name="target-role" value="started"/>
+            </meta_attributes>
+          </primitive>
+          <meta_attributes id="group-group_webservice.meta"/>
+        </group>
+        <meta_attributes id="clone-clone_webservice.meta">
+          <nvpair id="nvpair.meta.auto-246" name="target-role" value="started"/>
+          <nvpair id="nvpair.meta.auto-242" name="clone-max" value="2"/>
+          <nvpair id="nvpair.meta.auto-244" name="clone-node-max" value="1"/>
+          <nvpair id="unique-2" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
+      <master id="ms_drbd_mysql">
+        <meta_attributes id="meta_attributes.id22714">
+          <nvpair id="nvpair.id22720" name="master-max" value="1"/>
+          <nvpair id="nvpair.id22729" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22737" name="clone-max" value="2"/>
+          <nvpair id="nvpair.id22746" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair.id22754" name="target-role" value="started"/>
+          <nvpair id="nvpair.id22763" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.id22772" name="notify" value="yes"/>
+          <nvpair id="unique-3" name="globally-unique" value="true"/>
+        </meta_attributes>
+        <primitive id="drbd_mysql" class="ocf" provider="heartbeat" type="drbd">
+          <operations>
+            <op name="monitor" interval="5s" id="drbd_mysql_mon_normal" timeout="10s" role="Started"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22809">
+            <nvpair id="nvpair.id22815" name="drbd_resource" value="mysql1"/>
+            <nvpair id="nvpair.id22824" name="clone_overrides_hostname" value="yes"/>
+            <nvpair id="nvpair.id22833" name="target_role" value="started"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-drbd_mysql.meta">
+            <nvpair id="nvpair.meta.auto-329" name="target-role" value="started"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="master_slave-ms_drbd_mysql.meta"/>
+      </master>
+      <primitive id="fs_mysql" class="ocf" provider="heartbeat" type="Filesystem">
+        <operations>
+          <op name="monitor" interval="30s" id="fs_mysql_mon" timeout="30s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22870">
+          <nvpair id="nvpair.id22876" name="device" value="/dev/drbd1"/>
+          <nvpair id="nvpair.id22885" name="directory" value="/data/mysql"/>
+          <nvpair id="nvpair.id22893" name="fstype" value="ext3"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-fs_mysql.meta"/>
+      </primitive>
+      <primitive id="mysql-server" class="ocf" provider="heartbeat" type="mysql">
+        <operations>
+          <op name="monitor" interval="30s" id="mysql-server_mon" timeout="30s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22929">
+          <nvpair id="nvpair.id22935" name="target_role" value="started"/>
+          <nvpair id="nvpair.id22944" name="priority" value="1000"/>
+          <nvpair id="nvpair.id22953" name="config" value="/etc/mysql/my.cnf"/>
+          <nvpair id="nvpair.id22962" name="socket" value="/var/run/mysqld/mysqld.sock"/>
+          <nvpair id="nvpair.id22971" name="pid" value="/var/run/mysqld/mysqld.pid"/>
+          <nvpair id="nvpair.id22980" name="datadir" value="/data/mysql/"/>
+          <nvpair id="nvpair.id22989" name="binary" value="/usr/sbin/mysqld"/>
+          <nvpair id="nvpair.id22998" name="additional_parameters" value="--basedir=/usr --skip-external-locking --port=42006"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-mysql-server.meta">
+          <nvpair id="nvpair.meta.auto-366" name="target-role" value="started"/>
+          <nvpair id="nvpair.meta.auto-368" name="priority" value="1000"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="run_extip_1" rsc="extip_1">
+        <rule id="pref_run_extip_1" score="100">
+          <expression attribute="#uname" operation="eq" value="webcluster01" id="expression.id23028"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_extip_2" rsc="extip_2">
+        <rule id="pref_run_extip_2" score="100">
+          <expression attribute="#uname" operation="eq" value="webcluster02" id="expression.id23052"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_intip_0_main" rsc="group_main">
+        <rule id="pref_run_intip_0" score="100">
+          <expression attribute="#uname" operation="eq" value="webcluster01" id="expression.id23076"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_intip_1_master" rsc="intip_1_master">
+        <rule id="pref_run_intip_1" score="200">
+          <expression attribute="#uname" operation="eq" value="webcluster01" id="expression.id23101"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_intip_2_slave" rsc="intip_2_slave">
+        <rule id="pref_run_intip_2_wc2" score="100">
+          <expression attribute="#uname" operation="eq" value="webcluster02" id="expression.id23125"/>
+        </rule>
+      </rsc_location>
+      <rsc_order id="order_drbd_mysql_ip0" first-action="start" first="intip_1_master" then="ms_drbd_mysql" score="100"/>
+      <rsc_order id="order_drbd_mysql_ip1" first-action="start" first="intip_2_slave" then="ms_drbd_mysql" score="100"/>
+      <rsc_order id="order_drbd_www_ip0" first-action="start" first="intip_1_master" then="ms_drbd_www" score="100"/>
+      <rsc_order id="order_drbd_www_ip1" first-action="start" first="intip_2_slave" then="ms_drbd_www" score="100"/>
+      <rsc_colocation id="colo_drbd_mysql_ip0" rsc="drbd_mysql" with-rsc="intip_1_master" rsc-role="Master" score="100"/>
+      <rsc_colocation id="colo_drbd_mysql_ip1" rsc="drbd_mysql" with-rsc="intip_2_slave" rsc-role="Slave" score="100"/>
+      <rsc_colocation id="colo_drbd_www_ip0" rsc="drbd_www" with-rsc="intip_1_master" rsc-role="Master" score="100"/>
+      <rsc_colocation id="colo_drbd_www_ip1" rsc="drbd_www" with-rsc="intip_2_slave" rsc-role="Slave" score="100"/>
+      <rsc_order id="drbd_before_fs_mysql" first="ms_drbd_mysql" then="fs_mysql" then-action="start" first-action="promote" score="INFINITY"/>
+      <rsc_colocation id="colo_drbd_fs_mysql" rsc="fs_mysql" with-rsc="ms_drbd_mysql" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_order id="drbd_before_ocfs2_www" first="ms_drbd_www" then="clone_ocfs2_www" then-action="start" first-action="promote"/>
+      <rsc_colocation id="colo_ddrbd_ocfs2_www" rsc="clone_ocfs2_www" with-rsc="ms_drbd_www" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_order id="mysql-server_after_fs_mysql" first="fs_mysql" then="mysql-server" then-action="start" first-action="start"/>
+      <rsc_colocation id="colo_mysql-server_and_fs_mysql" rsc="mysql-server" with-rsc="fs_mysql" with-rsc-role="Started" score="INFINITY"/>
+      <rsc_order id="webservices_after_ocfs2_www" first="clone_ocfs2_www" then="clone_webservice" then-action="start" first-action="start"/>
+      <rsc_colocation id="colo_webservices_and_ocfs2_www" rsc="clone_webservice" with-rsc="clone_ocfs2_www" with-rsc-role="Started" score="INFINITY"/>
+      <rsc_colocation id="colocate_mysql-server_ip0" rsc="intip_0_main" with-rsc="mysql-server" with-rsc-role="Started" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id23409"/>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

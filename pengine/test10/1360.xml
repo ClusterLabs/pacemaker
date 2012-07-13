@@ -1,78 +1,93 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="4" num_updates="91" dc-uuid="c728b2aa-1e73-491f-a03c-8f0598bab169" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="94ef659b-5fd8-4d6b-b0ed-3b40339f8132" uname="ssgtest1a" type="normal"/>
-       <node id="c728b2aa-1e73-491f-a03c-8f0598bab169" uname="ssgtest1b" type="normal"/>
-     </nodes>
-     <resources>
-       <group id="ClusterAlias">
-         <primitive id="VIP" class="ocf" type="VIP-RIP.sh" provider="testing">
-           <instance_attributes id="instance_attributes.id21881"><nvpair id="nvpair.id21888" name="ip" value="172.18.67.3"/><nvpair id="nvpair.id21896" name="nic" value="eth0"/><nvpair id="nvpair.id21905" name="lvs_support" value="true"/></instance_attributes>
-         <meta_attributes id="primitive-VIP.meta"/></primitive>
-       <meta_attributes id="group-ClusterAlias.meta"/></group>
-       <clone id="dolly">
-         <primitive id="dollies" class="ocf" type="clone_server" provider="gn1">
-           <instance_attributes id="instance_attributes.id21968"/>
-         <meta_attributes id="primitive-dollies.meta"/></primitive>
-       <meta_attributes id="clone-dolly.meta"><nvpair id="nvpair.meta.auto-42" name="resource-stickiness" value="0"/><nvpair id="nvpair.meta.auto-40" name="clone-max" value="1"/><nvpair id="nvpair.meta.auto-44" name="clone-node-max" value="1"/></meta_attributes></clone>
-     </resources>
-     <constraints>
-       <rsc_location id="where_is_dolly" rsc="dolly">
-         <rule id="preferred_where_is_dolly" score="INFINITY">
-           <expression attribute="#uname" id="expression.id21994" operation="eq" value="ssgtest1b"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="place_CA" rsc="ClusterAlias">
-         <rule id="preferred_place_CA" score="INFINITY">
-           <expression attribute="#uname" id="expression.id22020" operation="eq" value="ssgtest1a"/>
-         </rule>
-       </rsc_location>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="c728b2aa-1e73-491f-a03c-8f0598bab169" uname="ssgtest1b" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
-       <transient_attributes id="c728b2aa-1e73-491f-a03c-8f0598bab169">
-         <instance_attributes id="instance_attributes.id22065"><nvpair id="nvpair.id22072" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="c728b2aa-1e73-491f-a03c-8f0598bab169">
-         <lrm_resources id="lrm_resources.id22090">
-           <lrm_resource id="dollies:0" type="clone_server" class="ocf" provider="gn1">
-             <lrm_rsc_op id="dolly-dollies-0_monitor_0" crm_feature_set="1.0.6" operation="monitor" transition-key="0:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="4:1;0:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="3" rc-code="1" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="dolly-dollies-0_stop_0" crm_feature_set="1.0.6" operation="stop" transition-key="11:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;11:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="10" rc-code="0" op-status="0" interval="0"/>
-             <lrm_rsc_op id="dolly-dollies-0_start_0" crm_feature_set="1.0.6" operation="start" transition-key="5:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;5:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="8" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="VIP" type="VIP-RIP.sh" class="ocf" provider="testing">
-             <lrm_rsc_op id="ClusterAlias-VIP_monitor_0" crm_feature_set="1.0.6" operation="monitor" transition-key="0:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="4:7;0:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="2" rc-code="7" op-status="4" interval="0" op-digest="a8861449d5a42926110c8b51ac27bd7a"/>
-             <lrm_rsc_op id="ClusterAlias-VIP_start_0" crm_feature_set="1.0.6" operation="start" transition-key="1:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;1:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="4" rc-code="0" op-status="0" interval="0" op-digest="a8861449d5a42926110c8b51ac27bd7a"/>
-             <lrm_rsc_op id="ClusterAlias-VIP_stop_0" crm_feature_set="1.0.6" operation="stop" transition-key="10:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;10:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="9" rc-code="0" op-status="0" interval="0"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="94ef659b-5fd8-4d6b-b0ed-3b40339f8132" uname="ssgtest1a" crmd="online" in_ccm="true" join="member" shutdown="0" ha="active" expected="member">
-       <lrm id="lrm.auto-2">
-         <lrm_resources id="lrm_resources.id22302">
-           <lrm_resource id="VIP" type="VIP-RIP.sh" class="ocf" provider="testing">
-             <lrm_rsc_op id="ClusterAlias-VIP_monitor_0" operation="monitor" transition-key="3:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="4:7;3:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="2" crm_feature_set="1.0.6" rc-code="7" op-status="4" interval="0" op-digest="a8861449d5a42926110c8b51ac27bd7a"/>
-             <lrm_rsc_op id="ClusterAlias-VIP_start_0" operation="start" transition-key="12:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;12:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="7" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="a8861449d5a42926110c8b51ac27bd7a"/>
-             <lrm_rsc_op id="ClusterAlias-VIP_stop_0" operation="stop" transition-key="11:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;11:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="6" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="604a5e3a6d6e0a91bc8aeb681eb5313c"/>
-           </lrm_resource>
-           <lrm_resource id="dollies:0" type="clone_server" class="ocf" provider="gn1">
-             <lrm_rsc_op id="dolly-dollies-0_monitor_0" operation="monitor" transition-key="3:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="4:1;3:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="3" crm_feature_set="1.0.6" rc-code="1" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="dolly-dollies-0_stop_0" operation="stop" transition-key="4:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;4:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="4" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="dolly-dollies-0_start_0" operation="start" transition-key="12:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;12:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="8" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="transient_attributes.auto-2">
-         <instance_attributes id="instance_attributes.id22494"><nvpair id="nvpair.id22501" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="4" num_updates="91" dc-uuid="c728b2aa-1e73-491f-a03c-8f0598bab169" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:50:59 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="94ef659b-5fd8-4d6b-b0ed-3b40339f8132" uname="ssgtest1a" type="normal"/>
+      <node id="c728b2aa-1e73-491f-a03c-8f0598bab169" uname="ssgtest1b" type="normal"/>
+    </nodes>
+    <resources>
+      <group id="ClusterAlias">
+        <primitive id="VIP" class="ocf" type="VIP-RIP.sh" provider="testing">
+          <instance_attributes id="instance_attributes.id21881">
+            <nvpair id="nvpair.id21888" name="ip" value="172.18.67.3"/>
+            <nvpair id="nvpair.id21896" name="nic" value="eth0"/>
+            <nvpair id="nvpair.id21905" name="lvs_support" value="true"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-VIP.meta"/>
+        </primitive>
+        <meta_attributes id="group-ClusterAlias.meta"/>
+      </group>
+      <clone id="dolly">
+        <primitive id="dollies" class="ocf" type="clone_server" provider="gn1">
+          <instance_attributes id="instance_attributes.id21968"/>
+          <meta_attributes id="primitive-dollies.meta"/>
+        </primitive>
+        <meta_attributes id="clone-dolly.meta">
+          <nvpair id="nvpair.meta.auto-42" name="resource-stickiness" value="0"/>
+          <nvpair id="nvpair.meta.auto-40" name="clone-max" value="1"/>
+          <nvpair id="nvpair.meta.auto-44" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="where_is_dolly" rsc="dolly">
+        <rule id="preferred_where_is_dolly" score="INFINITY">
+          <expression attribute="#uname" id="expression.id21994" operation="eq" value="ssgtest1b"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="place_CA" rsc="ClusterAlias">
+        <rule id="preferred_place_CA" score="INFINITY">
+          <expression attribute="#uname" id="expression.id22020" operation="eq" value="ssgtest1a"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="c728b2aa-1e73-491f-a03c-8f0598bab169" uname="ssgtest1b" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
+      <transient_attributes id="c728b2aa-1e73-491f-a03c-8f0598bab169">
+        <instance_attributes id="instance_attributes.id22065">
+          <nvpair id="nvpair.id22072" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="c728b2aa-1e73-491f-a03c-8f0598bab169">
+        <lrm_resources id="lrm_resources.id22090">
+          <lrm_resource id="dollies:0" type="clone_server" class="ocf" provider="gn1">
+            <lrm_rsc_op id="dolly-dollies-0_monitor_0" crm_feature_set="1.0.6" operation="monitor" transition-key="0:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="4:1;0:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="3" rc-code="1" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dolly-dollies-0_stop_0" crm_feature_set="1.0.6" operation="stop" transition-key="11:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;11:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="10" rc-code="0" op-status="0" interval="0"/>
+            <lrm_rsc_op id="dolly-dollies-0_start_0" crm_feature_set="1.0.6" operation="start" transition-key="5:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;5:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="8" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="VIP" type="VIP-RIP.sh" class="ocf" provider="testing">
+            <lrm_rsc_op id="ClusterAlias-VIP_monitor_0" crm_feature_set="1.0.6" operation="monitor" transition-key="0:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="4:7;0:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="2" rc-code="7" op-status="4" interval="0" op-digest="a8861449d5a42926110c8b51ac27bd7a"/>
+            <lrm_rsc_op id="ClusterAlias-VIP_start_0" crm_feature_set="1.0.6" operation="start" transition-key="1:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;1:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="4" rc-code="0" op-status="0" interval="0" op-digest="a8861449d5a42926110c8b51ac27bd7a"/>
+            <lrm_rsc_op id="ClusterAlias-VIP_stop_0" crm_feature_set="1.0.6" operation="stop" transition-key="10:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;10:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="9" rc-code="0" op-status="0" interval="0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="94ef659b-5fd8-4d6b-b0ed-3b40339f8132" uname="ssgtest1a" crmd="online" in_ccm="true" join="member" shutdown="0" ha="active" expected="member">
+      <lrm id="lrm.auto-2">
+        <lrm_resources id="lrm_resources.id22302">
+          <lrm_resource id="VIP" type="VIP-RIP.sh" class="ocf" provider="testing">
+            <lrm_rsc_op id="ClusterAlias-VIP_monitor_0" operation="monitor" transition-key="3:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="4:7;3:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="2" crm_feature_set="1.0.6" rc-code="7" op-status="4" interval="0" op-digest="a8861449d5a42926110c8b51ac27bd7a"/>
+            <lrm_rsc_op id="ClusterAlias-VIP_start_0" operation="start" transition-key="12:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;12:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="7" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="a8861449d5a42926110c8b51ac27bd7a"/>
+            <lrm_rsc_op id="ClusterAlias-VIP_stop_0" operation="stop" transition-key="11:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;11:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="6" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="604a5e3a6d6e0a91bc8aeb681eb5313c"/>
+          </lrm_resource>
+          <lrm_resource id="dollies:0" type="clone_server" class="ocf" provider="gn1">
+            <lrm_rsc_op id="dolly-dollies-0_monitor_0" operation="monitor" transition-key="3:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="4:1;3:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="3" crm_feature_set="1.0.6" rc-code="1" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dolly-dollies-0_stop_0" operation="stop" transition-key="4:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;4:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="4" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dolly-dollies-0_start_0" operation="start" transition-key="12:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" transition-magic="0:0;12:8cc4efb2-231d-4b4e-ae7e-99f491914ff5" call-id="8" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="transient_attributes.auto-2">
+        <instance_attributes id="instance_attributes.id22494">
+          <nvpair id="nvpair.id22501" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

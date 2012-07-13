@@ -1,61 +1,89 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="300" num_updates="42019" dc-uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="default"><nvpair id="nvpair.id21849" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21858" name="transition-idle-timeout" value="60"/><nvpair id="nvpair.id21867" name="default-resource-stickiness" value="0"/><nvpair id="nvpair.id21876" name="short-resource-names" value="true"/><nvpair id="nvpair.id21885" name="no-quorum-policy" value="stop"/><nvpair id="nvpair.id21894" name="stop-orphan-resources" value="false"/><nvpair id="nvpair.id21903" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21912" name="remove-after-stop" value="false"/><nvpair id="nvpair.id21921" name="is-managed-default" value="true"/><nvpair id="nvpair.id21930" name="stonith-enabled" value="false"/><nvpair id="nvpair.id21939" name="stonith-action" value="reboot"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" type="normal"/>
-       <node id="989edcb8-aa41-4aab-9fca-65569015499d" uname="webcluster02" type="normal"/>
-     </nodes>
-     <resources>
-       <clone id="apache2_clone">
-         <group id="grrr">
-           <primitive id="apache2" class="ocf" type="apache" provider="heartbeat">
-             <operations>
-               <op name="monitor" interval="10s" id="apache2_mon" timeout="20s"/>
-             </operations>
-             <instance_attributes id="instance_attributes.id22044"><nvpair id="nvpair.id22051" name="httpd" value="/usr/sbin/apache2"/><nvpair id="nvpair.id22060" name="options" value="-k start"/><nvpair id="nvpair.id22069" name="configfile" value="/etc/apache2/apache2.conf"/><nvpair id="nvpair.id22078" name="target_role" value="started"/></instance_attributes>
-           <meta_attributes id="primitive-apache2.meta"><nvpair id="nvpair.meta.auto-78" name="target-role" value="started"/></meta_attributes></primitive>
-           <primitive id="mysql-proxy" class="lsb" type="mysql-proxy">
-             <operations>
-               <op name="monitor" interval="10s" id="mysql-proxy_mon" timeout="20s"/>
-             </operations>
-           <meta_attributes id="primitive-mysql-proxy.meta"/></primitive>
-         <meta_attributes id="group-grrr.meta"/></group>
-       <meta_attributes id="clone-apache2_clone.meta"><nvpair id="nvpair.meta.auto-55" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-51" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-53" name="clone-node-max" value="1"/></meta_attributes></clone>
-     </resources>
-     <constraints/>
-   </configuration>
-   <status>
-     <node_state id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22152">
-           <lrm_resource id="mysql-proxy:1" type="mysql-proxy" class="lsb">
-             <lrm_rsc_op id="mysql-proxy-1_monitor_0" operation="monitor" transition-key="6:0:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:7;6:0:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="mysql-proxy-1_start_0" operation="start" transition-key="15:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;15:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="13" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="mysql-proxy-1_monitor_10000" operation="monitor" transition-key="16:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;16:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="15" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="5811cef7f7f94e3a35a70be7916cb2fd"/>
-           </lrm_resource>
-           <lrm_resource id="mysql-proxy:0" type="mysql-proxy" class="lsb">
-             <lrm_rsc_op id="mysql-proxy-0_monitor_0" operation="monitor" transition-key="4:0:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:7;4:0:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="mysql-proxy-0_start_0" operation="start" transition-key="6:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;6:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="11" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="mysql-proxy-0_monitor_10000" operation="monitor" transition-key="7:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;7:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="14" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="5811cef7f7f94e3a35a70be7916cb2fd"/>
-           </lrm_resource>
-           <lrm_resource id="apache2:1" type="apache" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="apache2-1_monitor_0" operation="monitor" transition-key="5:0:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:7;5:0:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="6f4f9083db544b5d5d246a882975fb04"/>
-             <lrm_rsc_op id="apache2-1_start_0" operation="start" transition-key="13:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;13:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="9" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="5f4f9083db544b5d5d246a882975fb04"/>
-             <lrm_rsc_op id="apache2-1_monitor_10000" operation="monitor" transition-key="14:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;14:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="12" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="5fd4bafc12dc00bd492080cc8f450fcf"/>
-           </lrm_resource>
-           <lrm_resource id="apache2:0" type="apache" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="apache2-0_monitor_0" operation="monitor" transition-key="3:0:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:7;3:0:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="6f4f9083db544b5d5d246a882975fb04"/>
-             <lrm_rsc_op id="apache2-0_start_0" operation="start" transition-key="4:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;4:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="5f4f9083db544b5d5d246a882975fb04"/>
-             <lrm_rsc_op id="apache2-0_monitor_10000" operation="monitor" transition-key="5:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;5:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="10" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="5fd4bafc12dc00bd492080cc8f450fcf"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.id22525"><nvpair id="nvpair.id22532" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="300" num_updates="42019" dc-uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="default">
+        <nvpair id="nvpair.id21849" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21858" name="transition-idle-timeout" value="60"/>
+        <nvpair id="nvpair.id21867" name="default-resource-stickiness" value="0"/>
+        <nvpair id="nvpair.id21876" name="short-resource-names" value="true"/>
+        <nvpair id="nvpair.id21885" name="no-quorum-policy" value="stop"/>
+        <nvpair id="nvpair.id21894" name="stop-orphan-resources" value="false"/>
+        <nvpair id="nvpair.id21903" name="stop-orphan-actions" value="true"/>
+        <nvpair id="nvpair.id21912" name="remove-after-stop" value="false"/>
+        <nvpair id="nvpair.id21921" name="is-managed-default" value="true"/>
+        <nvpair id="nvpair.id21930" name="stonith-enabled" value="false"/>
+        <nvpair id="nvpair.id21939" name="stonith-action" value="reboot"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" type="normal"/>
+      <node id="989edcb8-aa41-4aab-9fca-65569015499d" uname="webcluster02" type="normal"/>
+    </nodes>
+    <resources>
+      <clone id="apache2_clone">
+        <group id="grrr">
+          <primitive id="apache2" class="ocf" type="apache" provider="heartbeat">
+            <operations>
+              <op name="monitor" interval="10s" id="apache2_mon" timeout="20s"/>
+            </operations>
+            <instance_attributes id="instance_attributes.id22044">
+              <nvpair id="nvpair.id22051" name="httpd" value="/usr/sbin/apache2"/>
+              <nvpair id="nvpair.id22060" name="options" value="-k start"/>
+              <nvpair id="nvpair.id22069" name="configfile" value="/etc/apache2/apache2.conf"/>
+              <nvpair id="nvpair.id22078" name="target_role" value="started"/>
+            </instance_attributes>
+            <meta_attributes id="primitive-apache2.meta">
+              <nvpair id="nvpair.meta.auto-78" name="target-role" value="started"/>
+            </meta_attributes>
+          </primitive>
+          <primitive id="mysql-proxy" class="lsb" type="mysql-proxy">
+            <operations>
+              <op name="monitor" interval="10s" id="mysql-proxy_mon" timeout="20s"/>
+            </operations>
+            <meta_attributes id="primitive-mysql-proxy.meta"/>
+          </primitive>
+          <meta_attributes id="group-grrr.meta"/>
+        </group>
+        <meta_attributes id="clone-apache2_clone.meta">
+          <nvpair id="nvpair.meta.auto-55" name="target-role" value="started"/>
+          <nvpair id="nvpair.meta.auto-51" name="clone-max" value="2"/>
+          <nvpair id="nvpair.meta.auto-53" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22152">
+          <lrm_resource id="mysql-proxy:1" type="mysql-proxy" class="lsb">
+            <lrm_rsc_op id="mysql-proxy-1_monitor_0" operation="monitor" transition-key="6:0:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:7;6:0:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mysql-proxy-1_start_0" operation="start" transition-key="15:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;15:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="13" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mysql-proxy-1_monitor_10000" operation="monitor" transition-key="16:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;16:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="15" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="5811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-proxy:0" type="mysql-proxy" class="lsb">
+            <lrm_rsc_op id="mysql-proxy-0_monitor_0" operation="monitor" transition-key="4:0:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:7;4:0:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mysql-proxy-0_start_0" operation="start" transition-key="6:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;6:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="11" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mysql-proxy-0_monitor_10000" operation="monitor" transition-key="7:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;7:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="14" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="5811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="apache2:1" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache2-1_monitor_0" operation="monitor" transition-key="5:0:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:7;5:0:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="6f4f9083db544b5d5d246a882975fb04"/>
+            <lrm_rsc_op id="apache2-1_start_0" operation="start" transition-key="13:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;13:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="9" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="5f4f9083db544b5d5d246a882975fb04"/>
+            <lrm_rsc_op id="apache2-1_monitor_10000" operation="monitor" transition-key="14:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;14:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="12" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="5fd4bafc12dc00bd492080cc8f450fcf"/>
+          </lrm_resource>
+          <lrm_resource id="apache2:0" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache2-0_monitor_0" operation="monitor" transition-key="3:0:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:7;3:0:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="6f4f9083db544b5d5d246a882975fb04"/>
+            <lrm_rsc_op id="apache2-0_start_0" operation="start" transition-key="4:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;4:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="5f4f9083db544b5d5d246a882975fb04"/>
+            <lrm_rsc_op id="apache2-0_monitor_10000" operation="monitor" transition-key="5:1:9b0d1af2-f932-497b-971f-70be4a277e3d" transition-magic="0:0;5:1:9b0d1af2-f932-497b-971f-70be4a277e3d" call-id="10" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="5fd4bafc12dc00bd492080cc8f450fcf"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id22525">
+          <nvpair id="nvpair.id22532" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

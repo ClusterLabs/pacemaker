@@ -1,4 +1,4 @@
-<cib epoch="7" num_updates="19" admin_epoch="0" validate-with="pacemaker-1.1" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Wed Apr 18 12:22:12 2012" have-quorum="0" dc-uuid="fc16-builder">
+<cib epoch="7" num_updates="19" admin_epoch="0" validate-with="pacemaker-1.1" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Fri Jul 13 13:51:05 2012" have-quorum="0" dc-uuid="fc16-builder">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -27,8 +27,7 @@
         </instance_attributes>
       </transient_attributes>
       <lrm id="fc16-builder">
-        <lrm_resources>
-        </lrm_resources>
+        <lrm_resources/>
       </lrm>
     </node_state>
   </status>

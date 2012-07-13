@@ -1,8 +1,8 @@
-<cib epoch="1" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.1" cib-last-written="Thu Mar 24 16:15:36 2011" have-quorum="1">
+<cib epoch="1" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.1" cib-last-written="Fri Jul 13 13:51:16 2012" have-quorum="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-	<nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
       </cluster_property_set>
     </crm_config>
@@ -18,7 +18,7 @@
       <primitive class="ocf" id="rsc4" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints>
-      <rsc_colocation id="template1-colo-rsc4" rsc="template1" with-rsc="rsc4" with-rsc-role="Started" score="INFINITY"/>  
+      <rsc_colocation id="template1-colo-rsc4" rsc="template1" with-rsc="rsc4" with-rsc-role="Started" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>

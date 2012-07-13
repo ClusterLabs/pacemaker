@@ -1,4 +1,4 @@
-<cib epoch="150" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.1" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Tue Feb 28 10:54:21 2012" have-quorum="0" dc-uuid="fc16-builder">
+<cib epoch="150" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.1" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Fri Jul 13 13:51:10 2012" have-quorum="0" dc-uuid="fc16-builder">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -23,15 +23,15 @@
       <primitive class="ocf" id="C" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints>
-    <rsc_order id="order-1" symmetrical="false">
-      <resource_set id="require-all-set-1" require-all="false">
-        <resource_ref id="B"/>
-        <resource_ref id="C"/>
-      </resource_set>
-      <resource_set id="require-all-set-2" require-all="false">
-        <resource_ref id="A"/>
-      </resource_set>
-    </rsc_order>
+      <rsc_order id="order-1" symmetrical="false">
+        <resource_set id="require-all-set-1" require-all="false">
+          <resource_ref id="B"/>
+          <resource_ref id="C"/>
+        </resource_set>
+        <resource_set id="require-all-set-2" require-all="false">
+          <resource_ref id="A"/>
+        </resource_set>
+      </rsc_order>
     </constraints>
   </configuration>
   <status>

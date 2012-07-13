@@ -1,100 +1,145 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="80" num_updates="23" dc-uuid="782b1222-d1b9-4993-8f0d-b8b67801a2c8" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21849" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21858" name="no-quorum-policy" value="ignore"/><nvpair id="nvpair.id21868" name="stonith-enabled" value="false"/><nvpair id="nvpair.id21876" name="short-resource-names" value="true"/><nvpair id="nvpair.id21885" name="is-managed-default" value="true"/><nvpair id="nvpair.id21894" name="default-resource-stickiness" value="INFINITY"/><nvpair id="nvpair.id21903" name="stop-orphan-resources" value="true"/><nvpair id="nvpair.id21912" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21921" name="remove-after-stop" value="false"/><nvpair id="nvpair.id21930" name="default-migration-threshold" value="1"/><nvpair id="nvpair.id21940" name="stonith-action" value="reboot"/><nvpair id="nvpair.id21948" name="default-action-timeout" value="120s"/><nvpair id="nvpair.id21957" name="dc-deadtime" value="10s"/><nvpair id="nvpair.id21965" name="cluster-recheck-interval" value="0"/><nvpair id="nvpair.id21974" name="election-timeout" value="2min"/><nvpair id="nvpair.id21983" name="shutdown-escalation" value="20min"/><nvpair id="nvpair.id21992" name="crmd-integration-timeout" value="3min"/><nvpair id="nvpair.id22001" name="crmd-finalization-timeout" value="10min"/><nvpair id="nvpair.id22010" name="cluster-delay" value="180s"/><nvpair id="nvpair.id22019" name="pe-error-series-max" value="-1"/><nvpair id="nvpair.id22028" name="pe-warn-series-max" value="-1"/><nvpair id="nvpair.id22037" name="pe-input-series-max" value="-1"/><nvpair id="nvpair.id22045" name="startup-fencing" value="true"/><nvpair id="nvpair.id22054" name="dc-version" value="2.1.3-node: 176f519910028b93e655fe4d2d376037bf8dd0d4"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="782b1222-d1b9-4993-8f0d-b8b67801a2c8" uname="rh44-1" type="normal"/>
-       <node id="86600d98-4564-433a-8ad7-aca0ca59382a" uname="rh44-2" type="normal"/>
-     </nodes>
-     <resources>
-       <group id="test">
-         <primitive id="resource_1" class="ocf" type="IPaddr" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id22105"><nvpair id="nvpair.id22113" name="ip" value="192.168.40.92"/><nvpair id="nvpair.id22121" name="nic" value="eth0"/><nvpair id="nvpair.id22130" name="cidr_netmask" value="24"/></instance_attributes>
-           <operations>
-             <op name="start" interval="0" id="ipPostgreSQLDB_start" timeout="60s" on-fail="fence" start-delay="0" enabled="true" role="Started"/>
-             <op name="monitor" interval="10s" id="ipPostgreSQLDB_monitor" timeout="60s" on-fail="fence" start-delay="0" enabled="true" role="Started"/>
-             <op name="stop" interval="0" id="ipPostgreSQLDB_stop" timeout="60s" on-fail="fence" start-delay="0" enabled="true" role="Started"/>
-           </operations>
-         <meta_attributes id="primitive-resource_1.meta"/></primitive>
-       <meta_attributes id="group-test.meta"/></group>
-       <master id="ms-sf">
-         <meta_attributes id="meta_attributes.id22211"><nvpair id="nvpair.id22217" name="clone-max" value="2"/><nvpair id="nvpair.id22226" name="clone-node-max" value="1"/><nvpair id="nvpair.id22234" name="master-max" value="1"/><nvpair id="nvpair.id22243" name="master-node-max" value="1"/></meta_attributes>
-         <group id="grp_ms_sf">
-           <primitive id="master_slave_Stateful" class="ocf" type="Stateful" provider="heartbeat">
-             <operations>
-               <op name="monitor" interval="5s" id="ms-sf_monitor" timeout="30s"/>
-               <op name="monitor" interval="6s" id="ms-sf_monitor_master" timeout="30s" role="Master"/>
-             </operations>
-             <instance_attributes id="instance_attributes.id22294"/>
-           <meta_attributes id="primitive-master_slave_Stateful.meta"/></primitive>
-         <meta_attributes id="group-grp_ms_sf.meta"/></group>
-       <meta_attributes id="master_slave-ms-sf.meta"><nvpair id="ordered.meta.auto-98" name="ordered" value="false"/><nvpair id="interleave.meta.auto-98" name="interleave" value="false"/><nvpair id="notify.meta.auto-98" name="notify" value="false"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></master>
-     </resources>
-     <constraints>
-       <rsc_location id="rlcPostgreSQLDB" rsc="test">
-         <rule id="rulPostgreSQLDB_node01" score="200">
-           <expression id="expression.id22323" attribute="#uname" operation="eq" value="rh44-1"/>
-         </rule>
-         <rule id="rulPostgreSQLDB_node02" score="100">
-           <expression id="expression.id22341" attribute="#uname" operation="eq" value="rh44-2"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="rsc_location_group_0" rsc="ms-sf">
-         <rule id="preferred_location_group_0" role="Master" score="100">
-           <expression id="expression.id22369" attribute="#uname" operation="eq" value="rh44-1"/>
-         </rule>
-         <rule id="preferred_location_group_1" role="Master" score="50">
-           <expression id="expression.id22390" attribute="#uname" operation="eq" value="rh44-2"/>
-         </rule>
-       </rsc_location>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="782b1222-d1b9-4993-8f0d-b8b67801a2c8" uname="rh44-1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22436">
-           <lrm_resource id="master_slave_Stateful:1" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="master_slave_Stateful-1_monitor_0" operation="monitor" transition-key="5:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;5:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="master_slave_Stateful-1_start_0" operation="start" transition-key="17:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;17:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="master_slave_Stateful-1_monitor_5000" operation="monitor" transition-key="18:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;18:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
-           </lrm_resource>
-           <lrm_resource id="master_slave_Stateful:0" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="master_slave_Stateful-0_monitor_0" operation="monitor" transition-key="4:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;4:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="resource_1" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_1_monitor_0" operation="monitor" transition-key="3:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;3:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="cf453c0695bcf0a97aa217bbc913b737"/>
-             <lrm_rsc_op id="resource_1_start_0" operation="start" transition-key="5:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;5:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="5" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="cf453c0695bcf0a97aa217bbc913b737"/>
-             <lrm_rsc_op id="resource_1_monitor_10000" operation="monitor" transition-key="8:2:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;8:2:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="ab399f581fad689b92f5edad92fd0356"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.id22661"><nvpair id="nvpair.id22668" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-     <node_state id="86600d98-4564-433a-8ad7-aca0ca59382a" uname="rh44-2" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
-       <lrm id="lrm.auto-2">
-         <lrm_resources id="lrm_resources.id22709">
-           <lrm_resource id="master_slave_Stateful:0" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="master_slave_Stateful-0_monitor_0" operation="monitor" transition-key="8:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;8:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="master_slave_Stateful-0_start_0" operation="start" transition-key="11:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;11:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="5" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="master_slave_Stateful-0_monitor_5000" operation="monitor" transition-key="15:2:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;15:2:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
-           </lrm_resource>
-           <lrm_resource id="master_slave_Stateful:1" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="master_slave_Stateful-1_monitor_0" operation="monitor" transition-key="9:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;9:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="resource_1" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_1_monitor_0" operation="monitor" transition-key="7:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;7:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="cf453c0695bcf0a97aa217bbc913b737"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="transient_attributes.auto-2">
-         <instance_attributes id="instance_attributes.id22886"><nvpair id="nvpair.id22893" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="80" num_updates="23" dc-uuid="782b1222-d1b9-4993-8f0d-b8b67801a2c8" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:07 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21849" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21858" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="nvpair.id21868" name="stonith-enabled" value="false"/>
+        <nvpair id="nvpair.id21876" name="short-resource-names" value="true"/>
+        <nvpair id="nvpair.id21885" name="is-managed-default" value="true"/>
+        <nvpair id="nvpair.id21894" name="default-resource-stickiness" value="INFINITY"/>
+        <nvpair id="nvpair.id21903" name="stop-orphan-resources" value="true"/>
+        <nvpair id="nvpair.id21912" name="stop-orphan-actions" value="true"/>
+        <nvpair id="nvpair.id21921" name="remove-after-stop" value="false"/>
+        <nvpair id="nvpair.id21930" name="default-migration-threshold" value="1"/>
+        <nvpair id="nvpair.id21940" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21948" name="default-action-timeout" value="120s"/>
+        <nvpair id="nvpair.id21957" name="dc-deadtime" value="10s"/>
+        <nvpair id="nvpair.id21965" name="cluster-recheck-interval" value="0"/>
+        <nvpair id="nvpair.id21974" name="election-timeout" value="2min"/>
+        <nvpair id="nvpair.id21983" name="shutdown-escalation" value="20min"/>
+        <nvpair id="nvpair.id21992" name="crmd-integration-timeout" value="3min"/>
+        <nvpair id="nvpair.id22001" name="crmd-finalization-timeout" value="10min"/>
+        <nvpair id="nvpair.id22010" name="cluster-delay" value="180s"/>
+        <nvpair id="nvpair.id22019" name="pe-error-series-max" value="-1"/>
+        <nvpair id="nvpair.id22028" name="pe-warn-series-max" value="-1"/>
+        <nvpair id="nvpair.id22037" name="pe-input-series-max" value="-1"/>
+        <nvpair id="nvpair.id22045" name="startup-fencing" value="true"/>
+        <nvpair id="nvpair.id22054" name="dc-version" value="2.1.3-node: 176f519910028b93e655fe4d2d376037bf8dd0d4"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="782b1222-d1b9-4993-8f0d-b8b67801a2c8" uname="rh44-1" type="normal"/>
+      <node id="86600d98-4564-433a-8ad7-aca0ca59382a" uname="rh44-2" type="normal"/>
+    </nodes>
+    <resources>
+      <group id="test">
+        <primitive id="resource_1" class="ocf" type="IPaddr" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id22105">
+            <nvpair id="nvpair.id22113" name="ip" value="192.168.40.92"/>
+            <nvpair id="nvpair.id22121" name="nic" value="eth0"/>
+            <nvpair id="nvpair.id22130" name="cidr_netmask" value="24"/>
+          </instance_attributes>
+          <operations>
+            <op name="start" interval="0" id="ipPostgreSQLDB_start" timeout="60s" on-fail="fence" start-delay="0" enabled="true" role="Started"/>
+            <op name="monitor" interval="10s" id="ipPostgreSQLDB_monitor" timeout="60s" on-fail="fence" start-delay="0" enabled="true" role="Started"/>
+            <op name="stop" interval="0" id="ipPostgreSQLDB_stop" timeout="60s" on-fail="fence" start-delay="0" enabled="true" role="Started"/>
+          </operations>
+          <meta_attributes id="primitive-resource_1.meta"/>
+        </primitive>
+        <meta_attributes id="group-test.meta"/>
+      </group>
+      <master id="ms-sf">
+        <meta_attributes id="meta_attributes.id22211">
+          <nvpair id="nvpair.id22217" name="clone-max" value="2"/>
+          <nvpair id="nvpair.id22226" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair.id22234" name="master-max" value="1"/>
+          <nvpair id="nvpair.id22243" name="master-node-max" value="1"/>
+        </meta_attributes>
+        <group id="grp_ms_sf">
+          <primitive id="master_slave_Stateful" class="ocf" type="Stateful" provider="heartbeat">
+            <operations>
+              <op name="monitor" interval="5s" id="ms-sf_monitor" timeout="30s"/>
+              <op name="monitor" interval="6s" id="ms-sf_monitor_master" timeout="30s" role="Master"/>
+            </operations>
+            <instance_attributes id="instance_attributes.id22294"/>
+            <meta_attributes id="primitive-master_slave_Stateful.meta"/>
+          </primitive>
+          <meta_attributes id="group-grp_ms_sf.meta"/>
+        </group>
+        <meta_attributes id="master_slave-ms-sf.meta">
+          <nvpair id="ordered.meta.auto-98" name="ordered" value="false"/>
+          <nvpair id="interleave.meta.auto-98" name="interleave" value="false"/>
+          <nvpair id="notify.meta.auto-98" name="notify" value="false"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </master>
+    </resources>
+    <constraints>
+      <rsc_location id="rlcPostgreSQLDB" rsc="test">
+        <rule id="rulPostgreSQLDB_node01" score="200">
+          <expression id="expression.id22323" attribute="#uname" operation="eq" value="rh44-1"/>
+        </rule>
+        <rule id="rulPostgreSQLDB_node02" score="100">
+          <expression id="expression.id22341" attribute="#uname" operation="eq" value="rh44-2"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location_group_0" rsc="ms-sf">
+        <rule id="preferred_location_group_0" role="Master" score="100">
+          <expression id="expression.id22369" attribute="#uname" operation="eq" value="rh44-1"/>
+        </rule>
+        <rule id="preferred_location_group_1" role="Master" score="50">
+          <expression id="expression.id22390" attribute="#uname" operation="eq" value="rh44-2"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="782b1222-d1b9-4993-8f0d-b8b67801a2c8" uname="rh44-1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22436">
+          <lrm_resource id="master_slave_Stateful:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="master_slave_Stateful-1_monitor_0" operation="monitor" transition-key="5:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;5:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="master_slave_Stateful-1_start_0" operation="start" transition-key="17:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;17:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="master_slave_Stateful-1_monitor_5000" operation="monitor" transition-key="18:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;18:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="master_slave_Stateful:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="master_slave_Stateful-0_monitor_0" operation="monitor" transition-key="4:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;4:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="resource_1" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_1_monitor_0" operation="monitor" transition-key="3:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;3:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="cf453c0695bcf0a97aa217bbc913b737"/>
+            <lrm_rsc_op id="resource_1_start_0" operation="start" transition-key="5:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;5:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="5" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="cf453c0695bcf0a97aa217bbc913b737"/>
+            <lrm_rsc_op id="resource_1_monitor_10000" operation="monitor" transition-key="8:2:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;8:2:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="ab399f581fad689b92f5edad92fd0356"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id22661">
+          <nvpair id="nvpair.id22668" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="86600d98-4564-433a-8ad7-aca0ca59382a" uname="rh44-2" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
+      <lrm id="lrm.auto-2">
+        <lrm_resources id="lrm_resources.id22709">
+          <lrm_resource id="master_slave_Stateful:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="master_slave_Stateful-0_monitor_0" operation="monitor" transition-key="8:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;8:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="master_slave_Stateful-0_start_0" operation="start" transition-key="11:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;11:1:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="5" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="master_slave_Stateful-0_monitor_5000" operation="monitor" transition-key="15:2:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;15:2:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="master_slave_Stateful:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="master_slave_Stateful-1_monitor_0" operation="monitor" transition-key="9:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;9:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="resource_1" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_1_monitor_0" operation="monitor" transition-key="7:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;7:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="cf453c0695bcf0a97aa217bbc913b737"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="transient_attributes.auto-2">
+        <instance_attributes id="instance_attributes.id22886">
+          <nvpair id="nvpair.id22893" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

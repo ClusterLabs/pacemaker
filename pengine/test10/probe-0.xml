@@ -1,85 +1,121 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="3" num_updates="48" dc-uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cibbootstrap"><nvpair id="nvpair.id21846" name="cluster-delay" value="60"/><nvpair id="nvpair.id21855" name="default-resource-stickiness" value="1000"/><nvpair id="nvpair.id21864" name="default_resource_failure_stickiness" value="-500"/><nvpair id="nvpair.id21873" name="stonith-enabled" value="true"/><nvpair id="nvpair.id21881" name="stonith-action" value="reboot"/><nvpair id="nvpair.id21890" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21899" name="no-quorum-policy" value="stop"/><nvpair id="nvpair.id21908" name="stop-orphan-resources" value="true"/><nvpair id="nvpair.id21916" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21925" name="is-managed-default" value="true"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="ca93fea5-67c9-473d-9ce0-7ed7fb823872" uname="x32c48" type="normal"/>
-       <node id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" uname="x32c47" type="normal"/>
-     </nodes>
-     <resources>
-       <clone id="stonithcloneset">
-         <primitive id="stonithclone" class="stonith" type="null">
-           <operations>
-             <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s" requires="nothing"/>
-             <op name="start" interval="0" id="stonithclone-op-02" timeout="20s" requires="nothing"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22022">
-	     <nvpair id="nvpair.id22029" name="hostlist" value="32c47,32c48"/>
-	   </instance_attributes>
-           <meta_attributes id="primitive-stonithclone.meta"/>
-	 </primitive>
-	 <meta_attributes id="clone-stonithcloneset.meta">
-	   <nvpair id="globally_unique.meta.auto-43" name="globally-unique" value="false"/>
-	   <nvpair id="nvpair.meta.auto-49" name="clone-node-max" value="1"/>
-	 </meta_attributes>
-       </clone>
-       <clone id="imagestorecloneset">
-         <primitive id="imagestoreclone" class="ocf" type="Filesystem" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id22088"><nvpair id="nvpair.id22094" name="device" value="/dev/sdb1"/><nvpair id="nvpair.id22103" name="directory" value="/images"/><nvpair id="nvpair.id22112" name="fstype" value="ocfs2"/></instance_attributes>
-         <meta_attributes id="primitive-imagestoreclone.meta"/></primitive>
-       <meta_attributes id="clone-imagestorecloneset.meta"><nvpair id="notify.meta.auto-72" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-72" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-80" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-78" name="clone-node-max" value="1"/></meta_attributes></clone>
-       <clone id="configstorecloneset">
-         <primitive id="configstoreclone" class="ocf" type="Filesystem" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id22170"><nvpair id="nvpair.id22177" name="device" value="/dev/sdb2"/><nvpair id="nvpair.id22186" name="directory" value="/vm"/><nvpair id="nvpair.id22194" name="fstype" value="ocfs2"/></instance_attributes>
-         <meta_attributes id="primitive-configstoreclone.meta"/></primitive>
-       <meta_attributes id="clone-configstorecloneset.meta"><nvpair id="notify.meta.auto-100" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-100" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-108" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-106" name="clone-node-max" value="1"/></meta_attributes></clone>
-     </resources>
-     <constraints/>
-   </configuration>
-   <status>
-     <node_state id="ca93fea5-67c9-473d-9ce0-7ed7fb823872" uname="x32c48" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
-       <lrm id="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
-         <lrm_resources id="lrm_resources.id22240">
-           <lrm_resource id="stonithclone:0" type="null" class="stonith">
-             <lrm_rsc_op id="stonithclone-0_monitor_0" operation="monitor" transition-key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="4:7;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="0af514b911859ca1eec9ff95b4ab6806"/>
-             <lrm_rsc_op id="stonithclone-0_start_0" operation="start" transition-key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="3" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="0af514b911859ca1eec9ff95b4ab6806"/>
-             <lrm_rsc_op id="stonithclone-0_monitor_5000" operation="monitor" transition-key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="4" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="c5d5d41e45569401b71e10d2aabf7c78"/>
-           </lrm_resource>
-           <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="imagestoreclone-0_monitor_0" operation="monitor" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
-             <lrm_rsc_op id="imagestoreclone-0_start_0" operation="start" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
-             <lrm_rsc_op id="imagestoreclone-0_post_notify_start_0" operation="notify" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
-         <instance_attributes id="instance_attributes.id22419"><nvpair id="nvpair.id22426" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-     <node_state id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" uname="x32c47" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
-       <transient_attributes id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
-         <instance_attributes id="instance_attributes.id22464"><nvpair id="nvpair.id22471" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
-         <lrm_resources id="lrm_resources.id22488">
-           <lrm_resource id="stonithclone:0" type="null" class="stonith">
-             <lrm_rsc_op id="stonithclone-0_monitor_0" operation="monitor" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="0af514b911859ca1eec9ff95b4ab6806"/>
-           </lrm_resource>
-           <lrm_resource id="stonithclone:1" type="null" class="stonith">
-             <lrm_rsc_op id="stonithclone-1_start_0" operation="start" transition-key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="3" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="0af514b911859ca1eec9ff95b4ab6806"/>
-             <lrm_rsc_op id="stonithclone-1_monitor_5000" operation="monitor" transition-key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="4" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="c5d5d41e45569401b71e10d2aabf7c78"/>
-           </lrm_resource>
-           <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="imagestoreclone-0_monitor_0" operation="monitor" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
-           </lrm_resource>
-           <lrm_resource id="imagestoreclone:1" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="imagestoreclone-1_start_0" operation="start" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
-             <lrm_rsc_op id="imagestoreclone-1_post_notify_start_0" operation="notify" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="3" num_updates="48" dc-uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:12 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cibbootstrap">
+        <nvpair id="nvpair.id21846" name="cluster-delay" value="60"/>
+        <nvpair id="nvpair.id21855" name="default-resource-stickiness" value="1000"/>
+        <nvpair id="nvpair.id21864" name="default_resource_failure_stickiness" value="-500"/>
+        <nvpair id="nvpair.id21873" name="stonith-enabled" value="true"/>
+        <nvpair id="nvpair.id21881" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21890" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21899" name="no-quorum-policy" value="stop"/>
+        <nvpair id="nvpair.id21908" name="stop-orphan-resources" value="true"/>
+        <nvpair id="nvpair.id21916" name="stop-orphan-actions" value="true"/>
+        <nvpair id="nvpair.id21925" name="is-managed-default" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="ca93fea5-67c9-473d-9ce0-7ed7fb823872" uname="x32c48" type="normal"/>
+      <node id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" uname="x32c47" type="normal"/>
+    </nodes>
+    <resources>
+      <clone id="stonithcloneset">
+        <primitive id="stonithclone" class="stonith" type="null">
+          <operations>
+            <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s" requires="nothing"/>
+            <op name="start" interval="0" id="stonithclone-op-02" timeout="20s" requires="nothing"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22022">
+            <nvpair id="nvpair.id22029" name="hostlist" value="32c47,32c48"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-stonithclone.meta"/>
+        </primitive>
+        <meta_attributes id="clone-stonithcloneset.meta">
+          <nvpair id="globally_unique.meta.auto-43" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.meta.auto-49" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+      <clone id="imagestorecloneset">
+        <primitive id="imagestoreclone" class="ocf" type="Filesystem" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id22088">
+            <nvpair id="nvpair.id22094" name="device" value="/dev/sdb1"/>
+            <nvpair id="nvpair.id22103" name="directory" value="/images"/>
+            <nvpair id="nvpair.id22112" name="fstype" value="ocfs2"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-imagestoreclone.meta"/>
+        </primitive>
+        <meta_attributes id="clone-imagestorecloneset.meta">
+          <nvpair id="notify.meta.auto-72" name="notify" value="true"/>
+          <nvpair id="globally_unique.meta.auto-72" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.meta.auto-80" name="target-role" value="started"/>
+          <nvpair id="nvpair.meta.auto-78" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+      <clone id="configstorecloneset">
+        <primitive id="configstoreclone" class="ocf" type="Filesystem" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id22170">
+            <nvpair id="nvpair.id22177" name="device" value="/dev/sdb2"/>
+            <nvpair id="nvpair.id22186" name="directory" value="/vm"/>
+            <nvpair id="nvpair.id22194" name="fstype" value="ocfs2"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-configstoreclone.meta"/>
+        </primitive>
+        <meta_attributes id="clone-configstorecloneset.meta">
+          <nvpair id="notify.meta.auto-100" name="notify" value="true"/>
+          <nvpair id="globally_unique.meta.auto-100" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.meta.auto-108" name="target-role" value="started"/>
+          <nvpair id="nvpair.meta.auto-106" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="ca93fea5-67c9-473d-9ce0-7ed7fb823872" uname="x32c48" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
+      <lrm id="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
+        <lrm_resources id="lrm_resources.id22240">
+          <lrm_resource id="stonithclone:0" type="null" class="stonith">
+            <lrm_rsc_op id="stonithclone-0_monitor_0" operation="monitor" transition-key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="4:7;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="0af514b911859ca1eec9ff95b4ab6806"/>
+            <lrm_rsc_op id="stonithclone-0_start_0" operation="start" transition-key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="3" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="0af514b911859ca1eec9ff95b4ab6806"/>
+            <lrm_rsc_op id="stonithclone-0_monitor_5000" operation="monitor" transition-key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="4" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="c5d5d41e45569401b71e10d2aabf7c78"/>
+          </lrm_resource>
+          <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="imagestoreclone-0_monitor_0" operation="monitor" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+            <lrm_rsc_op id="imagestoreclone-0_start_0" operation="start" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+            <lrm_rsc_op id="imagestoreclone-0_post_notify_start_0" operation="notify" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
+        <instance_attributes id="instance_attributes.id22419">
+          <nvpair id="nvpair.id22426" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" uname="x32c47" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
+      <transient_attributes id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
+        <instance_attributes id="instance_attributes.id22464">
+          <nvpair id="nvpair.id22471" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
+        <lrm_resources id="lrm_resources.id22488">
+          <lrm_resource id="stonithclone:0" type="null" class="stonith">
+            <lrm_rsc_op id="stonithclone-0_monitor_0" operation="monitor" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="0af514b911859ca1eec9ff95b4ab6806"/>
+          </lrm_resource>
+          <lrm_resource id="stonithclone:1" type="null" class="stonith">
+            <lrm_rsc_op id="stonithclone-1_start_0" operation="start" transition-key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="3" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="0af514b911859ca1eec9ff95b4ab6806"/>
+            <lrm_rsc_op id="stonithclone-1_monitor_5000" operation="monitor" transition-key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="4" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="c5d5d41e45569401b71e10d2aabf7c78"/>
+          </lrm_resource>
+          <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="imagestoreclone-0_monitor_0" operation="monitor" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+          </lrm_resource>
+          <lrm_resource id="imagestoreclone:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="imagestoreclone-1_start_0" operation="start" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+            <lrm_rsc_op id="imagestoreclone-1_post_notify_start_0" operation="notify" transition-key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition-magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

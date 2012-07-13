@@ -1,4 +1,4 @@
-<cib epoch="291" num_updates="91" admin_epoch="2" validate-with="pacemaker-1.1" crm_feature_set="3.0.5" have-quorum="1" cib-last-written="Mon Apr 30 17:53:04 2012" update-origin="gluster02.h" update-client="cibadmin" dc-uuid="gluster02.h">
+<cib epoch="291" num_updates="91" admin_epoch="2" validate-with="pacemaker-1.1" crm_feature_set="3.0.5" have-quorum="1" cib-last-written="Fri Jul 13 13:51:01 2012" update-origin="gluster02.h" update-client="cibadmin" dc-uuid="gluster02.h">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

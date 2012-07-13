@@ -1,14 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21836" name="no-quorum-policy" value="ignore"/><nvpair id="nvpair.id21845" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21854" name="default-migration-threshold" value="1"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21836" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="nvpair.id21845" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21854" name="default-migration-threshold" value="1"/>
+      </cluster_property_set>
+    </crm_config>
     <rsc_defaults>
       <meta_attributes id="nvpair.id218777">
-	<nvpair id="nvpair.id21877" name="migration-threshold" value="1"/>
+        <nvpair id="nvpair.id21877" name="migration-threshold" value="1"/>
       </meta_attributes>
     </rsc_defaults>
     <nodes>
@@ -17,9 +21,15 @@
       <node id="node3" uname="node3" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc1.meta"/></primitive>
-      <primitive id="rsc2" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc2.meta"/></primitive>
-      <primitive id="rsc3" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc3.meta"/></primitive>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc1.meta"/>
+      </primitive>
+      <primitive id="rsc2" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc2.meta"/>
+      </primitive>
+      <primitive id="rsc3" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc3.meta"/>
+      </primitive>
     </resources>
     <constraints>
       <rsc_colocation id="colo-1-2" rsc="rsc1" with-rsc="rsc2" score="INFINITY"/>
@@ -29,23 +39,28 @@
   </configuration>
   <status>
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-       <transient_attributes id="node1">
-         <instance_attributes id="instance_attributes.id21983"><nvpair id="nvpair.id21990" name="fail-count-rsc4" value="1"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="node1">
-         <lrm_resources id="lrm_resources.id22006">
-         </lrm_resources>
-       </lrm>
+      <transient_attributes id="node1">
+        <instance_attributes id="instance_attributes.id21983">
+          <nvpair id="nvpair.id21990" name="fail-count-rsc4" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="node1">
+        <lrm_resources id="lrm_resources.id22006"/>
+      </lrm>
     </node_state>
     <node_state id="node2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
-       <transient_attributes id="node2">
-         <instance_attributes id="instance_attributes.id22032"><nvpair id="nvpair.id22039" name="fail-count-rsc3" value="1"/></instance_attributes>
-       </transient_attributes>
+      <transient_attributes id="node2">
+        <instance_attributes id="instance_attributes.id22032">
+          <nvpair id="nvpair.id22039" name="fail-count-rsc3" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
     </node_state>
     <node_state id="node3" ha="active" uname="node3" crmd="online" join="member" expected="member" in_ccm="true">
-       <transient_attributes id="node3">
-         <instance_attributes id="instance_attributes.id22073"><nvpair id="nvpair.id22079" name="fail-count-rsc2" value="1"/></instance_attributes>
-       </transient_attributes>
+      <transient_attributes id="node3">
+        <instance_attributes id="instance_attributes.id22073">
+          <nvpair id="nvpair.id22079" name="fail-count-rsc2" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
     </node_state>
   </status>
 </cib>

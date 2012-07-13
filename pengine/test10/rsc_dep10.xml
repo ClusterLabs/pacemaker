@@ -1,29 +1,37 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:14 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21835" name="symmetric-cluster" value="false"/><nvpair id="nvpair.id21844" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21835" name="symmetric-cluster" value="false"/>
+        <nvpair id="nvpair.id21844" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member"/>
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc1.meta"/></primitive>
-      <primitive id="rsc2" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc2.meta"/></primitive>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc1.meta"/>
+      </primitive>
+      <primitive id="rsc2" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc2.meta"/>
+      </primitive>
     </resources>
     <constraints>
       <rsc_colocation id="same_1" rsc="rsc1" with-rsc="rsc2" score="INFINITY"/>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can2" score="1">
-	  <expression id="expression.id21921" attribute="#uname" operation="eq" value="node2"/>
-	</rule>
+        <rule id="can2" score="1">
+          <expression id="expression.id21921" attribute="#uname" operation="eq" value="node2"/>
+        </rule>
       </rsc_location>
       <rsc_location id="run_rsc2" rsc="rsc2">
-	<rule id="can3" score="1">
-	  <expression id="expression.id21946" attribute="#uname" operation="eq" value="node1"/>
-	</rule>
+        <rule id="can3" score="1">
+          <expression id="expression.id21946" attribute="#uname" operation="eq" value="node1"/>
+        </rule>
       </rsc_location>
     </constraints>
   </configuration>

@@ -1,77 +1,114 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="13" num_updates="24" dc-uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21848" name="short-resource-names" value="true"/><nvpair id="nvpair.id21858" name="startup-fencing" value="true"/><nvpair id="nvpair.id21867" name="stonith-enabled" value="false"/><nvpair id="nvpair.id21876" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21885" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21894" name="stonith-action" value="reboot"/><nvpair id="nvpair.id21904" name="is-managed-default" value="true"/><nvpair id="nvpair.id21913" name="stop-orphan-resources" value="true"/><nvpair id="nvpair.id21922" name="no-quorum-policy" value="stop"/><nvpair id="nvpair.id21932" name="default-migration-threshold" value="-100"/><nvpair id="nvpair.id21941" name="probe_complete" value="true"/><nvpair id="nvpair.id21950" name="transition-idle-timeout" value="60s"/><nvpair id="nvpair.id21959" name="default-resource-stickiness" value="800"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" uname="redun2" type="normal"/>
-       <node id="cd34ed93-fa5d-4092-a618-ac6349351d13" uname="redun1" type="normal"/>
-     </nodes>
-     <resources>
-       <master id="shared_storage">
-         <meta_attributes id="meta_attributes.id22000"><nvpair id="nvpair.id22007" name="master-node-max" value="1"/><nvpair id="nvpair.id22016" name="master-max" value="1"/><nvpair id="nvpair.id22024" name="notify" value="yes"/><nvpair id="nvpair.id22033" name="clone-max" value="2"/><nvpair id="nvpair.id22042" name="clone-node-max" value="1"/><nvpair id="nvpair.id22050" name="globally-unique" value="false"/></meta_attributes>
-         <primitive id="prim_shared_storage" class="ocf" provider="heartbeat" type="drbd">
-           <operations>
-             <op name="monitor" interval="120s" id="shared_storage_op_monitor" timeout="60s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22087"><nvpair id="nvpair.id22094" name="drbd_resource" value="sip-shared"/></instance_attributes>
-         <meta_attributes id="primitive-prim_shared_storage.meta"/></primitive>
-       <meta_attributes id="master_slave-shared_storage.meta"/></master>
-       <primitive id="shared_filesystem" class="ocf" provider="heartbeat" type="Filesystem">
-         <operations>
-           <op name="monitor" interval="120s" id="shared_filesystem_op_monitor" timeout="60s"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22132"><nvpair id="nvpair.id22138" name="device" value="/dev/drbd0"/><nvpair id="nvpair.id22147" name="directory" value="/shared"/><nvpair id="nvpair.id22156" name="fstype" value="reiserfs"/></instance_attributes>
-       <meta_attributes id="primitive-shared_filesystem.meta"/></primitive>
-     </resources>
-     <constraints>
-       <rsc_colocation id="colocation_shared_filesystem_shared_storage-master" rsc="shared_filesystem" with-rsc="shared_storage" with-rsc-role="Master" score="INFINITY"/>
-       <rsc_order id="order_shared_filesystem_after_shared_storage-promote" first="shared_storage" then="shared_filesystem" then-action="start" first-action="promote" score="INFINITY"/>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" uname="redun2" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22233">
-           <lrm_resource id="prim_shared_storage:0" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="prim_shared_storage-0_monitor_0" operation="monitor" transition-key="3:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;3:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-             <lrm_rsc_op id="prim_shared_storage-0_start_0" operation="start" transition-key="4:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;4:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="5" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-             <lrm_rsc_op id="prim_shared_storage-0_post_notify_start_0" operation="notify" transition-key="39:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;39:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="6" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-           </lrm_resource>
-           <lrm_resource id="shared_filesystem" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="shared_filesystem_monitor_0" operation="monitor" transition-key="4:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;4:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="5858fd8b1fcc9107c71c24186f95f937"/>
-           </lrm_resource>
-           <lrm_resource id="prim_shared_storage:1" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="prim_shared_storage-1_monitor_0" operation="monitor" transition-key="3:1:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;3:1:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.id22414"><nvpair id="nvpair.id22421" name="probe_complete" value="true"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id22432"><nvpair id="nvpair.id22439" name="master-prim_shared_storage:0" value="75"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-     <node_state id="cd34ed93-fa5d-4092-a618-ac6349351d13" uname="redun1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <lrm id="cd34ed93-fa5d-4092-a618-ac6349351d13">
-         <lrm_resources id="lrm_resources.id22480">
-           <lrm_resource id="prim_shared_storage:0" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="prim_shared_storage-0_monitor_0" operation="monitor" transition-key="6:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;6:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-           </lrm_resource>
-           <lrm_resource id="shared_filesystem" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="shared_filesystem_monitor_0" operation="monitor" transition-key="7:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;7:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="5858fd8b1fcc9107c71c24186f95f937"/>
-           </lrm_resource>
-           <lrm_resource id="prim_shared_storage:1" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="prim_shared_storage-1_monitor_0" operation="monitor" transition-key="5:1:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;5:1:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-             <lrm_rsc_op id="prim_shared_storage-1_start_0" operation="start" transition-key="6:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;6:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="5" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-             <lrm_rsc_op id="prim_shared_storage-1_post_notify_start_0" operation="notify" transition-key="42:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;42:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="6" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="cd34ed93-fa5d-4092-a618-ac6349351d13">
-         <instance_attributes id="instance_attributes.id22657"><nvpair id="nvpair.id22664" name="probe_complete" value="true"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id22676"><nvpair id="nvpair.id22683" name="master-prim_shared_storage:1" value="75"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="13" num_updates="24" dc-uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:00 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21848" name="short-resource-names" value="true"/>
+        <nvpair id="nvpair.id21858" name="startup-fencing" value="true"/>
+        <nvpair id="nvpair.id21867" name="stonith-enabled" value="false"/>
+        <nvpair id="nvpair.id21876" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21885" name="stop-orphan-actions" value="true"/>
+        <nvpair id="nvpair.id21894" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21904" name="is-managed-default" value="true"/>
+        <nvpair id="nvpair.id21913" name="stop-orphan-resources" value="true"/>
+        <nvpair id="nvpair.id21922" name="no-quorum-policy" value="stop"/>
+        <nvpair id="nvpair.id21932" name="default-migration-threshold" value="-100"/>
+        <nvpair id="nvpair.id21941" name="probe_complete" value="true"/>
+        <nvpair id="nvpair.id21950" name="transition-idle-timeout" value="60s"/>
+        <nvpair id="nvpair.id21959" name="default-resource-stickiness" value="800"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" uname="redun2" type="normal"/>
+      <node id="cd34ed93-fa5d-4092-a618-ac6349351d13" uname="redun1" type="normal"/>
+    </nodes>
+    <resources>
+      <master id="shared_storage">
+        <meta_attributes id="meta_attributes.id22000">
+          <nvpair id="nvpair.id22007" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22016" name="master-max" value="1"/>
+          <nvpair id="nvpair.id22024" name="notify" value="yes"/>
+          <nvpair id="nvpair.id22033" name="clone-max" value="2"/>
+          <nvpair id="nvpair.id22042" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair.id22050" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive id="prim_shared_storage" class="ocf" provider="heartbeat" type="drbd">
+          <operations>
+            <op name="monitor" interval="120s" id="shared_storage_op_monitor" timeout="60s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22087">
+            <nvpair id="nvpair.id22094" name="drbd_resource" value="sip-shared"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-prim_shared_storage.meta"/>
+        </primitive>
+        <meta_attributes id="master_slave-shared_storage.meta"/>
+      </master>
+      <primitive id="shared_filesystem" class="ocf" provider="heartbeat" type="Filesystem">
+        <operations>
+          <op name="monitor" interval="120s" id="shared_filesystem_op_monitor" timeout="60s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22132">
+          <nvpair id="nvpair.id22138" name="device" value="/dev/drbd0"/>
+          <nvpair id="nvpair.id22147" name="directory" value="/shared"/>
+          <nvpair id="nvpair.id22156" name="fstype" value="reiserfs"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-shared_filesystem.meta"/>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_colocation id="colocation_shared_filesystem_shared_storage-master" rsc="shared_filesystem" with-rsc="shared_storage" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_order id="order_shared_filesystem_after_shared_storage-promote" first="shared_storage" then="shared_filesystem" then-action="start" first-action="promote" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" uname="redun2" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22233">
+          <lrm_resource id="prim_shared_storage:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prim_shared_storage-0_monitor_0" operation="monitor" transition-key="3:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;3:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-0_start_0" operation="start" transition-key="4:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;4:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="5" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-0_post_notify_start_0" operation="notify" transition-key="39:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;39:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="6" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+          </lrm_resource>
+          <lrm_resource id="shared_filesystem" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="shared_filesystem_monitor_0" operation="monitor" transition-key="4:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;4:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="5858fd8b1fcc9107c71c24186f95f937"/>
+          </lrm_resource>
+          <lrm_resource id="prim_shared_storage:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prim_shared_storage-1_monitor_0" operation="monitor" transition-key="3:1:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;3:1:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id22414">
+          <nvpair id="nvpair.id22421" name="probe_complete" value="true"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id22432">
+          <nvpair id="nvpair.id22439" name="master-prim_shared_storage:0" value="75"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="cd34ed93-fa5d-4092-a618-ac6349351d13" uname="redun1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <lrm id="cd34ed93-fa5d-4092-a618-ac6349351d13">
+        <lrm_resources id="lrm_resources.id22480">
+          <lrm_resource id="prim_shared_storage:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prim_shared_storage-0_monitor_0" operation="monitor" transition-key="6:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;6:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+          </lrm_resource>
+          <lrm_resource id="shared_filesystem" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="shared_filesystem_monitor_0" operation="monitor" transition-key="7:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;7:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="5858fd8b1fcc9107c71c24186f95f937"/>
+          </lrm_resource>
+          <lrm_resource id="prim_shared_storage:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prim_shared_storage-1_monitor_0" operation="monitor" transition-key="5:1:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;5:1:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-1_start_0" operation="start" transition-key="6:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;6:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="5" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-1_post_notify_start_0" operation="notify" transition-key="42:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;42:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="6" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="cd34ed93-fa5d-4092-a618-ac6349351d13">
+        <instance_attributes id="instance_attributes.id22657">
+          <nvpair id="nvpair.id22664" name="probe_complete" value="true"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id22676">
+          <nvpair id="nvpair.id22683" name="master-prim_shared_storage:1" value="75"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

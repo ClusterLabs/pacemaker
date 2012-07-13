@@ -1,23 +1,34 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:08 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21835" name="no-quorum-policy" value="ignore"/><nvpair id="nvpair.id21844" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21853" name="default-resource-stickiness" value="100"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21835" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="nvpair.id21844" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21853" name="default-resource-stickiness" value="100"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member">
-         <instance_attributes id="instance_attributes.id21874"><nvpair name="standby" id="nvpair.id21881" value="on"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id21874">
+          <nvpair name="standby" id="nvpair.id21881" value="on"/>
+        </instance_attributes>
       </node>
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
       <primitive id="rsc3" class="heartbeat" type="apache">
-         <instance_attributes id="instance_attributes.id21913"><nvpair name="allow_migrate" id="nvpair.id21920" value="on"/></instance_attributes>
-      <meta_attributes id="primitive-rsc3.meta"><nvpair id="nvpair.meta.auto-40" name="allow-migrate" value="on"/></meta_attributes></primitive>
+        <instance_attributes id="instance_attributes.id21913">
+          <nvpair name="allow_migrate" id="nvpair.id21920" value="on"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc3.meta">
+          <nvpair id="nvpair.meta.auto-40" name="allow-migrate" value="on"/>
+        </meta_attributes>
+      </primitive>
     </resources>
-    <constraints>
-    </constraints>
+    <constraints/>
   </configuration>
   <status>
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">

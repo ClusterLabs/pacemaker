@@ -1,4 +1,4 @@
-<cib crm_feature_set="2.1" admin_epoch="0" epoch="9698" num_updates="6" dc-uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.1" cib-last-written="Fri Apr 30 17:14:33 2010">
+<cib crm_feature_set="2.1" admin_epoch="0" epoch="9698" num_updates="6" dc-uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.1" cib-last-written="Fri Jul 13 13:51:00 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -14,7 +14,7 @@
     </nodes>
     <rsc_defaults>
       <meta_attributes id="foo">
-	<nvpair id="nvpair.id21908" name="failure-timeout" value="10"/>
+        <nvpair id="nvpair.id21908" name="failure-timeout" value="10"/>
       </meta_attributes>
     </rsc_defaults>
     <resources>

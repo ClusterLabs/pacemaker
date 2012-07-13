@@ -1,204 +1,291 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib crm_feature_set="2.1" admin_epoch="1" epoch="4" num_updates="53" dc-uuid="f10a448b-abcb-4743-a7b9-cbb966b46462" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21847" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21856" name="no-quorum-policy" value="stop"/><nvpair id="nvpair.id21865" name="default-resource-stickiness" value="200"/><nvpair id="nvpair.id21874" name="default-migration-threshold" value="-100"/><nvpair id="nvpair.id21883" name="stonith-enabled" value="true"/><nvpair id="nvpair.id21892" name="stonith-action" value="reboot"/><nvpair id="nvpair.id21900" name="startup-fencing" value="true"/><nvpair id="nvpair.id21909" name="stop-orphan-resources" value="true"/><nvpair id="nvpair.id21918" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21927" name="remove-after-stop" value="false"/><nvpair id="nvpair.id21936" name="short-resource-names" value="true"/><nvpair id="nvpair.id21945" name="transition-idle-timeout" value="5min"/><nvpair id="nvpair.id21954" name="default-action-timeout" value="20s"/><nvpair id="nvpair.id21963" name="is-managed-default" value="true"/><nvpair id="nvpair.id21972" name="cluster-delay" value="60s"/><nvpair id="nvpair.id21980" name="pe-error-series-max" value="-1"/><nvpair id="nvpair.id21989" name="pe-warn-series-max" value="-1"/><nvpair id="nvpair.id21998" name="pe-input-series-max" value="-1"/><nvpair id="nvpair.id22007" name="dc-version" value="0.6.2-node: 7f22385d1b41c36c4cc54f292e55869caa94ab7e"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="f10a448b-abcb-4743-a7b9-cbb966b46462" uname="sirius" type="normal"/>
-       <node id="26cfbecf-dc25-42e1-84de-325ca9e457b5" uname="pollux" type="normal"/>
-     </nodes>
-     <resources>
-       <clone id="pingd-clone">
-         <meta_attributes id="meta_attributes.id22048"><nvpair id="nvpair.id22054" name="globally-unique" value="false"/></meta_attributes>
-         <primitive id="pingd-1" class="ocf" provider="heartbeat" type="pingd">
-           <instance_attributes id="instance_attributes.id22076"><nvpair id="nvpair.id22083" name="pidfile" value="/var/run/heartbeat/rsctmp/pingd-1.pid"/><nvpair id="nvpair.id22092" name="name" value="pingd-1-node-attribute"/><nvpair id="nvpair.id22101" name="dampen" value="5s"/><nvpair id="nvpair.id22109" name="multiplier" value="100"/></instance_attributes>
-           <operations>
-             <op name="monitor" interval="10s" id="pingd-1-monitor" timeout="5s" requires="nothing"/>
-             <op name="start" interval="0" id="pingd-1-start" timeout="10s" requires="nothing"/>
-           </operations>
-         <meta_attributes id="primitive-pingd-1.meta"/></primitive>
-       <meta_attributes id="clone-pingd-clone.meta"/></clone>
-       <master id="drbd-msr">
-         <meta_attributes id="meta_attributes.id22156"><nvpair id="nvpair.id22162" name="clone-max" value="2"/><nvpair id="nvpair.id22170" name="clone-node-max" value="1"/><nvpair id="nvpair.id22178" name="master-max" value="1"/><nvpair id="nvpair.id22187" name="master-node-max" value="1"/><nvpair id="nvpair.id22195" name="notify" value="yes"/><nvpair id="nvpair.id22204" name="globally-unique" value="false"/></meta_attributes>
-         <primitive id="drbd-r0" class="ocf" provider="heartbeat" type="drbd">
-           <instance_attributes id="instance_attributes.id22225"><nvpair id="nvpair.id22231" name="drbd_resource" value="r0"/></instance_attributes>
-           <operations>
-             <op name="monitor" interval="20s" id="drbd-r0-monitor-1" timeout="10s" role="Master" start-delay="10s"/>
-             <op name="monitor" interval="21s" id="drbd-r0-monitor-2" timeout="10s" role="Slave" start-delay="10s"/>
-             <op name="start" interval="0" id="drbd-r0-start-1" timeout="10s" role="Master"/>
-             <op name="start" interval="0" id="drbd-r0-start-2" timeout="10s" role="Slave"/>
-             <op name="stop" interval="0" id="drbd-r0-stop-1" timeout="10s" role="Master"/>
-             <op name="stop" interval="0" id="drbd-r0-stop-2" timeout="10s" role="Slave"/>
-           </operations>
-         <meta_attributes id="primitive-drbd-r0.meta"/></primitive>
-       <meta_attributes id="master_slave-drbd-msr.meta"><nvpair id="ordered.meta.auto-96" name="ordered" value="false"/></meta_attributes></master>
-       <group id="group-1">
-         <primitive id="fs-1" class="ocf" provider="heartbeat" type="Filesystem">
-           <instance_attributes id="instance_attributes.id22332"><nvpair id="nvpair.id22338" name="device" value="/dev/drbd0"/><nvpair id="nvpair.id22347" name="directory" value="/drbd"/><nvpair id="nvpair.id22356" name="fstype" value="xfs"/><nvpair id="nvpair.id22364" name="options" value="noatime,exec,nosuid,nodev"/></instance_attributes>
-           <operations>
-             <op name="monitor" interval="20s" id="fs-1-monitor" timeout="10s" start-delay="10s"/>
-             <op name="start" interval="0" id="fs-1-start" timeout="10s"/>
-             <op name="stop" interval="0" id="fs-1-stop" timeout="10s"/>
-           </operations>
-         <meta_attributes id="primitive-fs-1.meta"/></primitive>
-         <primitive id="ip-198" class="ocf" provider="heartbeat" type="IPaddr2">
-           <instance_attributes id="instance_attributes.id22418"><nvpair id="nvpair.id22425" name="ip" value="80.237.189.198"/><nvpair id="nvpair.id22433" name="cidr_netmask" value="28"/><nvpair id="nvpair.id22441" name="nic" value="eth1"/><nvpair id="nvpair.id22450" name="iflabel" value="198"/></instance_attributes>
-           <operations>
-             <op name="monitor" interval="30s" id="ip-198-monitor" timeout="15s" start-delay="10s"/>
-             <op name="start" interval="0" id="ip-198-start" timeout="10s"/>
-             <op name="stop" interval="0" id="ip-198-stop" timeout="10s"/>
-           </operations>
-         <meta_attributes id="primitive-ip-198.meta"/></primitive>
-         <primitive id="apache" class="ocf" provider="custom" type="apache2">
-           <instance_attributes id="instance_attributes.id22503"><nvpair id="nvpair.id22510" name="apache2_bin" value="/usr/sbin/apache2"/><nvpair id="nvpair.id22518" name="apache2_pidfile" value="/var/run/apache2.pid"/><nvpair id="nvpair.id22527" name="apache2_config" value="/etc/apache2/httpd.conf"/><nvpair id="nvpair.id22536" name="apache2_opts" value="-D STATUS -D INFO -D LANGUAGE -D SSL -D SUEXEC -D PHP5"/><nvpair id="nvpair.id22545" name="apache2_listening_check" value="80.237.189.198:80"/></instance_attributes>
-           <operations>
-             <op name="monitor" interval="60s" id="apache-monitor" timeout="30s" start-delay="10s"/>
-             <op name="start" interval="0" id="apache-start" timeout="30s"/>
-             <op name="stop" interval="0" id="apache-stop" timeout="30s"/>
-           </operations>
-         <meta_attributes id="primitive-apache.meta"/></primitive>
-       <meta_attributes id="group-group-1.meta"/></group>
-       <primitive id="pollux-fencing" class="stonith" type="external/ipmi-soft">
-         <instance_attributes id="instance_attributes.id22604"><nvpair id="nvpair.id22610" name="hostname" value="pollux"/><nvpair id="nvpair.id22619" name="ipaddr" value="10.0.0.195"/><nvpair id="nvpair.id22628" name="userid" value="root"/><nvpair id="nvpair.id22637" name="passwd" value="qwe123"/></instance_attributes>
-         <operations>
-           <op name="monitor" interval="60s" id="pollux-fencing-monitor" timeout="10s" requires="nothing"/>
-           <op name="start" interval="0" id="pollux-fencing-start" timeout="10s" requires="nothing"/>
-           <op name="stop" interval="0" id="pollux-fencing-stop" timeout="10s" requires="nothing"/>
-         </operations>
-       <meta_attributes id="primitive-pollux-fencing.meta"><nvpair id="resource_stickiness.meta.auto-226" name="resource-stickiness" value="INFINITY"/></meta_attributes></primitive>
-       <primitive id="sirius-fencing" class="stonith" type="external/ipmi-soft">
-         <instance_attributes id="instance_attributes.id22699"><nvpair id="nvpair.id22706" name="hostname" value="sirius"/><nvpair id="nvpair.id22714" name="ipaddr" value="10.0.0.197"/><nvpair id="nvpair.id22723" name="userid" value="root"/><nvpair id="nvpair.id22732" name="passwd" value="qwe123"/></instance_attributes>
-         <operations>
-           <op name="monitor" interval="60s" id="sirius-fencing-monitor" timeout="10s" requires="nothing"/>
-           <op name="start" interval="0" id="sirius-fencing-start" timeout="10s" requires="nothing"/>
-           <op name="stop" interval="0" id="sirius-fencing-stop" timeout="10s" requires="nothing"/>
-         </operations>
-       <meta_attributes id="primitive-sirius-fencing.meta"><nvpair id="resource_stickiness.meta.auto-252" name="resource-stickiness" value="INFINITY"/></meta_attributes></primitive>
-     </resources>
-     <constraints>
-       <rsc_location id="rsc-location-drbd-msr" rsc="drbd-msr">
-         <rule id="preferred-location-drbd-msr" role="Master" score="50">
-           <expression id="expression.id22801" attribute="#uname" operation="eq" value="pollux"/>
-         </rule>
-         <rule id="pingd-score-group-1" role="Master" score-attribute="pingd-1-node-attribute">
-           <expression id="expression.id22822" attribute="pingd-1-node-attribute" operation="defined"/>
-         </rule>
-       </rsc_location>
-       <rsc_colocation id="group-1-prefer-on-drbd-msr-master" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Master" score="INFINITY"/>
-       <rsc_colocation id="group-1-never-on-drbd-msr-slave" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Slave" score="-INFINITY"/>
-       <rsc_order id="group-1-after-drbd-msr" first="drbd-msr" then="group-1" then-action="start" first-action="promote"/>
-       <rsc_location id="pollux-fencing-placement" rsc="pollux-fencing">
-         <rule id="pollux-fencing-placement-1" score="INFINITY">
-           <expression id="expression.id22883" attribute="#uname" operation="ne" value="pollux"/>
-         </rule>
-         <rule id="pollux-fencing-placement-2" score="-INFINITY">
-           <expression id="expression.id22901" attribute="#uname" operation="eq" value="pollux"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="sirius-fencing-placement" rsc="sirius-fencing">
-         <rule id="sirius-fencing-placement-1" score="INFINITY">
-           <expression id="expression.id22928" attribute="#uname" operation="ne" value="sirius"/>
-         </rule>
-         <rule id="sirius-fencing-placement-2" score="-INFINITY">
-           <expression id="expression.id22946" attribute="#uname" operation="eq" value="sirius"/>
-         </rule>
-       </rsc_location>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="26cfbecf-dc25-42e1-84de-325ca9e457b5" uname="pollux" crmd="online" shutdown="0" ha="active" in_ccm="true" join="member" expected="member">
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22989">
-           <lrm_resource id="pingd-1:0" type="pingd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="pingd-1-0_monitor_0" operation="monitor" transition-key="11:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;11:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="2" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
-           </lrm_resource>
-           <lrm_resource id="ip-198" type="IPaddr2" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ip-198_monitor_0" operation="monitor" transition-key="14:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;14:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="5" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="db4fe2112c192dcdba6b8c9c8f1dbc05"/>
-           </lrm_resource>
-           <lrm_resource id="fs-1" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="fs-1_monitor_0" operation="monitor" transition-key="13:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;13:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="4" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="b2b85e9ade4ce3ea16a1ecfac36761b8"/>
-           </lrm_resource>
-           <lrm_resource id="drbd-r0:0" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd-r0-0_monitor_0" operation="monitor" transition-key="12:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;12:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="3" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-           </lrm_resource>
-           <lrm_resource id="pollux-fencing" type="external/ipmi-soft" class="stonith">
-             <lrm_rsc_op id="pollux-fencing_monitor_0" operation="monitor" transition-key="16:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;16:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="7" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="6a0dd162758f62bc52df4fcfba007119"/>
-           </lrm_resource>
-           <lrm_resource id="apache" type="apache2" class="ocf" provider="custom">
-             <lrm_rsc_op id="apache_monitor_0" operation="monitor" transition-key="15:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;15:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="6" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="93b018a79565fe7ba531dc520eee7853"/>
-           </lrm_resource>
-           <lrm_resource id="sirius-fencing" type="external/ipmi-soft" class="stonith">
-             <lrm_rsc_op id="sirius-fencing_monitor_0" operation="monitor" transition-key="17:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;17:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="8" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="369dee444ee042bc029156a34392614f"/>
-             <lrm_rsc_op id="sirius-fencing_start_0" operation="start" transition-key="52:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;52:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="11" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="369dee444ee042bc029156a34392614f"/>
-             <lrm_rsc_op id="sirius-fencing_monitor_60000" operation="monitor" transition-key="51:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;51:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="12" crm_feature_set="2.1" rc-code="0" op-status="0" interval="60000" op-digest="13e13655085b688aecb96b00c866ae9c"/>
-           </lrm_resource>
-           <lrm_resource id="pingd-1:1" type="pingd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="pingd-1-1_monitor_0" operation="monitor" transition-key="6:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;6:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="9" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
-             <lrm_rsc_op id="pingd-1-1_start_0" operation="start" transition-key="8:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;8:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="13" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
-             <lrm_rsc_op id="pingd-1-1_monitor_10000" operation="monitor" transition-key="9:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;9:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="15" crm_feature_set="2.1" rc-code="0" op-status="0" interval="10000" op-digest="4f164d8c8a42d67dd673599dc4c7e9c8"/>
-           </lrm_resource>
-           <lrm_resource id="drbd-r0:1" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd-r0-1_monitor_0" operation="monitor" transition-key="7:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;7:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="10" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-1_start_0" operation="start" transition-key="14:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;14:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="14" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-1_post_notify_start_0" operation="notify" transition-key="66:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;66:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="16" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-1_pre_notify_promote_0" operation="notify" transition-key="72:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;72:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="17" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-1_promote_0" operation="promote" transition-key="20:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;20:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="18" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-1_post_notify_promote_0" operation="notify" transition-key="73:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;73:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="19" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-1_monitor_20000" operation="monitor" transition-key="21:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:8;21:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="20" crm_feature_set="2.1" rc-code="8" op-status="0" interval="20000" op-digest="db2fb3216fa7207fdc0b2bf31bbd09c1"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.id23607"><nvpair id="nvpair.id23614" name="probe_complete" value="true"/><nvpair id="nvpair.id23623" name="pingd-1-node-attribute" value="300"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id23635"><nvpair id="nvpair.id23642" name="master-drbd-r0:1" value="75"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-     <node_state id="f10a448b-abcb-4743-a7b9-cbb966b46462" uname="sirius" crmd="online" ha="active" in_ccm="true" join="member" expected="member" shutdown="0">
-       <lrm id="f10a448b-abcb-4743-a7b9-cbb966b46462">
-         <lrm_resources id="lrm_resources.id23682">
-           <lrm_resource id="pingd-1:0" type="pingd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="pingd-1-0_monitor_0" operation="monitor" transition-key="3:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;3:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="2" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
-             <lrm_rsc_op id="pingd-1-0_start_0" operation="start" transition-key="6:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;6:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="13" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
-             <lrm_rsc_op id="pingd-1-0_monitor_10000" operation="monitor" transition-key="7:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;7:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="15" crm_feature_set="2.1" rc-code="0" op-status="0" interval="10000" op-digest="4f164d8c8a42d67dd673599dc4c7e9c8"/>
-           </lrm_resource>
-           <lrm_resource id="ip-198" type="IPaddr2" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ip-198_monitor_0" operation="monitor" transition-key="6:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;6:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="5" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="db4fe2112c192dcdba6b8c9c8f1dbc05"/>
-           </lrm_resource>
-           <lrm_resource id="fs-1" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="fs-1_monitor_0" operation="monitor" transition-key="5:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;5:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="4" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="b2b85e9ade4ce3ea16a1ecfac36761b8"/>
-           </lrm_resource>
-           <lrm_resource id="drbd-r0:0" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd-r0-0_monitor_0" operation="monitor" transition-key="4:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;4:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="3" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-0_start_0" operation="start" transition-key="17:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;17:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="14" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-0_post_notify_start_0" operation="notify" transition-key="69:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;69:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="16" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-0_pre_notify_promote_0" operation="notify" transition-key="80:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;80:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="17" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-0_post_notify_promote_0" operation="notify" transition-key="81:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;81:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="18" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-             <lrm_rsc_op id="drbd-r0-0_monitor_21000" operation="monitor" transition-key="25:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;25:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="19" crm_feature_set="2.1" rc-code="0" op-status="0" interval="21000" op-digest="db2fb3216fa7207fdc0b2bf31bbd09c1"/>
-           </lrm_resource>
-           <lrm_resource id="pollux-fencing" type="external/ipmi-soft" class="stonith">
-             <lrm_rsc_op id="pollux-fencing_monitor_0" operation="monitor" transition-key="8:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;8:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="7" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="6a0dd162758f62bc52df4fcfba007119"/>
-             <lrm_rsc_op id="pollux-fencing_start_0" operation="start" transition-key="50:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;50:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="11" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="6a0dd162758f62bc52df4fcfba007119"/>
-             <lrm_rsc_op id="pollux-fencing_monitor_60000" operation="monitor" transition-key="51:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;51:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="12" crm_feature_set="2.1" rc-code="0" op-status="0" interval="60000" op-digest="eae071e4290b0acfac5e5ed2e9b87acf"/>
-           </lrm_resource>
-           <lrm_resource id="sirius-fencing" type="external/ipmi-soft" class="stonith">
-             <lrm_rsc_op id="sirius-fencing_monitor_0" operation="monitor" transition-key="9:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;9:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="8" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="369dee444ee042bc029156a34392614f"/>
-           </lrm_resource>
-           <lrm_resource id="apache" type="apache2" class="ocf" provider="custom">
-             <lrm_rsc_op id="apache_monitor_0" operation="monitor" transition-key="7:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;7:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="6" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="93b018a79565fe7ba531dc520eee7853"/>
-           </lrm_resource>
-           <lrm_resource id="pingd-1:1" type="pingd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="pingd-1-1_monitor_0" operation="monitor" transition-key="3:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;3:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="9" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
-           </lrm_resource>
-           <lrm_resource id="drbd-r0:1" type="drbd" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="drbd-r0-1_monitor_0" operation="monitor" transition-key="4:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;4:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="10" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="f10a448b-abcb-4743-a7b9-cbb966b46462">
-         <instance_attributes id="instance_attributes.id24271"><nvpair id="nvpair.id24278" name="probe_complete" value="true"/><nvpair id="nvpair.id24288" name="pingd-1-node-attribute" value="300"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id24299"><nvpair id="nvpair.id24306" name="master-drbd-r0:0" value="75"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-   </status>
- </cib>
+<cib crm_feature_set="2.1" admin_epoch="1" epoch="4" num_updates="53" dc-uuid="f10a448b-abcb-4743-a7b9-cbb966b46462" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21847" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21856" name="no-quorum-policy" value="stop"/>
+        <nvpair id="nvpair.id21865" name="default-resource-stickiness" value="200"/>
+        <nvpair id="nvpair.id21874" name="default-migration-threshold" value="-100"/>
+        <nvpair id="nvpair.id21883" name="stonith-enabled" value="true"/>
+        <nvpair id="nvpair.id21892" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21900" name="startup-fencing" value="true"/>
+        <nvpair id="nvpair.id21909" name="stop-orphan-resources" value="true"/>
+        <nvpair id="nvpair.id21918" name="stop-orphan-actions" value="true"/>
+        <nvpair id="nvpair.id21927" name="remove-after-stop" value="false"/>
+        <nvpair id="nvpair.id21936" name="short-resource-names" value="true"/>
+        <nvpair id="nvpair.id21945" name="transition-idle-timeout" value="5min"/>
+        <nvpair id="nvpair.id21954" name="default-action-timeout" value="20s"/>
+        <nvpair id="nvpair.id21963" name="is-managed-default" value="true"/>
+        <nvpair id="nvpair.id21972" name="cluster-delay" value="60s"/>
+        <nvpair id="nvpair.id21980" name="pe-error-series-max" value="-1"/>
+        <nvpair id="nvpair.id21989" name="pe-warn-series-max" value="-1"/>
+        <nvpair id="nvpair.id21998" name="pe-input-series-max" value="-1"/>
+        <nvpair id="nvpair.id22007" name="dc-version" value="0.6.2-node: 7f22385d1b41c36c4cc54f292e55869caa94ab7e"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="f10a448b-abcb-4743-a7b9-cbb966b46462" uname="sirius" type="normal"/>
+      <node id="26cfbecf-dc25-42e1-84de-325ca9e457b5" uname="pollux" type="normal"/>
+    </nodes>
+    <resources>
+      <clone id="pingd-clone">
+        <meta_attributes id="meta_attributes.id22048">
+          <nvpair id="nvpair.id22054" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive id="pingd-1" class="ocf" provider="heartbeat" type="pingd">
+          <instance_attributes id="instance_attributes.id22076">
+            <nvpair id="nvpair.id22083" name="pidfile" value="/var/run/heartbeat/rsctmp/pingd-1.pid"/>
+            <nvpair id="nvpair.id22092" name="name" value="pingd-1-node-attribute"/>
+            <nvpair id="nvpair.id22101" name="dampen" value="5s"/>
+            <nvpair id="nvpair.id22109" name="multiplier" value="100"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="10s" id="pingd-1-monitor" timeout="5s" requires="nothing"/>
+            <op name="start" interval="0" id="pingd-1-start" timeout="10s" requires="nothing"/>
+          </operations>
+          <meta_attributes id="primitive-pingd-1.meta"/>
+        </primitive>
+        <meta_attributes id="clone-pingd-clone.meta"/>
+      </clone>
+      <master id="drbd-msr">
+        <meta_attributes id="meta_attributes.id22156">
+          <nvpair id="nvpair.id22162" name="clone-max" value="2"/>
+          <nvpair id="nvpair.id22170" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair.id22178" name="master-max" value="1"/>
+          <nvpair id="nvpair.id22187" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22195" name="notify" value="yes"/>
+          <nvpair id="nvpair.id22204" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive id="drbd-r0" class="ocf" provider="heartbeat" type="drbd">
+          <instance_attributes id="instance_attributes.id22225">
+            <nvpair id="nvpair.id22231" name="drbd_resource" value="r0"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="20s" id="drbd-r0-monitor-1" timeout="10s" role="Master" start-delay="10s"/>
+            <op name="monitor" interval="21s" id="drbd-r0-monitor-2" timeout="10s" role="Slave" start-delay="10s"/>
+            <op name="start" interval="0" id="drbd-r0-start-1" timeout="10s" role="Master"/>
+            <op name="start" interval="0" id="drbd-r0-start-2" timeout="10s" role="Slave"/>
+            <op name="stop" interval="0" id="drbd-r0-stop-1" timeout="10s" role="Master"/>
+            <op name="stop" interval="0" id="drbd-r0-stop-2" timeout="10s" role="Slave"/>
+          </operations>
+          <meta_attributes id="primitive-drbd-r0.meta"/>
+        </primitive>
+        <meta_attributes id="master_slave-drbd-msr.meta">
+          <nvpair id="ordered.meta.auto-96" name="ordered" value="false"/>
+        </meta_attributes>
+      </master>
+      <group id="group-1">
+        <primitive id="fs-1" class="ocf" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="instance_attributes.id22332">
+            <nvpair id="nvpair.id22338" name="device" value="/dev/drbd0"/>
+            <nvpair id="nvpair.id22347" name="directory" value="/drbd"/>
+            <nvpair id="nvpair.id22356" name="fstype" value="xfs"/>
+            <nvpair id="nvpair.id22364" name="options" value="noatime,exec,nosuid,nodev"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="20s" id="fs-1-monitor" timeout="10s" start-delay="10s"/>
+            <op name="start" interval="0" id="fs-1-start" timeout="10s"/>
+            <op name="stop" interval="0" id="fs-1-stop" timeout="10s"/>
+          </operations>
+          <meta_attributes id="primitive-fs-1.meta"/>
+        </primitive>
+        <primitive id="ip-198" class="ocf" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="instance_attributes.id22418">
+            <nvpair id="nvpair.id22425" name="ip" value="80.237.189.198"/>
+            <nvpair id="nvpair.id22433" name="cidr_netmask" value="28"/>
+            <nvpair id="nvpair.id22441" name="nic" value="eth1"/>
+            <nvpair id="nvpair.id22450" name="iflabel" value="198"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="30s" id="ip-198-monitor" timeout="15s" start-delay="10s"/>
+            <op name="start" interval="0" id="ip-198-start" timeout="10s"/>
+            <op name="stop" interval="0" id="ip-198-stop" timeout="10s"/>
+          </operations>
+          <meta_attributes id="primitive-ip-198.meta"/>
+        </primitive>
+        <primitive id="apache" class="ocf" provider="custom" type="apache2">
+          <instance_attributes id="instance_attributes.id22503">
+            <nvpair id="nvpair.id22510" name="apache2_bin" value="/usr/sbin/apache2"/>
+            <nvpair id="nvpair.id22518" name="apache2_pidfile" value="/var/run/apache2.pid"/>
+            <nvpair id="nvpair.id22527" name="apache2_config" value="/etc/apache2/httpd.conf"/>
+            <nvpair id="nvpair.id22536" name="apache2_opts" value="-D STATUS -D INFO -D LANGUAGE -D SSL -D SUEXEC -D PHP5"/>
+            <nvpair id="nvpair.id22545" name="apache2_listening_check" value="80.237.189.198:80"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="60s" id="apache-monitor" timeout="30s" start-delay="10s"/>
+            <op name="start" interval="0" id="apache-start" timeout="30s"/>
+            <op name="stop" interval="0" id="apache-stop" timeout="30s"/>
+          </operations>
+          <meta_attributes id="primitive-apache.meta"/>
+        </primitive>
+        <meta_attributes id="group-group-1.meta"/>
+      </group>
+      <primitive id="pollux-fencing" class="stonith" type="external/ipmi-soft">
+        <instance_attributes id="instance_attributes.id22604">
+          <nvpair id="nvpair.id22610" name="hostname" value="pollux"/>
+          <nvpair id="nvpair.id22619" name="ipaddr" value="10.0.0.195"/>
+          <nvpair id="nvpair.id22628" name="userid" value="root"/>
+          <nvpair id="nvpair.id22637" name="passwd" value="qwe123"/>
+        </instance_attributes>
+        <operations>
+          <op name="monitor" interval="60s" id="pollux-fencing-monitor" timeout="10s" requires="nothing"/>
+          <op name="start" interval="0" id="pollux-fencing-start" timeout="10s" requires="nothing"/>
+          <op name="stop" interval="0" id="pollux-fencing-stop" timeout="10s" requires="nothing"/>
+        </operations>
+        <meta_attributes id="primitive-pollux-fencing.meta">
+          <nvpair id="resource_stickiness.meta.auto-226" name="resource-stickiness" value="INFINITY"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="sirius-fencing" class="stonith" type="external/ipmi-soft">
+        <instance_attributes id="instance_attributes.id22699">
+          <nvpair id="nvpair.id22706" name="hostname" value="sirius"/>
+          <nvpair id="nvpair.id22714" name="ipaddr" value="10.0.0.197"/>
+          <nvpair id="nvpair.id22723" name="userid" value="root"/>
+          <nvpair id="nvpair.id22732" name="passwd" value="qwe123"/>
+        </instance_attributes>
+        <operations>
+          <op name="monitor" interval="60s" id="sirius-fencing-monitor" timeout="10s" requires="nothing"/>
+          <op name="start" interval="0" id="sirius-fencing-start" timeout="10s" requires="nothing"/>
+          <op name="stop" interval="0" id="sirius-fencing-stop" timeout="10s" requires="nothing"/>
+        </operations>
+        <meta_attributes id="primitive-sirius-fencing.meta">
+          <nvpair id="resource_stickiness.meta.auto-252" name="resource-stickiness" value="INFINITY"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="rsc-location-drbd-msr" rsc="drbd-msr">
+        <rule id="preferred-location-drbd-msr" role="Master" score="50">
+          <expression id="expression.id22801" attribute="#uname" operation="eq" value="pollux"/>
+        </rule>
+        <rule id="pingd-score-group-1" role="Master" score-attribute="pingd-1-node-attribute">
+          <expression id="expression.id22822" attribute="pingd-1-node-attribute" operation="defined"/>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="group-1-prefer-on-drbd-msr-master" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="group-1-never-on-drbd-msr-slave" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Slave" score="-INFINITY"/>
+      <rsc_order id="group-1-after-drbd-msr" first="drbd-msr" then="group-1" then-action="start" first-action="promote"/>
+      <rsc_location id="pollux-fencing-placement" rsc="pollux-fencing">
+        <rule id="pollux-fencing-placement-1" score="INFINITY">
+          <expression id="expression.id22883" attribute="#uname" operation="ne" value="pollux"/>
+        </rule>
+        <rule id="pollux-fencing-placement-2" score="-INFINITY">
+          <expression id="expression.id22901" attribute="#uname" operation="eq" value="pollux"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="sirius-fencing-placement" rsc="sirius-fencing">
+        <rule id="sirius-fencing-placement-1" score="INFINITY">
+          <expression id="expression.id22928" attribute="#uname" operation="ne" value="sirius"/>
+        </rule>
+        <rule id="sirius-fencing-placement-2" score="-INFINITY">
+          <expression id="expression.id22946" attribute="#uname" operation="eq" value="sirius"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="26cfbecf-dc25-42e1-84de-325ca9e457b5" uname="pollux" crmd="online" shutdown="0" ha="active" in_ccm="true" join="member" expected="member">
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22989">
+          <lrm_resource id="pingd-1:0" type="pingd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pingd-1-0_monitor_0" operation="monitor" transition-key="11:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;11:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="2" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
+          </lrm_resource>
+          <lrm_resource id="ip-198" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-198_monitor_0" operation="monitor" transition-key="14:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;14:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="5" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="db4fe2112c192dcdba6b8c9c8f1dbc05"/>
+          </lrm_resource>
+          <lrm_resource id="fs-1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-1_monitor_0" operation="monitor" transition-key="13:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;13:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="4" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="b2b85e9ade4ce3ea16a1ecfac36761b8"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-r0:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-r0-0_monitor_0" operation="monitor" transition-key="12:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;12:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="3" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+          </lrm_resource>
+          <lrm_resource id="pollux-fencing" type="external/ipmi-soft" class="stonith">
+            <lrm_rsc_op id="pollux-fencing_monitor_0" operation="monitor" transition-key="16:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;16:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="7" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="6a0dd162758f62bc52df4fcfba007119"/>
+          </lrm_resource>
+          <lrm_resource id="apache" type="apache2" class="ocf" provider="custom">
+            <lrm_rsc_op id="apache_monitor_0" operation="monitor" transition-key="15:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;15:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="6" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="93b018a79565fe7ba531dc520eee7853"/>
+          </lrm_resource>
+          <lrm_resource id="sirius-fencing" type="external/ipmi-soft" class="stonith">
+            <lrm_rsc_op id="sirius-fencing_monitor_0" operation="monitor" transition-key="17:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;17:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="8" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="369dee444ee042bc029156a34392614f"/>
+            <lrm_rsc_op id="sirius-fencing_start_0" operation="start" transition-key="52:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;52:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="11" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="369dee444ee042bc029156a34392614f"/>
+            <lrm_rsc_op id="sirius-fencing_monitor_60000" operation="monitor" transition-key="51:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;51:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="12" crm_feature_set="2.1" rc-code="0" op-status="0" interval="60000" op-digest="13e13655085b688aecb96b00c866ae9c"/>
+          </lrm_resource>
+          <lrm_resource id="pingd-1:1" type="pingd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pingd-1-1_monitor_0" operation="monitor" transition-key="6:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;6:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="9" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
+            <lrm_rsc_op id="pingd-1-1_start_0" operation="start" transition-key="8:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;8:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="13" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
+            <lrm_rsc_op id="pingd-1-1_monitor_10000" operation="monitor" transition-key="9:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;9:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="15" crm_feature_set="2.1" rc-code="0" op-status="0" interval="10000" op-digest="4f164d8c8a42d67dd673599dc4c7e9c8"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-r0:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-r0-1_monitor_0" operation="monitor" transition-key="7:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;7:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="10" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-1_start_0" operation="start" transition-key="14:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;14:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="14" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-1_post_notify_start_0" operation="notify" transition-key="66:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;66:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="16" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-1_pre_notify_promote_0" operation="notify" transition-key="72:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;72:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="17" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-1_promote_0" operation="promote" transition-key="20:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;20:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="18" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-1_post_notify_promote_0" operation="notify" transition-key="73:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;73:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="19" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-1_monitor_20000" operation="monitor" transition-key="21:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:8;21:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="20" crm_feature_set="2.1" rc-code="8" op-status="0" interval="20000" op-digest="db2fb3216fa7207fdc0b2bf31bbd09c1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id23607">
+          <nvpair id="nvpair.id23614" name="probe_complete" value="true"/>
+          <nvpair id="nvpair.id23623" name="pingd-1-node-attribute" value="300"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id23635">
+          <nvpair id="nvpair.id23642" name="master-drbd-r0:1" value="75"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="f10a448b-abcb-4743-a7b9-cbb966b46462" uname="sirius" crmd="online" ha="active" in_ccm="true" join="member" expected="member" shutdown="0">
+      <lrm id="f10a448b-abcb-4743-a7b9-cbb966b46462">
+        <lrm_resources id="lrm_resources.id23682">
+          <lrm_resource id="pingd-1:0" type="pingd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pingd-1-0_monitor_0" operation="monitor" transition-key="3:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;3:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="2" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
+            <lrm_rsc_op id="pingd-1-0_start_0" operation="start" transition-key="6:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;6:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="13" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
+            <lrm_rsc_op id="pingd-1-0_monitor_10000" operation="monitor" transition-key="7:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;7:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="15" crm_feature_set="2.1" rc-code="0" op-status="0" interval="10000" op-digest="4f164d8c8a42d67dd673599dc4c7e9c8"/>
+          </lrm_resource>
+          <lrm_resource id="ip-198" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-198_monitor_0" operation="monitor" transition-key="6:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;6:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="5" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="db4fe2112c192dcdba6b8c9c8f1dbc05"/>
+          </lrm_resource>
+          <lrm_resource id="fs-1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-1_monitor_0" operation="monitor" transition-key="5:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;5:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="4" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="b2b85e9ade4ce3ea16a1ecfac36761b8"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-r0:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-r0-0_monitor_0" operation="monitor" transition-key="4:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;4:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="3" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-0_start_0" operation="start" transition-key="17:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;17:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="14" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-0_post_notify_start_0" operation="notify" transition-key="69:2:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;69:2:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="16" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-0_pre_notify_promote_0" operation="notify" transition-key="80:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;80:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="17" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-0_post_notify_promote_0" operation="notify" transition-key="81:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;81:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="18" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0-0_monitor_21000" operation="monitor" transition-key="25:3:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;25:3:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="19" crm_feature_set="2.1" rc-code="0" op-status="0" interval="21000" op-digest="db2fb3216fa7207fdc0b2bf31bbd09c1"/>
+          </lrm_resource>
+          <lrm_resource id="pollux-fencing" type="external/ipmi-soft" class="stonith">
+            <lrm_rsc_op id="pollux-fencing_monitor_0" operation="monitor" transition-key="8:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;8:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="7" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="6a0dd162758f62bc52df4fcfba007119"/>
+            <lrm_rsc_op id="pollux-fencing_start_0" operation="start" transition-key="50:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;50:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="11" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="6a0dd162758f62bc52df4fcfba007119"/>
+            <lrm_rsc_op id="pollux-fencing_monitor_60000" operation="monitor" transition-key="51:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:0;51:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="12" crm_feature_set="2.1" rc-code="0" op-status="0" interval="60000" op-digest="eae071e4290b0acfac5e5ed2e9b87acf"/>
+          </lrm_resource>
+          <lrm_resource id="sirius-fencing" type="external/ipmi-soft" class="stonith">
+            <lrm_rsc_op id="sirius-fencing_monitor_0" operation="monitor" transition-key="9:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;9:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="8" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="369dee444ee042bc029156a34392614f"/>
+          </lrm_resource>
+          <lrm_resource id="apache" type="apache2" class="ocf" provider="custom">
+            <lrm_rsc_op id="apache_monitor_0" operation="monitor" transition-key="7:0:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;7:0:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="6" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="93b018a79565fe7ba531dc520eee7853"/>
+          </lrm_resource>
+          <lrm_resource id="pingd-1:1" type="pingd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pingd-1-1_monitor_0" operation="monitor" transition-key="3:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;3:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="9" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="207654c1110a472b7bf22ee8215a90f5"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-r0:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-r0-1_monitor_0" operation="monitor" transition-key="4:1:fd7e78c1-31e3-4e00-a914-0844669c017e" transition-magic="0:7;4:1:fd7e78c1-31e3-4e00-a914-0844669c017e" call-id="10" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="f10a448b-abcb-4743-a7b9-cbb966b46462">
+        <instance_attributes id="instance_attributes.id24271">
+          <nvpair id="nvpair.id24278" name="probe_complete" value="true"/>
+          <nvpair id="nvpair.id24288" name="pingd-1-node-attribute" value="300"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id24299">
+          <nvpair id="nvpair.id24306" name="master-drbd-r0:0" value="75"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

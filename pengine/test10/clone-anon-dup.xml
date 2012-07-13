@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="122" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0" crm_feature_set="3.0.1" num_updates="103" cib-last-written="Fri Feb 27 17:01:01 2009" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
+<cib admin_epoch="0" epoch="122" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0" crm_feature_set="3.0.1" num_updates="103" cib-last-written="Fri Jul 13 13:51:03 2012" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
   <configuration>
     <crm_config>
       <cluster_property_set id="default">
@@ -107,8 +107,7 @@
       </clone>
       <!-- webservices - STOP -->
     </resources>
-    <constraints>
-    </constraints>
+    <constraints/>
   </configuration>
   <status>
     <node_state id="f36760d8-d84a-46b2-b452-4c8cac8b3396" uname="wc02" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">

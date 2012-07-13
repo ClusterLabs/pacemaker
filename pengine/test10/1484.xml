@@ -1,56 +1,74 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="535" num_updates="6455" dc-uuid="1ce670eb-d670-4f6d-811f-d415ffde76b7" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21849" name="last-lrm-refresh" value="1171618186"/><nvpair id="nvpair.id21858" name="default-resource-stickiness" value="100"/><nvpair id="nvpair.id21868" name="stonith-enabled" value="False"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="af77f4a5-5626-43b3-acbe-9299ae520262" uname="hb3" type="normal">
-         <instance_attributes id="instance_attributes.id21891"><nvpair id="nvpair.id21898" name="standby" value="off"/></instance_attributes>
-       </node>
-       <node id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" type="normal">
-         <instance_attributes id="instance_attributes.id21919"><nvpair id="nvpair.id21926" name="standby" value="off"/></instance_attributes>
-       </node>
-       <node id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" type="normal">
-         <instance_attributes id="instance_attributes.id21947"><nvpair id="nvpair.id21954" name="standby" value="off"/></instance_attributes>
-       </node>
-     </nodes>
-     <resources>
-       <primitive id="the-future-of-vaj" class="ocf" type="Dummy" provider="heartbeat">
-         <instance_attributes id="instance_attributes.id21980"><nvpair name="target_role" id="nvpair.id21987" value="started"/></instance_attributes>
-         <operations>
-           <op name="start" interval="0s" id="op.auto-1" timeout="60s" on-fail="stop"/>
-         </operations>
-       <meta_attributes id="primitive-the-future-of-vaj.meta"><nvpair id="nvpair.meta.auto-64" name="target-role" value="started"/></meta_attributes></primitive>
-     </resources>
-     <constraints/>
-   </configuration>
-   <status>
-     <node_state id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.id22050"><nvpair id="nvpair.id22057" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22074">
-           <lrm_resource id="the-future-of-vaj" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="the-future-of-vaj_monitor_0" operation="monitor" transition-key="5:68:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="0:0;5:68:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="166" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-             <lrm_rsc_op id="the-future-of-vaj_stop_0" operation="stop" transition-key="17:69:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="0:0;17:69:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="167" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
-       <transient_attributes id="transient_attributes.auto-2">
-         <instance_attributes id="instance_attributes.id22173"><nvpair id="nvpair.id22180" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-2">
-         <lrm_resources id="lrm_resources.id22197">
-           <lrm_resource id="the-future-of-vaj" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="the-future-of-vaj_monitor_0" operation="monitor" transition-key="3:68:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="4:7;3:68:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="70" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-             <lrm_rsc_op id="the-future-of-vaj_start_0" operation="start" transition-key="18:93:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="4:1;18:93:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="117" crm_feature_set="1.0.8" rc-code="1" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" op-force-restart=" state " op-restart-digest="b025b674e32442902ac3b62b70a62365"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="535" num_updates="6455" dc-uuid="1ce670eb-d670-4f6d-811f-d415ffde76b7" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:50:59 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21849" name="last-lrm-refresh" value="1171618186"/>
+        <nvpair id="nvpair.id21858" name="default-resource-stickiness" value="100"/>
+        <nvpair id="nvpair.id21868" name="stonith-enabled" value="False"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="af77f4a5-5626-43b3-acbe-9299ae520262" uname="hb3" type="normal">
+        <instance_attributes id="instance_attributes.id21891">
+          <nvpair id="nvpair.id21898" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" type="normal">
+        <instance_attributes id="instance_attributes.id21919">
+          <nvpair id="nvpair.id21926" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" type="normal">
+        <instance_attributes id="instance_attributes.id21947">
+          <nvpair id="nvpair.id21954" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="the-future-of-vaj" class="ocf" type="Dummy" provider="heartbeat">
+        <instance_attributes id="instance_attributes.id21980">
+          <nvpair name="target_role" id="nvpair.id21987" value="started"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0s" id="op.auto-1" timeout="60s" on-fail="stop"/>
+        </operations>
+        <meta_attributes id="primitive-the-future-of-vaj.meta">
+          <nvpair id="nvpair.meta.auto-64" name="target-role" value="started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id22050">
+          <nvpair id="nvpair.id22057" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22074">
+          <lrm_resource id="the-future-of-vaj" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="the-future-of-vaj_monitor_0" operation="monitor" transition-key="5:68:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="0:0;5:68:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="166" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+            <lrm_rsc_op id="the-future-of-vaj_stop_0" operation="stop" transition-key="17:69:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="0:0;17:69:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="167" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
+      <transient_attributes id="transient_attributes.auto-2">
+        <instance_attributes id="instance_attributes.id22173">
+          <nvpair id="nvpair.id22180" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-2">
+        <lrm_resources id="lrm_resources.id22197">
+          <lrm_resource id="the-future-of-vaj" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="the-future-of-vaj_monitor_0" operation="monitor" transition-key="3:68:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="4:7;3:68:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="70" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+            <lrm_rsc_op id="the-future-of-vaj_start_0" operation="start" transition-key="18:93:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="4:1;18:93:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="117" crm_feature_set="1.0.8" rc-code="1" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" op-force-restart=" state " op-restart-digest="b025b674e32442902ac3b62b70a62365"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

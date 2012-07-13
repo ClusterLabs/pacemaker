@@ -1,4 +1,4 @@
-<cib epoch="21" num_updates="25" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Tue Apr 17 15:18:09 2012" have-quorum="1" dc-uuid="fc16-builder2">
+<cib epoch="21" num_updates="25" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Fri Jul 13 13:51:11 2012" have-quorum="1" dc-uuid="fc16-builder2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

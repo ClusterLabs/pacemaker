@@ -1,33 +1,45 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:05 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
       <clone id="rsc1">
-	<primitive id="child_rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc1.meta"/></primitive>
-      <meta_attributes id="clone-rsc1.meta"><nvpair id="nvpair.meta.auto-31" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-27" name="clone-max" value="5"/><nvpair id="nvpair.meta.auto-29" name="clone-node-max" value="2"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+        <primitive id="child_rsc1" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc1.meta"/>
+        </primitive>
+        <meta_attributes id="clone-rsc1.meta">
+          <nvpair id="nvpair.meta.auto-31" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-27" name="clone-max" value="5"/>
+          <nvpair id="nvpair.meta.auto-29" name="clone-node-max" value="2"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
     </resources>
-    <constraints>
-    </constraints>
+    <constraints/>
   </configuration>
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="transient_attributes.id21938">
-        <instance_attributes id="instance_attributes.id21940"><nvpair id="nvpair.id21946" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id21940">
+          <nvpair id="nvpair.id21946" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="transient_attributes.id21976">
-        <instance_attributes id="instance_attributes.id21978"><nvpair id="nvpair.id21985" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id21978">
+          <nvpair id="nvpair.id21985" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
     </node_state>
   </status>

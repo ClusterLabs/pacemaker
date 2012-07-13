@@ -1,50 +1,66 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib crm_feature_set="2.1" admin_epoch="0" epoch="10" num_updates="2" dc-uuid="1db2544e-c39c-442c-be34-016c812fcf66" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21849" name="dc-version" value="0.6.4-node: 1f49e4d0e8117d31470c91a73656640bb1f8892d"/><nvpair id="nvpair.id21858" name="last-lrm-refresh" value="1213173198"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="1db2544e-c39c-442c-be34-016c812fcf66" uname="dktest2sles10" type="normal"/>
-       <node id="c231fc78-1eba-4b49-a003-a1cfef80bfc6" uname="dktest1sles10" type="normal"/>
-     </nodes>
-     <resources>
-       <primitive id="mysql-bin" class="ocf" provider="heartbeat" type="mysql">
-         <instance_attributes id="instance_attributes.id21905"><nvpair id="nvpair.id21912" name="binary" value="/packages/10.0/mysql/bin/mysqld_safe"/><nvpair id="nvpair.id21921" name="config" value="/packages/10.0/mysql/my.cnf"/><nvpair id="nvpair.id21930" name="datadir" value="/packages/10.0/mysql/var"/><nvpair id="nvpair.id21938" name="datadir" value="/packages/10.0/mysql/var"/><nvpair id="nvpair.id21947" name="logfile" value="/packages/10.0/mysql/var/mysqld.log"/><nvpair id="nvpair.id21956" name="socket" value="/packages/10.0/mysql/var/mysql.sock"/></instance_attributes>
-         <operations>
-           <op name="monitor" interval="30s" id="op-mysql-1" timeout="20s"/>
-         </operations>
-       <meta_attributes id="primitive-mysql-bin.meta"/></primitive>
-     </resources>
-     <constraints/>
-   </configuration>
-   <status>
-     <node_state id="1db2544e-c39c-442c-be34-016c812fcf66" uname="dktest2sles10" crmd="online" shutdown="0" ha="active" in_ccm="true" join="member" expected="member">
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.id22017"><nvpair id="nvpair.id22024" name="pingd10220" value="750"/><nvpair id="nvpair.id22033" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22051">
-           <lrm_resource id="mysql-bin" type="mysql" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="mysql-bin_monitor_0" operation="monitor" transition-key="4:3:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" transition-magic="0:0;4:3:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" call-id="5" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="693708d1be85bff163c441a522df1ff4"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="c231fc78-1eba-4b49-a003-a1cfef80bfc6" uname="dktest1sles10" crmd="online" shutdown="0" ha="active" in_ccm="true" join="member" expected="member">
-       <transient_attributes id="c231fc78-1eba-4b49-a003-a1cfef80bfc6">
-         <instance_attributes id="instance_attributes.id22122"><nvpair id="nvpair.id22129" name="pingd10220" value="750"/><nvpair id="nvpair.id22138" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="c231fc78-1eba-4b49-a003-a1cfef80bfc6">
-         <lrm_resources id="lrm_resources.id22156">
-           <lrm_resource id="mysql-bin" type="mysql" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="mysql-bin_monitor_0" operation="monitor" transition-key="6:0:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" transition-magic="0:7;6:0:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" call-id="2" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="693708d1be85bff163c441a522df1ff4"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib crm_feature_set="2.1" admin_epoch="0" epoch="10" num_updates="2" dc-uuid="1db2544e-c39c-442c-be34-016c812fcf66" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:01 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21849" name="dc-version" value="0.6.4-node: 1f49e4d0e8117d31470c91a73656640bb1f8892d"/>
+        <nvpair id="nvpair.id21858" name="last-lrm-refresh" value="1213173198"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1db2544e-c39c-442c-be34-016c812fcf66" uname="dktest2sles10" type="normal"/>
+      <node id="c231fc78-1eba-4b49-a003-a1cfef80bfc6" uname="dktest1sles10" type="normal"/>
+    </nodes>
+    <resources>
+      <primitive id="mysql-bin" class="ocf" provider="heartbeat" type="mysql">
+        <instance_attributes id="instance_attributes.id21905">
+          <nvpair id="nvpair.id21912" name="binary" value="/packages/10.0/mysql/bin/mysqld_safe"/>
+          <nvpair id="nvpair.id21921" name="config" value="/packages/10.0/mysql/my.cnf"/>
+          <nvpair id="nvpair.id21930" name="datadir" value="/packages/10.0/mysql/var"/>
+          <nvpair id="nvpair.id21938" name="datadir" value="/packages/10.0/mysql/var"/>
+          <nvpair id="nvpair.id21947" name="logfile" value="/packages/10.0/mysql/var/mysqld.log"/>
+          <nvpair id="nvpair.id21956" name="socket" value="/packages/10.0/mysql/var/mysql.sock"/>
+        </instance_attributes>
+        <operations>
+          <op name="monitor" interval="30s" id="op-mysql-1" timeout="20s"/>
+        </operations>
+        <meta_attributes id="primitive-mysql-bin.meta"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1db2544e-c39c-442c-be34-016c812fcf66" uname="dktest2sles10" crmd="online" shutdown="0" ha="active" in_ccm="true" join="member" expected="member">
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id22017">
+          <nvpair id="nvpair.id22024" name="pingd10220" value="750"/>
+          <nvpair id="nvpair.id22033" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22051">
+          <lrm_resource id="mysql-bin" type="mysql" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="mysql-bin_monitor_0" operation="monitor" transition-key="4:3:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" transition-magic="0:0;4:3:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" call-id="5" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="693708d1be85bff163c441a522df1ff4"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="c231fc78-1eba-4b49-a003-a1cfef80bfc6" uname="dktest1sles10" crmd="online" shutdown="0" ha="active" in_ccm="true" join="member" expected="member">
+      <transient_attributes id="c231fc78-1eba-4b49-a003-a1cfef80bfc6">
+        <instance_attributes id="instance_attributes.id22122">
+          <nvpair id="nvpair.id22129" name="pingd10220" value="750"/>
+          <nvpair id="nvpair.id22138" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="c231fc78-1eba-4b49-a003-a1cfef80bfc6">
+        <lrm_resources id="lrm_resources.id22156">
+          <lrm_resource id="mysql-bin" type="mysql" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="mysql-bin_monitor_0" operation="monitor" transition-key="6:0:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" transition-magic="0:7;6:0:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" call-id="2" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="693708d1be85bff163c441a522df1ff4"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

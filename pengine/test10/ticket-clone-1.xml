@@ -1,4 +1,4 @@
-<cib epoch="1" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.1" cib-last-written="Thu Mar 24 16:15:36 2011" have-quorum="1">
+<cib epoch="1" num_updates="20" admin_epoch="0" validate-with="pacemaker-1.1" cib-last-written="Fri Jul 13 13:51:17 2012" have-quorum="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -19,10 +19,10 @@
           </operations>
         </primitive>
       </clone>
-   </resources>
-   <constraints>
-     <rsc_ticket id="clone1-dep-ticketA" rsc="clone1" rsc-role="Started" ticket="ticketA" loss-policy="stop"/>
-   </constraints>
+    </resources>
+    <constraints>
+      <rsc_ticket id="clone1-dep-ticketA" rsc="clone1" rsc-role="Started" ticket="ticketA" loss-policy="stop"/>
+    </constraints>
   </configuration>
   <status>
     <node_state id="node1" uname="node1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">

@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.1" validate-with="pacemaker-1.2" have-quorum="1" admin_epoch="0" epoch="2592" num_updates="1" cib-last-written="Sat Nov 21 01:01:12 2009" dc-uuid="host1">
+<cib crm_feature_set="3.0.1" validate-with="pacemaker-1.2" have-quorum="1" admin_epoch="0" epoch="2592" num_updates="1" cib-last-written="Fri Jul 13 13:51:00 2012" dc-uuid="host1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -40,5 +40,5 @@
   <status>
     <node_state id="host1" uname="host1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0"/>
     <node_state id="host2" uname="host2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0"/>
-      </status>
+  </status>
 </cib>

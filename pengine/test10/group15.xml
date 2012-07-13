@@ -1,39 +1,58 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:05 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21835" name="no-quorum-policy" value="ignore"/><nvpair id="nvpair.id21844" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21853" name="default-resource-stickiness" value="100"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21835" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="nvpair.id21844" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21853" name="default-resource-stickiness" value="100"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member"/>
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
       <group id="foo">
-	<primitive id="rsc3" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc3.meta"/></primitive>
-	<primitive id="rsc4" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc4.meta"/></primitive>
-	<primitive id="rsc5" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc5.meta"/></primitive>
-      <meta_attributes id="group-foo.meta"/></group>
+        <primitive id="rsc3" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-rsc3.meta"/>
+        </primitive>
+        <primitive id="rsc4" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-rsc4.meta"/>
+        </primitive>
+        <primitive id="rsc5" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-rsc5.meta"/>
+        </primitive>
+        <meta_attributes id="group-foo.meta"/>
+      </group>
       <group id="bar">
-	<primitive id="rsc6" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc6.meta"/></primitive>
-	<primitive id="rsc7" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc7.meta"/></primitive>
-	<primitive id="rsc8" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc8.meta"/></primitive>
-      <meta_attributes id="group-bar.meta"><nvpair id="resource_stickiness.meta.auto-34" name="resource-stickiness" value="0"/></meta_attributes></group>
+        <primitive id="rsc6" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-rsc6.meta"/>
+        </primitive>
+        <primitive id="rsc7" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-rsc7.meta"/>
+        </primitive>
+        <primitive id="rsc8" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-rsc8.meta"/>
+        </primitive>
+        <meta_attributes id="group-bar.meta">
+          <nvpair id="resource_stickiness.meta.auto-34" name="resource-stickiness" value="0"/>
+        </meta_attributes>
+      </group>
     </resources>
     <constraints>
       <rsc_colocation id="rsc_colocation.auto-1" rsc="bar" with-rsc="foo" score="-INFINITY"/>
       <rsc_location id="rsc_location.auto-1" rsc="rsc3">
-	<rule id="score1" score="-INFINITY">
-	  <expression id="expression.id21976" attribute="#uname" operation="defined"/>
-	</rule>
+        <rule id="score1" score="-INFINITY">
+          <expression id="expression.id21976" attribute="#uname" operation="defined"/>
+        </rule>
       </rsc_location>
     </constraints>
   </configuration>
   <status>
-    <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-    </node_state>
-    <node_state id="node2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
-    </node_state>
+    <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true"/>
+    <node_state id="node2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true"/>
   </status>
 </cib>

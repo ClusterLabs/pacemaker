@@ -1,4 +1,4 @@
-<cib epoch="12" num_updates="8" admin_epoch="0" validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="0" dc-uuid="dualamd1" cib-last-written="Tue Jul 21 16:04:50 2009">
+<cib epoch="12" num_updates="8" admin_epoch="0" validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="0" dc-uuid="dualamd1" cib-last-written="Fri Jul 13 13:51:01 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -37,12 +37,12 @@
           <nvpair id="clone-dom0-iscsi1-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="clone-dom0-iscsi1-meta_attributes-globally-unique" name="globally-unique" value="false"/>
         </meta_attributes>
-          <primitive class="ocf" id="dom0-iscsi1-cnx1" provider="heartbeat" type="iscsi">
-            <instance_attributes id="dom0-iscsi1-cnx1-instance_attributes">
-              <nvpair id="dom0-iscsi1-cnx1-instance_attributes-portal" name="portal" value="10.151.1.72"/>
-              <nvpair id="dom0-iscsi1-cnx1-instance_attributes-target" name="target" value="iqn.2009-03.fr.u-picardie.testfrontal-01:test01"/>
-            </instance_attributes>
-          </primitive>
+        <primitive class="ocf" id="dom0-iscsi1-cnx1" provider="heartbeat" type="iscsi">
+          <instance_attributes id="dom0-iscsi1-cnx1-instance_attributes">
+            <nvpair id="dom0-iscsi1-cnx1-instance_attributes-portal" name="portal" value="10.151.1.72"/>
+            <nvpair id="dom0-iscsi1-cnx1-instance_attributes-target" name="target" value="iqn.2009-03.fr.u-picardie.testfrontal-01:test01"/>
+          </instance_attributes>
+        </primitive>
       </clone>
     </resources>
     <constraints>

@@ -1,35 +1,49 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="181" num_updates="4980" dc-uuid="f83e8e33-3e0f-46d6-93d4-8dace5be52db" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="overrides" score="2"><nvpair name="cluster-delay" id="nvpair.id21871" value="10s"/><rule score="0" id="test_failback_rule" boolean-op="and">
-           <date_expression operation="date_spec" id="test_failback_expr">
-             <date_spec id="test_failback_spec" hours="12"/>
-           </date_expression>
-         </rule></cluster_property_set>
-       <cluster_property_set id="boo" score="1"><nvpair name="stonith-enabled" id="nvpair.id21890" value="false"/><nvpair name="cluster-delay" id="nvpair.id21900" value="50s"/><nvpair name="cluster_recheck_interval" id="nvpair.id21909" value="60"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="3f9539b2-cd3b-4176-af89-e1b91fd9c8c7" uname="router1" type="normal"/>
-       <node id="f83e8e33-3e0f-46d6-93d4-8dace5be52db" uname="router2" type="normal"/>
-     </nodes>
-     <resources>
-       <group id="test" description="test resource">
-         <primitive id="test_ip" class="heartbeat" type="IPaddr2_vlan">
-           <instance_attributes id="instance_attributes.id21962"><nvpair id="nvpair.id21968" name="1" value="10.1.1.1/24/sit0"/></instance_attributes>
-         <meta_attributes id="primitive-test_ip.meta"/></primitive>
-         <primitive id="test_mailto" class="ocf" type="MailTo" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id21991"><nvpair id="nvpair.id21998" name="email" value="root"/><nvpair id="nvpair.id22006" name="subject" value="Test IP Failover"/></instance_attributes>
-         <meta_attributes id="primitive-test_mailto.meta"/></primitive>
-       <meta_attributes id="group-test.meta"/></group>
-     </resources>
-     <constraints>
-       <rsc_location id="test_location" rsc="test">
-         <rule id="test_preferred_location" score="100">
-           <expression attribute="#uname" id="expression.id22036" operation="eq" value="router1"/>
-         </rule>
-       </rsc_location>
-     </constraints>
-   </configuration>
-   <status/>
- </cib>
+<cib admin_epoch="0" epoch="181" num_updates="4980" dc-uuid="f83e8e33-3e0f-46d6-93d4-8dace5be52db" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="overrides" score="2">
+        <nvpair name="cluster-delay" id="nvpair.id21871" value="10s"/>
+        <rule score="0" id="test_failback_rule" boolean-op="and">
+          <date_expression operation="date_spec" id="test_failback_expr">
+            <date_spec id="test_failback_spec" hours="12"/>
+          </date_expression>
+        </rule>
+      </cluster_property_set>
+      <cluster_property_set id="boo" score="1">
+        <nvpair name="stonith-enabled" id="nvpair.id21890" value="false"/>
+        <nvpair name="cluster-delay" id="nvpair.id21900" value="50s"/>
+        <nvpair name="cluster_recheck_interval" id="nvpair.id21909" value="60"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="3f9539b2-cd3b-4176-af89-e1b91fd9c8c7" uname="router1" type="normal"/>
+      <node id="f83e8e33-3e0f-46d6-93d4-8dace5be52db" uname="router2" type="normal"/>
+    </nodes>
+    <resources>
+      <group id="test" description="test resource">
+        <primitive id="test_ip" class="heartbeat" type="IPaddr2_vlan">
+          <instance_attributes id="instance_attributes.id21962">
+            <nvpair id="nvpair.id21968" name="1" value="10.1.1.1/24/sit0"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-test_ip.meta"/>
+        </primitive>
+        <primitive id="test_mailto" class="ocf" type="MailTo" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id21991">
+            <nvpair id="nvpair.id21998" name="email" value="root"/>
+            <nvpair id="nvpair.id22006" name="subject" value="Test IP Failover"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-test_mailto.meta"/>
+        </primitive>
+        <meta_attributes id="group-test.meta"/>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_location id="test_location" rsc="test">
+        <rule id="test_preferred_location" score="100">
+          <expression attribute="#uname" id="expression.id22036" operation="eq" value="router1"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>

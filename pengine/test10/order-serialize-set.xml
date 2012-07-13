@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.1" have-quorum="1" validate-with="pacemaker-1.2" admin_epoch="0" epoch="187" dc-uuid="445a93d5-655e-430b-b45d-47d79a2f78c7" num_updates="1" cib-last-written="Fri Dec 11 02:08:05 2009">
+<cib crm_feature_set="3.0.1" have-quorum="1" validate-with="pacemaker-1.2" admin_epoch="0" epoch="187" dc-uuid="445a93d5-655e-430b-b45d-47d79a2f78c7" num_updates="1" cib-last-written="Fri Jul 13 13:51:11 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -200,7 +200,7 @@
       <rsc_location id="sysadmin_prefer_xen-b" node="xen-b" rsc="sysadmin" score="5000"/>
       <rsc_location id="base_prefer_xen-a" node="xen-a" rsc="base" score="5000"/>
       <rsc_order id="serialize-xen" kind="Serialize" symmetrical="true">
-	<resource_set id="xen-set">
+        <resource_set id="xen-set">
           <resource_ref id="db"/>
           <resource_ref id="dbreplica"/>
           <resource_ref id="core-101"/>
@@ -208,7 +208,7 @@
           <resource_ref id="sysadmin"/>
           <resource_ref id="edge"/>
           <resource_ref id="base"/>
-	</resource_set>
+        </resource_set>
       </rsc_order>
     </constraints>
     <op_defaults>

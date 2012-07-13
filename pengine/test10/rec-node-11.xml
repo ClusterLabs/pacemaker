@@ -1,7 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:12 2012">
   <configuration>
-    <crm_config><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21833" name="stonith-enabled" value="true"/><nvpair id="nvpair.id21841" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21833" name="stonith-enabled" value="true"/>
+        <nvpair id="nvpair.id21841" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>
@@ -9,18 +13,27 @@
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>
       <group id="group1">
-	<primitive id="rsc1" class="heartbeat" type="apache">
-	  <operations>
-	    <op name="stop" interval="0" id="stop-1" on-fail="block"/>
-	  </operations>
-	<meta_attributes id="primitive-rsc1.meta"/></primitive>
-	<primitive id="rsc2" class="heartbeat" type="apache">
-	  <operations>
-	    <op name="stop" interval="0" id="stop-2" on-fail="block"/>
-	  </operations>
-	<meta_attributes id="primitive-rsc2.meta"/></primitive>
-      <meta_attributes id="group-group1.meta"><nvpair id="restart_type.meta.auto-23" name="restart-type" value="restart"/></meta_attributes></group>
-      <primitive id="rsc3" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc3.meta"><nvpair id="restart_type.meta.auto-42" name="restart-type" value="restart"/></meta_attributes></primitive>
+        <primitive id="rsc1" class="heartbeat" type="apache">
+          <operations>
+            <op name="stop" interval="0" id="stop-1" on-fail="block"/>
+          </operations>
+          <meta_attributes id="primitive-rsc1.meta"/>
+        </primitive>
+        <primitive id="rsc2" class="heartbeat" type="apache">
+          <operations>
+            <op name="stop" interval="0" id="stop-2" on-fail="block"/>
+          </operations>
+          <meta_attributes id="primitive-rsc2.meta"/>
+        </primitive>
+        <meta_attributes id="group-group1.meta">
+          <nvpair id="restart_type.meta.auto-23" name="restart-type" value="restart"/>
+        </meta_attributes>
+      </group>
+      <primitive id="rsc3" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc3.meta">
+          <nvpair id="restart_type.meta.auto-42" name="restart-type" value="restart"/>
+        </meta_attributes>
+      </primitive>
     </resources>
     <constraints>
       <rsc_order id="order1" first="group1" then="rsc3" then-action="stop" first-action="stop" score="0"/>
@@ -32,10 +45,10 @@
         <lrm_resources id="lrm_resources.id21978">
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="group1-rsc1_stop_0" operation="stop" interval="0" op-status="4" rc-code="1" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="rsc2" class="heartbeat" type="apache">
             <lrm_rsc_op id="group1-rsc2_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>
@@ -44,7 +57,7 @@
         <lrm_resources id="lrm_resources.id22065">
           <lrm_resource id="rsc3" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>

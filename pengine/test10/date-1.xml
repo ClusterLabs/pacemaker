@@ -1,38 +1,57 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21832" name="symetric_cluster" value="true"/><nvpair id="nvpair.id21841" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21832" name="symetric_cluster" value="true"/>
+        <nvpair id="nvpair.id21841" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member">
-        <instance_attributes id="instance_attributes.id21862"><nvpair id="nvpair.id21869" name="server_group" value="group1"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id21862">
+          <nvpair id="nvpair.id21869" name="server_group" value="group1"/>
+        </instance_attributes>
       </node>
       <node id="uuid2" uname="node2" type="member">
-        <instance_attributes id="instance_attributes.id21889"><nvpair id="nvpair.id21907" name="server_group" value="group2"/><rule score="0" id="rule.auto-1">
-	    <date_expression operation="in_range" id="date_expression.auto-1" end="2005-001"/>
-	  </rule></instance_attributes>
-        <instance_attributes id="instance_attributes.id21918"><nvpair id="nvpair.id21937" name="server_group" value="group3"/><rule score="0" id="rule.auto-2">
-	    <date_expression operation="gt" id="date_expression.auto-2" start="2005-001"/>
-	  </rule></instance_attributes>
+        <instance_attributes id="instance_attributes.id21889">
+          <nvpair id="nvpair.id21907" name="server_group" value="group2"/>
+          <rule score="0" id="rule.auto-1">
+            <date_expression operation="in_range" id="date_expression.auto-1" end="2005-001"/>
+          </rule>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id21918">
+          <nvpair id="nvpair.id21937" name="server_group" value="group3"/>
+          <rule score="0" id="rule.auto-2">
+            <date_expression operation="gt" id="date_expression.auto-2" start="2005-001"/>
+          </rule>
+        </instance_attributes>
       </node>
     </nodes>
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache">
-        <instance_attributes id="instance_attributes.id21961"><nvpair id="nvpair.id21982" name="interface" value="eth1"/><rule score="0" id="rule.auto-3">
+        <instance_attributes id="instance_attributes.id21961">
+          <nvpair id="nvpair.id21982" name="interface" value="eth1"/>
+          <rule score="0" id="rule.auto-3">
             <expression id="expression.id21969" attribute="#uname" operation="eq" value="node1"/>
-	  </rule></instance_attributes>
-        <instance_attributes id="instance_attributes.id21993"><nvpair id="nvpair.id22014" name="interface" value="eth2"/><rule score="0" id="rule.auto-4">
+          </rule>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id21993">
+          <nvpair id="nvpair.id22014" name="interface" value="eth2"/>
+          <rule score="0" id="rule.auto-4">
             <expression id="expression.id22001" attribute="#uname" operation="eq" value="node2"/>
-	  </rule></instance_attributes>
-      <meta_attributes id="primitive-rsc1.meta"/></primitive>
+          </rule>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc1.meta"/>
+      </primitive>
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="prefer_group3" score="100">
-	  <expression id="expression.id22042" attribute="server_group" operation="eq" value="group3"/>
-	</rule>
+        <rule id="prefer_group3" score="100">
+          <expression id="expression.id22042" attribute="server_group" operation="eq" value="group3"/>
+        </rule>
       </rsc_location>
     </constraints>
   </configuration>

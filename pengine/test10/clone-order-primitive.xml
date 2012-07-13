@@ -1,4 +1,4 @@
-<cib admin_epoch="0" cib-last-written="Thu Jul 15 11:33:59 2010" crm_feature_set="3.0.1" dc-uuid="pcw2709.see.ed.ac.uk" epoch="375" have-quorum="1" num_updates="26" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" cib-last-written="Fri Jul 13 13:51:03 2012" crm_feature_set="3.0.1" dc-uuid="pcw2709.see.ed.ac.uk" epoch="375" have-quorum="1" num_updates="26" validate-with="pacemaker-1.0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -14,8 +14,7 @@
     <nodes>
       <node id="pcw2709.see.ed.ac.uk" type="normal" uname="pcw2709.see.ed.ac.uk"/>
       <node id="pcw2058.see.ed.ac.uk" type="normal" uname="pcw2058.see.ed.ac.uk"/>
-      <node id="pcw2059.see.ed.ac.uk" type="normal" uname="pcw2059.see.ed.ac.uk">
-   </node>
+      <node id="pcw2059.see.ed.ac.uk" type="normal" uname="pcw2059.see.ed.ac.uk"/>
       <node id="pcw2688.see.ed.ac.uk" type="normal" uname="pcw2688.see.ed.ac.uk"/>
     </nodes>
     <resources>

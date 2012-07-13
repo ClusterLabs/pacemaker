@@ -1,28 +1,36 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
-    
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21838" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21838" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="node2" uname="node2" type="member"/>
-      
       <node id="node1" uname="node1" type="member"/>
     </nodes>
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache">
-        <instance_attributes id="instance_attributes.id21885"><nvpair id="nvpair.id21892" name="priority" value="1.0"/></instance_attributes>
-      <meta_attributes id="primitive-rsc1.meta"/></primitive>
+        <instance_attributes id="instance_attributes.id21885">
+          <nvpair id="nvpair.id21892" name="priority" value="1.0"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc1.meta"/>
+      </primitive>
       <primitive id="rsc2" class="heartbeat" type="apache">
-        <instance_attributes id="instance_attributes.id21911"><nvpair id="nvpair.id21917" name="priority" value="1.0"/></instance_attributes>
-      <meta_attributes id="primitive-rsc2.meta"/></primitive>
+        <instance_attributes id="instance_attributes.id21911">
+          <nvpair id="nvpair.id21917" name="priority" value="1.0"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc2.meta"/>
+      </primitive>
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="cannot1" score="-INFINITY" boolean-op="or"><expression id="expression.id21948" attribute="#uname" operation="eq" value="node2"/>
-	</rule>
+        <rule id="cannot1" score="-INFINITY" boolean-op="or">
+          <expression id="expression.id21948" attribute="#uname" operation="eq" value="node2"/>
+        </rule>
       </rsc_location>
     </constraints>
   </configuration>

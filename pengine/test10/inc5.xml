@@ -1,56 +1,106 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:06 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
       <clone id="rsc1">
-	<primitive id="child_rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc1.meta"/></primitive>
-      <meta_attributes id="clone-rsc1.meta"><nvpair id="nvpair.meta.auto-31" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-27" name="clone-max" value="3"/>
-	<nvpair id="nvpair.meta.auto-29" name="clone-node-max" value="1"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+        <primitive id="child_rsc1" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc1.meta"/>
+        </primitive>
+        <meta_attributes id="clone-rsc1.meta">
+          <nvpair id="nvpair.meta.auto-31" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-27" name="clone-max" value="3"/>
+          <nvpair id="nvpair.meta.auto-29" name="clone-node-max" value="1"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
       <clone id="rsc2">
-	<primitive id="child_rsc2" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc2.meta"/></primitive>
-      <meta_attributes id="clone-rsc2.meta"><nvpair id="nvpair.meta.auto-48" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-44" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-46" name="clone-node-max" value="1"/>
-	<nvpair id="unique-2" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+        <primitive id="child_rsc2" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc2.meta"/>
+        </primitive>
+        <meta_attributes id="clone-rsc2.meta">
+          <nvpair id="nvpair.meta.auto-48" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-44" name="clone-max" value="3"/>
+          <nvpair id="nvpair.meta.auto-46" name="clone-node-max" value="1"/>
+          <nvpair id="unique-2" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
       <clone id="rsc3">
-	<primitive id="child_rsc3" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc3.meta"/></primitive>
-      <meta_attributes id="clone-rsc3.meta"><nvpair id="nvpair.meta.auto-65" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-61" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-63" name="clone-node-max" value="1"/>
-	<nvpair id="unique-3" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+        <primitive id="child_rsc3" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc3.meta"/>
+        </primitive>
+        <meta_attributes id="clone-rsc3.meta">
+          <nvpair id="nvpair.meta.auto-65" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-61" name="clone-max" value="3"/>
+          <nvpair id="nvpair.meta.auto-63" name="clone-node-max" value="1"/>
+          <nvpair id="unique-3" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
       <clone id="rsc4">
-	<primitive id="child_rsc4" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc4.meta"/></primitive>
-      <meta_attributes id="clone-rsc4.meta"><nvpair id="nvpair.meta.auto-82" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-78" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-80" name="clone-node-max" value="1"/>
-	<nvpair id="unique-4" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+        <primitive id="child_rsc4" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc4.meta"/>
+        </primitive>
+        <meta_attributes id="clone-rsc4.meta">
+          <nvpair id="nvpair.meta.auto-82" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-78" name="clone-max" value="3"/>
+          <nvpair id="nvpair.meta.auto-80" name="clone-node-max" value="1"/>
+          <nvpair id="unique-4" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
       <clone id="rsc5">
-	<primitive id="child_rsc5" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc5.meta"/></primitive>
-      <meta_attributes id="clone-rsc5.meta"><nvpair id="nvpair.meta.auto-99" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-95" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-97" name="clone-node-max" value="1"/>
-	<nvpair id="unique-5" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+        <primitive id="child_rsc5" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc5.meta"/>
+        </primitive>
+        <meta_attributes id="clone-rsc5.meta">
+          <nvpair id="nvpair.meta.auto-99" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-95" name="clone-max" value="3"/>
+          <nvpair id="nvpair.meta.auto-97" name="clone-node-max" value="1"/>
+          <nvpair id="unique-5" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
       <clone id="rsc6">
-	<primitive id="child_rsc6" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc6.meta"/></primitive>
-      <meta_attributes id="clone-rsc6.meta"><nvpair id="nvpair.meta.auto-116" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-112" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-114" name="clone-node-max" value="1"/>
-	<nvpair id="unique-6" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+        <primitive id="child_rsc6" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc6.meta"/>
+        </primitive>
+        <meta_attributes id="clone-rsc6.meta">
+          <nvpair id="nvpair.meta.auto-116" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-112" name="clone-max" value="3"/>
+          <nvpair id="nvpair.meta.auto-114" name="clone-node-max" value="1"/>
+          <nvpair id="unique-6" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
       <clone id="rsc7">
-	<primitive id="child_rsc7" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc7.meta"/></primitive>
-      <meta_attributes id="clone-rsc7.meta"><nvpair id="nvpair.meta.auto-133" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-129" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-131" name="clone-node-max" value="1"/>
-	<nvpair id="unique-7" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+        <primitive id="child_rsc7" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc7.meta"/>
+        </primitive>
+        <meta_attributes id="clone-rsc7.meta">
+          <nvpair id="nvpair.meta.auto-133" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-129" name="clone-max" value="3"/>
+          <nvpair id="nvpair.meta.auto-131" name="clone-node-max" value="1"/>
+          <nvpair id="unique-7" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
       <clone id="rsc8">
-	<primitive id="child_rsc8" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc8.meta"/></primitive>
-      <meta_attributes id="clone-rsc8.meta"><nvpair id="nvpair.meta.auto-150" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-146" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-148" name="clone-node-max" value="1"/>
-	<nvpair id="unique-8" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
+        <primitive id="child_rsc8" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc8.meta"/>
+        </primitive>
+        <meta_attributes id="clone-rsc8.meta">
+          <nvpair id="nvpair.meta.auto-150" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-146" name="clone-max" value="3"/>
+          <nvpair id="nvpair.meta.auto-148" name="clone-node-max" value="1"/>
+          <nvpair id="unique-8" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
     </resources>
     <constraints>
       <rsc_order id="order1" first="rsc1" then="rsc2" score="0"/>
@@ -62,67 +112,71 @@
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="transient_attributes.id22313">
-        <instance_attributes id="instance_attributes.id22315"><nvpair id="nvpair.id22322" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22315">
+          <nvpair id="nvpair.id22322" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22337">
           <lrm_resource id="child_rsc1:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc2:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2-child_rsc2-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc2:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2-child_rsc2-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc3:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3-child_rsc3-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc4:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4-child_rsc4-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc4:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4-child_rsc4-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc6:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc6-child_rsc6-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc8:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc8-child_rsc8-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="transient_attributes.id22606">
-        <instance_attributes id="instance_attributes.id22608"><nvpair id="nvpair.id22614" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22608">
+          <nvpair id="nvpair.id22614" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22630">
           <lrm_resource id="child_rsc1:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc3:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3-child_rsc3-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc5:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc5-child_rsc5-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc5:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc5-child_rsc5-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc6:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc6-child_rsc6-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc7:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc7-child_rsc7-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc7:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc7-child_rsc7-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc8:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc8-child_rsc8-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>

@@ -1,7 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:13 2012">
   <configuration>
-    <crm_config><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21835" name="stonith-enabled" value="true"/><nvpair id="nvpair.id21844" name="no-quorum-policy" value="stop"/></cluster_property_set></crm_config>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21835" name="stonith-enabled" value="true"/>
+        <nvpair id="nvpair.id21844" name="no-quorum-policy" value="stop"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>
@@ -9,33 +13,43 @@
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>
       <primitive id="rsc1" class="heartbeat" type="apache">
-	<operations>
-	  <op name="stop" interval="0" id="stop-1" on-fail="block"/>
-	  <op name="start" interval="0" id="start-1" requires="quorum"/>
-	</operations>
-      <meta_attributes id="primitive-rsc1.meta"/></primitive>
+        <operations>
+          <op name="stop" interval="0" id="stop-1" on-fail="block"/>
+          <op name="start" interval="0" id="start-1" requires="quorum"/>
+        </operations>
+        <meta_attributes id="primitive-rsc1.meta"/>
+      </primitive>
       <primitive id="rsc2" class="heartbeat" type="apache">
-	<operations>
-	  <op name="stop" interval="0" id="stop-2" on-fail="block"/>
-	  <op name="start" interval="0" id="start-2" requires="fencing"/>
-	</operations>
-      <meta_attributes id="primitive-rsc2.meta"/></primitive>
+        <operations>
+          <op name="stop" interval="0" id="stop-2" on-fail="block"/>
+          <op name="start" interval="0" id="start-2" requires="fencing"/>
+        </operations>
+        <meta_attributes id="primitive-rsc2.meta"/>
+      </primitive>
       <group id="group1">
-	<primitive id="rsc3" class="heartbeat" type="apache">
-	  <operations>
-	    <op name="start" interval="0" id="op.auto-5" requires="quorum"/>
-	  </operations>
-	<meta_attributes id="primitive-rsc3.meta"/></primitive>
-	<primitive id="rsc4" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc4.meta"/></primitive>
-      <meta_attributes id="group-group1.meta"/></group>
+        <primitive id="rsc3" class="heartbeat" type="apache">
+          <operations>
+            <op name="start" interval="0" id="op.auto-5" requires="quorum"/>
+          </operations>
+          <meta_attributes id="primitive-rsc3.meta"/>
+        </primitive>
+        <primitive id="rsc4" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-rsc4.meta"/>
+        </primitive>
+        <meta_attributes id="group-group1.meta"/>
+      </group>
       <group id="group2">
-	<primitive id="rsc5" class="heartbeat" type="apache">
-	  <operations>
-	    <op name="start" interval="0" id="op.auto-6" requires="fencing"/>
-	  </operations>
-	<meta_attributes id="primitive-rsc5.meta"/></primitive>
-	<primitive id="rsc6" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc6.meta"/></primitive>
-      <meta_attributes id="group-group2.meta"/></group>
+        <primitive id="rsc5" class="heartbeat" type="apache">
+          <operations>
+            <op name="start" interval="0" id="op.auto-6" requires="fencing"/>
+          </operations>
+          <meta_attributes id="primitive-rsc5.meta"/>
+        </primitive>
+        <primitive id="rsc6" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-rsc6.meta"/>
+        </primitive>
+        <meta_attributes id="group-group2.meta"/>
+      </group>
     </resources>
     <constraints/>
   </configuration>

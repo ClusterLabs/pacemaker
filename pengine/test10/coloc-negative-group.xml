@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="564" num_updates="1" cib-last-written="Tue Dec 15 17:04:54 2009" dc-uuid="lenny-a">
+<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="564" num_updates="1" cib-last-written="Fri Jul 13 13:51:04 2012" dc-uuid="lenny-a">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -24,8 +24,7 @@
           </meta_attributes>
         </primitive>
       </group>
-      <primitive id="res_Dummy_3" class="ocf" provider="heartbeat" type="Dummy">
-      </primitive>
+      <primitive id="res_Dummy_3" class="ocf" provider="heartbeat" type="Dummy"/>
     </resources>
     <constraints>
       <rsc_colocation id="col_res_Dummy_3_grp_1" score="-INFINITY" rsc="grp_1" with-rsc="res_Dummy_3"/>

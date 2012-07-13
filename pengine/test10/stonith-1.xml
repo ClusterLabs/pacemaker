@@ -1,430 +1,499 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="9" num_updates="208" dc-uuid="1186dc9a-324d-425a-966e-d757e693dc86" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21849" name="default-action-timeout" value="10s"/><nvpair id="nvpair.id21858" name="cluster-delay" value="60s"/><nvpair id="nvpair.id21867" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21877" name="stop-orphan-resources" value="true"/><nvpair id="nvpair.id21886" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21895" name="remove-after-stop" value="false"/><nvpair id="nvpair.id21905" name="is-managed-default" value="true"/><nvpair id="nvpair.id21914" name="no-quorum-policy" value="stop"/><nvpair id="nvpair.id21923" name="stonith-action" value="reboot"/><nvpair id="nvpair.id21932" name="stonith-enabled" value="1"/><nvpair id="nvpair.id21941" name="pe-error-series-max" value="-1"/><nvpair id="nvpair.id21950" name="pe-warn-series-max" value="-1"/><nvpair id="nvpair.id21959" name="pe-input-series-max" value="30000"/><nvpair id="nvpair.id21969" name="default-resource-stickiness" value="0"/><nvpair id="nvpair.id21978" name="default-migration-threshold" value="0"/><nvpair id="nvpair.id21987" name="shutdown-escalation" value="5min"/><nvpair id="nvpair.id21997" name="startup-fencing" value="false"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="1186dc9a-324d-425a-966e-d757e693dc86" uname="sles-1" type="normal">
-         <instance_attributes id="instance_attributes.id22020"><nvpair name="standby" id="nvpair.id22027" value="off"/></instance_attributes>
-       </node>
-       <node id="02fb99a8-e30e-482f-b3ad-0fb3ce27d088" uname="sles-2" type="normal"/>
-       <node id="2298606a-6a8c-499a-9d25-76242f7006ec" uname="sles-3" type="normal"/>
-       <node id="ea7d39f4-3b94-4cfa-ba7a-952956daabee" uname="sles-4" type="normal">
-         <instance_attributes id="instance_attributes.id22066"><nvpair name="standby" id="nvpair.id22073" value="off"/></instance_attributes>
-       </node>
-     </nodes>
-     <resources>
-       <group id="group-1">
-         <primitive id="r192.168.100.181" class="ocf" type="IPaddr" provider="heartbeat">
-           <operations>
-             <op name="monitor" interval="5s" id="r192.168.100.181-mon"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22116"><nvpair id="nvpair.id22123" name="ip" value="192.168.100.181"/></instance_attributes>
-         <meta_attributes id="primitive-r192.168.100.181.meta"/></primitive>
-         <primitive id="r192.168.100.182" class="heartbeat" type="IPaddr">
-           <operations>
-             <op name="monitor" interval="5s" id="r192.168.100.182-mon"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22155"><nvpair id="nvpair.id22162" name="1" value="192.168.100.182"/></instance_attributes>
-         <meta_attributes id="primitive-r192.168.100.182.meta"/></primitive>
-         <primitive id="r192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat">
-           <operations>
-             <op name="monitor" interval="5s" id="r192.168.100.183-mon"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22196"><nvpair id="nvpair.id22202" name="ip" value="192.168.100.183"/></instance_attributes>
-         <meta_attributes id="primitive-r192.168.100.183.meta"/></primitive>
-       <meta_attributes id="group-group-1.meta"/></group>
-       <primitive id="lsb_dummy" class="lsb" type="/usr/lib64/heartbeat/cts/LSBDummy">
-         <operations>
-           <op name="monitor" interval="5s" id="ocf_lsb_monitor"/>
-         </operations>
-       <meta_attributes id="primitive-lsb_dummy.meta"/></primitive>
-       <primitive id="migrator" class="ocf" type="Dummy" provider="heartbeat">
-         <operations>
-           <op name="monitor" interval="10s" id="migrator-mon"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22261"><nvpair id="nvpair.id22267" name="allow_migrate" value="1"/></instance_attributes>
-       <meta_attributes id="primitive-migrator.meta"><nvpair id="nvpair.meta.auto-149" name="allow-migrate" value="1"/></meta_attributes></primitive>
-       <primitive id="rsc_sles-1" class="ocf" type="IPaddr" provider="heartbeat">
-         <operations>
-           <op name="monitor" interval="5s" id="rsc_sles-1-mon"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22301"><nvpair id="nvpair.id22307" name="ip" value="192.168.100.184"/></instance_attributes>
-       <meta_attributes id="primitive-rsc_sles-1.meta"/></primitive>
-       <primitive id="rsc_sles-2" class="ocf" type="IPaddr" provider="heartbeat">
-         <operations>
-           <op name="monitor" interval="5s" id="rsc_sles-2-mon"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22340"><nvpair id="nvpair.id22347" name="ip" value="192.168.100.185"/></instance_attributes>
-       <meta_attributes id="primitive-rsc_sles-2.meta"/></primitive>
-       <primitive id="rsc_sles-3" class="ocf" type="IPaddr" provider="heartbeat">
-         <operations>
-           <op name="monitor" interval="5s" id="rsc_sles-3-mon"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22380"><nvpair id="nvpair.id22386" name="ip" value="192.168.100.186"/></instance_attributes>
-       <meta_attributes id="primitive-rsc_sles-3.meta"/></primitive>
-       <primitive id="rsc_sles-4" class="ocf" type="IPaddr" provider="heartbeat">
-         <operations>
-           <op name="monitor" interval="5s" id="rsc_sles-4-mon"/>
-         </operations>
-         <instance_attributes id="instance_attributes.id22420"><nvpair id="nvpair.id22426" name="ip" value="192.168.100.187"/></instance_attributes>
-       <meta_attributes id="primitive-rsc_sles-4.meta"/></primitive>
-       <clone id="DoFencing">
-         <primitive id="child_DoFencing" class="stonith" type="external/vmware">
-           <operations>
-             <op name="monitor" interval="60s" id="DoFencing-1" requires="nothing" timeout="300s"/>
-             <op name="start" interval="0" id="DoFencing-2" requires="nothing" timeout="180s"/>
-             <op name="stop" interval="0" id="DoFencing-3" timeout="180s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22505"><nvpair id="nvpair.id22511" name="device_host" value="vmhost"/></instance_attributes>
-         <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-       <meta_attributes id="clone-DoFencing.meta"><nvpair id="globally_unique.meta.auto-218" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-224" name="clone-node-max" value="1"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
-       <master id="master_rsc_1">
-         <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
-           <operations>
-             <op name="monitor" interval="5s" id="ocf_msdummy_monitor"/>
-             <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" role="Master"/>
-           </operations>
-         <meta_attributes id="primitive-ocf_msdummy.meta"/></primitive>
-       <meta_attributes id="master_slave-master_rsc_1.meta"><nvpair id="nvpair.meta.auto-255" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-257" name="clone-node-max" value="2"/><nvpair id="nvpair.meta.auto-259" name="master-max" value="4"/><nvpair id="nvpair.meta.auto-261" name="master-node-max" value="1"/>
-	<nvpair id="unique-2" name="globally-unique" value="true"/>
-      </meta_attributes></master>
-     </resources>
-     <constraints>
-       <rsc_location id="run_rsc_sles-1" rsc="rsc_sles-1">
-         <rule id="pref_run_rsc_sles-1" score="100" boolean-op="and">
-           <expression id="expression.id22624" attribute="#uname" operation="eq" value="sles-1"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="run_rsc_sles-2" rsc="rsc_sles-2">
-         <rule id="pref_run_rsc_sles-2" score="100" boolean-op="and">
-           <expression id="expression.id22650" attribute="#uname" operation="eq" value="sles-2"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="run_rsc_sles-3" rsc="rsc_sles-3">
-         <rule id="pref_run_rsc_sles-3" score="100" boolean-op="and">
-           <expression id="expression.id22676" attribute="#uname" operation="eq" value="sles-3"/>
-         </rule>
-       </rsc_location>
-       <rsc_location id="run_rsc_sles-4" rsc="rsc_sles-4">
-         <rule id="pref_run_rsc_sles-4" score="100" boolean-op="and">
-           <expression id="expression.id22704" attribute="#uname" operation="eq" value="sles-4"/>
-         </rule>
-       </rsc_location>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="ea7d39f4-3b94-4cfa-ba7a-952956daabee" uname="sles-4" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <lrm id="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
-         <lrm_resources id="lrm_resources.id22748">
-           <lrm_resource id="lsb_dummy" type="/usr/lib64/heartbeat/cts/LSBDummy" class="lsb">
-             <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" transition-key="10:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;10:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" transition-key="7:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;7:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
-           </lrm_resource>
-           <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" transition-key="9:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;9:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
-           </lrm_resource>
-           <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
-             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="8:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;8:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
-           </lrm_resource>
-           <lrm_resource id="migrator" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="migrator_monitor_0" operation="monitor" transition-key="11:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;11:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="424390c996795345714de0f015157695"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" transition-key="13:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;13:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="8" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-1" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-1_monitor_0" operation="monitor" transition-key="12:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;12:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="7" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="16:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;16:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="11" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:6" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-6_monitor_0" operation="monitor" transition-key="23:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;23:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="12" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-3" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-3_monitor_0" operation="monitor" transition-key="14:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;14:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="9" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="4524426499361a7a84b1803848e28d0c"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" transition-key="15:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;15:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="10" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="72dc6e7b4268eef18359d20e6a65c35e"/>
-             <lrm_rsc_op id="rsc_sles-4_start_0" operation="start" transition-key="48:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;48:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="20" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="72dc6e7b4268eef18359d20e6a65c35e"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:7" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-7_monitor_0" operation="monitor" transition-key="24:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;24:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="13" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="19:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;19:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="14" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:1" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-1_monitor_0" operation="monitor" transition-key="18:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;18:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="17" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:5" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-5_monitor_0" operation="monitor" transition-key="22:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;22:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="15" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:0" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-0_monitor_0" operation="monitor" transition-key="17:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;17:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="16" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-3_monitor_0" operation="monitor" transition-key="20:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;20:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="18" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:4" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-4_monitor_0" operation="monitor" transition-key="21:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;21:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="19" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
-         <instance_attributes id="instance_attributes.id23465"><nvpair id="nvpair.id23472" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-     <node_state id="1186dc9a-324d-425a-966e-d757e693dc86" uname="sles-1" crmd="online" in_ccm="true" ha="active" join="member" expected="member" shutdown="0">
-       <transient_attributes id="transient_attributes.auto-2">
-         <instance_attributes id="instance_attributes.id23512"><nvpair id="nvpair.id23519" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-2">
-         <lrm_resources id="lrm_resources.id23536">
-           <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" transition-key="3:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;3:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
-             <lrm_rsc_op id="r192.168.100.181_start_0" operation="start" transition-key="26:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;26:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="43" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
-             <lrm_rsc_op id="r192.168.100.181_stop_0" operation="stop" transition-key="17:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;17:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="42" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
-             <lrm_rsc_op id="r192.168.100.181_monitor_5000" operation="monitor" transition-key="27:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;27:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="46" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="135177160dc341f4f070b0f9344f116c"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" transition-key="9:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;9:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="8" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="15:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;15:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="14" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
-             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="4:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;4:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
-             <lrm_rsc_op id="r192.168.100.182_start_0" operation="start" transition-key="28:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;28:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="47" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
-             <lrm_rsc_op id="r192.168.100.182_stop_0" operation="stop" transition-key="19:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;19:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="41" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
-           </lrm_resource>
-           <lrm_resource id="lsb_dummy" type="/usr/lib64/heartbeat/cts/LSBDummy" class="lsb">
-             <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" transition-key="6:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;6:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-3" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-3_monitor_0" operation="monitor" transition-key="10:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;10:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="9" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="4524426499361a7a84b1803848e28d0c"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-3_monitor_0" operation="monitor" transition-key="16:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;16:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="15" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" transition-key="5:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;5:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
-             <lrm_rsc_op id="r192.168.100.183_start_0" operation="start" transition-key="19:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;19:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="34" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
-             <lrm_rsc_op id="r192.168.100.183_stop_0" operation="stop" transition-key="21:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;21:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="37" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" transition-key="11:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;11:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="10" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="72dc6e7b4268eef18359d20e6a65c35e"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:4" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-4_monitor_0" operation="monitor" transition-key="17:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;17:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="16" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:5" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-5_monitor_0" operation="monitor" transition-key="18:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;18:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="17" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:6" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-6_monitor_0" operation="monitor" transition-key="19:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;19:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="18" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-6_start_0" operation="start" transition-key="57:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;57:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="23" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-6_stop_0" operation="stop" transition-key="60:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;60:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="39" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="12:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;12:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="11" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:7" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-7_monitor_0" operation="monitor" transition-key="20:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;20:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="19" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-7_start_0" operation="start" transition-key="59:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;59:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="24" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-7_stop_0" operation="stop" transition-key="62:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;62:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="40" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:1" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="3:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;3:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="22" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:2" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="6:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;6:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="28" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-           </lrm_resource>
-           <lrm_resource id="migrator" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="migrator_monitor_0" operation="monitor" transition-key="7:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;7:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="424390c996795345714de0f015157695"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:3" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-3_start_0" operation="start" transition-key="49:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;49:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="32" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-             <lrm_rsc_op id="child_DoFencing-3_monitor_60000" operation="monitor" transition-key="50:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;50:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="35" crm_feature_set="2.0" rc-code="0" op-status="0" interval="60000" op-digest="20a63c39752cf941c02f4cba2a8a7b60"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:0" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-0_monitor_0" operation="monitor" transition-key="13:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;13:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="12" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-1" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-1_monitor_0" operation="monitor" transition-key="8:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;8:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="7" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
-             <lrm_rsc_op id="rsc_sles-1_start_0" operation="start" transition-key="41:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;41:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="44" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
-             <lrm_rsc_op id="rsc_sles-1_stop_0" operation="stop" transition-key="32:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;32:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="38" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
-             <lrm_rsc_op id="rsc_sles-1_monitor_5000" operation="monitor" transition-key="42:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;42:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="45" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="da2d7a7f380c2c5a7cf362c4de1dd529"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:1" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-1_monitor_0" operation="monitor" transition-key="14:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;14:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="13" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="02fb99a8-e30e-482f-b3ad-0fb3ce27d088" uname="sles-2" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <transient_attributes id="transient_attributes.auto-3">
-         <instance_attributes id="instance_attributes.id24754"><nvpair id="nvpair.id24761" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-3">
-         <lrm_resources id="lrm_resources.id24778">
-           <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" transition-key="22:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;22:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" transition-key="28:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;28:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="8" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
-             <lrm_rsc_op id="rsc_sles-2_start_0" operation="start" transition-key="43:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;43:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="39" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
-             <lrm_rsc_op id="rsc_sles-2_stop_0" operation="stop" transition-key="34:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;34:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="35" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="34:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;34:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="14" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
-             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="23:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;23:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
-           </lrm_resource>
-           <lrm_resource id="lsb_dummy" type="/usr/lib64/heartbeat/cts/LSBDummy" class="lsb">
-             <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" transition-key="25:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;25:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="lsb_dummy_start_0" operation="start" transition-key="36:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;36:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="38" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="lsb_dummy_stop_0" operation="stop" transition-key="27:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;27:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="34" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-3" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-3_monitor_0" operation="monitor" transition-key="29:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;29:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="9" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="4524426499361a7a84b1803848e28d0c"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-3_monitor_0" operation="monitor" transition-key="35:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;35:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="15" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" transition-key="24:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;24:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" transition-key="30:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;30:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="10" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="72dc6e7b4268eef18359d20e6a65c35e"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:4" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-4_monitor_0" operation="monitor" transition-key="36:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;36:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="16" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-4_start_0" operation="start" transition-key="53:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;53:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="24" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-4_stop_0" operation="stop" transition-key="58:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;58:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="37" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:5" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-5_monitor_0" operation="monitor" transition-key="37:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;37:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="17" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:6" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-6_monitor_0" operation="monitor" transition-key="38:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;38:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="18" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="31:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;31:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="11" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:7" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-7_monitor_0" operation="monitor" transition-key="39:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;39:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="19" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:1" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="5:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;5:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="22" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-             <lrm_rsc_op id="child_DoFencing-1_start_0" operation="start" transition-key="45:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;45:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="30" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-             <lrm_rsc_op id="child_DoFencing-1_monitor_60000" operation="monitor" transition-key="46:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;46:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="31" crm_feature_set="2.0" rc-code="0" op-status="0" interval="60000" op-digest="20a63c39752cf941c02f4cba2a8a7b60"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:2" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="8:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;8:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="27" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-           </lrm_resource>
-           <lrm_resource id="migrator" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="migrator_monitor_0" operation="monitor" transition-key="26:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;26:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="424390c996795345714de0f015157695"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:0" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-0_monitor_0" operation="monitor" transition-key="32:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;32:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="12" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-1" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-1_monitor_0" operation="monitor" transition-key="27:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;27:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="7" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:1" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-1_monitor_0" operation="monitor" transition-key="33:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;33:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="13" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-1_start_0" operation="start" transition-key="47:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;47:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="23" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-1_stop_0" operation="stop" transition-key="56:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;56:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="36" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="2298606a-6a8c-499a-9d25-76242f7006ec" uname="sles-3" crmd="online" ha="active" shutdown="0" in_ccm="false" join="member" expected="member">
-       <lrm id="lrm.auto-4">
-         <lrm_resources id="lrm_resources.id25826">
-           <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" transition-key="43:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;43:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
-           </lrm_resource>
-           <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" transition-key="41:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;41:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
-           </lrm_resource>
-           <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
-             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="42:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;42:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
-           </lrm_resource>
-           <lrm_resource id="lsb_dummy" type="/usr/lib64/heartbeat/cts/LSBDummy" class="lsb">
-             <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" transition-key="44:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;44:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" transition-key="47:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;47:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="8" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
-           </lrm_resource>
-           <lrm_resource id="migrator" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="migrator_monitor_0" operation="monitor" transition-key="45:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;45:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="424390c996795345714de0f015157695"/>
-             <lrm_rsc_op id="migrator_start_0" operation="start" transition-key="23:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;23:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="20" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="424390c996795345714de0f015157695" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="migrator_monitor_10000" operation="monitor" transition-key="30:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;30:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="25" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="81415fea31381c71277b9999ebb65d2f"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-1" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-1_monitor_0" operation="monitor" transition-key="46:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;46:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="7" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="50:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;50:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="11" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:0" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-0_monitor_0" operation="monitor" transition-key="51:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;51:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="12" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:4" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-4_monitor_0" operation="monitor" transition-key="55:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;55:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="16" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" transition-key="49:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;49:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="10" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="72dc6e7b4268eef18359d20e6a65c35e"/>
-           </lrm_resource>
-           <lrm_resource id="rsc_sles-3" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="rsc_sles-3_monitor_0" operation="monitor" transition-key="48:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;48:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="9" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="4524426499361a7a84b1803848e28d0c"/>
-             <lrm_rsc_op id="rsc_sles-3_start_0" operation="start" transition-key="29:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;29:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="21" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4524426499361a7a84b1803848e28d0c"/>
-             <lrm_rsc_op id="rsc_sles-3_monitor_5000" operation="monitor" transition-key="39:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;39:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="26" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="c945aa7e171c5474e2fecc65c6ed922a"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="53:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;53:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="14" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-2_start_0" operation="start" transition-key="49:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;49:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="23" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-2_monitor_5000" operation="monitor" transition-key="62:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;62:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="28" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="19240b0a103493c96459e91c1a816b50"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-3_monitor_0" operation="monitor" transition-key="54:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;54:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="15" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:1" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-1_monitor_0" operation="monitor" transition-key="52:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;52:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="13" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:5" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-5_monitor_0" operation="monitor" transition-key="56:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;56:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="17" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-5_start_0" operation="start" transition-key="55:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;55:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="24" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="ocf_msdummy-5_monitor_5000" operation="monitor" transition-key="70:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;70:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="29" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="19240b0a103493c96459e91c1a816b50"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:6" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-6_monitor_0" operation="monitor" transition-key="57:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;57:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="18" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="ocf_msdummy:7" type="Stateful" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocf_msdummy-7_monitor_0" operation="monitor" transition-key="58:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;58:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="19" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:1" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="7:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;7:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="22" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:2" type="external/vmware" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="10:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;10:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="27" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-             <lrm_rsc_op id="child_DoFencing-2_start_0" operation="start" transition-key="47:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;47:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="30" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
-             <lrm_rsc_op id="child_DoFencing-2_monitor_60000" operation="monitor" transition-key="48:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;48:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="31" crm_feature_set="2.0" rc-code="0" op-status="0" interval="60000" op-digest="20a63c39752cf941c02f4cba2a8a7b60"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="transient_attributes.auto-4">
-         <instance_attributes id="instance_attributes.id26855"><nvpair id="nvpair.id26862" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="9" num_updates="208" dc-uuid="1186dc9a-324d-425a-966e-d757e693dc86" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:14 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21849" name="default-action-timeout" value="10s"/>
+        <nvpair id="nvpair.id21858" name="cluster-delay" value="60s"/>
+        <nvpair id="nvpair.id21867" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21877" name="stop-orphan-resources" value="true"/>
+        <nvpair id="nvpair.id21886" name="stop-orphan-actions" value="true"/>
+        <nvpair id="nvpair.id21895" name="remove-after-stop" value="false"/>
+        <nvpair id="nvpair.id21905" name="is-managed-default" value="true"/>
+        <nvpair id="nvpair.id21914" name="no-quorum-policy" value="stop"/>
+        <nvpair id="nvpair.id21923" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21932" name="stonith-enabled" value="1"/>
+        <nvpair id="nvpair.id21941" name="pe-error-series-max" value="-1"/>
+        <nvpair id="nvpair.id21950" name="pe-warn-series-max" value="-1"/>
+        <nvpair id="nvpair.id21959" name="pe-input-series-max" value="30000"/>
+        <nvpair id="nvpair.id21969" name="default-resource-stickiness" value="0"/>
+        <nvpair id="nvpair.id21978" name="default-migration-threshold" value="0"/>
+        <nvpair id="nvpair.id21987" name="shutdown-escalation" value="5min"/>
+        <nvpair id="nvpair.id21997" name="startup-fencing" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1186dc9a-324d-425a-966e-d757e693dc86" uname="sles-1" type="normal">
+        <instance_attributes id="instance_attributes.id22020">
+          <nvpair name="standby" id="nvpair.id22027" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="02fb99a8-e30e-482f-b3ad-0fb3ce27d088" uname="sles-2" type="normal"/>
+      <node id="2298606a-6a8c-499a-9d25-76242f7006ec" uname="sles-3" type="normal"/>
+      <node id="ea7d39f4-3b94-4cfa-ba7a-952956daabee" uname="sles-4" type="normal">
+        <instance_attributes id="instance_attributes.id22066">
+          <nvpair name="standby" id="nvpair.id22073" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <group id="group-1">
+        <primitive id="r192.168.100.181" class="ocf" type="IPaddr" provider="heartbeat">
+          <operations>
+            <op name="monitor" interval="5s" id="r192.168.100.181-mon"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22116">
+            <nvpair id="nvpair.id22123" name="ip" value="192.168.100.181"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-r192.168.100.181.meta"/>
+        </primitive>
+        <primitive id="r192.168.100.182" class="heartbeat" type="IPaddr">
+          <operations>
+            <op name="monitor" interval="5s" id="r192.168.100.182-mon"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22155">
+            <nvpair id="nvpair.id22162" name="1" value="192.168.100.182"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-r192.168.100.182.meta"/>
+        </primitive>
+        <primitive id="r192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat">
+          <operations>
+            <op name="monitor" interval="5s" id="r192.168.100.183-mon"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22196">
+            <nvpair id="nvpair.id22202" name="ip" value="192.168.100.183"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-r192.168.100.183.meta"/>
+        </primitive>
+        <meta_attributes id="group-group-1.meta"/>
+      </group>
+      <primitive id="lsb_dummy" class="lsb" type="/usr/lib64/heartbeat/cts/LSBDummy">
+        <operations>
+          <op name="monitor" interval="5s" id="ocf_lsb_monitor"/>
+        </operations>
+        <meta_attributes id="primitive-lsb_dummy.meta"/>
+      </primitive>
+      <primitive id="migrator" class="ocf" type="Dummy" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="10s" id="migrator-mon"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22261">
+          <nvpair id="nvpair.id22267" name="allow_migrate" value="1"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-migrator.meta">
+          <nvpair id="nvpair.meta.auto-149" name="allow-migrate" value="1"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="rsc_sles-1" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="rsc_sles-1-mon"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22301">
+          <nvpair id="nvpair.id22307" name="ip" value="192.168.100.184"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_sles-1.meta"/>
+      </primitive>
+      <primitive id="rsc_sles-2" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="rsc_sles-2-mon"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22340">
+          <nvpair id="nvpair.id22347" name="ip" value="192.168.100.185"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_sles-2.meta"/>
+      </primitive>
+      <primitive id="rsc_sles-3" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="rsc_sles-3-mon"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22380">
+          <nvpair id="nvpair.id22386" name="ip" value="192.168.100.186"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_sles-3.meta"/>
+      </primitive>
+      <primitive id="rsc_sles-4" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="rsc_sles-4-mon"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22420">
+          <nvpair id="nvpair.id22426" name="ip" value="192.168.100.187"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_sles-4.meta"/>
+      </primitive>
+      <clone id="DoFencing">
+        <primitive id="child_DoFencing" class="stonith" type="external/vmware">
+          <operations>
+            <op name="monitor" interval="60s" id="DoFencing-1" requires="nothing" timeout="300s"/>
+            <op name="start" interval="0" id="DoFencing-2" requires="nothing" timeout="180s"/>
+            <op name="stop" interval="0" id="DoFencing-3" timeout="180s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22505">
+            <nvpair id="nvpair.id22511" name="device_host" value="vmhost"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-child_DoFencing.meta"/>
+        </primitive>
+        <meta_attributes id="clone-DoFencing.meta">
+          <nvpair id="globally_unique.meta.auto-218" name="globally-unique" value="false"/>
+          <nvpair id="nvpair.meta.auto-224" name="clone-node-max" value="1"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
+      <master id="master_rsc_1">
+        <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
+          <operations>
+            <op name="monitor" interval="5s" id="ocf_msdummy_monitor"/>
+            <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" role="Master"/>
+          </operations>
+          <meta_attributes id="primitive-ocf_msdummy.meta"/>
+        </primitive>
+        <meta_attributes id="master_slave-master_rsc_1.meta">
+          <nvpair id="nvpair.meta.auto-255" name="clone-max" value="8"/>
+          <nvpair id="nvpair.meta.auto-257" name="clone-node-max" value="2"/>
+          <nvpair id="nvpair.meta.auto-259" name="master-max" value="4"/>
+          <nvpair id="nvpair.meta.auto-261" name="master-node-max" value="1"/>
+          <nvpair id="unique-2" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </master>
+    </resources>
+    <constraints>
+      <rsc_location id="run_rsc_sles-1" rsc="rsc_sles-1">
+        <rule id="pref_run_rsc_sles-1" score="100" boolean-op="and">
+          <expression id="expression.id22624" attribute="#uname" operation="eq" value="sles-1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_sles-2" rsc="rsc_sles-2">
+        <rule id="pref_run_rsc_sles-2" score="100" boolean-op="and">
+          <expression id="expression.id22650" attribute="#uname" operation="eq" value="sles-2"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_sles-3" rsc="rsc_sles-3">
+        <rule id="pref_run_rsc_sles-3" score="100" boolean-op="and">
+          <expression id="expression.id22676" attribute="#uname" operation="eq" value="sles-3"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_sles-4" rsc="rsc_sles-4">
+        <rule id="pref_run_rsc_sles-4" score="100" boolean-op="and">
+          <expression id="expression.id22704" attribute="#uname" operation="eq" value="sles-4"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="ea7d39f4-3b94-4cfa-ba7a-952956daabee" uname="sles-4" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <lrm id="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
+        <lrm_resources id="lrm_resources.id22748">
+          <lrm_resource id="lsb_dummy" type="/usr/lib64/heartbeat/cts/LSBDummy" class="lsb">
+            <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" transition-key="10:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;10:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" transition-key="7:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;7:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" transition-key="9:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;9:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+            <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="8:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;8:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
+          </lrm_resource>
+          <lrm_resource id="migrator" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="migrator_monitor_0" operation="monitor" transition-key="11:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;11:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="424390c996795345714de0f015157695"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" transition-key="13:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;13:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="8" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-1" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-1_monitor_0" operation="monitor" transition-key="12:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;12:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="7" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="16:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;16:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="11" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:6" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-6_monitor_0" operation="monitor" transition-key="23:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;23:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="12" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-3" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-3_monitor_0" operation="monitor" transition-key="14:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;14:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="9" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="4524426499361a7a84b1803848e28d0c"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" transition-key="15:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;15:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="10" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="72dc6e7b4268eef18359d20e6a65c35e"/>
+            <lrm_rsc_op id="rsc_sles-4_start_0" operation="start" transition-key="48:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;48:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="20" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="72dc6e7b4268eef18359d20e6a65c35e"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:7" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-7_monitor_0" operation="monitor" transition-key="24:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;24:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="13" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="19:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;19:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="14" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-1_monitor_0" operation="monitor" transition-key="18:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;18:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="17" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:5" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-5_monitor_0" operation="monitor" transition-key="22:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;22:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="15" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-0_monitor_0" operation="monitor" transition-key="17:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;17:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="16" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-3_monitor_0" operation="monitor" transition-key="20:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;20:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="18" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:4" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-4_monitor_0" operation="monitor" transition-key="21:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:7;21:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="19" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
+        <instance_attributes id="instance_attributes.id23465">
+          <nvpair id="nvpair.id23472" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1186dc9a-324d-425a-966e-d757e693dc86" uname="sles-1" crmd="online" in_ccm="true" ha="active" join="member" expected="member" shutdown="0">
+      <transient_attributes id="transient_attributes.auto-2">
+        <instance_attributes id="instance_attributes.id23512">
+          <nvpair id="nvpair.id23519" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-2">
+        <lrm_resources id="lrm_resources.id23536">
+          <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" transition-key="3:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;3:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
+            <lrm_rsc_op id="r192.168.100.181_start_0" operation="start" transition-key="26:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;26:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="43" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
+            <lrm_rsc_op id="r192.168.100.181_stop_0" operation="stop" transition-key="17:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;17:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="42" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
+            <lrm_rsc_op id="r192.168.100.181_monitor_5000" operation="monitor" transition-key="27:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;27:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="46" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="135177160dc341f4f070b0f9344f116c"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" transition-key="9:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;9:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="8" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="15:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;15:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="14" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+            <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="4:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;4:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
+            <lrm_rsc_op id="r192.168.100.182_start_0" operation="start" transition-key="28:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;28:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="47" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
+            <lrm_rsc_op id="r192.168.100.182_stop_0" operation="stop" transition-key="19:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;19:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="41" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
+          </lrm_resource>
+          <lrm_resource id="lsb_dummy" type="/usr/lib64/heartbeat/cts/LSBDummy" class="lsb">
+            <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" transition-key="6:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;6:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-3" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-3_monitor_0" operation="monitor" transition-key="10:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;10:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="9" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="4524426499361a7a84b1803848e28d0c"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-3_monitor_0" operation="monitor" transition-key="16:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;16:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="15" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" transition-key="5:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;5:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+            <lrm_rsc_op id="r192.168.100.183_start_0" operation="start" transition-key="19:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;19:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="34" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+            <lrm_rsc_op id="r192.168.100.183_stop_0" operation="stop" transition-key="21:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;21:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="37" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" transition-key="11:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;11:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="10" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="72dc6e7b4268eef18359d20e6a65c35e"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:4" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-4_monitor_0" operation="monitor" transition-key="17:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;17:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="16" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:5" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-5_monitor_0" operation="monitor" transition-key="18:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;18:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="17" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:6" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-6_monitor_0" operation="monitor" transition-key="19:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;19:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="18" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-6_start_0" operation="start" transition-key="57:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;57:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="23" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-6_stop_0" operation="stop" transition-key="60:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;60:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="39" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="12:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;12:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="11" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:7" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-7_monitor_0" operation="monitor" transition-key="20:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;20:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="19" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-7_start_0" operation="start" transition-key="59:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;59:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="24" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-7_stop_0" operation="stop" transition-key="62:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;62:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="40" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:1" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="3:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;3:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="22" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:2" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="6:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;6:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="28" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+          </lrm_resource>
+          <lrm_resource id="migrator" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="migrator_monitor_0" operation="monitor" transition-key="7:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;7:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="424390c996795345714de0f015157695"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:3" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-3_start_0" operation="start" transition-key="49:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;49:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="32" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+            <lrm_rsc_op id="child_DoFencing-3_monitor_60000" operation="monitor" transition-key="50:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;50:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="35" crm_feature_set="2.0" rc-code="0" op-status="0" interval="60000" op-digest="20a63c39752cf941c02f4cba2a8a7b60"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-0_monitor_0" operation="monitor" transition-key="13:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;13:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="12" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-1" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-1_monitor_0" operation="monitor" transition-key="8:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;8:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="7" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
+            <lrm_rsc_op id="rsc_sles-1_start_0" operation="start" transition-key="41:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;41:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="44" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
+            <lrm_rsc_op id="rsc_sles-1_stop_0" operation="stop" transition-key="32:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;32:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="38" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
+            <lrm_rsc_op id="rsc_sles-1_monitor_5000" operation="monitor" transition-key="42:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;42:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="45" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="da2d7a7f380c2c5a7cf362c4de1dd529"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-1_monitor_0" operation="monitor" transition-key="14:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;14:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="13" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="02fb99a8-e30e-482f-b3ad-0fb3ce27d088" uname="sles-2" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <transient_attributes id="transient_attributes.auto-3">
+        <instance_attributes id="instance_attributes.id24754">
+          <nvpair id="nvpair.id24761" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-3">
+        <lrm_resources id="lrm_resources.id24778">
+          <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" transition-key="22:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;22:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" transition-key="28:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;28:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="8" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
+            <lrm_rsc_op id="rsc_sles-2_start_0" operation="start" transition-key="43:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;43:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="39" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
+            <lrm_rsc_op id="rsc_sles-2_stop_0" operation="stop" transition-key="34:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;34:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="35" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="34:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;34:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="14" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+            <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="23:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;23:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
+          </lrm_resource>
+          <lrm_resource id="lsb_dummy" type="/usr/lib64/heartbeat/cts/LSBDummy" class="lsb">
+            <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" transition-key="25:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;25:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="lsb_dummy_start_0" operation="start" transition-key="36:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;36:2:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="38" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="lsb_dummy_stop_0" operation="stop" transition-key="27:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;27:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="34" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-3" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-3_monitor_0" operation="monitor" transition-key="29:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;29:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="9" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="4524426499361a7a84b1803848e28d0c"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-3_monitor_0" operation="monitor" transition-key="35:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;35:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="15" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" transition-key="24:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;24:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" transition-key="30:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;30:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="10" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="72dc6e7b4268eef18359d20e6a65c35e"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:4" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-4_monitor_0" operation="monitor" transition-key="36:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;36:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="16" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-4_start_0" operation="start" transition-key="53:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;53:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="24" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-4_stop_0" operation="stop" transition-key="58:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;58:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="37" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:5" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-5_monitor_0" operation="monitor" transition-key="37:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;37:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="17" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:6" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-6_monitor_0" operation="monitor" transition-key="38:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;38:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="18" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="31:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;31:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="11" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:7" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-7_monitor_0" operation="monitor" transition-key="39:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;39:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="19" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:1" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="5:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;5:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="22" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+            <lrm_rsc_op id="child_DoFencing-1_start_0" operation="start" transition-key="45:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;45:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="30" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+            <lrm_rsc_op id="child_DoFencing-1_monitor_60000" operation="monitor" transition-key="46:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;46:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="31" crm_feature_set="2.0" rc-code="0" op-status="0" interval="60000" op-digest="20a63c39752cf941c02f4cba2a8a7b60"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:2" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="8:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;8:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="27" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+          </lrm_resource>
+          <lrm_resource id="migrator" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="migrator_monitor_0" operation="monitor" transition-key="26:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;26:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="424390c996795345714de0f015157695"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-0_monitor_0" operation="monitor" transition-key="32:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;32:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="12" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-1" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-1_monitor_0" operation="monitor" transition-key="27:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;27:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="7" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-1_monitor_0" operation="monitor" transition-key="33:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="4:7;33:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="13" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-1_start_0" operation="start" transition-key="47:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;47:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="23" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-1_stop_0" operation="stop" transition-key="56:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" transition-magic="0:0;56:0:a92a8570-d505-4703-a2fe-38ba4246cbb5" call-id="36" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2298606a-6a8c-499a-9d25-76242f7006ec" uname="sles-3" crmd="online" ha="active" shutdown="0" in_ccm="false" join="member" expected="member">
+      <lrm id="lrm.auto-4">
+        <lrm_resources id="lrm_resources.id25826">
+          <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" transition-key="43:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;43:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" transition-key="41:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;41:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="d284750e2bd4a30721ccaeb78f5582de"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+            <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="42:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;42:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
+          </lrm_resource>
+          <lrm_resource id="lsb_dummy" type="/usr/lib64/heartbeat/cts/LSBDummy" class="lsb">
+            <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" transition-key="44:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;44:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" transition-key="47:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;47:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="8" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="dcdbdc304c192f671a390f7df0317954"/>
+          </lrm_resource>
+          <lrm_resource id="migrator" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="migrator_monitor_0" operation="monitor" transition-key="45:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;45:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="424390c996795345714de0f015157695"/>
+            <lrm_rsc_op id="migrator_start_0" operation="start" transition-key="23:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;23:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="20" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="424390c996795345714de0f015157695" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="migrator_monitor_10000" operation="monitor" transition-key="30:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;30:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="25" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="81415fea31381c71277b9999ebb65d2f"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-1" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-1_monitor_0" operation="monitor" transition-key="46:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;46:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="7" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="821601077053d93826e4ac2adef1f61d"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="50:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;50:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="11" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-0_monitor_0" operation="monitor" transition-key="51:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;51:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="12" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:4" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-4_monitor_0" operation="monitor" transition-key="55:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;55:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="16" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" transition-key="49:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;49:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="10" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="72dc6e7b4268eef18359d20e6a65c35e"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sles-3" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sles-3_monitor_0" operation="monitor" transition-key="48:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;48:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="9" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="4524426499361a7a84b1803848e28d0c"/>
+            <lrm_rsc_op id="rsc_sles-3_start_0" operation="start" transition-key="29:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;29:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="21" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="4524426499361a7a84b1803848e28d0c"/>
+            <lrm_rsc_op id="rsc_sles-3_monitor_5000" operation="monitor" transition-key="39:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;39:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="26" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="c945aa7e171c5474e2fecc65c6ed922a"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="53:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;53:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="14" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-2_start_0" operation="start" transition-key="49:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;49:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="23" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-2_monitor_5000" operation="monitor" transition-key="62:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;62:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="28" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="19240b0a103493c96459e91c1a816b50"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-3_monitor_0" operation="monitor" transition-key="54:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;54:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="15" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-1_monitor_0" operation="monitor" transition-key="52:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;52:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="13" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:5" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-5_monitor_0" operation="monitor" transition-key="56:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;56:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="17" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-5_start_0" operation="start" transition-key="55:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;55:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="24" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ocf_msdummy-5_monitor_5000" operation="monitor" transition-key="70:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;70:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="29" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="19240b0a103493c96459e91c1a816b50"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:6" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-6_monitor_0" operation="monitor" transition-key="57:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;57:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="18" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ocf_msdummy:7" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocf_msdummy-7_monitor_0" operation="monitor" transition-key="58:0:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;58:0:8b471a36-40c9-47ef-b260-f684928d0276" call-id="19" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:1" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="7:1:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;7:1:8b471a36-40c9-47ef-b260-f684928d0276" call-id="22" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:2" type="external/vmware" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="10:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:7;10:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="27" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+            <lrm_rsc_op id="child_DoFencing-2_start_0" operation="start" transition-key="47:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;47:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="30" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f91e28ad7bdf548534b8469df1937cdb"/>
+            <lrm_rsc_op id="child_DoFencing-2_monitor_60000" operation="monitor" transition-key="48:2:8b471a36-40c9-47ef-b260-f684928d0276" transition-magic="0:0;48:2:8b471a36-40c9-47ef-b260-f684928d0276" call-id="31" crm_feature_set="2.0" rc-code="0" op-status="0" interval="60000" op-digest="20a63c39752cf941c02f4cba2a8a7b60"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="transient_attributes.auto-4">
+        <instance_attributes id="instance_attributes.id26855">
+          <nvpair id="nvpair.id26862" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

@@ -1,35 +1,45 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="uuid1" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="uuid1" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:00 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set>       
-      <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21836" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21836" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc1.meta"/></primitive>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc1.meta"/>
+      </primitive>
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="pingd-rule" score-attribute="pingd">
-	  <expression attribute="pingd" operation="defined" id="expression.id21895"/>
-	</rule>
+        <rule id="pingd-rule" score-attribute="pingd">
+          <expression attribute="pingd" operation="defined" id="expression.id21895"/>
+        </rule>
       </rsc_location>
     </constraints>
   </configuration>
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="uuid1">
-	<instance_attributes id="instance_attributes.id21932"><nvpair id="nvpair.id21939" name="probe_complete" value="true"/><nvpair id="nvpair.id21948" name="pingd" value="200"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id21932">
+          <nvpair id="nvpair.id21939" name="probe_complete" value="true"/>
+          <nvpair id="nvpair.id21948" name="pingd" value="200"/>
+        </instance_attributes>
       </transient_attributes>
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="uuid2">
-	<instance_attributes id="instance_attributes.id21982"><nvpair id="nvpair.id21989" name="probe_complete" value="true"/><nvpair id="nvpair.id21997" name="pingd" value="400"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id21982">
+          <nvpair id="nvpair.id21989" name="probe_complete" value="true"/>
+          <nvpair id="nvpair.id21997" name="pingd" value="400"/>
+        </instance_attributes>
       </transient_attributes>
     </node_state>
   </status>

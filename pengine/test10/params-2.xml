@@ -1,43 +1,55 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:11 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21835" name="no-quorum-policy" value="ignore"/><nvpair id="nvpair.id21844" name="symmetric-cluster" value="false"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21835" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="nvpair.id21844" name="symmetric-cluster" value="false"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member"/>
       <node id="node2" uname="node2" type="member"/>
       <node id="node3" uname="node3" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="lsb" type="apache"><meta_attributes id="primitive-rsc1.meta"/></primitive>
-      <primitive id="rsc2" class="lsb" type="apache"><meta_attributes id="primitive-rsc2.meta"/></primitive>
-      <primitive id="rsc3" class="lsb" type="apache"><meta_attributes id="primitive-rsc3.meta"/></primitive>
+      <primitive id="rsc1" class="lsb" type="apache">
+        <meta_attributes id="primitive-rsc1.meta"/>
+      </primitive>
+      <primitive id="rsc2" class="lsb" type="apache">
+        <meta_attributes id="primitive-rsc2.meta"/>
+      </primitive>
+      <primitive id="rsc3" class="lsb" type="apache">
+        <meta_attributes id="primitive-rsc3.meta"/>
+      </primitive>
     </resources>
     <constraints>
       <rsc_location id="cons1" rsc="rsc1">
-	<rule id="score1" score="10">
-	  <expression id="expression.id21927" attribute="#uname" operation="eq" value="node1"/>
-	</rule>
-      </rsc_location>	
+        <rule id="score1" score="10">
+          <expression id="expression.id21927" attribute="#uname" operation="eq" value="node1"/>
+        </rule>
+      </rsc_location>
       <rsc_location id="cons2" rsc="rsc2">
-	<rule id="score2" score="20">
-	  <expression id="expression.id21952" attribute="#uname" operation="eq" value="node2"/>
-	</rule>
-      </rsc_location>	
+        <rule id="score2" score="20">
+          <expression id="expression.id21952" attribute="#uname" operation="eq" value="node2"/>
+        </rule>
+      </rsc_location>
       <rsc_location id="cons3" rsc="rsc3">
-	<rule id="score3" score="30">
-	  <expression id="expression.id21977" attribute="#uname" operation="eq" value="node3"/>
-	</rule>
-      </rsc_location>	
+        <rule id="score3" score="30">
+          <expression id="expression.id21977" attribute="#uname" operation="eq" value="node3"/>
+        </rule>
+      </rsc_location>
     </constraints>
   </configuration>
   <status>
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true" shutdown="1086187789">
-       <transient_attributes id="b8f81462-2d65-42bf-bbb1-70db0ea29e5b">
-        <instance_attributes id="instance_attributes.shutdown"><nvpair id="nvp.shutdown" name="shutdown" value="1234"/></instance_attributes>
-       </transient_attributes>
+      <transient_attributes id="b8f81462-2d65-42bf-bbb1-70db0ea29e5b">
+        <instance_attributes id="instance_attributes.shutdown">
+          <nvpair id="nvp.shutdown" name="shutdown" value="1234"/>
+        </instance_attributes>
+      </transient_attributes>
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22019">
           <lrm_resource id="rsc1" class="heartbeat" type="apache">

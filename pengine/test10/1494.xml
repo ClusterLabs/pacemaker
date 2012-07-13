@@ -1,72 +1,98 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="537" num_updates="22245" dc-uuid="1ce670eb-d670-4f6d-811f-d415ffde76b7" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair name="last-lrm-refresh" id="nvpair.id21849" value="1171856040"/><nvpair id="nvpair.id21858" name="default-resource-stickiness" value="INFINITY"/><nvpair name="stonith-enabled" id="nvpair.id21868" value="False"/><nvpair id="nvpair.id21877" name="no-quorum-policy" value="ignore"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="af77f4a5-5626-43b3-acbe-9299ae520262" uname="hb3" type="normal">
-         <instance_attributes id="instance_attributes.id21900"><nvpair id="nvpair.id21907" name="standby" value="off"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id21918"/>
-       </node>
-       <node id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" type="normal">
-         <instance_attributes id="instance_attributes.id21936"><nvpair id="nvpair.id21943" name="standby" value="off"/><nvpair id="nvpair.id21952" name="inhibit_group0" value="1"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id21964"><nvpair id="nvpair.id21970" name="master-resource_masterslave:0" value="1"/></instance_attributes>
-       </node>
-       <node id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" type="normal">
-         <instance_attributes id="instance_attributes.id21992"><nvpair id="nvpair.id21999" name="standby" value="off"/><nvpair id="nvpair.id22008" name="db_in_sync" value="1"/></instance_attributes>
-         <instance_attributes id="instance_attributes.id22019"/>
-       </node>
-     </nodes>
-     <resources>
-       <clone id="ima_cloneid">
-         <primitive id="ima_rscid" class="ocf" type="Dummy" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id22073"><nvpair name="target_role" id="nvpair.id22080" value="started"/></instance_attributes>
-         <meta_attributes id="primitive-ima_rscid.meta"><nvpair id="nvpair.meta.auto-100" name="target-role" value="started"/></meta_attributes></primitive>
-       <meta_attributes id="clone-ima_cloneid.meta"><nvpair id="nvpair.meta.auto-88" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-90" name="clone-node-max" value="1"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
-     </resources>
-     <constraints>
-       <rsc_location id="place_ima_cloneid" rsc="ima_cloneid">
-         <rule id="preferred_place_ima_cloneid" score="-INFINITY">
-           <expression attribute="#uname" id="expression.id22110" operation="eq" value="hb1"/>
-         </rule>
-       </rsc_location>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
-       <transient_attributes id="transient_attributes.auto-1">
-         <instance_attributes id="instance_attributes.id22155"><nvpair id="nvpair.id22162" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-1">
-         <lrm_resources id="lrm_resources.id22180">
-           <lrm_resource id="ima_rscid:0" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ima_rscid-0_monitor_0" operation="monitor" transition-key="3:3:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="4:7;3:3:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="12" crm_feature_set="1.0.5" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-             <lrm_rsc_op id="ima_rscid-0_start_0" operation="start" transition-key="16:5:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:0;16:5:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="14" crm_feature_set="1.0.5" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-           </lrm_resource>
-           <lrm_resource id="ima_rscid:1" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ima_rscid-1_monitor_0" operation="monitor" transition-key="12:0:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="4:7;12:0:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="11" crm_feature_set="1.0.5" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
-       <lrm id="lrm.auto-2">
-         <lrm_resources id="lrm_resources.id22316">
-           <lrm_resource id="ima_rscid:0" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ima_rscid-0_monitor_0" operation="monitor" transition-key="11:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:7;11:6:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="10" crm_feature_set="1.0.5" rc-code="7" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-           </lrm_resource>
-           <lrm_resource id="ima_rscid:1" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ima_rscid-1_monitor_0" operation="monitor" transition-key="12:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:7;12:6:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="11" crm_feature_set="1.0.5" rc-code="7" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-             <lrm_rsc_op id="ima_rscid-1_start_0" operation="start" transition-key="30:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:0;30:6:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="12" crm_feature_set="1.0.5" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-       <transient_attributes id="transient_attributes.auto-2">
-         <instance_attributes id="instance_attributes.id22428"><nvpair id="nvpair.id22435" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="537" num_updates="22245" dc-uuid="1ce670eb-d670-4f6d-811f-d415ffde76b7" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:50:59 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="last-lrm-refresh" id="nvpair.id21849" value="1171856040"/>
+        <nvpair id="nvpair.id21858" name="default-resource-stickiness" value="INFINITY"/>
+        <nvpair name="stonith-enabled" id="nvpair.id21868" value="False"/>
+        <nvpair id="nvpair.id21877" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="af77f4a5-5626-43b3-acbe-9299ae520262" uname="hb3" type="normal">
+        <instance_attributes id="instance_attributes.id21900">
+          <nvpair id="nvpair.id21907" name="standby" value="off"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id21918"/>
+      </node>
+      <node id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" type="normal">
+        <instance_attributes id="instance_attributes.id21936">
+          <nvpair id="nvpair.id21943" name="standby" value="off"/>
+          <nvpair id="nvpair.id21952" name="inhibit_group0" value="1"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id21964">
+          <nvpair id="nvpair.id21970" name="master-resource_masterslave:0" value="1"/>
+        </instance_attributes>
+      </node>
+      <node id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" type="normal">
+        <instance_attributes id="instance_attributes.id21992">
+          <nvpair id="nvpair.id21999" name="standby" value="off"/>
+          <nvpair id="nvpair.id22008" name="db_in_sync" value="1"/>
+        </instance_attributes>
+        <instance_attributes id="instance_attributes.id22019"/>
+      </node>
+    </nodes>
+    <resources>
+      <clone id="ima_cloneid">
+        <primitive id="ima_rscid" class="ocf" type="Dummy" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id22073">
+            <nvpair name="target_role" id="nvpair.id22080" value="started"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-ima_rscid.meta">
+            <nvpair id="nvpair.meta.auto-100" name="target-role" value="started"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="clone-ima_cloneid.meta">
+          <nvpair id="nvpair.meta.auto-88" name="clone-max" value="2"/>
+          <nvpair id="nvpair.meta.auto-90" name="clone-node-max" value="1"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="place_ima_cloneid" rsc="ima_cloneid">
+        <rule id="preferred_place_ima_cloneid" score="-INFINITY">
+          <expression attribute="#uname" id="expression.id22110" operation="eq" value="hb1"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+      <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.id22155">
+          <nvpair id="nvpair.id22162" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-1">
+        <lrm_resources id="lrm_resources.id22180">
+          <lrm_resource id="ima_rscid:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ima_rscid-0_monitor_0" operation="monitor" transition-key="3:3:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="4:7;3:3:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="12" crm_feature_set="1.0.5" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+            <lrm_rsc_op id="ima_rscid-0_start_0" operation="start" transition-key="16:5:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:0;16:5:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="14" crm_feature_set="1.0.5" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+          </lrm_resource>
+          <lrm_resource id="ima_rscid:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ima_rscid-1_monitor_0" operation="monitor" transition-key="12:0:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="4:7;12:0:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="11" crm_feature_set="1.0.5" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
+      <lrm id="lrm.auto-2">
+        <lrm_resources id="lrm_resources.id22316">
+          <lrm_resource id="ima_rscid:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ima_rscid-0_monitor_0" operation="monitor" transition-key="11:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:7;11:6:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="10" crm_feature_set="1.0.5" rc-code="7" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+          </lrm_resource>
+          <lrm_resource id="ima_rscid:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ima_rscid-1_monitor_0" operation="monitor" transition-key="12:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:7;12:6:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="11" crm_feature_set="1.0.5" rc-code="7" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+            <lrm_rsc_op id="ima_rscid-1_start_0" operation="start" transition-key="30:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:0;30:6:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="12" crm_feature_set="1.0.5" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="transient_attributes.auto-2">
+        <instance_attributes id="instance_attributes.id22428">
+          <nvpair id="nvpair.id22435" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

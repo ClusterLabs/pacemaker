@@ -1,147 +1,204 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="98" num_updates="20" dc-uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair name="stonith-enabled" id="nvpair.id21846" value="false"/><nvpair name="last-lrm-refresh" id="nvpair.id21855" value="1192999094"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="11e02303-5984-4f6d-be06-37e137335612" uname="defiant.ds9" type="normal">
-         <instance_attributes id="instance_attributes.id21879"><nvpair id="nvpair.id21886" name="standby" value="on"/></instance_attributes>
-       </node>
-       <node id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57" uname="heartbeat.ds9" type="normal"/>
-       <node id="1e550a7a-16a2-453a-81c3-8d6e04919dad" uname="ops.ds9" type="normal"/>
-       <node id="de2a634c-e405-42bb-9df2-292e36ad5970" uname="biggame.ds9" type="normal"/>
-       <node id="674234bf-84a9-4059-8d48-28e273cc280e" uname="warbird.ds9" type="normal"/>
-     </nodes>
-     <resources>
-       <group id="Web_Group">
-         <primitive id="Apache_IP" class="ocf" type="IPaddr" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id21957"><nvpair name="target_role" id="nvpair.id21964" value="started"/><nvpair id="nvpair.id21973" name="ip" value="10.0.0.180"/><nvpair id="nvpair.id21981" name="cidr_netmask" value="255.255.255.0"/><nvpair id="nvpair.id21990" name="broadcast" value="10.0.0.255"/></instance_attributes>
-         <meta_attributes id="primitive-Apache_IP.meta"><nvpair id="nvpair.meta.auto-50" name="target-role" value="started"/></meta_attributes></primitive>
-         <instance_attributes id="instance_attributes.id22002"><nvpair id="nvpair.id22009" name="target_role" value="started"/></instance_attributes>
-         <primitive id="resource_IP2" class="ocf" type="IPaddr" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id22030"><nvpair name="target_role" id="nvpair.id22037" value="stopped"/><nvpair id="nvpair.id22046" name="ip" value="10.0.0.67"/><nvpair id="nvpair.id22054" name="cidr_netmask" value="255.255.255.0"/><nvpair id="nvpair.id22064" name="broadcast" value="10.0.0.255"/></instance_attributes>
-         <meta_attributes id="primitive-resource_IP2.meta"><nvpair id="nvpair.meta.auto-75" name="target-role" value="stopped"/></meta_attributes></primitive>
-         <primitive id="resource_dummyweb" class="ocf" type="Dummy" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id22086"><nvpair id="nvpair.id22093" name="target_role" value="started"/></instance_attributes>
-         <meta_attributes id="primitive-resource_dummyweb.meta"><nvpair id="nvpair.meta.auto-92" name="target-role" value="started"/></meta_attributes></primitive>
-       <meta_attributes id="group-Web_Group.meta"><nvpair id="ordered.meta.auto-42" name="ordered" value="true"/><nvpair id="collocated.meta.auto-42" name="collocated" value="true"/><nvpair id="nvpair.meta.auto-65" name="target-role" value="started"/></meta_attributes></group>
-       <group id="group_fUN">
-         <primitive id="resource_IP3" class="ocf" type="IPaddr" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id22125"><nvpair id="nvpair.id22132" name="target_role" value="started"/><nvpair id="nvpair.id22141" name="ip" value="10.0.0.68"/><nvpair id="nvpair.id22150" name="cidr_netmask" value="255.255.255.0"/><nvpair id="nvpair.id22159" name="broadcast" value="10.0.0.255"/></instance_attributes>
-         <meta_attributes id="primitive-resource_IP3.meta"><nvpair id="nvpair.meta.auto-106" name="target-role" value="started"/></meta_attributes></primitive>
-         <primitive id="resource_dummy" class="ocf" type="Dummy" provider="heartbeat">
-           <instance_attributes id="instance_attributes.id22181"><nvpair name="target_role" id="nvpair.id22188" value="started"/></instance_attributes>
-         <meta_attributes id="primitive-resource_dummy.meta"><nvpair id="nvpair.meta.auto-123" name="target-role" value="started"/></meta_attributes></primitive>
-       <meta_attributes id="group-group_fUN.meta"><nvpair id="ordered.meta.auto-98" name="ordered" value="true"/><nvpair id="collocated.meta.auto-98" name="collocated" value="true"/></meta_attributes></group>
-     </resources>
-     <constraints>
-       <rsc_location id="Web_Place" rsc="Web_Group">
-         <rule id="preferred_Web_Place" score="100">
-           <expression attribute="#uname" id="expression.id22218" operation="eq" value="defiant.ds9"/>
-         </rule>
-       </rsc_location>
-       <rsc_order id="order_Web_before_fun" first="Web_Group" then="group_fUN"/>
-     </constraints>
-   </configuration>
-   <status>
-     <node_state id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57" uname="heartbeat.ds9" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
-       <transient_attributes id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
-         <instance_attributes id="instance_attributes.id22275"><nvpair id="nvpair.id22282" name="probe_complete" value="true"/><nvpair id="nvpair.id22292" name="fail-count-OpenVPN" value="1"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
-         <lrm_resources id="lrm_resources.id22309">
-           <lrm_resource id="OpenVPN_IP" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="OpenVPN_IP_monitor_0" operation="monitor" transition-key="7:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;7:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="1f0bbac744caf5cfdfd4c698739d09c5"/>
-           </lrm_resource>
-           <lrm_resource id="resource_IP2" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_IP2_monitor_0" operation="monitor" transition-key="3:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;3:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="49" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="368d7680070c38f8f2f40ddf5a434d45"/>
-           </lrm_resource>
-           <lrm_resource id="Apache_IP" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="Apache_IP_monitor_0" operation="monitor" transition-key="5:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;5:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="a3558b7ea398267ef1ea56b21f5d840a"/>
-             <lrm_rsc_op id="Apache_IP_start_0" operation="start" transition-key="6:0:5e45f285-3200-4d7f-966a-42c650d75a6c" transition-magic="0:0;6:0:5e45f285-3200-4d7f-966a-42c650d75a6c" call-id="75" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="c2ff6b319ef47e19aa8594e768653937"/>
-             <lrm_rsc_op id="Apache_IP_stop_0" operation="stop" transition-key="19:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;19:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="17" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="a3558b7ea398267ef1ea56b21f5d840a"/>
-           </lrm_resource>
-           <lrm_resource id="resource_IP3" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_IP3_monitor_0" operation="monitor" transition-key="3:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;3:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="50" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="87f29a4a3d4a9a7ad6eadc46f37c1f64"/>
-             <lrm_rsc_op id="resource_IP3_stop_0" operation="stop" transition-key="31:0:5e45f285-3200-4d7f-966a-42c650d75a6c" transition-magic="0:0;31:0:5e45f285-3200-4d7f-966a-42c650d75a6c" call-id="77" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="87f29a4a3d4a9a7ad6eadc46f37c1f64"/>
-             <lrm_rsc_op id="resource_IP3_start_0" operation="start" transition-key="40:87:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;40:87:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="73" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="8e4b9832ba43717985ec21dee8ac8899"/>
-           </lrm_resource>
-           <lrm_resource id="Apache" type="apache13" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="Apache_monitor_0" operation="monitor" transition-key="3:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:1;3:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="16" crm_feature_set="2.0" rc-code="1" op-status="4" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
-             <lrm_rsc_op id="Apache_stop_0" operation="stop" transition-key="1:23:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;1:23:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="18" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
-           </lrm_resource>
-           <lrm_resource id="resource_dummyweb" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_dummyweb_monitor_0" operation="monitor" transition-key="3:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;3:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="62" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="resource_dummy" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_dummy_monitor_0" operation="monitor" transition-key="3:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;3:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="52" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="resource_dummy_stop_0" operation="stop" transition-key="33:0:5e45f285-3200-4d7f-966a-42c650d75a6c" transition-magic="0:0;33:0:5e45f285-3200-4d7f-966a-42c650d75a6c" call-id="76" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="resource_dummy_start_0" operation="start" transition-key="42:87:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;42:87:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="74" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" op-force-restart=" state " op-restart-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="1e550a7a-16a2-453a-81c3-8d6e04919dad" uname="ops.ds9" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="0">
-       <transient_attributes id="transient_attributes.auto-2">
-         <instance_attributes id="instance_attributes.id22797"><nvpair id="nvpair.id22804" name="probe_complete" value="true"/><nvpair id="nvpair.id22813" name="fail-count-OpenVPN" value="2"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-2">
-         <lrm_resources id="lrm_resources.id22831">
-           <lrm_resource id="OpenVPN_IP" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="OpenVPN_IP_monitor_0" operation="monitor" transition-key="14:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;14:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="1f0bbac744caf5cfdfd4c698739d09c5"/>
-           </lrm_resource>
-           <lrm_resource id="resource_IP2" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_IP2_monitor_0" operation="monitor" transition-key="5:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;5:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="46" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="368d7680070c38f8f2f40ddf5a434d45"/>
-           </lrm_resource>
-           <lrm_resource id="Apache_IP" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="Apache_IP_monitor_0" operation="monitor" transition-key="12:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;12:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="a3558b7ea398267ef1ea56b21f5d840a"/>
-           </lrm_resource>
-           <lrm_resource id="resource_IP3" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_IP3_monitor_0" operation="monitor" transition-key="5:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;5:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="47" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="87f29a4a3d4a9a7ad6eadc46f37c1f64"/>
-             <lrm_rsc_op id="resource_IP3_start_0" operation="start" transition-key="32:0:5e45f285-3200-4d7f-966a-42c650d75a6c" transition-magic="0:0;32:0:5e45f285-3200-4d7f-966a-42c650d75a6c" call-id="50" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="8e4b9832ba43717985ec21dee8ac8899"/>
-           </lrm_resource>
-           <lrm_resource id="Apache" type="apache13" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="Apache_monitor_0" operation="monitor" transition-key="5:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:1;5:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="14" crm_feature_set="2.0" rc-code="1" op-status="4" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
-             <lrm_rsc_op id="Apache_stop_0" operation="stop" transition-key="2:23:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;2:23:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="15" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
-           </lrm_resource>
-           <lrm_resource id="resource_dummyweb" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_dummyweb_monitor_0" operation="monitor" transition-key="5:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;5:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="49" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="resource_dummy" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_dummy_monitor_0" operation="monitor" transition-key="5:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;5:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="48" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-             <lrm_rsc_op id="resource_dummy_start_0" operation="start" transition-key="34:0:5e45f285-3200-4d7f-966a-42c650d75a6c" transition-magic="0:0;34:0:5e45f285-3200-4d7f-966a-42c650d75a6c" call-id="51" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="de2a634c-e405-42bb-9df2-292e36ad5970" uname="biggame.ds9" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
-       <transient_attributes id="de2a634c-e405-42bb-9df2-292e36ad5970">
-         <instance_attributes id="instance_attributes.id23212"><nvpair id="nvpair.id23219" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="de2a634c-e405-42bb-9df2-292e36ad5970">
-         <lrm_resources id="lrm_resources.id23236">
-           <lrm_resource id="resource_IP2" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_IP2_monitor_0" operation="monitor" transition-key="9:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;9:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="34" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="368d7680070c38f8f2f40ddf5a434d45"/>
-           </lrm_resource>
-           <lrm_resource id="Apache_IP" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="Apache_IP_monitor_0" operation="monitor" transition-key="8:26:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;8:26:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="a3558b7ea398267ef1ea56b21f5d840a"/>
-           </lrm_resource>
-           <lrm_resource id="resource_IP3" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_IP3_monitor_0" operation="monitor" transition-key="9:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;9:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="35" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="87f29a4a3d4a9a7ad6eadc46f37c1f64"/>
-           </lrm_resource>
-           <lrm_resource id="Apache" type="apache13" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="Apache_monitor_0" operation="monitor" transition-key="9:26:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:1;9:26:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="5" crm_feature_set="2.0" rc-code="1" op-status="4" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
-             <lrm_rsc_op id="Apache_stop_0" operation="stop" transition-key="1:27:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;1:27:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
-           </lrm_resource>
-           <lrm_resource id="resource_dummyweb" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_dummyweb_monitor_0" operation="monitor" transition-key="9:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;9:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="37" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-           <lrm_resource id="resource_dummy" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="resource_dummy_monitor_0" operation="monitor" transition-key="9:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;9:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="36" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="98" num_updates="20" dc-uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:00 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="stonith-enabled" id="nvpair.id21846" value="false"/>
+        <nvpair name="last-lrm-refresh" id="nvpair.id21855" value="1192999094"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="11e02303-5984-4f6d-be06-37e137335612" uname="defiant.ds9" type="normal">
+        <instance_attributes id="instance_attributes.id21879">
+          <nvpair id="nvpair.id21886" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57" uname="heartbeat.ds9" type="normal"/>
+      <node id="1e550a7a-16a2-453a-81c3-8d6e04919dad" uname="ops.ds9" type="normal"/>
+      <node id="de2a634c-e405-42bb-9df2-292e36ad5970" uname="biggame.ds9" type="normal"/>
+      <node id="674234bf-84a9-4059-8d48-28e273cc280e" uname="warbird.ds9" type="normal"/>
+    </nodes>
+    <resources>
+      <group id="Web_Group">
+        <primitive id="Apache_IP" class="ocf" type="IPaddr" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id21957">
+            <nvpair name="target_role" id="nvpair.id21964" value="started"/>
+            <nvpair id="nvpair.id21973" name="ip" value="10.0.0.180"/>
+            <nvpair id="nvpair.id21981" name="cidr_netmask" value="255.255.255.0"/>
+            <nvpair id="nvpair.id21990" name="broadcast" value="10.0.0.255"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-Apache_IP.meta">
+            <nvpair id="nvpair.meta.auto-50" name="target-role" value="started"/>
+          </meta_attributes>
+        </primitive>
+        <instance_attributes id="instance_attributes.id22002">
+          <nvpair id="nvpair.id22009" name="target_role" value="started"/>
+        </instance_attributes>
+        <primitive id="resource_IP2" class="ocf" type="IPaddr" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id22030">
+            <nvpair name="target_role" id="nvpair.id22037" value="stopped"/>
+            <nvpair id="nvpair.id22046" name="ip" value="10.0.0.67"/>
+            <nvpair id="nvpair.id22054" name="cidr_netmask" value="255.255.255.0"/>
+            <nvpair id="nvpair.id22064" name="broadcast" value="10.0.0.255"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-resource_IP2.meta">
+            <nvpair id="nvpair.meta.auto-75" name="target-role" value="stopped"/>
+          </meta_attributes>
+        </primitive>
+        <primitive id="resource_dummyweb" class="ocf" type="Dummy" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id22086">
+            <nvpair id="nvpair.id22093" name="target_role" value="started"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-resource_dummyweb.meta">
+            <nvpair id="nvpair.meta.auto-92" name="target-role" value="started"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="group-Web_Group.meta">
+          <nvpair id="ordered.meta.auto-42" name="ordered" value="true"/>
+          <nvpair id="collocated.meta.auto-42" name="collocated" value="true"/>
+          <nvpair id="nvpair.meta.auto-65" name="target-role" value="started"/>
+        </meta_attributes>
+      </group>
+      <group id="group_fUN">
+        <primitive id="resource_IP3" class="ocf" type="IPaddr" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id22125">
+            <nvpair id="nvpair.id22132" name="target_role" value="started"/>
+            <nvpair id="nvpair.id22141" name="ip" value="10.0.0.68"/>
+            <nvpair id="nvpair.id22150" name="cidr_netmask" value="255.255.255.0"/>
+            <nvpair id="nvpair.id22159" name="broadcast" value="10.0.0.255"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-resource_IP3.meta">
+            <nvpair id="nvpair.meta.auto-106" name="target-role" value="started"/>
+          </meta_attributes>
+        </primitive>
+        <primitive id="resource_dummy" class="ocf" type="Dummy" provider="heartbeat">
+          <instance_attributes id="instance_attributes.id22181">
+            <nvpair name="target_role" id="nvpair.id22188" value="started"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-resource_dummy.meta">
+            <nvpair id="nvpair.meta.auto-123" name="target-role" value="started"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="group-group_fUN.meta">
+          <nvpair id="ordered.meta.auto-98" name="ordered" value="true"/>
+          <nvpair id="collocated.meta.auto-98" name="collocated" value="true"/>
+        </meta_attributes>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_location id="Web_Place" rsc="Web_Group">
+        <rule id="preferred_Web_Place" score="100">
+          <expression attribute="#uname" id="expression.id22218" operation="eq" value="defiant.ds9"/>
+        </rule>
+      </rsc_location>
+      <rsc_order id="order_Web_before_fun" first="Web_Group" then="group_fUN"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57" uname="heartbeat.ds9" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
+      <transient_attributes id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
+        <instance_attributes id="instance_attributes.id22275">
+          <nvpair id="nvpair.id22282" name="probe_complete" value="true"/>
+          <nvpair id="nvpair.id22292" name="fail-count-OpenVPN" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
+        <lrm_resources id="lrm_resources.id22309">
+          <lrm_resource id="OpenVPN_IP" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="OpenVPN_IP_monitor_0" operation="monitor" transition-key="7:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;7:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="1f0bbac744caf5cfdfd4c698739d09c5"/>
+          </lrm_resource>
+          <lrm_resource id="resource_IP2" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_IP2_monitor_0" operation="monitor" transition-key="3:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;3:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="49" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="368d7680070c38f8f2f40ddf5a434d45"/>
+          </lrm_resource>
+          <lrm_resource id="Apache_IP" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Apache_IP_monitor_0" operation="monitor" transition-key="5:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;5:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="a3558b7ea398267ef1ea56b21f5d840a"/>
+            <lrm_rsc_op id="Apache_IP_start_0" operation="start" transition-key="6:0:5e45f285-3200-4d7f-966a-42c650d75a6c" transition-magic="0:0;6:0:5e45f285-3200-4d7f-966a-42c650d75a6c" call-id="75" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="c2ff6b319ef47e19aa8594e768653937"/>
+            <lrm_rsc_op id="Apache_IP_stop_0" operation="stop" transition-key="19:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;19:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="17" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="a3558b7ea398267ef1ea56b21f5d840a"/>
+          </lrm_resource>
+          <lrm_resource id="resource_IP3" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_IP3_monitor_0" operation="monitor" transition-key="3:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;3:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="50" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="87f29a4a3d4a9a7ad6eadc46f37c1f64"/>
+            <lrm_rsc_op id="resource_IP3_stop_0" operation="stop" transition-key="31:0:5e45f285-3200-4d7f-966a-42c650d75a6c" transition-magic="0:0;31:0:5e45f285-3200-4d7f-966a-42c650d75a6c" call-id="77" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="87f29a4a3d4a9a7ad6eadc46f37c1f64"/>
+            <lrm_rsc_op id="resource_IP3_start_0" operation="start" transition-key="40:87:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;40:87:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="73" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="8e4b9832ba43717985ec21dee8ac8899"/>
+          </lrm_resource>
+          <lrm_resource id="Apache" type="apache13" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Apache_monitor_0" operation="monitor" transition-key="3:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:1;3:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="16" crm_feature_set="2.0" rc-code="1" op-status="4" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
+            <lrm_rsc_op id="Apache_stop_0" operation="stop" transition-key="1:23:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;1:23:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="18" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
+          </lrm_resource>
+          <lrm_resource id="resource_dummyweb" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_dummyweb_monitor_0" operation="monitor" transition-key="3:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;3:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="62" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="resource_dummy" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_dummy_monitor_0" operation="monitor" transition-key="3:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;3:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="52" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_dummy_stop_0" operation="stop" transition-key="33:0:5e45f285-3200-4d7f-966a-42c650d75a6c" transition-magic="0:0;33:0:5e45f285-3200-4d7f-966a-42c650d75a6c" call-id="76" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_dummy_start_0" operation="start" transition-key="42:87:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;42:87:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="74" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" op-force-restart=" state " op-restart-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1e550a7a-16a2-453a-81c3-8d6e04919dad" uname="ops.ds9" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="0">
+      <transient_attributes id="transient_attributes.auto-2">
+        <instance_attributes id="instance_attributes.id22797">
+          <nvpair id="nvpair.id22804" name="probe_complete" value="true"/>
+          <nvpair id="nvpair.id22813" name="fail-count-OpenVPN" value="2"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-2">
+        <lrm_resources id="lrm_resources.id22831">
+          <lrm_resource id="OpenVPN_IP" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="OpenVPN_IP_monitor_0" operation="monitor" transition-key="14:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;14:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="1f0bbac744caf5cfdfd4c698739d09c5"/>
+          </lrm_resource>
+          <lrm_resource id="resource_IP2" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_IP2_monitor_0" operation="monitor" transition-key="5:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;5:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="46" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="368d7680070c38f8f2f40ddf5a434d45"/>
+          </lrm_resource>
+          <lrm_resource id="Apache_IP" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Apache_IP_monitor_0" operation="monitor" transition-key="12:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;12:5:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="a3558b7ea398267ef1ea56b21f5d840a"/>
+          </lrm_resource>
+          <lrm_resource id="resource_IP3" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_IP3_monitor_0" operation="monitor" transition-key="5:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;5:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="47" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="87f29a4a3d4a9a7ad6eadc46f37c1f64"/>
+            <lrm_rsc_op id="resource_IP3_start_0" operation="start" transition-key="32:0:5e45f285-3200-4d7f-966a-42c650d75a6c" transition-magic="0:0;32:0:5e45f285-3200-4d7f-966a-42c650d75a6c" call-id="50" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="8e4b9832ba43717985ec21dee8ac8899"/>
+          </lrm_resource>
+          <lrm_resource id="Apache" type="apache13" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Apache_monitor_0" operation="monitor" transition-key="5:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:1;5:22:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="14" crm_feature_set="2.0" rc-code="1" op-status="4" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
+            <lrm_rsc_op id="Apache_stop_0" operation="stop" transition-key="2:23:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;2:23:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="15" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
+          </lrm_resource>
+          <lrm_resource id="resource_dummyweb" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_dummyweb_monitor_0" operation="monitor" transition-key="5:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;5:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="49" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="resource_dummy" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_dummy_monitor_0" operation="monitor" transition-key="5:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;5:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="48" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_dummy_start_0" operation="start" transition-key="34:0:5e45f285-3200-4d7f-966a-42c650d75a6c" transition-magic="0:0;34:0:5e45f285-3200-4d7f-966a-42c650d75a6c" call-id="51" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="de2a634c-e405-42bb-9df2-292e36ad5970" uname="biggame.ds9" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
+      <transient_attributes id="de2a634c-e405-42bb-9df2-292e36ad5970">
+        <instance_attributes id="instance_attributes.id23212">
+          <nvpair id="nvpair.id23219" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="de2a634c-e405-42bb-9df2-292e36ad5970">
+        <lrm_resources id="lrm_resources.id23236">
+          <lrm_resource id="resource_IP2" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_IP2_monitor_0" operation="monitor" transition-key="9:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;9:74:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="34" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="368d7680070c38f8f2f40ddf5a434d45"/>
+          </lrm_resource>
+          <lrm_resource id="Apache_IP" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Apache_IP_monitor_0" operation="monitor" transition-key="8:26:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;8:26:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="a3558b7ea398267ef1ea56b21f5d840a"/>
+          </lrm_resource>
+          <lrm_resource id="resource_IP3" type="IPaddr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_IP3_monitor_0" operation="monitor" transition-key="9:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;9:75:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="35" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="87f29a4a3d4a9a7ad6eadc46f37c1f64"/>
+          </lrm_resource>
+          <lrm_resource id="Apache" type="apache13" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Apache_monitor_0" operation="monitor" transition-key="9:26:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:1;9:26:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="5" crm_feature_set="2.0" rc-code="1" op-status="4" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
+            <lrm_rsc_op id="Apache_stop_0" operation="stop" transition-key="1:27:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="0:0;1:27:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="353bb677b42be27312c9f093a30268be"/>
+          </lrm_resource>
+          <lrm_resource id="resource_dummyweb" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_dummyweb_monitor_0" operation="monitor" transition-key="9:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;9:83:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="37" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="resource_dummy" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="resource_dummy_monitor_0" operation="monitor" transition-key="9:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" transition-magic="4:7;9:79:33f424d2-dbce-4c8b-a19c-ce4da566c9d7" call-id="36" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

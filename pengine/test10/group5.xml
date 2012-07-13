@@ -1,40 +1,54 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:05 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc1.meta"/></primitive>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc1.meta"/>
+      </primitive>
       <group id="rsc2">
-	<primitive id="child_rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc1.meta"/></primitive>
-	<primitive id="child_rsc2" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc2.meta"/></primitive>
-	<primitive id="child_rsc3" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc3.meta"/></primitive>
-      <meta_attributes id="group-rsc2.meta"/></group>
-      <primitive id="rsc3" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc3.meta"/></primitive>
+        <primitive id="child_rsc1" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc1.meta"/>
+        </primitive>
+        <primitive id="child_rsc2" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc2.meta"/>
+        </primitive>
+        <primitive id="child_rsc3" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc3.meta"/>
+        </primitive>
+        <meta_attributes id="group-rsc2.meta"/>
+      </group>
+      <primitive id="rsc3" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-rsc3.meta"/>
+      </primitive>
     </resources>
     <constraints>
       <rsc_order id="order1" first="rsc1" then="rsc2" then-action="start" first-action="start" score="0"/>
       <rsc_order id="order2" first="rsc2" then="rsc3" score="0"/>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1-1" score="1">
-	  <expression id="expression.id21954" attribute="#uname" operation="eq" value="node2"/>
-	</rule>
+        <rule id="can1-1" score="1">
+          <expression id="expression.id21954" attribute="#uname" operation="eq" value="node2"/>
+        </rule>
       </rsc_location>
       <rsc_location id="run_rsc2" rsc="rsc2">
-	<rule id="can2-1" score="1">
-	  <expression id="expression.id21979" attribute="#uname" operation="eq" value="node2"/>
-	</rule>
+        <rule id="can2-1" score="1">
+          <expression id="expression.id21979" attribute="#uname" operation="eq" value="node2"/>
+        </rule>
       </rsc_location>
       <rsc_location id="run_rsc3" rsc="rsc3">
-	<rule id="can3-1" score="1">
-	  <expression id="expression.id22004" attribute="#uname" operation="eq" value="node2"/>
-	</rule>
+        <rule id="can3-1" score="1">
+          <expression id="expression.id22004" attribute="#uname" operation="eq" value="node2"/>
+        </rule>
       </rsc_location>
     </constraints>
   </configuration>
@@ -44,19 +58,19 @@
         <lrm_resources id="lrm_resources.id22043">
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2-child_rsc1_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc2" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2-child_rsc2_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="child_rsc3" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2-child_rsc3_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
           <lrm_resource id="rsc3" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
-	  </lrm_resource>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>

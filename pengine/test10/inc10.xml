@@ -1,159 +1,203 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="16" num_updates="6210" dc-uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-   <configuration>
-     <crm_config>
-       <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21850" name="cluster-delay" value="60"/><nvpair id="nvpair.id21858" name="default-resource-stickiness" value="1000"/><nvpair id="nvpair.id21876" name="stonith-enabled" value="true"/><nvpair id="nvpair.id21885" name="stonith-action" value="reboot"/><nvpair id="nvpair.id21893" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21902" name="no-quorum-policy" value="ignore"/><nvpair id="nvpair.id21911" name="stop-orphan-resources" value="true"/><nvpair id="nvpair.id21920" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21928" name="is-managed-default" value="true"/><nvpair id="nvpair.id21937" name="last-lrm-refresh" value="1150896827"/></cluster_property_set>
-     </crm_config>
-     <nodes>
-       <node id="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426" uname="xen-4" type="normal"/>
-       <node id="a89a7421-28b8-4d6e-b43f-3a9e563e24ad" uname="xen-3" type="normal">
-         <instance_attributes id="instance_attributes.id21970"><nvpair id="nvpair.id21977" name="standby" value="false"/></instance_attributes>
-       </node>
-       <node id="e3aa8547-3d52-47df-a8a3-ca94538a5282" uname="xen-2" type="normal">
-         <instance_attributes id="instance_attributes.id21998"><nvpair id="nvpair.id22005" name="standby" value="true"/></instance_attributes>
-       </node>
-       <node id="43746e52-5e02-49bb-a110-c420078855c5" uname="xen-1" type="normal"/>
-     </nodes>
-     <resources>
-       <clone id="DoFencing">
-         <primitive id="child_DoFencing" class="stonith" type="null">
-           <operations>
-             <op name="monitor" interval="5s" id="op-01" timeout="20s" requires="nothing"/>
-             <op name="start" interval="0" id="op-02" timeout="20s" requires="nothing"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22093"><nvpair id="nvpair.id22100" name="hostlist" value="xen-1,xen-2,xen-3,xen-4"/></instance_attributes>
-         <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-       <meta_attributes id="clone-DoFencing.meta"><nvpair id="globally_unique.meta.auto-67" name="globally-unique" value="false"/><nvpair id="ordered.meta.auto-67" name="ordered" value="false"/><nvpair id="nvpair.meta.auto-73" name="clone-node-max" value="1"/></meta_attributes></clone>
-       <clone id="ocfs2-clone">
-         <primitive id="ocfs2" class="ocf" type="Filesystem" provider="heartbeat">
-           <operations>
-             <op name="monitor" interval="10s" id="op-11" timeout="30s"/>
-           </operations>
-           <instance_attributes id="instance_attributes.id22182"><nvpair id="nvpair.id22188" name="device" value="/dev/hdb1"/><nvpair id="nvpair.id22197" name="directory" value="/mnt/share1"/><nvpair id="nvpair.id22205" name="fstype" value="ocfs2"/></instance_attributes>
-         <meta_attributes id="primitive-ocfs2.meta"/></primitive>
-       <meta_attributes id="clone-ocfs2-clone.meta"><nvpair id="notify.meta.auto-96" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-96" name="globally-unique" value="false"/><nvpair id="ordered.meta.auto-96" name="ordered" value="false"/><nvpair id="nvpair.meta.auto-106" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-104" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-102" name="clone-node-max" value="1"/></meta_attributes></clone>
-     </resources>
-     <constraints/>
-   </configuration>
-   <status>
-     <node_state id="a89a7421-28b8-4d6e-b43f-3a9e563e24ad" uname="xen-3" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
-       <transient_attributes id="a89a7421-28b8-4d6e-b43f-3a9e563e24ad">
-         <instance_attributes id="instance_attributes.id22253"><nvpair id="nvpair.id22260" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="a89a7421-28b8-4d6e-b43f-3a9e563e24ad">
-         <lrm_resources id="lrm_resources.id22277">
-           <lrm_resource id="ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocfs2-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-           </lrm_resource>
-           <lrm_resource id="ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocfs2-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-             <lrm_rsc_op id="ocfs2-1_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="9" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-             <lrm_rsc_op id="ocfs2-1_monitor_10000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="12" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="2fd0270eb7d1d5703c79e9f25f8ae3df"/>
-             <lrm_rsc_op id="ocfs2-1_post_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="33" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-             <lrm_rsc_op id="ocfs2-1_pre_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="32" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:0" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:1" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-             <lrm_rsc_op id="child_DoFencing-1_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-             <lrm_rsc_op id="child_DoFencing-1_monitor_5000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="10" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="599165b0d8a8ee8238d9016cd3068837"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:2" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="e3aa8547-3d52-47df-a8a3-ca94538a5282" uname="xen-2" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="0">
-       <transient_attributes id="e3aa8547-3d52-47df-a8a3-ca94538a5282">
-         <instance_attributes id="instance_attributes.id22655"><nvpair id="nvpair.id22662" name="probe_complete" value="true"/><nvpair id="nvpair.id22672" name="fail-count-ocfs2:2" value="4"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="e3aa8547-3d52-47df-a8a3-ca94538a5282">
-         <lrm_resources id="lrm_resources.id22689">
-           <lrm_resource id="ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocfs2-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-           </lrm_resource>
-           <lrm_resource id="ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocfs2-1_monitor_0" operation="monitor" transition-key="5:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;5:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="25" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:0" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:1" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="64" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:2" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-             <lrm_rsc_op id="child_DoFencing-2_start_0" operation="start" transition-key="18:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;18:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="54" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="43746e52-5e02-49bb-a110-c420078855c5" uname="xen-1" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="0">
-       <transient_attributes id="transient_attributes.auto-3">
-         <instance_attributes id="instance_attributes.id22938"><nvpair id="nvpair.id22945" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="lrm.auto-3">
-         <lrm_resources id="lrm_resources.id22962">
-           <lrm_resource id="ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocfs2-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-           </lrm_resource>
-           <lrm_resource id="ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocfs2-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:0" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-           </lrm_resource>
-           <lrm_resource id="ocfs2:3" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocfs2-3_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="9" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-             <lrm_rsc_op id="ocfs2-3_monitor_10000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="12" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="2fd0270eb7d1d5703c79e9f25f8ae3df"/>
-             <lrm_rsc_op id="ocfs2-3_post_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="33" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-             <lrm_rsc_op id="ocfs2-3_pre_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="32" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:1" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:2" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:3" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-3_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-             <lrm_rsc_op id="child_DoFencing-3_monitor_5000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="10" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="599165b0d8a8ee8238d9016cd3068837"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-     <node_state id="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426" uname="xen-4" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="0">
-       <transient_attributes id="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426">
-         <instance_attributes id="instance_attributes.id23368"><nvpair id="nvpair.id23374" name="probe_complete" value="true"/></instance_attributes>
-       </transient_attributes>
-       <lrm id="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426">
-         <lrm_resources id="lrm_resources.id23392">
-           <lrm_resource id="ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocfs2-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-             <lrm_rsc_op id="ocfs2-0_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="9" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-             <lrm_rsc_op id="ocfs2-0_monitor_10000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="12" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="2fd0270eb7d1d5703c79e9f25f8ae3df"/>
-             <lrm_rsc_op id="ocfs2-0_post_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="33" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-             <lrm_rsc_op id="ocfs2-0_pre_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="32" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-           </lrm_resource>
-           <lrm_resource id="ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ocfs2-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:0" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-             <lrm_rsc_op id="child_DoFencing-0_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-             <lrm_rsc_op id="child_DoFencing-0_monitor_5000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="10" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="599165b0d8a8ee8238d9016cd3068837"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:1" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-           </lrm_resource>
-           <lrm_resource id="child_DoFencing:2" type="null" class="stonith">
-             <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
-           </lrm_resource>
-         </lrm_resources>
-       </lrm>
-     </node_state>
-   </status>
- </cib>
+<cib admin_epoch="0" epoch="16" num_updates="6210" dc-uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:05 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21850" name="cluster-delay" value="60"/>
+        <nvpair id="nvpair.id21858" name="default-resource-stickiness" value="1000"/>
+        <nvpair id="nvpair.id21876" name="stonith-enabled" value="true"/>
+        <nvpair id="nvpair.id21885" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21893" name="symmetric-cluster" value="true"/>
+        <nvpair id="nvpair.id21902" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="nvpair.id21911" name="stop-orphan-resources" value="true"/>
+        <nvpair id="nvpair.id21920" name="stop-orphan-actions" value="true"/>
+        <nvpair id="nvpair.id21928" name="is-managed-default" value="true"/>
+        <nvpair id="nvpair.id21937" name="last-lrm-refresh" value="1150896827"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426" uname="xen-4" type="normal"/>
+      <node id="a89a7421-28b8-4d6e-b43f-3a9e563e24ad" uname="xen-3" type="normal">
+        <instance_attributes id="instance_attributes.id21970">
+          <nvpair id="nvpair.id21977" name="standby" value="false"/>
+        </instance_attributes>
+      </node>
+      <node id="e3aa8547-3d52-47df-a8a3-ca94538a5282" uname="xen-2" type="normal">
+        <instance_attributes id="instance_attributes.id21998">
+          <nvpair id="nvpair.id22005" name="standby" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="43746e52-5e02-49bb-a110-c420078855c5" uname="xen-1" type="normal"/>
+    </nodes>
+    <resources>
+      <clone id="DoFencing">
+        <primitive id="child_DoFencing" class="stonith" type="null">
+          <operations>
+            <op name="monitor" interval="5s" id="op-01" timeout="20s" requires="nothing"/>
+            <op name="start" interval="0" id="op-02" timeout="20s" requires="nothing"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22093">
+            <nvpair id="nvpair.id22100" name="hostlist" value="xen-1,xen-2,xen-3,xen-4"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-child_DoFencing.meta"/>
+        </primitive>
+        <meta_attributes id="clone-DoFencing.meta">
+          <nvpair id="globally_unique.meta.auto-67" name="globally-unique" value="false"/>
+          <nvpair id="ordered.meta.auto-67" name="ordered" value="false"/>
+          <nvpair id="nvpair.meta.auto-73" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+      <clone id="ocfs2-clone">
+        <primitive id="ocfs2" class="ocf" type="Filesystem" provider="heartbeat">
+          <operations>
+            <op name="monitor" interval="10s" id="op-11" timeout="30s"/>
+          </operations>
+          <instance_attributes id="instance_attributes.id22182">
+            <nvpair id="nvpair.id22188" name="device" value="/dev/hdb1"/>
+            <nvpair id="nvpair.id22197" name="directory" value="/mnt/share1"/>
+            <nvpair id="nvpair.id22205" name="fstype" value="ocfs2"/>
+          </instance_attributes>
+          <meta_attributes id="primitive-ocfs2.meta"/>
+        </primitive>
+        <meta_attributes id="clone-ocfs2-clone.meta">
+          <nvpair id="notify.meta.auto-96" name="notify" value="true"/>
+          <nvpair id="globally_unique.meta.auto-96" name="globally-unique" value="false"/>
+          <nvpair id="ordered.meta.auto-96" name="ordered" value="false"/>
+          <nvpair id="nvpair.meta.auto-106" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-104" name="target-role" value="started"/>
+          <nvpair id="nvpair.meta.auto-102" name="clone-node-max" value="1"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="a89a7421-28b8-4d6e-b43f-3a9e563e24ad" uname="xen-3" crmd="online" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
+      <transient_attributes id="a89a7421-28b8-4d6e-b43f-3a9e563e24ad">
+        <instance_attributes id="instance_attributes.id22253">
+          <nvpair id="nvpair.id22260" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="a89a7421-28b8-4d6e-b43f-3a9e563e24ad">
+        <lrm_resources id="lrm_resources.id22277">
+          <lrm_resource id="ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocfs2-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+          </lrm_resource>
+          <lrm_resource id="ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocfs2-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+            <lrm_rsc_op id="ocfs2-1_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="9" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+            <lrm_rsc_op id="ocfs2-1_monitor_10000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="12" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="2fd0270eb7d1d5703c79e9f25f8ae3df"/>
+            <lrm_rsc_op id="ocfs2-1_post_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="33" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+            <lrm_rsc_op id="ocfs2-1_pre_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="32" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:0" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:1" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+            <lrm_rsc_op id="child_DoFencing-1_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+            <lrm_rsc_op id="child_DoFencing-1_monitor_5000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="10" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="599165b0d8a8ee8238d9016cd3068837"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:2" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="e3aa8547-3d52-47df-a8a3-ca94538a5282" uname="xen-2" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="0">
+      <transient_attributes id="e3aa8547-3d52-47df-a8a3-ca94538a5282">
+        <instance_attributes id="instance_attributes.id22655">
+          <nvpair id="nvpair.id22662" name="probe_complete" value="true"/>
+          <nvpair id="nvpair.id22672" name="fail-count-ocfs2:2" value="4"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="e3aa8547-3d52-47df-a8a3-ca94538a5282">
+        <lrm_resources id="lrm_resources.id22689">
+          <lrm_resource id="ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocfs2-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+          </lrm_resource>
+          <lrm_resource id="ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocfs2-1_monitor_0" operation="monitor" transition-key="5:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;5:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="25" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:0" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:1" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="64" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:2" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+            <lrm_rsc_op id="child_DoFencing-2_start_0" operation="start" transition-key="18:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;18:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="54" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="43746e52-5e02-49bb-a110-c420078855c5" uname="xen-1" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="0">
+      <transient_attributes id="transient_attributes.auto-3">
+        <instance_attributes id="instance_attributes.id22938">
+          <nvpair id="nvpair.id22945" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="lrm.auto-3">
+        <lrm_resources id="lrm_resources.id22962">
+          <lrm_resource id="ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocfs2-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+          </lrm_resource>
+          <lrm_resource id="ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocfs2-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:0" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+          </lrm_resource>
+          <lrm_resource id="ocfs2:3" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocfs2-3_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="9" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+            <lrm_rsc_op id="ocfs2-3_monitor_10000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="12" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="2fd0270eb7d1d5703c79e9f25f8ae3df"/>
+            <lrm_rsc_op id="ocfs2-3_post_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="33" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+            <lrm_rsc_op id="ocfs2-3_pre_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="32" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:1" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:2" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:3" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-3_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+            <lrm_rsc_op id="child_DoFencing-3_monitor_5000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="10" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="599165b0d8a8ee8238d9016cd3068837"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426" uname="xen-4" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="0">
+      <transient_attributes id="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426">
+        <instance_attributes id="instance_attributes.id23368">
+          <nvpair id="nvpair.id23374" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426">
+        <lrm_resources id="lrm_resources.id23392">
+          <lrm_resource id="ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocfs2-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+            <lrm_rsc_op id="ocfs2-0_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="9" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+            <lrm_rsc_op id="ocfs2-0_monitor_10000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="12" crm_feature_set="2.0" rc-code="0" op-status="0" interval="10000" op-digest="2fd0270eb7d1d5703c79e9f25f8ae3df"/>
+            <lrm_rsc_op id="ocfs2-0_post_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="33" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+            <lrm_rsc_op id="ocfs2-0_pre_notify_stop_0" operation="notify" transition-key="21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;21:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="32" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+          </lrm_resource>
+          <lrm_resource id="ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ocfs2-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="63431b81c10bd2a72d6c4da010172654"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:0" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-0_monitor_0" operation="monitor" transition-key="0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;0:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+            <lrm_rsc_op id="child_DoFencing-0_start_0" operation="start" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="8" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+            <lrm_rsc_op id="child_DoFencing-0_monitor_5000" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="0:0;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="10" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="599165b0d8a8ee8238d9016cd3068837"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:1" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-1_monitor_0" operation="monitor" transition-key="1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;1:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:2" type="null" class="stonith">
+            <lrm_rsc_op id="child_DoFencing-2_monitor_0" operation="monitor" transition-key="2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" transition-magic="4:7;2:65b298e7-a44b-4d32-81e3-7b72d65f3e92" call-id="6" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f398a9bdccbe815c774943a21edcc842"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

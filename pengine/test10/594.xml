@@ -1,153 +1,187 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="6" num_updates="117" dc-uuid="6125a0df-456a-4395-829a-418e9a380d36" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
-    <configuration>
-      <crm_config><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21844" name="transition_timeout" value="120s"/><nvpair id="nvpair.id21853" name="require_quorum" value="true"/><nvpair id="nvpair.id21862" name="symetric_cluster" value="true"/><nvpair id="nvpair.id21871" name="suppress_cib_writes" value="true"/><nvpair id="nvpair.id21880" name="no-quorum-policy" value="stop"/><nvpair id="nvpair.id21889" name="stonith-enabled" value="true"/></cluster_property_set></crm_config>
-      <nodes>
-        <node id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" type="member"/>
-        <node id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" type="member"/>
-        <node id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" type="member"/>
-      </nodes>
-      <resources>
-        <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
+<cib admin_epoch="0" epoch="6" num_updates="117" dc-uuid="6125a0df-456a-4395-829a-418e9a380d36" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:50:59 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21844" name="transition_timeout" value="120s"/>
+        <nvpair id="nvpair.id21853" name="require_quorum" value="true"/>
+        <nvpair id="nvpair.id21862" name="symetric_cluster" value="true"/>
+        <nvpair id="nvpair.id21871" name="suppress_cib_writes" value="true"/>
+        <nvpair id="nvpair.id21880" name="no-quorum-policy" value="stop"/>
+        <nvpair id="nvpair.id21889" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" type="member"/>
+      <node id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" type="member"/>
+      <node id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" type="member"/>
+    </nodes>
+    <resources>
+      <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="op.auto-1" timeout="20s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id21956">
+          <nvpair id="nvpair.id21962" name="ip" value="127.0.0.10"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-DcIPaddr.meta"/>
+      </primitive>
+      <primitive id="rsc_hadev3" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="op.auto-2" timeout="20s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id21997">
+          <nvpair id="nvpair.id22003" name="ip" value="127.0.0.21"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_hadev3.meta"/>
+      </primitive>
+      <primitive id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="op.auto-3" timeout="20s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22038">
+          <nvpair id="nvpair.id22044" name="ip" value="127.0.0.22"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_hadev2.meta"/>
+      </primitive>
+      <primitive id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="op.auto-4" timeout="20s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22079">
+          <nvpair id="nvpair.id22085" name="ip" value="127.0.0.23"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_hadev1.meta"/>
+      </primitive>
+      <clone id="DoFencing">
+        <primitive id="child_DoFencing" class="stonith" type="ssh">
           <operations>
-            <op name="monitor" interval="5s" id="op.auto-1" timeout="20s"/>
+            <op name="monitor" interval="5s" id="op.auto-5" timeout="20s"/>
           </operations>
-          <instance_attributes id="instance_attributes.id21956"><nvpair id="nvpair.id21962" name="ip" value="127.0.0.10"/></instance_attributes>
-        <meta_attributes id="primitive-DcIPaddr.meta"/></primitive>
-        <primitive id="rsc_hadev3" class="ocf" type="IPaddr" provider="heartbeat">
-          <operations>
-            <op name="monitor" interval="5s" id="op.auto-2" timeout="20s"/>
-          </operations>
-          <instance_attributes id="instance_attributes.id21997"><nvpair id="nvpair.id22003" name="ip" value="127.0.0.21"/></instance_attributes>
-        <meta_attributes id="primitive-rsc_hadev3.meta"/></primitive>
-        <primitive id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat">
-          <operations>
-            <op name="monitor" interval="5s" id="op.auto-3" timeout="20s"/>
-          </operations>
-          <instance_attributes id="instance_attributes.id22038"><nvpair id="nvpair.id22044" name="ip" value="127.0.0.22"/></instance_attributes>
-        <meta_attributes id="primitive-rsc_hadev2.meta"/></primitive>
-        <primitive id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat">
-          <operations>
-            <op name="monitor" interval="5s" id="op.auto-4" timeout="20s"/>
-          </operations>
-          <instance_attributes id="instance_attributes.id22079"><nvpair id="nvpair.id22085" name="ip" value="127.0.0.23"/></instance_attributes>
-        <meta_attributes id="primitive-rsc_hadev1.meta"/></primitive>
-        <clone id="DoFencing">
-          <primitive id="child_DoFencing" class="stonith" type="ssh">
-            <operations>
-              <op name="monitor" interval="5s" id="op.auto-5" timeout="20s"/>
-            </operations>
-            <instance_attributes id="instance_attributes.id22155"><nvpair id="nvpair.id22161" name="hostlist" value="hadev3 hadev2 hadev1 "/></instance_attributes>
-          <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-        <meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-107" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-103" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-105" name="clone-node-max" value="1"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
-      </resources>
-      <constraints>
-        <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
-          <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean-op="and">
-            <expression id="expression.id22191" attribute="#is_dc" operation="eq" value="false"/>
-          </rule>
-        </rsc_location>
-        <rsc_location id="run_rsc_hadev3" rsc="rsc_hadev3">
-          <rule id="pref_run_rsc_hadev3" score="100" boolean-op="and">
-            <expression id="expression.id22217" attribute="#uname" operation="eq" value="hadev3"/>
-          </rule>
-        </rsc_location>
-        <rsc_location id="run_rsc_hadev2" rsc="rsc_hadev2">
-          <rule id="pref_run_rsc_hadev2" score="100" boolean-op="and">
-            <expression id="expression.id22244" attribute="#uname" operation="eq" value="hadev2"/>
-          </rule>
-        </rsc_location>
-        <rsc_location id="run_rsc_hadev1" rsc="rsc_hadev1">
-          <rule id="pref_run_rsc_hadev1" score="100" boolean-op="and">
-            <expression id="expression.id22271" attribute="#uname" operation="eq" value="hadev1"/>
-          </rule>
-        </rsc_location>
-      </constraints>
-    </configuration>
-    <status>
-      <node_state id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" in_ccm="false" join="down" crmd="offline" ha="active" expected="member">
+          <instance_attributes id="instance_attributes.id22155">
+            <nvpair id="nvpair.id22161" name="hostlist" value="hadev3 hadev2 hadev1 "/>
+          </instance_attributes>
+          <meta_attributes id="primitive-child_DoFencing.meta"/>
+        </primitive>
+        <meta_attributes id="clone-DoFencing.meta">
+          <nvpair id="nvpair.meta.auto-107" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-103" name="clone-max" value="3"/>
+          <nvpair id="nvpair.meta.auto-105" name="clone-node-max" value="1"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
+        <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean-op="and">
+          <expression id="expression.id22191" attribute="#is_dc" operation="eq" value="false"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_hadev3" rsc="rsc_hadev3">
+        <rule id="pref_run_rsc_hadev3" score="100" boolean-op="and">
+          <expression id="expression.id22217" attribute="#uname" operation="eq" value="hadev3"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_hadev2" rsc="rsc_hadev2">
+        <rule id="pref_run_rsc_hadev2" score="100" boolean-op="and">
+          <expression id="expression.id22244" attribute="#uname" operation="eq" value="hadev2"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_hadev1" rsc="rsc_hadev1">
+        <rule id="pref_run_rsc_hadev1" score="100" boolean-op="and">
+          <expression id="expression.id22271" attribute="#uname" operation="eq" value="hadev1"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" in_ccm="false" join="down" crmd="offline" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id22308">
-        <instance_attributes id="instance_attributes.id22310"><nvpair id="nvpair.id22316" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22310">
+          <nvpair id="nvpair.id22316" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
-        <lrm id="any">
-          <lrm_resources id="lrm_resources.id22332">
-            <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
-              <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" operation="start" interval="0" call-id="4" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
-              <lrm_rsc_op id="DoFencing-child_DoFencing-0_stop_0" operation="stop" interval="0" call-id="9" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-            <lrm_resource id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr">
-              <lrm_rsc_op id="rsc_hadev3_start_0" operation="start" interval="0" call-id="3" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="3a22d030a9e3ca76e31ac20cba1fc707"/>
-              <lrm_rsc_op id="rsc_hadev3_monitor_5000" op-digest="3a22d030a9e3ca76e31ac20cba1fc707" interval="5000" operation="monitor" call-id="6" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-              <lrm_rsc_op id="rsc_hadev3_stop_0" operation="stop" interval="0" call-id="19" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-            <lrm_resource id="child_DoFencing:2" class="stonith" type="ssh">
-              <lrm_rsc_op id="DoFencing-child_DoFencing-2_start_0" operation="start" interval="0" call-id="10" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
-              <lrm_rsc_op id="DoFencing-child_DoFencing-2_monitor_5000" op-digest="799f842e4ad91a40749bb44c2f8f91ef" interval="5000" operation="monitor" call-id="11" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-              <lrm_rsc_op id="DoFencing-child_DoFencing-2_stop_0" operation="stop" interval="0" call-id="21" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-            <lrm_resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
-              <lrm_rsc_op id="DcIPaddr_start_0" operation="start" interval="0" call-id="2" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="21ccbd2b8e65014ca7b36a2070642a2e"/>
-              <lrm_rsc_op id="DcIPaddr_monitor_5000" op-digest="21ccbd2b8e65014ca7b36a2070642a2e" interval="5000" operation="monitor" call-id="7" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-              <lrm_rsc_op id="DcIPaddr_stop_0" operation="stop" interval="0" call-id="17" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-          </lrm_resources>
-        </lrm>
-      </node_state>
-      <node_state id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="1118302974">
+      <lrm id="any">
+        <lrm_resources id="lrm_resources.id22332">
+          <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
+            <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" operation="start" interval="0" call-id="4" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
+            <lrm_rsc_op id="DoFencing-child_DoFencing-0_stop_0" operation="stop" interval="0" call-id="9" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+          <lrm_resource id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr">
+            <lrm_rsc_op id="rsc_hadev3_start_0" operation="start" interval="0" call-id="3" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="3a22d030a9e3ca76e31ac20cba1fc707"/>
+            <lrm_rsc_op id="rsc_hadev3_monitor_5000" op-digest="3a22d030a9e3ca76e31ac20cba1fc707" interval="5000" operation="monitor" call-id="6" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+            <lrm_rsc_op id="rsc_hadev3_stop_0" operation="stop" interval="0" call-id="19" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:2" class="stonith" type="ssh">
+            <lrm_rsc_op id="DoFencing-child_DoFencing-2_start_0" operation="start" interval="0" call-id="10" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
+            <lrm_rsc_op id="DoFencing-child_DoFencing-2_monitor_5000" op-digest="799f842e4ad91a40749bb44c2f8f91ef" interval="5000" operation="monitor" call-id="11" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+            <lrm_rsc_op id="DoFencing-child_DoFencing-2_stop_0" operation="stop" interval="0" call-id="21" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+          <lrm_resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
+            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" interval="0" call-id="2" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="21ccbd2b8e65014ca7b36a2070642a2e"/>
+            <lrm_rsc_op id="DcIPaddr_monitor_5000" op-digest="21ccbd2b8e65014ca7b36a2070642a2e" interval="5000" operation="monitor" call-id="7" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+            <lrm_rsc_op id="DcIPaddr_stop_0" operation="stop" interval="0" call-id="17" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="1118302974">
       <transient_attributes id="transient_attributes.id22639">
-        <instance_attributes id="instance_attributes.id22641"><nvpair id="shutdown" name="shutdown" value="1234"/><nvpair id="nvpair.id22647" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22641">
+          <nvpair id="shutdown" name="shutdown" value="1234"/>
+          <nvpair id="nvpair.id22647" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
-        <lrm id="any">
-          <lrm_resources id="lrm_resources.id22663">
-            <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
-              <lrm_rsc_op id="rsc_hadev1_start_0" operation="start" interval="0" call-id="3" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="ec317f3ef4dde73f68c525047430c3ee"/>
-              <lrm_rsc_op id="rsc_hadev1_stop_0" operation="stop" interval="0" call-id="9" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-            <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
-              <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" operation="start" interval="0" call-id="12" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
-              <lrm_rsc_op id="DoFencing-child_DoFencing-0_monitor_5000" op-digest="799f842e4ad91a40749bb44c2f8f91ef" interval="5000" operation="monitor" call-id="13" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-            <lrm_resource id="rsc_hadev2" class="ocf" provider="heartbeat" type="IPaddr">
-              <lrm_rsc_op id="rsc_hadev2_start_0" operation="start" interval="0" call-id="2" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="0b6d197bbd102b4d20d43e172a6b28b3"/>
-              <lrm_rsc_op id="rsc_hadev2_monitor_5000" op-digest="0b6d197bbd102b4d20d43e172a6b28b3" interval="5000" operation="monitor" call-id="7" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-            <lrm_resource id="child_DoFencing:1" class="stonith" type="ssh">
-              <lrm_rsc_op id="DoFencing-child_DoFencing-1_start_0" operation="start" interval="0" call-id="4" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
-              <lrm_rsc_op id="DoFencing-child_DoFencing-1_stop_0" operation="stop" interval="0" call-id="11" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-            <lrm_resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
-              <lrm_rsc_op id="DcIPaddr_start_0" operation="start" interval="0" call-id="18" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="21ccbd2b8e65014ca7b36a2070642a2e"/>
-              <lrm_rsc_op id="DcIPaddr_monitor_5000" op-digest="21ccbd2b8e65014ca7b36a2070642a2e" interval="5000" operation="monitor" call-id="19" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-          </lrm_resources>
-        </lrm>
-      </node_state>
-      <node_state id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
+      <lrm id="any">
+        <lrm_resources id="lrm_resources.id22663">
+          <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
+            <lrm_rsc_op id="rsc_hadev1_start_0" operation="start" interval="0" call-id="3" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="ec317f3ef4dde73f68c525047430c3ee"/>
+            <lrm_rsc_op id="rsc_hadev1_stop_0" operation="stop" interval="0" call-id="9" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:0" class="stonith" type="ssh">
+            <lrm_rsc_op id="DoFencing-child_DoFencing-0_start_0" operation="start" interval="0" call-id="12" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
+            <lrm_rsc_op id="DoFencing-child_DoFencing-0_monitor_5000" op-digest="799f842e4ad91a40749bb44c2f8f91ef" interval="5000" operation="monitor" call-id="13" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+          <lrm_resource id="rsc_hadev2" class="ocf" provider="heartbeat" type="IPaddr">
+            <lrm_rsc_op id="rsc_hadev2_start_0" operation="start" interval="0" call-id="2" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="0b6d197bbd102b4d20d43e172a6b28b3"/>
+            <lrm_rsc_op id="rsc_hadev2_monitor_5000" op-digest="0b6d197bbd102b4d20d43e172a6b28b3" interval="5000" operation="monitor" call-id="7" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:1" class="stonith" type="ssh">
+            <lrm_rsc_op id="DoFencing-child_DoFencing-1_start_0" operation="start" interval="0" call-id="4" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
+            <lrm_rsc_op id="DoFencing-child_DoFencing-1_stop_0" operation="stop" interval="0" call-id="11" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+          <lrm_resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
+            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" interval="0" call-id="18" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="21ccbd2b8e65014ca7b36a2070642a2e"/>
+            <lrm_rsc_op id="DcIPaddr_monitor_5000" op-digest="21ccbd2b8e65014ca7b36a2070642a2e" interval="5000" operation="monitor" call-id="19" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id22968">
-        <instance_attributes id="instance_attributes.id22970"><nvpair id="nvpair.id22976" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22970">
+          <nvpair id="nvpair.id22976" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
-        <lrm id="any">
-          <lrm_resources id="lrm_resources.id22992">
-            <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
-              <lrm_rsc_op id="rsc_hadev1_start_0" operation="start" interval="0" call-id="3" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="ec317f3ef4dde73f68c525047430c3ee"/>
-              <lrm_rsc_op id="rsc_hadev1_monitor_5000" op-digest="a46598608d2202e55725cc42d852e27a" interval="5000" operation="monitor" call-id="5" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-            <lrm_resource id="child_DoFencing:1" class="stonith" type="ssh">
-              <lrm_rsc_op id="DoFencing-child_DoFencing-1_start_0" operation="start" interval="0" call-id="2" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
-              <lrm_rsc_op id="DoFencing-child_DoFencing-1_monitor_5000" op-digest="a7e61fd8f67d8af4575e069be969b28d" interval="5000" operation="monitor" call-id="4" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-            <lrm_resource id="child_DoFencing:2" class="stonith" type="ssh">
-              <lrm_rsc_op id="DoFencing-child_DoFencing-2_start_0" operation="start" interval="0" call-id="8" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
-              <lrm_rsc_op id="DoFencing-child_DoFencing-2_monitor_5000" op-digest="a7e61fd8f67d8af4575e069be969b28d" interval="5000" operation="monitor" call-id="10" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-            <lrm_resource id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr">
-              <lrm_rsc_op id="rsc_hadev3_start_0" operation="start" interval="0" call-id="9" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="3a22d030a9e3ca76e31ac20cba1fc707"/>
-              <lrm_rsc_op id="rsc_hadev3_monitor_5000" op-digest="7b951d973d9519a529dd16b12226905d" interval="5000" operation="monitor" call-id="11" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
-            </lrm_resource>
-          </lrm_resources>
-        </lrm>
-      </node_state>
-    </status>
-  </cib>
+      <lrm id="any">
+        <lrm_resources id="lrm_resources.id22992">
+          <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
+            <lrm_rsc_op id="rsc_hadev1_start_0" operation="start" interval="0" call-id="3" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="ec317f3ef4dde73f68c525047430c3ee"/>
+            <lrm_rsc_op id="rsc_hadev1_monitor_5000" op-digest="a46598608d2202e55725cc42d852e27a" interval="5000" operation="monitor" call-id="5" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:1" class="stonith" type="ssh">
+            <lrm_rsc_op id="DoFencing-child_DoFencing-1_start_0" operation="start" interval="0" call-id="2" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
+            <lrm_rsc_op id="DoFencing-child_DoFencing-1_monitor_5000" op-digest="a7e61fd8f67d8af4575e069be969b28d" interval="5000" operation="monitor" call-id="4" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+          <lrm_resource id="child_DoFencing:2" class="stonith" type="ssh">
+            <lrm_rsc_op id="DoFencing-child_DoFencing-2_start_0" operation="start" interval="0" call-id="8" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="799f842e4ad91a40749bb44c2f8f91ef"/>
+            <lrm_rsc_op id="DoFencing-child_DoFencing-2_monitor_5000" op-digest="a7e61fd8f67d8af4575e069be969b28d" interval="5000" operation="monitor" call-id="10" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+          <lrm_resource id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr">
+            <lrm_rsc_op id="rsc_hadev3_start_0" operation="start" interval="0" call-id="9" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic="" op-digest="3a22d030a9e3ca76e31ac20cba1fc707"/>
+            <lrm_rsc_op id="rsc_hadev3_monitor_5000" op-digest="7b951d973d9519a529dd16b12226905d" interval="5000" operation="monitor" call-id="11" rc-code="0" op-status="0" crm_feature_set="2.0" transition-magic=""/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

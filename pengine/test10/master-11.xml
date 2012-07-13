@@ -1,44 +1,67 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
-       <cluster_property_set id="no-stonith">
-	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
-       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/></cluster_property_set></crm_config>
+      <cluster_property_set id="no-stonith">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member">
-        <instance_attributes id="instance_attributes.id21853"><nvpair id="nvpair.id21860" name="master-child_rsc1:0" value="10"/><nvpair id="nvpair.id21869" name="master-child_rsc1:1" value="100"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id21853">
+          <nvpair id="nvpair.id21860" name="master-child_rsc1:0" value="10"/>
+          <nvpair id="nvpair.id21869" name="master-child_rsc1:1" value="100"/>
+        </instance_attributes>
       </node>
       <node id="uuid2" uname="node2" type="member">
-        <instance_attributes id="instance_attributes.id21890"><nvpair id="nvpair.id21896" name="master-child_rsc1:0" value="30"/><nvpair id="nvpair.id21905" name="master-child_rsc1:1" value="300"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id21890">
+          <nvpair id="nvpair.id21896" name="master-child_rsc1:0" value="30"/>
+          <nvpair id="nvpair.id21905" name="master-child_rsc1:1" value="300"/>
+        </instance_attributes>
       </node>
     </nodes>
     <resources>
-      <primitive id="simple-rsc" class="heartbeat" type="apache"><meta_attributes id="primitive-simple-rsc.meta"/></primitive>
+      <primitive id="simple-rsc" class="heartbeat" type="apache">
+        <meta_attributes id="primitive-simple-rsc.meta"/>
+      </primitive>
       <master id="rsc1">
-	<primitive id="child_rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc1.meta"/></primitive>
-      <meta_attributes id="master_slave-rsc1.meta"><nvpair id="nvpair.meta.auto-59" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-51" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-53" name="clone-node-max" value="1"/><nvpair id="nvpair.meta.auto-55" name="master-max" value="1"/><nvpair id="nvpair.meta.auto-57" name="master-node-max" value="1"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></master>
+        <primitive id="child_rsc1" class="heartbeat" type="apache">
+          <meta_attributes id="primitive-child_rsc1.meta"/>
+        </primitive>
+        <meta_attributes id="master_slave-rsc1.meta">
+          <nvpair id="nvpair.meta.auto-59" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-51" name="clone-max" value="2"/>
+          <nvpair id="nvpair.meta.auto-53" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair.meta.auto-55" name="master-max" value="1"/>
+          <nvpair id="nvpair.meta.auto-57" name="master-node-max" value="1"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </master>
     </resources>
     <constraints>
       <rsc_colocation id="simple-with-master" rsc="simple-rsc" with-rsc="rsc1" with-rsc-role="Master" score="INFINITY"/>
       <rsc_location id="master-node2" rsc="rsc1">
-	<rule id="master-rule-node2" score="100" role="Master">
-	  <expression id="expression.id22023" attribute="#uname" operation="eq" value="node2"/>
-	</rule>
+        <rule id="master-rule-node2" score="100" role="Master">
+          <expression id="expression.id22023" attribute="#uname" operation="eq" value="node2"/>
+        </rule>
       </rsc_location>
     </constraints>
   </configuration>
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="transient_attributes.id22057">
-        <instance_attributes id="instance_attributes.id22059"><nvpair id="nvpair.id22065" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22059">
+          <nvpair id="nvpair.id22065" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="transient_attributes.id22095">
-        <instance_attributes id="instance_attributes.id22097"><nvpair id="nvpair.id22103" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22097">
+          <nvpair id="nvpair.id22103" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
     </node_state>
   </status>

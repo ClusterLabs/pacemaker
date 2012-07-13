@@ -1,75 +1,111 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cib admin_epoch="0" epoch="262" num_updates="8358" dc-uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
+<cib admin_epoch="0" epoch="262" num_updates="8358" dc-uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:50:59 2012">
   <configuration>
-      <crm_config><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21844" name="cluster-delay" value="120s"/><nvpair id="nvpair.id21853" name="symetric_cluster" value="true"/><nvpair id="nvpair.id21862" name="suppress_cib_writes" value="false"/><nvpair id="nvpair.id21872" name="no-quorum-policy" value="stop"/><nvpair id="nvpair.id21881" name="stonith-enabled" value="true"/></cluster_property_set></crm_config>
-      <nodes>
-        <node id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" type="member"/>
-        <node id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" type="member"/>
-        <node id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" type="member"/>
-      </nodes>
-      <resources>
-        <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id21844" name="cluster-delay" value="120s"/>
+        <nvpair id="nvpair.id21853" name="symetric_cluster" value="true"/>
+        <nvpair id="nvpair.id21862" name="suppress_cib_writes" value="false"/>
+        <nvpair id="nvpair.id21872" name="no-quorum-policy" value="stop"/>
+        <nvpair id="nvpair.id21881" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" type="member"/>
+      <node id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" type="member"/>
+      <node id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" type="member"/>
+    </nodes>
+    <resources>
+      <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="op.auto-1" timeout="20s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id21950">
+          <nvpair id="nvpair.id21956" name="ip" value="10.0.0.10"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-DcIPaddr.meta">
+          <nvpair id="is_managed.meta.auto-31" name="is-managed" value="1"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="op.auto-2" timeout="20s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id21993">
+          <nvpair id="nvpair.id21999" name="ip" value="10.0.0.11"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_hadev1.meta">
+          <nvpair id="is_managed.meta.auto-47" name="is-managed" value="1"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="op.auto-3" timeout="20s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22036">
+          <nvpair id="nvpair.id22042" name="ip" value="10.0.0.12"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_hadev2.meta">
+          <nvpair id="is_managed.meta.auto-63" name="is-managed" value="1"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="rsc_hadev3" class="ocf" type="IPaddr" provider="heartbeat">
+        <operations>
+          <op name="monitor" interval="5s" id="op.auto-4" timeout="20s"/>
+        </operations>
+        <instance_attributes id="instance_attributes.id22078">
+          <nvpair id="nvpair.id22084" name="ip" value="10.0.0.13"/>
+        </instance_attributes>
+        <meta_attributes id="primitive-rsc_hadev3.meta">
+          <nvpair id="is_managed.meta.auto-79" name="is-managed" value="1"/>
+        </meta_attributes>
+      </primitive>
+      <clone id="DoFencing">
+        <primitive id="child_DoFencing" class="stonith" type="ssh">
           <operations>
-            <op name="monitor" interval="5s" id="op.auto-1" timeout="20s"/>
+            <op name="monitor" interval="5s" id="op.auto-5" timeout="20s"/>
           </operations>
-          <instance_attributes id="instance_attributes.id21950"><nvpair id="nvpair.id21956" name="ip" value="10.0.0.10"/></instance_attributes>
-        <meta_attributes id="primitive-DcIPaddr.meta"><nvpair id="is_managed.meta.auto-31" name="is-managed" value="1"/></meta_attributes></primitive>
-        <primitive id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat">
-          <operations>
-            <op name="monitor" interval="5s" id="op.auto-2" timeout="20s"/>
-          </operations>
-          <instance_attributes id="instance_attributes.id21993"><nvpair id="nvpair.id21999" name="ip" value="10.0.0.11"/></instance_attributes>
-        <meta_attributes id="primitive-rsc_hadev1.meta"><nvpair id="is_managed.meta.auto-47" name="is-managed" value="1"/></meta_attributes></primitive>
-        <primitive id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat">
-          <operations>
-            <op name="monitor" interval="5s" id="op.auto-3" timeout="20s"/>
-          </operations>
-          <instance_attributes id="instance_attributes.id22036"><nvpair id="nvpair.id22042" name="ip" value="10.0.0.12"/></instance_attributes>
-        <meta_attributes id="primitive-rsc_hadev2.meta"><nvpair id="is_managed.meta.auto-63" name="is-managed" value="1"/></meta_attributes></primitive>
-        <primitive id="rsc_hadev3" class="ocf" type="IPaddr" provider="heartbeat">
-          <operations>
-            <op name="monitor" interval="5s" id="op.auto-4" timeout="20s"/>
-          </operations>
-          <instance_attributes id="instance_attributes.id22078"><nvpair id="nvpair.id22084" name="ip" value="10.0.0.13"/></instance_attributes>
-        <meta_attributes id="primitive-rsc_hadev3.meta"><nvpair id="is_managed.meta.auto-79" name="is-managed" value="1"/></meta_attributes></primitive>
-        <clone id="DoFencing">
-          <primitive id="child_DoFencing" class="stonith" type="ssh">
-            <operations>
-              <op name="monitor" interval="5s" id="op.auto-5" timeout="20s"/>
-            </operations>
-            <instance_attributes id="instance_attributes.id22152"><nvpair id="nvpair.id22158" name="hostlist" value="hadev1 hadev2 hadev3 "/></instance_attributes>
-          <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-        <meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-105" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-101" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-103" name="clone-node-max" value="1"/>
-	<nvpair id="unique-1" name="globally-unique" value="true"/>
-      </meta_attributes></clone>
-      </resources>
-      <constraints>
-        <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
-          <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean-op="and">
-            <expression id="expression.id22189" attribute="#is_dc" operation="eq" value="false"/>
-          </rule>
-        </rsc_location>
-        <rsc_location id="run_rsc_hadev1" rsc="rsc_hadev1">
-          <rule id="pref_run_rsc_hadev1" score="100" boolean-op="and">
-            <expression id="expression.id22216" attribute="#uname" operation="eq" value="hadev1"/>
-          </rule>
-        </rsc_location>
-        <rsc_location id="run_rsc_hadev2" rsc="rsc_hadev2">
-          <rule id="pref_run_rsc_hadev2" score="100" boolean-op="and">
-            <expression id="expression.id22243" attribute="#uname" operation="eq" value="hadev2"/>
-          </rule>
-        </rsc_location>
-        <rsc_location id="run_rsc_hadev3" rsc="rsc_hadev3">
-          <rule id="pref_run_rsc_hadev3" score="100" boolean-op="and">
-            <expression id="expression.id22270" attribute="#uname" operation="eq" value="hadev3"/>
-          </rule>
-        </rsc_location>
-      </constraints>
-    </configuration>
+          <instance_attributes id="instance_attributes.id22152">
+            <nvpair id="nvpair.id22158" name="hostlist" value="hadev1 hadev2 hadev3 "/>
+          </instance_attributes>
+          <meta_attributes id="primitive-child_DoFencing.meta"/>
+        </primitive>
+        <meta_attributes id="clone-DoFencing.meta">
+          <nvpair id="nvpair.meta.auto-105" name="resource-stickiness" value="1"/>
+          <nvpair id="nvpair.meta.auto-101" name="clone-max" value="3"/>
+          <nvpair id="nvpair.meta.auto-103" name="clone-node-max" value="1"/>
+          <nvpair id="unique-1" name="globally-unique" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
+        <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean-op="and">
+          <expression id="expression.id22189" attribute="#is_dc" operation="eq" value="false"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_hadev1" rsc="rsc_hadev1">
+        <rule id="pref_run_rsc_hadev1" score="100" boolean-op="and">
+          <expression id="expression.id22216" attribute="#uname" operation="eq" value="hadev1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_hadev2" rsc="rsc_hadev2">
+        <rule id="pref_run_rsc_hadev2" score="100" boolean-op="and">
+          <expression id="expression.id22243" attribute="#uname" operation="eq" value="hadev2"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_hadev3" rsc="rsc_hadev3">
+        <rule id="pref_run_rsc_hadev3" score="100" boolean-op="and">
+          <expression id="expression.id22270" attribute="#uname" operation="eq" value="hadev3"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
   <status>
     <node_state id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" in_ccm="true" join="member" crmd="online" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id22304">
-        <instance_attributes id="instance_attributes.id22306"><nvpair id="nvpair.id22313" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22306">
+          <nvpair id="nvpair.id22313" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22329">
@@ -88,7 +124,9 @@
     </node_state>
     <node_state id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id22485">
-        <instance_attributes id="instance_attributes.id22487"><nvpair id="nvpair.id22493" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22487">
+          <nvpair id="nvpair.id22493" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22509">
@@ -109,7 +147,9 @@
     </node_state>
     <node_state id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" crmd="online" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes id="transient_attributes.id22711">
-        <instance_attributes id="instance_attributes.id22713"><nvpair id="nvpair.id22719" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22713">
+          <nvpair id="nvpair.id22719" name="probe_complete" value="true"/>
+        </instance_attributes>
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22735"/>
