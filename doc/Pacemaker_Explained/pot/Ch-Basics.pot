@@ -64,7 +64,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "  &lt;cib generated=\"true\" admin_epoch=\"0\" epoch=\"0\" num_updates=\"0\" have-quorum=\"false\"&gt;\n"
+msgid "  &lt;cib admin_epoch=\"0\" epoch=\"0\" num_updates=\"0\" have-quorum=\"false\"&gt;\n"
 "     &lt;configuration&gt;\n"
 "        &lt;crm_config/&gt;\n"
 "        &lt;nodes/&gt;\n"

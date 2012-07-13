@@ -28,7 +28,7 @@ The configuration section itself is divided into four parts:
 .An empty configuration
 [source,XML]
 -------
-  <cib generated="true" admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
+  <cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
      <configuration>
         <crm_config/>
         <nodes/>
