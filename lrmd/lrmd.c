@@ -512,16 +512,16 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
         stonith_key_value_freeall(device_params, 1, 1);
         if (rc == 0) {
-            rc = stonith_api->cmds->call(stonith_api,
+            rc = stonith_api->cmds->monitor(stonith_api,
                                          st_opt_sync_call,
-                                         cmd->rsc_id, "monitor", NULL, cmd->timeout);
+                                         cmd->rsc_id, cmd->timeout);
         }
     } else if (safe_str_eq(cmd->action, "stop")) {
         rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id);
     } else if (safe_str_eq(cmd->action, "monitor")) {
-        rc = stonith_api->cmds->call(stonith_api,
+        rc = stonith_api->cmds->monitor(stonith_api,
                                      st_opt_sync_call,
-                                     cmd->rsc_id, cmd->action, NULL, cmd->timeout);
+                                     cmd->rsc_id, cmd->timeout);
     }
 
     cmd->exec_rc = get_uniform_rc("stonith", cmd->action, rc);

@@ -856,7 +856,7 @@ list_stonith_agents(lrmd_list_t ** resources)
     stonith_key_value_t *stonith_resources = NULL;
     stonith_key_value_t *dIter = NULL;
 
-    stonith_api->cmds->list(stonith_api, st_opt_sync_call, NULL, &stonith_resources, 0);
+    stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL, &stonith_resources, 0);
 
     for (dIter = stonith_resources; dIter; dIter = dIter->next) {
         rc++;

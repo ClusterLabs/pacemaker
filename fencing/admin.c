@@ -226,7 +226,7 @@ main(int argc, char ** argv)
 
     switch(action) {
     case 'I':
-        rc = st->cmds->list(st, st_opt_sync_call, NULL, &devices, timeout);
+        rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout);
         for(dIter = devices; dIter; dIter = dIter->next ) {
             fprintf( stdout, " %s\n", dIter->value );
         }
@@ -253,9 +253,9 @@ main(int argc, char ** argv)
         stonith_key_value_freeall(devices, 1, 1);
         break;
     case 'Q':
-        rc = st->cmds->call(st, st_opts, device, "monitor", NULL, timeout);
+        rc = st->cmds->monitor(st, st_opts, device, timeout);
         if(rc < 0) {
-            rc = st->cmds->call(st, st_opts, device, "list", NULL, timeout);
+            rc = st->cmds->list(st, st_opts, device, NULL, timeout);
         }
         break;
     case 'R':
