@@ -63,6 +63,7 @@ shell/modules/vars.py
 tools/coverage.sh
 tools/crm_report
 lrmd/regression.py
+fencing/regression.py
 
 # Build targets
 *.7

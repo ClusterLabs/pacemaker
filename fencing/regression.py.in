@@ -1,0 +1,310 @@
+#!/usr/bin/python
+
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
+
+
+import os
+import sys
+import subprocess
+import shlex
+import time
+
+def output_from_command(command):
+	test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+	test.wait()
+
+	return test.communicate()[0].split("\n")
+
+class Test:
+	def __init__(self, name, description, verbose = 0):
+		self.name = name
+		self.description = description
+		self.cmds = []
+		self.verbose = verbose
+
+		self.result_txt = ""
+		self.cmd_tool_output = ""
+		self.result_exitcode = 0;
+
+		self.stonith_process = None
+
+		self.executed = 0
+
+		rsc_classes = output_from_command("crm_resource --list-standards")
+
+		self.has_systemd = 0
+		if "systemd" in rsc_classes:
+			self.has_systemd = 1
+
+	def __new_cmd(self, cmd, args, exitcode, stdout_match = "", no_wait = 0, stdout_negative_match = "", kill=None):
+		self.cmds.append(
+			{
+				"cmd" : cmd,
+				"kill" : kill,
+				"args" : args,
+				"expected_exitcode" : exitcode,
+				"stdout_match" : stdout_match,
+				"stdout_negative_match" : stdout_negative_match,
+				"no_wait" : no_wait,
+				"cmd_output" : "",
+			}
+		)
+
+	def start_environment(self):
+
+		### make sure we are in full control here ###
+		if self.has_systemd:
+			cmd = shlex.split("systemctl stop pacemaker.service")
+		else:
+			cmd = shlex.split("service pacemaker stop")
+
+		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		test.wait()
+
+		if self.has_systemd:
+			cmd = shlex.split("systemctl stop corosync.service")
+		else:
+			cmd = shlex.split("service corosync stop")
+		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		test.wait()
+
+		cmd = shlex.split("killall -q -9 stonithd")
+		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		test.wait()
+
+		self.stonith_process = subprocess.Popen(shlex.split("@CRM_DAEMON_DIR@/stonithd -s"))
+
+		time.sleep(1)
+
+	def clean_environment(self):
+		if self.stonith_process:
+			self.stonith_process.kill()
+
+		self.stonith_process = None
+
+	def add_cmd(self, cmd, args):
+		self.__new_cmd(cmd, args, 0, "")
+
+	def add_cmd_no_wait(self, cmd, args):
+		self.__new_cmd(cmd, args, 0, "", 1)
+
+	def add_cmd_check_stdout(self, cmd, args, match, no_match = ""):
+		self.__new_cmd(cmd, args, 0, match, 0, no_match)
+
+	def add_expected_fail_cmd(self, cmd, args):
+		self.__new_cmd(cmd, args, 255, "")
+
+	def get_exitcode(self):
+		return self.result_exitcode
+
+	def print_result(self, filler):
+		print "%s%s" % (filler, self.result_txt)
+
+	def run_cmd(self, args):
+		cmd = shlex.split(args['args'])
+		cmd.insert(0, args['cmd'])
+
+		if self.verbose:
+			print "\n\nRunning: "+" ".join(cmd)
+		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+
+		if args['kill']:
+			if self.verbose:
+				print "Also running: "+args['kill']
+			subprocess.Popen(shlex.split(args['kill']))
+
+		if args['no_wait'] == 0:
+			test.wait()
+		else:
+			return 0
+
+		output = test.communicate()[0]
+
+		if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
+			test.returncode = -2
+			print "STDOUT string '%s' was not found in cmd output" % (args['stdout_match'])
+
+		if args['stdout_negative_match'] != "" and output.count(args['stdout_negative_match']) != 0:
+			test.returncode = -2
+			print "STDOUT string '%s' was found in cmd output" % (args['stdout_negative_match'])
+
+		args['cmd_output'] = output
+
+		return test.returncode;
+
+	def run(self):
+		res = 0
+		i = 1
+		self.start_environment()
+
+		if self.verbose:
+			print "\n--- START TEST - %s" % self.name
+
+		self.result_txt = "SUCCESS - '%s'" % (self.name)
+		self.result_exitcode = 0
+		for cmd in self.cmds:
+			res = self.run_cmd(cmd)
+			if res != cmd['expected_exitcode']:
+				print cmd['cmd_output']
+				print "Step %d FAILED - command returned %d, expected %d" % (i, res, cmd['expected_exitcode'])
+				self.result_txt = "FAILURE - '%s' failed at step %d. Command: lrmd_test %s" % (self.name, i, cmd['args'])
+				self.result_exitcode = -1
+				break
+			else:
+				if self.verbose:
+					print cmd['cmd_output'].strip()
+					print "Step %d SUCCESS" % (i)
+			i = i + 1
+		self.clean_environment()
+
+		print self.result_txt
+		if self.verbose:
+			print "--- END TEST - %s\n" % self.name
+
+		self.executed = 1
+		return res
+
+class Tests:
+	def __init__(self, verbose = 0):
+		self.tests = []
+		self.verbose = verbose
+
+	def new_test(self, name, description):
+		test = Test(name, description, self.verbose)
+		self.tests.append(test)
+		return test
+
+	def print_list(self):
+		print "\n==== %d TESTS FOUND ====" % (len(self.tests))
+		print "%35s - %s" % ("TEST NAME", "TEST DESCRIPTION")
+		print "%35s - %s" % ("--------------------", "--------------------")
+		for test in self.tests:
+			print "%35s - %s" % (test.name, test.description)
+		print "==== END OF LIST ====\n"
+
+	def run_single(self, name):
+		for test in self.tests:
+			if test.name == name:
+				test.run()
+				break;
+
+	def run_tests_matching(self, pattern):
+		for test in self.tests:
+			if test.name.count(pattern) != 0:
+				test.run()
+
+	def run_tests(self):
+		for test in self.tests:
+			test.run()
+
+	def print_results(self):
+		failures = 0;
+		success = 0;
+		print "\n\n======= FINAL RESULTS =========="
+		print "\n--- FAILURE RESULTS:"
+		for test in self.tests:
+			if test.executed == 0:
+				continue
+
+			if test.get_exitcode() != 0:
+				failures = failures + 1
+				test.print_result("    ")
+			else:
+				success = success + 1
+
+		if failures == 0:
+			print "    None"
+
+		print "\n--- TOTALS\n    Pass:%d\n    Fail:%d\n" % (success, failures)
+	def build_api_sanity_tests(self):
+		verbose_arg = ""
+		if self.verbose:
+			verbose_arg = "-V"
+
+		test = self.new_test("api_sanity_test", "Sanity test client api.")
+		test.add_cmd("@CRM_DAEMON_DIR@/stonith-test", "-t %s" % (verbose_arg))
+
+class TestOptions:
+	def __init__(self):
+		self.options = {}
+		self.options['list-tests'] = 0
+		self.options['run-all'] = 1
+		self.options['run-only'] = ""
+		self.options['run-only-pattern'] = ""
+		self.options['verbose'] = 0
+		self.options['invalid-arg'] = ""
+		self.options['show-usage'] = 0
+
+	def build_options(self, argv):
+		args = argv[1:]
+		skip = 0
+		for i in range(0, len(args)):
+			if skip:
+				skip = 0
+				continue
+			elif args[i] == "-h" or args[i] == "--help":
+				self.options['show-usage'] = 1
+			elif args[i] == "-l" or args[i] == "--list-tests":
+				self.options['list-tests'] = 1
+			elif args[i] == "-V" or args[i] == "--verbose":
+				self.options['verbose'] = 1
+			elif args[i] == "-r" or args[i] == "--run-only":
+				self.options['run-only'] = args[i+1]
+				skip = 1
+			elif args[i] == "-p" or args[i] == "--run-only-pattern":
+				self.options['run-only-pattern'] = args[i+1]
+				skip = 1
+
+	def show_usage(self):
+		print "usage: " + sys.argv[0] + " [options]"
+		print "If no options are provided, all tests will run"
+		print "Options:"
+		print "\t [--help | -h]                        Show usage"
+		print "\t [--list-tests | -l]                  Print out all registered tests."
+		print "\t [--run-only | -r 'testname']         Run a specific test"
+		print "\t [--verbose | -V]                     Verbose output"
+		print "\t [--run-only-pattern | -p 'string']   Run only tests containing the string value"
+		print "\n\tExample: Run only the test 'start_top'"
+		print "\t\t python ./regression.py --run-only start_stop"
+		print "\n\tExample: Run only the tests with the string 'systemd' present in them"
+		print "\t\t python ./regression.py --run-only-pattern systemd"
+
+def main(argv):
+	o = TestOptions()
+	o.build_options(argv)
+
+	tests = Tests(o.options['verbose'])
+	tests.build_api_sanity_tests()
+
+	print "Starting ..."
+
+	if o.options['list-tests']:
+		tests.print_list()
+	elif o.options['show-usage']:
+		o.show_usage()
+	elif o.options['run-only-pattern'] != "":
+		tests.run_tests_matching(o.options['run-only-pattern'])
+		tests.print_results()
+	elif o.options['run-only'] != "":
+		tests.run_single(o.options['run-only'])
+		tests.print_results()
+	else:
+		tests.run_tests()
+		tests.print_results()
+
+
+if __name__=="__main__":
+	main(sys.argv)
