@@ -124,7 +124,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
                st_event->origin, pcmk_strerror(st_event->result), st_event->id);
 
 #if SUPPORT_CMAN
-    if (rc == pcmk_ok && is_cman_cluster()) {
+    if (st_event->result == pcmk_ok && is_cman_cluster()) {
         int local_rc = 0;
         int confirm = 0;
         char *target_copy = strdup(st_event->target);
