@@ -47,7 +47,6 @@ enum pe_restart {
 
 enum pe_find {
     pe_find_renamed = 0x001,
-    pe_find_partial = 0x002,
     pe_find_clone = 0x004,
     pe_find_current = 0x008,
     pe_find_inactive = 0x010,

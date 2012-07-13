@@ -1056,7 +1056,7 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
             node_t *childnode = nIter->data;
             if(childnode->details == node->details) {
                 /* ->find_rsc() because we might be a cloned group */
-                rsc = parent->fns->find_rsc(child, rsc_id, NULL, 0);
+                rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
                 crm_trace("Resource %s, active", rsc->id);
             }
 
@@ -1084,7 +1084,7 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
             child->fns->location(child, &locations, TRUE);
             if (locations == NULL) {
                 /* ->find_rsc() because we might be a cloned group */
-                rsc = parent->fns->find_rsc(child, rsc_id, NULL, 0);
+                rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
                 crm_trace("Resource %s, empty slot", rsc->id);
             }
             g_list_free(locations);
@@ -1096,7 +1096,7 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
         resource_t *top = create_child_clone(parent, -1, data_set);
 
         /* ->find_rsc() because we might be a cloned group */
-        rsc = top->fns->find_rsc(top, rsc_id, NULL, pe_find_current | pe_find_partial);
+        rsc = top->fns->find_rsc(top, rsc_id, NULL, pe_find_clone);
         CRM_ASSERT(rsc != NULL);
 
         crm_debug("Created orphan %s for %s: %s on %s", top->id, parent->id, rsc_id, node->details->uname);

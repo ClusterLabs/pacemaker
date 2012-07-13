@@ -125,31 +125,17 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
     resource_t *result = NULL;
     GListPtr gIter = rsc->children;
 
-    if (is_not_set(flags, pe_find_clone) && id == NULL) {
-        return NULL;
-    }
+    CRM_ASSERT(id != NULL);
 
-    if (flags & pe_find_partial) {
-        if (strstr(rsc->id, id) == rsc->id) {
-            match = TRUE;
-
-        } else if (is_set(flags, pe_find_renamed) && rsc->clone_name
-                   && strstr(rsc->clone_name, id) == rsc->clone_name) {
-            match = TRUE;
-        }
-
-    } else if (flags & pe_find_clone) {
-        if (rsc->children != NULL) {
+    if (flags & pe_find_clone) {
+        const char *rid = ID(rsc->xml);
+        if(rsc->parent == NULL) {
             match = FALSE;
 
-        } else if (id == NULL) {
+        } else if (safe_str_eq(rsc->id, id)) {
             match = TRUE;
 
-        } else if (strstr(rsc->id, id)) {
-            match = TRUE;
-
-        } else if (is_set(flags, pe_find_renamed) && rsc->clone_name
-                   && strstr(rsc->clone_name, id) == rsc->clone_name) {
+        } else if(safe_str_eq(rid, id)) {
             match = TRUE;
         }
 
@@ -157,17 +143,10 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
         if (strcmp(rsc->id, id) == 0) {
             match = TRUE;
 
-        } else if (is_set(flags, pe_find_renamed) && rsc->clone_name
+        } else if (is_set(flags, pe_find_renamed)
+                   && rsc->clone_name
                    && strcmp(rsc->clone_name, id) == 0) {
             match = TRUE;
-
-        } else if (rsc->parent && is_set(rsc->flags, pe_rsc_unique) == FALSE) {
-            const char *rid = ID(rsc->xml);
-            crm_trace("Checking %s against %s", rid, id);
-
-            if(safe_str_eq(rid, id)) {
-                match = TRUE;
-            }
         }
     }
 

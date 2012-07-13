@@ -399,7 +399,7 @@ anonymous_known_on(resource_t * rsc, node_t *node)
          * and knowing that other members of the group are
          * known here implies nothing
          */
-        rsc = parent->fns->find_rsc(child, key, NULL, 0);
+        rsc = parent->fns->find_rsc(child, key, NULL, pe_find_clone);
         crm_trace("Checking %s for %s on %s", rsc->id, key, node->details->uname);
         if(g_hash_table_lookup(rsc->known_on, node->details->id)) {
             return TRUE;
