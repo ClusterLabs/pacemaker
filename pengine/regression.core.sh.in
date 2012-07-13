@@ -279,7 +279,7 @@ function test_results {
 	if [ -s $failed ]; then
 	    if [ "$verbose" = "1" ]; then
 		error "Results of $num_failed failed tests (out of $num_tests)...."
-		less $failed
+		cat $failed
 	    else
 		error "Results of $num_failed failed tests (out of $num_tests) are in $failed...."
 		error "Use $0 -V to display them automatically."
