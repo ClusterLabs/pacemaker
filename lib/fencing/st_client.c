@@ -921,8 +921,13 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 }
 
 static int
-stonith_api_call(stonith_t * stonith, int call_options, const char *id, const char *action,
-                 const char *victim, int timeout)
+stonith_api_call(stonith_t * stonith,
+    int call_options,
+    const char *id,
+    const char *action,
+    const char *victim,
+    int timeout,
+    xmlNode **output)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -933,10 +938,47 @@ stonith_api_call(stonith_t * stonith, int call_options, const char *id, const ch
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add(data, F_STONITH_TARGET, victim);
 
-    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, call_options, timeout);
+    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, output, call_options, timeout);
     free_xml(data);
 
     return rc;
+}
+
+static int
+stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **list_info, int timeout)
+{
+    int rc;
+    xmlNode *output = NULL;
+
+    rc = stonith_api_call(stonith, call_options, id, "list", NULL, timeout, &output);
+
+    if (output && list_info) {
+        const char *list_str;
+
+        list_str = crm_element_value(output, "st_output");
+
+        if (list_str) {
+            *list_info = strdup(list_str);
+        }
+    }
+
+    if (output) {
+        free_xml(output);
+    }
+
+    return rc;
+}
+
+static int
+stonith_api_monitor(stonith_t * stonith, int call_options, const char *id, int timeout)
+{
+    return stonith_api_call(stonith, call_options, id, "monitor", NULL, timeout, NULL);
+}
+
+static int
+stonith_api_status(stonith_t * stonith, int call_options, const char *id, const char *port, int timeout)
+{
+    return stonith_api_call(stonith, call_options, id, "status", port, timeout, NULL);
 }
 
 static int
@@ -1800,14 +1842,16 @@ stonith_api_new(void)
     new_stonith->cmds->free       = stonith_api_free;
     new_stonith->cmds->connect    = stonith_api_signon;
     new_stonith->cmds->disconnect = stonith_api_signoff;
-    
-    new_stonith->cmds->call       = stonith_api_call;
+
+    new_stonith->cmds->list       = stonith_api_list;
+    new_stonith->cmds->monitor    = stonith_api_monitor;
+    new_stonith->cmds->status     = stonith_api_status;
     new_stonith->cmds->fence      = stonith_api_fence;
     new_stonith->cmds->confirm    = stonith_api_confirm;
     new_stonith->cmds->history    = stonith_api_history;
 
-    new_stonith->cmds->list       = stonith_api_device_list;
-    new_stonith->cmds->metadata   = stonith_api_device_metadata;
+    new_stonith->cmds->list_agents  = stonith_api_device_list;
+    new_stonith->cmds->metadata     = stonith_api_device_metadata;
 
     new_stonith->cmds->query           = stonith_api_query;
     new_stonith->cmds->remove_device   = stonith_api_remove_device;
@@ -1815,9 +1859,9 @@ stonith_api_new(void)
 
     new_stonith->cmds->remove_level    = stonith_api_remove_level;
     new_stonith->cmds->register_level  = stonith_api_register_level;
-    
-    new_stonith->cmds->remove_callback       = stonith_api_del_callback;	
-    new_stonith->cmds->register_callback     = stonith_api_add_callback;	
+
+    new_stonith->cmds->remove_callback       = stonith_api_del_callback;
+    new_stonith->cmds->register_callback     = stonith_api_add_callback;
     new_stonith->cmds->remove_notification   = stonith_api_del_notification;
     new_stonith->cmds->register_notification = stonith_api_add_notification;
 /* *INDENT-ON* */
