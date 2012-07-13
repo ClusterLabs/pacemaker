@@ -111,7 +111,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="33" operation="stop" operation_key="nfs-xen_config:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
-        <primitive id="nfs-xen_config:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="nfs-xen_config" long-id="nfs-xen_config:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="deglnap098nfs:/vol/xen_config" directory="/etc/xen/vm" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
       </rsc_op>
     </action_set>
@@ -127,7 +127,7 @@
   <synapse id="9">
     <action_set>
       <rsc_op id="34" operation="stop" operation_key="nfs-xen_swapfiles:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
-        <primitive id="nfs-xen_swapfiles:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="nfs-xen_swapfiles" long-id="nfs-xen_swapfiles:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="deglnap098nfs:/vol/xen_swapfiles" directory="/var/lib/xen/deglnap098_swapfiles" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
       </rsc_op>
     </action_set>
@@ -143,7 +143,7 @@
   <synapse id="10">
     <action_set>
       <rsc_op id="35" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
-        <primitive id="nfs-xen_images:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="nfs-xen_images" long-id="nfs-xen_images:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="deglnap099nfs:/vol/xen_images" directory="/var/lib/xen/deglnap099_images" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
       </rsc_op>
     </action_set>
@@ -186,7 +186,7 @@
   <synapse id="13">
     <action_set>
       <rsc_op id="46" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
-        <primitive id="prim-ping:0" long-id="prim-ping:1" class="ocf" provider="pacemaker" type="ping"/>
+        <primitive id="prim-ping" long-id="prim-ping:0" class="ocf" provider="pacemaker" type="ping"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" host_list="77.77.77.138 77.77.77.139" multiplier="2000" name="ping-hosts"/>
       </rsc_op>
     </action_set>

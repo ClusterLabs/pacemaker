@@ -33,7 +33,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="10" operation="start" operation_key="dummy:0_start_0" on_node="bob.demo" on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de">
-        <primitive id="dummy:0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="dummy" long-id="dummy:0" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -49,7 +49,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="dummy:0_monitor_0" on_node="bob.demo" on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de">
-        <primitive id="dummy:0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="dummy" long-id="dummy:0" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -58,7 +58,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="11" operation="start" operation_key="dummy:1_start_0" on_node="alice.demo" on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131">
-        <primitive id="dummy:1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="dummy" long-id="dummy:1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -77,7 +77,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="dummy:1_monitor_0" on_node="alice.demo" on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131">
-        <primitive id="dummy:1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="dummy" long-id="dummy:1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

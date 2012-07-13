@@ -14,7 +14,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="20" operation="start" operation_key="o2cb:0_start_0" on_node="hex-0" on_node_uuid="hex-0">
-        <primitive id="o2cb:0" class="ocf" provider="ocfs2" type="o2cb"/>
+        <primitive id="o2cb" long-id="o2cb:0" class="ocf" provider="ocfs2" type="o2cb"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -30,7 +30,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="21" operation="start" operation_key="clvm:0_start_0" on_node="hex-0" on_node_uuid="hex-0">
-        <primitive id="clvm:0" class="ocf" provider="lvm2" type="clvmd"/>
+        <primitive id="clvm" long-id="clvm:0" class="ocf" provider="lvm2" type="clvmd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.6" daemon_timeout="30"/>
       </rsc_op>
     </action_set>
@@ -49,7 +49,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="22" operation="start" operation_key="cmirrord:0_start_0" on_node="hex-0" on_node_uuid="hex-0">
-        <primitive id="cmirrord:0" class="ocf" provider="lvm2" type="cmirrord"/>
+        <primitive id="cmirrord" long-id="cmirrord:0" class="ocf" provider="lvm2" type="cmirrord"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.6" daemon_timeout="60"/>
       </rsc_op>
     </action_set>
@@ -80,7 +80,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="27" operation="start" operation_key="dlm:1_start_0" on_node="hex-9" on_node_uuid="hex-9">
-        <primitive id="dlm:1" class="ocf" provider="pacemaker" type="controld"/>
+        <primitive id="dlm" long-id="dlm:1" class="ocf" provider="pacemaker" type="controld"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -96,7 +96,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="28" operation="start" operation_key="o2cb:1_start_0" on_node="hex-9" on_node_uuid="hex-9">
-        <primitive id="o2cb:1" class="ocf" provider="ocfs2" type="o2cb"/>
+        <primitive id="o2cb" long-id="o2cb:1" class="ocf" provider="ocfs2" type="o2cb"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -115,7 +115,7 @@
   <synapse id="7">
     <action_set>
       <rsc_op id="29" operation="start" operation_key="clvm:1_start_0" on_node="hex-9" on_node_uuid="hex-9">
-        <primitive id="clvm:1" class="ocf" provider="lvm2" type="clvmd"/>
+        <primitive id="clvm" long-id="clvm:1" class="ocf" provider="lvm2" type="clvmd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.6" daemon_timeout="30"/>
       </rsc_op>
     </action_set>
@@ -134,7 +134,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="30" operation="start" operation_key="cmirrord:1_start_0" on_node="hex-9" on_node_uuid="hex-9">
-        <primitive id="cmirrord:1" class="ocf" provider="lvm2" type="cmirrord"/>
+        <primitive id="cmirrord" long-id="cmirrord:1" class="ocf" provider="lvm2" type="cmirrord"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.6" daemon_timeout="60"/>
       </rsc_op>
     </action_set>
@@ -153,7 +153,7 @@
   <synapse id="9">
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="vg1:1_monitor_0" on_node="hex-9" on_node_uuid="hex-9">
-        <primitive id="vg1:1" class="ocf" provider="heartbeat" type="LVM"/>
+        <primitive id="vg1" long-id="vg1:1" class="ocf" provider="heartbeat" type="LVM"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.6" volgrpname="cluster-vg"/>
       </rsc_op>
     </action_set>

@@ -33,7 +33,7 @@
   <synapse id="3" priority="1000000">
     <action_set>
       <rsc_op id="50" operation="notify" operation_key="drbd1:0_post_notify_demote_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342">
-        <primitive id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd1:0 " CRM_meta_notify_demote_uname="dktest2sles10 " CRM_meta_notify_inactive_resource="drbd1:1 " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd1:0 " CRM_meta_notify_master_uname="dktest2sles10 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd1:1 " CRM_meta_notify_start_uname="dktest1sles10 " CRM_meta_notify_stop_resource="drbd1:0 " CRM_meta_notify_stop_uname="dktest2sles10 " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>
@@ -46,7 +46,7 @@
   <synapse id="4">
      <action_set>
       <rsc_op id="49" operation="notify" operation_key="drbd1:0_pre_notify_demote_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342">
-        <primitive id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd1:0 " CRM_meta_notify_demote_uname="dktest2sles10 " CRM_meta_notify_inactive_resource="drbd1:1 " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd1:0 " CRM_meta_notify_master_uname="dktest2sles10 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd1:1 " CRM_meta_notify_start_uname="dktest1sles10 " CRM_meta_notify_stop_resource="drbd1:0 " CRM_meta_notify_stop_uname="dktest2sles10 " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>
@@ -59,7 +59,7 @@
   <synapse id="5">
      <action_set>
       <rsc_op id="48" operation="notify" operation_key="drbd1:0_pre_notify_stop_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342">
-        <primitive id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd1:0 " CRM_meta_notify_demote_uname="dktest2sles10 " CRM_meta_notify_inactive_resource="drbd1:1 " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd1:0 " CRM_meta_notify_master_uname="dktest2sles10 " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd1:1 " CRM_meta_notify_start_uname="dktest1sles10 " CRM_meta_notify_stop_resource="drbd1:0 " CRM_meta_notify_stop_uname="dktest2sles10 " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>
@@ -72,7 +72,7 @@
   <synapse id="6">
      <action_set>
       <rsc_op id="13" operation="stop" operation_key="drbd1:0_stop_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342">
-        <primitive id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd1:0 " CRM_meta_notify_demote_uname="dktest2sles10 " CRM_meta_notify_inactive_resource="drbd1:1 " CRM_meta_notify_master_resource="drbd1:0 " CRM_meta_notify_master_uname="dktest2sles10 " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd1:1 " CRM_meta_notify_start_uname="dktest1sles10 " CRM_meta_notify_stop_resource="drbd1:0 " CRM_meta_notify_stop_uname="dktest2sles10 " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>
@@ -91,7 +91,7 @@
   <synapse id="7">
      <action_set>
       <rsc_op id="12" operation="demote" operation_key="drbd1:0_demote_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342">
-        <primitive id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd1:0 " CRM_meta_notify_demote_uname="dktest2sles10 " CRM_meta_notify_inactive_resource="drbd1:1 " CRM_meta_notify_master_resource="drbd1:0 " CRM_meta_notify_master_uname="dktest2sles10 " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd1:1 " CRM_meta_notify_start_uname="dktest1sles10 " CRM_meta_notify_stop_resource="drbd1:0 " CRM_meta_notify_stop_uname="dktest2sles10 " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>
@@ -104,7 +104,7 @@
   <synapse id="8" priority="1000000">
      <action_set>
       <rsc_op id="47" operation="notify" operation_key="drbd1:1_post_notify_start_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d">
-        <primitive id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd1:0 " CRM_meta_notify_demote_uname="dktest2sles10 " CRM_meta_notify_inactive_resource="drbd1:1 " CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd1:0 " CRM_meta_notify_master_uname="dktest2sles10 " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd1:1 " CRM_meta_notify_start_uname="dktest1sles10 " CRM_meta_notify_stop_resource="drbd1:0 " CRM_meta_notify_stop_uname="dktest2sles10 " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>
@@ -117,7 +117,7 @@
   <synapse id="9">
      <action_set>
       <rsc_op id="15" operation="monitor" operation_key="drbd1:1_monitor_11000" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d">
-        <primitive id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_start_delay="30000" CRM_meta_timeout="45000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>
@@ -133,7 +133,7 @@
   <synapse id="10">
      <action_set>
       <rsc_op id="14" operation="start" operation_key="drbd1:1_start_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d">
-        <primitive id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd1:0 " CRM_meta_notify_demote_uname="dktest2sles10 " CRM_meta_notify_inactive_resource="drbd1:1 " CRM_meta_notify_master_resource="drbd1:0 " CRM_meta_notify_master_uname="dktest2sles10 " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd1:1 " CRM_meta_notify_start_uname="dktest1sles10 " CRM_meta_notify_stop_resource="drbd1:0 " CRM_meta_notify_stop_uname="dktest2sles10 " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>
@@ -149,7 +149,7 @@
   <synapse id="11">
      <action_set>
       <rsc_op id="9" operation="monitor" operation_key="drbd1:1_monitor_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d">
-        <primitive id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>

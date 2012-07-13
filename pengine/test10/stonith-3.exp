@@ -67,7 +67,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="8" operation="start" operation_key="prmStonith:0_start_0" on_node="rh5node2" on_node_uuid="fb62f5f4-015c-466a-8778-7b5c1c5639d6">
-        <primitive id="prmStonith:0" class="stonith" type="external/ssh"/>
+        <primitive id="prmStonith" long-id="prmStonith:0" class="stonith" type="external/ssh"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="rh5node1 rh5node2" stonith-timeout="70s"/>
       </rsc_op>
     </action_set>
@@ -83,7 +83,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="prmStonith:0_monitor_0" on_node="rh5node2" on_node_uuid="fb62f5f4-015c-466a-8778-7b5c1c5639d6">
-        <primitive id="prmStonith:0" class="stonith" type="external/ssh"/>
+        <primitive id="prmStonith" long-id="prmStonith:0" class="stonith" type="external/ssh"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="rh5node1 rh5node2" stonith-timeout="70s"/>
       </rsc_op>
     </action_set>

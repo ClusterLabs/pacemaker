@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="drbd1:0_monitor_10000" on_node="dktest1" on_node_uuid="c738bee8-591f-4653-aaad-20a961923f25">
-        <primitive id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="15000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
       </rsc_op>
     </action_set>
@@ -11,7 +11,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="drbd1:0_monitor_11000" internal_operation_key="drbd1:1_monitor_11000" on_node="dktest2" on_node_uuid="f430bc66-3388-4b7d-9e99-24fb02855f54">
-        <primitive id="drbd1:0" long-id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <primitive id="drbd1" long-id="drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="15000" crm_feature_set="3.0.6" drbd_resource="drbd1"/>
       </rsc_op>
     </action_set>

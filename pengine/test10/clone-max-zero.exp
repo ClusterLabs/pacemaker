@@ -64,7 +64,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
-        <primitive id="o2cb:1" long-id="o2cb:0" class="ocf" provider="ocfs2" type="o2cb"/>
+        <primitive id="o2cb" long-id="o2cb:1" class="ocf" provider="ocfs2" type="o2cb"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -80,7 +80,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="14" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
-        <primitive id="o2cb:0" long-id="o2cb:1" class="ocf" provider="ocfs2" type="o2cb"/>
+        <primitive id="o2cb" long-id="o2cb:0" class="ocf" provider="ocfs2" type="o2cb"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -126,7 +126,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="27" operation="stop" operation_key="ocfs2-1:1_stop_0" internal_operation_key="ocfs2-1:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
-        <primitive id="ocfs2-1:1" long-id="ocfs2-1:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="ocfs2-1" long-id="ocfs2-1:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6" device="/dev/drbd0" directory="/mnt" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
@@ -139,7 +139,7 @@
   <synapse id="9">
     <action_set>
       <rsc_op id="28" operation="stop" operation_key="ocfs2-1:0_stop_0" internal_operation_key="ocfs2-1:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
-        <primitive id="ocfs2-1:0" long-id="ocfs2-1:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="ocfs2-1" long-id="ocfs2-1:0" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6" device="/dev/drbd0" directory="/mnt" fstype="ocfs2"/>
       </rsc_op>
     </action_set>

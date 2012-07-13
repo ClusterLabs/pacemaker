@@ -37,7 +37,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="26" operation="stop" operation_key="prmPingd:0_stop_0" on_node="srv01" on_node_uuid="45f985d7-e7c8-4834-b01b-16b99526672b">
-        <primitive id="prmPingd:0" class="ocf" provider="pacemaker" type="ping"/>
+        <primitive id="prmPingd" long-id="prmPingd:0" class="ocf" provider="pacemaker" type="ping"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000" crm_feature_set="3.0.6" host_list="192.168.40.1"/>
       </rsc_op>
     </action_set>

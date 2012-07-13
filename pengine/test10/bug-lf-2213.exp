@@ -29,7 +29,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="7" operation="start" operation_key="test:0_start_0" on_node="web1" on_node_uuid="web1">
-        <primitive id="test:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="test" long-id="test:0" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="192.168.55.15:/srv/nfs/web/" directory="/srv/web/" fstype="nfs" options="hard,intr,noatime,rw,nolock,tcp,timeo=50"/>
       </rsc_op>
     </action_set>
@@ -69,7 +69,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="12" operation="start" operation_key="test:1_start_0" on_node="web2" on_node_uuid="web2">
-        <primitive id="test:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <primitive id="test" long-id="test:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="192.168.55.15:/srv/nfs/web/" directory="/srv/web/" fstype="nfs" options="hard,intr,noatime,rw,nolock,tcp,timeo=50"/>
       </rsc_op>
     </action_set>

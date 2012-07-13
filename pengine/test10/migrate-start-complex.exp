@@ -130,7 +130,7 @@
   <synapse id="8">
     <action_set>
       <rsc_op id="17" operation="start" operation_key="dom0-iscsi1-cnx1:1_start_0" on_node="dom0-01" on_node_uuid="dom0-01">
-        <primitive id="dom0-iscsi1-cnx1:1" class="ocf" provider="heartbeat" type="iscsi"/>
+        <primitive id="dom0-iscsi1-cnx1" long-id="dom0-iscsi1-cnx1:1" class="ocf" provider="heartbeat" type="iscsi"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" portal="192.168.99.1" target="frontal-01:test01"/>
       </rsc_op>
     </action_set>
@@ -166,7 +166,7 @@
   <synapse id="11">
     <action_set>
       <rsc_op id="26" operation="start" operation_key="bottom:0_start_0" on_node="dom0-01" on_node_uuid="dom0-01">
-        <primitive id="bottom:0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="bottom" long-id="bottom:0" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -182,7 +182,7 @@
   <synapse id="12">
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="bottom:0_monitor_0" on_node="dom0-01" on_node_uuid="dom0-01">
-        <primitive id="bottom:0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="bottom" long-id="bottom:0" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -191,7 +191,7 @@
   <synapse id="13">
     <action_set>
       <rsc_op id="27" operation="start" operation_key="bottom:1_start_0" on_node="dom0-02" on_node_uuid="dom0-02">
-        <primitive id="bottom:1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="bottom" long-id="bottom:1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -207,7 +207,7 @@
   <synapse id="14">
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="bottom:1_monitor_0" on_node="dom0-02" on_node_uuid="dom0-02">
-        <primitive id="bottom:1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="bottom" long-id="bottom:1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>

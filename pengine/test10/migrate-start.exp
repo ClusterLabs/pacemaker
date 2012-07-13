@@ -83,7 +83,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="13" operation="start" operation_key="dom0-iscsi1-cnx1:1_start_0" on_node="dom0-01" on_node_uuid="dom0-01">
-        <primitive id="dom0-iscsi1-cnx1:1" class="ocf" provider="heartbeat" type="iscsi"/>
+        <primitive id="dom0-iscsi1-cnx1" long-id="dom0-iscsi1-cnx1:1" class="ocf" provider="heartbeat" type="iscsi"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" portal="192.168.99.1" target="frontal-01:test01"/>
       </rsc_op>
     </action_set>

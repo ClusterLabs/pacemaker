@@ -11,7 +11,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="apache:1_stop_0" internal_operation_key="apache:0_stop_0" on_node="domu1" on_node_uuid="domu1">
-        <primitive id="apache:1" long-id="apache:0" class="ocf" provider="heartbeat" type="apache"/>
+        <primitive id="apache" long-id="apache:1" class="ocf" provider="heartbeat" type="apache"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/httpd.conf" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="apache:0_stop_0" internal_operation_key="apache:1_stop_0" on_node="domu2" on_node_uuid="domu2">
-        <primitive id="apache:0" long-id="apache:1" class="ocf" provider="heartbeat" type="apache"/>
+        <primitive id="apache" long-id="apache:0" class="ocf" provider="heartbeat" type="apache"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" configfile="/etc/apache2/httpd.conf" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
@@ -67,7 +67,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="18" operation="stop" operation_key="DummyResource:1_stop_0" internal_operation_key="DummyResource:0_stop_0" on_node="domu1" on_node_uuid="domu1">
-        <primitive id="DummyResource:1" long-id="DummyResource:0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="DummyResource" long-id="DummyResource:1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" state="/var/run/DummyResource.log"/>
       </rsc_op>
     </action_set>
@@ -80,7 +80,7 @@
   <synapse id="6">
     <action_set>
       <rsc_op id="20" operation="stop" operation_key="DummyResource:0_stop_0" internal_operation_key="DummyResource:1_stop_0" on_node="domu2" on_node_uuid="domu2">
-        <primitive id="DummyResource:0" long-id="DummyResource:1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <primitive id="DummyResource" long-id="DummyResource:0" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" state="/var/run/DummyResource.log"/>
       </rsc_op>
     </action_set>
