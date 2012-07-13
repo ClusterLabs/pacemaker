@@ -218,7 +218,7 @@ msgstr ""
 #. Tag: programlisting
 #, no-c-format
 msgid "# cibadmin --query --obj_type resources &gt; tmp.xml\n"
-"# vi tmp.xml&lt;/command&gt;]\n"
+"# vi tmp.xml\n"
 "# cibadmin --replace --obj_type resources --xml-file tmp.xml"
 msgstr ""
 
