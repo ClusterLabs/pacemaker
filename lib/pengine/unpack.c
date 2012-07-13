@@ -1060,12 +1060,12 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
                 crm_trace("Resource %s, active", rsc->id);
             }
 
-            /* TODO - drop this block?
-             * Anonymous clones should no longer be able to have multiple entries on a node
+            /* Keep this block, it means we'll do the right thing if
+             * anyone toggles the unique flag to 'off'
              */
             if(rsc && rsc->running_on) {
-                crm_debug("/Anonymous/ clone %s is already running on %s",
-                          parent->id, node->details->uname);
+                crm_notice("/Anonymous/ clone %s is already running on %s",
+                           parent->id, node->details->uname);
                 skip_inactive = TRUE;
                 rsc = NULL;
             }

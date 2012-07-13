@@ -345,6 +345,8 @@ exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
     return TRUE;
 }
 
+GListPtr resource_list = NULL;
+
 static gboolean
 exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 {
@@ -376,7 +378,18 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
-    resource = ID(action_rsc);
+    /* Look for the preferred name
+     * If not found, try the expected 'local' name
+     * If not found use the preferred name anyway
+     */
+    resource = crm_element_value(action_rsc, XML_ATTR_ID);
+    if(pe_find_resource(resource_list, resource) == NULL) {
+        const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);
+        if(pe_find_resource(resource_list, longname)) {
+            resource = longname;
+        }
+    }
+
     rclass = crm_element_value(action_rsc, XML_AGENT_ATTR_CLASS);
     rtype = crm_element_value(action_rsc, XML_ATTR_TYPE);
     rprovider = crm_element_value(action_rsc, XML_AGENT_ATTR_PROVIDER);
@@ -595,10 +608,12 @@ run_simulation(pe_working_set_t * data_set)
     transition = unpack_graph(data_set->graph, crm_system_name);
     print_graph(LOG_DEBUG, transition);
 
+    resource_list = data_set->resources;
     do {
         graph_rc = run_graph(transition);
 
     } while (graph_rc == transition_active);
+    resource_list = NULL;
 
     if (graph_rc != transition_complete) {
         fprintf(stdout, "Transition failed: %s\n", transition_status(graph_rc));

@@ -510,7 +510,6 @@ action2xml(action_t * action, gboolean as_input)
         return NULL;
     }
 
-    crm_trace("Dumping action %d as XML", action->id);
     if (safe_str_eq(action->task, CRM_OP_FENCE)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 /* 		needs_node_info = FALSE; */
@@ -593,12 +592,48 @@ action2xml(action_t * action, gboolean as_input)
                 XML_ATTR_TYPE
             };
 
-            if (action->rsc->clone_name != NULL) {
-                crm_debug("Using clone name %s for %s", action->rsc->clone_name, action->rsc->id);
+            if(is_set(action->rsc->flags, pe_rsc_orphan) && action->rsc->clone_name) {
+                /* Do not use the 'instance free' name here as that
+                 * might interfere with the instance we plan to keep.
+                 * Ie. if there are more than two named /anonymous/
+                 * instances on a given node, we need to make sure the
+                 * command goes to the right one.
+                 *
+                 * Keep this block, even when everyone is using
+                 * 'instance free' anonymous clone names - it means
+                 * we'll do the right thing if anyone toggles the
+                 * unique flag to 'off'
+                 */
+                crm_debug("Using orphan clone name %s instead of %s", action->rsc->id, action->rsc->clone_name);
                 crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
                 crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
 
+            } else if(is_not_set(action->rsc->flags, pe_rsc_unique)) {
+                const char *xml_id = ID(action->rsc->xml);
+                crm_debug("Using anonymous clone name %s for %s (aka. %s)", xml_id, action->rsc->id, action->rsc->clone_name);
+
+                /* ID is what we'd like client to use
+                 * ID_LONG is what they might know it as instead
+                 *
+                 * ID_LONG is only strictly needed /here/ during the
+                 * transition period until all nodes in the cluster
+                 * are running the new software /and/ have rebooted
+                 * once (meaning that they've only ever spoken to a DC
+                 * supporting this feature).
+                 *
+                 * If anyone toggles the unique flag to 'on', the
+                 * 'instance free' name will correspond to an orphan
+                 * and fall into the claus above instead
+                 */
+                crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
+                if(action->rsc->clone_name && safe_str_neq(xml_id, action->rsc->clone_name)) {
+                    crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
+                } else {
+                    crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
+                }
+
             } else {
+                CRM_ASSERT(action->rsc->clone_name == NULL);
                 crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
             }
 
