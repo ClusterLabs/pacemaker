@@ -52,6 +52,7 @@ GMainLoop *mainloop = NULL;
 GHashTable *client_list = NULL;
 
 gboolean stand_alone = FALSE;
+gboolean no_cib_connect = FALSE;
 gboolean stonith_shutdown_flag = FALSE;
 
 qb_ipcs_service_t *ipcs = NULL;
@@ -616,7 +617,8 @@ stonith_cleanup(void)
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
-    {"stand-alone", 0, 0, 's'},
+    {"stand-alone",         0, 0, 's'},
+    {"stand-alone-w-cpg",   0, 0, 'c'},
     {"verbose",     0, 0, 'V'},
     {"version",     0, 0, '$'},
     {"help",        0, 0, '?'},
@@ -707,6 +709,10 @@ main(int argc, char ** argv)
             break;
         case 's':
             stand_alone = TRUE;
+            break;
+        case 'c':
+            stand_alone = FALSE;
+            no_cib_connect = TRUE;
             break;
         case '$':
         case '?':
@@ -817,7 +823,9 @@ main(int argc, char ** argv)
             exit(100);
         }
 
-        setup_cib();
+        if (no_cib_connect == FALSE) {
+            setup_cib();
+        }
 
     } else {
         stonith_our_uname = strdup("localhost");
