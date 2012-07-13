@@ -23,13 +23,13 @@ import shlex
 import time
 
 def output_from_command(command):
-	test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+	test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	test.wait()
 
 	return test.communicate()[0].split("\n")
 
 class Test:
-	def __init__(self, name, description, verbose = 0):
+	def __init__(self, name, description, verbose = 0, with_cpg = 0):
 		self.name = name
 		self.description = description
 		self.cmds = []
@@ -39,7 +39,15 @@ class Test:
 		self.cmd_tool_output = ""
 		self.result_exitcode = 0;
 
+		self.stonith_options = "-s"
+		self.enable_corosync = 0
+		if with_cpg:
+			self.stonith_options = "-c"
+			self.enable_corosync = 1
+
 		self.stonith_process = None
+		self.stonith_output = ""
+		self.stonith_patterns = []
 
 		self.executed = 0
 
@@ -59,20 +67,24 @@ class Test:
 				"stdout_match" : stdout_match,
 				"stdout_negative_match" : stdout_negative_match,
 				"no_wait" : no_wait,
-				"cmd_output" : "",
 			}
 		)
 
-	def start_environment(self):
+	def start_corosync(self):
+		if self.enable_corosync == 0:
+			return
 
-		### make sure we are in full control here ###
 		if self.has_systemd:
-			cmd = shlex.split("systemctl stop pacemaker.service")
+			cmd = shlex.split("systemctl start corosync.service")
 		else:
-			cmd = shlex.split("service pacemaker stop")
+			cmd = shlex.split("service corosync start")
 
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
+
+	def stop_corosync(self):
+		if self.enable_corosync == 0:
+			return
 
 		if self.has_systemd:
 			cmd = shlex.split("systemctl stop corosync.service")
@@ -81,11 +93,29 @@ class Test:
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
+	def stop_pacemaker(self):
+		if self.has_systemd:
+			cmd = shlex.split("systemctl stop pacemaker.service")
+		else:
+			cmd = shlex.split("service pacemaker stop")
+		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		test.wait()
+
+	def start_environment(self):
+		### make sure we are in full control here ###
+		self.stop_pacemaker()
+		self.stop_corosync()
+
 		cmd = shlex.split("killall -q -9 stonithd")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
-		self.stonith_process = subprocess.Popen(shlex.split("@CRM_DAEMON_DIR@/stonithd -s"))
+		self.start_corosync()
+
+		self.stonith_process = subprocess.Popen(
+			shlex.split("@CRM_DAEMON_DIR@/stonithd %s -V" % self.stonith_options),
+			stdout=subprocess.PIPE,
+			stderr=subprocess.PIPE)
 
 		time.sleep(1)
 
@@ -93,7 +123,13 @@ class Test:
 		if self.stonith_process:
 			self.stonith_process.kill()
 
+		self.stonith_output = self.stonith_process.communicate()[1]
 		self.stonith_process = None
+
+		self.stop_corosync()
+
+	def add_stonith_log_pattern(self, pattern):
+		self.stonith_patterns.append(pattern)
 
 	def add_cmd(self, cmd, args):
 		self.__new_cmd(cmd, args, 0, "")
@@ -104,8 +140,8 @@ class Test:
 	def add_cmd_check_stdout(self, cmd, args, match, no_match = ""):
 		self.__new_cmd(cmd, args, 0, match, 0, no_match)
 
-	def add_expected_fail_cmd(self, cmd, args):
-		self.__new_cmd(cmd, args, 255, "")
+	def add_expected_fail_cmd(self, cmd, args, exitcode = 255):
+		self.__new_cmd(cmd, args, exitcode, "")
 
 	def get_exitcode(self):
 		return self.result_exitcode
@@ -119,7 +155,7 @@ class Test:
 
 		if self.verbose:
 			print "\n\nRunning: "+" ".join(cmd)
-		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 		if args['kill']:
 			if self.verbose:
@@ -135,15 +171,34 @@ class Test:
 
 		if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
 			test.returncode = -2
-			print "STDOUT string '%s' was not found in cmd output" % (args['stdout_match'])
+			print "STDOUT string '%s' was not found in cmd output: %s" % (args['stdout_match'], output)
 
 		if args['stdout_negative_match'] != "" and output.count(args['stdout_negative_match']) != 0:
 			test.returncode = -2
-			print "STDOUT string '%s' was found in cmd output" % (args['stdout_negative_match'])
-
-		args['cmd_output'] = output
+			print "STDOUT string '%s' was found in cmd output: %s" % (args['stdout_negative_match'], output)
 
 		return test.returncode;
+
+	def match_stonith_patterns(self):
+		cur = 0
+		total_patterns = len(self.stonith_patterns)
+
+		if len(self.stonith_patterns) == 0:
+			return
+
+		for line in self.stonith_output.split("\n"):
+			if line.count(self.stonith_patterns[cur]):
+				cur = cur + 1
+			if cur == total_patterns:
+				break
+
+		if cur != len(self.stonith_patterns):
+			for item in range(total_patterns):
+				if self.verbose and item > (cur -1):
+					print "Pattern Not Matched = '%s'" % self.stonith_patterns[item]
+
+			self.result_txt = "FAILURE - '%s' failed. %d patterns out of %d not matched" % (self.name, total_patterns - cur, total_patterns)
+			self.result_exitcode = -1
 
 	def run(self):
 		res = 0
@@ -158,17 +213,18 @@ class Test:
 		for cmd in self.cmds:
 			res = self.run_cmd(cmd)
 			if res != cmd['expected_exitcode']:
-				print cmd['cmd_output']
 				print "Step %d FAILED - command returned %d, expected %d" % (i, res, cmd['expected_exitcode'])
 				self.result_txt = "FAILURE - '%s' failed at step %d. Command: lrmd_test %s" % (self.name, i, cmd['args'])
 				self.result_exitcode = -1
 				break
 			else:
 				if self.verbose:
-					print cmd['cmd_output'].strip()
 					print "Step %d SUCCESS" % (i)
 			i = i + 1
 		self.clean_environment()
+
+		if self.result_exitcode == 0:
+			self.match_stonith_patterns()
 
 		print self.result_txt
 		if self.verbose:
@@ -182,8 +238,8 @@ class Tests:
 		self.tests = []
 		self.verbose = verbose
 
-	def new_test(self, name, description):
-		test = Test(name, description, self.verbose)
+	def new_test(self, name, description, with_cpg = 0):
+		test = Test(name, description, self.verbose, with_cpg)
 		self.tests.append(test)
 		return test
 
@@ -237,6 +293,133 @@ class Tests:
 		test = self.new_test("api_sanity_test", "Sanity test client api.")
 		test.add_cmd("@CRM_DAEMON_DIR@/stonith-test", "-t %s" % (verbose_arg))
 
+	def build_standalone_tests(self):
+		test_types = [
+			{
+				"prefix" : "standalone" ,
+				"use_cpg" : 0,
+			},
+			{
+				"prefix" : "cpg" ,
+				"use_cpg" : 1,
+			},
+		]
+
+		# test what happens when multiple devices can fence a node, but the first device fails.
+		for test_type in test_types:
+			test = self.new_test("%s_fence_device_failure" % test_type["prefix"],
+					"Verify that when one fence device fails for a node, the others are tried.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-F node3 -t 5")
+
+		# simple topology test for one device
+		for test_type in test_types:
+			if test_type["use_cpg"] == 0:
+				continue
+
+			test = self.new_test("%s_topology_simple" % test_type["prefix"],
+					"Verify all fencing devices at a level are used.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+
+			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true")
+			test.add_cmd("stonith_admin", "-F node3 -t 5")
+
+			test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
+
+		# test what happens when the first fencing level has multiple devices.
+		for test_type in test_types:
+			if test_type["use_cpg"] == 0:
+				continue
+
+			test = self.new_test("%s_topology_device_fails" % test_type["prefix"],
+					"Verify if one device in a level fails, the other is tried.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R false  -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+
+			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false")
+			test.add_cmd("stonith_admin", "-r node3 -i 2 -v true")
+			test.add_cmd("stonith_admin", "-F node3 -t 5")
+
+			test.add_stonith_log_pattern("for host 'node3' with device 'false' returned: -1001")
+			test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
+
+		# test what happens when the first fencing level fails.
+		for test_type in test_types:
+			if test_type["use_cpg"] == 0:
+				continue
+
+			test = self.new_test("%s_topology_multi_level_fails" % test_type["prefix"],
+					"Verify if one level fails, the next leve is tried.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true4  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+
+			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
+			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true1")
+			test.add_cmd("stonith_admin", "-r node3 -i 2 -v true2")
+			test.add_cmd("stonith_admin", "-r node3 -i 2 -v false2")
+			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true3")
+			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true4")
+
+			test.add_cmd("stonith_admin", "-F node3 -t 5")
+
+
+			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -1001")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -1001")
+			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
+			test.add_stonith_log_pattern("for host 'node3' with device 'true4' returned: 0")
+
+		# test the stonith builds the correct list of devices that can fence a node.
+		for test_type in test_types:
+			test = self.new_test("%s_list_devices" % test_type["prefix"],
+					"Verify list of devices that can fence a node is correct", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
+			test.add_cmd("stonith_admin", "-R true2 -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true3 -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+
+			test.add_cmd_check_stdout("stonith_admin", "-l node1 -V", "true2", "true1")
+			test.add_cmd_check_stdout("stonith_admin", "-l node1 -V", "true3", "true1")
+
+		# simple test of device monitor
+		for test_type in test_types:
+			test = self.new_test("%s_monitor" % test_type["prefix"],
+					"Verify device is reachable", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
+			test.add_cmd("stonith_admin", "-R false1  -a fence_false -o \"pcmk_host_list=node3\"")
+
+			test.add_cmd("stonith_admin", "-Q true1")
+			test.add_cmd("stonith_admin", "-Q false1")
+			test.add_expected_fail_cmd("stonith_admin", "-Q true2", 237)
+
+		# simple register test
+		for test_type in test_types:
+			test = self.new_test("%s_register" % test_type["prefix"],
+					"Verify devices can be registered and un-registered", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
+
+			test.add_cmd("stonith_admin", "-Q true1")
+
+			test.add_cmd("stonith_admin", "-D true1")
+
+			test.add_expected_fail_cmd("stonith_admin", "-Q true1", 237)
+
+		# test fencing history.
+		for test_type in test_types:
+			if test_type["use_cpg"] == 0:
+				continue
+			test = self.new_test("%s_fence_history" % test_type["prefix"],
+					"Verify last fencing operation is returned.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
+
+			test.add_cmd("stonith_admin", "-F node3 -t 5 -V")
+
+			test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
+
 class TestOptions:
 	def __init__(self):
 		self.options = {}
@@ -287,7 +470,11 @@ def main(argv):
 	o.build_options(argv)
 
 	tests = Tests(o.options['verbose'])
+	tests.build_standalone_tests()
 	tests.build_api_sanity_tests()
+
+	os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
+	os.system("cp /usr/share/pacemaker/tests/cts/fence_true /usr/sbin/fence_true")
 
 	print "Starting ..."
 
@@ -304,7 +491,6 @@ def main(argv):
 	else:
 		tests.run_tests()
 		tests.print_results()
-
 
 if __name__=="__main__":
 	main(sys.argv)

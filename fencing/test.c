@@ -151,10 +151,10 @@ run_fence_failure_test(void)
         "Register device1 for failure test", 1, 0);
 
     single_test(st->cmds->fence(st, st_opts, "pcmk-2", "off", 3),
-        "Fence failure results off", 1, -62);
+        "Fence failure results off", 1, -1001);
 
     single_test(st->cmds->fence(st, st_opts, "pcmk-2", "reboot", 3),
-        "Fence failure results reboot", 1, -62);
+        "Fence failure results reboot", 1, -1001);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
         "Remove device1 for failure test", 1, 0);
