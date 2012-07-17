@@ -820,6 +820,8 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
 
     mainloop_add_fd("quorum", fd, dispatch, &quorum_fd_callbacks);
 
+    corosync_initialize_nodelist(NULL, FALSE, NULL);
+
   bail:
     if (rc != CS_OK) {
         quorum_finalize(pcmk_quorum_handle);
