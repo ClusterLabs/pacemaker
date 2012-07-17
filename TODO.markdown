@@ -1,7 +1,6 @@
 # Semi-random collection of tasks we'd like to get done
 
 ## Targeted for 1.2
-- Get fencing/test.c working again (with and without stonithd -s)
 - Avoid the use of xmlNode in fencing register_callback() call types
 - Replace (delegated)_variant_op in CIB API with a private function
 
@@ -34,7 +33,6 @@
 - Decide whether to fully support or drop failover domains
 
 # Testing
-- Write a regression test for Stonith-NG
 - Convert BandwidthTest CTS test into a Scenario wrapper
 - find_operations() is not covered by PE regression tests
 - Some node states in determine_online_status_fencing() are untested by PE regression tests

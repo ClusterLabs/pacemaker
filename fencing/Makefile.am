@@ -20,6 +20,9 @@ MAINTAINERCLEANFILES = Makefile.in
 SUBDIRS = 
 
 ## binary progs
+testdir			= $(datadir)/$(PACKAGE)/tests/fencing
+test_SCRIPTS		= regression.py
+
 halibdir	= $(CRM_DAEMON_DIR)
 halib_PROGRAMS	= stonithd stonith-test
 

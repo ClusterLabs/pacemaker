@@ -1727,6 +1727,7 @@ mcp/Makefile							\
 	mcp/pacemaker						\
 	mcp/pacemaker.service					\
 fencing/Makefile                                                \
+        fencing/regression.py                                      \
 lrmd/Makefile                                                   \
         lrmd/regression.py                                      \
 extra/Makefile							\
