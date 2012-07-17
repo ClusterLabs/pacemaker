@@ -70,52 +70,6 @@ static uint32_t pcmk_nodeid = 0;
 #  define INTERFACE_MAX 2 /* from the private coroapi.h header */
 #endif
 
-/*
- * Stolen from node_name in corosync-quorumtool.c
- * This resolves the first address assigned to a node and returns the name or IP address.
- */
-static char *corosync_node_name(uint32_t nodeid)
-{
-    int err;
-    int numaddrs;
-    corosync_cfg_node_address_t addrs[INTERFACE_MAX];
-    static char buf[INET6_ADDRSTRLEN];
-    socklen_t addrlen;
-    struct sockaddr_storage *ss;
-    static corosync_cfg_handle_t c_handle = 0;
-    static corosync_cfg_callbacks_t c_callbacks = {};
-
-    if(c_handle ==  0) {
-        crm_trace("Initializing CFG connection");
-	if (corosync_cfg_initialize(&c_handle, &c_callbacks) != CS_OK) {
-            crm_err("Cannot initialise CFG service\n");
-            c_handle = 0;
-            return NULL;
-	}
-    }
-    
-    err = corosync_cfg_get_node_addrs(c_handle, nodeid, INTERFACE_MAX, &numaddrs, addrs);
-    if (err != CS_OK) {
-        crm_err("Unable to get node address for nodeid %u: %s\n", nodeid, cs_strerror(err));
-        return NULL;
-    }
-
-    ss = (struct sockaddr_storage *)addrs[0].address;
-
-    if (ss->ss_family == AF_INET6) {
-        addrlen = sizeof(struct sockaddr_in6);
-    } else {
-        addrlen = sizeof(struct sockaddr_in);
-    }
-
-    if (!getnameinfo((struct sockaddr *)addrs[0].address, addrlen, buf, sizeof(buf), NULL, 0, 0)) {
-        crm_notice("Inferred node name '%s' for nodeid %u from DNS", buf, nodeid);
-        return strdup(buf);
-    }
-
-    return NULL;
-}
-
 static gboolean
 corosync_name_is_valid(const char *key, const char *name) 
 {
@@ -133,6 +87,124 @@ corosync_name_is_valid(const char *key, const char *name)
         return FALSE;
     }
     return TRUE;
+}
+
+/*
+ * Stolen from node_name in corosync-quorumtool.c
+ * This resolves the first address assigned to a node and returns the name or IP address.
+ */
+static char *corosync_node_name(uint32_t nodeid)
+{
+    int lpc = 0;
+    static corosync_cfg_handle_t cfg_handle = 0;
+    static cmap_handle_t cmap_handle = 0;
+
+    if(cmap_handle == 0) {
+        retries = 0;
+        crm_trace("Initializing CMAP connection");
+        do {
+            rc = cmap_initialize(&cmap_handle);
+            if(rc != CS_OK) {
+                retries++;
+                crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
+                sleep(retries);
+            }
+
+        } while(retries < 5 && rc != CS_OK);
+
+        if (rc != CS_OK) {
+            crm_warn("Could not connect to Cluster Configuration Database API, error %d", cs_strerror(rc));
+            cmap_handle = 0;
+        }
+    }
+    
+    if(cfg_handle ==  0) {
+        retries = 0;
+        crm_trace("Initializing CFG connection");
+        do {
+            rc = corosync_cfg_initialize(&cfg_handle, &c_callbacks);
+            if(rc != CS_OK) {
+                retries++;
+                crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
+                sleep(retries);
+            }
+
+        } while(retries < 5 && rc != CS_OK);
+
+        if (rc != CS_OK) {
+            crm_warn("Could not connect to the Corosync CFG API, error %d", cs_strerror(rc));
+            cfg_handle = 0;
+        }
+    }
+
+    while(name == NULL && cmap_handle != 0) {
+        uint32_t id = 0;
+        char *name = NULL;
+        char *key = NULL;
+
+        key = g_strdup_printf("nodelist.node.%d.nodeid", lpc);
+        rc = cmap_get_uint32(cmap_handle, key, &id);
+        g_free(key);
+
+        if(rc != CS_OK) {
+            break;
+        }
+
+        if(nodeid == id) {
+            if(name == NULL) {
+                key = g_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
+                rc = cmap_get_string(cmap_handle, key, &name);
+
+                if(corosync_name_is_valid(key, name) == FALSE) {
+                    free(name); name = NULL;
+                }
+                g_free(key);
+            }
+
+            if(name == NULL) {
+                key = g_strdup_printf("nodelist.node.%d.name", lpc);
+                rc = cmap_get_string(cmap_handle, key, &name);
+
+                if(corosync_name_is_valid(key, name) == FALSE) {
+                    free(name); name = NULL;
+                }
+                g_free(key);
+            }
+            break;
+        }
+
+        lpc++;
+    }
+
+    if(name == NULL && cfg_handle != 0) {
+        int numaddrs;
+        char buf[INET6_ADDRSTRLEN];
+
+        socklen_t addrlen;
+        struct sockaddr_storage *ss;
+        corosync_cfg_node_address_t addrs[INTERFACE_MAX];
+
+        rc = corosync_cfg_get_node_addrs(cfg_handle, nodeid, INTERFACE_MAX, &numaddrs, addrs);
+        if (rc == CS_OK) {
+            ss = (struct sockaddr_storage *)addrs[0].address;
+            if (ss->ss_family == AF_INET6) {
+                addrlen = sizeof(struct sockaddr_in6);
+            } else {
+                addrlen = sizeof(struct sockaddr_in);
+            }
+
+            if (!getnameinfo((struct sockaddr *)addrs[0].address, addrlen, buf, sizeof(buf), NULL, 0, 0)) {
+                crm_notice("Inferred node name '%s' for nodeid %u from DNS", buf, nodeid);
+
+                if(corosync_name_is_valid("DNS", buf)) {
+                    return strdup(buf);
+                }
+            }
+        }
+    }
+
+    crm_err("Unable to get node address for nodeid %u: %s", nodeid, cs_strerror(rc));
+    return NULL;
 }
 
 enum crm_ais_msg_types
@@ -681,10 +753,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
 
         node = crm_get_peer(id, NULL);
         if(node->uname == NULL) {
-            char *name = corosync_node_name(id);
-            if(corosync_name_is_valid("DNS", name) == FALSE) {
-                free(name); name = NULL;
-            }
+            name = corosync_node_name(id);
         }
 
         crm_update_peer(__FUNCTION__, id, 0, ring_id, 0, 0, uuid, name, NULL, CRM_NODE_MEMBER);
@@ -956,6 +1025,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_
         return FALSE;
     }
 
+    crm_trace("Initializing corosync nodelist");
     for(lpc = 0; ; lpc++) {
         uint32_t nodeid = 0;
         char *name = NULL;
@@ -969,46 +1039,24 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_
             break;
         }
 
-        if(name == NULL) {
-            key = g_strdup_printf("nodelist.node.%d.name", lpc);
-            rc = cmap_get_string(cmap_handle, key, &name);
-
-            if(corosync_name_is_valid(key, name) == FALSE) {
-                free(name); name = NULL;
-            }
-            g_free(key);
-        }
-
-        if(name == NULL) {
-            key = g_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
-            rc = cmap_get_string(cmap_handle, key, &name);
-
-            if(corosync_name_is_valid(key, name) == FALSE) {
-                free(name); name = NULL;
-            }
-            g_free(key);
-        }
-
-        if(name == NULL) {
-            name = corosync_node_name(nodeid);
-            if(corosync_name_is_valid("DNS", name) == FALSE) {
-                free(name); name = NULL;
-            }
-        }
+        name = corosync_node_name(nodeid);
 
         if(nodeid > 0 || name != NULL) {
             crm_trace("Initializing node[%d] %u = %s", lpc, nodeid, name);
             crm_get_peer(nodeid, name);
         }
 
-        if(xml_parent && nodeid > 0 && name != NULL) {
-            xmlNode *node = create_xml_node(xml_parent, XML_CIB_TAG_NODE);
-            crm_xml_add_int(node, XML_ATTR_ID, nodeid);
-            crm_xml_add(node, XML_ATTR_UNAME, name);
-            if(force_member) {
-                crm_xml_add(node, XML_ATTR_TYPE, CRM_NODE_MEMBER);
-            }
+        if(nodeid > 0 && name != NULL) {
             any = TRUE;
+
+            if(xml_parent) {
+                xmlNode *node = create_xml_node(xml_parent, XML_CIB_TAG_NODE);
+                crm_xml_add_int(node, XML_ATTR_ID, nodeid);
+                crm_xml_add(node, XML_ATTR_UNAME, name);
+                if(force_member) {
+                    crm_xml_add(node, XML_ATTR_TYPE, CRM_NODE_MEMBER);
+                }
+            }
         }
 
         free(name);
