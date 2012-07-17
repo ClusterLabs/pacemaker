@@ -76,9 +76,10 @@ corosync_name_is_valid(const char *key, const char *name)
     int octet;
 
     if(name == NULL) {
+        crm_trace("%s is empty", key);
         return FALSE;
 
-    } else if(sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) != 4) {
+    } else if(sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) == 4) {
         crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
         return FALSE;
 
@@ -206,7 +207,7 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
                 addrlen = sizeof(struct sockaddr_in);
             }
 
-            if (!getnameinfo((struct sockaddr *)addrs[0].address, addrlen, buf, sizeof(buf), NULL, 0, 0)) {
+            if (getnameinfo((struct sockaddr *)addrs[0].address, addrlen, buf, sizeof(buf), NULL, 0, 0) == 0) {
                 crm_notice("Inferred node name '%s' for nodeid %u from DNS", buf, nodeid);
 
                 if(corosync_name_is_valid("DNS", buf)) {
@@ -769,6 +770,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
 
         node = crm_get_peer(id, NULL);
         if(node->uname == NULL) {
+            crm_info("Obtaining name for new node %u", id);
             name = corosync_node_name(0, id);
         }
 
