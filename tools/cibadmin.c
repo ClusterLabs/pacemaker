@@ -515,8 +515,7 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
 
     } else if (cib_action != NULL) {
         crm_trace("Passing \"%s\" to variant_op...", cib_action);
-        return the_cib->cmds->variant_op(the_cib, cib_action, host, obj_type,
-                                         input, output, call_options);
+        return cib_internal_op(the_cib, cib_action, host, obj_type, input, output, call_options, NULL);
 
     } else {
         crm_err("You must specify an operation");

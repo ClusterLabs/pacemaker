@@ -71,10 +71,6 @@ enum cib_call_options {
 typedef struct cib_s cib_t;
 
 typedef struct cib_api_operations_s {
-    int (*variant_op) (cib_t * cib, const char *op, const char *host,
-                       const char *section, xmlNode * data,
-                       xmlNode ** output_data, int call_options);
-
     int (*signon) (cib_t * cib, const char *name, enum cib_conn_type type);
     int (*signon_raw) (cib_t * cib, const char *name, enum cib_conn_type type, int *async_fd,
                        int *unused);
@@ -125,13 +121,11 @@ typedef struct cib_api_operations_s {
 
     int (*register_notification) (cib_t * cib, const char *callback, int enabled);
 
-     gboolean(*register_callback) (cib_t * cib, int call_id, int timeout, gboolean only_success,
+    gboolean(*register_callback) (cib_t * cib, int call_id, int timeout, gboolean only_success,
                                    void *user_data, const char *callback_name,
                                    void (*callback) (xmlNode *, int, int, xmlNode *, void *));
 
-    int (*delegated_variant_op) (cib_t * cib, const char *op, const char *host,
-                                 const char *section, xmlNode * data,
-                                 xmlNode ** output_data, int call_options, const char *user_name);
+
 
 } cib_api_operations_t;
 
@@ -143,6 +137,7 @@ struct cib_s {
     int call_id;
     int call_timeout;
     void *variant_opaque;
+    void *delegate_fn;
 
     GList *notify_list;
     void (*op_callback) (const xmlNode * msg, int call_id, int rc, xmlNode * output);

@@ -83,8 +83,7 @@ cib_file_new(const char *cib_location)
     private->filename = strdup(cib_location);
 
     /* assign variant specific ops */
-    cib->cmds->variant_op = cib_file_perform_op;
-    cib->cmds->delegated_variant_op = cib_file_perform_op_delegate;
+    cib->delegate_fn = cib_file_perform_op_delegate;
     cib->cmds->signon = cib_file_signon;
     cib->cmds->signoff = cib_file_signoff;
     cib->cmds->free = cib_file_free;

@@ -82,7 +82,7 @@ int cib_remote_signoff(cib_t * cib);
 int cib_remote_free(cib_t * cib);
 
 int cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                          xmlNode * data, xmlNode ** output_data, int call_options);
+                          xmlNode * data, xmlNode ** output_data, int call_options, const char *name);
 
 static int
 cib_remote_inputfd(cib_t * cib)
@@ -141,7 +141,7 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     private->callback.encrypted = encrypted;
 
     /* assign variant specific ops */
-    cib->cmds->variant_op = cib_remote_perform_op;
+    cib->delegate_fn = cib_remote_perform_op;
     cib->cmds->signon = cib_remote_signon;
     cib->cmds->signoff = cib_remote_signoff;
     cib->cmds->free = cib_remote_free;
@@ -481,7 +481,7 @@ cib_timeout_handler(gpointer data)
 
 int
 cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                      xmlNode * data, xmlNode ** output_data, int call_options)
+                      xmlNode * data, xmlNode ** output_data, int call_options, const char *name)
 {
     int rc = pcmk_ok;
 

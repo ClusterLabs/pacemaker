@@ -29,7 +29,7 @@ extern void process_client_disconnect(crmd_client_t * curr_client);
 
 #  define fsa_cib_update(section, data, options, call_id, user_name)	\
 	if(fsa_cib_conn != NULL) {					\
-	    call_id = fsa_cib_conn->cmds->delegated_variant_op(		\
+	    call_id = cib_internal_op(                                  \
 		fsa_cib_conn, CIB_OP_MODIFY, NULL, section, data,	\
 		NULL, options, user_name);				\
 									\

@@ -892,8 +892,8 @@ delete_rsc_status(const char *rsc_id, int call_options, const char *user_name)
     rsc_xpath = calloc(1, max);
     snprintf(rsc_xpath, max, rsc_template, fsa_our_uname, rsc_id);
 
-    rc = fsa_cib_conn->cmds->delegated_variant_op(fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath,
-                                                  NULL, NULL, call_options | cib_xpath, user_name);
+    rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath,
+                         NULL, NULL, call_options | cib_xpath, user_name);
 
     free(rsc_xpath);
     return rc;

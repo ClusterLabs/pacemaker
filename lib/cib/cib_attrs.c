@@ -124,10 +124,8 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
     }
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
 
-    rc = the_cib->cmds->delegated_variant_op(the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL,
-                                             &xml_search,
-                                             cib_sync_call | cib_scope_local | cib_xpath,
-                                             user_name);
+    rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
+                         cib_sync_call | cib_scope_local | cib_xpath, user_name);
 
     if (rc != pcmk_ok) {
         crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
@@ -198,10 +196,8 @@ update_attr_delegate(cib_t * the_cib, int call_options,
         const char *node_type = NULL;
         xmlNode *cib_top = NULL;
 
-        rc = the_cib->cmds->delegated_variant_op(the_cib, CIB_OP_QUERY, NULL, "/cib", NULL,
-                                                 &cib_top,
-                                                 cib_sync_call | cib_scope_local | cib_xpath |
-                                                 cib_no_children, user_name);
+        rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, "/cib", NULL, &cib_top,
+                             cib_sync_call | cib_scope_local | cib_xpath | cib_no_children, user_name);
 
         value = crm_element_value(cib_top, "ignore_dtd");
         if (value != NULL) {
@@ -334,8 +330,8 @@ update_attr_delegate(cib_t * the_cib, int call_options,
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 
     crm_log_xml_trace(xml_top, "update_attr");
-    rc = the_cib->cmds->delegated_variant_op(the_cib, CIB_OP_MODIFY, NULL, section, xml_top, NULL,
-                                             call_options | cib_quorum_override, user_name);
+    rc = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, section, xml_top, NULL,
+                         call_options | cib_quorum_override, user_name);
 
     if (rc < pcmk_ok) {
         attr_msg(LOG_ERR, "Error setting %s=%s (section=%s, set=%s): %s",
@@ -401,8 +397,8 @@ delete_attr_delegate(cib_t * the_cib, int options,
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 
-    rc = the_cib->cmds->delegated_variant_op(the_cib, CIB_OP_DELETE, NULL, section, xml_obj, NULL,
-                                             options | cib_quorum_override, user_name);
+    rc = cib_internal_op(the_cib, CIB_OP_DELETE, NULL, section, xml_obj, NULL,
+                         options | cib_quorum_override, user_name);
 
     if (rc == pcmk_ok) {
         attr_msg(LOG_DEBUG, "Deleted %s %s: id=%s%s%s%s%s\n",

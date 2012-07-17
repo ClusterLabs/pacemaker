@@ -770,3 +770,14 @@ cib_internal_config_changed(xmlNode * diff)
 
     return changed;
 }
+
+int cib_internal_op(cib_t * cib, const char *op, const char *host,
+                    const char *section, xmlNode * data,
+                    xmlNode ** output_data, int call_options, const char *user_name)
+{
+    int (*delegate)(cib_t * cib, const char *op, const char *host,
+                    const char *section, xmlNode * data,
+                    xmlNode ** output_data, int call_options, const char *user_name) = cib->delegate_fn;
+
+    return delegate(cib, op, host, section, data, output_data, call_options, user_name);
+}

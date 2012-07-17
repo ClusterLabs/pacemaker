@@ -50,8 +50,8 @@ gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b);
 #define op_common(cib) do {                                             \
         if(cib == NULL) {                                               \
             return -EINVAL;						\
-        } else if(cib->cmds->variant_op == NULL) {                      \
-            return -EPROTONOSUPPORT;						\
+        } else if(cib->delegate_fn == NULL) {                           \
+            return -EPROTONOSUPPORT;                                    \
         }                                                               \
     } while(0)
 
@@ -59,14 +59,14 @@ static int
 cib_client_noop(cib_t * cib, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CRM_OP_NOOP, NULL, NULL, NULL, NULL, call_options);
+    return cib_internal_op(cib, CRM_OP_NOOP, NULL, NULL, NULL, NULL, call_options, NULL);
 }
 
 static int
 cib_client_ping(cib_t * cib, xmlNode ** output_data, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CRM_OP_PING, NULL, NULL, NULL, output_data, call_options);
+    return cib_internal_op(cib, CRM_OP_PING, NULL, NULL, NULL, output_data, call_options, NULL);
 }
 
 static int
@@ -80,22 +80,22 @@ cib_client_query_from(cib_t * cib, const char *host, const char *section,
                       xmlNode ** output_data, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_QUERY, host, section, NULL, output_data, call_options);
+    return cib_internal_op(cib, CIB_OP_QUERY, host, section, NULL, output_data, call_options, NULL);
 }
 
 static int
 cib_client_is_master(cib_t * cib)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_ISMASTER, NULL, NULL, NULL, NULL,
-                                 cib_scope_local | cib_sync_call);
+    return cib_internal_op(cib, CIB_OP_ISMASTER, NULL, NULL, NULL, NULL,
+                           cib_scope_local | cib_sync_call, NULL);
 }
 
 static int
 cib_client_set_slave(cib_t * cib, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_SLAVE, NULL, NULL, NULL, NULL, call_options);
+    return cib_internal_op(cib, CIB_OP_SLAVE, NULL, NULL, NULL, NULL, call_options, NULL);
 }
 
 static int
@@ -109,22 +109,22 @@ cib_client_set_master(cib_t * cib, int call_options)
 {
     op_common(cib);
     crm_trace("Adding cib_scope_local to options");
-    return cib->cmds->variant_op(cib, CIB_OP_MASTER, NULL, NULL, NULL, NULL,
-                                 call_options | cib_scope_local);
+    return cib_internal_op(cib, CIB_OP_MASTER, NULL, NULL, NULL, NULL,
+                           call_options | cib_scope_local, NULL);
 }
 
 static int
 cib_client_bump_epoch(cib_t * cib, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_BUMP, NULL, NULL, NULL, NULL, call_options);
+    return cib_internal_op(cib, CIB_OP_BUMP, NULL, NULL, NULL, NULL, call_options, NULL);
 }
 
 static int
 cib_client_upgrade(cib_t * cib, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_UPGRADE, NULL, NULL, NULL, NULL, call_options);
+    return cib_internal_op(cib, CIB_OP_UPGRADE, NULL, NULL, NULL, NULL, call_options, NULL);
 }
 
 static int
@@ -137,63 +137,63 @@ static int
 cib_client_sync_from(cib_t * cib, const char *host, const char *section, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_SYNC, host, section, NULL, NULL, call_options);
+    return cib_internal_op(cib, CIB_OP_SYNC, host, section, NULL, NULL, call_options, NULL);
 }
 
 static int
 cib_client_create(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_CREATE, NULL, section, data, NULL, call_options);
+    return cib_internal_op(cib, CIB_OP_CREATE, NULL, section, data, NULL, call_options, NULL);
 }
 
 static int
 cib_client_modify(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_MODIFY, NULL, section, data, NULL, call_options);
+    return cib_internal_op(cib, CIB_OP_MODIFY, NULL, section, data, NULL, call_options, NULL);
 }
 
 static int
 cib_client_update(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_MODIFY, NULL, section, data, NULL, call_options);
+    return cib_internal_op(cib, CIB_OP_MODIFY, NULL, section, data, NULL, call_options, NULL);
 }
 
 static int
 cib_client_replace(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_REPLACE, NULL, section, data, NULL, call_options);
+    return cib_internal_op(cib, CIB_OP_REPLACE, NULL, section, data, NULL, call_options, NULL);
 }
 
 static int
 cib_client_delete(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_DELETE, NULL, section, data, NULL, call_options);
+    return cib_internal_op(cib, CIB_OP_DELETE, NULL, section, data, NULL, call_options, NULL);
 }
 
 static int
 cib_client_delete_absolute(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_DELETE_ALT, NULL, section, data, NULL, call_options);
+    return cib_internal_op(cib, CIB_OP_DELETE_ALT, NULL, section, data, NULL, call_options, NULL);
 }
 
 static int
 cib_client_erase(cib_t * cib, xmlNode ** output_data, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CIB_OP_ERASE, NULL, NULL, NULL, output_data, call_options);
+    return cib_internal_op(cib, CIB_OP_ERASE, NULL, NULL, NULL, output_data, call_options, NULL);
 }
 
 static int
 cib_client_quit(cib_t * cib, int call_options)
 {
     op_common(cib);
-    return cib->cmds->variant_op(cib, CRM_OP_QUIT, NULL, NULL, NULL, NULL, call_options);
+    return cib_internal_op(cib, CRM_OP_QUIT, NULL, NULL, NULL, NULL, call_options, NULL);
 }
 
 static void

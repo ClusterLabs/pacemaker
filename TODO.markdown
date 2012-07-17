@@ -1,11 +1,10 @@
 # Semi-random collection of tasks we'd like to get done
 
 ## Targeted for 1.2
-- Get fencing/test.c working again (with and without stonithd -s)
 - Avoid the use of xmlNode in fencing register_callback() call types
-- Replace (delegated)_variant_op in CIB API with a private function
 
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
+
 - Test startup fencing with node lists
   - Figure out how to distinguish between "down" and "down
     but we've never seen them before so they need to be shot"

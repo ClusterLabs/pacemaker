@@ -71,8 +71,7 @@ cib_native_new(void)
     native->dnotify_fn = NULL;
 
     /* assign variant specific ops */
-    cib->cmds->variant_op = cib_native_perform_op;
-    cib->cmds->delegated_variant_op = cib_native_perform_op_delegate;
+    cib->delegate_fn = cib_native_perform_op_delegate;
     cib->cmds->signon = cib_native_signon;
     cib->cmds->signon_raw = cib_native_signon_raw;
     cib->cmds->signoff = cib_native_signoff;
