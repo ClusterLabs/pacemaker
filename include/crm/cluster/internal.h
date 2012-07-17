@@ -284,9 +284,13 @@ gboolean ccm_have_quorum(oc_ed_t event);
 const char *ccm_event_name(oc_ed_t event);
 crm_node_t *crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state,
                                        uint64_t seq);
+
+gboolean heartbeat_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_parent);
 #  endif
 
 #  if SUPPORT_COROSYNC
+
+gboolean corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_parent);
 
 gboolean send_ais_message(xmlNode * msg, gboolean local,
                           const char *node, enum crm_ais_msg_types dest);

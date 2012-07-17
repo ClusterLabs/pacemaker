@@ -66,7 +66,7 @@ extern void fsa_dump_inputs(int log_level, const char *text, long long input_reg
 
 extern gboolean update_dc(xmlNode * msg);
 extern void erase_node_from_join(const char *node);
-extern void populate_cib_nodes(gboolean with_client_status);
+extern void populate_cib_nodes(gboolean quick);
 extern void crm_update_quorum(gboolean quorum, gboolean force_update);
 extern void erase_status_tag(const char *uname, const char *tag, int options);
 extern void update_attrd(const char *host, const char *name, const char *value,

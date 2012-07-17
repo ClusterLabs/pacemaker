@@ -103,7 +103,7 @@ post_cache_update(int instance)
     set_bit(fsa_input_register, R_MEMBERSHIP);
 
     if (AM_I_DC) {
-        populate_cib_nodes(FALSE);
+        populate_cib_nodes(TRUE);
         do_update_cib_nodes(FALSE, __FUNCTION__);
     }
 

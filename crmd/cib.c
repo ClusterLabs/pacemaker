@@ -118,7 +118,7 @@ do_cib_replaced(const char *event, xmlNode * msg)
     }
 
     /* start the join process again so we get everyone's LRM status */
-    populate_cib_nodes(FALSE);
+    populate_cib_nodes(TRUE);
     do_update_cib_nodes(TRUE, __FUNCTION__);
     register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 }

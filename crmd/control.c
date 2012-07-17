@@ -926,28 +926,36 @@ create_cib_node_definition(gpointer key, gpointer value, gpointer user_data)
 }
 
 void
-populate_cib_nodes(gboolean with_client_status)
+populate_cib_nodes(gboolean quick)
 {
     int call_id = 0;
-    xmlNode *cib_node_list = NULL;
+    gboolean from_hashtable = TRUE;
+    xmlNode *cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
 
 #if SUPPORT_HEARTBEAT
-    if (is_heartbeat_cluster()) {
-        populate_cib_nodes_ha(with_client_status);
-        return;
+    if (quick == FALSE && is_heartbeat_cluster()) {
+        from_hashtable = heartbeat_initialize_nodelist(fsa_cluster_conn, FALSE, cib_node_list);
     }
 #endif
 
-    cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
+#if SUPPORT_COROSYNC
+    if (quick == FALSE && is_corosync_cluster()) {
+        from_hashtable = corosync_initialize_nodelist(NULL, FALSE, cib_node_list);
+    }
+#endif
+
+    if(from_hashtable) {
     /* if(uname_is_uuid()) { */
     /*     g_hash_table_foreach(crm_peer_id_cache, create_cib_node_definition, cib_node_list); */
     /* } else { */
         g_hash_table_foreach(crm_peer_cache, create_cib_node_definition, cib_node_list);
     /* } */
+    }
+
+    crm_trace("Populating <nodes> section from %s", from_hashtable?"hashtable":"cluster");
 
     fsa_cib_update(XML_CIB_TAG_NODES, cib_node_list, cib_scope_local | cib_quorum_override, call_id, NULL);
     add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
 
     free_xml(cib_node_list);
-    crm_trace("Complete");
 }

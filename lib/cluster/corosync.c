@@ -37,6 +37,8 @@
 #include <corosync/cmap.h>
 #include <corosync/quorum.h>
 
+#include <crm/msg_xml.h>
+
 cpg_handle_t pcmk_cpg_handle = 0;
 
 struct cpg_name pcmk_cpg_group = {
@@ -846,3 +848,82 @@ crm_is_corosync_peer_active(const crm_node_t * node)
     return TRUE;
 }
 
+gboolean
+corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_parent) 
+{
+    int lpc = 0;
+    int rc = CS_OK;
+    int retries = 0;
+    gboolean any = FALSE;
+    cmap_handle_t cmap_handle;
+
+    do {
+        rc = cmap_initialize(&cmap_handle);
+	if(rc != CS_OK) {
+	    retries++;
+	    crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
+	    sleep(retries);
+        }
+
+    } while(retries < 5 && rc != CS_OK);
+
+    if (rc != CS_OK) {
+        crm_warn("Could not connect to Cluster Configuration Database API, error %d", rc);
+        return FALSE;
+    }
+
+    for(lpc = 0; ; lpc++) {
+        uint32_t nodeid = 0;
+        char *name = 0;
+        char *key = NULL;
+
+        key = g_strdup_printf("nodelist.node.%d.nodeid", lpc);
+        rc = cmap_get_uint32(cmap_handle, key, &nodeid);
+        g_free(key);
+
+        if(rc != CS_OK) {
+            break;
+        }
+
+        key = g_strdup_printf("nodelist.node.%d.name", lpc);
+        rc = cmap_get_string(cmap_handle, key, &name);
+        g_free(key);
+
+        if(rc != CS_OK) {
+            int octet;
+            key = g_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
+            rc = cmap_get_string(cmap_handle, key, &name);
+
+            if(rc == CS_OK && sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) != 4) {
+                crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
+                free(name);
+                name = NULL;
+
+            } else if(rc == CS_OK && strstr(name, ":") != NULL) {
+                crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
+                free(name);
+                name = NULL;
+            }
+            g_free(key);
+        }
+
+        if(nodeid > 0 || name != NULL) {
+            crm_trace("Initializing node[%d] %u = %s", lpc, nodeid, name);
+            crm_get_peer(nodeid, name);
+        }
+
+        if(xml_parent && nodeid > 0 && name != NULL) {
+            xmlNode *node = create_xml_node(xml_parent, XML_CIB_TAG_NODE);
+            crm_xml_add_int(node, XML_ATTR_ID, nodeid);
+            crm_xml_add(node, XML_ATTR_UNAME, name);
+            if(force_member) {
+                crm_xml_add(node, XML_ATTR_TYPE, CRM_NODE_MEMBER);
+            }
+            any = TRUE;
+        }
+
+        free(name);
+    }
+    cmap_finalize(cmap_handle); 
+    return any;
+}

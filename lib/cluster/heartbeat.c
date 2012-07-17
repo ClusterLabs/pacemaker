@@ -561,4 +561,53 @@ ccm_event_name(oc_ed_t event)
 
 }
 
+gboolean
+heartbeat_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_parent) 
+{
+    const char *ha_node = NULL;
+    ll_cluster_t *conn = cluster;
+
+    if (conn == NULL) {
+        crm_debug("Not connected");
+        return FALSE;
+    }
+
+    /* Async get client status information in the cluster */
+    crm_info("Requesting the list of configured nodes");
+    conn->llc_ops->init_nodewalk(conn);
+
+    do {
+        xmlNode *node = NULL;
+        const char *ha_node_type = NULL;
+        const char *ha_node_uuid = NULL;
+
+        ha_node = conn->llc_ops->nextnode(conn);
+        if (ha_node == NULL) {
+            continue;
+        }
+
+        ha_node_type = conn->llc_ops->node_type(conn, ha_node);
+        if (safe_str_neq(NORMALNODE, ha_node_type)) {
+            crm_debug("Node %s: skipping '%s'", ha_node, ha_node_type);
+            continue;
+        }
+
+        ha_node_uuid = get_uuid(ha_node);
+        if (ha_node_uuid == NULL) {
+            crm_warn("Node %s: no uuid found", ha_node);
+            continue;
+        }
+
+        crm_debug("Node: %s (uuid: %s)", ha_node, ha_node_uuid);
+        node = create_xml_node(xml_parent, XML_CIB_TAG_NODE);
+        crm_xml_add(node, XML_ATTR_ID, ha_node_uuid);
+        crm_xml_add(node, XML_ATTR_UNAME, ha_node);
+        crm_xml_add(node, XML_ATTR_TYPE, ha_node_type);
+
+    } while (ha_node != NULL);
+
+    conn->llc_ops->end_nodewalk(conn);
+    return TRUE;
+}
+
 #endif

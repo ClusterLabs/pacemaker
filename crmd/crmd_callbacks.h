@@ -46,5 +46,4 @@ void default_cib_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * o
 
 #if SUPPORT_HEARTBEAT
 void crmd_ha_msg_callback(HA_Message * hamsg, void *private_data);
-void populate_cib_nodes_ha(gboolean with_client_status);
 #endif
