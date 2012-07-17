@@ -52,6 +52,8 @@ typedef struct remote_fencing_op_s {
     guint level;                /* ABI */
     GListPtr devices;           /* ABI */
 
+    int topology_device_number;
+
 } remote_fencing_op_t;
 
 typedef struct stonith_topology_s {
