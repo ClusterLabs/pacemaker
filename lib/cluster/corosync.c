@@ -672,10 +672,23 @@ pcmk_quorum_notification(quorum_handle_t handle,
     g_hash_table_foreach(crm_peer_cache, corosync_mark_node_unseen, NULL);
 
     for (i = 0; i < view_list_entries; i++) {
-        char *uuid = get_corosync_uuid(view_list[i], NULL);
+        uint32_t id = view_list[i];
+        char *name = NULL;
+        crm_node_t *node = NULL;
+        char *uuid = get_corosync_uuid(id, NULL);
 
-        crm_debug("Member[%d] %d ", i, view_list[i]);
-        crm_update_peer(__FUNCTION__, view_list[i], 0, ring_id, 0, 0, uuid, NULL, NULL, CRM_NODE_MEMBER);        
+        crm_debug("Member[%d] %d ", i, id);
+
+        node = crm_get_peer(id, NULL);
+        if(node->uname == NULL) {
+            char *name = corosync_node_name(id);
+            if(corosync_name_is_valid("DNS", name) == FALSE) {
+                free(name); name = NULL;
+            }
+        }
+
+        crm_update_peer(__FUNCTION__, id, 0, ring_id, 0, 0, uuid, name, NULL, CRM_NODE_MEMBER);
+        free(name);
     }
 
     crm_trace("Reaping unseen nodes...");
