@@ -130,6 +130,7 @@ do_ha_control(long long action,
             return;
         }
 
+        populate_cib_nodes(node_update_none, __FUNCTION__);
         clear_bit(fsa_input_register, R_HA_DISCONNECTED);
         crm_info("Connected to the cluster");
     }
@@ -910,52 +911,4 @@ default_cib_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output
 
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
-}
-
-static void
-create_cib_node_definition(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_node_t *node = value;
-    xmlNode *cib_nodes = user_data;
-    xmlNode *cib_new_node = NULL;
-
-    crm_trace("Creating node entry for %s/%s", node->uname, node->uuid);
-    cib_new_node = create_xml_node(cib_nodes, XML_CIB_TAG_NODE);
-    crm_xml_add(cib_new_node, XML_ATTR_ID, node->uuid);
-    crm_xml_add(cib_new_node, XML_ATTR_UNAME, node->uname);
-}
-
-void
-populate_cib_nodes(gboolean quick)
-{
-    int call_id = 0;
-    gboolean from_hashtable = TRUE;
-    xmlNode *cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
-
-#if SUPPORT_HEARTBEAT
-    if (quick == FALSE && is_heartbeat_cluster()) {
-        from_hashtable = heartbeat_initialize_nodelist(fsa_cluster_conn, FALSE, cib_node_list);
-    }
-#endif
-
-#if SUPPORT_COROSYNC
-    if (quick == FALSE && is_corosync_cluster()) {
-        from_hashtable = corosync_initialize_nodelist(NULL, FALSE, cib_node_list);
-    }
-#endif
-
-    if(from_hashtable) {
-    /* if(uname_is_uuid()) { */
-    /*     g_hash_table_foreach(crm_peer_id_cache, create_cib_node_definition, cib_node_list); */
-    /* } else { */
-        g_hash_table_foreach(crm_peer_cache, create_cib_node_definition, cib_node_list);
-    /* } */
-    }
-
-    crm_trace("Populating <nodes> section from %s", from_hashtable?"hashtable":"cluster");
-
-    fsa_cib_update(XML_CIB_TAG_NODES, cib_node_list, cib_scope_local | cib_quorum_override, call_id, NULL);
-    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
-
-    free_xml(cib_node_list);
 }

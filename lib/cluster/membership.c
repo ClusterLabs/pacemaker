@@ -185,7 +185,7 @@ crm_new_peer(unsigned int id, const char *uname)
     crm_debug("Creating entry for node %s/%u", uname, id);
 
     node = calloc(1, sizeof(crm_node_t));
-    node->state = strdup("unknown");
+    node->state = NULL;
 
     if (id > 0) {
         node->id = id;

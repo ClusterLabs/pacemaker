@@ -59,7 +59,7 @@ process_resource_updates(xmlXPathObject * xpathObj)
 {
 /*
     <status>
-       <node_state id="node1" state=CRMD_STATE_ACTIVE exp_state="active">
+       <node_state id="node1" state=CRMD_JOINSTATE_MEMBER exp_state="active">
           <lrm>
              <lrm_resources>
         	<rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>

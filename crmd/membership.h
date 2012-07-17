@@ -1,5 +1,4 @@
 
-void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
 void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data);
 void post_cache_update(int instance);
 

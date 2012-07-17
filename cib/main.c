@@ -403,7 +403,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
      */
     if(type == crm_status_nstate) {
         crm_info("status: %s is now %s (was %s)", node->uname, node->state, (const char *)data);
-        if (safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
+        if (safe_str_eq(CRMD_JOINSTATE_MEMBER, node->state)) {
             return;
         }
 

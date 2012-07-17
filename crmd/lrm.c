@@ -776,21 +776,14 @@ build_active_RAs(xmlNode * rsc_list)
 xmlNode *
 do_lrm_query(gboolean is_replace)
 {
-    gboolean shut_down = FALSE;
     xmlNode *xml_result = NULL;
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
-    const char *exp_state = CRMD_STATE_ACTIVE;
-
-    if (is_set(fsa_input_register, R_SHUTDOWN)) {
-        exp_state = CRMD_STATE_INACTIVE;
-        shut_down = TRUE;
-    }
 
     xml_state = create_node_state(fsa_our_uname, XML_BOOLEAN_TRUE,
-                                  ONLINESTATUS, CRMD_JOINSTATE_MEMBER, exp_state,
-                                  !shut_down, __FUNCTION__);
+                                  ONLINESTATUS, CRMD_JOINSTATE_MEMBER, CRMD_JOINSTATE_MEMBER,
+                                  is_not_set(fsa_input_register, R_SHUTDOWN), __FUNCTION__);
 
     xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
     crm_xml_add(xml_data, XML_ATTR_ID, fsa_our_uuid);

@@ -800,8 +800,10 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 
     } else if(do_terminate == FALSE && safe_str_eq(exp_state, CRMD_JOINSTATE_DOWN)) {
 
-        /* TO-DO: Have the crmd no longer pre-set CRMD_JOINSTATE_DOWN for shutdown */
-        if(crm_is_true(in_cluster) || crm_is_true(is_peer)) {
+        if(in_cluster == NULL) {
+            pe_fence_node(data_set, this_node, "because the peer has not been seen by the cluster");
+
+        } else if(crm_is_true(in_cluster) || crm_is_true(is_peer)) {
             crm_info("- Node %s is not ready to run resources", this_node->details->uname);
             this_node->details->standby = TRUE;
             this_node->details->pending = TRUE;

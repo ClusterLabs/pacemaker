@@ -126,13 +126,10 @@ extern const char *crm_system_name;
 #  define CRM_OP_RELAXED_SET  "one-or-more"
 #  define CRM_OP_RM_NODE_CACHE "rm_node_cache"
 
-#  define CRMD_STATE_ACTIVE	"member"
-#  define CRMD_STATE_INACTIVE	"down"
-
-#  define CRMD_JOINSTATE_DOWN	CRMD_STATE_INACTIVE
-#  define CRMD_JOINSTATE_PENDING	"pending"
-#  define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
-#  define CRMD_JOINSTATE_NACK	"banned"
+#  define CRMD_JOINSTATE_DOWN           "down"
+#  define CRMD_JOINSTATE_PENDING        "pending"
+#  define CRMD_JOINSTATE_MEMBER         "member"
+#  define CRMD_JOINSTATE_NACK           "banned"
 
 #  define CRMD_ACTION_DELETE		"delete"
 #  define CRMD_ACTION_CANCEL		"cancel"

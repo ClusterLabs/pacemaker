@@ -345,7 +345,7 @@ do_dc_join_filter_offer(long long action,
         crm_debug("join-%d: Welcoming node %s (ref %s)", join_id, join_from, ref);
     }
 
-    /* add them to our list of CRMD_STATE_ACTIVE nodes */
+    /* add them to our list of CRMD_JOINSTATE_MEMBER nodes */
     g_hash_table_insert(integrated_nodes, strdup(join_from), strdup(ack_nack));
 
     crm_debug("%u nodes have been integrated into join-%d",

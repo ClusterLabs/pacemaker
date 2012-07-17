@@ -726,7 +726,7 @@ corosync_mark_unseen_peer_dead(gpointer key, gpointer value, gpointer user_data)
     int *seq = user_data;
     crm_node_t *node = value;
 
-    if (node->last_seen != *seq && crm_str_eq(CRM_NODE_LOST, node->state, TRUE) == FALSE) {
+    if (node->last_seen != *seq && node->state && crm_str_eq(CRM_NODE_LOST, node->state, TRUE) == FALSE) {
         crm_notice("Node %d/%s was not seen in the previous transition", node->id, node->uname);
         crm_update_peer(__FUNCTION__, node->id, 0, 0, 0, 0, NULL, NULL, NULL, CRM_NODE_LOST);
     }

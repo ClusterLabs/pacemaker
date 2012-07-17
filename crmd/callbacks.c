@@ -130,14 +130,18 @@ crmd_proc_update(crm_node_t * member, enum crm_proc_flag client)
         register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 
     } else if (AM_I_DC) {
-        xmlNode *update = NULL;
+#if 0
+        /* Everyone */
+        populate_cib_nodes(node_update_quick|node_update_peer, __FUNCTION__);
+#else
+        /* Just one */
+        xmlNode *update = create_node_state(
+            member->uname, NULL, status, NULL, NULL, FALSE, __FUNCTION__);
 
-        update = create_node_state(member->uname,
-            NULL, status, NULL, NULL, FALSE, __FUNCTION__);
-
-        fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
-                            cib_scope_local | cib_quorum_override | cib_can_create);
+        fsa_cib_anon_update(
+            XML_CIB_TAG_STATUS, update, cib_scope_local | cib_quorum_override | cib_can_create);
         free_xml(update);
+#endif
 
         if ((member->processes & client) == 0) {
             erase_node_from_join(member->uname);
@@ -185,7 +189,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
     }
 
     /* Can this be removed now that do_cl_join_finalize_respond() does the same thing? */
-    if (AM_I_DC && reset_status_entry && safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
+    if (AM_I_DC && reset_status_entry && safe_str_eq(CRMD_JOINSTATE_MEMBER, node->state)) {
         crm_action_t *down = match_down_event(0, node->uname, NULL);
 
         erase_status_tag(node->uname, XML_CIB_TAG_LRM, cib_scope_local);

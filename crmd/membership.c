@@ -36,17 +36,14 @@
 gboolean membership_flux_hack = FALSE;
 void post_cache_update(int instance);
 
-void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
-
 int last_peer_update = 0;
 
 extern GHashTable *voted;
 
 struct update_data_s {
-    const char *state;
     const char *caller;
-    xmlNode *updates;
-    gboolean overwrite_join;
+    xmlNode *parent;
+    int flags;
 };
 
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
@@ -103,8 +100,7 @@ post_cache_update(int instance)
     set_bit(fsa_input_register, R_MEMBERSHIP);
 
     if (AM_I_DC) {
-        populate_cib_nodes(TRUE);
-        do_update_cib_nodes(FALSE, __FUNCTION__);
+        populate_cib_nodes(node_update_quick|node_update_cluster|node_update_peer, __FUNCTION__);
     }
 
     /*
@@ -139,81 +135,138 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
     }
 }
 
-void
+static xmlNode *
+do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *source)
+{
+    const char *value = NULL;
+    xmlNode *node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
+
+    set_uuid(node_state, XML_ATTR_UUID, node->uname);
+    crm_xml_add(node_state, XML_ATTR_UNAME, node->uname);
+
+    if(flags & node_update_cluster) {
+        if (safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
+            value = XML_BOOLEAN_YES;
+        } else if(node->state) {
+            value = XML_BOOLEAN_NO;
+        } else {
+            value = NULL;
+        }
+        crm_xml_add(node_state, XML_NODE_IN_CLUSTER, value);
+    }
+
+    if(flags & node_update_peer) {
+        value = OFFLINESTATUS;
+        if (node->processes & proc_flags) {
+            value = ONLINESTATUS;
+        }
+        crm_xml_add(node_state, XML_NODE_IS_PEER, value);
+    }
+
+    if(flags & node_update_join) {
+        const char *peer_member = g_hash_table_lookup(confirmed_nodes, node->uname);
+
+        if (peer_member != NULL) {
+            value = CRMD_JOINSTATE_MEMBER;
+        } else {
+            value = CRMD_JOINSTATE_DOWN;
+        }
+        crm_xml_add(node_state, XML_NODE_JOIN_STATE, value);
+    }
+
+    if(flags & node_update_expected) {
+        const char *peer_member = g_hash_table_lookup(confirmed_nodes, node->uname);
+
+        if (peer_member != NULL) {
+            value = CRMD_JOINSTATE_MEMBER;
+        } else {
+            value = CRMD_JOINSTATE_DOWN;
+        }
+        crm_xml_add(node_state, XML_NODE_EXPECTED, value);
+    }
+    
+    crm_xml_add(node_state, XML_ATTR_ORIGIN, source);
+
+    return node_state;
+}
+
+static void
 ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 {
-    xmlNode *tmp1 = NULL;
-    const char *join = NULL;
     crm_node_t *node = value;
     struct update_data_s *data = (struct update_data_s *)user_data;
 
-    data->state = XML_BOOLEAN_NO;
-    if (safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
-        data->state = XML_BOOLEAN_YES;
-    }
+    do_update_node_cib(node, data->flags, data->parent, data->caller);
+}
 
-    crm_debug("Updating %s: %s (overwrite=%s) hash_size=%d",
-              node->uname, data->state, data->overwrite_join ? "true" : "false",
-              g_hash_table_size(confirmed_nodes));
+static void
+create_cib_node_definition(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+    xmlNode *cib_nodes = user_data;
+    xmlNode *cib_new_node = NULL;
 
-    if (data->overwrite_join) {
-        if ((node->processes & proc_flags) == FALSE) {
-            join = CRMD_JOINSTATE_DOWN;
-
-        } else {
-            const char *peer_member = g_hash_table_lookup(confirmed_nodes, node->uname);
-
-            if (peer_member != NULL) {
-                join = CRMD_JOINSTATE_MEMBER;
-            } else {
-                join = CRMD_JOINSTATE_PENDING;
-            }
-        }
-    }
-
-    tmp1 =
-        create_node_state(node->uname,
-                          data->state,
-                          (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS, join,
-                          NULL, FALSE, data->caller);
-
-    add_node_copy(data->updates, tmp1);
-    free_xml(tmp1);
+    crm_trace("Creating node entry for %s/%s", node->uname, node->uuid);
+    cib_new_node = create_xml_node(cib_nodes, XML_CIB_TAG_NODE);
+    crm_xml_add(cib_new_node, XML_ATTR_ID, node->uuid);
+    crm_xml_add(cib_new_node, XML_ATTR_UNAME, node->uname);
 }
 
 void
-do_update_cib_nodes(gboolean overwrite, const char *caller)
+populate_cib_nodes(enum node_update_flags flags, const char *source)
 {
     int call_id = 0;
+    gboolean from_hashtable = TRUE;
     int call_options = cib_scope_local | cib_quorum_override;
-    struct update_data_s update_data;
-    xmlNode *fragment = NULL;
+    xmlNode *node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
 
-    if (crm_peer_cache == NULL) {
-        /* We got a replace notification before being connected to
-         *   the CCM.
-         * So there is no need to update the local CIB with our values
-         *   - since we have none.
-         */
-        return;
+#if SUPPORT_HEARTBEAT
+    if (is_not_set(flags, node_update_quick) && is_heartbeat_cluster()) {
+        from_hashtable = heartbeat_initialize_nodelist(fsa_cluster_conn, FALSE, node_list);
+    }
+#endif
 
-    } else if (AM_I_DC == FALSE) {
-        return;
+#if SUPPORT_COROSYNC
+    if (is_not_set(flags, node_update_quick) && is_corosync_cluster()) {
+        from_hashtable = corosync_initialize_nodelist(NULL, FALSE, node_list);
+    }
+#endif
+
+    if(from_hashtable) {
+    /* if(uname_is_uuid()) { */
+    /*     g_hash_table_foreach(crm_peer_id_cache, create_cib_node_definition, node_list); */
+    /* } else { */
+        g_hash_table_foreach(crm_peer_cache, create_cib_node_definition, node_list);
+    /* } */
     }
 
-    fragment = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    crm_trace("Populating <nodes> section from %s", from_hashtable?"hashtable":"cluster");
 
-    update_data.caller = caller;
-    update_data.updates = fragment;
-    update_data.overwrite_join = overwrite;
+    fsa_cib_update(XML_CIB_TAG_NODES, node_list, call_options, call_id, NULL);
+    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
 
-    g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
+    free_xml(node_list);
 
-    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id, NULL);
-    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, crmd_node_update_complete);
-    last_peer_update = call_id;
+    if (crm_peer_cache != NULL && AM_I_DC) {
+        /*
+         * There is no need to update the local CIB with our values if
+         * we've not seen valid membership data
+         */
+        struct update_data_s update_data;
+        node_list = create_xml_node(NULL, XML_CIB_TAG_STATUS);
 
-    free_xml(fragment);
+        update_data.caller = source;
+        update_data.parent = node_list;
+        update_data.flags = flags;
+
+        g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
+
+        fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id, NULL);
+        add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, crmd_node_update_complete);
+        last_peer_update = call_id;
+
+        free_xml(node_list);
+    }
 }
 
 static void

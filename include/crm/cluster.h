@@ -39,7 +39,6 @@ extern unsigned long long crm_peer_seq;
 #define CRM_NODE_LOST      "lost"
 #define CRM_NODE_MEMBER    "member"
 #define CRM_NODE_ACTIVE    CRM_NODE_MEMBER
-#define CRM_NODE_INACTIVE  CRM_NODE_LOST
 #define CRM_NODE_EVICTED   "evicted"
 
 enum crm_proc_flag {

@@ -49,30 +49,40 @@ extern void process_client_disconnect(crmd_client_t * curr_client);
 extern gboolean fsa_has_quorum;
 extern int last_peer_update;
 
-extern gboolean crm_timer_stop(fsa_timer_t * timer);
-extern gboolean crm_timer_start(fsa_timer_t * timer);
-extern gboolean crm_timer_popped(gpointer data);
-extern gboolean is_timer_started(fsa_timer_t *timer);
+enum node_update_flags 
+{
+    node_update_none     = 0x0000,
+    node_update_quick    = 0x0001,
+    node_update_cluster  = 0x0010,
+    node_update_peer     = 0x0020,
+    node_update_join     = 0x0040,
+    node_update_expected = 0x0100,
+};
 
-extern xmlNode *create_node_state(const char *uname, const char *in_cluster,
-                                  const char *is_peer, const char *join_state,
-                                  const char *exp_state, gboolean clear_shutdown, const char *src);
+gboolean crm_timer_stop(fsa_timer_t * timer);
+gboolean crm_timer_start(fsa_timer_t * timer);
+gboolean crm_timer_popped(gpointer data);
+gboolean is_timer_started(fsa_timer_t *timer);
 
-extern gboolean stop_subsystem(struct crm_subsystem_s *centry, gboolean force_quit);
-extern gboolean start_subsystem(struct crm_subsystem_s *centry);
+xmlNode *create_node_state(const char *uname, const char *in_cluster,
+                           const char *is_peer, const char *join_state,
+                           const char *exp_state, gboolean clear_shutdown, const char *src);
 
-extern void fsa_dump_actions(long long action, const char *text);
-extern void fsa_dump_inputs(int log_level, const char *text, long long input_register);
+gboolean stop_subsystem(struct crm_subsystem_s *centry, gboolean force_quit);
+gboolean start_subsystem(struct crm_subsystem_s *centry);
 
-extern gboolean update_dc(xmlNode * msg);
-extern void erase_node_from_join(const char *node);
-extern void populate_cib_nodes(gboolean quick);
-extern void crm_update_quorum(gboolean quorum, gboolean force_update);
-extern void erase_status_tag(const char *uname, const char *tag, int options);
-extern void update_attrd(const char *host, const char *name, const char *value,
+void fsa_dump_actions(long long action, const char *text);
+void fsa_dump_inputs(int log_level, const char *text, long long input_register);
+
+gboolean update_dc(xmlNode * msg);
+void erase_node_from_join(const char *node);
+void populate_cib_nodes(enum node_update_flags flags, const char *source);
+void crm_update_quorum(gboolean quorum, gboolean force_update);
+void erase_status_tag(const char *uname, const char *tag, int options);
+void update_attrd(const char *host, const char *name, const char *value,
                          const char *user_name);
 
-extern const char *get_timer_desc(fsa_timer_t * timer);
+const char *get_timer_desc(fsa_timer_t * timer);
 gboolean too_many_st_failures(void);
 
 #  define start_transition(state) do {					\

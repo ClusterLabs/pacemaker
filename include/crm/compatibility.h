@@ -23,11 +23,14 @@
 #  define LOG_DEBUG_5  LOG_TRACE
 #  define LOG_DEBUG_6  LOG_TRACE
 
-#  define XML_CIB_ATTR_HASTATE    	"ha"
+#  define XML_CIB_ATTR_HASTATE         "ha"
 #  define XML_CIB_ATTR_JOINSTATE       XML_NODE_JOIN_STATE
 #  define XML_CIB_ATTR_EXPSTATE        XML_NODE_EXPECTED
 #  define XML_CIB_ATTR_INCCM           XML_NODE_IN_CLUSTER
 #  define XML_CIB_ATTR_CRMDSTATE       XML_NODE_IS_PEER
+
+#  define CRMD_STATE_ACTIVE            CRMD_JOINSTATE_MEMBER
+#  define CRMD_STATE_INACTIVE          CRMD_JOINSTATE_DOWN
 
 enum cib_errors {
     cib_ok			=  pcmk_ok,
