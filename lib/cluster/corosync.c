@@ -87,6 +87,7 @@ corosync_name_is_valid(const char *key, const char *name)
         crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
         return FALSE;
     }
+    crm_trace("%s is valid", key);
     return TRUE;
 }
 
@@ -130,11 +131,11 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
 
     while(name == NULL && cmap_handle != 0) {
         uint32_t id = 0;
-        char *name = NULL;
         char *key = NULL;
 
         key = g_strdup_printf("nodelist.node.%d.nodeid", lpc);
         rc = cmap_get_uint32(cmap_handle, key, &id);
+        crm_trace("Checking %u vs %u from %s", nodeid, id, key);
         g_free(key);
 
         if(rc != CS_OK) {
@@ -142,9 +143,11 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
         }
 
         if(nodeid == id) {
+            crm_trace("Searching for node name for %u in nodelist.node.%d %s", nodeid, lpc, name);
             if(name == NULL) {
                 key = g_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
                 rc = cmap_get_string(cmap_handle, key, &name);
+                crm_trace("%s = %s", key, name);
 
                 if(corosync_name_is_valid(key, name) == FALSE) {
                     free(name); name = NULL;
@@ -155,6 +158,7 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
             if(name == NULL) {
                 key = g_strdup_printf("nodelist.node.%d.name", lpc);
                 rc = cmap_get_string(cmap_handle, key, &name);
+                crm_trace("%s = %s %d", key, name, rc);
 
                 if(corosync_name_is_valid(key, name) == FALSE) {
                     free(name); name = NULL;
@@ -165,10 +169,6 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
         }
 
         lpc++;
-    }
-
-    if(local_handle) {
-        cmap_finalize(local_handle); 
     }
 
     if(name == NULL) {
@@ -214,12 +214,18 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
                     name = strdup(buf);
                 }
             }
+        } else {
+            crm_debug("Unable to get node address for nodeid %u: %s", nodeid, cs_strerror(rc));
         }
         cmap_finalize(cfg_handle); 
     }
 
+    if(local_handle) {
+        cmap_finalize(local_handle); 
+    }
+
     if(name == NULL) {
-        crm_err("Unable to get node address for nodeid %u: %s", nodeid, cs_strerror(rc));
+        crm_err("Unable to get node name for nodeid %u", nodeid);
     }
     return name;
 }
