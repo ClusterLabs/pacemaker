@@ -173,7 +173,17 @@ stonith_api_register_device(stonith_t * st, int call_options,
                             stonith_key_value_t * params)
 {
     int rc = 0;
-    xmlNode *data = create_device_registration_xml(id, namespace, agent, params);
+    xmlNode *data = NULL;
+
+#if HAVE_STONITH_STONITH_H
+    namespace = get_stonith_provider(agent, namespace);
+    if (strcmp(namespace, "heartbeat") == 0) {
+        stonith_key_value_add(params, "plugin", agent);
+        agent = "fence_legacy";
+    }
+#endif
+
+    data = create_device_registration_xml(id, namespace, agent, params);
 
     rc = stonith_send_command(st, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
     free_xml(data);
