@@ -585,12 +585,8 @@ gboolean
 unpack_status(xmlNode * status, pe_working_set_t * data_set)
 {
     const char *id = NULL;
-    const char *uname = NULL;
-
-    xmlNode *lrm_rsc = NULL;
-    xmlNode *attrs = NULL;
     xmlNode *state = NULL;
-    xmlNode *node_state = NULL;
+    xmlNode *lrm_rsc = NULL;
     node_t *this_node = NULL;
 
     crm_trace("Beginning unpack");
@@ -607,8 +603,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
             /* Compatibility with the deprecated ticket state section:
              * Unpack the attributes in the deprecated "/cib/status/tickets/instance_attributes" if it exists. */
-            state_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                                      g_hash_destroy_str);
+            state_hash = g_hash_table_new_full(
+                crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
             unpack_instance_attributes(data_set->input, xml_tickets, XML_TAG_ATTR_SETS, NULL,
                                        state_hash, NULL, TRUE, data_set->now);
@@ -624,12 +620,11 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         }
 
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
-            node_state = state;
+            const char *uname = crm_element_value(state, XML_ATTR_UNAME);
 
-            id = crm_element_value(node_state, XML_ATTR_ID);
-            uname = crm_element_value(node_state, XML_ATTR_UNAME);
-            attrs = find_xml_node(node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+            xmlNode *attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
 
+            id = crm_element_value(state, XML_ATTR_ID);
             crm_trace("Processing node id=%s, uname=%s", id, uname);
             this_node = pe_find_node_id(data_set->nodes, id);
 
@@ -654,7 +649,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             }
 
             crm_trace("determining node state");
-            determine_online_status(node_state, this_node, data_set);
+            determine_online_status(state, this_node, data_set);
 
             if (this_node->details->online && data_set->no_quorum_policy == no_quorum_suicide) {
                 /* Everything else should flow from this automatically
@@ -669,13 +664,12 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
      * But, for now, only process healthy nodes
      *  - this is necessary for the logic in bug lf#2508 to function correctly 
      */
-    for (node_state = __xml_first_child(status); node_state != NULL;
-         node_state = __xml_next(node_state)) {
-        if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+    for (state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
+        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
             continue;
         }
 
-        id = crm_element_value(node_state, XML_ATTR_ID);
+        id = crm_element_value(state, XML_ATTR_ID);
         this_node = pe_find_node_id(data_set->nodes, id);
 
         if (this_node == NULL) {
@@ -685,7 +679,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         } else if (this_node->details->online) {
             crm_trace("Processing lrm resource entries on healthy node: %s",
                       this_node->details->uname);
-            lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+            lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
             lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
             unpack_lrm_resources(this_node, lrm_rsc, data_set);
         }
@@ -697,15 +691,15 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
      * Only when stonith is enabled do we need to know what is on the node to
      * ensure rsc start events happen after the stonith
      */
-    for (node_state = __xml_first_child(status);
-         node_state != NULL && is_set(data_set->flags, pe_flag_stonith_enabled);
-         node_state = __xml_next(node_state)) {
+    for (state = __xml_first_child(status);
+         state != NULL && is_set(data_set->flags, pe_flag_stonith_enabled);
+         state = __xml_next(state)) {
 
-        if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
             continue;
         }
 
-        id = crm_element_value(node_state, XML_ATTR_ID);
+        id = crm_element_value(state, XML_ATTR_ID);
         this_node = pe_find_node_id(data_set->nodes, id);
 
         if (this_node == NULL || this_node->details->online) {
@@ -714,7 +708,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         } else {
             crm_trace("Processing lrm resource entries on unhealthy node: %s",
                       this_node->details->uname);
-            lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+            lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
             lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
             unpack_lrm_resources(this_node, lrm_rsc, data_set);
         }
@@ -862,6 +856,8 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
     this_node->details->shutdown = FALSE;
     this_node->details->expected_up = FALSE;
     shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
+
+    crm_trace("Shutdown: %s", shutdown);
 
     if (shutdown != NULL && safe_str_neq("0", shutdown)) {
         this_node->details->shutdown = TRUE;
@@ -2240,15 +2236,16 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     xmlNode *tmp = NULL;
     xmlNode *status = find_xml_node(data_set->input, XML_CIB_TAG_STATUS, TRUE);
 
-    const char *uname = NULL;
     node_t *this_node = NULL;
 
     xmlNode *node_state = NULL;
 
     for (node_state = __xml_first_child(status); node_state != NULL;
          node_state = __xml_next(node_state)) {
+
         if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
-            uname = crm_element_value(node_state, XML_ATTR_UNAME);
+            const char *uname = crm_element_value(node_state, XML_ATTR_UNAME);
+
             if (node != NULL && safe_str_neq(uname, node)) {
                 continue;
             }
