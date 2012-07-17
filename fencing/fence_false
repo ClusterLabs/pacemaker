@@ -43,6 +43,7 @@ def get_power_status(conn, options):
 def set_power_status(conn, options):
     global plug_status
     plug_status = "unknown"
+    exit(1)
 
 def main():
     device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",
