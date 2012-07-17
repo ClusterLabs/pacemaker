@@ -90,20 +90,25 @@ corosync_name_is_valid(const char *key, const char *name)
 }
 
 /*
- * Stolen from node_name in corosync-quorumtool.c
+ * CFG functionality stolen from node_name() in corosync-quorumtool.c
  * This resolves the first address assigned to a node and returns the name or IP address.
  */
-static char *corosync_node_name(uint32_t nodeid)
+static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
 {
     int lpc = 0;
-    static corosync_cfg_handle_t cfg_handle = 0;
-    static cmap_handle_t cmap_handle = 0;
+    int rc = CS_OK;
+    int retries = 0;
+    char *name = NULL;
 
-    if(cmap_handle == 0) {
+    cmap_handle_t local_handle = 0;
+    corosync_cfg_handle_t cfg_handle = 0;
+    static corosync_cfg_callbacks_t cfg_callbacks = {};
+
+    if(cmap_handle == 0 && local_handle == 0) {
         retries = 0;
         crm_trace("Initializing CMAP connection");
         do {
-            rc = cmap_initialize(&cmap_handle);
+            rc = cmap_initialize(&local_handle);
             if(rc != CS_OK) {
                 retries++;
                 crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
@@ -114,27 +119,12 @@ static char *corosync_node_name(uint32_t nodeid)
 
         if (rc != CS_OK) {
             crm_warn("Could not connect to Cluster Configuration Database API, error %d", cs_strerror(rc));
-            cmap_handle = 0;
+            local_handle = 0;
         }
     }
-    
-    if(cfg_handle ==  0) {
-        retries = 0;
-        crm_trace("Initializing CFG connection");
-        do {
-            rc = corosync_cfg_initialize(&cfg_handle, &c_callbacks);
-            if(rc != CS_OK) {
-                retries++;
-                crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
-                sleep(retries);
-            }
 
-        } while(retries < 5 && rc != CS_OK);
-
-        if (rc != CS_OK) {
-            crm_warn("Could not connect to the Corosync CFG API, error %d", cs_strerror(rc));
-            cfg_handle = 0;
-        }
+    if(cmap_handle == 0) {
+        cmap_handle = local_handle;
     }
 
     while(name == NULL && cmap_handle != 0) {
@@ -176,6 +166,29 @@ static char *corosync_node_name(uint32_t nodeid)
         lpc++;
     }
 
+    if(local_handle) {
+        cmap_finalize(local_handle); 
+    }
+
+    if(name == NULL) {
+        retries = 0;
+        crm_trace("Initializing CFG connection");
+        do {
+            rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks);
+            if(rc != CS_OK) {
+                retries++;
+                crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
+                sleep(retries);
+            }
+
+        } while(retries < 5 && rc != CS_OK);
+
+        if (rc != CS_OK) {
+            crm_warn("Could not connect to the Corosync CFG API, error %d", cs_strerror(rc));
+            cfg_handle = 0;
+        }
+    }
+
     if(name == NULL && cfg_handle != 0) {
         int numaddrs;
         char buf[INET6_ADDRSTRLEN];
@@ -197,14 +210,17 @@ static char *corosync_node_name(uint32_t nodeid)
                 crm_notice("Inferred node name '%s' for nodeid %u from DNS", buf, nodeid);
 
                 if(corosync_name_is_valid("DNS", buf)) {
-                    return strdup(buf);
+                    name = strdup(buf);
                 }
             }
         }
+        cmap_finalize(cfg_handle); 
     }
 
-    crm_err("Unable to get node address for nodeid %u: %s", nodeid, cs_strerror(rc));
-    return NULL;
+    if(name == NULL) {
+        crm_err("Unable to get node address for nodeid %u: %s", nodeid, cs_strerror(rc));
+    }
+    return name;
 }
 
 enum crm_ais_msg_types
@@ -753,7 +769,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
 
         node = crm_get_peer(id, NULL);
         if(node->uname == NULL) {
-            name = corosync_node_name(id);
+            name = corosync_node_name(0, id);
         }
 
         crm_update_peer(__FUNCTION__, id, 0, ring_id, 0, 0, uuid, name, NULL, CRM_NODE_MEMBER);
@@ -1041,7 +1057,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_
             break;
         }
 
-        name = corosync_node_name(nodeid);
+        name = corosync_node_name(cmap_handle, nodeid);
 
         if(nodeid > 0 || name != NULL) {
             crm_trace("Initializing node[%d] %u = %s", lpc, nodeid, name);
