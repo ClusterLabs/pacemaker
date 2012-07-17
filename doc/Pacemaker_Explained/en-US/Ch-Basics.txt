@@ -28,7 +28,7 @@ The configuration section itself is divided into four parts:
 .An empty configuration
 [source,XML]
 -------
-  <cib generated="true" admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
+  <cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
      <configuration>
         <crm_config/>
         <nodes/>
@@ -156,7 +156,7 @@ do
 [source,Bash]
 --------
 # cibadmin --query --obj_type resources > tmp.xml
-# vi tmp.xml</command>]
+# vi tmp.xml
 # cibadmin --replace --obj_type resources --xml-file tmp.xml
 --------
 
@@ -169,7 +169,7 @@ Identify the object you wish to delete. Eg. run
 .Searching for STONITH related configuration items
 [source,Bash]
 --------
-# cibadmin -Q | grep stonith</command>
+# cibadmin -Q | grep stonith
    <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
    <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
   <primitive id="child_DoFencing" class="stonith" type="external/vmware">
@@ -186,7 +186,7 @@ Next identify the resource's tag name and id (in this case we'll
 choose +primitive+ and +child_DoFencing+).  Then simply execute:
       
 
-pass:[<command>cibadmin --delete --crm_xml ‘&lt;primitive id="child_DoFencing"/>'</command>]
+pass:[<command>cibadmin --delete --crm_xml '&lt;primitive id="child_DoFencing"/>'</command>]
 
 == Updating the Configuration Without Using XML ==
 
@@ -219,8 +219,8 @@ it the name of a configuration to create footnote:[Shadow copies are
 identified with a name, making it possible to have more than one.]  ;
 be sure to follow the simple on-screen instructions.
 
-Read the above carefully, failure to do so could result in you
-destroying the cluster's active configuration!</warning>
+WARNING: Read the above carefully, failure to do so could result in you
+destroying the cluster's active configuration!
       
       
 .Creating and displaying the active sandbox
