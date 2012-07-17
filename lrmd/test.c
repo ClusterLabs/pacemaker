@@ -35,11 +35,7 @@ static struct crm_option long_options[] = {
     {"help",             0, 0, '?'},
     {"verbose",          0, 0, 'V', "\t\tPrint out logs and events to screen"},
     {"quiet",            0, 0, 'Q', "\t\tSuppress all output to screen"},
-    /* just incase we have to add data to events,
-     * we don't want break a billion regression tests. Instead
-     * we'll create different versions */
     {"listen",           1, 0, 'l', "\tListen for a specific event string"},
-    {"event-ver",        1, 0, 'e', "\tVersion of event to listen to"},
     {"api-call",         1, 0, 'c', "\tDirectly relates to lrmd api functions"},
     {"no-wait",          0, 0, 'w', "\tMake api call and do not wait for result."},
     {"is-running",       0, 0, 'R', "\tDetermine if a resource is registered and running."},
@@ -74,7 +70,6 @@ static struct {
     int timeout;
     int start_delay;
     int cancel_call_id;
-    int event_version;
     int no_wait;
     int is_running;
     int no_connect;
@@ -447,9 +442,6 @@ main(int argc, char **argv)
             case 'Q':
                 options.quiet = 1;
                 options.verbose = 0;
-                break;
-            case 'e':
-                options.event_version = atoi(optarg);
                 break;
             case 'l':
                 options.listen = optarg;
