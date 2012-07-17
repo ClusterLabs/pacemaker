@@ -8,7 +8,6 @@
 - Test startup fencing with node lists
   - Figure out how to distinguish between "down" and "down
     but we've never seen them before so they need to be shot"
-- Attempt to obtain a node list from corosync if one exists
 
 ## Targeted for 1.2.x
 

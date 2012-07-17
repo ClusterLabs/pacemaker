@@ -21,6 +21,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
@@ -34,6 +35,7 @@
 #include <corosync/corotypes.h>
 #include <corosync/hdb.h>
 #include <corosync/cpg.h>
+#include <corosync/cfg.h>
 #include <corosync/cmap.h>
 #include <corosync/quorum.h>
 
@@ -63,6 +65,75 @@ static uint32_t pcmk_nodeid = 0;
             break;                                      \
         }                                               \
     } while(counter < max)
+
+#ifndef INTERFACE_MAX
+#  define INTERFACE_MAX 2 /* from the private coroapi.h header */
+#endif
+
+/*
+ * Stolen from node_name in corosync-quorumtool.c
+ * This resolves the first address assigned to a node and returns the name or IP address.
+ */
+static char *corosync_node_name(uint32_t nodeid)
+{
+    int err;
+    int numaddrs;
+    corosync_cfg_node_address_t addrs[INTERFACE_MAX];
+    static char buf[INET6_ADDRSTRLEN];
+    socklen_t addrlen;
+    struct sockaddr_storage *ss;
+    static corosync_cfg_handle_t c_handle = 0;
+    static corosync_cfg_callbacks_t c_callbacks = {};
+
+    if(c_handle ==  0) {
+        crm_trace("Initializing CFG connection");
+	if (corosync_cfg_initialize(&c_handle, &c_callbacks) != CS_OK) {
+            crm_err("Cannot initialise CFG service\n");
+            c_handle = 0;
+            return NULL;
+	}
+    }
+    
+    err = corosync_cfg_get_node_addrs(c_handle, nodeid, INTERFACE_MAX, &numaddrs, addrs);
+    if (err != CS_OK) {
+        crm_err("Unable to get node address for nodeid %u: %s\n", nodeid, cs_strerror(err));
+        return NULL;
+    }
+
+    ss = (struct sockaddr_storage *)addrs[0].address;
+
+    if (ss->ss_family == AF_INET6) {
+        addrlen = sizeof(struct sockaddr_in6);
+    } else {
+        addrlen = sizeof(struct sockaddr_in);
+    }
+
+    if (!getnameinfo((struct sockaddr *)addrs[0].address, addrlen, buf, sizeof(buf), NULL, 0, 0)) {
+        crm_notice("Inferred node name '%s' for nodeid %u from DNS", buf, nodeid);
+        return strdup(buf);
+    }
+
+    return NULL;
+}
+
+static gboolean
+corosync_name_is_valid(const char *key, const char *name) 
+{
+    int octet;
+
+    if(name == NULL) {
+        return FALSE;
+
+    } else if(sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) != 4) {
+        crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
+        return FALSE;
+
+    } else if(strstr(name, ":") != NULL) {
+        crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
+        return FALSE;
+    }
+    return TRUE;
+}
 
 enum crm_ais_msg_types
 text2msg_type(const char *text)
@@ -604,7 +675,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
         char *uuid = get_corosync_uuid(view_list[i], NULL);
 
         crm_debug("Member[%d] %d ", i, view_list[i]);
-        crm_update_peer(__FUNCTION__, view_list[i], 0, ring_id, 0, 0, uuid, NULL, NULL, CRM_NODE_MEMBER);
+        crm_update_peer(__FUNCTION__, view_list[i], 0, ring_id, 0, 0, uuid, NULL, NULL, CRM_NODE_MEMBER);        
     }
 
     crm_trace("Reaping unseen nodes...");
@@ -874,7 +945,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_
 
     for(lpc = 0; ; lpc++) {
         uint32_t nodeid = 0;
-        char *name = 0;
+        char *name = NULL;
         char *key = NULL;
 
         key = g_strdup_printf("nodelist.node.%d.nodeid", lpc);
@@ -885,26 +956,31 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_
             break;
         }
 
-        key = g_strdup_printf("nodelist.node.%d.name", lpc);
-        rc = cmap_get_string(cmap_handle, key, &name);
-        g_free(key);
+        if(name == NULL) {
+            key = g_strdup_printf("nodelist.node.%d.name", lpc);
+            rc = cmap_get_string(cmap_handle, key, &name);
 
-        if(rc != CS_OK) {
-            int octet;
+            if(corosync_name_is_valid(key, name) == FALSE) {
+                free(name); name = NULL;
+            }
+            g_free(key);
+        }
+
+        if(name == NULL) {
             key = g_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
             rc = cmap_get_string(cmap_handle, key, &name);
 
-            if(rc == CS_OK && sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) != 4) {
-                crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
-                free(name);
-                name = NULL;
-
-            } else if(rc == CS_OK && strstr(name, ":") != NULL) {
-                crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
-                free(name);
-                name = NULL;
+            if(corosync_name_is_valid(key, name) == FALSE) {
+                free(name); name = NULL;
             }
             g_free(key);
+        }
+
+        if(name == NULL) {
+            name = corosync_node_name(nodeid);
+            if(corosync_name_is_valid("DNS", name) == FALSE) {
+                free(name); name = NULL;
+            }
         }
 
         if(nodeid > 0 || name != NULL) {
