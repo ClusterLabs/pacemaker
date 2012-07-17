@@ -305,14 +305,27 @@ class Tests:
 			},
 		]
 
+		# test what happens when all devices timeout
+		for test_type in test_types:
+			test = self.new_test("%s_fence_multi_device_failure" % test_type["prefix"],
+					"Verify that all devices timeout, a fencing failure is returned.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false2  -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false3 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 3", 194)
+
+			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -62")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false3' returned: -62")
+
 		# test what happens when multiple devices can fence a node, but the first device fails.
 		for test_type in test_types:
-			test = self.new_test("%s_fence_device_failure" % test_type["prefix"],
+			test = self.new_test("%s_fence_device_failure_rollover" % test_type["prefix"],
 					"Verify that when one fence device fails for a node, the others are tried.", test_type["use_cpg"])
 			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-F node3 -t 5")
+			test.add_cmd("stonith_admin", "-F node3 -t 6")
 
 		# simple topology test for one device
 		for test_type in test_types:
@@ -342,7 +355,7 @@ class Tests:
 			test.add_cmd("stonith_admin", "-r node3 -i 2 -v true")
 			test.add_cmd("stonith_admin", "-F node3 -t 5")
 
-			test.add_stonith_log_pattern("for host 'node3' with device 'false' returned: -1001")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false' returned: -62")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
 
 		# test what happens when the first fencing level fails.
@@ -366,11 +379,11 @@ class Tests:
 			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true3")
 			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true4")
 
-			test.add_cmd("stonith_admin", "-F node3 -t 5")
+			test.add_cmd("stonith_admin", "-F node3 -t 24")
 
 
-			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -1001")
-			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -1001")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -62")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true4' returned: 0")
 
