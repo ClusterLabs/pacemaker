@@ -221,10 +221,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
                 crm_config_err("Must specify id tag in <node>");
                 continue;
             }
-            if (type == NULL) {
-                crm_config_err("Must specify type tag in <node>");
-                continue;
-            }
             if (pe_find_node(data_set->nodes, uname) != NULL) {
                 crm_config_warn("Detected multiple node entries with uname=%s"
                                 " - this is rarely intended", uname);
