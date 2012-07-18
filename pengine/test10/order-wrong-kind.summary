@@ -1,2 +1,28 @@
-replace me with real content once we re-enable the test
-for now we need something here to stop rpmlint from moaning
+Configuration validation is currently disabled. It is highly encouraged and prevents many common cluster issues.
+
+Current cluster status:
+Online: [ node1 ]
+
+ rsc1	(heartbeat:apache):	Stopped 
+ rsc2	(heartbeat:apache):	Started node1
+ rsc3	(heartbeat:apache):	Stopped 
+ rsc4	(heartbeat:apache):	Started node1
+
+Transition Summary:
+ * Start   rsc1	(node1)
+ * Restart rsc2	(Started node1)
+
+Executing cluster transition:
+ * Resource action: rsc1            start on node1
+ * Resource action: rsc2            stop on node1
+ * Pseudo action:   all_stopped
+ * Resource action: rsc2            start on node1
+
+Revised cluster status:
+Online: [ node1 ]
+
+ rsc1	(heartbeat:apache):	Started node1
+ rsc2	(heartbeat:apache):	Started node1
+ rsc3	(heartbeat:apache):	Stopped 
+ rsc4	(heartbeat:apache):	Started node1
+

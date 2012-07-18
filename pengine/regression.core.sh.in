@@ -123,7 +123,9 @@ function do_test {
 
     scores=$io_dir/${base}.scores
     score_output=$io_dir/${base}.scores.pe
-    stderr_output=$io_dir/${base}.stderr
+
+    stderr_expected=$io_dir/${base}.stderr
+    stderr_output=$io_dir/${base}.stderr.pe
 
     summary=$io_dir/${base}.summary
     summary_output=$io_dir/${base}.summary.pe
@@ -183,7 +185,18 @@ function do_test {
 	mv core $test_home/core.$base
     fi
 
-    if [ -s $stderr_output ]; then
+    if [ -e $stderr_expected ]; then
+
+	diff $diff_opts $stderr_expected $stderr_output >/dev/null
+	rc2=$?
+	if [ $rc2 != 0 ]; then
+	    failed "stderr changed";
+	    diff $diff_opts $stderr_expected $stderr_output 2>/dev/null >> $failed
+	    echo "" >> $failed
+	    did_fail=1
+	fi
+
+    elif [ -s $stderr_output ]; then
 	error "Output was written to stderr"
 	did_fail=1
 	cat $stderr_output
