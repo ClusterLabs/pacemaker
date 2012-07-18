@@ -28,7 +28,6 @@
 - Decide whether to fully support or drop failover domains
 
 # Testing
-- Write a regression test for Stonith-NG
 - Convert BandwidthTest CTS test into a Scenario wrapper
 - find_operations() is not covered by PE regression tests
 - Some node states in determine_online_status_fencing() are untested by PE regression tests
