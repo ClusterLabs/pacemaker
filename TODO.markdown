@@ -1,13 +1,9 @@
 # Semi-random collection of tasks we'd like to get done
 
 ## Targeted for 1.2
+- Move location of cib.xml to somewhere more appropriate
 - Avoid the use of xmlNode in fencing register_callback() call types
-
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
-
-- Test startup fencing with node lists
-  - Figure out how to distinguish between "down" and "down
-    but we've never seen them before so they need to be shot"
 
 ## Targeted for 1.2.x
 
