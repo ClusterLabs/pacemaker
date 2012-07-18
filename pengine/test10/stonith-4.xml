@@ -17,6 +17,7 @@
       <node id="108" uname="pcmk-8"/>
       <node id="109" uname="pcmk-9"/>
       <node id="110" uname="pcmk-10"/>
+      <node id="111" uname="pcmk-11"/>
     </nodes>
     <resources>
       <primitive id="Fencing" class="stonith" type="fence_xvm"/>
@@ -26,9 +27,6 @@
   <status>
     <!-- Ok - Active -->
     <node_state id="101" uname="pcmk-1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
-      <lrm id="101">
-        <lrm_resources/>
-      </lrm>
       <transient_attributes id="101">
         <instance_attributes id="status-101">
           <nvpair id="status-101-probe_complete" name="probe_complete" value="true"/>
@@ -69,6 +67,15 @@
 
     <!-- Fence - Peer not available -->
     <node_state id="110" uname="pcmk-10" in_ccm="true" crmd="offline" join="member" expected="member" crm-debug-origin="post_cache_update"/>
+
+    <!-- Pending - Active but not joined after restart -->
+    <node_state id="111" uname="pcmk-3" in_ccm="true" crmd="online" join="down" crm-debug-origin="crmd_proc_update" expected="member" shutdown="0">
+      <transient_attributes id="111">
+        <instance_attributes id="status-111">
+          <nvpair id="status-111-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
 
   </status>
 </cib>

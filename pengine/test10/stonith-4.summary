@@ -7,6 +7,7 @@ Node pcmk-7 (107): UNCLEAN (online)
 Node pcmk-8 (108): UNCLEAN (offline)
 Node pcmk-9 (109): pending
 Node pcmk-10 (110): UNCLEAN (online)
+Node pcmk-11 (111): pending
 Online: [ pcmk-1 ]
 OFFLINE: [ pcmk-4 pcmk-6 ]
 
@@ -28,6 +29,7 @@ Node pcmk-7 (107): UNCLEAN (online)
 Node pcmk-8 (108): UNCLEAN (offline)
 Node pcmk-9 (109): pending
 Node pcmk-10 (110): UNCLEAN (online)
+Node pcmk-11 (111): pending
 Online: [ pcmk-1 ]
 OFFLINE: [ pcmk-4 pcmk-6 ]
 

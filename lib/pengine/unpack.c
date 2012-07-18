@@ -798,15 +798,15 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         crm_debug("%s is shutting down", this_node->details->uname);
         online = crm_is_true(is_peer); /* Slightly different criteria since we cant shut down a dead peer */
 
+    } else if(in_cluster == NULL) {
+        pe_fence_node(data_set, this_node, "because the peer has not been seen by the cluster");
+
+    } else if (safe_str_eq(join, CRMD_JOINSTATE_NACK)) {
+        pe_fence_node(data_set, this_node, "because it failed the pacemaker membership criteria");
+
     } else if(do_terminate == FALSE && safe_str_eq(exp_state, CRMD_JOINSTATE_DOWN)) {
 
-        if(in_cluster == NULL) {
-            pe_fence_node(data_set, this_node, "because the peer has not been seen by the cluster");
-
-        } else if (safe_str_eq(join, CRMD_JOINSTATE_NACK)) {
-            pe_fence_node(data_set, this_node, "because it failed the pacemaker membership criteria");
-
-        } else if(crm_is_true(in_cluster) || crm_is_true(is_peer)) {
+        if(crm_is_true(in_cluster) || crm_is_true(is_peer)) {
             crm_info("- Node %s is not ready to run resources", this_node->details->uname);
             this_node->details->standby = TRUE;
             this_node->details->pending = TRUE;
@@ -822,16 +822,14 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         pe_fence_node(data_set, this_node, "because our peer process was not available");
 
         /* Everything is running at this point, now check join state */
-    } else if (safe_str_eq(join, CRMD_JOINSTATE_NACK)) {
-        pe_fence_node(data_set, this_node, "because it failed the pacemaker membership criteria");
-
     } else if (do_terminate) {
         pe_fence_node(data_set, this_node, "because termination was requested");
 
     } else if (safe_str_eq(join, CRMD_JOINSTATE_MEMBER)) {
         crm_info("Node %s is active", this_node->details->uname);
 
-    } else if (safe_str_eq(join, CRMD_JOINSTATE_PENDING)) {
+    } else if (safe_str_eq(join, CRMD_JOINSTATE_PENDING)
+               || safe_str_eq(join, CRMD_JOINSTATE_DOWN)) {
         crm_info("+ Node %s is not ready to run resources", this_node->details->uname);
         this_node->details->standby = TRUE;
         this_node->details->pending = TRUE;
