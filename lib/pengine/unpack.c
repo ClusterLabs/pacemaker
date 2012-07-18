@@ -859,8 +859,6 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
     this_node->details->expected_up = FALSE;
     shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
 
-    crm_trace("Shutdown: %s", shutdown);
-
     if (shutdown != NULL && safe_str_neq("0", shutdown)) {
         this_node->details->shutdown = TRUE;
 
@@ -875,7 +873,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
                          * Anyone caught abusing this logic will be shot
                          */
 
-    } if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
+    } else if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
         online = determine_online_status_no_fencing(data_set, node_state, this_node);
 
     } else {
@@ -897,7 +895,10 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
         this_node->weight = -INFINITY;
     }
 
-    if (this_node->details->unclean) {
+    if(this_node->details->type != node_member) {
+        crm_info("Node %s is not a pacemaker node", this_node->details->uname);
+
+    } else if (this_node->details->unclean) {
         pe_proc_warn("Node %s is unclean", this_node->details->uname);
 
     } else if (this_node->details->online) {
