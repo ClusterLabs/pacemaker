@@ -27,6 +27,13 @@
   <status>
     <!-- Ok - Active -->
     <node_state id="101" uname="pcmk-1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <lrm id="e7840e57-67e1-44dc-9804-edd22d282394">
+        <lrm_resources id="lrm_resources.id28092">
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_monitor_0" operation="monitor" transition-key="37:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="0:7;37:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="5" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+	</lrm_resources>
+      </lrm>
       <transient_attributes id="101">
         <instance_attributes id="status-101">
           <nvpair id="status-101-probe_complete" name="probe_complete" value="true"/>

@@ -17,21 +17,22 @@ Transition Summary:
  * Start   Fencing	(pcmk-1)
 
 Executing cluster transition:
- * Resource action: Fencing         monitor on pcmk-1
-Transition failed: terminated
-An invalid transition was produced
+ * Resource action: Fencing         start on pcmk-1
+ * Pseudo action:   stonith_up
+ * Fencing pcmk-5
+ * Fencing pcmk-7
+ * Fencing pcmk-8
+ * Fencing pcmk-10
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   all_stopped
 
 Revised cluster status:
 Node pcmk-2 (102): pending
 Node pcmk-3 (103): pending
-Node pcmk-5 (105): UNCLEAN (offline)
-Node pcmk-7 (107): UNCLEAN (online)
-Node pcmk-8 (108): UNCLEAN (offline)
 Node pcmk-9 (109): pending
-Node pcmk-10 (110): UNCLEAN (online)
 Node pcmk-11 (111): pending
 Online: [ pcmk-1 ]
-OFFLINE: [ pcmk-4 pcmk-6 ]
+OFFLINE: [ pcmk-4 pcmk-5 pcmk-6 pcmk-7 pcmk-8 pcmk-10 ]
 
- Fencing	(stonith:fence_xvm):	Stopped 
+ Fencing	(stonith:fence_xvm):	Started pcmk-1
 

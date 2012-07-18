@@ -83,6 +83,16 @@ struct capacity_data {
     gboolean is_enough;
 };
 
+static gboolean
+is_fencing_resource(resource_t *rsc) 
+{
+    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    if (safe_str_eq(class, "stonith")) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static void
 check_capacity(gpointer key, gpointer value, gpointer user_data)
 {
@@ -423,7 +433,6 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     int alloc_details = scores_log_level + 1;
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     if (rsc->parent && is_not_set(rsc->parent->flags, pe_rsc_allocating)) {
         /* never allocate children on their own */
@@ -525,7 +534,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         native_assign_node(rsc, NULL, assign_to, TRUE);
 
     } else if (is_set(data_set->flags, pe_flag_stop_everything)
-               && safe_str_neq(class, "stonith")) {
+               && is_fencing_resource(rsc) == FALSE) {
         crm_debug("Forcing %s to stop", rsc->id);
         native_assign_node(rsc, NULL, NULL, TRUE);
 
@@ -1159,7 +1168,6 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     resource_t *top = uber_parent(rsc);
     int type = pe_order_optional | pe_order_implies_then | pe_order_restart;
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                         rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, type, data_set);
@@ -1179,7 +1187,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         return;
     }
 
-    if (safe_str_neq(class, "stonith")) {
+    if (is_fencing_resource(rsc) == FALSE) {
         action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 
         custom_action_order(rsc, stop_key(rsc), NULL,
@@ -2053,12 +2061,12 @@ gboolean
 StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     crm_trace("%s", rsc->id);
 
     if (rsc->next_role == RSC_ROLE_STOPPED
-        && rsc->variant == pe_native && safe_str_eq(class, "stonith")) {
+        && rsc->variant == pe_native
+        && is_fencing_resource(rsc)) {
         action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 
         custom_action_order(NULL, strdup(all_stopped->task), all_stopped,
@@ -2387,6 +2395,11 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
+    if(node->details->pending && is_fencing_resource(rsc)) {
+        crm_trace("Skipping probe for fencing resource %s on pending node %s", rsc->id, node->details->uname);
+        return FALSE;
+    }
+
     running = g_hash_table_lookup(rsc->known_on, node->details->id);
     if (running == NULL && is_set(rsc->flags, pe_rsc_unique) == FALSE) {
         /* Anonymous clones */
@@ -2401,7 +2414,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 
     if (force == FALSE && running != NULL) {
         /* we already know the status of the resource on this node */
-        crm_trace("Skipping active: %s", rsc->id);
+        crm_trace("Skipping active: %s on %s", rsc->id, node->details->uname);
         return FALSE;
     }
 
@@ -2628,7 +2641,6 @@ void
 rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
     gboolean is_stonith = FALSE;
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     if (rsc->children) {
         GListPtr gIter = NULL;
@@ -2646,7 +2658,7 @@ rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op, pe_working_set_t *
         return;
     }
 
-    if (stonith_op != NULL && safe_str_eq(class, "stonith")) {
+    if (stonith_op != NULL && is_fencing_resource(rsc)) {
         is_stonith = TRUE;
     }
 

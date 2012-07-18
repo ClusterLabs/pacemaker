@@ -1,6 +1,4 @@
 digraph "g" {
-"FencingChild:3_monitor_0 pcmk-4" -> "probe_complete pcmk-4" [ style = dashed]
-"FencingChild:3_monitor_0 pcmk-4" [ style=dashed color="red" fontcolor="black"]
 "lsb-dummy_monitor_0 pcmk-4" -> "probe_complete pcmk-4" [ style = dashed]
 "lsb-dummy_monitor_0 pcmk-4" [ style=dashed color="red" fontcolor="black" ]
 "migrator_monitor_0 pcmk-4" -> "probe_complete pcmk-4" [ style = dashed]

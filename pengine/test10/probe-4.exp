@@ -1,20 +1,20 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="10" transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="57" operation="monitor" operation_key="migrator_monitor_10000" on_node="pcmk-3" on_node_uuid="pcmk-3">
+      <rsc_op id="56" operation="monitor" operation_key="migrator_monitor_10000" on_node="pcmk-3" on_node_uuid="pcmk-3">
         <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="56" operation="start" operation_key="migrator_start_0" on_node="pcmk-3" on_node_uuid="pcmk-3"/>
+        <rsc_op id="55" operation="start" operation_key="migrator_start_0" on_node="pcmk-3" on_node_uuid="pcmk-3"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="56" operation="start" operation_key="migrator_start_0" on_node="pcmk-3" on_node_uuid="pcmk-3">
+      <rsc_op id="55" operation="start" operation_key="migrator_start_0" on_node="pcmk-3" on_node_uuid="pcmk-3">
         <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
