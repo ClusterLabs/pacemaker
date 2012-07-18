@@ -1,0 +1,12 @@
+Allocation scores:
+An invalid transition was produced
+Transition failed: terminated
+native_color: Fencing allocation score on pcmk-1: 0
+native_color: Fencing allocation score on pcmk-2: 0
+native_color: Fencing allocation score on pcmk-3: 0
+native_color: Fencing allocation score on pcmk-4: 0
+native_color: Fencing allocation score on pcmk-5: 0
+native_color: Fencing allocation score on pcmk-6: 0
+native_color: Fencing allocation score on pcmk-7: 0
+native_color: Fencing allocation score on pcmk-8: 0
+native_color: Fencing allocation score on pcmk-9: 0
