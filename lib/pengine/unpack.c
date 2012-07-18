@@ -803,6 +803,9 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         if(in_cluster == NULL) {
             pe_fence_node(data_set, this_node, "because the peer has not been seen by the cluster");
 
+        } else if (safe_str_eq(join, CRMD_JOINSTATE_NACK)) {
+            pe_fence_node(data_set, this_node, "because it failed the pacemaker membership criteria");
+
         } else if(crm_is_true(in_cluster) || crm_is_true(is_peer)) {
             crm_info("- Node %s is not ready to run resources", this_node->details->uname);
             this_node->details->standby = TRUE;
