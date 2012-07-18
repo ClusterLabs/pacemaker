@@ -76,6 +76,9 @@ check_stonith_action(const char *value)
 
     } else if (safe_str_eq(value, "poweroff")) {
         return TRUE;
+
+    } else if (safe_str_eq(value, "off")) {
+        return TRUE;
     }
     return FALSE;
 }
@@ -118,7 +121,7 @@ pe_cluster_option pe_opts[] = {
 	/* Stonith Options */
 	{ "stonith-enabled", "stonith_enabled", "boolean", NULL, "true", &check_boolean,
 	  "Failed nodes are STONITH'd", NULL },
-	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff", "reboot", &check_stonith_action,
+	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff, off", "reboot", &check_stonith_action,
 	  "Action to send to STONITH device", NULL },
 	{ "stonith-timeout", NULL, "time", NULL, "60s", &check_timer,
 	  "How long to wait for the STONITH action to complete", NULL },
