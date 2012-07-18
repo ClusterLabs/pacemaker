@@ -746,9 +746,6 @@ class TestOptions:
 
 
 def main(argv):
-	lrmd_loc = argv[0].replace("regression.py", "lrmd")
-	test_loc = argv[0].replace("regression.py", "lrmd_test")
-
 	o = TestOptions()
 	o.build_options(argv)
 
