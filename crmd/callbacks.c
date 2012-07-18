@@ -132,11 +132,11 @@ crmd_proc_update(crm_node_t * member, enum crm_proc_flag client)
     } else if (AM_I_DC) {
 #if 0
         /* Everyone */
-        populate_cib_nodes(node_update_quick|node_update_peer, __FUNCTION__);
+        populate_cib_nodes(node_update_quick|node_update_peer|node_update_join, __FUNCTION__);
 #else
         /* Just one */
         xmlNode *update = create_node_state(
-            member->uname, NULL, status, NULL, NULL, FALSE, __FUNCTION__);
+            member->uname, NULL, status, CRMD_JOINSTATE_DOWN, NULL, FALSE, __FUNCTION__);
 
         fsa_cib_anon_update(
             XML_CIB_TAG_STATUS, update, cib_scope_local | cib_quorum_override | cib_can_create);
