@@ -23,6 +23,21 @@
   </synapse>
   <synapse id="2">
     <action_set>
+      <crm_event id="15" operation="stonith" operation_key="stonith" on_node="pcmk-10" on_node_uuid="110">
+        <attributes CRM_meta_on_node="pcmk-10" CRM_meta_on_node_uuid="110" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
+      </crm_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="9" operation="stonith_up" operation_key="stonith_up"/>
+      </trigger>
+      <trigger>
+        <crm_event id="14" operation="stonith" operation_key="stonith" on_node="pcmk-8" on_node_uuid="108"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
       <crm_event id="14" operation="stonith" operation_key="stonith" on_node="pcmk-8" on_node_uuid="108">
         <attributes CRM_meta_on_node="pcmk-8" CRM_meta_on_node_uuid="108" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
       </crm_event>
@@ -36,7 +51,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="3">
+  <synapse id="4">
     <action_set>
       <crm_event id="13" operation="stonith" operation_key="stonith" on_node="pcmk-7" on_node_uuid="107">
         <attributes CRM_meta_on_node="pcmk-7" CRM_meta_on_node_uuid="107" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
@@ -51,7 +66,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="4">
+  <synapse id="5">
     <action_set>
       <crm_event id="12" operation="stonith" operation_key="stonith" on_node="pcmk-5" on_node_uuid="105">
         <attributes CRM_meta_on_node="pcmk-5" CRM_meta_on_node_uuid="105" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
@@ -63,7 +78,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="5">
+  <synapse id="6">
     <action_set>
       <pseudo_event id="11" operation="stonith_complete" operation_key="stonith_complete">
         <attributes crm_feature_set="3.0.6"/>
@@ -74,11 +89,11 @@
         <pseudo_event id="9" operation="stonith_up" operation_key="stonith_up"/>
       </trigger>
       <trigger>
-        <crm_event id="14" operation="stonith" operation_key="stonith" on_node="pcmk-8" on_node_uuid="108"/>
+        <crm_event id="15" operation="stonith" operation_key="stonith" on_node="pcmk-10" on_node_uuid="110"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="6">
+  <synapse id="7">
     <action_set>
       <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped">
         <attributes crm_feature_set="3.0.6"/>
@@ -94,9 +109,12 @@
       <trigger>
         <crm_event id="14" operation="stonith" operation_key="stonith" on_node="pcmk-8" on_node_uuid="108"/>
       </trigger>
+      <trigger>
+        <crm_event id="15" operation="stonith" operation_key="stonith" on_node="pcmk-10" on_node_uuid="110"/>
+      </trigger>
     </inputs>
   </synapse>
-  <synapse id="7">
+  <synapse id="8">
     <action_set>
       <pseudo_event id="9" operation="stonith_up" operation_key="stonith_up">
         <attributes crm_feature_set="3.0.6"/>
@@ -108,7 +126,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="8" priority="1000000">
+  <synapse id="9" priority="1000000">
     <action_set>
       <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="pcmk-1" on_node_uuid="101">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>

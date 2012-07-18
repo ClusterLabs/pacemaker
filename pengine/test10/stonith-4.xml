@@ -16,6 +16,7 @@
       <node id="107" uname="pcmk-7"/>
       <node id="108" uname="pcmk-8"/>
       <node id="109" uname="pcmk-9"/>
+      <node id="110" uname="pcmk-10"/>
     </nodes>
     <resources>
       <primitive id="Fencing" class="stonith" type="fence_xvm"/>
@@ -65,6 +66,9 @@
 
     <!-- Pending - CPG up, Quorum down -->
     <node_state id="109" uname="pcmk-9" crmd="online" join="down" crm-debug-origin="crmd_proc_update" in_ccm="false"/>
+
+    <!-- Fence - Peer not available -->
+    <node_state id="110" uname="pcmk-10" in_ccm="true" crmd="offline" join="member" expected="member" crm-debug-origin="post_cache_update"/>
 
   </status>
 </cib>
