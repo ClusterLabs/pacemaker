@@ -182,6 +182,7 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
 {
     int rc;
     int lpc = 0;
+    int retries = 10;
     struct iovec iov[2];
     static uint32_t id = 0;
     const char *type = "Response";
@@ -197,7 +198,14 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
     header.error = 0; /* unused */
     header.size = iov[0].iov_len + iov[1].iov_len;
 
-    do {
+    if(flags & ipcs_send_error) {
+        retries = 5;
+
+    } else if(flags & ipcs_send_info) {
+        retries = 1;
+    }
+
+    while(lpc < retries) {
         if(flags & ipcs_send_event) {
             rc = qb_ipcs_event_sendv(c, iov, 2);
             type = "Event";
@@ -208,18 +216,13 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
 
         if(rc != -EAGAIN) {
             break;
-        } else if(lpc > 3 && (flags & ipcs_send_error)) {
-            break;
         }
 
+        lpc++;
         crm_debug("Attempting resend %d of %s %d (%d bytes) to %p[%d]: %.120s",
-                  ++lpc, type, header.id, header.size, c, crm_ipcs_client_pid(c), buffer);
+                  lpc, type, header.id, header.size, c, crm_ipcs_client_pid(c), buffer);
         sleep(1);
-
-        /* Only retry for important stuff, and even then only a limited amount for ipcs_send_error
-         * Unless ipcs_send_info or ipcs_send_error is specified, we block by default
-         */
-    } while((flags & ipcs_send_info) == 0);
+    } 
 
     if(rc < header.size) {
         do_crm_log((flags & ipcs_send_error)?LOG_ERR:LOG_INFO,
