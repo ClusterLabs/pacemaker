@@ -6,6 +6,7 @@ CMAN=0
 do_heartbeat=0
 plugin_ver=-1
 pcmk_ver=11
+nodelist=0
 
 INSTALL=No
 cs_conf=/etc/corosync/corosync.conf
@@ -34,11 +35,12 @@ consensus=7500
 do_debug=off
 
 function ip_for_node() {
-    if [ $do_raw = 1 ]; then
-	echo $1
-    else
-	host $1 | grep "has address" | head -n 1 | awk '{print $NF}' | sed 's:(::' | sed 's:)::'
-    fi
+    ping -c 1 $1 | grep "bytes from" | head -n 1 | sed -e 's/.*bytes from//' -e 's/: icmp.*//'  | awk  '{print $NF}' | sed 's:(::' | sed 's:)::'
+#    if [ $do_raw = 1 ]; then
+#	echo $1
+#    else
+#	#host $1 | grep "has address" | head -n 1 | awk '{print $NF}' | sed 's:(::' | sed 's:)::'
+#    fi
 }
 function id_for_node() {
     ip_for_node $* | tr '.' ' ' | awk '{print $4}'
@@ -56,6 +58,7 @@ function helptext() {
     echo ""
     echo "-h, --heartbeat     configure for heartbeat"
     echo "-c, --corosync      configure for corosync"
+    echo "-C, --nodelist      configure for corosync with a node list"
     echo "-o, --openais       configure for openais"
     echo "--cman              configure for cman"
     echo "-p, --plugin version"
@@ -95,6 +98,7 @@ while true; do
 	cman|--cman) CMAN=1; cs_conf=/etc/cluster/cluster.conf; shift;;
 	-h|--heartbeat) do_heartbeat=1; shift;;
 	-c|--corosync) cs_conf=/etc/corosync/corosync.conf; shift;;
+	-C|--nodelist) cs_conf=/etc/corosync/corosync.conf; nodelist=1; shift;;
 	-o|--openais) cs_conf=/etc/ais/openais.conf; shift;;
 	--plugin|-p) plugin_ver=$2; shift; shift;;
 
@@ -523,6 +527,38 @@ quorum {
         provider: quorum_cman
 }
 END
+    elif [ $nodelist = 1 ]; then
+	cat <<-END >>$cs_tmp
+nodelist {
+END
+
+	for peer in $host_list; do
+	    p_name=`name_for_node $peer`
+	    p_id=`id_for_node $peer`
+	    p_ip=`ip_for_node $peer`
+	    
+	    cat <<-END >>$cs_tmp
+    node {
+        ring0_addr: $p_ip
+        nodeid: $p_id
+        quorum_votes: 1
+        name: $peer
+    }
+END
+	done
+	cat <<-END >>$cs_tmp
+}
+
+quorum {
+   provider: corosync_votequorum
+   expected_votes: $num_hosts
+   votes: 1
+   two_node: $two_node
+   wait_for_all: 0
+   last_man_standing: 0
+   auto_tie_breaker: 0
+}
+END
     else
 	cat <<-END >>$cs_tmp
 quorum {
@@ -623,6 +659,7 @@ for host in $host_list; do
     else
 	ssh -l root ${host} -- grep -q "token:" $cs_conf 2>&1 > /dev/null
 	new_config=$?
+	new_config=1
 	
 	if [ $new_config = 0 ]; then
             printf "%-10s  Updating $cs_conf\n" ${host}:
