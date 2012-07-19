@@ -40,9 +40,9 @@ group_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     if (is_not_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to;
     }
-    crm_trace("Processing %s", rsc->id);
+    pe_rsc_trace(rsc, "Processing %s", rsc->id);
     if (is_set(rsc->flags, pe_rsc_allocating)) {
-        crm_debug("Dependency loop detected involving %s", rsc->id);
+        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
         return NULL;
     }
 
@@ -104,7 +104,7 @@ group_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     const char *value = NULL;
     GListPtr gIter = rsc->children;
 
-    crm_trace("Creating actions for %s", rsc->id);
+    pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
@@ -170,12 +170,12 @@ group_update_pseudo_status(resource_t * parent, resource_t * child)
         }
         if (safe_str_eq(RSC_STOP, action->task) && is_set(action->flags, pe_action_runnable)) {
             group_data->child_stopping = TRUE;
-            crm_trace("Based on %s the group is stopping", action->uuid);
+            pe_rsc_trace(action->rsc, "Based on %s the group is stopping", action->uuid);
 
         } else if (safe_str_eq(RSC_START, action->task)
                    && is_set(action->flags, pe_action_runnable)) {
             group_data->child_starting = TRUE;
-            crm_trace("Based on %s the group is starting", action->uuid);
+            pe_rsc_trace(action->rsc, "Based on %s the group is starting", action->uuid);
         }
     }
 }
@@ -303,7 +303,7 @@ group_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     }
 
     gIter = rsc_lh->children;
-    crm_trace("Processing constraints from %s", rsc_lh->id);
+    pe_rsc_trace(rsc_lh, "Processing constraints from %s", rsc_lh->id);
 
     get_group_variant_data(group_data, rsc_lh);
 
@@ -334,7 +334,7 @@ group_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     get_group_variant_data(group_data, rsc_rh);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
-    crm_trace("Processing RH of constraint %s", constraint->id);
+    pe_rsc_trace(rsc_rh, "Processing RH of constraint %s", constraint->id);
     print_resource(LOG_DEBUG_3, "LHS", rsc_lh, TRUE);
 
     if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
@@ -383,20 +383,20 @@ group_action_flags(action_t * action, node_t * node)
 
             if (is_set(flags, pe_action_optional)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
-                crm_trace("%s is manditory because of %s", action->uuid, child_action->uuid);
+                pe_rsc_trace(action->rsc, "%s is manditory because of %s", action->uuid, child_action->uuid);
                 clear_bit(flags, pe_action_optional);
                 pe_clear_action_bit(action, pe_action_optional);
             }
             if (safe_str_neq(task_s, action->task)
                 && is_set(flags, pe_action_runnable)
                 && is_set(child_flags, pe_action_runnable) == FALSE) {
-                crm_trace("%s is not runnable because of %s", action->uuid, child_action->uuid);
+                pe_rsc_trace(action->rsc, "%s is not runnable because of %s", action->uuid, child_action->uuid);
                 clear_bit(flags, pe_action_runnable);
                 pe_clear_action_bit(action, pe_action_runnable);
             }
 
         } else if (task != stop_rsc) {
-            crm_trace("%s is not runnable because of %s (not found in %s)", action->uuid, task_s,
+            pe_rsc_trace(action->rsc, "%s is not runnable because of %s (not found in %s)", action->uuid, task_s,
                       child->id);
             clear_bit(flags, pe_action_runnable);
         }
@@ -438,7 +438,7 @@ group_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
 
     get_group_variant_data(group_data, rsc);
 
-    crm_debug("Processing rsc_location %s for %s", constraint->id, rsc->id);
+    pe_rsc_debug(rsc, "Processing rsc_location %s for %s", constraint->id, rsc->id);
 
     native_rsc_location(rsc, constraint);
 
@@ -464,7 +464,7 @@ group_expand(resource_t * rsc, pe_working_set_t * data_set)
 
     get_group_variant_data(group_data, rsc);
 
-    crm_trace("Processing actions from %s", rsc->id);
+    pe_rsc_trace(rsc, "Processing actions from %s", rsc->id);
 
     CRM_CHECK(rsc != NULL, return);
     native_expand(rsc, data_set);
@@ -486,7 +486,7 @@ group_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const
     get_group_variant_data(group_data, rsc);
 
     if (is_set(rsc->flags, pe_rsc_merging)) {
-        crm_info("Breaking dependency loop with %s at %s", rsc->id, rhs);
+        pe_rsc_info(rsc, "Breaking dependency loop with %s at %s", rsc->id, rhs);
         return nodes;
     }
 

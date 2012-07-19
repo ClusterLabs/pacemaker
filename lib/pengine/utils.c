@@ -344,7 +344,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
 
         action = g_list_nth_data(possible_matches, 0);
-        crm_trace("Found existing action (%d) %s for %s on %s",
+        pe_rsc_trace(rsc, "Found existing action (%d) %s for %s on %s",
                   action->id, task, rsc ? rsc->id : "<NULL>",
                   on_node ? on_node->details->uname : "<NULL>");
         g_list_free(possible_matches);
@@ -352,7 +352,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
     if (action == NULL) {
         if (save_action) {
-            crm_trace("Creating%s action %d: %s for %s on %s",
+            pe_rsc_trace(rsc, "Creating%s action %d: %s for %s on %s",
                       optional ? "" : " manditory", data_set->action_id, key,
                       rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>");
         }
@@ -409,12 +409,12 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
 
         if (save_action) {
-            crm_trace("Action %d created", action->id);
+            pe_rsc_trace(rsc, "Action %d created", action->id);
         }
     }
 
     if (optional == FALSE) {
-        crm_trace("Action %d (%s) marked manditory", action->id, action->uuid);
+        pe_rsc_trace(rsc, "Action %d (%s) marked manditory", action->id, action->uuid);
         pe_clear_action_bit(action, pe_action_optional);
     }
 
@@ -462,7 +462,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
                        action->uuid, action->node->details->uname);
 
         } else if (action->needs == rsc_req_nothing) {
-            crm_trace("Action %s doesnt require anything", action->uuid);
+            pe_rsc_trace(rsc, "Action %s doesnt require anything", action->uuid);
             pe_set_action_bit(action, pe_action_runnable);
 #if 0
             /*
@@ -480,15 +480,15 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
                    && data_set->no_quorum_policy == no_quorum_freeze) {
-            crm_trace("Check resource is already active");
+            pe_rsc_trace(rsc, "Check resource is already active");
             if (rsc->fns->active(rsc, TRUE) == FALSE) {
                 pe_clear_action_bit(action, pe_action_runnable);
-                crm_debug("%s\t%s (cancelled : quorum freeze)",
+                pe_rsc_debug(rsc, "%s\t%s (cancelled : quorum freeze)",
                           action->node->details->uname, action->uuid);
             }
 
         } else {
-            crm_trace("Action %s is runnable", action->uuid);
+            pe_rsc_trace(rsc, "Action %s is runnable", action->uuid);
             pe_set_action_bit(action, pe_action_runnable);
         }
 
@@ -593,7 +593,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         }
     }
 
-    crm_trace("\tAction %s requires: %s", action->task, value);
+    pe_rsc_trace(action->rsc, "\tAction %s requires: %s", action->task, value);
 
     value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
     if (safe_str_eq(action->task, CRMD_ACTION_STOP)
@@ -661,7 +661,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         value = "restart (and possibly migrate) (default)";
     }
 
-    crm_trace("\t%s failure handling: %s", action->task, value);
+    pe_rsc_trace(action->rsc, "\t%s failure handling: %s", action->task, value);
 
     value = NULL;
     if (xml_obj != NULL) {
@@ -678,7 +678,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
             action->fail_role = RSC_ROLE_STARTED;
         }
     }
-    crm_trace("\t%s failure results in: %s", action->task, role2text(action->fail_role));
+    pe_rsc_trace(action->rsc, "\t%s failure results in: %s", action->task, role2text(action->fail_role));
 
     field = XML_LRM_ATTR_INTERVAL;
     value = g_hash_table_lookup(action->meta, field);
@@ -1072,7 +1072,7 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
         }
     }
 
-    crm_trace("Setting %s for %s on %s: %d", tag, rsc->id, node->details->uname, score);
+    pe_rsc_trace(rsc, "Setting %s for %s on %s: %d", tag, rsc->id, node->details->uname, score);
     match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = node_copy(node);

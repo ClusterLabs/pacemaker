@@ -39,7 +39,7 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
     const char *group_colocated = g_hash_table_lookup(rsc->meta, "collocated");
     const char *clone_id = NULL;
 
-    crm_trace("Processing resource %s...", rsc->id);
+    pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     group_data = calloc(1, sizeof(group_variant_data_t));
     group_data->num_children = 0;
@@ -106,7 +106,7 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
 #endif
     }
 
-    crm_trace("Added %d children to resource %s...", group_data->num_children, rsc->id);
+    pe_rsc_trace(rsc, "Added %d children to resource %s...", group_data->num_children, rsc->id);
 
     return TRUE;
 }
@@ -209,16 +209,16 @@ group_free(resource_t * rsc)
     CRM_CHECK(rsc != NULL, return);
     get_group_variant_data(group_data, rsc);
 
-    crm_trace("Freeing %s", rsc->id);
+    pe_rsc_trace(rsc, "Freeing %s", rsc->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        crm_trace("Freeing child %s", child_rsc->id);
+        pe_rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
         child_rsc->fns->free(child_rsc);
     }
 
-    crm_trace("Freeing child list");
+    pe_rsc_trace(rsc, "Freeing child list");
     g_list_free(rsc->children);
 
     if (group_data->self != NULL) {
@@ -244,6 +244,6 @@ group_resource_state(const resource_t * rsc, gboolean current)
         }
     }
 
-    crm_trace("%s role: %s", rsc->id, role2text(group_role));
+    pe_rsc_trace(rsc, "%s role: %s", rsc->id, role2text(group_role));
     return group_role;
 }
