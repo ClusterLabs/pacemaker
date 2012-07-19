@@ -1128,7 +1128,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
         diff_cs = qb_log_callsite_get(function, __FILE__, "xml-diff", log_level, __LINE__, 0);
     }
 
-    if (crm_is_callsite_active(diff_cs, log_level) == FALSE) {
+    if (crm_is_callsite_active(diff_cs, log_level, 0) == FALSE) {
         return;
     }
 

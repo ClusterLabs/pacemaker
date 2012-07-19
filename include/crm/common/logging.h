@@ -52,7 +52,7 @@ void crm_bump_log_level(void);
 
 void crm_enable_stderr(int enable);
 
-gboolean crm_is_callsite_active(struct qb_log_callsite *cs, int level);
+gboolean crm_is_callsite_active(struct qb_log_callsite *cs, int level, int tags);
 
 int log_data_element(int log_level, const char *file, const char *function, int line,
                      const char *prefix, xmlNode * data, int depth, gboolean formatted);
@@ -82,7 +82,7 @@ unsigned int get_crm_log_level(void);
         if(trace_cs == NULL) {                                          \
             trace_cs = qb_log_callsite_get(__func__, __FILE__, fmt, level, __LINE__, 0); \
         }                                                               \
-        if (crm_is_callsite_active(trace_cs, level)) {                  \
+        if (crm_is_callsite_active(trace_cs, level, 0)) {            \
             qb_log_from_external_source(                                \
                 __func__, __FILE__, fmt, level, __LINE__, 0,  ##args);  \
         }                                                               \
@@ -116,7 +116,7 @@ unsigned int get_crm_log_level(void);
         if(xml_cs == NULL) {                                            \
             xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blog", level, __LINE__, 0); \
         }                                                               \
-        if (crm_is_callsite_active(xml_cs, level)) {                    \
+        if (crm_is_callsite_active(xml_cs, level, 0)) {                  \
             log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
         }                                                               \
         if((level) < LOG_WARNING) {                                     \
@@ -139,11 +139,6 @@ unsigned int get_crm_log_level(void);
         }                                                               \
     } while(0)
 
-#    define crm_log_tag(level, tag, fmt, args...)    do {               \
-        qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, g_quark_try_string(tag), ##args); \
-    } while(0)
-
-
 #    define crm_crit(fmt, args...)    do {      \
         qb_logt(LOG_CRIT,    0, fmt , ##args);  \
         crm_write_blackbox(0);                  \
@@ -153,6 +148,17 @@ unsigned int get_crm_log_level(void);
         qb_logt(LOG_ERR,    0, fmt , ##args);  \
         crm_write_blackbox(0);                  \
     } while(0)
+
+#    define crm_log_tag(level, tag, fmt, args...)    do {               \
+        static struct qb_log_callsite *trace_tag_cs = NULL;                 \
+        int converted_tag = g_quark_try_string(tag);                   \
+        if(trace_tag_cs == NULL) {                                          \
+            trace_tag_cs = qb_log_callsite_get(__func__, __FILE__, fmt, level, __LINE__, converted_tag); \
+        }                                                               \
+        if (crm_is_callsite_active(trace_tag_cs, level, converted_tag)) {               \
+            qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, converted_tag, ##args); \
+        }                                                               \
+      } while(0)
 
 #    define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
 #    define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
