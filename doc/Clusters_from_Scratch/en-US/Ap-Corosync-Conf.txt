@@ -38,7 +38,7 @@ bindnetaddr: 192.168.122.0
 		# the network administrator). Do not reuse multicast
 		# addresses across multiple Corosync clusters sharing
 		# the same network.
-mcastaddr: 226.94.1.1
+mcastaddr: 239.255.1.1
 		# Corosync uses the port you specify here for UDP
 		# messaging, and also the immediately preceding
 		# port. Thus if you set this to 5405, Corosync sends

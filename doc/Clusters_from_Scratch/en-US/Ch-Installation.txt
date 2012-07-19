@@ -844,7 +844,7 @@ Choose a port number and multi-cast footnote:[http://en.wikipedia.org/wiki/Multi
 Be sure that the values you chose do not conflict with any existing clusters you might have.
 For advice on choosing a multi-cast address, see
 http://www.29west.com/docs/THPM/multicast-address-assignment.html
-For this document, I have chosen port 4000 and used 226.94.1.1 as the multi-cast address.
+For this document, I have chosen port 4000 and used 239.255.1.1 as the multi-cast address.
 
 
 [IMPORTANT]
@@ -857,7 +857,7 @@ manually.
 [source,Bash]
 ----
 # export ais_port=4000
-# export ais_mcast=226.94.1.1
+# export ais_mcast=239.255.1.1
 ----
 
 Next we automatically determine the hosts address. By not using the full
@@ -873,7 +873,7 @@ Display and verify the configuration options
 [source,Bash]
 ----
 # env | grep ais_
-ais_mcast=226.94.1.1
+ais_mcast=239.255.1.1
 ais_port=4000
 ais_addr=192.168.122.0
 ----
