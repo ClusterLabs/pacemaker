@@ -781,9 +781,12 @@ do_lrm_query(gboolean is_replace)
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
 
-    xml_state = create_node_state(fsa_our_uname, XML_BOOLEAN_TRUE,
-                                  ONLINESTATUS, CRMD_JOINSTATE_MEMBER, CRMD_JOINSTATE_MEMBER,
-                                  is_not_set(fsa_input_register, R_SHUTDOWN), __FUNCTION__);
+    crm_node_t *peer = crm_get_peer(0, fsa_our_uname);
+    xml_state = do_update_node_cib(peer, node_update_cluster|node_update_peer, NULL, __FUNCTION__);
+
+    /* The next two lines shouldn't be necessary for newer DCs */
+    crm_xml_add(xml_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
+    crm_xml_add(xml_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
 
     xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
     crm_xml_add(xml_data, XML_ATTR_ID, fsa_our_uuid);
@@ -1566,6 +1569,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
     xmlNode *reply = NULL;
     xmlNode *update, *iter;
     xmlNode *fragment;
+    crm_node_t *peer = NULL;
 
     CRM_CHECK(op != NULL, return);
     if (op->rsc_id == NULL) {
@@ -1575,7 +1579,9 @@ send_direct_ack(const char *to_host, const char *to_sys,
     if (to_sys == NULL) {
         to_sys = CRM_SYSTEM_TENGINE;
     }
-    update = create_node_state(fsa_our_uname, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
+
+    peer = crm_get_peer(0, fsa_our_uname);
+    update = do_update_node_cib(peer, node_update_none, NULL, __FUNCTION__);
 
     iter = create_xml_node(update, XML_CIB_TAG_LRM);
     crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);

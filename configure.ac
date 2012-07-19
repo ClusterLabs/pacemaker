@@ -1284,13 +1284,20 @@ elif test $SUPPORT_CS != 0; then
     fi
 fi
 
+if test $HAVE_confdb = 1; then
+   dnl confdb went away at about the same time as support for plugins	
+   SUPPORT_PLUGIN=1
+else
+   SUPPORT_PLUGIN=0
+fi
 AC_DEFINE_UNQUOTED(SUPPORT_COROSYNC, $SUPPORT_CS,    Support the Corosync messaging and membership layer)
 AC_DEFINE_UNQUOTED(SUPPORT_CMAN,     $SUPPORT_CMAN,  Support the consumption of membership and quorum from cman)
 AC_DEFINE_UNQUOTED(CS_USES_LIBQB,    $CS_USES_LIBQB, Does corosync use libqb for its ipc)
 AC_DEFINE_UNQUOTED(PCMK_SERVICE_ID,  $PCMK_SERVICE_ID, Corosync service number)
+AC_DEFINE_UNQUOTED(SUPPORT_PLUGIN,   $SUPPORT_PLUGIN, Support the Pacemaker plugin for Corosync)
 
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
-AM_CONDITIONAL(BUILD_CS_PLUGIN, test $HAVE_confdb = 1) dnl confdb went away at about the same time as plugins
+AM_CONDITIONAL(BUILD_CS_PLUGIN, $SUPPORT_PLUGIN)
 
 AC_SUBST(SUPPORT_CMAN)
 AC_SUBST(SUPPORT_CS)

@@ -953,38 +953,6 @@ fsa_dump_actions(long long action, const char *text)
     }
 }
 
-xmlNode *
-create_node_state(const char *uname, const char *in_cluster,
-                  const char *is_peer, const char *join_state, const char *exp_state,
-                  gboolean clear_shutdown, const char *src)
-{
-    xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-
-    crm_trace("%s Creating node state entry for %s", src, uname);
-    set_uuid(node_state, XML_ATTR_UUID, uname);
-
-    if (crm_element_value(node_state, XML_ATTR_UUID) == NULL) {
-        crm_debug("Node %s is not a cluster member", uname);
-        free_xml(node_state);
-        return NULL;
-    }
-
-    crm_xml_add(node_state, XML_ATTR_UNAME, uname);
-    crm_xml_add(node_state, XML_NODE_IN_CLUSTER, in_cluster);
-    crm_xml_add(node_state, XML_NODE_IS_PEER, is_peer);
-    crm_xml_add(node_state, XML_NODE_JOIN_STATE, join_state);
-    crm_xml_add(node_state, XML_NODE_EXPECTED, exp_state);
-    crm_xml_add(node_state, XML_ATTR_ORIGIN, src);
-
-    if (clear_shutdown) {
-        crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN, "0");
-    }
-
-    crm_log_xml_trace(node_state, "created");
-
-    return node_state;
-}
-
 extern GHashTable *ipc_clients;
 
 void

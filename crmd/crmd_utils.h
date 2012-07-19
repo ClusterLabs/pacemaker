@@ -76,6 +76,7 @@ void fsa_dump_inputs(int log_level, const char *text, long long input_register);
 
 gboolean update_dc(xmlNode * msg);
 void erase_node_from_join(const char *node);
+xmlNode *do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *source);
 void populate_cib_nodes(enum node_update_flags flags, const char *source);
 void crm_update_quorum(gboolean quorum, gboolean force_update);
 void erase_status_tag(const char *uname, const char *tag, int options);

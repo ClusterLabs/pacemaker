@@ -547,7 +547,7 @@ do_state_transition(long long actions,
     }
 
     if (cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
-        populate_cib_nodes(node_update_quick|node_update_cluster|node_update_peer|node_update_join, __FUNCTION__);
+        populate_cib_nodes(node_update_quick|node_update_cluster|node_update_peer|node_update_join|node_update_expected, __FUNCTION__);
     }
 
     switch (next_state) {

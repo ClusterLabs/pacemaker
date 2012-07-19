@@ -48,7 +48,7 @@ class crm_ais(crm_lha):
             "QuorumCmd"      : "crm_node -q --openais",
             "ParitionCmd"    : "crm_node -p --openais",
 
-            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",            
+            "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
             "Pat:ChildExit"    : "Child process .* exited",
 
             # Bad news Regexes.  Should never occur.
@@ -229,7 +229,7 @@ class crm_whitetank(crm_ais):
             "StopCmd"        : CTSvars.INITDIR+"/openais stop",
 
             "Pat:We_stopped"   : "%s.*openais.*pcmk_shutdown: Shutdown complete",
-            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
+            "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "openais:.*Node %s is now: lost",
             
             "Pat:ChildKilled"  : "%s openais.*Child process %s terminated with signal 9",
@@ -281,7 +281,7 @@ class crm_cs_v0(crm_ais):
 # The next pattern would be preferred, but it doesn't always come out
 #            "Pat:We_stopped"   : "%s.*Corosync Cluster Engine exiting with status",
             "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
-            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
+            "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "corosync:.*Node %s is now: lost",
             
             "Pat:ChildKilled"  : "%s corosync.*Child process %s terminated with signal 9",
@@ -335,8 +335,8 @@ class crm_cs_v1(crm_cs_v0):
             "ParitionCmd"    : "crm_node -p",
 
             "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
-            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
-            "Pat:They_dead"    : "crmd.*Node %s: .* state=lost .new",
+            "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
+            "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
             
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
@@ -363,8 +363,8 @@ class crm_mcp(crm_cs_v0):
             # Close enough... "Corosync Cluster Engine exiting normally" isn't printed
             #   reliably and there's little interest in doing anything it
             "Pat:We_stopped"  : "%s.*Unloading all Corosync service engines",
-            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
-            "Pat:They_dead"    : "crmd.*Node %s: .* state=lost .new",
+            "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
+            "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
             
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
@@ -393,8 +393,8 @@ class crm_cman(crm_cs_v0):
             "ParitionCmd"    : "crm_node -p --cman",
 
             "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
-            "Pat:They_stopped" : "%s crmd.*Node %s: .* state=lost .new",
-            "Pat:They_dead"    : "crmd.*Node %s: .* state=lost .new",
+            "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
+            "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
             
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",

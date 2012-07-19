@@ -61,6 +61,7 @@ void
 send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
 {
     int rc = pcmk_ok;
+    crm_node_t *peer = NULL;
 
     /* zero out the node-status & remove all LRM status info */
     xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
@@ -68,13 +69,14 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     CRM_CHECK(target != NULL, return);
     CRM_CHECK(uuid != NULL, return);
 
-    crm_xml_add(node_state, XML_ATTR_UUID, uuid);
-    crm_xml_add(node_state, XML_ATTR_UNAME, target);
-    crm_xml_add(node_state, XML_NODE_IN_CLUSTER, XML_BOOLEAN_NO);
-    crm_xml_add(node_state, XML_NODE_IS_PEER, OFFLINESTATUS);
-    crm_xml_add(node_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_DOWN);
-    crm_xml_add(node_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_DOWN);
-    crm_xml_add(node_state, XML_ATTR_ORIGIN, __FUNCTION__);
+    /* Make sure the membership and join caches are accurate */
+    peer = crm_get_peer(0, target);
+    crm_update_peer_proc(__FUNCTION__, peer, crm_proc_none, NULL);
+    crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_LOST, 0);
+    crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
+    erase_node_from_join(target);
+
+    node_state = do_update_node_cib(peer, node_update_cluster|node_update_peer|node_update_join|node_update_expected, NULL, __FUNCTION__);
 
     rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, node_state,
                                     cib_quorum_override | cib_scope_local | cib_can_create);
@@ -90,10 +92,6 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     erase_status_tag(target, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
 
     free_xml(node_state);
-
-    /* Make sure the membership cache is accurate */
-    crm_update_peer(__FUNCTION__, 0, 0, 0, -1, crm_proc_none, uuid, target, NULL, CRM_NODE_LOST);
-
     return;
 }
 
@@ -201,6 +199,10 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         update_graph(graph, action);
         trigger_graph();
         return TRUE;
+
+    } else if(safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+        crm_node_t *peer = crm_get_peer(0, on_node);
+        crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
     }
 
     cmd = create_request(task, action->xml, on_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);

@@ -322,6 +322,9 @@ crm_node_t *crm_update_peer(
     int32_t votes, uint32_t children, const char *uuid, const char *uname,
     const char *addr, const char *state);
 
+void crm_update_peer_expected(const char *source, crm_node_t *node, const char *expected);
+void crm_update_peer_state(const char *source, crm_node_t *node, const char *state, int membership);
+
 gboolean init_cman_connection(
     gboolean(*dispatch) (unsigned long long, gboolean), void (*destroy) (gpointer));
 

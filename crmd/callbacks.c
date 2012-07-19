@@ -108,54 +108,6 @@ lrm_op_callback(lrmd_event_data_t * op)
     process_lrm_event(op);
 }
 
-static void
-crmd_proc_update(crm_node_t * member, enum crm_proc_flag client)
-{
-    const char *status = NULL;
-
-    CRM_CHECK(member != NULL, return);
-    status = (member->processes & client) ? ONLINESTATUS : OFFLINESTATUS;
-    crm_notice("Status update: Client %s/%s now has status [%s] (DC=%s)",
-               member->uname, peer2text(client), status, AM_I_DC ? "true" : crm_str(fsa_our_dc));
-
-    if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
-        return;
-    } else if (fsa_state == S_STOPPING) {
-        return;
-    }
-
-    if (safe_str_eq(member->uname, fsa_our_dc) && crm_is_peer_active(member) == FALSE) {
-        /* Did the DC leave us? */
-        crm_info("Got client status callback - our DC is dead");
-        register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
-
-    } else if (AM_I_DC) {
-#if 0
-        /* Everyone */
-        populate_cib_nodes(node_update_quick|node_update_peer|node_update_join, __FUNCTION__);
-#else
-        /* Just one */
-        xmlNode *update = create_node_state(
-            member->uname, NULL, status, CRMD_JOINSTATE_DOWN, NULL, FALSE, __FUNCTION__);
-
-        fsa_cib_anon_update(
-            XML_CIB_TAG_STATUS, update, cib_scope_local | cib_quorum_override | cib_can_create);
-        free_xml(update);
-#endif
-
-        if ((member->processes & client) == 0) {
-            erase_node_from_join(member->uname);
-            check_join_state(fsa_state, __FUNCTION__);
-            fail_incompletable_actions(transition_graph, member->uuid);
-
-        } else {
-            register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
-        }
-    }
-
-    trigger_fsa(fsa_source);
-}
-
 void
 peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
@@ -183,7 +135,41 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
 
             if ((node->processes ^ old) & proc_flags) {
-                crmd_proc_update(node, proc_flags);
+                /* crmd_proc_update(node, proc_flags); */
+                const char *status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
+                crm_notice("Status update: Client %s/%s now has status [%s] (DC=%s)",
+                           node->uname, peer2text(proc_flags), status, AM_I_DC ? "true" : crm_str(fsa_our_dc));
+
+                if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+                    return;
+                } else if (fsa_state == S_STOPPING) {
+                    return;
+                }
+
+                if (safe_str_eq(node->uname, fsa_our_dc) && crm_is_peer_active(node) == FALSE) {
+                    /* Did the DC leave us? */
+                    crm_info("Got client status callback - our DC is dead");
+                    register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
+
+                } else if (AM_I_DC) {
+                    xmlNode *update = NULL;
+
+                    if ((node->processes & proc_flags) == 0) {
+                        erase_node_from_join(node->uname);
+                        check_join_state(fsa_state, __FUNCTION__);
+                        fail_incompletable_actions(transition_graph, node->uuid);
+
+                    } else {
+                        register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+                    }
+
+                    update = do_update_node_cib(node, node_update_peer, NULL, __FUNCTION__);
+                    fsa_cib_anon_update(
+                        XML_CIB_TAG_STATUS, update, cib_scope_local | cib_quorum_override | cib_can_create);
+                    free_xml(update);
+                }
+
+                trigger_fsa(fsa_source);
             }
             break;
     }

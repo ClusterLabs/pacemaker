@@ -56,6 +56,7 @@ check_dead_member(const char *uname, GHashTable * members)
         crm_err("%s didnt really leave the membership!", uname);
         return;
     }
+
     erase_node_from_join(uname);
     if (voted != NULL) {
         g_hash_table_remove(voted, uname);
@@ -100,7 +101,7 @@ post_cache_update(int instance)
     set_bit(fsa_input_register, R_MEMBERSHIP);
 
     if (AM_I_DC) {
-        populate_cib_nodes(node_update_quick|node_update_cluster|node_update_peer, __FUNCTION__);
+        populate_cib_nodes(node_update_quick|node_update_cluster|node_update_peer|node_update_expected, __FUNCTION__);
     }
 
     /*
@@ -135,7 +136,7 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
     }
 }
 
-static xmlNode *
+xmlNode *
 do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *source)
 {
     const char *value = NULL;
@@ -175,16 +176,9 @@ do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *sou
     }
 
     if(flags & node_update_expected) {
-        const char *peer_member = g_hash_table_lookup(confirmed_nodes, node->uname);
-
-        if (peer_member != NULL) {
-            value = CRMD_JOINSTATE_MEMBER;
-        } else {
-            value = CRMD_JOINSTATE_DOWN;
-        }
-        crm_xml_add(node_state, XML_NODE_EXPECTED, value);
+        crm_xml_add(node_state, XML_NODE_EXPECTED, node->expected);
     }
-    
+
     crm_xml_add(node_state, XML_ATTR_ORIGIN, source);
 
     return node_state;

@@ -43,6 +43,11 @@ extern unsigned long long crm_peer_seq;
 
 enum crm_proc_flag {
     crm_proc_none      = 0x00000001,
+    /* These values are sent over the network by the legacy plugin
+     * Therefor changing any of these values is going to break compatability
+     *
+     * So don't
+     */
 
     /* 3 messaging types */
     crm_proc_heartbeat = 0x01000000,
@@ -54,39 +59,44 @@ enum crm_proc_flag {
     crm_proc_crmd      = 0x00000200,
     crm_proc_attrd     = 0x00001000,
 
-    crm_proc_pe        = 0x00010000,
-    crm_proc_te        = 0x00020000,
-
     crm_proc_stonithd  = 0x00002000,
     crm_proc_stonith_ng= 0x00100000,
+
+    crm_proc_pe        = 0x00010000,
+    crm_proc_te        = 0x00020000,
 
     crm_proc_mgmtd     = 0x00040000,
 };
 /* *INDENT-ON* */
 
 typedef struct crm_peer_node_s {
-    uint32_t id;
-    uint64_t born;
+    uint32_t id;   /* Only used by corosync derivatives */
+    uint64_t born; /* Only used by heartbeat and the legacy plugin */
     uint64_t last_seen;
 
-    int32_t votes;
+    int32_t votes; /* Only used by the legacy plugin */
     uint32_t processes;
 
     char *uname;
-    char *state;
     char *uuid;
-    char *addr;
-    char *version;
+    char *state;
+    char *expected;
+
+    char *addr;   /* Only used by the legacy plugin */
+    char *version;/* Unused */
 } crm_node_t;
 
 static inline const char *
 peer2text(enum crm_proc_flag proc)
 {
     const char *text = "unknown";
+    if( proc == (crm_proc_cpg|crm_proc_crmd) ) {
+        return "peer";
+    }
 
     switch (proc) {
         case crm_proc_none:
-            text = "unknown";
+            text = "none";
             break;
         case crm_proc_plugin:
             text = "ais";

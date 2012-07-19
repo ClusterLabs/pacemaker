@@ -207,22 +207,27 @@ te_update_diff(const char *event, xmlNode * msg)
         for (lpc = 0; lpc < max; lpc++) {
             xmlNode *node = getXpathResult(xpathObj, lpc);
             const char *event_node = crm_element_value(node, XML_ATTR_ID);
-            const char *ccm_state = crm_element_value(node, XML_NODE_IN_CLUSTER);
-            const char *shutdown_s = crm_element_value(node, XML_CIB_ATTR_SHUTDOWN);
-            const char *crmd_state = crm_element_value(node, XML_NODE_IS_PEER);
+            const char *event_uname = crm_element_value(node, XML_ATTR_UNAME);
+            const char *is_peer = crm_element_value(node, XML_NODE_IS_PEER);
 
-            if (safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
-                || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
+            /* Don't check the value of XML_NODE_IN_CLUSTER, only pacemaker may have been shut down */
+            if (safe_str_eq(is_peer, XML_BOOLEAN_NO)) {
+                /* Pacemaker is now stopped/gone
+                 * Was it a shutdown or fencing operation?
+                 */
                 crm_action_t *shutdown = match_down_event(0, event_node, NULL);
 
                 if (shutdown != NULL) {
                     const char *task = crm_element_value(shutdown->xml, XML_LRM_ATTR_TASK);
 
-                    if (safe_str_neq(task, CRM_OP_FENCE)) {
-                        /* Wait for stonithd to tell us it is complete via tengine_stonith_callback() */
-                        crm_debug("Confirming %s op %d", task, shutdown->id);
+                    if (safe_str_eq(task, CRM_OP_FENCE)) {
+                        crm_trace("Waiting for stonithd to report the fencing of %s is complete", event_uname); /* via tengine_stonith_callback() */
+
+                    } else {
+                        crm_debug("%s of %s (op %d) is complete", task, event_uname, shutdown->id);
                         /* match->confirmed = TRUE; */
                         stop_te_timer(shutdown->timer);
+                        erase_node_from_join(event_uname);
                         update_graph(transition_graph, shutdown);
                         trigger_graph();
                     }
@@ -232,15 +237,6 @@ te_update_diff(const char *event, xmlNode * msg)
                     abort_transition(INFINITY, tg_restart, "Node failure", node);
                 }
                 fail_incompletable_actions(transition_graph, event_node);
-            }
-
-            if (shutdown_s) {
-                int shutdown = crm_parse_int(shutdown_s, NULL);
-
-                if (shutdown > 0) {
-                    crm_info("Aborting on " XML_CIB_ATTR_SHUTDOWN " attribute for %s", event_node);
-                    abort_transition(INFINITY, tg_restart, "Shutdown request", node);
-                }
             }
         }
         xmlXPathFreeObject(xpathObj);

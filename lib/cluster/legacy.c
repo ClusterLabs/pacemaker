@@ -522,8 +522,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
     }
 
     if (msg->header.id != crm_class_members) {
-        crm_update_peer(__FUNCTION__, msg->sender.id, 0, 0, 0, 0, msg->sender.uname, msg->sender.uname, NULL,
-                        NULL);
+        crm_get_peer(msg->sender.id, msg->sender.uname);
     }
 
     if (msg->header.id == crm_class_rmpeer) {
@@ -1006,7 +1005,8 @@ pcmk_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
             if (id == 0) {
                 crm_log_xml_err(msg, "Bad Update");
             } else {
-                crm_update_peer(__FUNCTION__, id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+                crm_node_t *peer = crm_get_peer(id, uname);
+                crm_update_peer_proc(__FUNCTION__, peer, children, NULL);
             }
         }
     }
@@ -1136,7 +1136,7 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
 
     if (pcmk_nodeid != 0) {
         /* Ensure the local node always exists */
-        crm_update_peer(__FUNCTION__, pcmk_nodeid, 0, 0, 0, 0, pcmk_uname, pcmk_uname, NULL, NULL);
+        crm_get_peer(pcmk_nodeid, pcmk_uname);
     }
 
     if (our_uuid != NULL) {

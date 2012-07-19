@@ -524,8 +524,8 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
     }
 
     if (msg->header.id != crm_class_members) {
-        crm_update_peer(__FUNCTION__, msg->sender.id, 0, 0, 0, 0, msg->sender.uname, msg->sender.uname, NULL,
-                        NULL);
+        /* Is this even needed anymore? */
+        crm_get_peer(msg->sender.id, msg->sender.uname);
     }
 
     if (msg->header.id == crm_class_rmpeer) {
@@ -728,7 +728,7 @@ corosync_mark_unseen_peer_dead(gpointer key, gpointer value, gpointer user_data)
 
     if (node->last_seen != *seq && node->state && crm_str_eq(CRM_NODE_LOST, node->state, TRUE) == FALSE) {
         crm_notice("Node %d/%s was not seen in the previous transition", node->id, node->uname);
-        crm_update_peer(__FUNCTION__, node->id, 0, 0, 0, 0, NULL, NULL, NULL, CRM_NODE_LOST);
+        crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
     }
 }
 
@@ -770,7 +770,6 @@ pcmk_quorum_notification(quorum_handle_t handle,
         uint32_t id = view_list[i];
         char *name = NULL;
         crm_node_t *node = NULL;
-        char *uuid = get_corosync_uuid(id, NULL);
 
         crm_debug("Member[%d] %d ", i, id);
 
@@ -778,9 +777,10 @@ pcmk_quorum_notification(quorum_handle_t handle,
         if(node->uname == NULL) {
             crm_info("Obtaining name for new node %u", id);
             name = corosync_node_name(0, id);
+            node = crm_get_peer(id, name);
         }
 
-        crm_update_peer(__FUNCTION__, id, 0, ring_id, 0, 0, uuid, name, NULL, CRM_NODE_MEMBER);
+        crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, ring_id);
         free(name);
     }
 
@@ -911,7 +911,7 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
 
     if (pcmk_nodeid != 0) {
         /* Ensure the local node always exists */
-        crm_update_peer(__FUNCTION__, pcmk_nodeid, 0, 0, 0, 0, pcmk_uname, pcmk_uname, NULL, NULL);
+        crm_get_peer(pcmk_nodeid, pcmk_uname);
     }
 
     if (our_uuid != NULL) {

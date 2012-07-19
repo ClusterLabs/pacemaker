@@ -175,48 +175,6 @@ crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, co
     crm_status_callback = dispatch;
 }
 
-static crm_node_t *
-crm_new_peer(unsigned int id, const char *uname)
-{
-    crm_node_t *node = NULL;
-    CRM_CHECK(uname != NULL || id > 0, return NULL);
-
-    crm_peer_init();
-    crm_debug("Creating entry for node %s/%u", uname, id);
-
-    node = calloc(1, sizeof(crm_node_t));
-    node->state = NULL;
-
-    if (id > 0) {
-        node->id = id;
-        crm_info("Node %s now has id: %u", crm_str(uname), id);
-        g_hash_table_replace(crm_peer_id_cache, GUINT_TO_POINTER(node->id), node);
-    }
-
-    if (uname) {
-        node->uname = strdup(uname);
-        CRM_ASSERT(node->uname != NULL);
-        crm_info("Node %u is now known as %s", id, node->uname);
-        g_hash_table_replace(crm_peer_cache, node->uname, node);
-
-        if (node->uuid == NULL) {
-            const char *uuid = get_node_uuid(id, node->uname);
-
-            if (node->uuid) {
-                crm_info("Node %u has uuid %s", id, node->uuid);
-            } else {
-                node->uuid = strdup(uuid);
-            }
-        }
-
-        if (crm_status_callback) {
-            crm_status_callback(crm_status_uname, node, NULL);
-        }
-    }
-
-    return node;
-}
-
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
 {
@@ -225,7 +183,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
     crm_peer_init();
 
-    if (uname != NULL) {
+    if (node == NULL && uname != NULL) {
         node = g_hash_table_lookup(crm_peer_cache, uname);
     }
 
@@ -237,28 +195,29 @@ crm_get_peer(unsigned int id, const char *uname)
             
             /* NOTE: Calling crm_new_peer() means the entry in 
              * crm_peer_id_cache will point to the new entity
+             *
+             * TO-DO: Replace the old uname instead?
              */
-
-            /* TODO: Replace the old uname instead? */
-            node = crm_new_peer(id, uname);
-            CRM_ASSERT(node->uname != NULL);
+            node = NULL;
         }
     }
 
     if (node == NULL) {
-        node = crm_new_peer(id, uname);
-        if(uname) {
-            const char *uuid = get_uuid(uname);
-            crm_update_peer(__FUNCTION__, 0, 0, 0, -1, 0, uuid, uname, NULL, NULL);
-        }
+        crm_debug("Creating entry for node %s/%u", uname, id);
+        node = calloc(1, sizeof(crm_node_t));
+        CRM_ASSERT(node);
     }
 
-    CRM_ASSERT(node);
+    if (id > 0 && node->id != id) {
+        node->id = id;
+        crm_info("Node %s now has id: %u", crm_str(uname), id);
+        g_hash_table_replace(crm_peer_id_cache, GUINT_TO_POINTER(node->id), node);
+    }
 
     if (node && uname && node->uname == NULL) {
         node->uname = strdup(uname);
         crm_info("Node %u is now known as %s", id, uname);
-        g_hash_table_insert(crm_peer_cache, node->uname, node);
+        g_hash_table_replace(crm_peer_cache, node->uname, node);
         if (crm_status_callback) {
             crm_status_callback(crm_status_uname, node, NULL);
         }
@@ -267,10 +226,11 @@ crm_get_peer(unsigned int id, const char *uname)
     if (node && node->uname && node->uuid == NULL) {
         const char *uuid = get_node_uuid(id, node->uname);
 
-        if (node->uuid) {
-            crm_info("Node %u has uuid %s", id, node->uuid);
-        } else if (uuid) {
+        if(uuid) {
             node->uuid = strdup(uuid);
+            crm_info("Node %u has uuid %s", id, node->uuid);
+        } else {
+            crm_err("Cannot obtain a UUID for node %d/%s", id, node->uname);
         }
     }
 
@@ -288,42 +248,17 @@ crm_node_t *
 crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
                 const char *uuid, const char *uname, const char *addr, const char *state)
 {
+#if SUPPORT_PLUGIN
     gboolean addr_changed = FALSE;
-    gboolean state_changed = FALSE;
     gboolean procs_changed = FALSE;
     gboolean votes_changed = FALSE;
-
+#endif
     crm_node_t *node = NULL;
 
     id = get_corosync_id(id, uuid);
-
-    CRM_CHECK(uname != NULL || id > 0, return NULL);
-    CRM_ASSERT(crm_peer_cache != NULL);
-    CRM_ASSERT(crm_peer_id_cache != NULL);
-
     node = crm_get_peer(id, uname);
-    if (node == NULL) {
-        crm_trace("No node found for %d/%s", id, uname);
-        node = crm_new_peer(id, uname);
 
-        CRM_LOG_ASSERT(node != NULL);
-        if (node == NULL) {
-            crm_err("Insufficient information to create node %d/%s", id, uname);
-            return NULL;
-        }
-
-        /* do it now so we don't get '(new)' everywhere */
-        node->votes = votes;
-        node->processes = children;
-        if (addr) {
-            node->addr = strdup(addr);
-        }
-    }
-
-    if (votes > 0 && node->votes != votes) {
-        votes_changed = TRUE;
-        node->votes = votes;
-    }
+    CRM_ASSERT(node != NULL);
 
     if (node->uuid == NULL) {
         if (is_openais_cluster()) {
@@ -335,35 +270,29 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
         }
     }
 
-    if (children > 0 && children != node->processes) {
-        uint32_t last = node->processes;
-
-        node->processes = children;
-        procs_changed = TRUE;
-
-        if (crm_status_callback) {
-            crm_status_callback(crm_status_processes, node, &last);
-        }
+    if (children > 0) {
+        crm_update_peer_proc(source, node, children, state);
     }
 
+    if (state != NULL) {
+        crm_update_peer_state(source, node, state, seen);
+    }
+
+#if SUPPORT_HEARTBEAT
+    if (born != 0) {
+        node->born = born;
+    }
+#endif
+
+#if SUPPORT_PLUGIN
+    /* These were only used by the plugin */
     if (born != 0) {
         node->born = born;
     }
 
-    if (state != NULL && safe_str_neq(node->state, state)) {
-        char *last = node->state;
-
-        node->state = strdup(state);
-        state_changed = TRUE;
-
-        if (crm_status_callback) {
-            crm_status_callback(crm_status_nstate, node, last);
-        }
-        free(last);
-    }
-
-    if (seen != 0 && safe_str_eq(node->state, CRM_NODE_MEMBER)) {
-        node->last_seen = seen;
+    if (votes > 0 && node->votes != votes) {
+        votes_changed = TRUE;
+        node->votes = votes;
     }
 
     if (addr != NULL) {
@@ -373,7 +302,6 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
             node->addr = strdup(addr);
         }
     }
-
     if (state_changed || addr_changed || votes_changed) {
         do_crm_log_unlikely(state_changed?LOG_NOTICE:LOG_INFO,
                    "%s: Node %s: id=%u state=%s%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
@@ -381,11 +309,8 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
                    node->addr, addr_changed ? " (new)" : "", node->votes,
                    votes_changed ? " (new)" : "", node->born, node->last_seen, node->processes,
                    procs_changed ? " (new)" : "");
-
-    } else if (procs_changed) {
-        crm_debug("%s: Node %s: id=%u seen=" U64T
-                  " proc=%.32x (new)", source, node->uname, node->id, node->last_seen, node->processes);
     }
+#endif
 
     return node;
 }
@@ -401,7 +326,13 @@ crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const 
               return);
 
     last = node->processes;
-    if (safe_str_eq(status, ONLINESTATUS)) {
+    if(status == NULL) {
+        node->processes = flag;
+        if(node->processes != last) {
+            changed = TRUE;
+        }
+
+    } else if (safe_str_eq(status, ONLINESTATUS)) {
         if ((node->processes & flag) == 0) {
             set_bit(node->processes, flag);
             changed = TRUE;
@@ -413,12 +344,61 @@ crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const 
     }
 
     if (changed) {
-        crm_info("%s: %s.%d.%s is now %s", source, node->uname, node->id, peer2text(flag), status);
+        crm_info("%s: Node %s[%d] - %s is now %s", source, node->uname, node->id, peer2text(flag), status);
         if (crm_status_callback) {
             crm_status_callback(crm_status_processes, node, &last);
         }
     } else {
-        crm_trace("%s: %s.%d.%s is unchanged %s", source, node->uname, node->id, peer2text(flag), status);
+        crm_trace("%s: Node %s[%d] - %s is unchanged (%s)", source, node->uname, node->id, peer2text(flag), status);
+    }
+}
+
+void crm_update_peer_expected(const char *source, crm_node_t *node, const char *expected) 
+{
+    char *last = NULL;
+    gboolean changed = FALSE;
+
+    CRM_CHECK(node != NULL, crm_err("%s: Could not set 'expected' to %s", source, expected); return);
+
+    last = node->expected;
+    if (expected != NULL && safe_str_neq(node->expected, expected)) {
+        node->expected = strdup(expected);
+        changed = TRUE;
+    }
+
+    if (changed) {
+        crm_info("%s: Node %s[%d] - expected state is now %s", source, node->uname, node->id, expected);
+        free(last);
+    } else {
+        crm_trace("%s: Node %s[%d] - expected state is unchanged (%s)", source, node->uname, node->id, expected);
+    }
+}
+
+void crm_update_peer_state(const char *source, crm_node_t *node, const char *state, int membership) 
+{
+    char *last = NULL;
+    gboolean changed = FALSE;
+
+    CRM_CHECK(node != NULL, crm_err("%s: Could not set 'state' to %s", source, state); return);
+
+    last = node->state;
+    if (state != NULL && safe_str_neq(node->state, state)) {
+        node->state = strdup(state);
+        changed = TRUE;
+    }
+
+    if (membership != 0 && safe_str_eq(node->state, CRM_NODE_MEMBER)) {
+        node->last_seen = membership;
+    }
+
+    if (changed) {
+        crm_notice("%s: Node %s[%d] - state is now %s", source, node->uname, node->id, state);
+        if (crm_status_callback) {
+            crm_status_callback(crm_status_nstate, node, last);
+        }
+        free(last);
+    } else {
+        crm_trace("%s: Node %s[%d] - state is unchanged (%s)", source, node->uname, node->id, state);
     }
 }
 

@@ -210,6 +210,8 @@ do_dc_join_offer_one(long long action,
     }
 
     member = crm_get_peer(0, join_to);
+    crm_update_peer_expected(__FUNCTION__, member, CRMD_JOINSTATE_PENDING);
+
     if (crm_is_peer_active(member) == FALSE) {
         crm_err("%s is not a fully active member of our partition", join_to);
         return;
@@ -347,6 +349,7 @@ do_dc_join_filter_offer(long long action,
 
     /* add them to our list of CRMD_JOINSTATE_MEMBER nodes */
     g_hash_table_insert(integrated_nodes, strdup(join_from), strdup(ack_nack));
+    crm_update_peer_expected(__FUNCTION__, join_node, ack_nack);
 
     crm_debug("%u nodes have been integrated into join-%d",
               g_hash_table_size(integrated_nodes), join_id);
@@ -567,6 +570,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
          *
          * All other NACKs (due to versions etc) should still be processed
          */
+        crm_update_peer_expected(__FUNCTION__, join_node, CRMD_JOINSTATE_PENDING);
         return TRUE;
     }
 
@@ -582,11 +586,14 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         crm_xml_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
         g_hash_table_insert(finalized_nodes,
                             strdup(join_to), strdup(CRMD_JOINSTATE_MEMBER));
+        crm_update_peer_expected(__FUNCTION__, join_node, CRMD_JOINSTATE_MEMBER);
+
     } else {
         crm_warn("join-%d: NACK'ing join request from %s, state %s",
                  current_join_id, join_to, join_state);
 
         crm_xml_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_FALSE);
+        crm_update_peer_expected(__FUNCTION__, join_node, CRMD_JOINSTATE_NACK);
     }
 
     send_cluster_message(join_to, crm_msg_crmd, acknak, TRUE);
