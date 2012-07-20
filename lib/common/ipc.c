@@ -182,12 +182,14 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
 {
     int rc;
     int lpc = 0;
-    int retries = 10;
+    int retries = 40;
+    int level = LOG_CRIT;
     struct iovec iov[2];
     static uint32_t id = 0;
     const char *type = "Response";
     struct qb_ipc_response_header header;
     char *buffer = dump_xml_unformatted(message);
+    struct timespec delay = { 0, 250000000 }; /* 250ms */
 
     iov[0].iov_len = sizeof(struct qb_ipc_response_header);
     iov[0].iov_base = &header;
@@ -199,16 +201,22 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
     header.size = iov[0].iov_len + iov[1].iov_len;
 
     if(flags & ipcs_send_error) {
-        retries = 5;
+        retries = 20;
+        level = LOG_ERR;
 
     } else if(flags & ipcs_send_info) {
-        retries = 1;
+        retries = 10;
+        level = LOG_INFO;
     }
 
     while(lpc < retries) {
         if(flags & ipcs_send_event) {
-            rc = qb_ipcs_event_sendv(c, iov, 2);
             type = "Event";
+            rc = qb_ipcs_event_sendv(c, iov, 2);
+            if(rc == -EPIPE) {
+                crm_trace("Client %p disconnected", c);
+                level = LOG_INFO;
+            }
             
         } else {
             rc = qb_ipcs_response_sendv(c, iov, 2);
@@ -221,15 +229,16 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
         lpc++;
         crm_debug("Attempting resend %d of %s %d (%d bytes) to %p[%d]: %.120s",
                   lpc, type, header.id, header.size, c, crm_ipcs_client_pid(c), buffer);
-        sleep(1);
-    } 
+        nanosleep(&delay, NULL);
+    }
 
     if(rc < header.size) {
-        do_crm_log((flags & ipcs_send_error)?LOG_ERR:LOG_INFO,
+        do_crm_log(level,
                    "%s %d failed, size=%d, to=%p[%d], rc=%d: %.120s",
                    type, header.id, header.size, c, crm_ipcs_client_pid(c), rc, buffer);
     } else {
-        crm_trace("%s %d sent, %d bytes to %p: %.120s", type, header.id, rc, c, buffer);
+        crm_trace("%s %d sent, %d bytes to %p[%d]: %.120s", type, header.id, rc,
+                  c, crm_ipcs_client_pid(c), buffer);
     }
     free(buffer);
     return rc;

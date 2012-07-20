@@ -502,6 +502,8 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
     gboolean keep = TRUE;
     mainloop_io_t *client = data;
 
+    crm_trace("Condition: %d %d", condition, G_IO_IN);
+
     if(condition & G_IO_IN) {
         if(client->ipc) {
             long rc = crm_ipc_read(client->ipc);
