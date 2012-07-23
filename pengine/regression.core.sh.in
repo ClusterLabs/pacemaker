@@ -283,7 +283,7 @@ function do_test {
 	echo "" >> $failed
 	did_fail=1
     fi
-    rm -f $output  $score_output
+    rm -f $output $score_output $summary_output
     num_failed=`expr $num_failed + $did_fail`
 }
 
