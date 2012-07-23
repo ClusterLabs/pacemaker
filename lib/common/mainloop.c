@@ -421,7 +421,9 @@ gio_poll_dispatch_del(int32_t fd)
     crm_trace("Looking for fd=%d", fd);
     if (qb_array_index(gio_map, fd, (void**)&adaptor) == 0) {
         crm_trace("Marking adaptor %p unused", adaptor);
-        g_io_channel_unref(adaptor->channel);
+        if(adaptor->channel) {
+            g_io_channel_unref(adaptor->channel);
+        }
         adaptor->is_used = QB_FALSE;
     }
     return 0;
@@ -478,7 +480,9 @@ qb_ipcs_service_t *mainloop_add_ipc_server(
 
 void mainloop_del_ipc_server(qb_ipcs_service_t *server) 
 {
-    qb_ipcs_destroy(server);
+    if(server) {
+        qb_ipcs_destroy(server);
+    }
 }
 
 struct mainloop_io_s
