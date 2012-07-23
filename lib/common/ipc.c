@@ -266,6 +266,7 @@ struct crm_ipc_s
         
         int buf_size;
         int msg_size;
+        int need_reply;
         char *buffer;
         char *name;
 
@@ -467,12 +468,58 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
     header.id = id++; /* We don't really use it, but doesn't hurt to set one */
     header.size = iov[0].iov_len + iov[1].iov_len;
 
+    if(client->need_reply) {
+        crm_trace("Trying again to obtain pending reply");
+        rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 300);
+        if(rc < 0) {
+            crm_err("Sending to %s disabled until pending reply is recieved: %.120s", client->name, buffer);
+            free(buffer);
+            return -EREMOTEIO;
+
+        } else {
+            crm_notice("Lost reply from %s finally arrived, sending re-enabled", client->name);
+            client->need_reply = FALSE;
+        }
+    }
+
     if(ms_timeout == 0) {
         ms_timeout = 5000;
     }
-    
-    crm_trace("Waiting for reply to %u bytes: %.200s...", header.size, buffer);
-    rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer, client->buf_size, ms_timeout);
+
+    if(ms_timeout > 0) {
+        time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
+        rc = qb_ipcc_sendv(client->ipc, iov, 2);
+
+        if(rc > 0) {
+            crm_trace("Waiting for reply %d from %s to %u bytes: %.200s...", header.id, client->name, header.size, buffer);
+
+            do {
+                rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 300);
+                if(rc > 0) {
+                    break;
+                }
+
+            } while(time(NULL) < timeout);
+
+            if(rc < 0) {
+                /* No reply, for now, disable sending
+                 *
+                 * The alternative is to close the connection since we don't know
+                 * how to detect and discard out-of-sequence replies
+                 *
+                 * TODO - implement the above
+                 */
+                client->need_reply = TRUE;
+            }
+
+        } else {
+            crm_trace("Could not send %u bytes to %s: %.200s...", header.size, client->name, buffer);
+        }
+
+    } else {
+        crm_trace("Waiting for reply to %u bytes: %.200s...", header.size, buffer);
+        rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer, client->buf_size, ms_timeout);
+    }
 
     if(rc > 0) {
         struct qb_ipc_response_header *hdr = (struct qb_ipc_response_header *)client->buffer;
