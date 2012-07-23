@@ -615,8 +615,8 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
             crm_warn("Forcing %s away from %s after %d failures (max=%d)",
                      failed->id, node->details->uname, fail_count, rsc->migration_threshold);
         } else {
-            crm_notice("%s can fail %d more times on %s before being forced off",
-                       failed->id, rsc->migration_threshold - fail_count, node->details->uname);
+            crm_info("%s can fail %d more times on %s before being forced off",
+                     failed->id, rsc->migration_threshold - fail_count, node->details->uname);
         }
     }
 }
