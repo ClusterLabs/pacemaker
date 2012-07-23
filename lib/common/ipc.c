@@ -213,7 +213,7 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
         if(flags & ipcs_send_event) {
             type = "Event";
             rc = qb_ipcs_event_sendv(c, iov, 2);
-            if(rc == -EPIPE) {
+            if(rc == -EPIPE || rc == -ENOTCONN) {
                 crm_trace("Client %p disconnected", c);
                 level = LOG_INFO;
             }
