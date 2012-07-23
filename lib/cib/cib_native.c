@@ -49,7 +49,7 @@ int cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host
 int cib_native_free(cib_t * cib);
 int cib_native_signoff(cib_t * cib);
 int cib_native_signon(cib_t * cib, const char *name, enum cib_conn_type type);
-int cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, int *async_fd, int *unused);
+int cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, int *event_fd);
 
 bool cib_native_dispatch(cib_t * cib);
 
@@ -86,7 +86,7 @@ cib_native_new(void)
 int
 cib_native_signon(cib_t * cib, const char *name, enum cib_conn_type type)
 {
-    return cib_native_signon_raw(cib, name, type, NULL, NULL);
+    return cib_native_signon_raw(cib, name, type, NULL);
 }
 
 static int
@@ -178,7 +178,7 @@ cib_native_destroy(void *userdata)
 }
 
 int
-cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, int *async_fd, int *unused)
+cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, int *async_fd)
 {
     int rc = pcmk_ok;
     const char *channel = NULL;
