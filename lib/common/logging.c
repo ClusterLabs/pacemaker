@@ -474,12 +474,16 @@ crm_is_callsite_active(struct qb_log_callsite *cs, int level)
 void
 crm_update_callsites(void)
 {
-    crm_info("Enabling callsites based on priority=%d, files=%s, functions=%s, formats=%s, tags=%s",
-             crm_log_level, 
-             getenv("PCMK_trace_files"),
-             getenv("PCMK_trace_functions"),
-             getenv("PCMK_trace_formats"),
-             getenv("PCMK_trace_tags"));
+    gboolean log = TRUE;
+    if(log) {
+        log = FALSE;
+        crm_info("Enabling callsites based on priority=%d, files=%s, functions=%s, formats=%s, tags=%s",
+                 crm_log_level, 
+                 getenv("PCMK_trace_files"),
+                 getenv("PCMK_trace_functions"),
+                 getenv("PCMK_trace_formats"),
+                 getenv("PCMK_trace_tags"));
+    }
     qb_log_filter_fn_set(crm_log_filter);
 }
 
