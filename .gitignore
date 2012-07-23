@@ -133,6 +133,7 @@ doc/Pacemaker_Explained/en-US/Ch-Basics.xml
 doc/Pacemaker_Explained/en-US/Ch-Options.xml
 lib/gnu/libgnu.a
 lib/gnu/stdalign.h
+*.coverity
 
 #Other 
 mock
