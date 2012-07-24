@@ -731,7 +731,9 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
         rc = update_attr_delegate(cib_conn, cib_none, hash_entry->section,
                                   attrd_uuid, NULL, hash_entry->set, hash_entry->uuid,
                                   hash_entry->id, hash_entry->value, FALSE, user_name);
-        if (safe_str_neq(hash_entry->value, hash_entry->stored_value) || rc < 0) {
+        if (rc < 0) {
+            crm_notice("Sent update %s=%s failed: %s", hash_entry->id, hash_entry->value, pcmk_strerror(rc));
+        } if (safe_str_neq(hash_entry->value, hash_entry->stored_value) || rc < 0) {
             crm_notice("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         } else {
             crm_trace("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
