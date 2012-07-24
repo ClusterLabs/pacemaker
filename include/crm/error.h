@@ -20,6 +20,12 @@
 #  include <crm_config.h>
 #  include <assert.h>
 
+/*
+  System error codes
+  - /usr/include/asm-generic/errno.h
+  - /usr/include/asm-generic/errno-base.h
+*/
+
 #  define CRM_ASSERT(expr) do {						\
 	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
@@ -27,7 +33,7 @@
     } while(0)
 
 #  define pcmk_ok                       0
-#  define PCMK_ERROR_OFFSET             900  /* Replacements on non-linux systems */ 
+#  define PCMK_ERROR_OFFSET             900  /* Replacements on non-linux systems, see include/portability.h */ 
 #  define PCMK_CUSTOM_OFFSET            1000 /* Purely custom codes */
 #  define pcmk_err_generic              1001
 #  define pcmk_err_no_quorum            1002
