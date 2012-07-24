@@ -79,7 +79,7 @@ class crm_ais(crm_lha):
                 r"Faking parameter digest creation",
                 r"Parameters to .* action changed:",
                 r"Parameters to .* changed",
-                r"Child process .* terminated with signal 11",
+                r"Child process .* terminated with signal",
                 r"Executing .* fencing operation",
                 r"LogActions: Recover",
                 r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
@@ -108,6 +108,7 @@ class crm_ais(crm_lha):
                 "async_notify: strange, client not found",
                 "Parse error: Ignoring unknown option .*nodename",
                 "error: log_operation: Operation 'reboot' .* with device 'FencingFail' returned: -2",
+                r"Child process .* terminated with signal 9",
                 ]
         return []
 
