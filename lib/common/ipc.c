@@ -461,17 +461,13 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
     struct iovec iov[2];
     static uint32_t id = 0;
     struct qb_ipc_request_header header;
-    char *buffer = dump_xml_unformatted(message);
+    char *buffer = NULL;
 
-    iov[0].iov_len = sizeof(struct qb_ipc_request_header);
-    iov[0].iov_base = &header;
-    iov[1].iov_len = 1 + strlen(buffer);
-    iov[1].iov_base = buffer;
+    if(crm_ipc_connected(client) == FALSE) {
+        crm_notice("Connection to %s closed", client->name);
+        return ENOTCONN;
 
-    header.id = id++; /* We don't really use it, but doesn't hurt to set one */
-    header.size = iov[0].iov_len + iov[1].iov_len;
-
-    if(client->need_reply) {
+    } else if(client->need_reply) {
         crm_trace("Trying again to obtain pending reply");
         rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 300);
         if(rc < 0) {
@@ -485,6 +481,15 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
         }
     }
 
+    buffer = dump_xml_unformatted(message);
+    iov[0].iov_len = sizeof(struct qb_ipc_request_header);
+    iov[0].iov_base = &header;
+    iov[1].iov_len = 1 + strlen(buffer);
+    iov[1].iov_base = buffer;
+
+    header.id = id++; /* We don't really use it, but doesn't hurt to set one */
+    header.size = iov[0].iov_len + iov[1].iov_len;
+
     if(ms_timeout == 0) {
         ms_timeout = 5000;
     }
@@ -497,8 +502,8 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
             crm_trace("Waiting for reply %d from %s to %u bytes: %.200s...", header.id, client->name, header.size, buffer);
 
             do {
-                rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 300);
-                if(rc > 0) {
+                rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 500);
+                if(rc > 0 || crm_ipc_connected(client) == FALSE) {
                     break;
                 }
 
@@ -526,21 +531,21 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
 
     if(rc > 0) {
         struct qb_ipc_response_header *hdr = (struct qb_ipc_response_header *)client->buffer;
-        crm_trace("Recieved response %d, size=%d, rc=%d, text: %.200s", hdr->id, hdr->size, rc, crm_ipc_buffer(client));
+        crm_trace("Recieved response %d, size=%d, rc=%ld, text: %.200s", hdr->id, hdr->size, rc, crm_ipc_buffer(client));
 
         if(reply) {
             *reply = string2xml(crm_ipc_buffer(client));
         }
 
     } else {
-        crm_trace("Response not recieved: rc=%d, errno=%d", rc, errno);
+        crm_trace("Response not recieved: rc=%ld, errno=%d", rc, errno);
     }
 
     if(crm_ipc_connected(client) == FALSE) {
-        crm_notice("Connection to %s closed: %d", client->name, rc);
+        crm_notice("Connection to %s closed: %s (%ld)", client->name, pcmk_strerror(rc), rc);
 
     } else if(rc <= 0) {
-        crm_perror(LOG_ERR, "Request to %s failed: %ld", client->name, rc);
+        crm_perror(LOG_ERR, "Request to %s failed: %s (%ld)", client->name, pcmk_strerror(rc), rc);
         crm_info("Request was %.120s", buffer);
     }
 
