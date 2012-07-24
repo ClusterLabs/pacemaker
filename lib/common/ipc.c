@@ -298,7 +298,6 @@ pick_ipc_buffer(int max)
     return max;
 }
 
-
 crm_ipc_t *
 crm_ipc_new(const char *name, size_t max_size) 
 {
@@ -434,7 +433,7 @@ crm_ipc_read(crm_ipc_t *client)
         struct qb_ipc_response_header *header = (struct qb_ipc_response_header *)client->buffer;
         client->buffer[client->msg_size] = 0;
 
-        crm_trace("Recieved response %d, size=%d, rc=%d, text: %.200s", header->id, header->size, client->msg_size, client->buffer+sizeof(struct qb_ipc_response_header));
+        crm_trace("Recieved event %d, size=%d, rc=%d, text: %.200s", header->id, header->size, client->msg_size, client->buffer+sizeof(struct qb_ipc_response_header));
     }
 
     if(crm_ipc_connected(client) == FALSE || client->msg_size == -ENOTCONN) {
@@ -467,14 +466,16 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
     char *buffer = NULL;
 
     if(crm_ipc_connected(client) == FALSE) {
+        /* Don't even bother */
         crm_notice("Connection to %s closed", client->name);
         return ENOTCONN;
+    }
 
-    } else if(client->need_reply) {
-        crm_trace("Trying again to obtain pending reply");
+    if(client->need_reply) {
+        crm_trace("Trying again to obtain pending reply from %s", client->name);
         rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 300);
         if(rc < 0) {
-            crm_err("Sending to %s disabled until pending reply is recieved", client->name);
+            crm_err("Sending to %s is disabled until pending reply is recieved", client->name);
             free(buffer);
             return -EREMOTEIO;
 
@@ -502,7 +503,8 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
         rc = qb_ipcc_sendv(client->ipc, iov, 2);
 
         if(rc > 0) {
-            crm_trace("Waiting for reply %d from %s to %u bytes: %.200s...", header.id, client->name, header.size, buffer);
+            crm_trace("Waiting for reply %d from %s to %u bytes: %.200s...",
+                      header.id, client->name, header.size, buffer);
 
             do {
                 rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 500);
