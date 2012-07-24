@@ -510,19 +510,24 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
 
     if(condition & G_IO_IN) {
         if(client->ipc) {
-            long rc = crm_ipc_read(client->ipc);
-            crm_trace("New message from %s[%p] = %d", client->name, client, rc);
+            long rc = 0;
+            int max = 10;
+            do {
+                rc = crm_ipc_read(client->ipc);
+                crm_trace("New message from %s[%p] = %d", client->name, client, rc);
 
-            if(rc <= 0) {
-                crm_perror(LOG_TRACE, "Message acquisition failed: %ld", rc);
-        
-            } else if(client->dispatch_fn_ipc) {
-                const char *buffer = crm_ipc_buffer(client->ipc);
-                if(client->dispatch_fn_ipc(buffer, rc, client->userdata) < 0) {
-                    crm_trace("Connection to %s no longer required", client->name);
-                    keep = FALSE;
+                if(rc <= 0) {
+                    crm_perror(LOG_TRACE, "Message acquisition failed: %ld", rc);
+
+                } else if(client->dispatch_fn_ipc) {
+                    const char *buffer = crm_ipc_buffer(client->ipc);
+                    if(client->dispatch_fn_ipc(buffer, rc, client->userdata) < 0) {
+                        crm_trace("Connection to %s no longer required", client->name);
+                        keep = FALSE;
+                    }
                 }
-            }
+
+            } while(keep && rc > 0 && --max > 0);
 
         } else {
             crm_trace("New message from %s[%p]", client->name, client);

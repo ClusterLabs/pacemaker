@@ -428,7 +428,7 @@ crm_ipc_read(crm_ipc_t *client)
     crm_trace("Message recieved on %s IPC connection", client->name);
 
     client->buffer[0] = 0;
-    client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer, client->buf_size-1, -1);
+    client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer, client->buf_size-1, 100);
     if(client->msg_size >= 0) {
         struct qb_ipc_response_header *header = (struct qb_ipc_response_header *)client->buffer;
         client->buffer[client->msg_size] = 0;
