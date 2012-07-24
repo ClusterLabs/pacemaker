@@ -183,7 +183,7 @@ attrd_ipc_destroy(qb_ipcs_connection_t *c)
     crm_trace("Destroying %p", c);
     free(client->user);
     free(client);
-    crm_trace("Freed the cib client");
+    crm_trace("Free'd the attrd client");
 
     return;
 }
@@ -240,11 +240,8 @@ stop_attrd_timer(attr_hash_entry_t * hash_entry)
 static void
 log_hash_entry(int level, attr_hash_entry_t * entry, const char *text)
 {
-    do_crm_log(level, "%s", text);
-    do_crm_log(level, "Set:     %s", entry->section);
-    do_crm_log(level, "Name:    %s", entry->id);
-    do_crm_log(level, "Value:   %s", entry->value);
-    do_crm_log(level, "Timeout: %s", entry->dampen);
+    do_crm_log(level, "%s: Set: %s, Name: %s, Value: %s, Timeout: %s",
+               text, entry->section, entry->id, entry->value, entry->dampen);
 }
 
 static attr_hash_entry_t *
@@ -439,10 +436,24 @@ update_for_hash_entry(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
+local_update_for_hash_entry(gpointer key, gpointer value, gpointer user_data)
+{
+    attr_hash_entry_t *entry = value;
+
+    if (entry->timer_id == 0) {
+        crm_trace("Performing local-only update after replace for %s", entry->id);
+        attrd_perform_update(entry);
+ /* } else {
+  *     just let the timer expire and attrd_timer_callback() will do the right thing
+  */
+    }
+}
+
+static void
 do_cib_replaced(const char *event, xmlNode * msg)
 {
-    crm_info("Sending full refresh");
-    g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
+    crm_info("Updating all attributes after %s event", event);
+    g_hash_table_foreach(attr_hash, local_update_for_hash_entry, NULL);
 }
 
 static gboolean
@@ -502,8 +513,8 @@ cib_connect(void *user_data)
 
     cib_conn = local_conn;
 
-    crm_info("Sending full refresh");
-    g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
+    crm_info("Sending full refresh now that we're connected to the cib");
+    g_hash_table_foreach(attr_hash, local_update_for_hash_entry, NULL);
 
     return FALSE;
 }
