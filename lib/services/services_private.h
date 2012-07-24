@@ -31,7 +31,12 @@ struct svc_action_private_s {
 
     int            stdout_fd;
     mainloop_io_t *stdout_gsource;
+
+    gint ref;
 };
+
+void services_action_ref(svc_action_t *op);
+void services_action_unref(svc_action_t *op);
 
 GList *
 services_os_get_directory_list(const char *root, gboolean files);

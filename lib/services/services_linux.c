@@ -128,6 +128,8 @@ pipe_out_done(gpointer user_data)
         close(op->opaque->stdout_fd);
     }
     op->opaque->stdout_fd = -1;
+
+    services_action_unref(op);
 }
 
 static void
@@ -139,6 +141,8 @@ pipe_err_done(gpointer user_data)
         close(op->opaque->stderr_fd);
     }
     op->opaque->stderr_fd = -1;
+
+    services_action_unref(op);
 }
 
 static struct mainloop_fd_callbacks stdout_callbacks = {
@@ -447,15 +451,21 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
         mainloop_add_child(op->pid, op->timeout, op->id, op,
                            operation_finished);
 
-        op->opaque->stdout_gsource = mainloop_add_fd(op->id,
-            op->opaque->stdout_fd,
-            op,
-            &stdout_callbacks);
+        if (op->opaque->stdout_fd > 0) {
+            services_action_ref(op);
+            op->opaque->stdout_gsource = mainloop_add_fd(op->id,
+                op->opaque->stdout_fd,
+                op,
+                &stdout_callbacks);
+        }
 
-        op->opaque->stderr_gsource = mainloop_add_fd(op->id,
-            op->opaque->stderr_fd,
-            op,
-            &stderr_callbacks);
+        if (op->opaque->stderr_fd > 0) {
+            services_action_ref(op);
+            op->opaque->stderr_gsource = mainloop_add_fd(op->id,
+                op->opaque->stderr_fd,
+                op,
+                &stderr_callbacks);
+        }
     }
 
     return TRUE;

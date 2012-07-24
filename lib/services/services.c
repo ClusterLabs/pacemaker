@@ -49,6 +49,8 @@
 static int operations = 0;
 GHashTable *recurring_actions = NULL;
 
+static svc_action_t *services_action_alloc(void);
+
 svc_action_t *
 services_action_create(const char *name, const char *action, int interval,
                        int timeout)
@@ -100,8 +102,7 @@ svc_action_t *resources_action_create(
      * Sanity checks passed, proceed!
      */
 
-    op = calloc(1, sizeof(svc_action_t));
-    op->opaque = calloc(1, sizeof(svc_action_private_t));
+    op = services_action_alloc();
     op->rsc = strdup(name);
     op->action = strdup(action);
     op->interval = interval;
@@ -215,8 +216,7 @@ services_action_create_generic(const char *exec, const char *args[])
     svc_action_t *op;
     unsigned int cur_arg;
 
-    op = calloc(1, sizeof(*op));
-    op->opaque = calloc(1, sizeof(svc_action_private_t));
+    op = services_action_alloc();
 
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
@@ -233,8 +233,8 @@ services_action_create_generic(const char *exec, const char *args[])
     return op;
 }
 
-void
-services_action_free(svc_action_t *op)
+static void
+services_action_free_internal(svc_action_t *op)
 {
     unsigned int i;
 
@@ -250,6 +250,11 @@ services_action_free(svc_action_t *op)
     if (op->opaque->stdout_gsource) {
         mainloop_del_fd(op->opaque->stdout_gsource);
         op->opaque->stdout_gsource = NULL;
+    }
+
+    if (op->opaque->repeat_timer) {
+        g_source_remove(op->opaque->repeat_timer);
+        op->opaque->repeat_timer = 0;
     }
 
     free(op->id);
@@ -274,7 +279,38 @@ services_action_free(svc_action_t *op)
         op->params = NULL;
     }
 
+    free(op->opaque);
     free(op);
+}
+
+static svc_action_t *
+services_action_alloc(void)
+{
+    svc_action_t *op;
+
+    op = calloc(1, sizeof(*op));
+    op->opaque = calloc(1, sizeof(svc_action_private_t));
+    services_action_ref(op);
+
+    return op;
+}
+
+void
+services_action_free(svc_action_t *op)
+{
+    services_action_unref(op);
+}
+
+void services_action_ref(svc_action_t *op)
+{
+    g_atomic_int_inc(&op->opaque->ref);
+}
+
+void services_action_unref(svc_action_t *op)
+{
+    if (g_atomic_int_dec_and_test(&op->opaque->ref)) {
+        services_action_free_internal(op);
+    }
 }
 
 gboolean
@@ -292,6 +328,7 @@ cancel_recurring_action(svc_action_t *op)
 
     if (op->opaque->repeat_timer) {
         g_source_remove(op->opaque->repeat_timer);
+        op->opaque->repeat_timer = 0;
     }
 
     return TRUE;
