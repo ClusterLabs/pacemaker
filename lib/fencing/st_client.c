@@ -1225,7 +1225,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
     } else {
         /* With mainloop */
-        native->source = mainloop_add_ipc_client("stonith-ng", 0, stonith, &st_callbacks);
+        native->source = mainloop_add_ipc_client("stonith-ng", G_PRIORITY_MEDIUM, 0, stonith, &st_callbacks);
         native->ipc = mainloop_get_ipc_client(native->source);
     }
     

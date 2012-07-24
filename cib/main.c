@@ -351,7 +351,7 @@ ccm_connect(void)
     }
 
     crm_debug("CCM Activation passed... all set to go!");
-    mainloop_add_fd("heartbeat-ccm", cib_ev_fd, cib_ev_token, &ccm_fd_callbacks);
+    mainloop_add_fd("heartbeat-ccm", G_PRIORITY_MEDIUM, cib_ev_fd, cib_ev_token, &ccm_fd_callbacks);
 
     return TRUE;
 }

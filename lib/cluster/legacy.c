@@ -753,7 +753,7 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
 
     fd = cman_get_fd(pcmk_cman_handle);
 
-    mainloop_add_fd("cman", fd, dispatch, &cman_fd_callbacks);
+    mainloop_add_fd("cman", G_PRIORITY_MEDIUM, fd, dispatch, &cman_fd_callbacks);
 
   cman_bail:
     if (rc < 0) {
@@ -892,7 +892,7 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
         goto bail;
     }
 
-    mainloop_add_fd("corosync-cpg", fd, dispatch, &cpg_fd_callbacks);
+    mainloop_add_fd("corosync-cpg", G_PRIORITY_MEDIUM, fd, dispatch, &cpg_fd_callbacks);
 
   bail:
     if (rc != CS_OK) {
@@ -961,7 +961,7 @@ init_ais_connection_classic(gboolean(*dispatch) (AIS_Message *, char *, int),
         destroy = ais_destroy;
     }
 
-    mainloop_add_fd("corosync-plugin", ais_fd_async, dispatch, &ais_fd_callbacks);
+    mainloop_add_fd("corosync-plugin", G_PRIORITY_MEDIUM, ais_fd_async, dispatch, &ais_fd_callbacks);
     crm_info("AIS connection established");
 
     pid = getpid();

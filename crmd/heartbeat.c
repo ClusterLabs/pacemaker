@@ -148,7 +148,7 @@ do_ccm_control(long long action,
             }
 
             crm_info("CCM connection established... waiting for first callback");
-            mainloop_add_fd("heartbeat-ccm", fsa_ev_fd, fsa_ev_token, &ccm_fd_callbacks);
+            mainloop_add_fd("heartbeat-ccm", G_PRIORITY_HIGH, fsa_ev_fd, fsa_ev_token, &ccm_fd_callbacks);
 
         }
     }

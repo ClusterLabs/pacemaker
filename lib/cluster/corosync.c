@@ -694,7 +694,7 @@ init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
         goto bail;
     }
 
-    mainloop_add_fd("corosync-cpg", fd, dispatch, &cpg_fd_callbacks);
+    mainloop_add_fd("corosync-cpg", G_PRIORITY_MEDIUM, fd, dispatch, &cpg_fd_callbacks);
 
   bail:
     if (rc != CS_OK) {
@@ -842,7 +842,7 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
         goto bail;
     }
 
-    mainloop_add_fd("quorum", fd, dispatch, &quorum_fd_callbacks);
+    mainloop_add_fd("quorum", G_PRIORITY_HIGH, fd, dispatch, &quorum_fd_callbacks);
 
     corosync_initialize_nodelist(NULL, FALSE, NULL);
 

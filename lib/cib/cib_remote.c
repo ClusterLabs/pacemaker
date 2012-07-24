@@ -316,7 +316,7 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection)
     }
 
     connection->socket = sock;
-    connection->source = mainloop_add_fd("cib-remote", connection->socket, cib, &cib_fd_callbacks);
+    connection->source = mainloop_add_fd("cib-remote", G_PRIORITY_HIGH, connection->socket, cib, &cib_fd_callbacks);
     return rc;
 }
 

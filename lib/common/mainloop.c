@@ -572,14 +572,14 @@ mainloop_gio_destroy(gpointer c)
 
 mainloop_io_t *
 mainloop_add_ipc_client(
-    const char *name, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks) 
+    const char *name, int priority, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks) 
 {
     mainloop_io_t *client = NULL;
     crm_ipc_t *conn = crm_ipc_new(name, max_size);
 
     if(conn && crm_ipc_connect(conn)) {
         int32_t fd = crm_ipc_get_fd(conn);
-        client = mainloop_add_fd(name, fd, userdata, NULL);
+        client = mainloop_add_fd(name, priority, fd, userdata, NULL);
         client->ipc = conn;
         client->destroy_fn = callbacks->destroy;
         client->dispatch_fn_ipc = callbacks->dispatch;
@@ -611,7 +611,7 @@ mainloop_get_ipc_client(mainloop_io_t *client)
 
 mainloop_io_t *
 mainloop_add_fd(
-    const char *name, int fd, void *userdata, struct mainloop_fd_callbacks *callbacks) 
+    const char *name, int priority, int fd, void *userdata, struct mainloop_fd_callbacks *callbacks) 
 {
     mainloop_io_t *client = NULL;
     if(fd > 0) {
@@ -626,7 +626,7 @@ mainloop_add_fd(
 
         client->channel = g_io_channel_unix_new(fd);
         client->source = g_io_add_watch_full(
-            client->channel, G_PRIORITY_DEFAULT, (G_IO_IN|G_IO_HUP|G_IO_NVAL|G_IO_ERR),
+            client->channel, priority, (G_IO_IN|G_IO_HUP|G_IO_NVAL|G_IO_ERR),
             mainloop_gio_callback, client, mainloop_gio_destroy);
         crm_trace("Added connection %d for %s[%p].%d", client->source, client->name, client, fd);
     }

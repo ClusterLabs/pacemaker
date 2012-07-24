@@ -607,7 +607,7 @@ try_corosync(int command, enum cluster_type_e stack)
         case 'p':
             /* Go to pacemakerd */ 
             amainloop = g_main_new(FALSE);
-            ipc = mainloop_add_ipc_client(CRM_SYSTEM_MCP, 0, NULL, &node_callbacks);
+            ipc = mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0, NULL, &node_callbacks);
             if(ipc != NULL) {
                 xmlNode *poke = create_xml_node(NULL, "poke");
                 crm_ipc_send(mainloop_get_ipc_client(ipc), poke, NULL, 0);

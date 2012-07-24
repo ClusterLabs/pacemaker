@@ -448,11 +448,13 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
                            operation_finished);
 
         op->opaque->stdout_gsource = mainloop_add_fd(op->id,
+            G_PRIORITY_LOW,
             op->opaque->stdout_fd,
             op,
             &stdout_callbacks);
 
         op->opaque->stderr_gsource = mainloop_add_fd(op->id,
+            G_PRIORITY_LOW,
             op->opaque->stderr_fd,
             op,
             &stderr_callbacks);

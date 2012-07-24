@@ -146,7 +146,7 @@ cluster_connect_cfg(uint32_t * nodeid)
     }
 
     crm_debug("Our nodeid: %d", *nodeid);
-    mainloop_add_fd("corosync-cfg", fd, &cfg_handle, &cfg_fd_callbacks);
+    mainloop_add_fd("corosync-cfg", G_PRIORITY_DEFAULT, fd, &cfg_handle, &cfg_fd_callbacks);
 
     return TRUE;
 
@@ -266,7 +266,7 @@ cluster_connect_cpg(void)
         goto bail;
     }
 
-    mainloop_add_fd("corosync-cpg", fd, &cpg_handle, &cpg_fd_callbacks);
+    mainloop_add_fd("corosync-cpg", G_PRIORITY_DEFAULT, fd, &cpg_handle, &cpg_fd_callbacks);
     return TRUE;
 
   bail:

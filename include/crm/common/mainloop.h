@@ -53,7 +53,7 @@ void mainloop_del_ipc_server(qb_ipcs_service_t *server);
 typedef struct mainloop_io_s mainloop_io_t;
 
 mainloop_io_t *mainloop_add_ipc_client(
-    const char *name, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks);
+    const char *name, int priority, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks);
 
 void mainloop_del_ipc_client(mainloop_io_t *client);
 
@@ -67,7 +67,7 @@ struct mainloop_fd_callbacks
 };
 
 mainloop_io_t *mainloop_add_fd(
-    const char *name, int fd, void *userdata, struct mainloop_fd_callbacks *callbacks);
+    const char *name, int priority, int fd, void *userdata, struct mainloop_fd_callbacks *callbacks);
 
 void mainloop_del_fd(mainloop_io_t *client);
 
@@ -94,5 +94,7 @@ pid_t
 mainloop_get_child_pid(mainloop_child_t *child);
 void
 mainloop_clear_child_userdata(mainloop_child_t *child);
+
+#define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
 
 #endif

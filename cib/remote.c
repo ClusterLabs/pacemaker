@@ -161,7 +161,7 @@ init_remote_listener(int port, gboolean encrypted)
         return -3;
     }
 
-    mainloop_add_fd("cib-remote", ssock, &ssock, &remote_listen_fd_callbacks);
+    mainloop_add_fd("cib-remote", G_PRIORITY_DEFAULT, ssock, &ssock, &remote_listen_fd_callbacks);
 
     return ssock;
 }
@@ -345,7 +345,7 @@ cib_remote_listen(gpointer data)
     free_xml(login);
 
     new_client->remote = mainloop_add_fd(
-        "cib-remote-client", csock, new_client, &remote_client_fd_callbacks);
+        "cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client, &remote_client_fd_callbacks);
 
     g_hash_table_insert(client_list, new_client->id, new_client);
 

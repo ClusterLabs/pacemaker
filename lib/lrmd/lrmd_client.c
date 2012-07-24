@@ -398,7 +398,7 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
             rc = -ENOTCONN;
         }
     } else {
-        native->source = mainloop_add_ipc_client("lrmd", 0, lrmd, &lrmd_callbacks);
+        native->source = mainloop_add_ipc_client("lrmd", G_PRIORITY_HIGH, 0, lrmd, &lrmd_callbacks);
         native->ipc = mainloop_get_ipc_client(native->source);
     }
 
