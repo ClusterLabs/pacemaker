@@ -174,7 +174,10 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             break;
     }
 
-    /* Can this be removed now that do_cl_join_finalize_respond() does the same thing? */
+    /* Can this be removed now that do_cl_join_finalize_respond() does the same thing?
+     *
+     * Dunno, but not the call to crm_update_peer_expected()
+     */
     if (AM_I_DC && reset_status_entry && safe_str_eq(CRMD_JOINSTATE_MEMBER, node->state)) {
         crm_action_t *down = match_down_event(0, node->uname, NULL);
 
@@ -190,7 +193,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
         }
 
-        /* TODO: potentially we also want to set XML_NODE_JOIN_STATE and XML_NODE_EXPECTED here */
+        crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
     }
 }
 
