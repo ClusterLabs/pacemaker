@@ -233,9 +233,12 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
     }
 
     if(rc < header.size) {
+        struct qb_ipcs_connection_stats_2 *stats = qb_ipcs_connection_stats_get_2(c, 0);
         do_crm_log(level,
-                   "%s %d failed, size=%d, to=%p[%d], rc=%d: %.120s",
-                   type, header.id, header.size, c, crm_ipcs_client_pid(c), rc, buffer);
+                   "%s %d failed, size=%d, to=%p[%d], queue=%d, rc=%d: %.120s",
+                   type, header.id, header.size, c, stats->client_pid, stats->event_q_length, rc, buffer);
+        free(stats);
+
     } else {
         crm_trace("%s %d sent, %d bytes to %p[%d]: %.120s", type, header.id, rc,
                   c, crm_ipcs_client_pid(c), buffer);
@@ -471,7 +474,7 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
         crm_trace("Trying again to obtain pending reply");
         rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 300);
         if(rc < 0) {
-            crm_err("Sending to %s disabled until pending reply is recieved: %.120s", client->name, buffer);
+            crm_err("Sending to %s disabled until pending reply is recieved", client->name);
             free(buffer);
             return -EREMOTEIO;
 
