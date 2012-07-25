@@ -9,14 +9,16 @@
 
 ## Targeted for 1.2.x
 
+- Allow the N in 'give up after N failed fencing attempts' to be configurable 
+- Log cib:diff in compressed form (only the ++ and -- entries)  
 - Check for uppercase letters in node names, warn if found
 - Imply startup-failure-is-fatal from on-fail="restart" 
 - Show an english version of the config with crm_resource --rules
 - Convert cts/CIB.py into a supported Python API for the CIB
 - Use crm_log_tag() in the PE to allow per-resource trace logging
 - Reduce the amount of stonith-ng logging
-- Reduce the amount of attrd logging
 - Use dlopen for snmp in crm_mon
+- Re-implement no-quorum filter for cib updates?
 
 ## Targeted for 1.4
 
@@ -30,6 +32,7 @@
 - Decide whether to fully support or drop failover domains
 
 # Testing
+- Create a BSC with all the regression tests
 - Convert BandwidthTest CTS test into a Scenario wrapper
 - find_operations() is not covered by PE regression tests
 - Some node states in determine_online_status_fencing() are untested by PE regression tests
