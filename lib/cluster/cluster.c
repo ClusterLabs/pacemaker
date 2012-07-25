@@ -128,6 +128,20 @@ get_corosync_uuid(uint32_t id, const char *uname)
     return NULL;
 }
 
+void
+set_node_uuid(const char *uname, const char *uuid)
+{
+    CRM_CHECK(uuid != NULL, return);
+    CRM_CHECK(uname != NULL, return);
+
+    if (crm_uuid_cache == NULL) {
+        crm_uuid_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                               g_hash_destroy_str, g_hash_destroy_str);
+    }
+
+    g_hash_table_insert(crm_uuid_cache, strdup(uname), strdup(uuid));
+}
+
 const char *
 get_node_uuid(uint32_t id, const char *uname)
 {

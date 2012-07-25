@@ -331,4 +331,5 @@ gboolean init_cman_connection(
 gboolean init_quorum_connection(
     gboolean(*dispatch) (unsigned long long, gboolean), void (*destroy) (gpointer));
 
+void set_node_uuid(const char *uname, const char *uuid);
 #endif

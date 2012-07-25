@@ -64,19 +64,30 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     crm_node_t *peer = NULL;
 
     /* zero out the node-status & remove all LRM status info */
-    xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+    xmlNode *node_state = NULL;
 
     CRM_CHECK(target != NULL, return);
     CRM_CHECK(uuid != NULL, return);
 
+    if(get_node_uuid(0, target) == NULL) {
+        set_node_uuid(target, uuid);
+    }
+
     /* Make sure the membership and join caches are accurate */
     peer = crm_get_peer(0, target);
+    if(peer->uuid == NULL) {
+        crm_info("Recording uuid '%s' for node '%s'", uuid, target);
+        peer->uuid = strdup(uuid);
+    }
     crm_update_peer_proc(__FUNCTION__, peer, crm_proc_none, NULL);
     crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_LOST, 0);
     crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
     erase_node_from_join(target);
 
     node_state = do_update_node_cib(peer, node_update_cluster|node_update_peer|node_update_join|node_update_expected, NULL, __FUNCTION__);
+
+    /* Force our known ID */
+    crm_xml_add(node_state, XML_ATTR_UUID, uuid);
 
     rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, node_state,
                                     cib_quorum_override | cib_scope_local | cib_can_create);

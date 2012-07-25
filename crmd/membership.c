@@ -143,6 +143,13 @@ do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *sou
     xmlNode *node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
 
     set_uuid(node_state, XML_ATTR_UUID, node->uname);
+
+    if(crm_element_value(node_state, XML_ATTR_UUID) == NULL) {
+        crm_info("Node update for %s cancelled: no id", node->uname);
+        free_xml(node_state);
+        return NULL;
+    }
+
     crm_xml_add(node_state, XML_ATTR_UNAME, node->uname);
 
     if(flags & node_update_cluster) {
