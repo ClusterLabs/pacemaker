@@ -585,6 +585,8 @@ gboolean
 unpack_status(xmlNode * status, pe_working_set_t * data_set)
 {
     const char *id = NULL;
+    const char *uname = NULL;
+
     xmlNode *state = NULL;
     xmlNode *lrm_rsc = NULL;
     node_t *this_node = NULL;
@@ -620,13 +622,12 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         }
 
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
-            const char *uname = crm_element_value(state, XML_ATTR_UNAME);
-
             xmlNode *attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
 
             id = crm_element_value(state, XML_ATTR_ID);
+            uname = crm_element_value(state, XML_ATTR_UNAME);
             crm_trace("Processing node id=%s, uname=%s", id, uname);
-            this_node = pe_find_node_id(data_set->nodes, id);
+            this_node = pe_find_node_any(data_set->nodes, id, uname);
 
             if (uname == NULL) {
                 /* error */
@@ -670,7 +671,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         }
 
         id = crm_element_value(state, XML_ATTR_ID);
-        this_node = pe_find_node_id(data_set->nodes, id);
+        uname = crm_element_value(state, XML_ATTR_UNAME);
+        this_node = pe_find_node_any(data_set->nodes, id, uname);
 
         if (this_node == NULL) {
             crm_info("Node %s is unknown", id);
@@ -700,7 +702,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         }
 
         id = crm_element_value(state, XML_ATTR_ID);
-        this_node = pe_find_node_id(data_set->nodes, id);
+        uname = crm_element_value(state, XML_ATTR_UNAME);
+        this_node = pe_find_node_any(data_set->nodes, id, uname);
 
         if (this_node == NULL || this_node->details->online) {
             continue;

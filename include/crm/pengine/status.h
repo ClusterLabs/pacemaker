@@ -331,6 +331,7 @@ void cleanup_calculations(pe_working_set_t * data_set);
 resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 node_t *pe_find_node(GListPtr node_list, const char *uname);
 node_t *pe_find_node_id(GListPtr node_list, const char *id);
+node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);    
 #endif

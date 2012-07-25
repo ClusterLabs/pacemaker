@@ -249,6 +249,17 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 }
 
 node_t *
+pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
+{
+    node_t *match = pe_find_node_id(nodes, id);
+    if(match) {
+        return match;
+    }
+    crm_trace("Looking up %s via it's uname instead", uname);
+    return pe_find_node(nodes, uname);
+}
+
+node_t *
 pe_find_node_id(GListPtr nodes, const char *id)
 {
     GListPtr gIter = nodes;
