@@ -81,9 +81,11 @@ class Test:
 
 	def clean_environment(self):
 		if self.lrmd_process:
-			self.lrmd_process.kill()
+			self.lrmd_process.terminate()
+			self.lrmd_process.wait()
 		if self.stonith_process:
-			self.stonith_process.kill()
+			self.stonith_process.terminate()
+			self.stonith_process.wait()
 
 		self.lrmd_process = None
 		self.stonith_process = None
