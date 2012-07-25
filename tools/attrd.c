@@ -643,7 +643,11 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     attr_hash_entry_t *hash_entry = NULL;
     struct attrd_callback_s *data = user_data;
 
-    if (data->value == NULL && rc == -ENXIO) {
+    if(call_id < 0) {
+        crm_warn("Update %s=%s failed: %s", data->attr, data->value, pcmk_strerror(call_id));
+        goto cleanup;
+
+    } else if (data->value == NULL && rc == -ENXIO) {
         rc = pcmk_ok;
     }
 
@@ -672,7 +676,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
             crm_err("Update %d for %s=%s failed: %s",
                     call_id, data->attr, data->value, pcmk_strerror(rc));
     }
-
+  cleanup:
     free(data->value);
     free(data->attr);
     free(data);
@@ -707,7 +711,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
                                   hash_entry->set, hash_entry->uuid, hash_entry->id, NULL, FALSE,
                                   user_name);
 
-        if (hash_entry->stored_value) {
+        if (rc >= 0 && hash_entry->stored_value) {
             crm_notice("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
                        rc, attrd_uuid, hash_entry->id,
                        hash_entry->uuid ? hash_entry->uuid : "<n/a>", hash_entry->set,
