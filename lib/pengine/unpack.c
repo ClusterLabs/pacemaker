@@ -2007,8 +2007,8 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
         case PCMK_LRM_OP_ERROR:
         case PCMK_LRM_OP_TIMEOUT:
         case PCMK_LRM_OP_NOTSUPPORTED:
-            crm_warn("Processing failed op %s on %s: %s (%d)",
-                     id, node->details->uname, lrmd_event_rc2str(actual_rc_i), actual_rc_i);
+            crm_warn("Processing failed op %s for %s on %s: %s (%d)",
+                     task, rsc->id, node->details->uname, lrmd_event_rc2str(actual_rc_i), actual_rc_i);
             crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
             if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
                 add_node_copy(data_set->failed, xml_op);
