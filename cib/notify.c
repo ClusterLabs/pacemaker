@@ -318,6 +318,10 @@ cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * d
     cib_diff_version_details(diff, &add_admin_epoch, &add_epoch, &add_updates,
                              &del_admin_epoch, &del_epoch, &del_updates);
 
+    if(del_updates < 0) {
+        crm_log_xml_debug(diff, "Bad replace diff");
+    }
+
     if (add_updates != del_updates) {
         crm_info("Replaced: %d.%d.%d -> %d.%d.%d from %s",
                  del_admin_epoch, del_epoch, del_updates,

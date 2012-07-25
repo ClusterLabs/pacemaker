@@ -1164,11 +1164,42 @@ purge_diff_markers(xmlNode *a_node)
     }
 }
 
+static void
+save_xml_to_file(xmlNode *xml, const char *desc, const char *filename) 
+{
+    char *f = NULL;
+    FILE *st = NULL;
+    xmlDoc *doc = getDocPtr(xml);
+    xmlBuffer *xml_buffer = xmlBufferCreate();
+
+    if(filename == NULL) {
+        char *uuid = crm_generate_uuid();
+        f = g_strdup_printf("/tmp/%s", uuid);
+        filename = f;
+        free(uuid);
+    }
+
+    crm_info("Saving %s to %s", desc, filename);
+    xmlNodeDump(xml_buffer, doc, xml, 0, FALSE);
+
+    st = fopen(filename, "w");
+    if(st) {
+        fprintf(st, "%s", xml_buffer->content);
+        /* fflush(st); */
+        /* fsync(fileno(st)); */
+        fclose(st);
+    }
+
+    xmlBufferFree(xml_buffer);
+    g_free(f);
+}
+
 gboolean
 apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 {
     gboolean result = TRUE;
     int root_nodes_seen = 0;
+    static struct qb_log_callsite *digest_cs = NULL;
     const char *digest = crm_element_value(diff, XML_ATTR_DIGEST);
     const char *version = crm_element_value(diff, XML_ATTR_CRM_VERSION);
 
@@ -1177,6 +1208,9 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
     xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
 
     CRM_CHECK(new != NULL, return FALSE);
+    if(digest_cs == NULL) {
+        digest_cs = qb_log_callsite_get(__func__, __FILE__, "diff-digest", LOG_TRACE, __LINE__, 0);
+    }
 
     crm_trace("Substraction Phase");
     for(child_diff = __xml_first_child(removed); child_diff != NULL; child_diff = __xml_next(child_diff)) {
@@ -1221,62 +1255,20 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 	if(safe_str_neq(new_digest, digest)) {
 	    crm_info("Digest mis-match: expected %s, calculated %s",
 		     digest, new_digest);
-	    crm_log_xml_trace(old,  "diff:original");
-	    crm_log_xml_trace(diff, "diff:input");
 	    result = FALSE;
-	} else {
+
+            crm_trace("%p %0.6x", digest_cs, digest_cs?digest_cs->targets:0);
+            if (digest_cs && digest_cs->targets) {
+                save_xml_to_file(old, "diff:original", NULL);
+                save_xml_to_file(diff,"diff:input", NULL);
+                save_xml_to_file(*new,"diff:new", NULL);
+            }
+
+        } else {
 	    crm_trace("Digest matched: expected %s, calculated %s",
 			digest, new_digest);
 	}
 	free(new_digest);
-	    
-#if XML_PARANOIA_CHECKS	    
-    } else if(result) {
-	int lpc = 0;
-	xmlNode *intermediate = NULL;
-	xmlNode *diff_of_diff = NULL;
-	xmlNode *calc_added = NULL;
-	xmlNode *calc_removed = NULL;
-
-	const char *value = NULL;
-	const char *name = NULL;
-	const char *version_attrs[] = {
-	    XML_ATTR_NUMUPDATES,
-	    XML_ATTR_GENERATION,
-	    XML_ATTR_GENERATION_ADMIN
-	};
-
-	crm_trace("Verification Phase");
-	intermediate = diff_xml_object(old, *new, FALSE);
-	calc_added = find_xml_node(intermediate, "diff-added", FALSE);
-	calc_removed = find_xml_node(intermediate, "diff-removed", FALSE);
-
-	/* add any version details to the diff so they match */
-	for(lpc = 0; lpc < DIMOF(version_attrs); lpc++) {
-	    name = version_attrs[lpc];
-
-	    value = crm_element_value(added, name);
-	    crm_xml_add(calc_added, name, value);
-			
-	    value = crm_element_value(removed, name);
-	    crm_xml_add(calc_removed, name, value);	
-	}
-
-	diff_of_diff = diff_xml_object(intermediate, diff, TRUE);
-	if(diff_of_diff != NULL) {
-	    crm_info("Diff application failed!");
-	    crm_log_xml_debug(old, "diff:original");
-	    crm_log_xml_debug(diff, "diff:input");
-	    result = FALSE;
-	} else {
-	    purge_diff_markers(*new);
-	}
-		
-	free_xml(diff_of_diff);
-	free_xml(intermediate);
-	diff_of_diff = NULL;
-	intermediate = NULL;
-#endif
     }
 
     return result;
@@ -2028,7 +2020,7 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
 }
 
 static char *
-calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
+calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
 {
     char *digest = NULL;
 
@@ -2037,6 +2029,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
 
     xmlDoc *doc = NULL;
     xmlNode *copy = NULL;
+    xmlNode *input = source;
     xmlBuffer *xml_buffer = NULL;
     static struct qb_log_callsite *digest_cs = NULL;
 
@@ -2092,23 +2085,16 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     crm_trace("Digest %s\n", digest);
 
         if(digest_cs == NULL) {
-            qb_log_callsite_get(__func__, __FILE__, "xml-blog", LOG_TRACE, __LINE__, 0);
+            digest_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blog", LOG_TRACE, __LINE__, 0);
         }
         if (digest_cs && digest_cs->targets) {
-            FILE *st = NULL;
             char *trace_file = crm_concat("/tmp/cib-digest", digest, '-');
             crm_trace("Saving %s.%s.%s to %s",
                       crm_element_value(input, XML_ATTR_GENERATION_ADMIN),
                       crm_element_value(input, XML_ATTR_GENERATION),
                       crm_element_value(input, XML_ATTR_NUMUPDATES),
                       trace_file);
-            st = fopen(trace_file, "w");
-            if(st) {
-                fprintf(st, "%s", xml_buffer->content);
-                /* fflush(st); */
-                /* fsync(fileno(st)); */
-                fclose(st);
-            }
+            save_xml_to_file(source, "digest input", trace_file);
             free(trace_file);
         }
 
