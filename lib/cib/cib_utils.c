@@ -202,7 +202,18 @@ cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *upda
     cib_version_details(tmp, admin_epoch, epoch, updates);
 
     tmp = find_xml_node(diff, "diff-removed", FALSE);
+    tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
     cib_version_details(tmp, _admin_epoch, _epoch, _updates);
+
+    if(*_admin_epoch < 0) {
+        *_admin_epoch = *admin_epoch;
+    }
+    if(*_epoch < 0) {
+        *_epoch = *epoch;
+    }
+    if(*_updates < 0) {
+        *_updates = *updates;
+    }
     return TRUE;
 }
 
