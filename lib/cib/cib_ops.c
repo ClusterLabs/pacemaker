@@ -199,7 +199,27 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         int replace_updates = 0;
         int replace_epoch = 0;
         int replace_admin_epoch = 0;
+
         const char *reason = NULL;
+        const char *peer = crm_element_value(req, F_ORIG);
+        const char *digest = crm_element_value(req, XML_ATTR_DIGEST);
+
+        if(digest) {
+            const char *version = crm_element_value(req, XML_ATTR_CRM_VERSION);
+            char *digest_verify = calculate_xml_versioned_digest(input, FALSE, TRUE, version?version:CRM_FEATURE_SET);
+
+            if(safe_str_neq(digest_verify, digest)) {
+                crm_err("Digest mis-match on replace from %s: %s vs. %s (expected)", peer, digest_verify, digest);
+                reason = "digest mismatch";
+
+            } else {
+                crm_info("Digest matched on replace from %s: %s", peer, digest);
+            }
+            free(digest_verify);
+
+        } else {
+            crm_trace("No digest to verify");
+        }
 
         cib_version_details(existing_cib, &admin_epoch, &epoch, &updates);
         cib_version_details(input, &replace_admin_epoch, &replace_epoch, &replace_updates);
@@ -221,11 +241,15 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         }
 
         if (reason != NULL) {
-            crm_warn("Replacement %d.%d.%d not applied to %d.%d.%d:"
+            crm_warn("Replacement %d.%d.%d from %s not applied to %d.%d.%d:"
                      " current %s is greater than the replacement",
                      replace_admin_epoch, replace_epoch,
-                     replace_updates, admin_epoch, epoch, updates, reason);
+                     replace_updates, peer, admin_epoch, epoch, updates, reason);
             result = -pcmk_err_old_data;
+        } else {
+            crm_info("Replaced %d.%d.%d with %d.%d.%d from %s",
+                     admin_epoch, epoch, updates,
+                     replace_admin_epoch, replace_epoch, replace_updates, peer);
         }
 
         free_xml(*result_cib);

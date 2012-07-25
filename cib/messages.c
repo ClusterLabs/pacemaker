@@ -422,6 +422,7 @@ int
 sync_our_cib(xmlNode * request, gboolean all)
 {
     int result = pcmk_ok;
+    char *digest = NULL;
     const char *host = crm_element_value(request, F_ORIG);
     const char *op = crm_element_value(request, F_CIB_OPERATION);
 
@@ -448,12 +449,18 @@ sync_our_cib(xmlNode * request, gboolean all)
     crm_xml_add(replace_request, F_CIB_OPERATION, CIB_OP_REPLACE);
     crm_xml_add(replace_request, "original_" F_CIB_OPERATION, op);
     crm_xml_add(replace_request, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
+
+    crm_xml_add(replace_request, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
+    crm_xml_add(replace_request, XML_ATTR_DIGEST, digest);
+
     add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
 
     if (send_cluster_message(all ? NULL : host, crm_msg_cib, replace_request, FALSE) == FALSE) {
         result = -ENOTCONN;
     }
     free_xml(replace_request);
+    free(digest);
     return result;
 }
 #endif
