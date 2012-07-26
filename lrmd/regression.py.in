@@ -595,6 +595,17 @@ if __name__ == "__main__":
 		test.add_cmd("-c unregister_rsc -r rsc2 -t 1000 ")
 		test.add_expected_fail_cmd("-c get_rsc_info -r rsc2 ")
 
+		### Register duplicate, verify only one entry exists and can still be removed.
+		test = self.new_test("duplicate_registration", "Register resource multiple times, verify only one entry exists and can be removed.")
+		test.add_cmd("-c register_rsc -r rsc2 -C ocf -T Dummy -P pacemaker -t 1000 ")
+		test.add_cmd_check_stdout("-c get_rsc_info -r rsc2 ", "id:rsc2 class:ocf provider:pacemaker type:Dummy")
+		test.add_cmd("-c register_rsc -r rsc2 -C ocf -T Dummy -P pacemaker -t 1000 ")
+		test.add_cmd_check_stdout("-c get_rsc_info -r rsc2 ", "id:rsc2 class:ocf provider:pacemaker type:Dummy")
+		test.add_cmd("-c register_rsc -r rsc2 -C ocf -T Stateful -P pacemaker -t 1000 ")
+		test.add_cmd_check_stdout("-c get_rsc_info -r rsc2 ", "id:rsc2 class:ocf provider:pacemaker type:Stateful")
+		test.add_cmd("-c unregister_rsc -r rsc2 -t 1000 ")
+		test.add_expected_fail_cmd("-c get_rsc_info -r rsc2 ")
+
 		### get metadata ###
 		test = self.new_test("get_ocf_metadata", "Retrieve metadata for a resource")
 		test.add_cmd_check_stdout("-c metadata -C \"ocf\" -P \"pacemaker\" -T \"Dummy\""
