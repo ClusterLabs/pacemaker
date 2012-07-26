@@ -352,7 +352,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
     if (discard_status && status != NULL) {
         /* strip out the status section if there is one */
-        free_xml_from_parent(root, status);
+        free_xml(status);
         status = NULL;
     }
     if (status == NULL) {
@@ -683,7 +683,7 @@ write_cib_contents(gpointer p)
         CRM_LOG_ASSERT(cib_status_root != NULL);
 
         if (cib_status_root != NULL) {
-            free_xml_from_parent(local_cib, cib_status_root);
+            free_xml(cib_status_root);
         }
     }
 

@@ -230,7 +230,7 @@ crm_get_peer(unsigned int id, const char *uname)
             node->uuid = strdup(uuid);
             crm_info("Node %u has uuid %s", id, node->uuid);
         } else {
-            crm_err("Cannot obtain a UUID for node %d/%s", id, node->uname);
+            crm_warn("Cannot obtain a UUID for node %d/%s", id, node->uname);
         }
     }
 

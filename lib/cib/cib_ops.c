@@ -399,7 +399,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                 if (remove != NULL) {
                     crm_trace("Replacing node <%s> in <%s>",
                               replace_item, crm_element_name(target));
-                    free_xml_from_parent(target, remove);
+                    free_xml(remove);
                     remove = NULL;
                 }
                 free(replace_item);
@@ -886,7 +886,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         free(path);
 
         if (safe_str_eq(op, CIB_OP_DELETE)) {
-            free_xml_from_parent(NULL, match);
+            free_xml(match);
             if ((options & cib_multiple) == 0) {
                 break;
             }
@@ -924,7 +924,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         } else if (safe_str_eq(op, CIB_OP_REPLACE)) {
             xmlNode *parent = match->parent;
 
-            free_xml_from_parent(NULL, match);
+            free_xml(match);
             if (input != NULL) {
                 add_node_copy(parent, input);
             }

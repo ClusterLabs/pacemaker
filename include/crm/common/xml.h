@@ -69,8 +69,6 @@ void copy_in_properties(xmlNode * target, xmlNode * src);
 void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
 
-void free_xml_from_parent(xmlNode * parent, xmlNode * a_node);
-
 /*
  * Create a node named "name" as a child of "parent"
  * If parent is NULL, creates an unconnected node.
@@ -227,23 +225,7 @@ __xml_next(xmlNode * child)
     return child;
 }
 
-#  define free_xml(a_node) do {						\
-	if((a_node) != NULL) {						\
-	    xmlNode *a_doc_top = NULL;					\
-	    xmlDoc *a_doc = (a_node)->doc;				\
-	    if (a_doc != NULL) {					\
-		a_doc_top = xmlDocGetRootElement(a_doc);		\
-	    }								\
-	    if(a_doc != NULL && a_doc_top == (a_node)) {		\
-		xmlFreeDoc(a_doc);					\
-									\
-	    } else {							\
-		/* make sure the node is unlinked first */		\
-		xmlUnlinkNode(a_node);					\
-		xmlFreeNode(a_node);					\
-	    }								\
-	}								\
-    } while(0)
+void free_xml(xmlNode * child);
 
 xmlNode *first_named_child(xmlNode * parent, const char *name);
 

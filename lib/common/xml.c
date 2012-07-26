@@ -429,13 +429,30 @@ create_xml_node(xmlNode *parent, const char *name)
     return node;
 }
 
-void
-free_xml_from_parent(xmlNode *parent, xmlNode *a_node)
-{
-    CRM_CHECK(a_node != NULL, return);
 
-    xmlUnlinkNode(a_node);
-    xmlFreeNode(a_node);
+void
+free_xml(xmlNode * child) 
+{
+    if(child != NULL) {
+        xmlNode *top = NULL;
+        xmlDoc *doc = child->doc;
+
+        if (doc != NULL) {
+            top = xmlDocGetRootElement(doc);
+        }
+
+        if(doc != NULL && top == child) {
+            /* Free everything */
+            xmlFreeDoc(doc);
+
+        } else {
+            /* Free this particular subtree
+             * Make sure to unlink it from the parent first
+             */
+            xmlUnlinkNode(child);
+            xmlFreeNode(child);
+        }
+    }
 }
 
 xmlNode*
@@ -1287,12 +1304,12 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 	
     tmp1 = subtract_xml_object(removed, old, new, FALSE, "removed:top");
     if(suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
-	free_xml_from_parent(removed, tmp1);
+	free_xml(tmp1);
     }
 	
     tmp1 = subtract_xml_object(added, new, old, TRUE, "added:top");
     if(suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
-	free_xml_from_parent(added, tmp1);
+	free_xml(tmp1);
     }
 	
     if(added->children == NULL && removed->children == NULL) {
@@ -1547,7 +1564,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
     }
 
     if(differences == FALSE) {
-	free_xml_from_parent(parent, diff);
+	free_xml(diff);
 	crm_trace("\tNo changes to <%s id=%s>", crm_str(name), id);
 	return NULL;
 
@@ -1737,13 +1754,13 @@ replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update, gboolean del
     if(can_delete && parent != NULL) {
 	crm_log_xml_trace(child, "Delete match found...");
 	if(delete_only || update == NULL) {
-	    free_xml_from_parent(NULL, child);
+	    free_xml(child);
 		    
 	} else {	
 	    xmlNode *tmp = copy_xml(update);
 	    xmlDoc *doc = tmp->doc;
 	    xmlNode *old = xmlReplaceNode(child, tmp);
-	    free_xml_from_parent(NULL, old);
+	    free_xml(old);
 	    xmlDocSetRootElement(doc, NULL);
 	    xmlFreeDoc(doc);
 	}

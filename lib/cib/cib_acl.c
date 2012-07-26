@@ -240,7 +240,7 @@ diff_xml_object_orig(xmlNode * old, xmlNode * new, gboolean suppress, xmlNode * 
 
         tmp1 = subtract_xml_object(removed, old, new, FALSE, "removed:top");
         if (suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
-            free_xml_from_parent(removed, tmp1);
+            free_xml(tmp1);
         }
     }
 
@@ -248,7 +248,7 @@ diff_xml_object_orig(xmlNode * old, xmlNode * new, gboolean suppress, xmlNode * 
 
     tmp1 = subtract_xml_object(added, new, old, FALSE, "added:top");
     if (suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
-        free_xml_from_parent(added, tmp1);
+        free_xml(tmp1);
     }
 
     if (added->children == NULL && removed->children == NULL) {
@@ -732,7 +732,7 @@ acl_filter_xml(xmlNode * xml, GHashTable * xml_perms)
         return FALSE;
     }
 
-    free_xml_from_parent(NULL, xml);
+    free_xml(xml);
     crm_trace("Filtered out the element: tag=%s, id=%s",
               crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID));
     return TRUE;

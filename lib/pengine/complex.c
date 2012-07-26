@@ -273,7 +273,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
             g_hash_table_destroy(rsc_ops_hash);
         }
 
-        free_xml_from_parent(NULL, template_ops);
+        free_xml(template_ops);
     }
 
     /*free_xml(*expanded_xml); */

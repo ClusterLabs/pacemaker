@@ -221,7 +221,13 @@ slist_basic_destroy(GListPtr list)
 	}								\
     } while(0)
 
-#  define zap_xml_from_parent(parent, xml_obj) free_xml_from_parent(parent, xml_obj); xml_obj = NULL
+#  define zap_xml_from_parent(parent, xml_obj) free_xml(xml_obj); xml_obj = NULL
+
+static inline void free_xml_from_parent(xmlNode * parent, xmlNode * a_node)
+{
+    free_xml(a_node);
+}
+
 
 /* Use something like this instead of the next macro:
 

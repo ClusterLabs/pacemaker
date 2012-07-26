@@ -1280,7 +1280,7 @@ expand_templates_in_sets(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_se
          */
         for (gIter = template_refs; gIter != NULL; gIter = gIter->next) {
             xmlNode *template_ref = gIter->data;
-            free_xml_from_parent(NULL, template_ref);
+            free_xml(template_ref);
         }
         g_list_free(template_refs);
     }
