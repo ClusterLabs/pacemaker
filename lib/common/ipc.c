@@ -500,7 +500,12 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
 
     if(ms_timeout > 0) {
         time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
-        rc = qb_ipcc_sendv(client->ipc, iov, 2);
+        crm_trace("Sending request %d of %u bytes to %s (timeout=%dms): %.200s...",
+                  header.id, header.size, client->name, ms_timeout, buffer);
+        do {
+            rc = qb_ipcc_sendv(client->ipc, iov, 2);
+
+        } while(rc == -EAGAIN && time(NULL) < timeout && crm_ipc_connected(client));
 
         if(rc > 0) {
             crm_trace("Waiting for reply %d from %s to %u bytes: %.200s...",
@@ -531,7 +536,10 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
 
     } else {
         crm_trace("Waiting for reply to %u bytes: %.200s...", header.size, buffer);
-        rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer, client->buf_size, ms_timeout);
+        do {
+            rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer, client->buf_size, ms_timeout);
+
+        } while(rc == -EAGAIN && crm_ipc_connected(client));
     }
 
     if(rc > 0) {
