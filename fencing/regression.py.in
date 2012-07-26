@@ -48,6 +48,7 @@ class Test:
 		self.stonith_process = None
 		self.stonith_output = ""
 		self.stonith_patterns = []
+		self.negative_stonith_patterns = []
 
 		self.executed = 0
 
@@ -131,6 +132,9 @@ class Test:
 	def add_stonith_log_pattern(self, pattern):
 		self.stonith_patterns.append(pattern)
 
+	def add_stonith_negative_log_pattern(self, pattern):
+		self.negative_stonith_patterns.append(pattern)
+
 	def add_cmd(self, cmd, args):
 		self.__new_cmd(cmd, args, 0, "")
 
@@ -179,7 +183,18 @@ class Test:
 
 		return test.returncode;
 
+
+	def count_negative_matches(self, outline):
+		count = 0
+		for line in self.negative_stonith_patterns:
+			if outline.count(line):
+				count = 1
+				if self.verbose:
+					print "This pattern should not have matched = '%s" % (line)
+		return count
+
 	def match_stonith_patterns(self):
+		negative_matches = 0
 		cur = 0
 		total_patterns = len(self.stonith_patterns)
 
@@ -187,17 +202,18 @@ class Test:
 			return
 
 		for line in self.stonith_output.split("\n"):
+			negative_matches = negative_matches + self.count_negative_matches(line)
+			if cur == total_patterns:
+				continue
 			if line.count(self.stonith_patterns[cur]):
 				cur = cur + 1
-			if cur == total_patterns:
-				break
 
-		if cur != len(self.stonith_patterns):
+		if cur != len(self.stonith_patterns) or negative_matches:
 			for item in range(total_patterns):
 				if self.verbose and item > (cur -1):
 					print "Pattern Not Matched = '%s'" % self.stonith_patterns[item]
 
-			self.result_txt = "FAILURE - '%s' failed. %d patterns out of %d not matched" % (self.name, total_patterns - cur, total_patterns)
+			self.result_txt = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches." % (self.name, total_patterns - cur, total_patterns, negative_matches)
 			self.result_exitcode = -1
 
 	def run(self):
@@ -371,6 +387,39 @@ class Tests:
 
 			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -1001")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -1001")
+			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
+			test.add_stonith_log_pattern("for host 'node3' with device 'true4' returned: 0")
+
+		# Test what happens if multiple fencing levels are defined, and then the first one is removed.
+		for test_type in test_types:
+			if test_type["use_cpg"] == 0:
+				continue
+
+			test = self.new_test("%s_topology_level_removal" % test_type["prefix"],
+					"Verify level removal works.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true4  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+
+			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
+			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true1")
+
+			test.add_cmd("stonith_admin", "-r node3 -i 2 -v true2")
+			test.add_cmd("stonith_admin", "-r node3 -i 2 -v false2")
+
+			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true3")
+			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true4")
+
+			# Now remove level 2, verify none of the devices in level two are hit.
+			test.add_cmd("stonith_admin", "-d node3 -i 2")
+
+			test.add_cmd("stonith_admin", "-F node3 -t 5")
+
+			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -1001")
+			test.add_stonith_negative_log_pattern("for host 'node3' with device 'false2' returned: -1001")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true4' returned: 0")
 
