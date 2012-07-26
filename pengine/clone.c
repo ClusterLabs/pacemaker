@@ -368,11 +368,11 @@ can_run_instance(resource_t * rsc, node_t * node)
         goto bail;
 
     } else if (local_node->count < clone_data->clone_node_max) {
-        crm_trace("%s can run on %s: %d", rsc->id, node->details->uname, local_node->count);
+        pe_rsc_trace(rsc, "%s can run on %s: %d", rsc->id, node->details->uname, local_node->count);
         return local_node;
 
     } else {
-        crm_trace("%s cannot run on %s: node full (%d >= %d)",
+        pe_rsc_trace(rsc, "%s cannot run on %s: node full (%d >= %d)",
                     rsc->id, node->details->uname, local_node->count, clone_data->clone_node_max);
     }
 
@@ -389,13 +389,13 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, pe_working
     node_t *chosen = NULL;
     node_t *local_node = NULL;
 
-    crm_trace("Processing %s", rsc->id);
+    pe_rsc_trace(rsc, "Processing %s", rsc->id);
 
     if (is_not_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->fns->location(rsc, NULL, FALSE);
 
     } else if (is_set(rsc->flags, pe_rsc_allocating)) {
-        crm_debug("Dependency loop detected involving %s", rsc->id);
+        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
         return NULL;
     }
 
@@ -408,7 +408,7 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, pe_working
         node_t *local_prefer = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
 
         if (local_prefer == NULL || local_prefer->weight < 0) {
-            crm_trace("Not pre-allocating %s to %s - unavailable", rsc->id, prefer->details->uname);
+            pe_rsc_trace(rsc, "Not pre-allocating %s to %s - unavailable", rsc->id, prefer->details->uname);
             return NULL;
         }
     }
@@ -488,12 +488,12 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         return NULL;
 
     } else if (is_set(rsc->flags, pe_rsc_allocating)) {
-        crm_debug("Dependency loop detected involving %s", rsc->id);
+        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
         return NULL;
     }
 
     set_bit(rsc->flags, pe_rsc_allocating);
-    crm_trace("Processing %s", rsc->id);
+    pe_rsc_trace(rsc, "Processing %s", rsc->id);
 
     /* this information is used by sort_clone_instance() when deciding in which 
      * order to allocate clone instances
@@ -502,7 +502,7 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
-        crm_trace("%s: Coloring %s first", rsc->id, constraint->rsc_rh->id);
+        pe_rsc_trace(rsc, "%s: Coloring %s first", rsc->id, constraint->rsc_rh->id);
         constraint->rsc_rh->cmds->allocate(constraint->rsc_rh, prefer, data_set);
     }
 
@@ -553,11 +553,11 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
 
         if (can_run_resources(node) == FALSE || node->weight < 0) {
-            crm_trace("Not Pre-allocatiing %s", node->details->uname);
+            pe_rsc_trace(rsc, "Not Pre-allocatiing %s", node->details->uname);
             continue;
         }
 
-        crm_trace("Pre-allocatiing %s", node->details->uname);
+        pe_rsc_trace(rsc, "Pre-allocatiing %s", node->details->uname);
         for (lpc = 0;
              allocated < clone_data->clone_max
              && node->count < clone_data->clone_node_max
@@ -572,7 +572,7 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                     if (child_node->details == node->details
                         && color_instance(child, node, clone_data->clone_max < available_nodes,
                                           data_set)) {
-                        crm_trace("Pre-allocated %s to %s", child->id, node->details->uname);
+                        pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id, node->details->uname);
                         allocated++;
                         break;
                     }
@@ -581,7 +581,7 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
     }
 
-    crm_trace("Done pre-allocating");
+    pe_rsc_trace(rsc, "Done pre-allocating");
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -599,7 +599,7 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
         if (is_not_set(child->flags, pe_rsc_provisional)) {
         } else if (allocated >= clone_data->clone_max) {
-            crm_debug("Child %s not allocated - limit reached", child->id);
+            pe_rsc_debug(rsc, "Child %s not allocated - limit reached", child->id);
             resource_location(child, NULL, -INFINITY, "clone_color:limit_reached", data_set);
 
         } else if (color_instance(child, NULL, clone_data->clone_max < available_nodes, data_set)) {
@@ -607,13 +607,13 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
     }
 
-    crm_debug("Allocated %d %s instances of a possible %d",
+    pe_rsc_debug(rsc, "Allocated %d %s instances of a possible %d",
               allocated, rsc->id, clone_data->clone_max);
 
     clear_bit(rsc->flags, pe_rsc_provisional);
     clear_bit(rsc->flags, pe_rsc_allocating);
 
-    crm_trace("Done allocating %s", rsc->id);
+    pe_rsc_trace(rsc, "Done allocating %s", rsc->id);
     return NULL;
 }
 
@@ -651,26 +651,26 @@ clone_update_pseudo_status(resource_t * rsc, gboolean * stopping, gboolean * sta
             return;
 
         } else if (is_set(action->flags, pe_action_optional)) {
-            crm_trace("Skipping optional: %s", action->uuid);
+            pe_rsc_trace(rsc, "Skipping optional: %s", action->uuid);
             continue;
 
         } else if (is_set(action->flags, pe_action_pseudo) == FALSE
                    && is_set(action->flags, pe_action_runnable) == FALSE) {
-            crm_trace("Skipping unrunnable: %s", action->uuid);
+            pe_rsc_trace(rsc, "Skipping unrunnable: %s", action->uuid);
             continue;
 
         } else if (safe_str_eq(RSC_STOP, action->task)) {
-            crm_trace("Stopping due to: %s", action->uuid);
+            pe_rsc_trace(rsc, "Stopping due to: %s", action->uuid);
             *stopping = TRUE;
 
         } else if (safe_str_eq(RSC_START, action->task)) {
             if (is_set(action->flags, pe_action_runnable) == FALSE) {
-                crm_trace("Skipping pseudo-op: %s run=%d, pseudo=%d",
+                pe_rsc_trace(rsc, "Skipping pseudo-op: %s run=%d, pseudo=%d",
                             action->uuid, is_set(action->flags, pe_action_runnable),
                             is_set(action->flags, pe_action_pseudo));
             } else {
-                crm_trace("Starting due to: %s", action->uuid);
-                crm_trace("%s run=%d, pseudo=%d",
+                pe_rsc_trace(rsc, "Starting due to: %s", action->uuid);
+                pe_rsc_trace(rsc, "%s run=%d, pseudo=%d",
                             action->uuid, is_set(action->flags, pe_action_runnable),
                             is_set(action->flags, pe_action_pseudo));
                 *starting = TRUE;
@@ -794,7 +794,7 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
     get_clone_variant_data(clone_data, rsc);
 
-    crm_trace("Creating actions for %s", rsc->id);
+    pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
@@ -857,7 +857,7 @@ clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     get_clone_variant_data(clone_data, rsc);
 
-    crm_trace("Internal constraints for %s", rsc->id);
+    pe_rsc_trace(rsc, "Internal constraints for %s", rsc->id);
     new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START, pe_order_optional, data_set);
     new_rsc_order(rsc, RSC_START, rsc, RSC_STARTED, pe_order_runnable_left, data_set);
     new_rsc_order(rsc, RSC_STOP, rsc, RSC_STOPPED, pe_order_runnable_left, data_set);
@@ -986,7 +986,7 @@ find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_
         }
     }
 
-    crm_debug("Can't pair %s with %s", local_child->id, rsc->id);
+    pe_rsc_debug(rsc, "Can't pair %s with %s", local_child->id, rsc->id);
   done:
     g_list_free(scratch);
     return pair;
@@ -1029,7 +1029,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
     get_clone_variant_data(clone_data, constraint->rsc_rh);
-    crm_trace("Processing constraint %s: %s -> %s %d",
+    pe_rsc_trace(rsc_rh, "Processing constraint %s: %s -> %s %d",
                 constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
 
     if (constraint->rsc_lh->variant >= pe_clone) {
@@ -1048,7 +1048,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     }
 
     if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
-        crm_trace("%s is still provisional", rsc_rh->id);
+        pe_rsc_trace(rsc_rh, "%s is still provisional", rsc_rh->id);
         return;
 
     } else if (do_interleave) {
@@ -1057,7 +1057,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
         rh_child = find_compatible_child(rsc_lh, rsc_rh, RSC_ROLE_UNKNOWN, FALSE);
 
         if (rh_child) {
-            crm_debug("Pairing %s with %s", rsc_lh->id, rh_child->id);
+            pe_rsc_debug(rsc_rh, "Pairing %s with %s", rsc_lh->id, rh_child->id);
             rsc_lh->cmds->rsc_colocation_lh(rsc_lh, rh_child, constraint);
 
         } else if (constraint->score >= INFINITY) {
@@ -1065,7 +1065,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
             assign_node(rsc_lh, NULL, TRUE);
 
         } else {
-            crm_debug("Cannot pair %s with instance of %s", rsc_lh->id, rsc_rh->id);
+            pe_rsc_debug(rsc_rh, "Cannot pair %s with instance of %s", rsc_lh->id, rsc_rh->id);
         }
 
         return;
@@ -1152,14 +1152,14 @@ clone_action_flags(action_t * action, node_t * node)
 
         child_action =
             find_first_action(child->actions, NULL, task_s, child->children ? NULL : node);
-        crm_trace("Checking for %s in %s on %s", task_s, child->id,
+        pe_rsc_trace(child, "Checking for %s in %s on %s", task_s, child->id,
                   node ? node->details->uname : "none");
         if (child_action) {
             enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
 
             if (is_set(flags, pe_action_optional)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
-                crm_trace("%s is manditory because of %s", action->uuid, child_action->uuid);
+                pe_rsc_trace(child, "%s is manditory because of %s", action->uuid, child_action->uuid);
                 flags = crm_clear_bit(__FUNCTION__, action->rsc->id, flags, pe_action_optional);
                 pe_clear_action_bit(action, pe_action_optional);
             }
@@ -1174,14 +1174,14 @@ clone_action_flags(action_t * action, node_t * node)
             for (; gIter2 != NULL; gIter2 = gIter2->next) {
                 action_t *op = (action_t *) gIter2->data;
 
-                crm_trace("%s on %s (%s)", op->uuid, op->node ? op->node->details->uname : "none",
+                pe_rsc_trace(child, "%s on %s (%s)", op->uuid, op->node ? op->node->details->uname : "none",
                           op->task);
             }
         }
     }
 
     if (check_runnable && any_runnable == FALSE) {
-        crm_trace("%s is not runnable because no children are", action->uuid);
+        pe_rsc_trace(action->rsc, "%s is not runnable because no children are", action->uuid);
         flags = crm_clear_bit(__FUNCTION__, action->rsc->id, flags, pe_action_runnable);
         if (node == NULL) {
             pe_clear_action_bit(action, pe_action_runnable);
@@ -1228,7 +1228,7 @@ clone_update_actions_interleave(action_t * first, action_t * then, node_t * node
              *   not be allowed to start
              */
             if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
-                crm_info("Inhibiting %s from being active", then_child->id);
+                pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
                 assign_node(then_child, NULL, TRUE);
             }
 
@@ -1236,7 +1236,7 @@ clone_update_actions_interleave(action_t * first, action_t * then, node_t * node
             action_t *first_action = NULL;
             action_t *then_action = NULL;
 
-            crm_debug("Pairing %s with %s", first_child->id, then_child->id);
+            pe_rsc_debug(then->rsc, "Pairing %s with %s", first_child->id, then_child->id);
 
             first_action = find_first_action(first_child->actions, NULL, first_task, node);
             then_action = find_first_action(then_child->actions, NULL, then->task, node);
@@ -1324,7 +1324,7 @@ clone_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
 {
     GListPtr gIter = rsc->children;
 
-    crm_trace("Processing location constraint %s for %s", constraint->id, rsc->id);
+    pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
 
     native_rsc_location(rsc, constraint);
 

@@ -58,7 +58,7 @@ get_action_flags(action_t * action, node_t * node)
              */
             if (is_not_set(clone_flags, pe_action_runnable)
                 && is_set(flags, pe_action_runnable)) {
-                crm_trace("Fixing up runnable flag for %s", action->uuid);
+                pe_rsc_trace(action->rsc, "Fixing up runnable flag for %s", action->uuid);
                 set_bit(clone_flags, pe_action_runnable);
             }
             flags = clone_flags;
@@ -77,7 +77,7 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
     char *raw_task = NULL;
     int task = no_action;
 
-    crm_trace("Processing %s", old_uuid);
+    pe_rsc_trace(rsc, "Processing %s", old_uuid);
     if (old_uuid == NULL) {
         return NULL;
 
@@ -126,7 +126,7 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
         } else {
             uuid = generate_op_key(rid, task2text(task + 1), 0);
         }
-        crm_trace("Converted %s -> %s", old_uuid, uuid);
+        pe_rsc_trace(rsc, "Converted %s -> %s", old_uuid, uuid);
     }
 
   done:
@@ -160,7 +160,7 @@ rsc_expand_action(action_t * action)
 
         uuid = convert_non_atomic_uuid(action->uuid, action->rsc, notify, FALSE);
         if (uuid) {
-            crm_trace("Converting %s to %s %d", action->uuid, uuid,
+            pe_rsc_trace(action->rsc, "Converting %s to %s %d", action->uuid, uuid,
                       is_set(action->rsc->flags, pe_rsc_notify));
             result = find_first_action(action->rsc->actions, uuid, NULL, NULL);
             if (result == NULL) {
@@ -194,7 +194,11 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                 changed |= pe_graph_updated_then;
             }
         }
-        crm_trace("implies right: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
+        if (changed) {
+            pe_rsc_trace(then->rsc, "implies right: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("implies right: %s then %s", first->uuid, then->uuid);
+        }
     }
 
     if ((type & pe_order_restart) && then->rsc) {
@@ -204,7 +208,11 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         changed |=
             then->rsc->cmds->update_actions(first, then, node, flags, restart,
                                             pe_order_restart);
-        crm_trace("restart: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
+        if (changed) {
+            pe_rsc_trace(then->rsc, "restart: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("restart: %s then %s", first->uuid, then->uuid);
+        }
     }
 
     if (type & pe_order_implies_first) {
@@ -219,7 +227,12 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                 changed |= pe_graph_updated_first;
             }
         }
-        crm_trace("implies left: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
+
+        if (changed) {
+            pe_rsc_trace(then->rsc, "implies left: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("implies left: %s then %s", first->uuid, then->uuid);
+        }
     }
 
     if (type & pe_order_implies_first_master) {
@@ -229,7 +242,12 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                 then->rsc->cmds->update_actions(first, then, node, flags & pe_action_optional,
                                                  pe_action_optional, pe_order_implies_first_master);
         }
-        crm_trace("implies left when right rsc is Master role: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
+
+        if (changed) {
+            pe_rsc_trace(then->rsc, "implies left when right rsc is Master role: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("implies left when right rsc is Master role: %s then %s", first->uuid, then->uuid);
+        }
     }
 
 
@@ -245,7 +263,11 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                 changed |= pe_graph_updated_then;
             }
         }
-        crm_trace("runnable_one_or_more: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
+        if (changed) {
+            pe_rsc_trace(then->rsc, "runnable_one_or_more: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("runnable_one_or_more: %s then %s", first->uuid, then->uuid);
+        }
     }
 
     if (type & pe_order_runnable_left) {
@@ -260,7 +282,11 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                 changed |= pe_graph_updated_then;
             }
         }
-        crm_trace("runnable: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
+        if (changed) {
+            pe_rsc_trace(then->rsc, "runnable: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("runnable: %s then %s", first->uuid, then->uuid);
+        }
     }
 
     if (type & pe_order_optional) {
@@ -270,17 +296,27 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
                 then->rsc->cmds->update_actions(first, then, node, flags,
                                                 pe_action_runnable, pe_order_optional);
         }
-        crm_trace("optional: %s then %s%s", first->uuid, then->uuid, changed?": changed":"");
+        if (changed) {
+            pe_rsc_trace(then->rsc, "optional: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("optional: %s then %s", first->uuid, then->uuid);
+        }
     }
 
     if (type & pe_order_asymmetrical) {
-        crm_trace("asymmetrical: %s then %s", first->uuid, then->uuid);
         processed = TRUE;
         if (then->rsc) {
             changed |=
                 then->rsc->cmds->update_actions(first, then, node, flags,
                                                 pe_action_runnable, pe_order_asymmetrical);
         }
+
+        if (changed) {
+            pe_rsc_trace(then->rsc, "asymmetrical: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("asymmetrical: %s then %s", first->uuid, then->uuid);
+        }
+
     }
 
     if ((first->flags & pe_action_runnable) && (type & pe_order_implies_then_printed) && (flags & pe_action_optional) == 0) {
@@ -450,7 +486,7 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
         } else if(action->node->details != node->details) {
             continue;
         } else if(is_set(data_set->flags, pe_flag_maintenance_mode)) {
-            crm_trace("Skipping %s: maintainence mode", action->uuid);
+            pe_rsc_trace(action->rsc, "Skipping %s: maintainence mode", action->uuid);
             continue;
         } else if(safe_str_neq(action->task, RSC_STOP)) {
             continue;
@@ -459,11 +495,11 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
             /*
              * If another action depends on this one, we may still end up blocking
              */
-            crm_trace("Skipping %s: unmanaged", action->uuid);
+            pe_rsc_trace(action->rsc, "Skipping %s: unmanaged", action->uuid);
             continue;
         }
 
-        crm_trace("Ordering %s before shutdown on %s", action->uuid, node->details->uname);
+        pe_rsc_trace(action->rsc, "Ordering %s before shutdown on %s", action->uuid, node->details->uname);
         clear_bit(action->flags, pe_action_optional);
         custom_action_order(action->rsc, NULL, action,
                             NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,

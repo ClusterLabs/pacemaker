@@ -454,14 +454,25 @@ crm_log_filter(struct qb_log_callsite *cs)
 }
 
 gboolean
-crm_is_callsite_active(struct qb_log_callsite *cs, int level)
+crm_is_callsite_active(struct qb_log_callsite *cs, int level, int tags)
 {
+    gboolean refilter = FALSE;
+
     if (cs == NULL) {
         return FALSE;
     }
 
-    if(cs->priority != level) {
+    if (cs->priority != level) {
         cs->priority = level;
+        refilter = TRUE;
+    }
+
+    if (cs->tags != tags) {
+        cs->tags = tags;
+        refilter = TRUE;
+    }
+
+    if (refilter) {
         crm_log_filter(cs);
     }
 

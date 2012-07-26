@@ -36,7 +36,7 @@ child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering 
 {
     if (child == NULL) {
         if (clone_data->ordered && last != NULL) {
-            crm_trace("Ordered version (last node)");
+            pe_rsc_trace(rsc, "Ordered version (last node)");
             /* last child promote before promoted started */
             new_rsc_order(last, RSC_PROMOTE, rsc, RSC_PROMOTED, type, data_set);
         }
@@ -50,7 +50,7 @@ child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering 
     new_rsc_order(rsc, RSC_PROMOTE, child, RSC_PROMOTE, type, data_set);
 
     if (clone_data->ordered) {
-        crm_trace("Ordered version");
+        pe_rsc_trace(rsc, "Ordered version");
         if (last == NULL) {
             /* global promote before first child promote */
             last = rsc;
@@ -61,7 +61,7 @@ child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering 
         new_rsc_order(last, RSC_PROMOTE, child, RSC_PROMOTE, type, data_set);
 
     } else {
-        crm_trace("Un-ordered version");
+        pe_rsc_trace(rsc, "Un-ordered version");
     }
 }
 
@@ -72,7 +72,7 @@ child_demoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering t
 {
     if (child == NULL) {
         if (clone_data->ordered && last != NULL) {
-            crm_trace("Ordered version (last node)");
+            pe_rsc_trace(rsc, "Ordered version (last node)");
             /* global demote before first child demote */
             new_rsc_order(rsc, RSC_DEMOTE, last, RSC_DEMOTE, pe_order_optional, data_set);
         }
@@ -86,18 +86,18 @@ child_demoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering t
     new_rsc_order(rsc, RSC_DEMOTE, child, RSC_DEMOTE, pe_order_implies_first_printed, data_set);
 
     if (clone_data->ordered && last != NULL) {
-        crm_trace("Ordered version");
+        pe_rsc_trace(rsc, "Ordered version");
 
         /* child/child relative demote */
         new_rsc_order(child, RSC_DEMOTE, last, RSC_DEMOTE, type, data_set);
 
     } else if (clone_data->ordered) {
-        crm_trace("Ordered version (1st node)");
+        pe_rsc_trace(rsc, "Ordered version (1st node)");
         /* first child stop before global stopped */
         new_rsc_order(child, RSC_DEMOTE, rsc, RSC_DEMOTED, type, data_set);
 
     } else {
-        crm_trace("Un-ordered version");
+        pe_rsc_trace(rsc, "Un-ordered version");
     }
 }
 
@@ -145,7 +145,7 @@ master_update_pseudo_status(resource_t * rsc, gboolean * demoting, gboolean * pr
 									\
 	cons_node = NULL;						\
 	if(cons->role_filter == RSC_ROLE_MASTER) {			\
-	    crm_trace("Applying %s to %s",				\
+	    pe_rsc_trace(rsc, "Applying %s to %s",				\
 			cons->id, child_rsc->id);			\
 	    cons_node = pe_find_node_id(				\
 		cons->node_list_rh, chosen->details->id);		\
@@ -153,7 +153,7 @@ master_update_pseudo_status(resource_t * rsc, gboolean * demoting, gboolean * pr
 	if(cons_node != NULL) {						\
 	    int new_priority = merge_weights(				\
 		child_rsc->priority, cons_node->weight);		\
-	    crm_trace("\t%s: %d->%d (%d)", child_rsc->id,		\
+	    pe_rsc_trace(rsc, "\t%s: %d->%d (%d)", child_rsc->id,		\
 			child_rsc->priority, new_priority, cons_node->weight); \
 	    child_rsc->priority = new_priority;				\
 	}								\
@@ -182,7 +182,7 @@ can_be_master(resource_t * rsc)
             resource_t *child = (resource_t *) gIter->data;
 
             if (can_be_master(child) == NULL) {
-                crm_trace( "Child %s of %s can't be promoted", child->id, rsc->id);
+                pe_rsc_trace(rsc, "Child %s of %s can't be promoted", child->id, rsc->id);
                 return NULL;
             }
         }
@@ -190,7 +190,7 @@ can_be_master(resource_t * rsc)
 
     node = rsc->fns->location(rsc, NULL, FALSE);
     if (node == NULL) {
-        crm_trace( "%s cannot be master: not allocated", rsc->id);
+        pe_rsc_trace(rsc, "%s cannot be master: not allocated", rsc->id);
         return NULL;
 
     } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
@@ -203,7 +203,7 @@ can_be_master(resource_t * rsc)
         }
 
     } else if (rsc->priority < 0) {
-        crm_trace( "%s cannot be master: preference: %d", rsc->id, rsc->priority);
+        pe_rsc_trace(rsc, "%s cannot be master: preference: %d", rsc->id, rsc->priority);
         return NULL;
 
     } else if (can_run_resources(node) == FALSE) {
@@ -223,7 +223,7 @@ can_be_master(resource_t * rsc)
         return local_node;
 
     } else {
-        crm_trace( "%s cannot be master on %s: node full",
+        pe_rsc_trace(rsc, "%s cannot be master on %s: node full",
                             rsc->id, node->details->uname);
     }
 
@@ -285,14 +285,14 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
         return;
     }
     clone_data->merged_master_weights = TRUE;
-    crm_trace("Merging weights for %s", rsc->id);
+    pe_rsc_trace(rsc, "Merging weights for %s", rsc->id);
     set_bit(rsc->flags, pe_rsc_merging);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
 
-        crm_trace("Sort index: %s = %d", child->id, child->sort_index);
+        pe_rsc_trace(rsc, "Sort index: %s = %d", child->id, child->sort_index);
     }
     dump_node_scores(LOG_DEBUG_3, rsc, "Before", rsc->allowed_nodes);
 
@@ -302,14 +302,14 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
 
         chosen = child->fns->location(child, NULL, FALSE);
         if (chosen == NULL || child->sort_index < 0) {
-            crm_trace("Skipping %s", child->id);
+            pe_rsc_trace(rsc, "Skipping %s", child->id);
             continue;
         }
 
         node = (node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
         CRM_ASSERT(node != NULL);
         /* adds in master preferences and rsc_location.role=Master */
-        crm_trace("Adding %s to %s from %s", score2char(child->sort_index), node->details->uname,
+        pe_rsc_trace(rsc, "Adding %s to %s from %s", score2char(child->sort_index), node->details->uname,
                   child->id);
         node->weight = merge_weights(child->sort_index, node->weight);
     }
@@ -326,7 +326,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
         if (constraint->role_lh == RSC_ROLE_MASTER) {
             enum pe_weights flags = constraint->score == INFINITY ? 0 : pe_weights_rollback;
 
-            crm_trace("RHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
+            pe_rsc_trace(rsc, "RHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
                         constraint->score);
             rsc->allowed_nodes =
                 constraint->rsc_rh->cmds->merge_weights(constraint->rsc_rh, rsc->id,
@@ -345,7 +345,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
          * colocated with the master instance
          */
         if (constraint->role_rh == RSC_ROLE_MASTER) {
-            crm_trace("LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
+            pe_rsc_trace(rsc, "LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
                         constraint->score);
             rsc->allowed_nodes =
                 constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id,
@@ -379,7 +379,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
             child->sort_index = INFINITY;
 
         } else if (chosen == NULL || child->sort_index < 0) {
-            crm_trace("%s: %d", child->id, child->sort_index);
+            pe_rsc_trace(rsc, "%s: %d", child->id, child->sort_index);
 
         } else {
             node = (node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
@@ -387,7 +387,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
 
             child->sort_index = node->weight;
         }
-        crm_trace("Set sort index: %s = %d", child->id, child->sort_index);
+        pe_rsc_trace(rsc, "Set sort index: %s = %d", child->id, child->sort_index);
     }
 
     rsc->children = g_list_sort_with_data(rsc->children, sort_master_instance, data_set);
@@ -409,7 +409,7 @@ anonymous_known_on(resource_t * rsc, node_t *node)
          * known here implies nothing
          */
         rsc = parent->fns->find_rsc(child, key, NULL, pe_find_clone);
-        crm_trace("Checking %s for %s on %s", rsc->id, key, node->details->uname);
+        pe_rsc_trace(rsc, "Checking %s for %s on %s", rsc->id, key, node->details->uname);
         if(g_hash_table_lookup(rsc->known_on, node->details->id)) {
             return TRUE;
         }
@@ -443,7 +443,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
 
     if (node == NULL) {
         if(rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED) {
-            crm_trace("Ingoring master score for %s: unknown state", rsc->id);
+            pe_rsc_trace(rsc, "Ingoring master score for %s: unknown state", rsc->id);
             return score;
         }
 
@@ -452,10 +452,10 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
         node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
 
         if(is_not_set(rsc->flags, pe_rsc_unique) && anonymous_known_on(rsc, node)) {
-            crm_trace("Anonymous clone %s is known on %s", rsc->id, node->details->uname);
+            pe_rsc_trace(rsc, "Anonymous clone %s is known on %s", rsc->id, node->details->uname);
 
         } else if (match == NULL && known == NULL) {
-            crm_trace("%s (aka. %s) is not known on %s - ignoring", rsc->id, rsc->clone_name, node->details->uname);
+            pe_rsc_trace(rsc, "%s (aka. %s) is not known on %s - ignoring", rsc->id, rsc->clone_name, node->details->uname);
             return score;
         }
 
@@ -464,7 +464,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
             return score;
 
         } else if (match->weight < 0) {
-            crm_trace("%s on %s has score: %d - ignoring",
+            pe_rsc_trace(rsc, "%s on %s has score: %d - ignoring",
                       rsc->id, match->details->uname, match->weight);
             return score;
         }
@@ -483,7 +483,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
 
     if (node) {
         attr_value = g_hash_table_lookup(node->details->attrs, attr_name);
-        crm_trace("%s: %s[%s] = %s", rsc->id, attr_name, node->details->uname, crm_str(attr_value));
+        pe_rsc_trace(rsc, "%s: %s[%s] = %s", rsc->id, attr_name, node->details->uname, crm_str(attr_value));
     }
 
     if (attr_value != NULL) {
@@ -531,7 +531,7 @@ apply_master_prefs(resource_t * rsc)
             if (score > 0) {
                 new_score = merge_weights(node->weight, score);
                 if (new_score != node->weight) {
-                    crm_trace("\t%s: Updating preference for %s (%d->%d)",
+                    pe_rsc_trace(rsc, "\t%s: Updating preference for %s (%d->%d)",
                                 child_rsc->id, node->details->uname, node->weight, new_score);
                     node->weight = new_score;
                 }
@@ -539,7 +539,7 @@ apply_master_prefs(resource_t * rsc)
 
             new_score = max(child_rsc->priority, score);
             if (new_score != child_rsc->priority) {
-                crm_trace("\t%s: Updating priority (%d->%d)",
+                pe_rsc_trace(rsc, "\t%s: Updating priority (%d->%d)",
                             child_rsc->id, child_rsc->priority, new_score);
                 child_rsc->priority = new_score;
             }
@@ -615,7 +615,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         return NULL;
 
     } else if (is_set(rsc->flags, pe_rsc_allocating)) {
-        crm_debug("Dependency loop detected involving %s", rsc->id);
+        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
         return NULL;
     }
 
@@ -639,7 +639,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         GListPtr list = NULL;
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        crm_trace("Assigning priority for %s: %s", child_rsc->id,
+        pe_rsc_trace(rsc, "Assigning priority for %s: %s", child_rsc->id,
                     role2text(child_rsc->next_role));
 
         if (child_rsc->fns->state(child_rsc, TRUE) == RSC_ROLE_STARTED) {
@@ -696,7 +696,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
 
         child_rsc->sort_index = child_rsc->priority;
-        crm_trace("Assigning priority for %s: %d", child_rsc->id, child_rsc->priority);
+        pe_rsc_trace(rsc, "Assigning priority for %s: %d", child_rsc->id, child_rsc->priority);
 
         if (next_role == RSC_ROLE_MASTER) {
             child_rsc->sort_index = INFINITY;
@@ -729,13 +729,13 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                                  */
 
         if (child_rsc->sort_index < 0) {
-            crm_trace("Not supposed to promote child: %s", child_rsc->id);
+            pe_rsc_trace(rsc, "Not supposed to promote child: %s", child_rsc->id);
 
         } else if (promoted < clone_data->master_max || is_not_set(rsc->flags, pe_rsc_managed)) {
             chosen = can_be_master(child_rsc);
         }
 
-        crm_debug("%s master score: %d", child_rsc->id, child_rsc->priority);
+        pe_rsc_debug(rsc, "%s master score: %d", child_rsc->id, child_rsc->priority);
 
         if (chosen == NULL) {
             set_role_slave(child_rsc, FALSE);
@@ -743,14 +743,14 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
 
         chosen->count++;
-        crm_info("Promoting %s (%s %s)",
+        pe_rsc_info(rsc, "Promoting %s (%s %s)",
                  child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
         set_role_master(child_rsc);
         promoted++;
     }
 
     clone_data->masters_allocated = promoted;
-    crm_info("%s: Promoted %d instances of a possible %d to master",
+    pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d to master",
              rsc->id, promoted, clone_data->master_max);
 
     clear_bit(rsc->flags, pe_rsc_provisional);
@@ -774,7 +774,7 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
     get_clone_variant_data(clone_data, rsc);
 
-    crm_debug("Creating actions for %s", rsc->id);
+    pe_rsc_debug(rsc, "Creating actions for %s", rsc->id);
 
     /* create actions as normal */
     clone_create_actions(rsc, data_set);
@@ -784,13 +784,13 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         gboolean child_demoting = FALSE;
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        crm_trace("Creating actions for %s", child_rsc->id);
+        pe_rsc_trace(rsc, "Creating actions for %s", child_rsc->id);
         child_rsc->cmds->create_actions(child_rsc, data_set);
         master_update_pseudo_status(child_rsc, &child_demoting, &child_promoting);
 
         any_demoting = any_demoting || child_demoting;
         any_promoting = any_promoting || child_promoting;
-        crm_trace("Created actions for %s: %d %d", child_rsc->id, child_promoting,
+        pe_rsc_trace(rsc, "Created actions for %s: %d %d", child_rsc->id, child_promoting,
                     child_demoting);
     }
 
@@ -949,14 +949,14 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
         return;
 
     } else if (constraint->role_rh == RSC_ROLE_UNKNOWN) {
-        crm_trace("Handling %s as a clone colocation", constraint->id);
+        pe_rsc_trace(rsc_rh, "Handling %s as a clone colocation", constraint->id);
         clone_rsc_colocation_rh(rsc_lh, rsc_rh, constraint);
         return;
     }
 
     CRM_CHECK(rsc_lh != NULL, return);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
-    crm_trace("Processing constraint %s: %d", constraint->id, constraint->score);
+    pe_rsc_trace(rsc_rh, "Processing constraint %s: %d", constraint->id, constraint->score);
 
     if (constraint->role_rh == RSC_ROLE_UNKNOWN) {
 
@@ -976,9 +976,9 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
             node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
             enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);
 
-            crm_trace("Processing: %s", child_rsc->id);
+            pe_rsc_trace(rsc_rh, "Processing: %s", child_rsc->id);
             if (chosen != NULL && next_role == constraint->role_rh) {
-                crm_trace("Applying: %s %s %s %d", child_rsc->id,
+                pe_rsc_trace(rsc_rh, "Applying: %s %s %s %d", child_rsc->id,
                             role2text(next_role), chosen->details->uname, constraint->score);
                 if (constraint->score < INFINITY) {
                     node_hash_update_one(rsc_lh->allowed_nodes, chosen,
@@ -1002,14 +1002,14 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
         resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, constraint->role_rh, FALSE);
 
         if (rh_child == NULL && constraint->score >= INFINITY) {
-            crm_trace("%s can't be promoted %s", rsc_lh->id, constraint->id);
+            pe_rsc_trace(rsc_lh, "%s can't be promoted %s", rsc_lh->id, constraint->id);
             rsc_lh->priority = -INFINITY;
 
         } else if (rh_child != NULL) {
             int new_priority = merge_weights(rsc_lh->priority, constraint->score);
 
-            crm_debug("Applying %s to %s", constraint->id, rsc_lh->id);
-            crm_debug("\t%s: %d->%d", rsc_lh->id, rsc_lh->priority, new_priority);
+            pe_rsc_debug(rsc_lh, "Applying %s to %s", constraint->id, rsc_lh->id);
+            pe_rsc_debug(rsc_lh, "\t%s: %d->%d", rsc_lh->id, rsc_lh->priority, new_priority);
             rsc_lh->priority = new_priority;
         }
     }

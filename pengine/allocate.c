@@ -215,7 +215,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     if (interval > 0) {
         xmlNode *op_match = NULL;
 
-        crm_trace("Checking parameters for %s", key);
+        pe_rsc_trace(rsc, "Checking parameters for %s", key);
         op_match = find_rsc_op_entry(rsc, key);
 
         if (op_match == NULL && is_set(data_set->flags, pe_flag_stop_action_orphans)) {
@@ -224,7 +224,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
             return TRUE;
 
         } else if (op_match == NULL) {
-            crm_debug("Orphan action detected: %s on %s", key, active_node->details->uname);
+            pe_rsc_debug(rsc, "Orphan action detected: %s on %s", key, active_node->details->uname);
             free(key);
             return TRUE;
         }
@@ -305,7 +305,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 #endif
 
         } else if (digest_restart) {
-            crm_trace("Reloading '%s' action for resource %s", task, rsc->id);
+            pe_rsc_trace(rsc, "Reloading '%s' action for resource %s", task, rsc->id);
 
             /* Allow this resource to reload - unless something else causes a full restart */
             set_bit(rsc->flags, pe_rsc_try_reload);
@@ -314,7 +314,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
             custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
 
         } else {
-            crm_trace("Resource %s doesn't know how to reload", rsc->id);
+            pe_rsc_trace(rsc, "Resource %s doesn't know how to reload", rsc->id);
 
             /* Re-send the start/demote/promote op
              * Recurring ops will be detected independantly
@@ -359,16 +359,16 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     CRM_CHECK(node != NULL, return);
 
     if (is_set(rsc->flags, pe_rsc_orphan)) {
-        crm_trace("Skipping param check for %s: orphan", rsc->id);
+        pe_rsc_trace(rsc, "Skipping param check for %s: orphan", rsc->id);
         return;
 
     } else if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
-        crm_trace("Skipping param check for %s: no longer active on %s",
+        pe_rsc_trace(rsc, "Skipping param check for %s: no longer active on %s",
                     rsc->id, node->details->uname);
         return;
     }
 
-    crm_trace("Processing %s on %s", rsc->id, node->details->uname);
+    pe_rsc_trace(rsc, "Processing %s on %s", rsc->id, node->details->uname);
 
     if (check_rsc_parameters(rsc, node, rsc_entry, data_set)) {
         DeleteRsc(rsc, node, FALSE, data_set);
@@ -588,14 +588,14 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
             resource_t *sticky_rsc = rsc;
 
             resource_location(sticky_rsc, node, rsc->stickiness, "stickiness", data_set);
-            crm_debug("Resource %s: preferring current location"
+            pe_rsc_debug(sticky_rsc, "Resource %s: preferring current location"
                       " (node=%s, weight=%d)", sticky_rsc->id,
                       node->details->uname, rsc->stickiness);
         } else {
             GHashTableIter iter;
             node_t *nIter = NULL;
 
-            crm_debug("Ignoring stickiness for %s: the cluster is asymmetric"
+            pe_rsc_debug(rsc, "Ignoring stickiness for %s: the cluster is asymmetric"
                       " and node %s is not explicitly allowed", rsc->id, node->details->uname);
             g_hash_table_iter_init(&iter, rsc->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (void **)&nIter)) {
@@ -1110,7 +1110,7 @@ stage5(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
 
-        crm_trace("Allocating: %s", rsc->id);
+        pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
         rsc->cmds->allocate(rsc, NULL, data_set);
     }
 
@@ -1405,16 +1405,16 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
     }
 
     if (rh_actions == NULL) {
-        crm_trace("No RH-Side (%s/%s) found for constraint..."
+        pe_rsc_trace(rsc, "No RH-Side (%s/%s) found for constraint..."
                     " ignoring", rsc->id, order->rh_action_task);
         if (lh_action) {
-            crm_trace("LH-Side was: %s", lh_action->uuid);
+            pe_rsc_trace(rsc, "LH-Side was: %s", lh_action->uuid);
         }
         return;
     }
 
     if (lh_action && lh_action->rsc == rsc && is_set(lh_action->flags, pe_action_dangle)) {
-        crm_trace("Detected dangling operation %s -> %s", lh_action->uuid, order->rh_action_task);
+        pe_rsc_trace(rsc, "Detected dangling operation %s -> %s", lh_action->uuid, order->rh_action_task);
         clear_bit(type, pe_order_implies_then);
     }
 
@@ -1464,13 +1464,13 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
         key = generate_op_key(lh_rsc->id, op_type, interval);
 
         if (lh_rsc->fns->state(lh_rsc, TRUE) != RSC_ROLE_STOPPED || safe_str_neq(op_type, RSC_STOP)) {
-            crm_trace("No LH-Side (%s/%s) found for constraint %d with %s - creating",
+            pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - creating",
                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
             lh_action = custom_action(lh_rsc, key, op_type, NULL, TRUE, TRUE, data_set);
             lh_actions = g_list_prepend(NULL, lh_action);
         } else {
             free(key);
-            crm_trace("No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
+            pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
         }
 
@@ -1696,24 +1696,24 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
     const char *task = NULL;
 
     if (op == NULL || confirm == NULL) {
-        crm_trace("Op=%p confirm=%p", op, confirm);
+        pe_rsc_trace(rsc, "Op=%p confirm=%p", op, confirm);
         return NULL;
     }
 
     CRM_CHECK(node != NULL, return NULL);
 
     if (node->details->online == FALSE) {
-        crm_trace("Skipping notification for %s: node offline", rsc->id);
+        pe_rsc_trace(rsc, "Skipping notification for %s: node offline", rsc->id);
         return NULL;
     } else if (is_set(op->flags, pe_action_runnable) == FALSE) {
-        crm_trace("Skipping notification for %s: not runnable", op->uuid);
+        pe_rsc_trace(rsc, "Skipping notification for %s: not runnable", op->uuid);
         return NULL;
     }
 
     value = g_hash_table_lookup(op->meta, "notify_type");
     task = g_hash_table_lookup(op->meta, "notify_operation");
 
-    crm_trace("Creating notify actions for %s: %s (%s-%s)", op->uuid, rsc->id, value, task);
+    pe_rsc_trace(rsc, "Creating notify actions for %s: %s (%s-%s)", op->uuid, rsc->id, value, task);
 
     key = generate_notify_key(rsc->id, value, task);
     trigger = custom_action(rsc, key, op->task, node,
@@ -1722,7 +1722,7 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
     g_hash_table_foreach(n_data->keys, dup_attr, trigger->meta);
 
     /* pseudo_notify before notify */
-    crm_trace("Ordering %s before %s (%d->%d)", op->uuid, trigger->uuid, trigger->id, op->id);
+    pe_rsc_trace(rsc, "Ordering %s before %s (%d->%d)", op->uuid, trigger->uuid, trigger->id, op->id);
 
     order_actions(op, trigger, pe_order_optional);
     order_actions(trigger, confirm, pe_order_optional);
@@ -1754,10 +1754,10 @@ pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_worki
             const char *interval = g_hash_table_lookup(mon->meta, "interval");
 
             if (interval == NULL || safe_str_eq(interval, "0")) {
-                crm_trace("Skipping %s: interval", mon->uuid);
+                pe_rsc_trace(rsc, "Skipping %s: interval", mon->uuid);
                 continue;
             } else if (safe_str_eq(mon->task, "cancel")) {
-                crm_trace("Skipping %s: cancel", mon->uuid);
+                pe_rsc_trace(rsc, "Skipping %s: cancel", mon->uuid);
                 continue;
             }
 
@@ -1910,7 +1910,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
             entry->node = rsc->running_on->data;
         }
 
-        crm_trace("%s state: %s", rsc->id, role2text(rsc->role));
+        pe_rsc_trace(rsc, "%s state: %s", rsc->id, role2text(rsc->role));
 
         switch (rsc->role) {
             case RSC_ROLE_STOPPED:
@@ -2102,7 +2102,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
         }
     }
 
-    crm_trace("Creating notificaitons for: %s.%s (%s->%s)",
+    pe_rsc_trace(rsc, "Creating notificaitons for: %s.%s (%s->%s)",
                 n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
 
     stop = find_first_action(rsc->actions, NULL, RSC_STOP, NULL);
@@ -2210,7 +2210,7 @@ stage8(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
 
-        crm_trace("processing actions for rsc=%s", rsc->id);
+        pe_rsc_trace(rsc, "processing actions for rsc=%s", rsc->id);
         rsc->cmds->expand(rsc, data_set);
     }
 
