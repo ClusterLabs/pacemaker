@@ -291,6 +291,11 @@ lrmd_connection_destroy(gpointer userdata)
     lrmd_private_t *native = lrmd->private;
 
     crm_info("connection destroyed");
+
+    /* Prevent these from being cleaned up in lrmd_api_disconnect() */
+    native->ipc = NULL;
+    native->source = NULL;
+
     if (native->callback) {
         lrmd_event_data_t event = { 0, };
         event.type = lrmd_event_disconnect;
