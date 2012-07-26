@@ -1101,16 +1101,18 @@ update_attrd(const char *host, const char *name, const char *value, const char *
 
     do {
         if (crm_ipc_connected(attrd_ipc) == FALSE) {
-            crm_info("Connecting to cluster... %d retries remaining", max);
+            crm_info("Connecting to attrd... %d retries remaining", max);
             crm_ipc_connect(attrd_ipc);
         }
 
         rc = attrd_update_delegate(attrd_ipc, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL, NULL, user_name);
         if (rc > 0) {
             break;
+
+        } else if(rc != -EAGAIN && rc != -EREMOTEIO) {
+            crm_ipc_close(attrd_ipc);
         }
 
-        crm_ipc_close(attrd_ipc);
         sleep(5-max);
 
     } while(max--);
