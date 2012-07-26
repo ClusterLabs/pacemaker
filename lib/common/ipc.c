@@ -319,6 +319,7 @@ crm_ipc_new(const char *name, size_t max_size)
 bool
 crm_ipc_connect(crm_ipc_t *client) 
 {
+    client->need_reply = FALSE;
     client->ipc = qb_ipcc_connect(client->name, client->buf_size);
 
     if (client->ipc == NULL) {
@@ -469,7 +470,7 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
     if(crm_ipc_connected(client) == FALSE) {
         /* Don't even bother */
         crm_notice("Connection to %s closed", client->name);
-        return ENOTCONN;
+        return -ENOTCONN;
     }
 
     if(client->need_reply) {
