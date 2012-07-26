@@ -638,6 +638,18 @@ if __name__ == "__main__":
 		test.add_cmd_check_stdout("-c metadata -C \"stonith\" -P \"pacemaker\" -T \"fence_dummy_monitor\"",
 			"resource-agent name=\"fence_dummy_monitor\"")
 
+		### get metadata ###
+		if "systemd" in self.rsc_classes:
+			test = self.new_test("get_systemd_metadata", "Retrieve metadata for a resource")
+			test.add_cmd_check_stdout("-c metadata -C \"systemd\" -T \"lrmd_dummy_daemon\""
+				,"resource-agent name=\"lrmd_dummy_daemon\"")
+
+		### get metadata ###
+		if "upstart" in self.rsc_classes:
+			test = self.new_test("get_systemd_metadata", "Retrieve metadata for a resource")
+			test.add_cmd_check_stdout("-c metadata -C \"systemd\" -T \"lrmd_dummy_daemon\""
+				,"resource-agent name=\"lrmd_dummy_daemon\"")
+
 		### get ocf providers  ###
 		test = self.new_test("list_ocf_providers", "Retrieve list of available resource providers, verifies pacemaker is a provider.")
 		test.add_cmd_check_stdout("-c list_ocf_providers ", "pacemaker")
