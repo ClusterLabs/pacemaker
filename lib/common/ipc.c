@@ -191,6 +191,7 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
     char *buffer = dump_xml_unformatted(message);
     struct timespec delay = { 0, 250000000 }; /* 250ms */
 
+    memset(&iov, 0, 2 * sizeof(struct iovec));
     iov[0].iov_len = sizeof(struct qb_ipc_response_header);
     iov[0].iov_base = &header;
     iov[1].iov_len = 1 + strlen(buffer);

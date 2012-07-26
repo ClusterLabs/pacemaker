@@ -1333,24 +1333,36 @@ cib_shutdown(int nsig)
 
         cib_shutdown_flag = TRUE;
 
-        for(c = qb_ipcs_connection_first_get(ipcs_rw); c != NULL; c = qb_ipcs_connection_next_get(ipcs_rw, c)) {
-            crm_debug("Disconnecting r/w client %p...", c);
-            qb_ipcs_disconnect(c);
-            qb_ipcs_connection_unref(c);
+        c = qb_ipcs_connection_first_get(ipcs_rw);
+        while(c != NULL) {
+            qb_ipcs_connection_t *last = c;
+            c = qb_ipcs_connection_next_get(ipcs_rw, last);
+
+            crm_debug("Disconnecting r/w client %p...", last);
+            qb_ipcs_disconnect(last);
+            qb_ipcs_connection_unref(last);
             disconnects++;
         }
 
-        for(c = qb_ipcs_connection_first_get(ipcs_ro); c != NULL; c = qb_ipcs_connection_next_get(ipcs_ro, c)) {
-            crm_debug("Disconnecting r/o client %p...", c);
-            qb_ipcs_disconnect(c);
-            qb_ipcs_connection_unref(c);
+        c = qb_ipcs_connection_first_get(ipcs_ro);
+        while(c != NULL) {
+            qb_ipcs_connection_t *last = c;
+            c = qb_ipcs_connection_next_get(ipcs_ro, last);
+
+            crm_debug("Disconnecting r/o client %p...", last);
+            qb_ipcs_disconnect(last);
+            qb_ipcs_connection_unref(last);
             disconnects++;
         }
 
-        for(c = qb_ipcs_connection_first_get(ipcs_shm); c != NULL; c = qb_ipcs_connection_next_get(ipcs_shm, c)) {
-            crm_debug("Disconnecting non-blocking r/w client %p...", c);
-            qb_ipcs_disconnect(c);
-            qb_ipcs_connection_unref(c);
+        c = qb_ipcs_connection_first_get(ipcs_shm);
+        while(c != NULL) {
+            qb_ipcs_connection_t *last = c;
+            c = qb_ipcs_connection_next_get(ipcs_shm, last);
+
+            crm_debug("Disconnecting non-blocking r/w client %p...", last);
+            qb_ipcs_disconnect(last);
+            qb_ipcs_connection_unref(last);
             disconnects++;
         }
 
@@ -1405,9 +1417,11 @@ terminate_cib(const char *caller, gboolean fast)
 {
     if (remote_fd > 0) {
         close(remote_fd);
+        remote_fd = 0;
     }
     if (remote_tls_fd > 0) {
         close(remote_tls_fd);
+        remote_tls_fd = 0;
     }
     
     if(!fast) {
@@ -1416,6 +1430,7 @@ terminate_cib(const char *caller, gboolean fast)
             if (hb_conn != NULL) {
                 crm_info("%s: Disconnecting heartbeat", caller);
                 hb_conn->llc_ops->signoff(hb_conn, FALSE);
+                hb_conn = NULL;
 
             } else {
                 crm_err("%s: No heartbeat connection", caller);
@@ -1431,16 +1446,21 @@ terminate_cib(const char *caller, gboolean fast)
 
     uninitializeCib();
 
-    crm_info("%s: Exiting%s...", caller, fast?" fast":"");
-    qb_log_fini();
+    crm_info("%s: Exiting%s...", caller, fast?" fast":mainloop?" from mainloop":"");
 
-    if (fast) {
-        exit(EX_USAGE);
-
-    } else if(mainloop != NULL && g_main_is_running(mainloop)) {
+    if(fast == FALSE && mainloop != NULL && g_main_is_running(mainloop)) {
         g_main_quit(mainloop);
 
     } else {
-        exit(EX_OK);
+        qb_ipcs_destroy(ipcs_ro);
+        qb_ipcs_destroy(ipcs_rw);
+        qb_ipcs_destroy(ipcs_shm);
+        qb_log_fini();
+
+        if (fast) {
+            exit(EX_USAGE);
+        } else {
+            exit(EX_OK);
+        }
     }
 }

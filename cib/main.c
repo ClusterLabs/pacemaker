@@ -538,6 +538,7 @@ cib_init(void)
     qb_ipcs_destroy(ipcs_ro);
     qb_ipcs_destroy(ipcs_rw);
     qb_ipcs_destroy(ipcs_shm);
+    qb_log_fini();
 
     return 0;
 }
