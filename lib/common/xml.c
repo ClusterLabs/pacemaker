@@ -1011,12 +1011,12 @@ log_data_element(
 	
     if(formatted) {
 	offset = print_spaces(buffer, depth, buffer_len - offset);
-        if(diff_plus && crm_element_value(data, XML_DIFF_MARKER)) {
+        if(diff_plus && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
             prefix_m = strdup(prefix);
             prefix_m[1] = '+';
             prefix = prefix_m;
 
-        } else if(diff_minus && crm_element_value(data, XML_DIFF_MARKER)) {
+        } else if(diff_minus && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
             prefix_m = strdup(prefix);
             prefix_m[1] = '-';
             prefix = prefix_m;
