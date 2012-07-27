@@ -250,7 +250,6 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
 {
 #if SUPPORT_PLUGIN
     gboolean addr_changed = FALSE;
-    gboolean procs_changed = FALSE;
     gboolean votes_changed = FALSE;
 #endif
     crm_node_t *node = NULL;
@@ -302,13 +301,11 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
             node->addr = strdup(addr);
         }
     }
-    if (state_changed || addr_changed || votes_changed) {
-        do_crm_log_unlikely(state_changed?LOG_NOTICE:LOG_INFO,
-                   "%s: Node %s: id=%u state=%s%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
-                   " proc=%.32x%s", source, node->uname, node->id, node->state, state_changed ? " (new)" : "",
-                   node->addr, addr_changed ? " (new)" : "", node->votes,
-                   votes_changed ? " (new)" : "", node->born, node->last_seen, node->processes,
-                   procs_changed ? " (new)" : "");
+    if (addr_changed || votes_changed) {
+        crm_info("%s: Node %s: id=%u state=%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
+                 " proc=%.32x", source, node->uname, node->id, node->state, 
+                 node->addr, addr_changed ? " (new)" : "", node->votes,
+                 votes_changed ? " (new)" : "", node->born, node->last_seen, node->processes);
     }
 #endif
 
