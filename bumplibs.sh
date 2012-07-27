@@ -9,9 +9,10 @@ headers[pe_rules]="include/crm/pengine/rules.h"
 headers[pe_status]="include/crm/pengine"
 headers[stonithd]="include/crm/stonith-ng.h"
 headers[pengine]="include/crm/pengine pengine/*.h"
+headers[lrmd]="include/crm/lrmd.h"
 
 LAST_RELEASE=`test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1`
-for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pengine; do
+for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pengine lrmd; do
     git diff $LAST_RELEASE..HEAD ${headers[$lib]}
     echo ""
 
@@ -42,6 +43,8 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
     if [ $lines -gt 0 ]; then
 	echo "- Headers: ${headers[$lib]}"
 	echo "- Sources: $full_sources"
+	echo "- Changed Sources since $LAST_RELEASE:"
+	git diff $LAST_RELEASE..HEAD --stat $full_sources
 	echo ""
 	read -p "Are the changes to lib$lib: [A]dditions, [R]emovals or [F]ixes? [None]: " CHANGE
 
@@ -74,18 +77,19 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 	
 	if [ ! -z $CHANGE ]; then
 	    if [ $VER_NEW != $VER_NOW ]; then
-		read -p "Updating $lib library version: $VER -> $VER_NEW"
+		echo "Updating $lib library version: $VER -> $VER_NEW"
 		sed -i.sed  "s/version-info\ $VER_NOW/version-info\ $VER_NEW/" $am
 	    else
-		read -p "No further version changes needed"
+		echo "No further version changes needed"
 	    fi
 	else
-	    read -p "Skipping $lib version"
+	    echo "Skipping $lib version"
 	fi
     else
-	read -p "No changes to $lib interface"
+	echo "No changes to $lib interface"
     fi
-	
+
+    read -p "Continue?"
     echo ""
 done
 
