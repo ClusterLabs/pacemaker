@@ -1570,18 +1570,25 @@ xml_to_event(xmlNode *msg)
     stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
     const char *ntype = crm_element_value(msg, F_SUBTYPE);
     char *data_addr = g_strdup_printf("//%s", ntype);
-    xmlNode *data = get_xpath_object(data_addr, msg, LOG_ERR);
+    xmlNode *data = get_xpath_object(data_addr, msg, LOG_DEBUG);
 
     crm_log_xml_trace(msg, "stonith_notify");
     
     crm_element_value_int(msg, F_STONITH_RC, &(event->result));
 
     if(safe_str_eq(ntype, T_STONITH_NOTIFY_FENCE)) {
-        event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
-        event->target = crm_element_value_copy(data, F_STONITH_TARGET);
         event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
-        event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
-        event->id = crm_element_value_copy(data, F_STONITH_REMOTE);
+
+        if(data) {
+            event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
+            event->target = crm_element_value_copy(data, F_STONITH_TARGET);
+            event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
+            event->id = crm_element_value_copy(data, F_STONITH_REMOTE);
+
+        } else {
+            crm_err("No data for %s event", ntype);
+            crm_log_xml_notice(msg, "BadEvent");
+        }
     }
 
     g_free(data_addr);
