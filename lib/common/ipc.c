@@ -477,7 +477,7 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
         crm_trace("Trying again to obtain pending reply from %s", client->name);
         rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 300);
         if(rc < 0) {
-            crm_err("Sending to %s is disabled until pending reply is recieved", client->name);
+            crm_warn("Sending to %s is disabled until pending reply is recieved", client->name);
             free(buffer);
             return -EREMOTEIO;
 
@@ -560,7 +560,7 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
         crm_notice("Connection to %s closed: %s (%ld)", client->name, pcmk_strerror(rc), rc);
 
     } else if(rc <= 0) {
-        crm_perror(LOG_ERR, "Request to %s failed: %s (%ld)", client->name, pcmk_strerror(rc), rc);
+        crm_warn("Request %d to %s failed: %s (%ld)", header.id, client->name, pcmk_strerror(rc), rc);
         crm_info("Request was %.120s", buffer);
     }
 
