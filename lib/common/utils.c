@@ -1740,7 +1740,7 @@ crm_help(char cmd, int exit_code)
     }
 }
 
-gboolean
+int
 attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char *name,
                       const char *value, const char *section, const char *set, const char *dampen,
                       const char *user_name)
@@ -1830,11 +1830,10 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
     free_xml(update);
     if (rc > 0) {
         crm_debug("Sent update: %s=%s for %s", name, value, host ? host : "localhost");
-        return TRUE;
+    } else {
+        crm_debug("Could not send update %s=%s for %s: %s (%d)", name, value, host ? host : "localhost", pcmk_strerror(rc), rc);
     }
-
-    crm_info("Could not send update %s=%s for %s: %s (%d)", name, value, host ? host : "localhost", pcmk_strerror(rc), rc);
-    return FALSE;
+    return rc;
 }
 
 #define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
