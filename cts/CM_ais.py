@@ -104,12 +104,12 @@ class crm_ais(crm_lha):
         '''Return list of errors which are known and very noisey should be ignored'''
         if 1:
             return [ 
-                "crm_mon:",
-                "crmadmin:",
-                "update_trace_data",
-                "async_notify: strange, client not found",
-                "Parse error: Ignoring unknown option .*nodename",
-                "error: log_operation: Operation 'reboot' .* with device 'FencingFail' returned: -2",
+                r"crm_mon:",
+                r"crmadmin:",
+                r"update_trace_data",
+                r"async_notify: strange, client not found",
+                r"Parse error: Ignoring unknown option .*nodename",
+                r"error: log_operation: Operation 'reboot' .* with device 'FencingFail' returned:",
                 r"Child process .* terminated with signal 9",
                 ]
         return []
