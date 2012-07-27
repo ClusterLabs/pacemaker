@@ -71,7 +71,7 @@ gboolean cib_register_ha(ll_cluster_t * hb_cluster, const char *client_name);
 extern void terminate_cib(const char *caller, gboolean fast);
 
 GMainLoop *mainloop = NULL;
-const char *cib_root = CRM_CONFIG_DIR;
+const char *cib_root = NULL;
 char *cib_our_uname = NULL;
 gboolean preserve_status = FALSE;
 gboolean cib_writes_enabled = TRUE;
@@ -212,6 +212,29 @@ main(int argc, char **argv)
 
     if (argerr) {
         usage(crm_system_name, EX_USAGE);
+    }
+
+    if(cib_root == NULL) {
+        char *path = g_strdup_printf("%s/cib.xml", CRM_CONFIG_DIR);
+        char *legacy = g_strdup_printf("%s/cib.xml", CRM_LEGACY_CONFIG_DIR);
+
+        if(g_file_test(path, G_FILE_TEST_EXISTS)) {
+            cib_root = CRM_CONFIG_DIR;
+
+        } else if(g_file_test(legacy, G_FILE_TEST_EXISTS)) {
+            cib_root = CRM_LEGACY_CONFIG_DIR;
+            crm_notice("Using legacy config location: %s", cib_root);
+
+        } else {
+            cib_root = CRM_CONFIG_DIR;
+            crm_notice("Using new config location: %s", cib_root);
+        }
+
+        g_free(legacy);
+        g_free(path);
+
+    } else {
+        crm_notice("Using custom config location: %s", cib_root);
     }
 
     if (crm_is_writable(cib_root, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {

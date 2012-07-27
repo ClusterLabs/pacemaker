@@ -33,8 +33,11 @@
 /* Set of enabled features */
 #undef CRM_FEATURES
 
-/* Where to keep CIB configuration files */
+/* Where to keep configuration files */
 #undef CRM_CONFIG_DIR
+
+/* Where Pacemaker used to keep configuration files */
+#undef CRM_LEGACY_CONFIG_DIR
 
 /* Group to run Pacemaker daemons as */
 #undef CRM_DAEMON_GROUP

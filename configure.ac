@@ -1058,10 +1058,13 @@ PE_STATE_DIR="${localstatedir}/lib/pengine"
 AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep PEngine outputs)
 AC_SUBST(PE_STATE_DIR)
 
-dnl Eventually move out of the heartbeat dir tree and create compatability code
-CRM_CONFIG_DIR="${localstatedir}/lib/heartbeat/crm"
-AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep CIB configuration files)
+CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
+AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep configuration files)
 AC_SUBST(CRM_CONFIG_DIR)
+
+CRM_LEGACY_CONFIG_DIR="${localstatedir}/lib/heartbeat/crm"
+AC_DEFINE_UNQUOTED(CRM_LEGACY_CONFIG_DIR,"$CRM_LEGACY_CONFIG_DIR", Where Pacemaker used to keep configuration files)
+AC_SUBST(CRM_LEGACY_CONFIG_DIR)
 
 CRM_DAEMON_DIR="${libexecdir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
