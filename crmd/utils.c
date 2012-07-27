@@ -1110,6 +1110,7 @@ update_attrd(const char *host, const char *name, const char *value, const char *
             break;
 
         } else if(rc != -EAGAIN && rc != -EREMOTEIO) {
+            crm_info("Disconnecting from attrd: %s (%d)", pcmk_strerror(rc), rc);
             crm_ipc_close(attrd_ipc);
         }
 
@@ -1117,12 +1118,16 @@ update_attrd(const char *host, const char *name, const char *value, const char *
 
     } while(max--);
     
-    if (rc == FALSE) {
+    if (rc < 0) {
         if(name) {
-            crm_err("Could not send attrd %s update (%d)", name, is_set(fsa_input_register, R_SHUTDOWN));
+            crm_err("Could not send attrd %s update%s: %s (%d)",
+                    name, is_set(fsa_input_register, R_SHUTDOWN)?" at shutdown":"",
+                    pcmk_strerror(rc), rc);
 
         } else {
-            crm_err("Could not send attrd refresh (%d)", is_set(fsa_input_register, R_SHUTDOWN));
+            crm_err("Could not send attrd refresh%s: %s (%d)",
+                    is_set(fsa_input_register, R_SHUTDOWN)?" at shutdown":"",
+                    pcmk_strerror(rc), rc);
         }
 
         if(is_set(fsa_input_register, R_SHUTDOWN)) {
