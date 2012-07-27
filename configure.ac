@@ -1251,8 +1251,10 @@ if test $SUPPORT_CS = 1 -a x$HAVE_oldipc = x0 ; then
     AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
 fi
 
+SUPPORT_PLUGIN=0
 if test $SUPPORT_CS = 1 -a x$HAVE_confdb = x1; then
     dnl Need confdb to support cman and the plugins
+    SUPPORT_PLUGIN=1
     LCRSODIR=`$PKGCONFIG corosync --variable=lcrsodir`
     STACKS="$STACKS corosync-plugin"
     COROSYNC_LIBS="$COROSYNC_LIBS $confdb_LIBS"
@@ -1284,12 +1286,6 @@ elif test $SUPPORT_CS != 0; then
     fi
 fi
 
-if test $HAVE_confdb = 1; then
-   dnl confdb went away at about the same time as support for plugins	
-   SUPPORT_PLUGIN=1
-else
-   SUPPORT_PLUGIN=0
-fi
 AC_DEFINE_UNQUOTED(SUPPORT_COROSYNC, $SUPPORT_CS,    Support the Corosync messaging and membership layer)
 AC_DEFINE_UNQUOTED(SUPPORT_CMAN,     $SUPPORT_CMAN,  Support the consumption of membership and quorum from cman)
 AC_DEFINE_UNQUOTED(CS_USES_LIBQB,    $CS_USES_LIBQB, Does corosync use libqb for its ipc)
@@ -1297,7 +1293,7 @@ AC_DEFINE_UNQUOTED(PCMK_SERVICE_ID,  $PCMK_SERVICE_ID, Corosync service number)
 AC_DEFINE_UNQUOTED(SUPPORT_PLUGIN,   $SUPPORT_PLUGIN, Support the Pacemaker plugin for Corosync)
 
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
-AM_CONDITIONAL(BUILD_CS_PLUGIN, $SUPPORT_PLUGIN)
+AM_CONDITIONAL(BUILD_CS_PLUGIN, test $SUPPORT_PLUGIN = 1)
 
 AC_SUBST(SUPPORT_CMAN)
 AC_SUBST(SUPPORT_CS)
