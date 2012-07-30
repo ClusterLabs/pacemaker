@@ -97,85 +97,103 @@ fatal() {
 }
 
 detect_host() {
+
+    depth="-maxdepth 5"
     local_state_dir=/var
-    if [ -d $local_state_dir/run/crm ]; then
+
+    if [ -d $local_state_dir/run ]; then
 	CRM_STATE_DIR=$local_state_dir/run/crm
     else
-        info "Detecting where Pacemaker keeps state information... this may take a while"
-	for d in `find / -type d -name run`; do
-	    if [ -d $d/crm ]; then
-		CRM_STATE_DIR=$d/crm
-		local_state_dir=`dirname $d`
-	    fi
+        info "Searching for where Pacemaker keeps runtime data... this may take a while"
+	for d in `find / $depth -type d -name run`; do
+	    local_state_dir=`dirname $d`
+	    CRM_STATE_DIR=$d/crm
+	    break
 	done
     fi
-    if [ ! -d $CRM_STATE_DIR ]; then
-	fatal "Non-standard Pacemaker installation: State directory not found"
+    debug "Machine runtime directory: $local_state_dir"
+    debug "Pacemaker runtime data located in: $CRM_STATE_DIR"
+
+    CRM_DAEMON_DIR=
+    for p in /usr /usr/local /opt/local; do
+	for d in libexec lib64 lib; do
+	    if [ -e $p/$d/pacemaker/pengine ]; then
+		CRM_DAEMON_DIR=$p/$d/pacemaker
+		break
+	    elif [ -e $p/$d/heartbeat/pengine ]; then
+		CRM_DAEMON_DIR=$p/$d/heartbeat
+		break
+	    fi
+	done
+    done
+
+    if [ ! -d $CRM_DAEMON_DIR ]; then
+        info "Searching for where Pacemaker daemons live... this may take a while"
+	for f in `find / $depth -type f -name pengine`; do
+	    CRM_DAEMON_DIR=`dirname $f`
+	    break
+	done
     fi
 
-    debug "Machine state directory: $local_state_dir"
-    debug "State files located in: $CRM_STATE_DIR"
-
-    if [ -d $local_state_dir/lib/pengine ]; then
-	PE_STATE_DIR=$local_state_dir/lib/pengine
+    if [ -z $CRM_DAEMON_DIR ]; then
+	fatal "Non-standard Pacemaker installation: daemons not found"
     else
-        info "Detecting where Pacemaker keeps Policy Engine inputs... this may take a while"
-	for d in `find / -type d -name pengine`; do
+	debug "Pacemaker daemons located under: $CRM_DAEMON_DIR"
+    fi
+
+    CRM_CONFIG_DIR=
+    for d in pacemaker/cib heartbeat/crm; do
+	if [ -f $local_state_dir/lib/$d/cib.xml ]; then
+	    CRM_CONFIG_DIR=$local_state_dir/lib/$d
+	    break
+	fi
+    done
+
+    if [ ! -d $CRM_CONFIG_DIR ]; then
+        info "Detecting where Pacemaker keeps config information... this may take a while"
+	for f in `find / $depth -type f -name cib.xml`; do
+	    CRM_CONFIG_DIR=`dirname $f`
+	    break
+	done
+    fi
+    if [ -z $CRM_CONFIG_DIR ]; then
+	warning "Non-standard Pacemaker installation: config not found"
+    else
+	debug "Pacemaker config files located in: $CRM_CONFIG_DIR"
+    fi
+
+    # Assume new layout
+    # $local_state_dir/lib/pacemaker/(cib,pengine,blackbox,cores)
+    config_root=`dirname $CRM_CONFIG_DIR`
+
+    # Older versions had none
+    BLACKBOX_DIR=$config_root/blackbox
+    debug "Pacemaker blackboxes (if any) located in: $BLACKBOX_DIR"
+
+    PE_STATE_DIR=$config_root/pengine
+    if [ ! -d $PE_STATE_DIR ]; then
+	info "Detecting where Pacemaker keeps Policy Engine inputs... this may take a while"
+	for d in `find / $depth -type d -name pengine`; do
 	    PE_STATE_DIR=$d
 	    break
 	done
     fi
     if [ -z $PE_STATE_DIR ]; then
 	fatal "Non-standard Pacemaker installation: Policy Engine directory not found"
+    else
+	debug "PE files located in: $PE_STATE_DIR"
     fi
-    debug "PE files located in: $PE_STATE_DIR"
-
-    BLACKBOX_DIR=$local_state_dir/lib/pacemaker
-    debug "Pacemaker blackboxes located in: $BLACKBOX_DIR"
 
     HA_STATE_DIR=$local_state_dir/lib/heartbeat
-    if [ ! -d $HA_STATE_DIR ]; then
-	# TODO: Go looking
-	fatal "Non-standard Heartbeat installation: Heartbeat state directory not found"
-    fi
-    debug "Heartbeat state files located in: $HA_STATE_DIR"
-
+    debug "Assuming Heartbeat state files, if any, are located in: $HA_STATE_DIR"
 
     CRM_CORE_DIRS=""
-    for d in $HA_STATE_DIR/cores $local_state_dir/lib/corosync $local_state_dir/lib/openais; do
+    for d in $config_root/cores $HA_STATE_DIR/cores $local_state_dir/lib/corosync $local_state_dir/lib/openais; do
 	if [ -d $d ]; then
 	    CRM_CORE_DIRS="$CRM_CORE_DIRS $d"
 	fi
     done
     debug "Core files located under: $CRM_CORE_DIRS"
-
-    for d in /usr/lib/heartbeat /usr/lib64/heartbeat; do
-	if [ -f $d/crmd ]; then
-	    CRM_DAEMON_DIR=$d
-	    break
-	fi
-    done
-    if [ ! -d $CRM_DAEMON_DIR ]; then
-        info "Detecting where Pacemaker daemons live... this may take a while"
-	for d in `find / -type d -name heartbeat`; do
-	    if [ -f $d/crmd ]; then
-		CRM_DAEMON_DIR=$d
-		break
-	    fi
-	done
-    fi
-
-    if [ ! -d $CRM_DAEMON_DIR ]; then
-	for f in `find / -type f -name crmd`; do
-	    if [ -f $f ]; then
-		CRM_DAEMON_DIR=`basename $f`
-	    fi
-	done
-    fi
-    if [ ! -d $CRM_DAEMON_DIR ]; then
-	fatal "Non-standard Pacemaker installation: daemons not found"
-    fi
-    debug "Pacemaker daemons located under: $CRM_DAEMON_DIR"
 }
 
 time2str() {

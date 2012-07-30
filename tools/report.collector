@@ -582,6 +582,7 @@ essential_files() {
 	cat<<EOF
 d $HA_STATE_DIR 0755 root root
 d $PE_STATE_DIR 0750 hacluster haclient
+d $CRM_CONFIG_DIR 0750 hacluster haclient
 d $CRM_STATE_DIR 0750 hacluster haclient
 EOF
     case $1 in
@@ -628,7 +629,7 @@ debug "Config: $cluster $cluster_cf $logd_cf $logfiles"
 
 sys_info $cluster $PACKAGES > $SYSINFO_F
 essential_files $cluster | check_perms  > $PERMISSIONS_F 2>&1
-getconfig $cluster "$REPORT_HOME/$REPORT_TARGET" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache" "/etc/drbd.conf" "/etc/drbd.d"
+getconfig $cluster "$REPORT_HOME/$REPORT_TARGET" "$cluster_cf" "$logd_cf" "$CRM_CONFIG_DIR/$CIB_F" "$HA_STATE_DIR/hostcache" "/etc/drbd.conf" "/etc/drbd.d"
 
 getpeinputs    $LOG_START $LOG_END $REPORT_HOME/$REPORT_TARGET
 getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$REPORT_TARGET/$BT_F
