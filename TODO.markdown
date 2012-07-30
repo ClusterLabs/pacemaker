@@ -41,10 +41,8 @@
 - phase_of_the_moon() is not covered by PE regression tests
 - test_role_expression() is not covered by PE regression tests
 - native_parameter() is not covered by PE regression tests
-- clone_resource_state() is not covered by PE regression tests
 - clone_active() is not covered by PE regression tests
 - convert_non_atomic_task() in native.c is not covered by PE regression tests
-- clone_rsc_colocation_lh() is not covered by PE regression tests
 - group_rsc_colocation_lh() is not covered by PE regression tests
 - Test on-fail=standby
 

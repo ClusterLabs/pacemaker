@@ -81,9 +81,11 @@ class Test:
 
 	def clean_environment(self):
 		if self.lrmd_process:
-			self.lrmd_process.kill()
+			self.lrmd_process.terminate()
+			self.lrmd_process.wait()
 		if self.stonith_process:
-			self.stonith_process.kill()
+			self.stonith_process.terminate()
+			self.stonith_process.wait()
 
 		self.lrmd_process = None
 		self.stonith_process = None
@@ -593,6 +595,31 @@ if __name__ == "__main__":
 		test.add_cmd("-c unregister_rsc -r rsc2 -t 1000 ")
 		test.add_expected_fail_cmd("-c get_rsc_info -r rsc2 ")
 
+		### Register duplicate, verify only one entry exists and can still be removed.
+		test = self.new_test("duplicate_registration", "Register resource multiple times, verify only one entry exists and can be removed.")
+		test.add_cmd("-c register_rsc -r rsc2 -C ocf -T Dummy -P pacemaker -t 1000 ")
+		test.add_cmd_check_stdout("-c get_rsc_info -r rsc2 ", "id:rsc2 class:ocf provider:pacemaker type:Dummy")
+		test.add_cmd("-c register_rsc -r rsc2 -C ocf -T Dummy -P pacemaker -t 1000 ")
+		test.add_cmd_check_stdout("-c get_rsc_info -r rsc2 ", "id:rsc2 class:ocf provider:pacemaker type:Dummy")
+		test.add_cmd("-c register_rsc -r rsc2 -C ocf -T Stateful -P pacemaker -t 1000 ")
+		test.add_cmd_check_stdout("-c get_rsc_info -r rsc2 ", "id:rsc2 class:ocf provider:pacemaker type:Stateful")
+		test.add_cmd("-c unregister_rsc -r rsc2 -t 1000 ")
+		test.add_expected_fail_cmd("-c get_rsc_info -r rsc2 ")
+
+		### verify the option to only send notification to the original client. ###
+		test = self.new_test("notify_orig_client_only", "Verify option to only send notifications to the client originating the action.")
+		test.add_cmd("-c register_rsc -r \"test_rsc\" -C \"ocf\" -P \"pacemaker\" -T \"Dummy\" -t 1000 "
+			"-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+		test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 1000 "
+			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" ")
+		test.add_cmd("-c exec -r \"test_rsc\" -a \"monitor\" -i \"100\" -t 1000 -n "
+			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
+		# this will fail because the monitor notifications should only go to the original caller, which no longer exists. 
+		test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
+		test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"1000\" ")
+		test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 1000 "
+			"-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+
 		### get metadata ###
 		test = self.new_test("get_ocf_metadata", "Retrieve metadata for a resource")
 		test.add_cmd_check_stdout("-c metadata -C \"ocf\" -P \"pacemaker\" -T \"Dummy\""
@@ -610,6 +637,18 @@ if __name__ == "__main__":
 		test = self.new_test("get_stonith_metadata", "Retrieve stonith metadata for a resource")
 		test.add_cmd_check_stdout("-c metadata -C \"stonith\" -P \"pacemaker\" -T \"fence_dummy_monitor\"",
 			"resource-agent name=\"fence_dummy_monitor\"")
+
+		### get metadata ###
+		if "systemd" in self.rsc_classes:
+			test = self.new_test("get_systemd_metadata", "Retrieve metadata for a resource")
+			test.add_cmd_check_stdout("-c metadata -C \"systemd\" -T \"lrmd_dummy_daemon\""
+				,"resource-agent name=\"lrmd_dummy_daemon\"")
+
+		### get metadata ###
+		if "upstart" in self.rsc_classes:
+			test = self.new_test("get_systemd_metadata", "Retrieve metadata for a resource")
+			test.add_cmd_check_stdout("-c metadata -C \"systemd\" -T \"lrmd_dummy_daemon\""
+				,"resource-agent name=\"lrmd_dummy_daemon\"")
 
 		### get ocf providers  ###
 		test = self.new_test("list_ocf_providers", "Retrieve list of available resource providers, verifies pacemaker is a provider.")
