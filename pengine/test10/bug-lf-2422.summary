@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ qa-suse-2 qa-suse-3 qa-suse-4 qa-suse-1 ]
+Online: [ qa-suse-1 qa-suse-2 qa-suse-3 qa-suse-4 ]
 
  sbd_stonith	(stonith:external/sbd):	Started qa-suse-2
  Clone Set: c-o2stage [o2stage]
@@ -51,7 +51,7 @@ Executing cluster transition:
  * Pseudo action:   c-o2stage_stopped_0
 
 Revised cluster status:
-Online: [ qa-suse-2 qa-suse-3 qa-suse-4 qa-suse-1 ]
+Online: [ qa-suse-1 qa-suse-2 qa-suse-3 qa-suse-4 ]
 
  sbd_stonith	(stonith:external/sbd):	Started qa-suse-2
  Clone Set: c-o2stage [o2stage]

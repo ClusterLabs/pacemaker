@@ -9,7 +9,7 @@ drbd_r0:0 promotion score on ibm2.isg.si: 10000
 drbd_r0:1 promotion score on ibm1.isg.si: 10000
 native_color: HostingIsg allocation score on ibm1.isg.si: 0
 native_color: HostingIsg allocation score on ibm2.isg.si: 10
-native_color: drbd_r0:0 allocation score on ibm1.isg.si: 0
+native_color: drbd_r0:0 allocation score on ibm1.isg.si: -INFINITY
 native_color: drbd_r0:0 allocation score on ibm2.isg.si: 10001
 native_color: drbd_r0:1 allocation score on ibm1.isg.si: 10001
-native_color: drbd_r0:1 allocation score on ibm2.isg.si: -INFINITY
+native_color: drbd_r0:1 allocation score on ibm2.isg.si: 0

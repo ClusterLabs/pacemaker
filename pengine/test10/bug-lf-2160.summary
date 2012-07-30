@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ dualamd3 dualamd1 cardhu ]
+Online: [ cardhu dualamd1 dualamd3 ]
 
  domU-test01	(ocf::heartbeat:Xen):	Started dualamd1
  Clone Set: clone-dom0-iscsi1 [dom0-iscsi1-cnx1]
@@ -14,7 +14,7 @@ Executing cluster transition:
  * Pseudo action:   probe_complete
 
 Revised cluster status:
-Online: [ dualamd3 dualamd1 cardhu ]
+Online: [ cardhu dualamd1 dualamd3 ]
 
  domU-test01	(ocf::heartbeat:Xen):	Started dualamd1
  Clone Set: clone-dom0-iscsi1 [dom0-iscsi1-cnx1]

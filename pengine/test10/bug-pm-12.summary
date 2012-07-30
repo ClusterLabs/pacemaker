@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ node-b node-a ]
+Online: [ node-a node-b ]
 
  Master/Slave Set: ms-sf [group] (unique)
      Resource Group: group:0
@@ -44,7 +44,7 @@ Executing cluster transition:
  * Pseudo action:   ms-sf_promoted_0
 
 Revised cluster status:
-Online: [ node-b node-a ]
+Online: [ node-a node-b ]
 
  Master/Slave Set: ms-sf [group] (unique)
      Resource Group: group:0

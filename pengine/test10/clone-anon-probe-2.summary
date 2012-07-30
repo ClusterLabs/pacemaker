@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ mysql-02 mysql-01 ]
+Online: [ mysql-01 mysql-02 ]
 
  Clone Set: ms-drbd0 [drbd0]
      Started: [ mysql-02 ]
@@ -15,7 +15,7 @@ Executing cluster transition:
  * Pseudo action:   ms-drbd0_running_0
 
 Revised cluster status:
-Online: [ mysql-02 mysql-01 ]
+Online: [ mysql-01 mysql-02 ]
 
  Clone Set: ms-drbd0 [drbd0]
      Started: [ mysql-01 mysql-02 ]

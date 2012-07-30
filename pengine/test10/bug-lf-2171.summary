@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ xenserver2 xenserver1 ]
+Online: [ xenserver1 xenserver2 ]
 
  Clone Set: cl_res_Dummy1 [res_Dummy1]
      Started: [ xenserver1 xenserver2 ]
@@ -26,7 +26,7 @@ Executing cluster transition:
  * Pseudo action:   all_stopped
 
 Revised cluster status:
-Online: [ xenserver2 xenserver1 ]
+Online: [ xenserver1 xenserver2 ]
 
  Clone Set: cl_res_Dummy1 [res_Dummy1]
      Stopped: [ res_Dummy1:0 res_Dummy1:1 ]

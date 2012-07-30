@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ hb2 hb1 ]
+Online: [ hb1 hb2 ]
 OFFLINE: [ hb3 ]
 
  the-future-of-vaj	(ocf::heartbeat:Dummy):	Started hb2 FAILED
@@ -13,7 +13,7 @@ Executing cluster transition:
  * Pseudo action:   all_stopped
 
 Revised cluster status:
-Online: [ hb2 hb1 ]
+Online: [ hb1 hb2 ]
 OFFLINE: [ hb3 ]
 
  the-future-of-vaj	(ocf::heartbeat:Dummy):	Stopped 

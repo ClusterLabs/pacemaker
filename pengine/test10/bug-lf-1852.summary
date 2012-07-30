@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ mysql-02 mysql-01 ]
+Online: [ mysql-01 mysql-02 ]
 
  Master/Slave Set: ms-drbd0 [drbd0]
      Masters: [ mysql-02 ]
@@ -26,7 +26,7 @@ Executing cluster transition:
  * Pseudo action:   ms-drbd0_confirmed-post_notify_running_0
 
 Revised cluster status:
-Online: [ mysql-02 mysql-01 ]
+Online: [ mysql-01 mysql-02 ]
 
  Master/Slave Set: ms-drbd0 [drbd0]
      Masters: [ mysql-02 ]

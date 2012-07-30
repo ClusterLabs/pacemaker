@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ c001n09 c001n02 c001n03 c001n04 ]
+Online: [ c001n02 c001n03 c001n04 c001n09 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n09
  rsc_c001n09	(ocf::heartbeat:IPaddr):	Started c001n09
@@ -24,20 +24,20 @@ Executing cluster transition:
  * Resource action: rsc_c001n09     monitor on c001n04
  * Resource action: rsc_c001n09     monitor on c001n03
  * Resource action: rsc_c001n09     monitor on c001n02
+ * Resource action: rsc_c001n02     monitor on c001n09
  * Resource action: rsc_c001n02     monitor on c001n04
  * Resource action: rsc_c001n02     monitor on c001n03
- * Resource action: rsc_c001n02     monitor on c001n09
+ * Resource action: rsc_c001n03     monitor on c001n09
  * Resource action: rsc_c001n03     monitor on c001n04
  * Resource action: rsc_c001n03     monitor on c001n02
- * Resource action: rsc_c001n03     monitor on c001n09
- * Resource action: rsc_c001n04     monitor on c001n03
  * Resource action: rsc_c001n04     monitor on c001n09
- * Resource action: child_DoFencing:0 monitor on c001n04
+ * Resource action: rsc_c001n04     monitor on c001n03
  * Resource action: child_DoFencing:0 monitor on c001n09
+ * Resource action: child_DoFencing:0 monitor on c001n04
  * Resource action: child_DoFencing:1 monitor on c001n04
  * Resource action: child_DoFencing:1 monitor on c001n02
- * Resource action: child_DoFencing:2 monitor on c001n03
  * Resource action: child_DoFencing:2 monitor on c001n09
+ * Resource action: child_DoFencing:2 monitor on c001n03
  * Resource action: child_DoFencing:3 monitor on c001n04
  * Resource action: child_DoFencing:3 monitor on c001n03
  * Resource action: child_DoFencing:3 monitor on c001n02
@@ -52,7 +52,7 @@ Executing cluster transition:
  * Resource action: rsc_c001n02     monitor=5000 on c001n03
 
 Revised cluster status:
-Online: [ c001n09 c001n02 c001n03 c001n04 ]
+Online: [ c001n02 c001n03 c001n04 c001n09 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n09
  rsc_c001n09	(ocf::heartbeat:IPaddr):	Started c001n09

@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ heartbeat.ds9 ops.ds9 biggame.ds9 ]
+Online: [ biggame.ds9 heartbeat.ds9 ops.ds9 ]
 OFFLINE: [ defiant.ds9 warbird.ds9 ]
 
  Resource Group: Web_Group
@@ -23,7 +23,7 @@ Executing cluster transition:
  * Pseudo action:   group_fUN_stopped_0
 
 Revised cluster status:
-Online: [ heartbeat.ds9 ops.ds9 biggame.ds9 ]
+Online: [ biggame.ds9 heartbeat.ds9 ops.ds9 ]
 OFFLINE: [ defiant.ds9 warbird.ds9 ]
 
  Resource Group: Web_Group

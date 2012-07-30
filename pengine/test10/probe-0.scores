@@ -21,11 +21,11 @@ native_color: configstoreclone:0 allocation score on x32c47: 0
 native_color: configstoreclone:0 allocation score on x32c48: 0
 native_color: configstoreclone:1 allocation score on x32c47: -INFINITY
 native_color: configstoreclone:1 allocation score on x32c48: 0
-native_color: imagestoreclone:0 allocation score on x32c47: 0
+native_color: imagestoreclone:0 allocation score on x32c47: -INFINITY
 native_color: imagestoreclone:0 allocation score on x32c48: 1
 native_color: imagestoreclone:1 allocation score on x32c47: 1
-native_color: imagestoreclone:1 allocation score on x32c48: -INFINITY
-native_color: stonithclone:0 allocation score on x32c47: 0
+native_color: imagestoreclone:1 allocation score on x32c48: 0
+native_color: stonithclone:0 allocation score on x32c47: -INFINITY
 native_color: stonithclone:0 allocation score on x32c48: 1
 native_color: stonithclone:1 allocation score on x32c47: 1
-native_color: stonithclone:1 allocation score on x32c48: -INFINITY
+native_color: stonithclone:1 allocation score on x32c48: 0

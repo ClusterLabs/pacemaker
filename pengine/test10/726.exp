@@ -10,7 +10,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-      <rsc_op id="28" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <rsc_op id="24" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
         <primitive id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.10"/>
        </rsc_op>
@@ -19,7 +19,7 @@
    </synapse>
    <synapse id="2">
      <action_set>
-      <rsc_op id="18" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
+      <rsc_op id="14" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
         <primitive id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.10"/>
        </rsc_op>
@@ -28,7 +28,7 @@
    </synapse>
    <synapse id="3">
      <action_set>
-      <rsc_op id="9" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
+      <rsc_op id="4" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <primitive id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.10"/>
        </rsc_op>
@@ -63,7 +63,7 @@
    </synapse>
    <synapse id="6">
      <action_set>
-      <rsc_op id="29" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <rsc_op id="33" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
         <primitive id="rsc_sgi2" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.11"/>
        </rsc_op>
@@ -72,7 +72,7 @@
    </synapse>
    <synapse id="7">
      <action_set>
-      <rsc_op id="19" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
+      <rsc_op id="25" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
         <primitive id="rsc_sgi2" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.11"/>
        </rsc_op>
@@ -81,7 +81,7 @@
    </synapse>
    <synapse id="8">
      <action_set>
-      <rsc_op id="10" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
+      <rsc_op id="15" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
         <primitive id="rsc_sgi2" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.11"/>
        </rsc_op>
@@ -90,7 +90,7 @@
    </synapse>
    <synapse id="9">
      <action_set>
-      <rsc_op id="4" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
+      <rsc_op id="5" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <primitive id="rsc_sgi2" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.11"/>
        </rsc_op>
@@ -141,7 +141,7 @@
    </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="30" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <rsc_op id="26" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
         <primitive id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.12"/>
       </rsc_op>
@@ -150,7 +150,7 @@
   </synapse>
    <synapse id="14">
      <action_set>
-      <rsc_op id="20" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
+      <rsc_op id="16" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
         <primitive id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.12"/>
        </rsc_op>
@@ -159,7 +159,7 @@
    </synapse>
    <synapse id="15">
      <action_set>
-      <rsc_op id="11" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
+      <rsc_op id="6" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <primitive id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.12"/>
        </rsc_op>
@@ -194,7 +194,7 @@
    </synapse>
    <synapse id="18">
      <action_set>
-      <rsc_op id="31" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <rsc_op id="34" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
         <primitive id="rsc_test02" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.13"/>
        </rsc_op>
@@ -203,7 +203,7 @@
    </synapse>
    <synapse id="19">
      <action_set>
-      <rsc_op id="21" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
+      <rsc_op id="27" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
         <primitive id="rsc_test02" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.13"/>
        </rsc_op>
@@ -212,7 +212,7 @@
    </synapse>
    <synapse id="20">
      <action_set>
-      <rsc_op id="12" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
+      <rsc_op id="17" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
         <primitive id="rsc_test02" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.13"/>
        </rsc_op>
@@ -221,7 +221,7 @@
    </synapse>
    <synapse id="21">
      <action_set>
-      <rsc_op id="5" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
+      <rsc_op id="7" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <primitive id="rsc_test02" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.13"/>
        </rsc_op>
@@ -239,7 +239,7 @@
    </synapse>
    <synapse id="23">
      <action_set>
-      <rsc_op id="32" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <rsc_op id="28" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
         <primitive id="rsc_test03" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.14"/>
        </rsc_op>
@@ -248,7 +248,7 @@
    </synapse>
    <synapse id="24">
      <action_set>
-      <rsc_op id="22" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
+      <rsc_op id="18" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
         <primitive id="rsc_test03" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.14"/>
        </rsc_op>
@@ -257,7 +257,7 @@
    </synapse>
    <synapse id="25">
      <action_set>
-      <rsc_op id="13" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
+      <rsc_op id="8" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <primitive id="rsc_test03" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.14"/>
        </rsc_op>
@@ -295,7 +295,7 @@
    </synapse>
   <synapse id="28">
     <action_set>
-      <rsc_op id="33" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <rsc_op id="19" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
         <primitive id="child_DoFencing:0" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
       </rsc_op>
@@ -304,7 +304,7 @@
   </synapse>
    <synapse id="29">
      <action_set>
-      <rsc_op id="23" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
+      <rsc_op id="9" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <primitive id="child_DoFencing:0" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
       </rsc_op>
@@ -342,7 +342,7 @@
   </synapse>
   <synapse id="32">
     <action_set>
-      <rsc_op id="34" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <rsc_op id="29" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
         <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -351,7 +351,7 @@
    </synapse>
   <synapse id="33">
      <action_set>
-      <rsc_op id="24" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
+      <rsc_op id="20" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
         <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -360,7 +360,7 @@
    </synapse>
   <synapse id="34">
      <action_set>
-      <rsc_op id="14" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
+      <rsc_op id="10" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -398,7 +398,7 @@
    </synapse>
   <synapse id="37">
      <action_set>
-      <rsc_op id="35" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <rsc_op id="35" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -407,7 +407,7 @@
    </synapse>
   <synapse id="38">
      <action_set>
-      <rsc_op id="25" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
+      <rsc_op id="30" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -416,7 +416,7 @@
    </synapse>
   <synapse id="39">
      <action_set>
-      <rsc_op id="15" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
+      <rsc_op id="21" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -425,7 +425,7 @@
    </synapse>
   <synapse id="40">
      <action_set>
-      <rsc_op id="6" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
+      <rsc_op id="11" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -463,7 +463,7 @@
    </synapse>
    <synapse id="43">
      <action_set>
-      <rsc_op id="36" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <rsc_op id="36" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
         <primitive id="child_DoFencing:3" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -472,7 +472,7 @@
    </synapse>
    <synapse id="44">
      <action_set>
-      <rsc_op id="26" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
+      <rsc_op id="31" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
         <primitive id="child_DoFencing:3" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -481,7 +481,7 @@
    </synapse>
    <synapse id="45">
      <action_set>
-      <rsc_op id="16" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
+      <rsc_op id="22" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
         <primitive id="child_DoFencing:3" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -490,7 +490,7 @@
    </synapse>
    <synapse id="46">
      <action_set>
-      <rsc_op id="7" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
+      <rsc_op id="12" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <primitive id="child_DoFencing:3" class="stonith" type="ssh"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="sgi2 ibm1 test02 test03 "/>
        </rsc_op>
@@ -531,127 +531,127 @@
    </synapse>
   <synapse id="49" priority="1000000">
      <action_set>
-      <rsc_op id="27" operation="probe_complete" operation_key="probe_complete" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <rsc_op id="32" operation="probe_complete" operation_key="probe_complete" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="28" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+        <rsc_op id="33" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
        </trigger>
        <trigger>
-        <rsc_op id="29" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+        <rsc_op id="34" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
        </trigger>
        <trigger>
-        <rsc_op id="30" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+        <rsc_op id="35" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
        </trigger>
        <trigger>
-        <rsc_op id="31" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
-       </trigger>
-       <trigger>
-        <rsc_op id="32" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
-       </trigger>
-       <trigger>
-        <rsc_op id="33" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
-       </trigger>
-       <trigger>
-        <rsc_op id="34" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
-       </trigger>
-       <trigger>
-        <rsc_op id="35" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="36" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+        <rsc_op id="36" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="50" priority="1000000">
      <action_set>
-      <rsc_op id="17" operation="probe_complete" operation_key="probe_complete" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
+      <rsc_op id="23" operation="probe_complete" operation_key="probe_complete" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="18" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+        <rsc_op id="24" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
        </trigger>
        <trigger>
-        <rsc_op id="19" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+        <rsc_op id="25" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
        </trigger>
        <trigger>
-        <rsc_op id="20" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+        <rsc_op id="26" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
        </trigger>
        <trigger>
-        <rsc_op id="21" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+        <rsc_op id="27" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
        </trigger>
        <trigger>
-        <rsc_op id="22" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+        <rsc_op id="28" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
        </trigger>
        <trigger>
-        <rsc_op id="23" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+        <rsc_op id="29" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
        </trigger>
        <trigger>
-        <rsc_op id="24" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
-       </trigger>
-       <trigger>
-        <rsc_op id="25" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+        <rsc_op id="30" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
       </trigger>
       <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+        <rsc_op id="31" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="51" priority="1000000">
      <action_set>
-      <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
+      <rsc_op id="13" operation="probe_complete" operation_key="probe_complete" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="9" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+        <rsc_op id="14" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
        </trigger>
        <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+        <rsc_op id="15" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
        </trigger>
        <trigger>
-        <rsc_op id="11" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+        <rsc_op id="16" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
        </trigger>
        <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+        <rsc_op id="17" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
        </trigger>
        <trigger>
-        <rsc_op id="13" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+        <rsc_op id="18" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
        </trigger>
        <trigger>
-        <rsc_op id="14" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+        <rsc_op id="19" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
        </trigger>
        <trigger>
-        <rsc_op id="15" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+        <rsc_op id="20" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
        </trigger>
        <trigger>
-        <rsc_op id="16" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+        <rsc_op id="21" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="52" priority="1000000">
      <action_set>
-      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="4" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
+        <rsc_op id="4" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="7" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
        </trigger>
        <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
+        <rsc_op id="10" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
        </trigger>
        <trigger>
-        <rsc_op id="6" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
+        <rsc_op id="11" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
        </trigger>
        <trigger>
-        <rsc_op id="7" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
+        <rsc_op id="12" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
        </trigger>
     </inputs>
   </synapse>
@@ -663,16 +663,16 @@
     </action_set>
     <inputs>
        <trigger>
-        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
+        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
        </trigger>
        <trigger>
-        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
+        <rsc_op id="13" operation="probe_complete" operation_key="probe_complete" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
        </trigger>
        <trigger>
-        <rsc_op id="17" operation="probe_complete" operation_key="probe_complete" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8"/>
+        <rsc_op id="23" operation="probe_complete" operation_key="probe_complete" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947"/>
        </trigger>
        <trigger>
-        <rsc_op id="27" operation="probe_complete" operation_key="probe_complete" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+        <rsc_op id="32" operation="probe_complete" operation_key="probe_complete" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
        </trigger>
     </inputs>
   </synapse>

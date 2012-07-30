@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ node2 node1 ]
+Online: [ node1 node2 ]
 
  Clone Set: stonithcloneset [stonithclone]
      Started: [ node2 ]
@@ -91,7 +91,7 @@ Executing cluster transition:
  * Resource action: sles10          monitor=10000 on node1
 
 Revised cluster status:
-Online: [ node2 node1 ]
+Online: [ node1 node2 ]
 
  Clone Set: stonithcloneset [stonithclone]
      Started: [ node1 node2 ]

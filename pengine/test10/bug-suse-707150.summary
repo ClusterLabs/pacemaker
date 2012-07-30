@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ hex-9 hex-0 ]
+Online: [ hex-0 hex-9 ]
 OFFLINE: [ hex-7 hex-8 ]
 
  vm-00	(ocf::heartbeat:Xen):	Stopped 
@@ -31,10 +31,10 @@ Executing cluster transition:
  * Resource action: vg1:1           monitor on hex-9
  * Pseudo action:   base-clone_start_0
  * Pseudo action:   probe_complete
- * Pseudo action:   load_stopped_hex-0
  * Pseudo action:   load_stopped_hex-9
  * Pseudo action:   load_stopped_hex-8
  * Pseudo action:   load_stopped_hex-7
+ * Pseudo action:   load_stopped_hex-0
  * Pseudo action:   base-group:0_start_0
  * Resource action: o2cb:0          start on hex-0
  * Resource action: clvm:0          start on hex-0
@@ -46,7 +46,7 @@ Executing cluster transition:
  * Resource action: cmirrord:1      start on hex-9
 
 Revised cluster status:
-Online: [ hex-9 hex-0 ]
+Online: [ hex-0 hex-9 ]
 OFFLINE: [ hex-7 hex-8 ]
 
  vm-00	(ocf::heartbeat:Xen):	Stopped 

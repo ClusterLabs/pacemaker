@@ -1,7 +1,7 @@
 
 Current cluster status:
 Online: [ c001n06 c001n07 ]
-OFFLINE: [ c001n03 c001n02 c001n04 c001n05 ]
+OFFLINE: [ c001n02 c001n03 c001n04 c001n05 ]
 
  DcIPaddr	(heartbeat:IPaddr):	Stopped 
  Resource Group: group-1
@@ -67,7 +67,7 @@ Executing cluster transition:
 
 Revised cluster status:
 Online: [ c001n06 c001n07 ]
-OFFLINE: [ c001n03 c001n02 c001n04 c001n05 ]
+OFFLINE: [ c001n02 c001n03 c001n04 c001n05 ]
 
  DcIPaddr	(heartbeat:IPaddr):	Stopped 
  Resource Group: group-1

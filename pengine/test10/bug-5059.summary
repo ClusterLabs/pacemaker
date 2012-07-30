@@ -1,7 +1,7 @@
 
 Current cluster status:
 Node gluster03.h: standby
-Online: [ gluster02.h gluster01.h ]
+Online: [ gluster01.h gluster02.h ]
 OFFLINE: [ gluster04.h ]
 
  Master/Slave Set: ms_stateful [g_stateful]
@@ -62,7 +62,7 @@ Executing cluster transition:
 
 Revised cluster status:
 Node gluster03.h: standby
-Online: [ gluster02.h gluster01.h ]
+Online: [ gluster01.h gluster02.h ]
 OFFLINE: [ gluster04.h ]
 
  Master/Slave Set: ms_stateful [g_stateful]

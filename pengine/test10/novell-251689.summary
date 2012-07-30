@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ node2 node1 ]
+Online: [ node1 node2 ]
 
  Clone Set: stonithcloneset [stonithclone]
      Started: [ node1 node2 ]
@@ -22,7 +22,7 @@ Executing cluster transition:
  * Pseudo action:   all_stopped
 
 Revised cluster status:
-Online: [ node2 node1 ]
+Online: [ node1 node2 ]
 
  Clone Set: stonithcloneset [stonithclone]
      Started: [ node1 node2 ]

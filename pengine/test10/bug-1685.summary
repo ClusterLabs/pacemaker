@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ redun2 redun1 ]
+Online: [ redun1 redun2 ]
 
  Master/Slave Set: shared_storage [prim_shared_storage]
      Slaves: [ redun1 redun2 ]
@@ -27,7 +27,7 @@ Executing cluster transition:
  * Resource action: shared_filesystem monitor=120000 on redun2
 
 Revised cluster status:
-Online: [ redun2 redun1 ]
+Online: [ redun1 redun2 ]
 
  Master/Slave Set: shared_storage [prim_shared_storage]
      Masters: [ redun2 ]

@@ -101,7 +101,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="25" operation="load_stopped_sby1" operation_key="load_stopped_sby1"/>
+        <pseudo_event id="24" operation="load_stopped_sby1" operation_key="load_stopped_sby1"/>
       </trigger>
       <trigger>
         <rsc_op id="64" operation="stop" operation_key="prmExPostgreSQLDB1_stop_0" on_node="act1" on_node_uuid="act1"/>
@@ -366,7 +366,7 @@
   </synapse>
   <synapse id="22">
     <action_set>
-      <pseudo_event id="25" operation="load_stopped_sby1" operation_key="load_stopped_sby1">
+      <pseudo_event id="25" operation="load_stopped_sby2" operation_key="load_stopped_sby2">
         <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -374,7 +374,7 @@
   </synapse>
   <synapse id="23">
     <action_set>
-      <pseudo_event id="24" operation="load_stopped_sby2" operation_key="load_stopped_sby2">
+      <pseudo_event id="24" operation="load_stopped_sby1" operation_key="load_stopped_sby1">
         <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>

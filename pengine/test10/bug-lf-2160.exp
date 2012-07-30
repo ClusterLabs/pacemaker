@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="6" operation="monitor" operation_key="domU-test01_monitor_0" on_node="cardhu" on_node_uuid="cardhu">
+      <rsc_op id="4" operation="monitor" operation_key="domU-test01_monitor_0" on_node="cardhu" on_node_uuid="cardhu">
         <primitive id="domU-test01" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.6" xmfile="/etc/xen/test01.cfg"/>
       </rsc_op>
@@ -10,7 +10,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="7" operation="monitor" operation_key="dom0-iscsi1-cnx1:0_monitor_0" on_node="cardhu" on_node_uuid="cardhu">
+      <rsc_op id="5" operation="monitor" operation_key="dom0-iscsi1-cnx1:0_monitor_0" on_node="cardhu" on_node_uuid="cardhu">
         <primitive id="dom0-iscsi1-cnx1" long-id="dom0-iscsi1-cnx1:0" class="ocf" provider="heartbeat" type="iscsi"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" portal="10.151.1.72" target="iqn.2009-03.fr.u-picardie.testfrontal-01:test01"/>
       </rsc_op>
@@ -19,16 +19,16 @@
   </synapse>
   <synapse id="2" priority="1000000">
     <action_set>
-      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="cardhu" on_node_uuid="cardhu">
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="cardhu" on_node_uuid="cardhu">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="monitor" operation_key="domU-test01_monitor_0" on_node="cardhu" on_node_uuid="cardhu"/>
+        <rsc_op id="4" operation="monitor" operation_key="domU-test01_monitor_0" on_node="cardhu" on_node_uuid="cardhu"/>
       </trigger>
       <trigger>
-        <rsc_op id="7" operation="monitor" operation_key="dom0-iscsi1-cnx1:0_monitor_0" on_node="cardhu" on_node_uuid="cardhu"/>
+        <rsc_op id="5" operation="monitor" operation_key="dom0-iscsi1-cnx1:0_monitor_0" on_node="cardhu" on_node_uuid="cardhu"/>
       </trigger>
     </inputs>
   </synapse>
@@ -40,7 +40,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="cardhu" on_node_uuid="cardhu"/>
+        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="cardhu" on_node_uuid="cardhu"/>
       </trigger>
     </inputs>
   </synapse>

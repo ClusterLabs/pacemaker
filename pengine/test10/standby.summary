@@ -1,7 +1,7 @@
 
 Current cluster status:
-Node sapcl03 (0bfb78a2-fcd2-4f52-8a06-2d17437a6750): standby
 Node sapcl02 (09fa194c-d7e1-41fa-a0d0-afd79a139181): standby
+Node sapcl03 (0bfb78a2-fcd2-4f52-8a06-2d17437a6750): standby
 Online: [ sapcl01 ]
 
  Resource Group: app01
@@ -65,8 +65,8 @@ Executing cluster transition:
  * Resource action: oralsnr_25      monitor=120000 on sapcl01
 
 Revised cluster status:
-Node sapcl03 (0bfb78a2-fcd2-4f52-8a06-2d17437a6750): standby
 Node sapcl02 (09fa194c-d7e1-41fa-a0d0-afd79a139181): standby
+Node sapcl03 (0bfb78a2-fcd2-4f52-8a06-2d17437a6750): standby
 Online: [ sapcl01 ]
 
  Resource Group: app01

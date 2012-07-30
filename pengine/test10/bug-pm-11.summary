@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ node-b node-a ]
+Online: [ node-a node-b ]
 
  Master/Slave Set: ms-sf [group] (unique)
      Resource Group: group:0
@@ -16,10 +16,10 @@ Transition Summary:
  * Promote stateful-2:1	(Stopped -> Master node-a)
 
 Executing cluster transition:
- * Resource action: stateful-2:0    monitor on node-a
  * Resource action: stateful-2:0    monitor on node-b
- * Resource action: stateful-2:1    monitor on node-a
+ * Resource action: stateful-2:0    monitor on node-a
  * Resource action: stateful-2:1    monitor on node-b
+ * Resource action: stateful-2:1    monitor on node-a
  * Pseudo action:   ms-sf_start_0
  * Pseudo action:   probe_complete
  * Pseudo action:   group:0_start_0
@@ -36,7 +36,7 @@ Executing cluster transition:
  * Pseudo action:   ms-sf_promoted_0
 
 Revised cluster status:
-Online: [ node-b node-a ]
+Online: [ node-a node-b ]
 
  Master/Slave Set: ms-sf [group] (unique)
      Resource Group: group:0

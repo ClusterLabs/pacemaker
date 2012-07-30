@@ -1,7 +1,7 @@
 
 Current cluster status:
 Node hadev3 (879e65f8-4b38-4c56-9552-4752ad436669): UNCLEAN (offline)
-Online: [ hadev2 hadev1 ]
+Online: [ hadev1 hadev2 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started hadev2
  rsc_hadev3	(ocf::heartbeat:IPaddr):	Started hadev1
@@ -42,7 +42,7 @@ Executing cluster transition:
  * Resource action: rsc_hadev2      monitor=5000 on hadev1
 
 Revised cluster status:
-Online: [ hadev2 hadev1 ]
+Online: [ hadev1 hadev2 ]
 OFFLINE: [ hadev3 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started hadev1

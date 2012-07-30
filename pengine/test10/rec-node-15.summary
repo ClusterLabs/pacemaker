@@ -1,7 +1,7 @@
 
 Current cluster status:
-Node sapcl03 (0bfb78a2-fcd2-4f52-8a06-2d17437a6750): UNCLEAN (offline)
 Node sapcl02 (09fa194c-d7e1-41fa-a0d0-afd79a139181): standby
+Node sapcl03 (0bfb78a2-fcd2-4f52-8a06-2d17437a6750): UNCLEAN (offline)
 Online: [ sapcl01 ]
 
  stonith-1	(stonith:dummy):	Stopped 
@@ -32,8 +32,8 @@ Transition Summary:
  * Start   oralsnr_25	(sapcl01)
 
 Executing cluster transition:
- * Resource action: stonith-1       monitor on sapcl01
  * Resource action: stonith-1       monitor on sapcl02
+ * Resource action: stonith-1       monitor on sapcl01
  * Pseudo action:   app02_stop_0
  * Pseudo action:   oracle_start_0
  * Pseudo action:   probe_complete

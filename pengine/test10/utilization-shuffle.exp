@@ -213,7 +213,7 @@
   </synapse>
   <synapse id="14">
     <action_set>
-      <pseudo_event id="33" operation="load_stopped_sby1" operation_key="load_stopped_sby1">
+      <pseudo_event id="33" operation="load_stopped_sby2" operation_key="load_stopped_sby2">
         <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
@@ -221,7 +221,7 @@
   </synapse>
   <synapse id="15">
     <action_set>
-      <pseudo_event id="32" operation="load_stopped_sby2" operation_key="load_stopped_sby2">
+      <pseudo_event id="32" operation="load_stopped_sby1" operation_key="load_stopped_sby1">
         <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>

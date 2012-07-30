@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ dl380g5b dl380g5a ]
+Online: [ dl380g5a dl380g5b ]
 
  Master/Slave Set: ms-sf [group] (unique)
      Resource Group: group:0
@@ -34,7 +34,7 @@ Executing cluster transition:
  * Pseudo action:   ms-sf_promoted_0
 
 Revised cluster status:
-Online: [ dl380g5b dl380g5a ]
+Online: [ dl380g5a dl380g5b ]
 
  Master/Slave Set: ms-sf [group] (unique)
      Resource Group: group:0

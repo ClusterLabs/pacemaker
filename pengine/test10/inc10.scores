@@ -50,8 +50,8 @@ native_color: child_DoFencing:1 allocation score on xen-4: -INFINITY
 native_color: child_DoFencing:2 allocation score on xen-1: 1
 native_color: child_DoFencing:2 allocation score on xen-2: -INFINITY
 native_color: child_DoFencing:2 allocation score on xen-3: 0
-native_color: child_DoFencing:2 allocation score on xen-4: -INFINITY
-native_color: child_DoFencing:3 allocation score on xen-1: 0
+native_color: child_DoFencing:2 allocation score on xen-4: 0
+native_color: child_DoFencing:3 allocation score on xen-1: -INFINITY
 native_color: child_DoFencing:3 allocation score on xen-2: -INFINITY
 native_color: child_DoFencing:3 allocation score on xen-3: 0
 native_color: child_DoFencing:3 allocation score on xen-4: 1
@@ -66,8 +66,8 @@ native_color: ocfs2:1 allocation score on xen-4: -INFINITY
 native_color: ocfs2:2 allocation score on xen-1: 1
 native_color: ocfs2:2 allocation score on xen-2: -INFINITY
 native_color: ocfs2:2 allocation score on xen-3: 0
-native_color: ocfs2:2 allocation score on xen-4: -INFINITY
-native_color: ocfs2:3 allocation score on xen-1: 0
+native_color: ocfs2:2 allocation score on xen-4: 0
+native_color: ocfs2:3 allocation score on xen-1: -INFINITY
 native_color: ocfs2:3 allocation score on xen-2: -INFINITY
 native_color: ocfs2:3 allocation score on xen-3: 0
 native_color: ocfs2:3 allocation score on xen-4: 1

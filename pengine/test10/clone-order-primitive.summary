@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ pcw2709.see.ed.ac.uk pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk ]
+Online: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk pcw2709.see.ed.ac.uk ]
 
  Clone Set: cups_clone [cups_lsb]
      Stopped: [ cups_lsb:0 cups_lsb:1 ]
@@ -19,7 +19,7 @@ Executing cluster transition:
  * Pseudo action:   cups_clone_running_0
 
 Revised cluster status:
-Online: [ pcw2709.see.ed.ac.uk pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk ]
+Online: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk pcw2709.see.ed.ac.uk ]
 
  Clone Set: cups_clone [cups_lsb]
      Started: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk ]

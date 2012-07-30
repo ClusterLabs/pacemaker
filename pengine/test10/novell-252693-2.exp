@@ -30,7 +30,7 @@
    </synapse>
    <synapse id="2">
      <action_set>
-      <rsc_op id="10" operation="monitor" operation_key="stonithclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
+      <rsc_op id="9" operation="monitor" operation_key="stonithclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="stonithclone" long-id="stonithclone:1" class="stonith" type="external/ssh"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="node1,node2"/>
        </rsc_op>
@@ -91,7 +91,7 @@
    </synapse>
    <synapse id="7">
      <action_set>
-      <rsc_op id="11" operation="monitor" operation_key="evmsdclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
+      <rsc_op id="10" operation="monitor" operation_key="evmsdclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="evmsdclone" long-id="evmsdclone:1" class="ocf" provider="heartbeat" type="Evmsd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -178,7 +178,7 @@
    </synapse>
   <synapse id="14">
      <action_set>
-      <rsc_op id="12" operation="monitor" operation_key="evmsclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
+      <rsc_op id="11" operation="monitor" operation_key="evmsclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="evmsclone" long-id="evmsclone:1" class="ocf" provider="heartbeat" type="EvmsSCC"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -344,7 +344,7 @@
    </synapse>
   <synapse id="26">
      <action_set>
-      <rsc_op id="13" operation="monitor" operation_key="imagestoreclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
+      <rsc_op id="12" operation="monitor" operation_key="imagestoreclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="imagestoreclone" long-id="imagestoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
        </rsc_op>
@@ -510,7 +510,7 @@
    </synapse>
   <synapse id="38">
      <action_set>
-      <rsc_op id="14" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
+      <rsc_op id="13" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="configstoreclone" long-id="configstoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/evms/vmsharedclustercontainer/configstore" directory="/etc/xen/vm" fstype="ocfs2"/>
        </rsc_op>
@@ -687,7 +687,7 @@
   </synapse>
   <synapse id="50">
     <action_set>
-      <rsc_op id="15" operation="monitor" operation_key="sles10_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
+      <rsc_op id="14" operation="monitor" operation_key="sles10_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" xmfile="/etc/xen/vm/sles10"/>
       </rsc_op>
@@ -696,28 +696,28 @@
    </synapse>
   <synapse id="51" priority="1000000">
      <action_set>
-       <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
+      <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="10" operation="monitor" operation_key="stonithclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+        <rsc_op id="9" operation="monitor" operation_key="stonithclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
        <trigger>
-         <rsc_op id="11" operation="monitor" operation_key="evmsdclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+        <rsc_op id="10" operation="monitor" operation_key="evmsdclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
        <trigger>
-         <rsc_op id="12" operation="monitor" operation_key="evmsclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+        <rsc_op id="11" operation="monitor" operation_key="evmsclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
        <trigger>
-         <rsc_op id="13" operation="monitor" operation_key="imagestoreclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+        <rsc_op id="12" operation="monitor" operation_key="imagestoreclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
        <trigger>
-         <rsc_op id="14" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+        <rsc_op id="13" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
        <trigger>
-         <rsc_op id="15" operation="monitor" operation_key="sles10_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+        <rsc_op id="14" operation="monitor" operation_key="sles10_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
      </inputs>
    </synapse>
@@ -729,7 +729,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
       </trigger>
     </inputs>
   </synapse>

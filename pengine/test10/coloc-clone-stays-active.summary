@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ s01-1 s01-0 ]
+Online: [ s01-0 s01-1 ]
 
  stonith-s01-0	(stonith:external/ipmi):	Started s01-1
  stonith-s01-1	(stonith:external/ipmi):	Started s01-0
@@ -108,7 +108,7 @@ Executing cluster transition:
  * Resource action: mgmt-vm         monitor=10000 on s01-1
 
 Revised cluster status:
-Online: [ s01-1 s01-0 ]
+Online: [ s01-0 s01-1 ]
 
  stonith-s01-0	(stonith:external/ipmi):	Started s01-1
  stonith-s01-1	(stonith:external/ipmi):	Started s01-0

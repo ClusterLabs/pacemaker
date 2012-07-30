@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ dom0-02 dom0-01 ]
+Online: [ dom0-01 dom0-02 ]
 
  domU-test01	(ocf::heartbeat:Xen):	Started dom0-02
  Clone Set: clone-dom0-iscsi1 [dom0-iscsi1]
@@ -24,7 +24,7 @@ Executing cluster transition:
  * Pseudo action:   domU-test01_start_0
 
 Revised cluster status:
-Online: [ dom0-02 dom0-01 ]
+Online: [ dom0-01 dom0-02 ]
 
  domU-test01	(ocf::heartbeat:Xen):	Started dom0-01
  Clone Set: clone-dom0-iscsi1 [dom0-iscsi1]

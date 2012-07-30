@@ -1,7 +1,7 @@
 
 Current cluster status:
 Node xen-2 (e3aa8547-3d52-47df-a8a3-ca94538a5282): standby
-Online: [ xen-4 xen-3 xen-1 ]
+Online: [ xen-1 xen-3 xen-4 ]
 
  Clone Set: DoFencing [child_DoFencing]
      Started: [ xen-1 xen-2 xen-3 xen-4 ]
@@ -34,7 +34,7 @@ Executing cluster transition:
 
 Revised cluster status:
 Node xen-2 (e3aa8547-3d52-47df-a8a3-ca94538a5282): standby
-Online: [ xen-4 xen-3 xen-1 ]
+Online: [ xen-1 xen-3 xen-4 ]
 
  Clone Set: DoFencing [child_DoFencing]
      Started: [ xen-1 xen-3 xen-4 ]

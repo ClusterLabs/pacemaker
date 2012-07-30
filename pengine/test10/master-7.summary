@@ -1,7 +1,7 @@
 
 Current cluster status:
 Node c001n01 (de937e3d-0309-4b5d-b85c-f96edc1ed8e3): UNCLEAN (offline)
-Online: [ c001n03 c001n02 c001n08 ]
+Online: [ c001n02 c001n03 c001n08 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n01
  Resource Group: group-1
@@ -43,18 +43,18 @@ Executing cluster transition:
  * Pseudo action:   group-1_stop_0
  * Resource action: child_DoFencing:2 monitor on c001n08
  * Resource action: child_DoFencing:2 monitor on c001n03
- * Resource action: child_DoFencing:3 monitor on c001n02
  * Resource action: child_DoFencing:3 monitor on c001n03
+ * Resource action: child_DoFencing:3 monitor on c001n02
  * Pseudo action:   DoFencing_stop_0
  * Resource action: ocf_msdummy:4   monitor on c001n08
- * Resource action: ocf_msdummy:4   monitor on c001n02
  * Resource action: ocf_msdummy:4   monitor on c001n03
+ * Resource action: ocf_msdummy:4   monitor on c001n02
  * Resource action: ocf_msdummy:5   monitor on c001n08
  * Resource action: ocf_msdummy:5   monitor on c001n02
  * Resource action: ocf_msdummy:6   monitor on c001n08
  * Resource action: ocf_msdummy:6   monitor on c001n03
- * Resource action: ocf_msdummy:7   monitor on c001n02
  * Resource action: ocf_msdummy:7   monitor on c001n03
+ * Resource action: ocf_msdummy:7   monitor on c001n02
  * Pseudo action:   master_rsc_1_demote_0
  * Pseudo action:   stonith_up
  * Pseudo action:   probe_complete
@@ -92,7 +92,7 @@ Executing cluster transition:
  * Resource action: ocf_192.168.100.183 monitor=5000 on c001n02
 
 Revised cluster status:
-Online: [ c001n03 c001n02 c001n08 ]
+Online: [ c001n02 c001n03 c001n08 ]
 OFFLINE: [ c001n01 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n03

@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ sirius pollux ]
+Online: [ pollux sirius ]
 
  Clone Set: pingd-clone [pingd-1]
      Started: [ pollux sirius ]
@@ -30,7 +30,7 @@ Executing cluster transition:
  * Resource action: apache          monitor=60000 on pollux
 
 Revised cluster status:
-Online: [ sirius pollux ]
+Online: [ pollux sirius ]
 
  Clone Set: pingd-clone [pingd-1]
      Started: [ pollux sirius ]

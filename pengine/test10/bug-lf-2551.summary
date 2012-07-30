@@ -1,7 +1,7 @@
 
 Current cluster status:
 Node hex-9: UNCLEAN (offline)
-Online: [ hex-7 hex-8 hex-0 ]
+Online: [ hex-0 hex-7 hex-8 ]
 
  vm-00	(ocf::heartbeat:Xen):	Started hex-0
  Clone Set: base-clone [base-group]
@@ -143,7 +143,7 @@ Executing cluster transition:
  * Pseudo action:   base-clone_stopped_0
 
 Revised cluster status:
-Online: [ hex-7 hex-8 hex-0 ]
+Online: [ hex-0 hex-7 hex-8 ]
 OFFLINE: [ hex-9 ]
 
  vm-00	(ocf::heartbeat:Xen):	Started hex-0

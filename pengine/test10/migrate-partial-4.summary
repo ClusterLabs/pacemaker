@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ lustre02-left lustre01-left lustre03-left lustre04-left ]
+Online: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
 
  drbd-local	(ocf::vds-ok:Ticketer):	Started lustre01-left
  drbd-stacked	(ocf::vds-ok:Ticketer):	Stopped 
@@ -80,7 +80,7 @@ Executing cluster transition:
  * Resource action: drbd-mgs:1      monitor=30000 on lustre02-left
 
 Revised cluster status:
-Online: [ lustre02-left lustre01-left lustre03-left lustre04-left ]
+Online: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
 
  drbd-local	(ocf::vds-ok:Ticketer):	Started lustre01-left
  drbd-stacked	(ocf::vds-ok:Ticketer):	Started lustre02-left

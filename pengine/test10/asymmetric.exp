@@ -19,7 +19,7 @@
    </synapse>
    <synapse id="2">
      <action_set>
-      <rsc_op id="6" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
+      <rsc_op id="6" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
         <primitive id="drbd_target_poolA" class="ocf" provider="vpools" type="iscsi_target"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.6" drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
        </rsc_op>
@@ -28,7 +28,7 @@
    </synapse>
    <synapse id="3">
      <action_set>
-      <rsc_op id="4" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
+      <rsc_op id="4" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
         <primitive id="drbd_target_poolA" class="ocf" provider="vpools" type="iscsi_target"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.6" drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
        </rsc_op>
@@ -37,25 +37,25 @@
    </synapse>
   <synapse id="4" priority="1000000">
      <action_set>
-      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
+      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="6" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a"/>
+        <rsc_op id="6" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="5" priority="1000000">
      <action_set>
-       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="4" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3"/>
+        <rsc_op id="4" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a"/>
        </trigger>
      </inputs>
    </synapse>
@@ -67,10 +67,10 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3"/>
+        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a"/>
       </trigger>
       <trigger>
-        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a"/>
+        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3"/>
        </trigger>
      </inputs>
    </synapse>

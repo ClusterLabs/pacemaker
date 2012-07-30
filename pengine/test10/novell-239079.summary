@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ xen-2 xen-1 ]
+Online: [ xen-1 xen-2 ]
 
  fs_1	(ocf::heartbeat:Filesystem):	Stopped 
  Master/Slave Set: ms-drbd0 [drbd0]
@@ -23,7 +23,7 @@ Executing cluster transition:
  * Pseudo action:   ms-drbd0_confirmed-post_notify_running_0
 
 Revised cluster status:
-Online: [ xen-2 xen-1 ]
+Online: [ xen-1 xen-2 ]
 
  fs_1	(ocf::heartbeat:Filesystem):	Stopped 
  Master/Slave Set: ms-drbd0 [drbd0]

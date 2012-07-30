@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ dktest2sles10 dktest1sles10 ]
+Online: [ dktest1sles10 dktest2sles10 ]
 
  stonith-1	(stonith:dummy):	Stopped 
  Master/Slave Set: ms-drbd1 [drbd1]
@@ -15,8 +15,8 @@ Transition Summary:
  * Stop    testip	(dktest2sles10)
 
 Executing cluster transition:
- * Resource action: stonith-1       monitor on dktest1sles10
  * Resource action: stonith-1       monitor on dktest2sles10
+ * Resource action: stonith-1       monitor on dktest1sles10
  * Resource action: drbd1:1         monitor on dktest1sles10
  * Pseudo action:   ms-drbd1_pre_notify_demote_0
  * Resource action: testip          monitor on dktest1sles10
@@ -51,7 +51,7 @@ Executing cluster transition:
  * Resource action: drbd1:1         monitor=11000 on dktest1sles10
 
 Revised cluster status:
-Online: [ dktest2sles10 dktest1sles10 ]
+Online: [ dktest1sles10 dktest2sles10 ]
 
  stonith-1	(stonith:dummy):	Started dktest1sles10
  Master/Slave Set: ms-drbd1 [drbd1]

@@ -30,7 +30,7 @@
    </synapse>
   <synapse id="2">
      <action_set>
-      <rsc_op id="8" operation="monitor" operation_key="configstoreclone:0_monitor_0" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
+      <rsc_op id="6" operation="monitor" operation_key="configstoreclone:0_monitor_0" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
         <primitive id="configstoreclone" long-id="configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/sdb2" directory="/vm" fstype="ocfs2"/>
        </rsc_op>
@@ -68,7 +68,7 @@
    </synapse>
   <synapse id="5">
      <action_set>
-      <rsc_op id="6" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
+      <rsc_op id="8" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
         <primitive id="configstoreclone" long-id="configstoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/sdb2" directory="/vm" fstype="ocfs2"/>
        </rsc_op>
@@ -160,25 +160,25 @@
   </synapse>
   <synapse id="12" priority="1000000">
     <action_set>
-      <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
+      <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
     <inputs>
        <trigger>
-        <rsc_op id="8" operation="monitor" operation_key="configstoreclone:0_monitor_0" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410"/>
+        <rsc_op id="8" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="13" priority="1000000">
      <action_set>
-       <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
+      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="6" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872"/>
+        <rsc_op id="6" operation="monitor" operation_key="configstoreclone:0_monitor_0" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410"/>
        </trigger>
      </inputs>
    </synapse>
@@ -190,10 +190,10 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872"/>
+        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410"/>
       </trigger>
       <trigger>
-        <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410"/>
+        <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872"/>
        </trigger>
      </inputs>
    </synapse>

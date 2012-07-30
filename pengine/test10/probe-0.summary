@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ x32c48 x32c47 ]
+Online: [ x32c47 x32c48 ]
 
  Clone Set: stonithcloneset [stonithclone]
      Started: [ x32c47 x32c48 ]
@@ -29,7 +29,7 @@ Executing cluster transition:
  * Pseudo action:   configstorecloneset_confirmed-post_notify_running_0
 
 Revised cluster status:
-Online: [ x32c48 x32c47 ]
+Online: [ x32c47 x32c48 ]
 
  Clone Set: stonithcloneset [stonithclone]
      Started: [ x32c47 x32c48 ]

@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ act1 act2 act3 sby2 sby1 ]
+Online: [ act1 act2 act3 sby1 sby2 ]
 
  Resource Group: grpPostgreSQLDB1
      prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started act1
@@ -39,8 +39,8 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   grpPostgreSQLDB1_stop_0
  * Resource action: prmApPostgreSQLDB1 stop on act1
- * Pseudo action:   load_stopped_sby1
  * Pseudo action:   load_stopped_sby2
+ * Pseudo action:   load_stopped_sby1
  * Pseudo action:   load_stopped_act3
  * Pseudo action:   load_stopped_act2
  * Resource action: prmIpPostgreSQLDB1 stop on act1
@@ -70,7 +70,7 @@ Executing cluster transition:
  * Pseudo action:   all_stopped
 
 Revised cluster status:
-Online: [ act1 act2 act3 sby2 sby1 ]
+Online: [ act1 act2 act3 sby1 sby2 ]
 
  Resource Group: grpPostgreSQLDB1
      prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started sby1

@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ node2 node1 ]
+Online: [ node1 node2 ]
 
  A	(ocf::pacemaker:Dummy):	Started node1
  Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
@@ -38,7 +38,7 @@ Executing cluster transition:
  * Resource action: MS_RSC_NATIVE:0 monitor=15000 on node2
 
 Revised cluster status:
-Online: [ node2 node1 ]
+Online: [ node1 node2 ]
 
  A	(ocf::pacemaker:Dummy):	Started node1
  Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
