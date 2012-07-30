@@ -1095,7 +1095,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         log_level = LOG_DEBUG_2;
     }
 
-    log_xml_diff(log_level, *cib_diff, "cib:diff");
+    log_cib_diff(log_level, *cib_diff, "cib:diff");
 
   done:
     if ((call_options & cib_discard_reply) == 0) {

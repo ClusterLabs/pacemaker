@@ -54,6 +54,15 @@
 #define XML_PARSER_DEBUG 0
 #define BEST_EFFORT_STATUS 0
 
+enum xml_log_options 
+{
+    xml_log_option_formatted  = 0x01,
+    xml_log_option_diff_plus  = 0x02,
+    xml_log_option_diff_minus = 0x04,
+    xml_log_option_diff_short = 0x10,
+    xml_log_option_diff_all   = 0x20,
+};
+
 void xml_log(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
 
 void xml_log(int priority, const char * fmt, ...)
@@ -989,9 +998,6 @@ log_data_element(
     xmlAttrPtr pIter = NULL;
     const char *name = NULL;
     const char *hidden = NULL;
-    gboolean formatted = (options & 0x1);
-    gboolean diff_plus = (options & 0x2);
-    gboolean diff_minus = (options & 0x4);
 
     /* Since we use the same file and line, to avoid confusing libqb, we need to use the same format strings */
     if(data == NULL) {
@@ -1009,18 +1015,29 @@ log_data_element(
     /* crm_trace("Dumping %s", name); */
     buffer = calloc(1, buffer_len);
 	
-    if(formatted) {
+    if(is_set(options, xml_log_option_formatted)) {
 	offset = print_spaces(buffer, depth, buffer_len - offset);
-        if(diff_plus && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
+        if(is_set(options, xml_log_option_diff_plus) && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
+            options |= xml_log_option_diff_all;
             prefix_m = strdup(prefix);
             prefix_m[1] = '+';
             prefix = prefix_m;
 
-        } else if(diff_minus && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
+        } else if(is_set(options, xml_log_option_diff_minus) && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
+            options |= xml_log_option_diff_all;
             prefix_m = strdup(prefix);
             prefix_m[1] = '-';
             prefix = prefix_m;
         }
+    }
+
+    if(is_set(options, xml_log_option_diff_short) && is_not_set(options, xml_log_option_diff_all)) {
+        /* Still searching for the actual change */
+        for(a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
+            child_result = log_data_element(
+                log_level, file, function, line, prefix, a_child, depth+1, options);
+        }
+        goto done;
     }
 
     printed = snprintf(buffer + offset, buffer_len - offset, "<%s", name);
@@ -1034,7 +1051,8 @@ log_data_element(
 	if(p_name == NULL || safe_str_eq(F_XML_TAGNAME, p_name)) {
 	    continue;
 
-        } else if((diff_plus || diff_minus) && safe_str_eq(XML_DIFF_MARKER, p_name)) {
+        } else if((is_set(options, xml_log_option_diff_plus) || is_set(options, xml_log_option_diff_minus))
+                  && safe_str_eq(XML_DIFF_MARKER, p_name)) {
             continue;
 
 	} else if(hidden != NULL
@@ -1062,13 +1080,13 @@ log_data_element(
 	free(buffer);
 	return 0;
     }
-	
+
     for(a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
 	child_result = log_data_element(
 	    log_level, file, function, line, prefix, a_child, depth+1, options);
     }
 
-    if(formatted) {
+    if(is_set(options, xml_log_option_formatted)) {
 	offset = print_spaces(buffer, depth, buffer_len);
     }
 
@@ -1076,6 +1094,8 @@ log_data_element(
     update_buffer();
 
     do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
+
+  done:
     free(prefix_m);
     free(buffer);
     return 1;
@@ -1138,6 +1158,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
     xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
     xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
     gboolean is_first = TRUE;
+    int options = xml_log_option_formatted;
 
     static struct qb_log_callsite *diff_cs = NULL;
 
@@ -1149,8 +1170,11 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
         return;
     }
 
+    if(log_level < LOG_DEBUG) {
+        options |= xml_log_option_diff_short;
+    }
     for(child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
-	log_data_element(log_level, __FILE__, function, __LINE__, "- ", child, 0, 5);
+	log_data_element(log_level, __FILE__, function, __LINE__, "- ", child, 0, options|xml_log_option_diff_minus);
 	if(is_first) {
 	    is_first = FALSE;
 	} else {
@@ -1160,7 +1184,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
     
     is_first = TRUE;
     for(child = __xml_first_child(added); child != NULL; child = __xml_next(child)) {
-	log_data_element(log_level, __FILE__, function, __LINE__, "+ ", child, 0, 3);
+	log_data_element(log_level, __FILE__, function, __LINE__, "+ ", child, 0, options|xml_log_option_diff_plus);
 	if(is_first) {
 	    is_first = FALSE;
 	} else {
