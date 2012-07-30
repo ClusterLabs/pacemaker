@@ -39,6 +39,7 @@ static struct crm_option long_options[] = {
     {"api-call",         1, 0, 'c', "\tDirectly relates to lrmd api functions"},
     {"no-wait",          0, 0, 'w', "\tMake api call and do not wait for result."},
     {"is-running",       0, 0, 'R', "\tDetermine if a resource is registered and running."},
+    {"notify-orig",      0, 0, 'n', "\tOnly notify this client the results of an api action."},
     {"-spacer-",         1, 0, '-', "\nParameters for api-call option"},
     {"action",           1, 0, 'a'},
     {"rsc-id",           1, 0, 'r'},
@@ -88,11 +89,18 @@ lrmd_t *lrmd_conn = NULL;
 
 static char event_buf_v0[1024];
 
+static void
+test_exit(int rc)
+{
+    lrmd_api_delete(lrmd_conn);
+    exit(rc);
+}
+
 #define print_result(result) \
     if (!options.quiet) {    \
         result;              \
     }                        \
-    
+
 #define report_event(event)                                             \
     snprintf(event_buf_v0, sizeof(event_buf_v0), "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s op_status:%s", \
              lrmd_event_type2str(event->type),                          \
@@ -106,6 +114,7 @@ static void
 test_shutdown(int nsig)
 {
     lrmd_api_delete(lrmd_conn);
+    lrmd_conn = NULL;
 }
 
 static void
@@ -115,7 +124,7 @@ read_events(lrmd_event_data_t * event)
     if (options.listen) {
         if (safe_str_eq(options.listen, event_buf_v0)) {
             print_result(printf("LISTEN EVENT SUCCESSFUL\n"));
-            exit(0);
+            test_exit(0);
         }
     }
 
@@ -125,11 +134,11 @@ read_events(lrmd_event_data_t * event)
         } else {
             print_result(printf("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s\n",
                                 event->rc, services_lrm_status_str(event->op_status)));
-            exit(-1);
+            test_exit(-1);
         }
 
         if (!options.listen) {
-            exit(0);
+            test_exit(0);
         }
     }
 }
@@ -138,7 +147,7 @@ static gboolean
 timeout_err(gpointer data)
 {
     print_result(printf("LISTEN EVENT FAILURE - timeout occurred, never found.\n"));
-    exit(-1);
+    test_exit(-1);
 
     return FALSE;
 }
@@ -163,7 +172,7 @@ try_connect(void)
     }
 
     print_result(printf("API CONNECTION FAILURE\n"));
-    exit(-1);
+    test_exit(-1);
 }
 
 static gboolean
@@ -286,24 +295,24 @@ start_test(gpointer user_data)
 
     } else if (options.api_call) {
         print_result(printf("API-CALL FAILURE unknown action '%s'\n", options.action));
-        exit(-1);
+        test_exit(-1);
     }
 
     if (rc < 0) {
         print_result(printf("API-CALL FAILURE for '%s' api_rc:%d\n", options.api_call, rc));
-        exit(-1);
+        test_exit(-1);
     }
 
     if (options.api_call && rc == pcmk_ok) {
         print_result(printf("API-CALL SUCCESSFUL for '%s'\n", options.api_call));
         if (!options.listen) {
-            exit(0);
+            test_exit(0);
         }
     }
 
     if (options.no_wait) {
         /* just make the call and exit regardless of anything else. */
-        exit(0);
+        test_exit(0);
     }
 
     return 0;
@@ -452,6 +461,9 @@ main(int argc, char **argv)
             case 'R':
                 options.is_running = 1;
                 break;
+            case 'n':
+                exec_call_opts = lrmd_opt_notify_orig_only;
+                break;
             case 'c':
                 options.api_call = optarg;
                 break;
@@ -526,13 +538,13 @@ main(int argc, char **argv)
         options.interval = 0;
         if (!options.rsc_id) {
             crm_err("rsc-id must be given when is-running is used");
-            exit(-1);
+            test_exit(-1);
         }
 
         if (generate_params()) {
             print_result(printf
                          ("Failed to retrieve rsc parameters from cib, can not determine if rsc is running.\n"));
-            exit(-1);
+            test_exit(-1);
         }
         options.api_call = "exec";
         options.action = "monitor";
@@ -554,12 +566,12 @@ main(int argc, char **argv)
     crm_info("Starting");
     mainloop = g_main_new(FALSE);
     g_main_run(mainloop);
-    lrmd_api_delete(lrmd_conn);
 
     if (cib_conn != NULL) {
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
     }
 
+    test_exit(0);
     return 0;
 }
