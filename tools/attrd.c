@@ -525,6 +525,7 @@ main(int argc, char **argv)
     int flag = 0;
     int argerr = 0;
     gboolean was_err = FALSE;
+    qb_ipcs_connection_t *c = NULL;
     qb_ipcs_service_t *ipcs = NULL;
     
     crm_log_init(T_ATTRD, LOG_NOTICE, TRUE, FALSE, argc, argv, FALSE);
@@ -616,6 +617,17 @@ main(int argc, char **argv)
         attrd_cluster_conn->llc_ops->delete(attrd_cluster_conn);
     }
 #endif
+
+    c = qb_ipcs_connection_first_get(ipcs);
+    while(c != NULL) {
+        qb_ipcs_connection_t *last = c;
+        c = qb_ipcs_connection_next_get(ipcs, last);
+
+        /* There really shouldn't be anyone connected at this point */
+        crm_notice("Disconnecting client %p, pid=%d...", last, crm_ipcs_client_pid(last));
+        qb_ipcs_disconnect(last);
+        qb_ipcs_connection_unref(last);
+    }
 
     qb_ipcs_destroy(ipcs);
     
