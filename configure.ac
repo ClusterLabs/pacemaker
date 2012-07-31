@@ -1034,7 +1034,7 @@ AC_SUBST(CRM_DTD_DIRECTORY)
 AC_DEFINE_UNQUOTED(CRM_DTD_VERSION,"$CRM_DTD_VERSION", Current version of the Pacemaker Relax-NG Schema)
 AC_SUBST(CRM_DTD_VERSION)
 
-CRM_CORE_DIR=`try_extract_header_define $GLUE_HEADER HA_COREDIR ${localstatedir}/lib/heartbeat/cores`
+CRM_CORE_DIR=`try_extract_header_define $GLUE_HEADER HA_COREDIR ${localstatedir}/lib/pacemaker/cores`
 AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)
 AC_SUBST(CRM_CORE_DIR)
 
