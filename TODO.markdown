@@ -6,6 +6,7 @@
 
 ## Targeted for 1.2.x
 
+- Support 'yesterday' and 'thursday' and '24-04' as dates in crm_report 
 - Allow the N in 'give up after N failed fencing attempts' to be configurable 
 - Log cib:diff in compressed form (only the ++ and -- entries)  
 - Check for uppercase letters in node names, warn if found
