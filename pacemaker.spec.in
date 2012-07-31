@@ -428,9 +428,9 @@ exit 0
 %doc AUTHORS
 %doc ChangeLog
 
-%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/heartbeat/crm
-%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pengine
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker
+%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
+%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
 %ghost %dir %attr (750, %{uname}, %{gname}) %{_var}/run/crm
 %dir /usr/lib/ocf
 %dir /usr/lib/ocf/resource.d
