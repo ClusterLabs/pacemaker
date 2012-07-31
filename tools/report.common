@@ -110,6 +110,7 @@ detect_host() {
 	    CRM_STATE_DIR=$d/crm
 	    break
 	done
+	info "Found: $CRM_STATE_DIR"
     fi
     debug "Machine runtime directory: $local_state_dir"
     debug "Pacemaker runtime data located in: $CRM_STATE_DIR"
@@ -133,6 +134,7 @@ detect_host() {
 	    CRM_DAEMON_DIR=`dirname $f`
 	    break
 	done
+	info "Found: $CRM_DAEMON_DIR"
     fi
 
     if [ -z $CRM_DAEMON_DIR ]; then
@@ -155,6 +157,7 @@ detect_host() {
 	    CRM_CONFIG_DIR=`dirname $f`
 	    break
 	done
+	info "Found: $CRM_CONFIG_DIR"
     fi
     if [ -z $CRM_CONFIG_DIR ]; then
 	warning "Non-standard Pacemaker installation: config not found"
@@ -177,6 +180,7 @@ detect_host() {
 	    PE_STATE_DIR=$d
 	    break
 	done
+	info "Found: $PE_STATE_DIR"
     fi
     if [ -z $PE_STATE_DIR ]; then
 	fatal "Non-standard Pacemaker installation: Policy Engine directory not found"

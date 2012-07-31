@@ -67,9 +67,19 @@ find_files_clean() {
 }
 
 find_files() {
-    dirs=$1
+    dirs=
     from_time=$2
     to_time=$3
+    for d in $1; do
+        if [ -d $d ]; then
+	   dirs="$dirs $d"
+	fi
+    done
+
+    if [ x"$dirs" = x ]; then
+	return
+    fi
+
     isnumber "$from_time" && [ "$from_time" -gt 0 ] || {
 	warning "sorry, can't find files in [ $1 ] based on time if you don't supply time"
 	return
@@ -642,7 +652,7 @@ case $cluster in
 	then
 	    corosync-blackbox > corosync-blackbox-live.txt
 	fi
-	corosync-fplay > corosync-blackbox.txt
+#	corosync-fplay > corosync-blackbox.txt
 
 	tool=`pickfirst corosync-objctl corosync-cmapctl`
 	case $tool in
