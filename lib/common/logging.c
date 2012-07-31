@@ -474,7 +474,7 @@ crm_is_callsite_active(struct qb_log_callsite *cs, int level)
 void
 crm_update_callsites(void)
 {
-    gboolean log = TRUE;
+    static gboolean log = TRUE;
     if(log) {
         log = FALSE;
         crm_info("Enabling callsites based on priority=%d, files=%s, functions=%s, formats=%s, tags=%s",
