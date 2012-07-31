@@ -216,8 +216,10 @@ free_mem(fsa_data_t * msg_data)
 
     crm_ipc_close(attrd_ipc);
     crm_ipc_destroy(attrd_ipc);
-    g_main_loop_quit(crmd_mainloop);
-    g_main_loop_unref(crmd_mainloop);
+    if(crmd_mainloop) {
+        g_main_loop_quit(crmd_mainloop);
+        g_main_loop_unref(crmd_mainloop);
+    }
 
 #if SUPPORT_HEARTBEAT
     if (fsa_cluster_conn) {
