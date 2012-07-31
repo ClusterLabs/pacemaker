@@ -1002,6 +1002,7 @@ class ClusterManager(UserDict):
 
     def fencing_cleanup(self, node, stonith):
         peer_list = []
+        self.debug("Looking for nodes that were fenced as a result of %s starting" % node)
 
         # If we just started a node, we may now have quorum (and permission to fence)
         # Make sure everyone is online before continuing
@@ -1110,8 +1111,6 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus[node]="up"
         watch_result = watch.lookforall()
 
-        self.fencing_cleanup(node, stonith)
-
         if watch.unmatched:
             for regex in watch.unmatched:
                 self.log ("Warn: Startup pattern not found: %s" %(regex))
@@ -1119,9 +1118,11 @@ class ClusterManager(UserDict):
 
         if watch_result and self.cluster_stable(self["DeadTime"]):
             #self.debug("Found match: "+ repr(watch_result))
+            self.fencing_cleanup(node, stonith)
             return 1
 
         elif self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
+            self.fencing_cleanup(node, stonith)
             return 1
 
         self.log ("Warn: Start failed for node %s" %(node))
