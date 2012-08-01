@@ -1207,6 +1207,10 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
                 }
                 if(alternate_host == NULL) {
                     crm_err("No alternate host available to handle complex self fencing request");
+                    g_hash_table_iter_init(&gIter, crm_peer_cache);
+                    while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
+                        crm_notice("Peer[%d] %s", entry->id, entry->uname);
+                    }
                 }
             }
 
