@@ -827,11 +827,18 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
             crm_trace("%s is down or still coming up", this_node->details->uname);
         }
 
+    } else if(do_terminate
+              && safe_str_eq(join, CRMD_JOINSTATE_DOWN)
+              && crm_is_true(in_cluster) == FALSE
+              && crm_is_true(is_peer) == FALSE) {
+        crm_info("Node %s was just shot", this_node->details->uname);
+        online = FALSE;
+
     } else if(crm_is_true(in_cluster) == FALSE) {
-        pe_fence_node(data_set, this_node, "because the node was not part of the cluster");
+        pe_fence_node(data_set, this_node, "because the node is no longer part of the cluster");
 
     } else if(crm_is_true(is_peer) == FALSE) {
-        pe_fence_node(data_set, this_node, "because our peer process was not available");
+        pe_fence_node(data_set, this_node, "because our peer process is no longer available");
 
         /* Everything is running at this point, now check join state */
     } else if (do_terminate) {
@@ -842,7 +849,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 
     } else if (safe_str_eq(join, CRMD_JOINSTATE_PENDING)
                || safe_str_eq(join, CRMD_JOINSTATE_DOWN)) {
-        crm_info("+ Node %s is not ready to run resources", this_node->details->uname);
+        crm_info("Node %s is not ready to run resources", this_node->details->uname);
         this_node->details->standby = TRUE;
         this_node->details->pending = TRUE;
 
