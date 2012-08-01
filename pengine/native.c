@@ -2903,7 +2903,6 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
 
     GListPtr gIter = NULL;
     const char *value = g_hash_table_lookup(rsc->meta, XML_OP_ATTR_ALLOW_MIGRATE);
-    crm_trace("%s %s -> %s", rsc->id, stop->node->details->uname, start->node->details->uname);
 
     if (crm_is_true(value) == FALSE) {
         return;
@@ -2938,6 +2937,8 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
         crm_trace("%s: not at stack bottom", rsc->id);
         return;
     }
+
+    crm_trace("%s %s -> %s", rsc->id, stop->node->details->uname, start->node->details->uname);
 
     if (partial) {
         crm_info("Completing partial migration of %s from %s to %s", rsc->id,
