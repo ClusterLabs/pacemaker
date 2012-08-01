@@ -197,10 +197,6 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
         if (crm_config_error) {
             crm_notice("Configuration ERRORs found during PE processing."
                        "  Please run \"crm_verify -L\" to identify issues.");
-
-        } else if (crm_config_warning) {
-            crm_notice("Configuration WARNINGs found during PE processing."
-                       "  Please run \"crm_verify -L\" to identify issues.");
         }
 
         free_xml(converted);
