@@ -42,11 +42,6 @@
 						GFS2 as the cluster filesystem (in active/active mode)
 					</para>
 				</listitem>
-				<listitem>
-					<para>
-						The crm shell for displaying the configuration and making changes
-					</para>
-				</listitem>
 			</orderedlist>
 		</para>
 		<para>

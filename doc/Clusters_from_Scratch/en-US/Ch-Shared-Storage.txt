@@ -291,6 +291,68 @@ END
 
 == Configure the Cluster for DRBD ==
 
+ifdef::pcs[]
+
+One handy feature pcs has is the ability to queue up several changes
+into a file and commit those changes atomically.  To do this, start by
+populating the file with the current raw xml config from the cib.  This
+can be done using the following command.
+
+[source,Bash]
+----
+# pcs cluster cib drbd_cfg
+----
+
+Now using the pcs -f option, make changes to the configuration saved
+in the drbd_cfg file.  These changes will not be seen by the cluster until
+the drbd_cfg file is pushed into the live cluster's cib later on.
+
+[source,Bash]
+----
+# pcs -f drbd_cfg resource create WebData ocf:linbit:drbd \
+         drbd_resource=wwwdata op monitor interval=60s
+# pcs -f drbd_cfg resource master WebDataClone WebData \
+         master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 \
+         notify=true
+# pcs -f drbd_cfg resource show
+ ClusterIP	(ocf::heartbeat:IPaddr2) Started 
+ WebSite	(ocf::heartbeat:apache) Started 
+ Master/Slave Set: WebDataClone [WebData]
+     Stopped: [ WebData:0 WebData:1 ]
+----
+
+After you are satisfied with all the changes, you can commit all
+the changes at once by pushing the drbd_cfg file into the live
+cib.
+
+[source,Bash]
+----
+# pcs cluster push cib drbd_cfg 
+CIB updated
+#
+# pcs status
+
+Last updated: Fri Sep 14 12:19:49 2012
+Last change: Fri Sep 14 12:19:13 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (2) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+4 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 ]
+----
+endif::[]
+
+ifdef::crm[]
 One handy feature of the crm shell is that you can use it in
 interactive mode to make several changes atomically.
 
@@ -380,6 +442,7 @@ Online: [ pcmk-1 pcmk-2 ]
      Masters: [ pcmk-1 ]
      Slaves: [ pcmk-2 ]
 ----
+endif::[]
 
 [NOTE]
 =======
@@ -393,6 +456,58 @@ use it. In addition to the filesystem's definition, we also need to
 tell the cluster where it can be located (only on the DRBD Primary)
 and when it is allowed to start (after the Primary was promoted).
 
+ifdef::pcs[]
+Once again we will queue up our changes to a file and then push the
+new configuration to the cluster as the final step.
+
+[source,Bash]
+----
+# pcs cluster cib fs_cfg
+# pcs -f fs_cfg resource create WebFS ocf:heartbeat:Filesystem \
+         device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" \
+         fstype="ext4"
+# pcs -f fs_cfg constraint colocation add WebFS WebDataClone INFINITY with-rsc-role=Master
+# pcs -f fs_cfg constraint order promote WebDataClone then start WebFS
+Adding WebDataClone WebFS (kind: Mandatory) (Options: first-action=promote then-action=start)
+----
+
+We also need to tell the cluster that Apache needs to run on the same
+machine as the filesystem and that it must be active before Apache can
+start.
+
+[source,Bash]
+----
+# pcs -f fs_cfg constraint colocation add WebSite WebFS INFINITY
+# pcs -f fs_cfg constraint order WebFS then WebSite
+----
+
+Now review the updated configuration.
+
+[source,Bash]
+----
+# pcs -f fs_cfg constraint
+Location Constraints:
+Ordering Constraints:
+  start ClusterIP then start WebSite
+  WebFS then WebSite
+  promote WebDataClone then start WebFS
+Colocation Constraints:
+  WebSite with ClusterIP
+  WebFS with WebDataClone (with-rsc-role:Master)
+  WebSite with WebFS
+#
+# pcs -f fs_cfg resource show
+ ClusterIP	(ocf::heartbeat:IPaddr2) Started 
+ WebSite	(ocf::heartbeat:apache) Started 
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 ]
+ WebFS	(ocf::heartbeat:Filesystem) Stopped 
+----
+
+endif::[]
+
+ifdef::crm[]
 Once again we'll use the shell's interactive mode
 
 [source,Bash]
@@ -454,10 +569,40 @@ rsc_defaults $id="rsc-options" \
 op_defaults $id="op-options" \
 	timeout="240s"
 ----
+endif::[]
 
 After reviewing the new configuration, we again upload it and watch the
 cluster put it into effect.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs cluster push cib fs_cfg
+CIB updated
+# pcs status
+ Last updated: Fri Aug 10 12:47:01 2012
+
+ Last change: Fri Aug 10 12:46:55 2012 via cibadmin on pcmk-1
+ Stack: corosync
+ Current DC: pcmk-1 (1) - partition with quorum
+ Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+ 2 Nodes configured, unknown expected votes
+ 5 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 ]
+ WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 crm(fs) # cib commit fs
@@ -484,6 +629,7 @@ Online: [ pcmk-1 pcmk-2 ]
      Slaves: [ pcmk-2 ]
  WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1
 ----
+endif::[]
 
 === Testing Migration ===
 
@@ -498,6 +644,35 @@ Put the local node into standby mode and observe the cluster move all
 the resources to the other node. Note also that the node's status will
 change to indicate that it can no longer host resources.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs cluster standby pcmk-1
+# pcs status
+
+Last updated: Fri Sep 14 12:41:12 2012
+Last change: Fri Sep 14 12:41:08 2012 via crm_attribute on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+5 Resources configured.
+
+Node pcmk-1 (1): standby
+Online: [ pcmk-2 ]
+
+Full list of resources:
+
+ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+WebSite (ocf::heartbeat:apache):        Started pcmk-2
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-2 ]
+     Stopped: [ WebData:1 ]
+WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm node standby
@@ -522,11 +697,40 @@ WebSite (ocf::heartbeat:apache):        Started pcmk-2
      Stopped: [ WebData:1 ]
 WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2
 ----
+endif::[]
 
 Once we've done everything we needed to on pcmk-1 (in this case nothing,
 we just wanted to see the resources move), we can allow the node to be a
 full cluster member again.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs cluster unstandby pcmk-1
+# pcs status
+
+Last updated: Fri Sep 14 12:43:02 2012
+Last change: Fri Sep 14 12:42:57 2012 via crm_attribute on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+5 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-2
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-2 ]
+     Slaves: [ pcmk-1 ]
+ WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-2
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm node online
@@ -550,6 +754,7 @@ Online: [ pcmk-1 pcmk-2 ]
      Slaves: [ pcmk-1 ]
  WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-2
 ----
+endif::[]
 
 Notice that our resource stickiness settings prevent the services from
 migrating back to pcmk-1.

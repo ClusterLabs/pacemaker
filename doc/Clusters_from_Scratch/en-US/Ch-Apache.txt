@@ -178,10 +178,34 @@ footnote:[Compare the key used here ocf:heartbeat:apache with the one we used ea
 configuration file and we'll tell the cluster to check once a
 minute that apache is still running.
 
+ifdef::pcs[]
+[source,Bash]
+-----
+# pcs resource create WebSite ocf:heartbeat:apache  \
+      configfile=/etc/httpd/conf/httpd.conf \
+      statusurl="http://localhost/server-status" op monitor interval=1min
+-----
+
+By default, the operation timeout for all resource's start, stop, and monitor
+operations is 20 seconds.  In many cases this timeout period is less than
+the advised timeout period.  For the purposes of this tutorial, we will
+adjust the global operation timeout default to 240 seconds.
+
+[source,Bash]
+-----
+# pcs resource op defaults timeout=240s
+# pcs resource op defaults
+timeout: 240s
+-----
+
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 # crm configure primitive WebSite ocf:heartbeat:apache \
      params configfile=/etc/httpd/conf/httpd.conf \
+     statusurl="http://localhost/server-status" \
      op monitor interval=1min
 WARNING: WebSite: default timeout 20s for start is smaller than the advised 40s
 WARNING: WebSite: default timeout 20s for stop is smaller than the advised 60s
@@ -211,9 +235,33 @@ rsc_defaults $id="rsc-options" \
 op_defaults $id="op-options" \
 	timeout="240s"
 -----
+endif::[]
 
 After a short delay, we should see the cluster start apache
 
+ifdef::pcs[]
+[source,Bash]
+-----
+# pcs status
+
+Last updated: Fri Sep 14 10:51:27 2012
+Last change: Fri Sep 14 10:50:46 2012 via crm_attribute on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (2) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+2 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+-----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 # crm_mon -1
@@ -229,13 +277,33 @@ Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
 
 Online: [ pcmk-1 pcmk-2 ]
 
-ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-WebSite (ocf::heartbeat:apache):        Started pcmk-1
+ClusterIP	(ocf:heartbeat:IPaddr2):	Started pcmk-2
+WebSite (ocf:heartbeat:apache):        Started pcmk-1
 -----
+endif::[]
 
 Wait a moment, the WebSite resource isn't running on the same host as our
 IP address!
 
+ifdef::pcs[]
+[NOTE]
+======
+If, in the `pcs status` output, you see the WebSite resource has
+failed to start, then you've likely not enabled the status URL correctly.
+You can check if this is the problem by running:
+
+....
+wget http://127.0.0.1/server-status
+....
+
+If you see +Connection refused+ in the output, then this is indeed the
+problem.  Check to ensure that +Allow from 127.0.0.1+ is present for
+the +<Location /server-status>+ block.
+
+======
+endif::[]
+
+ifdef::crm[]
 [NOTE]
 ======
 If, in the `crm_mon` output, you see:
@@ -257,6 +325,7 @@ problem.  Check to ensure that +Allow from 127.0.0.1+ is present for
 the +<Location /server-status>+ block.
 
 ======
+endif::[]
 
 == Ensuring Resources Run on the Same Host ==
 
@@ -266,11 +335,21 @@ can tell the cluster that two resources are related and need to run on
 the same host (or not at all). Here we instruct the cluster that
 WebSite can only run on the host that ClusterIP is active on.
 
+ifdef::pcs[]
+To achieve this we use a colocation constraint that indicates it is
+mandatory for WebSite to run on the same node as ClusterIP.  The
+"mandatory" part of the colocation constraint is indicated by using a
+score of INFINITY.  The INFINITY score also means that if ClusterIP is not
+active anywhere, WebSite will not be permitted to run.
+endif::[]
+
+ifdef::crm[]
 For the constraint, we need a name (choose something descriptive like
 website-with-ip), indicate that its mandatory (so that if ClusterIP is
 not active anywhere, WebSite will not be permitted to run anywhere
 either) by specifying a score of INFINITY and finally list the two
 resources.
+endif::[]
 
 [NOTE]
 =======
@@ -289,6 +368,35 @@ location of +ClusterIP+ before choosing a location for +WebSite+.
 
 ===========
 
+ifdef::pcs[]
+[source,Bash]
+-----
+# pcs constraint colocation add WebSite ClusterIP INFINITY
+# pcs constraint
+Location Constraints:
+Ordering Constraints:
+Colocation Constraints:
+  WebSite with ClusterIP
+# pcs status
+
+Last updated: Fri Sep 14 11:00:44 2012
+Last change: Fri Sep 14 11:00:25 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (2) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+2 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-2
+-----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 # crm configure colocation website-with-ip INFINITY: WebSite ClusterIP
@@ -325,9 +433,10 @@ Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
 
 Online: [ pcmk-1 pcmk-2 ]
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
- WebSite	(ocf::heartbeat:apache):	Started pcmk-2
+ ClusterIP	(ocf:heartbeat:IPaddr2):   Started pcmk-2
+ WebSite	(ocf:heartbeat:apache):    Started pcmk-2
 -----
+endif::[]
 
 == Controlling Resource Start/Stop Ordering ==
 
@@ -335,7 +444,29 @@ When Apache starts, it binds to the available IP addresses. It doesn't
 know about any addresses we add afterwards, so not only do they need to
 run on the same node, but we need to make sure ClusterIP is already
 active before we start WebSite. We do this by adding an ordering
-constraint. We need to give it a name (choose something descriptive like
+constraint.
+
+ifdef::pcs[]
+By default all order constraints are mandatory constraints unless
+otherwise configured.  This means that the recovery of ClusterIP will
+also trigger the recovery of WebSite.
+
+[source,Bash]
+-----
+# pcs constraint order ClusterIP then WebSite
+Adding ClusterIP WebSite (kind: Mandatory) (Options: first-action=start then-action=start)
+# pcs constraint
+Location Constraints:
+Ordering Constraints:
+  start ClusterIP then start WebSite
+Colocation Constraints:
+  WebSite with ClusterIP
+-----
+endif::[]
+
+ifdef::crm[]
+
+We need to give it a name (choose something descriptive like
 apache-after-ip), indicate that its mandatory (so that any recovery for
 ClusterIP will also trigger recovery of WebSite) and list the two
 resources in the order we need them to start.
@@ -365,16 +496,53 @@ rsc_defaults $id="rsc-options" \
 op_defaults $id="op-options" \
 	timeout="240s"
 -----
+endif::[]
 
 == Specifying a Preferred Location ==
 
 Pacemaker does not rely on any sort of hardware symmetry between nodes,
 so it may well be that one machine is more powerful than the other. In
 such cases it makes sense to host the resources there if it is available.
-To do this we create a location constraint. Again we give it a
-descriptive name (prefer-pcmk-1), specify the resource we want to run
-there (WebSite), how badly we'd like it to run there (we'll use 50 for
-now, but in a two-node situation almost any value above 0 will do) and
+To do this we create a location constraint.
+
+ifdef::pcs[]
+In the location constraint below, we are saying the WebSite resource
+prefers the node pcmk-1 with a score of 50.  The score here indicates
+how badly we'd like the resource to run somewhere.
+
+[source,Bash]
+-----
+# pcs constraint location WebSite prefers pcmk-1=50
+# pcs constraint
+Location Constraints:
+  Resource: WebSite
+    Enabled on: pcmk-1 (score:50)
+Ordering Constraints:
+  start ClusterIP then start WebSite
+Colocation Constraints:
+  WebSite with ClusterIP
+# pcs status
+Last updated: Fri Sep 14 11:06:37 2012
+Last change: Fri Sep 14 11:06:26 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (2) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+2 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-2
+-----
+endif::[]
+
+ifdef::crm[]
+Again we give it a descriptive name (prefer-pcmk-1), specify the resource we
+want to run there (WebSite), how badly we'd like it to run there (we'll use
+50 for now, but in a two-node situation almost any value above 0 will do) and
 the host's name.
 
 [source,Bash]
@@ -422,9 +590,10 @@ Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
 
 Online: [ pcmk-1 pcmk-2 ]
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
- WebSite	(ocf::heartbeat:apache):	Started pcmk-2
+ ClusterIP	(ocf:heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf:heartbeat:apache):	Started pcmk-2
 -----
+endif::[]
 
 Wait a minute, the resources are still on pcmk-2!
 
@@ -440,8 +609,8 @@ To see the current placement scores, you can use a tool called crm_simulate
 Current cluster status:
 Online: [ pcmk-1 pcmk-2 ]
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
- WebSite	(ocf::heartbeat:apache):	Started pcmk-2
+ ClusterIP	(ocf:heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf:heartbeat:apache):	Started pcmk-2
 
 Allocation scores:
 native_color: ClusterIP allocation score on pcmk-1: 50
@@ -454,6 +623,43 @@ Transition Summary:
 
 == Manually Moving Resources Around the Cluster ==
 
+ifdef::pcs[]
+There are always times when an administrator needs to override the
+cluster and force resources to move to a specific location.  By
+updating our previous location constraint with a score of INFINITY,
+WebSite will be forced to move to pcmk-1.
+
+[source,Bash]
+-----
+# pcs constraint location WebSite prefers pcmk-1=INFINITY
+# pcs constraint all
+Location Constraints:
+  Resource: WebSite
+    Enabled on: pcmk-1 (score:INFINITY) (id:location-WebSite-pcmk-1-INFINITY)
+Ordering Constraints:
+  start ClusterIP then start WebSite (Mandatory) (id:order-ClusterIP-WebSite-mandatory)
+Colocation Constraints:
+  WebSite with ClusterIP (INFINITY) (id:colocation-WebSite-ClusterIP-INFINITY)
+# pcs status
+
+Last updated: Fri Sep 14 11:16:26 2012
+Last change: Fri Sep 14 11:16:18 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (2) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+2 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+-----
+endif::[]
+
+ifdef::crm[]
 There are always times when an administrator needs to override the
 cluster and force resources to move to a specific location. Underneath we
 use location constraints like the one we created above, happily you don't
@@ -476,8 +682,8 @@ Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
 
 Online: [ pcmk-1 pcmk-2 ]
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
- WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+ ClusterIP	(ocf:heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf:heartbeat:apache):	Started pcmk-1
 -----
 
 Notice how the colocation rule we created has ensured that ClusterIP was also moved to pcmk-1.
@@ -513,6 +719,7 @@ op_defaults $id="op-options" \
 
 The automated constraint used to move the resources to +pcmk-1+ is the
 line beginning with +location cli-prefer-WebSite+.
+endif::[]
 
 === Giving Control Back to the Cluster ===
 
@@ -521,6 +728,28 @@ resources to pcmk-1, in our case nothing, we can then allow the cluster
 to resume normal operation with the unmove command. Since we previously
 configured a default stickiness, the resources will remain on pcmk-1.
 
+ifdef::pcs[]
+[source,Bash]
+-----
+# pcs constraint all
+Location Constraints:
+  Resource: WebSite
+    Enabled on: pcmk-1 (score:INFINITY) (id:location-WebSite-pcmk-1-INFINITY)
+Ordering Constraints:
+  start ClusterIP then start WebSite (Mandatory) (id:order-ClusterIP-WebSite-mandatory)
+Colocation Constraints:
+  WebSite with ClusterIP (INFINITY) (id:colocation-WebSite-ClusterIP-INFINITY)
+# pcs constraint rm location-WebSite-pcmk-1-INFINITY
+# pcs constraint
+Location Constraints:
+Ordering Constraints:
+  start ClusterIP then start WebSite
+Colocation Constraints:
+  WebSite with ClusterIP
+-----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 # crm resource unmove WebSite
@@ -547,11 +776,35 @@ rsc_defaults $id="rsc-options" \
 op_defaults $id="op-options" \
 	timeout="240s"
 -----
+endif::[]
 
 Note that the automated constraint is now gone. If we check the cluster
 status, we can also see that as expected the resources are still active
 on pcmk-1.
 
+ifdef::pcs[]
+[source,Bash]
+-----
+# pcs status
+
+Last updated: Fri Sep 14 11:57:12 2012
+Last change: Fri Sep 14 11:57:03 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (2) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+2 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+-----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 # crm_mon
@@ -567,6 +820,7 @@ Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
 
 Online: [ pcmk-1 pcmk-2 ]
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
- WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+ ClusterIP	(ocf:heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf:heartbeat:apache):	Started pcmk-1
 -----
+endif::[]

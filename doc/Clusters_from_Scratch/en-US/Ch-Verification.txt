@@ -1,17 +1,57 @@
 = Verify Cluster Installation =
 
+ifdef::pcs[]
+== Start the Cluster ==
+
+Now that corosync is configured, it is time to start the cluster.
+The command below will start corosync and pacemaker on both nodes
+in the cluster.  If you are issuing the start command from a different
+node than the one you ran the 'pcs cluster auth' command on earlier, you
+must authenticate on current node you are logged into before you will
+be allowed to start the cluster.
+
+[source,Bash]
+----
+# pcs cluster start --all
+pcmk-1: Starting Cluster...
+pcmk-2: Starting Cluster...
+----
+
+An alternative to using the 'pcs cluster startall' command
+is to issue either of the below commands on each node in the
+cluster by hand.
+
+[source,Bash]
+----
+# pcs cluster start
+Starting Cluster...
+----
+
+or
+
+[source,Bash]
+----
+# systemctl start corosync.service
+# systemctl start pacemaker.service
+----
+
+endif::[]
+
 == Verify Corosync Installation ==
 
+ifdef::crm[]
 Start Corosync on the first node
 
 [source,Bash]
 ----
 # systemctl start corosync.service
 ----
+endif::[]
 
 The first thing to check is if cluster communication is happy, for
 that we use `corosync-cfgtool`.
 
+ifdef::crm[]
 [source,Bash]
 ----
 # corosync-cfgtool -s
@@ -21,6 +61,18 @@ RING ID 0
 	id	= 192.168.122.101
 	status	= ring 0 active with no faults
 ----
+endif::[]
+
+ifdef::pcs[]
+----
+# corosync-cfgtool -s
+Printing ring status.
+Local node ID 1
+RING ID 0
+	id	= 192.168.122.101
+	status	= ring 0 active with no faults
+----
+endif::[]
 
 We can see here that everything appears normal with our fixed IP
 address, not a 127.0.0.x loopback address, listed as the +id+ and +no
@@ -31,16 +83,39 @@ the node's network, firewall and selinux configurations.
 
 Next we check the membership and quorum APIs:
 
+ifdef::pcs[]
+[source,Bash]
+----
+# corosync-cmapctl  | grep members 
+runtime.totem.pg.mrp.srp.members.1.ip (str) = r(0) ip(192.168.122.101) 
+runtime.totem.pg.mrp.srp.members.1.join_count (u32) = 1
+runtime.totem.pg.mrp.srp.members.1.status (str) = joined
+runtime.totem.pg.mrp.srp.members.2.ip (str) = r(0) ip(192.168.122.102) 
+runtime.totem.pg.mrp.srp.members.2.join_count (u32) = 1
+runtime.totem.pg.mrp.srp.members.2.status (str) = joined
+
+# pcs status corosync 
+Membership information
+ --------------------------
+    Nodeid      Votes Name
+         1          1 pcmk-1
+         2          1 pcmk-2
+----
+
+You should see both nodes have joined the cluster.
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # corosync-cmapctl  | grep members
 runtime.totem.pg.mrp.srp.members.1702537408.ip (str) = r(0) ip(192.168.122.101)
 runtime.totem.pg.mrp.srp.members.1702537408.join_count (u32) = 1
 runtime.totem.pg.mrp.srp.members.1702537408.status (str) = joined
-# corosync-quorumtool -l
 
+# corosync-quorumtool -l
 Membership information
- ----------------------
+ --------------------------
     Nodeid      Votes Name
 1702537408          1 pcmk-1
 ----
@@ -83,16 +158,69 @@ runtime.totem.pg.mrp.srp.members.1719314624.status (str) = joined
 # corosync-quorumtool -l
 
 Membership information
- ----------------------
+ --------------------------
     Nodeid      Votes Name
 1702537408          1 pcmk-1
 1719314624          1 pcmk-2
 ----
+endif::[]
 
 All good!
 
 == Verify Pacemaker Installation ==
 
+
+ifdef::pcs[]
+Now that we have confirmed that Corosync is functional we can check
+the rest of the stack. Pacemaker has already been started, so verify
+the necessary processes are running.
+
+[source,Bash]
+----
+# ps axf
+  PID TTY      STAT   TIME COMMAND
+    2 ?        S      0:00 [kthreadd]
+...lots of processes...
+28019 ?        Ssl    0:03 /usr/sbin/corosync
+28047 ?        Ss     0:00 /usr/sbin/pacemakerd -f
+28048 ?        Ss     0:00  \_ /usr/libexec/pacemaker/cib
+28049 ?        Ss     0:00  \_ /usr/libexec/pacemaker/stonithd
+28050 ?        Ss     0:00  \_ /usr/lib64/heartbeat/lrmd
+28051 ?        Ss     0:00  \_ /usr/libexec/pacemaker/attrd
+28052 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pengine
+28053 ?        Ss     0:00  \_ /usr/libexec/pacemaker/crmd
+----
+
+If that looks ok, check the pcs status output.
+
+[source,Bash]
+----
+# pcs status
+Last updated: Fri Sep 14 09:52:25 2012
+Last change: Fri Sep 14 09:51:55 2012 via crmd on pcmk-2
+Stack: corosync
+Current DC: pcmk-2 (2) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+0 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+----
+
+Next, check for any ERRORs during startup - there shouldn't be any.
+
+[source,Bash]
+----
+# grep -i error /var/log/messages
+----
+
+Repeat these checks on the other node. The results should be the same.
+
+endif::[]
+
+ifdef::crm[]
 Now that we have confirmed that Corosync is functional we can check
 the rest of the stack. Start Pacemaker and check the necessary
 processes have been started.
@@ -160,3 +288,5 @@ Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
 
 Online: [ pcmk-1 pcmk-2 ]
 ----
+
+endif::[]

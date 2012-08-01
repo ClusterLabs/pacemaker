@@ -7,7 +7,7 @@ resources. The redundancy of multiple machines is used to guard
 against failures of many types.
 
 This document will walk through the installation and setup of simple
-clusters using the Fedora distribution, version 14.
+clusters using the Fedora distribution, version 17.
 
 The clusters described here will use Pacemaker and Corosync to provide
 resource management and messaging. Required packages and modifications
@@ -45,7 +45,7 @@ Pacemaker's key features include:
  * Support for advanced service types
  ** Clones: for services which need to be active on multiple nodes
  ** Multi-state: for services with multiple modes (eg. master/slave, primary/secondary)
- * Unified, scriptable, cluster shell
+ * Unified, scriptable, cluster management tools.
 
 == Pacemaker Architecture ==
 
