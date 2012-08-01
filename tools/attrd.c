@@ -138,15 +138,17 @@ attrd_ipc_created(qb_ipcs_connection_t *c)
 static int32_t
 attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
+    uint32_t id = 0;
+    uint32_t flags = 0;
 #if ENABLE_ACL
     attrd_client_t *client = qb_ipcs_context_get(c);
 #endif
-    xmlNode *msg = crm_ipcs_recv(c, data, size);
-    xmlNode *ack = create_xml_node(NULL, "ack");
+    xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
 
-    crm_ipcs_send(c, ack, FALSE);
-    free_xml(ack);
-    
+    if(flags & crm_ipc_client_response) {
+        crm_ipcs_send_ack(c, id, "ack", __FUNCTION__, __LINE__);
+    }
+
     if (msg == NULL) {
         return 0;
     }

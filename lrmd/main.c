@@ -95,7 +95,9 @@ lrmd_ipc_created(qb_ipcs_connection_t * c)
 static int32_t
 lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
-    xmlNode *request = crm_ipcs_recv(c, data, size);
+    uint32_t id = 0;
+    uint32_t flags = 0;
+    xmlNode *request = crm_ipcs_recv(c, data, size, &id, &flags);
     lrmd_client_t *client = (lrmd_client_t *) qb_ipcs_context_get(c);
 
     CRM_CHECK(client != NULL, crm_err("Invalid client");
@@ -103,6 +105,9 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client);
               return FALSE);
 
+    CRM_CHECK(flags & crm_ipc_client_response, crm_err("Invalid client request: %p", client);
+              return FALSE);
+    
     if (!request) {
         return 0;
     }
@@ -120,7 +125,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_xml_add(request, F_LRMD_CLIENTID, client->id);
     crm_xml_add(request, F_LRMD_CLIENTNAME, client->name);
 
-    process_lrmd_message(client, request);
+    process_lrmd_message(client, id, request);
 
     free_xml(request);
     return 0;
@@ -209,7 +214,7 @@ try_server_create(void)
                 crm_xml_add(hello, F_LRMD_OPERATION, CRM_OP_QUIT);
                 crm_xml_add(hello, F_LRMD_CLIENTNAME, "new_lrmd");
 
-                crm_ipc_send(ipc, hello, &reply, -1);
+                crm_ipc_send(ipc, hello, 0, 0, &reply);
 
                 crm_ipc_close(ipc);
                 crm_ipc_destroy(ipc);

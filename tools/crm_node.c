@@ -507,7 +507,7 @@ crmd_remove_node_cache(int id)
     admin_uuid[10] = '\0';
 
     hello = create_hello_message(admin_uuid, "crm_node", "0", "1");
-    rc = crm_ipc_send(conn, hello, NULL, 0);
+    rc = crm_ipc_send(conn, hello, 0, 0, NULL);
     if (rc < 0) {
         goto rm_node_cleanup;
     }
@@ -521,7 +521,7 @@ crmd_remove_node_cache(int id)
         "crm_node",
         admin_uuid);
 
-    rc = crm_ipc_send(conn, cmd, NULL, 0);
+    rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
 
 rm_node_cleanup:
     if (conn) {
@@ -610,7 +610,7 @@ try_corosync(int command, enum cluster_type_e stack)
             ipc = mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0, NULL, &node_callbacks);
             if(ipc != NULL) {
                 xmlNode *poke = create_xml_node(NULL, "poke");
-                crm_ipc_send(mainloop_get_ipc_client(ipc), poke, NULL, 0);
+                crm_ipc_send(mainloop_get_ipc_client(ipc), poke, 0, 0, NULL);
                 free_xml(poke);
                 g_main_run(amainloop);
             }

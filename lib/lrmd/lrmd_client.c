@@ -337,7 +337,7 @@ lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** outp
 
     crm_xml_add_int(op_msg, F_LRMD_TIMEOUT, timeout);
 
-    rc = crm_ipc_send(native->ipc, op_msg, &op_reply, timeout);
+    rc = crm_ipc_send(native->ipc, op_msg, crm_ipc_client_response, timeout, &op_reply);
     free_xml(op_msg);
 
     if (rc < 0) {
@@ -420,7 +420,7 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
         crm_xml_add(hello, F_LRMD_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(hello, F_LRMD_CLIENTNAME, name);
 
-        rc = crm_ipc_send(native->ipc, hello, &reply, -1);
+        rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);
 
         if (rc < 0) {
             crm_perror(LOG_DEBUG, "Couldn't complete registration with the lrmd API: %d", rc);

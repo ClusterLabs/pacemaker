@@ -279,7 +279,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     free(fsa_pe_ref);
     fsa_pe_ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);
 
-    sent = crm_ipc_send(mainloop_get_ipc_client(pe_subsystem->source), cmd, NULL, 0);
+    sent = crm_ipc_send(mainloop_get_ipc_client(pe_subsystem->source), cmd, 0, 0, NULL);
     if (sent <= 0) {
         crm_err("Could not contact the pengine: %d", sent);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);

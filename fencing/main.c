@@ -109,14 +109,17 @@ st_ipc_created(qb_ipcs_connection_t *c)
 static int32_t
 st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
+    uint32_t id = 0;
+    uint32_t flags = 0;
     xmlNode *request = NULL;
     stonith_client_t *client = (stonith_client_t*)qb_ipcs_context_get(c);
 
-    request = crm_ipcs_recv(c, data, size);
+    request = crm_ipcs_recv(c, data, size, &id, &flags);
     if (request == NULL) {
+        crm_ipcs_send_ack(c, id, "nack", __FUNCTION__, __LINE__);
         return 0;
     }
-
+    
     CRM_CHECK(client != NULL, goto cleanup);
 
     if(client->name == NULL) {
@@ -130,11 +133,16 @@ st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p/%s", client, client->name); goto cleanup);
 
+    if(flags & crm_ipc_client_response) {
+        CRM_LOG_ASSERT(client->request_id == 0); /* This means the client has two synchronous events in-flight */
+        client->request_id = id;                 /* Reply only to the last one */
+    }
+    
     crm_xml_add(request, F_STONITH_CLIENTID, client->id);
     crm_xml_add(request, F_STONITH_CLIENTNAME, client->name);
 
     crm_log_xml_trace(request, "Client[inbound]");
-    stonith_command(client, request, NULL);
+    stonith_command(client, id, flags, request, NULL);
 
   cleanup:
     if(client == NULL || client->id == NULL) {
@@ -210,7 +218,7 @@ stonith_peer_callback(xmlNode * msg, void* private_data)
 {
     const char *remote = crm_element_value(msg, F_ORIG);
     crm_log_xml_trace(msg, "Peer[inbound]");
-    stonith_command(NULL, msg, remote);
+    stonith_command(NULL, 0, 0, msg, remote);
 }
 
 #if SUPPORT_HEARTBEAT
@@ -288,12 +296,23 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
         local_rc = -1;
 
     } else {
-        crm_trace("Sending %ssync response to %s %s",
-                    sync_reply?"":"an a-",
-                    client_obj->name,
-                    from_peer?"(originator of delegated request)":"");
+        int rid = 0;
 
-        local_rc = crm_ipcs_send(client_obj->channel, notify_src, !sync_reply);
+        if(sync_reply) {
+            CRM_LOG_ASSERT(client_obj->request_id);
+
+            rid = client_obj->request_id;
+            client_obj->request_id = 0;
+
+            crm_trace("Sending response %d to %s %s",
+                      rid, client_obj->name, from_peer?"(originator of delegated request)":"");
+
+        } else {
+            crm_trace("Sending an event to %s %s",
+                      client_obj->name, from_peer?"(originator of delegated request)":"");
+        }
+
+        local_rc = crm_ipcs_send(client_obj->channel, rid, notify_src, !sync_reply);
     }
 
     if(local_rc < pcmk_ok && client_obj != NULL) {
@@ -342,7 +361,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 
     if(client->flags & get_stonith_flag(type)) {
         crm_trace("Sending %s-notification to client %s/%s", type, client->name, client->id);
-        if(crm_ipcs_send(client->channel, update_msg, ipcs_send_event|ipcs_send_error) <= 0) {
+        if(crm_ipcs_send(client->channel, 0, update_msg, crm_ipc_server_event|crm_ipc_server_error) <= 0) {
             crm_warn("%s-Notification of client %s/%s failed",
                      type, client->name, client->id);
         }

@@ -447,14 +447,16 @@ pcmk_ipc_created(qb_ipcs_connection_t *c)
 static int32_t
 pcmk_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
+    uint32_t id = 0;
+    uint32_t flags = 0;
     const char *task = NULL;
-    xmlNode *msg = crm_ipcs_recv(c, data, size);
-    xmlNode *ack = create_xml_node(NULL, "ack");
+    xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
 
     crm_trace("Message from %p", c);
-    crm_ipcs_send(c, ack, FALSE);
-    free_xml(ack);
-    
+    if(flags & crm_ipc_client_response) {
+        crm_ipcs_send_ack(c, id, "ack", __FUNCTION__, __LINE__);
+    }
+
     if (msg == NULL) {
         return 0;
     }
@@ -504,7 +506,7 @@ struct qb_ipcs_service_handlers ipc_callbacks =
 static gboolean
 ghash_send_proc_details(gpointer key, gpointer value, gpointer data)
 {
-    if (crm_ipcs_send(key, data, TRUE) <= 0) {
+    if (crm_ipcs_send(key, 0, data, TRUE) <= 0) {
         /* remove it */
         return TRUE;
     }
@@ -710,7 +712,7 @@ main(int argc, char **argv)
             xmlNode *cmd = create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_MCP, CRM_SYSTEM_MCP, NULL);
 
             crm_debug(".");
-            crm_ipc_send(old_instance, cmd, NULL, 0);
+            crm_ipc_send(old_instance, cmd, 0, 0, NULL);
             free_xml(cmd);
 
             sleep(2);

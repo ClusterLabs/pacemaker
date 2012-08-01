@@ -232,14 +232,14 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
 
     if (rc == pcmk_ok) {
         xmlNode *reply = NULL;
-        xmlNode *hello = create_xml_node(NULL, "stonith_command");
+        xmlNode *hello = create_xml_node(NULL, "cib_command");
 
         crm_xml_add(hello, F_TYPE, T_CIB);
         crm_xml_add(hello, F_CIB_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(hello, F_CIB_CLIENTNAME, name);
         crm_xml_add_int(hello, F_CIB_CALLOPTS, cib_sync_call);
 
-        if (crm_ipc_send(native->ipc, hello, &reply, -1) > 0) {
+        if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply) > 0) {
             const char *msg_type = crm_element_value(reply, F_CIB_OPERATION);
 
             rc = pcmk_ok;
@@ -334,6 +334,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
 {
     int rc = pcmk_ok;
     int reply_id = 0;
+    enum crm_ipc_flags ipc_flags = crm_ipc_client_none;
 
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;
@@ -351,6 +352,10 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
     if (op == NULL) {
         crm_err("No operation specified");
         return -EINVAL;
+    }
+
+    if(call_options & cib_sync_call) {
+        ipc_flags |= crm_ipc_client_response;
     }
 
     cib->call_id++;
@@ -371,7 +376,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
     }
 
     crm_trace("Sending %s message to CIB service (timeout=%ds)", op, cib->call_timeout);
-    rc = crm_ipc_send(native->ipc, op_msg, &op_reply, cib->call_timeout * 1000);
+    rc = crm_ipc_send(native->ipc, op_msg, ipc_flags, cib->call_timeout * 1000, &op_reply);
     free_xml(op_msg);
 
     if(rc < 0) {
@@ -488,7 +493,7 @@ cib_native_register_notification(cib_t * cib, const char *callback, int enabled)
         crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
         crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
         crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
-        rc = crm_ipc_send(native->ipc, notify_msg, NULL, 1000 * cib->call_timeout);
+        rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response, 1000 * cib->call_timeout, NULL);
         if(rc <= 0) {
             crm_trace("Notification not registered: %d", rc);
             rc = -ECOMM;

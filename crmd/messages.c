@@ -588,7 +588,6 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
     table_key = (gpointer) generate_hash_key(client_name, uuid);
 
     if (auth_result == TRUE) {
-        xmlNode *xml = NULL;
         crm_trace("Accepted client %s", crm_str(table_key));
 
         curr_client->table_key = table_key;
@@ -596,11 +595,6 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
         curr_client->uuid = strdup(uuid);
 
         g_hash_table_insert(ipc_clients, table_key, curr_client->ipc);
-
-        xml = create_hello_message("n/a", CRM_SYSTEM_CRMD, "0", "1");
-        crm_ipcs_send(curr_client->ipc, xml, FALSE);
-        free_xml(xml);
-
         crm_trace("Updated client list with %s", crm_str(table_key));
 
         crm_trace("Triggering FSA: %s", __FUNCTION__);
@@ -917,7 +911,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
 
     if (client_channel != NULL) {
         /* Transient clients such as crmadmin */
-        send_ok = crm_ipcs_send(client_channel, msg, TRUE);
+        send_ok = crm_ipcs_send(client_channel, 0, msg, TRUE);
 
     } else if (sys != NULL && strcmp(sys, CRM_SYSTEM_TENGINE) == 0) {
         xmlNode *data = get_message_xml(msg, F_CRM_DATA);

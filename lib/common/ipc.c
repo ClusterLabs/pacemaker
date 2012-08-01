@@ -32,6 +32,12 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 
+struct crm_ipc_request_header 
+{
+        struct qb_ipc_request_header qb;
+        uint32_t flags;
+};
+
 static char *
 generateReference(const char *custom1, const char *custom2)
 {
@@ -170,22 +176,28 @@ crm_ipcs_client_pid(qb_ipcs_connection_t *c)
 }
 
 xmlNode *
-crm_ipcs_recv(qb_ipcs_connection_t *c, void *data, size_t size)
+crm_ipcs_recv(qb_ipcs_connection_t *c, void *data, size_t size, uint32_t *id, uint32_t *flags)
 {
-    char *text = ((char*)data) + sizeof(struct qb_ipc_request_header);
+    char *text = ((char*)data) + sizeof(struct crm_ipc_request_header);
     crm_trace("Received %.200s", text);
+    if(id) {
+        *id = ((struct qb_ipc_request_header*)data)->id;
+    }
+    if(flags) {
+        *flags = ((struct crm_ipc_request_header*)data)->flags;
+    }
     return string2xml(text);
 }
 
 ssize_t
-crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags flags)
+crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags)
 {
     int rc;
     int lpc = 0;
     int retries = 40;
     int level = LOG_CRIT;
     struct iovec iov[2];
-    static uint32_t id = 0;
+    static uint32_t id = 1;
     const char *type = "Response";
     struct qb_ipc_response_header header;
     char *buffer = dump_xml_unformatted(message);
@@ -197,21 +209,27 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
     iov[1].iov_len = 1 + strlen(buffer);
     iov[1].iov_base = buffer;
 
-    header.id = id++; /* We don't really use it, but doesn't hurt to set one */
+    if(flags & crm_ipc_server_event) {
+        header.id = id++;    /* We don't really use it, but doesn't hurt to set one */
+    } else {
+        CRM_LOG_ASSERT (request != 0);
+        header.id = request; /* Replying to a specific request */
+    }
+
     header.error = 0; /* unused */
     header.size = iov[0].iov_len + iov[1].iov_len;
 
-    if(flags & ipcs_send_error) {
+    if(flags & crm_ipc_server_error) {
         retries = 20;
         level = LOG_ERR;
 
-    } else if(flags & ipcs_send_info) {
+    } else if(flags & crm_ipc_server_info) {
         retries = 10;
         level = LOG_INFO;
     }
 
     while(lpc < retries) {
-        if(flags & ipcs_send_event) {
+        if(flags & crm_ipc_server_event) {
             type = "Event";
             rc = qb_ipcs_event_sendv(c, iov, 2);
             if(rc == -EPIPE || rc == -ENOTCONN) {
@@ -250,12 +268,12 @@ crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *message, enum ipcs_send_flags fl
 
 void
 crm_ipcs_send_ack(
-    qb_ipcs_connection_t *c, const char *tag, const char *function, int line)
+    qb_ipcs_connection_t *c, uint32_t request, const char *tag, const char *function, int line)
 {
     xmlNode *ack = create_xml_node(NULL, tag);
     crm_xml_add(ack, "function", function);
     crm_xml_add_int(ack, "line", line);
-    crm_ipcs_send(c, ack, FALSE);
+    crm_ipcs_send(c, request, ack, FALSE);
     free_xml(ack);
 }
 
@@ -459,12 +477,12 @@ const char *crm_ipc_name(crm_ipc_t *client)
 }
 
 int
-crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_timeout)
+crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int32_t ms_timeout, xmlNode **reply)
 {
     long rc = 0;
     struct iovec iov[2];
     static uint32_t id = 0;
-    struct qb_ipc_request_header header;
+    struct crm_ipc_request_header header;
     char *buffer = NULL;
 
     if(crm_ipc_connected(client) == FALSE) {
@@ -488,13 +506,14 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
     }
 
     buffer = dump_xml_unformatted(message);
-    iov[0].iov_len = sizeof(struct qb_ipc_request_header);
+    iov[0].iov_len = sizeof(struct crm_ipc_request_header);
     iov[0].iov_base = &header;
     iov[1].iov_len = 1 + strlen(buffer);
     iov[1].iov_base = buffer;
 
-    header.id = id++; /* We don't really use it, but doesn't hurt to set one */
-    header.size = iov[0].iov_len + iov[1].iov_len;
+    header.qb.id = ++id;
+    header.qb.size = iov[0].iov_len + iov[1].iov_len;
+    header.flags = flags;
 
     if(ms_timeout == 0) {
         ms_timeout = 5000;
@@ -503,20 +522,42 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
     if(ms_timeout > 0) {
         time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
         crm_trace("Sending request %d of %u bytes to %s (timeout=%dms): %.200s...",
-                  header.id, header.size, client->name, ms_timeout, buffer);
+                  header.qb.id, header.qb.size, client->name, ms_timeout, buffer);
         do {
             rc = qb_ipcc_sendv(client->ipc, iov, 2);
 
         } while(rc == -EAGAIN && time(NULL) < timeout && crm_ipc_connected(client));
 
-        if(rc > 0) {
+        if(rc > 0 && is_not_set(flags, crm_ipc_client_response)) {
+            crm_trace("Message sent, not waiting for reply to %d from %s to %u bytes: %.200s...",
+                      header.qb.id, client->name, header.qb.size, buffer);
+            free(buffer);
+            return rc;
+
+        } else if(rc > 0) {
             crm_trace("Waiting for reply %d from %s to %u bytes: %.200s...",
-                      header.id, client->name, header.size, buffer);
+                      header.qb.id, client->name, header.qb.size, buffer);
 
             do {
                 rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 500);
                 if(rc > 0 || crm_ipc_connected(client) == FALSE) {
-                    break;
+                    struct qb_ipc_response_header *hdr = (struct qb_ipc_response_header *)client->buffer;
+
+                    if(hdr->id == header.qb.id) {
+                        /* Got it */
+                        break;
+
+                    } else if(hdr->id > header.qb.id){
+                        xmlNode *bad = string2xml(crm_ipc_buffer(client));
+                        crm_err("Discarding old reply %d (need %d)", hdr->id, header.qb.id);
+                        crm_log_xml_notice(bad, "OldIpcReply");
+
+                    } else {
+                        xmlNode *bad = string2xml(crm_ipc_buffer(client));
+                        crm_err("Discarding newer reply %d (need %d)", hdr->id, header.qb.id);
+                        crm_log_xml_notice(bad, "ImpossibleReply");
+                        CRM_ASSERT(hdr->id <= header.qb.id);
+                    }
                 }
 
             } while(time(NULL) < timeout);
@@ -533,11 +574,11 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
             }
 
         } else {
-            crm_trace("Could not send %u bytes to %s: %.200s...", header.size, client->name, buffer);
+            crm_trace("Could not send %u bytes to %s: %.200s...", header.qb.size, client->name, buffer);
         }
 
     } else {
-        crm_trace("Waiting for reply to %u bytes: %.200s...", header.size, buffer);
+        crm_trace("Waiting for reply to %u bytes: %.200s...", header.qb.size, buffer);
         do {
             rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer, client->buf_size, ms_timeout);
 
@@ -560,7 +601,7 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_ti
         crm_notice("Connection to %s closed: %s (%ld)", client->name, pcmk_strerror(rc), rc);
 
     } else if(rc <= 0) {
-        crm_warn("Request %d to %s failed: %s (%ld)", header.id, client->name, pcmk_strerror(rc), rc);
+        crm_warn("Request %d to %s failed: %s (%ld)", header.qb.id, client->name, pcmk_strerror(rc), rc);
         crm_info("Request was %.120s", buffer);
     }
 

@@ -59,7 +59,7 @@ typedef struct lrmd_client_s {
 
 } lrmd_client_t;
 
-void process_lrmd_message(lrmd_client_t * client, xmlNode * request);
+void process_lrmd_message(lrmd_client_t * client, uint32_t id, xmlNode * request);
 
 void free_rsc(gpointer data);
 

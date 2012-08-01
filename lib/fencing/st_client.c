@@ -1241,7 +1241,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         crm_xml_add(hello, F_TYPE, T_STONITH_NG);
         crm_xml_add(hello, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(hello, F_STONITH_CLIENTNAME, name);
-        rc = crm_ipc_send(native->ipc, hello, &reply, -1);
+        rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);
 
         if(rc < 0) {
             crm_perror(LOG_DEBUG, "Couldn't complete registration with the fencing API: %d", rc);
@@ -1304,7 +1304,7 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
         } else {
             crm_xml_add(notify_msg, F_STONITH_NOTIFY_DEACTIVATE, callback);
         }
-        rc = crm_ipc_send(native->ipc, notify_msg, NULL, -1);
+        rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response, -1, NULL);
         if(rc < 0) {
             crm_perror(LOG_DEBUG, "Couldn't register for fencing notifications: %d", rc);
             rc = -ECOMM;
@@ -1636,6 +1636,8 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 {
     int rc = 0;
     int reply_id = -1;
+    enum crm_ipc_flags ipc_flags = crm_ipc_client_none;
+
 
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;
@@ -1655,6 +1657,10 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         return -EINVAL;
     }
 
+    if (call_options & st_opt_sync_call) {
+        ipc_flags |= crm_ipc_client_response;
+    }
+    
     stonith->call_id++;
     /* prevent call_id from being negative (or zero) and conflicting
      *    with the stonith_errors enum
@@ -1673,7 +1679,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
     crm_trace("Sending %s message to STONITH service, Timeout: %ds", op, timeout);
 
-    rc = crm_ipc_send(native->ipc, op_msg, &op_reply, 1000*(timeout + 60));
+    rc = crm_ipc_send(native->ipc, op_msg, ipc_flags, 1000*(timeout + 60), &op_reply);
     free_xml(op_msg);
 
     if(rc < 0) {

@@ -214,8 +214,10 @@ free_mem(fsa_data_t * msg_data)
 {
     GListPtr gIter = NULL;
 
-    crm_ipc_close(attrd_ipc);
-    crm_ipc_destroy(attrd_ipc);
+    if(attrd_ipc) {
+        crm_ipc_close(attrd_ipc);
+        crm_ipc_destroy(attrd_ipc);
+    }
     if(crmd_mainloop) {
         g_main_loop_quit(crmd_mainloop);
         g_main_loop_unref(crmd_mainloop);
@@ -572,16 +574,17 @@ crmd_ipc_created(qb_ipcs_connection_t *c)
 static int32_t
 crmd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
+    uint32_t id = 0;
+    uint32_t flags = 0;
     crmd_client_t *client = qb_ipcs_context_get(c);
 
-    xmlNode *msg = crm_ipcs_recv(c, data, size);
-    xmlNode *ack = create_xml_node(NULL, "ack");
-
+    xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
     crm_trace("Invoked: %s", client->table_key);
 
-    crm_ipcs_send(c, ack, FALSE); /* TODO: Do not unconditionally send this */
-    free_xml(ack);
-    
+    if(flags & crm_ipc_client_response) {
+        crm_ipcs_send_ack(c, id, "ack", __FUNCTION__, __LINE__);
+    }
+
     if (msg == NULL) {
         return 0;
     }

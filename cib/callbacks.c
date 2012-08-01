@@ -212,17 +212,20 @@ struct qb_ipcs_service_handlers ipc_rw_callbacks =
 };
 
 void
-cib_common_callback_worker(xmlNode * op_request, cib_client_t * cib_client, gboolean privileged)
+cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request, cib_client_t * cib_client, gboolean privileged)
 {
     const char *op = crm_element_value(op_request, F_CIB_OPERATION);
 
     if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
-        xmlNode *ack = create_xml_node(NULL, __FUNCTION__);
+        if(flags & crm_ipc_client_response) {
+            xmlNode *ack = create_xml_node(NULL, __FUNCTION__);
 
-        crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
-        crm_xml_add(ack, F_CIB_CLIENTID, cib_client->id);
-	crm_ipcs_send(cib_client->ipc, ack, FALSE);
-        free_xml(ack);
+            crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
+            crm_xml_add(ack, F_CIB_CLIENTID, cib_client->id);
+            crm_ipcs_send(cib_client->ipc, id, ack, FALSE);
+            cib_client->request_id = 0;
+            free_xml(ack);
+        }
         return;
 
     } else if (crm_str_eq(op, T_CIB_NOTIFY, TRUE)) {
@@ -252,7 +255,12 @@ cib_common_callback_worker(xmlNode * op_request, cib_client_t * cib_client, gboo
         } else {
             rc = -ENXIO;
         }
-        /* Already ack'd */
+
+        if(flags & crm_ipc_client_response) {
+            /* TODO - include rc */
+            crm_ipcs_send_ack(cib_client->ipc, id, "ack", __FUNCTION__, __LINE__);
+            cib_client->request_id = 0;
+        }
         return;
     }
 
@@ -263,10 +271,12 @@ cib_common_callback_worker(xmlNode * op_request, cib_client_t * cib_client, gboo
 int32_t
 cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean privileged)
 {
+    uint32_t id = 0;
+    uint32_t flags = 0;
     int call_options = 0;
     const char *op = NULL;
     const char *call = NULL;
-    xmlNode *op_request = crm_ipcs_recv(c, data, size);
+    xmlNode *op_request = crm_ipcs_recv(c, data, size, &id, &flags);
     cib_client_t *cib_client = qb_ipcs_context_get(c);
 
     if(op_request) {
@@ -277,27 +287,20 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean p
 
     crm_trace("Inbound: %.200s", data);
     if (op_request == NULL || cib_client == NULL) {
-        xmlNode *ack = create_xml_node(NULL, "nack");
-
-        crm_trace("Sending nack to %p", cib_client);
-        crm_xml_add(ack, F_CIB_CALLID, call);
-        crm_xml_add(ack, F_CIB_OPERATION, op);
-        crm_xml_add(ack, XML_ATTR_ORIGIN, __FUNCTION__);
-        crm_ipcs_send(c, ack, FALSE);
-        free_xml(ack);
+        crm_ipcs_send_ack(c, id, "nack", __FUNCTION__, __LINE__);
         return 0;
-
-    } else if((call_options & cib_sync_call) == 0) {
-        xmlNode *ack = create_xml_node(NULL, "ack");
-
-        crm_trace("Sending a-sync ack to %p", cib_client);
-        crm_xml_add(ack, F_CIB_CALLID, call);
-        crm_xml_add(ack, F_CIB_OPERATION, op);
-        crm_xml_add(ack, XML_ATTR_ORIGIN, __FUNCTION__);
-        crm_ipcs_send(c, ack, FALSE);
-        free_xml(ack);
     }
 
+    if(is_set(call_options, cib_sync_call)) {
+        CRM_ASSERT(flags & crm_ipc_client_response);
+    }
+
+    if(flags & crm_ipc_client_response) {
+        CRM_LOG_ASSERT(cib_client->request_id == 0); /* This means the client has two synchronous events in-flight */
+        cib_client->request_id = id;                 /* Reply only to the last one */
+    }
+
+    
     if (cib_client->name == NULL) {
         const char *value = crm_element_value(op_request, F_CIB_CLIENTNAME);
         if (value == NULL) {
@@ -326,7 +329,7 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean p
 
     crm_log_xml_trace(op_request, "Client[inbound]");
 
-    cib_common_callback_worker(op_request, cib_client, privileged);
+    cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
     free_xml(op_request);
 
     return 0;
@@ -350,11 +353,23 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
         local_rc = -ECONNRESET;
 
     } else {
-        crm_trace("Sending %ssync response to %s %s",
-                  sync_reply ? "" : "an a-", client_obj->name,
-                  from_peer ? "(originator of delegated request)" : "");
+        int rid = 0;
 
-        if (client_obj->ipc && crm_ipcs_send(client_obj->ipc, notify_src, !sync_reply) < 0) {
+        if(sync_reply) {
+            CRM_LOG_ASSERT(client_obj->request_id);
+
+            rid = client_obj->request_id;
+            client_obj->request_id = 0;
+
+            crm_trace("Sending response %d to %s %s",
+                      rid, client_obj->name, from_peer?"(originator of delegated request)":"");
+
+        } else {
+            crm_trace("Sending an event to %s %s",
+                      client_obj->name, from_peer?"(originator of delegated request)":"");
+        }
+
+        if (client_obj->ipc && crm_ipcs_send(client_obj->ipc, rid, notify_src, !sync_reply) < 0) {
             local_rc = -ENOMSG;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H

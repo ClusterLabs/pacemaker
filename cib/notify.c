@@ -109,7 +109,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
     if (do_send) {
         if (client->ipc) {
-            if(crm_ipcs_send(client->ipc, update_msg, TRUE) == FALSE) {
+            if(crm_ipcs_send(client->ipc, 0, update_msg, TRUE) == FALSE) {
                 crm_warn("Notification of client %s/%s failed", client->name, client->id);
             }
 

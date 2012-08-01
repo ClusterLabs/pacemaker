@@ -1087,7 +1087,7 @@ xmlNode *stonith_construct_async_reply(async_command_t *cmd, char *output, xmlNo
 }
 
 void
-stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
+stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *request, const char *remote)
 {
     int call_options = 0;
     int rc = -EOPNOTSUPP;
@@ -1101,7 +1101,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     char *output = NULL;
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
     const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
-
+    
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
     if(get_xpath_object("//"T_STONITH_REPLY, request, LOG_DEBUG_3)) {
         is_reply = TRUE;
@@ -1110,11 +1110,16 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     crm_debug("Processing %s%s from %s (%16x)", op, is_reply?" reply":"",
               client?client->name:remote, call_options);
 
+    if(is_set(call_options, st_opt_sync_call)) {
+        CRM_ASSERT(client->request_id == id);
+    }
+    
     if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
         xmlNode *reply = create_xml_node(NULL, "reply");
         crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(reply, F_STONITH_CLIENTID,  client->id);
-        crm_ipcs_send(client->channel, reply, FALSE);
+        crm_ipcs_send(client->channel, id, reply, FALSE);
+        client->request_id = 0;
         free_xml(reply);
         return;
 
@@ -1159,7 +1164,10 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
             client->flags |= get_stonith_flag(flag_name);
         }
 
-        crm_ipcs_send_ack(client->channel, "ack", __FUNCTION__, __LINE__);
+        if(flags & crm_ipc_client_response) {
+            crm_ipcs_send_ack(client->channel, id, "ack", __FUNCTION__, __LINE__);
+            client->request_id = 0;
+        }
         return;
 
     /* } else if(is_reply && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) { */
@@ -1185,8 +1193,9 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
             xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_TRACE);
             const char *target = crm_element_value_copy(dev, F_STONITH_TARGET);
 
-            if((call_options & st_opt_sync_call) == 0) {
-                crm_ipcs_send_ack(client->channel, "ack", __FUNCTION__, __LINE__);
+            if(flags & crm_ipc_client_response) {
+                crm_ipcs_send_ack(client->channel, id, "ack", __FUNCTION__, __LINE__);
+                client->request_id = 0;
             }
 
             if(g_hash_table_lookup(topology, target) && safe_str_eq(target, stonith_our_uname)) {

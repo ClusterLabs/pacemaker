@@ -378,7 +378,7 @@ do_work(void)
         xmlNode *cmd = create_request(crmd_operation, msg_data, dest_node, sys_to,
                                       crm_system_name, admin_uuid);
 
-        crm_ipc_send(crmd_channel, cmd, NULL, 0);
+        crm_ipc_send(crmd_channel, cmd, 0, 0, NULL);
         free_xml(cmd);
     }
 
@@ -420,7 +420,7 @@ do_init(void)
 
     } else if (crmd_channel != NULL) {
         xmlNode *xml = create_hello_message(admin_uuid, crm_system_name, "0", "1");
-        crm_ipc_send(crmd_channel, xml, NULL, 0);
+        crm_ipc_send(crmd_channel, xml, 0, 0, NULL);
         return TRUE;
     }
     return FALSE;

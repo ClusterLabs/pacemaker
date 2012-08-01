@@ -61,11 +61,13 @@ gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connectio
 static int32_t
 pe_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
-    xmlNode *msg = crm_ipcs_recv(c, data, size);
-    xmlNode *ack = create_xml_node(NULL, "ack");
+    uint32_t id = 0;
+    uint32_t flags = 0;
+    xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
 
-    crm_ipcs_send(c, ack, FALSE);
-    free_xml(ack);
+    if(flags & crm_ipc_client_response) {
+        crm_ipcs_send_ack(c, id, "ack", __FUNCTION__, __LINE__);
+    }
 
     if (msg != NULL) {
         xmlNode *data = get_message_xml(msg, F_CRM_DATA);
@@ -157,7 +159,7 @@ main(int argc, char **argv)
     while (crm_ipc_connected(old_instance)) {
         xmlNode *cmd = create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_PENGINE, NULL);
         crm_debug(".");
-        crm_ipc_send(old_instance, cmd, NULL, 0);
+        crm_ipc_send(old_instance, cmd, 0, 0, NULL);
         free_xml(cmd);
         
         sleep(2);

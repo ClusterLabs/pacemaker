@@ -463,7 +463,7 @@ cib_remote_msg(gpointer data)
     }
 
     crm_log_xml_trace(command, "Remote command: ");
-    cib_common_callback_worker(command, client, TRUE);
+    cib_common_callback_worker(0, 0, command, client, TRUE);
   bail:
     free_xml(command);
     command = NULL;

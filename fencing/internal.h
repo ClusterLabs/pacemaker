@@ -21,6 +21,7 @@ typedef struct stonith_device_s {
 typedef struct stonith_client_s {
     char *id;
     char *name;
+    int request_id;
 
     char *channel_name;
     qb_ipcs_connection_t *channel;
@@ -62,7 +63,7 @@ typedef struct stonith_topology_s {
 
 extern long long get_stonith_flag(const char *name);
 
-extern void stonith_command(stonith_client_t * client, xmlNode * op_request, const char *remote);
+extern void stonith_command(stonith_client_t * client, uint32_t id, uint32_t flags, xmlNode * op_request, const char *remote);
 
 extern int stonith_device_register(xmlNode * msg, const char **desc);
 

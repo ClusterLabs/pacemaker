@@ -36,19 +36,25 @@ xmlNode *create_request_adv(const char *task, xmlNode * xml_data, const char *ho
 
 #include <qb/qbipcs.h>
 
-enum ipcs_send_flags
+enum crm_ipc_server_flags
 {
-    ipcs_send_none  = 0x0000,
-    ipcs_send_event = 0x0001,
+    crm_ipc_server_none  = 0x0000,
+    crm_ipc_server_event = 0x0001, /* Send an Event instead of a Response */ 
 
-    ipcs_send_info  = 0x0010,
-    ipcs_send_error = 0x0020,
+    crm_ipc_server_info  = 0x0010, /* Log failures as LOG_INFO */ 
+    crm_ipc_server_error = 0x0020, /* Log failures as LOG_ERR */
 };
 
-ssize_t crm_ipcs_send(qb_ipcs_connection_t *c, xmlNode *msg, enum ipcs_send_flags flags);
-xmlNode *crm_ipcs_recv(qb_ipcs_connection_t *c, void *data, size_t size);
+enum crm_ipc_flags
+{
+    crm_ipc_client_none     = 0x0000,
+    crm_ipc_client_response = 0x0001, /* A Response is expected in reply */ 
+};
+
+void crm_ipcs_send_ack(qb_ipcs_connection_t *c, uint32_t request, const char *tag, const char *function, int line);
+ssize_t crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags);
+xmlNode *crm_ipcs_recv(qb_ipcs_connection_t *c, void *data, size_t size, uint32_t *id, uint32_t *flags);
 int crm_ipcs_client_pid(qb_ipcs_connection_t *c);
-void crm_ipcs_send_ack(qb_ipcs_connection_t *c, const char *tag, const char *function, int line);
 
 #include <qb/qbipcc.h>
 typedef struct crm_ipc_s crm_ipc_t;
@@ -58,7 +64,7 @@ bool crm_ipc_connect(crm_ipc_t *client);
 void crm_ipc_close(crm_ipc_t *client);
 void crm_ipc_destroy(crm_ipc_t *client);
 
-int crm_ipc_send(crm_ipc_t *client, xmlNode *message, xmlNode **reply, int32_t ms_timeout);
+int crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int32_t ms_timeout, xmlNode **reply);
 
 int crm_ipc_get_fd(crm_ipc_t *client);
 bool crm_ipc_connected(crm_ipc_t *client);

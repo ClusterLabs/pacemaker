@@ -1810,7 +1810,7 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
         }
 
         if(connected) {
-            rc = crm_ipc_send(ipc, update, NULL, 0);
+            rc = crm_ipc_send(ipc, update, 0, 0, NULL);
         }
 
         if(ipc != local_ipc) {

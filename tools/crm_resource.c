@@ -701,7 +701,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
 /* 	crm_log_xml_warn(cmd, "send_lrm_rsc_op"); */
     free_xml(msg_data);
 
-    if (crm_ipc_send(crmd_channel, cmd, NULL, 0) > 0) {
+    if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
         rc = 0;
 
     } else {
@@ -780,7 +780,7 @@ refresh_lrm(crm_ipc_t * crmd_channel, const char *host_uname)
     cmd = create_request(CRM_OP_LRM_REFRESH, NULL, host_uname,
                          CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
-    if (crm_ipc_send(crmd_channel, cmd, NULL, 0) > 0) {
+    if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
         rc = 0;
     }
     free_xml(cmd);
@@ -1543,7 +1543,7 @@ main(int argc, char **argv)
         }
 
         xml = create_hello_message(our_pid, crm_system_name, "0", "1");
-        crm_ipc_send(crmd_channel, xml, NULL, 0);
+        crm_ipc_send(crmd_channel, xml, 0, 0, NULL);
         free_xml(xml);
     }
 
@@ -1863,7 +1863,7 @@ main(int argc, char **argv)
         xmlNode *cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
                                       CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
-        if (crm_ipc_send(crmd_channel, cmd, NULL, 0) > 0) {
+        if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
             start_mainloop();
         }
 
