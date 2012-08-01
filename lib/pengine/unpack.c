@@ -1232,6 +1232,15 @@ process_rsc_state(resource_t * rsc, node_t * node,
         }
     }
 
+    if (rsc->role > RSC_ROLE_STOPPED
+        && node->details->online == FALSE
+        && is_set(rsc->flags, pe_rsc_managed)
+        && is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        char *reason = g_strdup_printf("because %s is thought to be active there", rsc->id);
+        pe_fence_node(data_set, node, reason);
+        g_free(reason);
+    }
+
     if (node->details->unclean) {
         /* No extra processing needed
          * Also allows resources to be started again after a node is shot

@@ -2231,7 +2231,12 @@ stage8(pe_working_set_t * data_set)
             && is_not_set(action->flags, pe_action_runnable)
             && crm_str_eq(action->task, RSC_STOP, TRUE)
             ) {
-            crm_crit("Cannot shut down node '%s' because of %s:%s%s",
+            /* Eventually we should just ignore the 'fence' case
+             * But for now its the best way to detect (in CTS) when
+             * CIB resource updates are being lost
+             */
+            crm_crit("Cannot %s node '%s' because of %s:%s%s",
+                     action->node->details->unclean?"fence":"shut down",
                      action->node->details->uname, action->rsc->id,
                      is_not_set(action->rsc->flags, pe_rsc_managed)?" unmanaged":" blocked",
                      is_set(action->rsc->flags, pe_rsc_failed)?" failed":"");

@@ -420,7 +420,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
     if (rsc != NULL) {
         enum action_tasks a_task = text2task(action->task);
-        int warn_level = LOG_DEBUG_3;
+        int warn_level = LOG_TRACE;
 
         if (save_action) {
             warn_level = LOG_WARNING;
@@ -451,6 +451,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
             if (is_set(action->rsc->flags, pe_rsc_managed)
+                && action->node->details->unclean == FALSE
                 && save_action && a_task == stop_rsc) {
                 do_crm_log(warn_level, "Marking node %s unclean", action->node->details->uname);
                 action->node->details->unclean = TRUE;
