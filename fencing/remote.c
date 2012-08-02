@@ -214,6 +214,20 @@ static gboolean remote_op_query_timeout(gpointer data)
     return FALSE;
 }
 
+static int topology_count_devices(stonith_topology_t *tp)
+{
+    int count = 0;
+    int level;
+
+    for (level = 0; level < ST_LEVEL_MAX; level++) {
+        if (tp->levels[level]) {
+            count += g_list_length(tp->levels[level]);
+        }
+    }
+
+    return count;
+}
+
 static int stonith_topology_next(remote_fencing_op_t *op) 
 {
     stonith_topology_t *tp = NULL;
@@ -226,6 +240,10 @@ static int stonith_topology_next(remote_fencing_op_t *op)
     }
 
     set_bit(op->call_options, st_opt_topology);
+
+    if (!op->topology_device_number) {
+        op->topology_device_number = topology_count_devices(tp);
+    }
 
     do {
         op->level++;
@@ -404,22 +422,28 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
 {
     const char *device = NULL;
     int timeout = op->base_timeout;
+    int device_number = 0;
 
     if(is_set(op->call_options, st_opt_topology)) {
-        int num_devices = g_list_length(op->devices); /* Not accurate when there are multiple levels */
-
-        if(num_devices) {
-            timeout /= num_devices;
-            crm_trace("Dividing the timeout (%ds) equally between %d devices: %ds",
-                      op->base_timeout, num_devices, timeout);
+        if(op->topology_device_number) {
+            device_number = op->topology_device_number;
         }
 
         /* Ignore any preference, they might not have the device we need */
         peer = stonith_choose_peer(op);
         device = op->devices->data;
-
     } else if(peer == NULL) {
-        peer = stonith_choose_peer(op);
+        if ((peer = stonith_choose_peer(op)) != NULL) {
+            device_number = peer->devices;
+        }
+    } else {
+        device_number = peer->devices;
+    }
+
+    if (device_number > 1) {
+        timeout /= device_number;
+        crm_trace("Dividing the timeout (%ds) equally between %d peer devices: %ds",
+                  op->base_timeout, device_number, timeout);
     }
 
     if(peer) {
