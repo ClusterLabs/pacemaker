@@ -30,7 +30,7 @@ test_SCRIPTS		= regression.sh
 test_DATA		= regression.core.sh ptest.supp
 
 test10dir		= $(datadir)/$(PACKAGE)/tests/pengine/test10
-test10_DATA		= $(PE_TESTS) $(PE_TESTS:%.scores=%.xml) $(PE_TESTS:%.scores=%.exp) $(PE_TESTS:%.scores=%.dot) $(PE_TESTS:%.scores=%.summary)
+test10_DATA		= $(PE_TESTS) $(PE_TESTS:%.scores=%.xml) $(PE_TESTS:%.scores=%.exp) $(PE_TESTS:%.scores=%.dot) $(PE_TESTS:%.scores=%.summary) $(wildcard test10/*.stderr)
 
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/common/libcrmcommon.la		\

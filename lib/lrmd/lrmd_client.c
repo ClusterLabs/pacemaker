@@ -1005,6 +1005,9 @@ lrmd_api_new(void)
 void
 lrmd_api_delete(lrmd_t * lrmd)
 {
+    if (!lrmd) {
+        return;
+    }
     lrmd->cmds->disconnect(lrmd);       /* no-op if already disconnected */
     free(lrmd->cmds);
     free(lrmd->private);
