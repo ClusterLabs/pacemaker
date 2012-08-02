@@ -44,7 +44,7 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
         }
     }
 
-    crm_trace("Adding %s to %s", rsc->id, node->details->uname);
+    pe_rsc_trace(rsc, "Adding %s to %s", rsc->id, node->details->uname);
 
     rsc->running_on = g_list_append(rsc->running_on, node);
     if (rsc->variant == pe_native) {
@@ -52,7 +52,7 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
     }
 
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
-        crm_info("resource %s isnt managed", rsc->id);
+        pe_rsc_info(rsc, "resource %s isnt managed", rsc->id);
         resource_location(rsc, node, INFINITY, "not_managed_default", data_set);
         return;
     }
@@ -85,7 +85,7 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
                   recovery2text(rsc->recovery_type));
 
     } else {
-        crm_trace("Resource %s is active on: %s", rsc->id, node->details->uname);
+        pe_rsc_trace(rsc, "Resource %s is active on: %s", rsc->id, node->details->uname);
     }
 
     if (rsc->parent != NULL) {
@@ -100,7 +100,7 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
     native_variant_data_t *native_data = NULL;
 
-    crm_trace("Processing resource %s...", rsc->id);
+    pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     native_data = calloc(1, sizeof(native_variant_data_t));
 
@@ -151,7 +151,7 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
     }
 
     if (match && on_node) {
-        crm_trace("Now checking %s is on %s", rsc->id, on_node->details->uname);
+        pe_rsc_trace(rsc, "Now checking %s is on %s", rsc->id, on_node->details->uname);
         if (is_set(flags, pe_find_current) && rsc->running_on) {
 
             GListPtr gIter = rsc->running_on;
@@ -199,13 +199,13 @@ native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *n
     CRM_CHECK(rsc != NULL, return NULL);
     CRM_CHECK(name != NULL && strlen(name) != 0, return NULL);
 
-    crm_trace("Looking up %s in %s", name, rsc->id);
+    pe_rsc_trace(rsc, "Looking up %s in %s", name, rsc->id);
 
     if (create || g_hash_table_size(rsc->parameters) == 0) {
         if (node != NULL) {
-            crm_trace("Creating hash with node %s", node->details->uname);
+            pe_rsc_trace(rsc, "Creating hash with node %s", node->details->uname);
         } else {
-            crm_trace("Creating default hash");
+            pe_rsc_trace(rsc, "Creating default hash");
         }
 
         local_hash = g_hash_table_new_full(crm_str_hash, g_str_equal,
@@ -491,7 +491,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
 void
 native_free(resource_t * rsc)
 {
-    crm_trace("Freeing resource action list (not the data)");
+    pe_rsc_trace(rsc, "Freeing resource action list (not the data)");
     common_free(rsc);
 }
 
@@ -503,7 +503,7 @@ native_resource_state(const resource_t * rsc, gboolean current)
     if (current) {
         role = rsc->role;
     }
-    crm_trace("%s state: %s", rsc->id, role2text(role));
+    pe_rsc_trace(rsc, "%s state: %s", rsc->id, role2text(role));
     return role;
 }
 

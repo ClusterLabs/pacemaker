@@ -19,9 +19,9 @@
 #  define PE_INTERNAL__H
 #  include <crm/pengine/status.h>
 
-#  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc->id, fmt, ##args)
-#  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc->id, fmt, ##args)
-#  define pe_rsc_trace(rsc, fmt, args...) crm_log_tag(LOG_TRACE, rsc->id, fmt, ##args)
+#  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
+#  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
+#  define pe_rsc_trace(rsc, fmt, args...) crm_log_tag(LOG_TRACE, rsc ? rsc->id : "<NULL>", fmt, ##args)
 
 #  define pe_err(fmt...) { was_processing_error = TRUE; crm_config_error = TRUE; crm_err(fmt); }
 #  define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }

@@ -333,7 +333,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
     order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
 
-    crm_trace("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
+    pe_rsc_trace(rsc_first, "order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
                 order_id, id, rsc_first->id, action_first, rsc_then->id, action_then, cons_weight);
 
     if (invert_bool == FALSE) {
@@ -364,7 +364,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     cons_weight |= get_flags(id, kind, action_first, action_then, TRUE);
     order_id = new_rsc_order(rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
 
-    crm_trace("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
+    pe_rsc_trace(rsc_then, "order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
                 order_id, id, rsc_then->id, action_then, rsc_first->id, action_first, cons_weight);
 
     return TRUE;
@@ -693,7 +693,7 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
         node_attr = "#" XML_ATTR_UNAME;
     }
 
-    crm_trace("%s ==> %s (%s %d)", rsc_lh->id, rsc_rh->id, node_attr, score);
+    pe_rsc_trace(rsc_lh, "%s ==> %s (%s %d)", rsc_lh->id, rsc_rh->id, node_attr, score);
 
     rsc_lh->rsc_cons = g_list_insert_sorted(rsc_lh->rsc_cons, new_con, sort_cons_priority_rh);
 
@@ -1652,7 +1652,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
             if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
                 EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
                 if (with != NULL) {
-                    crm_trace("Colocating %s with %s", resource->id, with->id);
+                    pe_rsc_trace(resource, "Colocating %s with %s", resource->id, with->id);
                     rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role,
                                        data_set);
                 }
@@ -1685,7 +1685,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                             return FALSE;
                         }
                         EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
-                        crm_trace("Anti-Colocating %s with %s", resource->id, with->id);
+                        pe_rsc_trace(resource, "Anti-Colocating %s with %s", resource->id, with->id);
                         rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role,
                                            data_set);
                     }
@@ -2103,7 +2103,7 @@ rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
         }
     }
 
-    crm_trace("%s (%s) ==> %s", rsc_lh->id, role2text(new_rsc_ticket->role_lh), ticket->id);
+    pe_rsc_trace(rsc_lh, "%s (%s) ==> %s", rsc_lh->id, role2text(new_rsc_ticket->role_lh), ticket->id);
 
     rsc_lh->rsc_tickets = g_list_append(rsc_lh->rsc_tickets, new_rsc_ticket);
 
@@ -2139,7 +2139,7 @@ unpack_rsc_ticket_set(xmlNode * set, ticket_t * ticket, const char *loss_policy,
     for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
         if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
             EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-            crm_trace("Resource '%s' depends on ticket '%s'", resource->id, ticket->id);
+            pe_rsc_trace(resource, "Resource '%s' depends on ticket '%s'", resource->id, ticket->id);
             rsc_ticket_new(set_id, resource, ticket, role, loss_policy, data_set);
         }
     }
