@@ -171,7 +171,9 @@ one or more STONITH resources have been configured also.
 | stonith-action | reboot |
 indexterm:[stonith-action Cluster Options]
 indexterm:[Cluster Options,stonith-action]
-Action to send to STONITH device. Allowed values: reboot, poweroff.
+Action to send to STONITH device. Allowed values: reboot, off.
+The value 'poweroff' is also allowed, but is only used for
+legacy devices.
 
 | cluster-delay | 60s |
 indexterm:[cluster-delay Cluster Options]
