@@ -1030,7 +1030,7 @@ class ClusterManager(UserDict):
 
             peer_list.append(peer)
             self.ShouldBeStatus[peer]="down"
-            self.log("   Peer %s was fenced as a result of %s starting" % (peer, node)) 
+            self.debug("   Peer %s was fenced as a result of %s starting" % (peer, node))
                 
             # Get the next one
             shot = stonith.look(60)
