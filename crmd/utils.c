@@ -1101,6 +1101,7 @@ update_attrd(const char *host, const char *name, const char *value, const char *
 
     do {
         if (crm_ipc_connected(attrd_ipc) == FALSE) {
+            crm_ipc_close(attrd_ipc);
             crm_info("Connecting to attrd... %d retries remaining", max);
             crm_ipc_connect(attrd_ipc);
         }
