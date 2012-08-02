@@ -399,10 +399,12 @@ crm_ipc_get_fd(crm_ipc_t *client)
     int fd = 0;
     
     CRM_ASSERT(client != NULL);
-    if(qb_ipcc_fd_get(client->ipc, &fd) < 0) {
-        crm_perror(LOG_ERR, "Could not obtain file IPC descriptor for %s", client->name);
+    if(client->ipc && qb_ipcc_fd_get(client->ipc, &fd) == 0) {
+        return fd;
     }
-    return fd;
+
+    crm_perror(LOG_ERR, "Could not obtain file IPC descriptor for %s", client->name);
+    return -EINVAL;
 }
 
 bool
@@ -414,6 +416,10 @@ crm_ipc_connected(crm_ipc_t *client)
         crm_trace("No client");
         return FALSE;
 
+    } else if(client->ipc == NULL) {
+        crm_trace("No connection");
+        return FALSE;
+
     } else if(client->pfd.fd < 0) {
         crm_trace("Bad descriptor");
         return FALSE;        
@@ -421,7 +427,7 @@ crm_ipc_connected(crm_ipc_t *client)
 
     rc = qb_ipcc_is_connected(client->ipc);
     if(rc == FALSE) {
-        client->pfd.fd = -1;
+        client->pfd.fd = -EINVAL;
     }
     return rc;
 }
@@ -443,6 +449,7 @@ long
 crm_ipc_read(crm_ipc_t *client) 
 {
     CRM_ASSERT(client != NULL);
+    CRM_ASSERT(client->ipc != NULL);
     CRM_ASSERT(client->buffer != NULL);
     
     crm_trace("Message recieved on %s IPC connection", client->name);
