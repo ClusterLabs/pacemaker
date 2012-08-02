@@ -709,7 +709,7 @@ main(int argc, char ** argv)
     int lpc = 0;
     int argerr = 0;
     int option_index = 0;
-    const char *actions[] = { "reboot", "poweroff", "list", "monitor", "status" };
+    const char *actions[] = { "reboot", "off", "list", "monitor", "status" };
 
     crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "mode [options]", long_options,
