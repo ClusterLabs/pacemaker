@@ -572,12 +572,12 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         unsetenv("PCMK_logfacility");
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
 
+    } else if(daemon) {
+        setenv("HA_logfacility", facility, TRUE);
+        setenv("PCMK_logfacility", facility, TRUE);
+
     } else {
         crm_log_args(argc, argv);
-        if(daemon) {
-            setenv("HA_logfacility", facility, TRUE);
-            setenv("PCMK_logfacility", facility, TRUE);
-        }
     }
 
     if (daemon_option_enabled(crm_system_name, "blackbox")) {
@@ -671,11 +671,32 @@ crm_enable_stderr(int enable)
 }
 
 void
-crm_bump_log_level(void)
+crm_bump_log_level(int argc, char **argv)
 {
-    if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
-        set_crm_log_level(crm_log_level + 1);
+    static int args = TRUE;
+    int level = crm_log_level;
+
+    if(args && argc > 1) {
+        int restore = qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_STATE_GET, 0);
+
+        args = FALSE;
+
+        crm_log_level = LOG_NOTICE; /* So that the argstring comes out */
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_TRUE);
+
+        crm_update_callsites();
+
+        crm_log_args(argc, argv);
+
+        crm_log_level = level;      /* Revert back */
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, restore);
     }
+
+    if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
+        set_crm_log_level(level + 1);
+    }
+
+    /* Enable after potentially logging the argstring, not before */
     crm_enable_stderr(TRUE);
 }
 

@@ -1294,7 +1294,7 @@ main(int argc, char **argv)
                     dup2(STDOUT_FILENO, STDERR_FILENO);
                 }
                 
-                crm_bump_log_level();
+                crm_bump_log_level(argc, argv);
                 break;
             case '?':
             case '$':

@@ -391,7 +391,7 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 'V':
-                crm_bump_log_level();
+                crm_bump_log_level(argc, argv);
                 break;
             case 'Q':
                 print_last_updated = FALSE;

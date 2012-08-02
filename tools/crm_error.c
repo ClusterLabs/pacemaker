@@ -49,7 +49,7 @@ main(int argc, char **argv)
             case -1:
                 break;
             case 'V':
-                crm_bump_log_level();
+                crm_bump_log_level(argc, argv);
                 break;
             case '$':
             case '?':

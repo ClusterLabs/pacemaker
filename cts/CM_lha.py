@@ -71,7 +71,6 @@ class crm_lha(ClusterManager):
             "StableTime"     : 30,
             "StartCmd"       : CTSvars.INITDIR+"/heartbeat start > /dev/null 2>&1",
             "StopCmd"        : CTSvars.INITDIR+"/heartbeat stop  > /dev/null 2>&1",
-            "ElectionCmd"    : "crmadmin -E %s",
             "StatusCmd"      : "crmadmin -t 60000 -S %s 2>/dev/null",
             "EpocheCmd"      : "crm_node -H -e",
             "QuorumCmd"      : "crm_node -H -q",
@@ -95,8 +94,8 @@ class crm_lha(ClusterManager):
             "LogFileName"    : Environment["LogFileName"],
 
             "UUIDQueryCmd"    : "crmadmin -N",
-            "StandbyCmd"      : "crm_attribute -Q  -U %s -n standby -l forever -v %s 2>/dev/null",
-            "StandbyQueryCmd" : "crm_attribute -GQ -U %s -n standby -l forever -d off 2>/dev/null",
+            "StandbyCmd"      : "crm_attribute -VQ  -U %s -n standby -l forever -v %s 2>/dev/null",
+            "StandbyQueryCmd" : "crm_attribute -QG -U %s -n standby -l forever -d off 2>/dev/null",
 
             # Patterns to look for in the log files for various occasions...
             "Pat:DC_IDLE"      : "crmd.*State transition.*-> S_IDLE",

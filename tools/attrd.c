@@ -536,7 +536,7 @@ main(int argc, char **argv)
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
         switch (flag) {
             case 'V':
-                crm_bump_log_level();
+                crm_bump_log_level(argc, argv);
                 break;
             case 'h':          /* Help message */
                 usage(T_ATTRD, EX_OK);

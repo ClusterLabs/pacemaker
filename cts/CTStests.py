@@ -460,7 +460,7 @@ class StonithdTest(CTSTest):
         watch = self.create_watch(watchpats, 30 + self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
 
-        self.CM.rsh(node, "crm_attribute --node %s --type status --attr-name terminate --attr-value true" % node)
+        self.CM.rsh(node, "crm_attribute -V --node %s --type status --attr-name terminate --attr-value true" % node)
 
         self.set_timer("fence")
         matched = watch.lookforall()
@@ -1116,7 +1116,7 @@ class ResourceRecover(CTSTest):
         watch = self.create_watch(pats, 60)
         watch.setwatch()
         
-        self.CM.rsh(node, "crm_resource -F -r %s -H %s &>/dev/null" % (self.rid, node))
+        self.CM.rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
         self.set_timer("recover")
         watch.lookforall()
@@ -1357,7 +1357,7 @@ class SplitBrainTest(CTSTest):
             self.CM.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
 
         # Disabling STONITH to reduce test complexity for now
-        self.CM.rsh(node, "crm_attribute -n stonith-enabled -v false")
+        self.CM.rsh(node, "crm_attribute -V -n stonith-enabled -v false")
 
         for key in partitions.keys():
             self.isolate_partition(partitions[key])
@@ -1423,7 +1423,7 @@ class SplitBrainTest(CTSTest):
 
         # Turn fencing back on
         if self.CM.Env["DoFencing"]:
-            self.CM.rsh(node, "crm_attribute -D -n stonith-enabled")
+            self.CM.rsh(node, "crm_attribute -V -D -n stonith-enabled")
         
         self.CM.cluster_stable()
 
@@ -1482,14 +1482,14 @@ class Reattach(CTSTest):
         start = StartTest(self.CM)
         start(node)
 
-        is_managed = self.CM.rsh(node, "crm_attribute -GQ -t crm_config -n is-managed-default -d true", 1)
+        is_managed = self.CM.rsh(node, "crm_attribute -Q -G -t crm_config -n is-managed-default -d true", 1)
         is_managed = is_managed[:-1] # Strip off the newline
         if is_managed != "true":
             self.CM.log("Attempting to re-enable resource management on %s (%s)" % (node, is_managed))
             managed = self.create_watch(["is-managed-default"], 60)
             managed.setwatch()
             
-            self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
+            self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
             
             if not managed.lookforall():
                 self.CM.log("Patterns not found: " + repr(managed.unmatched))
@@ -1513,7 +1513,7 @@ class Reattach(CTSTest):
         managed.setwatch()
         
         self.CM.debug("Disable resource management")
-        self.CM.rsh(node, "crm_attribute -n is-managed-default -v false")
+        self.CM.rsh(node, "crm_attribute -V -n is-managed-default -v false")
 
         if not managed.lookforall():
             self.CM.log("Patterns not found: " + repr(managed.unmatched))
@@ -1533,7 +1533,7 @@ class Reattach(CTSTest):
         ret = self.stopall(None)
         if not ret:
             self.CM.debug("Re-enable resource management")
-            self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
+            self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
             return self.failure("Couldn't shut down the cluster")
 
         self.CM.debug("Bringing the cluster back up")
@@ -1541,12 +1541,12 @@ class Reattach(CTSTest):
         time.sleep(5) # allow ping to update the CIB
         if not ret:
             self.CM.debug("Re-enable resource management")
-            self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
+            self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
             return self.failure("Couldn't restart the cluster")
 
         if self.local_badnews("ResourceActivity:", watch):
             self.CM.debug("Re-enable resource management")
-            self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
+            self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
             return self.failure("Resources stopped or started during cluster restart")
 
         watch = self.create_watch(pats, 60, "StartupActivity")
@@ -1556,7 +1556,7 @@ class Reattach(CTSTest):
         managed.setwatch()
         
         self.CM.debug("Re-enable resource management")
-        self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
+        self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
 
         if not managed.lookforall():
             self.CM.log("Patterns not found: " + repr(managed.unmatched))
@@ -1727,7 +1727,7 @@ class HAERoleTest(HAETest):
         self.name="HAERoleTest"
 
     def change_state(self, node, resource, target):
-        rc = self.CM.rsh(node, "crm_resource -r %s -p target-role -v %s  --meta" % (resource, target))
+        rc = self.CM.rsh(node, "crm_resource -V -r %s -p target-role -v %s  --meta" % (resource, target))
         return rc
 
     def __call__(self, node):
@@ -1776,7 +1776,7 @@ class HAEStandbyTest(HAETest):
         self.name="HAEStandbyTest"
 
     def change_state(self, node, resource, target):
-        rc = self.CM.rsh(node, "crm_standby -l reboot -v %s" % (target))
+        rc = self.CM.rsh(node, "crm_standby -V -l reboot -v %s" % (target))
         return rc
 
     def __call__(self, node):

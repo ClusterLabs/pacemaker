@@ -125,7 +125,7 @@ main(int argc, char ** argv)
         switch(flag) {
         case 'V':
             verbose = 1;
-            crm_bump_log_level();
+            crm_bump_log_level(argc, argv);
             break;
         case '$':
         case '?':

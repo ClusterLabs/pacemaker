@@ -48,7 +48,7 @@ void crm_log_args(int argc, char **argv);
 
 gboolean crm_add_logfile(const char *filename);
 
-void crm_bump_log_level(void);
+void crm_bump_log_level(int argc, char **argv);
 
 void crm_enable_stderr(int enable);
 

@@ -130,7 +130,7 @@ main(int argc, char **argv)
                 as_cib = TRUE;
                 break;
             case 'V':
-                crm_bump_log_level();
+                crm_bump_log_level(argc, argv);
                 break;
             case '?':
             case '$':

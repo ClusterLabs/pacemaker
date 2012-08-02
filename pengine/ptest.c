@@ -229,7 +229,7 @@ main(int argc, char **argv)
                 input_file = optarg;
                 break;
             case 'V':
-                crm_bump_log_level();
+                crm_bump_log_level(argc, argv);
                 break;
             case 'L':
                 USE_LIVE_CIB = TRUE;
