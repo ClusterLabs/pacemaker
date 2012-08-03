@@ -99,7 +99,7 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #define STONITH_ATTR_HOSTLIST  "pcmk_host_list"
 #define STONITH_ATTR_HOSTCHECK "pcmk_host_check"
 
-#define STONITH_ATTR_ACTION_OP   "option" /* To be replaced by 'action' at some point */
+#define STONITH_ATTR_ACTION_OP   "action"
 
 #define STONITH_OP_EXEC        "st_execute"
 #define STONITH_OP_QUERY       "st_query"
