@@ -1026,7 +1026,8 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     gboolean need_stop = FALSE;
     
     GListPtr gIter = NULL;
-    int num_active_nodes = g_list_length(rsc->running_on);
+    int num_active_nodes = 0;
+    gboolean fence_device = is_fencing_resource(rsc);
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
@@ -1045,6 +1046,16 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
     if(rsc->running_on) {
         current = rsc->running_on->data;
+    }
+
+    for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
+        node_t *n = (node_t *) gIter->data;
+
+        if(fence_device && n->details->unclean) {
+            crm_info("Ignoring %s on %s: fencing resource on an unclean node", rsc->id, n->details->uname);
+            continue;
+        }
+        num_active_nodes++;
     }
     
     get_rsc_attributes(rsc->parameters, rsc, chosen, data_set);
