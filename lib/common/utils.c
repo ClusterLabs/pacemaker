@@ -1747,6 +1747,7 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
 {
     int rc = 0;
     int max = 5;
+    enum crm_ipc_flags flags = crm_ipc_client_none;
     xmlNode *update = create_xml_node(NULL, __FUNCTION__);
 
     static gboolean connected = TRUE;
@@ -1754,6 +1755,7 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
 
     if(ipc == NULL && local_ipc == NULL) {
         local_ipc = crm_ipc_new(T_ATTRD, 0);
+        flags |= crm_ipc_client_response;
         connected = FALSE;
     }
 
@@ -1818,6 +1820,10 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
 
         } else if (rc > 0) {
             break;
+
+        } else if(rc == -EAGAIN || rc == -EREMOTEIO) {
+            sleep(5-max);
+            max--;
 
         } else {
             crm_ipc_close(ipc);
