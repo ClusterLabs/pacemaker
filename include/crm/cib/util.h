@@ -75,5 +75,6 @@ gboolean determine_host(cib_t * cib_conn, char **node_uname, char **node_uuid);
 
 void cib_metadata(void);
 const char *cib_pref(GHashTable * options, const char *name);
+int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output, int level);
 
 #endif

@@ -758,6 +758,40 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
     return TRUE;
 }
 
+int
+cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output, int level) 
+{
+    int rc = pcmk_err_generic;
+
+    xmlNode *diff = NULL;
+
+    CRM_ASSERT(event);
+    CRM_ASSERT(input);
+    CRM_ASSERT(output);
+
+    crm_element_value_int(event, F_CIB_RC, &rc);
+    diff = get_message_xml(event, F_CIB_UPDATE_RESULT);
+
+    if (rc < pcmk_ok || diff == NULL) {
+        return rc;
+    }
+
+    if (level > LOG_CRIT) {
+        log_cib_diff(level, diff, "Config update");
+    }
+
+    if (input != NULL) {
+        rc = cib_process_diff(NULL, cib_none, NULL, NULL, diff, input, output, NULL);
+
+        if (rc != pcmk_ok) {
+            crm_debug("Update didn't apply: %s", pcmk_strerror(rc));
+            return rc;
+        }
+    }
+
+    return rc;
+}
+
 gboolean
 cib_internal_config_changed(xmlNode * diff)
 {

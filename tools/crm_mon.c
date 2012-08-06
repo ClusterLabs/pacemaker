@@ -2144,38 +2144,25 @@ crm_diff_update(const char *event, xmlNode * msg)
     int rc = -1;
     long now = time(NULL);
     const char *op = NULL;
-    unsigned int log_level = LOG_INFO;
-
-    xmlNode *diff = NULL;
-    xmlNode *cib_last = NULL;
-    xmlNode *update = get_message_xml(msg, F_CIB_UPDATE);
 
     print_dot();
 
-    if (msg == NULL) {
-        crm_err("NULL update");
-        return;
-    }
-
-    crm_element_value_int(msg, F_CIB_RC, &rc);
-    op = crm_element_value(msg, F_CIB_OPERATION);
-    diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-
-    if (rc < pcmk_ok) {
-        log_level = LOG_WARNING;
-        do_crm_log(log_level, "[%s] %s ABORTED: %s", event, op, pcmk_strerror(rc));
-        return;
-    }
-
     if (current_cib != NULL) {
-        cib_last = current_cib;
+        xmlNode *cib_last = current_cib;
         current_cib = NULL;
-        rc = cib_process_diff(op, cib_force_diff, NULL, NULL, diff, cib_last, &current_cib, NULL);
 
-        if (rc != pcmk_ok) {
-            crm_debug("Update didn't apply, requesting full copy: %s", pcmk_strerror(rc));
-            free_xml(current_cib);
-            current_cib = NULL;
+        rc = cib_apply_patch_event(msg, cib_last, &current_cib, LOG_DEBUG);
+        free_xml(cib_last);
+
+        switch(rc) {
+            case pcmk_err_diff_resync:
+            case pcmk_err_diff_failed:
+                crm_warn("[%s] %s Patch aborted: %s (%d)", event, op, pcmk_strerror(rc), rc);
+            case pcmk_ok:
+                break;
+            default:
+                crm_warn("[%s] %s ABORTED: %s (%d)", event, op, pcmk_strerror(rc), rc);
+                return;
         }
     }
 
@@ -2183,18 +2170,10 @@ crm_diff_update(const char *event, xmlNode * msg)
         current_cib = get_cib_copy(cib);
     }
 
-    if (log_diffs && diff) {
-        log_cib_diff(LOG_DEBUG, diff, op);
-    }
-
-    if (log_updates && update != NULL) {
-        crm_log_xml_debug(update, "raw_update");
-    }
-
-    if (diff && (crm_mail_to || snmp_target || external_agent)) {
+    if (crm_mail_to || snmp_target || external_agent) {
         /* Process operation updates */
         xmlXPathObject *xpathObj =
-            xpath_search(diff,
+            xpath_search(msg,
                          "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_LRM_TAG_RSC_OP);
         if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
             int lpc = 0, max = xpathObj->nodesetval->nodeNr;
@@ -2217,7 +2196,6 @@ crm_diff_update(const char *event, xmlNode * msg)
     } else {
         mainloop_set_trigger(refresh_trigger);
     }
-    free_xml(cib_last);
 }
 
 gboolean
