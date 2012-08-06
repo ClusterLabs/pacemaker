@@ -45,6 +45,7 @@
 
 GHashTable *device_list = NULL;
 GHashTable *topology = NULL;
+GList *cmd_list = NULL;
 
 static int active_children = 0;
 
@@ -53,6 +54,11 @@ static void st_child_done(GPid pid, gint status, gpointer user_data);
 
 static void free_async_command(async_command_t *cmd)
 {
+    if (!cmd) {
+        return;
+    }
+    cmd_list = g_list_remove(cmd_list, cmd);
+
     g_list_free(cmd->device_list);
     free(cmd->device);
     free(cmd->action);
@@ -90,6 +96,8 @@ static async_command_t *create_async_command(xmlNode *msg)
 
     CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
     CRM_CHECK(cmd->client != NULL, crm_log_xml_warn(msg, "NoClient"));
+
+    cmd_list = g_list_append(cmd_list, cmd);
     return cmd;
 }
 
@@ -136,7 +144,6 @@ static gboolean stonith_device_execute(stonith_device_t *device)
         return TRUE;
     }
 
-    cmd->device = strdup(device->id);
     exec_rc = run_stonith_agent(device->agent, cmd->action, cmd->victim,
     device->params, device->aliases, &rc, NULL, cmd);
 
@@ -164,6 +171,12 @@ static void schedule_stonith_command(async_command_t *cmd, stonith_device_t *dev
 {
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(device != NULL, return);
+
+    if (cmd->device) {
+        free(cmd->device);
+    }
+
+    cmd->device = strdup(device->id);
 
     crm_debug("Scheduling %s on %s for %s (timeout=%dms)", cmd->action, device->id,
               cmd->remote?cmd->remote:cmd->client, cmd->timeout);
@@ -796,6 +809,86 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
     }
 }
 
+static void
+stonith_send_async_reply(async_command_t *cmd, const char *output, int rc, GPid pid)
+{
+    xmlNode *reply = NULL;
+    gboolean bcast = FALSE;
+
+    reply = stonith_construct_async_reply(cmd, output, NULL, rc);
+
+    if(safe_str_eq(cmd->action, "metadata")) {
+        /* Too verbose to log */
+        bcast = FALSE;
+        output = NULL;
+        crm_trace("Directed reply: %s op", cmd->action);
+
+    } else if(crm_str_eq(cmd->action, "monitor", TRUE) ||
+            crm_str_eq(cmd->action, "list", TRUE) ||
+            crm_str_eq(cmd->action, "status", TRUE)) {
+        crm_trace("Directed reply: %s op", cmd->action);
+        bcast = FALSE;
+
+    } else if(safe_str_eq(cmd->mode, "slave")) {
+        crm_trace("Directed reply: Complex op with %s", cmd->device);
+        bcast = FALSE;
+    }
+
+    log_operation(cmd, rc, pid, NULL, output);
+    crm_log_xml_trace(reply, "Reply");
+
+    if(bcast && !stand_alone) {
+        /* Send reply as T_STONITH_NOTIFY so everyone does notifications
+         * Potentially limit to unsucessful operations to the originator?
+         */
+        crm_trace("Broadcast reply");
+        crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+        send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
+
+    } else if(cmd->origin) {
+        crm_trace("Directed reply to %s", cmd->origin);
+        send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
+
+    } else {
+        crm_trace("Directed local %ssync reply to %s", (cmd->options & st_opt_sync_call)?"":"a-", cmd->client);
+        do_local_reply(reply, cmd->client, cmd->options & st_opt_sync_call, FALSE);
+    }
+
+    if(stand_alone) {
+        /* Do notification with a clean data object */
+        xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+        crm_xml_add_int(notify_data, F_STONITH_RC,    rc);
+        crm_xml_add(notify_data, F_STONITH_TARGET,    cmd->victim);
+        crm_xml_add(notify_data, F_STONITH_OPERATION, cmd->op);
+        crm_xml_add(notify_data, F_STONITH_DELEGATE,  cmd->device);
+        crm_xml_add(notify_data, F_STONITH_REMOTE,    cmd->remote);
+        crm_xml_add(notify_data, F_STONITH_ORIGIN,    cmd->client);
+
+        do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data, NULL);
+    }
+
+    free_xml(reply);
+}
+
+
+static void cancel_stonith_command(async_command_t *cmd)
+{
+    stonith_device_t *device;
+
+    CRM_CHECK(cmd != NULL, return);
+
+    if (!cmd->device) {
+        return;
+    }
+
+    device = g_hash_table_lookup(device_list, cmd->device);
+
+    if (device) {
+        crm_trace("Cancel scheduled %s on %s", cmd->action, device->id);
+        device->pending_ops = g_list_remove(device->pending_ops, cmd);
+    }
+}
+
 #define READ_MAX 500
 static void st_child_done(GPid pid, gint status, gpointer user_data) 
 {
@@ -803,14 +896,14 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
 
     int len = 0;
     int more = 0;
-    gboolean bcast = TRUE;
 
     char *output = NULL;
-    xmlNode *data = NULL;
-    xmlNode *reply = NULL;
 
     stonith_device_t *device = NULL;
     async_command_t *cmd = user_data;
+
+    GListPtr gIter = NULL;
+    GListPtr gIterNext = NULL;
 
     CRM_CHECK(cmd != NULL, return);
 
@@ -880,6 +973,8 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
 
         cmd->device_next = cmd->device_next->next;
         schedule_stonith_command(cmd, dev);
+        /* Prevent cmd from being freed */
+        cmd = NULL;
         goto done;
     }
 
@@ -887,63 +982,56 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
         rc = -pcmk_err_generic;
     }
 
-    reply = stonith_construct_async_reply(cmd, output, data, rc);
-    if(safe_str_eq(cmd->action, "metadata")) {
-        /* Too verbose to log */
-        bcast = FALSE;
-        free(output); output = NULL;
-        crm_trace("Directed reply: %s op", cmd->action);
+    stonith_send_async_reply(cmd, output, rc, pid);
 
-    } else if(crm_str_eq(cmd->action, "monitor", TRUE) ||
-            crm_str_eq(cmd->action, "list", TRUE) ||
-            crm_str_eq(cmd->action, "status", TRUE)) {
-        crm_trace("Directed reply: %s op", cmd->action);
-        bcast = FALSE;
-
-    } else if(safe_str_eq(cmd->mode, "slave")) {
-        crm_trace("Directed reply: Complex op with %s", cmd->device);
-        bcast = FALSE;
+    if(rc != 0) {
+        goto done;
     }
 
-    log_operation(cmd, rc, pid, NULL, output);
-    crm_log_xml_trace(reply, "Reply");
+    /* Check to see if any operations are scheduled to do the exact
+     * same thing that just completed.  If so, rather than
+     * performing the same fencing operation twice, return the result
+     * of this operation for all pending commands it matches. */
+    for (gIter = cmd_list; gIter != NULL; gIter = gIterNext) {
+        async_command_t *cmd_other = gIter->data;
+        gIterNext = gIter->next;
 
-    if(bcast && !stand_alone) {
-        /* Send reply as T_STONITH_NOTIFY so everyone does notifications
-         * Potentially limit to unsucessful operations to the originator?
+        if(cmd == cmd_other) {
+            continue;
+        }
+
+        /* A pending scheduled command matches the command that just finished if.
+         * 1. The client connections are different.
+         * 2. The node victim is the same.
+         * 3. The fencing action is the same.
+         * 4. The device scheduled to execute the action is the same. 
          */
-        crm_trace("Broadcast reply");
-        crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-        send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
+        if(safe_str_eq(cmd->client, cmd_other->client) ||
+            safe_str_neq(cmd->victim, cmd_other->victim) ||
+            safe_str_neq(cmd->action, cmd_other->action) ||
+            safe_str_neq(cmd->device, cmd_other->device)) {
 
-    } else if(cmd->origin) {
-        crm_trace("Directed reply to %s", cmd->origin);
-        send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
+            continue;
+        }
 
-    } else {
-        crm_trace("Directed local %ssync reply to %s", (cmd->options & st_opt_sync_call)?"":"a-", cmd->client);
-        do_local_reply(reply, cmd->client, cmd->options & st_opt_sync_call, FALSE);
+        crm_notice("Merging stonith action %s for node %s originating from client %s with identical stonith request from client %s",
+            cmd_other->action,
+            cmd_other->victim,
+            cmd_other->client,
+            cmd->client);
+
+        cmd_list = g_list_remove_link(cmd_list, gIter);
+
+        stonith_send_async_reply(cmd_other, output, rc, pid);
+        cancel_stonith_command(cmd_other);
+
+        free_async_command(cmd_other);
+        g_list_free_1(gIter);
     }
 
-    if(stand_alone) {
-        /* Do notification with a clean data object */
-        xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
-        crm_xml_add_int(notify_data, F_STONITH_RC,    rc);
-        crm_xml_add(notify_data, F_STONITH_TARGET,    cmd->victim);
-        crm_xml_add(notify_data, F_STONITH_OPERATION, cmd->op);
-        crm_xml_add(notify_data, F_STONITH_DELEGATE,  cmd->device);
-        crm_xml_add(notify_data, F_STONITH_REMOTE,    cmd->remote);
-        crm_xml_add(notify_data, F_STONITH_ORIGIN,    cmd->client);
-
-        do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data, NULL);
-    }
-
-    free_async_command(cmd);
   done:
-
+    free_async_command(cmd);
     free(output);
-    free_xml(reply);
-    free_xml(data);
 }
 
 static gint sort_device_priority(gconstpointer a, gconstpointer b)
@@ -1011,7 +1099,6 @@ static int stonith_fence(xmlNode *msg)
     }
 
     if(device) {
-        cmd->device = device->id;
         schedule_stonith_command(cmd, device);
         return -EINPROGRESS;
     }
@@ -1057,7 +1144,7 @@ xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, 
     return reply;
 }
 
-xmlNode *stonith_construct_async_reply(async_command_t *cmd, char *output, xmlNode *data, int rc) 
+xmlNode *stonith_construct_async_reply(async_command_t *cmd, const char *output, xmlNode *data, int rc) 
 {
     xmlNode *reply = NULL;
 
