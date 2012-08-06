@@ -437,8 +437,10 @@ class StonithdTest(CTSTest):
         watchpats.append("log_operation: Operation .* for host '%s' with device .* returned: 0" % node)
         watchpats.append("tengine_stonith_notify: Peer %s was terminated .*: OK" % node)
 
-        if is_dc:
-            watchpats.append("tengine_stonith_notify: Target .* our leader .*%s" % node)
+        # Not reliable, too sensitive to timing issues
+        # 'Fixing' this risks failure detection reliability, which is important
+        #if is_dc:
+        #    watchpats.append("tengine_stonith_notify: Target .* our leader .*%s" % node)
 
         if self.CM.Env["LogWatcher"] != "remote" or not is_dc:
             # Often remote logs aren't flushed to disk by the time the node is shot,
