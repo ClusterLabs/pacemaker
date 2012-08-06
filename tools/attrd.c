@@ -106,7 +106,8 @@ attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
     struct group *crm_grp = NULL;
 #endif
 
-    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
+    crm_trace("Connecting %p for connection from %d by uid=%d gid=%d",
+              c, crm_ipcs_client_pid(c), uid, gid);
     if (need_shutdown) {
         crm_info("Ignoring connection request during shutdown");
         return FALSE;
@@ -131,7 +132,7 @@ attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 static void
 attrd_ipc_created(qb_ipcs_connection_t *c)
 {
-    crm_trace("Client %p connected", c);
+    crm_trace("Client %p connected from %d", c, crm_ipcs_client_pid(c));
 }
 
 /* Exit code means? */
@@ -146,10 +147,12 @@ attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
 
     if(flags & crm_ipc_client_response) {
+        crm_trace("Ack'ing msg from %d (%p)", crm_ipcs_client_pid(c), c);
         crm_ipcs_send_ack(c, id, "ack", __FUNCTION__, __LINE__);
     }
 
     if (msg == NULL) {
+        crm_debug("No msg from %d (%p)", crm_ipcs_client_pid(c), c);
         return 0;
     }
 
@@ -157,7 +160,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     determine_request_user(client->user, msg, F_ATTRD_USER);
 #endif
 
-    crm_trace("Processing msg from %p", c);
+    crm_trace("Processing msg from %d (%p)", crm_ipcs_client_pid(c), c);
     crm_log_xml_trace(msg, __PRETTY_FUNCTION__);
     
     attrd_local_callback(msg);
@@ -170,6 +173,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 static int32_t
 attrd_ipc_closed(qb_ipcs_connection_t *c) 
 {
+    crm_trace("Connection %p from %d closed", c, crm_ipcs_client_pid(c));
     return 0;
 }
 
