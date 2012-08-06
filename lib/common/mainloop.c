@@ -563,14 +563,19 @@ mainloop_gio_destroy(gpointer c)
     mainloop_io_t *client = c;
 
     crm_trace("Destroying %s[%p]", client->name, c);
+
+    if(client->ipc) {
+        crm_ipc_close(client->ipc);
+    }
+
     if(client->destroy_fn) {
         client->destroy_fn(client->userdata);
     }
     
     if(client->ipc) {
-        crm_ipc_close(client->ipc);
         crm_ipc_destroy(client->ipc);
     }
+
     free(client->name);
     free(client);
 }
