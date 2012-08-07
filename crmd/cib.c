@@ -135,6 +135,13 @@ do_cib_control(long long action,
     long long start_actions = A_CIB_START;
 
     if (action & stop_actions) {
+
+        if (fsa_cib_conn->state != cib_disconnected && last_resource_update != 0) {
+            crm_info("Waiting for resource update %d to complete", last_resource_update);
+            crmd_fsa_stall(NULL);
+            return;
+        }
+
         crm_info("Disconnecting CIB");
         clear_bit(fsa_input_register, R_CIB_CONNECTED);
         CRM_ASSERT(fsa_cib_conn != NULL);

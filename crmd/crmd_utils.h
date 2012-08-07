@@ -48,6 +48,7 @@ extern void process_client_disconnect(crmd_client_t * curr_client);
 
 extern gboolean fsa_has_quorum;
 extern int last_peer_update;
+extern int last_resource_update;
 
 enum node_update_flags 
 {
