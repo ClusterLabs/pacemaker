@@ -45,8 +45,9 @@ typedef struct remote_fencing_op_s {
     long long call_options;
 
     enum op_state state;
-    char *client_id;
     char *originator;
+    char *client_id;
+    char *client_name;
     GListPtr query_results;
     xmlNode *request;
 
@@ -103,5 +104,4 @@ extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
-
-
+extern GHashTable *client_list;

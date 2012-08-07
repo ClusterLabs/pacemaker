@@ -32,6 +32,7 @@ typedef struct async_command_s {
     char *op;
     char *origin;
     char *client;
+    char *client_name;
     char *remote;
 
     char *victim;

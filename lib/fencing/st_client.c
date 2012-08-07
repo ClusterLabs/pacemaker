@@ -1591,7 +1591,7 @@ xml_to_event(xmlNode *msg)
             event->target = crm_element_value_copy(data, F_STONITH_TARGET);
             event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
             event->id = crm_element_value_copy(data, F_STONITH_REMOTE);
-
+            event->client_origin = crm_element_value_copy(data, F_STONITH_CLIENTNAME);
         } else {
             crm_err("No data for %s event", ntype);
             crm_log_xml_notice(msg, "BadEvent");

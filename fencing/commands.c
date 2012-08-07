@@ -65,6 +65,7 @@ static void free_async_command(async_command_t *cmd)
     free(cmd->victim);
     free(cmd->remote);
     free(cmd->client);
+    free(cmd->client_name);
     free(cmd->origin);
     free(cmd->op);
     free(cmd);
@@ -87,6 +88,7 @@ static async_command_t *create_async_command(xmlNode *msg)
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
     cmd->remote = crm_element_value_copy(msg, F_STONITH_REMOTE);
     cmd->client = crm_element_value_copy(msg, F_STONITH_CLIENTID);
+    cmd->client_name = crm_element_value_copy(msg, F_STONITH_CLIENTNAME);
     cmd->op     = crm_element_value_copy(msg, F_STONITH_OPERATION);
     cmd->action = strdup(action);
     cmd->victim = crm_element_value_copy(op, F_STONITH_TARGET);
@@ -1118,6 +1120,7 @@ xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, 
         F_STONITH_OPERATION,
         F_STONITH_CALLID,
         F_STONITH_CLIENTID,
+        F_STONITH_CLIENTNAME,
         F_STONITH_REMOTE,
         F_STONITH_CALLOPTS
     };
@@ -1158,12 +1161,14 @@ xmlNode *stonith_construct_async_reply(async_command_t *cmd, const char *output,
     crm_xml_add(reply, F_STONITH_DEVICE, cmd->device);
     crm_xml_add(reply, F_STONITH_REMOTE, cmd->remote);
     crm_xml_add(reply, F_STONITH_CLIENTID, cmd->client);
+    crm_xml_add(reply, F_STONITH_CLIENTNAME, cmd->client_name);
     crm_xml_add(reply, F_STONITH_TARGET, cmd->victim);
     crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
     crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
     crm_xml_add_int(reply, F_STONITH_CALLOPTS, cmd->options);
 
     crm_xml_add_int(reply, F_STONITH_RC, rc);
+
     crm_xml_add(reply, "st_output", output);
 
     if(data != NULL) {

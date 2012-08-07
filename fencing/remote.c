@@ -78,6 +78,7 @@ static void free_remote_op(gpointer data)
     free(op->action);
     free(op->target);
     free(op->client_id);
+    free(op->client_name);
     free(op->originator);
 
     if(op->query_timer) {
@@ -152,6 +153,8 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     crm_xml_add(notify_data, F_STONITH_DELEGATE,  op->delegate);
     crm_xml_add(notify_data, F_STONITH_REMOTE,    op->id);
     crm_xml_add(notify_data, F_STONITH_ORIGIN,    op->originator);
+    crm_xml_add(notify_data, F_STONITH_CLIENTID,  op->client_id);
+    crm_xml_add(notify_data, F_STONITH_CLIENTNAME,  op->client_name);
 
     do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data, NULL);
 
@@ -307,6 +310,9 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     if(client) {
         op->client_id = strdup(client);
     }
+
+    op->client_name = crm_element_value_copy(request, F_STONITH_CLIENTNAME);
+
     op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
     op->request = copy_xml(request); /* TODO: Figure out how to avoid this */
     crm_element_value_int(request, F_STONITH_CALLOPTS, (int*)&(op->call_options));
@@ -359,6 +365,7 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
     crm_xml_add(query, F_STONITH_ACTION, op->action);
     crm_xml_add(query, F_STONITH_OWNER,  op->originator);
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
+    crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
     crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
 
     crm_info("Initiating remote operation %s for %s: %s", op->action, op->target, op->id);
@@ -453,6 +460,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         crm_xml_add(query, F_STONITH_ACTION, op->action);
         crm_xml_add(query, F_STONITH_OWNER,  op->originator);
         crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
+        crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
         crm_xml_add_int(query, F_STONITH_TIMEOUT, timeout);
 
         if(device) {
