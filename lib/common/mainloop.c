@@ -547,7 +547,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
         crm_trace("Recieved G_IO_HUP for %s [%p] connection", client->name, client);
         keep = FALSE;
     } else if(condition & G_IO_NVAL) {
-        crm_err("Recieved G_IO_NVAL for %s [%p] connection", client->name, client);
+        crm_warn("Recieved G_IO_NVAL for %s [%p] connection", client->name, client);
         keep = FALSE;
     } else if(condition & G_IO_ERR) {
         crm_err("Recieved G_IO_ERR for %s [%p] connection", client->name, client);
