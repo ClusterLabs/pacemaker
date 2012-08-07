@@ -461,15 +461,18 @@ lrmd_api_disconnect(lrmd_t * lrmd)
 
     crm_info("Disconnecting from lrmd service");
 
-    if (native->source) {
+    if (native->source != NULL) {
+        /* Attached to mainloop */
         mainloop_del_ipc_client(native->source);
         native->source = NULL;
         native->ipc = NULL;
-    } else if (native->ipc) {
-        crm_ipc_close(native->ipc);
-        crm_ipc_destroy(native->ipc);
-        native->source = NULL;
+
+    } else if(native->ipc) {
+        /* Not attached to mainloop */
+        crm_ipc_t *ipc = native->ipc;
         native->ipc = NULL;
+        crm_ipc_close(ipc);
+        crm_ipc_destroy(ipc);
     }
 
     free(native->token);

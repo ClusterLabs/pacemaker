@@ -1187,16 +1187,18 @@ stonith_api_signoff(stonith_t * stonith)
 
     crm_debug("Signing out of the STONITH Service");
 
-    if (native->ipc != NULL) {
-        /* If attached to mainloop and it is active, _close() will result in:
-         *  - the source being removed from mainloop
-         *  - the dnotify callback being invoked
-         * Otherwise, we are at least correctly disconnecting IPC
-         */
-        crm_ipc_close(native->ipc);
-        crm_ipc_destroy(native->ipc);
+    if (native->source != NULL) {
+        /* Attached to mainloop */
+        mainloop_del_ipc_client(native->source);
         native->source = NULL;
         native->ipc = NULL;
+
+    } else if(native->ipc) {
+        /* Not attached to mainloop */
+        crm_ipc_t *ipc = native->ipc;
+        native->ipc = NULL;
+        crm_ipc_close(ipc);
+        crm_ipc_destroy(ipc);
     }
 
     stonith->state = stonith_disconnected;
