@@ -1603,6 +1603,20 @@ xml_to_event(xmlNode *msg)
 }
 
 static void
+event_free(stonith_event_t *event)
+{
+    free(event->id);
+    free(event->type);
+    free(event->message);
+    free(event->operation);
+    free(event->origin);
+    free(event->target);
+    free(event->executioner);
+    free(event->device);
+    free(event->client_origin);
+}
+
+static void
 stonith_send_notification(gpointer data, gpointer user_data)
 {
     struct notify_blob_s *blob = user_data;
@@ -1635,6 +1649,8 @@ stonith_send_notification(gpointer data, gpointer user_data)
     crm_trace("Invoking callback for %p/%s event...", entry, event);
     entry->notify(blob->stonith, st_event);
     crm_trace("Callback invoked...");
+
+    event_free(st_event);
 }
 
 int
