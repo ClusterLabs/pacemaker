@@ -1285,11 +1285,6 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
             xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_TRACE);
             const char *target = crm_element_value_copy(dev, F_STONITH_TARGET);
 
-            if(flags & crm_ipc_client_response) {
-                crm_ipcs_send_ack(client->channel, id, "ack", __FUNCTION__, __LINE__);
-                client->request_id = 0;
-            }
-
             if(g_hash_table_lookup(topology, target) && safe_str_eq(target, stonith_our_uname)) {
                 GHashTableIter gIter;
                 crm_node_t *entry = NULL;
