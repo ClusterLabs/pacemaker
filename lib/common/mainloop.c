@@ -517,7 +517,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
                 crm_trace("New message from %s[%p] = %d", client->name, client, rc);
 
                 if(rc <= 0) {
-                    crm_perror(LOG_TRACE, "Message acquisition failed: %ld", rc);
+                    crm_trace("Message acquisition failed: %s (%ld)", pcmk_strerror(rc), rc);
 
                 } else if(client->dispatch_fn_ipc) {
                     const char *buffer = crm_ipc_buffer(client->ipc);
