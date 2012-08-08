@@ -478,10 +478,56 @@ action_complete(svc_action_t * action)
     cmd_finalize(cmd, rsc);
 }
 
+
+static void
+stonith_action_complete(lrmd_cmd_t *cmd, int rc)
+{
+    lrmd_rsc_t *rsc = NULL;
+
+    cmd->exec_rc = get_uniform_rc("stonith", cmd->action, rc);
+
+    /* Attempt to map return codes to op status if possible */
+    if (rc) {
+        switch (rc) {
+            case -EPROTONOSUPPORT:
+                cmd->lrmd_op_status = PCMK_LRM_OP_NOTSUPPORTED;
+                break;
+            case -ETIME:
+                cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
+                break;
+            default:
+                cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
+        }
+    } else {
+        cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
+    }
+
+    rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
+    if ((cmd->interval > 0) && rsc) {
+        rsc->recurring_ops = g_list_append(rsc->recurring_ops, cmd);
+        cmd->stonith_recurring_id = g_timeout_add(cmd->interval, stonith_recurring_op_helper, cmd);
+    }
+
+    cmd_finalize(cmd, rsc);
+}
+
+static void
+lrmd_stonith_callback(stonith_t * stonith,
+        const xmlNode * msg,
+        int call_id,
+        int rc,
+        xmlNode * output,
+        void *userdata)
+{
+    stonith_action_complete(userdata, rc);
+}
+
 static int
 lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
     int rc = 0;
+    int do_monitor = 0;
+
     stonith_t *stonith_api = get_stonith_connection();
 
     if (!stonith_api) {
@@ -512,42 +558,40 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
         stonith_key_value_freeall(device_params, 1, 1);
         if (rc == 0) {
-            rc = stonith_api->cmds->monitor(stonith_api,
-                                         st_opt_sync_call,
-                                         cmd->rsc_id, cmd->timeout);
+            do_monitor = 1;
         }
     } else if (safe_str_eq(cmd->action, "stop")) {
         rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id);
     } else if (safe_str_eq(cmd->action, "monitor")) {
-        rc = stonith_api->cmds->monitor(stonith_api,
-                                     st_opt_sync_call,
-                                     cmd->rsc_id, cmd->timeout);
+        do_monitor = 1;
     }
 
-    cmd->exec_rc = get_uniform_rc("stonith", cmd->action, rc);
-
-    /* Attempt to map return codes to op status if possible */
-    if (rc) {
-        switch (rc) {
-            case -EPROTONOSUPPORT:
-                cmd->lrmd_op_status = PCMK_LRM_OP_NOTSUPPORTED;
-                break;
-            case -ETIME:
-                cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
-                break;
-            default:
-                cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
-        }
-    } else {
-        cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
+    if (!do_monitor) {
+        goto cleanup_stonith_exec;
     }
 
-    if (cmd->interval > 0) {
-        rsc->recurring_ops = g_list_append(rsc->recurring_ops, cmd);
-        cmd->stonith_recurring_id = g_timeout_add(cmd->interval, stonith_recurring_op_helper, cmd);
-    }
-    cmd_finalize(cmd, rsc);
+    rc = stonith_api->cmds->monitor(stonith_api,
+               0, cmd->rsc_id, cmd->timeout);
 
+    rc = stonith_api->cmds->register_callback(
+                stonith_api,
+                rc,
+                cmd->timeout,
+                FALSE,
+                cmd,
+                "lrmd_stonith_callback",
+                lrmd_stonith_callback);
+
+    /* don't cleanup yet, we will find out the result of the monitor later */
+    if (rc > 0) {
+        rsc->active = cmd;
+        return rc;
+    } else if (rc == 0) {
+		rc = -1;
+	}
+
+cleanup_stonith_exec:
+    stonith_action_complete(cmd, rc);
     return rc;
 }
 
