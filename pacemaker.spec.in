@@ -292,8 +292,6 @@ find . -exec touch \{\} \;
 eval `objdump --headers --private-headers /usr/bin/perl | grep RPATH | awk '{print "export LD_LIBRARY_PATH="$2}'`
 %endif
 
-echo "CSV: %{cs_major} . %{cs_minor}."
-
 # RHEL <= 5 does not support --docdir
 docdir=%{pcmk_docdir} %{configure}                 \
         %{!?with_heartbeat:  --without-heartbeat}  \
@@ -313,9 +311,8 @@ make %{_smp_mflags} V=1 docdir=%{pcmk_docdir} all
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} V=1 install
 
-mkdir -p ${RPM_BUILD_ROOT}%{_var}/lib/heartbeat/cores
-
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
+mkdir -p ${RPM_BUILD_ROOT}%{_var}/lib/pacemaker/cores
 install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
 
 # Scripts that should be executable
@@ -377,7 +374,6 @@ exit 0
 ###########################################################
 %defattr(-,root,root)
 
-%ghost %dir %attr (755, root, root) %{_var}/lib/heartbeat/cores
 %exclude %{_datadir}/pacemaker/tests
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
@@ -430,6 +426,7 @@ exit 0
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
+%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cores
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
 %ghost %dir %attr (750, %{uname}, %{gname}) %{_var}/run/crm
 %dir /usr/lib/ocf
