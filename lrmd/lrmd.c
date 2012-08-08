@@ -571,12 +571,12 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 
     rc = stonith_api->cmds->monitor(stonith_api,
-               0, cmd->rsc_id, cmd->timeout);
+               0, cmd->rsc_id, cmd->timeout / 1000 );
 
     rc = stonith_api->cmds->register_callback(
                 stonith_api,
                 rc,
-                cmd->timeout,
+                cmd->timeout / 1000,
                 FALSE,
                 cmd,
                 "lrmd_stonith_callback",
