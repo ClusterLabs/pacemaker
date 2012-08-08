@@ -190,6 +190,7 @@ case $DATE in
 	now=`date`
 	for host in $host_list; do
 	    echo "Setting time on ${host}"
+	    scp /etc/localtime root@${host}:/etc
 	    ssh -l root ${host} -- date -s "'$now'"
 	    echo ""
 	done
