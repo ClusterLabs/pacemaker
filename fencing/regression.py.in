@@ -431,7 +431,8 @@ class Tests:
 
 			test.add_cmd("stonith_admin", "-F node3 -t 5")
 
-			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -1001")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
+			test.add_stonith_negative_log_pattern("for host 'node3' with device 'false2' returned: -62")
 			test.add_stonith_negative_log_pattern("for host 'node3' with device 'false2' returned: -1001")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true4' returned: 0")
