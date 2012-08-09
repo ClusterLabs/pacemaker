@@ -32,6 +32,9 @@ noinst_PROGRAMS = scratch
 AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS  = -I m4
 
+testdir			= $(datadir)/$(PACKAGE)/tests/
+test_SCRIPTS		= BasicSanity.sh
+
 # Scratch file for ad-hoc testing
 scratch_SOURCES	= scratch.c
 scratch_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
