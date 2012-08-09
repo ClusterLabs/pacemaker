@@ -4,22 +4,11 @@ set -x
 self=`basename $0`
 
 if [ x$1 = xinstall ]; then
-    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./mock/*.rpm nano
+    # Basic test phase
+    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./mock/*.rpm nano sudo
 elif [ x$1 = xdownloads ]; then
-    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./downloads/*.rpm nano
-    mock --configdir=$PWD --root=mock --resultdir=./mock -v --copyin $0 /
-    mock --configdir=$PWD --root=mock --resultdir=./mock -v --shell -- bash /$self gcov
-
-elif [ x$1 = xgcov ]; then
-    # Magic to make the source code available to gcov
-    include=`rpm -ql pacemaker-debuginfo | grep include | head -n 1`
-    cd $include/..
-
-    # Create the directory structure
-    find . -type d -exec mkdir /var/lib/pacemaker/gcov/\{\} \;
-
-    # Now link the files in place
-    find . -type f -exec ln -s $PWD/\{\} /var/lib/pacemaker/gcov/\{\} \;
+    # Extra test phase
+    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./downloads/*.rpm nano sudo valgrind lcov
     
 elif [ x$1 = xlint ]; then
     rpmlint -i -f rpmlintrc ./mock/*.rpm
