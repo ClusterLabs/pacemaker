@@ -45,8 +45,9 @@ typedef struct remote_fencing_op_s {
     long long call_options;
 
     enum op_state state;
-    char *client_id;
     char *originator;
+    char *client_id;
+    char *client_name;
     GListPtr query_results;
     xmlNode *request;
 
@@ -78,7 +79,7 @@ extern void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean
 
 extern xmlNode *stonith_construct_reply(xmlNode * request, char *output, xmlNode * data, int rc);
 
-extern xmlNode *stonith_construct_async_reply(async_command_t * cmd, char *output, xmlNode * data,
+extern xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char *output, xmlNode * data,
                                               int rc);;
 
 extern void do_stonith_notify(int options, const char *type, int result, xmlNode * data, const char *remote);
@@ -103,5 +104,4 @@ extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
-
-
+extern GHashTable *client_list;

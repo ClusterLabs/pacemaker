@@ -1591,7 +1591,7 @@ xml_to_event(xmlNode *msg)
             event->target = crm_element_value_copy(data, F_STONITH_TARGET);
             event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
             event->id = crm_element_value_copy(data, F_STONITH_REMOTE);
-
+            event->client_origin = crm_element_value_copy(data, F_STONITH_CLIENTNAME);
         } else {
             crm_err("No data for %s event", ntype);
             crm_log_xml_notice(msg, "BadEvent");
@@ -1600,6 +1600,20 @@ xml_to_event(xmlNode *msg)
 
     g_free(data_addr);
     return event;
+}
+
+static void
+event_free(stonith_event_t *event)
+{
+    free(event->id);
+    free(event->type);
+    free(event->message);
+    free(event->operation);
+    free(event->origin);
+    free(event->target);
+    free(event->executioner);
+    free(event->device);
+    free(event->client_origin);
 }
 
 static void
@@ -1635,6 +1649,8 @@ stonith_send_notification(gpointer data, gpointer user_data)
     crm_trace("Invoking callback for %p/%s event...", entry, event);
     entry->notify(blob->stonith, st_event);
     crm_trace("Callback invoked...");
+
+    event_free(st_event);
 }
 
 int
