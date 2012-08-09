@@ -445,8 +445,8 @@ crm_ipc_ready(crm_ipc_t *client)
     return poll(&(client->pfd), 1, 0);
 }
 
-long
-crm_ipc_read(crm_ipc_t *client) 
+static long
+internal_ipc_read(crm_ipc_t *client, uint32_t timeout)
 {
     CRM_ASSERT(client != NULL);
     CRM_ASSERT(client->ipc != NULL);
@@ -455,7 +455,7 @@ crm_ipc_read(crm_ipc_t *client)
     crm_trace("Message recieved on %s IPC connection", client->name);
 
     client->buffer[0] = 0;
-    client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer, client->buf_size-1, 100);
+    client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer, client->buf_size-1, timeout);
     if(client->msg_size >= 0) {
         struct qb_ipc_response_header *header = (struct qb_ipc_response_header *)client->buffer;
         client->buffer[client->msg_size] = 0;
@@ -468,6 +468,18 @@ crm_ipc_read(crm_ipc_t *client)
     }
     
     return client->msg_size;
+}
+
+long
+crm_ipc_read_timeout(crm_ipc_t *client, int32_t ms_timeout)
+{
+    return internal_ipc_read(client, ms_timeout);
+}
+
+long
+crm_ipc_read(crm_ipc_t *client)
+{
+    return internal_ipc_read(client, CRM_IPC_DEFAULT_TIMEOUT_MS);
 }
 
 const char *
