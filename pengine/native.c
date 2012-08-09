@@ -1581,66 +1581,6 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
     }
 }
 
-const char *convert_non_atomic_task(char *raw_task, resource_t * rsc, gboolean allow_notify);
-
-const char *
-convert_non_atomic_task(char *raw_task, resource_t * rsc, gboolean allow_notify)
-{
-    int task = no_action;
-    const char *atomic_task = raw_task;
-
-    crm_trace("Processing %s for %s", crm_str(raw_task), rsc->id);
-    if (raw_task == NULL) {
-        return NULL;
-
-    } else if (strstr(raw_task, "notify") != NULL) {
-        goto done;              /* no conversion */
-
-    } else if (rsc->variant < pe_group) {
-        goto done;              /* no conversion */
-    }
-
-    task = text2task(raw_task);
-    switch (task) {
-        case stop_rsc:
-        case start_rsc:
-        case action_notify:
-        case action_promote:
-        case action_demote:
-            break;
-        case stopped_rsc:
-        case started_rsc:
-        case action_notified:
-        case action_promoted:
-        case action_demoted:
-            task--;
-            break;
-        case monitor_rsc:
-        case shutdown_crm:
-        case stonith_node:
-            goto done;
-            break;
-        default:
-            crm_trace("Unknown action: %s", raw_task);
-            goto done;
-            break;
-    }
-
-    if (task != no_action) {
-        if (is_set(rsc->flags, pe_rsc_notify) && allow_notify) {
-            /* atomic_task = generate_notify_key(rid, "confirmed-post", task2text(task+1)); */
-            crm_err("Not handled");
-
-        } else {
-            atomic_task = task2text(task + 1);
-        }
-        crm_trace("Converted %s -> %s", raw_task, atomic_task);
-    }
-
-  done:
-    return atomic_task;
-}
-
 enum pe_action_flags
 native_action_flags(action_t * action, node_t * node)
 {
