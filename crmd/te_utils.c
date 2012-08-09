@@ -180,14 +180,14 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
                 send_stonith_update(NULL, st_event->target, uuid);
             }
             stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(st_event->target));
-        } else if (we_are_executioner &&
+        } else if (AM_I_DC &&
                     st_event->client_origin &&
                     safe_str_neq(st_event->client_origin, crm_system_name)) {
             const char *uuid = get_uuid(st_event->target);
             /* If a remote process outside of pacemaker invoked stonith to
              * fence someone, report the fencing result to the cib
              * and abort the transition graph. */
-
+            crm_info("External fencing operation from %s fenced %s", st_event->client_origin, st_event->target);
             send_stonith_update(NULL, st_event->target, uuid);
             abort_transition(INFINITY, tg_restart, "External Fencing Operation", NULL);
         }
