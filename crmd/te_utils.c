@@ -117,11 +117,12 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
         return;
     }
 
-    crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s)",
+    crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s) by client %s",
                st_event->target, st_event->result == pcmk_ok?"":" not",
                st_event->operation,
                st_event->executioner ? st_event->executioner : "<anyone>",
-               st_event->origin, pcmk_strerror(st_event->result), st_event->id);
+               st_event->origin, pcmk_strerror(st_event->result), st_event->id,
+               st_event->client_origin ? st_event->client_origin : "<unknown>");
 
 #if SUPPORT_CMAN
     if (st_event->result == pcmk_ok && is_cman_cluster()) {
@@ -163,6 +164,8 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
 #endif
 
     if (st_event->result == pcmk_ok) {
+        gboolean we_are_executioner = safe_str_eq(st_event->executioner, fsa_our_uname);
+
         crm_trace("target=%s dc=%s", st_event->target, fsa_our_dc);
         if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, st_event->target)) {
             crm_notice("Target %s our leader %s (recorded: %s)",
@@ -172,12 +175,21 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
              * have one node update the CIB now and, if the new DC is different,
              * have them do so too after the election
              */
-            if (safe_str_eq(st_event->executioner, fsa_our_uname)) {
+            if (we_are_executioner) {
                 const char *uuid = get_uuid(st_event->target);
-
                 send_stonith_update(NULL, st_event->target, uuid);
             }
             stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(st_event->target));
+        } else if (we_are_executioner &&
+                    st_event->client_origin &&
+                    safe_str_neq(st_event->client_origin, crm_system_name)) {
+            const char *uuid = get_uuid(st_event->target);
+            /* If a remote process outside of pacemaker invoked stonith to
+             * fence someone, report the fencing result to the cib
+             * and abort the transition graph. */
+
+            send_stonith_update(NULL, st_event->target, uuid);
+            abort_transition(INFINITY, tg_restart, "External Fencing Operation", NULL);
         }
     }
 }

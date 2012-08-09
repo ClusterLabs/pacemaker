@@ -91,6 +91,9 @@ typedef struct stonith_event_s
 
     char *device;
 
+    /*! The name of the client that initiated the action. */
+    char *client_origin;
+
 } stonith_event_t;
 
 typedef struct stonith_api_operations_s
