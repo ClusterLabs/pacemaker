@@ -282,6 +282,16 @@ class Tests:
 		for test in self.tests:
 			test.run()
 
+	def exit(self):
+		for test in self.tests:
+			if test.executed == 0:
+				continue
+
+			if test.get_exitcode() != 0:
+				sys.exit(-1)
+
+		sys.exit(0)
+
 	def print_results(self):
 		failures = 0;
 		success = 0;
@@ -555,5 +565,6 @@ def main(argv):
 		tests.run_tests()
 		tests.print_results()
 
+	tests.exit()
 if __name__=="__main__":
 	main(sys.argv)
