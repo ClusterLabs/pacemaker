@@ -35,25 +35,44 @@ if [ -z "$tests" ]; then
     tests="pengine lrmd fencing cli"
 fi
 
+failed=""
 for t in $tests; do
     info "Executing the $t regression tests"
     info "============================================================"
     if [ -e $test_home/$t/regression.py ]; then
 	# Fencing, lrmd
 	chmod a+x $test_home/$t/regression.py
-	sudo $test_home/$t/regression.py $verbose
+	$test_home/$t/regression.py $verbose
+	rc=$?
 
     elif [ -e $test_home/$t ]; then
 	# pengine, cli
 	$test_home/$t/regression.sh $verbose $valgrind
+	rc=$?
 
     elif [ $t = cli -a -e $test_home/tools ]; then
 	# Running cli tests from the source tree
 	$test_home/tools/regression.sh $verbose $valgrind
+	rc=$?
 
     else
 	error "Cannot find $t test in $test_home"
-	exit 1
+	rc=1
     fi
+
+    if [ $rc != 0 ]; then
+	info "$t regression tests failed: $rc"
+	failed="$failed $t"
+    fi
+
+    info "============================================================"
+    info ""
+    info ""
 done
 
+if [ -z $failed ]; then
+    exit 0
+fi
+
+error "regression tests for $failed failed"
+exit 1
