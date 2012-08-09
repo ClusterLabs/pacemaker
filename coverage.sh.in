@@ -1,0 +1,49 @@
+#!/bin/bash
+
+test_home=`dirname $0`
+sanitydir=@datadir@/@PACKAGE@/tests
+
+if [ $test_home != $sanitydir ]; then
+    # Running against the source tree
+    GCOV_BASE=@abs_top_srcdir@
+    sanitydir=@abs_top_srcdir@
+    cd @abs_top_srcdir@
+    
+    grep with-gcov config.log
+    if [ $? = 0 ]; then
+	echo "Pacemaker was built with gcov support"
+    else
+	echo "Re-building with gcov support"
+	last=`grep --color=never "$.*configure" config.log | tail -n 1 | sed s:.*configure:./configure: | sed s:--no-create:--with-gcov:`
+	eval $last
+    fi
+    
+    #sudo make core core-install
+
+else
+    GCOV_BASE=@localstatedir@/lib/pacemaker/gcov/
+    rm -rf $GCOV_BASE
+    mkdir -p $GCOV_BASE
+
+    export GCOV_PREFIX_STRIP=4
+    export GCOV_PREFIX=$GCOV_BASE
+
+    echo "Creating the directory structure in $GCOV_BASE from $PWD"
+    cd `rpm -ql pacemaker-debuginfo | grep include | head -n 1`/..
+    find . -type d -exec mkdir $GCOV_BASE/\{\} \;
+
+    echo "Now linking the source files into place"
+    find . -type f -name "*.c" -exec ln -s $PWD/\{\} $GCOV_BASE\{\} \;
+    find . -type f -name "*.h" -exec ln -s $PWD/\{\} $GCOV_BASE\{\} \;
+    find . -type f -name "*.debug" -exec ln -s $PWD/\{\} $GCOV_BASE\{\} \;
+fi
+
+lcov -d $GCOV_BASE -z
+
+$sanitydir/BasicSanity.sh all
+
+lcov -d $GCOV_BASE -c -o pacemaker.info
+
+rm -rf html
+mkdir html
+genhtml -o html pacemaker.info

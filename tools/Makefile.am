@@ -40,9 +40,6 @@ halib_PROGRAMS		= attrd
 sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
 			 crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket crm_error
 
-testdir			= $(datadir)/$(PACKAGE)/tests
-test_SCRIPTS		= coverage.sh
-
 clidir			= $(testdir)/cli
 cli_SCRIPTS		= regression.sh
 cli_DATA		= regression.exp cli.supp

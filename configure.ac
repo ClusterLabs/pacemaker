@@ -1696,6 +1696,7 @@ AC_SUBST(PCMK_FEATURES)
 
 dnl The Makefiles and shell scripts we output
 AC_CONFIG_FILES(Makefile				        \
+coverage.sh							\
 cts/Makefile					        	\
 	cts/CTSvars.py						\
 	cts/LSBDummy						\
@@ -1741,7 +1742,6 @@ extra/Makefile							\
 	extra/rgmanager/Makefile				\
 tools/Makefile							\
 	tools/crm_report					\
-	tools/coverage.sh					\
 xml/Makefile							\
 lib/gnu/Makefile						\
 		)

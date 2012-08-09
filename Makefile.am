@@ -33,7 +33,7 @@ AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS  = -I m4
 
 testdir			= $(datadir)/$(PACKAGE)/tests/
-test_SCRIPTS		= BasicSanity.sh
+test_SCRIPTS		= coverage.sh BasicSanity.sh
 
 # Scratch file for ad-hoc testing
 scratch_SOURCES	= scratch.c
