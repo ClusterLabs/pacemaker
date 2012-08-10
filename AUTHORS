@@ -1,13 +1,23 @@
-NOTE:	The work of everyone on this project is dearly appreciated. If you
-	are not listed here but should be, please notify us!
+NOTE:	The work of everyone on this project is greatly appreciated. If you
+	are not listed here but should be, please let us know!
 
 The following people have kindly helped with pacemaker development by
 providing code, documentation or testing, or fixes:
 
 	Andrew Beekhof <andrew[at]beekhof[dot]net>
-		Main architect, Lead Developer.
-	Dejan Muhamedagic <dejan[at]suse[dot]de>
-		Cluster Shell.
+		Main architect, Lead Developer
+	David Vossel <dvossel[at]redhat[dot]com>	
+		Lrmd, Stonith Maintainer, PE bug fixes and features
+	Keisuke MORI <keisuke[dot]mori[at]gmail[dot]com>
+		Maintainer of the 1.0 branch
+	Yan Gao <ygao[at]suse[dot]com>
+		Bug fixes, features and documentation
+	Dan Frîncu <df[dot]cluster[at]gmail[dot]com>
+		Romanian document translations
+	Raoul Scarazzini <rasca[at]miamammausalinux[dot]org>
+		Italian document translations
+	Charlie Chen
+		Chinese document translations
 
 Contributors, ordered by last name:
 
@@ -15,4 +25,7 @@ Contributors, ordered by last name:
 	        Project catalyst and advocate
 
 	Dominik Klein <dk@in-telegence.net>
+	Dejan Muhamedagic <dejan[at]suse[dot]de>
 	Alan Robertson <alanr@unix.sh>
+	Tanja Roth <taroth[at]suse[dot]com>
+	Thomas Schraitle <toms[at]suse[dot]com>
