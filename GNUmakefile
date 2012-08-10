@@ -127,6 +127,26 @@ srpm-%:	export $(PACKAGE)-%.spec
 	esac
 	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(WITH)  $(PACKAGE).spec
 
+mock-install: mock-install-$(MOCK_CFG)
+	echo "Done"
+
+mock-sh:   mock-sh-$(MOCK_CFG)
+	echo "Done"
+
+mock-next: 
+	make F=$(shell expr 1 + $(F)) mock
+
+mock-rawhide:
+	make F=rawhide mock
+
+mock-install-%:
+	echo "Installing packages"
+	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm vi
+
+mock-sh-%:
+	echo "Connecting"
+	mock --root=$* $(MOCK_OPTIONS) --shell
+
 # eg. WITH="--with cman" make rpm
 mock-%: 
 	make srpm-$(firstword $(shell echo $(@:mock-%=%) | tr '-' ' '))
@@ -134,19 +154,10 @@ mock-%:
 	@echo "mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm"
 	mock --root=$* --no-cleanup-after --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
 
-mock-inst-%:
-	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm
-
-mock-sh-%:
-	mock --root=$* $(MOCK_OPTIONS) --shell
-
 srpm:	srpm-$(DISTRO)
 
-mock:   mock-$(MOCK_CFG)
-mock-next: 
-	make F=$(shell expr 1 + $(F)) mock
-mock-rawhide:
-	make F=rawhide mock
+mock:      mock-$(MOCK_CFG)
+	echo "Done"
 
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
