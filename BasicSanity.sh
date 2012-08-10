@@ -32,7 +32,7 @@ while true ; do
 done
 
 if [ -z "$tests" ]; then
-    tests="pengine lrmd fencing cli"
+    tests="pengine lrmd cli"
 fi
 
 failed=""
