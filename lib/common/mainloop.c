@@ -512,12 +512,22 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
         if(client->ipc) {
             long rc = 0;
             int max = 10;
+            int timeout = CRM_IPC_DEFAULT_TIMEOUT_MS;
             do {
-                rc = crm_ipc_read(client->ipc);
+                rc = crm_ipc_read_timeout(client->ipc, timeout);
                 crm_trace("New message from %s[%p] = %d", client->name, client, rc);
 
+
+                if (rc > 0) {
+                    /* once we have received an event, no longer block
+                     * to receive additional ones */
+                    timeout = 0;
+                }
+
                 if(rc <= 0) {
-                    crm_trace("Message acquisition failed: %s (%ld)", pcmk_strerror(rc), rc);
+                    if (timeout) {
+                        crm_trace("Message acquisition failed: %s (%ld)", pcmk_strerror(rc), rc);
+                    }
 
                 } else if(client->dispatch_fn_ipc) {
                     const char *buffer = crm_ipc_buffer(client->ipc);
@@ -526,7 +536,6 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
                         keep = FALSE;
                     }
                 }
-
             } while(keep && rc > 0 && --max > 0);
 
         } else {

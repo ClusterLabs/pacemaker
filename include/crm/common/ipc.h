@@ -36,6 +36,8 @@ xmlNode *create_request_adv(const char *task, xmlNode * xml_data, const char *ho
 
 #include <qb/qbipcs.h>
 
+#define CRM_IPC_DEFAULT_TIMEOUT_MS 100
+
 enum crm_ipc_server_flags
 {
     crm_ipc_server_none  = 0x0000,
@@ -69,6 +71,10 @@ int crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, 
 int crm_ipc_get_fd(crm_ipc_t *client);
 bool crm_ipc_connected(crm_ipc_t *client);
 int crm_ipc_ready(crm_ipc_t *client);
+
+/* Specifiy custom timeout in ms */
+long crm_ipc_read_timeout(crm_ipc_t *client, int32_t ms_timeout);
+/* Uses default timeout period */
 long crm_ipc_read(crm_ipc_t *client);
 const char *crm_ipc_buffer(crm_ipc_t *client);
 const char *crm_ipc_name(crm_ipc_t *client);
