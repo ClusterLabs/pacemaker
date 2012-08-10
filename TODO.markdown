@@ -14,7 +14,6 @@
 - Imply startup-failure-is-fatal from on-fail="restart" 
 - Show an english version of the config with crm_resource --rules
 - Convert cts/CIB.py into a supported Python API for the CIB
-- Use crm_log_tag() in the PE to allow per-resource trace logging
 - Reduce the amount of stonith-ng logging
 - Use dlopen for snmp in crm_mon
 - Re-implement no-quorum filter for cib updates?
@@ -42,10 +41,8 @@
 - Decide whether to fully support or drop failover domains
 
 # Testing
-- Create a BSC with all the regression tests
 - Convert BandwidthTest CTS test into a Scenario wrapper
 - find_operations() is not covered by PE regression tests
-- Some node states in determine_online_status_fencing() are untested by PE regression tests
 - no_quorum_policy==suicide is not covered by PE regression tests
 - parse_xml_duration() is not covered by PE regression tests
 - phase_of_the_moon() is not covered by PE regression tests
