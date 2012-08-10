@@ -42,7 +42,8 @@ for t in $tests; do
     if [ -e $test_home/$t/regression.py ]; then
 	# Fencing, lrmd
 	chmod a+x $test_home/$t/regression.py
-	sudo $test_home/$t/regression.py $verbose
+	echo "Enter the root password..."
+	su root -c $test_home/$t/regression.py $verbose
 	rc=$?
 
     elif [ -e $test_home/$t ]; then
