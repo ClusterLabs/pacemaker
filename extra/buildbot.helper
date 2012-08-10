@@ -5,7 +5,7 @@ self=`basename $0`
 
 if [ x$1 = xinstall ]; then
     # Basic test phase
-    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./mock/*.rpm nano sudo
+    mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./mock/*.rpm nano sudo valgrind lcov
 elif [ x$1 = xdownloads ]; then
     # Extra test phase
     mock --configdir=$PWD --root=mock --resultdir=./mock -v --install ./downloads/*.rpm nano sudo valgrind lcov
