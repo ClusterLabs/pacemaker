@@ -22,15 +22,15 @@ if [ $test_home != $sanitydir ]; then
 
 else
     GCOV_BASE=@localstatedir@/lib/pacemaker/gcov/
-    rm -rf $GCOV_BASE
     mkdir -p $GCOV_BASE
 
     export GCOV_PREFIX_STRIP=4
     export GCOV_PREFIX=$GCOV_BASE
 
-    echo "Creating the directory structure in $GCOV_BASE from $PWD"
     cd `rpm -ql pacemaker-debuginfo | grep include | head -n 1`/..
-    find . -type d -exec mkdir $GCOV_BASE/\{\} \;
+    echo "Creating the directory structure in $GCOV_BASE from $PWD"
+    # Not needed because the .gcno files will already be there
+    #find . -type d -exec mkdir $GCOV_BASE/\{\} \;
 
     echo "Now linking the source files into place"
     find . -type f -name "*.c" -exec ln -s $PWD/\{\} $GCOV_BASE\{\} \;

@@ -71,7 +71,7 @@ for t in $tests; do
     info ""
 done
 
-if [ -z $failed ]; then
+if [ -z "$failed" ]; then
     exit 0
 fi
 
