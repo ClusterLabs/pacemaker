@@ -40,10 +40,10 @@ for t in $tests; do
     info "Executing the $t regression tests"
     info "============================================================"
     if [ -e $test_home/$t/regression.py ]; then
-	# Fencing, lrmd
+	# Fencing, lrmd need root access
 	chmod a+x $test_home/$t/regression.py
 	echo "Enter the root password..."
-	su root -c $test_home/$t/regression.py $verbose
+	su root -c "$test_home/$t/regression.py $verbose"
 	rc=$?
 
     elif [ -e $test_home/$t ]; then
