@@ -1304,11 +1304,6 @@ main(int argc, char **argv)
                             printf("%s\n", iter->val);
                         }
                         lrmd_list_freeall(list);
-                        if(optarg) {
-                            fprintf(stderr, "%d %s found for %s\n", rc, text, optarg);
-                        } else {
-                            fprintf(stderr, "%d %s found\n", rc, text);
-                        }
                         return 0;
 
                     } else {
@@ -1373,7 +1368,6 @@ main(int argc, char **argv)
                             rc++;
                         }
                         lrmd_list_freeall(list);
-                        fprintf(stderr, "%d agents found for standard=%s, provider=%s\n", rc, standard, provider);
                         rc = 0;
                     } else {
                         fprintf(stderr, "No agents found for standard=%s, provider=%s\n", standard, provider);
