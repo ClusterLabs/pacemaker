@@ -860,8 +860,9 @@ init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
 {
     int retries = 0;
 
-    while (retries++ < 30) {
+    while (retries < 5) {
         int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
+        retries++;
 
         switch (rc) {
             case CS_OK:
@@ -869,13 +870,14 @@ init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
                 break;
             case CS_ERR_TRY_AGAIN:
             case CS_ERR_QUEUE_FULL:
+                sleep(retries);
                 break;
             default:
                 return FALSE;
         }
     }
 
-    crm_err("Retry count exceeded: %d", retries);
+    crm_err("Could not connect to corosync after %d retries", retries);
     return FALSE;
 }
 
