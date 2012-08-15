@@ -307,5 +307,6 @@ main(int argc, char **argv)
     the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
     crm_xml_cleanup();
+    qb_log_fini();
     return rc;
 }

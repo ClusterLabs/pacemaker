@@ -973,5 +973,6 @@ main(int argc, char **argv)
         CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
     }
 
+    qb_log_fini();
     return rc;
 }

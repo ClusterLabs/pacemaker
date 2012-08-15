@@ -78,6 +78,7 @@ resource_ipc_timeout(gpointer data)
     fprintf(stderr, "No messages received in %d seconds.. aborting\n",
             (int)message_timeout_ms / 1000);
     crm_err("No messages received in %d seconds", (int)message_timeout_ms / 1000);
+    qb_log_fini();
     exit(-1);
 }
 
@@ -85,6 +86,7 @@ static void
 resource_ipc_connection_destroy(gpointer user_data)
 {
     crm_info("Connection to CRMd was terminated");
+    qb_log_fini();
     exit(1);
 }
 
@@ -113,6 +115,7 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
         crm_xml_cleanup();
+        qb_log_fini();
         exit(0);
     }
 
@@ -1916,5 +1919,6 @@ main(int argc, char **argv)
         CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
     }
 
+    qb_log_fini();
     return rc;
 }

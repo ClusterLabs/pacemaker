@@ -484,6 +484,7 @@ main(int argc, char **argv)
     cib_delete(the_cib);
     crm_xml_cleanup();
 
+    qb_log_fini();
     return -exit_code;
 }
 
