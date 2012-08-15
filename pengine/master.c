@@ -411,9 +411,11 @@ anonymous_known_on(resource_t * rsc, node_t *node)
         rsc = parent->fns->find_rsc(child, key, NULL, pe_find_clone);
         pe_rsc_trace(rsc, "Checking %s for %s on %s", rsc->id, key, node->details->uname);
         if(g_hash_table_lookup(rsc->known_on, node->details->id)) {
+            free(key);
             return TRUE;
         }
     }
+    free(key);
     return FALSE;
 }
 

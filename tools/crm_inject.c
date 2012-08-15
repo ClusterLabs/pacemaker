@@ -689,6 +689,7 @@ create_action_name(action_t * action)
         } else {
             action_name = g_strdup_printf("%s%s", prefix?prefix:"", key);
         }
+        free(key);
 
     } else if(action_host) {
         action_name = g_strdup_printf("%s%s %s", prefix?prefix:"", action->uuid, action_host);
