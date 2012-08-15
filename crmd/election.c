@@ -553,7 +553,7 @@ do_dc_release(long long action,
 
         for (gIter = stonith_cleanup_list; gIter != NULL; gIter = gIter->next) {
             char *target = gIter->data;
-            crm_debug("Purging %s from stonith cleanup list", target);
+            crm_info("Purging %s from stonith cleanup list", target);
             free(target);
         }
         g_list_free(stonith_cleanup_list);

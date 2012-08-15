@@ -47,6 +47,8 @@ crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
     int seq = 0;
     xmlNode *xml = NULL;
     const char *seq_s = NULL;
+    crm_node_t *peer = NULL;
+    enum crm_proc_flag flag = crm_proc_cpg;
 
     xml = string2xml(data);
     if (xml == NULL) {
@@ -87,6 +89,22 @@ crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
         case crm_class_cluster:
             crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
             crm_xml_add_int(xml, F_SEQ, wrapper->id);
+
+            if(is_heartbeat_cluster()) { 
+                flag = crm_proc_heartbeat;
+
+            } else if(is_classic_ais_cluster()) {
+                flag = crm_proc_plugin;
+            }
+
+            peer = crm_get_peer(0, wrapper->sender.uname);
+            if(is_not_set(peer->processes, flag)) {
+                /* If we can still talk to our peer process on that node,
+                 * then its also part of the corosync membership
+                 */
+                crm_err("Recieving messages from a node we think is dead: %s[%d]", peer->uname, peer->id);
+                crm_update_peer_proc(__FUNCTION__, peer, flag, ONLINESTATUS);
+            }
             crmd_ha_msg_filter(xml);
             break;
 

@@ -180,6 +180,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
                 send_stonith_update(NULL, st_event->target, uuid);
             }
             stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(st_event->target));
+
         } else if (AM_I_DC &&
                     st_event->client_origin &&
                     safe_str_neq(st_event->client_origin, crm_system_name)) {
