@@ -1727,9 +1727,11 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
         actual_rc_i = PCMK_EXECRA_UNIMPLEMENT_FEATURE;
     }
 
-    if (task_status_i != actual_rc_i
-        && rsc->failure_timeout > 0 && get_failcount(node, rsc, &last_failure, data_set) == 0) {
-        if (last_failure > 0) {
+    if(expired) {
+        int fc = get_failcount(node, rsc, &last_failure, data_set);
+        if (rsc->failure_timeout > 0
+            && last_failure > 0
+            && fc == 0) {
             action_t *clear_op = NULL;
 
             clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),

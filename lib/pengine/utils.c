@@ -1326,16 +1326,17 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
         free(search.key);
     }
 
+    if (search.count != 0 && search.last != 0 && last_failure) {
+        *last_failure = search.last;
+    }
+
     if (search.count != 0 && search.last != 0 && rsc->failure_timeout) {
-        if (last_failure) {
-            *last_failure = search.last;
-        }
         if (search.last > 0) {
             time_t now = get_timet_now(data_set);
 
             if (now > (search.last + rsc->failure_timeout)) {
-                crm_notice("Failcount for %s on %s has expired (limit was %ds)",
-                           search.rsc->id, node->details->uname, rsc->failure_timeout);
+                crm_debug("Failcount for %s on %s has expired (limit was %ds)",
+                          search.rsc->id, node->details->uname, rsc->failure_timeout);
                 search.count = 0;
             }
         }
