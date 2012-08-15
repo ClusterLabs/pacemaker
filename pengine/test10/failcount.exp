@@ -1,0 +1,21 @@
+<transition_graph cluster-delay="20s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="256" transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <crm_event id="7" operation="clear_failcount" operation_key="re-openfire-lsb:0_clear_failcount" on_node="dresproddns01" on_node_uuid="dresproddns01">
+        <primitive id="re-openfire-lsb" long-id="re-openfire-lsb:0" class="lsb" type="openfire"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <crm_event id="32" operation="clear_failcount" operation_key="re-openfire-lsb:1_clear_failcount" on_node="dresproddns02" on_node_uuid="dresproddns02">
+        <primitive id="re-openfire-lsb" long-id="re-openfire-lsb:1" class="lsb" type="openfire"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>
+

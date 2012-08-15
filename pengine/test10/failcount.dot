@@ -1,0 +1,4 @@
+digraph "g" {
+"re-openfire-lsb:0_clear_failcount dresproddns01" [ style=bold color="green" fontcolor="black"]
+"re-openfire-lsb:1_clear_failcount dresproddns02" [ style=bold color="green" fontcolor="black"]
+}

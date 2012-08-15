@@ -1,0 +1,59 @@
+
+Current cluster status:
+Online: [ dresproddns01 dresproddns02 ]
+
+ Clone Set: cl-openfire [gr-openfire]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-named [gr-named]
+     Started: [ dresproddns01 dresproddns02 ]
+ re-monitor	(ocf::pacemaker:ClusterMon):	Started dresproddns02
+ Clone Set: cl-ping-sjim [re-ping-sjim]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-wesbprod [gr-wesbprod]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-svn [gr-svn]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-ldirectord [re-ldirectord-gluster]
+     Started: [ dresproddns01 dresproddns02 ]
+ re-drdns-ip	(ocf::heartbeat:IPaddr):	Started dresproddns01
+ Clone Set: cl-cdeprod [gr-cdeprod]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-sysinfo [re-sysinfo]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-haproxy [gr-haproxy]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-ping-sjho [re-ping-sjho]
+     Started: [ dresproddns01 dresproddns02 ]
+
+Transition Summary:
+
+Executing cluster transition:
+ * Cluster action:  clear_failcount on dresproddns01
+ * Cluster action:  clear_failcount on dresproddns02
+
+Revised cluster status:
+Online: [ dresproddns01 dresproddns02 ]
+
+ Clone Set: cl-openfire [gr-openfire]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-named [gr-named]
+     Started: [ dresproddns01 dresproddns02 ]
+ re-monitor	(ocf::pacemaker:ClusterMon):	Started dresproddns02
+ Clone Set: cl-ping-sjim [re-ping-sjim]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-wesbprod [gr-wesbprod]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-svn [gr-svn]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-ldirectord [re-ldirectord-gluster]
+     Started: [ dresproddns01 dresproddns02 ]
+ re-drdns-ip	(ocf::heartbeat:IPaddr):	Started dresproddns01
+ Clone Set: cl-cdeprod [gr-cdeprod]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-sysinfo [re-sysinfo]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-haproxy [gr-haproxy]
+     Started: [ dresproddns01 dresproddns02 ]
+ Clone Set: cl-ping-sjho [re-ping-sjho]
+     Started: [ dresproddns01 dresproddns02 ]
+
