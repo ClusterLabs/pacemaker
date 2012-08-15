@@ -29,8 +29,9 @@ else
 
     cd `rpm -ql pacemaker-debuginfo | grep include | head -n 1`/..
     echo "Creating the directory structure in $GCOV_BASE from $PWD"
-    # Not needed because the .gcno files will already be there
-    #find . -type d -exec mkdir $GCOV_BASE/\{\} \;
+    # The .gcno files will already be there for sources,
+    # but we still need to create the include/ subtree
+    find . -type d -exec mkdir -p $GCOV_BASE/\{\} \;
 
     echo "Now linking the source files into place"
     find . -type f -name "*.c" -exec ln -s $PWD/\{\} $GCOV_BASE\{\} \;
@@ -40,7 +41,8 @@ fi
 
 lcov -d $GCOV_BASE -z
 
-$sanitydir/BasicSanity.sh all
+# Run all active regression tests
+$sanitydir/BasicSanity.sh
 
 lcov -d $GCOV_BASE -c -o pacemaker.info
 
