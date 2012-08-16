@@ -236,8 +236,7 @@ Summary:      Pacemaker development package
 Group:        Development/Libraries
 Requires:     %{name}-libs = %{version}-%{release}
 Requires:     %{name}-cluster-libs = %{version}-%{release}
-Requires:     libtool-ltdl-devel
-Requires:     libxml2-devel libxslt-devel bzip2-devel glib2-devel 
+Requires:     libtool-ltdl-devel libxml2-devel libxslt-devel bzip2-devel glib2-devel 
 %if %{with corosync}
 Requires:     corosynclib-devel
 %endif
