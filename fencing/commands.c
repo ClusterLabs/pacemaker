@@ -374,6 +374,86 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     return device;
 }
 
+static const char *
+target_list_type(stonith_device_t *dev)
+{
+    const char *check_type = NULL;
+
+    check_type = g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTCHECK);
+
+    if(check_type == NULL) {
+
+        if(g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTLIST)) {
+            check_type = "static-list";
+        } else if(g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTMAP)) {
+            check_type = "static-list";
+        } else {
+            check_type = "dynamic-list";
+        }
+    }
+
+	return check_type;
+}
+
+static void
+update_dynamic_list(stonith_device_t *dev)
+{
+    time_t now = time(NULL);
+
+    /* Host/alias must be in the list output to be eligable to be fenced
+     *
+     * Will cause problems if down'd nodes aren't listed or (for virtual nodes)
+     *  if the guest is still listed despite being moved to another machine
+     */
+
+    if(dev->targets_age < 0) {
+        crm_trace("Port list queries disabled for %s", dev->id);
+
+    } else if(dev->targets == NULL || dev->targets_age + 60 < now) {
+        char *output = NULL;
+        int rc = pcmk_ok;
+        int exec_rc = pcmk_ok;
+
+        if(dev->active_pid != 0) {
+            crm_notice("Port list query can not execute because device is busy, using cache: %s",
+                    dev->targets ? "YES" : "NO");
+            return;
+        }
+
+        exec_rc = run_stonith_agent(dev->agent, "list", NULL, dev->params, NULL, &rc, &output, NULL);
+        if(rc != 0 && dev->active_pid == 0) {
+            /* This device probably only supports a single
+             * connection, which appears to already be in use,
+             * likely involved in a montior or (less likely)
+             * metadata operation.
+             *
+             * Avoid disabling port list queries in the hope that
+             * the op would succeed next time
+             */
+            crm_info("Couldn't query ports for %s. Call failed with rc=%d and active_pid=%d: %s",
+                     dev->agent, rc, dev->active_pid, output);
+
+        } else if(exec_rc < 0 || rc != 0) {
+            crm_notice("Disabling port list queries for %s (%d/%d): %s",
+                           dev->id, exec_rc, rc, output);
+            dev->targets_age = -1;
+
+            /* Fall back to status */
+            g_hash_table_replace(dev->params, strdup(STONITH_ATTR_HOSTCHECK), strdup("status"));
+
+            g_list_free_full(dev->targets, free);
+            dev->targets = NULL;
+        } else {
+            crm_info("Refreshing port list for %s", dev->id);
+            g_list_free_full(dev->targets, free);
+            dev->targets = parse_host_list(output);
+            dev->targets_age = now;
+        }
+
+        free(output);
+    }
+}
+
 int stonith_device_register(xmlNode *msg, const char **desc) 
 {
     const char *value = NULL;
@@ -386,6 +466,13 @@ int stonith_device_register(xmlNode *msg, const char **desc)
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTMAP);
     device->aliases = build_port_aliases(value, &(device->targets));
+
+    value = target_list_type(device);
+    if (safe_str_eq(value, "dynamic-list")) {
+        /* set the dynamic list during the register to guarantee we have
+         * targets cached */
+        update_dynamic_list(device);
+    }
 
     g_hash_table_replace(device_list, device->id, device);
 
@@ -574,18 +661,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
         alias = g_hash_table_lookup(dev->aliases, host);
     }
 
-    check_type = g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTCHECK);
-
-    if(check_type == NULL) {
-
-        if(g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTLIST)) {
-            check_type = "static-list";
-        } else if(g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTMAP)) {
-            check_type = "static-list";
-        } else {
-            check_type = "dynamic-list";
-        }
-    }
+    check_type = target_list_type(dev);
 
     if(safe_str_eq(check_type, "none")) {
         can = TRUE;
@@ -604,63 +680,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
         }
 
     } else if(safe_str_eq(check_type, "dynamic-list")) {
-        time_t now = time(NULL);
-
-        /* Host/alias must be in the list output to be eligable to be fenced
-         *
-         * Will cause problems if down'd nodes aren't listed or (for virtual nodes)
-         *  if the guest is still listed despite being moved to another machine
-         */
-
-        if(dev->targets_age < 0) {
-            crm_trace("Port list queries disabled for %s", dev->id);
-
-        } else if(dev->targets == NULL || dev->targets_age + 60 < now) {
-            char *output = NULL;
-            int rc = pcmk_ok;
-            int exec_rc = pcmk_ok;
-
-            /* Check for the target's presence in the output of the 'list' command */
-            g_list_free_full(dev->targets, free);
-            dev->targets = NULL;
-
-            while(dev->active_pid != 0 && kill(dev->active_pid, 0) == 0) {
-                /* This is a hack
-                 * The proper approach would be to do asynchronous replies
-                 */
-                crm_trace("Waiting for %u to exit for %s", dev->active_pid, dev->id);
-                sleep(1);
-            }
-
-            exec_rc = run_stonith_agent(dev->agent, "list", NULL, dev->params, NULL, &rc, &output, NULL);
-            if(rc != 0 && dev->active_pid == 0) {
-                /* This device probably only supports a single
-                 * connection, which appears to already be in use,
-                 * likely involved in a montior or (less likely)
-                 * metadata operation.
-                 *
-                 * Avoid disabling port list queries in the hope that
-                 * the op would succeed next time
-                 */
-                crm_info("Couldn't query ports for %s. Call failed with rc=%d and active_pid=%d: %s",
-                         dev->agent, rc, dev->active_pid, output);
-
-            } else if(exec_rc < 0 || rc != 0) {
-                crm_notice("Disabling port list queries for %s (%d/%d): %s",
-                                dev->id, exec_rc, rc, output);
-                dev->targets_age = -1;
-
-                /* Fall back to status */
-                g_hash_table_replace(dev->params, strdup(STONITH_ATTR_HOSTCHECK), strdup("status"));
-
-            } else {
-                crm_info("Refreshing port list for %s", dev->id);
-                dev->targets = parse_host_list(output);
-                dev->targets_age = now;
-            }
-
-            free(output);
-        }
+        update_dynamic_list(dev);
 
         if(string_in_list(dev->targets, alias)) {
             can = TRUE;
