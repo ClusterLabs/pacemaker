@@ -1,5 +1,5 @@
 Allocation scores:
 native_color: A allocation score on node1: 100
-native_color: A allocation score on node2: 60000
-native_color: B allocation score on node1: 6
+native_color: A allocation score on node2: 500000
+native_color: B allocation score on node1: 50
 native_color: B allocation score on node2: 100

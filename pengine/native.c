@@ -290,7 +290,7 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
             /* Negative preference for a node with a negative score
              * should not become a positive preference
              *
-             * TODO: Decide if we want to filter only if weight == -INFINITY
+             * TODO - Decide if we want to filter only if weight == -INFINITY
              *
              */
             crm_trace("%s: Filtering %d + %f*%d (factor * score)",

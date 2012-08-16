@@ -25,7 +25,7 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_colocation id="colo" rsc="A" score="60000" with-rsc="B"/>
+      <rsc_colocation id="colo" rsc="A" score="500000" with-rsc="B"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc-options">
