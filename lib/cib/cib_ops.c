@@ -785,6 +785,11 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
         xmlXPathFreeObject(xpathObj);
     }
 
+    /*
+     * Do not check XML_TAG_DIFF_ADDED "//" XML_TAG_CIB
+     * This always contains every field and would produce a false positive
+     * every time if the checked value existed
+     */
     xpathObj = xpath_search(*diff, "//" XML_TAG_DIFF_REMOVED "//" XML_TAG_CIB);
     if (xpathObj) {
         int lpc = 0, max = xpathObj->nodesetval->nodeNr;
@@ -806,6 +811,14 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
                 goto done;
             }
             if (crm_element_value(top, XML_ATTR_CRM_VERSION) != NULL) {
+                config_changes = TRUE;
+                goto done;
+            }
+            if (crm_element_value(top, "remote-clear-port") != NULL) {
+                config_changes = TRUE;
+                goto done;
+            }
+            if (crm_element_value(top, "remote-tls-port") != NULL) {
                 config_changes = TRUE;
                 goto done;
             }
