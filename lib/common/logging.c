@@ -762,16 +762,22 @@ pcmk_strerror(int rc)
             return "Application of an update diff failed, requesting a full refresh";
 
             /* The following cases will only be hit on systems for which they are non-standard */
+        /* coverity[dead_error_condition] False positive on non-Linux */
         case ENOTUNIQ:
             return "Name not unique on network";
+        /* coverity[dead_error_condition] False positive on non-Linux */
         case ECOMM:
             return "Communication error on send";
+        /* coverity[dead_error_condition] False positive on non-Linux */
         case ELIBACC:
             return "Can not access a needed shared library";
+        /* coverity[dead_error_condition] False positive on non-Linux */
         case EREMOTEIO:
             return "Remote I/O error";
+        /* coverity[dead_error_condition] False positive on non-Linux */
         case EUNATCH:
             return "Protocol driver not attached";
+        /* coverity[dead_error_condition] False positive on non-Linux */
         case ENOKEY:
             return "Required key not available";
     }

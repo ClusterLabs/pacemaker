@@ -312,7 +312,7 @@ upstart_job_running(const gchar *name)
 
     pass = upstart_job_by_name (upstart_proxy, name, &job, NULL, &error);
     if (error || pass == FALSE) {
-        crm_err("Call to ListUnits failed: %s", error->message);
+        crm_err("Call to ListUnits failed: %s", error?error->message:"unknown");
         g_error_free(error);
 
     } else {

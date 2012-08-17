@@ -153,8 +153,9 @@ mock-%:
 	mock --root=$* --no-cleanup-after --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
 
 srpm:	srpm-$(DISTRO)
+	echo "Done"
 
-mock:      mock-$(MOCK_CFG)
+mock:   mock-$(MOCK_CFG)
 	echo "Done"
 
 rpm:	srpm

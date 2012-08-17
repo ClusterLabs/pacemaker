@@ -618,6 +618,9 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     svc_action_t *action = NULL;
     GHashTable *params_copy = NULL;
 
+    CRM_ASSERT(rsc);
+    CRM_ASSERT(cmd);
+
     crm_trace("Creating action, resource:%s action:%s class:%s provider:%s agent:%s",
               rsc->rsc_id, cmd->action, rsc->class, rsc->provider, rsc->type);
 
@@ -666,9 +669,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     action = NULL;
 
   exec_done:
-    if (cmd) {
-        cmd_finalize(cmd, rsc);
-    }
+    cmd_finalize(cmd, rsc);
     return TRUE;
 }
 

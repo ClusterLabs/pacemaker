@@ -558,6 +558,8 @@ try_corosync(int command, enum cluster_type_e stack)
             if (crmd_remove_node_cache(atoi(target_uname))) {
                 crm_err("Failed to connect to crmd to remove node id %s", target_uname);
             }
+            break;
+
         case 'e':
             /* Age makes no sense (yet) in an AIS cluster */
             fprintf(stdout, "1\n");

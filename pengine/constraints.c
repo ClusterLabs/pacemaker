@@ -193,30 +193,22 @@ contains_stonith(resource_t * rsc)
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
-        enum contains_stonith_res tmp;
+        enum contains_stonith_res tmp = contains_stonith(child);
 
-        tmp = contains_stonith(child);
-
-        if (tmp == contains_stonith_unknown) {
-            continue;
-        }
-
-        switch (res) {
-        case contains_stonith_unknown:
-            res = tmp;
-            break;
-        case contains_stonith_false:
-            res = tmp != contains_stonith_false ? contains_stonith_mixed : res;
-            break;
-        case contains_stonith_true:
-            res = tmp != contains_stonith_true ? contains_stonith_mixed : res;
-            break;
-        case contains_stonith_mixed:
-            break;
-        }
-
-        if (res == contains_stonith_mixed) {
-            break;
+        if (tmp != contains_stonith_unknown) {
+            switch (res) {
+                case contains_stonith_unknown:
+                    res = tmp;
+                    break;
+                case contains_stonith_false:
+                case contains_stonith_true:
+                    if(tmp != res) {
+                        return contains_stonith_mixed;
+                    }
+                    break;
+                case contains_stonith_mixed:
+                    return contains_stonith_mixed;
+            }
         }
     }
 

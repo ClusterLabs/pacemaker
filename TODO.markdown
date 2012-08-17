@@ -6,6 +6,8 @@
 
 ## Targeted for 1.2.x
 
+- Support
+  http://cgit.freedesktop.org/systemd/systemd/commit/?id=96342de68d0d6de71a062d984dafd2a0905ed9fe
 - Add corosync to ComponentFail cts test
 - Support 'yesterday' and 'thursday' and '24-04' as dates in crm_report 
 - Allow the N in 'give up after N failed fencing attempts' to be configurable 

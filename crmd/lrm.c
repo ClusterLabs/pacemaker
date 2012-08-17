@@ -544,6 +544,7 @@ get_rsc_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
     }
 
     len = strlen(rsc->type) + strlen(rsc->class) + strlen(provider) + 4;
+    /* coverity[returned_null] Ignore */
     key = malloc( len);
     snprintf(key, len, "%s::%s:%s", rsc->type, rsc->class, provider);
 

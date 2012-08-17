@@ -358,6 +358,8 @@ send_ais_text(int class, const char *data,
         unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
 
         crm_trace("Compressing message payload");
+
+        /* coverity[returned_null] Ignore */
         compressed = malloc( len);
 
         rc = BZ2_bzBuffToBuffCompress(compressed, &len, uncompressed, ais_msg->size, CRM_BZ2_BLOCKS,

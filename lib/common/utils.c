@@ -749,12 +749,12 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
     CRM_CHECK(mutable_key != mutable_key_ptr, free(mutable_key); return FALSE);
 
     notify = strstr(mutable_key, "_post_notify");
-    if (safe_str_eq(notify, "_post_notify")) {
+    if (notify && safe_str_eq(notify, "_post_notify")) {
         notify[0] = 0;
     }
 
     notify = strstr(mutable_key, "_pre_notify");
-    if (safe_str_eq(notify, "_pre_notify")) {
+    if (notify && safe_str_eq(notify, "_pre_notify")) {
         notify[0] = 0;
     }
 
@@ -1032,6 +1032,7 @@ filter_reload_parameters(xmlNode * param_set, const char *restart_string)
     }
 }
 
+/* coverity[+kill] */
 void
 crm_abort(const char *file, const char *function, int line,
           const char *assert_condition, gboolean do_core, gboolean do_fork)
@@ -1477,9 +1478,6 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
 
     } else if (a == NULL || b == NULL) {
         /* shouldn't be comparing NULLs */
-        return FALSE;
-
-    } else if (use_case && a[0] != b[0]) {
         return FALSE;
 
     } else if (strcasecmp(a, b) == 0) {

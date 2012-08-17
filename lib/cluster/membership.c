@@ -175,6 +175,7 @@ crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, co
     crm_status_callback = dispatch;
 }
 
+/* coverity[-alloc] Memory is referenced in one or both hashtables */
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
 {
@@ -204,6 +205,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
     if (node == NULL) {
         crm_debug("Creating entry for node %s/%u", uname, id);
+
         node = calloc(1, sizeof(crm_node_t));
         CRM_ASSERT(node);
     }
@@ -214,7 +216,7 @@ crm_get_peer(unsigned int id, const char *uname)
         g_hash_table_replace(crm_peer_id_cache, GUINT_TO_POINTER(node->id), node);
     }
 
-    if (node && uname && node->uname == NULL) {
+    if (uname && node->uname == NULL) {
         node->uname = strdup(uname);
         crm_info("Node %u is now known as %s", id, uname);
         g_hash_table_replace(crm_peer_cache, node->uname, node);
@@ -232,13 +234,6 @@ crm_get_peer(unsigned int id, const char *uname)
         } else {
             crm_warn("Cannot obtain a UUID for node %d/%s", id, node->uname);
         }
-    }
-
-    if (node && id > 0 && id != node->id) {
-        g_hash_table_remove(crm_peer_id_cache, GUINT_TO_POINTER(node->id));
-        g_hash_table_insert(crm_peer_id_cache, GUINT_TO_POINTER(id), node);
-        node->id = id;
-        crm_info("Node %s now has id: %u", crm_str(uname), id);
     }
 
     return node;

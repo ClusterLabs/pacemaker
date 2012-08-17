@@ -68,6 +68,7 @@ gboolean safe_str_neq(const char *a, const char *b);
 
 #  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 
+/* coverity[+kill] */
 void crm_abort(const char *file, const char *function, int line,
                       const char *condition, gboolean do_core, gboolean do_fork);
 

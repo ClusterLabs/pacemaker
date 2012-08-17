@@ -517,7 +517,10 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
         int ret;
         int total = 0;
 
-        fcntl(p_read_fd, F_SETFL, fcntl(p_read_fd, F_GETFL, 0) | O_NONBLOCK);
+        ret = fcntl(p_read_fd, F_SETFL, fcntl(p_read_fd, F_GETFL, 0) | O_NONBLOCK);
+        if(ret < 0) {
+            crm_perror(LOG_NOTICE, "Could not change the output of %s to be non-blocking", agent);
+        }
 
         do {
             crm_debug("sending args");
@@ -814,13 +817,6 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
         return -EINVAL; /* Heartbeat agents not supported */
 #else
         int bufferlen = 0;
-
-        char *xml_meta_longdesc = NULL;
-        char *xml_meta_shortdesc = NULL;
-        
-        char *meta_param = NULL;
-        char *meta_longdesc = NULL;
-        char *meta_shortdesc = NULL;
         static const char *no_parameter_info = "<!-- no value -->";
 
         Stonith *stonith_obj = NULL;
@@ -838,6 +834,13 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
         }
 
         if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn) {
+            char *xml_meta_longdesc = NULL;
+            char *xml_meta_shortdesc = NULL;
+
+            char *meta_param = NULL;
+            char *meta_longdesc = NULL;
+            char *meta_shortdesc = NULL;
+
             stonith_obj = (*st_new_fn) (agent);
             if(stonith_obj) {
                 meta_longdesc = strdup((*st_info_fn)(stonith_obj, ST_DEVICEDESCR));
@@ -861,27 +864,27 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             } else {
                 return -EINVAL; /* Heartbeat agents not supported */
             }
+
+            xml_meta_longdesc =
+                (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_longdesc);
+            xml_meta_shortdesc =
+                (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
+
+            bufferlen = strlen(META_TEMPLATE) + strlen(agent)
+                + strlen(xml_meta_longdesc) + strlen(xml_meta_shortdesc)
+                + strlen(meta_param) + 1;
+
+            buffer = calloc(1, bufferlen);
+            snprintf(buffer, bufferlen - 1, META_TEMPLATE,
+                     agent, xml_meta_longdesc, xml_meta_shortdesc, meta_param);
+
+            xmlFree(xml_meta_longdesc);
+            xmlFree(xml_meta_shortdesc);
+
+            free(meta_shortdesc);
+            free(meta_longdesc);
+            free(meta_param);
         }
-
-        xml_meta_longdesc =
-            (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_longdesc);
-        xml_meta_shortdesc =
-            (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
-
-        bufferlen = strlen(META_TEMPLATE) + strlen(agent)
-            + strlen(xml_meta_longdesc) + strlen(xml_meta_shortdesc)
-            + strlen(meta_param) + 1;
-
-        buffer = calloc(1, bufferlen);
-        snprintf(buffer, bufferlen - 1, META_TEMPLATE,
-                 agent, xml_meta_longdesc, xml_meta_shortdesc, meta_param);
-
-        xmlFree(xml_meta_longdesc);
-        xmlFree(xml_meta_shortdesc);
-
-        free(meta_shortdesc);
-        free(meta_longdesc);
-        free(meta_param);
 #endif
     }
 

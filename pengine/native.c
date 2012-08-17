@@ -2616,7 +2616,9 @@ rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op, pe_working_set_t *
     native_start_constraints(rsc, stonith_op, is_stonith, data_set);
 
     /* Stop constraints */
-    native_stop_constraints(rsc, stonith_op, is_stonith, data_set);
+    if(stonith_op) {
+        native_stop_constraints(rsc, stonith_op, is_stonith, data_set);
+    }
 }
 
 enum stack_activity {

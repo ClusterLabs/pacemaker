@@ -99,6 +99,7 @@ remote_connection_destroy(gpointer user_data)
 int
 init_remote_listener(int port, gboolean encrypted)
 {
+    int rc;
     int ssock;
     struct sockaddr_in saddr;
     int optval;
@@ -143,7 +144,10 @@ init_remote_listener(int port, gboolean encrypted)
 
     /* reuse address */
     optval = 1;
-    setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+    rc = setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+    if(rc < 0) {
+        crm_perror(LOG_INFO, "Couldn't allow the reuse of local addresses by our remote listener");
+    }
 
     /* bind server socket */
     memset(&saddr, '\0', sizeof(saddr));

@@ -1161,7 +1161,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
             free(base);
         }
 
-        if (safe_str_neq(rsc_id, rsc->id)) {
+        if (rsc && safe_str_neq(rsc_id, rsc->id)) {
             free(rsc->clone_name);
             rsc->clone_name = strdup(rsc_id);
         }

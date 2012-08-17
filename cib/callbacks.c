@@ -274,14 +274,10 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean p
     uint32_t id = 0;
     uint32_t flags = 0;
     int call_options = 0;
-    const char *op = NULL;
-    const char *call = NULL;
     xmlNode *op_request = crm_ipcs_recv(c, data, size, &id, &flags);
     cib_client_t *cib_client = qb_ipcs_context_get(c);
 
     if(op_request) {
-        op = crm_element_value(op_request, F_CIB_OPERATION);
-        call = crm_element_value(op_request, F_CIB_CALLID);
         crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
     }
 

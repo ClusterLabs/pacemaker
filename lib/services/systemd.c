@@ -267,7 +267,7 @@ systemd_unit_listall(void)
         G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
     if (error || _ret == NULL) {
-        crm_info("Call to ListUnits failed: %s", error->message);
+        crm_info("Call to ListUnits failed: %s", error?error->message:"unknown");
         g_error_free(error);
         return NULL;
     }
@@ -315,7 +315,7 @@ systemd_unit_exists(const char *name)
     pass = systemd_unit_by_name(systemd_proxy, name, &path, NULL, &error);
 
     if (error || pass == FALSE) {
-        crm_err("Call to ListUnits failed: %s", error->message);
+        crm_err("Call to ListUnits failed: %s", error?error->message:"unknown");
         g_error_free(error);
         pass = FALSE;
 
@@ -435,8 +435,8 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
 
     pass = systemd_unit_by_name (systemd_proxy, op->agent, &unit, NULL, &error);
     if (error || pass == FALSE) {
-        crm_debug("Could not obtain unit named '%s': %s", op->agent, error->message);
-        if(strstr(error->message, "systemd1.NoSuchUnit")) {
+        crm_debug("Could not obtain unit named '%s': %s", op->agent, error?error->message:"unknown");
+        if(error && strstr(error->message, "systemd1.NoSuchUnit")) {
             op->rc = PCMK_EXECRA_NOT_INSTALLED;
         }
         g_error_free(error);

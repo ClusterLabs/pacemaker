@@ -490,9 +490,7 @@ parse_time_duration(char **interval_str)
     return diff;
 
   bail:
-    if (diff) {
-        free(diff->has);
-    }
+    free(diff->has);
     free(diff);
     return NULL;
 }
