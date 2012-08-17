@@ -1055,8 +1055,6 @@ print_status(pe_working_set_t * data_set)
     updates++;
     dc = data_set->dc_node;
 
-    print_as("============\n");
-
     if (a_time == (time_t) - 1) {
         crm_perror(LOG_ERR, "set_node_tstamp(): Invalid time returned");
         return 1;
@@ -1119,7 +1117,7 @@ print_status(pe_working_set_t * data_set)
     print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes),
              quorum_votes);
     print_as("%d Resources configured.\n", count_resources(data_set, NULL));
-    print_as("============\n\n");
+    print_as("\n\n");
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
