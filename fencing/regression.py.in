@@ -198,6 +198,9 @@ class Test:
 		cur = 0
 		total_patterns = len(self.stonith_patterns)
 
+		if self.verbose:
+			print self.stonith_output
+
 		if len(self.stonith_patterns) == 0:
 			return
 
@@ -492,6 +495,73 @@ class Tests:
 			test.add_cmd("stonith_admin", "-F node3 -t 5 -V")
 
 			test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
+
+		# Simple test to verify custom fence timeout in device args.
+		for test_type in test_types:
+			test = self.new_test("%s_custom_fence_timeout_1" % test_type["prefix"],
+					"Verify custom device action timeout is used", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_off_timeout=1\"")
+			test.add_stonith_log_pattern("with action off is using custom timeout period pcmk_off_timeout=1")
+			test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 5", 194)
+
+		# test custom operation timeout when giving fence command smaller timeout than custom timeout
+		for test_type in test_types:
+			test = self.new_test("%s_custom_fence_timeout_2" % test_type["prefix"],
+					"Verify custom device action timeout defaults to async command timeout when too large.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_off_timeout=3\"")
+			test.add_stonith_log_pattern("with custom timeout pcmk_off_timeout=3 is larger than async command timeout")
+			test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 1", 194)
+
+
+		# test custom operation timeouts with fencing levels
+		for test_type in test_types:
+			if test_type["use_cpg"] == 0:
+				continue
+			test = self.new_test("%s_custom_fence_timeout_3" % test_type["prefix"],
+					"Verify expected behavior for custom device timeouts when fencing levels are used.", test_type["use_cpg"])
+
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true4  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_off_timeout=3\"")
+			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_off_timeout=5\"")
+
+			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
+			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true1")
+			test.add_cmd("stonith_admin", "-r node3 -i 2 -v true2")
+			test.add_cmd("stonith_admin", "-r node3 -i 2 -v false2")
+			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true3")
+			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true4")
+
+			# device timeout should be 4 seconds (24 seconds / 6 devices = 4 seconds per device)
+			# This means devices with pcmk_off_timeout > 4 will default to 4.
+			test.add_cmd("stonith_admin", "-F node3 -t 24")
+
+			test.add_stonith_log_pattern("with action off is using custom timeout period pcmk_off_timeout=3")
+			test.add_stonith_log_pattern("with custom timeout pcmk_off_timeout=5 is larger than async command timeout")
+
+		# test what happens when multiple devices can fence a node, but the first device fails.
+		for test_type in test_types:
+			test = self.new_test("%s_custom_fence_timeout_4" % test_type["prefix"],
+					"Verify expected behavior for custom timeouts when rolling over to multiple devices.", test_type["use_cpg"])
+
+			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_off_timeout=2\"")
+			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_off_timeout=2\"")
+			test.add_cmd("stonith_admin", "-R false3 -a fence_false -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_off_timeout=3\"")
+
+			test.add_stonith_log_pattern("with action off is using custom timeout period pcmk_off_timeout=2")
+			test.add_stonith_log_pattern("with action off is using custom timeout period pcmk_off_timeout=2")
+			test.add_stonith_log_pattern("with custom timeout pcmk_off_timeout=3 is larger than async command timeout")
+
+			if test_type["use_cpg"] == 1:
+				# With cpg/remote ops each device will get a default timeout of 2 (6 seconds / 3 devices = 2 seconds per device)
+				test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 6", 194)
+
+			if test_type["use_cpg"] == 0:
+				# When standalone (no cpg) each device timeout defaults to whatever is passed in.
+				# No division by device number is expected in this mode.
+				test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", 194)
 
 class TestOptions:
 	def __init__(self):
