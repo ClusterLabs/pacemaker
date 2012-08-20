@@ -366,6 +366,39 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
     free(name);
 }
 
+static int
+get_args_timeout(const char *action, GHashTable * device_args, async_command_t *cmd, const char *agent)
+{
+    char buffer[512] = { 0, };
+    char *value = NULL;
+    int timeout = cmd ? cmd->timeout : 0;
+    int op_timeout = 0;
+
+    CRM_CHECK(action != NULL, return timeout);
+    CRM_CHECK(agent != NULL, return timeout);
+
+    if (!device_args) {
+        return timeout;
+    }
+
+    snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
+    value = g_hash_table_lookup(device_args, buffer);
+
+    if (!value) {
+        return timeout;
+    }
+
+    op_timeout = atoi(value);
+
+    if (timeout && (op_timeout > timeout)) {
+        crm_warn("Device '%s' action '%s' with custom timeout %s=%d is larger than async command timeout %d. defaulting to %d",
+            agent, action, buffer, op_timeout, timeout, timeout);
+        return timeout;
+    }
+
+    return op_timeout;
+}
+
 static char *
 make_args(const char *action, const char *victim, GHashTable * device_args, GHashTable * port_map)
 {
@@ -483,6 +516,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
                   async_command_t * track)
 {
     char *args = make_args(action, victim, device_args, port_map);
+    int action_timeout = get_args_timeout(action, device_args, track, agent);
     int pid, status, len, rc = -EPROTO;
     int p_read_fd, p_write_fd;  /* parent read/write file descriptors */
     int c_read_fd, c_write_fd;  /* child read/write file descriptors */
@@ -541,12 +575,12 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
         if (track && track->done) {
             track->stdout = p_read_fd;
             g_child_watch_add(pid, track->done, track);
-            crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action, agent, pid, track->timeout);
+            crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action, agent, pid, action_timeout);
 
-            if (track->timeout) {
+            if (action_timeout) {
                 track->pid = pid;
-                track->timer_sigterm = g_timeout_add(1000*track->timeout, st_child_term, track);
-                track->timer_sigkill = g_timeout_add(1000*(track->timeout+5), st_child_kill, track);
+                track->timer_sigterm = g_timeout_add(1000*action_timeout, st_child_term, track);
+                track->timer_sigkill = g_timeout_add(1000*(action_timeout+5), st_child_kill, track);
 
             } else {
                 crm_err("No timeout set for stonith operation %s with device %s", action, agent);
