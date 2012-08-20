@@ -396,6 +396,8 @@ get_args_timeout(const char *action, GHashTable * device_args, async_command_t *
         return timeout;
     }
 
+    crm_info("%s with action %s is using custom timeout period %s=%d",
+        agent, action, buffer, op_timeout);
     return op_timeout;
 }
 
