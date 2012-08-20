@@ -815,7 +815,7 @@ static void
 stonith_send_async_reply(async_command_t *cmd, const char *output, int rc, GPid pid)
 {
     xmlNode *reply = NULL;
-    gboolean bcast = FALSE;
+    gboolean bcast = TRUE;
 
     reply = stonith_construct_async_reply(cmd, output, NULL, rc);
 
