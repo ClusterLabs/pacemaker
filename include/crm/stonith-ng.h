@@ -230,6 +230,13 @@ typedef struct stonith_api_operations_s
      *
      * \note Possible actions are, 'on', 'off', and 'reboot'.
      *
+     * \param st, stonith connection
+     * \param options, call options
+     * \param node, The target node to fence
+     * \param action, The fencing action to take
+     * \param timeout, The default per device timeout to use with each device
+     *                 capable of fencing the target.
+     *
      * \retval 0 success
      * \retval negative error code on failure.
      */
@@ -259,10 +266,33 @@ typedef struct stonith_api_operations_s
         void (*notify)(stonith_t *st, stonith_event_t *e));
     int (*remove_notification)(stonith_t *st, const char *event);
 
-    int (*register_callback)(
-        stonith_t *st, int call_id, int timeout, bool only_success,
-        void *userdata, const char *callback_name,
+    /*!
+     * \brief Register a callback to receive the result of an async call id
+     *
+     * \param call_id, The call id to register the callback for.
+     * \param timeout, The default timeout period to wait until this callback expires
+     * \param only_success, Only report back if operation is a success
+     * \param allow_timeout_updates, Allow the timeout period for this callback to be adjusted
+     *        based on the time the server reports the operation will take.
+     * \param userdate, A pointer that will be handed back in the callback.
+     * \param callback_name, Unique name given to callback
+     * \param callback, The callback function
+     *
+     * \retval 0 success
+     * \retval negative error code on failure.
+     */
+    int (*register_callback)(stonith_t *st,
+        int call_id,
+        int timeout,
+        bool only_success,
+        bool allow_timeout_updates,
+        void *userdata,
+        const char *callback_name,
         void (*callback)(stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata));
+
+    /*!
+     * \brief Remove a registered callback for a given call id.
+     */
     int (*remove_callback)(stonith_t *st, int call_id, bool all_callbacks);
 
 } stonith_api_operations_t;

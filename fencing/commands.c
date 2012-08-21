@@ -52,6 +52,28 @@ static int active_children = 0;
 static gboolean stonith_device_dispatch(gpointer user_data);
 static void st_child_done(GPid pid, gint status, gpointer user_data);
 
+static int
+get_action_timeout(stonith_device_t *device, const char *action, int default_timeout)
+{
+    char buffer[512] = { 0, };
+    char *value = NULL;
+
+    CRM_CHECK(action != NULL, return default_timeout);
+
+    if (!device->params) {
+        return default_timeout;
+    }
+
+    snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
+    value = g_hash_table_lookup(device->params, buffer);
+
+    if (!value) {
+        return default_timeout;
+    }
+
+    return  atoi(value);
+}
+
 static void free_async_command(async_command_t *cmd)
 {
     if (!cmd) {
@@ -83,7 +105,8 @@ static async_command_t *create_async_command(xmlNode *msg)
     cmd = calloc(1, sizeof(async_command_t));
     crm_element_value_int(msg, F_STONITH_CALLID,   &(cmd->id));
     crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
-    crm_element_value_int(msg, F_STONITH_TIMEOUT,  &(cmd->timeout));
+    crm_element_value_int(msg, F_STONITH_TIMEOUT,  &(cmd->default_timeout));
+    cmd->timeout = cmd->default_timeout;
 
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
     cmd->remote = crm_element_value_copy(msg, F_STONITH_REMOTE);
@@ -179,6 +202,7 @@ static void schedule_stonith_command(async_command_t *cmd, stonith_device_t *dev
     }
 
     cmd->device = strdup(device->id);
+    cmd->timeout = get_action_timeout(device, cmd->action, cmd->default_timeout);
 
     crm_debug("Scheduling %s on %s for %s (timeout=%dms)", cmd->action, device->id,
               cmd->remote?cmd->remote:cmd->client, cmd->timeout);
@@ -745,6 +769,7 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
 {
     struct device_search_s search;
     int available_devices = 0;
+    const char *action = NULL;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_DEBUG_3);
 
     search.host = NULL;
@@ -760,6 +785,8 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
             }
             return pcmk_ok;
         }
+
+        action = crm_element_value(dev, F_STONITH_ACTION);
     }
 
     crm_log_xml_debug(msg, "Query");
@@ -781,10 +808,15 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
         crm_xml_add_int(*list, "st-available-devices", available_devices);
         for(lpc = search.capable; lpc != NULL; lpc = lpc->next) {
             stonith_device_t *device = (stonith_device_t*)lpc->data;
+            int action_specific_timeout = get_action_timeout(device, action, 0);
+
             dev = create_xml_node(*list, F_STONITH_DEVICE);
             crm_xml_add(dev, XML_ATTR_ID, device->id);
             crm_xml_add(dev, "namespace", device->namespace);
             crm_xml_add(dev, "agent", device->agent);
+            if (action_specific_timeout) {
+                crm_xml_add_int(dev, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
+            }
             if(search.host == NULL) {
                 xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
                 g_hash_table_foreach(device->params, hash2field, attrs);
@@ -1238,6 +1270,14 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
     } else if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
         rc = stonith_device_action(request, &output);
 
+    } else if (crm_str_eq(op, STONITH_OP_TIMEOUT_UPDATE, TRUE)) {
+        const char *call_id = crm_element_value(request, F_STONITH_CALLID);
+        const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
+        int op_timeout = 0;
+
+        crm_element_value_int(request, F_STONITH_TIMEOUT, &op_timeout);
+        do_stonith_async_timeout_update(client_id, call_id, op_timeout);
+        return;
     } else if(is_reply && crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
         process_remote_stonith_query(request);
         return;
