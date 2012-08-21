@@ -27,6 +27,7 @@ typedef struct async_command_s {
     int pid;
     int stdout;
     int options;
+    int default_timeout;
     int timeout;
 
     char *op;
@@ -71,9 +72,13 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #define F_STONITH_TARGET        "st_target"
 #define F_STONITH_REMOTE        "st_remote_op"
 #define F_STONITH_RC            "st_rc"
+/*! Timeout period per a device execution */
 #define F_STONITH_TIMEOUT       "st_timeout"
+/*! Action specific timeout period returned in query of fencing devices. */
+#define F_STONITH_ACTION_TIMEOUT       "st_action_timeout"
 #define F_STONITH_CALLBACK_TOKEN    "st_async_id"
 #define F_STONITH_CLIENTNAME        "st_clientname"
+#define F_STONITH_CLIENTNODE        "st_clientnode"
 #define F_STONITH_NOTIFY_TYPE       "st_notify_type"
 #define F_STONITH_NOTIFY_ACTIVATE   "st_notify_activate"
 #define F_STONITH_NOTIFY_DEACTIVATE "st_notify_deactivate"
@@ -92,6 +97,10 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 
 #define T_STONITH_NG        "stonith-ng"
 #define T_STONITH_REPLY     "st-reply"
+/*! For async operations, an event from the server containing
+ * the total amount of time the server is allowing for the operation
+ * to take place is returned to the client. */
+#define T_STONITH_TIMEOUT_VALUE "st-async-timeout-value"
 #define T_STONITH_NOTIFY    "st_notify"
 
 #define STONITH_ATTR_ARGMAP    "pcmk_arg_map"
@@ -103,6 +112,7 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #define STONITH_ATTR_ACTION_OP   "action"
 
 #define STONITH_OP_EXEC        "st_execute"
+#define STONITH_OP_TIMEOUT_UPDATE        "st_timeout_update"
 #define STONITH_OP_QUERY       "st_query"
 #define STONITH_OP_FENCE       "st_fence"
 #define STONITH_OP_RELAY       "st_relay"

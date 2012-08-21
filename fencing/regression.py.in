@@ -127,6 +127,9 @@ class Test:
 		self.stonith_output = self.stonith_process.communicate()[1]
 		self.stonith_process = None
 
+		if self.verbose:
+			print self.stonith_output
+
 		self.stop_corosync()
 
 	def add_stonith_log_pattern(self, pattern):
@@ -172,6 +175,8 @@ class Test:
 			return 0
 
 		output = test.communicate()[0]
+		if self.verbose:
+			print output
 
 		if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
 			test.returncode = -2
@@ -338,7 +343,10 @@ class Tests:
 			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-R false2  -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-R false3 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 3", 194)
+			test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", 194)
+
+			if test_type["use_cpg"] == 1:
+				test.add_stonith_log_pattern("remote op timeout set to 6")
 
 			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -62")
@@ -351,7 +359,10 @@ class Tests:
 			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-F node3 -t 6")
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
+
+			if test_type["use_cpg"] == 1:
+				test.add_stonith_log_pattern("remote op timeout set to 6")
 
 		# simple topology test for one device
 		for test_type in test_types:
@@ -363,8 +374,9 @@ class Tests:
 			test.add_cmd("stonith_admin", "-R true  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
 
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true")
-			test.add_cmd("stonith_admin", "-F node3 -t 5")
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
 
+			test.add_stonith_log_pattern("remote op timeout set to 2")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
 
 		# test what happens when the first fencing level has multiple devices.
@@ -379,8 +391,9 @@ class Tests:
 
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false")
 			test.add_cmd("stonith_admin", "-r node3 -i 2 -v true")
-			test.add_cmd("stonith_admin", "-F node3 -t 5")
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
 
+			test.add_stonith_log_pattern("remote op timeout set to 4")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false' returned: -62")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
 
@@ -405,9 +418,9 @@ class Tests:
 			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true3")
 			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true4")
 
-			test.add_cmd("stonith_admin", "-F node3 -t 24")
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
 
-
+			test.add_stonith_log_pattern("remote op timeout set to 12")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -62")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
@@ -439,8 +452,9 @@ class Tests:
 			# Now remove level 2, verify none of the devices in level two are hit.
 			test.add_cmd("stonith_admin", "-d node3 -i 2")
 
-			test.add_cmd("stonith_admin", "-F node3 -t 5")
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
 
+			test.add_stonith_log_pattern("remote op timeout set to 8")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
 			test.add_stonith_negative_log_pattern("for host 'node3' with device 'false2' returned: -62")
 			test.add_stonith_negative_log_pattern("for host 'node3' with device 'false2' returned: -1001")
@@ -489,7 +503,7 @@ class Tests:
 					"Verify last fencing operation is returned.", test_type["use_cpg"])
 			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
 
-			test.add_cmd("stonith_admin", "-F node3 -t 5 -V")
+			test.add_cmd("stonith_admin", "-F node3 -t 2 -V")
 
 			test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
 

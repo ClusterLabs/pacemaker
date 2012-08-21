@@ -577,7 +577,7 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
                 stonith_api,
                 rc,
                 cmd->timeout / 1000,
-                FALSE,
+                0,
                 cmd,
                 "lrmd_stonith_callback",
                 lrmd_stonith_callback);
