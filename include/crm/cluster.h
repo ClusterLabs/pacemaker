@@ -41,32 +41,6 @@ extern unsigned long long crm_peer_seq;
 #define CRM_NODE_ACTIVE    CRM_NODE_MEMBER
 #define CRM_NODE_EVICTED   "evicted"
 
-enum crm_proc_flag {
-    crm_proc_none      = 0x00000001,
-    /* These values are sent over the network by the legacy plugin
-     * Therefor changing any of these values is going to break compatability
-     *
-     * So don't
-     */
-
-    /* 3 messaging types */
-    crm_proc_heartbeat = 0x01000000,
-    crm_proc_plugin    = 0x00000002,
-    crm_proc_cpg       = 0x04000000,
-
-    crm_proc_lrmd      = 0x00000010,
-    crm_proc_cib       = 0x00000100,
-    crm_proc_crmd      = 0x00000200,
-    crm_proc_attrd     = 0x00001000,
-
-    crm_proc_stonithd  = 0x00002000,
-    crm_proc_stonith_ng= 0x00100000,
-
-    crm_proc_pe        = 0x00010000,
-    crm_proc_te        = 0x00020000,
-
-    crm_proc_mgmtd     = 0x00040000,
-};
 /* *INDENT-ON* */
 
 typedef struct crm_peer_node_s {
@@ -85,58 +59,6 @@ typedef struct crm_peer_node_s {
     char *addr;   /* Only used by the legacy plugin */
     char *version;/* Unused */
 } crm_node_t;
-
-static inline const char *
-peer2text(enum crm_proc_flag proc)
-{
-    const char *text = "unknown";
-    if( proc == (crm_proc_cpg|crm_proc_crmd) ) {
-        return "peer";
-    }
-
-    switch (proc) {
-        case crm_proc_none:
-            text = "none";
-            break;
-        case crm_proc_plugin:
-            text = "ais";
-            break;
-        case crm_proc_heartbeat:
-            text = "heartbeat";
-            break;
-        case crm_proc_cib:
-            text = "cib";
-            break;
-        case crm_proc_crmd:
-            text = "crmd";
-            break;
-        case crm_proc_pe:
-            text = "pengine";
-            break;
-        case crm_proc_te:
-            text = "tengine";
-            break;
-        case crm_proc_lrmd:
-            text = "lrmd";
-            break;
-        case crm_proc_attrd:
-            text = "attrd";
-            break;
-        case crm_proc_stonithd:
-            text = "stonithd";
-            break;
-        case crm_proc_stonith_ng:
-            text = "stonith-ng";
-            break;
-        case crm_proc_mgmtd:
-            text = "mgmtd";
-            break;
-        case crm_proc_cpg:
-            text = "corosync-cpg";
-            break;
-    }
-    return text;
-}
 
 void crm_peer_init(void);
 void crm_peer_destroy(void);
