@@ -1254,7 +1254,6 @@ main(int argc, char **argv)
     xmlNode *cib_xml_copy = NULL;
 
     cib_t *cib_conn = NULL;
-    lrmd_t *lrmd_conn = NULL;
     int rc = pcmk_ok;
 
     int option_index = 0;
@@ -1268,8 +1267,6 @@ main(int argc, char **argv)
     if (argc < 2) {
         crm_help('?', EX_USAGE);
     }
-
-    lrmd_conn = lrmd_api_new();
 
     while (1) {
         flag = crm_get_option_long(argc, argv, &option_index, &longname);
@@ -1290,6 +1287,7 @@ main(int argc, char **argv)
                     const char *text = NULL;
                     lrmd_list_t *list = NULL;
                     lrmd_list_t *iter = NULL;
+                    lrmd_t *lrmd_conn = lrmd_api_new();
 
                     if(safe_str_eq("list-ocf-providers", longname) || safe_str_eq("list-ocf-alternatives", longname)) {
                         rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, optarg, &list);
@@ -1307,52 +1305,49 @@ main(int argc, char **argv)
                             printf("%s\n", iter->val);
                         }
                         lrmd_list_freeall(list);
-                        return 0;
 
+                    } else if(optarg) {
+                        fprintf(stderr, "No %s found for %s\n", text, optarg);
                     } else {
-                        if(optarg) {
-                            fprintf(stderr, "No %s found for %s\n", text, optarg);
-                        } else {
-                            fprintf(stderr, "No %s found\n", text);
-                        }
-                        return -1;
+                        fprintf(stderr, "No %s found\n", text);
                     }
+
+                    lrmd_api_delete(lrmd_conn);
+                    return rc;
 
                 } else if(safe_str_eq("show-metadata", longname)) {
                     char standard[512];
                     char provider[512];
                     char type[512];
                     char *metadata = NULL;
+                    lrmd_t *lrmd_conn = lrmd_api_new();
 
                     rc = sscanf(optarg, "%[^:]:%[^:]:%s", standard, provider, type);
                     if(rc == 3) {
                         rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard, provider, type, &metadata, 0);
-                        if(metadata) {
-                            printf("%s\n", metadata);
-                            return 0;
-                        }
-                        fprintf(stderr, "Metadata query for %s failed: %d\n", optarg, rc);
-                        return rc;
 
                     } else if(rc == 2) {
                         rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard, NULL, provider, &metadata, 0);
-                        if(metadata) {
-                            printf("%s\n", metadata);
-                            return 0;
-                        }
-                        fprintf(stderr, "Metadata query for %s failed: %d\n", optarg, rc);
-                        return rc;
 
                     } else if(rc < 2) {
                         fprintf(stderr, "Please specify standard:type or standard:provider:type, not %s\n", optarg);
-                        return -1;
+                        rc = -EINVAL;
                     }
+
+                    if(metadata) {
+                        printf("%s\n", metadata);
+                    } else {
+                        fprintf(stderr, "Metadata query for %s failed: %d\n", optarg, rc);
+                    }
+                    lrmd_api_delete(lrmd_conn);
+                    return rc;
 
                 } else if(safe_str_eq("list-agents", longname)) {
                     lrmd_list_t *list = NULL;
                     lrmd_list_t *iter = NULL;
                     char standard[512];
                     char provider[512];
+                    lrmd_t *lrmd_conn = lrmd_api_new();
 
                     rc = sscanf(optarg, "%[^:]:%s", standard, provider);
                     if(rc == 1) {
@@ -1376,6 +1371,7 @@ main(int argc, char **argv)
                         fprintf(stderr, "No agents found for standard=%s, provider=%s\n", standard, provider);
                         rc = -1;
                     }
+                    lrmd_api_delete(lrmd_conn);
                     return rc;
 
                 } else {
