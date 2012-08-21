@@ -547,17 +547,8 @@ do_dc_release(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (action & A_DC_RELEASE) {
-        GListPtr gIter = NULL;
         crm_debug("Releasing the role of DC");
         clear_bit(fsa_input_register, R_THE_DC);
-
-        for (gIter = stonith_cleanup_list; gIter != NULL; gIter = gIter->next) {
-            char *target = gIter->data;
-            crm_info("Purging %s from stonith cleanup list", target);
-            free(target);
-        }
-        g_list_free(stonith_cleanup_list);
-        stonith_cleanup_list = NULL;
 
     } else if (action & A_DC_RELEASED) {
         crm_info("DC role released");
