@@ -78,8 +78,6 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
-int local_id = 0;
-
 #if SUPPORT_HEARTBEAT
 #  include <ocf/oc_event.h>
 #  include <ocf/oc_membership.h>
@@ -389,9 +387,9 @@ crm_add_member(gpointer key, gpointer value, gpointer user_data)
 }
 
 static gboolean
-ais_membership_dispatch(AIS_Message * wrapper, char *data, int sender)
+ais_membership_dispatch(int kind, const char *from, const char *data)
 {
-    switch (wrapper->header.id) {
+    switch (kind) {
         case crm_class_members:
         case crm_class_notify:
         case crm_class_quorum:
@@ -626,11 +624,13 @@ try_corosync(int command, enum cluster_type_e stack)
 static gboolean
 try_openais(int command, enum cluster_type_e stack)
 {
-    if (init_ais_connection_once
-        (ais_membership_dispatch, ais_membership_destroy, NULL, NULL, &local_id)) {
+    static crm_cluster_t cluster;
+    cluster.destroy = ais_membership_destroy;
+    cluster.cs_dispatch = ais_membership_dispatch;
+    
+    if (init_cs_connection_once(&cluster)) {
 
         GMainLoop *amainloop = NULL;
-
         switch (command) {
             case 'R':
                 send_ais_text(crm_class_rmpeer, target_uname, TRUE, NULL, crm_msg_ais);
@@ -652,7 +652,7 @@ try_openais(int command, enum cluster_type_e stack)
                 break;
 
             case 'i':
-                printf("%u\n", local_id);
+                printf("%u\n", cluster.nodeid);
                 exit(0);
 
             default:

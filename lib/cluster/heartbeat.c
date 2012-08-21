@@ -475,27 +475,25 @@ ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
 }
 
 gboolean
-register_heartbeat_conn(ll_cluster_t * hb_cluster, char **uuid, char **uname,
-                        void (*hb_message) (HA_Message * msg, void *private_data),
-                        void (*hb_destroy) (gpointer user_data))
+register_heartbeat_conn(crm_cluster_t *cluster)
 {
     const char *const_uuid = NULL;
     const char *const_uname = NULL;
 
     crm_debug("Signing in with Heartbeat");
-    if (hb_cluster->llc_ops->signon(hb_cluster, crm_system_name) != HA_OK) {
-        crm_err("Cannot sign on with heartbeat: %s", hb_cluster->llc_ops->errmsg(hb_cluster));
+    if (cluster->hb_conn->llc_ops->signon(cluster->hb_conn, crm_system_name) != HA_OK) {
+        crm_err("Cannot sign on with heartbeat: %s", cluster->hb_conn->llc_ops->errmsg(cluster->hb_conn));
         return FALSE;
     }
 
     if (HA_OK !=
-        hb_cluster->llc_ops->set_msg_callback(hb_cluster, crm_system_name, hb_message,
-                                              hb_cluster)) {
+        cluster->hb_conn->llc_ops->set_msg_callback(
+            cluster->hb_conn, crm_system_name, cluster->hb_dispatch, cluster->hb_conn)) {
 
-        crm_err("Cannot set msg callback: %s", hb_cluster->llc_ops->errmsg(hb_cluster));
+        crm_err("Cannot set msg callback: %s", cluster->hb_conn->llc_ops->errmsg(cluster->hb_conn));
         return FALSE;
-    }
-    {
+
+    } else {
         void *handle = NULL;
         GLLclusterSource *(*g_main_add_cluster) (int priority, ll_cluster_t * api,
                                                  gboolean can_recurse,
@@ -504,12 +502,12 @@ register_heartbeat_conn(ll_cluster_t * hb_cluster, char **uuid, char **uname,
                                                  gpointer userdata, GDestroyNotify notify) =
             find_library_function(&handle, HEARTBEAT_LIBRARY, "G_main_add_ll_cluster", 1);
 
-        (*g_main_add_cluster) (G_PRIORITY_HIGH, hb_cluster,
-                               FALSE, ha_msg_dispatch, hb_cluster, hb_destroy);
+        (*g_main_add_cluster) (G_PRIORITY_HIGH, cluster->hb_conn,
+                               FALSE, ha_msg_dispatch, cluster->hb_conn, cluster->destroy);
         dlclose(handle);
     }
 
-    const_uname = hb_cluster->llc_ops->get_mynodeid(hb_cluster);
+    const_uname = cluster->hb_conn->llc_ops->get_mynodeid(cluster->hb_conn);
     CRM_CHECK(const_uname != NULL, return FALSE);
 
     const_uuid = get_uuid(const_uname);
@@ -518,12 +516,8 @@ register_heartbeat_conn(ll_cluster_t * hb_cluster, char **uuid, char **uname,
     crm_info("Hostname: %s", const_uname);
     crm_info("UUID: %s", const_uuid);
 
-    if (uname) {
-        *uname = strdup(const_uname);
-    }
-    if (uuid) {
-        *uuid = strdup(const_uuid);
-    }
+    cluster->uname = strdup(const_uname);
+    cluster->uuid = strdup(const_uuid);
 
     return TRUE;
 }

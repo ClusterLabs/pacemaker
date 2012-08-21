@@ -198,24 +198,15 @@ get_node_uuid(uint32_t id, const char *uname)
 }
 
 gboolean
-crm_cluster_connect(char **our_uname, char **our_uuid, void *dispatch, void *destroy,
-#if SUPPORT_HEARTBEAT
-                    ll_cluster_t ** hb_conn
-#else
-                    void **hb_conn
-#endif
-    )
+crm_cluster_connect(crm_cluster_t *cluster)
 {
     enum cluster_type_e type = get_cluster_type();
 
     crm_notice("Connecting to cluster infrastructure: %s", name_for_cluster_type(type));
-    if (hb_conn != NULL) {
-        *hb_conn = NULL;
-    }
 #if SUPPORT_COROSYNC
     if (is_openais_cluster()) {
         crm_peer_init();
-        return init_ais_connection(dispatch, destroy, our_uuid, our_uname, NULL);
+        return init_cs_connection(cluster);
     }
 #endif
 
@@ -223,33 +214,30 @@ crm_cluster_connect(char **our_uname, char **our_uuid, void *dispatch, void *des
     if (is_heartbeat_cluster()) {
         int rv;
 
-        CRM_ASSERT(hb_conn != NULL);
+        CRM_ASSERT(cluster->hb_conn != NULL);
         /* coverity[var_deref_op] False positive */
-        if (*hb_conn == NULL) {
+        if (cluster->hb_conn == NULL) {
             /* No object passed in, create a new one. */
             ll_cluster_t *(*new_cluster) (const char *llctype) =
                 find_library_function(&hb_library, HEARTBEAT_LIBRARY, "ll_cluster_new", 1);
 
-            *hb_conn = (*new_cluster) ("heartbeat");
+            cluster->hb_conn = (*new_cluster) ("heartbeat");
             /* dlclose(handle); */
 
         } else {
             /* Object passed in. Disconnect first, then reconnect below. */
-            ll_cluster_t *conn = *hb_conn;
-
-            conn->llc_ops->signoff(conn, FALSE);
+            cluster->hb_conn->llc_ops->signoff(cluster->hb_conn, FALSE);
         }
 
         /* make sure we are disconnected first with the old object, if any. */
-        if (heartbeat_cluster && heartbeat_cluster != *hb_conn) {
+        if (heartbeat_cluster && heartbeat_cluster != cluster->hb_conn) {
             heartbeat_cluster->llc_ops->signoff(heartbeat_cluster, FALSE);
         }
 
-        CRM_ASSERT(*hb_conn != NULL);
-        heartbeat_cluster = *hb_conn;
+        CRM_ASSERT(cluster->hb_conn != NULL);
+        heartbeat_cluster = cluster->hb_conn;
 
-        rv = register_heartbeat_conn(heartbeat_cluster, our_uuid, our_uname, dispatch, destroy);
-
+        rv = register_heartbeat_conn(cluster);
         if (rv) {
             /* we'll benefit from a bigger queue length on heartbeat side.
              * Otherwise, if peers send messages faster than we can consume
@@ -257,8 +245,8 @@ crm_cluster_connect(char **our_uname, char **our_uuid, void *dispatch, void *des
              * it's (small) default queue fills up :(
              * If we fail to adjust the sendq length, that's not yet fatal, though.
              */
-            if (HA_OK != (*hb_conn)->llc_ops->set_sendq_len(*hb_conn, 1024)) {
-                crm_warn("Cannot set sendq length: %s", (*hb_conn)->llc_ops->errmsg(*hb_conn));
+            if (HA_OK != heartbeat_cluster->llc_ops->set_sendq_len(heartbeat_cluster, 1024)) {
+                crm_warn("Cannot set sendq length: %s", heartbeat_cluster->llc_ops->errmsg(heartbeat_cluster));
             }
         }
         return rv;

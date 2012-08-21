@@ -358,14 +358,14 @@ attrd_ha_callback(HA_Message * msg, void *private_data)
 
 #if SUPPORT_COROSYNC
 static gboolean
-attrd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
+attrd_ais_dispatch(int kind, const char *from, const char *data)
 {
     xmlNode *xml = NULL;
 
-    if (wrapper->header.id == crm_class_cluster) {
+    if (kind == crm_class_cluster) {
         xml = string2xml(data);
         if (xml == NULL) {
-            crm_err("Bad message received: %d:'%.120s'", wrapper->id, data);
+            crm_err("Bad message received: '%.120s'", data);
         }
     }
 
@@ -375,15 +375,15 @@ attrd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
         const char *host = crm_element_value(xml, F_ATTRD_HOST);
         const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
-        crm_xml_add_int(xml, F_SEQ, wrapper->id);
-        crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
+        /* crm_xml_add_int(xml, F_SEQ, wrapper->id); */
+        crm_xml_add(xml, F_ORIG, from);
 
         if (host != NULL && safe_str_eq(host, attrd_uname)) {
-            crm_notice("Update relayed from %s", wrapper->sender.uname);
+            crm_notice("Update relayed from %s", from);
             attrd_local_callback(xml);
 
-        } else if (ignore == NULL || safe_str_neq(wrapper->sender.uname, attrd_uname)) {
-            crm_trace("%s message from %s", op, wrapper->sender.uname);
+        } else if (ignore == NULL || safe_str_neq(from, attrd_uname)) {
+            crm_trace("%s message from %s", op, from);
             hash_entry = find_hash_entry(xml);
             stop_attrd_timer(hash_entry);
             attrd_perform_update(hash_entry);
@@ -530,6 +530,7 @@ main(int argc, char **argv)
 {
     int flag = 0;
     int argerr = 0;
+    crm_cluster_t cluster;
     gboolean was_err = FALSE;
     qb_ipcs_connection_t *c = NULL;
     qb_ipcs_service_t *ipcs = NULL;
@@ -564,29 +565,31 @@ main(int argc, char **argv)
     crm_info("Starting up");
 
     if (was_err == FALSE) {
-        void *destroy = NULL;
-        void *dispatch = NULL;
-        void *data = NULL;
 
 #if SUPPORT_COROSYNC
         if (is_openais_cluster()) {
-            destroy = attrd_ais_destroy;
-            dispatch = attrd_ais_dispatch;
+            cluster.destroy = attrd_ais_destroy;
+            cluster.cs_dispatch = attrd_ais_dispatch;
         }
 #endif
 
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {
-            data = &attrd_cluster_conn;
-            dispatch = attrd_ha_callback;
-            destroy = attrd_ha_connection_destroy;
+            cluster.hb_dispatch = attrd_ha_callback;
+            cluster.destroy = attrd_ha_connection_destroy;
         }
 #endif
 
-        if (FALSE == crm_cluster_connect(&attrd_uname, &attrd_uuid, dispatch, destroy, data)) {
+        if (FALSE == crm_cluster_connect(&cluster)) {
             crm_err("HA Signon failed");
             was_err = TRUE;
         }
+
+        attrd_uname = cluster.uname;
+        attrd_uuid = cluster.uuid;
+#if SUPPORT_HEARTBEAT
+        attrd_cluster_conn = cluster.hb_conn;
+#endif
     }
 
     crm_info("Cluster connection active");

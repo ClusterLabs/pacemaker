@@ -41,7 +41,7 @@
 
 qb_ipcs_service_t *ipcs = NULL;
 
-extern gboolean crm_connect_corosync(void);
+extern gboolean crm_connect_corosync(crm_cluster_t *cluster);
 extern void crmd_ha_connection_destroy(gpointer user_data);
 
 void crm_shutdown(int nsig);
@@ -60,12 +60,13 @@ do_ha_control(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     gboolean registered = FALSE;
+    static crm_cluster_t cluster;
 
     if (action & A_HA_DISCONNECT) {
         if (is_openais_cluster()) {
             crm_peer_destroy();
 #if SUPPORT_COROSYNC
-            terminate_ais_connection();
+            terminate_cs_connection();
 #endif
             crm_info("Disconnected from OpenAIS");
 
@@ -83,17 +84,16 @@ do_ha_control(long long action,
 
         if (is_openais_cluster()) {
 #if SUPPORT_COROSYNC
-            registered = crm_connect_corosync();
+            registered = crm_connect_corosync(&cluster);
 #endif
         } else if (is_heartbeat_cluster()) {
 #if SUPPORT_HEARTBEAT
-            registered =
-                crm_cluster_connect(&fsa_our_uname, &fsa_our_uuid, crmd_ha_msg_callback,
-                                    crmd_ha_connection_destroy, &fsa_cluster_conn);
-#endif
-        }
-#if SUPPORT_HEARTBEAT
-        if (is_heartbeat_cluster()) {
+            cluster.destroy = crmd_ha_connection_destroy;
+            cluster.hb_dispatch = crmd_ha_msg_callback;
+
+            registered = crm_cluster_connect(&cluster);
+            fsa_cluster_conn = cluster.hb_conn;
+
             crm_trace("Be informed of Node Status changes");
             if (registered &&
                 fsa_cluster_conn->llc_ops->set_nstatus_callback(fsa_cluster_conn,
@@ -121,8 +121,10 @@ do_ha_control(long long action,
                 fsa_cluster_conn->llc_ops->client_status(fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD,
                                                          -1);
             }
-        }
 #endif
+        }
+        fsa_our_uname = cluster.uname;
+        fsa_our_uuid = cluster.uuid;
 
         if (registered == FALSE) {
             set_bit(fsa_input_register, R_HA_DISCONNECTED);

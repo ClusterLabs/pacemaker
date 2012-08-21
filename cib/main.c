@@ -66,6 +66,8 @@ oc_ev_t *cib_ev_token;
 ll_cluster_t *hb_conn = NULL;
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t, int);
 gboolean cib_register_ha(ll_cluster_t * hb_cluster, const char *client_name);
+#else
+void *hb_conn = NULL;
 #endif
 
 extern void terminate_cib(const char *caller, gboolean fast);
@@ -382,17 +384,17 @@ ccm_connect(void)
 
 #if SUPPORT_COROSYNC
 static gboolean
-cib_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
+cib_ais_dispatch(int kind, const char *from, const char *data)
 {
     xmlNode *xml = NULL;
 
-    if (wrapper->header.id == crm_class_cluster) {
+    if (kind == crm_class_cluster) {
         xml = string2xml(data);
         if (xml == NULL) {
             goto bail;
         }
-        crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
-        crm_xml_add_int(xml, F_SEQ, wrapper->id);
+        crm_xml_add(xml, F_ORIG, from);
+        /* crm_xml_add_int(xml, F_SEQ, wrapper->id); */
         cib_peer_callback(xml, NULL);
     }
 
@@ -470,6 +472,20 @@ cib_ha_connection_destroy(gpointer user_data)
 int
 cib_init(void)
 {
+    static crm_cluster_t cluster;
+
+    if (is_openais_cluster()) {
+#if SUPPORT_COROSYNC
+        cluster.destroy = cib_ais_destroy;
+        cluster.cs_dispatch = cib_ais_dispatch;
+#endif
+    } else if(is_heartbeat_cluster()) {
+#if SUPPORT_HEARTBEAT
+        cluster.hb_dispatch = cib_ha_peer_callback;
+        cluster.destroy = cib_ha_connection_destroy;
+#endif
+    }
+
     config_hash =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
@@ -479,31 +495,11 @@ cib_init(void)
     }
 
     if (stand_alone == FALSE) {
-        void *dispatch = NULL;
-        void *destroy = NULL;
-
-        if (is_openais_cluster()) {
-#if SUPPORT_COROSYNC
-            destroy = cib_ais_destroy;
-            dispatch = cib_ais_dispatch;
-#endif
-        } else if(is_heartbeat_cluster()) {
-#if SUPPORT_HEARTBEAT
-            dispatch = cib_ha_peer_callback;
-            destroy = cib_ha_connection_destroy;
-#endif
-        }
-
-        if (crm_cluster_connect(&cib_our_uname, NULL, dispatch, destroy,
-#if SUPPORT_HEARTBEAT
-                                &hb_conn
-#else
-                                NULL
-#endif
-            ) == FALSE) {
+        if (crm_cluster_connect(&cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
             exit(100);
         }
+        cib_our_uname = cluster.uname;
         if (is_openais_cluster()) {
             crm_set_status_callback(&cib_peer_update_callback);
         }
@@ -512,6 +508,7 @@ cib_init(void)
 
             gboolean was_error = FALSE;
 
+            hb_conn = cluster.hb_conn;
             if (was_error == FALSE) {
                 if (HA_OK !=
                     hb_conn->llc_ops->set_cstatus_callback(hb_conn, cib_client_status_callback,

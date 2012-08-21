@@ -57,10 +57,6 @@ gboolean stonith_shutdown_flag = FALSE;
 
 qb_ipcs_service_t *ipcs = NULL;
 
-#if SUPPORT_HEARTBEAT
-ll_cluster_t *hb_conn = NULL;
-#endif
-
 static void stonith_shutdown(int nsig);
 static void stonith_cleanup(void);
 
@@ -243,18 +239,17 @@ stonith_peer_hb_destroy(gpointer user_data)
 
 
 #if SUPPORT_COROSYNC
-static gboolean stonith_peer_ais_callback(
-    AIS_Message *wrapper, char *data, int sender)
+static gboolean stonith_peer_ais_callback(int kind, const char *from, const char *data)
 {
     xmlNode *xml = NULL;
 
-    if(wrapper->header.id == crm_class_cluster) {
+    if(kind == crm_class_cluster) {
         xml = string2xml(data);
         if(xml == NULL) {
             goto bail;
         }
-        crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
-        crm_xml_add_int(xml, F_SEQ, wrapper->id);
+        crm_xml_add(xml, F_ORIG, from);
+        /* crm_xml_add_int(xml, F_SEQ, wrapper->id); */
         stonith_peer_callback(xml, NULL);
     }
 
@@ -709,6 +704,7 @@ main(int argc, char ** argv)
     int lpc = 0;
     int argerr = 0;
     int option_index = 0;
+    crm_cluster_t cluster;
     const char *actions[] = { "reboot", "off", "list", "monitor", "status" };
 
     crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
@@ -816,28 +812,19 @@ main(int argc, char ** argv)
     client_list = g_hash_table_new(crm_str_hash, g_str_equal);
 
     if(stand_alone == FALSE) {
-        void *dispatch = NULL;
-        void *destroy = NULL;
-
 #if SUPPORT_HEARTBEAT
-        dispatch = stonith_peer_hb_callback;
-        destroy = stonith_peer_hb_destroy;
+        cluster.hb_dispatch = stonith_peer_hb_callback;
+        cluster.destroy = stonith_peer_hb_destroy;
 #endif
 
         if(is_openais_cluster()) {
 #if SUPPORT_COROSYNC
-            destroy = stonith_peer_ais_destroy;
-            dispatch = stonith_peer_ais_callback;
+            cluster.destroy = stonith_peer_ais_destroy;
+            cluster.cs_dispatch = stonith_peer_ais_callback;
 #endif
         }
 
-        if(crm_cluster_connect(&stonith_our_uname, NULL, dispatch, destroy,
-#if SUPPORT_HEARTBEAT
-                   &hb_conn
-#else
-                   NULL
-#endif
-            ) == FALSE) {
+        if(crm_cluster_connect(&cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
             exit(100);
         }
@@ -878,8 +865,8 @@ main(int argc, char ** argv)
     stonith_cleanup();
 
 #if SUPPORT_HEARTBEAT
-    if(hb_conn) {
-        hb_conn->llc_ops->delete(hb_conn);
+    if(cluster.hb_conn) {
+        cluster.hb_conn->llc_ops->delete(cluster.hb_conn);
     }
 #endif
 

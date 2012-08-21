@@ -42,7 +42,7 @@ extern void crmd_ha_connection_destroy(gpointer user_data);
 #if SUPPORT_COROSYNC
 
 static gboolean
-crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
+crmd_ais_dispatch(int kind, const char *from, const char *data)
 {
     int seq = 0;
     xmlNode *xml = NULL;
@@ -52,11 +52,11 @@ crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
 
     xml = string2xml(data);
     if (xml == NULL) {
-        crm_err("Could not parse message content (%d): %.100s", wrapper->header.id, data);
+        crm_err("Could not parse message content (%d): %.100s", kind, data);
         return TRUE;
     }
 
-    switch (wrapper->header.id) {
+    switch (kind) {
         case crm_class_members:
             seq_s = crm_element_value(xml, "id");
             seq = crm_int_helper(seq_s, NULL);
@@ -87,8 +87,8 @@ crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
             break;
 
         case crm_class_cluster:
-            crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
-            crm_xml_add_int(xml, F_SEQ, wrapper->id);
+            crm_xml_add(xml, F_ORIG, from);
+            /* crm_xml_add_int(xml, F_SEQ, wrapper->id); Fake? */
 
             if(is_heartbeat_cluster()) { 
                 flag = crm_proc_heartbeat;
@@ -97,7 +97,7 @@ crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
                 flag = crm_proc_plugin;
             }
 
-            peer = crm_get_peer(0, wrapper->sender.uname);
+            peer = crm_get_peer(0, from);
             if(is_not_set(peer->processes, flag)) {
                 /* If we can still talk to our peer process on that node,
                  * then its also part of the corosync membership
@@ -114,11 +114,11 @@ crmd_ais_dispatch(AIS_Message * wrapper, char *data, int sender)
 
         case crm_class_notify:
         case crm_class_nodeid:
-            crm_err("Unexpected message class (%d): %.100s", wrapper->header.id, data);
+            crm_err("Unexpected message class (%d): %.100s", kind, data);
             break;
 
         default:
-            crm_err("Invalid message class (%d): %.100s", wrapper->header.id, data);
+            crm_err("Invalid message class (%d): %.100s", kind, data);
     }
 
     free_xml(xml);
@@ -171,17 +171,19 @@ crmd_cman_destroy(gpointer user_data)
 }
 #endif
 
-extern gboolean crm_connect_corosync(void);
+extern gboolean crm_connect_corosync(crm_cluster_t *cluster);
 
 gboolean
-crm_connect_corosync(void)
+crm_connect_corosync(crm_cluster_t *cluster)
 {
     gboolean rc = FALSE;
 
     if (is_openais_cluster()) {
         crm_set_status_callback(&peer_update_callback);
-        rc = crm_cluster_connect(&fsa_our_uname, &fsa_our_uuid, crmd_ais_dispatch, crmd_ais_destroy,
-                                 NULL);
+        cluster->cs_dispatch = crmd_ais_dispatch;
+        cluster->destroy = crmd_ais_destroy;
+
+        rc = crm_cluster_connect(cluster);
     }
 
     if (rc && is_corosync_cluster()) {

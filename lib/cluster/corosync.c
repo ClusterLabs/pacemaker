@@ -449,7 +449,7 @@ send_ais_message(xmlNode * msg, gboolean local, const char *node, enum crm_ais_m
 }
 
 void
-terminate_ais_connection(void)
+terminate_cs_connection(void)
 {
     crm_notice("Disconnecting from Corosync");
 
@@ -477,7 +477,7 @@ int ais_membership_timer = 0;
 gboolean ais_membership_force = FALSE;
 
 static gboolean
-ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char *, int))
+ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (int kind, const char *from, const char *data))
 {
     char *data = NULL;
     char *uncompressed = NULL;
@@ -540,7 +540,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
 
     crm_trace("Payload: %s", data);
     if (dispatch != NULL) {
-        dispatch(msg, data, 0);
+        dispatch(msg->header.id, msg->sender.uname, data);
     }
 
   done:
@@ -558,7 +558,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (AIS_Message *, char
     goto done;
 }
 
-gboolean(*pcmk_cpg_dispatch_fn) (AIS_Message *, char *, int) = NULL;
+gboolean(*pcmk_cpg_dispatch_fn) (int kind, const char *from, const char *data) = NULL;
 
 static int
 pcmk_cpg_dispatch(gpointer user_data)
@@ -655,7 +655,7 @@ cpg_callbacks_t cpg_callbacks = {
 };
 
 static gboolean
-init_cpg_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*destroy) (gpointer),
+init_cpg_connection(gboolean(*dispatch) (int kind, const char *from, const char *data), void (*destroy) (gpointer),
                     uint32_t * nodeid)
 {
     int rc = -1;
@@ -857,13 +857,12 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
 }
 
 gboolean
-init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*destroy) (gpointer),
-                    char **our_uuid, char **our_uname, int *nodeid)
+init_cs_connection(crm_cluster_t *cluster)
 {
     int retries = 0;
 
     while (retries < 5) {
-        int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
+        int rc = init_cs_connection_once(cluster);
         retries++;
 
         switch (rc) {
@@ -884,8 +883,7 @@ init_ais_connection(gboolean(*dispatch) (AIS_Message *, char *, int), void (*des
 }
 
 gboolean
-init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
-                         void (*destroy) (gpointer), char **our_uuid, char **our_uname, int *nodeid)
+init_cs_connection_once(crm_cluster_t *cluster)
 {
     struct utsname res;
     enum cluster_type_e stack = get_cluster_type();
@@ -898,7 +896,7 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
         return FALSE;
     }
     
-    if (init_cpg_connection(dispatch, destroy, &pcmk_nodeid) == FALSE) {
+    if (init_cpg_connection(cluster->cs_dispatch, cluster->destroy, &pcmk_nodeid) == FALSE) {
         return FALSE;
     } else if (uname(&res) < 0) {
         crm_perror(LOG_ERR, "Could not determin the current host");
@@ -918,17 +916,9 @@ init_ais_connection_once(gboolean(*dispatch) (AIS_Message *, char *, int),
         crm_get_peer(pcmk_nodeid, pcmk_uname);
     }
 
-    if (our_uuid != NULL) {
-        *our_uuid = get_corosync_uuid(pcmk_nodeid, pcmk_uname);
-    }
-
-    if (our_uname != NULL) {
-        *our_uname = strdup(pcmk_uname);
-    }
-
-    if (nodeid != NULL) {
-        *nodeid = pcmk_nodeid;
-    }
+    cluster->uuid = get_corosync_uuid(pcmk_nodeid, pcmk_uname);
+    cluster->uname = strdup(pcmk_uname);
+    cluster->nodeid = pcmk_nodeid;
 
     return TRUE;
 }

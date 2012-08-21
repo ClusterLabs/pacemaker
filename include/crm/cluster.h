@@ -144,14 +144,23 @@ char *get_corosync_uuid(uint32_t id, const char *uname);
 const char *get_node_uuid(uint32_t id, const char *uname);
 int get_corosync_id(int id, const char *uuid);
 
-gboolean crm_cluster_connect(char **our_uname, char **our_uuid, void *dispatch,
-                                    void *destroy,
-#  if SUPPORT_HEARTBEAT
-                                    ll_cluster_t ** hb_conn
-#  else
-                                    void **unused
-#  endif
-    );
+typedef struct crm_cluster_s
+{
+        char *uuid;
+        char *uname;
+        uint32_t nodeid;
+
+#if SUPPORT_HEARTBEAT
+        ll_cluster_t *hb_conn;
+        void (*hb_dispatch)(HA_Message *msg, void *private);
+#endif
+
+        gboolean (*cs_dispatch) (int kind, const char *from, const char *data);
+        void (*destroy) (gpointer);
+
+} crm_cluster_t;
+
+gboolean crm_cluster_connect(crm_cluster_t *cluster);
 
 enum crm_ais_msg_types;
 gboolean send_cluster_message(const char *node, enum crm_ais_msg_types service,
