@@ -543,18 +543,14 @@ read_config(void)
         local_handle = config_find_next(config, "service", top_handle);
 
         while (local_handle) {
-            free(value);
             get_config_opt(config, local_handle, "name", &value, NULL);
             if (safe_str_eq("pacemaker", value)) {
-                free(value);
                 get_config_opt(config, local_handle, "ver", &value, "0");
                 if (safe_str_eq(value, "1")) {
-                    free(value);
                     get_config_opt(config, local_handle, "use_logd", &value, "no");
                     setenv("HA_use_logd", value, 1);
                     setenv("HA_LOGD", value, 1);
 
-                    free(value);
                     get_config_opt(config, local_handle, "use_mgmtd", &value, "no");
                     enable_mgmtd(crm_is_true(value));
 
