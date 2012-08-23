@@ -34,6 +34,15 @@ GMainLoop *mainloop = NULL;
 qb_ipcs_service_t *ipcs = NULL;
 stonith_t *stonith_api = NULL;
 
+
+static void
+stonith_connection_destroy_cb(stonith_t * st, stonith_event_t *e)
+{
+    stonith_api->state = stonith_disconnected;
+    crm_err("LRMD lost STONITH connection");
+    stonith_connection_failed();
+}
+
 stonith_t *
 get_stonith_connection(void)
 {
@@ -50,6 +59,9 @@ get_stonith_connection(void)
         do {
             rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL);
             if (rc == pcmk_ok) {
+                stonith_api->cmds->register_notification(stonith_api,
+                    T_STONITH_NOTIFY_DISCONNECT,
+                    stonith_connection_destroy_cb);
                 break;
             }
             sleep(1);
