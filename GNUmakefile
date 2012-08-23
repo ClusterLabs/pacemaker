@@ -99,7 +99,6 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	sed -i.sed s:libtool-ltdl-devel::g $@
 	sed -i.sed s:publican::g $@
 	sed -i.sed s:byacc::g $@
-	sed -i.sed s:libqb-devel::g $@
 	sed -i.sed s:without\ cman:with\ cman:g $@
 	sed -i.sed s:.*pacemaker.service.*::g $@
 	sed -i.sed s:global\ cs_major.*:global\ cs_major\ 1:g $@
