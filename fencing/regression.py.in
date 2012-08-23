@@ -321,8 +321,35 @@ class Tests:
 		if self.verbose:
 			verbose_arg = "-V"
 
-		test = self.new_test("api_sanity_test", "Sanity test client api.")
+		test = self.new_test("standalone_low_level_api_test", "Sanity test client api in standalone mode.")
 		test.add_cmd("@CRM_DAEMON_DIR@/stonith-test", "-t %s" % (verbose_arg))
+
+		test = self.new_test("cpg_low_level_api_test", "Sanity test client api using mainloop and cpg.", 1)
+		test.add_cmd("@CRM_DAEMON_DIR@/stonith-test", "-m %s" % (verbose_arg))
+
+	def build_custom_timeout_tests(self):
+		# custom timeout without topology
+		test = self.new_test("cpg_custom_timeout_1",
+				"Verify per device timeouts work as expected without using topology.", 1)
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=1\"")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=4\"")
+		test.add_cmd("stonith_admin", "-F node3 -t 2")
+		# timeout is 2+1+4 = 7
+		test.add_stonith_log_pattern("remote op timeout set to 7")
+
+		# custom timeout _WITH_ topology
+		test = self.new_test("cpg_custom_timeout_2",
+				"Verify per device timeouts work as expected _WITH_ topology.", 1)
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=1\"")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=4000\"")
+		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
+		test.add_cmd("stonith_admin", "-r node3 -i 2 -v true1")
+		test.add_cmd("stonith_admin", "-r node3 -i 3 -v false2")
+		test.add_cmd("stonith_admin", "-F node3 -t 2")
+		# timeout is 2+1+4000 = 4003
+		test.add_stonith_log_pattern("remote op timeout set to 4003")
 
 	def build_standalone_tests(self):
 		test_types = [
@@ -558,6 +585,7 @@ def main(argv):
 
 	tests = Tests(o.options['verbose'])
 	tests.build_standalone_tests()
+	tests.build_custom_timeout_tests()
 	tests.build_api_sanity_tests()
 
 	os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
