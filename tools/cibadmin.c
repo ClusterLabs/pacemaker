@@ -156,7 +156,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', " CRM shell, crm(8), crm_shadow(8)"},
 
     /* Legacy options */
-    {"host",	     0, 0, 'h', NULL, 1},
+    {"host",	     1, 0, 'h', NULL, 1},
     {"force-quorum", 0, 0, 'f', NULL, 1},
     {"obj_type",     1, 0, 'o', NULL, 1},
     {F_CRM_DATA,     1, 0, 'X', NULL, 1},
