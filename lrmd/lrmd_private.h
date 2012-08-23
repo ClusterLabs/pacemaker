@@ -65,10 +65,17 @@ void free_rsc(gpointer data);
 
 void lrmd_shutdown(int nsig);
 
-/*
+/*!
  * \brief Don't worry about freeing this connection. It is 
  *        taken care of after mainloop exits by the main() function.
  */
 stonith_t *get_stonith_connection(void);
+
+/*!
+ * \brief This is a callback that tells the lrmd
+ * the current stonith connection has gone away. This allows
+ * us to timeout any pending stonith commands
+ */
+void stonith_connection_failed(void);
 
 #endif
