@@ -463,6 +463,7 @@ main(int argc, char **argv)
     }
   done:
     crm_xml_cleanup();
+    qb_log_fini();
     free(shadow_file);
     free(shadow);
     return rc;

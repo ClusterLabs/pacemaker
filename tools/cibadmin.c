@@ -337,7 +337,7 @@ main(int argc, char **argv)
 
                 admin_input_xml = dump_xml_formatted(output);
                 fprintf(stdout, "%s\n", crm_str(admin_input_xml));
-                exit(0);
+                goto bail;
                 break;
             default:
                 printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
@@ -367,7 +367,8 @@ main(int argc, char **argv)
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
         fflush(stderr);
-        exit(1);
+        exit_code = -EINVAL;
+        goto bail;
     }
 
     if (admin_input_file != NULL) {
@@ -388,7 +389,8 @@ main(int argc, char **argv)
 
     } else if (source) {
         fprintf(stderr, "Couldn't parse input from %s.\n", source);
-        return 1;
+        exit_code = -EINVAL;
+        goto bail;
     }
 
     if (safe_str_eq(cib_action, "md5-sum")) {
@@ -396,14 +398,15 @@ main(int argc, char **argv)
 
         if (input == NULL) {
             fprintf(stderr, "Please supply XML to process with -X, -x or -p\n");
-            exit(1);
+            exit_code = -EINVAL;
+            goto bail;
         }
 
         digest = calculate_on_disk_digest(input);
         fprintf(stderr, "Digest: ");
         fprintf(stdout, "%s\n", crm_str(digest));
         free(digest);
-        exit(0);
+        goto bail;
 
     } else if (safe_str_eq(cib_action, "md5-sum-versioned")) {
         char *digest = NULL;
@@ -411,7 +414,8 @@ main(int argc, char **argv)
 
         if (input == NULL) {
             fprintf(stderr, "Please supply XML to process with -X, -x or -p\n");
-            exit(1);
+            exit_code = -EINVAL;
+            goto bail;
         }
 
         version = crm_element_value(input, XML_ATTR_CRM_VERSION);
@@ -419,7 +423,7 @@ main(int argc, char **argv)
         fprintf(stderr, "Versioned (%s) digest: ", version);
         fprintf(stdout, "%s\n", crm_str(digest));
         free(digest);
-        exit(0);
+        goto bail;
     }
     
     exit_code = do_init();
@@ -483,7 +487,7 @@ main(int argc, char **argv)
     the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
     crm_xml_cleanup();
-
+  bail:
     qb_log_fini();
     return -exit_code;
 }

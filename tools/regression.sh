@@ -62,7 +62,7 @@ function test_tools() {
     $VALGRIND_CMD cibadmin -Q
     
     $VALGRIND_CMD cibadmin -E 
-    assert $? 1 cibadmin "Require --force for CIB erasure"
+    assert $? 22 cibadmin "Require --force for CIB erasure"
     
     $VALGRIND_CMD cibadmin -E --force
     assert $? 0 cibadmin "Allow CIB erasure with --force"
