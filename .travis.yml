@@ -1,0 +1,32 @@
+# Control file for the Travis autobuilder
+# http://about.travis-ci.org/docs/user/build-configuration/
+
+language: c
+compiler:
+  - gcc
+
+before_install:
+ - lsb_release
+ - sudo cat /etc/apt/sources.list
+ - sudo bash -c 'echo "deb http://archive.ubuntu.com/ubuntu/ quantal universe" >> /etc/apt/sources.list'
+ - sudo apt-get update -qq
+ - sudo apt-get install -qq automake autoconf chrpath libsnmp-dev libglib2.0-dev perl net-tools python libtool libxml2-dev bison flex uuid-dev libbz2-dev zlib1g-dev libltdl3-dev libgnutls-dev python-central python-dev libpam0g-dev libncurses5-dev libcorosync-dev heartbeat-dev libheartbeat2-dev cluster-glue-dev libxslt1-dev libesmtp-dev libqb-dev/quantal
+
+before_script:
+  - ./autogen.sh
+  - ./configure
+
+script: make
+
+after_script:
+  - ./BasicSanity.sh -V
+
+notifications:
+  irc: "irc.freenode.org#pcmk"	
+  email:
+    recipients:
+      - andrew@beekhof.net
+# whitelist
+branches:
+  only:
+    - master
