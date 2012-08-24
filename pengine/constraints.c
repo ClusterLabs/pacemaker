@@ -615,6 +615,13 @@ sort_cons_priority_lh(gconstpointer a, gconstpointer b)
         return 1;
     }
 
+    /* Process clones before primitives and groups */
+    if (rsc_constraint1->rsc_lh->variant > rsc_constraint2->rsc_lh->variant) {
+        return -1;
+    } else if (rsc_constraint1->rsc_lh->variant < rsc_constraint2->rsc_lh->variant) {
+        return 1;
+    }
+
     return strcmp(rsc_constraint1->rsc_lh->id, rsc_constraint2->rsc_lh->id);
 }
 
@@ -641,6 +648,14 @@ sort_cons_priority_rh(gconstpointer a, gconstpointer b)
     if (rsc_constraint1->rsc_rh->priority < rsc_constraint2->rsc_rh->priority) {
         return 1;
     }
+
+    /* Process clones before primitives and groups */
+    if (rsc_constraint1->rsc_rh->variant > rsc_constraint2->rsc_rh->variant) {
+        return -1;
+    } else if (rsc_constraint1->rsc_rh->variant < rsc_constraint2->rsc_rh->variant) {
+        return 1;
+    }
+
     return strcmp(rsc_constraint1->rsc_rh->id, rsc_constraint2->rsc_rh->id);
 }
 

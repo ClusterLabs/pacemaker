@@ -9,7 +9,7 @@ clone_color: cl-drbdlinks-s01-service allocation score on s01-0: 0
 clone_color: cl-drbdlinks-s01-service allocation score on s01-1: 0
 clone_color: cl-gfs2 allocation score on s01-0: 0
 clone_color: cl-gfs2 allocation score on s01-1: 0
-clone_color: cl-ietd allocation score on s01-0: 1000
+clone_color: cl-ietd allocation score on s01-0: 11001
 clone_color: cl-ietd allocation score on s01-1: 1000
 clone_color: cl-libvirtd allocation score on s01-0: 0
 clone_color: cl-libvirtd allocation score on s01-1: 0

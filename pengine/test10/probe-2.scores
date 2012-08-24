@@ -7,7 +7,7 @@ clone_color: apache2:1 allocation score on wc01: 0
 clone_color: apache2:1 allocation score on wc02: 1
 clone_color: clone_mysql-proxy allocation score on wc01: 0
 clone_color: clone_mysql-proxy allocation score on wc02: 0
-clone_color: clone_nfs-common allocation score on wc01: 0
+clone_color: clone_nfs-common allocation score on wc01: 76
 clone_color: clone_nfs-common allocation score on wc02: 0
 clone_color: clone_webservice allocation score on wc01: 0
 clone_color: clone_webservice allocation score on wc02: 0
