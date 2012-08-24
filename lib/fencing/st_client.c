@@ -178,7 +178,7 @@ stonith_api_register_device(stonith_t * st, int call_options,
 
 #if HAVE_STONITH_STONITH_H
     namespace = get_stonith_provider(agent, namespace);
-    if (strcmp(namespace, "heartbeat") == 0) {
+    if (safe_str_eq(namespace, "heartbeat")) {
         stonith_key_value_add(params, "plugin", agent);
         agent = "fence_legacy";
     }
