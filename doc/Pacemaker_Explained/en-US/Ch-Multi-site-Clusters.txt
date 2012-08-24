@@ -195,37 +195,25 @@ constraints as necessary with `rsc_ticket`.
 
 == Managing Multi-Site Clusters ==
 
-=== Managing Tickets Manually ===
+=== Granting and Revoking Tickets Manually ===
 
 You can grant tickets to sites or revoke them from sites manually.
 Though if you want to re-distribute a ticket, you should wait for
 the dependent resources to cleanly stop at the previous site before you
 grant the ticket to another desired site.
 
-Use the `crm_ticket` command line tool to grant, revoke, or query tickets. 
+Use the `crm_ticket` command line tool to grant and revoke tickets. 
 
 To grant a ticket to this site:
 [source,Bash]
 -------
-# crm_ticket -t ticketA -v true
+# crm_ticket --ticket ticketA --grant
 -------
 
 To revoke a ticket from this site:
 [source,Bash]
 -------
-# crm_ticket -t ticketA -v false
--------
-
-Query if the specified ticket is granted to this site or not:
-[source,Bash]
--------
-# crm_ticket -t ticketA -G
--------
-
-Query the time of last granted the specified ticket to this site:
-[source,Bash]
--------
-# crm_ticket -t ticketA -T
+# crm_ticket --ticket ticketA --revoke
 -------
 
 [IMPORTANT]
@@ -237,7 +225,7 @@ granted elsewhere.
 ====
 
 
-=== Managing Tickets via a Cluster Ticket Registry ===
+=== Granting and Revoking Tickets via a Cluster Ticket Registry ===
 
 ==== Booth ====
 Booth is an implementation of `Cluster Ticket Registry` or so-called
@@ -321,6 +309,48 @@ with regards to the number of sites and the number of arbitrators involved.
 Nodes belonging to the same cluster site should be synchronized via NTP. However,
 time synchronization is not required between the individual cluster sites.
 
+
+=== General Management of Tickets ===
+
+Display the information of tickets:
+[source,Bash]
+-------
+# crm_ticket --info
+-------
+
+Or you can monitor them with:
+[source,Bash]
+-------
+# crm_mon --tickets
+-------
+
+Display the rsc_ticket constraints that apply to a ticket:
+[source,Bash]
+-------
+# crm_ticket --ticket ticketA --constraints
+-------
+
+When you want to do maintenance or manual switch-over of a ticket, the
+ticket could be revoked from the site for any reason, which would
+trigger the loss-policies. If `loss-policy="fence"`, the dependent
+resources could not be gracefully stopped/demoted, and even, other
+unrelated resources could be impacted. 
+
+The proper way is making the ticket `standby` first with:
+[source,Bash]
+-------
+# crm_ticket --ticket ticketA --standby
+-------
+
+Then the dependent resources will be stopped or demoted gracefully without
+triggering the loss-policies.
+
+If you have finished the maintenance and want to activate the ticket again,
+you can run:
+[source,Bash]
+-------
+# crm_ticket --ticket ticketA --activate
+-------
 
 == For more information ==
 
