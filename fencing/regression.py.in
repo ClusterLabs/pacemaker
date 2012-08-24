@@ -41,6 +41,7 @@ class Test:
 
 		self.stonith_options = "-s"
 		self.enable_corosync = 0
+
 		if with_cpg:
 			self.stonith_options = "-c"
 			self.enable_corosync = 1
@@ -258,6 +259,9 @@ class Tests:
 	def __init__(self, verbose = 0):
 		self.tests = []
 		self.verbose = verbose
+		self.autogen_corosync_cfg = 0
+		if not os.path.exists("/etc/corosync/corosync.conf"):
+			self.autogen_corosync_cfg = 1
 
 	def new_test(self, name, description, with_cpg = 0):
 		test = Test(name, description, self.verbose, with_cpg)
@@ -534,6 +538,57 @@ class Tests:
 
 			test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
 
+	def setup_environment(self):
+		if self.autogen_corosync_cfg:
+			corosync_conf = ("""compatibility: whitetank
+totem {
+        version: 2
+        token:          5000
+        token_retransmits_before_loss_const: 10
+        join:           1000
+        consensus:      6000
+        vsftype:        none
+        max_messages:   20
+        send_join: 45
+        clear_node_high_bit: yes
+        secauth:        off
+        threads:           0
+        interface {
+                ringnumber: 0
+                bindnetaddr: 127.0.0.1
+                mcastaddr: 226.94.1.1
+                mcastport: 4000
+        }
+}
+logging {
+        debug: off
+        fileline: off
+        to_syslog: yes
+        to_stderr: off
+        syslog_facility: daemon
+        timestamp: on
+}
+amf {
+        mode: disabled
+}
+quorum {
+   provider: corosync_votequorum
+   expected_votes: 2
+   votes: 1
+   wait_for_all: 0
+   last_man_standing: 0
+   auto_tie_breaker: 0
+}""")
+
+			os.system("cat <<-END >>/etc/corosync/corosync.conf\n%s\nEND" % (corosync_conf))
+
+		os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
+		os.system("cp /usr/share/pacemaker/tests/cts/fence_true /usr/sbin/fence_true")
+
+	def cleanup_environment(self):
+		if self.autogen_corosync_cfg:
+			os.system("rm -f /etc/corosync/corosync.conf")
+
 class TestOptions:
 	def __init__(self):
 		self.options = {}
@@ -588,10 +643,9 @@ def main(argv):
 	tests.build_custom_timeout_tests()
 	tests.build_api_sanity_tests()
 
-	os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
-	os.system("cp /usr/share/pacemaker/tests/cts/fence_true /usr/sbin/fence_true")
-
 	print "Starting ..."
+
+	tests.setup_environment()
 
 	if o.options['list-tests']:
 		tests.print_list()
@@ -607,6 +661,7 @@ def main(argv):
 		tests.run_tests()
 		tests.print_results()
 
+	tests.cleanup_environment()
 	tests.exit()
 if __name__=="__main__":
 	main(sys.argv)
