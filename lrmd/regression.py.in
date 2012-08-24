@@ -285,6 +285,19 @@ class Tests:
 description     "Dummy service for regression tests"
 exec dd if=/dev/random of=/dev/null
 """)
+
+		dummy_fence_sleep_agent = ("""#!/usr/bin/python
+import sys
+import time
+def main():
+    for line in sys.stdin.readlines():
+        if line.count("monitor") > 0:
+            time.sleep(10000)
+            sys.exit(0)
+    sys.exit(-1)
+if __name__ == "__main__":
+    main()
+""")
 		dummy_fence_agent = ("""#!/usr/bin/python
 import sys
 def main():
@@ -325,6 +338,9 @@ if __name__ == "__main__":
 		os.system("cat <<-END >>/lib/systemd/system/lrmd_dummy_daemon.service\n%s\nEND" % (dummy_service_file))
 		os.system("chmod u+x /usr/sbin/lrmd_dummy_daemon")
 
+		os.system("cat <<-END >>/usr/sbin/fence_dummy_sleep\n%s\nEND" % (dummy_fence_sleep_agent))
+		os.system("chmod 711 /usr/sbin/fence_dummy_sleep")
+
 		os.system("cat <<-END >>/usr/sbin/fence_dummy_monitor\n%s\nEND" % (dummy_fence_agent))
 		os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
 
@@ -337,6 +353,7 @@ if __name__ == "__main__":
 		os.system("rm -f /lib/systemd/system/lrmd_dummy_daemon.service")
 		os.system("rm -f /usr/sbin/lrmd_dummy_daemon")
 		os.system("rm -f /usr/sbin/fence_dummy_monitor")
+		os.system("rm -f /usr/sbin/fence_dummy_sleep")
 		os.system("rm -f /etc/init.d/LSBDummy")
 		os.system("systemctl daemon-reload")
 
@@ -397,13 +414,26 @@ if __name__ == "__main__":
 	### These are tests related to how the lrmd handles failures.  ###
 	def build_negative_tests(self):
 
-		### start timeout test  ###
-		test = self.new_test("start_timeout", "Force start timeout to occur, verify start failure.")
+		### ocf start timeout test  ###
+		test = self.new_test("ocf_start_timeout", "Force start timeout to occur, verify start failure.")
 		test.add_cmd("-c register_rsc -r \"test_rsc\" -C \"ocf\" -P \"pacemaker\" -T \"Dummy\" -t 1000 "
 			"-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 		test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -k \"op_sleep\" -v \"3\" -t 1000 -w")
 		test.add_cmd("-l "
 			"\"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:unknown error op_status:Timed Out\" -t 3000")
+		test.add_cmd("-c exec -r test_rsc -a stop -t 1000"
+			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\" ")
+		test.add_cmd("-c unregister_rsc -r test_rsc -t 1000 "
+			"-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+
+
+		### stonith start timeout test  ###
+		test = self.new_test("stonith_start_timeout", "Force start timeout to occur, verify start failure.")
+		test.add_cmd("-c register_rsc -r \"test_rsc\" -C \"stonith\" -P \"pacemaker\" -T \"fence_dummy_sleep\" -t 1000 "
+			"-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+		test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 2000 -w")
+		test.add_cmd("-l "
+			"\"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:unknown error op_status:Timed Out\" -t 4000")
 		test.add_cmd("-c exec -r test_rsc -a stop -t 1000"
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\" ")
 		test.add_cmd("-c unregister_rsc -r test_rsc -t 1000 "
