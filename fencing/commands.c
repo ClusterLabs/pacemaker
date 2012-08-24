@@ -946,9 +946,9 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
         char buffer[READ_MAX];
 
         errno = 0;
-        if(cmd->stdout > 0) {
+        if(cmd->fd_stdout > 0) {
             memset(&buffer, 0, READ_MAX);
-            more = read(cmd->stdout, buffer, READ_MAX-1);
+            more = read(cmd->fd_stdout, buffer, READ_MAX-1);
             crm_trace("Got %d more bytes: %s", more, buffer);
         }
 
@@ -960,9 +960,9 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
 
     } while (more == (READ_MAX-1) || (more < 0 && errno == EINTR));
 
-    if(cmd->stdout) {
-        close(cmd->stdout);
-        cmd->stdout = 0;
+    if(cmd->fd_stdout) {
+        close(cmd->fd_stdout);
+        cmd->fd_stdout = 0;
     }
 
     crm_trace("Operation on %s completed with rc=%d (%d remaining)",

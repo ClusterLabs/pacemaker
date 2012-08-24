@@ -542,7 +542,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
         close(p_write_fd);
 
         if (track && track->done) {
-            track->stdout = p_read_fd;
+            track->fd_stdout = p_read_fd;
             g_child_watch_add(pid, track->done, track);
             crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action, agent, pid, track->timeout);
 
