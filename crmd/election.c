@@ -253,7 +253,6 @@ do_election_count_vote(long long action,
     crm_node_t *our_node = NULL, *your_node = NULL;
     ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
-    static time_t last_election_win = 0;
     static time_t last_election_loss = 0;
 
     /* if the membership copy is NULL we REALLY shouldnt be voting
@@ -410,7 +409,6 @@ do_election_count_vote(long long action,
         fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 
         last_election_loss = time(NULL);
-        last_election_win = 0;
 
     } else {
         do_crm_log(log_level, "Election %d (owner: %s) pass: %s from %s (%s)",
@@ -427,25 +425,7 @@ do_election_count_vote(long long action,
             }
             last_election_loss = 0;
         }
-#if 0
-        /* Enabling this code can lead to multiple DCs during SimulStart.
-         * Specifically when a node comes up after our last 'win' vote.
-         *
-         * Fixing and enabling this functionality might become important when
-         * we start running realy big clusters, but for now leave it disabled.
-         */
-        if (last_election_win) {
-            time_t tm_now = time(NULL);
 
-            if (tm_now - last_election_win < (time_t) win_dampen) {
-                crm_info("Election %d ignore: We already won an election less than %ds ago",
-                         election_id, win_dampen);
-                return;
-            }
-        }
-
-        last_election_win = time(NULL);
-#endif
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
         g_hash_table_destroy(voted);
         voted = NULL;

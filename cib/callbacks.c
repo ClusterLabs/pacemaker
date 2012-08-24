@@ -231,7 +231,6 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request, ci
     } else if (crm_str_eq(op, T_CIB_NOTIFY, TRUE)) {
         /* Update the notify filters for this client */
         int on_off = 0;
-        int rc = pcmk_ok;
         const char *type = crm_element_value(op_request, F_CIB_NOTIFY_TYPE);
         crm_element_value_int(op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
 
@@ -252,8 +251,6 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request, ci
 
         } else if (safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
             cib_client->replace = on_off;
-        } else {
-            rc = -ENXIO;
         }
 
         if(flags & crm_ipc_client_response) {

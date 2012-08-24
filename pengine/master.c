@@ -942,9 +942,6 @@ void
 master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
 {
     GListPtr gIter = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc_rh);
 
     CRM_CHECK(rsc_rh != NULL, return);
     if (is_set(rsc_rh->flags, pe_rsc_provisional)) {

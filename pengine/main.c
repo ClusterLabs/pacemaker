@@ -105,7 +105,6 @@ main(int argc, char **argv)
 {
     int flag;
     int argerr = 0;
-    gboolean allow_cores = TRUE;
     crm_ipc_t *old_instance = NULL;
 
     crm_system_name = CRM_SYSTEM_PENGINE;
@@ -118,9 +117,6 @@ main(int argc, char **argv)
                 break;
             case 'h':          /* Help message */
                 usage(crm_system_name, EX_OK);
-                break;
-            case 'c':
-                allow_cores = TRUE;
                 break;
             default:
                 ++argerr;

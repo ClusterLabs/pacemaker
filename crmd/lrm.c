@@ -621,7 +621,6 @@ append_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, xmlNode * upd
     char *list = NULL;
     char *digest = NULL;
     const char *value = NULL;
-    gboolean non_empty = FALSE;
     xmlNode *restart = NULL;
     GListPtr restart_list = NULL;
     GListPtr lpc = NULL;
@@ -661,7 +660,6 @@ append_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, xmlNode * upd
         CRM_CHECK(param != NULL, continue);
         value = g_hash_table_lookup(op->params, param);
         if (value != NULL) {
-            non_empty = TRUE;
             crm_xml_add(restart, param, value);
         }
         len += strlen(param) + 2;
@@ -673,12 +671,8 @@ append_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, xmlNode * upd
     crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
     crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
-#if 0
-    crm_debug("%s: %s, %s", rsc->id, digest, list);
-    if (non_empty) {
-        crm_log_xml_debug(restart, "restart digest source");
-    }
-#endif
+    crm_trace("%s: %s, %s", rsc->id, digest, list);
+    crm_log_xml_trace(restart, "restart digest source");
 
     free_xml(restart);
     free(digest);
@@ -1291,9 +1285,8 @@ do_lrm_invoke(long long action,
         int rc = pcmk_ok;
         xmlNode *fragment = do_lrm_query(TRUE);
 
-        crm_info("Forcing a local LRM refresh");
-
         fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
+        crm_info("Forced a local LRM refresh: call=%d", rc);
         free_xml(fragment);
 
     } else if (safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {

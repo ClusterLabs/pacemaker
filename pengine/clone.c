@@ -788,8 +788,6 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     action_t *started = NULL;
 
     GListPtr gIter = rsc->children;
-    resource_t *last_start_rsc = NULL;
-    resource_t *last_stop_rsc = NULL;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -801,13 +799,6 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
         child_rsc->cmds->create_actions(child_rsc, data_set);
         clone_update_pseudo_status(child_rsc, &child_stopping, &child_starting, &child_active);
-
-        if (is_set(child_rsc->flags, pe_rsc_starting)) {
-            last_start_rsc = child_rsc;
-        }
-        if (is_set(child_rsc->flags, pe_rsc_stopping)) {
-            last_stop_rsc = child_rsc;
-        }
     }
 
     /* start */
@@ -914,9 +905,6 @@ find_compatible_child_by_node(resource_t * local_child, node_t * local_node, res
 {
     node_t *node = NULL;
     GListPtr gIter = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
 
     if (local_node == NULL) {
         crm_err("Can't colocate unrunnable child %s with %s", local_child->id, rsc->id);
@@ -964,9 +952,6 @@ find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_
     GListPtr gIter = NULL;
     GListPtr scratch = NULL;
     node_t *local_node = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
 
     local_node = local_child->fns->location(local_child, NULL, current);
     if (local_node) {

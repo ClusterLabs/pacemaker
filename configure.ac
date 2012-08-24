@@ -1597,7 +1597,7 @@ else
 		-Wnested-externs
 		-Wno-long-long
 		-Wno-strict-aliasing
-		-Wno-unused-but-set-variable
+		-Wunused-but-set-variable
 		-Wpointer-arith 
 		-Wstrict-prototypes
     		-Wunsigned-char

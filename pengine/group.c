@@ -460,9 +460,6 @@ void
 group_expand(resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = rsc->children;
-    group_variant_data_t *group_data = NULL;
-
-    get_group_variant_data(group_data, rsc);
 
     pe_rsc_trace(rsc, "Processing actions from %s", rsc->id);
 

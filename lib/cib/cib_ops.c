@@ -163,7 +163,6 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
                     xmlNode ** answer)
 {
     const char *tag = NULL;
-    gboolean verbose = FALSE;
     int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
@@ -181,9 +180,6 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
 
     tag = crm_element_name(input);
 
-    if (options & cib_verbose) {
-        verbose = TRUE;
-    }
     if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
         section = NULL;
 

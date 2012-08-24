@@ -556,7 +556,6 @@ lrmd_free_rsc_info(lrmd_rsc_info_t * rsc_info)
 static lrmd_rsc_info_t *
 lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options)
 {
-    int rc = pcmk_ok;
     lrmd_rsc_info_t *rsc_info = NULL;
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
     xmlNode *output = NULL;
@@ -566,16 +565,18 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
 
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
     crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options);
+    lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options);
     free_xml(data);
+
+    if (!output) {
+        return NULL;
+    }
 
     class = crm_element_value(output, F_LRMD_CLASS);
     provider = crm_element_value(output, F_LRMD_PROVIDER);
     type = crm_element_value(output, F_LRMD_TYPE);
 
-    if (!output) {
-        return NULL;
-    } else if (!class || !type) {
+    if (!class || !type) {
         free_xml(output);
         return NULL;
     } else if (safe_str_eq(class, "ocf") && !provider) {
@@ -952,14 +953,12 @@ static int
 lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
 {
     int rc = 0;
-    char *standard = NULL;
     GList *standards = NULL;
     GListPtr gIter = NULL;
 
     standards = resources_list_standards();
 
     for (gIter = standards; gIter != NULL; gIter = gIter->next) {
-        standard = gIter->data;
         *supported = lrmd_list_add(*supported, (const char *)gIter->data);
         rc++;
     }

@@ -1241,7 +1241,6 @@ main(int argc, char **argv)
 
     gboolean store = FALSE;
     gboolean process = FALSE;
-    gboolean verbose = FALSE;
     gboolean simulate = FALSE;
     gboolean all_actions = FALSE;
     gboolean have_stdout = FALSE;
@@ -1286,8 +1285,6 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 'V':
-                verbose = TRUE;
-
                 if(have_stdout == FALSE) {
                     /* Redirect stderr to stdout so we can grep the output */
                     have_stdout = TRUE;

@@ -1095,7 +1095,6 @@ show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int o
 static GHashTable *
 generate_resource_params(resource_t *rsc, pe_working_set_t * data_set)
 {
-    int rc = 0;
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
     GHashTable *combined = NULL;
@@ -1103,7 +1102,6 @@ generate_resource_params(resource_t *rsc, pe_working_set_t * data_set)
 
     if (!rsc) {
         crm_err("Resource does not exist in config");
-        rc = -1;
         return NULL;
     }
 

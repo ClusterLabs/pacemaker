@@ -96,7 +96,6 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length, gpointer userda
     xmlNode *msg = NULL;
 
     cib_t * cib = userdata;
-    cib_native_opaque_t *native;
 
     crm_trace("dispatching %p", userdata);
 
@@ -105,7 +104,6 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length, gpointer userda
         return 0;
     }
 
-    native = cib->variant_opaque;
     msg = string2xml(buffer);
 
     if (msg == NULL) {

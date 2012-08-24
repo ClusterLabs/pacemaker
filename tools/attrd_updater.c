@@ -72,7 +72,6 @@ main(int argc, char **argv)
     int index = 0;
     int argerr = 0;
     int flag;
-    int BE_QUIET = FALSE;
 
     crm_log_cli_init("attrd_updater");
     crm_set_options(NULL, "command -n attribute [options]", long_options,
@@ -109,7 +108,6 @@ main(int argc, char **argv)
                 attr_section = strdup(optarg);
                 break;
             case 'q':
-                BE_QUIET = TRUE;
                 break;
             case 'Q':
             case 'R':

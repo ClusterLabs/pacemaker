@@ -987,7 +987,6 @@ log_data_element(
     const char *prefix, xmlNode *data, int depth, int options)
 {
     xmlNode *a_child = NULL;
-    int child_result = 0;
 
     int offset = 0;
     int printed = 0;
@@ -1034,7 +1033,7 @@ log_data_element(
     if(is_set(options, xml_log_option_diff_short) && is_not_set(options, xml_log_option_diff_all)) {
         /* Still searching for the actual change */
         for(a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
-            child_result = log_data_element(
+            log_data_element(
                 log_level, file, function, line, prefix, a_child, depth+1, options);
         }
         goto done;
@@ -1082,7 +1081,7 @@ log_data_element(
     }
 
     for(a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
-	child_result = log_data_element(
+	log_data_element(
 	    log_level, file, function, line, prefix, a_child, depth+1, options);
     }
 
