@@ -283,6 +283,16 @@ class Tests:
 			if test.name.count(pattern) != 0:
 				test.run()
 
+	def run_cpg_only(self):
+		for test in self.tests:
+			if test.enable_corosync:
+				test.run()
+
+	def run_no_cpg(self):
+		for test in self.tests:
+			if not test.enable_corosync:
+				test.run()
+
 	def run_tests(self):
 		for test in self.tests:
 			test.run()
@@ -592,6 +602,8 @@ class TestOptions:
 		self.options['run-only-pattern'] = ""
 		self.options['verbose'] = 0
 		self.options['invalid-arg'] = ""
+		self.options['cpg-only'] = 0
+		self.options['no-cpg'] = 0
 		self.options['show-usage'] = 0
 
 	def build_options(self, argv):
@@ -607,6 +619,10 @@ class TestOptions:
 				self.options['list-tests'] = 1
 			elif args[i] == "-V" or args[i] == "--verbose":
 				self.options['verbose'] = 1
+			elif args[i] == "-n" or args[i] == "--no-cpg":
+				self.options['no-cpg'] = 1
+			elif args[i] == "-c" or args[i] == "--cpg-only":
+				self.options['cpg-only'] = 1
 			elif args[i] == "-r" or args[i] == "--run-only":
 				self.options['run-only'] = args[i+1]
 				skip = 1
@@ -620,6 +636,8 @@ class TestOptions:
 		print "Options:"
 		print "\t [--help | -h]                        Show usage"
 		print "\t [--list-tests | -l]                  Print out all registered tests."
+		print "\t [--cpg-only | -c]                    Only run tests that require corosync."
+		print "\t [--no-cpg | -n]                      Only run tests that do not require corosync"
 		print "\t [--run-only | -r 'testname']         Run a specific test"
 		print "\t [--verbose | -V]                     Verbose output"
 		print "\t [--run-only-pattern | -p 'string']   Run only tests containing the string value"
@@ -650,6 +668,12 @@ def main(argv):
 		tests.print_results()
 	elif o.options['run-only'] != "":
 		tests.run_single(o.options['run-only'])
+		tests.print_results()
+	elif o.options['no-cpg']:
+		tests.run_no_cpg()
+		tests.print_results()
+	elif o.options['cpg-only']:
+		tests.run_cpg_only()
 		tests.print_results()
 	else:
 		tests.run_tests()
