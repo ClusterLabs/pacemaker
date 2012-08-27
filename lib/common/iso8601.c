@@ -849,7 +849,8 @@ crm_time_parse_period(const char *period_str)
         period->start = parse_date(period_str);
     }
 
-    if (period_str[0] != 0) {
+    period_str = strstr(original, "/");
+    if (period_str) {
         CRM_CHECK(period_str[0] == '/', invalid = TRUE; goto bail);
         period_str++;
 

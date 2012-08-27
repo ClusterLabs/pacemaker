@@ -54,7 +54,11 @@ log_time_period(int log_level, crm_time_period_t * dtp, int flags)
 {
     char *start = crm_time_as_string(dtp->start, flags);
     char *end = crm_time_as_string(dtp->end, flags);
-    do_crm_log(log_level, "Period: %s to %s", start, end);
+    if(log_level < LOG_CRIT) {
+        printf("Period: %s to %s\n", start, end);
+    } else {
+        do_crm_log(log_level, "Period: %s to %s", start, end);
+    }
     free(start);
     free(end);
 }
@@ -170,6 +174,7 @@ main(int argc, char **argv)
             fprintf(stderr, "Invalid interval specified: %s\n", optarg);
             crm_help('?', 1);
         }
+        log_time_period(LOG_TRACE, interval, print_options | crm_time_log_date | crm_time_log_timeofday);
         log_time_period(-1, interval, print_options | crm_time_log_date | crm_time_log_timeofday);
     }
 
