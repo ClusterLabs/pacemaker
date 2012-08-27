@@ -11,9 +11,13 @@ function assert() {
     target=$1; shift
     app=$1; shift
     msg=$1; shift
-    exit_code=$1; shift
+    cib=$1; shift
 
-    cibadmin -Q
+    if [ x$cib = x0 ]; then
+	: nothing
+    else
+	cibadmin -Q
+    fi
 
     if [ $rc -ne $target ]; then
 	num_errors=`expr $num_errors + 1`
@@ -22,6 +26,8 @@ function assert() {
 	exit 1
     else
 	printf "* Passed: %-14s - %s\n" $app "$msg"
+	printf "* Passed: %-14s - %s\n" $app "$msg" 1>&2
+
 	num_passed=`expr $num_passed + 1`
     fi
 }
@@ -57,11 +63,11 @@ fi
 
 function test_tools() {
     export CIB_shadow_dir=$test_home
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow  2>&1
     export CIB_shadow=$shadow
-    $VALGRIND_CMD cibadmin -Q
+    $VALGRIND_CMD cibadmin -Q 2>&1
     
-    $VALGRIND_CMD cibadmin -E 
+    $VALGRIND_CMD cibadmin -E 2>&1
     assert $? 22 cibadmin "Require --force for CIB erasure"
     
     $VALGRIND_CMD cibadmin -E --force
@@ -82,7 +88,7 @@ function test_tools() {
     $VALGRIND_CMD cibadmin -D -o crm_config --xml-text '<nvpair id="cib-bootstrap-options-cluster-delay"/>'
     assert $? 0 cibadmin "Delete nvpair"
     
-    $VALGRIND_CMD cibadmin -C -o crm_config --xml-file /tmp/$$.opt.xml 
+    $VALGRIND_CMD cibadmin -C -o crm_config --xml-file /tmp/$$.opt.xml 2>&1
     assert $? 76 cibadmin "Create operaton should fail with: -76, The object already exists"
     
     $VALGRIND_CMD cibadmin -M -o crm_config --xml-file /tmp/$$.opt.xml
@@ -119,7 +125,7 @@ function test_tools() {
     assert $? 0 cibadmin "Digest calculation"
     
     # This update will fail because it has version numbers
-    $VALGRIND_CMD cibadmin -R --xml-file /tmp/$$.existing.xml
+    $VALGRIND_CMD cibadmin -R --xml-file /tmp/$$.existing.xml 2>&1
     assert $? 237 cibadmin "Replace operation should fail with: -45, Update was older than existing configuration"
 
     crm_standby -N clusterNode-UNAME -G
@@ -128,10 +134,10 @@ function test_tools() {
     crm_standby -N clusterNode-UNAME -v true
     assert $? 0 crm_standby "Set standby status"
 
-    crm_standby -N clusterNode-UNAME -G
+    crm_standby -N clusterNode-UNAME -G 
     assert $? 0 crm_standby "Query standby value"
     
-    crm_standby -N clusterNode-UNAME -D
+    crm_standby -N clusterNode-UNAME -D 2>&1
     assert $? 0 crm_standby "Delete standby value"
     
     $VALGRIND_CMD cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
@@ -152,13 +158,13 @@ function test_tools() {
     $VALGRIND_CMD crm_resource -L
     assert $? 0 crm_resource "List the configured resources"
 
-    crm_failcount -r dummy -v 10 -N clusterNode-UNAME
+    crm_failcount -r dummy -v 10 -N clusterNode-UNAME 2>&1
     assert $? 0 crm_resource "Set a resource's fail-count"
 
-    $VALGRIND_CMD crm_resource -r dummy -M
+    $VALGRIND_CMD crm_resource -r dummy -M 2>&1
     assert $? 234 crm_resource "Require a destination when migrating a resource that is stopped"
 
-    $VALGRIND_CMD crm_resource -r dummy -M -N i.dont.exist
+    $VALGRIND_CMD crm_resource -r dummy -M -N i.dont.exist 2>&1
     assert $? 250 crm_resource "Don't support migration to non-existant locations"
 
     $VALGRIND_CMD crm_resource -r dummy -M -N clusterNode-UNAME
@@ -192,7 +198,23 @@ function test_tools() {
     assert $? 0 crm_ticket "Delete ticket standby state"
  }
 
-test_tools &> $test_home/regression.out
+function test_date() {
+#    $VALGRIND_CMD cibadmin -Q
+    for y in 06 07 08 09 10 11 12 13 14 15 16 17 18; do
+	$VALGRIND_CMD iso8601 -d "20$y-W01-7 00Z"
+	$VALGRIND_CMD iso8601 -d "20$y-W01-7 00Z" -W -E "20$y-W01-7 00:00:00Z"
+	assert $? 0 iso8601 "20$y-W01-7" 0
+	$VALGRIND_CMD iso8601 -d "20$y-W01-1 00Z"
+	$VALGRIND_CMD iso8601 -d "20$y-W01-1 00Z" -W -E "20$y-W01-1 00:00:00Z"
+	assert $? 0 iso8601 "20$y-W01-1" 0
+    done
+
+    $VALGRIND_CMD iso8601 -d "2009-W53-7 00:00:00Z" -W -E "2009-W53-7 00:00:00Z"
+    assert $? 0 iso8601 "2009-W53-07" 0
+ }
+
+test_date > $test_home/regression.out
+test_tools >> $test_home/regression.out
 sed -i.sed 's/cib-last-written.*>/>/' $test_home/regression.out
 
 if [ $do_save = 1 ]; then
