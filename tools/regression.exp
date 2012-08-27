@@ -78,6 +78,22 @@ Date: 2018-W01-1 00:00:00Z
 * Passed: iso8601        - 2018-W01-1
 Date: 2009-W53-7 00:00:00Z
 * Passed: iso8601        - 2009-W53-07
+Date: 2009-01-31 00:00:00Z
+Duration: 0000-01-00 00:00:00Z
+Duration ends at: 2009-02-28 00:00:00Z
+* Passed: iso8601        - 2009-01-31 + 1 Month
+Date: 2009-01-31 00:00:00Z
+Duration: 0000-02-00 00:00:00Z
+Duration ends at: 2009-03-31 00:00:00Z
+* Passed: iso8601        - 2009-01-31 + 2 Months
+Date: 2009-01-31 00:00:00Z
+Duration: 0000-03-00 00:00:00Z
+Duration ends at: 2009-04-30 00:00:00Z
+* Passed: iso8601        - 2009-01-31 + 3 Months
+Date: 2009-03-31 00:00:00Z
+Duration: 0000--01-00 00:00:00Z
+Duration ends at: 2009-02-28 00:00:00Z
+* Passed: iso8601        - 2009-03-31 - 1 Month
 Setting up shadow instance
 A new shadow instance was created.  To begin using it paste the following into your shell:
   CIB_shadow=tools-regression ; export CIB_shadow

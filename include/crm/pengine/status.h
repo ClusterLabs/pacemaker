@@ -72,7 +72,7 @@ enum pe_find {
 
 typedef struct pe_working_set_s {
     xmlNode *input;
-    ha_time_t *now;
+    crm_time_t *now;
 
     /* options extracted from the input */
     char *dc_uuid;

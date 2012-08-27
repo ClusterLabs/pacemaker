@@ -819,33 +819,28 @@ move_resource(const char *rsc_id,
     free(id);
 
     if (move_lifetime) {
-        char *life = strdup(move_lifetime);
-        char *life_mutable = life;
-
-        ha_time_t *now = NULL;
-        ha_time_t *later = NULL;
-        ha_time_t *duration = parse_time_duration(&life_mutable);
+        crm_time_t *now = NULL;
+        crm_time_t *later = NULL;
+        crm_time_t *duration = crm_time_parse_duration(move_lifetime);
 
         if (duration == NULL) {
             CMD_ERR("Invalid duration specified: %s\n", move_lifetime);
             CMD_ERR("Please refer to"
                     " http://en.wikipedia.org/wiki/ISO_8601#Duration"
                     " for examples of valid durations\n");
-            free(life);
             return -EINVAL;
         }
-        now = new_ha_date(TRUE);
-        later = add_time(now, duration);
-        log_date(LOG_INFO, "now     ", now, ha_log_date | ha_log_time);
-        log_date(LOG_INFO, "later   ", later, ha_log_date | ha_log_time);
-        log_date(LOG_INFO, "duration", duration, ha_log_date | ha_log_time | ha_log_local);
-        later_s = date_to_string(later, ha_log_date | ha_log_time);
+        now = crm_time_new(NULL);
+        later = crm_time_add(now, duration);
+        crm_time_log(LOG_INFO, "now     ", now, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+        crm_time_log(LOG_INFO, "later   ", later, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+        crm_time_log(LOG_INFO, "duration", duration, crm_time_log_date | crm_time_log_timeofday);
+        later_s = crm_time_as_string(later, crm_time_log_date | crm_time_log_timeofday);
         printf("Migration will take effect until: %s\n", later_s);
 
-        free_ha_date(duration);
-        free_ha_date(later);
-        free_ha_date(now);
-        free(life);
+        crm_time_free(duration);
+        crm_time_free(later);
+        crm_time_free(now);
     }
 
     if (existing_node == NULL) {
@@ -1511,7 +1506,7 @@ main(int argc, char **argv)
         }
 
         data_set.input = cib_xml_copy;
-        data_set.now = new_ha_date(TRUE);
+        data_set.now = crm_time_new(NULL);
 
         cluster_status(&data_set);
         if (rsc_id) {

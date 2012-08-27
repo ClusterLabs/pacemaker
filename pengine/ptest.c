@@ -47,7 +47,7 @@ gboolean use_stdin = FALSE;
 gboolean do_simulation = FALSE;
 gboolean inhibit_exit = FALSE;
 gboolean all_actions = FALSE;
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * now);
+extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 extern void cleanup_calculations(pe_working_set_t * data_set);
 char *use_date = NULL;
 
@@ -151,7 +151,7 @@ main(int argc, char **argv)
     gboolean all_good = TRUE;
     enum transition_status graph_rc = -1;
     crm_graph_t *transition = NULL;
-    ha_time_t *a_date = NULL;
+    crm_time_t *a_date = NULL;
     cib_t *cib_conn = NULL;
 
     xmlNode *cib_object = NULL;
@@ -335,9 +335,9 @@ main(int argc, char **argv)
 
     if (use_date != NULL) {
         a_date = parse_date(&use_date);
-        log_date(LOG_WARNING, "Set fake 'now' to", a_date, ha_log_date | ha_log_time);
+        log_date(LOG_WARNING, "Set fake 'now' to", a_date, crm_time_log_date | crm_time_log_timeofday);
         log_date(LOG_WARNING, "Set fake 'now' to (localtime)",
-                 a_date, ha_log_date | ha_log_time | ha_log_local);
+                 a_date, crm_time_log_date | crm_time_log_timeofday | ha_log_local);
     }
 
     set_working_set_defaults(&data_set);

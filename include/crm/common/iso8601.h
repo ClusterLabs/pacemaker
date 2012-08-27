@@ -24,105 +24,91 @@
 #ifndef CRM_COMMON_ISO8601
 #  define CRM_COMMON_ISO8601
 
-#  include <crm/crm.h>
 #  include <time.h>
 #  include <ctype.h>
+#  include <stdbool.h>
 
-typedef struct ha_time_s ha_time_t;
+typedef struct crm_time_s crm_time_t;
 
-enum date_fields {
-    date_month,
-    date_day
-};
+typedef struct crm_time_period_s {
+    crm_time_t *start;
+    crm_time_t *end;
+    crm_time_t *diff;
+} crm_time_period_t;
 
-typedef struct ha_time_period_s {
-    ha_time_t *start;
-    ha_time_t *end;
-    ha_time_t *diff;
-} ha_time_period_t;
+/* Creates a new date/time object conforming to iso8601:
+ *     http://en.wikipedia.org/wiki/ISO_8601
+ *
+ * Eg.
+ *   Ordinal:   2010-01 12:00:00 +10:00
+ *   Gregorian: 2010-01-01 12:00:00 +10:00
+ *   ISO Week:  2010-W53-6 12:00:00 +10:00
+ *
+ * Notes:
+ *   Only one of date, time is required
+ *   If date or timezone is unspecified, they default to the current one
+ *   Supplying NULL results in the current date/time
+ *   Dashes may be ommitted from dates
+ *   Colons may be ommitted from times and timezones
+ *   A timezone of 'Z' denoted UTC time
+ */
+crm_time_t *crm_time_new(const char *string);
+void crm_time_free(crm_time_t * dt);
 
-#  define ha_log_date    0x01
-#  define ha_log_time    0x02
-#  define ha_log_local   0x04
+char *crm_time_as_string(crm_time_t * dt, int flags);
+#define crm_time_log(level, prefix, dt, flags) crm_time_log_alias(level, __FILE__, __FUNCTION__, __LINE__, prefix, dt, flags)
+void crm_time_log_alias(int log_level, const char *file, const char *function, int line, const char *prefix, crm_time_t * date_time, int flags);
 
-#  define ha_date_ordinal 0x10
-#  define ha_date_weeks   0x20
+#  define crm_time_log_date          0x001
+#  define crm_time_log_timeofday     0x002
+#  define crm_time_log_with_timezone 0x004
 
-#  define ha_date_seconds 0x100
-#  define ha_date_epoch   0x200
+#  define crm_time_ordinal           0x010
+#  define crm_time_weeks             0x020
+#  define crm_time_seconds           0x100
+#  define crm_time_epoch             0x200
 
-int str_lookup(const char *str, enum date_fields);
+crm_time_t *crm_time_parse_duration(const char *duration_str);
+crm_time_period_t *crm_time_parse_period(const char *period_str);
 
-char *date_to_string(ha_time_t * dt, int flags);
-void log_date(int log_level, const char *prefix, ha_time_t * dt, int flags);
-void log_time_period(int log_level, ha_time_period_t * dtp, int flags);
+int crm_time_compare(crm_time_t *dt, crm_time_t * rhs);
 
-ha_time_t *parse_date(char **date_str);
-ha_time_t *parse_time_duration(char **duration_str);
-ha_time_period_t *parse_time_period(char **period_str);
+int crm_time_get_timeofday(crm_time_t *dt, uint32_t *h, uint32_t *m, uint32_t *s);
+int crm_time_get_timezone(crm_time_t *dt, uint32_t *h, uint32_t *m);
+int crm_time_get_gregorian(crm_time_t *dt, uint32_t *y, uint32_t *m, uint32_t *d);
+int crm_time_get_ordinal(crm_time_t *dt, uint32_t *y, uint32_t *d);
+int crm_time_get_isoweek(crm_time_t *dt, uint32_t *y, uint32_t *w, uint32_t *d);
 
-/* ha_time_interval_t *parse_time_interval(char **interval_str); */
+/* Time in seconds since 0000-01-01 00:00:00Z */
+unsigned long long int crm_time_get_seconds(crm_time_t * dt); 
+/* Time in seconds since 1970-01-01 00:00:00Z */
+unsigned long long int crm_time_get_seconds_since_epoch(crm_time_t * dt);
 
-unsigned long long int date_in_seconds(ha_time_t * a_date);
-unsigned long long int date_in_seconds_since_epoch(ha_time_t * a_date);
-int compare_date(ha_time_t * lhs, ha_time_t * rhs);
+void crm_time_set(crm_time_t * target, crm_time_t * source);
+void crm_time_set_timet(crm_time_t * target, time_t * source);
 
-gboolean parse_int(char **str, int field_width, int uppper_bound, int *result);
-gboolean check_for_ordinal(const char *str);
+/* Returns a new time object */
+crm_time_t *crm_time_add(crm_time_t * dt, crm_time_t * value);
+crm_time_t *crm_time_subtract(crm_time_t * dt, crm_time_t * value);
 
-void ha_set_time(ha_time_t * lhs, ha_time_t * rhs, gboolean offset);
-void ha_set_tm_time(ha_time_t * lhs, struct tm *rhs);
-void ha_set_timet_time(ha_time_t * lhs, time_t * rhs);
-ha_time_t *add_time(ha_time_t * lhs, ha_time_t * rhs);
-ha_time_t *subtract_time(ha_time_t * lhs, ha_time_t * rhs);
-ha_time_t *subtract_duration(ha_time_t * time, ha_time_t * duration);
-void reset_tm(struct tm *some_tm);
-void add_seconds(ha_time_t * a_time, int extra);
-void add_minutes(ha_time_t * a_time, int extra);
-void add_hours(ha_time_t * a_time, int extra);
-void add_days(ha_time_t * a_time, int extra);
-void add_weekdays(ha_time_t * a_time, int extra);
-void add_yeardays(ha_time_t * a_time, int extra);
-void add_weeks(ha_time_t * a_time, int extra);
-void add_months(ha_time_t * a_time, int extra);
-void add_years(ha_time_t * a_time, int extra);
-void add_ordinalyears(ha_time_t * a_time, int extra);
-void add_weekyears(ha_time_t * a_time, int extra);
-void sub_seconds(ha_time_t * a_time, int extra);
-void sub_minutes(ha_time_t * a_time, int extra);
-void sub_hours(ha_time_t * a_time, int extra);
-void sub_days(ha_time_t * a_time, int extra);
-void sub_weekdays(ha_time_t * a_time, int extra);
-void sub_yeardays(ha_time_t * a_time, int extra);
-void sub_weeks(ha_time_t * a_time, int extra);
-void sub_months(ha_time_t * a_time, int extra);
-void sub_years(ha_time_t * a_time, int extra);
-void sub_ordinalyears(ha_time_t * a_time, int extra);
-void sub_weekyears(ha_time_t * a_time, int extra);
+/* All crm_time_add_... functions support negative values */
+void crm_time_add_seconds(crm_time_t *dt, int value);
+void crm_time_add_minutes(crm_time_t *dt, int value);
+void crm_time_add_hours(crm_time_t *dt, int value);
+void crm_time_add_days(crm_time_t *dt, int value);
+void crm_time_add_weekdays(crm_time_t *dt, int value);
+void crm_time_add_weeks(crm_time_t *dt, int value);
+void crm_time_add_months(crm_time_t *dt, int value);
+void crm_time_add_years(crm_time_t *dt, int value);
+void crm_time_add_ordinalyears(crm_time_t *dt, int value);
+void crm_time_add_weekyears(crm_time_t *dt, int value);
 
-int crm_get_time(ha_time_t *now, uint32_t *h, uint32_t *m, uint32_t *s);
-int crm_get_gregorian_date(ha_time_t *now, uint32_t *y, uint32_t *m, uint32_t *d);
-int crm_get_ordinal_date(ha_time_t *now, uint32_t *y, uint32_t *d);
-int crm_get_week_date(ha_time_t *now, uint32_t *y, uint32_t *w, uint32_t *d);
+/* Useful helper functions */
+int crm_time_january1_weekday(int year);
+int crm_time_weeks_in_year(int year);
+int crm_time_days_in_month(int month, int year);
 
-/* conversion functions */
-int january1(int year);
-
-gboolean convert_from_weekdays(ha_time_t * a_date);
-gboolean convert_from_ordinal(ha_time_t * a_date);
-gboolean convert_from_gregorian(ha_time_t * a_date);
-
-gboolean is_leap_year(int year);
-
-int weeks_in_year(int year);
-int days_per_month(int month, int year);
-
-gboolean is_date_sane(ha_time_t * a_date);
-
-ha_time_t *new_ha_date(gboolean set_to_now);
-void free_ha_date(ha_time_t * a_date);
-
-void reset_time(ha_time_t * a_time);
-void log_tm_date(int log_level, struct tm *some_tm);
+bool crm_time_leapyear(int year);
+bool crm_time_check(crm_time_t * dt);
 
 #endif

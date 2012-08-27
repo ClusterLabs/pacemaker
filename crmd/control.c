@@ -790,7 +790,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 {
     const char *value = NULL;
     GHashTable *config_hash = NULL;
-    ha_time_t *now = new_ha_date(TRUE);
+    crm_time_t *now = crm_time_new(NULL);
 
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
@@ -851,7 +851,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     g_hash_table_destroy(config_hash);
   bail:
-    free_ha_date(now);
+    crm_time_free(now);
 }
 
 gboolean

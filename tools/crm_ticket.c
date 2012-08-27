@@ -787,7 +787,7 @@ main(int argc, char **argv)
     }
 
     data_set.input = cib_xml_copy;
-    data_set.now = new_ha_date(TRUE);
+    data_set.now = crm_time_new(NULL);
 
     cluster_status(&data_set);
 

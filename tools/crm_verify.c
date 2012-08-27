@@ -41,7 +41,7 @@ char *cib_save = NULL;
 void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t * data_set);
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * now);
+extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
@@ -248,7 +248,7 @@ main(int argc, char **argv)
         cleanup_alloc_calculations(&data_set);
 
     } else {
-        data_set.now = new_ha_date(TRUE);
+        data_set.now = crm_time_new(NULL);
         data_set.input = cib_object;
         stage0(&data_set);
         cleanup_alloc_calculations(&data_set);

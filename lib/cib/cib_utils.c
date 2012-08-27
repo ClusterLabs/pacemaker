@@ -735,13 +735,13 @@ gboolean
 cib_read_config(GHashTable * options, xmlNode * current_cib)
 {
     xmlNode *config = NULL;
-    ha_time_t *now = NULL;
+    crm_time_t *now = NULL;
 
     if (options == NULL || current_cib == NULL) {
         return FALSE;
     }
 
-    now = new_ha_date(TRUE);
+    now = crm_time_new(NULL);
 
     g_hash_table_remove_all(options);
 
@@ -753,7 +753,7 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     verify_cib_options(options);
 
-    free_ha_date(now);
+    crm_time_free(now);
 
     return TRUE;
 }

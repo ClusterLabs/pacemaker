@@ -605,23 +605,19 @@ crm_str_to_boolean(const char *s, int *ret)
 unsigned long long
 crm_get_interval(const char *input)
 {
-    ha_time_t *interval = NULL;
-    char *input_copy = strdup(input);
-    char *input_copy_mutable = input_copy;
+    crm_time_t *interval = NULL;
     unsigned long long msec = 0;
 
     if (input == NULL) {
         return 0;
 
     } else if (input[0] != 'P') {
-        free(input_copy);
         return crm_get_msec(input);
     }
 
-    interval = parse_time_duration(&input_copy_mutable);
-    msec = date_in_seconds(interval);
-    free_ha_date(interval);
-    free(input_copy);
+    interval = crm_time_parse_duration(input);
+    msec = crm_time_get_seconds(interval);
+    crm_time_free(interval);
     return msec * 1000;
 }
 

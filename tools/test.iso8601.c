@@ -17,6 +17,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/crm.h>
 #include <crm/common/iso8601.h>
 #include <unistd.h>
 
@@ -48,6 +49,16 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+static void
+log_time_period(int log_level, crm_time_period_t * dtp, int flags)
+{
+    char *start = crm_time_as_string(dtp->start, flags);
+    char *end = crm_time_as_string(dtp->end, flags);
+    do_crm_log(log_level, "Period: %s to %s", start, end);
+    free(start);
+    free(end);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -56,13 +67,13 @@ main(int argc, char **argv)
     int flag;
     int index = 0;
     int print_options = 0;
-    ha_time_t *duration = NULL;
-    ha_time_t *date_time = NULL;
-    ha_time_period_t *interval = NULL;
+    crm_time_t *duration = NULL;
+    crm_time_t *date_time = NULL;
+    crm_time_period_t *interval = NULL;
 
-    char *period_s = NULL;
-    char *duration_s = NULL;
-    char *date_time_s = NULL;
+    const char *period_s = NULL;
+    const char *duration_s = NULL;
+    const char *date_time_s = NULL;
     const char *expected_s = NULL;
     
     crm_log_cli_init("iso8601");
@@ -87,97 +98,97 @@ main(int argc, char **argv)
                 crm_help(flag, 0);
                 break;
             case 'n':
-                date_time_s = strdup("now");
+                date_time_s = "now";
                 break;
             case 'd':
-                date_time_s = strdup(optarg);
+                date_time_s = optarg;
                 break;
             case 'p':
-                period_s = strdup(optarg);
+                period_s = optarg;
                 break;
             case 'D':
-                duration_s = strdup(optarg);
+                duration_s = optarg;
                 break;
             case 'E':
                 expected_s = optarg;
                 break;
             case 'S':
-                print_options |= ha_date_epoch;
+                print_options |= crm_time_epoch;
                 break;
             case 's':
-                print_options |= ha_date_seconds;
+                print_options |= crm_time_seconds;
                 break;
             case 'W':
-                print_options |= ha_date_weeks;
+                print_options |= crm_time_weeks;
                 break;
             case 'O':
-                print_options |= ha_date_ordinal;
+                print_options |= crm_time_ordinal;
                 break;
             case 'L':
-                print_options |= ha_log_local;
+                print_options |= crm_time_log_with_timezone;
                 break;
                 break;
         }
     }
 
     if(safe_str_eq("now", date_time_s)) {
-        date_time = new_ha_date(TRUE);
+        date_time = crm_time_new(NULL);
 
         if (date_time == NULL) {
             fprintf(stderr, "Internal error: couldnt determin 'now' !\n");
             crm_help('?', 1);
         }
-        log_date(LOG_TRACE, "Current date/time", date_time, ha_date_ordinal | ha_log_date | ha_log_time);
-        log_date(-1, "Current date/time", date_time, print_options | ha_log_date | ha_log_time);
+        crm_time_log(LOG_TRACE, "Current date/time", date_time, crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(-1, "Current date/time", date_time, print_options | crm_time_log_date | crm_time_log_timeofday);
 
     } else if(date_time_s) {
-        date_time = parse_date(&date_time_s);
+        date_time = crm_time_new(date_time_s);
 
         if (date_time == NULL) {
             fprintf(stderr, "Invalid date/time specified: %s\n", optarg);
             crm_help('?', 1);
         }
-        log_date(LOG_TRACE, "Date", date_time, ha_date_ordinal | ha_log_date | ha_log_time);
-        log_date(-1, "Date", date_time, print_options | ha_log_date | ha_log_time);
+        crm_time_log(LOG_TRACE, "Date", date_time, crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(-1, "Date", date_time, print_options | crm_time_log_date | crm_time_log_timeofday);
     }
 
     if(duration_s) {
-        duration = parse_time_duration(&duration_s);
+        duration = crm_time_parse_duration(duration_s);
 
         if (duration == NULL) {
-            fprintf(stderr, "Invalid duration specified: %s\n", optarg);
+            fprintf(stderr, "Invalid duration specified: %s\n", duration_s);
             crm_help('?', 1);
         }
-        log_date(LOG_TRACE, "Duration", duration, ha_date_ordinal | ha_log_date | ha_log_time);
-        log_date(-1, "Duration", duration, print_options | ha_log_date | ha_log_time | ha_log_local);
+        crm_time_log(LOG_TRACE, "Duration", duration, crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(-1, "Duration", duration, print_options | crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     }
 
     if(period_s) {
-        interval = parse_time_period(&period_s);
+        interval = crm_time_parse_period(period_s);
 
         if (interval == NULL) {
             fprintf(stderr, "Invalid interval specified: %s\n", optarg);
             crm_help('?', 1);
         }
-        log_time_period(-1, interval, print_options | ha_log_date | ha_log_time);
+        log_time_period(-1, interval, print_options | crm_time_log_date | crm_time_log_timeofday);
     }
 
     if(date_time && duration) {
-        ha_time_t *later = add_time(date_time, duration);
+        crm_time_t *later = crm_time_add(date_time, duration);
 
-        log_date(LOG_TRACE, "Duration ends at", later, ha_date_ordinal | ha_log_date | ha_log_time);
-        log_date(-1, "Duration ends at", later, print_options | ha_log_date | ha_log_time | ha_log_local);
+        crm_time_log(LOG_TRACE, "Duration ends at", later, crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(-1, "Duration ends at", later, print_options | crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
         if(expected_s) {
-            char *dt_s = date_to_string(later, print_options | ha_log_date | ha_log_time);
+            char *dt_s = crm_time_as_string(later, print_options | crm_time_log_date | crm_time_log_timeofday);
             if(safe_str_neq(expected_s, dt_s)) {
                 rc = 1;
             }
             free(dt_s);
         }
-        free_ha_date(later);
+        crm_time_free(later);
 
     } else if(date_time && expected_s) {
-        char *dt_s = date_to_string(date_time, print_options | ha_log_date | ha_log_time);
+        char *dt_s = crm_time_as_string(date_time, print_options | crm_time_log_date | crm_time_log_timeofday);
         if(safe_str_neq(expected_s, dt_s)) {
             rc = 1;
         }
@@ -187,18 +198,14 @@ main(int argc, char **argv)
     /* if(date_time && interval) { */
     /* } */
 
-    free_ha_date(date_time);
-    free_ha_date(duration);
+    crm_time_free(date_time);
+    crm_time_free(duration);
     if(interval) {
-        free_ha_date(interval->start);
-        free_ha_date(interval->end);
-        free_ha_date(interval->diff);
+        crm_time_free(interval->start);
+        crm_time_free(interval->end);
+        crm_time_free(interval->diff);
         free(interval);
     }
-
-    free(date_time_s);
-    free(duration_s);
-    free(period_s);
 
     qb_log_fini();
     return rc;

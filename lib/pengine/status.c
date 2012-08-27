@@ -71,7 +71,7 @@ cluster_status(pe_working_set_t * data_set)
     }
 
     if (data_set->now == NULL) {
-        data_set->now = new_ha_date(TRUE);
+        data_set->now = crm_time_new(NULL);
     }
 
     if (data_set->input != NULL && crm_element_value(data_set->input, XML_ATTR_DC_UUID) != NULL) {
@@ -204,7 +204,7 @@ cleanup_calculations(pe_working_set_t * data_set)
     pe_free_nodes(data_set->nodes);
 
     free_xml(data_set->graph);
-    free_ha_date(data_set->now);
+    crm_time_free(data_set->now);
     free_xml(data_set->input);
     free_xml(data_set->failed);
 

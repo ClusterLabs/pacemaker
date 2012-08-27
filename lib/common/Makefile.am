@@ -32,7 +32,7 @@ lib_LTLIBRARIES	= libcrmcommon.la
 
 CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
-libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c iso8601.c iso8601_fields.c remote.c mainloop.c logging.c
+libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c iso8601.c remote.c mainloop.c logging.c
 
 libcrmcommon_la_LDFLAGS	= -version-info 3:0:0
 libcrmcommon_la_LIBADD  = -ldl $(GNUTLSLIBS)

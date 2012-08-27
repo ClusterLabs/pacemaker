@@ -33,7 +33,7 @@
 #include <allocate.h>
 #include <utils.h>
 
-xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * now);
+xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 gboolean show_scores = FALSE;
 int scores_log_level = LOG_DEBUG_2;
@@ -211,7 +211,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
 }
 
 xmlNode *
-do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * now)
+do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now)
 {
     GListPtr gIter = NULL;
     int rsc_log_level = LOG_INFO;
@@ -225,7 +225,7 @@ do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * no
         data_set->input = xml_input;
         data_set->now = now;
         if (data_set->now == NULL) {
-            data_set->now = new_ha_date(TRUE);
+            data_set->now = crm_time_new(NULL);
         }
     } else {
         crm_trace("Already have status - reusing");

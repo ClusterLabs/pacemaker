@@ -55,16 +55,14 @@ gboolean quiet = FALSE;
 
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, ha_time_t * now);
+extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 char *use_date = NULL;
-static ha_time_t *
+static crm_time_t *
 get_date(void)
 {
     if (use_date) {
-        char *date_m = use_date;
-
-        return parse_date(&date_m);
+        return crm_time_new(use_date);
     }
     return NULL;
 }
@@ -1421,7 +1419,7 @@ main(int argc, char **argv)
 
     if (data_set.now != NULL) {
         quiet_log(" + Setting effective cluster time: %s", use_date);
-        log_date(LOG_WARNING, "Set fake 'now' to", data_set.now, ha_log_date | ha_log_time);
+        crm_time_log(LOG_WARNING, "Set fake 'now' to", data_set.now, crm_time_log_date | crm_time_log_timeofday);
     }
 
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
@@ -1462,7 +1460,7 @@ main(int argc, char **argv)
 
     rc = 0;
     if (process || simulate) {
-        ha_time_t *local_date = NULL;
+        crm_time_t *local_date = NULL;
 
         if (show_scores && show_utilization) {
             printf("Allocation scores and utilization information:\n");

@@ -706,40 +706,33 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         g_hash_table_replace(action->meta, strdup(field), value_ms);
 
     } else if (interval > 0 && g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN)) {
-        char *date_str = NULL;
-        char *date_str_mutable = NULL;
-        ha_time_t *origin = NULL;
+        crm_time_t *origin = NULL;
 
         value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN);
-        date_str = strdup(value);
-        date_str_mutable = date_str;
-        origin = parse_date(&date_str_mutable);
-        free(date_str);
+        origin = crm_time_new(value);
 
         if (origin == NULL) {
             crm_config_err("Operation %s contained an invalid " XML_OP_ATTR_ORIGIN ": %s",
                            ID(xml_obj), value);
 
         } else {
-            ha_time_t *delay = NULL;
-            int rc = compare_date(origin, data_set->now);
+            crm_time_t *delay = NULL;
+            int rc = crm_time_compare(origin, data_set->now);
             unsigned long long delay_s = 0;
 
             while (rc < 0) {
-                add_seconds(origin, interval / 1000);
-                rc = compare_date(origin, data_set->now);
+                crm_time_add_seconds(origin, interval / 1000);
+                rc = crm_time_compare(origin, data_set->now);
             }
 
-            delay = subtract_time(origin, data_set->now);
-            delay_s = date_in_seconds(delay);
-            /* log_date(LOG_DEBUG_5, "delay", delay, ha_log_date|ha_log_time|ha_log_local); */
+            delay = crm_time_subtract(origin, data_set->now);
+            delay_s = crm_time_get_seconds(delay);
+            start_delay = delay_s * 1000;
 
             crm_info("Calculated a start delay of %llus for %s", delay_s, ID(xml_obj));
-            g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
-                                 crm_itoa(delay_s * 1000));
-            start_delay = delay_s * 1000;
-            free_ha_date(origin);
-            free_ha_date(delay);
+            g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY), crm_itoa(start_delay));
+            crm_time_free(origin);
+            crm_time_free(delay);
         }
     }
 

@@ -33,17 +33,17 @@ enum expression_type {
 
 enum expression_type find_expression_type(xmlNode * expr);
 
-gboolean test_ruleset(xmlNode * ruleset, GHashTable * node_hash, ha_time_t * now);
+gboolean test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now);
 
 gboolean test_rule(xmlNode * rule, GHashTable * node_hash,
-                          enum rsc_role_e role, ha_time_t * now);
+                          enum rsc_role_e role, crm_time_t * now);
 
 gboolean test_expression(xmlNode * expr, GHashTable * node_hash,
-                                enum rsc_role_e role, ha_time_t * now);
+                                enum rsc_role_e role, crm_time_t * now);
 
 void unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                                        GHashTable * node_hash, GHashTable * hash,
                                        const char *always_first, gboolean overwrite,
-                                       ha_time_t * now);
+                                       crm_time_t * now);
 
 #endif

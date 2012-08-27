@@ -28,15 +28,15 @@
 
 CRM_TRACE_INIT_DATA(pe_rules);
 
-ha_time_t *parse_xml_duration(ha_time_t * start, xmlNode * duration_spec);
+crm_time_t *parse_xml_duration(crm_time_t * start, xmlNode * duration_spec);
 
-gboolean test_date_expression(xmlNode * time_expr, ha_time_t * now);
-gboolean cron_range_satisfied(ha_time_t * now, xmlNode * cron_spec);
-gboolean test_attr_expression(xmlNode * expr, GHashTable * hash, ha_time_t * now);
-gboolean test_role_expression(xmlNode * expr, enum rsc_role_e role, ha_time_t * now);
+gboolean test_date_expression(xmlNode * time_expr, crm_time_t * now);
+gboolean cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec);
+gboolean test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now);
+gboolean test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now);
 
 gboolean
-test_ruleset(xmlNode * ruleset, GHashTable * node_hash, ha_time_t * now)
+test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now)
 {
     gboolean ruleset_default = TRUE;
     xmlNode *rule = NULL;
@@ -54,7 +54,7 @@ test_ruleset(xmlNode * ruleset, GHashTable * node_hash, ha_time_t * now)
 }
 
 gboolean
-test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, ha_time_t * now)
+test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
     xmlNode *expr = NULL;
     gboolean test = TRUE;
@@ -94,7 +94,7 @@ test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, ha_time_
 }
 
 gboolean
-test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, ha_time_t * now)
+test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
     gboolean accept = FALSE;
     const char *uname = NULL;
@@ -163,7 +163,7 @@ find_expression_type(xmlNode * expr)
 }
 
 gboolean
-test_role_expression(xmlNode * expr, enum rsc_role_e role, ha_time_t * now)
+test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
 {
     gboolean accept = FALSE;
     const char *op = NULL;
@@ -204,7 +204,7 @@ test_role_expression(xmlNode * expr, enum rsc_role_e role, ha_time_t * now)
 }
 
 gboolean
-test_attr_expression(xmlNode * expr, GHashTable * hash, ha_time_t * now)
+test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now)
 {
     gboolean accept = FALSE;
     int cmp = 0;
@@ -340,12 +340,12 @@ test_attr_expression(xmlNode * expr, GHashTable * hash, ha_time_t * now)
  */
 
 static int
-phase_of_the_moon(ha_time_t * now)
+phase_of_the_moon(crm_time_t * now)
 {
     uint32_t epact, diy, goldn;
     uint32_t y;
 
-    crm_get_ordinal_date(now, &y, &diy);
+    crm_time_get_ordinal(now, &y, &diy);
 
     goldn = (y % 19) + 1;
     epact = (11 * goldn + 18) % 30;
@@ -441,7 +441,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
     }
 
 gboolean
-cron_range_satisfied(ha_time_t * now, xmlNode * cron_spec)
+cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
 {
     const char *value = NULL;
     char *value_low = NULL;
@@ -454,23 +454,23 @@ cron_range_satisfied(ha_time_t * now, xmlNode * cron_spec)
 
     CRM_CHECK(now != NULL, return FALSE);
 
-    crm_get_time(now, &h, &m, &s);
+    crm_time_get_timeofday(now, &h, &m, &s);
     
     cron_check("seconds", s);
     cron_check("minutes", m);
     cron_check("hours", h);
 
-    crm_get_gregorian_date(now, &y, &m, &d);
+    crm_time_get_gregorian(now, &y, &m, &d);
 
     cron_check("monthdays", d);
     cron_check("months", m);
     cron_check("years", y);
 
-    crm_get_ordinal_date(now, &y, &d);
+    crm_time_get_ordinal(now, &y, &d);
 
     cron_check("yeardays", d);
 
-    crm_get_week_date(now, &y, &w, &d);
+    crm_time_get_isoweek(now, &y, &w, &d);
 
     cron_check("weekyears", y);
     cron_check("weeks", w);
@@ -488,34 +488,32 @@ cron_range_satisfied(ha_time_t * now, xmlNode * cron_spec)
 	time_fn(end, value_i);					\
     }
 
-ha_time_t *
-parse_xml_duration(ha_time_t * start, xmlNode * duration_spec)
+crm_time_t *
+parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
 {
-    ha_time_t *end = NULL;
+    crm_time_t *end = NULL;
     const char *value = NULL;
 
-    end = new_ha_date(FALSE);
-    ha_set_time(end, start, TRUE);
+    end = crm_time_new(NULL);
+    crm_time_set(end, start);
 
-    update_field("years", add_years);
-    update_field("months", add_months);
-    update_field("weeks", add_weeks);
-    update_field("days", add_days);
-    update_field("hours", add_hours);
-    update_field("minutes", add_minutes);
-    update_field("seconds", add_seconds);
+    update_field("years", crm_time_add_years);
+    update_field("months", crm_time_add_months);
+    update_field("weeks", crm_time_add_weeks);
+    update_field("days", crm_time_add_days);
+    update_field("hours", crm_time_add_hours);
+    update_field("minutes", crm_time_add_minutes);
+    update_field("seconds", crm_time_add_seconds);
 
     return end;
 }
 
 gboolean
-test_date_expression(xmlNode * time_expr, ha_time_t * now)
+test_date_expression(xmlNode * time_expr, crm_time_t * now)
 {
-    ha_time_t *start = NULL;
-    ha_time_t *end = NULL;
+    crm_time_t *start = NULL;
+    crm_time_t *end = NULL;
     const char *value = NULL;
-    char *value_copy = NULL;
-    char *value_copy_start = NULL;
     const char *op = crm_element_value(time_expr, "operation");
 
     xmlNode *duration_spec = NULL;
@@ -530,17 +528,11 @@ test_date_expression(xmlNode * time_expr, ha_time_t * now)
 
     value = crm_element_value(time_expr, "start");
     if (value != NULL) {
-        value_copy = strdup(value);
-        value_copy_start = value_copy;
-        start = parse_date(&value_copy);
-        free(value_copy_start);
+        start = crm_time_new(value);
     }
     value = crm_element_value(time_expr, "end");
     if (value != NULL) {
-        value_copy = strdup(value);
-        value_copy_start = value_copy;
-        end = parse_date(&value_copy);
-        free(value_copy_start);
+        end = crm_time_new(value);
     }
 
     if (start != NULL && end == NULL && duration_spec != NULL) {
@@ -551,9 +543,9 @@ test_date_expression(xmlNode * time_expr, ha_time_t * now)
     }
 
     if (safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range")) {
-        if (start != NULL && compare_date(start, now) > 0) {
+        if (start != NULL && crm_time_compare(start, now) > 0) {
             passed = FALSE;
-        } else if (end != NULL && compare_date(end, now) < 0) {
+        } else if (end != NULL && crm_time_compare(end, now) < 0) {
             passed = FALSE;
         } else if (safe_str_eq(op, "in_range")) {
             passed = TRUE;
@@ -561,21 +553,21 @@ test_date_expression(xmlNode * time_expr, ha_time_t * now)
             passed = cron_range_satisfied(now, date_spec);
         }
 
-    } else if (safe_str_eq(op, "gt") && compare_date(start, now) < 0) {
+    } else if (safe_str_eq(op, "gt") && crm_time_compare(start, now) < 0) {
         passed = TRUE;
 
-    } else if (safe_str_eq(op, "lt") && compare_date(end, now) > 0) {
+    } else if (safe_str_eq(op, "lt") && crm_time_compare(end, now) > 0) {
         passed = TRUE;
 
-    } else if (safe_str_eq(op, "eq") && compare_date(start, now) == 0) {
+    } else if (safe_str_eq(op, "eq") && crm_time_compare(start, now) == 0) {
         passed = TRUE;
 
-    } else if (safe_str_eq(op, "neq") && compare_date(start, now) != 0) {
+    } else if (safe_str_eq(op, "neq") && crm_time_compare(start, now) != 0) {
         passed = TRUE;
     }
 
-    free_ha_date(start);
-    free_ha_date(end);
+    crm_time_free(start);
+    crm_time_free(end);
     return passed;
 }
 
@@ -665,7 +657,7 @@ struct unpack_data_s {
     gboolean overwrite;
     GHashTable *node_hash;
     GHashTable *hash;
-    ha_time_t *now;
+    crm_time_t *now;
 };
 
 static void
@@ -685,7 +677,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
 void
 unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                            GHashTable * node_hash, GHashTable * hash, const char *always_first,
-                           gboolean overwrite, ha_time_t * now)
+                           gboolean overwrite, crm_time_t * now)
 {
     GListPtr sorted = NULL;
     GListPtr unsorted = NULL;

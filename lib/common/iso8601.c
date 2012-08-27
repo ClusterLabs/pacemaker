@@ -34,26 +34,6 @@
 #include <ctype.h>
 #include <crm/common/iso8601.h>
 
-
-struct ha_time_s {
-        int years;
-        int months; /* Only for durations */
-        int days;
-        int seconds;
-        int offset; /* Seconds */
-};
-
-char *date_to_string(ha_time_t * date_time, int flags);
-
-static int year_days(int year) 
-{
-    int d = 365;
-    if (is_leap_year(year)) {
-        d++;
-    }
-    return d;
-}
-
 /*
  * Andrew's code was originally written for OSes whose "struct tm" contains:
  *	long tm_gmtoff;		:: Seconds east of UTC
@@ -76,39 +56,167 @@ static int year_days(int year)
 #  define GMTOFF(tm) (timezone)
 #endif
 
-static ha_time_t *
-crm_get_utc_time(ha_time_t *dt)
+struct crm_time_s {
+        int years;
+        int months; /* Only for durations */
+        int days;
+        int seconds;
+        int offset; /* Seconds */
+};
+
+char *crm_time_as_string(crm_time_t * date_time, int flags);
+crm_time_t *parse_date(const char *date_str);
+
+gboolean check_for_ordinal(const char *str);
+
+static crm_time_t *
+crm_get_utc_time(crm_time_t *dt)
 {
-    ha_time_t *utc = new_ha_date(FALSE);
-    ha_set_time(utc, dt, FALSE);
-    sub_seconds(utc, dt->offset);
-    crm_trace("utc time");
+    crm_time_t *utc = calloc(1, sizeof(crm_time_t));
+
+    utc->years = dt->years;
+    utc->days = dt->days;
+    utc->seconds = dt->seconds;
+    utc->offset = 0;
+
+    if(dt->offset) {
+        crm_time_add_seconds(utc, -dt->offset);
+    } else {
+        /* Durations (which are the only things that can include months, never have a timezone */
+        utc->months = dt->months;
+    }
+
+    crm_time_log(LOG_TRACE, "utc-source", dt, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    crm_time_log(LOG_TRACE, "utc-target", utc, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     return utc;
 }
 
-void
-log_date(int log_level, const char *prefix, ha_time_t * date_time, int flags)
+crm_time_t *
+crm_time_new(const char *date_time)
 {
-    char *date_s = date_to_string(date_time, flags);
+    time_t tm_now;
+    crm_time_t *dt = NULL;
+
+    tzset();
+    if (date_time == NULL) {
+        tm_now = time(NULL);
+        dt = calloc(1, sizeof(crm_time_t));
+        crm_time_set_timet(dt, &tm_now);
+    } else {
+        dt = parse_date(date_time);
+    }
+    return dt;
+}
+
+void
+crm_time_free(crm_time_t * dt)
+{
+    if (dt == NULL) {
+        return;
+    }
+    free(dt);
+}
+
+static int year_days(int year) 
+{
+    int d = 365;
+    if (crm_time_leapyear(year)) {
+        d++;
+    }
+    return d;
+}
+
+/* http://www.personal.ecu.edu/mccartyr/ISOwdALG.txt
+ *
+ * 5. Find the Jan1Weekday for Y (Monday=1, Sunday=7)
+ *  YY = (Y-1) % 100
+ *  C = (Y-1) - YY
+ *  G = YY + YY/4
+ *  Jan1Weekday = 1 + (((((C / 100) % 4) x 5) + G) % 7)
+ */
+int
+crm_time_january1_weekday(int year)
+{
+    int YY = (year - 1) % 100;
+    int C = (year - 1) - YY;
+    int G = YY + YY / 4;
+    int jan1 = 1 + (((((C / 100) % 4) * 5) + G) % 7);
+
+    crm_trace("YY=%d, C=%d, G=%d", YY, C, G);
+    crm_trace("January 1 %.4d: %d", year, jan1);
+    return jan1;
+}
+
+int
+crm_time_weeks_in_year(int year)
+{
+    int weeks = 52;
+    int jan1 = crm_time_january1_weekday(year);
+
+    /* if jan1 == thursday */
+    if (jan1 == 4) {
+        weeks++;
+    } else {
+        jan1 = crm_time_january1_weekday(year + 1);
+        /* if dec31 == thursday aka. jan1 of next year is a friday */
+        if (jan1 == 5) {
+            weeks++;
+        }
+
+    }
+    return weeks;
+}
+
+int month_days[14] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29 };
+
+int
+crm_time_days_in_month(int month, int year)
+{
+    if (month == 2 && crm_time_leapyear(year)) {
+        month = 13;
+    }
+    return month_days[month];
+}
+
+bool
+crm_time_leapyear(int year)
+{
+    gboolean is_leap = FALSE;
+
+    if (year % 4 == 0) {
+        is_leap = TRUE;
+    }
+    if (year % 100 == 0 && year % 400 != 0) {
+        is_leap = FALSE;
+    }
+    return is_leap;
+}
+
+static uint32_t get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
+{
+    int lpc;
+    for(lpc = 1; lpc < m; lpc++) {
+        d += crm_time_days_in_month(lpc, y);
+    }
+    return d;
+}
+
+void
+crm_time_log_alias(int log_level, const char *file, const char *function, int line, const char *prefix, crm_time_t * date_time, int flags)
+{
+    char *date_s = crm_time_as_string(date_time, flags);
 
     if(log_level < LOG_CRIT) {
         printf("%s%s%s\n",
                prefix ? prefix : "", prefix ? ": " : "", date_s ? date_s : "__invalid_date__");
     } else {
-        do_crm_log(log_level, "%s%s%s",
+            do_crm_log_alias(log_level, file, function, line, "%s%s%s",
                    prefix ? prefix : "", prefix ? ": " : "", date_s ? date_s : "__invalid_date__");
     }
     free(date_s);
 }
 
-void
-log_time_period(int log_level, ha_time_period_t * dtp, int flags)
-{
-    log_date(log_level, "Period start:", dtp->start, flags);
-    log_date(log_level, "Period end:", dtp->end, flags);
-}
-
-static int crm_get_time_sec(int sec, uint *h, uint *m, uint *s)
+static int crm_time_get_sec(int sec, uint *h, uint *m, uint *s)
 {
     uint hours, minutes, seconds;
     if(sec < 0) {
@@ -132,47 +240,99 @@ static int crm_get_time_sec(int sec, uint *h, uint *m, uint *s)
     return TRUE;
 }
 
-int crm_get_time(ha_time_t *now, uint *h, uint *m, uint *s)
+int crm_time_get_timeofday(crm_time_t *dt, uint *h, uint *m, uint *s)
 {
-    return crm_get_time_sec(now->seconds, h, m, s);
+    return crm_time_get_sec(dt->seconds, h, m, s);
 }
 
-    
-int crm_get_gregorian_date(ha_time_t *now, uint *y, uint *m, uint *d)
+int crm_time_get_timezone(crm_time_t *dt, uint *h, uint *m)
+{
+    uint s;
+    return crm_time_get_sec(dt->seconds, h, m, &s);
+}
+
+unsigned long long
+crm_time_get_seconds(crm_time_t * dt)
+{
+    int lpc;
+    crm_time_t *utc = NULL;
+    unsigned long long in_seconds = 0;
+
+    utc = crm_get_utc_time(dt);
+
+    for(lpc = 1; lpc < utc->years; lpc++) {
+        int dmax = year_days(lpc);
+        in_seconds += 60 * 60 * 24 * dmax;
+    }
+
+    /* utc->months is an offset that can only be set for a duration
+     * By definiton, the value is variable depending on the date to
+     * which it is applied
+     *
+     * Force 30-day months so that something vaguely sane happens
+     * for anyone that tries to use a month in this way
+     */
+    if(utc->months > 0) {
+        in_seconds += 60 * 60 * 24 * 30 * utc->months;
+    }
+
+    if(utc->days > 0) {
+        in_seconds += 60 * 60 * 24 * (utc->days -1);
+    }
+    in_seconds += utc->seconds;
+
+    crm_time_free(utc);
+    return in_seconds;
+}
+
+#define EPOCH_SECONDS 62135596800 /* Calculated using crm_time_get_seconds() */
+unsigned long long
+crm_time_get_seconds_since_epoch(crm_time_t * dt)
+{
+    return crm_time_get_seconds(dt) - EPOCH_SECONDS;
+}
+
+int crm_time_get_gregorian(crm_time_t *dt, uint *y, uint *m, uint *d)
 {
     int months = 1;
-    int days = now->days;
-    for(; months <= 12 && days > 0; months++) {
-        int mdays = days_per_month(months, now->years);
-        if(mdays >= days) {
-            break;
-        } else {
-            days -= mdays;
+    int days = dt->days;
+    if(dt->months) {
+        /* This is a duration including months, don't convert the days field */
+        months = dt->months;
+
+    } else {
+        for(; months <= 12 && days > 0; months++) {
+            int mdays = crm_time_days_in_month(months, dt->years);
+            if(mdays >= days) {
+                break;
+            } else {
+                days -= mdays;
+            }
         }
     }
 
-    *y = now->years;
+    *y = dt->years;
     *m = months;
     *d = days;
-    crm_trace("%.4d-%.3d -> %.4d-%.2d-%.2d", now->years, now->days, now->years, months, days);
+    crm_trace("%.4d-%.3d -> %.4d-%.2d-%.2d", dt->years, dt->days, dt->years, months, days);
     return TRUE;
 }
 
-int crm_get_ordinal_date(ha_time_t *now, uint *y, uint *d)
+int crm_time_get_ordinal(crm_time_t *dt, uint *y, uint *d)
 {
-    *y = now->years;
-    *d = now->days;
+    *y = dt->years;
+    *d = dt->days;
     return TRUE;
 }
 
-int crm_get_week_date(ha_time_t *dt, uint *y, uint *w, uint *d)
+int crm_time_get_isoweek(crm_time_t *dt, uint *y, uint *w, uint *d)
 {
     /*
      * Monday 29 December 2008 is written "2009-W01-1"
      * Sunday 3 January 2010 is written "2009-W53-7"
      */
     int year_num = 0;
-    int jan1 = january1(dt->years);
+    int jan1 = crm_time_january1_weekday(dt->years);
     int h = -1;
 
     CRM_CHECK(dt->days > 0, return FALSE);
@@ -185,7 +345,7 @@ int crm_get_week_date(ha_time_t *dt, uint *y, uint *w, uint *d)
     if (dt->days <= (8 - jan1) && jan1 > 4) {
         crm_trace("year--, jan1=%d", jan1);
         year_num = dt->years - 1;
-        *w = weeks_in_year(year_num);
+        *w = crm_time_weeks_in_year(year_num);
 
     } else {
         year_num = dt->years;
@@ -219,68 +379,64 @@ int crm_get_week_date(ha_time_t *dt, uint *y, uint *w, uint *d)
 }
 
 char *
-date_to_string(ha_time_t * date_time, int flags)
+crm_time_as_string(crm_time_t * date_time, int flags)
 {
     char *date_s = NULL;
     char *time_s = NULL;
     char *offset_s = NULL;
     char *result_s = NULL;
-    ha_time_t *dt = NULL;
+    crm_time_t *dt = NULL;
+    crm_time_t *utc = NULL;
 
-    if (flags & ha_log_local) {
-        crm_trace("Local version");
-        dt = calloc(1, sizeof(ha_time_t));
-        ha_set_time(dt, date_time, FALSE);
-    } else if(date_time->offset) {
+    if (date_time->offset && (flags & crm_time_log_with_timezone) == 0) {
         crm_trace("UTC conversion");
-        dt = crm_get_utc_time(date_time);
+        utc = crm_get_utc_time(date_time);
+        dt = utc;
     } else {
-        crm_trace("Already UTC");
-        dt = calloc(1, sizeof(ha_time_t));
-        ha_set_time(dt, date_time, FALSE);
+        dt = date_time;
     }
 
     CRM_CHECK(dt != NULL, return NULL);
 
-    if (flags & ha_log_date) {
+    if (flags & crm_time_log_date) {
         date_s = calloc(1, 32);
         if (date_s == NULL) {
             return NULL;
 
-        } else if (flags & ha_date_seconds) {
-            unsigned long long s = date_in_seconds(date_time);
+        } else if (flags & crm_time_seconds) {
+            unsigned long long s = crm_time_get_seconds(date_time);
             snprintf(date_s, 31, "%llu", s);
             goto done;
 
-        } else if (flags & ha_date_epoch) {
-            unsigned long long s = date_in_seconds_since_epoch(date_time);
+        } else if (flags & crm_time_epoch) {
+            unsigned long long s = crm_time_get_seconds_since_epoch(date_time);
             snprintf(date_s, 31, "%llu", s);
             goto done;
 
-        } else if (flags & ha_date_weeks) {
+        } else if (flags & crm_time_weeks) {
             /* YYYY-Www-D */
             uint y, w, d;
-            if(crm_get_week_date(dt, &y, &w, &d)) {
+            if(crm_time_get_isoweek(dt, &y, &w, &d)) {
                 snprintf(date_s, 31, "%d-W%.2d-%d", y, w, d);
             }
 
-        } else if (flags & ha_date_ordinal) {
+        } else if (flags & crm_time_ordinal) {
             /* YYYY-DDD */
             uint y, d;
-            if(crm_get_ordinal_date(dt, &y, &d)) {
+            if(crm_time_get_ordinal(dt, &y, &d)) {
                 snprintf(date_s, 31, "%d-%.3d", y, d);
             }
 
         } else {
             /* YYYY-MM-DD */
             uint y, m, d;
-            if(crm_get_gregorian_date(dt, &y, &m, &d)) {
+            if(crm_time_get_gregorian(dt, &y, &m, &d)) {
                 snprintf(date_s, 31, "%.4d-%.2d-%.2d", y, m, d);
             }
         }
     }
 
-    if (flags & ha_log_time) {
+    if (flags & crm_time_log_timeofday) {
         uint h, m, s;
 
         time_s = calloc(1, 32);
@@ -288,17 +444,17 @@ date_to_string(ha_time_t * date_time, int flags)
             goto cleanup;
         }
 
-        if(crm_get_time(dt, &h, &m, &s)) {
+        if(crm_time_get_timeofday(dt, &h, &m, &s)) {
             snprintf(time_s, 31, "%.2d:%.2d:%.2d", h, m, s);
         }
 
         if (dt->offset != 0) {
-            crm_get_time_sec(dt->offset, &h, &m, &s);
+            crm_time_get_sec(dt->offset, &h, &m, &s);
         }
 
         offset_s = calloc(1, 32);
-        if ((flags & ha_log_local) == 0 || dt->offset == 0) {
-            crm_trace("flags %6x %6x", flags, ha_log_local);
+        if ((flags & crm_time_log_with_timezone) == 0 || dt->offset == 0) {
+            crm_trace("flags %6x %6x", flags, crm_time_log_with_timezone);
             snprintf(offset_s, 31, "Z");
 
         } else {
@@ -317,13 +473,13 @@ date_to_string(ha_time_t * date_time, int flags)
     free(date_s);
     free(time_s);
     free(offset_s);
-    free_ha_date(dt);
+    crm_time_free(utc);
 
     return result_s;
 }
 
 static int
-parse_time_sec(const char *time_str)
+crm_time_parse_sec(const char *time_str)
 {
     int rc;
     uint hour = 0;
@@ -353,7 +509,7 @@ parse_time_sec(const char *time_str)
 }
 
 static int
-parse_time_offset(char *offset_str)
+crm_time_parse_offset(const char *offset_str)
 {
     int offset = 0;
 
@@ -381,7 +537,7 @@ parse_time_offset(char *offset_str)
             negate = TRUE;
             offset_str++;
         }
-        offset = parse_time_sec(offset_str);
+        offset = crm_time_parse_sec(offset_str);
         if (negate) {
             offset = 0 - offset;
         }
@@ -389,41 +545,42 @@ parse_time_offset(char *offset_str)
     return offset;
 }
 
-static ha_time_t *
-parse_time(char **time_str, ha_time_t * a_time, gboolean with_offset)
+static crm_time_t *
+crm_time_parse(const char *time_str, crm_time_t * a_time)
 {
     uint h, m, s;
     char *offset_s = NULL;
-    ha_time_t *new_time = a_time;
+    crm_time_t *dt = a_time;
 
     tzset();
     if (a_time == NULL) {
-        new_time = new_ha_date(FALSE);
+        dt = calloc(1, sizeof(crm_time_t));
     }
     
-    CRM_CHECK(new_time != NULL, return NULL);
-    new_time->seconds = parse_time_sec(*time_str);
+    if(time_str) {
+        dt->seconds = crm_time_parse_sec(time_str);
+    }
 
-    offset_s = strstr(*time_str, "Z");
+    offset_s = strstr(time_str, "Z");
     if(offset_s == NULL) {
-        offset_s = strstr(*time_str, " ");
+        offset_s = strstr(time_str, " ");
     }
     if(offset_s) {
         while (isspace(offset_s[0])) {
             offset_s++;
         }
     }
-    new_time->offset = parse_time_offset(offset_s);
-    crm_get_time_sec(new_time->offset, &h, &m, &s);
-    crm_trace("Got tz: %c%2.d:%.2d", new_time->offset<0?'-':'+', h, m);
-    return new_time;
+    dt->offset = crm_time_parse_offset(offset_s);
+    crm_time_get_sec(dt->offset, &h, &m, &s);
+    crm_trace("Got tz: %c%2.d:%.2d", dt->offset<0?'-':'+', h, m);
+    return dt;
 }
 
-ha_time_t *
-parse_date(char **date_str)
+crm_time_t *
+parse_date(const char *date_str)
 {
     char *time_s;
-    ha_time_t *new_time = NULL;
+    crm_time_t *dt = NULL;
 
     int year = 0;
     int month = 0;
@@ -432,31 +589,31 @@ parse_date(char **date_str)
     int rc = 0;
 
     CRM_CHECK(date_str != NULL, return NULL);
-    CRM_CHECK(strlen(*date_str) > 0, return NULL);
+    CRM_CHECK(strlen(date_str) > 0, return NULL);
 
-    if ((*date_str)[0] == 'T' || (*date_str)[2] == ':') {
+    if (date_str[0] == 'T' || date_str[2] == ':') {
         /* Just a time supplied - Infer current date */
-        new_time = new_ha_date(TRUE);
+        dt = crm_time_new(NULL);
 
-        parse_time(date_str, new_time, TRUE);
+        crm_time_parse(date_str, dt);
         goto done;
 
     } else {
-        new_time = calloc(1, sizeof(ha_time_t));
+        dt = calloc(1, sizeof(crm_time_t));
     }
 
-    if(safe_str_eq("epoch", *date_str)) {
-        new_time->days = 1;
-        new_time->years = 1970;
-        log_date(LOG_TRACE, "Unpacked", new_time, ha_log_date | ha_log_time);
-        return new_time;
+    if(safe_str_eq("epoch", date_str)) {
+        dt->days = 1;
+        dt->years = 1970;
+        crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
+        return dt;
     }
 
     /* YYYY-MM-DD */
-    rc = sscanf(*date_str, "%d-%d-%d", &year, &month, &day);
+    rc = sscanf(date_str, "%d-%d-%d", &year, &month, &day);
     if(rc == 1) {
         /* YYYYMMDD */
-        rc = sscanf(*date_str, "%4d%2d%2d", &year, &month, &day);
+        rc = sscanf(date_str, "%4d%2d%2d", &year, &month, &day);
     }
     if(rc == 3) {
         if(month > 12) {
@@ -464,53 +621,37 @@ parse_date(char **date_str)
         } else if(day > 31) {
             crm_err("Invalid day: %d", day);
         } else {
-            int m;
-            new_time->days = day;
-            new_time->years = year;
-            for(m = 1; m < month; m++) {
-                new_time->days += days_per_month(year, m);
-            }
-            crm_trace("Got gergorian date: %.4d-%.3d", year, new_time->days);
+            dt->years = year;
+            dt->days = get_ordinal_days(year, month, day);
+            crm_trace("Got gergorian date: %.4d-%.3d", year, dt->days);
         }
         goto done;
     }
 
     /* YYYY-DDD */
-    rc = sscanf(*date_str, "%d-%d", &year, &day);
+    rc = sscanf(date_str, "%d-%d", &year, &day);
     if(rc == 2) {
         crm_trace("Got ordinal date");
-        if(day > 366) {
-            crm_err("Invalid day: %d", day);
+        if(day > year_days(year)) {
+            crm_err("Invalid day: %d (max=%d)", day, year_days(year));
         } else {
-            new_time->days = day;
-            new_time->years = year;
+            dt->days = day;
+            dt->years = year;
         }
         goto done;
     }
 
     /* YYYY-Www-D */
-    rc = sscanf(*date_str, "%d-W%d-%d", &year, &week, &day);
+    rc = sscanf(date_str, "%d-W%d-%d", &year, &week, &day);
     if(rc == 3) {
         crm_trace("Got week date");
-        if(week > 53) {
-            crm_err("Invalid week: %d", week);
-        } else if(day > 7) {
+        if(week > crm_time_weeks_in_year(year)) {
+            crm_err("Invalid week: %d (max=%d)", week, crm_time_weeks_in_year(year));
+        } else if(day < 1 || day > 7) {
             crm_err("Invalid day: %d", day);
         } else {
             /*
              * http://en.wikipedia.org/wiki/ISO_week_date
-             * This method requires that one know the weekday of 4 January of the year in question.
-             * Add 3 to the number of this weekday, giving a correction to be used for dates within this year.
-             *
-             * Method: Multiply the week number by 7, then add the weekday.
-             * From this sum subtract the correction for the year.
-             *
-             * Example: year 2008, week 39, Saturday (day 6)
-             * Correction for 2008: 5 + 3 = 8
-             * (39 * 7) + 6 = 279
-             * 279 - 8 = 271
-             *
-             * http://personal.ecu.edu/mccartyr/ISOwdALG.txt
              *
              * Monday 29 December 2008 is written "2009-W01-1"
              * Sunday 3 January 2010 is written "2009-W53-7"
@@ -521,75 +662,134 @@ parse_date(char **date_str)
              * If 1 January is on a Monday, Tuesday, Wednesday or Thursday, it is in week 01.
              * If 1 January is on a Friday, Saturday or Sunday, it is in week 52 or 53 of the previous year.
              */
-            int jan1 = january1(year);
+            int jan1 = crm_time_january1_weekday(year);
             crm_trace("Jan 1 = %d", jan1);
 
-            new_time->years = year;
-            add_days(new_time, (week - 1) * 7);
+            dt->years = year;
+            crm_time_add_days(dt, (week - 1) * 7);
 
             if(jan1 <= 4) {
-                sub_days(new_time, jan1 - 1);
+                crm_time_add_days(dt, 1-jan1);
             } else {
-                add_days(new_time, 8 - jan1);
+                crm_time_add_days(dt, 8-jan1);
             }
 
-            add_days(new_time, day);
-
-            /* Handle any underflow */
-            sub_days(new_time, 0);
+            crm_time_add_days(dt, day);
         }
         goto done;
     }
 
-    crm_err("Couldn't parse %s", *date_str);
+    crm_err("Couldn't parse %s", date_str);
   done:
     
-    time_s = strstr(*date_str, " ");
+    time_s = strstr(date_str, " ");
     if(time_s == NULL) {
-        time_s = strstr(*date_str, "T");
+        time_s = strstr(date_str, "T");
     }
     
     if(time_s) {
         time_s++;
-        parse_time(&time_s, new_time, TRUE);
+        crm_time_parse(time_s, dt);
     }
 
-    log_date(LOG_TRACE, "Unpacked", new_time, ha_log_date | ha_log_time);
+    crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
 
-    CRM_CHECK(is_date_sane(new_time), return NULL);
+    CRM_CHECK(crm_time_check(dt), return NULL);
 
-    return new_time;
+    return dt;
 }
 
-ha_time_t *
-parse_time_duration(char **interval_str)
+static int
+parse_int(const char *str, int field_width, int uppper_bound, int *result)
+{
+    int lpc = 0;
+    int offset = 0;
+    int intermediate = 0;
+    gboolean fraction = FALSE;
+    gboolean negate = FALSE;
+
+    CRM_CHECK(str != NULL, return FALSE);
+    CRM_CHECK(result != NULL, return FALSE);
+
+    *result = 0;
+
+    if (strlen(str) <= 0) {
+        return FALSE;
+    }
+
+    if (str[offset] == 'T') {
+        offset++;
+    }
+
+    if (str[offset] == '.' || str[offset] == ',') {
+        fraction = TRUE;
+        field_width = -1;
+        offset++;
+    } else if (str[offset] == '-') {
+        negate = TRUE;
+        offset++;
+    } else if (str[offset] == '+' || str[offset] == ':') {
+        offset++;
+    }
+
+    for (; (fraction || lpc < field_width) && isdigit((int)str[offset]); lpc++) {
+        if (fraction) {
+            intermediate = (str[offset] - '0') / (10 ^ lpc);
+        } else {
+            *result *= 10;
+            intermediate = str[offset] - '0';
+        }
+        *result += intermediate;
+        offset++;
+    }
+    if (fraction) {
+        *result = (int)(*result * uppper_bound);
+
+    } else if (uppper_bound > 0 && *result > uppper_bound) {
+        *result = uppper_bound;
+    }
+    if (negate) {
+        *result = 0 - *result;
+    }
+    if (lpc > 0) {
+        crm_trace("Found int: %d.  Stopped at str[%d]='%c'", *result, lpc, str[lpc]);
+        return offset;
+    }
+    return 0;
+}
+
+crm_time_t *
+crm_time_parse_duration(const char *interval_str)
 {
     gboolean is_time = FALSE;
-    ha_time_t *diff = NULL;
+    crm_time_t *diff = NULL;
 
     CRM_CHECK(interval_str != NULL, goto bail);
-    CRM_CHECK(strlen(*interval_str) > 0, goto bail);
-    CRM_CHECK((*interval_str)[0] == 'P', goto bail);
-    (*interval_str)++;
+    CRM_CHECK(strlen(interval_str) > 0, goto bail);
+    CRM_CHECK(interval_str[0] == 'P', goto bail);
+    interval_str++;
 
-    diff = calloc(1, sizeof(ha_time_t));
+    diff = calloc(1, sizeof(crm_time_t));
 
-    while (isspace((int)(*interval_str)[0]) == FALSE) {
-        int an_int = 0;
+    while (isspace((int)interval_str[0]) == FALSE) {
+        int an_int = 0, rc;
         char ch = 0;
 
-        if ((*interval_str)[0] == 'T') {
+        if (interval_str[0] == 'T') {
             is_time = TRUE;
-            (*interval_str)++;
+            interval_str++;
         }
 
-        if (parse_int(interval_str, 10, 0, &an_int) == FALSE) {
+        rc = parse_int(interval_str, 10, 0, &an_int);
+        if (rc == 0) {
             break;
         }
-        ch = (*interval_str)[0];
-        (*interval_str)++;
+        interval_str += rc;
 
-        crm_trace("%c=%d", ch, an_int);
+        ch = interval_str[0];
+        interval_str++;
+
+        crm_trace("Testing %c=%d, rc=%d", ch, an_int, rc);
 
         switch (ch) {
             case 0:
@@ -630,47 +830,42 @@ parse_time_duration(char **interval_str)
     return NULL;
 }
 
-ha_time_period_t *
-parse_time_period(char **period_str)
+crm_time_period_t *
+crm_time_parse_period(const char *period_str)
 {
     gboolean invalid = FALSE;
-    const char *original = *period_str;
-    ha_time_period_t *period = NULL;
+    const char *original = period_str;
+    crm_time_period_t *period = NULL;
 
     CRM_CHECK(period_str != NULL, return NULL);
-    CRM_CHECK(strlen(*period_str) > 0, return NULL);
+    CRM_CHECK(strlen(period_str) > 0, return NULL);
 
     tzset();
-    period = calloc(1, sizeof(ha_time_period_t));
+    period = calloc(1, sizeof(crm_time_period_t));
 
-    if ((*period_str)[0] == 'P') {
-        period->diff = parse_time_duration(period_str);
+    if (period_str[0] == 'P') {
+        period->diff = crm_time_parse_duration(period_str);
     } else {
         period->start = parse_date(period_str);
     }
 
-    if ((*period_str)[0] != 0) {
-        CRM_CHECK((*period_str)[0] == '/', invalid = TRUE; goto bail);
-        (*period_str)++;
+    if (period_str[0] != 0) {
+        CRM_CHECK(period_str[0] == '/', invalid = TRUE; goto bail);
+        period_str++;
 
-        if ((*period_str)[0] == 'P') {
-            period->diff = parse_time_duration(period_str);
+        if (period_str[0] == 'P') {
+            period->diff = crm_time_parse_duration(period_str);
         } else {
             period->end = parse_date(period_str);
         }
 
     } else if (period->diff != NULL) {
         /* just aduration starting from now */
-        time_t now = time(NULL);
-
-        period->start = calloc(1, sizeof(ha_time_t));
-
-        ha_set_timet_time(period->start, &now);
-        /* normalize_time(period->start); */
+        period->start = crm_time_new(NULL);
 
     } else {
         invalid = TRUE;
-        CRM_CHECK((*period_str)[0] == '/', goto bail);
+        CRM_CHECK(period_str[0] == '/', goto bail);
         goto bail;
     }
 
@@ -700,291 +895,121 @@ parse_time_period(char **period_str)
     }
 
     if (period->start == NULL) {
-        period->start = subtract_duration(period->end, period->diff);
+        period->start = crm_time_subtract(period->end, period->diff);
 
     } else if (period->end == NULL) {
-        period->end = add_time(period->start, period->diff);
+        period->end = crm_time_add(period->start, period->diff);
     }
 
-    is_date_sane(period->start);
-    is_date_sane(period->end);
+    crm_time_check(period->start);
+    crm_time_check(period->end);
 
     return period;
 }
 
-/* http://www.personal.ecu.edu/mccartyr/ISOwdALG.txt
- *
- * 5. Find the Jan1Weekday for Y (Monday=1, Sunday=7)
- *  YY = (Y-1) % 100
- *  C = (Y-1) - YY
- *  G = YY + YY/4
- *  Jan1Weekday = 1 + (((((C / 100) % 4) x 5) + G) % 7)
- */
-int
-january1(int year)
-{
-    int YY = (year - 1) % 100;
-    int C = (year - 1) - YY;
-    int G = YY + YY / 4;
-    int jan1 = 1 + (((((C / 100) % 4) * 5) + G) % 7);
-
-    crm_trace("YY=%d, C=%d, G=%d", YY, C, G);
-    crm_trace("January 1 %.4d: %d", year, jan1);
-    return jan1;
-}
-
-int
-weeks_in_year(int year)
-{
-    int weeks = 52;
-    int jan1 = january1(year);
-
-    /* if jan1 == thursday */
-    if (jan1 == 4) {
-        weeks++;
-    } else {
-        jan1 = january1(year + 1);
-        /* if dec31 == thursday aka. jan1 of next year is a friday */
-        if (jan1 == 5) {
-            weeks++;
-        }
-
-    }
-    return weeks;
-}
-
 void
-ha_set_time(ha_time_t * lhs, ha_time_t * rhs, gboolean offset)
+crm_time_set(crm_time_t *target, crm_time_t *source)
 {
-    crm_trace("lhs=%p, rhs=%p, offset=%d", lhs, rhs, offset);
+    crm_trace("target=%p, source=%p, offset=%d", target, source);
 
-    CRM_CHECK(lhs != NULL && rhs != NULL, return);
+    CRM_CHECK(target != NULL && source != NULL, return);
 
-    lhs->years = rhs->years;
-    lhs->days = rhs->days;
-    lhs->seconds = rhs->seconds;
-    lhs->offset = rhs->offset;
+    target->years = source->years;
+    target->days = source->days;
+    target->months = source->months; /* Only for durations */
+    target->seconds = source->seconds;
+    target->offset = source->offset;
+
+    crm_time_log(LOG_TRACE, "source", source, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    crm_time_log(LOG_TRACE, "target", target, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);    
 }
 
-void
-ha_set_tm_time(ha_time_t * lhs, struct tm *rhs)
+static void
+ha_set_tm_time(crm_time_t * target, struct tm *source)
 {
     int h_offset = 0;
     int m_offset = 0;
 
-    if (rhs->tm_year > 0) {
+    if (source->tm_year > 0) {
         /* years since 1900 */
-        lhs->years = 1900 + rhs->tm_year;
+        target->years = 1900 + source->tm_year;
     }
 
-    if (rhs->tm_yday >= 0) {
+    if (source->tm_yday >= 0) {
         /* days since January 1 [0-365] */
-        lhs->days = 1 + rhs->tm_yday;
+        target->days = 1 + source->tm_yday;
     }
 
-    if (rhs->tm_hour >= 0) {
-        lhs->seconds += 60 * 60 * rhs->tm_hour;
+    if (source->tm_hour >= 0) {
+        target->seconds += 60 * 60 * source->tm_hour;
     }
-    if (rhs->tm_min >= 0) {
-        lhs->seconds += 60 * rhs->tm_min;
+    if (source->tm_min >= 0) {
+        target->seconds += 60 * source->tm_min;
     }
-    if (rhs->tm_sec >= 0) {
-        lhs->seconds += rhs->tm_sec;
+    if (source->tm_sec >= 0) {
+        target->seconds += source->tm_sec;
     }
 
     /* tm_gmtoff == offset from UTC in seconds */
-    h_offset = GMTOFF(rhs) / (3600);
-    m_offset = (GMTOFF(rhs) - (3600 * h_offset)) / (60);
-    crm_trace("Offset (s): %ld, offset (hh:mm): %.2d:%.2d", GMTOFF(rhs), h_offset, m_offset);
+    h_offset = GMTOFF(source) / (3600);
+    m_offset = (GMTOFF(source) - (3600 * h_offset)) / (60);
+    crm_trace("Offset (s): %ld, offset (hh:mm): %.2d:%.2d", GMTOFF(source), h_offset, m_offset);
 
-    lhs->offset = 0;
-    lhs->offset += 60 * 60 * h_offset;
-    lhs->offset += 60 * m_offset;
+    target->offset = 0;
+    target->offset += 60 * 60 * h_offset;
+    target->offset += 60 * m_offset;
 }
 
 void
-ha_set_timet_time(ha_time_t * lhs, time_t * rhs)
+crm_time_set_timet(crm_time_t * target, time_t * source)
 {
-    ha_set_tm_time(lhs, localtime(rhs));
+    ha_set_tm_time(target, localtime(source));
 }
 
-ha_time_t *
-add_time(ha_time_t * dt, ha_time_t * rhs)
+crm_time_t *
+crm_time_add(crm_time_t * dt, crm_time_t * value)
 {
-    ha_time_t *utc = NULL;
-    ha_time_t *answer = NULL;
+    crm_time_t *utc = NULL;
+    crm_time_t *answer = NULL;
 
-    CRM_CHECK(dt != NULL && rhs != NULL, return NULL);
+    CRM_CHECK(dt != NULL && value != NULL, return NULL);
 
-    answer = new_ha_date(FALSE);
-    ha_set_time(answer, dt, TRUE);
+    answer = calloc(1, sizeof(crm_time_t));
+    crm_time_set(answer, dt);
 
-    utc = crm_get_utc_time(rhs);
+    utc = crm_get_utc_time(value);
 
-    add_years(answer, utc->years);
-    add_months(answer, utc->months);
-    add_days(answer, utc->days);
-    add_seconds(answer, utc->seconds);
+    answer->years += utc->years;
+    crm_time_add_months(answer, utc->months);
+    crm_time_add_days(answer, utc->days);
+    crm_time_add_seconds(answer, utc->seconds);
 
     return answer;
 }
 
-ha_time_t *
-subtract_time(ha_time_t * dt, ha_time_t * rhs)
+crm_time_t *
+crm_time_subtract(crm_time_t * dt, crm_time_t * value)
 {
-    ha_time_t *utc = NULL;
-    ha_time_t *answer = NULL;
+    crm_time_t *utc = NULL;
+    crm_time_t *answer = NULL;
 
-    CRM_CHECK(dt != NULL && rhs != NULL, return NULL);
+    CRM_CHECK(dt != NULL && value != NULL, return NULL);
 
-    answer = new_ha_date(FALSE);
-    ha_set_time(answer, dt, TRUE);
+    answer = calloc(1, sizeof(crm_time_t));
+    crm_time_set(answer, dt);
 
-    utc = crm_get_utc_time(rhs);
+    utc = crm_get_utc_time(value);
 
-    sub_years(answer, utc->years);
-    sub_months(answer, utc->months);
-    sub_days(answer, utc->days);
-    sub_seconds(answer, utc->seconds);
+    answer->years -= utc->years;
+    crm_time_add_months(answer,  -utc->months);
+    crm_time_add_days(answer,    -utc->days);
+    crm_time_add_seconds(answer, -utc->seconds);
 
     return answer;
 }
 
-ha_time_t *
-subtract_duration(ha_time_t * dt, ha_time_t * rhs)
-{
-    ha_time_t *utc = NULL;
-    ha_time_t *answer = NULL;
-
-    CRM_CHECK(dt != NULL && rhs != NULL, return NULL);
-
-    answer = new_ha_date(FALSE);
-    ha_set_time(answer, dt, TRUE);
-
-    utc = crm_get_utc_time(rhs);
-
-    sub_seconds(answer, utc->seconds);
-    sub_months(answer, utc->months);
-    sub_days(answer, utc->days);
-    sub_years(answer, utc->years);
-
-    return answer;
-}
-
-int month_days[14] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29 };
-
-int
-days_per_month(int month, int year)
-{
-    if (month == 2 && is_leap_year(year)) {
-        month = 13;
-    }
-    return month_days[month];
-}
-
-gboolean
-is_leap_year(int year)
-{
-    gboolean is_leap = FALSE;
-
-    if (year % 4 == 0) {
-        is_leap = TRUE;
-    }
-    if (year % 100 == 0 && year % 400 != 0) {
-        is_leap = FALSE;
-    }
-    return is_leap;
-}
-
-gboolean
-parse_int(char **str, int field_width, int uppper_bound, int *result)
-{
-    int lpc = 0;
-    int intermediate = 0;
-    gboolean fraction = FALSE;
-    gboolean negate = FALSE;
-
-    CRM_CHECK(str != NULL, return FALSE);
-    CRM_CHECK(*str != NULL, return FALSE);
-    CRM_CHECK(result != NULL, return FALSE);
-
-    *result = 0;
-
-    if (strlen(*str) <= 0) {
-        return FALSE;
-    }
-
-    if ((*str)[0] == 'T') {
-        (*str)++;
-    }
-
-    if ((*str)[0] == '.' || (*str)[0] == ',') {
-        fraction = TRUE;
-        field_width = -1;
-        (*str)++;
-    } else if ((*str)[0] == '-') {
-        negate = TRUE;
-        (*str)++;
-    } else if ((*str)[0] == '+' || (*str)[0] == ':') {
-        (*str)++;
-    }
-
-    for (; (fraction || lpc < field_width) && isdigit((int)(*str)[0]); lpc++) {
-        if (fraction) {
-            intermediate = ((*str)[0] - '0') / (10 ^ lpc);
-        } else {
-            *result *= 10;
-            intermediate = (*str)[0] - '0';
-        }
-        *result += intermediate;
-        (*str)++;
-    }
-    if (fraction) {
-        *result = (int)(*result * uppper_bound);
-
-    } else if (uppper_bound > 0 && *result > uppper_bound) {
-        *result = uppper_bound;
-    }
-    if (negate) {
-        *result = 0 - *result;
-    }
-    if (lpc > 0) {
-        crm_trace("Found int: %d.  Stopped at str[%d]='%c'", *result, lpc, (*str)[lpc]);
-        return TRUE;
-    }
-    return FALSE;
-}
-
-void
-reset_time(ha_time_t * a_time)
-{
-    a_time->years = 0;
-    a_time->days = 0;
-    a_time->seconds = 0;
-}
-
-void
-reset_tm(struct tm *some_tm)
-{
-    some_tm->tm_sec = -1;       /* seconds after the minute [0-60] */
-    some_tm->tm_min = -1;       /* minutes after the hour [0-59] */
-    some_tm->tm_hour = -1;      /* hours since midnight [0-23] */
-    some_tm->tm_mday = -1;      /* day of the month [1-31] */
-    some_tm->tm_mon = -1;       /* months since January [0-11] */
-    some_tm->tm_year = -1;      /* years since 1900 */
-    some_tm->tm_wday = -1;      /* days since Sunday [0-6] */
-    some_tm->tm_yday = -1;      /* days since January 1 [0-365] */
-    some_tm->tm_isdst = -1;     /* Daylight Savings Time flag */
-#if defined(HAVE_STRUCT_TM_TM_GMTOFF)
-    some_tm->tm_gmtoff = -1;    /* offset from CUT in seconds */
-#endif
-#if defined(HAVE_TM_ZONE)
-    some_tm->tm_zone = NULL;    /* timezone abbreviation */
-#endif
-}
-
-gboolean
-is_date_sane(ha_time_t * dt)
+bool
+crm_time_check(crm_time_t * dt)
 {
     int ydays = 0;
 
@@ -1016,11 +1041,11 @@ is_date_sane(ha_time_t * dt)
     }
 
 int
-compare_date(ha_time_t * a, ha_time_t * b)
+crm_time_compare(crm_time_t * a, crm_time_t * b)
 {
     int rc = 0;
-    ha_time_t *t1 = NULL;
-    ha_time_t *t2 = NULL;
+    crm_time_t *t1 = NULL;
+    crm_time_t *t2 = NULL;
 
     if (a == NULL && b == NULL) {
         return 0;
@@ -1040,81 +1065,114 @@ compare_date(ha_time_t * a, ha_time_t * b)
     return rc;
 }
 
-ha_time_t *
-new_ha_date(gboolean set_to_now)
-{
-    time_t tm_now;
-    ha_time_t *now = NULL;
 
-    tzset();
-    now = calloc(1, sizeof(ha_time_t));
-    if (set_to_now) {
-        tm_now = time(NULL);
-        ha_set_timet_time(now, &tm_now);
+void
+crm_time_add_seconds(crm_time_t * a_time, int extra)
+{
+    int days = 0;
+    int seconds = 24 * 60 * 60;
+
+    crm_trace("Adding %d seconds to %d (max=%d)", extra, a_time->seconds, seconds);
+
+    a_time->seconds += extra;
+    while (a_time->seconds >= seconds) {
+        a_time->seconds -= seconds;
+        days++;
     }
-    return now;
+
+    days = 0;
+    while (a_time->seconds < 0) {
+        crm_trace("s=%d, d=%d", a_time->seconds, days);
+        a_time->seconds += seconds;
+        days--;
+        crm_trace("s=%d, d=%d", a_time->seconds, days);
+    }
+    crm_time_add_days(a_time, days);
 }
 
 void
-free_ha_date(ha_time_t * dt)
+crm_time_add_days(crm_time_t * a_time, int extra)
 {
-    if (dt == NULL) {
-        return;
+    int ydays = crm_time_leapyear(a_time->years)?366:365;
+
+    crm_trace("Adding %d days to %.4d-%.3d",
+              extra, a_time->years, a_time->days);
+    
+    a_time->days += extra;
+    while (a_time->days > ydays) {
+        a_time->years++;
+        a_time->days -= ydays;
+        ydays = crm_time_leapyear(a_time->years)?366:365;
     }
-    free(dt);
+
+    while (a_time->days <= 0) {
+        a_time->years--;
+        a_time->days += crm_time_leapyear(a_time->years)?366:365;
+    }
 }
 
 void
-log_tm_date(int log_level, struct tm *some_tm)
-{
-    const char *tzn;
-
-#if defined(HAVE_TM_ZONE)
-    tzn = some_tm->tm_zone;
-#elif defined(HAVE_TZNAME)
-    tzn = tzname[0];
-#else
-    tzn = NULL;
-#endif
-
-    do_crm_log(log_level,
-               "%.2d/%.2d/%.4d %.2d:%.2d:%.2d %s"
-               " (wday=%d, yday=%d, dst=%d, offset=%ld)",
-               some_tm->tm_mday,
-               some_tm->tm_mon,
-               1900 + some_tm->tm_year,
-               some_tm->tm_hour,
-               some_tm->tm_min,
-               some_tm->tm_sec,
-               tzn,
-               some_tm->tm_wday == 0 ? 7 : some_tm->tm_wday,
-               1 + some_tm->tm_yday, some_tm->tm_isdst, GMTOFF(some_tm));
-}
-
-unsigned long long
-date_in_seconds(ha_time_t * dt)
+crm_time_add_months(crm_time_t * a_time, int extra)
 {
     int lpc;
-    ha_time_t *utc = NULL;
-    unsigned long long in_seconds = 0;
+    uint32_t y, m, d, dmax;
 
-    utc = crm_get_utc_time(dt);
+    crm_time_get_gregorian(a_time, &y, &m, &d);
+    crm_trace("Adding %d months to %.4d-%.2d-%.2d", extra, y, m, d);
 
-    for(lpc = 1; lpc < utc->years; lpc++) {
-        int dmax = year_days(lpc);
-        in_seconds += 60 * 60 * 24 * dmax;
+    if(extra > 0) {
+        for(lpc = extra; lpc > 0; lpc--) {
+            m++;
+            if(m == 13) {
+                m = 1;
+                y++;
+            }
+        }
+    } else {
+        for(lpc = -extra; lpc > 0; lpc--) {
+            m--;
+            if(m == 0) {
+                m = 12;
+                y--;
+            }
+        }
+    }
+    
+    dmax = crm_time_days_in_month(m, y);
+    if(dmax < d) {
+        /* Preserve day-of-month unless the month doesn't have enough days */
+        d = dmax;
     }
 
-    in_seconds += 60 * 60 * 24 * utc->days;
-    in_seconds += 60 * utc->seconds;
+    crm_trace("Calculated %.4d-%.2d-%.2d", y, m, d);
+    
+    a_time->years = y;
+    a_time->days = get_ordinal_days(y, m, d);
 
-    free_ha_date(utc);
-    return in_seconds;
+    crm_time_get_gregorian(a_time, &y, &m, &d);
+    crm_trace("Got %.4d-%.2d-%.2d", y, m, d);
 }
 
-#define EPOCH_SECONDS 62135683200 /* Calculated using date_in_seconds() */
-unsigned long long
-date_in_seconds_since_epoch(ha_time_t * dt)
+void
+crm_time_add_minutes(crm_time_t * a_time, int extra)
 {
-    return date_in_seconds(dt) - EPOCH_SECONDS;
+    crm_time_add_seconds(a_time, extra * 60);
+}
+
+void
+crm_time_add_hours(crm_time_t * a_time, int extra)
+{
+    crm_time_add_seconds(a_time, extra * 60 * 60);
+}
+
+void
+crm_time_add_weeks(crm_time_t * a_time, int extra)
+{
+    crm_time_add_days(a_time, extra * 7);
+}
+
+void
+crm_time_add_years(crm_time_t * a_time, int extra)
+{
+    a_time->years += extra;
 }

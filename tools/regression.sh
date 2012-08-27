@@ -22,6 +22,7 @@ function assert() {
     if [ $rc -ne $target ]; then
 	num_errors=`expr $num_errors + 1`
 	printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$msg"
+	printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$msg" 1>&2
 	return
 	exit 1
     else
@@ -211,9 +212,23 @@ function test_date() {
 
     $VALGRIND_CMD iso8601 -d "2009-W53-7 00:00:00Z" -W -E "2009-W53-7 00:00:00Z"
     assert $? 0 iso8601 "2009-W53-07" 0
+
+    $VALGRIND_CMD iso8601 -d "2009-01-31 00:00:00Z" -D "P1M" -E "2009-02-28 00:00:00Z"
+    assert $? 0 iso8601 "2009-01-31 + 1 Month" 0
+
+    $VALGRIND_CMD iso8601 -d "2009-01-31 00:00:00Z" -D "P2M" -E "2009-03-31 00:00:00Z"
+    assert $? 0 iso8601 "2009-01-31 + 2 Months" 0
+
+    $VALGRIND_CMD iso8601 -d "2009-01-31 00:00:00Z" -D "P3M" -E "2009-04-30 00:00:00Z"
+    assert $? 0 iso8601 "2009-01-31 + 3 Months" 0
+
+    $VALGRIND_CMD iso8601 -d "2009-03-31 00:00:00Z" -D "P-1M" -E "2009-02-28 00:00:00Z"
+    assert $? 0 iso8601 "2009-03-31 - 1 Month" 0
  }
 
+echo "Testing dates"
 test_date > $test_home/regression.out
+echo "Testing tools"
 test_tools >> $test_home/regression.out
 sed -i.sed 's/cib-last-written.*>/>/' $test_home/regression.out
 
