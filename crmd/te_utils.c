@@ -148,7 +148,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
             local_rc = write(confirm, target_copy, len);
             ignore = write(confirm, "\n", 1);
 
-            if(errno == EBADF) {
+            if(ignore < 0 && errno == EBADF) {
                 crm_trace("CMAN not expecting %s to be fenced (yet)", st_event->target);
                 
             } else if (local_rc < len) {

@@ -350,8 +350,14 @@ process_ais_conf(void)
                 ignore = fchown(logfd, pcmk_uid, pcmk_gid);
                 ignore = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 
-                fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
-                        pcmk_uid, pcmk_gid, value);
+                if(ignore < 0) {
+                    fprintf(logfile, "Could not set r/w permissions for uid=%d, gid=%d on %s\n",
+                            pcmk_uid, pcmk_gid, value);
+
+                } else {
+                    fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
+                            pcmk_uid, pcmk_gid, value);
+                }
                 fflush(logfile);
                 fsync(logfd);
                 fclose(logfile);
@@ -987,7 +993,7 @@ void
 pcmk_ipc(void *conn, ais_void_ptr * msg)
 {
     AIS_Message *mutable;
-    int type = 0, size = 0;
+    int type = 0;
     gboolean transient = TRUE;
     const AIS_Message *ais_msg = (const AIS_Message *)msg;
     void *async_conn = conn;
@@ -1008,10 +1014,6 @@ pcmk_ipc(void *conn, ais_void_ptr * msg)
 
     mutable = ais_msg_copy(ais_msg);
     AIS_ASSERT(check_message_sanity(mutable, mutable->data));
-
-    size = mutable->header.size;
-    /* ais_malloc0(ais_msg, size); */
-    /* memcpy(ais_msg, msg, size); */
 
     type = mutable->sender.type;
     ais_trace
