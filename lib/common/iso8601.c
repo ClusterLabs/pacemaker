@@ -984,6 +984,7 @@ crm_time_add(crm_time_t * dt, crm_time_t * value)
     crm_time_add_days(answer, utc->days);
     crm_time_add_seconds(answer, utc->seconds);
 
+    crm_time_free(utc);
     return answer;
 }
 
@@ -1062,6 +1063,8 @@ crm_time_compare(crm_time_t * a, crm_time_t * b)
     do_cmp_field(t1, t2, days);
     do_cmp_field(t1, t2, seconds);
 
+    crm_time_free(t1);
+    crm_time_free(t2);
     return rc;
 }
 
