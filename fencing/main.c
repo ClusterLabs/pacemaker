@@ -136,6 +136,7 @@ st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     
     crm_xml_add(request, F_STONITH_CLIENTID, client->id);
     crm_xml_add(request, F_STONITH_CLIENTNAME, client->name);
+    crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
 
     crm_log_xml_trace(request, "Client[inbound]");
     stonith_command(client, id, flags, request, NULL);
@@ -361,6 +362,35 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
                      type, client->name, client->id);
         }
     }
+}
+
+void
+do_stonith_async_timeout_update(const char *client_id, const char *call_id, int timeout)
+{
+    stonith_client_t *client = NULL;
+    xmlNode *notify_data = NULL;
+
+    if (!timeout || !call_id || !client_id) {
+        return;
+    }
+
+    client = g_hash_table_lookup(client_list, client_id);
+    if (!client) {
+        return;
+    }
+
+    notify_data = create_xml_node(NULL, T_STONITH_TIMEOUT_VALUE);
+    crm_xml_add(notify_data, F_TYPE, T_STONITH_TIMEOUT_VALUE);
+    crm_xml_add(notify_data, F_STONITH_CALLID, call_id);
+    crm_xml_add_int(notify_data, F_STONITH_TIMEOUT, timeout);
+
+    crm_trace("timeout update is %d for client %s and call id %s", timeout, client_id, call_id);
+
+    if (client->channel) {
+        crm_ipcs_send(client->channel, 0, notify_data, crm_ipc_server_event);
+    }
+
+    free_xml(notify_data);
 }
 
 void
@@ -748,7 +778,7 @@ main(int argc, char ** argv)
         printf(" <parameters>\n");
 
         printf("  <parameter name=\"stonith-timeout\" unique=\"0\">\n");
-        printf("    <shortdesc lang=\"en\">How long to wait for the STONITH action to complete.</shortdesc>\n");
+        printf("    <shortdesc lang=\"en\">How long to wait for the STONITH action to complete per a stonith device.</shortdesc>\n");
         printf("    <longdesc lang=\"en\">Overrides the stonith-timeout cluster property</longdesc>\n");
         printf("    <content type=\"time\" default=\"60s\"/>\n");
         printf("  </parameter>\n");

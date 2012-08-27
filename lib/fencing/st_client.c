@@ -75,6 +75,7 @@ typedef struct stonith_callback_client_s {
     const char *id;
     void *user_data;
     gboolean only_success;
+    gboolean allow_timeout_updates;
     struct timer_rec_s *timer;
 
 } stonith_callback_client_t;
@@ -177,7 +178,7 @@ stonith_api_register_device(stonith_t * st, int call_options,
 
 #if HAVE_STONITH_STONITH_H
     namespace = get_stonith_provider(agent, namespace);
-    if (strcmp(namespace, "heartbeat") == 0) {
+    if (safe_str_eq(namespace, "heartbeat")) {
         stonith_key_value_add(params, "plugin", agent);
         agent = "fence_legacy";
     }
@@ -1404,9 +1405,48 @@ stonith_async_timeout_handler(gpointer data)
     return TRUE;
 }
 
+static void
+set_callback_timeout(stonith_callback_client_t *callback, stonith_t *stonith, int call_id, int timeout)
+{
+    struct timer_rec_s *async_timer = callback->timer;
+
+    if (timeout <= 0) {
+        return;
+    }
+
+    if (!async_timer) {
+        async_timer = calloc(1, sizeof(struct timer_rec_s));
+        callback->timer = async_timer;
+    }
+
+    async_timer->stonith = stonith;
+    async_timer->call_id = call_id;
+    /* Allow a fair bit of grace to allow the server to tell us of a timeout
+     * This is only a fallback
+     */
+    async_timer->timeout = (timeout + 60) * 1000;
+    if (async_timer->ref) {
+        g_source_remove(async_timer->ref);
+    }
+    async_timer->ref = g_timeout_add(async_timer->timeout, stonith_async_timeout_handler, async_timer);
+}
+
+static void
+update_callback_timeout(int call_id, int timeout, stonith_t *st)
+{
+    stonith_callback_client_t *callback = NULL;
+    stonith_private_t *private = st->private;
+    callback = g_hash_table_lookup(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
+    if (!callback || !callback->allow_timeout_updates) {
+        return;
+    }
+
+    set_callback_timeout(callback, st, call_id, timeout);
+}
+
 static int
 stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, bool only_success,
-                         void *user_data, const char *callback_name,
+                         bool allow_timeout_updates, void *user_data, const char *callback_name,
                          void (*callback) (stonith_t * st, const xmlNode * msg, int call, int rc,
                                            xmlNode * output, void *userdata))
 {
@@ -1436,21 +1476,10 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, bool onl
     blob->only_success = only_success;
     blob->user_data = user_data;
     blob->callback = callback;
+    blob->allow_timeout_updates = allow_timeout_updates;
 
     if (timeout > 0) {
-        struct timer_rec_s *async_timer = NULL;
-
-        async_timer = calloc(1, sizeof(struct timer_rec_s));
-        blob->timer = async_timer;
-
-        async_timer->stonith = stonith;
-        async_timer->call_id = call_id;
-        /* Allow a fair bit of grace to allow the server to tell us of a timeout
-         * This is only a fallback
-         */
-        async_timer->timeout = (timeout + 60) * 1000;
-        async_timer->ref =
-            g_timeout_add(async_timer->timeout, stonith_async_timeout_handler, async_timer);
+        set_callback_timeout(blob, stonith, call_id, timeout);
     }
 
     g_hash_table_insert(private->stonith_op_callback_table, GINT_TO_POINTER(call_id), blob);
@@ -1819,7 +1848,14 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
 
     } else if (safe_str_eq(type, T_STONITH_NOTIFY)) {
         g_list_foreach(private->notify_list, stonith_send_notification, &blob);
+    } else if (safe_str_eq(type, T_STONITH_TIMEOUT_VALUE)) {
+        int call_id = 0;
+        int timeout = 0;
 
+        crm_element_value_int(blob.xml, F_STONITH_TIMEOUT, &timeout);
+        crm_element_value_int(blob.xml, F_STONITH_CALLID, &call_id);
+
+        update_callback_timeout(call_id, timeout, st);
     } else {
         crm_err("Unknown message type: %s", type);
         crm_log_xml_warn(blob.xml, "BadReply");

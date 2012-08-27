@@ -522,6 +522,33 @@ lrmd_stonith_callback(stonith_t * stonith,
     stonith_action_complete(userdata, rc);
 }
 
+void
+stonith_connection_failed(void)
+{
+    GHashTableIter iter;
+    GList *cmd_list = NULL;
+    GList *cmd = NULL;
+    lrmd_rsc_t *rsc = NULL;
+    char *key = NULL;
+
+    g_hash_table_iter_init(&iter, rsc_list);
+    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
+        if (safe_str_eq(rsc->class, "stonith") && rsc->active) {
+            cmd_list = g_list_append(cmd_list, rsc->active);
+        }
+    }
+
+    if (!cmd_list) {
+        return;
+    }
+
+    crm_err("STONITH connection failed, finalizing %d pending operations.", g_list_length(cmd_list));
+    for (cmd = cmd_list; cmd; cmd = cmd->next) {
+        stonith_action_complete(cmd->data, -ENOTCONN);
+    }
+    g_list_free(cmd_list);
+}
+
 static int
 lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
@@ -576,7 +603,8 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     rc = stonith_api->cmds->register_callback(
                 stonith_api,
                 rc,
-                cmd->timeout / 1000,
+                0,
+                FALSE,
                 FALSE,
                 cmd,
                 "lrmd_stonith_callback",

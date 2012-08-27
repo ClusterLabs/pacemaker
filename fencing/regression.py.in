@@ -127,6 +127,9 @@ class Test:
 		self.stonith_output = self.stonith_process.communicate()[1]
 		self.stonith_process = None
 
+		if self.verbose:
+			print self.stonith_output
+
 		self.stop_corosync()
 
 	def add_stonith_log_pattern(self, pattern):
@@ -172,6 +175,8 @@ class Test:
 			return 0
 
 		output = test.communicate()[0]
+		if self.verbose:
+			print output
 
 		if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
 			test.returncode = -2
@@ -278,6 +283,16 @@ class Tests:
 			if test.name.count(pattern) != 0:
 				test.run()
 
+	def run_cpg_only(self):
+		for test in self.tests:
+			if test.enable_corosync:
+				test.run()
+
+	def run_no_cpg(self):
+		for test in self.tests:
+			if not test.enable_corosync:
+				test.run()
+
 	def run_tests(self):
 		for test in self.tests:
 			test.run()
@@ -316,8 +331,35 @@ class Tests:
 		if self.verbose:
 			verbose_arg = "-V"
 
-		test = self.new_test("api_sanity_test", "Sanity test client api.")
+		test = self.new_test("standalone_low_level_api_test", "Sanity test client api in standalone mode.")
 		test.add_cmd("@CRM_DAEMON_DIR@/stonith-test", "-t %s" % (verbose_arg))
+
+		test = self.new_test("cpg_low_level_api_test", "Sanity test client api using mainloop and cpg.", 1)
+		test.add_cmd("@CRM_DAEMON_DIR@/stonith-test", "-m %s" % (verbose_arg))
+
+	def build_custom_timeout_tests(self):
+		# custom timeout without topology
+		test = self.new_test("cpg_custom_timeout_1",
+				"Verify per device timeouts work as expected without using topology.", 1)
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=1\"")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=4\"")
+		test.add_cmd("stonith_admin", "-F node3 -t 2")
+		# timeout is 2+1+4 = 7
+		test.add_stonith_log_pattern("remote op timeout set to 7")
+
+		# custom timeout _WITH_ topology
+		test = self.new_test("cpg_custom_timeout_2",
+				"Verify per device timeouts work as expected _WITH_ topology.", 1)
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=1\"")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=4000\"")
+		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
+		test.add_cmd("stonith_admin", "-r node3 -i 2 -v true1")
+		test.add_cmd("stonith_admin", "-r node3 -i 3 -v false2")
+		test.add_cmd("stonith_admin", "-F node3 -t 2")
+		# timeout is 2+1+4000 = 4003
+		test.add_stonith_log_pattern("remote op timeout set to 4003")
 
 	def build_standalone_tests(self):
 		test_types = [
@@ -338,7 +380,10 @@ class Tests:
 			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-R false2  -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-R false3 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 3", 194)
+			test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", 194)
+
+			if test_type["use_cpg"] == 1:
+				test.add_stonith_log_pattern("remote op timeout set to 6")
 
 			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -62")
@@ -351,7 +396,10 @@ class Tests:
 			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-F node3 -t 6")
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
+
+			if test_type["use_cpg"] == 1:
+				test.add_stonith_log_pattern("remote op timeout set to 6")
 
 		# simple topology test for one device
 		for test_type in test_types:
@@ -363,8 +411,9 @@ class Tests:
 			test.add_cmd("stonith_admin", "-R true  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
 
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true")
-			test.add_cmd("stonith_admin", "-F node3 -t 5")
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
 
+			test.add_stonith_log_pattern("remote op timeout set to 2")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
 
 		# test what happens when the first fencing level has multiple devices.
@@ -379,8 +428,9 @@ class Tests:
 
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false")
 			test.add_cmd("stonith_admin", "-r node3 -i 2 -v true")
-			test.add_cmd("stonith_admin", "-F node3 -t 5")
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
 
+			test.add_stonith_log_pattern("remote op timeout set to 4")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false' returned: -62")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
 
@@ -405,9 +455,9 @@ class Tests:
 			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true3")
 			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true4")
 
-			test.add_cmd("stonith_admin", "-F node3 -t 24")
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
 
-
+			test.add_stonith_log_pattern("remote op timeout set to 12")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -62")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
@@ -439,8 +489,9 @@ class Tests:
 			# Now remove level 2, verify none of the devices in level two are hit.
 			test.add_cmd("stonith_admin", "-d node3 -i 2")
 
-			test.add_cmd("stonith_admin", "-F node3 -t 5")
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
 
+			test.add_stonith_log_pattern("remote op timeout set to 8")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
 			test.add_stonith_negative_log_pattern("for host 'node3' with device 'false2' returned: -62")
 			test.add_stonith_negative_log_pattern("for host 'node3' with device 'false2' returned: -1001")
@@ -489,9 +540,58 @@ class Tests:
 					"Verify last fencing operation is returned.", test_type["use_cpg"])
 			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
 
-			test.add_cmd("stonith_admin", "-F node3 -t 5 -V")
+			test.add_cmd("stonith_admin", "-F node3 -t 2 -V")
 
 			test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
+
+	def setup_environment(self):
+		corosync_conf = ("""compatibility: whitetank
+totem {
+        version: 2
+        token:          5000
+        token_retransmits_before_loss_const: 10
+        join:           1000
+        consensus:      6000
+        vsftype:        none
+        max_messages:   20
+        send_join: 45
+        clear_node_high_bit: yes
+        secauth:        off
+        threads:           0
+        interface {
+                ringnumber: 0
+                mcastaddr: 226.94.1.1
+                mcastport: 4000
+        }
+}
+logging {
+        debug: off
+        fileline: off
+        to_syslog: yes
+        to_stderr: off
+        syslog_facility: daemon
+        timestamp: on
+}
+amf {
+        mode: disabled
+}
+quorum {
+   provider: corosync_votequorum
+   expected_votes: 2
+   votes: 1
+   wait_for_all: 0
+   last_man_standing: 0
+   auto_tie_breaker: 0
+}""")
+
+		os.system("cp /etc/corosync/corosync.conf /etc/corosync/fencing_regression_bu.conf")
+		os.system("cat <<-END >>/etc/corosync/corosync.conf\n%s\nEND" % (corosync_conf))
+
+		os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
+		os.system("cp /usr/share/pacemaker/tests/cts/fence_true /usr/sbin/fence_true")
+
+	def cleanup_environment(self):
+		os.system("mv /etc/corosync/fencing_regression_bu.conf /etc/corosync/corosync.conf")
 
 class TestOptions:
 	def __init__(self):
@@ -502,6 +602,8 @@ class TestOptions:
 		self.options['run-only-pattern'] = ""
 		self.options['verbose'] = 0
 		self.options['invalid-arg'] = ""
+		self.options['cpg-only'] = 0
+		self.options['no-cpg'] = 0
 		self.options['show-usage'] = 0
 
 	def build_options(self, argv):
@@ -517,6 +619,10 @@ class TestOptions:
 				self.options['list-tests'] = 1
 			elif args[i] == "-V" or args[i] == "--verbose":
 				self.options['verbose'] = 1
+			elif args[i] == "-n" or args[i] == "--no-cpg":
+				self.options['no-cpg'] = 1
+			elif args[i] == "-c" or args[i] == "--cpg-only":
+				self.options['cpg-only'] = 1
 			elif args[i] == "-r" or args[i] == "--run-only":
 				self.options['run-only'] = args[i+1]
 				skip = 1
@@ -530,6 +636,8 @@ class TestOptions:
 		print "Options:"
 		print "\t [--help | -h]                        Show usage"
 		print "\t [--list-tests | -l]                  Print out all registered tests."
+		print "\t [--cpg-only | -c]                    Only run tests that require corosync."
+		print "\t [--no-cpg | -n]                      Only run tests that do not require corosync"
 		print "\t [--run-only | -r 'testname']         Run a specific test"
 		print "\t [--verbose | -V]                     Verbose output"
 		print "\t [--run-only-pattern | -p 'string']   Run only tests containing the string value"
@@ -544,12 +652,12 @@ def main(argv):
 
 	tests = Tests(o.options['verbose'])
 	tests.build_standalone_tests()
+	tests.build_custom_timeout_tests()
 	tests.build_api_sanity_tests()
 
-	os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
-	os.system("cp /usr/share/pacemaker/tests/cts/fence_true /usr/sbin/fence_true")
-
 	print "Starting ..."
+
+	tests.setup_environment()
 
 	if o.options['list-tests']:
 		tests.print_list()
@@ -561,10 +669,17 @@ def main(argv):
 	elif o.options['run-only'] != "":
 		tests.run_single(o.options['run-only'])
 		tests.print_results()
+	elif o.options['no-cpg']:
+		tests.run_no_cpg()
+		tests.print_results()
+	elif o.options['cpg-only']:
+		tests.run_cpg_only()
+		tests.print_results()
 	else:
 		tests.run_tests()
 		tests.print_results()
 
+	tests.cleanup_environment()
 	tests.exit()
 if __name__=="__main__":
 	main(sys.argv)

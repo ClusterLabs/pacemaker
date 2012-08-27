@@ -82,6 +82,9 @@ extern xmlNode *stonith_construct_reply(xmlNode * request, char *output, xmlNode
 extern xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char *output, xmlNode * data,
                                               int rc);;
 
+void
+do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
+
 extern void do_stonith_notify(int options, const char *type, int result, xmlNode * data, const char *remote);
 
 extern remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t * client, xmlNode * request,
