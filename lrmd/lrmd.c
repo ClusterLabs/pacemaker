@@ -505,6 +505,9 @@ stonith_action_complete(lrmd_cmd_t *cmd, int rc)
     rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
     if ((cmd->interval > 0) && rsc) {
         rsc->recurring_ops = g_list_append(rsc->recurring_ops, cmd);
+        if (cmd->stonith_recurring_id) {
+            g_source_remove(cmd->stonith_recurring_id);
+        }
         cmd->stonith_recurring_id = g_timeout_add(cmd->interval, stonith_recurring_op_helper, cmd);
     }
 
@@ -527,14 +530,23 @@ stonith_connection_failed(void)
 {
     GHashTableIter iter;
     GList *cmd_list = NULL;
-    GList *cmd = NULL;
+    GList *cmd_iter = NULL;
     lrmd_rsc_t *rsc = NULL;
     char *key = NULL;
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
-        if (safe_str_eq(rsc->class, "stonith") && rsc->active) {
-            cmd_list = g_list_append(cmd_list, rsc->active);
+        if (safe_str_eq(rsc->class, "stonith")) {
+            if (rsc->active) {
+                cmd_list = g_list_append(cmd_list, rsc->active);
+            }
+            if (rsc->recurring_ops) {
+                cmd_list = g_list_concat(cmd_list, rsc->recurring_ops);
+            }
+            if (rsc->pending_ops) {
+                cmd_list = g_list_concat(cmd_list, rsc->pending_ops);
+            }
+            rsc->pending_ops = rsc->recurring_ops = NULL;
         }
     }
 
@@ -543,8 +555,8 @@ stonith_connection_failed(void)
     }
 
     crm_err("STONITH connection failed, finalizing %d pending operations.", g_list_length(cmd_list));
-    for (cmd = cmd_list; cmd; cmd = cmd->next) {
-        stonith_action_complete(cmd->data, -ENOTCONN);
+    for (cmd_iter = cmd_list; cmd_iter; cmd_iter = cmd_iter->next) {
+        stonith_action_complete(cmd_iter->data, -ENOTCONN);
     }
     g_list_free(cmd_list);
 }
