@@ -124,6 +124,11 @@ class Test:
 		if args['kill']:
 			if self.verbose:
 				print "Also running: "+args['kill']
+			### Typically the kill argument is used to detect some sort of
+			### failure.  Without yeilding for a few seconds here the process
+			### launched earlier that is listening for the failure may not have time
+			### to connect to the lrmd.
+			time.sleep(2)
 			subprocess.Popen(shlex.split(args['kill']))
 
 		if args['no_wait'] == 0:
@@ -444,10 +449,11 @@ if __name__ == "__main__":
 		test = self.new_test("stonith_component_fail", "Kill stonith component after lrmd connects")
 		test.add_cmd(common_cmds["stonith_reg_line"]   + " " + common_cmds["stonith_reg_event"])
 		test.add_cmd(common_cmds["stonith_start_line"] + " " + common_cmds["stonith_start_event"])
-		test.add_cmd(common_cmds["stonith_monitor_line"] + " " + common_cmds["stonith_monitor_event"])
-		test.add_cmd(common_cmds["stonith_monitor_event"])
-		test.add_sys_cmd("killall", "-9 -q stonithd")
-		test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:monitor rc:unknown error op_status:error\" -t 15000")
+
+		test.add_cmd("-c exec -r \"stonith_test_rsc\" -a \"monitor\" -i \"600000\" "
+			"-l \"NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:monitor rc:ok op_status:complete\" -t 3000")
+
+		test.add_cmd_and_kill("killall -9 -q stonithd" ,"-l \"NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:monitor rc:unknown error op_status:error\" -t 15000")
 		test.add_cmd(common_cmds["stonith_unreg_line"] + " " + common_cmds["stonith_unreg_event"])
 
 		### monitor fail for ocf resources ###
@@ -462,7 +468,7 @@ if __name__ == "__main__":
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
 		test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
 		test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
-		test.add_cmd_and_kill("rm -f /var/run/Dummy-test_rsc.state", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 2000")
+		test.add_cmd_and_kill("rm -f /var/run/Dummy-test_rsc.state", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 6000")
 		test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"1000\" "
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
 		test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 1000")
@@ -483,7 +489,7 @@ if __name__ == "__main__":
 				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
 			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
 			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
-			test.add_cmd_and_kill("killall -9 -q lrmd_dummy_daemon", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 5000")
+			test.add_cmd_and_kill("killall -9 -q lrmd_dummy_daemon", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 8000")
 			test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"1000\" "
 				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
 			test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 1000")
@@ -504,7 +510,7 @@ if __name__ == "__main__":
 				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
 			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
 			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
-			test.add_cmd_and_kill("killall -9 -q dd", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 5000")
+			test.add_cmd_and_kill("killall -9 -q dd", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 8000")
 			test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"1000\" "
 				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
 			test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 1000")
