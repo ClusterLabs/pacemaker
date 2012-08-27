@@ -46,6 +46,11 @@ enum stonith_call_options {
     st_opt_scope_local     = 0x00000100,
     st_opt_cs_nodeid       = 0x00000200,
     st_opt_sync_call       = 0x00001000,
+    /*! Allow the timeout period for a callback to be adjusted
+     *  based on the time the server reports the operation will take. */
+    st_opt_timeout_updates = 0x00002000,
+    /*! Only report back if operation is a success in callback */
+    st_opt_report_only_success = 0x00004000,
 };
 
 #define stonith_default_options = stonith_none
@@ -230,6 +235,13 @@ typedef struct stonith_api_operations_s
      *
      * \note Possible actions are, 'on', 'off', and 'reboot'.
      *
+     * \param st, stonith connection
+     * \param options, call options
+     * \param node, The target node to fence
+     * \param action, The fencing action to take
+     * \param timeout, The default per device timeout to use with each device
+     *                 capable of fencing the target.
+     *
      * \retval 0 success
      * \retval negative error code on failure.
      */
@@ -259,10 +271,31 @@ typedef struct stonith_api_operations_s
         void (*notify)(stonith_t *st, stonith_event_t *e));
     int (*remove_notification)(stonith_t *st, const char *event);
 
-    int (*register_callback)(
-        stonith_t *st, int call_id, int timeout, bool only_success,
-        void *userdata, const char *callback_name,
+    /*!
+     * \brief Register a callback to receive the result of an async call id
+     *
+     * \param call_id, The call id to register the callback for.
+     * \param timeout, The default timeout period to wait until this callback expires
+     * \param options, Option flags, st_opt_timeout_updates and st_opt_report_only_success are the
+     *                 only valid options for this function.
+     * \param userdate, A pointer that will be handed back in the callback.
+     * \param callback_name, Unique name given to callback
+     * \param callback, The callback function
+     *
+     * \retval 0 success
+     * \retval negative error code on failure.
+     */
+    int (*register_callback)(stonith_t *st,
+        int call_id,
+        int timeout,
+        int options,
+        void *userdata,
+        const char *callback_name,
         void (*callback)(stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata));
+
+    /*!
+     * \brief Remove a registered callback for a given call id.
+     */
     int (*remove_callback)(stonith_t *st, int call_id, bool all_callbacks);
 
 } stonith_api_operations_t;

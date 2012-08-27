@@ -124,6 +124,11 @@ class Test:
 		if args['kill']:
 			if self.verbose:
 				print "Also running: "+args['kill']
+			### Typically the kill argument is used to detect some sort of
+			### failure.  Without yeilding for a few seconds here the process
+			### launched earlier that is listening for the failure may not have time
+			### to connect to the lrmd.
+			time.sleep(2)
 			subprocess.Popen(shlex.split(args['kill']))
 
 		if args['no_wait'] == 0:
@@ -191,9 +196,9 @@ class Tests:
 			"ocf_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:ocf_test_rsc action:none rc:ok op_status:complete\"",
 			"ocf_unreg_line"    : "-c unregister_rsc -r \"ocf_test_rsc\" -t 1000",
 			"ocf_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:ocf_test_rsc action:none rc:ok op_status:complete\"",
-			"ocf_start_line"    : "-c exec -r \"ocf_test_rsc\" -a \"start\" -t 1000 ",
+			"ocf_start_line"    : "-c exec -r \"ocf_test_rsc\" -a \"start\" -t 2000 ",
 			"ocf_start_event"   : "-l \"NEW_EVENT event_type:exec_complete rsc_id:ocf_test_rsc action:start rc:ok op_status:complete\" ",
-			"ocf_stop_line"     : "-c exec -r \"ocf_test_rsc\" -a \"stop\" -t 1000 ",
+			"ocf_stop_line"     : "-c exec -r \"ocf_test_rsc\" -a \"stop\" -t 2000 ",
 			"ocf_stop_event"    : "-l \"NEW_EVENT event_type:exec_complete rsc_id:ocf_test_rsc action:stop rc:ok op_status:complete\" ",
 			"ocf_monitor_line"  : "-c exec -r \"ocf_test_rsc\" -a \"monitor\" -i \"1000\" -t 1000",
 			"ocf_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:ocf_test_rsc action:monitor rc:ok op_status:complete\" -t 2000",
@@ -204,9 +209,9 @@ class Tests:
 			"systemd_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:systemd_test_rsc action:none rc:ok op_status:complete\"",
 			"systemd_unreg_line"    : "-c unregister_rsc -r \"systemd_test_rsc\" -t 1000",
 			"systemd_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:systemd_test_rsc action:none rc:ok op_status:complete\"",
-			"systemd_start_line"    : "-c exec -r \"systemd_test_rsc\" -a \"start\" -t 1000 ",
+			"systemd_start_line"    : "-c exec -r \"systemd_test_rsc\" -a \"start\" -t 2000 ",
 			"systemd_start_event"   : "-l \"NEW_EVENT event_type:exec_complete rsc_id:systemd_test_rsc action:start rc:ok op_status:complete\" ",
-			"systemd_stop_line"     : "-c exec -r \"systemd_test_rsc\" -a \"stop\" -t 1000 ",
+			"systemd_stop_line"     : "-c exec -r \"systemd_test_rsc\" -a \"stop\" -t 2000 ",
 			"systemd_stop_event"    : "-l \"NEW_EVENT event_type:exec_complete rsc_id:systemd_test_rsc action:stop rc:ok op_status:complete\" ",
 			"systemd_monitor_line"  : "-c exec -r \"systemd_test_rsc\" -a \"monitor\" -i \"1000\" -t 1000",
 			"systemd_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:systemd_test_rsc action:monitor rc:ok op_status:complete\" -t 2000",
@@ -217,9 +222,9 @@ class Tests:
 			"upstart_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:upstart_test_rsc action:none rc:ok op_status:complete\"",
 			"upstart_unreg_line"    : "-c unregister_rsc -r \"upstart_test_rsc\" -t 1000",
 			"upstart_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:upstart_test_rsc action:none rc:ok op_status:complete\"",
-			"upstart_start_line"    : "-c exec -r \"upstart_test_rsc\" -a \"start\" -t 1000 ",
+			"upstart_start_line"    : "-c exec -r \"upstart_test_rsc\" -a \"start\" -t 2000 ",
 			"upstart_start_event"   : "-l \"NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:start rc:ok op_status:complete\" ",
-			"upstart_stop_line"     : "-c exec -r \"upstart_test_rsc\" -a \"stop\" -t 1000 ",
+			"upstart_stop_line"     : "-c exec -r \"upstart_test_rsc\" -a \"stop\" -t 2000 ",
 			"upstart_stop_event"    : "-l \"NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:stop rc:ok op_status:complete\" ",
 			"upstart_monitor_line"  : "-c exec -r \"upstart_test_rsc\" -a \"monitor\" -i \"1000\" -t 1000",
 			"upstart_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:monitor rc:ok op_status:complete\" -t 2000",
@@ -230,9 +235,9 @@ class Tests:
 			"service_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:service_test_rsc action:none rc:ok op_status:complete\"",
 			"service_unreg_line"    : "-c unregister_rsc -r \"service_test_rsc\" -t 1000",
 			"service_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:service_test_rsc action:none rc:ok op_status:complete\"",
-			"service_start_line"    : "-c exec -r \"service_test_rsc\" -a \"start\" -t 1000 ",
+			"service_start_line"    : "-c exec -r \"service_test_rsc\" -a \"start\" -t 2000 ",
 			"service_start_event"   : "-l \"NEW_EVENT event_type:exec_complete rsc_id:service_test_rsc action:start rc:ok op_status:complete\" ",
-			"service_stop_line"     : "-c exec -r \"service_test_rsc\" -a \"stop\" -t 1000 ",
+			"service_stop_line"     : "-c exec -r \"service_test_rsc\" -a \"stop\" -t 2000 ",
 			"service_stop_event"    : "-l \"NEW_EVENT event_type:exec_complete rsc_id:service_test_rsc action:stop rc:ok op_status:complete\" ",
 			"service_monitor_line"  : "-c exec -r \"service_test_rsc\" -a \"monitor\" -i \"1000\" -t 1000",
 			"service_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:service_test_rsc action:monitor rc:ok op_status:complete\" -t 2000",
@@ -243,9 +248,9 @@ class Tests:
 			"lsb_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:lsb_test_rsc action:none rc:ok op_status:complete\" ",
 			"lsb_unreg_line"    : "-c unregister_rsc -r \"lsb_test_rsc\" -t 1000",
 			"lsb_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:lsb_test_rsc action:none rc:ok op_status:complete\"",
-			"lsb_start_line"    : "-c exec -r \"lsb_test_rsc\" -a \"start\" -t 1000 ",
+			"lsb_start_line"    : "-c exec -r \"lsb_test_rsc\" -a \"start\" -t 2000 ",
 			"lsb_start_event"   : "-l \"NEW_EVENT event_type:exec_complete rsc_id:lsb_test_rsc action:start rc:ok op_status:complete\" ",
-			"lsb_stop_line"     : "-c exec -r \"lsb_test_rsc\" -a \"stop\" -t 1000 ",
+			"lsb_stop_line"     : "-c exec -r \"lsb_test_rsc\" -a \"stop\" -t 2000 ",
 			"lsb_stop_event"    : "-l \"NEW_EVENT event_type:exec_complete rsc_id:lsb_test_rsc action:stop rc:ok op_status:complete\" ",
 			"lsb_monitor_line"  : "-c exec -r \"lsb_test_rsc\" -a status -i \"1000\" -t 1000",
 			"lsb_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:lsb_test_rsc action:status rc:ok op_status:complete\" -t 2000",
@@ -256,9 +261,9 @@ class Tests:
 			"stonith_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:stonith_test_rsc action:none rc:ok op_status:complete\" ",
 			"stonith_unreg_line"    : "-c unregister_rsc -r \"stonith_test_rsc\" -t 1000",
 			"stonith_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:stonith_test_rsc action:none rc:ok op_status:complete\"",
-			"stonith_start_line"    : "-c exec -r \"stonith_test_rsc\" -a \"start\" -t 1000 ",
+			"stonith_start_line"    : "-c exec -r \"stonith_test_rsc\" -a \"start\" -t 2000 ",
 			"stonith_start_event"   : "-l \"NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:start rc:ok op_status:complete\" ",
-			"stonith_stop_line"     : "-c exec -r \"stonith_test_rsc\" -a \"stop\" -t 1000 ",
+			"stonith_stop_line"     : "-c exec -r \"stonith_test_rsc\" -a \"stop\" -t 2000 ",
 			"stonith_stop_event"    : "-l \"NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:stop rc:ok op_status:complete\" ",
 			"stonith_monitor_line"  : "-c exec -r \"stonith_test_rsc\" -a \"monitor\" -i \"1000\" -t 1000",
 			"stonith_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:monitor rc:ok op_status:complete\" -t 3000",
@@ -284,6 +289,19 @@ class Tests:
 		dummy_upstart_job = ("""
 description     "Dummy service for regression tests"
 exec dd if=/dev/random of=/dev/null
+""")
+
+		dummy_fence_sleep_agent = ("""#!/usr/bin/python
+import sys
+import time
+def main():
+    for line in sys.stdin.readlines():
+        if line.count("monitor") > 0:
+            time.sleep(10000)
+            sys.exit(0)
+    sys.exit(-1)
+if __name__ == "__main__":
+    main()
 """)
 		dummy_fence_agent = ("""#!/usr/bin/python
 import sys
@@ -325,6 +343,9 @@ if __name__ == "__main__":
 		os.system("cat <<-END >>/lib/systemd/system/lrmd_dummy_daemon.service\n%s\nEND" % (dummy_service_file))
 		os.system("chmod u+x /usr/sbin/lrmd_dummy_daemon")
 
+		os.system("cat <<-END >>/usr/sbin/fence_dummy_sleep\n%s\nEND" % (dummy_fence_sleep_agent))
+		os.system("chmod 711 /usr/sbin/fence_dummy_sleep")
+
 		os.system("cat <<-END >>/usr/sbin/fence_dummy_monitor\n%s\nEND" % (dummy_fence_agent))
 		os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
 
@@ -335,9 +356,10 @@ if __name__ == "__main__":
 
 	def cleanup_test_environment(self):
 		os.system("rm -f /lib/systemd/system/lrmd_dummy_daemon.service")
+		os.system("rm -f /etc/init.d/lrmd_dummy_daemon")
 		os.system("rm -f /usr/sbin/lrmd_dummy_daemon")
 		os.system("rm -f /usr/sbin/fence_dummy_monitor")
-		os.system("rm -f /etc/init.d/lrmd_dummy_daemon")
+		os.system("rm -f /usr/sbin/fence_dummy_sleep")
 		os.system("systemctl daemon-reload")
 
 	### These are tests that should apply to all resource classes ###
@@ -397,8 +419,8 @@ if __name__ == "__main__":
 	### These are tests related to how the lrmd handles failures.  ###
 	def build_negative_tests(self):
 
-		### start timeout test  ###
-		test = self.new_test("start_timeout", "Force start timeout to occur, verify start failure.")
+		### ocf start timeout test  ###
+		test = self.new_test("ocf_start_timeout", "Force start timeout to occur, verify start failure.")
 		test.add_cmd("-c register_rsc -r \"test_rsc\" -C \"ocf\" -P \"pacemaker\" -T \"Dummy\" -t 1000 "
 			"-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 		test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -k \"op_sleep\" -v \"3\" -t 1000 -w")
@@ -408,6 +430,31 @@ if __name__ == "__main__":
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\" ")
 		test.add_cmd("-c unregister_rsc -r test_rsc -t 1000 "
 			"-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+
+
+		### stonith start timeout test  ###
+		test = self.new_test("stonith_start_timeout", "Force start timeout to occur, verify start failure.")
+		test.add_cmd("-c register_rsc -r \"test_rsc\" -C \"stonith\" -P \"pacemaker\" -T \"fence_dummy_sleep\" -t 1000 "
+			"-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+		test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 2000 -w")
+		test.add_cmd("-l "
+			"\"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:unknown error op_status:Timed Out\" -t 4000")
+		test.add_cmd("-c exec -r test_rsc -a stop -t 1000"
+			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\" ")
+		test.add_cmd("-c unregister_rsc -r test_rsc -t 1000 "
+			"-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
+
+		### stonith component fail ###
+		common_cmds = self.common_cmds
+		test = self.new_test("stonith_component_fail", "Kill stonith component after lrmd connects")
+		test.add_cmd(common_cmds["stonith_reg_line"]   + " " + common_cmds["stonith_reg_event"])
+		test.add_cmd(common_cmds["stonith_start_line"] + " " + common_cmds["stonith_start_event"])
+
+		test.add_cmd("-c exec -r \"stonith_test_rsc\" -a \"monitor\" -i \"600000\" "
+			"-l \"NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:monitor rc:ok op_status:complete\" -t 3000")
+
+		test.add_cmd_and_kill("killall -9 -q stonithd" ,"-l \"NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:monitor rc:unknown error op_status:error\" -t 15000")
+		test.add_cmd(common_cmds["stonith_unreg_line"] + " " + common_cmds["stonith_unreg_event"])
 
 		### monitor fail for ocf resources ###
 		test = self.new_test("monitor_fail_ocf", "Force ocf monitor to fail, verify failure is reported.")
@@ -421,7 +468,7 @@ if __name__ == "__main__":
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
 		test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
 		test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
-		test.add_cmd_and_kill("rm -f /var/run/Dummy-test_rsc.state", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 2000")
+		test.add_cmd_and_kill("rm -f /var/run/Dummy-test_rsc.state", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 6000")
 		test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"1000\" "
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
 		test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 1000")
@@ -442,7 +489,7 @@ if __name__ == "__main__":
 				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
 			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
 			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
-			test.add_cmd_and_kill("killall -9 -q lrmd_dummy_daemon", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 5000")
+			test.add_cmd_and_kill("killall -9 -q lrmd_dummy_daemon", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 8000")
 			test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"1000\" "
 				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
 			test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 1000")
@@ -463,7 +510,7 @@ if __name__ == "__main__":
 				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
 			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
 			test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 2000")
-			test.add_cmd_and_kill("killall -9 -q dd", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 5000")
+			test.add_cmd_and_kill("killall -9 -q dd", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 8000")
 			test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"1000\" "
 				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
 			test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 1000")

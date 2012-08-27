@@ -49,6 +49,7 @@ typedef struct st_query_result_s
     char *host;
     int devices;
     GListPtr device_list;
+    GHashTable *custom_action_timeouts;
 
 } st_query_result_t;
 
@@ -63,6 +64,7 @@ static void free_remote_query(gpointer data)
         st_query_result_t *query = data;
         crm_trace("Free'ing query result from %s", query->host);
         free(query->host);
+        g_hash_table_destroy(query->custom_action_timeouts);
         free(query);
     }
 }
@@ -217,20 +219,6 @@ static gboolean remote_op_query_timeout(gpointer data)
     return FALSE;
 }
 
-static int topology_count_devices(stonith_topology_t *tp)
-{
-    int count = 0;
-    int level;
-
-    for (level = 0; level < ST_LEVEL_MAX; level++) {
-        if (tp->levels[level]) {
-            count += g_list_length(tp->levels[level]);
-        }
-    }
-
-    return count;
-}
-
 static int stonith_topology_next(remote_fencing_op_t *op) 
 {
     stonith_topology_t *tp = NULL;
@@ -243,10 +231,6 @@ static int stonith_topology_next(remote_fencing_op_t *op)
     }
 
     set_bit(op->call_options, st_opt_topology);
-
-    if (!op->topology_device_number) {
-        op->topology_device_number = topology_count_devices(tp);
-    }
 
     do {
         op->level++;
@@ -353,7 +337,6 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
     query = stonith_create_op(0, op->id, STONITH_OP_QUERY, NULL, 0);
 
     if(!manual_ack) {
-        op->op_timer = g_timeout_add(1200*op->base_timeout, remote_op_timeout, op);
         op->query_timer = g_timeout_add(100*op->base_timeout, remote_op_query_timeout, op);
 
     } else {
@@ -425,32 +408,132 @@ static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
     return NULL;
 }
 
+static int
+get_device_timeout(st_query_result_t *peer, const char *device, int default_timeout)
+{
+    gpointer res;
+
+    if (!peer || !device) {
+        return default_timeout;
+    }
+
+    res = g_hash_table_lookup(peer->custom_action_timeouts, device);
+
+    return res ? GPOINTER_TO_INT(res) : default_timeout;
+}
+
+static int
+get_op_total_timeout(remote_fencing_op_t *op, st_query_result_t *chosen_peer, int default_timeout)
+{
+    stonith_topology_t *tp = g_hash_table_lookup(topology, op->target);
+    int total_timeout = 0;
+
+    if (is_set(op->call_options, st_opt_topology) && tp) {
+        int i;
+        GListPtr device_list = NULL;
+        GListPtr iter = NULL;
+
+        /* Yep, this looks scary, nested loops all over the place.
+         * Here is what is going on.
+         * Loop1: Iterate through fencing levels.
+         * Loop2: If a fencing level has devices, loop through each device
+         * Loop3: For each device in a fencing level, see what peer owns it
+         *        and what that peer has reported the timeout is for the device.
+         */
+        for (i = 0; i < ST_LEVEL_MAX; i++) {
+            if (!tp->levels[i]) {
+                continue;
+            }
+            for (device_list = tp->levels[i]; device_list; device_list = device_list->next) {
+                for(iter = op->query_results; iter != NULL; iter = iter->next) {
+                    st_query_result_t *peer = iter->data;
+                    if (g_list_find_custom(peer->device_list, device_list->data, sort_strings)) {
+                        total_timeout += get_device_timeout(chosen_peer, device_list->data, default_timeout);
+                        break;
+                    }
+                } /* End Loop3: match device with peer that owns device, find device's timeout period */
+            } /* End Loop2: iterate through devices at a specific level */
+        } /*End Loop1: iterate through fencing levels */
+
+    } else if (chosen_peer) {
+        GListPtr cur = NULL;
+        for (cur = chosen_peer->device_list; cur; cur = cur->next) {
+            total_timeout += get_device_timeout(chosen_peer, cur->data, default_timeout);
+        }
+    } else {
+        total_timeout = default_timeout;
+    }
+
+    return total_timeout ? total_timeout : default_timeout;
+}
+
+static void
+report_timeout_period(remote_fencing_op_t *op, int op_timeout)
+{
+    xmlNode *update = NULL;
+    const char *client_node = NULL;
+    const char *client_id = NULL;
+    const char *call_id = NULL;
+
+    if (op->call_options & st_opt_sync_call) {
+        /* There is no reason to report the timeout for a syncronous call. It
+         * is impossible to use the reported timeout to do anything when the client
+         * is blocking for the response.  This update is only important for
+         * async calls that require a callback to report the results in. */
+        return;
+    } else if (!op->request) {
+        return;
+    }
+
+    client_node = crm_element_value(op->request, F_STONITH_CLIENTNODE);
+    call_id = crm_element_value(op->request, F_STONITH_CALLID);
+    client_id = crm_element_value(op->request, F_STONITH_CLIENTID);
+    if (!client_node || !call_id || !client_id) {
+        return;
+    }
+
+    if (safe_str_eq(client_node, stonith_our_uname)) {
+        /* The client is connected to this node, send the update direclty to them */
+        do_stonith_async_timeout_update(client_id, call_id, op_timeout);
+        return;
+    }
+
+    /* The client is connected to another node, relay this update to them */
+    update = stonith_create_op(0, op->id, STONITH_OP_TIMEOUT_UPDATE, NULL, 0);
+    crm_xml_add(update, F_STONITH_REMOTE, op->id);
+    crm_xml_add(update, F_STONITH_CLIENTID, client_id);
+    crm_xml_add(update, F_STONITH_CALLID, call_id);
+    crm_xml_add_int(update, F_STONITH_TIMEOUT, op_timeout);
+
+    send_cluster_message(client_node, crm_msg_stonith_ng, update, FALSE);
+
+    free_xml(update);
+}
+
 void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer) 
 {
     const char *device = NULL;
     int timeout = op->base_timeout;
-    int device_number = 0;
 
-    if(is_set(op->call_options, st_opt_topology)) {
-        if(op->topology_device_number) {
-            device_number = op->topology_device_number;
-        }
-
-        /* Ignore any preference, they might not have the device we need */
+    if(peer == NULL && !is_set(op->call_options, st_opt_topology)) {
         peer = stonith_choose_peer(op);
-        device = op->devices->data;
-    } else if(peer == NULL) {
-        if ((peer = stonith_choose_peer(op)) != NULL) {
-            device_number = peer->devices;
-        }
-    } else {
-        device_number = peer->devices;
     }
 
-    if (device_number > 1) {
-        timeout /= device_number;
-        crm_trace("Dividing the timeout (%ds) equally between %d peer devices: %ds",
-                  op->base_timeout, device_number, timeout);
+    if(!op->op_timer) {
+        int op_timeout = get_op_total_timeout(op, peer, op->base_timeout);
+        op->op_timer = g_timeout_add((1200 * op_timeout), remote_op_timeout, op);
+        report_timeout_period(op, op_timeout);
+        crm_info("Total remote op timeout set to %d for fencing of node %s", op_timeout, op->target);
+    }
+
+    if(is_set(op->call_options, st_opt_topology)) {
+        /* Ignore any preference, they might not have the device we need */
+        /* When using topology, the stonith_choose_peer function pops off
+         * the peer from the op's query results.  Make sure to calculate
+         * the op_timeout before calling this function when topology is in use */
+        peer = stonith_choose_peer(op);
+        device = op->devices->data;
+        timeout = get_device_timeout(peer, device, timeout);
     }
 
     if(peer) {
@@ -474,6 +557,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         }
 
         op->state = st_exec;
+
         send_cluster_message(peer->host, crm_msg_stonith_ng, query, FALSE);
         free_xml(query);
         return;
@@ -549,11 +633,22 @@ int process_remote_stonith_query(xmlNode *msg)
     result = calloc(1, sizeof(st_query_result_t));
     result->host = strdup(host);
     result->devices = devices;
+    result->custom_action_timeouts = g_hash_table_new_full(
+        crm_str_hash, g_str_equal, free, NULL);
 
     for (child = __xml_first_child(dev); child != NULL; child = __xml_next(child)) {
         const char *device = ID(child);
+        int action_timeout = 0;
         if(device) {
             result->device_list = g_list_prepend(result->device_list, strdup(device));
+            crm_element_value_int(child, F_STONITH_ACTION_TIMEOUT, &action_timeout);
+            if (action_timeout) {
+                crm_trace("Peer %s with device %s returned action timeout %d",
+                    result->host, device, action_timeout);
+                g_hash_table_insert(result->custom_action_timeouts,
+                    strdup(device),
+                    GINT_TO_POINTER(action_timeout));
+            }
         }
     }
 
