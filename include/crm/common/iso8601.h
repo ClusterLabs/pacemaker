@@ -28,45 +28,7 @@
 #  include <time.h>
 #  include <ctype.h>
 
-typedef struct ha_has_time_s {
-    gboolean years;
-
-    gboolean months;
-    gboolean days;
-
-    gboolean weeks;
-    gboolean weekdays;
-    gboolean weekyears;
-
-    gboolean yeardays;
-
-    gboolean hours;
-    gboolean minutes;
-    gboolean seconds;
-} ha_has_time_t;
-
-typedef struct ha_time_s {
-    time_t tm_now;
-
-    int years;
-
-    int months;
-    int days;
-
-    int weeks;
-    int weekdays;
-    int weekyears;
-
-    int yeardays;
-
-    int hours;
-    int minutes;
-    int seconds;
-
-    struct ha_time_s *offset;
-    struct ha_time_s *normalized;
-    struct ha_has_time_s *has;
-} ha_time_t;
+typedef struct ha_time_s ha_time_t;
 
 enum date_fields {
     date_month,
@@ -86,14 +48,15 @@ typedef struct ha_time_period_s {
 #  define ha_date_ordinal 0x10
 #  define ha_date_weeks   0x20
 
+#  define ha_date_seconds 0x100
+#  define ha_date_epoch   0x200
+
 int str_lookup(const char *str, enum date_fields);
 
 char *date_to_string(ha_time_t * dt, int flags);
 void log_date(int log_level, const char *prefix, ha_time_t * dt, int flags);
 void log_time_period(int log_level, ha_time_period_t * dtp, int flags);
 
-ha_time_t *parse_time(char **time_str, ha_time_t * atime, gboolean with_offset);
-ha_time_t *parse_time_offset(char **offset_str);
 ha_time_t *parse_date(char **date_str);
 ha_time_t *parse_time_duration(char **duration_str);
 ha_time_period_t *parse_time_period(char **period_str);
@@ -136,6 +99,11 @@ void sub_months(ha_time_t * a_time, int extra);
 void sub_years(ha_time_t * a_time, int extra);
 void sub_ordinalyears(ha_time_t * a_time, int extra);
 void sub_weekyears(ha_time_t * a_time, int extra);
+
+int crm_get_time(ha_time_t *now, uint32_t *h, uint32_t *m, uint32_t *s);
+int crm_get_gregorian_date(ha_time_t *now, uint32_t *y, uint32_t *m, uint32_t *d);
+int crm_get_ordinal_date(ha_time_t *now, uint32_t *y, uint32_t *d);
+int crm_get_week_date(ha_time_t *now, uint32_t *y, uint32_t *w, uint32_t *d);
 
 /* conversion functions */
 int january1(int year);

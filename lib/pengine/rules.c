@@ -342,10 +342,12 @@ test_attr_expression(xmlNode * expr, GHashTable * hash, ha_time_t * now)
 static int
 phase_of_the_moon(ha_time_t * now)
 {
-    int epact, diy, goldn;
+    uint32_t epact, diy, goldn;
+    uint32_t y;
 
-    diy = now->yeardays;
-    goldn = (now->years % 19) + 1;
+    crm_get_ordinal_date(now, &y, &diy);
+
+    goldn = (y % 19) + 1;
     epact = (11 * goldn + 18) % 30;
     if ((epact == 25 && goldn > 11) || epact == 24)
         epact++;
@@ -448,18 +450,32 @@ cron_range_satisfied(ha_time_t * now, xmlNode * cron_spec)
     int value_low_i = 0;
     int value_high_i = 0;
 
+    uint32_t h, m, s, y, d, w;
+
     CRM_CHECK(now != NULL, return FALSE);
 
-    cron_check("seconds", now->seconds);
-    cron_check("minutes", now->minutes);
-    cron_check("hours", now->hours);
-    cron_check("monthdays", now->days);
-    cron_check("weekdays", now->weekdays);
-    cron_check("yeardays", now->yeardays);
-    cron_check("weeks", now->weeks);
-    cron_check("months", now->months);
-    cron_check("years", now->years);
-    cron_check("weekyears", now->weekyears);
+    crm_get_time(now, &h, &m, &s);
+    
+    cron_check("seconds", s);
+    cron_check("minutes", m);
+    cron_check("hours", h);
+
+    crm_get_gregorian_date(now, &y, &m, &d);
+
+    cron_check("monthdays", d);
+    cron_check("months", m);
+    cron_check("years", y);
+
+    crm_get_ordinal_date(now, &y, &d);
+
+    cron_check("yeardays", d);
+
+    crm_get_week_date(now, &y, &w, &d);
+
+    cron_check("weekyears", y);
+    cron_check("weeks", w);
+    cron_check("weekdays", d);
+
     cron_check("moon", phase_of_the_moon(now));
 
     return TRUE;

@@ -27,399 +27,220 @@
 #include <ctype.h>
 #include <crm/common/iso8601.h>
 
-#define do_add_field(atime, field, extra, limit, overflow)		\
-	{								\
-		crm_trace("Adding %d to %d (limit=%d)",		\
-			    extra, atime->field, limit);		\
-		atime->field += extra;					\
-		if(limit > 0) {						\
-			while(limit < atime->field) {			\
-				crm_trace("Overflowing: %d", atime->field); \
-				atime->field -= limit;			\
-				overflow(atime, 1);			\
-			}						\
-		}							\
-		atime->field = atime->field;				\
-		crm_trace("Result: %d", atime->field);		\
-	}
+struct ha_time_s {
+        int years;
+        int months; /* Only for durations */
+        int days;
+        int seconds;
 
-#define do_add_days_field(atime, field, extra, overflow)		\
-	{								\
-		int __limit = days_per_month(atime->months, atime->years);	\
-		crm_trace("Adding %d to %d (limit=%d)",		\
-			    extra, atime->field, __limit);		\
-		atime->field += extra;					\
-		if(__limit > 0) {						\
-			while(__limit < atime->field) {			\
-				crm_trace("Overflowing: %d", atime->field); \
-				overflow(atime, 1);			\
-				__limit = days_per_month(atime->months, atime->years);	\
-				atime->field -= __limit;			\
-			}						\
-		}							\
-		atime->field = atime->field;				\
-		crm_trace("Result: %d", atime->field);		\
-	}
+        struct ha_time_s *offset;
+};
 
-#define do_add_time_field(atime, field, extra, limit, overflow)		\
-	{								\
-		crm_trace("Adding %d to %d (limit=%d)",		\
-			    extra, atime->field, limit);		\
-		atime->field += extra;					\
-		if(limit > 0) {						\
-			while(limit <= atime->field) {			\
-				crm_trace("Overflowing: %d", atime->field); \
-				atime->field -= limit;			\
-				overflow(atime, 1);			\
-			}						\
-		}							\
-		atime->field = atime->field;				\
-		crm_trace("Result: %d", atime->field);		\
-	}
-
-#define do_sub_field(atime, field, extra, limit, overflow)		\
-	{								\
-		crm_trace("Subtracting %d from %d (limit=%d)",	\
-			    extra, atime->field, limit);		\
-		atime->field -= extra;					\
-		while(atime->field < 1) {				\
-			crm_trace("Underflowing: %d", atime->field);	\
-			atime->field += limit;				\
-			overflow(atime, 1);				\
-		}							\
-		crm_trace("Result: %d", atime->field);		\
-	}
-
-#define do_sub_days_field(atime, field, extra, overflow)		\
-	{								\
-		int __limit = days_per_month(atime->months, atime->years);	\
-		crm_trace("Subtracting %d from %d (__limit=%d)",	\
-			    extra, atime->field, __limit);		\
-		atime->field -= extra;					\
-		while(atime->field < 1) {				\
-			crm_trace("Underflowing: %d", atime->field);	\
-			__limit = days_per_month(atime->months, atime->years);	\
-			atime->field += __limit;				\
-			overflow(atime, 1);				\
-		}							\
-		crm_trace("Result: %d", atime->field);		\
-	}
-#define do_sub_time_field(atime, field, extra, limit, overflow)		\
-	{								\
-		crm_trace("Subtracting %d from %d (limit=%d)",	\
-			    extra, atime->field, limit);		\
-		atime->field -= extra;					\
-		while(atime->field < 0) {				\
-			crm_trace("Underflowing: %d", atime->field);	\
-			atime->field += limit;				\
-			overflow(atime, 1);				\
-		}							\
-		crm_trace("Result: %d", atime->field);		\
-	}
+static uint32_t get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
+{
+    int lpc;
+    for(lpc = 1; lpc < m; lpc++) {
+        d += days_per_month(lpc, y);
+    }
+    return d;
+}
 
 void
 add_seconds(ha_time_t * a_time, int extra)
 {
-    if (extra < 0) {
+    int days = 0;
+    int seconds = 24 * 60 * 60;
+
+    crm_trace("Adding %d seconds to %d (max=%d)", extra, a_time->seconds, seconds);
+    if(extra < 0) {
         sub_seconds(a_time, -extra);
-    } else {
-        do_add_time_field(a_time, seconds, extra, 60, add_minutes);
+        return;
     }
-}
 
-void
-add_minutes(ha_time_t * a_time, int extra)
-{
-    if (extra < 0) {
-        sub_minutes(a_time, -extra);
-    } else {
-        do_add_time_field(a_time, minutes, extra, 60, add_hours);
+    a_time->seconds += extra;
+    while (a_time->seconds >= seconds) {
+        a_time->seconds -= seconds;
+        days++;
     }
-}
-
-void
-add_hours(ha_time_t * a_time, int extra)
-{
-    if (extra < 0) {
-        sub_hours(a_time, -extra);
-    } else {
-        do_add_time_field(a_time, hours, extra, 24, add_days);
-    }
+    add_days(a_time, days);
 }
 
 void
 add_days(ha_time_t * a_time, int extra)
 {
-    if (a_time->has->days == FALSE) {
-        crm_trace("has->days == FALSE");
-        return;
-    }
-    if (extra < 0) {
+    int ydays = is_leap_year(a_time->years)?366:365;
+
+    crm_trace("Adding %d days to %.4d-%.3d",
+              extra, a_time->years, a_time->days);
+    if(extra < 0) {
         sub_days(a_time, -extra);
-    } else {
-        do_add_days_field(a_time, days, extra, add_months);
-    }
-
-    convert_from_gregorian(a_time);
-}
-
-void
-add_weekdays(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->weekdays == FALSE) {
-        crm_trace("has->weekdays == FALSE");
         return;
     }
-    if (extra < 0) {
-        sub_weekdays(a_time, -extra);
-    } else {
-        do_add_field(a_time, weekdays, extra, 7, add_weeks);
+    
+    a_time->days += extra;
+    while (a_time->days > ydays) {
+        a_time->years++;
+        a_time->days -= ydays;
+        ydays = is_leap_year(a_time->years)?366:365;
     }
-
-    convert_from_weekdays(a_time);
-}
-
-void
-add_yeardays(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->yeardays == FALSE) {
-        crm_trace("has->yeardays == FALSE");
-        return;
-    }
-    if (extra < 0) {
-        sub_yeardays(a_time, -extra);
-    } else {
-        /* coverity[result_independent_of_operands] Not interesting */
-        do_add_field(a_time, yeardays, extra,
-                     (is_leap_year(a_time->years) ? 366 : 365), add_ordinalyears);
-    }
-
-    convert_from_ordinal(a_time);
-}
-
-void
-add_weeks(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->weeks == FALSE) {
-        crm_trace("has->weeks == FALSE");
-        return;
-    }
-    if (extra < 0) {
-        sub_weeks(a_time, -extra);
-    } else {
-        do_add_field(a_time, weeks, extra, weeks_in_year(a_time->years), add_weekyears);
-    }
-
-    convert_from_weekdays(a_time);
 }
 
 void
 add_months(ha_time_t * a_time, int extra)
 {
-    int max = 0;
+    int lpc;
+    uint32_t y, m, d, dmax;
 
-    if (a_time->has->months == FALSE) {
-        crm_trace("has->months == FALSE");
-        return;
-    }
-    if (extra < 0) {
+    crm_get_gregorian_date(a_time, &y, &m, &d);
+    crm_trace("Adding %d months to %.4d-%.2d-%.2d", extra, y, m, d);
+    if(extra < 0) {
         sub_months(a_time, -extra);
-    } else {
-        do_add_field(a_time, months, extra, 12, add_years);
-    }
-
-    max = days_per_month(a_time->months, a_time->years);
-    if (a_time->days > max) {
-        a_time->days = max;
-    }
-    convert_from_gregorian(a_time);
-}
-
-void
-add_years(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->years == FALSE) {
-        crm_trace("has->years == FALSE");
         return;
     }
-    a_time->years += extra;
-    convert_from_gregorian(a_time);
-}
 
-void
-add_ordinalyears(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->years == FALSE) {
-        crm_trace("has->years == FALSE");
-        return;
+    for(lpc = extra; lpc > 0; lpc--) {
+        m++;
+        if(m == 13) {
+            m = 1;
+            y++;
+        }
     }
-    a_time->years += extra;
-    convert_from_ordinal(a_time);
-}
 
-void
-add_weekyears(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->weekyears == FALSE) {
-        crm_trace("has->weekyears == FALSE");
-        return;
+    dmax = days_per_month(m, y);
+    if(dmax < d) {
+        /* Preserve day-of-month unless the month doesn't have enough days */
+        d = dmax;
     }
-    a_time->weekyears += extra;
-    convert_from_weekdays(a_time);
+
+    crm_trace("Calculated %.4d-%.2d-%.2d", y, m, d);
+    
+    a_time->years = y;
+    a_time->days = get_ordinal_days(y, m, d);
+
+    crm_get_gregorian_date(a_time, &y, &m, &d);
+    crm_trace("Got %.4d-%.2d-%.2d", y, m, d);
 }
 
 void
 sub_seconds(ha_time_t * a_time, int extra)
 {
-    if (extra < 0) {
+    int days = 0;
+
+    crm_trace("Subtracting %d seconds from %d", extra, a_time->seconds);
+    if(extra < 0) {
         add_seconds(a_time, -extra);
-    } else {
-        do_sub_time_field(a_time, seconds, extra, 60, sub_minutes);
+        return;
     }
-}
 
-void
-sub_minutes(ha_time_t * a_time, int extra)
-{
-    if (extra < 0) {
-        add_minutes(a_time, -extra);
-    } else {
-        do_sub_time_field(a_time, minutes, extra, 60, sub_hours);
-    }
-}
+    a_time->seconds -= extra;
+    crm_trace("s=%d, d=%d", a_time->seconds, days);
 
-void
-sub_hours(ha_time_t * a_time, int extra)
-{
-    if (extra < 0) {
-        add_hours(a_time, -extra);
-    } else {
-        do_sub_time_field(a_time, hours, extra, 24, sub_days);
+    while (a_time->seconds < 0) {
+        crm_trace("s=%d, d=%d", a_time->seconds, days);
+        a_time->seconds += 24 * 60 * 60;
+        days++;
+        crm_trace("s=%d, d=%d", a_time->seconds, days);
     }
+    sub_days(a_time, days);
 }
 
 void
 sub_days(ha_time_t * a_time, int extra)
 {
-    if (a_time->has->days == FALSE) {
-        crm_trace("has->days == FALSE");
-        return;
-    }
-
-    crm_trace("Subtracting %d days from %.4d-%.2d-%.2d",
-              extra, a_time->years, a_time->months, a_time->days);
-
-    if (extra < 0) {
+    crm_trace("Subtracting %d days from %.4d-%.3d",
+              extra, a_time->years, a_time->days);
+    if(extra < 0) {
         add_days(a_time, -extra);
-    } else {
-        do_sub_days_field(a_time, days, extra, sub_months);
-    }
-
-    convert_from_gregorian(a_time);
-}
-
-void
-sub_weekdays(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->weekdays == FALSE) {
-        crm_trace("has->weekdays == FALSE");
         return;
     }
 
-    crm_trace("Subtracting %d days from %.4d-%.2d-%.2d",
-              extra, a_time->years, a_time->months, a_time->days);
-
-    if (extra < 0) {
-        add_weekdays(a_time, -extra);
-    } else {
-        do_sub_field(a_time, weekdays, extra, 7, sub_weeks);
+    a_time->days -= extra;
+    while (a_time->days <= 0) {
+        a_time->years--;
+        a_time->days += is_leap_year(a_time->years)?366:365;
     }
-
-    convert_from_weekdays(a_time);
-}
-
-void
-sub_yeardays(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->yeardays == FALSE) {
-        crm_trace("has->yeardays == FALSE");
-        return;
-    }
-
-    crm_trace("Subtracting %d days from %.4d-%.3d", extra, a_time->years, a_time->yeardays);
-
-    if (extra < 0) {
-        add_yeardays(a_time, -extra);
-    } else {
-        do_sub_field(a_time, yeardays, extra,
-                     is_leap_year(a_time->years) ? 366 : 365, sub_ordinalyears);
-    }
-
-    convert_from_ordinal(a_time);
-}
-
-void
-sub_weeks(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->weeks == FALSE) {
-        crm_trace("has->weeks == FALSE");
-        return;
-    }
-    if (extra < 0) {
-        add_weeks(a_time, -extra);
-    } else {
-        do_sub_field(a_time, weeks, extra, weeks_in_year(a_time->years), sub_weekyears);
-    }
-
-    convert_from_weekdays(a_time);
 }
 
 void
 sub_months(ha_time_t * a_time, int extra)
 {
-    if (a_time->has->months == FALSE) {
-        crm_trace("has->months == FALSE");
-        return;
-    }
-    if (extra < 0) {
+    int lpc;
+    uint32_t y, m, d, dmax;
+    crm_get_gregorian_date(a_time, &y, &m, &d);
+
+    crm_trace("Subtracting %d months from %.4d-%.2d-%.2d", extra, y, m, d);
+    if(extra < 0) {
         add_months(a_time, -extra);
-    } else {
-        do_sub_field(a_time, months, extra, 12, sub_years);
+        return;
+    }    
+
+    for(lpc = extra; lpc > 0; lpc--) {
+        m--;
+        if(m == 0) {
+            m = 12;
+            y--;
+        }
     }
-    convert_from_gregorian(a_time);
+
+    dmax = days_per_month(m, y);
+    if(dmax < d) {
+        /* Preserve day-of-month unless the month doesn't have enough days */
+        d = dmax;
+    }
+    crm_trace("Calculated %.4d-%.2d-%.2d", y, m, d);
+
+    a_time->years = y;
+    a_time->days = get_ordinal_days(y, m, d);
+
+    crm_get_gregorian_date(a_time, &y, &m, &d);
+    crm_trace("Got %.4d-%.2d-%.2d", y, m, d);
+}
+
+void
+add_minutes(ha_time_t * a_time, int extra)
+{
+    add_seconds(a_time, extra * 60);
+}
+
+void
+add_hours(ha_time_t * a_time, int extra)
+{
+    add_seconds(a_time, extra * 60 * 60);
+}
+
+void
+add_weeks(ha_time_t * a_time, int extra)
+{
+    add_days(a_time, extra * 7);
+}
+
+void
+add_years(ha_time_t * a_time, int extra)
+{
+    a_time->years += extra;
+}
+
+void
+sub_minutes(ha_time_t * a_time, int extra)
+{
+    sub_seconds(a_time, extra * 60);
+}
+
+void
+sub_hours(ha_time_t * a_time, int extra)
+{
+    sub_seconds(a_time, extra * 60 * 60);
+}
+
+void
+sub_weeks(ha_time_t * a_time, int extra)
+{
+    sub_days(a_time, 7 * extra);
 }
 
 void
 sub_years(ha_time_t * a_time, int extra)
 {
-    if (a_time->has->years == FALSE) {
-        crm_trace("has->years == FALSE");
-        return;
-    }
     a_time->years -= extra;
-    convert_from_gregorian(a_time);
 }
 
-void
-sub_weekyears(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->weekyears == FALSE) {
-        crm_trace("has->weekyears == FALSE");
-        return;
-    }
-    a_time->weekyears -= extra;
-
-    convert_from_weekdays(a_time);
-}
-
-void
-sub_ordinalyears(ha_time_t * a_time, int extra)
-{
-    if (a_time->has->years == FALSE) {
-        crm_trace("has->years == FALSE");
-        return;
-    }
-    a_time->years -= extra;
-
-    convert_from_ordinal(a_time);
-}
