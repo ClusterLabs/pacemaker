@@ -806,7 +806,7 @@ const long long crmd_fsa_actions[MAXINPUT][MAXSTATE] = {
      /* S_PENDING            ==> */ A_WARN,
      /* S_STOPPING           ==> */ A_WARN,
      /* S_TERMINATE          ==> */ A_WARN | A_EXIT_1,
-     /* S_TRANSITION_ENGINE  ==> */ A_WARN | O_LRM_RECONNECT,
+     /* S_TRANSITION_ENGINE  ==> */ A_WARN | O_LRM_RECONNECT | A_PE_INVOKE | A_TE_CANCEL,
      /* S_HALT               ==> */ A_WARN,
      },
 
