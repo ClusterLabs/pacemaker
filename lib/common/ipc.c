@@ -517,13 +517,12 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout)
     crm_trace("client %s waiting on reply to msg id %d", client->name, request_id);
     do {
         rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 500);
-        if(rc > 0 || crm_ipc_connected(client) == FALSE) {
+        if(rc > 0) {
             struct qb_ipc_response_header *hdr = (struct qb_ipc_response_header *)client->buffer;
 
             if(hdr->id == request_id) {
                 /* Got it */
                 break;
-
             } else if(hdr->id > request_id){
                 xmlNode *bad = string2xml(crm_ipc_buffer(client));
                 crm_err("Discarding old reply %d (need %d)", hdr->id, request_id);
@@ -535,6 +534,9 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout)
                 crm_log_xml_notice(bad, "ImpossibleReply");
                 CRM_ASSERT(hdr->id <= request_id);
             }
+        } else if (crm_ipc_connected(client) == FALSE) {
+            crm_err("Server disconnected client %s while waiting for msg id %d", client->name, request_id);
+            break;
         }
 
     } while(time(NULL) < timeout);
