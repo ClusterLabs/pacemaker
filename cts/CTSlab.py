@@ -116,7 +116,7 @@ def usage(arg, status=1):
     print "\t [--nodes 'node list']        list of cluster nodes separated by whitespace" 
     print "\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)" 
     print "\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes" 
-    print "\t [--stack (heartbeat|ais)]    which cluster stack is installed"
+    print "\t [--stack (v0|v1|cman|corosync|heartbeat|openais)]    which cluster stack is installed"
     print "\t [--list-tests]               list the valid tests" 
     print "\t [--benchmark]                add the timing information" 
     print "\t "
