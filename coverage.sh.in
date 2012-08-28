@@ -39,6 +39,7 @@ else
     find . -type f -name "*.debug" -exec ln -s $PWD/\{\} $GCOV_BASE\{\} \;
 fi
 
+cd -
 lcov -d $GCOV_BASE -z
 
 # Run all active regression tests
