@@ -483,6 +483,65 @@ const char *crm_ipc_name(crm_ipc_t *client)
     return client->name;
 }
 
+static int
+internal_ipc_send_recv(crm_ipc_t *client, const void *iov)
+{
+    int rc = 0;
+    do {
+        rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer, client->buf_size, -1);
+    } while(rc == -EAGAIN && crm_ipc_connected(client));
+
+    return rc;
+}
+
+static int
+internal_ipc_send_request(crm_ipc_t *client, const void *iov, int ms_timeout)
+{
+    int rc = 0;
+    time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
+
+    do {
+        rc = qb_ipcc_sendv(client->ipc, iov, 2);
+    } while(rc == -EAGAIN && time(NULL) < timeout && crm_ipc_connected(client));
+
+    return rc;
+}
+
+static int
+internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout)
+{
+    time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
+    int rc = 0;
+
+    /* get the reply */
+    crm_trace("client %s waiting on reply to msg id %d", client->name, request_id);
+    do {
+        rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 500);
+        if(rc > 0 || crm_ipc_connected(client) == FALSE) {
+            struct qb_ipc_response_header *hdr = (struct qb_ipc_response_header *)client->buffer;
+
+            if(hdr->id == request_id) {
+                /* Got it */
+                break;
+
+            } else if(hdr->id > request_id){
+                xmlNode *bad = string2xml(crm_ipc_buffer(client));
+                crm_err("Discarding old reply %d (need %d)", hdr->id, request_id);
+                crm_log_xml_notice(bad, "OldIpcReply");
+
+            } else {
+                xmlNode *bad = string2xml(crm_ipc_buffer(client));
+                crm_err("Discarding newer reply %d (need %d)", hdr->id, request_id);
+                crm_log_xml_notice(bad, "ImpossibleReply");
+                CRM_ASSERT(hdr->id <= request_id);
+            }
+        }
+
+    } while(time(NULL) < timeout);
+
+    return rc;
+}
+
 int
 crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int32_t ms_timeout, xmlNode **reply)
 {
@@ -526,70 +585,39 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int3
         ms_timeout = 5000;
     }
 
+    crm_trace("Sending from client: %s request id: %d bytes: %u timeout:%d msg: %.200s...",
+        client->name, header.qb.id, header.qb.size, ms_timeout, buffer);
+
     if(ms_timeout > 0) {
-        time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
-        crm_trace("Sending request %d of %u bytes to %s (timeout=%dms): %.200s...",
-                  header.qb.id, header.qb.size, client->name, ms_timeout, buffer);
-        do {
-            rc = qb_ipcc_sendv(client->ipc, iov, 2);
 
-        } while(rc == -EAGAIN && time(NULL) < timeout && crm_ipc_connected(client));
+        rc = internal_ipc_send_request(client, iov, ms_timeout);
 
-        if(rc > 0 && is_not_set(flags, crm_ipc_client_response)) {
+        if (rc <= 0) {
+            crm_trace("Failed to send from client %s request %d with %u bytes: %.200s...",
+                client->name, header.qb.id, header.qb.size, buffer);
+            goto send_cleanup;
+        } else if(is_not_set(flags, crm_ipc_client_response)) {
             crm_trace("Message sent, not waiting for reply to %d from %s to %u bytes: %.200s...",
                       header.qb.id, client->name, header.qb.size, buffer);
-            free(buffer);
-            return rc;
 
-        } else if(rc > 0) {
-            crm_trace("Waiting for reply %d from %s to %u bytes: %.200s...",
-                      header.qb.id, client->name, header.qb.size, buffer);
+            goto send_cleanup;
+        }
 
-            do {
-                rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 500);
-                if(rc > 0 || crm_ipc_connected(client) == FALSE) {
-                    struct qb_ipc_response_header *hdr = (struct qb_ipc_response_header *)client->buffer;
+        rc = internal_ipc_get_reply(client, header.qb.id, ms_timeout);
 
-                    if(hdr->id == header.qb.id) {
-                        /* Got it */
-                        break;
-
-                    } else if(hdr->id > header.qb.id){
-                        xmlNode *bad = string2xml(crm_ipc_buffer(client));
-                        crm_err("Discarding old reply %d (need %d)", hdr->id, header.qb.id);
-                        crm_log_xml_notice(bad, "OldIpcReply");
-
-                    } else {
-                        xmlNode *bad = string2xml(crm_ipc_buffer(client));
-                        crm_err("Discarding newer reply %d (need %d)", hdr->id, header.qb.id);
-                        crm_log_xml_notice(bad, "ImpossibleReply");
-                        CRM_ASSERT(hdr->id <= header.qb.id);
-                    }
-                }
-
-            } while(time(NULL) < timeout);
-
-            if(rc < 0) {
-                /* No reply, for now, disable sending
-                 *
-                 * The alternative is to close the connection since we don't know
-                 * how to detect and discard out-of-sequence replies
-                 *
-                 * TODO - implement the above
-                 */
-                client->need_reply = TRUE;
-            }
-
-        } else {
-            crm_trace("Could not send %u bytes to %s: %.200s...", header.qb.size, client->name, buffer);
+        if(rc < 0) {
+           /* No reply, for now, disable sending
+            *
+            * The alternative is to close the connection since we don't know
+            * how to detect and discard out-of-sequence replies
+            *
+            * TODO - implement the above
+            */
+            client->need_reply = TRUE;
         }
 
     } else {
-        crm_trace("Waiting for reply to %u bytes: %.200s...", header.qb.size, buffer);
-        do {
-            rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer, client->buf_size, ms_timeout);
-
-        } while(rc == -EAGAIN && crm_ipc_connected(client));
+        rc = internal_ipc_send_recv(client, iov);
     }
 
     if(rc > 0) {
@@ -604,6 +632,7 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int3
         crm_trace("Response not recieved: rc=%ld, errno=%d", rc, errno);
     }
 
+send_cleanup:
     if(crm_ipc_connected(client) == FALSE) {
         crm_notice("Connection to %s closed: %s (%ld)", client->name, pcmk_strerror(rc), rc);
 
