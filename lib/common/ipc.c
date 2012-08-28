@@ -554,7 +554,7 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int3
                         /* Got it */
                         break;
 
-                    } else if(hdr->id > header.qb.id){
+                    } else if(hdr->id < header.qb.id){
                         xmlNode *bad = string2xml(crm_ipc_buffer(client));
                         crm_err("Discarding old reply %d (need %d)", hdr->id, header.qb.id);
                         crm_log_xml_notice(bad, "OldIpcReply");
