@@ -858,6 +858,7 @@ main(int argc, char ** argv)
             crm_crit("Cannot sign in to the cluster... terminating");
             exit(100);
         }
+        stonith_our_uname = cluster.uname;
 
         if (no_cib_connect == FALSE) {
             setup_cib();
