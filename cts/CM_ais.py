@@ -192,12 +192,15 @@ class crm_ais(crm_lha):
             "LogActions: Recover Fencing",
             "update_failcount: Updating failcount for Fencing",
             "(ERROR|error): te_connect_stonith: Sign-in failed: triggered a retry",
+            "stonith_connection_failed: STONITH connection failed, finalizing .* pending operations.",
+            "process_lrm_event: LRM operation Fencing.* Error"
             ]
         
         stonith_ignore.extend(self.common_ignore)
         
         fullcomplist["stonith-ng"] = Process(self, "stonith-ng", process="stonithd", pats = [
                 "crm_ipc_read: Connection to stonith-ng failed",
+                "stonith_connection_destroy_cb: LRMD lost STONITH connection",
                 "mainloop_gio_callback: Connection to stonith-ng.* closed",
                 "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                 "crmd.*stonith_api_add_notification: Callback already present",
