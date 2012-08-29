@@ -233,13 +233,13 @@ get_time_legacy() {
 get_time_format_for_string() {
     l="$*"
     t=$(get_time `echo $l | get_time_syslog`)
-    if [ "$t" ]; then
+    if [ "x$t" != x ]; then
 	echo syslog
 	return
     fi
 
     t=$(get_time `echo $l | get_time_legacy`)
-    if [ "$t" ]; then
+    if [ "x$t" != x ]; then
 	echo legacy
 	return
     fi
@@ -250,13 +250,40 @@ get_time_format() {
     trycnt=10
     while [ $trycnt -gt 0 ] && read l; do
 	func=$(get_time_format_for_string $l)
-	if [ "$func" ]; then
+	if [ "x$func" != x ]; then
 	    break
 	fi
 	trycnt=$(($trycnt-1))
     done
     #debug "Logfile uses the $func time format"
     echo $func
+}
+
+get_first_time() {
+    l="" 
+    format=$1
+    while read l; do
+	t=$(echo $l | get_time_$format)
+	ts=$(get_time $t)
+	if [ "x$ts" != x ]; then
+	    echo "$ts"
+	    return
+	fi
+    done
+}
+
+get_last_time() {
+    l=""
+    best=`date +%s` # Now
+    format=$1
+    while read l; do
+	t=$(echo $l | get_time_$format)
+	ts=$(get_time $t)
+	if [ "x$ts" != x ]; then
+	    best=$ts
+	fi
+    done
+    echo $best
 }
 
 linetime() {
@@ -416,11 +443,12 @@ is_our_log() {
 
 	local cat=`find_decompressor $logf`
 	local format=`$cat $logf | get_time_format`
-	local first_time=$(get_time "`$cat $logf | head -1 | get_time_$format`")
-	local last_time=$(get_time "`$cat $logf | tail -1 | get_time_$format`")
+	local first_time=`$cat $logf | head -10 | get_first_time $format`
+	local last_time=`$cat $logf | tail -10 | get_last_time $format`
 
 	if [ x = "x$first_time" -o x = "x$last_time" ]; then
-		return 0 # skip (empty log?)
+	    warning "Skipping bad logfile '$1': Could not determine log dates"
+	    return 0 # skip (empty log?)
 	fi
 	if [ $from_time -gt $last_time ]; then
 		# we shouldn't get here anyway if the logs are in order
