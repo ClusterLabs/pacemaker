@@ -271,20 +271,6 @@ crm_add_logfile(const char *filename)
 
 
 static char *blackbox_file_prefix = NULL;
-static gboolean blackbox_tracing_enabled = FALSE;
-
-void
-crm_enable_blackbox_tracing(int nsig) 
-{
-
-    if(blackbox_tracing_enabled) {
-        blackbox_tracing_enabled = FALSE;
-    } else {
-        blackbox_tracing_enabled = TRUE;
-    }
-    crm_update_callsites();
-    crm_debug("Blackbox tracing is %s", blackbox_tracing_enabled?"on":"off");
-}
 
 void
 crm_enable_blackbox(int nsig)
@@ -307,12 +293,10 @@ crm_enable_blackbox(int nsig)
         /* Original meanings from signal(7) 
          *
          * Signal       Value     Action   Comment
-         * SIGPROF     27,27,29    Term    Profiling timer expired
          * SIGTRAP        5        Core    Trace/breakpoint trap
          *
          * Our usage is as similar as possible
          */
-        mainloop_add_signal(SIGPROF, crm_enable_blackbox_tracing);
         mainloop_add_signal(SIGTRAP, crm_write_blackbox);
     }
 }
