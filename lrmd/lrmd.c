@@ -515,14 +515,9 @@ stonith_action_complete(lrmd_cmd_t *cmd, int rc)
 }
 
 static void
-lrmd_stonith_callback(stonith_t * stonith,
-        const xmlNode * msg,
-        int call_id,
-        int rc,
-        xmlNode * output,
-        void *userdata)
+lrmd_stonith_callback(stonith_t * stonith, stonith_callback_data_t *data)
 {
-    stonith_action_complete(userdata, rc);
+    stonith_action_complete(data->userdata, data->rc);
 }
 
 void

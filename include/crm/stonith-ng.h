@@ -101,6 +101,13 @@ typedef struct stonith_event_s
 
 } stonith_event_t;
 
+typedef struct stonith_callback_data_s
+{
+    int rc;
+    int call_id;
+    void *userdata;
+} stonith_callback_data_t;
+
 typedef struct stonith_api_operations_s
 {
     /*!
@@ -291,7 +298,7 @@ typedef struct stonith_api_operations_s
         int options,
         void *userdata,
         const char *callback_name,
-        void (*callback)(stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata));
+        void (*callback)(stonith_t *st, stonith_callback_data_t *data));
 
     /*!
      * \brief Remove a registered callback for a given call id.
