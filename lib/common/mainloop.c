@@ -506,21 +506,19 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
     gboolean keep = TRUE;
     mainloop_io_t *client = data;
 
-    crm_trace("Condition: %d %d", condition, G_IO_IN);
-
     if(condition & G_IO_IN) {
         if(client->ipc) {
             long rc = 0;
             int max = 10;
             do {
                 rc = crm_ipc_read(client->ipc);
-                crm_trace("New message from %s[%p] = %d", client->name, client, rc);
-
                 if(rc <= 0) {
-                    crm_trace("Message acquisition failed: %s (%ld)", pcmk_strerror(rc), rc);
+                    crm_trace("Message acquisition from %s[%p] failed: %s (%ld)",
+                              client->name, client, pcmk_strerror(rc), rc);
 
                 } else if(client->dispatch_fn_ipc) {
                     const char *buffer = crm_ipc_buffer(client->ipc);
+                    crm_trace("New message from %s[%p] = %d", client->name, client, rc, condition);
                     if(client->dispatch_fn_ipc(buffer, rc, client->userdata) < 0) {
                         crm_trace("Connection to %s no longer required", client->name);
                         keep = FALSE;
@@ -541,17 +539,42 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
     }
 
     if(client->ipc && crm_ipc_connected(client->ipc) == FALSE) {
-        crm_err("Connection to %s[%p] closed", client->name, client);
+        crm_err("Connection to %s[%p] closed (I/O condition=%d)", client->name, client, condition);
         keep = FALSE;
-    } else if(condition & G_IO_HUP) {
-        crm_trace("Recieved G_IO_HUP for %s [%p] connection", client->name, client);
+
+    } else if(condition & (G_IO_HUP|G_IO_NVAL|G_IO_ERR)) {
+        crm_trace("The connection %s[%p] has been closed (I/O condition=%d)", client->name, client, condition);
         keep = FALSE;
-    } else if(condition & G_IO_NVAL) {
-        crm_warn("Recieved G_IO_NVAL for %s [%p] connection", client->name, client);
-        keep = FALSE;
-    } else if(condition & G_IO_ERR) {
-        crm_err("Recieved G_IO_ERR for %s [%p] connection", client->name, client);
-        keep = FALSE;
+
+    } else if((condition & G_IO_IN) == 0) {
+        /*
+          #define 	GLIB_SYSDEF_POLLIN     =1
+          #define 	GLIB_SYSDEF_POLLPRI    =2
+          #define 	GLIB_SYSDEF_POLLOUT    =4
+          #define 	GLIB_SYSDEF_POLLERR    =8
+          #define 	GLIB_SYSDEF_POLLHUP    =16
+          #define 	GLIB_SYSDEF_POLLNVAL   =32
+
+          typedef enum
+          {
+            G_IO_IN	GLIB_SYSDEF_POLLIN,
+            G_IO_OUT	GLIB_SYSDEF_POLLOUT,
+            G_IO_PRI	GLIB_SYSDEF_POLLPRI,
+            G_IO_ERR	GLIB_SYSDEF_POLLERR,
+            G_IO_HUP	GLIB_SYSDEF_POLLHUP,
+            G_IO_NVAL	GLIB_SYSDEF_POLLNVAL
+          } GIOCondition;
+
+          A bitwise combination representing a condition to watch for on an event source.
+
+          G_IO_IN	There is data to read.
+          G_IO_OUT	Data can be written (without blocking).
+          G_IO_PRI	There is urgent data to read.
+          G_IO_ERR	Error condition.
+          G_IO_HUP	Hung up (the connection has been broken, usually for pipes and sockets).
+          G_IO_NVAL	Invalid request. The file descriptor is not open.    
+        */
+        crm_err("Strange condition: %d", condition);
     }
     
     return keep;
