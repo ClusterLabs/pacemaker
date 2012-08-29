@@ -330,6 +330,14 @@ crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const 
             changed = TRUE;
         }
 
+#if SUPPORT_PLUGIN
+    } else if (safe_str_eq(status, CRM_NODE_MEMBER)) {
+        if (flag > 0 && node->processes != flag) {
+            node->processes = flag;
+            changed = TRUE;
+        }
+#endif
+
     } else if (node->processes & flag) {
         clear_bit(node->processes, flag);
         changed = TRUE;
