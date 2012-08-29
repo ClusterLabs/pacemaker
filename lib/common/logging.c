@@ -388,13 +388,13 @@ crm_log_filter_source(int source, const char *trace_files, const char *trace_fns
 {
     if (qb_log_ctl(source, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         return;
+    } else if(source == QB_LOG_BLACKBOX) { /* Blackbox gets everything if enabled */
+        qb_bit_set(cs->targets, source);
     } else if (source == QB_LOG_SYSLOG) { /* No tracing to syslog */
         if(cs->priority <= LOG_NOTICE && cs->priority <= crm_log_level) {
             qb_bit_set(cs->targets, source);
         }
-        /* Tracing options... */
-    } else if(source == QB_LOG_BLACKBOX && blackbox_tracing_enabled) {
-        qb_bit_set(cs->targets, source);
+        /* Log file tracing options... */
     } else if (cs->priority <= crm_log_level) {
         qb_bit_set(cs->targets, source);
     } else if(trace_files && strstr(trace_files, cs->filename) != NULL) {
