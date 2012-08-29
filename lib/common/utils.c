@@ -2145,6 +2145,25 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     return a_function;
 }
 
+char *
+add_list_element(char *list, const char *value)
+{
+    int len = 0;
+    int last = 0;
+
+    if (value == NULL) {
+        return list;
+    }
+    if (list) {
+        last = strlen(list);
+    }
+    len = last + 2;             /* +1 space, +1 EOS */
+    len += strlen(value);
+    list = realloc(list, len);
+    sprintf(list + last, " %s", value);
+    return list;
+}
+
 void *
 convert_const_pointer(const void *ptr)
 {

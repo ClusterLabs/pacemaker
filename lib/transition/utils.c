@@ -117,7 +117,7 @@ actiontype2text(action_type_e type)
 }
 
 static void
-print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t * action)
+print_elem(int log_level, const char *prefix, gboolean as_input, gboolean unresolved, crm_action_t * action)
 {
     int priority = 0;
     const char *key = NULL;
@@ -136,6 +136,10 @@ print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t * 
 
     } else if (action->sent_update) {
         state = "Update sent";
+
+    } else if (unresolved) {
+        /* Present as an input only */
+        state = "Unresolved dependancy";
     }
 
     if (as_input) {
@@ -190,7 +194,27 @@ print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t * 
 void
 print_action(int log_level, const char *prefix, crm_action_t * action)
 {
-    print_elem(log_level, prefix, FALSE, action);
+    print_elem(log_level, prefix, FALSE, FALSE, action);
+}
+
+static crm_action_t *
+find_action(crm_graph_t * graph, int id)
+{
+    GListPtr sIter = NULL;
+
+    for (sIter = graph->synapses; sIter != NULL; sIter = sIter->next) {
+        GListPtr aIter = NULL;
+        synapse_t *synapse = (synapse_t *) sIter->data;
+
+        for (aIter = synapse->actions; aIter != NULL; aIter = aIter->next) {
+            crm_action_t *action = (crm_action_t *) aIter->data;
+
+            if(action->id == id) {
+                return action;
+            }
+        }
+    }
+    return NULL;
 }
 
 void
@@ -200,12 +224,12 @@ print_graph(unsigned int log_level, crm_graph_t * graph)
 
     if (graph == NULL || graph->num_actions == 0) {
         if (log_level > LOG_DEBUG) {
-            crm_debug("## Empty transition graph ##");
+            crm_debug("Empty transition graph");
         }
         return;
     }
 
-    do_crm_log(log_level, "Graph %d (%d actions in %d synapses):"
+    do_crm_log(log_level, "Graph %d with %d actions:"
                " batch-limit=%d jobs, network-delay=%dms",
                graph->id, graph->num_actions, graph->num_synapses,
                graph->batch_limit, graph->network_delay);
@@ -213,27 +237,42 @@ print_graph(unsigned int log_level, crm_graph_t * graph)
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
 
-        do_crm_log(log_level, "Synapse %d %s (priority: %d)",
-                   synapse->id,
-                   synapse->confirmed ? "was confirmed" :
-                   synapse->executed ? "was executed" : "is pending", synapse->priority);
-
         if (synapse->confirmed == FALSE) {
             GListPtr lpc2 = NULL;
-
             for (lpc2 = synapse->actions; lpc2 != NULL; lpc2 = lpc2->next) {
                 crm_action_t *action = (crm_action_t *) lpc2->data;
 
-                print_elem(log_level, "    ", FALSE, action);
+                print_elem(log_level, "  ", FALSE, FALSE, action);
             }
         }
         if (synapse->executed == FALSE) {
             GListPtr lpc2 = NULL;
+            char *pending = NULL;
 
             for (lpc2 = synapse->inputs; lpc2 != NULL; lpc2 = lpc2->next) {
+                int id = 0;
                 crm_action_t *input = (crm_action_t *) lpc2->data;
+                const char *id_string = crm_element_value(input->xml, XML_ATTR_ID);
 
-                print_elem(log_level, "     * ", TRUE, input);
+                crm_element_value_int(input->xml, XML_ATTR_ID, &id);
+                if (input->failed || input->executed) {
+                    /* Unusual - expand */
+                    print_elem(log_level, "   * ", TRUE, FALSE, input);
+
+                } else if (input->confirmed || input->sent_update) {
+                    /* Done - ignore */
+
+                } else if(find_action(graph, id)) {
+                    /* Pending - compress */
+                    pending = add_list_element(pending, id_string);
+                } else {
+                    /* Unknown - expand */
+                    print_elem(log_level, "   * ", TRUE, TRUE, input);
+                }
+            }
+            if(pending) {
+                do_crm_log(log_level, "  * Pending inputs: %s", pending);
+                free(pending);
             }
         }
     }

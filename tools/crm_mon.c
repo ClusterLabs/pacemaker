@@ -1009,25 +1009,6 @@ print_cluster_tickets(pe_working_set_t * data_set)
     return;
 }
 
-static char *
-add_list_element(char *list, const char *value)
-{
-    int len = 0;
-    int last = 0;
-
-    if (value == NULL) {
-        return list;
-    }
-    if (list) {
-        last = strlen(list);
-    }
-    len = last + 2;             /* +1 space, +1 EOS */
-    len += strlen(value);
-    list = realloc(list, len);
-    sprintf(list + last, " %s", value);
-    return list;
-}
-
 static int
 print_status(pe_working_set_t * data_set)
 {

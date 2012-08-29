@@ -144,6 +144,7 @@ crm_strlen_zero(const char *s)
     return !s || *s == '\0';
 }
 
+char *add_list_element(char *list, const char *value);
 char *generate_series_filename(const char *directory, const char *series, int sequence, gboolean bzip);
 int get_last_sequence(const char *directory, const char *series);
 void write_last_sequence(const char *directory, const char *series, int sequence, int max);

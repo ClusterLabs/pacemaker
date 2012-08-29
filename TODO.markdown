@@ -18,17 +18,6 @@
 - Reduce the amount of stonith-ng logging
 - Use dlopen for snmp in crm_mon
 - Re-implement no-quorum filter for cib updates?
-- More concise logging of print_graph() when a transition is cancelled or fails
-
-    warning: print_graph: Synapse 26 is pending (priority: 0)
-    warning: print_elem:     [Action 11]: Pending (id: all_stopped, type: pseduo, priority: 0)
-    warning: print_elem:      * [Input 36]: Pending (id: rsc_pcmk-1_stop_0, loc: pcmk-1, priority: 0)
-    warning: print_elem:      * [Input 39]: Pending (id: rsc_pcmk-2_stop_0, loc: pcmk-3, priority: 0)
-    warning: print_elem:      * [Input 42]: Pending (id: rsc_pcmk-3_stop_0, loc: pcmk-3, priority: 0)
-    warning: print_elem:      * [Input 47]: Pending (id: migrator_stop_0, loc: pcmk-1, priority: 0)
-    warning: print_elem:      * [Input 50]: Pending (id: ping-1_stop_0, loc: pcmk-3, priority: 0)
-    warning: print_elem:      * [Input 53]: Pending (id: ping-1_stop_0, loc: pcmk-1, priority: 0)
-
 
 ## Targeted for 1.4
 
