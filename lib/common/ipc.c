@@ -451,8 +451,6 @@ crm_ipc_read(crm_ipc_t *client)
     CRM_ASSERT(client != NULL);
     CRM_ASSERT(client->ipc != NULL);
     CRM_ASSERT(client->buffer != NULL);
-    
-    crm_trace("Message recieved on %s IPC connection", client->name);
 
     client->buffer[0] = 0;
     client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer, client->buf_size-1, 0);
@@ -460,7 +458,11 @@ crm_ipc_read(crm_ipc_t *client)
         struct qb_ipc_response_header *header = (struct qb_ipc_response_header *)client->buffer;
         client->buffer[client->msg_size] = 0;
 
-        crm_trace("Recieved event %d, size=%d, rc=%d, text: %.200s", header->id, header->size, client->msg_size, client->buffer+sizeof(struct qb_ipc_response_header));
+        crm_trace("Recieved %s event %d, size=%d, rc=%d, text: %.200s",
+                  client->name, header->id, header->size, client->msg_size,
+                  client->buffer+sizeof(struct qb_ipc_response_header));
+    } else {
+        crm_trace("No message from %s recieved: %s", client->name, pcmk_strerror(client->msg_size));
     }
 
     if(crm_ipc_connected(client) == FALSE || client->msg_size == -ENOTCONN) {
