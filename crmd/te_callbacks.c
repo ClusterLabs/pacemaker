@@ -209,9 +209,8 @@ te_update_diff(const char *event, xmlNode * msg)
             const char *event_node = crm_element_value(node, XML_ATTR_ID);
             const char *event_uname = crm_element_value(node, XML_ATTR_UNAME);
             const char *is_peer = crm_element_value(node, XML_NODE_IS_PEER);
-
-            /* Don't check the value of XML_NODE_IN_CLUSTER, only pacemaker may have been shut down */
-            if (safe_str_eq(is_peer, XML_BOOLEAN_NO)) {
+             /* Don't check the value of XML_NODE_IN_CLUSTER, only pacemaker may have been shut down */
+            if (safe_str_eq(is_peer, OFFLINESTATUS)) {
                 /* Pacemaker is now stopped/gone
                  * Was it a shutdown or fencing operation?
                  */
