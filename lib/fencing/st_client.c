@@ -56,8 +56,7 @@ typedef struct stonith_private_s {
     GHashTable *stonith_op_callback_table;
     GList *notify_list;
 
-    void (*op_callback) (stonith_t * st, const xmlNode * msg, int call, int rc, xmlNode * output,
-                         void *userdata);
+    void (*op_callback) (stonith_t * st, stonith_callback_data_t *data);
 
 } stonith_private_t;
 
@@ -70,8 +69,7 @@ typedef struct stonith_notify_client_s {
 } stonith_notify_client_t;
 
 typedef struct stonith_callback_client_s {
-    void (*callback) (stonith_t * st, const xmlNode * msg, int call, int rc, xmlNode * output,
-                      void *userdata);
+    void (*callback) (stonith_t * st, stonith_callback_data_t *data);
     const char *id;
     void *user_data;
     gboolean only_success;
@@ -1444,11 +1442,23 @@ update_callback_timeout(int call_id, int timeout, stonith_t *st)
     set_callback_timeout(callback, st, call_id, timeout);
 }
 
+static void
+invoke_callback(stonith_t *st, int call_id, int rc, void *userdata,
+    void (*callback) (stonith_t * st, stonith_callback_data_t *data))
+{
+    stonith_callback_data_t data = { 0, };
+
+    data.call_id = call_id;
+    data.rc = rc;
+    data.userdata = userdata;
+
+    callback(st, &data);
+}
+
 static int
 stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int options,
                          void *user_data, const char *callback_name,
-                         void (*callback) (stonith_t * st, const xmlNode * msg, int call, int rc,
-                                           xmlNode * output, void *userdata))
+                         void (*callback) (stonith_t * st, stonith_callback_data_t *data))
 {
     stonith_callback_client_t *blob = NULL;
     stonith_private_t *private = NULL;
@@ -1464,7 +1474,7 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
         if (!(options & st_opt_report_only_success)) {
             crm_trace("Call failed, calling %s: %s",
                       callback_name, pcmk_strerror(call_id));
-            callback(stonith, NULL, call_id, call_id, NULL, user_data);
+            invoke_callback(stonith, call_id, call_id, user_data, callback);
         } else {
             crm_warn("STONITH call failed: %s", pcmk_strerror(call_id));
         }
@@ -1532,7 +1542,6 @@ stonith_dump_pending_callbacks(stonith_t * stonith)
 void
 stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc)
 {
-    xmlNode *output = NULL;
     stonith_private_t *private = NULL;
     stonith_callback_client_t *blob = NULL;
     stonith_callback_client_t local_blob;
@@ -1550,7 +1559,6 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
     if (msg != NULL) {
         crm_element_value_int(msg, F_STONITH_RC, &rc);
         crm_element_value_int(msg, F_STONITH_CALLID, &call_id);
-        output = get_message_xml(msg, F_STONITH_CALLDATA);
     }
 
     CRM_CHECK(call_id > 0, crm_log_xml_err(msg, "Bad result"));
@@ -1570,7 +1578,7 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
 
     if (local_blob.callback != NULL && (rc == pcmk_ok || local_blob.only_success == FALSE)) {
         crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
-        local_blob.callback(stonith, msg, call_id, rc, output, local_blob.user_data);
+        invoke_callback(stonith, call_id, rc, local_blob.user_data, local_blob.callback);
 
     } else if (private->op_callback == NULL && rc != pcmk_ok) {
         crm_warn("STONITH command failed: %s", pcmk_strerror(rc));
@@ -1579,7 +1587,7 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
 
     if (private->op_callback != NULL) {
         crm_trace("Invoking global callback for call %d", call_id);
-        private->op_callback(stonith, msg, call_id, rc, output, NULL);
+        invoke_callback(stonith, call_id, rc, NULL, private->op_callback);
     }
     crm_trace("OP callback activated.");
 }
