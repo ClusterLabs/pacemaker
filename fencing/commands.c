@@ -968,17 +968,16 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
         g_source_remove(cmd->timer_sigkill);
     }
 
-    if(WIFSIGNALED(status)) {
+    if(cmd->last_timeout_signo) {
+        crm_notice("Child process %d performing action '%s' with '%s' timed out with signal %d",
+                   pid, cmd->action, cmd->device, cmd->last_timeout_signo);
+        rc = -ETIME;
+    } else if(WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
 
-        if(signo == SIGTERM || signo == SIGKILL) {
-            rc = -ETIME;
-        } else {
-            rc = -ECONNABORTED;
-        }
+        rc = -ECONNABORTED;
         crm_notice("Child process %d performing action '%s' with '%s' terminated with signal %d",
                    pid, cmd->action, cmd->device, signo);
-
     } else if(WIFEXITED(status)) {
         rc = WEXITSTATUS(status);
         crm_debug("Child process %d performing action '%s' with '%s' exited with rc %d",
