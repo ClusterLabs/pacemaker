@@ -34,8 +34,6 @@ GMainLoop *mainloop = NULL;
 GHashTable *client_list = NULL;
 GHashTable *peers = NULL;
 
-qb_ipcs_service_t *ipcs = NULL;
-
 char *local_name = NULL;
 uint32_t local_nodeid = 0;
 crm_trigger_t *shutdown_trigger = NULL;
@@ -394,11 +392,6 @@ pcmk_shutdown_worker(gpointer user_data)
 void
 pcmk_shutdown(int nsig)
 {
-    if(ipcs) {
-        crm_trace("Closing IPC server");
-        mainloop_del_ipc_server(ipcs);
-        ipcs = NULL;
-    }
     if (shutdown_trigger == NULL) {
         shutdown_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, pcmk_shutdown_worker, NULL);
     }
@@ -645,6 +638,7 @@ main(int argc, char **argv)
     gid_t pcmk_gid = 0;
     struct rlimit cores;
     crm_ipc_t *old_instance = NULL;
+    qb_ipcs_service_t *ipcs = NULL;
 
 /* *INDENT-OFF* */
     /* =::=::= Default Environment =::=::= */
@@ -839,6 +833,13 @@ main(int argc, char **argv)
     crm_info("Starting mainloop");
 
     g_main_run(mainloop);
+
+    if(ipcs) {
+        crm_trace("Closing IPC server");
+        mainloop_del_ipc_server(ipcs);
+        ipcs = NULL;
+    }
+
     g_main_destroy(mainloop);
 
     cluster_disconnect_cpg();
