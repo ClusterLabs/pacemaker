@@ -828,19 +828,18 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
         return FALSE;
 
     } else if (wrapper->type == pe_order_load) {
-        crm_trace("check load filter %s.%s -> %s.%s", wrapper->action->uuid, wrapper->action->node->details->uname, action->uuid, action->node->details->uname);
+        crm_trace("check load filter %s.%s -> %s.%s",
+                  wrapper->action->uuid, wrapper->action->node ? wrapper->action->node->details->uname : "", 
+                  action->uuid, action->node ? action->node->details->uname : "");
 
         if (action->rsc && safe_str_eq(action->task, RSC_MIGRATE)) {
-            /* For migrate_to ops, we care about where it has been
-             * allocated to, not where the action will be executed
+            /* Remove the orders like :
+             *     "load_stopped_node2" -> "rscA_migrate_to node1"
+             * which were created from: pengine/native.c: MigrateRsc() 
+             *     order_actions(other, then, other_w->type);
              */
-            if(wrapper->action->node == NULL || action->rsc->allocated_to == NULL
-               || wrapper->action->node->details != action->rsc->allocated_to->details) {
-                /* Check if the actions are for the same node, ignore otherwise */
-                crm_trace("load filter - migrate");
-                wrapper->type = pe_order_none;
-                return FALSE;
-            }
+            wrapper->type = pe_order_none;
+            return FALSE;
 
         } else if (wrapper->action->node == NULL || action->node == NULL
             || wrapper->action->node->details != action->node->details) {
