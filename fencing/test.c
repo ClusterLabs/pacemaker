@@ -122,10 +122,9 @@ static void st_callback(stonith_t *st, stonith_event_t *e)
 }
 
 static  void
-st_global_callback(stonith_t * stonith, const xmlNode * msg, int call_id, int rc,
-                   xmlNode * output, void *userdata)
+st_global_callback(stonith_t * stonith, stonith_callback_data_t *data)
 {
-    crm_log_xml_notice((xmlNode*)msg, "Event");
+    crm_notice("Call id %d completed with rc %d", data->call_id, data->rc);
 }
 
 static void
@@ -340,14 +339,9 @@ static void
 iterate_mainloop_tests(gboolean event_ready);
 
 static void
-mainloop_callback(stonith_t * stonith,
-        const xmlNode * msg,
-        int call_id,
-        int rc,
-        xmlNode * output,
-        void *userdata)
+mainloop_callback(stonith_t * stonith, stonith_callback_data_t *data)
 {
-    callback_rc = rc;
+    callback_rc = data->rc;
     iterate_mainloop_tests(TRUE);
 }
 

@@ -860,6 +860,7 @@ main(int argc, char ** argv)
         } else {
             stonith_our_uname = cluster.uname;
         }
+        stonith_our_uname = cluster.uname;
 
         if (no_cib_connect == FALSE) {
             setup_cib();
