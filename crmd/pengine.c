@@ -210,6 +210,10 @@ do_pe_invoke(long long action,
         return;
     }
 
+    if(cur_state != S_POLICY_ENGINE) {
+        crm_err("No need to invoke the PE in state %s", fsa_state2string(cur_state));
+        return;
+    }
     if (is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
         crm_err("Attempted to invoke the PE without a consistent" " copy of the CIB!");
 
