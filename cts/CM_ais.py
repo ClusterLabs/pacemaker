@@ -369,7 +369,7 @@ class crm_mcp(crm_cs_v0):
 
             # Close enough... "Corosync Cluster Engine exiting normally" isn't printed
             #   reliably and there's little interest in doing anything it
-            "Pat:We_stopped"  : "%s.*Unloading all Corosync service engines",
+            "Pat:We_stopped"   : "%s.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
             
@@ -399,7 +399,7 @@ class crm_cman(crm_cs_v0):
             "QuorumCmd"      : "crm_node -q --cman",
             "ParitionCmd"    : "crm_node -p --cman",
 
-            "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
+            "Pat:We_stopped"   : "%s.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
             
