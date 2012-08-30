@@ -306,8 +306,8 @@ te_graph_trigger(gpointer user_data)
         }
 
         if (graph_rc != transition_complete) {
-            crm_err("Transition failed: %s", transition_status(graph_rc));
-            print_graph(LOG_WARNING, transition_graph);
+            crm_warn("Transition failed: %s", transition_status(graph_rc));
+            print_graph(LOG_NOTICE, transition_graph);
         }
     }
 
