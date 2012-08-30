@@ -718,7 +718,45 @@ should_dump_action(action_t * action)
                             action->id, action->uuid);
         return FALSE;
 
-    } else if (is_set(action->flags, pe_action_runnable) == FALSE) {
+    } else if (is_set(action->flags, pe_action_pseudo) && safe_str_eq(action->task, CRM_OP_PROBED)) {
+        GListPtr lpc = NULL;
+
+        /* This is a horrible but convenient hack
+         *
+         * It mimimizes the number of actions with unsatisfied inputs
+         * (ie. not included in the graph)
+         *
+         * This in turn, means we can be more concise when printing
+         * aborted/incomplete graphs.
+         *
+         * It also makes it obvious which node is preventing
+         * probe_complete from running (presumably because it is only
+         * partially up)
+         *
+         * For these reasons we tolerate such perversions 
+         */
+
+        for (lpc = action->actions_after; lpc != NULL; lpc = lpc->next) {
+            action_wrapper_t *wrapper = (action_wrapper_t *) lpc->data;
+
+            if (is_not_set(wrapper->action->flags, pe_action_runnable)) {
+                /* Only interested in runnable operations */
+            } else if (safe_str_neq(wrapper->action->task, RSC_START)) {
+                /* Only interested in start operations */
+            } else if (is_set(wrapper->action->flags, pe_action_dumped)) {
+                crm_trace( "action %d (%s) dependancy of %s",
+                           action->id, action->uuid, wrapper->action->uuid);
+                return TRUE;
+
+            } else if (should_dump_action(wrapper->action)) {
+                crm_trace( "action %d (%s) dependancy of %s",
+                           action->id, action->uuid, wrapper->action->uuid);
+                return TRUE;
+            }
+        }
+    }
+
+    if (is_set(action->flags, pe_action_runnable) == FALSE) {
         crm_trace( "action %d (%s) was not runnable",
                             action->id, action->uuid);
         return FALSE;
