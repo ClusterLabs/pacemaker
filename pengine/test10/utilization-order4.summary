@@ -22,9 +22,9 @@ Transition Summary:
  * Stop    prim-ping:1	(deglxen002)
 
 Executing cluster transition:
+ * Resource action: degllx62-vm     migrate_to on deglxen002
  * Resource action: degllx61-vm     stop on deglxen001
  * Pseudo action:   load_stopped_deglxen001
- * Resource action: degllx62-vm     migrate_to on deglxen002
  * Resource action: degllx62-vm     migrate_from on deglxen001
  * Resource action: degllx62-vm     stop on deglxen002
  * Pseudo action:   clone-nfs_stop_0
