@@ -303,15 +303,15 @@ do_election_count_vote(long long action,
         log_level = LOG_ERR;
         we_loose = TRUE;
 
+    } else if (election_id != current_election_id && crm_str_eq(fsa_our_uuid, election_owner, TRUE)) {
+        log_level = LOG_DEBUG_2;
+        reason = "Superceeded";
+        done = TRUE;
+
     } else if (your_node == NULL || crm_is_peer_active(your_node) == FALSE) {
         /* Possibly we cached the message in the FSA queue at a point that it wasn't */
         reason = "Peer is not part of our cluster";
         log_level = LOG_WARNING;
-        done = TRUE;
-
-    } else if (election_id != current_election_id && crm_str_eq(fsa_our_uuid, election_owner, TRUE)) {
-        log_level = LOG_DEBUG_2;
-        reason = "Superceeded";
         done = TRUE;
 
     } else if (crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
