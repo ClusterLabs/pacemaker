@@ -116,91 +116,14 @@ actiontype2text(action_type_e type)
     return "<unknown>";
 }
 
-static void
-print_elem(int log_level, const char *prefix, gboolean as_input, gboolean unresolved, crm_action_t * action)
-{
-    int priority = 0;
-    const char *key = NULL;
-    const char *host = NULL;
-    const char *class = "Action";
-    const char *state = "Pending";
-
-    if (action->failed) {
-        state = "Failed";
-
-    } else if (action->confirmed) {
-        state = "Completed";
-
-    } else if (action->executed) {
-        state = "In-flight";
-
-    } else if (action->sent_update) {
-        state = "Update sent";
-
-    } else if (unresolved) {
-        /* Present as an input only */
-        state = "Unresolved dependancy";
-    }
-
-    if (as_input) {
-        class = "Input";
-    }
-
-    if (as_input == FALSE) {
-        priority = action->synapse->priority;
-    }
-
-    key = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
-    host = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-
-    switch (action->type) {
-        case action_type_pseudo:
-            do_crm_log(log_level,
-                       "%s[%s %d]: %s (id: %s, type: %s, priority: %d)",
-                       prefix, class, action->id, state, key,
-                       actiontype2text(action->type), priority);
-            break;
-        case action_type_rsc:
-            do_crm_log(log_level,
-                       "%s[%s %d]: %s (id: %s, loc: %s, priority: %d)",
-                       prefix, class, action->id, state, key, host, priority);
-            break;
-        case action_type_crm:
-            do_crm_log(log_level,
-                       "%s[%s %d]: %s (id: %s, loc: %s, type: %s, priority: %d)",
-                       prefix, class, action->id, state, key, host,
-                       actiontype2text(action->type), priority);
-            break;
-        default:
-            crm_err("%s[%s %d]: %s (id: %s, loc: %s, type: %s (unhandled), priority: %d)",
-                    prefix, class, action->id, state, key, host,
-                    actiontype2text(action->type), priority);
-    }
-
-    if (as_input == FALSE) {
-        return;
-    }
-
-    if (action->timer) {
-        do_crm_log(log_level, "%s\ttimeout=%d, timer=%d", prefix,
-                   action->timeout, action->timer->source_id);
-    }
-
-    if (action->confirmed == FALSE) {
-        crm_log_xml_trace(action->xml, "\t\t\tRaw xml: ");
-    }
-}
-
-void
-print_action(int log_level, const char *prefix, crm_action_t * action)
-{
-    print_elem(log_level, prefix, FALSE, FALSE, action);
-}
-
 static crm_action_t *
 find_action(crm_graph_t * graph, int id)
 {
     GListPtr sIter = NULL;
+
+    if(graph == NULL) {
+        return NULL;
+    }
 
     for (sIter = graph->synapses; sIter != NULL; sIter = sIter->next) {
         GListPtr aIter = NULL;
@@ -215,6 +138,77 @@ find_action(crm_graph_t * graph, int id)
         }
     }
     return NULL;
+}
+
+static void
+print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t *synapse)
+{
+    GListPtr lpc = NULL;
+    char *pending = NULL;
+    const char *state = "Pending";
+    
+    if (synapse->failed) {
+        state = "Failed";
+
+    } else if (synapse->confirmed) {
+        state = "Completed";
+
+    } else if (synapse->executed) {
+        state = "In-flight";
+
+    } else if (synapse->ready) {
+        state = "Ready";
+    }
+
+    if (synapse->executed == FALSE) {
+        for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
+            crm_action_t *input = (crm_action_t *) lpc->data;
+            const char *id_string = crm_element_value(input->xml, XML_ATTR_ID);
+
+            if ((input->failed || input->executed == FALSE) && find_action(graph, input->id)) {
+                /* Pending or failed - Show compressed */
+                pending = add_list_element(pending, id_string);
+            }
+        }
+    }
+
+    for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
+        crm_action_t *action = (crm_action_t *) lpc->data;
+        const char *key = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+        const char *host = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+        char *desc = g_strdup_printf("%s %s op %s", state, actiontype2text(action->type), key);
+
+        do_crm_log(log_level,
+                   "[Action %4d]: %-50s on %s (priority: %d, requires: %s)",
+                   action->id, desc, host?host:"N/A",
+                   synapse->priority, pending?pending:"none");
+
+        g_free(desc);
+    }
+
+    if (synapse->executed == FALSE) {
+        for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
+            crm_action_t *input = (crm_action_t *) lpc->data;
+            const char *key = crm_element_value(input->xml, XML_LRM_ATTR_TASK_KEY);
+            const char *host = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
+
+            if (find_action(graph, input->id) == NULL) {
+                if(host == NULL) {
+                    do_crm_log(log_level, " * [Input %2d]: Unresolved dependancy %s op %s",
+                               input->id, actiontype2text(input->type), key);
+                } else {
+                    do_crm_log(log_level, " * [Input %2d]: Unresolved dependancy %s op %s on %s",
+                               input->id, actiontype2text(input->type), key, host);
+                }
+            }
+        }
+    }
+}
+
+void
+print_action(int log_level, const char *prefix, crm_action_t * action)
+{
+    print_synapse(log_level, NULL, action->synapse);
 }
 
 void
@@ -236,45 +230,7 @@ print_graph(unsigned int log_level, crm_graph_t * graph)
 
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
-
-        if (synapse->confirmed == FALSE) {
-            GListPtr lpc2 = NULL;
-            for (lpc2 = synapse->actions; lpc2 != NULL; lpc2 = lpc2->next) {
-                crm_action_t *action = (crm_action_t *) lpc2->data;
-
-                print_elem(log_level, "  ", FALSE, FALSE, action);
-            }
-        }
-        if (synapse->executed == FALSE) {
-            GListPtr lpc2 = NULL;
-            char *pending = NULL;
-
-            for (lpc2 = synapse->inputs; lpc2 != NULL; lpc2 = lpc2->next) {
-                int id = 0;
-                crm_action_t *input = (crm_action_t *) lpc2->data;
-                const char *id_string = crm_element_value(input->xml, XML_ATTR_ID);
-
-                crm_element_value_int(input->xml, XML_ATTR_ID, &id);
-                if (input->failed || input->executed) {
-                    /* Unusual - expand */
-                    print_elem(log_level, "   * ", TRUE, FALSE, input);
-
-                } else if (input->confirmed || input->sent_update) {
-                    /* Done - ignore */
-
-                } else if(find_action(graph, id)) {
-                    /* Pending - compress */
-                    pending = add_list_element(pending, id_string);
-                } else {
-                    /* Unknown - expand */
-                    print_elem(log_level, "   * ", TRUE, TRUE, input);
-                }
-            }
-            if(pending) {
-                do_crm_log(log_level, "  * Pending inputs: %s", pending);
-                free(pending);
-            }
-        }
+        print_synapse(log_level, graph, synapse);
     }
 }
 
