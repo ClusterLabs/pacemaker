@@ -33,7 +33,7 @@ extern gboolean crm_config_warning;
 
 void crm_enable_blackbox(int nsig);
 void crm_enable_blackbox_tracing(int nsig);
-void crm_write_blackbox(int nsig);
+void crm_write_blackbox(int nsig, struct qb_log_callsite *callsite);
 
 void crm_update_callsites(void);
 
@@ -69,12 +69,7 @@ unsigned int get_crm_log_level(void);
  */
 #    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
 
-#    define do_crm_log(level, fmt, args...) do {                        \
-        qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args); \
-        if((level) < LOG_WARNING) {                                     \
-            crm_write_blackbox(0);                                      \
-        }                                                               \
-    } while(0)
+#    define do_crm_log(level, fmt, args...) qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args)
 
 /* level /MUST/ be a constant or compilation will fail */
 #    define do_crm_log_unlikely(level, fmt, args...) do {               \
@@ -119,9 +114,6 @@ unsigned int get_crm_log_level(void);
         if (crm_is_callsite_active(xml_cs, level, 0)) {                  \
             log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
         }                                                               \
-        if((level) < LOG_WARNING) {                                     \
-            crm_write_blackbox(0);                                      \
-        }                                                               \
     } while(0)
 
 #    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
@@ -134,19 +126,6 @@ unsigned int get_crm_log_level(void);
 	const char *err = strerror(errno);				\
 	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
 	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
-        if((level) < LOG_WARNING) {                                     \
-            crm_write_blackbox(0);                                      \
-        }                                                               \
-    } while(0)
-
-#    define crm_crit(fmt, args...)    do {      \
-        qb_logt(LOG_CRIT,    0, fmt , ##args);  \
-        crm_write_blackbox(0);                  \
-    } while(0)
-
-#    define crm_err(fmt, args...)    do {      \
-        qb_logt(LOG_ERR,    0, fmt , ##args);  \
-        crm_write_blackbox(0);                  \
     } while(0)
 
 #    define crm_log_tag(level, tag, fmt, args...)    do {               \
@@ -160,6 +139,8 @@ unsigned int get_crm_log_level(void);
         }                                                               \
       } while(0)
 
+#    define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
+#    define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
 #    define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
 #    define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
 #    define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)

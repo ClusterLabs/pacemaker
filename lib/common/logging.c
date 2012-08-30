@@ -88,6 +88,13 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
 #ifndef NAME_MAX
 #  define NAME_MAX 256
 #endif
+
+static void
+crm_trigger_blackbox(int nsig)
+{
+    crm_write_blackbox(nsig, NULL);
+}
+
 static const char *
 daemon_option(const char *option)
 {
@@ -270,7 +277,14 @@ crm_add_logfile(const char *filename)
 }
 
 
+static int blackbox_trigger = 0;
 static char *blackbox_file_prefix = NULL;
+
+static void
+blackbox_logger(int32_t t, struct qb_log_callsite *cs, time_t timestamp, const char *msg)
+{
+    crm_write_blackbox(0, cs);
+}
 
 void
 crm_enable_blackbox(int nsig)
@@ -287,7 +301,7 @@ crm_enable_blackbox(int nsig)
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE); /* Setting the size seems to disable it */
 
         crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
-        crm_signal(SIGSEGV, crm_write_blackbox);
+        crm_signal(SIGSEGV, crm_trigger_blackbox);
         crm_update_callsites();
 
         /* Original meanings from signal(7) 
@@ -297,12 +311,18 @@ crm_enable_blackbox(int nsig)
          *
          * Our usage is as similar as possible
          */
-        mainloop_add_signal(SIGTRAP, crm_write_blackbox);
+        mainloop_add_signal(SIGTRAP, crm_trigger_blackbox);
+
+        blackbox_trigger = qb_log_custom_open(blackbox_logger, NULL, NULL, NULL);
+        qb_log_ctl(blackbox_trigger, QB_LOG_CONF_ENABLED, QB_TRUE);
+        crm_info("Trigger: %d is %d %d", blackbox_trigger, qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0), QB_LOG_STATE_ENABLED);
+
+        crm_update_callsites();
     }
 }
 
 void
-crm_write_blackbox(int nsig)
+crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
 {
     static int counter = 1;
     static time_t last = 0;
@@ -327,9 +347,13 @@ crm_write_blackbox(int nsig)
             } else if(nsig == SIGTRAP) {
                 crm_notice("Blackbox dump requested, please see %s for contents", buffer);
 
+            } else if(cs) {
+                syslog(LOG_NOTICE, "Problem detected at %s:%d (%s), please see %s for additional details",
+                           cs->function, cs->lineno, cs->filename, buffer);
             } else {
                 crm_notice("Problem detected, please see %s for additional details", buffer);
             }
+
             last = now;
             qb_log_blackbox_write_to_file(buffer);
 
@@ -368,12 +392,26 @@ static const char *crm_quark_to_string(uint32_t tag)
 }
 
 static void
-crm_log_filter_source(int source, const char *trace_files, const char *trace_fns, const char *trace_fmts, const char *trace_tags, struct qb_log_callsite *cs)
+crm_log_filter_source(int source, const char *trace_files, const char *trace_fns, const char *trace_fmts, const char *trace_tags, const char *trace_blackbox, struct qb_log_callsite *cs)
 {
     if (qb_log_ctl(source, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         return;
     } else if(source == QB_LOG_BLACKBOX) { /* Blackbox gets everything if enabled */
         qb_bit_set(cs->targets, source);
+
+    } else if(source == blackbox_trigger && blackbox_trigger > 0) {
+        /* Should this log message result in the blackbox being dumped */
+        if(cs->priority <= LOG_ERR) {
+            qb_bit_set(cs->targets, source);
+
+        } else if(trace_blackbox) {
+            char *key = g_strdup_printf("%s:%d", cs->function, cs->lineno);
+            if(strstr(trace_blackbox, key) != NULL) {
+                qb_bit_set(cs->targets, source);
+            }
+            free(key);
+        }
+
     } else if (source == QB_LOG_SYSLOG) { /* No tracing to syslog */
         if(cs->priority <= LOG_NOTICE && cs->priority <= crm_log_level) {
             qb_bit_set(cs->targets, source);
@@ -401,6 +439,7 @@ crm_log_filter(struct qb_log_callsite *cs)
     static const char *trace_tags = NULL;
     static const char *trace_fmts = NULL;
     static const char *trace_files = NULL;
+    static const char *trace_blackbox = NULL;
 
     if(need_init) {
         need_init = 0;
@@ -408,6 +447,7 @@ crm_log_filter(struct qb_log_callsite *cs)
         trace_fmts = getenv("PCMK_trace_formats");
         trace_tags = getenv("PCMK_trace_tags");
         trace_files = getenv("PCMK_trace_files");
+        trace_blackbox = getenv("PCMK_trace_blackbox");
 
         if (trace_tags != NULL) {
             uint32_t tag;
@@ -433,7 +473,7 @@ crm_log_filter(struct qb_log_callsite *cs)
 
     cs->targets = 0; /* Reset then find targets to enable */
     for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        crm_log_filter_source(lpc, trace_files, trace_fns, trace_fmts, trace_tags, cs);
+        crm_log_filter_source(lpc, trace_files, trace_fns, trace_fmts, trace_tags, trace_blackbox, cs);
     }
 }
 
