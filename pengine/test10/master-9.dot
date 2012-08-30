@@ -52,7 +52,6 @@
 "probe_complete ibm1" [ style=bold color="green" fontcolor="black" ]
 "probe_complete va1" -> "probe_complete" [ style = bold]
 "probe_complete va1" [ style=bold color="green" fontcolor="black" ]
-"probe_complete" -> "child_DoFencing:1_stop_0 ibm1" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 "rsc_ibm1_monitor_5000 va1" [ style=dashed color="red" fontcolor="black" ]
 "rsc_sgi2_monitor_5000 va1" [ style=dashed color="red" fontcolor="black" ]

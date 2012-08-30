@@ -8,7 +8,6 @@
 "probe_complete node2" [ style=bold color="green" fontcolor="black" ]
 "probe_complete node3" -> "probe_complete" [ style = bold]
 "probe_complete node3" [ style=bold color="green" fontcolor="black" ]
-"probe_complete" -> "rsc1_stop_0 node1" [ style = bold]
 "probe_complete" -> "rsc2_start_0 node2" [ style = bold]
 "probe_complete" -> "rsc2_stop_0 node2" [ style = bold]
 "probe_complete" -> "rsc3_start_0 node3" [ style = bold]

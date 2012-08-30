@@ -790,8 +790,24 @@ wait_for_probe(resource_t * rsc, const char *action, action_t * probe_complete,
         }
 
     } else {
-        char *key = generate_op_key(rsc->id, action, 0);
+        char *key = NULL;
 
+        if(safe_str_eq(action, RSC_STOP) && g_list_length(rsc->running_on) == 1) {
+            node_t *node = (node_t *) rsc->running_on->data;
+
+            /* Stop actions on nodes that are shutting down do not need to wait for probes to complete
+             * Doing so prevents node shutdown in the presence of nodes that are coming up
+             * The purpose of waiting is to not stop resources until we know for sure the
+             *  intended destination is able to take them 
+             */
+            if(node && node->details->shutdown) {
+                crm_debug("Skipping %s before %s_%s_0 due to %s shutdown",
+                          probe_complete->uuid, rsc->id, action, node->details->uname);
+                return;
+            }
+        }
+
+        key = generate_op_key(rsc->id, action, 0);
         custom_action_order(NULL, NULL, probe_complete, rsc, key, NULL,
                             pe_order_optional, data_set);
     }

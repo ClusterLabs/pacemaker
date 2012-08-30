@@ -22,8 +22,6 @@ digraph "g" {
 "probe_complete world" -> "probe_complete" [ style = bold]
 "probe_complete world" [ style=bold color="green" fontcolor="black" ]
 "probe_complete" -> "p1_start_0 world" [ style = bold]
-"probe_complete" -> "test1_stop_0 star" [ style = bold]
-"probe_complete" -> "test2_stop_0 star" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 "test1_monitor_10000 world" [ style=bold color="green" fontcolor="black" ]
 "test1_start_0 world" -> "gr1_running_0" [ style = bold]

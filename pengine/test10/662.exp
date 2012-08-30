@@ -89,11 +89,7 @@
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="11" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="9">
     <action_set>
@@ -177,9 +173,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="11" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
         <pseudo_event id="59" operation="stop" operation_key="DoFencing_stop_0"/>

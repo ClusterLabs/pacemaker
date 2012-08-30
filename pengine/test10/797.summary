@@ -26,8 +26,10 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on c001n02
  * Resource action: DcIPaddr        monitor on c001n01
+ * Resource action: rsc_c001n08     stop on c001n02
  * Resource action: rsc_c001n08     monitor on c001n03
  * Resource action: rsc_c001n08     monitor on c001n01
+ * Resource action: rsc_c001n02     stop on c001n02
  * Resource action: rsc_c001n02     monitor on c001n03
  * Resource action: rsc_c001n02     monitor on c001n01
  * Resource action: rsc_c001n03     monitor on c001n02
@@ -40,8 +42,6 @@ Executing cluster transition:
  * Pseudo action:   DoFencing_stop_0
  * Pseudo action:   probe_complete
  * Resource action: DcIPaddr        stop on c001n03
- * Resource action: rsc_c001n08     stop on c001n02
- * Resource action: rsc_c001n02     stop on c001n02
  * Resource action: rsc_c001n03     stop on c001n03
  * Resource action: rsc_c001n01     stop on c001n01
  * Resource action: child_DoFencing:0 stop on c001n03

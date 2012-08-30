@@ -24,6 +24,7 @@ Executing cluster transition:
  * Resource action: rsc_c001n09     monitor on c001n04
  * Resource action: rsc_c001n09     monitor on c001n03
  * Resource action: rsc_c001n09     monitor on c001n02
+ * Resource action: rsc_c001n02     stop on c001n02
  * Resource action: rsc_c001n02     monitor on c001n09
  * Resource action: rsc_c001n02     monitor on c001n04
  * Resource action: rsc_c001n02     monitor on c001n03
@@ -43,7 +44,6 @@ Executing cluster transition:
  * Resource action: child_DoFencing:3 monitor on c001n02
  * Pseudo action:   DoFencing_stop_0
  * Pseudo action:   probe_complete
- * Resource action: rsc_c001n02     stop on c001n02
  * Pseudo action:   all_stopped
  * Resource action: rsc_c001n02     start on c001n03
  * Resource action: child_DoFencing:0 stop on c001n02

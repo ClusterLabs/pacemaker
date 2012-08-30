@@ -8,9 +8,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="51" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
      </inputs>

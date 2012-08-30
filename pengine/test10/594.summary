@@ -19,16 +19,16 @@ Transition Summary:
  * Stop    child_DoFencing:2	(hadev1)
 
 Executing cluster transition:
+ * Resource action: DcIPaddr        stop on hadev2
  * Resource action: DcIPaddr        monitor on hadev1
  * Resource action: rsc_hadev3      monitor on hadev2
+ * Resource action: rsc_hadev2      stop on hadev2
  * Resource action: rsc_hadev2      monitor on hadev1
  * Resource action: child_DoFencing:0 monitor on hadev1
  * Resource action: child_DoFencing:2 monitor on hadev2
  * Pseudo action:   DoFencing_stop_0
  * Pseudo action:   stonith_up
  * Pseudo action:   probe_complete
- * Resource action: DcIPaddr        stop on hadev2
- * Resource action: rsc_hadev2      stop on hadev2
  * Fencing hadev3
  * Pseudo action:   stonith_complete
  * Pseudo action:   all_stopped

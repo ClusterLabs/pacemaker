@@ -124,9 +124,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <rsc_op id="13" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
       </trigger>
       <trigger>
@@ -175,9 +172,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="18" operation="stop" operation_key="gr1_stop_0"/>
        </trigger>
      </inputs>
