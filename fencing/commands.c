@@ -1216,8 +1216,10 @@ xmlNode *stonith_construct_async_reply(async_command_t *cmd, const char *output,
     crm_xml_add(reply, F_STONITH_CLIENTNAME, cmd->client_name);
     crm_xml_add(reply, F_STONITH_TARGET, cmd->victim);
     crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
+    crm_xml_add(reply, F_STONITH_ORIGIN, cmd->origin);
     crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
     crm_xml_add_int(reply, F_STONITH_CALLOPTS, cmd->options);
+
 
     crm_xml_add_int(reply, F_STONITH_RC, rc);
 
