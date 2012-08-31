@@ -47,7 +47,9 @@ typedef struct async_command_s {
     void (*done)(GPid pid, gint status, gpointer user_data);
     guint timer_sigterm;
     guint timer_sigkill;
-
+    /*! If the operation timed out, this is the last signal
+     *  we sent to the process to get it to terminate */
+    int last_timeout_signo;
 } async_command_t;
 
 int run_stonith_agent(const char *agent, const char *action, const char *victim,
