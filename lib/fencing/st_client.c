@@ -716,13 +716,27 @@ internal_stonith_action_execute(stonith_action_t *action)
 
     } else {
         /* sync */
-        pid_t p;
+        int timeout = action->timeout + 1;
+        pid_t p = 0;
 
-        do {
-            p = waitpid(pid, &status, 0);
-        } while (p < 0 && errno == EINTR);
+        while (action->timeout < 0 || timeout > 0) {
+            p = waitpid(pid, &status, WNOHANG);
+            if (p > 0) {
+                break;
+            }
+            sleep(1);
+            timeout--;
+        };
 
-        if (p < 0) {
+        if (timeout == 0) {
+            int killrc = kill(pid, 9 /*SIGKILL*/);
+
+            if (killrc && errno != ESRCH) {
+                crm_err("kill(%d, KILL) failed: %d", pid, errno);
+            }
+        }
+
+        if (p <= 0) {
             crm_perror(LOG_ERR, "waitpid(%d)", pid);
 
         } else if (p != pid) {
@@ -731,9 +745,10 @@ internal_stonith_action_execute(stonith_action_t *action)
 
         action->output = read_output(p_read_fd);
 
-        rc = -ECONNABORTED;
-        action->rc = -ECONNABORTED;
-        if (WIFEXITED(status)) {
+        action->rc = rc = -ECONNABORTED;
+        if (timeout == 0) {
+            action->rc = -ETIME;
+        } else if (WIFEXITED(status)) {
             crm_debug("result = %d", WEXITSTATUS(status));
             action->rc = -WEXITSTATUS(status);
             rc = 0;
