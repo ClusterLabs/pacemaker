@@ -198,49 +198,6 @@ te_update_diff(const char *event, xmlNode * msg)
         xmlXPathFreeObject(xpathObj);
     }
 
-    /* Check for node state updates... possibly from a shutdown we requested */
-    xpathObj =
-        xpath_search(diff, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_STATE);
-    if (xpathObj) {
-        int lpc = 0, max = xpathObj->nodesetval->nodeNr;
-
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *node = getXpathResult(xpathObj, lpc);
-            const char *event_node = crm_element_value(node, XML_ATTR_ID);
-            const char *event_uname = crm_element_value(node, XML_ATTR_UNAME);
-            const char *is_peer = crm_element_value(node, XML_NODE_IS_PEER);
-             /* Don't check the value of XML_NODE_IN_CLUSTER, only pacemaker may have been shut down */
-            if (safe_str_eq(is_peer, OFFLINESTATUS)) {
-                /* Pacemaker is now stopped/gone
-                 * Was it a shutdown or fencing operation?
-                 */
-                crm_action_t *shutdown = match_down_event(0, event_node, NULL);
-
-                if (shutdown != NULL) {
-                    const char *task = crm_element_value(shutdown->xml, XML_LRM_ATTR_TASK);
-
-                    if (safe_str_eq(task, CRM_OP_FENCE)) {
-                        crm_trace("Waiting for stonithd to report the fencing of %s is complete", event_uname); /* via tengine_stonith_callback() */
-
-                    } else {
-                        crm_debug("%s of %s (op %d) is complete", task, event_uname, shutdown->id);
-                        /* match->confirmed = TRUE; */
-                        stop_te_timer(shutdown->timer);
-                        erase_node_from_join(event_uname);
-                        update_graph(transition_graph, shutdown);
-                        trigger_graph();
-                    }
-
-                } else {
-                    crm_info("Stonith/shutdown of %s not matched", event_node);
-                    abort_transition(INFINITY, tg_restart, "Node failure", node);
-                }
-                fail_incompletable_actions(transition_graph, event_node);
-            }
-        }
-        xmlXPathFreeObject(xpathObj);
-    }
-
     /*
      * Check for and fast-track the processing of LRM refreshes
      * In large clusters this can result in _huge_ speedups

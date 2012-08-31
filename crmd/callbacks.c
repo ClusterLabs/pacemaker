@@ -111,8 +111,8 @@ lrm_op_callback(lrmd_event_data_t * op)
 void
 peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
-    gboolean reset_status_entry = FALSE;
     uint32_t old = 0;
+    const char *status = NULL;
 
     set_bit(fsa_input_register, R_PEER_DATA);
     if (node->uname == NULL) {
@@ -121,80 +121,105 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
     switch (type) {
         case crm_status_uname:
-            crm_info("status: %s is now %s", node->uname, node->state);
-            /* reset_status_entry = TRUE; */
             /* If we've never seen the node, then it also wont be in the status section */
-            break;
+            crm_info("%s is now %s", node->uname, node->state);
+            return;
         case crm_status_nstate:
-            crm_info("status: %s is now %s (was %s)", node->uname, node->state, (const char *)data);
-            reset_status_entry = TRUE;
+            crm_info("%s is now %s (was %s)", node->uname, node->state, (const char *)data);
+            if(safe_str_neq(data, node->state)) {
+                /* State did not change */
+                return;
+            }
             break;
         case crm_status_processes:
             if (data) {
                 old = *(const uint32_t *)data;
             }
 
-            if ((node->processes ^ old) & proc_flags) {
-                /* crmd_proc_update(node, proc_flags); */
-                const char *status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
-                crm_notice("Status update: Client %s/%s now has status [%s] (DC=%s)",
-                           node->uname, peer2text(proc_flags), status, AM_I_DC ? "true" : crm_str(fsa_our_dc));
+            /* crmd_proc_update(node, proc_flags); */
+            status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
+            crm_info("Client %s/%s now has status [%s] (DC=%s)",
+                     node->uname, peer2text(proc_flags), status, AM_I_DC ? "true" : crm_str(fsa_our_dc));
 
-                if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
-                    return;
-                } else if (fsa_state == S_STOPPING) {
-                    return;
-                }
+            if (((node->processes ^ old) & proc_flags) == 0) {
+                /* Peer process did not change */
+                crm_trace("No change %6x %6x %6x", old, node->processes, proc_flags);
+                return;
+            } else if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+                crm_trace("Not connected");
+                return;
+            } else if (fsa_state == S_STOPPING) {
+                crm_trace("Stopping");
+                return;
+            }
 
-                if (safe_str_eq(node->uname, fsa_our_dc) && crm_is_peer_active(node) == FALSE) {
-                    /* Did the DC leave us? */
-                    crm_info("Got client status callback - our DC is dead");
-                    register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
-
-                } else if (AM_I_DC) {
-                    xmlNode *update = NULL;
-
-                    if ((node->processes & proc_flags) == 0) {
-                        erase_node_from_join(node->uname);
-                        check_join_state(fsa_state, __FUNCTION__);
-                        fail_incompletable_actions(transition_graph, node->uuid);
-
-                    } else {
-                        register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
-                    }
-
-                    update = do_update_node_cib(node, node_update_peer, NULL, __FUNCTION__);
-                    fsa_cib_anon_update(
-                        XML_CIB_TAG_STATUS, update, cib_scope_local | cib_quorum_override | cib_can_create);
-                    free_xml(update);
-                }
-
-                trigger_fsa(fsa_source);
+            if (safe_str_eq(node->uname, fsa_our_dc) && crm_is_peer_active(node) == FALSE) {
+                /* Did the DC leave us? */
+                crm_notice("Got client status callback - our DC is dead");
+                register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
             }
             break;
     }
 
-    /* Can this be removed now that do_cl_join_finalize_respond() does the same thing?
-     *
-     * Dunno, but not the call to crm_update_peer_expected()
-     */
-    if (AM_I_DC && reset_status_entry && safe_str_eq(CRMD_JOINSTATE_MEMBER, node->state)) {
-        crm_action_t *down = match_down_event(0, node->uname, NULL);
+    if (AM_I_DC) {
+        xmlNode *update = NULL;
+        crm_action_t *down = match_down_event(0, node->uuid, NULL);
+        gboolean alive = crm_is_peer_active(node);
 
-        erase_status_tag(node->uname, XML_CIB_TAG_LRM, cib_scope_local);
-        erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+        if(alive && type == crm_status_processes) {
+            register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+        }
+
+        crm_trace("Alive=%d, down=%p", alive, down);
+        
         if (down) {
             const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);
 
-            if (safe_str_eq(task, CRM_OP_FENCE)) {
-                crm_info("Node return implies stonith of %s (action %d) completed", node->uname,
-                         down->id);
+            if (alive && safe_str_eq(task, CRM_OP_FENCE)) {
+                crm_info("Node return implies stonith of %s (action %d) completed", node->uname, down->id);
+                erase_status_tag(node->uname, XML_CIB_TAG_LRM, cib_scope_local);
+                erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
                 down->confirmed = TRUE;
+
+            } else if (safe_str_eq(task, CRM_OP_FENCE)) {
+                crm_trace("Waiting for stonithd to report the fencing of %s is complete", node->uname); /* via tengine_stonith_callback() */
+
+            } else if(alive == FALSE) {
+                crm_notice("%s of %s (op %d) is complete", task, node->uname, down->id);
+                down->confirmed = TRUE;
+                stop_te_timer(down->timer);
+
+                erase_node_from_join(node->uname);
+                crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
+                check_join_state(fsa_state, __FUNCTION__);
+
+                update_graph(transition_graph, down);
+                trigger_graph();
+
+            } else {
+                crm_trace("Other %p", down);
             }
+
+        } else if(alive == FALSE) {
+            crm_notice("Stonith/shutdown of %s not matched", node->uname);
+
+            erase_node_from_join(node->uname);
+            crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
+            check_join_state(fsa_state, __FUNCTION__);
+
+            abort_transition(INFINITY, tg_restart, "Node failure", NULL);
+            fail_incompletable_actions(transition_graph, node->uuid);
+        } else {
+            crm_trace("Other %p", down);
         }
 
-        crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
+        update = do_update_node_cib(node, node_update_peer, NULL, __FUNCTION__);
+        fsa_cib_anon_update(
+            XML_CIB_TAG_STATUS, update, cib_scope_local | cib_quorum_override | cib_can_create);
+        free_xml(update);
     }
+
+    trigger_fsa(fsa_source);
 }
 
 void
