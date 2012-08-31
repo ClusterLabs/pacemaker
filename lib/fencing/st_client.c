@@ -49,6 +49,28 @@ static void *lha_agents_lib = NULL;
 
 CRM_TRACE_INIT_DATA(stonith);
 
+struct stonith_action_s {
+    char *agent;
+    char *action;
+    char *victim;
+    char *args;
+    int timeout;
+    int async;
+    void *userdata;
+    void (*done_cb)(GPid pid, gint status, const char *output, gpointer user_data);
+
+    /* async track data */
+    int fd_stdout;
+    int last_timeout_signo;
+    guint timer_sigterm;
+    guint timer_sigkill;
+
+    /* output data */
+    GPid pid;
+    int rc;
+    char *output;
+};
+
 typedef struct stonith_private_s {
     char *token;
     crm_ipc_t *ipc;
@@ -451,7 +473,7 @@ static gboolean
 st_child_term(gpointer data)
 {
     int rc = 0;
-    async_command_t * track = data;
+    stonith_action_t *track = data;
     crm_info("Child %d timed out, sending SIGTERM", track->pid);
     track->timer_sigterm = 0;
     track->last_timeout_signo = SIGTERM;
@@ -466,7 +488,7 @@ static gboolean
 st_child_kill(gpointer data)
 {
     int rc = 0;
-    async_command_t * track = data;
+    stonith_action_t *track = data;
     crm_info("Child %d timed out, sending SIGKILL", track->pid);
     track->timer_sigkill = 0;
     track->last_timeout_signo = SIGKILL;
@@ -477,14 +499,124 @@ st_child_kill(gpointer data)
     return FALSE;
 }
 
-/* Borrowed from libfence and extended */
-int
-run_stonith_agent(const char *agent, const char *action, const char *victim,
-                  GHashTable * device_args, GHashTable * port_map, int *agent_result, char **output,
-                  async_command_t * track)
+static void
+stonith_action_destroy(stonith_action_t *action)
 {
-    char *args = make_args(action, victim, device_args, port_map);
+
+    if (action->timer_sigterm > 0) {
+        g_source_remove(action->timer_sigterm);
+    }
+    if (action->timer_sigkill > 0) {
+        g_source_remove(action->timer_sigkill);
+    }
+
+    if (action->fd_stdout) {
+        close(action->fd_stdout);
+    }
+    free(action->agent);
+    free(action->args);
+    free(action->output);
+    free(action->action);
+    free(action->victim);
+    free(action);
+}
+
+stonith_action_t *
+stonith_action_create(const char *agent,
+        const char *_action,
+        const char *victim,
+        int timeout,
+        GHashTable * device_args,
+        GHashTable * port_map)
+{
+    stonith_action_t *action;
+
+    action = calloc(1, sizeof(stonith_action_t));
+    action->args = make_args(_action, victim, device_args, port_map);
+    action->agent = strdup(agent);
+    action->action = strdup(_action);
+    if (victim) {
+        action->victim = strdup(victim);
+    }
+    action->timeout = timeout;
+
+    return action;
+}
+
+#define READ_MAX 500
+static char*
+read_output(int fd)
+{
+    char buffer[READ_MAX];
+    char *output = NULL;
+    int len = 0;
+    int more = 0;
+
+    if (!fd) {
+        return NULL;
+    }
+
+    do {
+        errno = 0;
+        memset(&buffer, 0, READ_MAX);
+        more = read(fd, buffer, READ_MAX-1);
+
+        if (more > 0) {
+            crm_trace("Got %d more bytes: %s", more, buffer);
+            output = realloc(output, len + more + 1);
+            sprintf(output+len, "%s", buffer);
+            len += more;
+        }
+
+    } while (more == (READ_MAX-1) || (more < 0 && errno == EINTR));
+
+    return output;
+}
+
+static void
+stonith_action_async_done(GPid pid, gint status, gpointer user_data)
+{
+    int rc = -pcmk_err_generic;
+    stonith_action_t *action = user_data;
+
+    if (action->timer_sigterm > 0) {
+        g_source_remove(action->timer_sigterm);
+    }
+    if (action->timer_sigkill > 0) {
+        g_source_remove(action->timer_sigkill);
+    }
+
+    if(action->last_timeout_signo) {
+        rc = -ETIME;
+        crm_notice("Child process %d performing action '%s' timed out with signal %d",
+                   pid, action->action, action->last_timeout_signo);
+    } else if(WIFSIGNALED(status)) {
+        int signo = WTERMSIG(status);
+        rc = -ECONNABORTED;
+        crm_notice("Child process %d performing action '%s' timed out with signal %d",
+                   pid, action->action, signo);
+    } else if(WIFEXITED(status)) {
+        rc = WEXITSTATUS(status);
+        crm_debug("Child process %d performing action '%s' exited with rc %d",
+                  pid, action->action, rc);
+    }
+
+    action->rc = rc;
+    action->output = read_output(action->fd_stdout);
+
+    if (action->done_cb) {
+        action->done_cb(pid, action->rc, action->output, action->userdata);
+    }
+
+    stonith_action_destroy(action);
+}
+
+static int
+internal_stonith_action_execute(stonith_action_t *action)
+{
     int pid, status, len, rc = -EPROTO;
+    int ret;
+    int total = 0;
     int p_read_fd, p_write_fd;  /* parent read/write file descriptors */
     int c_read_fd, c_write_fd;  /* child read/write file descriptors */
     int fd1[2];
@@ -492,9 +624,9 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
 
     c_read_fd = c_write_fd = p_read_fd = p_write_fd = -1;
 
-    if (args == NULL || agent == NULL)
+    if (action->args == NULL || action->agent == NULL)
         goto fail;
-    len = strlen(args);
+    len = strlen(action->args);
 
     if (pipe(fd1))
         goto fail;
@@ -513,118 +645,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
         goto fail;
     }
 
-    if (pid) {
-        /* parent */
-        int ret;
-        int total = 0;
-
-        ret = fcntl(p_read_fd, F_SETFL, fcntl(p_read_fd, F_GETFL, 0) | O_NONBLOCK);
-        if(ret < 0) {
-            crm_perror(LOG_NOTICE, "Could not change the output of %s to be non-blocking", agent);
-        }
-
-        do {
-            crm_debug("sending args");
-            ret = write(p_write_fd, args + total, len - total);
-            if (ret > 0) {
-                total += ret;
-            }
-
-        } while (errno == EINTR && total < len);
-
-        if (total != len) {
-            crm_perror(LOG_ERR, "Sent %d not %d bytes", total, len);
-            if (ret >= 0) {
-                rc = -EREMOTEIO;
-            }
-            goto fail;
-        }
-
-        close(p_write_fd);
-
-        if (track && track->done) {
-            track->fd_stdout = p_read_fd;
-            g_child_watch_add(pid, track->done, track);
-            crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action, agent, pid, track->timeout);
-            track->last_timeout_signo = 0;
-            if (track->timeout) {
-                track->pid = pid;
-                track->timer_sigterm = g_timeout_add(1000*track->timeout, st_child_term, track);
-                track->timer_sigkill = g_timeout_add(1000*(track->timeout+5), st_child_kill, track);
-
-            } else {
-                crm_err("No timeout set for stonith operation %s with device %s", action, agent);
-            }
-
-            close(c_write_fd);
-            close(c_read_fd);
-            free(args);
-            return pid;
-
-        } else {
-            pid_t p;
-
-            do {
-                p = waitpid(pid, &status, 0);
-            } while (p < 0 && errno == EINTR);
-
-            if (p < 0) {
-                crm_perror(LOG_ERR, "waitpid(%d)", pid);
-
-            } else if (p != pid) {
-                crm_err("Waited for %d, got %d", pid, p);
-            }
-
-            if (output != NULL) {
-                char *local_copy;
-                int lpc = 0, last = 0, more;
-                len = 0;
-                do {
-                    char buf[500];
-
-                    ret = read(p_read_fd, buf, 500);
-                    if (ret > 0) {
-                        buf[ret] = 0;
-                        *output = realloc(*output, len + ret + 1);
-                        sprintf((*output) + len, "%s", buf);
-                        crm_trace("%d: %s", ret, (*output) + len);
-                        len += ret;
-                    }
-
-                } while (ret == 500 || (ret < 0 && errno == EINTR));
-
-                if (*output) {
-                    local_copy = strdup(*output);
-                    more = strlen(local_copy);
-                    for(lpc = 0; lpc < more; lpc++) {
-                        if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
-                            local_copy[lpc] = 0;
-                            crm_debug("%s: %s", agent, local_copy+last);
-                            last = lpc+1;
-                        }
-                    }
-                    crm_debug("%s: %s (total %d bytes)", agent, local_copy+last, more);
-                    free(local_copy);
-                }
-            }
-
-            rc = -ECONNABORTED;
-            *agent_result = -ECONNABORTED;
-            if (WIFEXITED(status)) {
-                crm_debug("result = %d", WEXITSTATUS(status));
-                *agent_result = -WEXITSTATUS(status);
-                rc = 0;
-
-            } else if (WIFSIGNALED(status)) {
-                crm_err("call %s for %s exited due to signal %d", action, agent, WTERMSIG(status));
-
-            } else {
-                crm_err("call %s for %s exited abnormally. stopped=%d, continued=%d",
-                        action, agent, WIFSTOPPED(status), WIFCONTINUED(status));
-            }
-        }
-
-    } else {
+    if (!pid) {
         /* child */
 
         close(1);
@@ -645,12 +666,88 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
         close(p_read_fd);
         close(p_write_fd);
 
-        execlp(agent, agent, NULL);
+        execlp(action->agent, action->agent, NULL);
         exit(EXIT_FAILURE);
     }
 
-  fail:
-    free(args);
+    /* parent */
+    action->pid = pid;
+    ret = fcntl(p_read_fd, F_SETFL, fcntl(p_read_fd, F_GETFL, 0) | O_NONBLOCK);
+    if(ret < 0) {
+        crm_perror(LOG_NOTICE, "Could not change the output of %s to be non-blocking", action->agent);
+    }
+
+    do {
+        crm_debug("sending args");
+        ret = write(p_write_fd, action->args + total, len - total);
+        if (ret > 0) {
+            total += ret;
+        }
+
+    } while (errno == EINTR && total < len);
+
+    if (total != len) {
+        crm_perror(LOG_ERR, "Sent %d not %d bytes", total, len);
+        if (ret >= 0) {
+            rc = -EREMOTEIO;
+        }
+        goto fail;
+    }
+
+    close(p_write_fd);
+
+    /* async */
+    if (action->async) {
+        action->fd_stdout = p_read_fd;
+        g_child_watch_add(pid, stonith_action_async_done, action);
+        crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action->action, action->agent, pid, action->timeout);
+        action->last_timeout_signo = 0;
+        if (action->timeout) {
+            action->timer_sigterm = g_timeout_add(1000*action->timeout, st_child_term, action);
+            action->timer_sigkill = g_timeout_add(1000*(action->timeout+5), st_child_kill, action);
+        } else {
+            crm_err("No timeout set for stonith operation %s with device %s",
+                action->action, action->agent);
+        }
+
+        close(c_write_fd);
+        close(c_read_fd);
+        return 0;
+
+    } else {
+        /* sync */
+        pid_t p;
+
+        do {
+            p = waitpid(pid, &status, 0);
+        } while (p < 0 && errno == EINTR);
+
+        if (p < 0) {
+            crm_perror(LOG_ERR, "waitpid(%d)", pid);
+
+        } else if (p != pid) {
+            crm_err("Waited for %d, got %d", pid, p);
+        }
+
+        action->output = read_output(p_read_fd);
+
+        rc = -ECONNABORTED;
+        action->rc = -ECONNABORTED;
+        if (WIFEXITED(status)) {
+            crm_debug("result = %d", WEXITSTATUS(status));
+            action->rc = -WEXITSTATUS(status);
+            rc = 0;
+
+        } else if (WIFSIGNALED(status)) {
+            crm_err("call %s for %s exited due to signal %d", action->action, action->agent, WTERMSIG(status));
+
+        } else {
+            crm_err("call %s for %s exited abnormally. stopped=%d, continued=%d",
+                    action->action, action->agent, WIFSTOPPED(status), WIFCONTINUED(status));
+        }
+    }
+
+fail:
 
     if (p_read_fd >= 0) {
         close(p_read_fd);
@@ -666,6 +763,55 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
         close(c_write_fd);
     }
 
+    return rc;
+}
+
+GPid
+stonith_action_execute_async(stonith_action_t *action,
+        void *userdata,
+        void (*done)(GPid pid, int rc, const char *output, gpointer user_data))
+{
+    int rc = 0;
+
+    if (!action) {
+        return -1;
+    }
+
+    action->userdata = userdata;
+    action->done_cb = done;
+    action->async = 1;
+
+    rc = internal_stonith_action_execute(action);
+
+    return rc ? rc : action->pid;
+}
+
+int
+stonith_action_execute(stonith_action_t *action,
+        int *agent_result,
+        char **output)
+{
+    int rc = 0;
+
+    if (!action) {
+        return -1;
+    }
+
+    rc = internal_stonith_action_execute(action);
+    if (rc) {
+        /* error */
+        return rc;
+    }
+
+    if (agent_result) {
+        *agent_result = action->rc;
+    }
+    if (output) {
+        *output = action->output;
+        action->output = NULL; /* handed it off, do not free */
+    }
+
+    stonith_action_destroy(action);
     return rc;
 }
 
@@ -766,8 +912,8 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
      */
 
     if (safe_str_eq(provider, "redhat")) {
-
-        int exec_rc = run_stonith_agent(agent, "metadata", NULL, NULL, NULL, &rc, &buffer, NULL);
+        stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 5, NULL, NULL);
+        int exec_rc = stonith_action_execute(action, &rc, &buffer);
 
         if (exec_rc < 0 || rc != 0 || buffer == NULL) {
             crm_debug("Query failed: %d %d: %s", exec_rc, rc, crm_str(buffer));

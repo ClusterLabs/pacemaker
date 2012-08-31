@@ -44,7 +44,7 @@ typedef struct async_command_s {
     GListPtr device_list;
     GListPtr device_next;
 
-    void (*done)(GPid pid, gint status, gpointer user_data);
+    void (*done)(GPid pid, int rc, const char *output, gpointer user_data);
     guint timer_sigterm;
     guint timer_sigkill;
     /*! If the operation timed out, this is the last signal
@@ -52,9 +52,26 @@ typedef struct async_command_s {
     int last_timeout_signo;
 } async_command_t;
 
-int run_stonith_agent(const char *agent, const char *action, const char *victim,
-                             GHashTable * dev_hash, GHashTable * port_map, int *agent_result,
-                             char **output, async_command_t * track);
+struct stonith_action_s;
+typedef struct stonith_action_s stonith_action_t;
+
+stonith_action_t *
+stonith_action_create(const char *agent,
+        const char *_action,
+        const char *victim,
+        int timeout,
+        GHashTable * device_args,
+        GHashTable * port_map);
+
+GPid
+stonith_action_execute_async(stonith_action_t *action,
+        void *userdata,
+        void (*done)(GPid pid, int rc, const char *output, gpointer user_data));
+
+int
+stonith_action_execute(stonith_action_t *action,
+        int *agent_result,
+        char **output);
 
 gboolean is_redhat_agent(const char *agent);
 
