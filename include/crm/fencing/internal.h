@@ -83,12 +83,15 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #define F_STONITH_NOTIFY_ACTIVATE   "st_notify_activate"
 #define F_STONITH_NOTIFY_DEACTIVATE "st_notify_deactivate"
 #define F_STONITH_DELEGATE      "st_delegate"
+/*! The node initiating the stonith operation.  If an operation
+ * is relayed, this is the last node the operation lands on. When
+ * in standalone mode, origin is the client's id that originated the
+ * operation. */
 #define F_STONITH_ORIGIN        "st_origin"
 #define F_STONITH_HISTORY_LIST  "st_history"
 #define F_STONITH_DATE          "st_date"
 #define F_STONITH_STATE         "st_state"
 #define F_STONITH_LEVEL         "st_level"
-#define F_STONITH_OWNER         "st_owner"
 #define F_STONITH_ACTIVE        "st_active"
 
 #define F_STONITH_DEVICE        "st_device_id"

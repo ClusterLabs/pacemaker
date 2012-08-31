@@ -284,7 +284,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
 
     op->state = st_query;
     op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
-    op->originator = crm_element_value_copy(dev, F_STONITH_OWNER);
+    op->originator = crm_element_value_copy(dev, F_STONITH_ORIGIN);
 
     if(op->originator == NULL) {
         /* Local request */
@@ -346,7 +346,7 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
     crm_xml_add(query, F_STONITH_REMOTE, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op->action);
-    crm_xml_add(query, F_STONITH_OWNER,  op->originator);
+    crm_xml_add(query, F_STONITH_ORIGIN,  op->originator);
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
     crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
     crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
@@ -541,7 +541,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         crm_xml_add(query, F_STONITH_REMOTE, op->id);
         crm_xml_add(query, F_STONITH_TARGET, op->target);
         crm_xml_add(query, F_STONITH_ACTION, op->action);
-        crm_xml_add(query, F_STONITH_OWNER,  op->originator);
+        crm_xml_add(query, F_STONITH_ORIGIN,  op->originator);
         crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
         crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
         crm_xml_add_int(query, F_STONITH_TIMEOUT, timeout);
