@@ -52,6 +52,40 @@ static int active_children = 0;
 static gboolean stonith_device_dispatch(gpointer user_data);
 static void st_child_done(GPid pid, int rc, const char *output, gpointer user_data);
 
+typedef struct async_command_s {
+
+    int id;
+    int pid;
+    int fd_stdout;
+    int options;
+    int default_timeout;
+    int timeout;
+
+    char *op;
+    char *origin;
+    char *client;
+    char *client_name;
+    char *remote;
+
+    char *victim;
+    char *action;
+    char *device;
+    char *mode;
+
+    GListPtr device_list;
+    GListPtr device_next;
+
+    void (*done)(GPid pid, int rc, const char *output, gpointer user_data);
+    guint timer_sigterm;
+    guint timer_sigkill;
+    /*! If the operation timed out, this is the last signal
+     *  we sent to the process to get it to terminate */
+    int last_timeout_signo;
+} async_command_t;
+
+static xmlNode *
+stonith_construct_async_reply(async_command_t *cmd, const char *output, xmlNode *data, int rc);
+
 static int
 get_action_timeout(stonith_device_t *device, const char *action, int default_timeout)
 {
@@ -1153,7 +1187,8 @@ xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, 
     return reply;
 }
 
-xmlNode *stonith_construct_async_reply(async_command_t *cmd, const char *output, xmlNode *data, int rc) 
+static xmlNode *
+stonith_construct_async_reply(async_command_t *cmd, const char *output, xmlNode *data, int rc) 
 {
     xmlNode *reply = NULL;
 

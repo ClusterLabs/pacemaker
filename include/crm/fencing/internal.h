@@ -21,37 +21,6 @@
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
 
-typedef struct async_command_s {
-
-    int id;
-    int pid;
-    int fd_stdout;
-    int options;
-    int default_timeout;
-    int timeout;
-
-    char *op;
-    char *origin;
-    char *client;
-    char *client_name;
-    char *remote;
-
-    char *victim;
-    char *action;
-    char *device;
-    char *mode;
-
-    GListPtr device_list;
-    GListPtr device_next;
-
-    void (*done)(GPid pid, int rc, const char *output, gpointer user_data);
-    guint timer_sigterm;
-    guint timer_sigkill;
-    /*! If the operation timed out, this is the last signal
-     *  we sent to the process to get it to terminate */
-    int last_timeout_signo;
-} async_command_t;
-
 struct stonith_action_s;
 typedef struct stonith_action_s stonith_action_t;
 
