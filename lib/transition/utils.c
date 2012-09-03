@@ -209,6 +209,8 @@ print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t *synapse)
             }
         }
     }
+
+    free(pending);
 }
 
 void
