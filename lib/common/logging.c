@@ -599,9 +599,6 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     } else if(daemon) {
         setenv("HA_logfacility", facility, TRUE);
         setenv("PCMK_logfacility", facility, TRUE);
-
-    } else {
-        crm_log_args(argc, argv);
     }
 
     if (daemon_option_enabled(crm_system_name, "blackbox")) {
@@ -625,6 +622,9 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     crm_update_callsites();
     
     /* Ok, now we can start logging... */
+    if (quiet == FALSE && daemon == FALSE) {
+        crm_log_args(argc, argv);
+    }
 
     if (daemon) {
         const char *user = getenv("USER");
@@ -701,19 +701,7 @@ crm_bump_log_level(int argc, char **argv)
     int level = crm_log_level;
 
     if(args && argc > 1) {
-        int restore = qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_STATE_GET, 0);
-
-        args = FALSE;
-
-        crm_log_level = LOG_NOTICE; /* So that the argstring comes out */
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_TRUE);
-
-        crm_update_callsites();
-
         crm_log_args(argc, argv);
-
-        crm_log_level = level;      /* Revert back */
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, restore);
     }
 
     if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
@@ -730,17 +718,27 @@ get_crm_log_level(void)
     return crm_log_level;
 }
 
+#define ARGS_FMT "Invoked: %s"
 void
 crm_log_args(int argc, char **argv)
 {
     int lpc = 0;
     int len = 0;
+    int restore = FALSE;
     int existing_len = 0;
+    int line = __LINE__;
+
     char *arg_string = NULL;
+    struct qb_log_callsite *args_cs = qb_log_callsite_get(__func__, __FILE__, ARGS_FMT, LOG_NOTICE, line, 0);
 
     if (argc == 0 || argv == NULL) {
         return;
     }
+
+    qb_bit_set(args_cs->targets, QB_LOG_SYSLOG); /* Turn on syslog too */
+
+    restore = qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_STATE_GET, 0);
+    qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_TRUE);
 
     for (; lpc < argc; lpc++) {
         if (argv[lpc] == NULL) {
@@ -751,7 +749,10 @@ crm_log_args(int argc, char **argv)
         arg_string = realloc(arg_string, len + existing_len);
         existing_len += sprintf(arg_string + existing_len, "%s ", argv[lpc]);
     }
-    do_crm_log_always(LOG_NOTICE, "Invoked: %s", arg_string);
+
+    qb_log_from_external_source(__func__, __FILE__, ARGS_FMT, LOG_NOTICE, line, 0, arg_string);
+    qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, restore);
+
     free(arg_string);
 }
 
