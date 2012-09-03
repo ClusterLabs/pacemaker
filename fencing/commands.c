@@ -837,13 +837,13 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 
     if(cmd->victim != NULL) {
         do_crm_log(rc==0?LOG_NOTICE:LOG_ERR,
-                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned: %d%s%s",
-                   cmd->action, pid, cmd->id, cmd->client, cmd->victim, cmd->device, rc,
+                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned: %d(%s)%s%s",
+                   cmd->action, pid, cmd->id, cmd->client, cmd->victim, cmd->device, rc, pcmk_strerror(rc),
                    next?". Trying: ":"", next?next:"");
     } else {
         do_crm_log_unlikely(rc==0?LOG_DEBUG:LOG_NOTICE,
-                   "Operation '%s' [%d] for device '%s' returned: %d%s%s",
-                   cmd->action, pid, cmd->device, rc, next?". Trying: ":"", next?next:"");
+                   "Operation '%s' [%d] for device '%s' returned: %d(%s)%s%s",
+                   cmd->action, pid, cmd->device, rc, pcmk_strerror(rc), next?". Trying: ":"", next?next:"");
     }
 
     if(output) {
@@ -968,17 +968,16 @@ static void st_child_done(GPid pid, gint status, gpointer user_data)
         g_source_remove(cmd->timer_sigkill);
     }
 
-    if(WIFSIGNALED(status)) {
+    if(cmd->last_timeout_signo) {
+        crm_notice("Child process %d performing action '%s' with '%s' timed out with signal %d",
+                   pid, cmd->action, cmd->device, cmd->last_timeout_signo);
+        rc = -ETIME;
+    } else if(WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
 
-        if(signo == SIGTERM || signo == SIGKILL) {
-            rc = -ETIME;
-        } else {
-            rc = -ECONNABORTED;
-        }
+        rc = -ECONNABORTED;
         crm_notice("Child process %d performing action '%s' with '%s' terminated with signal %d",
                    pid, cmd->action, cmd->device, signo);
-
     } else if(WIFEXITED(status)) {
         rc = WEXITSTATUS(status);
         crm_debug("Child process %d performing action '%s' with '%s' exited with rc %d",

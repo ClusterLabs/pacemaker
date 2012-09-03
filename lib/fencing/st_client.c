@@ -454,6 +454,7 @@ st_child_term(gpointer data)
     async_command_t * track = data;
     crm_info("Child %d timed out, sending SIGTERM", track->pid);
     track->timer_sigterm = 0;
+    track->last_timeout_signo = SIGTERM;
     rc = kill(track->pid, SIGTERM);
     if(rc < 0) {
         crm_perror(LOG_ERR, "Couldn't send SIGTERM to %d", track->pid);
@@ -468,6 +469,7 @@ st_child_kill(gpointer data)
     async_command_t * track = data;
     crm_info("Child %d timed out, sending SIGKILL", track->pid);
     track->timer_sigkill = 0;
+    track->last_timeout_signo = SIGKILL;
     rc = kill(track->pid, SIGKILL);
     if(rc < 0) {
         crm_perror(LOG_ERR, "Couldn't send SIGKILL to %d", track->pid);
@@ -544,7 +546,7 @@ run_stonith_agent(const char *agent, const char *action, const char *victim,
             track->fd_stdout = p_read_fd;
             g_child_watch_add(pid, track->done, track);
             crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action, agent, pid, track->timeout);
-
+            track->last_timeout_signo = 0;
             if (track->timeout) {
                 track->pid = pid;
                 track->timer_sigterm = g_timeout_add(1000*track->timeout, st_child_term, track);
