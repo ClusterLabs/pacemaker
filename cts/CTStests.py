@@ -1239,23 +1239,32 @@ class ComponentFail(CTSTest):
         # kill the component
         chosen.kill(node)
 
-        # check to see Heartbeat noticed
-        matched = watch.lookforall(allow_multiple_matches=1)
-        if watch.unmatched:
-            self.CM.log("Patterns not found: " + repr(watch.unmatched))
-
-        if self.CM.Env["at-boot"] == 0:
-            self.CM.debug("Checking if %s was shot" % node)
-            shot = stonith.look(60)
-            if shot:
-                self.CM.debug("Found: "+ repr(shot))
-                self.CM.ShouldBeStatus[node]="down"
-            
         self.CM.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
 
         self.CM.debug("Waiting for any STONITHd node to come back up")
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"], 600)
+
+        self.CM.debug("Waiting for the cluster to re-stabilize with all nodes")
+        self.CM.cluster_stable(self.CM["StartTime"])
+
+        self.CM.debug("Checking if %s was shot" % node)
+        shot = stonith.look(60)
+        if shot:
+            self.CM.debug("Found: "+ repr(shot))
+            self.okerrpatterns.append(self.CM["Pat:We_fenced"] % node)
+
+            if self.CM.Env["at-boot"] == 0:
+                self.CM.ShouldBeStatus[node]="down"
+
+            # If fencing occurred, chances are many (if not all) the expected logs
+            # will not be sent - or will be lost when the node reboots
+            return self.success()
+
+        # check for logs indicating a graceful recovery
+        matched = watch.lookforall(allow_multiple_matches=1)
+        if watch.unmatched:
+            self.CM.log("Patterns not found: " + repr(watch.unmatched))
 
         self.CM.debug("Waiting for the cluster to re-stabilize with all nodes")
         is_stable = self.CM.cluster_stable(self.CM["StartTime"])
