@@ -165,8 +165,14 @@ print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t *synapse)
             crm_action_t *input = (crm_action_t *) lpc->data;
             const char *id_string = crm_element_value(input->xml, XML_ATTR_ID);
 
-            if ((input->failed || input->executed == FALSE) && find_action(graph, input->id)) {
-                /* Pending or failed - Show compressed */
+            if (input->failed) {
+                pending = add_list_element(pending, id_string);
+
+            } else if(input->confirmed) {
+                /* Confirmed, skip */
+
+            } else if(find_action(graph, input->id)) {
+                /* In-flight or pending */
                 pending = add_list_element(pending, id_string);
             }
         }
@@ -179,7 +185,7 @@ print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t *synapse)
         char *desc = g_strdup_printf("%s %s op %s", state, actiontype2text(action->type), key);
 
         do_crm_log(log_level,
-                   "[Action %4d]: %-50s on %s (priority: %d, requires: %s)",
+                   "[Action %4d]: %-50s on %s (priority: %d, waiting: %s)",
                    action->id, desc, host?host:"N/A",
                    synapse->priority, pending?pending:"none");
 
