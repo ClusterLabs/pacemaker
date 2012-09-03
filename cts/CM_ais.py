@@ -96,6 +96,7 @@ class crm_ais(crm_lha):
                 #r"No need to invoke the TE",
                 #r"ping.*: DEBUG: Updated connected = 0",
                 #r"Digest mis-match:",
+                r"te_graph_trigger: Transition failed: terminated",
             ),
         })
 
