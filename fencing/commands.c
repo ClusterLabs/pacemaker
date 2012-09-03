@@ -1256,11 +1256,13 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
               client?client->name:remote, call_options);
 
     if(is_set(call_options, st_opt_sync_call)) {
-        CRM_ASSERT(client->request_id == id);
+        CRM_ASSERT(client == NULL || client->request_id == id);
     }
     
     if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
         xmlNode *reply = create_xml_node(NULL, "reply");
+
+        CRM_ASSERT(client);
         crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(reply, F_STONITH_CLIENTID,  client->id);
         crm_ipcs_send(client->channel, id, reply, FALSE);
@@ -1303,6 +1305,7 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
     } else if(crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
         const char *flag_name = NULL;
 
+        CRM_ASSERT(client);
         flag_name = crm_element_value(request, F_STONITH_NOTIFY_ACTIVATE);
         if(flag_name) {
             crm_debug("Setting %s callbacks for %s (%s): ON",
