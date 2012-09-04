@@ -87,13 +87,13 @@ class LogAudit(ClusterAudit):
         if watch_pref == "any" or watch_pref == "syslog":
             self.CM.Env["LogWatcher"] = "syslog"
             if watch_pref == "any": self.CM.log("Testing for %s logs" % self.CM.Env["LogWatcher"])
-            watch_syslog = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 30, silent=True)
+            watch_syslog = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 5, silent=True)
             watch_syslog.setwatch()
 
         if watch_pref == "any" or watch_pref == "remote":
             self.CM.Env["LogWatcher"] = "remote"
             if watch_pref == "any": self.CM.log("Testing for %s logs" % self.CM.Env["LogWatcher"])
-            watch_remote = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 30, silent=True)
+            watch_remote = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 5, silent=True)
             watch_remote.setwatch()
 
         for node in self.CM.Env["nodes"]:
