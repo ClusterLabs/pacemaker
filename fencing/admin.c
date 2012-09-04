@@ -86,7 +86,8 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
-int st_opts = st_opt_sync_call;
+int st_opts = st_opt_sync_call|st_opt_allow_suicide;
+
 
 int
 main(int argc, char ** argv)
