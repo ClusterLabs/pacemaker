@@ -1817,6 +1817,7 @@ event_free(stonith_event_t *event)
     free(event->executioner);
     free(event->device);
     free(event->client_origin);
+    free(event);
 }
 
 static void
