@@ -479,6 +479,7 @@ do_test utilization-order2 "Utilization Order - Complex"
 do_test utilization-order3 "Utilization Order - Migrate"
 do_test utilization-order4 "Utilization Order - Live Mirgration (bnc#695440)"
 do_test utilization-shuffle "Don't displace prmExPostgreSQLDB2 on act2, Start prmExPostgreSQLDB1 on act3"
+do_test load-stopped-loop "Avoid transition loop due to load_stopped (cl#5044)"
 
 echo ""
 do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"

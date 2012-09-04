@@ -10,8 +10,8 @@ Transition Summary:
  * Migrate rsc1	(Started node1 -> node2)
 
 Executing cluster transition:
- * Pseudo action:   load_stopped_node2
  * Resource action: rsc1            migrate_to on node1
+ * Pseudo action:   load_stopped_node2
  * Resource action: rsc1            migrate_from on node2
  * Resource action: rsc1            stop on node1
  * Pseudo action:   load_stopped_node1

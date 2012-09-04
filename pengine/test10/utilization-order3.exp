@@ -32,11 +32,7 @@
         <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="load_stopped_node2" operation_key="load_stopped_node2"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="3">
     <action_set>
