@@ -710,7 +710,7 @@ setup_cib(void)
     } while(rc == -ENOTCONN && ++retries < 5);
 
     if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB service: %s", (*cib_err_fn)(rc));
+        crm_err("Could not connect to the CIB service: %d %p", rc, cib_err_fn);
 
     } else if (pcmk_ok != cib->cmds->add_notify_callback(
                    cib, T_CIB_DIFF_NOTIFY, update_fencing_topology)) {
