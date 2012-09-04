@@ -536,6 +536,19 @@ class Tests:
 
 			test.add_expected_fail_cmd("stonith_admin", "-Q true1", 237)
 
+
+		# simple reboot test
+		for test_type in test_types:
+			test = self.new_test("%s_reboot" % test_type["prefix"],
+					"Verify devices can be rebooted", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
+
+			test.add_cmd("stonith_admin", "-B node3 -t 2")
+
+			test.add_cmd("stonith_admin", "-D true1")
+
+			test.add_expected_fail_cmd("stonith_admin", "-Q true1", 237)
+
 		# test fencing history.
 		for test_type in test_types:
 			if test_type["use_cpg"] == 0:
