@@ -437,20 +437,6 @@ class StonithdTest(CTSTest):
         watchpats.append("log_operation: Operation .* for host '%s' with device .* returned: 0" % node)
         watchpats.append("tengine_stonith_notify: Peer %s was terminated .*: OK" % node)
 
-        # Not reliable, too sensitive to timing issues
-        # 'Fixing' this risks failure detection reliability, which is important
-        #if is_dc:
-        #    watchpats.append("tengine_stonith_notify: Target .* our leader .*%s" % node)
-
-        if self.CM.Env["LogWatcher"] != "remote" or not is_dc:
-            # Often remote logs aren't flushed to disk by the time the node is shot,
-            #   so we wont be able to find them
-            # Remote syslog doesn't suffer this problem because they're already on 
-            #   the loghost when the node is shot
-            watchpats.append("Node %s will be fenced because termination was requested" % node)
-            watchpats.append("Scheduling Node %s for STONITH" % node)
-            watchpats.append("Executing .* fencing operation")
-
         if self.CM.Env["at-boot"] == 0:
             self.CM.debug("Expecting %s to stay down" % node)
             self.CM.ShouldBeStatus[node]="down"
@@ -462,7 +448,23 @@ class StonithdTest(CTSTest):
         watch = self.create_watch(watchpats, 30 + self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
 
-        self.CM.rsh(node, "crm_attribute -V --node %s --type status --attr-name terminate --attr-value true" % node)
+        origin = self.CM.Env.RandomGen.choice(self.CM.Env["nodes"])
+
+        rc = self.CM.rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
+
+        if origin != node and rc != 0:
+            self.CM.debug("Waiting for the cluster to recover")
+            self.CM.cluster_stable()
+
+            self.CM.debug("Waiting STONITHd node to come back up")
+            self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"], 600)
+
+            return self.failure("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
+
+        elif origin == node and rc != 255:
+            # 255 == broken pipe, ie. the node was fenced as epxected
+            self.CM.log("Logcally originated fencing returned %d" % rc)
+
 
         self.set_timer("fence")
         matched = watch.lookforall()

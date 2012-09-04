@@ -1243,6 +1243,7 @@ class ClusterManager(UserDict):
             nodelist=self.Env["nodes"]
         for node in nodelist:
             if self.ShouldBeStatus[node] == "down":
+                self.ns.WaitForAllNodesToComeUp(nodelist, 300)
                 if not self.StartaCM(node, verbose=verbose):
                     ret = 0
         return ret
