@@ -678,7 +678,7 @@ set_crm_log_level(unsigned int level)
     unsigned int old = crm_log_level;
     crm_log_level = level;
     crm_update_callsites();
-    crm_info("New log level: %d", level);
+    crm_trace("New log level: %d", level);
     return old;
 }
 

@@ -369,6 +369,7 @@ main(int argc, char ** argv)
     } /* closing bracket for switch case */
 
 done:
+    crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
     if(rc < 0) {
         printf("Command failed: %s\n", pcmk_strerror(rc));
     }
