@@ -837,12 +837,12 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 
     if(cmd->victim != NULL) {
         do_crm_log(rc==0?LOG_NOTICE:LOG_ERR,
-                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned: %d(%s)%s%s",
+                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned: %d (%s)%s%s",
                    cmd->action, pid, cmd->id, cmd->client, cmd->victim, cmd->device, rc, pcmk_strerror(rc),
                    next?". Trying: ":"", next?next:"");
     } else {
         do_crm_log_unlikely(rc==0?LOG_DEBUG:LOG_NOTICE,
-                   "Operation '%s' [%d] for device '%s' returned: %d(%s)%s%s",
+                   "Operation '%s' [%d] for device '%s' returned: %d (%s)%s%s",
                    cmd->action, pid, cmd->device, rc, pcmk_strerror(rc), next?". Trying: ":"", next?next:"");
     }
 
