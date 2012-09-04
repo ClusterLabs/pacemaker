@@ -82,7 +82,7 @@ crm_node_SOURCES	= crm_node.c
 crm_node_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la \
 			  $(COMMONLIBS) $(CLUSTERLIBS)
 
-crm_simulate_SOURCES	= crm_inject.c
+crm_simulate_SOURCES	= crm_simulate.c
 crm_simulate_CFLAGS	= -I$(top_srcdir)/pengine
 
 crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la		\
