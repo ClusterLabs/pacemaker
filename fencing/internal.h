@@ -79,9 +79,6 @@ extern void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean
 
 extern xmlNode *stonith_construct_reply(xmlNode * request, char *output, xmlNode * data, int rc);
 
-extern xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char *output, xmlNode * data,
-                                              int rc);;
-
 void
 do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
 

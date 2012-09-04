@@ -33,7 +33,6 @@ digraph "g" {
 "grp-nfs:1_stopped_0" -> "clone-nfs_stopped_0" [ style = bold]
 "grp-nfs:1_stopped_0" -> "prim-ping:0_stop_0 deglxen002" [ style = bold]
 "grp-nfs:1_stopped_0" [ style=bold color="green" fontcolor="orange" ]
-"load_stopped_deglxen001 deglxen001" -> "degllx62-vm_migrate_to_0 deglxen002" [ style = bold]
 "load_stopped_deglxen001 deglxen001" -> "degllx62-vm_start_0 deglxen001" [ style = bold]
 "load_stopped_deglxen001 deglxen001" [ style=bold color="green" fontcolor="orange" ]
 "load_stopped_deglxen002 deglxen002" [ style=bold color="green" fontcolor="orange" ]

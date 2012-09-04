@@ -43,6 +43,8 @@ def get_power_status(conn, options):
 def set_power_status(conn, options):
     global plug_status
     plug_status = "off"
+    if options.has_key("-o") and options["-o"] == "on":
+        plug_status = "on"
 
 def main():
     device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",

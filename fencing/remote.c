@@ -730,6 +730,7 @@ int process_remote_stonith_exec(xmlNode *msg)
         } else {
             op->state = st_done;
             remote_op_done(op, msg, rc);
+            return rc;
         }
 
     } else if(rc == pcmk_ok && op->devices == NULL) {
