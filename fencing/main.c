@@ -214,6 +214,12 @@ static void
 stonith_peer_callback(xmlNode * msg, void* private_data)
 {
     const char *remote = crm_element_value(msg, F_ORIG);
+    const char *op = crm_element_value(msg, F_STONITH_OPERATION);
+
+    if(crm_str_eq(op, "poke", TRUE)) {
+        return;
+    }
+
     crm_log_xml_trace(msg, "Peer[inbound]");
     stonith_command(NULL, 0, 0, msg, remote);
 }
@@ -726,6 +732,27 @@ struct qb_ipcs_service_handlers ipc_callbacks =
     .connection_destroyed = st_ipc_destroy
 };
 
+static void
+st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
+{
+    /* 
+     * This is a hack until we can send to a nodeid and/or we fix node name lookups
+     * These messages are ignored in stonith_peer_callback()
+     */
+    if(node->uname == NULL) {
+        xmlNode *query = create_xml_node(NULL, "stonith_command");
+
+        crm_xml_add(query, F_XML_TAGNAME, "stonith_command");
+        crm_xml_add(query, F_TYPE, T_STONITH_NG);
+        crm_xml_add(query, F_STONITH_OPERATION, "poke");
+
+        crm_notice("Broadcasting our uname because of node %u", node->id);
+        send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
+
+        free_xml(query);
+    }
+}
+
 int
 main(int argc, char ** argv)
 {
@@ -869,6 +896,8 @@ main(int argc, char ** argv)
     } else {
         stonith_our_uname = strdup("localhost");
     }
+
+    crm_set_status_callback(&st_peer_update_callback);
 
     device_list = g_hash_table_new_full(
         crm_str_hash, g_str_equal, NULL, free_device);
