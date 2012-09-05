@@ -424,7 +424,7 @@ getblackboxes() {
 
     for bb in $flist; do
         bb_short=`basename $bb`
-	qb-blackbox $bb &> $3/$bb_short
+	qb-blackbox $bb &> $3/${bb_short}.blackbox
 	info "Extracting contents of $bb_short"
     done
 }

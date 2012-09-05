@@ -293,7 +293,7 @@ crm_enable_blackbox(int nsig)
         pid_t pid = getpid();
 
         blackbox_file_prefix = malloc(NAME_MAX);
-        snprintf(blackbox_file_prefix, NAME_MAX, "%s/blackbox-%s-%d", CRM_BLACKBOX_DIR, crm_system_name, pid);
+        snprintf(blackbox_file_prefix, NAME_MAX, "%s/%s-%d", CRM_BLACKBOX_DIR, crm_system_name, pid);
     }
 
     if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
