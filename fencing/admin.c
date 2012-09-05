@@ -123,7 +123,22 @@ try_mainloop_connect(void)
 }
 
 static void
-mainloop_callback(stonith_t * stonith, stonith_callback_data_t *data)
+notify_callback(stonith_t *st, stonith_event_t *e)
+{
+    if (e->result != pcmk_ok) {
+        return;
+    }
+
+    if (safe_str_eq(async_fence_data.target, e->target) &&
+        safe_str_eq(async_fence_data.action, e->operation)) {
+
+        async_fence_data.rc = e->result;
+        g_main_loop_quit(mainloop);
+    }
+}
+
+static void
+fence_callback(stonith_t * stonith, stonith_callback_data_t *data)
 {
     async_fence_data.rc = data->rc;
 
@@ -140,6 +155,8 @@ async_fence_helper(gpointer user_data)
         g_main_loop_quit(mainloop);
         return TRUE;
     }
+
+    st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, notify_callback);
 
     call_id = st->cmds->fence(st,
         st_opt_allow_suicide,
@@ -159,7 +176,7 @@ async_fence_helper(gpointer user_data)
             st_opt_timeout_updates,
             NULL,
             "callback",
-            mainloop_callback);
+            fence_callback);
 
     return TRUE;
 }
