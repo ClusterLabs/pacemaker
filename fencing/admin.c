@@ -33,6 +33,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
+#include <crm/common/mainloop.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/cib.h>
@@ -88,6 +89,100 @@ static struct crm_option long_options[] = {
 
 int st_opts = st_opt_sync_call|st_opt_allow_suicide;
 
+GMainLoop *mainloop = NULL;
+struct {
+    stonith_t *st;
+    const char *target;
+    const char *action;
+    int timeout;
+    int rc;
+} async_fence_data;
+
+static int
+try_mainloop_connect(void)
+{
+    stonith_t *st = async_fence_data.st;
+    int tries = 10;
+    int i = 0;
+    int rc = 0;
+
+    for (i = 0; i < tries; i++) {
+        rc = st->cmds->connect(st, crm_system_name, NULL);
+
+        if (!rc) {
+            crm_debug("stonith client connection established");
+            return 0;
+        } else {
+            crm_debug("stonith client connection failed");
+        }
+        sleep(1);
+    }
+
+    crm_err("Couldn not connect to stonithd. \n");
+    return -1;
+}
+
+static void
+mainloop_callback(stonith_t * stonith, stonith_callback_data_t *data)
+{
+    async_fence_data.rc = data->rc;
+
+    g_main_loop_quit(mainloop);
+}
+
+static gboolean
+async_fence_helper(gpointer user_data)
+{
+    stonith_t *st = async_fence_data.st;
+    int call_id = 0;
+
+    if (try_mainloop_connect()) {
+        g_main_loop_quit(mainloop);
+        return TRUE;
+    }
+
+    call_id = st->cmds->fence(st,
+        st_opt_allow_suicide,
+        async_fence_data.target,
+        async_fence_data.action,
+        async_fence_data.timeout);
+
+    if (call_id < 0) {
+        g_main_loop_quit(mainloop);
+        return TRUE;
+    }
+
+    st->cmds->register_callback(
+            st,
+            call_id,
+            async_fence_data.timeout,
+            st_opt_timeout_updates,
+            NULL,
+            "callback",
+            mainloop_callback);
+
+    return TRUE;
+}
+
+static int
+mainloop_fencing(stonith_t *st, const char *target, const char *action, int timeout)
+{
+    crm_trigger_t *trig;
+
+    async_fence_data.st = st;
+    async_fence_data.target = target;
+    async_fence_data.action = action;
+    async_fence_data.timeout = timeout;
+    async_fence_data.rc = -1;
+
+    trig = mainloop_add_trigger(G_PRIORITY_HIGH, async_fence_helper, NULL);
+    mainloop_set_trigger(trig);
+
+    mainloop = g_main_new(FALSE);
+    g_main_run(mainloop);
+
+    return async_fence_data.rc;
+}
 
 int
 main(int argc, char ** argv)
@@ -100,6 +195,7 @@ main(int argc, char ** argv)
     int timeout = 120;
     int option_index = 0;
     int fence_level = 0;
+    int no_connect = 0;
 
     char name[512];
     char value[512];
@@ -132,8 +228,10 @@ main(int argc, char ** argv)
         case '?':
             crm_help(flag, EX_OK);
             break;
-        case 'L':
         case 'I':
+            no_connect = 1;
+            /* fall through */
+        case 'L':
             action = flag;
             break;
         case 'q':
@@ -153,6 +251,7 @@ main(int argc, char ** argv)
             action = 'L';
             break;
         case 'M':
+            no_connect = 1;
             action = flag;
             break;
         case 't':
@@ -161,6 +260,9 @@ main(int argc, char ** argv)
         case 'B':
         case 'F':
         case 'U':
+            /* using mainloop here */
+            no_connect = 1;
+            /* fall through */
         case 'C':
             /* Always log the input arguments */
             crm_log_args(argc, argv);
@@ -221,7 +323,7 @@ main(int argc, char ** argv)
     crm_debug("Create");
     st = stonith_api_new();
 
-    if(action != 'M' && action != 'I') {
+    if(!no_connect) {
         rc = st->cmds->connect(st, crm_system_name, NULL);
         crm_debug("Connect: %d", rc);
 
@@ -294,13 +396,13 @@ main(int argc, char ** argv)
         rc = st->cmds->confirm(st, st_opts, target);
         break;
     case 'B':
-        rc = st->cmds->fence(st, st_opts, target, "reboot", timeout);
+        rc = mainloop_fencing(st, target, "reboot", timeout);
         break;
     case 'F':
-        rc = st->cmds->fence(st, st_opts, target, "off", timeout);
+        rc = mainloop_fencing(st, target, "off", timeout);
         break;
     case 'U':
-        rc = st->cmds->fence(st, st_opts, target, "on", timeout);
+        rc = mainloop_fencing(st, target, "on", timeout);
         break;
     case 'H':
     {
