@@ -514,7 +514,7 @@ if __name__ == '__main__':
     # Try to determinw an offset for IPaddr resources
     if Environment["CIBResource"] and not Environment.has_key("IPBase"):
         network=rsh(discover, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", stdout=1).strip()
-        Environment["IPBase"] = rsh(discover, "nmap -sn -n %s | grep 'scan report' | sort -u | tail -n 1 | awk '{print $NF}' | sed 's:(::' | sed 's:)::'" % network, stdout=1).strip()
+        Environment["IPBase"] = rsh(discover, "nmap -sn -n %s | grep 'scan report' | tail -n 1 | awk '{print $NF}' | sed 's:(::' | sed 's:)::'" % network, stdout=1).strip()
         if not Environment["IPBase"]:
             Environment["IPBase"] = "127.0.0.10"
             Environment.log("Could not determine an offset for IPaddr resources.  Perhaps nmap is not installed on the nodes.")
