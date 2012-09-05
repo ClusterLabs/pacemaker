@@ -29,6 +29,8 @@ halib_PROGRAMS	= stonithd stonith-test
 sbin_PROGRAMS  = stonith_admin
 sbin_SCRIPTS   = fence_legacy fence_pcmk
 
+noinst_HEADERS = internal.h
+
 man7_MANS      = 
 man8_MANS      = 
 
