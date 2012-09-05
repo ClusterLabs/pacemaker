@@ -1792,6 +1792,7 @@ xml_to_event(xmlNode *msg)
 
         if(data) {
             event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
+            event->action = crm_element_value_copy(data, F_STONITH_ACTION);
             event->target = crm_element_value_copy(data, F_STONITH_TARGET);
             event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
             event->id = crm_element_value_copy(data, F_STONITH_REMOTE);
@@ -1814,6 +1815,7 @@ event_free(stonith_event_t *event)
     free(event->message);
     free(event->operation);
     free(event->origin);
+    free(event->action);
     free(event->target);
     free(event->executioner);
     free(event->device);

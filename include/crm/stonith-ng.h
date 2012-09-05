@@ -92,6 +92,7 @@ typedef struct stonith_event_s
     int result;
     char *origin;
     char *target;
+    char *action;
     char *executioner;
 
     char *device;
