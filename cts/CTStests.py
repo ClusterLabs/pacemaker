@@ -495,6 +495,7 @@ class StonithdTest(CTSTest):
             self.CM["Pat:We_fenced"] % ".*", 
             self.CM["Pat:They_fenced"] % ".*",
             "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
+            "error: remote_op_done: Operation reboot of .*by <no-one> for .*: Timer expired",
             ]
 
     def is_applicable(self):
