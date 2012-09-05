@@ -130,7 +130,7 @@ notify_callback(stonith_t *st, stonith_event_t *e)
     }
 
     if (safe_str_eq(async_fence_data.target, e->target) &&
-        safe_str_eq(async_fence_data.action, e->operation)) {
+        safe_str_eq(async_fence_data.action, e->action)) {
 
         async_fence_data.rc = e->result;
         g_main_loop_quit(mainloop);

@@ -151,7 +151,7 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     crm_xml_add_int(notify_data, "state", op->state);
     crm_xml_add_int(notify_data, F_STONITH_RC,    rc);
     crm_xml_add(notify_data, F_STONITH_TARGET,    op->target);
-    crm_xml_add(notify_data, F_STONITH_OPERATION, op->action); 
+    crm_xml_add(notify_data, F_STONITH_ACTION, op->action); 
     crm_xml_add(notify_data, F_STONITH_DELEGATE,  op->delegate);
     crm_xml_add(notify_data, F_STONITH_REMOTE,    op->id);
     crm_xml_add(notify_data, F_STONITH_ORIGIN,    op->originator);
