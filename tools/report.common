@@ -205,9 +205,11 @@ time2str() {
 }
 
 get_time() {
-	perl -e "\$time='$*';" -e '
+	perl -e "\$time=\"$*\";" -e '
 	eval "use Date::Parse";
-	if (!$@) {
+	if (index($time, ":") < 0) {
+
+	} elsif (!$@) {
 		print str2time($time);
 	} else {
 		eval "use Date::Manip";
