@@ -425,7 +425,7 @@ getblackboxes() {
     for bb in $flist; do
         bb_short=`basename $bb`
 	qb-blackbox $bb &> $3/${bb_short}.blackbox
-	info "Extracting contents of $bb_short"
+	info "Extracting contents of blackbox: $bb_short"
     done
 }
 
@@ -650,7 +650,7 @@ case $cluster in
 	if 
 	    ps -ef | egrep -qs '[c]orosync'
 	then
-	    corosync-blackbox > corosync-blackbox-live.txt
+	    corosync-blackbox &> corosync-blackbox-live.txt
 	fi
 #	corosync-fplay > corosync-blackbox.txt
 
