@@ -3,11 +3,13 @@
 ## Targeted for 1.2
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
 - Remove all calls to uname() and replace with get_node_name() whcih redirects to ${stack}_node_name()
-
+- Allow messages to be sent to a nodeid (not just node (u)name)
+ 
 ## Targeted for 1.2.x
 
 - Support
   http://cgit.freedesktop.org/systemd/systemd/commit/?id=96342de68d0d6de71a062d984dafd2a0905ed9fe
+- Allow stonith_admin to optionally route fencing requests via the CIB (terminate=true)
 - Add corosync to ComponentFail cts test
 - Support 'yesterday' and 'thursday' and '24-04' as dates in crm_report 
 - Allow the N in 'give up after N failed fencing attempts' to be configurable 

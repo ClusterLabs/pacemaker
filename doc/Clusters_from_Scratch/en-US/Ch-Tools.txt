@@ -15,9 +15,6 @@ atomically.
 Take some time to familiarize yourself with what it can do.
 
 pass:[# <command>crm --help</command>]
-------------------
-sys::[crm --help]
-------------------
 
 The primary tool for monitoring the status of the cluster is crm_mon
 (also available as crm status). It can be run in a variety of modes
