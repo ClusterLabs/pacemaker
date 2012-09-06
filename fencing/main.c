@@ -87,6 +87,7 @@ st_ipc_created(qb_ipcs_connection_t *c)
 
     new_client = calloc(1, sizeof(stonith_client_t));
     new_client->channel = c;
+    new_client->pid = crm_ipcs_client_pid(c);
     new_client->channel_name = strdup("ipc");
 
     CRM_CHECK(new_client->id == NULL, free(new_client->id));

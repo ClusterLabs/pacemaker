@@ -1341,8 +1341,13 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
             const char *action = crm_element_value(dev, F_STONITH_ACTION);
             const char *device = crm_element_value(dev, F_STONITH_DEVICE);
 
-            crm_notice("%s %s wants to fence (%s) '%s' with device '%s'",
-                       client?"Client":"Peer", client?client->id:remote, action, target, device?device:"(any)");
+            if(client) {
+                crm_notice("Client %s.%d[%s] wants to fence (%s) '%s' with device '%s'",
+                           client->name, client->pid, client->id, action, target, device?device:"(any)");
+            } else {
+                crm_notice("Peer %s wants to fence (%s) '%s' with device '%s'",
+                           remote, action, target, device?device:"(any)");
+            }
 
             if(g_hash_table_lookup(topology, target) && safe_str_eq(target, stonith_our_uname)) {
                 GHashTableIter gIter;

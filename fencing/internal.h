@@ -21,6 +21,8 @@ typedef struct stonith_device_s {
 typedef struct stonith_client_s {
     char *id;
     char *name;
+
+    int pid;
     int request_id;
 
     char *channel_name;
