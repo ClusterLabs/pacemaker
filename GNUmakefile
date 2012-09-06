@@ -218,9 +218,9 @@ changes:
 	@printf "\n- Statistics:\n">> ChangeLog 
 	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n" >> ChangeLog 
 	@printf "  Diff:      " >> ChangeLog 
-	@git diff -r $(LAST_RELEASE)..HEAD | diffstat | tail -n 1 >> ChangeLog 
+	@git diff -r $(LAST_RELEASE)..HEAD --stat | tail -n 1 >> ChangeLog
 	@printf "\n- Changes since $(LAST_RELEASE)\n" >> ChangeLog 
-	@git log --pretty=format:'%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: | sort -uf >> ChangeLog 
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: | sed -e s@High:@@ -e s@PE:@pengine:@ | sort -uf >> ChangeLog 
 	@printf "\n">> ChangeLog 
 	cat ChangeLog.last >> ChangeLog
 	@rm ChangeLog.last
