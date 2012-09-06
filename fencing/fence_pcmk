@@ -166,7 +166,7 @@ if ( $pid=fork() == 0 )
        }
        system "logger -p daemon.notice \"fence_pcmk[$agent_pid]: Requesting Pacemaker fence $opt_n ($opt_o)\"";
    }
-   exec "stonith_admin $cmd $opt_n" or die "failed to exec \"stonith_admin $cmd $opt_n\"\n";
+   exec "stonith_admin $cmd $opt_n --tolerance 5s" or die "failed to exec \"stonith_admin $cmd $opt_n\"\n";
 }
 
 $SIG{TERM} = \&term_handler;

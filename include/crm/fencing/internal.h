@@ -62,6 +62,7 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #define F_STONITH_RC            "st_rc"
 /*! Timeout period per a device execution */
 #define F_STONITH_TIMEOUT       "st_timeout"
+#define F_STONITH_TOLERANCE     "st_tolerance"
 /*! Action specific timeout period returned in query of fencing devices. */
 #define F_STONITH_ACTION_TIMEOUT       "st_action_timeout"
 #define F_STONITH_CALLBACK_TOKEN    "st_async_id"

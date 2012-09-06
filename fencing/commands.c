@@ -47,8 +47,9 @@ GHashTable *device_list = NULL;
 GHashTable *topology = NULL;
 GList *cmd_list = NULL;
 
-static int active_children = 0;
+extern GHashTable *remote_op_list;
 
+static int active_children = 0;
 static gboolean stonith_device_dispatch(gpointer user_data);
 static void st_child_done(GPid pid, int rc, const char *output, gpointer user_data);
 
@@ -1342,8 +1343,39 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
             const char *device = crm_element_value(dev, F_STONITH_DEVICE);
 
             if(client) {
+                int tolerance = 0;
+
+                crm_element_value_int(dev, F_STONITH_TOLERANCE, &tolerance);
                 crm_notice("Client %s.%d[%s] wants to fence (%s) '%s' with device '%s'",
                            client->name, client->pid, client->id, action, target, device?device:"(any)");
+
+                crm_trace("tolerance=%d, remote_op_list=%p", tolerance, remote_op_list);
+                if(tolerance > 0 && remote_op_list) {
+                    GHashTableIter iter;
+                    time_t now = time(NULL);
+                    remote_fencing_op_t *op = NULL;
+
+                    g_hash_table_iter_init(&iter, remote_op_list); 
+                    while(g_hash_table_iter_next(&iter, NULL, (void**)&op)) {
+                        if (target == NULL || action == NULL) {
+                            continue;
+                        } else if(strcmp(op->target, target) != 0) {
+                            continue;
+                        } else if(op->state != st_done) {
+                            continue;
+                        } else if(strcmp(op->action, action) != 0) {
+                            continue;
+                        } else if((op->completed + tolerance) < now) {
+                            continue;
+                        }
+
+                        crm_notice("Target %s was fenced (%s) less than %ds ago by %s on behalf of %s",
+                                   target, action, tolerance, op->delegate, op->originator);
+                        rc = 0;
+                        goto done;
+                    }
+                }
+
             } else {
                 crm_notice("Peer %s wants to fence (%s) '%s' with device '%s'",
                            remote, action, target, device?device:"(any)");
@@ -1454,6 +1486,7 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
         crm_log_xml_warn(request, "UnknownOp");
     }
 
+  done:
     do_crm_log_unlikely(rc>0?LOG_DEBUG:LOG_INFO,"Processed %s%s from %s: %s (%d)", op, is_reply?" reply":"",
                client?client->name:remote, rc>0?"":pcmk_strerror(rc), rc);
 

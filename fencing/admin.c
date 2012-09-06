@@ -80,6 +80,7 @@ static struct crm_option long_options[] = {
     {"index",       1, 0, 'i', "The stonith level (1-9)"},
 
     {"timeout",     1, 0, 't', "Operation timeout in seconds"},
+    {"tolerance",   1, 0, 0, "(Advanced) Do nothing if an equivalent --fence request succeeded less than N seconds earlier" },
 
     {"list-all",    0, 0, 'L', "legacy alias for --list-registered"},
 
@@ -95,6 +96,7 @@ struct {
     const char *target;
     const char *action;
     int timeout;
+    int tolerance;
     int rc;
 } async_fence_data;
 
@@ -162,7 +164,9 @@ async_fence_helper(gpointer user_data)
         st_opt_allow_suicide,
         async_fence_data.target,
         async_fence_data.action,
-        async_fence_data.timeout);
+        async_fence_data.timeout,
+        async_fence_data.tolerance
+        );
 
     if (call_id < 0) {
         g_main_loop_quit(mainloop);
@@ -182,7 +186,7 @@ async_fence_helper(gpointer user_data)
 }
 
 static int
-mainloop_fencing(stonith_t *st, const char *target, const char *action, int timeout)
+mainloop_fencing(stonith_t *st, const char *target, const char *action, int timeout, int tolerance)
 {
     crm_trigger_t *trig;
 
@@ -190,6 +194,7 @@ mainloop_fencing(stonith_t *st, const char *target, const char *action, int time
     async_fence_data.target = target;
     async_fence_data.action = action;
     async_fence_data.timeout = timeout;
+    async_fence_data.tolerance = tolerance;
     async_fence_data.rc = -1;
 
     trig = mainloop_add_trigger(G_PRIORITY_HIGH, async_fence_helper, NULL);
@@ -213,12 +218,14 @@ main(int argc, char ** argv)
     int option_index = 0;
     int fence_level = 0;
     int no_connect = 0;
+    int tolerance = 0;
 
     char name[512];
     char value[512];
     const char *agent = NULL;
     const char *device = NULL;
     const char *target = NULL;
+    const char *longname = NULL;
 
     char action = 0;
     stonith_t *st = NULL;
@@ -232,7 +239,7 @@ main(int argc, char ** argv)
         "\nAllows the administrator to add/remove/list devices, check device and host status and fence hosts\n");
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = crm_get_option_long(argc, argv, &option_index, &longname);
         if (flag == -1)
             break;
 
@@ -310,19 +317,24 @@ main(int argc, char ** argv)
             }
             break;
         case 'e':
-        {
-            char *key = crm_concat("OCF_RESKEY", optarg, '_');
-            const char *env = getenv(key);
+            {
+                char *key = crm_concat("OCF_RESKEY", optarg, '_');
+                const char *env = getenv(key);
 
-            if(env == NULL) {
-            crm_err("Invalid option: -e %s", optarg);
-            ++argerr;
-            } else {
-            crm_info("Got: '%s'='%s'", optarg, env);
-                        params = stonith_key_value_add( params, optarg, env);
+                if(env == NULL) {
+                    crm_err("Invalid option: -e %s", optarg);
+                    ++argerr;
+                } else {
+                    crm_info("Got: '%s'='%s'", optarg, env);
+                    params = stonith_key_value_add( params, optarg, env);
+                }
             }
-        }
-        break;
+            break;
+        case 0:
+            if(safe_str_eq("tolerance", longname)) {
+                tolerance = crm_get_msec(optarg) / 1000; /* Send in seconds */
+            }
+            break;
         default:
             ++argerr;
             break;
@@ -413,13 +425,13 @@ main(int argc, char ** argv)
         rc = st->cmds->confirm(st, st_opts, target);
         break;
     case 'B':
-        rc = mainloop_fencing(st, target, "reboot", timeout);
+        rc = mainloop_fencing(st, target, "reboot", timeout, tolerance);
         break;
     case 'F':
-        rc = mainloop_fencing(st, target, "off", timeout);
+        rc = mainloop_fencing(st, target, "off", timeout, tolerance);
         break;
     case 'U':
-        rc = mainloop_fencing(st, target, "on", timeout);
+        rc = mainloop_fencing(st, target, "on", timeout, tolerance);
         break;
     case 'H':
     {

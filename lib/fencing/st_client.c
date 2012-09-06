@@ -1164,7 +1164,7 @@ stonith_api_status(stonith_t * stonith, int call_options, const char *id, const 
 
 static int
 stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const char *action,
-                  int timeout)
+                  int timeout, int tolerance)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -1173,6 +1173,7 @@ stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const
     crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
+    crm_xml_add_int(data, F_STONITH_TOLERANCE, tolerance);
 
     rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, timeout);
     free_xml(data);
@@ -1183,7 +1184,7 @@ stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const
 static int
 stonith_api_confirm(stonith_t * stonith, int call_options, const char *target)
 {
-    return stonith_api_fence(stonith, call_options | st_opt_manual_ack, target, "off", 0);
+    return stonith_api_fence(stonith, call_options | st_opt_manual_ack, target, "off", 0, 0);
 }
 
 static int
@@ -2202,7 +2203,7 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
     }
 
     if (rc == pcmk_ok) {
-        rc = st->cmds->fence(st, opts, name, action, timeout);
+        rc = st->cmds->fence(st, opts, name, action, timeout, 0);
     }
 
     if (st) {

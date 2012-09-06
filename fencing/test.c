@@ -180,10 +180,10 @@ run_fence_failure_test(void)
     single_test(st->cmds->register_device(st, st_opts, "test-id1", "stonith-ng", "fence_false", params),
         "Register device1 for failure test", 1, 0);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3, 0),
         "Fence failure results off", 1, -62);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "reboot", 3),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "reboot", 3, 0),
         "Fence failure results reboot", 1, -62);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
@@ -205,10 +205,10 @@ run_fence_failure_rollover_test(void)
     single_test(st->cmds->register_device(st, st_opts, "test-id2", "stonith-ng", "fence_true", params),
         "Register device2 for rollover test", 1, 0);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3, 0),
         "Fence rollover results off", 1, 0);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "on", 3),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "on", 3, 0),
         "Fence rollover results on", 1, 0);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
@@ -242,13 +242,13 @@ run_standard_test(void)
     single_test(st->cmds->status(st, st_opts, "test-id", "false_1_node1", 1),
         "Status false_1_node1", 1, 0);
 
-    single_test(st->cmds->fence(st, st_opts, "unknown-host", "off", 1),
+    single_test(st->cmds->fence(st, st_opts, "unknown-host", "off", 1, 0),
         "Fence unknown-host (expected failure)", 0, -113);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node1", "off", 1),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node1", "off", 1, 0),
         "Fence false_1_node1", 1, 0);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node1", "on", 1),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node1", "on", 1, 0),
         "Unfence false_1_node1", 1, 0);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id"),
@@ -304,31 +304,31 @@ standard_dev_test(void)
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
     crm_debug("Status false_1_node1: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "unknown-host", "off", 60);
+    rc = st->cmds->fence(st, st_opts, "unknown-host", "off", 60, 0);
     crm_debug("Fence unknown-host: %d", rc);
 
     rc = st->cmds->status(st, st_opts,  "test-id", "false_1_node1", 10);
     crm_debug("Status false_1_node1: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "false_1_node1", "off", 60);
+    rc = st->cmds->fence(st, st_opts, "false_1_node1", "off", 60, 0);
     crm_debug("Fence false_1_node1: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
     crm_debug("Status false_1_node1: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "false_1_node1", "on", 10);
+    rc = st->cmds->fence(st, st_opts, "false_1_node1", "on", 10, 0);
     crm_debug("Unfence false_1_node1: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
     crm_debug("Status false_1_node1: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "some-host", "off", 10);
+    rc = st->cmds->fence(st, st_opts, "some-host", "off", 10, 0);
     crm_debug("Fence alias: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "some-host", 10);
     crm_debug("Status alias: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "false_1_node1", "on", 10);
+    rc = st->cmds->fence(st, st_opts, "false_1_node1", "on", 10, 0);
     crm_debug("Unfence false_1_node1: %d", rc);
 
     rc = st->cmds->remove_device(st, st_opts, "test-id");
@@ -374,7 +374,7 @@ test_async_fence_pass(int check_event)
         return;
     }
 
-    rc = st->cmds->fence(st, 0, "true_1_node1", "off", MAINLOOP_DEFAULT_TIMEOUT);
+    rc = st->cmds->fence(st, 0, "true_1_node1", "off", MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
         crm_err("fence failed with rc %d", rc);
         mainloop_test_done(FALSE);
@@ -406,7 +406,7 @@ test_async_fence_custom_timeout(int check_event)
     }
     begin = time(NULL);
 
-    rc = st->cmds->fence(st, 0, "custom_timeout_node1", "off", MAINLOOP_DEFAULT_TIMEOUT);
+    rc = st->cmds->fence(st, 0, "custom_timeout_node1", "off", MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
         crm_err("fence failed with rc %d", rc);
         mainloop_test_done(FALSE);
@@ -429,7 +429,7 @@ test_async_fence_timeout(int check_event)
         return;
     }
 
-    rc = st->cmds->fence(st, 0, "false_1_node2", "off", MAINLOOP_DEFAULT_TIMEOUT);
+    rc = st->cmds->fence(st, 0, "false_1_node2", "off", MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
         crm_err("fence failed with rc %d", rc);
         mainloop_test_done(FALSE);

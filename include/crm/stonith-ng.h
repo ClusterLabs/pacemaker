@@ -254,7 +254,7 @@ typedef struct stonith_api_operations_s
      * \retval negative error code on failure.
      */
     int (*fence)(stonith_t *st, int options, const char *node, const char *action,
-            int timeout);
+                 int timeout, int tolerance);
 
     /*!
      * \brief Manually confirm that a node is down.

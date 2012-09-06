@@ -143,7 +143,7 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
     }
 
     rc = stonith_api->cmds->fence(stonith_api, options, target, type,
-                                  transition_graph->stonith_timeout / 1000);
+                                  transition_graph->stonith_timeout / 1000, 0);
 
     stonith_api->cmds->register_callback(
         stonith_api, rc, transition_graph->stonith_timeout / 1000,
