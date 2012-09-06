@@ -11,74 +11,74 @@
   Diff:       2102 files changed, 113820 insertions(+), 72511 deletions(-)
 
 - Changes since Pacemaker-1.1.7
- + Core: Bug cl#5032 - Rewrite the iso8601 date handling code
- + Core: Correctly extract the version details from a diff
- + Core: Log blackbox contents, if enabled, when an error occurs
- + Core: Only LOG_NOTICE and higher are sent to syslog
- + Core: Replace use of IPC from clplumbing with IPC from libqb
- + Core: SIGUSR1 now enables blackbox logging, SIGTRAP to write out
- + Core: Support a blackbox for additional logging detail after crashes/errors
- + Promote support for advanced fencing logic to the stable schema
- + Promote support for node starting scores to the stable schema
- + Promote support for service and systemd to the stable schema
+  + Core: Bug cl#5032 - Rewrite the iso8601 date handling code
+  + Core: Correctly extract the version details from a diff
+  + Core: Log blackbox contents, if enabled, when an error occurs
+  + Core: Only LOG_NOTICE and higher are sent to syslog
+  + Core: Replace use of IPC from clplumbing with IPC from libqb
+  + Core: SIGUSR1 now enables blackbox logging, SIGTRAP to write out
+  + Core: Support a blackbox for additional logging detail after crashes/errors
+  + Promote support for advanced fencing logic to the stable schema
+  + Promote support for node starting scores to the stable schema
+  + Promote support for service and systemd to the stable schema
 
- + attrd: Differentiate between updating all our attributes and everybody updating all theirs too
- + attrd: Have single-shot clients wait for an ack before disconnecting
- + cib: cl#5026 - Synced cib updates should not return until the cpg broadcast is complete.
- + corosync: Detect when the first corosync has not yet formed and handle it gracefully
- + corosync: Obtain a full list of configured nodes, including their names, when we connect to the quorum API
- + corosync: Obtain a node name from DNS if one was not already known
- + corosync: Populate the cib nodelist from corosync if available
- + corosync: Use the CFG API and DNS to determine node names if not configured in corosync.conf
- + crmd: Block after 10 failed fencing attempts for a node
- + crmd: cl#5051 - Fixes file leak in pe ipc connection initialization.
- + crmd: cl#5053 - Fixes fail-count not being updated properly.
- + crmd: cl#5057 - Restart sub-systems correctly (bnc#755671)
- + crmd: cl#5068 - Fixes crm_node -R option so it works with corosync 2.0
- + crmd: Correctly re-establish failed attrd connections
- + crmd: Detect when the quorum API isn't configured for corosync 2.0
- + crmd: Do not overwrite any configured node type (eg. quorum node)
- + crmd: Enable use of new lrmd daemon and client library in crmd.
- + crmd: Overhaul the way node state is recorded and updated in the CIB
- + fencing: Bug rhbz#853537 - Prevent use-of-NULL when the cib libraries are not available
- + fencing: cl#5073 - Add 'off' as an valid value for stonith-action option.
- + fencing: cl#5092 - Always timeout stonith operations if timeout period expires.
- + fencing: cl#5093 - Stonith per device timeout option
- + fencing: Clean up if we detect a failed connection
- + fencing: Delegate complex self fencing requests - we wont be around to see it to completion
- + fencing: Ensure all peers are notified of complex fencing op completion
- + fencing: Fix passing of fence_legacy parameters containing '='
- + fencing: Gracefully handle metadata requests for unknown agents
- + fencing: Return cached dynamic target list for busy devices.
- + fencing: rhbz#801355 - Abort transition on DC when external fencing operation is detected
- + fencing: rhbz#801355 - Merge fence requests for identical operations already in progress.
- + fencing: rhbz#801355 - Report fencing operations external of pacemaker to cib
- + fencing: Specify the action to perform using action= instead of the older option=
- + fencing: Stop building fake metadata for broken agents
- + fencing: Tolerate agents that report empty metadata in the admin tool
- + mcp: Correctly retry the connection to corosync on failure
- + mcp: Do not shut down IPC until the last client exits
- + mcp: Prevent use-after-free when running against corosync 1.x
- + pengine: Bug cl#5059 - Use the correct action's status when calculating required actions for interleaved clones
- + pengine: Bypass online/offline checking resource detection for ping/quorum nodes
- + pengine: cl#5044 - migrate_to no longer requires load_stopped for avoiding possible transition loop
- + pengine: cl#5069 - Honor 'on-fail=ignore' even when operation is disabled.
- + pengine: cl#5070 - Allow influence of promotion score when multistate rsc is left hand of colocation
- + pengine: cl#5072 - Fixes monitor op stopping after rsc promotion.
- + pengine: cl#5072 - Fixes pengine regression test failures
- + pengine: Correctly set the status for nodes not intended to run Pacemaker
- + pengine: Do not append instance numbers to anonymous clones
- + pengine: Fix failcount expiration
- + pengine: Fix memory leaks found by valgrind
- + pengine: Fix use-after-free and use-of-NULL errors detected by coverity
- + pengine: Fixes use of colocation scores other than +/- INFINITY
- + pengine: Improve detection of rejoining nodes
- + pengine: Prevent use-of-NULL when tracing is enabled
- + pengine: Stonith resources are allowed to start even if their probes haven't completed on partially active nodes
- + services: New class called 'service' which expands to the correct (LSB/systemd/upstart) standard
- + services: Support Asynchronous systemd/upstart actions
- + Tools: crm_shadow - Bug cl#5062 - Correctly set argv[0] when forking a shell process
- + Tools: crm_report: Always include system logs (if we can find them)
+  + attrd: Differentiate between updating all our attributes and everybody updating all theirs too
+  + attrd: Have single-shot clients wait for an ack before disconnecting
+  + cib: cl#5026 - Synced cib updates should not return until the cpg broadcast is complete.
+  + corosync: Detect when the first corosync has not yet formed and handle it gracefully
+  + corosync: Obtain a full list of configured nodes, including their names, when we connect to the quorum API
+  + corosync: Obtain a node name from DNS if one was not already known
+  + corosync: Populate the cib nodelist from corosync if available
+  + corosync: Use the CFG API and DNS to determine node names if not configured in corosync.conf
+  + crmd: Block after 10 failed fencing attempts for a node
+  + crmd: cl#5051 - Fixes file leak in pe ipc connection initialization.
+  + crmd: cl#5053 - Fixes fail-count not being updated properly.
+  + crmd: cl#5057 - Restart sub-systems correctly (bnc#755671)
+  + crmd: cl#5068 - Fixes crm_node -R option so it works with corosync 2.0
+  + crmd: Correctly re-establish failed attrd connections
+  + crmd: Detect when the quorum API isn't configured for corosync 2.0
+  + crmd: Do not overwrite any configured node type (eg. quorum node)
+  + crmd: Enable use of new lrmd daemon and client library in crmd.
+  + crmd: Overhaul the way node state is recorded and updated in the CIB
+  + fencing: Bug rhbz#853537 - Prevent use-of-NULL when the cib libraries are not available
+  + fencing: cl#5073 - Add 'off' as an valid value for stonith-action option.
+  + fencing: cl#5092 - Always timeout stonith operations if timeout period expires.
+  + fencing: cl#5093 - Stonith per device timeout option
+  + fencing: Clean up if we detect a failed connection
+  + fencing: Delegate complex self fencing requests - we wont be around to see it to completion
+  + fencing: Ensure all peers are notified of complex fencing op completion
+  + fencing: Fix passing of fence_legacy parameters containing '='
+  + fencing: Gracefully handle metadata requests for unknown agents
+  + fencing: Return cached dynamic target list for busy devices.
+  + fencing: rhbz#801355 - Abort transition on DC when external fencing operation is detected
+  + fencing: rhbz#801355 - Merge fence requests for identical operations already in progress.
+  + fencing: rhbz#801355 - Report fencing operations external of pacemaker to cib
+  + fencing: Specify the action to perform using action= instead of the older option=
+  + fencing: Stop building fake metadata for broken agents
+  + fencing: Tolerate agents that report empty metadata in the admin tool
+  + mcp: Correctly retry the connection to corosync on failure
+  + mcp: Do not shut down IPC until the last client exits
+  + mcp: Prevent use-after-free when running against corosync 1.x
+  + pengine: Bug cl#5059 - Use the correct action's status when calculating required actions for interleaved clones
+  + pengine: Bypass online/offline checking resource detection for ping/quorum nodes
+  + pengine: cl#5044 - migrate_to no longer requires load_stopped for avoiding possible transition loop
+  + pengine: cl#5069 - Honor 'on-fail=ignore' even when operation is disabled.
+  + pengine: cl#5070 - Allow influence of promotion score when multistate rsc is left hand of colocation
+  + pengine: cl#5072 - Fixes monitor op stopping after rsc promotion.
+  + pengine: cl#5072 - Fixes pengine regression test failures
+  + pengine: Correctly set the status for nodes not intended to run Pacemaker
+  + pengine: Do not append instance numbers to anonymous clones
+  + pengine: Fix failcount expiration
+  + pengine: Fix memory leaks found by valgrind
+  + pengine: Fix use-after-free and use-of-NULL errors detected by coverity
+  + pengine: Fixes use of colocation scores other than +/- INFINITY
+  + pengine: Improve detection of rejoining nodes
+  + pengine: Prevent use-of-NULL when tracing is enabled
+  + pengine: Stonith resources are allowed to start even if their probes haven't completed on partially active nodes
+  + services: New class called 'service' which expands to the correct (LSB/systemd/upstart) standard
+  + services: Support Asynchronous systemd/upstart actions
+  + Tools: crm_shadow - Bug cl#5062 - Correctly set argv[0] when forking a shell process
+  + Tools: crm_report: Always include system logs (if we can find them)
 
 * Wed Mar 28 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.7-1
 - Update source tarball to revision: bc7ff2c
@@ -87,87 +87,87 @@
   Diff:       1171 files changed, 90472 insertions(+), 19368 deletions(-)
 
 - Changes since Pacemaker-1.1.6.1
-High: ais: Prepare for corosync versions using IPC from libqb
-High: cib: Correctly shutdown in the presence of peers without relying on timers
-High: cib: Don't halt disk writes if the previous digest is missing
-High: cib: Determine when there are no peers to respond to our shutdown request and exit
-High: cib: Ensure no additional messages are processed after we begin terminating
-High: Cluster: Hook up the callbacks to the corosync quorum notifications
-High: Core: basename() may modify its input, do not pass in a constant
-High: Core: Bug cl#5016 - Prevent failures in recurring ops from being lost
-High: Core: Bug rhbz#800054 - Correctly retrieve heartbeat uuids
-High: Core: Correctly determine when an XML file should be decompressed
-High: Core: Correctly track the length of a string without reading from uninitialzied memory (valgrind)
-High: Core: Ensure signals are handled eventually in the absense of timer sources or IPC messages
-High: Core: Prevent use-of-NULL in crm_update_peer()
-High: Core: Strip text nodes from on disk xml files
-High: Core: Support libqb for logging
-High: corosync: Consistently set the correct uuid with get_node_uuid()
-High: Corosync: Correctly disconnect from corosync variants
-High: Corosync: Correctly extract the node id from membership udpates
-High: corosync: Correctly infer lost members from the quorum API
-High: Corosync: Default to using the nodeid as the node's uuid (instead of uname)
-High: corosync: Ensure we catch nodes that leave the membership, even if the ringid doesn't change
-High: corosync: Hook up CPG membership
-High: corosync: Relax a development assert and gracefully handle the error condition
-High: corosync: Remove deprecated member of the CFG API
-High: corosync: Treat CS_ERR_QUEUE_FULL the same as CS_ERR_TRY_AGAIN
-High: corosync: Unset the process list when nodes dissappear on us
-High: crmd: Also purge fencing results when we enter S_NOT_DC
-High: crmd: Bug cl#5015 - Remove the failed operation as well as the resulting fail-count and last-failure attributes
-High: crmd: Correctly determine when a node can suicide with fencing
-High: crmd: Election - perform the age comparison only once
-High: crmd: Fast-track shutdown if we couldn't request it via attrd
-High: crmd: Leave it up to the PE to decide which ops can/cannot be reload
-High: crmd: Prevent use-after-free when calling delete_resource due to CRM_OP_REPROBE
-High: crmd: Supply format arguments in the correct order
-High: fencing: Add missing format parameter
-High: fencing: Add the fencing topology section to the 1.1 configuration schema
-High: fencing: fence_legacy - Drop spurilous host argument from status query
-High: fencing: fence_legacy - Ensure port is available as an environment variable when calling monitor
-High: fencing: fence_pcmk - don't block if nothing is specified on stdin
-High: fencing: Fix log format error
-High: fencing: Fix segfault caused by passing garbage to dlsym()
-High: fencing: Fix use-of-NULL in process_remote_stonith_query()
-High: fencing: Fix use-of-NULL when listing installed devices
-High: fencing: Implement support for advanced fencing topologies: eg. kdump || (network && disk) || power
-High: fencing: More gracefully handle failed 'list' operations for devices that only support a single connection
-High: fencing: Prevent duplicate free when listing devices
-High: fencing: Prevent uninitialized pointers being passed to free
-High: fencing: Prevent use-after-free, we may need the query result for subsequent operations
-High: fencing: Provide enough data to construct an entry in the node's fencing history
-High: fencing: Standardize on /one/ method for clients to request members be fenced
-High: fencing: Supress errors when listing all registered devices
-High: mcp: corosync_cfg_state_track was removed from the corosync API, luckily we didnt use it for anything
-High: mcp: Do not specify a WorkingDirectory in the systemd unit file - startup fails if its not available
-High: mcp: Set the HA_quorum_type env variable consistently with our corosync plugin
-High: mcp: Shut down if one of our child processes can/should not be respawned
-High: PE: Bug cl#5000 - Ensure ordering is preserved when depending on partial sets
-High: PE: Bug cl#5028 - Unmanaged services should block shutdown unless in maintainence mode
-High: PE: Bug cl#5038 - Prevent restart of anonymous clones when clone-max decreases
-High: PE: Bug cl#5007 - Fixes use of colocation constraints with multi-state resources
-High: PE: Bug cl#5014 - Prevent asymmetrical order constraints from causing resource stops
-High: PE: Bug cl#5000 - Implements ability to create rsc_order constraint sets such that A can start after B or C has started.
-High: PE: Correctly migrate a resource that has just migrated
-High: PE: Correct return from error path
-High: PE: Detect reloads of previously migrated resources
-High: PE: Ensure post-migration stop actions occur before node shutdown
-High: PE: Log as loudly as possible when we cannot shut down a cluster node
-High: PE: Reload of a resource no longer causes a restart of dependant resources
-High: PE: Support limiting the number of concurrent live migrations
-High: PE: Support referencing templates in constraints
-High: PE: Support of referencing resource templates in resource sets
-High: PE: Support to make tickets standby for relinquishing tickets gracefully
-High: stonith: A "start" operation of a stonith resource does a "monitor" on the device beyond registering it
-High: stonith: Bug rhbz#745526 - Ensure stonith_admin actually gets called by fence_pcmk
-High: Stonith: Ensure all nodes receive and deliver notifications of the manual override
-High: stonith: Fix the stonith timeout issue (cl#5009, bnc#727498)
-High: Stonith: Implement a manual override for when nodes are known to be safely off
-High: Tools: Bug cl#5003 - Prevent use-after-free in crm_simlate
-High: Tools: crm_mon - Support to display tickets (based on Yuusuke Iida's work)
-High: Tools: crm_simulate - Support to grant/revoke/standby/activate tickets from the new ticket state section
-High: Tools: Implement crm_node functionality for native corosync
-High: Fix a number of potential problems reported by coverity
+  + ais: Prepare for corosync versions using IPC from libqb
+  + cib: Correctly shutdown in the presence of peers without relying on timers
+  + cib: Don't halt disk writes if the previous digest is missing
+  + cib: Determine when there are no peers to respond to our shutdown request and exit
+  + cib: Ensure no additional messages are processed after we begin terminating
+  + Cluster: Hook up the callbacks to the corosync quorum notifications
+  + Core: basename() may modify its input, do not pass in a constant
+  + Core: Bug cl#5016 - Prevent failures in recurring ops from being lost
+  + Core: Bug rhbz#800054 - Correctly retrieve heartbeat uuids
+  + Core: Correctly determine when an XML file should be decompressed
+  + Core: Correctly track the length of a string without reading from uninitialzied memory (valgrind)
+  + Core: Ensure signals are handled eventually in the absense of timer sources or IPC messages
+  + Core: Prevent use-of-NULL in crm_update_peer()
+  + Core: Strip text nodes from on disk xml files
+  + Core: Support libqb for logging
+  + corosync: Consistently set the correct uuid with get_node_uuid()
+  + Corosync: Correctly disconnect from corosync variants
+  + Corosync: Correctly extract the node id from membership udpates
+  + corosync: Correctly infer lost members from the quorum API
+  + Corosync: Default to using the nodeid as the node's uuid (instead of uname)
+  + corosync: Ensure we catch nodes that leave the membership, even if the ringid doesn't change
+  + corosync: Hook up CPG membership
+  + corosync: Relax a development assert and gracefully handle the error condition
+  + corosync: Remove deprecated member of the CFG API
+  + corosync: Treat CS_ERR_QUEUE_FULL the same as CS_ERR_TRY_AGAIN
+  + corosync: Unset the process list when nodes dissappear on us
+  + crmd: Also purge fencing results when we enter S_NOT_DC
+  + crmd: Bug cl#5015 - Remove the failed operation as well as the resulting fail-count and last-failure attributes
+  + crmd: Correctly determine when a node can suicide with fencing
+  + crmd: Election - perform the age comparison only once
+  + crmd: Fast-track shutdown if we couldn't request it via attrd
+  + crmd: Leave it up to the PE to decide which ops can/cannot be reload
+  + crmd: Prevent use-after-free when calling delete_resource due to CRM_OP_REPROBE
+  + crmd: Supply format arguments in the correct order
+  + fencing: Add missing format parameter
+  + fencing: Add the fencing topology section to the 1.1 configuration schema
+  + fencing: fence_legacy - Drop spurilous host argument from status query
+  + fencing: fence_legacy - Ensure port is available as an environment variable when calling monitor
+  + fencing: fence_pcmk - don't block if nothing is specified on stdin
+  + fencing: Fix log format error
+  + fencing: Fix segfault caused by passing garbage to dlsym()
+  + fencing: Fix use-of-NULL in process_remote_stonith_query()
+  + fencing: Fix use-of-NULL when listing installed devices
+  + fencing: Implement support for advanced fencing topologies: eg. kdump || (network && disk) || power
+  + fencing: More gracefully handle failed 'list' operations for devices that only support a single connection
+  + fencing: Prevent duplicate free when listing devices
+  + fencing: Prevent uninitialized pointers being passed to free
+  + fencing: Prevent use-after-free, we may need the query result for subsequent operations
+  + fencing: Provide enough data to construct an entry in the node's fencing history
+  + fencing: Standardize on /one/ method for clients to request members be fenced
+  + fencing: Supress errors when listing all registered devices
+  + mcp: corosync_cfg_state_track was removed from the corosync API, luckily we didnt use it for anything
+  + mcp: Do not specify a WorkingDirectory in the systemd unit file - startup fails if its not available
+  + mcp: Set the HA_quorum_type env variable consistently with our corosync plugin
+  + mcp: Shut down if one of our child processes can/should not be respawned
+  + pengine: Bug cl#5000 - Ensure ordering is preserved when depending on partial sets
+  + pengine: Bug cl#5028 - Unmanaged services should block shutdown unless in maintainence mode
+  + pengine: Bug cl#5038 - Prevent restart of anonymous clones when clone-max decreases
+  + pengine: Bug cl#5007 - Fixes use of colocation constraints with multi-state resources
+  + pengine: Bug cl#5014 - Prevent asymmetrical order constraints from causing resource stops
+  + pengine: Bug cl#5000 - Implements ability to create rsc_order constraint sets such that A can start after B or C has started.
+  + pengine: Correctly migrate a resource that has just migrated
+  + pengine: Correct return from error path
+  + pengine: Detect reloads of previously migrated resources
+  + pengine: Ensure post-migration stop actions occur before node shutdown
+  + pengine: Log as loudly as possible when we cannot shut down a cluster node
+  + pengine: Reload of a resource no longer causes a restart of dependant resources
+  + pengine: Support limiting the number of concurrent live migrations
+  + pengine: Support referencing templates in constraints
+  + pengine: Support of referencing resource templates in resource sets
+  + pengine: Support to make tickets standby for relinquishing tickets gracefully
+  + stonith: A "start" operation of a stonith resource does a "monitor" on the device beyond registering it
+  + stonith: Bug rhbz#745526 - Ensure stonith_admin actually gets called by fence_pcmk
+  + Stonith: Ensure all nodes receive and deliver notifications of the manual override
+  + stonith: Fix the stonith timeout issue (cl#5009, bnc#727498)
+  + Stonith: Implement a manual override for when nodes are known to be safely off
+  + Tools: Bug cl#5003 - Prevent use-after-free in crm_simlate
+  + Tools: crm_mon - Support to display tickets (based on Yuusuke Iida's work)
+  + Tools: crm_simulate - Support to grant/revoke/standby/activate tickets from the new ticket state section
+  + Tools: Implement crm_node functionality for native corosync
+  + Fix a number of potential problems reported by coverity
 
 * Wed Aug 31 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.6-1
 - Update source tarball to revision: 676e5f25aa46 tip
@@ -176,81 +176,81 @@ High: Fix a number of potential problems reported by coverity
   Diff:       1761 files changed, 36259 insertions(+), 140578 deletions(-)
 
 - Changes since Pacemaker-1.1.5
-  + High: ais: check for retryable errors when dispatching AIS messages
-  + High: ais: Correctly disconnect from Corosync and Cman based clusters
-  + High: ais: Followup to previous patch - Ensure we drain the corosync queue of messages when Glib tells us there is input
-  + High: ais: Handle IPC error before checking for NULL data (bnc#702907)
-  + High: cib: Check the validation version before adding the originator details of a CIB change
-  + High: cib: Remove disconnected remote connections from mainloop
-  + High: cman: Correctly override existing fenced operations
-  + High: cman: Dequeue all the cman emitted events and not only the first one leaving the others in the event's queue.
-  + High: cman: Don't call fenced_join and fenced_leave when notifying cman of a fencing event.
-  + High: cman: We need to run the crmd as root for CMAN so that we can ACK fencing operations
-  + High: Core: Cancelled and pending operations do not count as failed
-  + High: Core: Ensure there is sufficient space for EOS when building short-form option strings
-  + High: Core: Fix variable expansion in pkg-config files
-  + High: Core: Partial revert of accidental commit in previous patch
-  + High: Core: Use dlopen to load heartbeat libraries on-demand
-  + High: crmd: Bug lf#2509 - Watch for config option changes from the CIB even if we're not the DC
-  + High: crmd: Bug lf#2528 - Introduce a slight delay when creating a transition to allow attrd time to perform its updates
-  + High: crmd: Bug lf#2559 - Fail actions that were scheduled for a failed/fenced node
-  + High: crmd: Bug lf#2584 - Allow nodes to fence themselves if they're the last one standing
-  + High: crmd: Bug lf#2632 - Correctly handle nodes that return faster than stonith
-  + High: crmd: Cancel timers for actions that were pending on dead nodes
-  + High: crmd: Catch fence operations that claim to succeed but did not really
-  + High: crmd: Do not wait for actions that were pending on dead nodes
-  + High: crmd: Ensure we do not attempt to perform action on failed nodes
-  + High: crmd: Prevent use-of-NULL by g_hash_table_iter_next()
-  + High: crmd: Recurring actions shouldn't cause the last non-recurring action to be forgotten
-  + High: crmd: Store only the last and last failed operation in the CIB
-  + High: mcp: dirname() modifies the input path - pass in a copy of the logfile path
-  + High: mcp: Enable stack detection logic instead of forcing 'corosync'
-  + High: mcp: Fix spelling mistake in systemd service script that prevents shutdown
-  + High: mcp: Shut down if corosync becomes unavailable
-  + High: mcp: systemd control file is now functional
-  + High: PE: Before migrating an utilization-using resource to a node, take off the load which will no longer run there (lf#2599, bnc#695440)
-  + High: PE: Before migrating an utilization-using resource to a node, take off the load which will no longer run there (regression tests) (lf#2599, bnc#695440)
-  + High: PE: Bug lf#2574 - Prevent shuffling by choosing the correct clone instance to stop
-  + High: PE: Bug lf#2575 - Use uname for migration variables, id is a UUID on heartbeat
-  + High: PE: Bug lf#2581 - Avoid group restart when clone (re)starts on an unrelated node
-  + High: PE: Bug lf#2613, lf#2619 - Group migration after failures and non-default utilization policies
-  + High: PE: Bug suse#707150 - Prevent services being active if dependancies on clones are not satisfied
-  + High: PE: Correctly recognise which recurring operations are currently active
-  + High: PE: Demote from Master does not clear previous errors
-  + High: PE: Ensure restarts due to definition changes cause the start action to be re-issued not probes
-  + High: PE: Ensure role is preserved for unmanaged resources
-  + High: PE: Ensure unmanaged resources have the correct role set so the correct monitor operation is chosen
-  + High: PE: Fix memory leak for re-allocated resources reported by valgrind
-  + High: PE: Implement cluster ticket and deadman
-  + High: PE: Implement resource template
-  + High: pengine: Correctly determine the state of multi-state resources with a partial operation history
-  + High: PE: Only allocate master/slave resources once
-  + High: PE: Partial revert of 'Minor code cleanup CS: cf6bca32376c On: 2011-08-15'
-  + High: PE: Resolve memory leak reported by valgrind
-  + High: PE: Restore the ability to save inputs to disk
-  + High: Shell: implement -w,--wait option to wait for the transition to finish
-  + High: Shell: repair template list command
-  + High: Shell: set of commands to examine logs, reports, etc
-  + High: Stonith: Consolidate pcmk_host_map into run_stonith_agent so that it is applied consistently
-  + High: Stonith: Deprecate pcmk_arg_map for the saner pcmk_host_argument
-  + High: Stonith: Fix use-of-NULL by g_hash_table_lookup
-  + High: Stonith: Improved pcmk_host_map parsing
-  + High: Stonith: Prevent use-of-NULL by g_hash_table_lookup
-  + High: Stonith: Prevent use-of-NULL when no Linux-HA stonith agents are present
-  + High: stonith: Add missing entries to stonith_error2string()
-  + High: Stonith: Correctly finish sending agent options if the initial write is interrupted
-  + High: stonith: Correctly handle synchronous calls
-  + High: stonith: Coverity - Correctly construct result list for the query API call
-  + High: stonith: Coverity - Remove badly constructed memory allocation from the query API call
-  + High: stonith: Ensure completed operations are recorded as such in the history
-  + High: Stonith: Ensure device parameters are passed to the daemon during registration
-  + High: stonith: Fix use-of-NULL in stonith_api_device_list()
-  + High: stonith: stonith_admin - Prevent use of uninitialized pointer by --history command
-  + High: Tools: Bug lf#2528 - Make progress when attrd_updater is called repeatedly within the dampen interval but with the same value
-  + High: Tools: crm_report - Correctly extract data from the local node
-  + High: Tools: crm_report - Remove newlines when detecting the node list
-  + High: Tools: crm_report - Repair the ability to extract data from the local machine
-  + High: Tools: crm_report - Report on all detected backtraces
+  + ais: check for retryable errors when dispatching AIS messages
+  + ais: Correctly disconnect from Corosync and Cman based clusters
+  + ais: Followup to previous patch - Ensure we drain the corosync queue of messages when Glib tells us there is input
+  + ais: Handle IPC error before checking for NULL data (bnc#702907)
+  + cib: Check the validation version before adding the originator details of a CIB change
+  + cib: Remove disconnected remote connections from mainloop
+  + cman: Correctly override existing fenced operations
+  + cman: Dequeue all the cman emitted events and not only the first one leaving the others in the event's queue.
+  + cman: Don't call fenced_join and fenced_leave when notifying cman of a fencing event.
+  + cman: We need to run the crmd as root for CMAN so that we can ACK fencing operations
+  + Core: Cancelled and pending operations do not count as failed
+  + Core: Ensure there is sufficient space for EOS when building short-form option strings
+  + Core: Fix variable expansion in pkg-config files
+  + Core: Partial revert of accidental commit in previous patch
+  + Core: Use dlopen to load heartbeat libraries on-demand
+  + crmd: Bug lf#2509 - Watch for config option changes from the CIB even if we're not the DC
+  + crmd: Bug lf#2528 - Introduce a slight delay when creating a transition to allow attrd time to perform its updates
+  + crmd: Bug lf#2559 - Fail actions that were scheduled for a failed/fenced node
+  + crmd: Bug lf#2584 - Allow nodes to fence themselves if they're the last one standing
+  + crmd: Bug lf#2632 - Correctly handle nodes that return faster than stonith
+  + crmd: Cancel timers for actions that were pending on dead nodes
+  + crmd: Catch fence operations that claim to succeed but did not really
+  + crmd: Do not wait for actions that were pending on dead nodes
+  + crmd: Ensure we do not attempt to perform action on failed nodes
+  + crmd: Prevent use-of-NULL by g_hash_table_iter_next()
+  + crmd: Recurring actions shouldn't cause the last non-recurring action to be forgotten
+  + crmd: Store only the last and last failed operation in the CIB
+  + mcp: dirname() modifies the input path - pass in a copy of the logfile path
+  + mcp: Enable stack detection logic instead of forcing 'corosync'
+  + mcp: Fix spelling mistake in systemd service script that prevents shutdown
+  + mcp: Shut down if corosync becomes unavailable
+  + mcp: systemd control file is now functional
+  + pengine: Before migrating an utilization-using resource to a node, take off the load which will no longer run there (lf#2599, bnc#695440)
+  + pengine: Before migrating an utilization-using resource to a node, take off the load which will no longer run there (regression tests) (lf#2599, bnc#695440)
+  + pengine: Bug lf#2574 - Prevent shuffling by choosing the correct clone instance to stop
+  + pengine: Bug lf#2575 - Use uname for migration variables, id is a UUID on heartbeat
+  + pengine: Bug lf#2581 - Avoid group restart when clone (re)starts on an unrelated node
+  + pengine: Bug lf#2613, lf#2619 - Group migration after failures and non-default utilization policies
+  + pengine: Bug suse#707150 - Prevent services being active if dependancies on clones are not satisfied
+  + pengine: Correctly recognise which recurring operations are currently active
+  + pengine: Demote from Master does not clear previous errors
+  + pengine: Ensure restarts due to definition changes cause the start action to be re-issued not probes
+  + pengine: Ensure role is preserved for unmanaged resources
+  + pengine: Ensure unmanaged resources have the correct role set so the correct monitor operation is chosen
+  + pengine: Fix memory leak for re-allocated resources reported by valgrind
+  + pengine: Implement cluster ticket and deadman
+  + pengine: Implement resource template
+  + pengine: Correctly determine the state of multi-state resources with a partial operation history
+  + pengine: Only allocate master/slave resources once
+  + pengine: Partial revert of 'Minor code cleanup CS: cf6bca32376c On: 2011-08-15'
+  + pengine: Resolve memory leak reported by valgrind
+  + pengine: Restore the ability to save inputs to disk
+  + Shell: implement -w,--wait option to wait for the transition to finish
+  + Shell: repair template list command
+  + Shell: set of commands to examine logs, reports, etc
+  + Stonith: Consolidate pcmk_host_map into run_stonith_agent so that it is applied consistently
+  + Stonith: Deprecate pcmk_arg_map for the saner pcmk_host_argument
+  + Stonith: Fix use-of-NULL by g_hash_table_lookup
+  + Stonith: Improved pcmk_host_map parsing
+  + Stonith: Prevent use-of-NULL by g_hash_table_lookup
+  + Stonith: Prevent use-of-NULL when no Linux-HA stonith agents are present
+  + stonith: Add missing entries to stonith_error2string()
+  + Stonith: Correctly finish sending agent options if the initial write is interrupted
+  + stonith: Correctly handle synchronous calls
+  + stonith: Coverity - Correctly construct result list for the query API call
+  + stonith: Coverity - Remove badly constructed memory allocation from the query API call
+  + stonith: Ensure completed operations are recorded as such in the history
+  + Stonith: Ensure device parameters are passed to the daemon during registration
+  + stonith: Fix use-of-NULL in stonith_api_device_list()
+  + stonith: stonith_admin - Prevent use of uninitialized pointer by --history command
+  + Tools: Bug lf#2528 - Make progress when attrd_updater is called repeatedly within the dampen interval but with the same value
+  + Tools: crm_report - Correctly extract data from the local node
+  + Tools: crm_report - Remove newlines when detecting the node list
+  + Tools: crm_report - Repair the ability to extract data from the local machine
+  + Tools: crm_report - Report on all detected backtraces
 
 * Fri Feb 11 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.5-1
 - Update source tarball to revision: baad6636a053
@@ -259,36 +259,36 @@ High: Fix a number of potential problems reported by coverity
   Diff:       605 files changed, 46103 insertions(+), 26417 deletions(-)
 
 - Changes since Pacemaker-1.1.4
-  + High: Add the ability to delegate sub-sections of the cluster to non-root users via ACLs
+  + Add the ability to delegate sub-sections of the cluster to non-root users via ACLs
 	  Needs to be enabled at compile time, not enabled by default.
-  + High: ais: Bug lf#2550 - Report failed processes immediately
-  + High: Core: Prevent recently introduced use-after-free in replace_xml_child()
-  + High: Core: Reinstate the logic that skips past non-XML_ELEMENT_NODE children
-  + High: Core: Remove extra calls to xmlCleanupParser resulting in use-after-free
-  + High: Core: Repair reference to child-of-child after removal of xml_child_iter_filter from get_message_xml()
-  + High: crmd: Bug lf#2545 - Ensure notify variables are accurate for stop operations
-  + High: crmd: Cancel recurring operations while we're still connected to the lrmd
-  + High: crmd: Reschedule the PE_START action if its not already running when we try to use it
-  + High: crmd: Update failcount for failed promote and demote operations
-  + High: PE: Bug lf#2445 - Avoid relying on stickness for stable clone placement
-  + High: PE: Bug lf#2445 - Do not override configured clone stickiness values
-  + High: PE: Bug lf#2493 - Don't imply colocation requirements when applying ordering constraints with clones
-  + High: PE: Bug lf#2495 - Prevent segfault by validating the contents of ordering sets
-  + High: PE: Bug lf#2508 - Correctly reconstruct the status of anonymous cloned groups
-  + High: PE: Bug lf#2518 - Avoid spamming the logs with errors for orphan resources
-  + High: PE: Bug lf#2544 - Prevent unstable clone placement by factoring in the current node's score before all others
-  + High: PE: Bug lf#2554 - target-role alone is not sufficient to promote resources
-  + High: PE: Correct target_rc for probes of inactive resources (fix regression introduced by cs:ac3f03006e95)
-  + High: PE: Ensure that fencing has completed for stop actions on stonith-dependent resources (lf#2551)
-  + High: PE: Only update the node's promotion score if the resource is active there
-  + High: PE: Only use the promotion score from the current clone instance
-  + High: PE: Prevent use-of-NULL resulting from variable shadowing spotted by Coverity
-  + High: PE: Prevent use-of-NULL when there is status for an undefined node
-  + High: PE: Prevet use-after-free resulting from unintended recursion when chosing a node to promote master/slave resources
-  + High: Shell: don't create empty optional sections (bnc#665131)
-  + High: Stonith: Teach stonith_admin to automagically obtain the current node attributes for the target from the CIB
-  + High: tools: Bug lf#2527 - Prevent use-of-NULL in crm_simulate
-  + High: Tools: Prevent crm_resource commands from being lost due to the use of cib_scope_local
+  + ais: Bug lf#2550 - Report failed processes immediately
+  + Core: Prevent recently introduced use-after-free in replace_xml_child()
+  + Core: Reinstate the logic that skips past non-XML_ELEMENT_NODE children
+  + Core: Remove extra calls to xmlCleanupParser resulting in use-after-free
+  + Core: Repair reference to child-of-child after removal of xml_child_iter_filter from get_message_xml()
+  + crmd: Bug lf#2545 - Ensure notify variables are accurate for stop operations
+  + crmd: Cancel recurring operations while we're still connected to the lrmd
+  + crmd: Reschedule the PE_START action if its not already running when we try to use it
+  + crmd: Update failcount for failed promote and demote operations
+  + pengine: Bug lf#2445 - Avoid relying on stickness for stable clone placement
+  + pengine: Bug lf#2445 - Do not override configured clone stickiness values
+  + pengine: Bug lf#2493 - Don't imply colocation requirements when applying ordering constraints with clones
+  + pengine: Bug lf#2495 - Prevent segfault by validating the contents of ordering sets
+  + pengine: Bug lf#2508 - Correctly reconstruct the status of anonymous cloned groups
+  + pengine: Bug lf#2518 - Avoid spamming the logs with errors for orphan resources
+  + pengine: Bug lf#2544 - Prevent unstable clone placement by factoring in the current node's score before all others
+  + pengine: Bug lf#2554 - target-role alone is not sufficient to promote resources
+  + pengine: Correct target_rc for probes of inactive resources (fix regression introduced by cs:ac3f03006e95)
+  + pengine: Ensure that fencing has completed for stop actions on stonith-dependent resources (lf#2551)
+  + pengine: Only update the node's promotion score if the resource is active there
+  + pengine: Only use the promotion score from the current clone instance
+  + pengine: Prevent use-of-NULL resulting from variable shadowing spotted by Coverity
+  + pengine: Prevent use-of-NULL when there is status for an undefined node
+  + pengine: Prevet use-after-free resulting from unintended recursion when chosing a node to promote master/slave resources
+  + Shell: don't create empty optional sections (bnc#665131)
+  + Stonith: Teach stonith_admin to automagically obtain the current node attributes for the target from the CIB
+  + tools: Bug lf#2527 - Prevent use-of-NULL in crm_simulate
+  + Tools: Prevent crm_resource commands from being lost due to the use of cib_scope_local
 
 * Wed Oct 20 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.4-1
 - Update source tarball to revision: 75406c3eb2c1 tip
@@ -299,59 +299,59 @@ High: Fix a number of potential problems reported by coverity
 - Changes since Pacemaker-1.1.3
   + Italian translation of Clusters from Scratch
   + Significant performance enhancements to the Policy Engine and CIB
-  + High: cib: Bug lf#2506 - Don't remove client's when notifications fail, they might just be too big
-  + High: cib: Drop invalid/failed connections from the client hashtable
-  + High: cib: Ensure all diffs sent to peers have sufficient ordering information
-  + High: cib: Ensure non-change diffs can preserve the ordering on the other side
-  + High: cib: Fix the feature set check
-  + High: cib: Include version information on our synthesised diffs when nothing changed
-  + High: cib: Optimize the way we detect group/set ordering changes - 15% speedup
-  + High: cib: Prevent false detection of config updates with the new diff format
-  + High: cib: Reduce unnecessary copying when comparing xml objects
-  + High: cib: Repair the processing of updates sent from peer nodes
-  + High: cib: Revert part of a recent commit that purged still valid connections
-  + High: cib: The feature set version check is only valid if the current value is non-NULL
-  + High: Core: Actually removing diff markers is necessary
-  + High: Core: Bug lf#2506 - Drop the compression limit because Heartbeat's IPC code sucks
-  + High: Core: Cache Relax-NG schemas - profiling indicates many cycles are wasted needlessly re-parsing them
-  + High: Core: Correctly compare against crm_log_level in the logging macros
-  + High: Core: Correctly extract the version details from a diff
-  + High: Core: Correctly hook up the RNG schema cache
-  + High: Core: Correctly use lazy_xml_sort() for v2 digests
-  + High: Core: Don't compress large payload elements unless we're approaching message limits
-  + High: Core: Don't insert empty ID tags when applying diffs
-  + High: Core: Enable the improve v2 digests
-  + High: Core: Ensure ordering is preserved when applying diffs
-  + High: Core: Fix the CRM_CHECK macro
-  + High: Core: Modify the v2 digest algorithm so that some fields are sorted
-  + High: Core: Prevent use-after-free when creating a CIB update for a timed out action
-  + High: Core: Prevent use-of-NULL when cleaning up RelaxNG data structures
-  + High: Core: Provide significant performance improvements by implementing versioned diffs and digests
-  + High: crmd: All pending operations should be recorded, even recurring ones with high start delays
-  + High: crmd: Don't abort transitions when probes are completed on a node
-  + High: crmd: Don't hide stop events that time out - allowing faster recovery in the presence of overloaded hosts
-  + High: crmd: Ensure the CIB is always writable on the DC by removing a timing hole
-  + High: crmd: Include the correct transition details for timed out operations
-  + High: crmd: Prevent use of NULL by making copies of the operation's hash table
-  + High: crmd: There's no need to check the cib version from the 'added' part of diff updates
-  + High: crmd: Use the supplied timeout for stop actions
-  + High: mcp: Ensure valgrind is able to log its output somewhere
-  + High: mcp: Use 99/01 for the start/stop sequence to avoid problems with services (such as libvirtd) started by init - Patch from Vladislav Bogdanov
-  + High: PE: Ensure fencing of the DC preceeds the STONITH_DONE operation
-  + High: PE: Fix memory leak introduced as part of the conversion to GHashTables
-  + High: PE: Fix memory leak when processing completed migration actions
-  + High: PE: Fix typo leading to use-of-NULL in the new ordering code
-  + High: PE: Free memory in recently introduced helper function
-  + High: PE: lf#2478 - Implement improved handling and recovery of atomic resource migrations
-  + High: PE: Obtain massive speedup by prepending to the list of ordering constraints (which can grow quite large)
-  + High: PE: Optimize the logic for deciding which non-grouped anonymous clone instances to probe for
-  + High: PE: Prevent clones from being stopped because resources colocated with them cannot be active
-  + High: PE: Try to ensure atomic migration ops occur within a single transition
-  + High: PE: Use hashtables instead of linked lists for performance sensitive datastructures
-  + High: PE: Use the original digest algorithm for parameter lists
-  + High: stonith: cleanup children on timeout in fence_legacy
-  + High: Stonith: Fix two memory leaks
-  + High: Tools: crm_shadow - Avoid replacing the entire configuration (including status)
+  + cib: Bug lf#2506 - Don't remove client's when notifications fail, they might just be too big
+  + cib: Drop invalid/failed connections from the client hashtable
+  + cib: Ensure all diffs sent to peers have sufficient ordering information
+  + cib: Ensure non-change diffs can preserve the ordering on the other side
+  + cib: Fix the feature set check
+  + cib: Include version information on our synthesised diffs when nothing changed
+  + cib: Optimize the way we detect group/set ordering changes - 15% speedup
+  + cib: Prevent false detection of config updates with the new diff format
+  + cib: Reduce unnecessary copying when comparing xml objects
+  + cib: Repair the processing of updates sent from peer nodes
+  + cib: Revert part of a recent commit that purged still valid connections
+  + cib: The feature set version check is only valid if the current value is non-NULL
+  + Core: Actually removing diff markers is necessary
+  + Core: Bug lf#2506 - Drop the compression limit because Heartbeat's IPC code sucks
+  + Core: Cache Relax-NG schemas - profiling indicates many cycles are wasted needlessly re-parsing them
+  + Core: Correctly compare against crm_log_level in the logging macros
+  + Core: Correctly extract the version details from a diff
+  + Core: Correctly hook up the RNG schema cache
+  + Core: Correctly use lazy_xml_sort() for v2 digests
+  + Core: Don't compress large payload elements unless we're approaching message limits
+  + Core: Don't insert empty ID tags when applying diffs
+  + Core: Enable the improve v2 digests
+  + Core: Ensure ordering is preserved when applying diffs
+  + Core: Fix the CRM_CHECK macro
+  + Core: Modify the v2 digest algorithm so that some fields are sorted
+  + Core: Prevent use-after-free when creating a CIB update for a timed out action
+  + Core: Prevent use-of-NULL when cleaning up RelaxNG data structures
+  + Core: Provide significant performance improvements by implementing versioned diffs and digests
+  + crmd: All pending operations should be recorded, even recurring ones with high start delays
+  + crmd: Don't abort transitions when probes are completed on a node
+  + crmd: Don't hide stop events that time out - allowing faster recovery in the presence of overloaded hosts
+  + crmd: Ensure the CIB is always writable on the DC by removing a timing hole
+  + crmd: Include the correct transition details for timed out operations
+  + crmd: Prevent use of NULL by making copies of the operation's hash table
+  + crmd: There's no need to check the cib version from the 'added' part of diff updates
+  + crmd: Use the supplied timeout for stop actions
+  + mcp: Ensure valgrind is able to log its output somewhere
+  + mcp: Use 99/01 for the start/stop sequence to avoid problems with services (such as libvirtd) started by init - Patch from Vladislav Bogdanov
+  + pengine: Ensure fencing of the DC preceeds the STONITH_DONE operation
+  + pengine: Fix memory leak introduced as part of the conversion to GHashTables
+  + pengine: Fix memory leak when processing completed migration actions
+  + pengine: Fix typo leading to use-of-NULL in the new ordering code
+  + pengine: Free memory in recently introduced helper function
+  + pengine: lf#2478 - Implement improved handling and recovery of atomic resource migrations
+  + pengine: Obtain massive speedup by prepending to the list of ordering constraints (which can grow quite large)
+  + pengine: Optimize the logic for deciding which non-grouped anonymous clone instances to probe for
+  + pengine: Prevent clones from being stopped because resources colocated with them cannot be active
+  + pengine: Try to ensure atomic migration ops occur within a single transition
+  + pengine: Use hashtables instead of linked lists for performance sensitive datastructures
+  + pengine: Use the original digest algorithm for parameter lists
+  + stonith: cleanup children on timeout in fence_legacy
+  + Stonith: Fix two memory leaks
+  + Tools: crm_shadow - Avoid replacing the entire configuration (including status)
 
 * Tue Sep 21 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.3-1
 - Update source tarball to revision: e3bb31c56244 tip
@@ -360,111 +360,111 @@ High: Fix a number of potential problems reported by coverity
   Diff:       481 files changed, 14130 insertions(+), 11156 deletions(-)
 
 - Changes since Pacemaker-1.1.2.1
-  + High: ais: Bug lf#2401 - Improved processing when the peer crmd processes join/leave
-  + High: ais: Correct the logic for conecting to plugin based clusters
-  + High: ais: Do not supply a process list in mcp-mode
-  + High: ais: Drop support for whitetank in the 1.1 release series
-  + High: ais: Get an initial dump of the node membership when connecting to quorum-based clusters
-  + High: ais: Guard against saturated cpg connections
-  + High: ais: Handle CS_ERR_TRY_AGAIN in more cases
-  + High: ais: Move the code for finding uid before the fork so that the child does no logging
-  + High: ais: Never allow quorum plugins to affect connection to the pacemaker plugin
-  + High: ais: Sign everyone up for peer process updates, not just the crmd
-  + High: ais: The cluster type needs to be set before initializing classic openais connections
-  + High: cib: Also free query result for xpath operations that return more than one hit
-  + High: cib: Attempt to resolve memory corruption when forking a child to write the cib to disk
-  + High: cib: Correctly free memory when writing out the cib to disk
-  + High: cib: Fix the application of unversioned diffs
-  + High: cib: Remove old developmental error logging
-  + High: cib: Restructure the 'valid peer' check for deciding which instructions to ignore
-  + High: cman: Correctly process membership/quorum changes from the pcmk plugin. Allow other message types through untouched
-  + High: cman: Filter directed messages not intended for us
-  + High: cman: Grab the initial membership when we connect
-  + High: cman: Keep the list of peer processes up-to-date
-  + High: cman: Make sure our common hooks are called after a cman membership update
-  + High: cman: Make sure we can compile without cman present
-  + High: cman: Populate sender details for cpg messages
-  + High: cman: Update the ringid for cman based clusters
-  + High: Core: Correctly unpack HA_Messages containing multiple entries with the same name
-  + High: Core: crm_count_member() should only track nodes that have the full stack up
-  + High: Core: New developmental logging system inspired by the kernel and a PoC from Lars Ellenberg
-  + High: crmd: All nodes should see status updates, not just he DC
-  + High: crmd: Allow non-DC nodes to clear failcounts too
-  + High: crmd: Base DC election on process relative uptime
-  + High: crmd: Bug lf#2439 - cancel_op() can also return HA_RSCBUSY
-  + High: crmd: Bug lf#2439 - Handle asynchronous notification of resource deletion events
-  + High: crmd: Bug lf#2458 - Ensure stop actions always have the relevant resource attributes
-  + High: crmd: Disable age as a criteria for cman based clusters, its not reliable enough
-  + High: crmd: Ensure we activate the DC timer if we detect an alternate DC
-  + High: crmd: Factor the nanosecond component of process uptime in elections
-  + High: crmd: Fix assertion failure when performing async resource failures
-  + High: crmd: Fix handling of async resource deletion results
-  + High: crmd: Include the action for crm graph operations
-  + High: crmd: Make sure the membership cache is accurate after a sucessful fencing operation
-  + High: crmd: Make sure we always poke the FSA after a transition to clear any TE_HALT actions
-  + High: crmd: Offer crm-level membership once the peer starts the crmd process
-  + High: crmd: Only need to request quorum update for plugin based clusters
-  + High: crmd: Prevent assertion failure for stop actions resulting from cs: 3c0bc17c6daf
-  + High: crmd: Prevent everyone from loosing DC elections by correctly initializing all relevant variables
-  + High: crmd: Prevent segmentation fault
-  + High: crmd: several fixes for async resource delete (thanks to beekhof)
-  + High: crmd: Use the correct define/size for lrm resource IDs
-  + High: Introduce two new cluster types 'cman' and 'corosync', replaces 'quorum_provider' concept
-  + High: mcp: Add missing headers when built without heartbeat support
-  + High: mcp: Correctly initialize the string containing the list of active daemons
-  + High: mcp: Fix macro expansion in init script
-  + High: mcp: Fix the expansion of the pid file in the init script
-  + High: mcp: Handle CS_ERR_TRY_AGAIN when connecting to libcfg
-  + High: mcp: Make sure we can compile the mcp without cman present
-  + High: mcp: New master control process for (re)spawning pacemaker daemons
-  + High: mcp: Read config early so we can re-initialize logging asap if daemonizing
-  + High: mcp: Rename the mcp binary to pacemakerd and create a 'pacemaker' init script
-  + High: mcp: Resend our process list after every CPG change
-  + High: mcp: Tell chkconfig we need to shut down early on
-  + High: PE: Avoid creating invalid ordering constraints for probes that are not needed
-  + High: PE: Bug lf#1959 - Fail unmanaged resources should not prevent other services from shutting down
-  + High: PE: Bug lf#2422 - Ordering dependencies on partially active groups not observed properly
-  + High: PE: Bug lf#2424 - Use notify oepration definition if it exists in the configuration
-  + High: PE: Bug lf#2433 - No services should be stopped until probes finish
-  + High: PE: Bug lf#2453 - Enforce clone ordering in the absense of colocation constraints
-  + High: PE: Bug lf#2476 - Repair on-fail=block for groups and primitive resources
-  + High: PE: Correctly detect when there is a real failcount that expired and needs to be cleared
-  + High: PE: Correctly handle pseudo action creation
-  + High: PE: Correctly order clone startup after group/clone start
-  + High: PE: Correct use-after-free introduced in the prior patch
-  + High: PE: Do not demote resources because something that requires it can not run
-  + High: PE: Fix colocation for interleaved clones
-  + High: PE: Fix colocation with partially active groups
-  + High: PE: Fix potential use-after-free defect from coverity
-  + High: PE: Fix previous merge
-  + High: PE: Fix use-after-free in order_actions() reported by valgrind
-  + High: PE: Make the current data set a global variable so it does not need to be passed around everywhere
-  + High: PE: Prevent endless loop when looking for operation definitions in the configuration
-  + High: PE: Prevent segfault by ensuring the arguments to do_calculations() are initialized
-  + High: PE: Rewrite the ordering constraint logic to be simplicity, clarity and maintainability
-  + High: PE: Wait until stonith is available, do not fall back to shutdown for nodes requesting termination
-  + High: Resolve coverity RESOURCE_LEAK defects
-  + High: Shell: Complete the transition to using crm_attribute instead of crm_failcount and crm_standby
-  + High: stonith: Advertise stonith-ng options in the metadata
-  + High: stonith: Bug lf#2461 - Prevent segfault by not looking up operations if the hashtable has not been initialized yet
-  + High: stonith: Bug lf#2473 - Add the timeout at the top level where the daemon is looking for it
-  + High: Stonith: Bug lf#2473 - Ensure stonith operations complete within the timeout and are terminated if they run too long
-  + High: stonith: Bug lf#2473 - Ensure timeouts are included for fencing operations
-  + High: stonith: Bug lf#2473 - Gracefully handle remote operations that arrive late (after we have done notifications)
-  + High: stonith: Correctly parse pcmk_host_list parameters that appear on a single line
-  + High: stonith: Map poweron/poweroff back to on/off expected by the stonith tool from cluster-glue
-  + High: stonith: pass the configuration to the stonith program via environment variables (bnc#620781)
-  + High: Stonith: Use the timeout specified by the user
-  + High: Support starting plugin-based Pacemaker clusters with the MCP as well
-  + High: Tools: Bug lf#2456 - Fix assertion failure in crm_resource
-  + High: tools: crm_node - Repair the ability to connect to openais based clusters
-  + High: tools: crm_node - Use the correct short option for --cman
-  + High: tools: crm_report - corosync.conf wont necessarily contain the text 'pacemaker' anymore
-  + High: Tools: crm_simulate - Fix use-after-free in when terminating
-  + High: tools: crm_simulate - Resolve coverity USE_AFTER_FREE defect
-  + High: Tools: Drop the 'pingd' daemon and resource agent in favor of ocf:pacemaker:ping
-  + High: Tools: Fix recently introduced use-of-NULL
-  + High: Tools: Fix use-after-free defects from coverity
+  + ais: Bug lf#2401 - Improved processing when the peer crmd processes join/leave
+  + ais: Correct the logic for conecting to plugin based clusters
+  + ais: Do not supply a process list in mcp-mode
+  + ais: Drop support for whitetank in the 1.1 release series
+  + ais: Get an initial dump of the node membership when connecting to quorum-based clusters
+  + ais: Guard against saturated cpg connections
+  + ais: Handle CS_ERR_TRY_AGAIN in more cases
+  + ais: Move the code for finding uid before the fork so that the child does no logging
+  + ais: Never allow quorum plugins to affect connection to the pacemaker plugin
+  + ais: Sign everyone up for peer process updates, not just the crmd
+  + ais: The cluster type needs to be set before initializing classic openais connections
+  + cib: Also free query result for xpath operations that return more than one hit
+  + cib: Attempt to resolve memory corruption when forking a child to write the cib to disk
+  + cib: Correctly free memory when writing out the cib to disk
+  + cib: Fix the application of unversioned diffs
+  + cib: Remove old developmental error logging
+  + cib: Restructure the 'valid peer' check for deciding which instructions to ignore
+  + cman: Correctly process membership/quorum changes from the pcmk plugin. Allow other message types through untouched
+  + cman: Filter directed messages not intended for us
+  + cman: Grab the initial membership when we connect
+  + cman: Keep the list of peer processes up-to-date
+  + cman: Make sure our common hooks are called after a cman membership update
+  + cman: Make sure we can compile without cman present
+  + cman: Populate sender details for cpg messages
+  + cman: Update the ringid for cman based clusters
+  + Core: Correctly unpack HA_Messages containing multiple entries with the same name
+  + Core: crm_count_member() should only track nodes that have the full stack up
+  + Core: New developmental logging system inspired by the kernel and a PoC from Lars Ellenberg
+  + crmd: All nodes should see status updates, not just he DC
+  + crmd: Allow non-DC nodes to clear failcounts too
+  + crmd: Base DC election on process relative uptime
+  + crmd: Bug lf#2439 - cancel_op() can also return HA_RSCBUSY
+  + crmd: Bug lf#2439 - Handle asynchronous notification of resource deletion events
+  + crmd: Bug lf#2458 - Ensure stop actions always have the relevant resource attributes
+  + crmd: Disable age as a criteria for cman based clusters, its not reliable enough
+  + crmd: Ensure we activate the DC timer if we detect an alternate DC
+  + crmd: Factor the nanosecond component of process uptime in elections
+  + crmd: Fix assertion failure when performing async resource failures
+  + crmd: Fix handling of async resource deletion results
+  + crmd: Include the action for crm graph operations
+  + crmd: Make sure the membership cache is accurate after a sucessful fencing operation
+  + crmd: Make sure we always poke the FSA after a transition to clear any TE_HALT actions
+  + crmd: Offer crm-level membership once the peer starts the crmd process
+  + crmd: Only need to request quorum update for plugin based clusters
+  + crmd: Prevent assertion failure for stop actions resulting from cs: 3c0bc17c6daf
+  + crmd: Prevent everyone from loosing DC elections by correctly initializing all relevant variables
+  + crmd: Prevent segmentation fault
+  + crmd: several fixes for async resource delete (thanks to beekhof)
+  + crmd: Use the correct define/size for lrm resource IDs
+  + Introduce two new cluster types 'cman' and 'corosync', replaces 'quorum_provider' concept
+  + mcp: Add missing headers when built without heartbeat support
+  + mcp: Correctly initialize the string containing the list of active daemons
+  + mcp: Fix macro expansion in init script
+  + mcp: Fix the expansion of the pid file in the init script
+  + mcp: Handle CS_ERR_TRY_AGAIN when connecting to libcfg
+  + mcp: Make sure we can compile the mcp without cman present
+  + mcp: New master control process for (re)spawning pacemaker daemons
+  + mcp: Read config early so we can re-initialize logging asap if daemonizing
+  + mcp: Rename the mcp binary to pacemakerd and create a 'pacemaker' init script
+  + mcp: Resend our process list after every CPG change
+  + mcp: Tell chkconfig we need to shut down early on
+  + pengine: Avoid creating invalid ordering constraints for probes that are not needed
+  + pengine: Bug lf#1959 - Fail unmanaged resources should not prevent other services from shutting down
+  + pengine: Bug lf#2422 - Ordering dependencies on partially active groups not observed properly
+  + pengine: Bug lf#2424 - Use notify oepration definition if it exists in the configuration
+  + pengine: Bug lf#2433 - No services should be stopped until probes finish
+  + pengine: Bug lf#2453 - Enforce clone ordering in the absense of colocation constraints
+  + pengine: Bug lf#2476 - Repair on-fail=block for groups and primitive resources
+  + pengine: Correctly detect when there is a real failcount that expired and needs to be cleared
+  + pengine: Correctly handle pseudo action creation
+  + pengine: Correctly order clone startup after group/clone start
+  + pengine: Correct use-after-free introduced in the prior patch
+  + pengine: Do not demote resources because something that requires it can not run
+  + pengine: Fix colocation for interleaved clones
+  + pengine: Fix colocation with partially active groups
+  + pengine: Fix potential use-after-free defect from coverity
+  + pengine: Fix previous merge
+  + pengine: Fix use-after-free in order_actions() reported by valgrind
+  + pengine: Make the current data set a global variable so it does not need to be passed around everywhere
+  + pengine: Prevent endless loop when looking for operation definitions in the configuration
+  + pengine: Prevent segfault by ensuring the arguments to do_calculations() are initialized
+  + pengine: Rewrite the ordering constraint logic to be simplicity, clarity and maintainability
+  + pengine: Wait until stonith is available, do not fall back to shutdown for nodes requesting termination
+  + Resolve coverity RESOURCE_LEAK defects
+  + Shell: Complete the transition to using crm_attribute instead of crm_failcount and crm_standby
+  + stonith: Advertise stonith-ng options in the metadata
+  + stonith: Bug lf#2461 - Prevent segfault by not looking up operations if the hashtable has not been initialized yet
+  + stonith: Bug lf#2473 - Add the timeout at the top level where the daemon is looking for it
+  + Stonith: Bug lf#2473 - Ensure stonith operations complete within the timeout and are terminated if they run too long
+  + stonith: Bug lf#2473 - Ensure timeouts are included for fencing operations
+  + stonith: Bug lf#2473 - Gracefully handle remote operations that arrive late (after we have done notifications)
+  + stonith: Correctly parse pcmk_host_list parameters that appear on a single line
+  + stonith: Map poweron/poweroff back to on/off expected by the stonith tool from cluster-glue
+  + stonith: pass the configuration to the stonith program via environment variables (bnc#620781)
+  + Stonith: Use the timeout specified by the user
+  + Support starting plugin-based Pacemaker clusters with the MCP as well
+  + Tools: Bug lf#2456 - Fix assertion failure in crm_resource
+  + tools: crm_node - Repair the ability to connect to openais based clusters
+  + tools: crm_node - Use the correct short option for --cman
+  + tools: crm_report - corosync.conf wont necessarily contain the text 'pacemaker' anymore
+  + Tools: crm_simulate - Fix use-after-free in when terminating
+  + tools: crm_simulate - Resolve coverity USE_AFTER_FREE defect
+  + Tools: Drop the 'pingd' daemon and resource agent in favor of ocf:pacemaker:ping
+  + Tools: Fix recently introduced use-of-NULL
+  + Tools: Fix use-after-free defects from coverity
 
 * Wed May 12 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.2-1
 - Update source tarball to revision: c25c972a25cc tip
@@ -472,43 +472,43 @@ High: Fix a number of potential problems reported by coverity
   Changesets: 339
   Diff:       708 files changed, 37918 insertions(+), 10584 deletions(-)
 - Changes since Pacemaker-1.1.1
-  + High: ais: Do not count votes from offline nodes and calculate current votes before sending quorum data
-  + High: ais: Ensure the list of active processes sent to clients is always up-to-date
-  + High: ais: Look for the correct conf variable for turning on file logging
-  + High: ais: Need to find a better and thread-safe way to set core_uses_pid. Disable for now.
-  + High: ais: Use the threadsafe version of getpwnam
-  + High: Core: Bump the feature set due to the new failcount expiry feature
-  + High: Core: fix memory leaks exposed by valgrind
-  + High: Core: Bug lf#2414 - Prevent use-after-free reported by valgrind when doing xpath based deletions
-  + High: crmd: Bug lf#2414 - Prevent use-after-free of the PE connection after it dies
-  + High: crmd: Bug lf#2414 - Prevent use-after-free of the stonith-ng connection
-  + High: crmd: Bug lf#2401 - Improved detection of partially active peers
-  + High: crmd: Bug lf#2379 - Ensure the cluster terminates when the PE is not available
-  + High: crmd: Do not allow the target_rc to be misused by resource agents
-  + High: crmd: Do not ignore action timeouts based on FSA state
-  + High: crmd: Ensure we dont get stuck in S_PENDING if we loose an election to someone that never talks to us again
-  + High: crmd: Fix memory leaks exposed by valgrind
-  + High: crmd: Remove race condition that could lead to multiple instances of a clone being active on a machine
-  + High: crmd: Send erase_status_tag() calls to the local CIB when the DC is fenced, since there is no DC to accept them
-  + High: crmd: Use global fencing notifications to prevent secondary fencing operations of the DC
-  + High: PE: Bug lf#2317 - Avoid needless restart of primitive depending on a clone
-  + High: PE: Bug lf#2361 - Ensure clones observe mandatory ordering constraints if the LHS is unrunnable
-  + High: PE: Bug lf#2383 - Combine failcounts for all instances of an anonymous clone on a host
-  + High: PE: Bug lf#2384 - Fix intra-set colocation and ordering
-  + High: PE: Bug lf#2403 - Enforce mandatory promotion (colocation) constraints
-  + High: PE: Bug lf#2412 - Correctly find clone instances by their prefix
-  + High: PE: Do not be so quick to pull the trigger on nodes that are coming up
-  + High: PE: Fix memory leaks exposed by valgrind
-  + High: PE: Rewrite native_merge_weights() to avoid Fix use-after-free
-  + High: Shell: Bug bnc#590035 - always reload status if working with the cluster
-  + High: Shell: Bug bnc#592762 - Default to using the status section from the live CIB
-  + High: Shell: Bug lf#2315 - edit multiple meta_attributes sets in resource management
-  + High: Shell: Bug lf#2221 - enable comments
-  + High: Shell: Bug bnc#580492 - implement new cibstatus interface and commands
-  + High: Shell: Bug bnc#585471 - new cibstatus import command
-  + High: Shell: check timeouts also against the default-action-timeout property
-  + High: Shell: new configure filter command
-  + High: Tools: crm_mon - fix memory leaks exposed by valgrind
+  + ais: Do not count votes from offline nodes and calculate current votes before sending quorum data
+  + ais: Ensure the list of active processes sent to clients is always up-to-date
+  + ais: Look for the correct conf variable for turning on file logging
+  + ais: Need to find a better and thread-safe way to set core_uses_pid. Disable for now.
+  + ais: Use the threadsafe version of getpwnam
+  + Core: Bump the feature set due to the new failcount expiry feature
+  + Core: fix memory leaks exposed by valgrind
+  + Core: Bug lf#2414 - Prevent use-after-free reported by valgrind when doing xpath based deletions
+  + crmd: Bug lf#2414 - Prevent use-after-free of the PE connection after it dies
+  + crmd: Bug lf#2414 - Prevent use-after-free of the stonith-ng connection
+  + crmd: Bug lf#2401 - Improved detection of partially active peers
+  + crmd: Bug lf#2379 - Ensure the cluster terminates when the PE is not available
+  + crmd: Do not allow the target_rc to be misused by resource agents
+  + crmd: Do not ignore action timeouts based on FSA state
+  + crmd: Ensure we dont get stuck in S_PENDING if we loose an election to someone that never talks to us again
+  + crmd: Fix memory leaks exposed by valgrind
+  + crmd: Remove race condition that could lead to multiple instances of a clone being active on a machine
+  + crmd: Send erase_status_tag() calls to the local CIB when the DC is fenced, since there is no DC to accept them
+  + crmd: Use global fencing notifications to prevent secondary fencing operations of the DC
+  + pengine: Bug lf#2317 - Avoid needless restart of primitive depending on a clone
+  + pengine: Bug lf#2361 - Ensure clones observe mandatory ordering constraints if the LHS is unrunnable
+  + pengine: Bug lf#2383 - Combine failcounts for all instances of an anonymous clone on a host
+  + pengine: Bug lf#2384 - Fix intra-set colocation and ordering
+  + pengine: Bug lf#2403 - Enforce mandatory promotion (colocation) constraints
+  + pengine: Bug lf#2412 - Correctly find clone instances by their prefix
+  + pengine: Do not be so quick to pull the trigger on nodes that are coming up
+  + pengine: Fix memory leaks exposed by valgrind
+  + pengine: Rewrite native_merge_weights() to avoid Fix use-after-free
+  + Shell: Bug bnc#590035 - always reload status if working with the cluster
+  + Shell: Bug bnc#592762 - Default to using the status section from the live CIB
+  + Shell: Bug lf#2315 - edit multiple meta_attributes sets in resource management
+  + Shell: Bug lf#2221 - enable comments
+  + Shell: Bug bnc#580492 - implement new cibstatus interface and commands
+  + Shell: Bug bnc#585471 - new cibstatus import command
+  + Shell: check timeouts also against the default-action-timeout property
+  + Shell: new configure filter command
+  + Tools: crm_mon - fix memory leaks exposed by valgrind
 
 * Tue Feb 16 2010 Andrew Beekhof <andrew@beekhof.net> - 1.1.1-1
 - First public release of Pacemaker 1.1
@@ -535,36 +535,36 @@ High: Fix a number of potential problems reported by coverity
       Changesets:      193
       Diff:            220 files changed, 15933 insertions(+), 8782 deletions(-)
 - Changes since 1.0.5-4
-  + High: PE: Bug 2213 - Ensure groups process location constraints so that clone-node-max works for cloned groups
-  + High: PE: Bug lf#2153 - non-clones should not restart when clones stop/start on other nodes
-  + High: PE: Bug lf#2209 - Clone ordering should be able to prevent startup of dependant clones
-  + High: PE: Bug lf#2216 - Correctly identify the state of anonymous clones when deciding when to probe
-  + High: PE: Bug lf#2225 - Operations that require fencing should wait for 'stonith_complete' not 'all_stopped'.
-  + High: PE: Bug lf#2225 - Prevent clone peers from stopping while another is instance is (potentially) being fenced
-  + High: PE: Correctly anti-colocate with a group
-  + High: PE: Correctly unpack ordering constraints for resource sets to avoid graph loops
-  + High: Tools: crm: load help from crm_cli.txt
-  + High: Tools: crm: resource sets (bnc#550923)
-  + High: Tools: crm: support for comments (LF 2221)
-  + High: Tools: crm: support for description attribute in resources/operations (bnc#548690)
-  + High: Tools: hb2openais: add EVMS2 CSM processing (and other changes) (bnc#548093)
-  + High: Tools: hb2openais: do not allow empty rules, clones, or groups (LF 2215)
-  + High: Tools: hb2openais: refuse to convert pure EVMS volumes
-  + High: cib: Ensure the loop for login message terminates
-  + High: cib: Finally fix reliability of receiving large messages over remote plaintext connections
-  + High: cib: Fix remote notifications
-  + High: cib: For remote connections, default to CRM_DAEMON_USER since thats the only one that the cib can validate the password for using PAM
-  + High: cib: Remote plaintext - Retry sending parts of the message that did not fit the first time
-  + High: crmd: Ensure batch-limit is correctly enforced
-  + High: crmd: Ensure we have the latest status after a transition abort
-  + High (bnc#547579,547582): Tools: crm: status section editing support
-  + High: shell: Add allow-migrate as allowed meta-attribute (bnc#539968)
+  + pengine: Bug 2213 - Ensure groups process location constraints so that clone-node-max works for cloned groups
+  + pengine: Bug lf#2153 - non-clones should not restart when clones stop/start on other nodes
+  + pengine: Bug lf#2209 - Clone ordering should be able to prevent startup of dependant clones
+  + pengine: Bug lf#2216 - Correctly identify the state of anonymous clones when deciding when to probe
+  + pengine: Bug lf#2225 - Operations that require fencing should wait for 'stonith_complete' not 'all_stopped'.
+  + pengine: Bug lf#2225 - Prevent clone peers from stopping while another is instance is (potentially) being fenced
+  + pengine: Correctly anti-colocate with a group
+  + pengine: Correctly unpack ordering constraints for resource sets to avoid graph loops
+  + Tools: crm: load help from crm_cli.txt
+  + Tools: crm: resource sets (bnc#550923)
+  + Tools: crm: support for comments (LF 2221)
+  + Tools: crm: support for description attribute in resources/operations (bnc#548690)
+  + Tools: hb2openais: add EVMS2 CSM processing (and other changes) (bnc#548093)
+  + Tools: hb2openais: do not allow empty rules, clones, or groups (LF 2215)
+  + Tools: hb2openais: refuse to convert pure EVMS volumes
+  + cib: Ensure the loop for login message terminates
+  + cib: Finally fix reliability of receiving large messages over remote plaintext connections
+  + cib: Fix remote notifications
+  + cib: For remote connections, default to CRM_DAEMON_USER since thats the only one that the cib can validate the password for using PAM
+  + cib: Remote plaintext - Retry sending parts of the message that did not fit the first time
+  + crmd: Ensure batch-limit is correctly enforced
+  + crmd: Ensure we have the latest status after a transition abort
+  + (bnc#547579,547582): Tools: crm: status section editing support
+  + shell: Add allow-migrate as allowed meta-attribute (bnc#539968)
   + Medium: Build: Do not automatically add -L/lib, it could cause 64-bit arches to break
-  + Medium: PE: Bug lf#2206 - rsc_order constraints always use score at the top level
-  + Medium: PE: Only complain about target-role=master for non m/s resources
-  + Medium: PE: Prevent non-multistate resources from being promoted through target-role
-  + Medium: PE: Provide a default action for resource-set ordering
-  + Medium: PE: Silently fix requires=fencing for stonith resources so that it can be set in op_defaults
+  + Medium: pengine: Bug lf#2206 - rsc_order constraints always use score at the top level
+  + Medium: pengine: Only complain about target-role=master for non m/s resources
+  + Medium: pengine: Prevent non-multistate resources from being promoted through target-role
+  + Medium: pengine: Provide a default action for resource-set ordering
+  + Medium: pengine: Silently fix requires=fencing for stonith resources so that it can be set in op_defaults
   + Medium: Tools: Bug lf#2286 - Allow the shell to accept template parameters on the command line
   + Medium: Tools: Bug lf#2307 - Provide a way to determin the nodeid of past cluster members
   + Medium: Tools: crm: add update method to template apply (LF 2289)
@@ -605,38 +605,38 @@ High: Fix a number of potential problems reported by coverity
 - Exclude documentation that is included elsewhere in the package
 
 - Update the tarball from upstream to version ee19d8e83c2a
-  + High: cib: Correctly clean up when both plaintext and tls remote ports are requested
-  + High: PE: Bug bnc#515172 - Provide better defaults for lt(e) and gt(e) comparisions
-  + High: PE: Bug lf#2197 - Allow master instances placemaker to be influenced by colocation constraints
-  + High: PE: Make sure promote/demote pseudo actions are created correctly
-  + High: PE: Prevent target-role from promoting more than master-max instances
-  + High: ais: Bug lf#2199 - Prevent expected-quorum-votes from being populated with garbage
-  + High: ais: Prevent deadlock - dont try to release IPC message if the connection failed
-  + High: cib: For validation errors, send back the full CIB so the client can display the errors
-  + High: cib: Prevent use-after-free for remote plaintext connections
-  + High: crmd: Bug lf#2201 - Prevent use-of-NULL when running heartbeat
+  + cib: Correctly clean up when both plaintext and tls remote ports are requested
+  + pengine: Bug bnc#515172 - Provide better defaults for lt(e) and gt(e) comparisions
+  + pengine: Bug lf#2197 - Allow master instances placemaker to be influenced by colocation constraints
+  + pengine: Make sure promote/demote pseudo actions are created correctly
+  + pengine: Prevent target-role from promoting more than master-max instances
+  + ais: Bug lf#2199 - Prevent expected-quorum-votes from being populated with garbage
+  + ais: Prevent deadlock - dont try to release IPC message if the connection failed
+  + cib: For validation errors, send back the full CIB so the client can display the errors
+  + cib: Prevent use-after-free for remote plaintext connections
+  + crmd: Bug lf#2201 - Prevent use-of-NULL when running heartbeat
 
 * Wed Oct 13 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-3
 - Update the tarball from upstream to version 38cd629e5c3c
-  + High: Core: Bug lf#2169 - Allow dtd/schema validation to be disabled
-  + High: PE: Bug lf#2106 - Not all anonymous clone children are restarted after configuration change
-  + High: PE: Bug lf#2170 - stop-all-resources option had no effect
-  + High: PE: Bug lf#2171 - Prevent groups from starting if they depend on a complex resource which can not
-  + High: PE: Disable resource management if stonith-enabled=true and no stonith resources are defined
-  + High: PE: do not include master score if it would prevent allocation
-  + High: ais: Avoid excessive load by checking for dead children every 1s (instead of 100ms)
-  + High: ais: Bug rh#525589 - Prevent shutdown deadlocks when running on CoroSync
-  + High: ais: Gracefully handle changes to the AIS nodeid
-  + High: crmd: Bug bnc#527530 - Wait for the transition to complete before leaving S_TRANSITION_ENGINE
-  + High: crmd: Prevent use-after-free with LOG_DEBUG_3
+  + Core: Bug lf#2169 - Allow dtd/schema validation to be disabled
+  + pengine: Bug lf#2106 - Not all anonymous clone children are restarted after configuration change
+  + pengine: Bug lf#2170 - stop-all-resources option had no effect
+  + pengine: Bug lf#2171 - Prevent groups from starting if they depend on a complex resource which can not
+  + pengine: Disable resource management if stonith-enabled=true and no stonith resources are defined
+  + pengine: do not include master score if it would prevent allocation
+  + ais: Avoid excessive load by checking for dead children every 1s (instead of 100ms)
+  + ais: Bug rh#525589 - Prevent shutdown deadlocks when running on CoroSync
+  + ais: Gracefully handle changes to the AIS nodeid
+  + crmd: Bug bnc#527530 - Wait for the transition to complete before leaving S_TRANSITION_ENGINE
+  + crmd: Prevent use-after-free with LOG_DEBUG_3
   + Medium: xml: Mask the "symmetrical" attribute on rsc_colocation constraints (bnc#540672)
   + Medium (bnc#520707): Tools: crm: new templates ocfs2 and clvm
   + Medium: Build: Invert the disable ais/heartbeat logic so that --without (ais|heartbeat) is available to rpmbuild
-  + Medium: PE: Bug lf#2178 - Indicate unmanaged clones
-  + Medium: PE: Bug lf#2180 - Include node information for all failed ops
-  + Medium: PE: Bug lf#2189 - Incorrect error message when unpacking simple ordering constraint
-  + Medium: PE: Correctly log resources that would like to start but can not
-  + Medium: PE: Stop ptest from logging to syslog
+  + Medium: pengine: Bug lf#2178 - Indicate unmanaged clones
+  + Medium: pengine: Bug lf#2180 - Include node information for all failed ops
+  + Medium: pengine: Bug lf#2189 - Incorrect error message when unpacking simple ordering constraint
+  + Medium: pengine: Correctly log resources that would like to start but can not
+  + Medium: pengine: Stop ptest from logging to syslog
   + Medium: ais: Include version details in plugin name
   + Medium: crmd: Requery the resource metadata after every start operation
 
@@ -656,7 +656,7 @@ High: Fix a number of potential problems reported by coverity
 - Add dependency on resource-agents
 - Use the version of the configure macro that supplies --prefix, --libdir, etc
 - Update the tarball from upstream to version 462f1569a437 (Pacemaker 1.0.5 final)
-  + High: Tools: crm_resource - Advertise --move instead of --migrate
+  + Tools: crm_resource - Advertise --move instead of --migrate
   + Medium: Extra: New node connectivity RA that uses system ping and attrd_updater
   + Medium: crmd: Note that dc-deadtime can be used to mask the brokeness of some switches
 
@@ -686,11 +686,11 @@ High: Fix a number of potential problems reported by coverity
 - Remove execute permissions from xml related files
 - Reference the new cluster-glue devel package name
 - Update the tarball from upstream to version c9120a53a6ae
-  + High: PE: Only prevent migration if the clone dependency is stopping/starting on the target node
-  + High: PE: Bug 2160 - Dont shuffle clones due to colocation
-  + High: PE: New implementation of the resource migration (not stop/start) logic
+  + pengine: Only prevent migration if the clone dependency is stopping/starting on the target node
+  + pengine: Bug 2160 - Dont shuffle clones due to colocation
+  + pengine: New implementation of the resource migration (not stop/start) logic
   + Medium: Tools: crm_resource - Prevent use-of-NULL by requiring a resource name for the -A and -a options
-  + Medium: PE: Prevent use-of-NULL in find_first_action()
+  + Medium: pengine: Prevent use-of-NULL in find_first_action()
 
 * Tue Jul 14 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.4-2
 - Reference authors from the project AUTHORS file instead of listing in description
@@ -704,30 +704,30 @@ High: Fix a number of potential problems reported by coverity
     Changesets:      209
     Diff:            266 files changed, 12010 insertions(+), 8276 deletions(-)
 - Changes since Pacemaker-1.0.3
-  + High (bnc#488291): ais: do not rely on byte endianness on ptr cast
-  + High (bnc#507255): Tools: crm: delete rsc/op_defaults (these meta_attributes are killing me)
-  + High (bnc#507255): Tools: crm: import properly rsc/op_defaults
-  + High (LF 2114): Tools: crm: add support for operation instance attributes
-  + High: ais: Bug lf#2126 - Messages replies cannot be routed to transient clients
-  + High: ais: Fix compilation for the latest Corosync API (v1719)
-  + High: attrd: Do not perform all updates as complete refreshes
-  + High: cib: Fix huge memory leak affecting heartbeat-based clusters
-  + High: Core: Allow xpath queries to match attributes
-  + High: Core: Generate the help text directly from a tool options struct
-  + High: Core: Handle differences in 0.6 messaging format
-  + High: crmd: Bug lf#2120 - All transient node attribute updates need to go via attrd
-  + High: crmd: Correctly calculate how long an FSA action took to avoid spamming the logs with errors
-  + High: crmd: Fix another large memory leak affecting Heartbeat based clusters
-  + High: lha: Restore compatability with older versions
-  + High: PE: Bug bnc#495687 - Filesystem is not notified of successful STONITH under some conditions
-  + High: PE: Make running a cluster with STONITH enabled but no STONITH resources an error and provide details on resolutions
-  + High: PE: Prevent use-ofNULL when using resource ordering sets
-  + High: PE: Provide inter-notification ordering guarantees
-  + High: PE: Rewrite the notification code to be understanable and extendable
-  + High: Tools: attrd - Prevent race condition resulting in the cluster forgetting the node wishes to shut down
-  + High: Tools: crm: regression tests
-  + High: Tools: crm_mon - Fix smtp notifications
-  + High: Tools: crm_resource - Repair the ability to query meta attributes
+  + (bnc#488291): ais: do not rely on byte endianness on ptr cast
+  + (bnc#507255): Tools: crm: delete rsc/op_defaults (these meta_attributes are killing me)
+  + (bnc#507255): Tools: crm: import properly rsc/op_defaults
+  + (LF 2114): Tools: crm: add support for operation instance attributes
+  + ais: Bug lf#2126 - Messages replies cannot be routed to transient clients
+  + ais: Fix compilation for the latest Corosync API (v1719)
+  + attrd: Do not perform all updates as complete refreshes
+  + cib: Fix huge memory leak affecting heartbeat-based clusters
+  + Core: Allow xpath queries to match attributes
+  + Core: Generate the help text directly from a tool options struct
+  + Core: Handle differences in 0.6 messaging format
+  + crmd: Bug lf#2120 - All transient node attribute updates need to go via attrd
+  + crmd: Correctly calculate how long an FSA action took to avoid spamming the logs with errors
+  + crmd: Fix another large memory leak affecting Heartbeat based clusters
+  + lha: Restore compatability with older versions
+  + pengine: Bug bnc#495687 - Filesystem is not notified of successful STONITH under some conditions
+  + pengine: Make running a cluster with STONITH enabled but no STONITH resources an error and provide details on resolutions
+  + pengine: Prevent use-ofNULL when using resource ordering sets
+  + pengine: Provide inter-notification ordering guarantees
+  + pengine: Rewrite the notification code to be understanable and extendable
+  + Tools: attrd - Prevent race condition resulting in the cluster forgetting the node wishes to shut down
+  + Tools: crm: regression tests
+  + Tools: crm_mon - Fix smtp notifications
+  + Tools: crm_resource - Repair the ability to query meta attributes
   + Low Build: Bug lf#2105 - Debian package should contain pacemaker doc and crm templates
   + Medium (bnc#507255): Tools: crm: handle empty rsc/op_defaults properly
   + Medium (bnc#507255): Tools: crm: use the right obj_type when creating objects from xml nodes
@@ -738,10 +738,10 @@ High: Fix a number of potential problems reported by coverity
   + Medium: cts: Do not combine crm_standby arguments - the wrapper can not process them
   + Medium: cts: Fix the CIBAusdit class
   + Medium: Extra: Refresh showscores script from Dominik
-  + Medium: PE: Build a statically linked version of ptest
-  + Medium: PE: Correctly log the actions for resources that are being recovered
-  + Medium: PE: Correctly log the occurance of promotion events
-  + Medium: PE: Implememt node health based on a patch from Mark Hamzy
+  + Medium: pengine: Build a statically linked version of ptest
+  + Medium: pengine: Correctly log the actions for resources that are being recovered
+  + Medium: pengine: Correctly log the occurance of promotion events
+  + Medium: pengine: Implememt node health based on a patch from Mark Hamzy
   + Medium: Tools: Add examples to help text outputs
   + Medium: Tools: crm: catch syntax errors for configure load
   + Medium: Tools: crm: implement erasing nodes in configure erase
@@ -759,70 +759,70 @@ High: Fix a number of potential problems reported by coverity
     Diff:            329 files changed, 15471 insertions(+), 15119 deletions(-)
 - Changes since Pacemaker-1.0.2
   + Added tag SLE11-HAE-GMC for changeset 9196be9830c2
-  + High: ais plugin: Fix quorum calculation (bnc#487003)
-  + High: ais: Another memory fix leak in error path
-  + High: ais: Bug bnc#482847, bnc#482905 - Force a clean exit of OpenAIS once Pacemaker has finished unloading
-  + High: ais: Bug bnc#486858 - Fix update_member() to prevent spamming clients with membership events containing no changes
-  + High: ais: Centralize all quorum calculations in the ais plugin and allow expected votes to be configured int he cib
-  + High: ais: Correctly handle a return value of zero from openais_dispatch_recv()
-  + High: ais: Disable logging to a file
-  + High: ais: Fix memory leak in error path
-  + High: ais: IPC messages are only in scope until a response is sent
-  + High: All signal handlers used with CL_SIGNAL() need to be as minimal as possible
-  + High: cib: Bug bnc#482885 - Simplify CIB disk-writes to prevent data loss.  Required a change to the backup filename format
-  + High: cib: crmd: Revert part of 9782ab035003.  Complex shutdown routines need G_main_add_SignalHandler to avoid race coditions
-  + High: crm: Avoid infinite loop during crm configure edit (bnc#480327)
-  + High: crmd: Avoid a race condition by waiting for the attrd update to trigger a transition automatically
-  + High: crmd: Bug bnc#480977 - Prevent extra, partial, shutdown when a node restarts too quickly
-  + High: crmd: Bug bnc#480977 - Prevent extra, partial, shutdown when a node restarts too quickly (verified)
-  + High: crmd: Bug bnc#489063 - Ensure the DC is always unset after we 'loose' an election
-  + High: crmd: Bug BSC#479543 - Correctly find the migration source for timed out migrate_from actions
-  + High: crmd: Call crm_peer_init() before we start the FSA - prevents a race condition when used with Heartbeat
-  + High: crmd: Erasing the status section should not be forced to the local node
-  + High: crmd: Fix memory leak in cib notication processing code
-  + High: crmd: Fix memory leak in transition graph processing
-  + High: crmd: Fix memory leaks found by valgrind
-  + High: crmd: More memory leaks fixes found by valgrind
-  + High: fencing: stonithd: is_heartbeat_cluster is a no-no if there is no heartbeat support
-  + High: PE: Bug bnc#466788 - Exclude nodes that can not run resources
-  + High: PE: Bug bnc#466788 - Make colocation based on node attributes work
-  + High: PE: Bug BNC#478687 - Do not crash when clone-max is 0
-  + High: PE: Bug bnc#488721 - Fix id-ref expansion for clones, the doc-root for clone children is not the cib root
-  + High: PE: Bug bnc#490418 - Correctly determine node state for nodes wishing to be terminated
-  + High: PE: Bug LF#2087 - Correctly parse the state of anonymous clones that have multiple instances on a given node
-  + High: PE: Bug lf#2089 - Meta attributes are not inherited by clone children
-  + High: PE: Bug lf#2091 - Correctly restart modified resources that were found active by a probe
-  + High: PE: Bug lf#2094 - Fix probe ordering for cloned groups
-  + High: PE: Bug LF:2075 - Fix large pingd memory leaks
-  + High: PE: Correctly attach orphaned clone children to their parent
-  + High: PE: Correctly handle terminate node attributes that are set to the output from time()
-  + High: PE: Ensure orphaned clone members are hooked up to the parent when clone-max=0
-  + High: PE: Fix memory leak in LogActions
-  + High: PE: Fix the determination of whether a group is active
-  + High: PE: Look up the correct promotion preference for anonymous masters
-  + High: PE: Simplify handling of start failures by changing the default migration-threshold to INFINITY
-  + High: PE: The ordered option for clones no longer causes extra start/stop operations
-  + High: RA: Bug bnc#490641 - Shut down dlm_controld with -TERM instead of -KILL
-  + High: RA: pingd: Set default ping interval to 1 instead of 0 seconds
-  + High: Resources: pingd - Correctly tell the ping daemon to shut down
-  + High: Tools: Bug bnc#483365 - Ensure the command from cluster_test includes a value for --log-facility
-  + High: Tools: cli: fix and improve delete command
-  + High: Tools: crm: add and implement templates
-  + High: Tools: crm: add support for command aliases and some common commands (i.e. cd,exit)
-  + High: Tools: crm: create top configuration nodes if they are missing
-  + High: Tools: crm: fix parsing attributes for rules (broken by the previous changeset)
-  + High: Tools: crm: new ra set of commands
-  + High: Tools: crm: resource agents information management
-  + High: Tools: crm: rsc/op_defaults
-  + High: Tools: crm: support for no value attribute in nvpairs
-  + High: Tools: crm: the new configure monitor command
-  + High: Tools: crm: the new configure node command
-  + High: Tools: crm_mon - Prevent use-of-NULL when summarizing an orphan
-  + High: Tools: hb2openais: create clvmd clone for respawn evmsd in ha.cf
-  + High: Tools: hb2openais: fix a serious recursion bug in xml node processing
-  + High: Tools: hb2openais: fix ocfs2 processing
-  + High: Tools: pingd - prevent double free of getaddrinfo() output in error path
-  + High: Tools: The default re-ping interval for pingd should be 1s not 1ms
+  + ais plugin: Fix quorum calculation (bnc#487003)
+  + ais: Another memory fix leak in error path
+  + ais: Bug bnc#482847, bnc#482905 - Force a clean exit of OpenAIS once Pacemaker has finished unloading
+  + ais: Bug bnc#486858 - Fix update_member() to prevent spamming clients with membership events containing no changes
+  + ais: Centralize all quorum calculations in the ais plugin and allow expected votes to be configured int he cib
+  + ais: Correctly handle a return value of zero from openais_dispatch_recv()
+  + ais: Disable logging to a file
+  + ais: Fix memory leak in error path
+  + ais: IPC messages are only in scope until a response is sent
+  + All signal handlers used with CL_SIGNAL() need to be as minimal as possible
+  + cib: Bug bnc#482885 - Simplify CIB disk-writes to prevent data loss.  Required a change to the backup filename format
+  + cib: crmd: Revert part of 9782ab035003.  Complex shutdown routines need G_main_add_SignalHandler to avoid race coditions
+  + crm: Avoid infinite loop during crm configure edit (bnc#480327)
+  + crmd: Avoid a race condition by waiting for the attrd update to trigger a transition automatically
+  + crmd: Bug bnc#480977 - Prevent extra, partial, shutdown when a node restarts too quickly
+  + crmd: Bug bnc#480977 - Prevent extra, partial, shutdown when a node restarts too quickly (verified)
+  + crmd: Bug bnc#489063 - Ensure the DC is always unset after we 'loose' an election
+  + crmd: Bug BSC#479543 - Correctly find the migration source for timed out migrate_from actions
+  + crmd: Call crm_peer_init() before we start the FSA - prevents a race condition when used with Heartbeat
+  + crmd: Erasing the status section should not be forced to the local node
+  + crmd: Fix memory leak in cib notication processing code
+  + crmd: Fix memory leak in transition graph processing
+  + crmd: Fix memory leaks found by valgrind
+  + crmd: More memory leaks fixes found by valgrind
+  + fencing: stonithd: is_heartbeat_cluster is a no-no if there is no heartbeat support
+  + pengine: Bug bnc#466788 - Exclude nodes that can not run resources
+  + pengine: Bug bnc#466788 - Make colocation based on node attributes work
+  + pengine: Bug BNC#478687 - Do not crash when clone-max is 0
+  + pengine: Bug bnc#488721 - Fix id-ref expansion for clones, the doc-root for clone children is not the cib root
+  + pengine: Bug bnc#490418 - Correctly determine node state for nodes wishing to be terminated
+  + pengine: Bug LF#2087 - Correctly parse the state of anonymous clones that have multiple instances on a given node
+  + pengine: Bug lf#2089 - Meta attributes are not inherited by clone children
+  + pengine: Bug lf#2091 - Correctly restart modified resources that were found active by a probe
+  + pengine: Bug lf#2094 - Fix probe ordering for cloned groups
+  + pengine: Bug LF:2075 - Fix large pingd memory leaks
+  + pengine: Correctly attach orphaned clone children to their parent
+  + pengine: Correctly handle terminate node attributes that are set to the output from time()
+  + pengine: Ensure orphaned clone members are hooked up to the parent when clone-max=0
+  + pengine: Fix memory leak in LogActions
+  + pengine: Fix the determination of whether a group is active
+  + pengine: Look up the correct promotion preference for anonymous masters
+  + pengine: Simplify handling of start failures by changing the default migration-threshold to INFINITY
+  + pengine: The ordered option for clones no longer causes extra start/stop operations
+  + RA: Bug bnc#490641 - Shut down dlm_controld with -TERM instead of -KILL
+  + RA: pingd: Set default ping interval to 1 instead of 0 seconds
+  + Resources: pingd - Correctly tell the ping daemon to shut down
+  + Tools: Bug bnc#483365 - Ensure the command from cluster_test includes a value for --log-facility
+  + Tools: cli: fix and improve delete command
+  + Tools: crm: add and implement templates
+  + Tools: crm: add support for command aliases and some common commands (i.e. cd,exit)
+  + Tools: crm: create top configuration nodes if they are missing
+  + Tools: crm: fix parsing attributes for rules (broken by the previous changeset)
+  + Tools: crm: new ra set of commands
+  + Tools: crm: resource agents information management
+  + Tools: crm: rsc/op_defaults
+  + Tools: crm: support for no value attribute in nvpairs
+  + Tools: crm: the new configure monitor command
+  + Tools: crm: the new configure node command
+  + Tools: crm_mon - Prevent use-of-NULL when summarizing an orphan
+  + Tools: hb2openais: create clvmd clone for respawn evmsd in ha.cf
+  + Tools: hb2openais: fix a serious recursion bug in xml node processing
+  + Tools: hb2openais: fix ocfs2 processing
+  + Tools: pingd - prevent double free of getaddrinfo() output in error path
+  + Tools: The default re-ping interval for pingd should be 1s not 1ms
   + Medium (bnc#479049): Tools: crm: add validation of resource type for the configure primitive command
   + Medium (bnc#479050): Tools: crm: add help for RA parameters in tab completion
   + Medium (bnc#479050): Tools: crm: add tab completion for primitive params/meta/op
@@ -845,14 +845,14 @@ High: Fix a number of potential problems reported by coverity
   + Medium: crmd: Prevent the crmd from being respawned if its told to shut down when it did not ask to be
   + Medium: crmd: Re-check the election status after membership events
   + Medium: crmd: Send resource updates via the local CIB during elections
-  + Medium: PE: Bug bnc#491441 - crm_mon does not display operations returning 'uninstalled' correctly
-  + Medium: PE: Bug lf#2101 - For location constraints, role=Slave is equivalent to role=Started
-  + Medium: PE: Clean up the API - removed ->children() and renamed ->find_child() to fine_rsc()
-  + Medium: PE: Compress the display of healthy anonymous clones
-  + Medium: PE: Correctly log the actions for resources that are being recovered
-  + Medium: PE: Determin a promotion score for complex resources
-  + Medium: PE: Ensure clones always have a value for globally-unique
-  + Medium: PE: Prevent orphan clones from being allocated
+  + Medium: pengine: Bug bnc#491441 - crm_mon does not display operations returning 'uninstalled' correctly
+  + Medium: pengine: Bug lf#2101 - For location constraints, role=Slave is equivalent to role=Started
+  + Medium: pengine: Clean up the API - removed ->children() and renamed ->find_child() to fine_rsc()
+  + Medium: pengine: Compress the display of healthy anonymous clones
+  + Medium: pengine: Correctly log the actions for resources that are being recovered
+  + Medium: pengine: Determin a promotion score for complex resources
+  + Medium: pengine: Ensure clones always have a value for globally-unique
+  + Medium: pengine: Prevent orphan clones from being allocated
   + Medium: RA: controld: Return proper exit code for stop op.
   + Medium: Tools: Bug bnc#482558 - Fix logging test in cluster_test
   + Medium: Tools: Bug bnc#482828 - Fix quoting in cluster_test logging setup
@@ -878,88 +878,88 @@ High: Fix a number of potential problems reported by coverity
     Changesets:      441
     Diff:            639 files changed, 20871 insertions(+), 21594 deletions(-)
 - Changes since Pacemaker-1.0.1
-  + High (bnc#450815): Tools: crm cli: do not generate id for the operations tag
-  + High: ais: Add support for the new AIS IPC layer
-  + High: ais: Always set header.error to the correct default: SA_AIS_OK
-  + High: ais: Bug BNC#456243 - Ensure the membership cache always contains an entry for the local node
-  + High: ais: Bug BNC:456208 - Prevent deadlocks by not logging in the child process before exec()
-  + High: ais: By default, disable supprt for the WIP openais IPC patch
-  + High: ais: Detect and handle situations where ais and the crm disagree on the node name
-  + High: ais: Ensure crm_peer_seq is updated after a membership update
-  + High: ais: Make sure all IPC header fields are set to sane defaults
-  + High: ais: Repair and streamline service load now that whitetank startup functions correctly
-  + High: build: create and install doc files
-  + High: cib: Allow clients without mainloop to connect to the cib
-  + High: cib: CID:18 - Fix use-of-NULL in cib_perform_op
-  + High: cib: CID:18 - Repair errors introduced in b5a18704477b - Fix use-of-NULL in cib_perform_op
-  + High: cib: Ensure diffs contain the correct values of admin_epoch
-  + High: cib: Fix four moderately sized memory leaks detected by Valgrind
-  + High: Core: CID:10 - Prevent indexing into an array of schemas with a negative value
-  + High: Core: CID:13 - Fix memory leak in log_data_element
-  + High: Core: CID:15 - Fix memory leak in crm_get_peer
-  + High: Core: CID:6 - Fix use-of-NULL in copy_ha_msg_input
-  + High: Core: Fix crash in the membership code preventing node shutdown
-  + High: Core: Fix more memory leaks foudn by valgrind
-  + High: Core: Prevent unterminated strings after decompression
-  + High: crmd: Bug BNC:467995 - Delay marking STONITH operations complete until STONITH tells us so
-  + High: crmd: Bug LF:1962 - Do not NACK peers because they are not (yet) in our membership.  Just ignore them.
-  + High: crmd: Bug LF:2010 - Ensure fencing cib updates create the node_state entry if needed to preent re-fencing during cluster startup
-  + High: crmd: Correctly handle reconnections to attrd
-  + High: crmd: Ensure updates for lost migrate operations indicate which node it tried to migrating to
-  + High: crmd: If there are no nodes to finalize, start an election.
-  + High: crmd: If there are no nodes to welcome, start an election.
-  + High: crmd: Prevent node attribute loss by detecting attrd disconnections immediately
-  + High: crmd: Prevent node re-probe loops by ensuring manditory actions always complete
-  + High: PE: Bug 2005 - Fix startup ordering of cloned stonith groups
-  + High: PE: Bug 2006 - Correctly reprobe cloned groups
-  + High: PE: Bug BNC:465484 - Fix the no-quorum-policy=suicide option
-  + High: PE: Bug LF:1996 - Correctly process disabled monitor operations
-  + High: PE: CID:19 - Fix use-of-NULL in determine_online_status
-  + High: PE: Clones now default to globally-unique=false
-  + High: PE: Correctly calculate the number of available nodes for the clone to use
-  + High: PE: Only shoot online nodes with no-quorum-policy=suicide
-  + High: PE: Prevent on-fail settings being ignored after a resource is successfully stopped
-  + High: PE: Prevent use-of-NULL for failed migrate actions in process_rsc_state()
-  + High: PE: Remove an optimization for the terminate node attribute that caused the cluster to block indefinitly
-  + High: PE: Repar the ability to colocate based on node attributes other than uname
-  + High: PE: Start the correct monitor operation for unmanaged masters
-  + High: stonith: CID:3 - Fix another case of exceptionally poor error handling by the original stonith developers
-  + High: stonith: CID:5 - Checking for NULL and then dereferencing it anyway is an interesting approach to error handling
-  + High: stonithd: Sending IPC to the cluster is a privileged operation
-  + High: stonithd: wrong checks for shmid (0 is a valid id)
-  + High: Tools: attrd - Correctly determine when an attribute has stopped changing and should be committed to the CIB
-  + High: Tools: Bug 2003 - pingd does not correctly detect failures when the interface is down
-  + High: Tools: Bug 2003 - pingd does not correctly handle node-down events on multi-NIC systems
-  + High: Tools: Bug 2021 - pingd does not detect sequence wrapping correctly, incorrectly reports nodes offline
-  + High: Tools: Bug BNC:468066 - Do not use the result of uname() when its no longer in scope
-  + High: Tools: Bug BNC:473265 - crm_resource -L dumps core
-  + High: Tools: Bug LF:2001 - Transient node attributes should be set via attrd
-  + High: Tools: Bug LF:2036 - crm_resource cannot set/get parameters for cloned resources
-  + High: Tools: Bug LF:2046 - Node attribute updates are lost because attrd can take too long to start
-  + High: Tools: Cause the correct clone instance to be failed with crm_resource -F
-  + High: Tools: cluster_test - Allow the user to select a stack and fix CTS invocation
-  + High: Tools: crm cli: allow rename only if the resource is stopped
-  + High: Tools: crm cli: catch system errors on file operations
-  + High: Tools: crm cli: completion for ids in configure
-  + High: Tools: crm cli: drop '-rsc' from attributes for order constraint
-  + High: Tools: crm cli: exit with an appropriate exit code
-  + High: Tools: crm cli: fix wrong order of action and resource in order constraint
-  + High: Tools: crm cli: fox wrong exit code
-  + High: Tools: crm cli: improve handling of cib attributes
-  + High: Tools: crm cli: new command: configure rename
-  + High: Tools: crm cli: new command: configure upgrade
-  + High: Tools: crm cli: new command: node delete
-  + High: Tools: crm cli: prevent key errors on missing cib attributes
-  + High: Tools: crm cli: print long help for help topics
-  + High: Tools: crm cli: return on syntax error when parsing score
-  + High: Tools: crm cli: rsc_location can be without nvpairs
-  + High: Tools: crm cli: short node preference location constraint
-  + High: Tools: crm cli: sometimes, on errors, level would change on single shot use
-  + High: Tools: crm cli: syntax: drop a bunch of commas (remains of help tables conversion)
-  + High: Tools: crm cli: verify user input for sanity
-  + High: Tools: crm: find expressions within rules (do not always skip xml nodes due to used id)
-  + High: Tools: crm_master should not define a set id now that attrd is used.  Defining one can break lookups
-  + High: Tools: crm_mon Use the OID assigned to the project by IANA for SNMP traps
+  + (bnc#450815): Tools: crm cli: do not generate id for the operations tag
+  + ais: Add support for the new AIS IPC layer
+  + ais: Always set header.error to the correct default: SA_AIS_OK
+  + ais: Bug BNC#456243 - Ensure the membership cache always contains an entry for the local node
+  + ais: Bug BNC:456208 - Prevent deadlocks by not logging in the child process before exec()
+  + ais: By default, disable supprt for the WIP openais IPC patch
+  + ais: Detect and handle situations where ais and the crm disagree on the node name
+  + ais: Ensure crm_peer_seq is updated after a membership update
+  + ais: Make sure all IPC header fields are set to sane defaults
+  + ais: Repair and streamline service load now that whitetank startup functions correctly
+  + build: create and install doc files
+  + cib: Allow clients without mainloop to connect to the cib
+  + cib: CID:18 - Fix use-of-NULL in cib_perform_op
+  + cib: CID:18 - Repair errors introduced in b5a18704477b - Fix use-of-NULL in cib_perform_op
+  + cib: Ensure diffs contain the correct values of admin_epoch
+  + cib: Fix four moderately sized memory leaks detected by Valgrind
+  + Core: CID:10 - Prevent indexing into an array of schemas with a negative value
+  + Core: CID:13 - Fix memory leak in log_data_element
+  + Core: CID:15 - Fix memory leak in crm_get_peer
+  + Core: CID:6 - Fix use-of-NULL in copy_ha_msg_input
+  + Core: Fix crash in the membership code preventing node shutdown
+  + Core: Fix more memory leaks foudn by valgrind
+  + Core: Prevent unterminated strings after decompression
+  + crmd: Bug BNC:467995 - Delay marking STONITH operations complete until STONITH tells us so
+  + crmd: Bug LF:1962 - Do not NACK peers because they are not (yet) in our membership.  Just ignore them.
+  + crmd: Bug LF:2010 - Ensure fencing cib updates create the node_state entry if needed to preent re-fencing during cluster startup
+  + crmd: Correctly handle reconnections to attrd
+  + crmd: Ensure updates for lost migrate operations indicate which node it tried to migrating to
+  + crmd: If there are no nodes to finalize, start an election.
+  + crmd: If there are no nodes to welcome, start an election.
+  + crmd: Prevent node attribute loss by detecting attrd disconnections immediately
+  + crmd: Prevent node re-probe loops by ensuring manditory actions always complete
+  + pengine: Bug 2005 - Fix startup ordering of cloned stonith groups
+  + pengine: Bug 2006 - Correctly reprobe cloned groups
+  + pengine: Bug BNC:465484 - Fix the no-quorum-policy=suicide option
+  + pengine: Bug LF:1996 - Correctly process disabled monitor operations
+  + pengine: CID:19 - Fix use-of-NULL in determine_online_status
+  + pengine: Clones now default to globally-unique=false
+  + pengine: Correctly calculate the number of available nodes for the clone to use
+  + pengine: Only shoot online nodes with no-quorum-policy=suicide
+  + pengine: Prevent on-fail settings being ignored after a resource is successfully stopped
+  + pengine: Prevent use-of-NULL for failed migrate actions in process_rsc_state()
+  + pengine: Remove an optimization for the terminate node attribute that caused the cluster to block indefinitly
+  + pengine: Repar the ability to colocate based on node attributes other than uname
+  + pengine: Start the correct monitor operation for unmanaged masters
+  + stonith: CID:3 - Fix another case of exceptionally poor error handling by the original stonith developers
+  + stonith: CID:5 - Checking for NULL and then dereferencing it anyway is an interesting approach to error handling
+  + stonithd: Sending IPC to the cluster is a privileged operation
+  + stonithd: wrong checks for shmid (0 is a valid id)
+  + Tools: attrd - Correctly determine when an attribute has stopped changing and should be committed to the CIB
+  + Tools: Bug 2003 - pingd does not correctly detect failures when the interface is down
+  + Tools: Bug 2003 - pingd does not correctly handle node-down events on multi-NIC systems
+  + Tools: Bug 2021 - pingd does not detect sequence wrapping correctly, incorrectly reports nodes offline
+  + Tools: Bug BNC:468066 - Do not use the result of uname() when its no longer in scope
+  + Tools: Bug BNC:473265 - crm_resource -L dumps core
+  + Tools: Bug LF:2001 - Transient node attributes should be set via attrd
+  + Tools: Bug LF:2036 - crm_resource cannot set/get parameters for cloned resources
+  + Tools: Bug LF:2046 - Node attribute updates are lost because attrd can take too long to start
+  + Tools: Cause the correct clone instance to be failed with crm_resource -F
+  + Tools: cluster_test - Allow the user to select a stack and fix CTS invocation
+  + Tools: crm cli: allow rename only if the resource is stopped
+  + Tools: crm cli: catch system errors on file operations
+  + Tools: crm cli: completion for ids in configure
+  + Tools: crm cli: drop '-rsc' from attributes for order constraint
+  + Tools: crm cli: exit with an appropriate exit code
+  + Tools: crm cli: fix wrong order of action and resource in order constraint
+  + Tools: crm cli: fox wrong exit code
+  + Tools: crm cli: improve handling of cib attributes
+  + Tools: crm cli: new command: configure rename
+  + Tools: crm cli: new command: configure upgrade
+  + Tools: crm cli: new command: node delete
+  + Tools: crm cli: prevent key errors on missing cib attributes
+  + Tools: crm cli: print long help for help topics
+  + Tools: crm cli: return on syntax error when parsing score
+  + Tools: crm cli: rsc_location can be without nvpairs
+  + Tools: crm cli: short node preference location constraint
+  + Tools: crm cli: sometimes, on errors, level would change on single shot use
+  + Tools: crm cli: syntax: drop a bunch of commas (remains of help tables conversion)
+  + Tools: crm cli: verify user input for sanity
+  + Tools: crm: find expressions within rules (do not always skip xml nodes due to used id)
+  + Tools: crm_master should not define a set id now that attrd is used.  Defining one can break lookups
+  + Tools: crm_mon Use the OID assigned to the project by IANA for SNMP traps
   + Medium (bnc#445622): Tools: crm cli: improve the node show command and drop node status
   + Medium (LF 2009): stonithd: improve timeouts for remote fencing
   + Medium: ais: Allow dead peers to be removed from membership calculations
@@ -990,10 +990,10 @@ High: Fix a number of potential problems reported by coverity
   + Medium: CTS: Remove references to deleted classes
   + Medium: Extra: Resources - Use HA_VARRUN instead of HA_RSCTMP for state files as Heartbeat removes HA_RSCTMP at startup
   + Medium: HB: Bug 1933 - Fake crmd_client_status_callback() calls because HB does not provide them for already running processes
-  + Medium: PE: CID:17 - Fix memory leak in find_actions_by_task error path
-  + Medium: PE: CID:7,8 - Prevent hypothetical use-of-NULL in LogActions
-  + Medium: PE: Defer logging the actions performed on a resource until we have processed ordering constraints
-  + Medium: PE: Remove the symmetrical attribute of colocation constraints
+  + Medium: pengine: CID:17 - Fix memory leak in find_actions_by_task error path
+  + Medium: pengine: CID:7,8 - Prevent hypothetical use-of-NULL in LogActions
+  + Medium: pengine: Defer logging the actions performed on a resource until we have processed ordering constraints
+  + Medium: pengine: Remove the symmetrical attribute of colocation constraints
   + Medium: Resources: pingd - fix the meta defaults
   + Medium: Resources: Stateful - Add missing meta defaults
   + Medium: stonithd: exit if we the pid file cannot be locked
@@ -1030,37 +1030,37 @@ High: Fix a number of potential problems reported by coverity
     Changesets:      170
     Diff:            816 files changed, 7633 insertions(+), 6286 deletions(-)
 - Changes since Pacemaker-1.0.1
-  + High: ais: Allow the crmd to get callbacks whenever a node state changes
-  + High: ais: Create an option for starting the mgmtd daemon automatically
-  + High: ais: Ensure HA_RSCTMP exists for use by resource agents
-  + High: ais: Hook up the openais.conf config logging options
-  + High: ais: Zero out the PID of disconnecting clients
-  + High: cib: Ensure global updates cause a disk write when appropriate
-  + High: Core: Add an extra snaity check to getXpathResults() to prevent segfaults
-  + High: Core: Do not redefine __FUNCTION__ unnecessarily
-  + High: Core: Repair the ability to have comments in the configuration
-  + High: crmd: Bug:1975 - crmd should wait indefinitely for stonith operations to complete
-  + High: crmd: Ensure PE processing does not occur for all error cases in do_pe_invoke_callback
-  + High: crmd: Requests to the CIB should cause any prior PE calculations to be ignored
-  + High: heartbeat: Wait for membership 'up' events before removing stale node status data
-  + High: PE: Bug LF:1988 - Ensure recurring operations always have the correct target-rc set
-  + High: PE: Bug LF:1988 - For unmanaged resources we need to skip the usual can_run_resources() checks
-  + High: PE: Ensure the terminate node attribute is handled correctly
-  + High: PE: Fix optional colocation
-  + High: PE: Improve up the detection of 'new' nodes joining the cluster
-  + High: PE: Prevent assert failures in master_color() by ensuring unmanaged masters are always reallocated to their current location
-  + High: Tools: crm cli: parser: return False on syntax error and None for comments
-  + High: Tools: crm cli: unify template and edit commands
-  + High: Tools: crm_shadow - Show more line number information after validation failures
-  + High: Tools: hb2openais: add option to upgrade the CIB to v3.0
-  + High: Tools: hb2openais: add U option to getopts and update usage
-  + High: Tools: hb2openais: backup improved and multiple fixes
-  + High: Tools: hb2openais: fix class/provider reversal
-  + High: Tools: hb2openais: fix testing
-  + High: Tools: hb2openais: move the CIB update to the end
-  + High: Tools: hb2openais: update logging and set logfile appropriately
-  + High: Tools: LF:1969 - Attrd never sets any properties in the cib
-  + High: Tools: Make attrd functional on OpenAIS
+  + ais: Allow the crmd to get callbacks whenever a node state changes
+  + ais: Create an option for starting the mgmtd daemon automatically
+  + ais: Ensure HA_RSCTMP exists for use by resource agents
+  + ais: Hook up the openais.conf config logging options
+  + ais: Zero out the PID of disconnecting clients
+  + cib: Ensure global updates cause a disk write when appropriate
+  + Core: Add an extra snaity check to getXpathResults() to prevent segfaults
+  + Core: Do not redefine __FUNCTION__ unnecessarily
+  + Core: Repair the ability to have comments in the configuration
+  + crmd: Bug:1975 - crmd should wait indefinitely for stonith operations to complete
+  + crmd: Ensure PE processing does not occur for all error cases in do_pe_invoke_callback
+  + crmd: Requests to the CIB should cause any prior PE calculations to be ignored
+  + heartbeat: Wait for membership 'up' events before removing stale node status data
+  + pengine: Bug LF:1988 - Ensure recurring operations always have the correct target-rc set
+  + pengine: Bug LF:1988 - For unmanaged resources we need to skip the usual can_run_resources() checks
+  + pengine: Ensure the terminate node attribute is handled correctly
+  + pengine: Fix optional colocation
+  + pengine: Improve up the detection of 'new' nodes joining the cluster
+  + pengine: Prevent assert failures in master_color() by ensuring unmanaged masters are always reallocated to their current location
+  + Tools: crm cli: parser: return False on syntax error and None for comments
+  + Tools: crm cli: unify template and edit commands
+  + Tools: crm_shadow - Show more line number information after validation failures
+  + Tools: hb2openais: add option to upgrade the CIB to v3.0
+  + Tools: hb2openais: add U option to getopts and update usage
+  + Tools: hb2openais: backup improved and multiple fixes
+  + Tools: hb2openais: fix class/provider reversal
+  + Tools: hb2openais: fix testing
+  + Tools: hb2openais: move the CIB update to the end
+  + Tools: hb2openais: update logging and set logfile appropriately
+  + Tools: LF:1969 - Attrd never sets any properties in the cib
+  + Tools: Make attrd functional on OpenAIS
   + Medium: ais: Hook up the options for specifying the expected number of nodes and total quorum votes
   + Medium: ais: Look for pacemaker options inside the service block with 'name: pacemaker' instead of creating an addtional configuration block
   + Medium: ais: Provide better feedback when nodes change nodeids (in openais.conf)
@@ -1074,10 +1074,10 @@ High: Fix a number of potential problems reported by coverity
   + Medium: crmd: Initiate an attrd refresh _after_ the status section has been fully repopulated
   + Medium: crmd: Only the DC should update quorum in an openais cluster
   + Medium: Ensure meta attributes are used consistantly
-  + Medium: PE: Allow group and clone level resource attributes
-  + Medium: PE: Bug N:437719 - Ensure scores from colocated resources count when allocating groups
-  + Medium: PE: Prevent lsb scripts from being used in globally unique clones
-  + Medium: PE: Make a best-effort guess at a migration threshold for people with 0.6 configs
+  + Medium: pengine: Allow group and clone level resource attributes
+  + Medium: pengine: Bug N:437719 - Ensure scores from colocated resources count when allocating groups
+  + Medium: pengine: Prevent lsb scripts from being used in globally unique clones
+  + Medium: pengine: Make a best-effort guess at a migration threshold for people with 0.6 configs
   + Medium: Resources: controld - ensure we are part of a clone with globally_unique=false
   + Medium: Tools: attrd - Automatically refresh all attributes after a CIB replace operation
   + Medium: Tools: Bug LF:1985 - crm_mon - Correctly process failed cib queries to allow reconnection after cluster restarts
@@ -1094,38 +1094,38 @@ High: Fix a number of potential problems reported by coverity
     Changesets:      261
     Diff:            3021 files changed, 244985 insertions(+), 111596 deletions(-)
 - Changes since f805e1b30103
-  + High: add the crm cli program
-  + High: ais: Move the service id definition to a common location and make sure it is always used
-  + High: build: rename hb2openais.sh to .in and replace paths with vars
-  + High: cib: Implement --create for crm_shadow
-  + High: cib: Remove dead files
-  + High: Core: Allow the expected number of quorum votes to be configrable
-  + High: Core: cl_malloc and friends were removed from Heartbeat
-  + High: Core: Only call xmlCleanupParser() if we parsed anything.  Doing so unconditionally seems to cause a segfault
-  + High: hb2openais.sh: improve pingd handling; several bugs fixed
-  + High: hb2openais: fix clone creation; replace EVMS strings
-  + High: new hb2openais.sh conversion script
-  + High: PE: Bug LF:1950 - Ensure the current values for all notification variables are always set (even if empty)
-  + High: PE: Bug LF:1955 - Ensure unmanaged masters are unconditionally repromoted to ensure they are monitored correctly.
-  + High: PE: Bug LF:1955 - Fix another case of filtering causing unmanaged master failures
-  + High: PE: Bug LF:1955 - Umanaged mode prevents master resources from being allocated correctly
-  + High: PE: Bug N:420538 - Anit-colocation caused a positive node preference
-  + High: PE: Correctly handle unmanaged resources to prevent them from being started elsewhere
-  + High: PE: crm_resource - Fix the --migrate command
-  + High: PE: MAke stonith-enabled default to true and warn if no STONITH resources are found
-  + High: PE: Make sure orphaned clone children are created correctly
-  + High: PE: Monitors for unmanaged resources do not need to wait for start/promote/demote actions to complete
-  + High: stonithd (LF 1951): fix remote stonith operations
-  + High: stonithd: fix handling of timeouts
-  + High: stonithd: fix logic for stonith resource priorities
-  + High: stonithd: implement the fence-timeout instance attribute
-  + High: stonithd: initialize value before reading fence-timeout
-  + High: stonithd: set timeouts for fencing ops to the timeout of the start op
-  + High: stonithd: stonith rsc priorities (new feature)
-  + High: Tools: Add hb2openais - a tool for upgrading a Heartbeat cluster to use OpenAIS instead
-  + High: Tools: crm_verify - clean up the upgrade logic to prevent crash on invalid configurations
-  + High: Tools: Make pingd functional on Linux
-  + High: Update version numbers for 1.0 candidates
+  + add the crm cli program
+  + ais: Move the service id definition to a common location and make sure it is always used
+  + build: rename hb2openais.sh to .in and replace paths with vars
+  + cib: Implement --create for crm_shadow
+  + cib: Remove dead files
+  + Core: Allow the expected number of quorum votes to be configrable
+  + Core: cl_malloc and friends were removed from Heartbeat
+  + Core: Only call xmlCleanupParser() if we parsed anything.  Doing so unconditionally seems to cause a segfault
+  + hb2openais.sh: improve pingd handling; several bugs fixed
+  + hb2openais: fix clone creation; replace EVMS strings
+  + new hb2openais.sh conversion script
+  + pengine: Bug LF:1950 - Ensure the current values for all notification variables are always set (even if empty)
+  + pengine: Bug LF:1955 - Ensure unmanaged masters are unconditionally repromoted to ensure they are monitored correctly.
+  + pengine: Bug LF:1955 - Fix another case of filtering causing unmanaged master failures
+  + pengine: Bug LF:1955 - Umanaged mode prevents master resources from being allocated correctly
+  + pengine: Bug N:420538 - Anit-colocation caused a positive node preference
+  + pengine: Correctly handle unmanaged resources to prevent them from being started elsewhere
+  + pengine: crm_resource - Fix the --migrate command
+  + pengine: MAke stonith-enabled default to true and warn if no STONITH resources are found
+  + pengine: Make sure orphaned clone children are created correctly
+  + pengine: Monitors for unmanaged resources do not need to wait for start/promote/demote actions to complete
+  + stonithd (LF 1951): fix remote stonith operations
+  + stonithd: fix handling of timeouts
+  + stonithd: fix logic for stonith resource priorities
+  + stonithd: implement the fence-timeout instance attribute
+  + stonithd: initialize value before reading fence-timeout
+  + stonithd: set timeouts for fencing ops to the timeout of the start op
+  + stonithd: stonith rsc priorities (new feature)
+  + Tools: Add hb2openais - a tool for upgrading a Heartbeat cluster to use OpenAIS instead
+  + Tools: crm_verify - clean up the upgrade logic to prevent crash on invalid configurations
+  + Tools: Make pingd functional on Linux
+  + Update version numbers for 1.0 candidates
   + Medium: ais: Add support for a synchronous call to retrieve the nodes nodeid
   + Medium: ais: Use the agreed service number
   + Medium: Build: Reliably detect heartbeat libraries during configure
@@ -1137,17 +1137,17 @@ High: Fix a number of potential problems reported by coverity
   + Medium: crmd: Hook up the stonith-timeout option to stonithd
   + Medium: crmd: Prevent potential use-of-NULL in global_timer_callback
   + Medium: crmd: Rationalize the logging of graph aborts
-  + Medium: PE: Add a stonith_timeout option and remove new options that are better set in rsc_defaults
-  + Medium: PE: Allow external entities to ask for a node to be shot by creating a terminate=true transient node attribute
-  + Medium: PE: Bug LF:1950 - Notifications do not contain all documented resource state fields
-  + Medium: PE: Bug N:417585 - Do not restart group children whos individual score drops below zero
-  + Medium: PE: Detect clients that disconnect before receiving their reply
-  + Medium: PE: Implement a true maintenance mode
-  + Medium: PE: Implement on-fail=standby for NTT.  Derived from a patch by Satomi TANIGUCHI
-  + Medium: PE: Print the correct message when stonith is disabled
-  + Medium: PE: ptest - check the input is valid before proceeding
-  + Medium: PE: Revert group stickiness to the 'old way'
-  + Medium: PE: Use the correct attribute for action 'requires' (was prereq)
+  + Medium: pengine: Add a stonith_timeout option and remove new options that are better set in rsc_defaults
+  + Medium: pengine: Allow external entities to ask for a node to be shot by creating a terminate=true transient node attribute
+  + Medium: pengine: Bug LF:1950 - Notifications do not contain all documented resource state fields
+  + Medium: pengine: Bug N:417585 - Do not restart group children whos individual score drops below zero
+  + Medium: pengine: Detect clients that disconnect before receiving their reply
+  + Medium: pengine: Implement a true maintenance mode
+  + Medium: pengine: Implement on-fail=standby for NTT.  Derived from a patch by Satomi TANIGUCHI
+  + Medium: pengine: Print the correct message when stonith is disabled
+  + Medium: pengine: ptest - check the input is valid before proceeding
+  + Medium: pengine: Revert group stickiness to the 'old way'
+  + Medium: pengine: Use the correct attribute for action 'requires' (was prereq)
   + Medium: stonithd: Fix compilation without full heartbeat install
   + Medium: stonithd: exit with better code on empty host list
   + Medium: tools: Add a new regression test for CLI tools
@@ -1161,29 +1161,29 @@ High: Fix a number of potential problems reported by coverity
     Changesets:      133
     Diff:            89 files changed, 7492 insertions(+), 1125 deletions(-)
 - Changes since f805e1b30103
-  + High: Tools: add the crm cli program
-  + High: Core: cl_malloc and friends were removed from Heartbeat
-  + High: Core: Only call xmlCleanupParser() if we parsed anything.  Doing so unconditionally seems to cause a segfault
-  + High: new hb2openais.sh conversion script
-  + High: PE: Bug LF:1950 - Ensure the current values for all notification variables are always set (even if empty)
-  + High: PE: Bug LF:1955 - Ensure unmanaged masters are unconditionally repromoted to ensure they are monitored correctly.
-  + High: PE: Bug LF:1955 - Fix another case of filtering causing unmanaged master failures
-  + High: PE: Bug LF:1955 - Umanaged mode prevents master resources from being allocated correctly
-  + High: PE: Bug N:420538 - Anit-colocation caused a positive node preference
-  + High: PE: Correctly handle unmanaged resources to prevent them from being started elsewhere
-  + High: PE: crm_resource - Fix the --migrate command
-  + High: PE: MAke stonith-enabled default to true and warn if no STONITH resources are found
-  + High: PE: Make sure orphaned clone children are created correctly
-  + High: PE: Monitors for unmanaged resources do not need to wait for start/promote/demote actions to complete
-  + High: stonithd (LF 1951): fix remote stonith operations
-  + High: Tools: crm_verify - clean up the upgrade logic to prevent crash on invalid configurations
+  + Tools: add the crm cli program
+  + Core: cl_malloc and friends were removed from Heartbeat
+  + Core: Only call xmlCleanupParser() if we parsed anything.  Doing so unconditionally seems to cause a segfault
+  + new hb2openais.sh conversion script
+  + pengine: Bug LF:1950 - Ensure the current values for all notification variables are always set (even if empty)
+  + pengine: Bug LF:1955 - Ensure unmanaged masters are unconditionally repromoted to ensure they are monitored correctly.
+  + pengine: Bug LF:1955 - Fix another case of filtering causing unmanaged master failures
+  + pengine: Bug LF:1955 - Umanaged mode prevents master resources from being allocated correctly
+  + pengine: Bug N:420538 - Anit-colocation caused a positive node preference
+  + pengine: Correctly handle unmanaged resources to prevent them from being started elsewhere
+  + pengine: crm_resource - Fix the --migrate command
+  + pengine: MAke stonith-enabled default to true and warn if no STONITH resources are found
+  + pengine: Make sure orphaned clone children are created correctly
+  + pengine: Monitors for unmanaged resources do not need to wait for start/promote/demote actions to complete
+  + stonithd (LF 1951): fix remote stonith operations
+  + Tools: crm_verify - clean up the upgrade logic to prevent crash on invalid configurations
   + Medium: ais: Add support for a synchronous call to retrieve the nodes nodeid
   + Medium: ais: Use the agreed service number
-  + Medium: PE: Allow external entities to ask for a node to be shot by creating a terminate=true transient node attribute
-  + Medium: PE: Bug LF:1950 - Notifications do not contain all documented resource state fields
-  + Medium: PE: Bug N:417585 - Do not restart group children whos individual score drops below zero
-  + Medium: PE: Implement a true maintenance mode
-  + Medium: PE: Print the correct message when stonith is disabled
+  + Medium: pengine: Allow external entities to ask for a node to be shot by creating a terminate=true transient node attribute
+  + Medium: pengine: Bug LF:1950 - Notifications do not contain all documented resource state fields
+  + Medium: pengine: Bug N:417585 - Do not restart group children whos individual score drops below zero
+  + Medium: pengine: Implement a true maintenance mode
+  + Medium: pengine: Print the correct message when stonith is disabled
   + Medium: stonithd: exit with better code on empty host list
   + Medium: xml: pacemaker-0.7 is now an alias for the 1.0 schema
 
@@ -1194,17 +1194,17 @@ High: Fix a number of potential problems reported by coverity
     Diff:            513 files changed, 43408 insertions(+), 43783 deletions(-)
 - Changes since 0.7.0-19
   + Fix compilation when GNUTLS isnt found
-  + High: admin: Fix use-after-free in crm_mon
-  + High: Build: Remove testing code that prevented heartbeat-only builds
-  + High: cib: Use single quotes so that the xpath queries for nvpairs will succeed
-  + High: crmd: Always connect to stonithd when the TE starts and ensure we notice if it dies
-  + High: crmd: Correctly handle a dead PE process
-  + High: crmd: Make sure async-failures cause the failcount to be incrimented
-  + High: PE: Bug LF:1941 - Handle failed clone instance probes when clone-max < #nodes
-  + High: PE: Parse resource ordering sets correctly
-  + High: PE: Prevent use-of-NULL - order->rsc_rh will not always be non-NULL
-  + High: PE: Unpack colocation sets correctly
-  + High: Tools: crm_mon - Prevent use-of-NULL for orphaned resources
+  + admin: Fix use-after-free in crm_mon
+  + Build: Remove testing code that prevented heartbeat-only builds
+  + cib: Use single quotes so that the xpath queries for nvpairs will succeed
+  + crmd: Always connect to stonithd when the TE starts and ensure we notice if it dies
+  + crmd: Correctly handle a dead PE process
+  + crmd: Make sure async-failures cause the failcount to be incrimented
+  + pengine: Bug LF:1941 - Handle failed clone instance probes when clone-max < #nodes
+  + pengine: Parse resource ordering sets correctly
+  + pengine: Prevent use-of-NULL - order->rsc_rh will not always be non-NULL
+  + pengine: Unpack colocation sets correctly
+  + Tools: crm_mon - Prevent use-of-NULL for orphaned resources
   + Medium: ais: Add support for a synchronous call to retrieve the nodes nodeid
   + Medium: ais: Allow transient clients to receive membership updates
   + Medium: ais: Avoid double-free in error path
@@ -1234,11 +1234,11 @@ High: Fix a number of potential problems reported by coverity
   + Medium: cts: The libxml2 parser wont allow v1 resources to use integers as parameter names
   + Medium: Do not use the cluster UID and GID directly.  Look them up based on the configured value of HA_CCMUSER
   + Medium: Fix compilation when heartbeat is not supported
-  + Medium: PE: Allow groups to be involved in optional ordering constraints
-  + Medium: PE: Allow sets of operations to be reused by multiple resources
-  + Medium: PE: Bug LF:1941 - Mark extra clone instances as orphans and do not show inactive ones
-  + Medium: PE: Determin the correct migration-threshold during resource expansion
-  + Medium: PE: Implement no-quorum-policy=suicide (FATE #303619)
+  + Medium: pengine: Allow groups to be involved in optional ordering constraints
+  + Medium: pengine: Allow sets of operations to be reused by multiple resources
+  + Medium: pengine: Bug LF:1941 - Mark extra clone instances as orphans and do not show inactive ones
+  + Medium: pengine: Determin the correct migration-threshold during resource expansion
+  + Medium: pengine: Implement no-quorum-policy=suicide (FATE #303619)
   + Medium: pengine: Clean up resources after stopping old copies of the PE
   + Medium: pengine: Teach the PE how to stop old copies of itself
   + Medium: Tools: Backport hb_report updates
@@ -1251,14 +1251,14 @@ High: Fix a number of potential problems reported by coverity
     Changesets:      108
     Diff:            216 files changed, 4632 insertions(+), 4173 deletions(-)
 - Changes added since unstable-0.7
-  + High: admin: Fix use-after-free in crm_mon
-  + High: ais: Change the tag for the ais plugin to "pacemaker" (used in openais.conf)
-  + High: ais: Log terminated processes as an error
-  + High: cib: Performance - Reorganize things to avoid calculating the XML diff twice
-  + High: PE: Bug LF:1941 - Handle failed clone instance probes when clone-max < #nodes
-  + High: PE: Fix memory leak in action2xml
-  + High: PE: Make OCF_ERR_ARGS a node-level error rather than a cluster-level one
-  + High: PE: Properly handle clones that are not installed on all nodes
+  + admin: Fix use-after-free in crm_mon
+  + ais: Change the tag for the ais plugin to "pacemaker" (used in openais.conf)
+  + ais: Log terminated processes as an error
+  + cib: Performance - Reorganize things to avoid calculating the XML diff twice
+  + pengine: Bug LF:1941 - Handle failed clone instance probes when clone-max < #nodes
+  + pengine: Fix memory leak in action2xml
+  + pengine: Make OCF_ERR_ARGS a node-level error rather than a cluster-level one
+  + pengine: Properly handle clones that are not installed on all nodes
   + Medium: admin: cibadmin - Show any validation errors if the upgrade failed
   + Medium: admin: cib_shadow - Implement --locate to display the underlying filename
   + Medium: admin: cib_shadow - Implement a --diff option
@@ -1271,7 +1271,7 @@ High: Fix a number of potential problems reported by coverity
   + Medium: Core: Clean up XML parser after validation
   + Medium: crmd: Detect and optimize the CRMs behavior when processing diffs of an LRM refresh
   + Medium: Fix memory leaks when resetting the name of an XML object
-  + Medium: PE: Prefer the current location if it is one of a group of nodes with the same (highest) score
+  + Medium: pengine: Prefer the current location if it is one of a group of nodes with the same (highest) score
 
 * Wed Jun 25 2008 Andrew Beekhof <abeekhof@suse.de> - 0.7.0-1
 - Update source tarball to revision: bde0c7db74fb tip
@@ -1279,26 +1279,26 @@ High: Fix a number of potential problems reported by coverity
     Changesets:      439
     Diff:            676 files changed, 41310 insertions(+), 52071 deletions(-)
 - Changes added since stable-0.6
-  + High: A new tool for setting up and invoking CTS
-  + High: Admin: All tools now use --node (-N) for specifying node unames
-  + High: Admin: All tools now use --xml-file (-x) and --xml-text (-X) for specifying where to find XML blobs
-  + High: cib: Cleanup the API - remove redundant input fields
-  + High: cib: Implement CIB_shadow - a facility for making and testing changes before uploading them to the cluster
-  + High: cib: Make registering per-op callbacks an API call and renamed (for clarity) the API call for requesting notifications
-  + High: Core: Add a facility for automatically upgrading old configurations
-  + High: Core: Adopt libxml2 as the XML processing library - all external clients need to be recompiled
-  + High: Core: Allow sending TLS messages larger than the MTU
-  + High: Core: Fix parsing of time-only ISO dates
-  + High: Core: Smarter handling of XML values containing quotes
-  + High: Core: XML memory corruption - catch, and handle, cases where we are overwriting an attribute value with itself
-  + High: Core: The xml ID type does not allow UUIDs that start with a number
-  + High: Core: Implement XPath based versions of query/delete/replace/modify
-  + High: Core: Remove some HA2.0.(3,4) compatability code
-  + High: crmd: Overhaul the detection of nodes that are starting vs. failed
-  + High: PE: Bug LF:1459 - Allow failures to expire
-  + High: PE: Have the PE do non-persistent configuration upgrades before performing calculations
-  + High: PE: Replace failure-stickiness with a simple 'migration-threshold'
-  + High: TE: Simplify the design by folding the tengine process into the crmd
+  + A new tool for setting up and invoking CTS
+  + Admin: All tools now use --node (-N) for specifying node unames
+  + Admin: All tools now use --xml-file (-x) and --xml-text (-X) for specifying where to find XML blobs
+  + cib: Cleanup the API - remove redundant input fields
+  + cib: Implement CIB_shadow - a facility for making and testing changes before uploading them to the cluster
+  + cib: Make registering per-op callbacks an API call and renamed (for clarity) the API call for requesting notifications
+  + Core: Add a facility for automatically upgrading old configurations
+  + Core: Adopt libxml2 as the XML processing library - all external clients need to be recompiled
+  + Core: Allow sending TLS messages larger than the MTU
+  + Core: Fix parsing of time-only ISO dates
+  + Core: Smarter handling of XML values containing quotes
+  + Core: XML memory corruption - catch, and handle, cases where we are overwriting an attribute value with itself
+  + Core: The xml ID type does not allow UUIDs that start with a number
+  + Core: Implement XPath based versions of query/delete/replace/modify
+  + Core: Remove some HA2.0.(3,4) compatability code
+  + crmd: Overhaul the detection of nodes that are starting vs. failed
+  + pengine: Bug LF:1459 - Allow failures to expire
+  + pengine: Have the PE do non-persistent configuration upgrades before performing calculations
+  + pengine: Replace failure-stickiness with a simple 'migration-threshold'
+  + tengine: Simplify the design by folding the tengine process into the crmd
   + Medium: Admin: Bug LF:1438 - Allow the list of all/active resource operations to be queried by crm_resource
   + Medium: Admin: Bug LF:1708 - crm_resource should print a warning if an attribute is already set as a meta attribute
   + Medium: Admin: Bug LF:1883 - crm_mon should display fail-count and operation history
@@ -1330,16 +1330,16 @@ High: Fix a number of potential problems reported by coverity
   + Medium: crmd: HB - watch link status for node leaving events
   + Medium: crmd: Bug LF:1924 - Improved handling of lrmd disconnects and shutdowns
   + Medium: crmd: Do not wait for actions with a start_delay over 5 minutes. Confirm them immediately
-  + Medium: PE: Bug LF:1328 - Do not fencing nodes in clusters without managed resources
-  + Medium: PE: Bug LF:1461 - Give transient node attributes (in <status/>) preference over persistent ones (in <nodes/>)
-  + Medium: PE: Bug LF:1884, Bug LF:1885 - Implement N:M ordering and colocation constraints
-  + Medium: PE: Bug LF:1886 - Create a resource and operation 'defaults' config section
-  + Medium: PE: Bug LF:1892 - Allow recurring actions to be triggered at known times
-  + Medium: PE: Bug LF:1926 - Probes should complete before stop actions are invoked
-  + Medium: PE: Fix the standby when its set as a transient attribute
-  + Medium: PE: Implement a global 'stop-all-resources' option
-  + Medium: PE: Implement cibpipe, a tool for performing/simulating config changes "offline"
-  + Medium: PE: We do not allow colocation with specific clone instances
+  + Medium: pengine: Bug LF:1328 - Do not fencing nodes in clusters without managed resources
+  + Medium: pengine: Bug LF:1461 - Give transient node attributes (in <status/>) preference over persistent ones (in <nodes/>)
+  + Medium: pengine: Bug LF:1884, Bug LF:1885 - Implement N:M ordering and colocation constraints
+  + Medium: pengine: Bug LF:1886 - Create a resource and operation 'defaults' config section
+  + Medium: pengine: Bug LF:1892 - Allow recurring actions to be triggered at known times
+  + Medium: pengine: Bug LF:1926 - Probes should complete before stop actions are invoked
+  + Medium: pengine: Fix the standby when its set as a transient attribute
+  + Medium: pengine: Implement a global 'stop-all-resources' option
+  + Medium: pengine: Implement cibpipe, a tool for performing/simulating config changes "offline"
+  + Medium: pengine: We do not allow colocation with specific clone instances
   + Medium: Tools: pingd - Implement a stack-independant version of pingd
   + Medium: xml: Ship an xslt for upgrading from 0.6 to 0.7
 
@@ -1349,24 +1349,24 @@ High: Fix a number of potential problems reported by coverity
     Changesets:      48
     Diff:            37 files changed, 1204 insertions(+), 234 deletions(-)
 - Changes since Pacemaker-0.6.4
-  + High: Admin: Repair the ability to delete failcounts
-  + High: ais: Audit IPC handling between the AIS plugin and CRM processes
-  + High: ais: Have the plugin create needed /var/lib directories
-  + High: ais: Make sure the sync and async connections are assigned correctly (not swapped)
-  + High: cib: Correctly detect configuration changes - num_updates does not count
-  + High: PE: Apply stickiness values to the whole group, not the individual resources
-  + High: PE: Bug N:385265 - Ensure groups are migrated instead of remaining partially active on the current node
-  + High: PE: Bug N:396293 - Enforce manditory group restarts due to ordering constraints
-  + High: PE: Correctly recover master instances found active on more than one node
-  + High: PE: Fix memory leaks reported by Valgrind
+  + Admin: Repair the ability to delete failcounts
+  + ais: Audit IPC handling between the AIS plugin and CRM processes
+  + ais: Have the plugin create needed /var/lib directories
+  + ais: Make sure the sync and async connections are assigned correctly (not swapped)
+  + cib: Correctly detect configuration changes - num_updates does not count
+  + pengine: Apply stickiness values to the whole group, not the individual resources
+  + pengine: Bug N:385265 - Ensure groups are migrated instead of remaining partially active on the current node
+  + pengine: Bug N:396293 - Enforce manditory group restarts due to ordering constraints
+  + pengine: Correctly recover master instances found active on more than one node
+  + pengine: Fix memory leaks reported by Valgrind
   + Medium: Admin: crm_mon - Misc improvements from Satomi Taniguchi
   + Medium: Bug LF:1900 - Resource stickiness should not allow placement in asynchronous clusters
   + Medium: crmd: Ensure joins are completed promptly when a node taking part dies
-  + Medium: PE: Avoid clone instance shuffling in more cases
-  + Medium: PE: Bug LF:1906 - Remove an optimization in native_merge_weights() causing group scores to behave eratically
-  + Medium: PE: Make use of target_rc data to correctly process resource operations
-  + Medium: PE: Prevent a possible use of NULL in sort_clone_instance()
-  + Medium: TE: Include target rc in the transition key - used to correctly determin operation failure
+  + Medium: pengine: Avoid clone instance shuffling in more cases
+  + Medium: pengine: Bug LF:1906 - Remove an optimization in native_merge_weights() causing group scores to behave eratically
+  + Medium: pengine: Make use of target_rc data to correctly process resource operations
+  + Medium: pengine: Prevent a possible use of NULL in sort_clone_instance()
+  + Medium: tengine: Include target rc in the transition key - used to correctly determin operation failure
 
 * Thu May 22 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.4-1
 - Update source tarball to revision: 226d8e356924 tip
@@ -1374,18 +1374,18 @@ High: Fix a number of potential problems reported by coverity
     Changesets:       55
     Diff:             199 files changed, 7103 insertions(+), 12378 deletions(-)
 - Changes since Pacemaker-0.6.3
-  + High: crmd: Bug LF:1881 LF:1882 - Overhaul the logic for operation cancelation and deletion
-  + High: crmd: Bug LF:1894 - Make sure cancelled recurring operations are cleaned out from the CIB
-  + High: PE: Bug N:387749 - Colocation with clones causes unnecessary clone instance shuffling
-  + High: PE: Ensure 'master' monitor actions are cancelled _before_ we demote the resource
-  + High: PE: Fix assert failure leading to core dump - make sure variable is properly initialized
-  + High: PE: Make sure 'slave' monitoring happens after the resource has been demoted
-  + High: PE: Prevent failure stickiness underflows (where too many failures become a _positive_ preference)
+  + crmd: Bug LF:1881 LF:1882 - Overhaul the logic for operation cancelation and deletion
+  + crmd: Bug LF:1894 - Make sure cancelled recurring operations are cleaned out from the CIB
+  + pengine: Bug N:387749 - Colocation with clones causes unnecessary clone instance shuffling
+  + pengine: Ensure 'master' monitor actions are cancelled _before_ we demote the resource
+  + pengine: Fix assert failure leading to core dump - make sure variable is properly initialized
+  + pengine: Make sure 'slave' monitoring happens after the resource has been demoted
+  + pengine: Prevent failure stickiness underflows (where too many failures become a _positive_ preference)
   + Medium: Admin: crm_mon - Only complain if the output file could not be opened
   + Medium: Common: filter_action_parameters - enable legacy handling only for older versions
-  + Medium: PE: Bug N:385265 - The failure stickiness of group children is ignored until it reaches -INFINITY
-  + Medium: PE: Implement master and clone colocation by exlcuding nodes rather than setting ones score to INFINITY (similar to cs: 756afc42dc51)
-  + Medium: TE: Bug LF:1875 - Correctly find actions to cancel when their node leaves the cluster
+  + Medium: pengine: Bug N:385265 - The failure stickiness of group children is ignored until it reaches -INFINITY
+  + Medium: pengine: Implement master and clone colocation by exlcuding nodes rather than setting ones score to INFINITY (similar to cs: 756afc42dc51)
+  + Medium: tengine: Bug LF:1875 - Correctly find actions to cancel when their node leaves the cluster
 
 * Wed Apr 23 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.3-1
 - Update source tarball to revision: fd8904c9bc67 tip
@@ -1393,29 +1393,29 @@ High: Fix a number of potential problems reported by coverity
     Changesets:      117
     Diff:            354 files changed, 19094 insertions(+), 11338 deletions(-)
 - Changes since Pacemaker-0.6.2
-  + High: Admin: Bug LF:1848 - crm_resource - Pass set name and id to delete_resource_attr() in the correct order
-  + High: Build: SNMP has been moved to the management/pygui project
-  + High: crmd: Bug LF1837 - Unmanaged resources prevent crmd from shutting down
-  + High: crmd: Prevent use-after-free in lrm interface code (Patch based on work by Keisuke MORI)
-  + High: PE: Allow the cluster to make progress by not retrying failed demote actions
-  + High: PE: Anti-colocation with slave should not prevent master colocation
-  + High: PE: Bug LF 1768 - Wait more often for STONITH ops to complete before starting resources
-  + High: PE: Bug LF1836 - Allow is-managed-default=false to be overridden by individual resources
-  + High: PE: Bug LF185 - Prevent pointless master/slave instance shuffling by ignoring the master-pref of stopped instances
-  + High: PE: Bug N-191176 - Implement interleaved ordering for clone-to-clone scenarios
-  + High: PE: Bug N-347004 - Ensure clone notifications are always sent when an instance is stopped/started
-  + High: PE: Bug N-347004 - Include notification ordering is correct for interleaved clones
-  + High: PE: Bug PM-11 - Directly link probe_complete to starting clone instances
-  + High: PE: Bug PM1 - Fix setting failcounts when applied to complex resources
-  + High: PE: Bug PM12, LF1648 - Extensive revision of group ordering
-  + High: PE: Bug PM7 - Ensure masters are always demoted before they are stopped
-  + High: PE: Create probes after allocation to allow smarter handling of anonymous clones
-  + High: PE: Do not prioritize clone instances that must be moved
-  + High: PE: Fix error in previous commit that allowed more than the required number of masters to be promoted
-  + High: PE: Group start ordering fixes
-  + High: PE: Implement promote/demote ordering for cloned groups
-  + High: TE: Repair failcount updates
-  + High: TE: Use the correct offset when updating failcount
+  + Admin: Bug LF:1848 - crm_resource - Pass set name and id to delete_resource_attr() in the correct order
+  + Build: SNMP has been moved to the management/pygui project
+  + crmd: Bug LF1837 - Unmanaged resources prevent crmd from shutting down
+  + crmd: Prevent use-after-free in lrm interface code (Patch based on work by Keisuke MORI)
+  + pengine: Allow the cluster to make progress by not retrying failed demote actions
+  + pengine: Anti-colocation with slave should not prevent master colocation
+  + pengine: Bug LF 1768 - Wait more often for STONITH ops to complete before starting resources
+  + pengine: Bug LF1836 - Allow is-managed-default=false to be overridden by individual resources
+  + pengine: Bug LF185 - Prevent pointless master/slave instance shuffling by ignoring the master-pref of stopped instances
+  + pengine: Bug N-191176 - Implement interleaved ordering for clone-to-clone scenarios
+  + pengine: Bug N-347004 - Ensure clone notifications are always sent when an instance is stopped/started
+  + pengine: Bug N-347004 - Include notification ordering is correct for interleaved clones
+  + pengine: Bug PM-11 - Directly link probe_complete to starting clone instances
+  + pengine: Bug PM1 - Fix setting failcounts when applied to complex resources
+  + pengine: Bug PM12, LF1648 - Extensive revision of group ordering
+  + pengine: Bug PM7 - Ensure masters are always demoted before they are stopped
+  + pengine: Create probes after allocation to allow smarter handling of anonymous clones
+  + pengine: Do not prioritize clone instances that must be moved
+  + pengine: Fix error in previous commit that allowed more than the required number of masters to be promoted
+  + pengine: Group start ordering fixes
+  + pengine: Implement promote/demote ordering for cloned groups
+  + tengine: Repair failcount updates
+  + tengine: Use the correct offset when updating failcount
   + Medium: Admin: Add a summary output that can be easily parsed by CTS for audit purposes
   + Medium: Build: Make configure fail if bz2 or libxml2 are not present
   + Medium: Build: Re-instate a better default for LCRSODIR
@@ -1424,18 +1424,18 @@ High: Fix a number of potential problems reported by coverity
   + Medium: Core: Drop compataibility code for 2.0.4 and 2.0.5 clusters
   + Medium: crmd: Bug LF-1860 - Automatically cancel recurring ops before demote and promote operations (not only stops)
   + Medium: crmd: Save the current CIB contents if we detect the PE crashed
-  + Medium: PE: Bug LF:1866 - Fix version check when applying compatability handling for failed start operations
-  + Medium: PE: Bug LF:1866 - Restore the ability to have start failures not be fatal
-  + Medium: PE: Bug PM1 - Failcount applies to all instances of non-unique clone
-  + Medium: PE: Correctly set the state of partially active master/slave groups
-  + Medium: PE: Do not claim to be stopping an already stopped orphan
-  + Medium: PE: Ensure implies_left ordering constraints are always effective
-  + Medium: PE: Indicate each resources 'promotion' score
-  + Medium: PE: Prevent a possible use-of-NULL
-  + Medium: PE: Reprocess the current action if it changed (so that any prior dependancies are updated)
-  + Medium: TE: Bug LF-1859 - Wait for fail-count updates to complete before terminating the transition
-  + Medium: TE: Bug LF:1859 - Do not abort graphs due to our own failcount updates
-  + Medium: TE: Bug LF:1859 - Prevent the TE from interupting itself
+  + Medium: pengine: Bug LF:1866 - Fix version check when applying compatability handling for failed start operations
+  + Medium: pengine: Bug LF:1866 - Restore the ability to have start failures not be fatal
+  + Medium: pengine: Bug PM1 - Failcount applies to all instances of non-unique clone
+  + Medium: pengine: Correctly set the state of partially active master/slave groups
+  + Medium: pengine: Do not claim to be stopping an already stopped orphan
+  + Medium: pengine: Ensure implies_left ordering constraints are always effective
+  + Medium: pengine: Indicate each resources 'promotion' score
+  + Medium: pengine: Prevent a possible use-of-NULL
+  + Medium: pengine: Reprocess the current action if it changed (so that any prior dependancies are updated)
+  + Medium: tengine: Bug LF-1859 - Wait for fail-count updates to complete before terminating the transition
+  + Medium: tengine: Bug LF:1859 - Do not abort graphs due to our own failcount updates
+  + Medium: tengine: Bug LF:1859 - Prevent the TE from interupting itself
 
 * Thu Feb 14 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.2-1
 - Update source tarball to revision: 28b1a8c1868b tip
@@ -1454,15 +1454,15 @@ High: Fix a number of potential problems reported by coverity
     Changesets:    25
     Diff:          37 files changed, 1323 insertions(+), 227 deletions(-)
 - Changes since Pacemaker-0.6.0
-  + High: CIB: Ensure changes to top-level attributes (like admin_epoch) cause a disk write
-  + High: CIB: Ensure the archived file hits the disk before returning
-  + High: CIB: Repair the ability to do 'atomic incriment' updates (value="value++")
-  + High: crmd: Bug #7 - Connecting to the crmd immediately after startup causes use-of-NULL
+  + CIB: Ensure changes to top-level attributes (like admin_epoch) cause a disk write
+  + CIB: Ensure the archived file hits the disk before returning
+  + CIB: Repair the ability to do 'atomic incriment' updates (value="value++")
+  + crmd: Bug #7 - Connecting to the crmd immediately after startup causes use-of-NULL
   + Medium: CIB: Mask cib_diff_resync results from the caller - they do not need to know
   + Medium: crmd: Delay starting the IPC server until we are fully functional
   + Medium: CTS: Fix the startup patterns
-  + Medium: PE: Bug 1820 - Allow the first resource in a group to be migrated
-  + Medium: PE: Bug 1820 - Check the colocation dependancies of resources to be migrated
+  + Medium: pengine: Bug 1820 - Allow the first resource in a group to be migrated
+  + Medium: pengine: Bug 1820 - Check the colocation dependancies of resources to be migrated
 
 * Mon Jan 14 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.0-2
 - This is the first release of the Pacemaker Cluster Resource Manager formerly part of Heartbeat.
@@ -1498,37 +1498,37 @@ High: Fix a number of potential problems reported by coverity
     + OpenAIS   #1793 - Assertion failure in memb_state_gather_enter()
     + OpenAIS   #1796 - Cluster message corruption
 - Changes since Heartbeat-2.1.2-24
-  + High: Add OpenAIS support
-  + High: Admin: crm_uuid - Look in the right place for Heartbeat UUID files
-  + High: admin: Exit and indicate a problem if the crmd exits while crmadmin is performing a query
-  + High: cib: Fix CIB_OP_UPDATE calls that modify the whole CIB
-  + High: cib: Fix compilation when supporting the heartbeat stack
-  + High: cib: Fix memory leaks caused by the switch to get_message_xml()
-  + High: cib: HA_VALGRIND_ENABLED needs to be set _and_ set to 1|yes|true
-  + High: cib: Use get_message_xml() in preference to cl_get_struct()
-  + High: cib: Use the return value from call to write() in cib_send_plaintext()
-  + High: Core: ccm nodes can legitimately have a node id of 0
-  + High: Core: Fix peer-process tracking for the Heartbeat stack
-  + High: Core: Heartbeat does not send status notifications for nodes that were already part of the cluster.  Fake them instead
-  + High: CRM: Add children to HA_Messages such that the field name matches F_XML_TAGNAME
-  + High: crm: Adopt a more flexible appraoch to enabling Valgrind
-  + High: crm: Fix compilation when bzip2 is not installed
-  + High: CRM: Future-proof get_message_xml()
-  + High: crmd: Filter election responses based on time not FSA state
-  + High: crmd: Handle all possible peer states in crmd_ha_status_callback()
-  + High: crmd: Make sure the current date/time is set - prevents use-of-NULL when evaluating rules
-  + High: crmd: Relax an assertion regrading  ccm membership instances
-  + High: crmd: Use (node->processes&crm_proc_ais) to accurately update the CIB after replace operations
-  + High: crmd: Heartbeat: Accurately record peer client status
-  + High: PE: Bug 1777 - Allow colocation with a resource in the Stopped state
-  + High: PE: Bug 1822 - Prevent use-of-NULL in PromoteRsc()
-  + High: PE: Implement three recovery policies based on op_status and op_rc
-  + High: PE: Parse fail-count correctly (it may be set to ININFITY)
-  + High: PE: Prevent graph-loop when stonith agents need to be moved around before a STONITH op
-  + High: PE: Prevent graph-loops when two operations have the same name+interval
-  + High: te: Cancel active timers when destroying graphs
-  + High: TE: Ensure failcount is set correctly for failed stops/starts
-  + High: TE: Update failcount for oeprations that time out
+  + Add OpenAIS support
+  + Admin: crm_uuid - Look in the right place for Heartbeat UUID files
+  + admin: Exit and indicate a problem if the crmd exits while crmadmin is performing a query
+  + cib: Fix CIB_OP_UPDATE calls that modify the whole CIB
+  + cib: Fix compilation when supporting the heartbeat stack
+  + cib: Fix memory leaks caused by the switch to get_message_xml()
+  + cib: HA_VALGRIND_ENABLED needs to be set _and_ set to 1|yes|true
+  + cib: Use get_message_xml() in preference to cl_get_struct()
+  + cib: Use the return value from call to write() in cib_send_plaintext()
+  + Core: ccm nodes can legitimately have a node id of 0
+  + Core: Fix peer-process tracking for the Heartbeat stack
+  + Core: Heartbeat does not send status notifications for nodes that were already part of the cluster.  Fake them instead
+  + CRM: Add children to HA_Messages such that the field name matches F_XML_TAGNAME
+  + crm: Adopt a more flexible appraoch to enabling Valgrind
+  + crm: Fix compilation when bzip2 is not installed
+  + CRM: Future-proof get_message_xml()
+  + crmd: Filter election responses based on time not FSA state
+  + crmd: Handle all possible peer states in crmd_ha_status_callback()
+  + crmd: Make sure the current date/time is set - prevents use-of-NULL when evaluating rules
+  + crmd: Relax an assertion regrading  ccm membership instances
+  + crmd: Use (node->processes&crm_proc_ais) to accurately update the CIB after replace operations
+  + crmd: Heartbeat: Accurately record peer client status
+  + pengine: Bug 1777 - Allow colocation with a resource in the Stopped state
+  + pengine: Bug 1822 - Prevent use-of-NULL in PromoteRsc()
+  + pengine: Implement three recovery policies based on op_status and op_rc
+  + pengine: Parse fail-count correctly (it may be set to ININFITY)
+  + pengine: Prevent graph-loop when stonith agents need to be moved around before a STONITH op
+  + pengine: Prevent graph-loops when two operations have the same name+interval
+  + tengine: Cancel active timers when destroying graphs
+  + tengine: Ensure failcount is set correctly for failed stops/starts
+  + tengine: Update failcount for oeprations that time out
   + Medium: admin: Prevent hang in crm_mon -1 when there is no cib connection - Patch from Junko IKEDA
   + Medium: cib: Require --force|-f when performing potentially dangerous commands with cibadmin
   + Medium: cib: Tweak the shutdown code
@@ -1542,9 +1542,9 @@ High: Fix a number of potential problems reported by coverity
   + Medium: crmd: Fix potential use-of-NULL in string comparison
   + Medium: crmd: Reimpliment syncronizing of CIB queries and updates when invoking the PE
   + Medium: crm_mon: Indicate when a node is both in standby mode and offline
-  + Medium: PE: Bug 1822 - Do not try an promote groups if not all of it is active
-  + Medium: PE: on_fail=nothing is an alias for 'ignore' not 'restart'
-  + Medium: PE: Prevent a potential use-of-NULL in cron_range_satisfied()
+  + Medium: pengine: Bug 1822 - Do not try an promote groups if not all of it is active
+  + Medium: pengine: on_fail=nothing is an alias for 'ignore' not 'restart'
+  + Medium: pengine: Prevent a potential use-of-NULL in cron_range_satisfied()
   + snmp subagent: fix a problem on displaying an unmanaged group
   + snmp subagent: use the syslog setting
   + snmp: v2 support (thanks to Keisuke MORI)
