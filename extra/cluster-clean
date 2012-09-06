@@ -72,7 +72,7 @@ for f in $state_files; do
 done
 
 cluster-helper $target -- "find /dev/shm -name 'qb-*' -exec rm -f \{\} \;"
-cluster-helper $target -- "find /var/lib/pacemaker -name 'blackbox*' -exec rm -f \{\} \;"
+cluster-helper $target -- "find /var/lib/pacemaker/blackbox -name '*.*' -exec rm -f \{\} \;"
 cluster-helper $target -- "find /tmp -name 'cts-*.valgrind' -exec rm -f \{\} \;"
 
 cluster-helper $target -- service rsyslog restart  2>&1 > /dev/null
