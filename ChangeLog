@@ -1,3 +1,85 @@
+
+* Thu Sep 06 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.8-1
+- Update source tarball to revision: 5a41af5
+- All APIs have been cleaned up and reduced to essentials
+- Pacemaker now includes a replacement lrmd that supports systemd and upstart agents
+- Config and state files (cib.xml, PE inputs and core files) have moved to new locations
+- The crm shell has become a separate project and no longer included with Pacemaker
+- All daemons/tools now have a unified set of error codes based on errno.h (see crm_error)
+- Statistics:
+  Changesets: 940
+  Diff:       2102 files changed, 113820 insertions(+), 72511 deletions(-)
+
+- Changes since Pacemaker-1.1.7
+ + Core: Bug cl#5032 - Rewrite the iso8601 date handling code
+ + Core: Correctly extract the version details from a diff
+ + Core: Log blackbox contents, if enabled, when an error occurs
+ + Core: Only LOG_NOTICE and higher are sent to syslog
+ + Core: Replace use of IPC from clplumbing with IPC from libqb
+ + Core: SIGUSR1 now enables blackbox logging, SIGTRAP to write out
+ + Core: Support a blackbox for additional logging detail after crashes/errors
+ + Promote support for advanced fencing logic to the stable schema
+ + Promote support for node starting scores to the stable schema
+ + Promote support for service and systemd to the stable schema
+
+ + attrd: Differentiate between updating all our attributes and everybody updating all theirs too
+ + attrd: Have single-shot clients wait for an ack before disconnecting
+ + cib: cl#5026 - Synced cib updates should not return until the cpg broadcast is complete.
+ + corosync: Detect when the first corosync has not yet formed and handle it gracefully
+ + corosync: Obtain a full list of configured nodes, including their names, when we connect to the quorum API
+ + corosync: Obtain a node name from DNS if one was not already known
+ + corosync: Populate the cib nodelist from corosync if available
+ + corosync: Use the CFG API and DNS to determine node names if not configured in corosync.conf
+ + crmd: Block after 10 failed fencing attempts for a node
+ + crmd: cl#5051 - Fixes file leak in pe ipc connection initialization.
+ + crmd: cl#5053 - Fixes fail-count not being updated properly.
+ + crmd: cl#5057 - Restart sub-systems correctly (bnc#755671)
+ + crmd: cl#5068 - Fixes crm_node -R option so it works with corosync 2.0
+ + crmd: Correctly re-establish failed attrd connections
+ + crmd: Detect when the quorum API isn't configured for corosync 2.0
+ + crmd: Do not overwrite any configured node type (eg. quorum node)
+ + crmd: Enable use of new lrmd daemon and client library in crmd.
+ + crmd: Overhaul the way node state is recorded and updated in the CIB
+ + fencing: Bug rhbz#853537 - Prevent use-of-NULL when the cib libraries are not available
+ + fencing: cl#5073 - Add 'off' as an valid value for stonith-action option.
+ + fencing: cl#5092 - Always timeout stonith operations if timeout period expires.
+ + fencing: cl#5093 - Stonith per device timeout option
+ + fencing: Clean up if we detect a failed connection
+ + fencing: Delegate complex self fencing requests - we wont be around to see it to completion
+ + fencing: Ensure all peers are notified of complex fencing op completion
+ + fencing: Fix passing of fence_legacy parameters containing '='
+ + fencing: Gracefully handle metadata requests for unknown agents
+ + fencing: Return cached dynamic target list for busy devices.
+ + fencing: rhbz#801355 - Abort transition on DC when external fencing operation is detected
+ + fencing: rhbz#801355 - Merge fence requests for identical operations already in progress.
+ + fencing: rhbz#801355 - Report fencing operations external of pacemaker to cib
+ + fencing: Specify the action to perform using action= instead of the older option=
+ + fencing: Stop building fake metadata for broken agents
+ + fencing: Tolerate agents that report empty metadata in the admin tool
+ + mcp: Correctly retry the connection to corosync on failure
+ + mcp: Do not shut down IPC until the last client exits
+ + mcp: Prevent use-after-free when running against corosync 1.x
+ + pengine: Bug cl#5059 - Use the correct action's status when calculating required actions for interleaved clones
+ + pengine: Bypass online/offline checking resource detection for ping/quorum nodes
+ + pengine: cl#5044 - migrate_to no longer requires load_stopped for avoiding possible transition loop
+ + pengine: cl#5069 - Honor 'on-fail=ignore' even when operation is disabled.
+ + pengine: cl#5070 - Allow influence of promotion score when multistate rsc is left hand of colocation
+ + pengine: cl#5072 - Fixes monitor op stopping after rsc promotion.
+ + pengine: cl#5072 - Fixes pengine regression test failures
+ + pengine: Correctly set the status for nodes not intended to run Pacemaker
+ + pengine: Do not append instance numbers to anonymous clones
+ + pengine: Fix failcount expiration
+ + pengine: Fix memory leaks found by valgrind
+ + pengine: Fix use-after-free and use-of-NULL errors detected by coverity
+ + pengine: Fixes use of colocation scores other than +/- INFINITY
+ + pengine: Improve detection of rejoining nodes
+ + pengine: Prevent use-of-NULL when tracing is enabled
+ + pengine: Stonith resources are allowed to start even if their probes haven't completed on partially active nodes
+ + services: New class called 'service' which expands to the correct (LSB/systemd/upstart) standard
+ + services: Support Asynchronous systemd/upstart actions
+ + Tools: crm_shadow - Bug cl#5062 - Correctly set argv[0] when forking a shell process
+ + Tools: crm_report: Always include system logs (if we can find them)
+
 * Wed Mar 28 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.7-1
 - Update source tarball to revision: bc7ff2c
 - Statistics:
@@ -39,23 +121,23 @@ High: crmd: Fast-track shutdown if we couldn't request it via attrd
 High: crmd: Leave it up to the PE to decide which ops can/cannot be reload
 High: crmd: Prevent use-after-free when calling delete_resource due to CRM_OP_REPROBE
 High: crmd: Supply format arguments in the correct order
-High: Fencing: Add missing format parameter
+High: fencing: Add missing format parameter
 High: fencing: Add the fencing topology section to the 1.1 configuration schema
 High: fencing: fence_legacy - Drop spurilous host argument from status query
-High: Fencing: fence_legacy - Ensure port is available as an environment variable when calling monitor
-High: Fencing: fence_pcmk - don't block if nothing is specified on stdin
+High: fencing: fence_legacy - Ensure port is available as an environment variable when calling monitor
+High: fencing: fence_pcmk - don't block if nothing is specified on stdin
 High: fencing: Fix log format error
-High: Fencing: Fix segfault caused by passing garbage to dlsym()
-High: Fencing: Fix use-of-NULL in process_remote_stonith_query()
-High: Fencing: Fix use-of-NULL when listing installed devices
-High: Fencing: Implement support for advanced fencing topologies: eg. kdump || (network && disk) || power
+High: fencing: Fix segfault caused by passing garbage to dlsym()
+High: fencing: Fix use-of-NULL in process_remote_stonith_query()
+High: fencing: Fix use-of-NULL when listing installed devices
+High: fencing: Implement support for advanced fencing topologies: eg. kdump || (network && disk) || power
 High: fencing: More gracefully handle failed 'list' operations for devices that only support a single connection
-High: Fencing: Prevent duplicate free when listing devices
-High: Fencing: Prevent uninitialized pointers being passed to free
-High: Fencing: Prevent use-after-free, we may need the query result for subsequent operations
+High: fencing: Prevent duplicate free when listing devices
+High: fencing: Prevent uninitialized pointers being passed to free
+High: fencing: Prevent use-after-free, we may need the query result for subsequent operations
 High: fencing: Provide enough data to construct an entry in the node's fencing history
-High: Fencing: Standardize on /one/ method for clients to request members be fenced
-High: Fencing: Supress errors when listing all registered devices
+High: fencing: Standardize on /one/ method for clients to request members be fenced
+High: fencing: Supress errors when listing all registered devices
 High: mcp: corosync_cfg_state_track was removed from the corosync API, luckily we didnt use it for anything
 High: mcp: Do not specify a WorkingDirectory in the systemd unit file - startup fails if its not available
 High: mcp: Set the HA_quorum_type env variable consistently with our corosync plugin
