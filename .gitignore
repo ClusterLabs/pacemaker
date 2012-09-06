@@ -15,6 +15,8 @@ Makefile.in
 *.lo
 *.o
 *~
+*.gcda
+*.gcno
 
 
 # Autobuild
