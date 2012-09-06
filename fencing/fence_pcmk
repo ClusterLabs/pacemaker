@@ -147,6 +147,7 @@ sub term_handler {
 }
 
 setpgrp($$,0);
+$agent_pid=$$;
 
 if ( $pid=fork() == 0 )
 {
@@ -163,7 +164,7 @@ if ( $pid=fork() == 0 )
        } elsif ( $opt_o eq "off" || $opt_o eq "poweroff" ) {
 	   $cmd="--fence";
        }
-       system "logger -t fence_pcmk -p daemon.notice \"Requesting Pacemaker fence $opt_n ($opt_o)\"";
+       system "logger -p daemon.notice \"fence_pcmk[$agent_pid]: Requesting Pacemaker fence $opt_n ($opt_o)\"";
    }
    exec "stonith_admin $cmd $opt_n" or die "failed to exec \"stonith_admin $cmd $opt_n\"\n";
 }
@@ -175,4 +176,7 @@ $status=$?/256;
 print (($status == 0 ? "success":"failed") . ": $opt_n $status\n")
    unless defined $opt_q;
 
+if ( $status != 0 ) {
+       system "logger -p daemon.notice \"fence_pcmk[$agent_pid]: Call to fence $opt_n ($opt_o) failed with rc=$status\"";
+}
 exit ($status == 0 ? 0 : 1 );
