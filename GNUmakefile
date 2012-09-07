@@ -210,9 +210,15 @@ www:	global
 	make -C doc www
 	make coverity
 
+summary:
+	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(NEXT_RELEASE)-1" 
+	@printf "\n- Update source tarball to revision: `git id`"
+	@printf "\n- Statistics:\n"
+	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n" 
+	@printf "  Diff:      " 
+	@git diff -r $(LAST_RELEASE)..HEAD --stat | tail -n 1
+
 changes:
-	git co - ChangeLog
-	git show $(LAST_RELEASE):ChangeLog > ChangeLog.last 
 	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(NEXT_RELEASE)-1" > ChangeLog 
 	@printf "\n- Update source tarball to revision: `git id`" >> ChangeLog 
 	@printf "\n- Statistics:\n">> ChangeLog 
@@ -222,8 +228,7 @@ changes:
 	@printf "\n- Changes since $(LAST_RELEASE)\n" >> ChangeLog 
 	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: | sed -e s@High:@@ -e s@PE:@pengine:@ | sort -uf >> ChangeLog 
 	@printf "\n">> ChangeLog 
-	cat ChangeLog.last >> ChangeLog
-	@rm ChangeLog.last
+	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 	@echo -e "\033[1;35m -- Don't forget to run the bumplibs.sh script! --\033[0m"
 
 indent:
