@@ -677,8 +677,10 @@ mainloop_del_fd(mainloop_io_t *client)
             client->channel = NULL;
         }
         if (client->source) {
-            g_source_remove(client->source);
+            guint tmp = client->source;
+
             client->source = 0;
+            g_source_remove(tmp);
         }
         /* Results in mainloop_ipcc_destroy() being called once the source is removed from mainloop? */
     }
