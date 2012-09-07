@@ -740,18 +740,16 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
      * This is a hack until we can send to a nodeid and/or we fix node name lookups
      * These messages are ignored in stonith_peer_callback()
      */
-    if(node->uname == NULL) {
         xmlNode *query = create_xml_node(NULL, "stonith_command");
 
         crm_xml_add(query, F_XML_TAGNAME, "stonith_command");
         crm_xml_add(query, F_TYPE, T_STONITH_NG);
         crm_xml_add(query, F_STONITH_OPERATION, "poke");
 
-        crm_notice("Broadcasting our uname because of node %u", node->id);
+        crm_debug("Broadcasting our uname because of node %u", node->id);
         send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
 
         free_xml(query);
-    }
 }
 
 int
