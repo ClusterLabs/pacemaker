@@ -122,10 +122,9 @@ st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     if(client->name == NULL) {
         const char *value = crm_element_value(request, F_STONITH_CLIENTNAME);
         if(value == NULL) {
-            client->name = crm_itoa(crm_ipcs_client_pid(c));
-        } else {
-            client->name = strdup(value);
+            value = "unknown";
         }
+        client->name = g_strdup_printf("%s.%u", value, client->pid);
     }
 
     CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p/%s", client, client->name); goto cleanup);

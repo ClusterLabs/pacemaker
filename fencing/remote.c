@@ -131,14 +131,14 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
         reply = stonith_construct_reply(op->request, NULL, data, rc);
         crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
         do_crm_log(rc==pcmk_ok?LOG_NOTICE:LOG_ERR,
-               "Operation %s of %s by %s for %s[%s]: %s",
-               op->action, op->target, op->delegate?op->delegate:"<no-one>",
-               op->originator, op->client_id, pcmk_strerror(rc));
+                   "Operation %s of %s by %s for %s@%s: %s",
+                   op->action, op->target, op->delegate?op->delegate:"<no-one>",
+                   op->client_name, op->originator, pcmk_strerror(rc));
 
     } else {
-        crm_err("Already sent notifications for '%s of %s by %s' (op=%s, for=%s, state=%d): %s",
-                op->action, op->target, op->delegate, op->id, op->client_id, op->state,
-                pcmk_strerror(rc));
+        crm_err("Already sent notifications for '%s of %s by %s' (op=%s, for=%s@%s, state=%d): %s",
+                op->action, op->target, op->delegate, op->id, op->client_name, op->originator,
+                op->state, pcmk_strerror(rc));
         return;
     }
 
@@ -238,12 +238,15 @@ static int stonith_topology_next(remote_fencing_op_t *op)
     } while(op->level < ST_LEVEL_MAX && tp->levels[op->level] == NULL);
 
     if(op->level < ST_LEVEL_MAX) {
-        crm_trace("Attempting fencing level %d for %s (%d devices)", op->level, op->target, g_list_length(tp->levels[op->level]));
+        crm_trace("Attempting fencing level %d for %s (%d devices) - %s@%s",
+                  op->level, op->target, g_list_length(tp->levels[op->level]),
+                  op->client_name, op->originator);
         op->devices = tp->levels[op->level];
         return pcmk_ok;
     }
 
-    crm_notice("All fencing options for %s failed", op->target);
+    crm_notice("All fencing options to fence %s for %s@%s failed",
+               op->target, op->client_name, op->originator);
     return -EINVAL;
 }
 
@@ -708,9 +711,11 @@ int process_remote_stonith_exec(xmlNode *msg)
     if(is_set(op->call_options, st_opt_topology)) {
         const char *device = crm_element_value(msg, F_STONITH_DEVICE);
 
-        crm_notice("Call to %s for %s on behalf of %s: %s (%d)", device, op->target, op->originator, rc == pcmk_ok?"passed":"failed", rc);
-        if(safe_str_eq(op->originator, stonith_our_uname)) {
+        crm_notice("Call to %s for %s on behalf of %s@%s: %s (%d)",
+                   device, op->target, op->client_name, op->originator,
+                   rc == pcmk_ok?"passed":"failed", rc);
 
+        if(safe_str_eq(op->originator, stonith_our_uname)) {
             if(op->state == st_done) {
                 remote_op_done(op, msg, rc);
                 return rc;
@@ -742,7 +747,7 @@ int process_remote_stonith_exec(xmlNode *msg)
     }
 
     /* Retry on failure or execute the rest of the topology */
-    crm_trace("Next for %s (rc was %d)", op->target, rc);
+    crm_trace("Next for %s on behalf of %s@%s (rc was %d)", op->target, op->originator, op->client_name, rc);
     call_remote_stonith(op, NULL);
     return rc;
 }

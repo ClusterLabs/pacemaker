@@ -882,7 +882,7 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
     if(cmd->victim != NULL) {
         do_crm_log(rc==0?LOG_NOTICE:LOG_ERR,
                    "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned: %d (%s)%s%s",
-                   cmd->action, pid, cmd->id, cmd->client, cmd->victim, cmd->device, rc, pcmk_strerror(rc),
+                   cmd->action, pid, cmd->id, cmd->client_name, cmd->victim, cmd->device, rc, pcmk_strerror(rc),
                    next?". Trying: ":"", next?next:"");
     } else {
         do_crm_log_unlikely(rc==0?LOG_DEBUG:LOG_NOTICE,
@@ -948,7 +948,7 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc, GPid 
         send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
 
     } else {
-        crm_trace("Directed local %ssync reply to %s", (cmd->options & st_opt_sync_call)?"":"a-", cmd->client);
+        crm_trace("Directed local %ssync reply to %s", (cmd->options & st_opt_sync_call)?"":"a-", cmd->client_name);
         do_local_reply(reply, cmd->client, cmd->options & st_opt_sync_call, FALSE);
     }
 
@@ -1061,8 +1061,8 @@ static void st_child_done(GPid pid, int rc, const char *output, gpointer user_da
         crm_notice("Merging stonith action %s for node %s originating from client %s with identical stonith request from client %s",
             cmd_other->action,
             cmd_other->victim,
-            cmd_other->client,
-            cmd->client);
+            cmd_other->client_name,
+            cmd->client_name);
 
         cmd_list = g_list_remove_link(cmd_list, gIter);
 
@@ -1346,8 +1346,8 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
                 int tolerance = 0;
 
                 crm_element_value_int(dev, F_STONITH_TOLERANCE, &tolerance);
-                crm_notice("Client %s.%d[%s] wants to fence (%s) '%s' with device '%s'",
-                           client->name, client->pid, client->id, action, target, device?device:"(any)");
+                crm_notice("Client %s.%.8s wants to fence (%s) '%s' with device '%s'",
+                           client->name, client->id, action, target, device?device:"(any)");
 
                 crm_trace("tolerance=%d, remote_op_list=%p", tolerance, remote_op_list);
                 if(tolerance > 0 && remote_op_list) {
