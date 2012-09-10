@@ -1133,7 +1133,7 @@ get_lrm_resource(xmlNode * resource, xmlNode * op_msg, gboolean do_create)
         crm_trace("Adding rsc %s before operation", id);
 
         fsa_lrm_conn->cmds->register_rsc(fsa_lrm_conn,
-            id, class, provider, type, 0);
+            id, class, provider, type, lrmd_opt_drop_recurring);
 
         rsc = fsa_lrm_conn->cmds->get_rsc_info(fsa_lrm_conn, id, 0);
 

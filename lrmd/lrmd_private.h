@@ -34,6 +34,8 @@ typedef struct lrmd_rsc_s {
     char *provider;
     char *type;
 
+    int call_opts;
+
     /* NEVER dereference this pointer,
      * It simply exists as a switch to let us know
      * when the currently active operation has completed */
@@ -64,6 +66,8 @@ void process_lrmd_message(lrmd_client_t * client, uint32_t id, xmlNode * request
 void free_rsc(gpointer data);
 
 void lrmd_shutdown(int nsig);
+
+void client_disconnect_cleanup(const char *client_id);
 
 /*!
  * \brief Don't worry about freeing this connection. It is 
