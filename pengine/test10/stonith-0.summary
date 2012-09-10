@@ -6,9 +6,9 @@ Online: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
  Resource Group: group-1
-     ocf_192.168.100.181	(ocf::heartbeat:IPaddr) Started [	c001n03	c001n05 ]
+     ocf_192.168.100.181	(ocf::heartbeat:IPaddr):	Started [ c001n03 c001n05 ]
      heartbeat_192.168.100.182	(heartbeat:IPaddr):	Started c001n03
-     ocf_192.168.100.183	(ocf::heartbeat:IPaddr) Started  FAILED[	c001n03	c001n05 ]
+     ocf_192.168.100.183	(ocf::heartbeat:IPaddr):	Started FAILED [ c001n03 c001n05 ]
  lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Started c001n04
  rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n06
  rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02

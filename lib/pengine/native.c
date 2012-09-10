@@ -365,15 +365,15 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         const char *desc = NULL;
 
         desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
-        status_print("%s%s\t(%s%s%s:%s%s) %s %s%s%s%s%s",
+        status_print("%s%s\t(%s%s%s:%s%s):\t%s %s%s%s%s%s",
                      pre_text ? pre_text : "", rsc->id,
                      class, prov ? "::" : "", prov ? prov : "",
                      crm_element_value(rsc->xml, XML_ATTR_TYPE),
                      is_set(rsc->flags, pe_rsc_orphan) ? " ORPHANED" : "",
                      (rsc->variant != pe_native) ? "" : role2text(rsc->role),
-                     is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
-                     is_set(rsc->flags, pe_rsc_failed) ? " FAILED" : "",
-                     is_set(rsc->flags, pe_rsc_failure_ignored) ? " (failure ignored)" : "",
+                     is_set(rsc->flags, pe_rsc_managed) ? "" : "(unmanaged) ",
+                     is_set(rsc->flags, pe_rsc_failed) ? "FAILED " : "",
+                     is_set(rsc->flags, pe_rsc_failure_ignored) ? "(failure ignored) " : "",
                      desc ? ": " : "", desc ? desc : "");
 
     } else {
@@ -423,7 +423,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
 
             } else if ((options & pe_print_printf)
                        || (options & pe_print_ncurses)) {
-                status_print("\t%s", node->details->uname);
+                status_print(" %s", node->details->uname);
 
             } else if ((options & pe_print_log)) {
                 status_print("\t%d : %s", counter, node->details->uname);

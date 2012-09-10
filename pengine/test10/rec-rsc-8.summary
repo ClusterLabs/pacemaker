@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(heartbeat:apache) Started  (unmanaged)[	node1	node2 ]
+ rsc1	(heartbeat:apache):	Started (unmanaged) [ node1 node2 ]
 
 Transition Summary:
 
@@ -11,5 +11,5 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(heartbeat:apache) Started  (unmanaged)[	node1	node2 ]
+ rsc1	(heartbeat:apache):	Started (unmanaged) [ node1 node2 ]
 

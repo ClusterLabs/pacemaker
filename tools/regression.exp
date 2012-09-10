@@ -686,7 +686,7 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
   </status>
 </cib>
 * Passed: crm_resource   - Create a resource attribute
- dummy	(ocf::pacemaker:Dummy) Stopped 
+ dummy	(ocf::pacemaker:Dummy):	Stopped 
 <cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>

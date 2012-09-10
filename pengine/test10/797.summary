@@ -9,7 +9,7 @@ Online: [ c001n01 c001n02 c001n03 ]
  rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n03
  rsc_c001n01	(ocf::heartbeat:IPaddr):	Started c001n01
  Clone Set: DoFencing [child_DoFencing] (unique)
-     child_DoFencing:0	(stonith:ssh) Started [	c001n01	c001n03 ]
+     child_DoFencing:0	(stonith:ssh):	Started [ c001n01 c001n03 ]
      child_DoFencing:1	(stonith:ssh):	Started c001n02
      child_DoFencing:2	(stonith:ssh):	Started c001n03
      child_DoFencing:3	(stonith:ssh):	Stopped 
