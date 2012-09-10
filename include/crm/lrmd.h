@@ -88,6 +88,9 @@ enum lrmd_call_options {
     /* lrmd_opt_sync_call = 0x00000001, //Not implemented, patches welcome. */
     /*! Only notify the client originating a exec() the results */
     lrmd_opt_notify_orig_only = 0x00000002,
+    /*! Drop recurring operations initiated by a client when client disconnects.
+     * This call_option is only valid when registering a resource. */
+    lrmd_opt_drop_recurring = 0x00000003,
 };
 
 enum lrmd_callback_event {

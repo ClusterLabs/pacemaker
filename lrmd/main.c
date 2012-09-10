@@ -183,6 +183,8 @@ lrmd_ipc_destroy(qb_ipcs_connection_t * c)
 
     crm_info("LRMD client disconnecting %p - name: %s id: %s", c, client->name, client->id);
 
+    client_disconnect_cleanup(client->id);
+
     qb_ipcs_context_set(c, NULL);
     free(client->name);
     free(client->id);
