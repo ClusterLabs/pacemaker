@@ -33,7 +33,7 @@
 GMainLoop *mainloop = NULL;
 qb_ipcs_service_t *ipcs = NULL;
 stonith_t *stonith_api = NULL;
-
+static int global_call_id = 0;
 
 static void
 stonith_connection_destroy_cb(stonith_t * st, stonith_event_t *e)
@@ -134,8 +134,14 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         }
     }
 
+    global_call_id++;
+    if (global_call_id < 1) {
+        global_call_id = 1;
+    }
+
     crm_xml_add(request, F_LRMD_CLIENTID, client->id);
     crm_xml_add(request, F_LRMD_CLIENTNAME, client->name);
+    crm_xml_add_int(request, F_LRMD_CALLID, global_call_id);
 
     process_lrmd_message(client, id, request);
 

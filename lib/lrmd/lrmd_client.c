@@ -45,8 +45,6 @@ CRM_TRACE_INIT_DATA(lrmd);
 static stonith_t *stonith_api = NULL;
 
 typedef struct lrmd_private_s {
-    int call_id;
-
     char *token;
     crm_ipc_t *ipc;
     mainloop_io_t *source;
@@ -260,8 +258,7 @@ lrmd_dispatch(lrmd_t * lrmd)
 }
 
 static xmlNode *
-lrmd_create_op(int call_id,
-               const char *token, const char *op, xmlNode * data, enum lrmd_call_options options)
+lrmd_create_op(const char *token, const char *op, xmlNode * data, enum lrmd_call_options options)
 {
     xmlNode *op_msg = create_xml_node(NULL, "lrmd_command");
 
@@ -273,7 +270,6 @@ lrmd_create_op(int call_id,
     crm_xml_add(op_msg, F_TYPE, T_LRMD);
     crm_xml_add(op_msg, F_LRMD_CALLBACK_TOKEN, token);
     crm_xml_add(op_msg, F_LRMD_OPERATION, op);
-    crm_xml_add_int(op_msg, F_LRMD_CALLID, call_id);
     crm_trace("Sending call options: %.8lx, %d", (long)options, options);
     crm_xml_add_int(op_msg, F_LRMD_CALLOPTS, options);
 
@@ -322,14 +318,9 @@ lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** outp
         return -EINVAL;
     }
 
-    native->call_id++;
-    if (native->call_id < 1) {
-        native->call_id = 1;
-    }
-
     CRM_CHECK(native->token != NULL,;);
 
-    op_msg = lrmd_create_op(native->call_id, native->token, op, data, options);
+    op_msg = lrmd_create_op(native->token, op, data, options);
 
     if (op_msg == NULL) {
         return -EINVAL;
@@ -348,26 +339,15 @@ lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** outp
 
     rc = pcmk_ok;
     crm_element_value_int(op_reply, F_LRMD_CALLID, &reply_id);
-    if (reply_id == native->call_id) {
-        crm_trace("reply received");
-        if (crm_element_value_int(op_reply, F_LRMD_RC, &rc) != 0) {
-            rc = -ENOMSG;
-            goto done;
-        }
-
-        if (output_data) {
-            *output_data = op_reply;
-            op_reply = NULL;    /* Prevent subsequent free */
-        }
-
-    } else if (reply_id <= 0) {
-        crm_err("Recieved bad reply: No id set");
-        crm_log_xml_err(op_reply, "Bad reply");
+    crm_trace("reply received");
+    if (crm_element_value_int(op_reply, F_LRMD_RC, &rc) != 0) {
         rc = -ENOMSG;
-    } else {
-        crm_err("Recieved bad reply: %d (wanted %d)", reply_id, native->call_id);
-        crm_log_xml_err(op_reply, "Old reply");
-        rc = -ENOMSG;
+        goto done;
+    }
+
+    if (output_data) {
+        *output_data = op_reply;
+        op_reply = NULL;    /* Prevent subsequent free */
     }
 
     crm_log_xml_trace(op_reply, "Reply");
