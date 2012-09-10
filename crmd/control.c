@@ -906,16 +906,3 @@ crm_shutdown(int nsig)
 
     }
 }
-
-void
-default_cib_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
-{
-    if (rc != pcmk_ok) {
-        fsa_data_t *msg_data = NULL;
-
-        crm_err("CIB Update failed: %s", pcmk_strerror(rc));
-        crm_log_xml_warn(output, "update:failed");
-
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-    }
-}

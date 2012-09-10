@@ -213,6 +213,19 @@ create_cib_node_definition(gpointer key, gpointer value, gpointer user_data)
     crm_xml_add(cib_new_node, XML_ATTR_UNAME, node->uname);
 }
 
+static void
+node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
+{
+    if (rc != pcmk_ok) {
+        fsa_data_t *msg_data = NULL;
+
+        crm_err("CIB Update %d failed: %s", call_id, pcmk_strerror(rc));
+        crm_log_xml_warn(output, "update:failed");
+
+        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+    }
+}
+
 void
 populate_cib_nodes(enum node_update_flags flags, const char *source)
 {
@@ -246,7 +259,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     crm_trace("Populating <nodes> section from %s", from_hashtable?"hashtable":"cluster");
 
     fsa_cib_update(XML_CIB_TAG_NODES, node_list, call_options, call_id, NULL);
-    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
+    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, node_list_update_callback);
 
     free_xml(node_list);
 

@@ -42,8 +42,6 @@ extern gboolean crm_fsa_trigger(gpointer user_data);
 
 extern void peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data);
 
-void default_cib_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
-
 #if SUPPORT_HEARTBEAT
 void crmd_ha_msg_callback(HA_Message * hamsg, void *private_data);
 #endif
