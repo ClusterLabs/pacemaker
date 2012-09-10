@@ -1174,7 +1174,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
     if (max == 0) {
         return;
     }
-    if (sequence >= max) {
+    if (max > 0 && sequence >= max) {
         sequence = 0;
     }
 
