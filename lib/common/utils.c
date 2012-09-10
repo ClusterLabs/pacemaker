@@ -1150,10 +1150,13 @@ get_last_sequence(const char *directory, const char *series)
         }
     }
 
-    free(series_file);
     seq = crm_parse_int(buffer, "0");
-    free(buffer);
     fclose(file_strm);
+
+    crm_trace("Found %d in %s", seq, series_file);
+
+    free(series_file);
+    free(buffer);
     return seq;
 }
 
@@ -1197,6 +1200,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
         fclose(file_strm);
     }
 
+    crm_trace("Wrote %d to %s", sequence, series_file);
     free(series_file);
 }
 

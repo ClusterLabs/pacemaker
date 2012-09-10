@@ -44,17 +44,16 @@ extern int transition_id;
 #define get_series() 	was_processing_error?1:was_processing_warning?2:3
 
 typedef struct series_s {
-    int id;
     const char *name;
     const char *param;
     int wrap;
 } series_t;
 
 series_t series[] = {
-    {0, "pe-unknown", "_dont_match_anything_", -1},
-    {0, "pe-error", "pe-error-series-max", -1},
-    {0, "pe-warn", "pe-warn-series-max", 200},
-    {0, "pe-input", "pe-input-series-max", 400},
+    {"pe-unknown", "_dont_match_anything_", -1},
+    {"pe-error", "pe-error-series-max", -1},
+    {"pe-warn", "pe-warn-series-max", 200},
+    {"pe-input", "pe-input-series-max", 400},
 };
 
 gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* sender);
@@ -62,7 +61,6 @@ gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connectio
 gboolean
 process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* sender)
 {
-    static char *filename = NULL;
     static char *last_digest = NULL;
 
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
@@ -96,12 +94,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
         xmlNode *reply = NULL;
         gboolean is_repoke = FALSE;
         gboolean process = TRUE;
-
-#if HAVE_BZLIB_H
-        gboolean compress = TRUE;
-#else
-        gboolean compress = FALSE;
-#endif
+        char *filename = NULL;
 
         crm_config_error = FALSE;
         crm_config_warning = FALSE;
@@ -123,7 +116,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
             process = FALSE;
 
         } else if (safe_str_eq(digest, last_digest)) {
-            crm_trace("Input has not changed since last time, not saving to disk");
+            crm_info("Input has not changed since last time, not saving to disk");
             is_repoke = TRUE;
 
         } else {
@@ -151,15 +144,15 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
         }
 
         seq = get_last_sequence(PE_STATE_DIR, series[series_id].name);
+        crm_trace("Series %s: wrap=%d, seq=%d, pref=%s",
+                  series[series_id].name, series_wrap, seq, value);
 
         data_set.input = NULL;
         reply = create_reply(msg, data_set.graph);
         CRM_ASSERT(reply != NULL);
 
         if (is_repoke == FALSE) {
-            free(filename);
-            filename =
-                generate_series_filename(PE_STATE_DIR, series[series_id].name, seq, compress);
+            filename = generate_series_filename(PE_STATE_DIR, series[series_id].name, seq, HAVE_BZLIB_H);
         }
 
         crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
@@ -175,23 +168,17 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
         free_xml(reply);
         cleanup_alloc_calculations(&data_set);
 
-        if (is_repoke == FALSE && series_wrap != 0) {
-            write_xml_file(xml_data, filename, compress);
-            write_last_sequence(PE_STATE_DIR, series[series_id].name, seq + 1, series_wrap);
-        }
-
         if (was_processing_error) {
-            crm_err("Transition %d:"
-                    " ERRORs found during PE processing."
-                    " PEngine Input stored in: %s", transition_id, filename);
+            crm_err("Calculated Transition %d: %s",
+                    transition_id, filename);
 
         } else if (was_processing_warning) {
-            crm_warn("Transition %d:"
-                     " WARNINGs found during PE processing."
-                     " PEngine Input stored in: %s", transition_id, filename);
+            crm_warn("Calculated Transition %d: %s",
+                     transition_id, filename);
 
         } else {
-            crm_notice("Transition %d: PEngine Input stored in: %s", transition_id, filename);
+            crm_notice("Calculated Transition %d: %s",
+                       transition_id, filename);
         }
 
         if (crm_config_error) {
@@ -199,8 +186,18 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
                        "  Please run \"crm_verify -L\" to identify issues.");
         }
 
+        if (is_repoke == FALSE && series_wrap != 0) {
+            write_xml_file(xml_data, filename, HAVE_BZLIB_H);
+            write_last_sequence(PE_STATE_DIR, series[series_id].name,
+                                seq + 1, series_wrap);
+        } else {
+            crm_trace("Not writing out %s: %d & %d",
+                      filename, is_repoke, series_wrap);
+        }
+
         free_xml(converted);
         free(graph_file);
+        free(filename);
 
     } else if (strcasecmp(op, CRM_OP_QUIT) == 0) {
         crm_warn("Received quit message, terminating");
