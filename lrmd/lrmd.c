@@ -46,13 +46,14 @@ typedef struct lrmd_cmd_s {
     int exec_rc;
     int lrmd_op_status;
 
+    int call_opts;
     /* Timer ids, must be removed on cmd destruction. */
     int delay_id;
     int stonith_recurring_id;
 
     int rsc_deleted;
 
-    char *only_notify_client;
+    char *client_id;
     char *origin;
     char *rsc_id;
     char *action;
@@ -73,7 +74,7 @@ typedef struct lrmd_cmd_s {
 
 static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
 static gboolean lrmd_rsc_dispatch(gpointer user_data);
-
+static void cancel_all_recurring(lrmd_rsc_t *rsc, const char *client_id);
 static lrmd_rsc_t *
 build_rsc_from_xml(xmlNode * msg)
 {
@@ -81,6 +82,9 @@ build_rsc_from_xml(xmlNode * msg)
     lrmd_rsc_t *rsc = NULL;
 
     rsc = calloc(1, sizeof(lrmd_rsc_t));
+
+    crm_element_value_int(msg, F_LRMD_CALLOPTS, &rsc->call_opts);
+
     rsc->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ID);
     rsc->class = crm_element_value_copy(rsc_xml, F_LRMD_CLASS);
     rsc->provider = crm_element_value_copy(rsc_xml, F_LRMD_PROVIDER);
@@ -99,10 +103,8 @@ create_lrmd_cmd(xmlNode * msg, lrmd_client_t * client)
     cmd = calloc(1, sizeof(lrmd_cmd_t));
 
     crm_element_value_int(msg, F_LRMD_CALLOPTS, &call_options);
-
-    if (call_options & lrmd_opt_notify_orig_only) {
-        cmd->only_notify_client = strdup(client->id);
-    }
+    cmd->call_opts = call_options;
+    cmd->client_id = strdup(client->id);
 
     crm_element_value_int(msg, F_LRMD_CALLID, &cmd->call_id);
     crm_element_value_int(rsc_xml, F_LRMD_RSC_INTERVAL, &cmd->interval);
@@ -136,7 +138,7 @@ free_lrmd_cmd(lrmd_cmd_t * cmd)
     free(cmd->userdata_str);
     free(cmd->rsc_id);
     free(cmd->output);
-    free(cmd->only_notify_client);
+    free(cmd->client_id);
     free(cmd);
 }
 
@@ -304,8 +306,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         }
     }
 
-    if (cmd->only_notify_client) {
-        lrmd_client_t *client = g_hash_table_lookup(client_list, cmd->only_notify_client);
+    if (cmd->client_id && (cmd->call_opts & lrmd_opt_notify_orig_only)) {
+        lrmd_client_t *client = g_hash_table_lookup(client_list, cmd->client_id);
 
         if (client) {
             send_client_notify(client->id, client, notify);
@@ -355,6 +357,11 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
     }
 
     send_cmd_complete_notify(cmd);
+
+    /* crmd expects lrmd to automatically cancel recurring ops after rsc stops */
+    if (rsc && safe_str_eq(cmd->action, "stop")) {
+        cancel_all_recurring(rsc, NULL);
+    }
 
     if (cmd->interval && (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED)) {
         if (rsc) {
@@ -451,6 +458,23 @@ get_uniform_rc(const char *standard, const char *action, int rc)
     }
 }
 
+void
+client_disconnect_cleanup(const char *client_id)
+{
+    GHashTableIter iter;
+    lrmd_rsc_t *rsc = NULL;
+    char *key = NULL;
+
+    g_hash_table_iter_init(&iter, rsc_list);
+    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
+        if (rsc->call_opts & lrmd_opt_drop_recurring) {
+            /* This client is disconnecting, drop any recurring operations
+             * it may have initiated on the resource */
+            cancel_all_recurring(rsc, client_id);
+        }
+    }
+}
+
 static void
 action_complete(svc_action_t * action)
 {
@@ -482,29 +506,32 @@ action_complete(svc_action_t * action)
 static void
 stonith_action_complete(lrmd_cmd_t *cmd, int rc)
 {
+    int recurring = cmd->interval;
     lrmd_rsc_t *rsc = NULL;
-
     cmd->exec_rc = get_uniform_rc("stonith", cmd->action, rc);
 
-    /* Attempt to map return codes to op status if possible */
-    if (rc) {
+    if (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
+        recurring = 0;
+        /* do nothing */
+    } else if (rc) {
+        /* Attempt to map return codes to op status if possible */
         switch (rc) {
-            case -EPROTONOSUPPORT:
-                cmd->lrmd_op_status = PCMK_LRM_OP_NOTSUPPORTED;
-                break;
-            case -ETIME:
-                cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
-                break;
-            default:
-                cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
+        case -EPROTONOSUPPORT:
+            cmd->lrmd_op_status = PCMK_LRM_OP_NOTSUPPORTED;
+            break;
+        case -ETIME:
+            cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
+            break;
+        default:
+            cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
         }
     } else {
+        /* command successful */
         cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
     }
 
     rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
-    if ((cmd->interval > 0) && rsc) {
-        rsc->recurring_ops = g_list_append(rsc->recurring_ops, cmd);
+    if (recurring && rsc) {
         if (cmd->stonith_recurring_id) {
             g_source_remove(cmd->stonith_recurring_id);
         }
@@ -532,9 +559,6 @@ stonith_connection_failed(void)
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
         if (safe_str_eq(rsc->class, "stonith")) {
-            if (rsc->active) {
-                cmd_list = g_list_append(cmd_list, rsc->active);
-            }
             if (rsc->recurring_ops) {
                 cmd_list = g_list_concat(cmd_list, rsc->recurring_ops);
             }
@@ -681,12 +705,6 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 
     action->cb_data = cmd;
-    /* The cmd will be finalized by the action_complete callback after
-     * the service library is done with it */
-    rsc->active = cmd;          /* only one op at a time for a rsc */
-    if (cmd->interval) {
-        rsc->recurring_ops = g_list_append(rsc->recurring_ops, cmd);
-    }
 
     /* 'cmd' may not be valid after this point
      *
@@ -740,6 +758,11 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
     if (!cmd) {
         crm_trace("Nothing further to do for %s", rsc->rsc_id);
         return TRUE;
+    }
+
+    rsc->active = cmd;          /* only one op at a time for a rsc */
+    if (cmd->interval) {
+        rsc->recurring_ops = g_list_append(rsc->recurring_ops, cmd);
     }
 
     if (safe_str_eq(rsc->class, "stonith")) {
@@ -977,7 +1000,9 @@ cancel_op(const char *rsc_id, const char *action, int interval)
 
             if (safe_str_eq(cmd->action, action) && cmd->interval == interval) {
                 cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
-                cmd_finalize(cmd, rsc);
+                if (rsc->active != cmd) {
+                    cmd_finalize(cmd, rsc);
+                }
                 return pcmk_ok;
             }
         }
@@ -990,6 +1015,44 @@ cancel_op(const char *rsc_id, const char *action, int interval)
     }
 
     return -EOPNOTSUPP;
+}
+
+static void
+cancel_all_recurring(lrmd_rsc_t *rsc, const char *client_id)
+{
+    GList *cmd_list = NULL;
+    GList *cmd_iter = NULL;
+
+    /* Notice a copy of each list is created when concat is called.
+     * This prevents odd behavior from occurring when the cmd_list
+     * is iterated through later on.  It is possible the cancel_op
+     * function may end up modifying the recurring_ops and pending_ops
+     * lists.  If we did not copy those lists, our cmd_list iteration
+     * could get messed up.*/
+    if (rsc->recurring_ops) {
+        cmd_list = g_list_concat(cmd_list, g_list_copy(rsc->recurring_ops));
+    }
+    if (rsc->pending_ops) {
+        cmd_list = g_list_concat(cmd_list, g_list_copy(rsc->pending_ops));
+    }
+    if (!cmd_list) {
+        return;
+    }
+
+    for (cmd_iter = cmd_list; cmd_iter; cmd_iter = cmd_iter->next) {
+        lrmd_cmd_t *cmd = cmd_iter->data;
+        if (cmd->interval == 0) {
+           continue;
+        }
+
+        if (client_id && safe_str_neq(cmd->client_id, client_id)) {
+            continue;
+        }
+
+        cancel_op(rsc->rsc_id, cmd->action, cmd->interval);
+    }
+    /* frees only the copied list data, not the cmds */
+    g_list_free(cmd_list);
 }
 
 static int
