@@ -973,7 +973,7 @@ init_cs_connection_classic(crm_cluster_t *cluster)
 
     get_ais_nodeid(&pcmk_nodeid, &pcmk_uname);
     if (safe_str_neq(name.nodename, pcmk_uname)) {
-        crm_crit("Node name mismatch!  OpenAIS supplied %s, our lookup returned %s",
+        crm_crit("Node name mismatch!  Corosync supplied %s, our lookup returned %s",
                  pcmk_uname, name.nodename);
         crm_notice
             ("Node name mismatches usually occur when assigned automatically by DHCP servers");

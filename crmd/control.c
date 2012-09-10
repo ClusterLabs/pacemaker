@@ -68,7 +68,7 @@ do_ha_control(long long action,
 #if SUPPORT_COROSYNC
             terminate_cs_connection();
 #endif
-            crm_info("Disconnected from OpenAIS");
+            crm_info("Disconnected from Corosync");
 
 #if SUPPORT_HEARTBEAT
         } else if (fsa_cluster_conn != NULL) {

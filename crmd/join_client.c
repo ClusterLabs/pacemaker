@@ -239,7 +239,7 @@ do_cl_join_finalize_respond(long long action,
             /*
              * Clear any previous transient node attribute and lrm operations
              *
-             * OpenAIS has a nasty habit of not being able to tell if a
+             * Corosync has a nasty habit of not being able to tell if a
              *   node is returning or didn't leave in the first place.
              * This confuses Pacemaker because it never gets a "node up"
              *   event which is normally used to clean up the status section.

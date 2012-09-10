@@ -873,7 +873,7 @@ pcmk_ipc_exit(void *conn)
 int
 pcmk_ipc_connect(void *conn)
 {
-    /* OpenAIS hasn't finished setting up the connection at this point
+    /* Corosync hasn't finished setting up the connection at this point
      * Sending messages now messes up the protocol!
      */
     return (0);

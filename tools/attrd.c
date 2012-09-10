@@ -400,11 +400,11 @@ attrd_ais_destroy(gpointer unused)
 {
     if (need_shutdown) {
         /* we signed out, so this is expected */
-        crm_info("OpenAIS disconnection complete");
+        crm_info("Corosync disconnection complete");
         return;
     }
 
-    crm_crit("Lost connection to OpenAIS service!");
+    crm_crit("Lost connection to Corosync service!");
     if (mainloop != NULL && g_main_is_running(mainloop)) {
         g_main_quit(mainloop);
         return;
