@@ -40,6 +40,7 @@ static struct crm_option long_options[] = {
     {"no-wait",          0, 0, 'w', "\tMake api call and do not wait for result."},
     {"is-running",       0, 0, 'R', "\tDetermine if a resource is registered and running."},
     {"notify-orig",      0, 0, 'n', "\tOnly notify this client the results of an api action."},
+    {"notify-changes",   0, 0, 'o', "\tOnly notify client changes to recurring operations."},
     {"-spacer-",         1, 0, '-', "\nParameters for api-call option"},
     {"action",           1, 0, 'a'},
     {"rsc-id",           1, 0, 'r'},
@@ -463,6 +464,9 @@ main(int argc, char **argv)
                 break;
             case 'n':
                 exec_call_opts = lrmd_opt_notify_orig_only;
+                break;
+            case 'o':
+                exec_call_opts = lrmd_opt_notify_changes_only;
                 break;
             case 'c':
                 options.api_call = optarg;
