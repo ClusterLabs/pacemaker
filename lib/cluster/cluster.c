@@ -116,7 +116,16 @@ get_corosync_uuid(uint32_t id, const char *uname)
         }
 
         if (id > 0) {
-            return crm_itoa(id);
+            int len = 32;
+            char *buffer = NULL;
+
+            buffer = calloc(1, (len + 1));
+            if (buffer != NULL) {
+                snprintf(buffer, len, "%u", id);
+            }
+
+            return buffer;
+
         } else {
             crm_warn("Node %s is not yet known by corosync", uname);
         }

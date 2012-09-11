@@ -397,13 +397,13 @@ void crm_update_peer_state(const char *source, crm_node_t *node, const char *sta
     }
 
     if (changed) {
-        crm_notice("%s: Node %s[%d] - state is now %s", source, node->uname, node->id, state);
+        crm_notice("%s: Node %s[%u] - state is now %s", source, node->uname, node->id, state);
         if (crm_status_callback) {
             crm_status_callback(crm_status_nstate, node, last);
         }
         free(last);
     } else {
-        crm_trace("%s: Node %s[%d] - state is unchanged (%s)", source, node->uname, node->id, state);
+        crm_trace("%s: Node %s[%u] - state is unchanged (%s)", source, node->uname, node->id, state);
     }
 }
 
