@@ -321,7 +321,7 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
         int tmp = 0;
 
         crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);
-        crm_info("Got call_id=%d for %s", tmp, ID(resource));
+        crm_debug("Got call_id=%d for %s", tmp, ID(resource));
         if (tmp > op->call_id) {
             op->call_id = tmp;
         }
