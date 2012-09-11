@@ -1292,6 +1292,7 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
     key = crm_concat("fail-count", rsc->clone_name?rsc->clone_name:rsc->id, '-');
     value = g_hash_table_lookup(node->details->attrs, key);
     search.count = char2score(value);
+    crm_trace("%s = %s", key, value);
     free(key);
     
     if(value) {
@@ -1300,20 +1301,12 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
         search.last = crm_int_helper(value, NULL);
         free(key);
 
-        /* This block wont be relevant once we omit anonymous instance numbers */
+        /* This block is still relevant once we omit anonymous instance numbers
+         * because stopped clones wont have clone_name set
+         */
     } else if (is_not_set(rsc->flags, pe_rsc_unique)) {
-        int lpc = 0;
-
         search.rsc = uber_parent(rsc);
-        search.key = strdup(rsc->id);
-
-        /* Strip the clone incarnation */
-        for (lpc = strlen(search.key); lpc > 0; lpc--) {
-            if (search.key[lpc] == ':') {
-                search.key[lpc + 1] = 0;
-                break;
-            }
-        }
+        search.key = clone_strip(rsc->id);
 
         g_hash_table_foreach(node->details->attrs, get_failcount_by_prefix, &search);
         free(search.key);
