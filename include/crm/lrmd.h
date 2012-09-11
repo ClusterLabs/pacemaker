@@ -91,6 +91,8 @@ enum lrmd_call_options {
     /*! Drop recurring operations initiated by a client when client disconnects.
      * This call_option is only valid when registering a resource. */
     lrmd_opt_drop_recurring = 0x00000003,
+    /*! Only send out notifications for recurring operations whenthe result changes */
+    lrmd_opt_notify_changes_only = 0x00000004,
 };
 
 enum lrmd_callback_event {
