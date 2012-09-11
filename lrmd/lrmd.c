@@ -69,6 +69,10 @@ typedef struct lrmd_cmd_s {
     struct timeb t_rcchange;
 #endif
 
+    int first_notify_sent;
+    int last_notify_rc;
+    int last_notify_op_status;
+
     GHashTable *params;
 } lrmd_cmd_t;
 
@@ -267,6 +271,23 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     struct timeb now = { 0, };
 #endif
     xmlNode *notify = NULL;
+
+    /* if the first notify result for a cmd has already been sent earlier, and the
+     * the option to only send notifies on result changes is set. Check to see
+     * if the last result is the same as the new one. If so, suppress this update */
+    if (cmd->first_notify_sent && (cmd->call_opts & lrmd_opt_notify_changes_only)) {
+        if (cmd->last_notify_rc == cmd->exec_rc &&
+            cmd->last_notify_op_status == cmd->lrmd_op_status) {
+
+            /* only send changes */
+            return;
+        }
+
+    }
+
+    cmd->first_notify_sent = 1;
+    cmd->last_notify_rc = cmd->exec_rc;
+    cmd->last_notify_op_status = cmd->lrmd_op_status;
 
     notify = create_xml_node(NULL, T_LRMD_NOTIFY);
 

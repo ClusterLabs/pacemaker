@@ -56,8 +56,6 @@ struct recurring_op_s {
     char *op_key;
     int call_id;
     int interval;
-    int last_rc;
-    int last_op_status;
     gboolean remove;
     gboolean cancelled;
 };
@@ -1709,7 +1707,7 @@ do_lrm_rsc_op(lrmd_rsc_info_t * rsc, const char *operation, xmlNode * msg, xmlNo
         op->interval,
         op->timeout,
         op->start_delay,
-        0,
+        lrmd_opt_notify_changes_only,
         params);
 
     if (call_id <= 0) {
@@ -1731,8 +1729,6 @@ do_lrm_rsc_op(lrmd_rsc_info_t * rsc, const char *operation, xmlNode * msg, xmlNo
         pending->op_type = strdup(operation);
         pending->op_key = strdup(op_id);
         pending->rsc_id = strdup(rsc->id);
-        pending->last_rc = -1; /* All rc are positive, -1 indicates the last rc has not been set. */
-        pending->last_op_status = -2;
         g_hash_table_replace(pending_ops, call_id_s, pending);
 
         if (op->interval > 0 && op->start_delay > START_DELAY_THRESHOLD) {
@@ -1895,21 +1891,6 @@ process_lrm_event(lrmd_event_data_t * op)
     CRM_CHECK(op->rsc_id != NULL, return FALSE);
     op_id = make_stop_id(op->rsc_id, op->call_id);
     pending = g_hash_table_lookup(pending_ops, op_id);
-
-    /* ignore recurring ops that have not changed. */
-    if (op->interval &&
-            pending &&
-            (pending->last_rc == op->rc) &&
-            (pending->last_op_status == op->op_status)) {
-        free(op_id);
-        return TRUE;
-    }
-
-    if (pending) {
-        pending->last_rc = op->rc;
-        pending->last_op_status = op->op_status;
-    }
-
     op_key = generate_op_key(op->rsc_id, op->op_type, op->interval);
     rsc = fsa_lrm_conn->cmds->get_rsc_info(fsa_lrm_conn, op->rsc_id, 0);
 
