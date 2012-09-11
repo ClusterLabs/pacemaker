@@ -1322,6 +1322,13 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
     /*         return; */
 
     } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_RELAY, TRUE)) {
+        xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_TRACE);
+        crm_notice("Peer %s has received a forwarded fencing request from %s to fence (%s) peer %s",
+            stonith_our_uname,
+            client ? client->name : remote,
+            crm_element_value(dev, F_STONITH_ACTION),
+            crm_element_value(dev, F_STONITH_TARGET));
+
         if(initiate_remote_stonith_op(NULL, request, FALSE) != NULL) {
             rc = -EINPROGRESS;
         }
