@@ -428,7 +428,9 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t *data)
         crm_debug("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
             action->confirmed = TRUE;
-            send_stonith_update(action, target, uuid);
+            if(action->sent_update == FALSE) {
+                send_stonith_update(action, target, uuid);
+            }
         }
         rec = g_hash_table_lookup(stonith_failures, target);
         if(rec) {
