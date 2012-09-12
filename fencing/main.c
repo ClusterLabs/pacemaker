@@ -362,10 +362,12 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     }
 
     if(client->flags & get_stonith_flag(type)) {
-        crm_trace("Sending %s-notification to client %s/%s", type, client->name, client->id);
-        if(crm_ipcs_send(client->channel, 0, update_msg, crm_ipc_server_event|crm_ipc_server_error) <= 0) {
-            crm_warn("%s-Notification of client %s/%s failed",
-                     type, client->name, client->id);
+        int rc = crm_ipcs_send(client->channel, 0, update_msg, crm_ipc_server_event|crm_ipc_server_error);
+        if(rc <= 0) {
+            crm_warn("%s notification of client %s.%.6s failed: %s (%d)",
+                     type, client->name, client->id, pcmk_strerror(rc), rc);
+        } else {
+            crm_trace("Sent %s notification to client %s.%.6s", type, client->name, client->id);
         }
     }
 }

@@ -38,9 +38,10 @@ typedef struct remote_fencing_op_s {
     char *action;
     guint replies;
 
-    guint op_timer;
-    guint query_timer;
-    guint base_timeout;
+    gint op_timer;
+    gint op_timer_one;
+    gint query_timer;
+    gint base_timeout;
 
     char *delegate;
     time_t completed;
@@ -53,10 +54,11 @@ typedef struct remote_fencing_op_s {
     GListPtr query_results;
     xmlNode *request;
 
-    guint level;                /* ABI */
-    GListPtr devices;           /* ABI */
-
+    guint level;
     int topology_device_number;
+
+    GListPtr devices;
+    GListPtr duplicates;
 
 } remote_fencing_op_t;
 

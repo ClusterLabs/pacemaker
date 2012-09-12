@@ -911,31 +911,30 @@ static void
 stonith_send_async_reply(async_command_t *cmd, const char *output, int rc, GPid pid)
 {
     xmlNode *reply = NULL;
-    gboolean bcast = TRUE;
+    gboolean bcast = FALSE;
 
     reply = stonith_construct_async_reply(cmd, output, NULL, rc);
 
     if(safe_str_eq(cmd->action, "metadata")) {
         /* Too verbose to log */
-        bcast = FALSE;
+        crm_trace("Metadata query for %s", cmd->device);
         output = NULL;
-        crm_trace("Directed reply: %s op", cmd->action);
 
     } else if(crm_str_eq(cmd->action, "monitor", TRUE) ||
-            crm_str_eq(cmd->action, "list", TRUE) ||
-            crm_str_eq(cmd->action, "status", TRUE)) {
-        crm_trace("Directed reply: %s op", cmd->action);
-        bcast = FALSE;
+              crm_str_eq(cmd->action, "list", TRUE) ||
+              crm_str_eq(cmd->action, "status", TRUE)) {
+        crm_trace("Never broadcast %s replies", cmd->action);
 
-    } else if(safe_str_eq(cmd->mode, "slave")) {
-        crm_trace("Directed reply: Complex op with %s", cmd->device);
-        bcast = FALSE;
+    } else if(!stand_alone && safe_str_eq(cmd->origin, cmd->victim)) {
+        crm_info("Broadcast %s reply for %s", cmd->action, cmd->victim);
+        crm_xml_add(reply, F_SUBTYPE, "broadcast");
+        bcast = TRUE;
     }
 
     log_operation(cmd, rc, pid, NULL, output);
     crm_log_xml_trace(reply, "Reply");
 
-    if(bcast && !stand_alone) {
+    if(bcast) {
         /* Send reply as T_STONITH_NOTIFY so everyone does notifications
          * Potentially limit to unsucessful operations to the originator?
          */
@@ -948,7 +947,8 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc, GPid 
         send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
 
     } else {
-        crm_trace("Directed local %ssync reply to %s", (cmd->options & st_opt_sync_call)?"":"a-", cmd->client_name);
+        crm_trace("Directed local %ssync reply to %s",
+                  (cmd->options & st_opt_sync_call)?"":"a-", cmd->client_name);
         do_local_reply(reply, cmd->client, cmd->options & st_opt_sync_call, FALSE);
     }
 
@@ -1007,8 +1007,8 @@ static void st_child_done(GPid pid, int rc, const char *output, gpointer user_da
         mainloop_set_trigger(device->work);
     }
 
-    crm_trace("Operation on %s completed with rc=%d (%d remaining)",
-              cmd->device, rc, g_list_length(cmd->device_next));
+    crm_trace("Operation %s on %s completed with rc=%d (%d remaining)",
+              cmd->action, cmd->device, rc, g_list_length(cmd->device_next));
 
     if(rc != 0 && cmd->device_next) {
         stonith_device_t *dev = cmd->device_next->data;
@@ -1272,6 +1272,7 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
         crm_element_value_int(request, F_STONITH_TIMEOUT, &op_timeout);
         do_stonith_async_timeout_update(client_id, call_id, op_timeout);
         return;
+
     } else if(is_reply && crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
         process_remote_stonith_query(request);
         return;
@@ -1360,24 +1361,24 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
                 if(tolerance > 0 && remote_op_list) {
                     GHashTableIter iter;
                     time_t now = time(NULL);
-                    remote_fencing_op_t *op = NULL;
+                    remote_fencing_op_t *rop = NULL;
 
                     g_hash_table_iter_init(&iter, remote_op_list); 
-                    while(g_hash_table_iter_next(&iter, NULL, (void**)&op)) {
+                    while(g_hash_table_iter_next(&iter, NULL, (void**)&rop)) {
                         if (target == NULL || action == NULL) {
                             continue;
-                        } else if(strcmp(op->target, target) != 0) {
+                        } else if(strcmp(rop->target, target) != 0) {
                             continue;
-                        } else if(op->state != st_done) {
+                        } else if(rop->state != st_done) {
                             continue;
-                        } else if(strcmp(op->action, action) != 0) {
+                        } else if(strcmp(rop->action, action) != 0) {
                             continue;
-                        } else if((op->completed + tolerance) < now) {
+                        } else if((rop->completed + tolerance) < now) {
                             continue;
                         }
 
                         crm_notice("Target %s was fenced (%s) less than %ds ago by %s on behalf of %s",
-                                   target, action, tolerance, op->delegate, op->originator);
+                                   target, action, tolerance, rop->delegate, rop->originator);
                         rc = 0;
                         goto done;
                     }

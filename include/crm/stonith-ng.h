@@ -60,6 +60,7 @@ enum op_state
     st_query,
     st_exec,
     st_done,
+    st_duplicate,
     st_failed,
 };
 
