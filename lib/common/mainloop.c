@@ -500,6 +500,20 @@ struct mainloop_io_s
 
 };
 
+static int
+mainloop_gio_refcount(mainloop_io_t *client) 
+{
+    /* This is evil
+     * Looking at the giochannel header file, ref_count is the first member of channel
+     * So cheat...
+     */
+    if(client && client->channel) {
+        int *ref = (void*)client->channel;
+        return *ref;
+    }
+    return 0;
+}
+
 static gboolean
 mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
 {
@@ -543,7 +557,8 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
         keep = FALSE;
 
     } else if(condition & (G_IO_HUP|G_IO_NVAL|G_IO_ERR)) {
-        crm_trace("The connection %s[%p] has been closed (I/O condition=%d)", client->name, client, condition);
+        crm_trace("The connection %s[%p] has been closed (I/O condition=%d, refcount=%d)",
+                  client->name, client, condition, mainloop_gio_refcount(client));
         keep = FALSE;
 
     } else if((condition & G_IO_IN) == 0) {
@@ -576,7 +591,10 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
         */
         crm_err("Strange condition: %d", condition);
     }
-    
+
+    /* keep == FALSE results in mainloop_gio_destroy() being called
+     * just before the source is removed from mainloop
+     */
     return keep;
 }
 
@@ -585,7 +603,10 @@ mainloop_gio_destroy(gpointer c)
 {
     mainloop_io_t *client = c;
 
-    crm_trace("Destroying %s[%p]", client->name, c);
+    /* client->source is valid but about to be destroyed (ref_count == 0) in gmain.c
+     * client->channel will still have ref_count > 0
+     */
+    crm_trace("Destroying client %s[%p] %d", client->name, c, mainloop_gio_refcount(client));
 
     if(client->ipc) {
         crm_ipc_close(client->ipc);
@@ -599,7 +620,20 @@ mainloop_gio_destroy(gpointer c)
         crm_ipc_destroy(client->ipc);
     }
 
+    if(client->channel && client->source) {
+        /* We still hold a reference to the channel (from g_io_add_watch_full), now is the time to drop it */
+        crm_trace("Unreferencing client %s[%p] %d", client->name, client, mainloop_gio_refcount(client));
+        g_io_channel_unref(client->channel);
+
+        /* g_source_remove() via g_source_destroy_internal() will take
+         * care of the remaining reference (ie. from creation), resulting in deletion
+         */
+    }
+
+    crm_trace("Destroyed client %s[%p] %d", client->name, c, mainloop_gio_refcount(client));
     free(client->name);
+
+    memset(client, 0, sizeof(mainloop_io_t)); /* A bit of pointless paranoia */
     free(client);
 }
 
@@ -661,7 +695,7 @@ mainloop_add_fd(
         client->source = g_io_add_watch_full(
             client->channel, priority, (G_IO_IN|G_IO_HUP|G_IO_NVAL|G_IO_ERR),
             mainloop_gio_callback, client, mainloop_gio_destroy);
-        crm_trace("Added connection %d for %s[%p].%d", client->source, client->name, client, fd);
+        crm_trace("Added connection %d for %s[%p].%d %d", client->source, client->name, client, fd, mainloop_gio_refcount(client));
     }
 
     return client;
@@ -671,18 +705,13 @@ void
 mainloop_del_fd(mainloop_io_t *client)
 {
     if(client != NULL) {
-        if (client->channel) {
-            crm_trace("Removing client %s[%p]", client->name, client);
-            g_io_channel_unref(client->channel);
-            client->channel = NULL;
-        }
+        crm_trace("Removing client %s[%p] %d", client->name, client, mainloop_gio_refcount(client));
         if (client->source) {
-            guint tmp = client->source;
-
-            client->source = 0;
-            g_source_remove(tmp);
+            /* Results in mainloop_gio_destroy() being called just
+             * before the source is removed from mainloop
+             */
+            g_source_remove(client->source);
         }
-        /* Results in mainloop_ipcc_destroy() being called once the source is removed from mainloop? */
     }
 }
 

@@ -360,7 +360,7 @@ void
 crm_ipc_close(crm_ipc_t *client) 
 {
     if(client) {
-        crm_trace("Disconnecting %s IPC connection %p (%p.%d)", client->name, client, client->ipc);
+        crm_trace("Disconnecting %s IPC connection %p (%p.%p)", client->name, client, client->ipc);
 
         if(client->ipc) {
             qb_ipcc_connection_t *ipc = client->ipc;
@@ -386,7 +386,7 @@ crm_ipc_destroy(crm_ipc_t *client)
              */
             /* crm_ipc_close(client); */
         }
-        crm_trace("Destroying %s IPC connection %p", client->name, client);
+        crm_trace("Destroying IPC connection to %s: %p", client->name, client);
         free(client->buffer);
         free(client->name);
         free(client);
