@@ -266,7 +266,7 @@ crm_cluster_connect(crm_cluster_t *cluster)
 }
 
 gboolean
-send_cluster_message(const char *node, enum crm_ais_msg_types service, xmlNode * data,
+send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service, xmlNode * data,
                      gboolean ordered)
 {
 
@@ -277,7 +277,7 @@ send_cluster_message(const char *node, enum crm_ais_msg_types service, xmlNode *
 #endif
 #if SUPPORT_HEARTBEAT
     if (is_heartbeat_cluster()) {
-        return send_ha_message(heartbeat_cluster, data, node, ordered);
+        return send_ha_message(heartbeat_cluster, data, node->uname, ordered);
     }
 #endif
     return FALSE;

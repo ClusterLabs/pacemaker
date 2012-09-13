@@ -207,7 +207,7 @@ crm_get_cluster_name(char **cname)
 
 gboolean
 send_ais_text(int class, const char *data,
-              gboolean local, const char *node, enum crm_ais_msg_types dest)
+              gboolean local, crm_node_t *node, enum crm_ais_msg_types dest)
 {
     static int msg_id = 0;
     static int local_pid = 0;
@@ -247,16 +247,14 @@ send_ais_text(int class, const char *data,
 
     ais_msg->host.type = dest;
     ais_msg->host.local = local;
-    if (node) {
-        ais_msg->host.size = strlen(node);
-        memset(ais_msg->host.uname, 0, MAX_NAME);
-        memcpy(ais_msg->host.uname, node, ais_msg->host.size);
-        ais_msg->host.id = 0;
 
-    } else {
-        ais_msg->host.size = 0;
-        memset(ais_msg->host.uname, 0, MAX_NAME);
-        ais_msg->host.id = 0;
+    if (node) {
+        if (node->uname) {
+            ais_msg->host.size = strlen(node->uname);
+            memset(ais_msg->host.uname, 0, MAX_NAME);
+            memcpy(ais_msg->host.uname, node->uname, ais_msg->host.size);
+        }
+        ais_msg->host.id = node->id;
     }
 
     ais_msg->sender.id = 0;
@@ -388,7 +386,7 @@ send_ais_text(int class, const char *data,
 }
 
 gboolean
-send_ais_message(xmlNode * msg, gboolean local, const char *node, enum crm_ais_msg_types dest)
+send_ais_message(xmlNode * msg, gboolean local, crm_node_t *node, enum crm_ais_msg_types dest)
 {
     gboolean rc = TRUE;
     char *data = NULL;
@@ -796,6 +794,9 @@ pcmk_cpg_deliver(cpg_handle_t handle,
         return;
 
     } else if (ais_msg->host.size != 0 && safe_str_neq(ais_msg->host.uname, pcmk_uname)) {
+        /* Not for us */
+        return;
+    } else if (ais_msg->host.id != 0 && (pcmk_nodeid != ais_msg->host.id)) {
         /* Not for us */
         return;
     }

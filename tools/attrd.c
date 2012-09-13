@@ -793,7 +793,7 @@ attrd_local_callback(xmlNode * msg)
     }
 
     if (host != NULL && safe_str_neq(host, attrd_uname)) {
-        send_cluster_message(host, crm_msg_attrd, msg, FALSE);
+        send_cluster_message(crm_get_peer(0, host), crm_msg_attrd, msg, FALSE);
         return;
     }
 

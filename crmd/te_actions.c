@@ -222,7 +222,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         generate_transition_key(transition_graph->id, action->id, get_target_rc(action), te_uuid);
     crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 
-    rc = send_cluster_message(on_node, crm_msg_crmd, cmd, TRUE);
+    rc = send_cluster_message(crm_get_peer(0, on_node), crm_msg_crmd, cmd, TRUE);
     free(counter);
     free_xml(cmd);
 
@@ -423,7 +423,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, fsa_state, I_NULL, &msg);
 
     } else {
-        rc = send_cluster_message(on_node, crm_msg_lrmd, cmd, TRUE);
+        rc = send_cluster_message(crm_get_peer(0, on_node), crm_msg_lrmd, cmd, TRUE);
     }
 
     free(counter);
