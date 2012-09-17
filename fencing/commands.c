@@ -945,7 +945,7 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc, GPid 
 
     } else if(cmd->origin) {
         crm_trace("Directed reply to %s", cmd->origin);
-        send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
+        send_cluster_message(crm_get_peer(0, cmd->origin), crm_msg_stonith_ng, reply, FALSE);
 
     } else {
         crm_trace("Directed local %ssync reply to %s", (cmd->options & st_opt_sync_call)?"":"a-", cmd->client_name);
@@ -1417,7 +1417,7 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
                 crm_notice("Forwarding complex self fencing request to peer %s", alternate_host);
                 crm_xml_add(request, F_STONITH_OPERATION, STONITH_OP_RELAY);
                 crm_xml_add(request, F_STONITH_CLIENTID, client->id);
-                send_cluster_message(alternate_host, crm_msg_stonith_ng, request, FALSE);
+                send_cluster_message(crm_get_peer(0, alternate_host), crm_msg_stonith_ng, request, FALSE);
                 rc = -EINPROGRESS;
 
             } else if(initiate_remote_stonith_op(client, request, FALSE) != NULL) {
@@ -1502,7 +1502,7 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
 
     } else if(remote) {
         reply = stonith_construct_reply(request, output, data, rc);
-        send_cluster_message(remote, crm_msg_stonith_ng, reply, FALSE);
+        send_cluster_message(crm_get_peer(0, remote), crm_msg_stonith_ng, reply, FALSE);
         free_xml(reply);
 
     } else if(rc <= pcmk_ok || always_reply) {

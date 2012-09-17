@@ -438,7 +438,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             }
 #endif
             ROUTER_RESULT("Message result: External relay to DC");
-            send_cluster_message(host_to, dest, msg, TRUE);
+            send_cluster_message(host_to ? crm_get_peer(0, host_to) : NULL, dest, msg, TRUE);
 
         } else {
             /* discard */
@@ -460,7 +460,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         }
 #endif
         ROUTER_RESULT("Message result: External relay");
-        send_cluster_message(host_to, dest, msg, TRUE);
+        send_cluster_message(host_to ? crm_get_peer(0, host_to) : NULL, dest, msg, TRUE);
     }
 
     return processing_complete;

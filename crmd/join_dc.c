@@ -139,7 +139,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         /* send the welcome */
         crm_debug("join-%d: Sending offer to %s", current_join_id, join_to);
 
-        send_cluster_message(join_to, crm_msg_crmd, offer, TRUE);
+        send_cluster_message(crm_get_peer(0, join_to), crm_msg_crmd, offer, TRUE);
         free_xml(offer);
 
         g_hash_table_insert(welcomed_nodes, strdup(join_to), join_offered);
@@ -596,7 +596,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         crm_update_peer_expected(__FUNCTION__, join_node, CRMD_JOINSTATE_NACK);
     }
 
-    send_cluster_message(join_to, crm_msg_crmd, acknak, TRUE);
+    send_cluster_message(crm_get_peer(0, join_to), crm_msg_crmd, acknak, TRUE);
     free_xml(acknak);
     return TRUE;
 }
