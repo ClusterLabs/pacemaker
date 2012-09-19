@@ -452,14 +452,28 @@ class StonithdTest(CTSTest):
 
         rc = self.CM.rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
 
-        if origin != node and rc != 0:
+        if rc == 194:
+            # 194 - 256 = -62 = Timer expired
+            #
+            # Look for the patterns, usually this means the required
+            # device was running on the node to be fenced - or that
+            # the required devices were in the process of being loaded
+            # and/or moved
+            #
+            # Effectively the node committed suicide so there will be
+            # no confirmation, but pacemaker should be watching and
+            # fence the node again
+
+            self.CM.log("Fencing command on %s to fence %s timed out" % (origin, node))
+
+        elif origin != node and rc != 0:
             self.CM.debug("Waiting for the cluster to recover")
             self.CM.cluster_stable()
 
             self.CM.debug("Waiting STONITHd node to come back up")
             self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"], 600)
 
-            return self.failure("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
+            self.CM.log("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
 
         elif origin == node and rc != 255:
             # 255 == broken pipe, ie. the node was fenced as epxected
@@ -495,7 +509,7 @@ class StonithdTest(CTSTest):
             self.CM["Pat:We_fenced"] % ".*", 
             self.CM["Pat:They_fenced"] % ".*",
             "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
-            "error: remote_op_done: Operation reboot of .*by <no-one> for .*: Timer expired",
+            "error: remote_op_done: Operation reboot of .*by .* for stonith_admin.*: Timer expired",
             ]
 
     def is_applicable(self):
