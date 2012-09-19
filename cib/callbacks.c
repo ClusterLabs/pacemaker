@@ -61,9 +61,7 @@ qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
 
-#if SUPPORT_HEARTBEAT
-extern ll_cluster_t *hb_conn;
-#endif
+extern crm_cluster_t crm_cluster;
 
 extern int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
 
@@ -1433,23 +1431,8 @@ terminate_cib(const char *caller, gboolean fast)
     }
     
     if(!fast) {
-        if(is_heartbeat_cluster()) {
-#if SUPPORT_HEARTBEAT
-            if (hb_conn != NULL) {
-                crm_info("%s: Disconnecting heartbeat", caller);
-                hb_conn->llc_ops->signoff(hb_conn, FALSE);
-                hb_conn = NULL;
-
-            } else {
-                crm_err("%s: No heartbeat connection", caller);
-            }
-#endif
-        } else {
-#if SUPPORT_COROSYNC
-            crm_info("%s: Disconnecting corosync", caller);
-            terminate_cs_connection();
-#endif
-        }
+        crm_info("%s: Disconnecting from cluster infrastructure", caller);
+        crm_cluster_disconnect(&crm_cluster);
     }
 
     uninitializeCib();

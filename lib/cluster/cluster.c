@@ -265,6 +265,43 @@ crm_cluster_connect(crm_cluster_t *cluster)
     return FALSE;
 }
 
+void
+crm_cluster_disconnect(crm_cluster_t *cluster)
+{
+    enum cluster_type_e type = get_cluster_type();
+    const char *type_str = name_for_cluster_type(type);
+
+    crm_info("Disconnecting from cluster infrastructure: %s", type_str);
+#if SUPPORT_COROSYNC
+    if (is_openais_cluster()) {
+        crm_peer_destroy();
+        terminate_cs_connection();
+        crm_info("Disconnected from %s", type_str);
+        return;
+    }
+#endif
+
+#if SUPPORT_HEARTBEAT
+    if (is_heartbeat_cluster()) {
+        if (cluster == NULL) {
+            crm_info("No cluster connection");
+            return;
+
+        } else if (cluster->hb_conn) {
+            cluster->hb_conn->llc_ops->signoff(cluster->hb_conn, FALSE);
+            cluster->hb_conn = NULL;
+            crm_info("Disconnected from %s", type_str);
+            return;
+
+        } else {
+            crm_info("No %s connection", type_str);
+            return;
+        }
+    }
+#endif
+    crm_info("Unsupported cluster stack: %s", getenv("HA_cluster_type"));
+}
+
 gboolean
 send_cluster_message(const char *node, enum crm_ais_msg_types service, xmlNode * data,
                      gboolean ordered)

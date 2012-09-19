@@ -60,23 +60,19 @@ do_ha_control(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     gboolean registered = FALSE;
-    static crm_cluster_t cluster;
+    static crm_cluster_t *cluster = NULL;
+
+    if(cluster == NULL) {
+        cluster = calloc(1, sizeof(crm_cluster_t));
+    }
 
     if (action & A_HA_DISCONNECT) {
-        if (is_openais_cluster()) {
-            crm_peer_destroy();
-#if SUPPORT_COROSYNC
-            terminate_cs_connection();
-#endif
-            crm_info("Disconnected from Corosync");
+        crm_cluster_disconnect(cluster);
+        crm_info("Disconnected from the cluster");
 
 #if SUPPORT_HEARTBEAT
-        } else if (fsa_cluster_conn != NULL) {
-            set_bit(fsa_input_register, R_HA_DISCONNECTED);
-            fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn, FALSE);
-            crm_info("Disconnected from Heartbeat");
+        set_bit(fsa_input_register, R_HA_DISCONNECTED);
 #endif
-        }
     }
 
     if (action & A_HA_CONNECT) {
@@ -84,15 +80,15 @@ do_ha_control(long long action,
 
         if (is_openais_cluster()) {
 #if SUPPORT_COROSYNC
-            registered = crm_connect_corosync(&cluster);
+            registered = crm_connect_corosync(cluster);
 #endif
         } else if (is_heartbeat_cluster()) {
 #if SUPPORT_HEARTBEAT
-            cluster.destroy = crmd_ha_connection_destroy;
-            cluster.hb_dispatch = crmd_ha_msg_callback;
+            cluster->destroy = crmd_ha_connection_destroy;
+            cluster->hb_dispatch = crmd_ha_msg_callback;
 
-            registered = crm_cluster_connect(&cluster);
-            fsa_cluster_conn = cluster.hb_conn;
+            registered = crm_cluster_connect(cluster);
+            fsa_cluster_conn = cluster->hb_conn;
 
             crm_trace("Be informed of Node Status changes");
             if (registered &&
@@ -123,8 +119,8 @@ do_ha_control(long long action,
             }
 #endif
         }
-        fsa_our_uname = cluster.uname;
-        fsa_our_uuid = cluster.uuid;
+        fsa_our_uname = cluster->uname;
+        fsa_our_uuid = cluster->uuid;
 
         if (registered == FALSE) {
             set_bit(fsa_input_register, R_HA_DISCONNECTED);

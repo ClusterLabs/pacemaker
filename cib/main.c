@@ -61,6 +61,8 @@ extern gboolean stand_alone;
 gboolean cib_shutdown_flag = FALSE;
 int cib_status = pcmk_ok;
 
+crm_cluster_t crm_cluster;
+
 #if SUPPORT_HEARTBEAT
 oc_ev_t *cib_ev_token;
 ll_cluster_t *hb_conn = NULL;
@@ -472,17 +474,15 @@ cib_ha_connection_destroy(gpointer user_data)
 int
 cib_init(void)
 {
-    static crm_cluster_t cluster;
-
     if (is_openais_cluster()) {
 #if SUPPORT_COROSYNC
-        cluster.destroy = cib_ais_destroy;
-        cluster.cs_dispatch = cib_ais_dispatch;
+        crm_cluster.destroy = cib_ais_destroy;
+        crm_cluster.cs_dispatch = cib_ais_dispatch;
 #endif
     } else if(is_heartbeat_cluster()) {
 #if SUPPORT_HEARTBEAT
-        cluster.hb_dispatch = cib_ha_peer_callback;
-        cluster.destroy = cib_ha_connection_destroy;
+        crm_cluster.hb_dispatch = cib_ha_peer_callback;
+        crm_cluster.destroy = cib_ha_connection_destroy;
 #endif
     }
 
@@ -495,11 +495,11 @@ cib_init(void)
     }
 
     if (stand_alone == FALSE) {
-        if (crm_cluster_connect(&cluster) == FALSE) {
+        if (crm_cluster_connect(&crm_cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
             exit(100);
         }
-        cib_our_uname = cluster.uname;
+        cib_our_uname = crm_cluster.uname;
         if (is_openais_cluster()) {
             crm_set_status_callback(&cib_peer_update_callback);
         }
@@ -508,7 +508,7 @@ cib_init(void)
 
             gboolean was_error = FALSE;
 
-            hb_conn = cluster.hb_conn;
+            hb_conn = crm_cluster.hb_conn;
             if (was_error == FALSE) {
                 if (HA_OK !=
                     hb_conn->llc_ops->set_cstatus_callback(hb_conn, cib_client_status_callback,
