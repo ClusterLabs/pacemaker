@@ -832,6 +832,7 @@ int process_remote_stonith_exec(xmlNode *msg)
 {
     int rc = 0;
     const char *id = NULL;
+    const char *device = NULL;
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE, msg, LOG_ERR);
 
@@ -844,6 +845,8 @@ int process_remote_stonith_exec(xmlNode *msg)
     CRM_CHECK(dev != NULL, return -EPROTO);
 
     crm_element_value_int(dev, F_STONITH_RC, &rc);
+
+    device = crm_element_value(dev, F_STONITH_DEVICE);
 
     if(remote_op_list) {
         op = g_hash_table_lookup(remote_op_list, id);
@@ -861,6 +864,12 @@ int process_remote_stonith_exec(xmlNode *msg)
         /* TODO: Record the op for later querying */
         crm_info("Unknown or expired remote op: %s", id);
         return -EOPNOTSUPP;
+    }
+
+    if (op->devices && device && safe_str_neq(op->devices->data, device)) {
+        crm_err("Received outdated reply for device %s to %s node %s. Operation already timed out at remote level.",
+            device, op->action, op->target);
+        return rc;
     }
 
     if(safe_str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast")) {
