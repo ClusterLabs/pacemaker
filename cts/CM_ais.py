@@ -97,6 +97,9 @@ class crm_ais(crm_lha):
                 #r"ping.*: DEBUG: Updated connected = 0",
                 #r"Digest mis-match:",
                 r"te_graph_trigger: Transition failed: terminated",
+                r"fence_pcmk.* Call to fence",
+                r"fence_pcmk",
+                r"cman killed by node",
             ),
         })
 
@@ -138,6 +141,8 @@ class crm_ais(crm_lha):
                     "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
                     "(ERROR|error): attrd_connection_destroy: Lost connection to attrd",
                     "info: te_fence_node: Executing .* fencing operation",
+#                    "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
+#                    "error: process_pe_message: Transition .* ERRORs found during PE processing",
             ]
 
         fullcomplist["cib"] = Process(self, "cib", pats = [
