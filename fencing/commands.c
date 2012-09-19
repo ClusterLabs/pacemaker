@@ -1274,7 +1274,9 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
         return;
 
     } else if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
-        create_remote_stonith_op(client_id, request, TRUE); /* Record it for the future notification */
+        if (remote) {
+            create_remote_stonith_op(client_id, request, TRUE); /* Record it for the future notification */
+        }
         rc = stonith_query(request, &data);
         always_reply = TRUE;
         if(!data) {

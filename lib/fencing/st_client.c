@@ -1079,6 +1079,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
     data = create_xml_node(NULL, F_STONITH_DEVICE);
     crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, F_STONITH_TARGET, target);
+    crm_xml_add(data, F_STONITH_ACTION, "off");
     rc = stonith_send_command(stonith, STONITH_OP_QUERY, data, &output, call_options, timeout);
 
     if (rc < 0) {
