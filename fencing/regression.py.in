@@ -83,12 +83,12 @@ class Test:
 		if self.enable_corosync == 0:
 			return
 
-		cmd = shlex.split("killall -9q corosync")
+		cmd = shlex.split("killall -9 -q corosync")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
 	def stop_pacemaker(self):
-		cmd = shlex.split("killall -9q pacemakerd")
+		cmd = shlex.split("killall -9 -q pacemakerd")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
@@ -97,7 +97,7 @@ class Test:
 		self.stop_pacemaker()
 		self.stop_corosync()
 
-		cmd = shlex.split("killall -9q stonithd")
+		cmd = shlex.split("killall -9 -q stonithd")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
@@ -434,7 +434,7 @@ class Tests:
 
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false")
 			test.add_cmd("stonith_admin", "-r node3 -i 2 -v true")
-			test.add_cmd("stonith_admin", "-F node3 -t 2")
+			test.add_cmd("stonith_admin", "-F node3 -t 20")
 
 			test.add_stonith_log_pattern("remote op timeout set to 4")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false' returned: -62")
@@ -495,7 +495,7 @@ class Tests:
 			# Now remove level 2, verify none of the devices in level two are hit.
 			test.add_cmd("stonith_admin", "-d node3 -i 2")
 
-			test.add_cmd("stonith_admin", "-F node3 -t 2")
+			test.add_cmd("stonith_admin", "-F node3 -t 20")
 
 			test.add_stonith_log_pattern("remote op timeout set to 8")
 			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
