@@ -1316,7 +1316,10 @@ process_rsc_state(resource_t * rsc, node_t * node,
             set_bit(rsc->flags, pe_rsc_failed);
         }
 
-    } else if (rsc->clone_name) {
+    } else if (rsc->clone_name && strchr(rsc->clone_name, ':') != NULL) {
+        /* Only do this for older status sections that included instance numbers
+         * Otherwise stopped instances will appear as orphans
+         */
         pe_rsc_trace(rsc, "Resetting clone_name %s for %s (stopped)", rsc->clone_name, rsc->id);
         free(rsc->clone_name);
         rsc->clone_name = NULL;
