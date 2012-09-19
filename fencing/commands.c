@@ -814,7 +814,7 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     struct device_search_s search;
     int available_devices = 0;
     const char *action = NULL;
-    xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_DEBUG_3);
+    xmlNode *dev = get_xpath_object("//@"F_STONITH_ACTION, msg, LOG_DEBUG_3);
 
     search.host = NULL;
     search.capable = NULL;
