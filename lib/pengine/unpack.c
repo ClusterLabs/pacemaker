@@ -2048,6 +2048,9 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
             }
 
             if (*on_fail < action->on_fail) {
+                pe_rsc_trace(rsc, "on-fail %s -> %s for %s (%s)",
+                             fail2text(*on_fail), fail2text(action->on_fail),
+                             action->uuid, task_key ? task_key : id);
                 *on_fail = action->on_fail;
             }
 
