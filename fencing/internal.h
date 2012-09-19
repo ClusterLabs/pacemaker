@@ -38,10 +38,11 @@ typedef struct remote_fencing_op_s {
     char *action;
     guint replies;
 
-    gint op_timer;
+    gint op_timer_total;
     gint op_timer_one;
     gint query_timer;
     gint base_timeout;
+    gint total_timeout;
 
     char *delegate;
     time_t completed;
