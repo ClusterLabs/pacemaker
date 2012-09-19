@@ -662,11 +662,12 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     }
 
     if(op->op_timer_total <= 0) {
-        op->total_timeout = 1.2 * get_op_total_timeout(op, peer, op->base_timeout);
+        int t = get_op_total_timeout(op, peer, op->base_timeout);
+        op->total_timeout = 1.2 * t;
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
         crm_info("Total remote op timeout set to %d for fencing of node %s for %s.%.8s",
-                 op->total_timeout, op->target, op->client_name, op->id);
+                 t, op->target, op->client_name, op->id);
     }
 
     if(is_set(op->call_options, st_opt_topology) && op->devices) {
