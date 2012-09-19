@@ -161,7 +161,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
                                CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
         crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
-        send_cluster_message(fsa_our_dc, crm_msg_crmd, reply, TRUE);
+        send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
         free_xml(reply);
 
     } else {
@@ -262,7 +262,7 @@ do_cl_join_finalize_respond(long long action,
             }
         }
 
-        send_cluster_message(fsa_our_dc, crm_msg_crmd, reply, TRUE);
+        send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
         free_xml(reply);
 
         if (AM_I_DC == FALSE) {

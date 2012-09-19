@@ -561,7 +561,7 @@ forward_request(xmlNode * request, cib_client_t * cib_client, int call_options)
 
     if (host != NULL) {
         crm_trace("Forwarding %s op to %s", op, host);
-        send_cluster_message(host, crm_msg_cib, request, FALSE);
+        send_cluster_message(crm_get_peer(0, host), crm_msg_cib, request, FALSE);
 
     } else {
         crm_trace("Forwarding %s op to master instance", op);
@@ -624,7 +624,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         /* send reply via HA to originating node */
         crm_trace("Sending request result to originator only");
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
-        return send_cluster_message(originator, crm_msg_cib, msg, FALSE);
+        return send_cluster_message(crm_get_peer(0, originator), crm_msg_cib, msg, FALSE);
     }
 
     return FALSE;

@@ -403,7 +403,7 @@ do_election_count_vote(long long action,
         crm_xml_add(novote, F_CRM_ELECTION_OWNER, election_owner);
         crm_xml_add_int(novote, F_CRM_ELECTION_ID, election_id);
 
-        send_cluster_message(vote_from, crm_msg_crmd, novote, TRUE);
+        send_cluster_message(crm_get_peer(0, vote_from), crm_msg_crmd, novote, TRUE);
         free_xml(novote);
 
         fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);

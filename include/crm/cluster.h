@@ -85,7 +85,7 @@ typedef struct crm_cluster_s
 gboolean crm_cluster_connect(crm_cluster_t *cluster);
 
 enum crm_ais_msg_types;
-gboolean send_cluster_message(const char *node, enum crm_ais_msg_types service,
+gboolean send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
                               xmlNode * data, gboolean ordered);
 
 void destroy_crm_node(gpointer/* crm_node_t* */ data);
@@ -107,7 +107,7 @@ gboolean crm_is_heartbeat_peer_active(const crm_node_t * node);
 extern int ais_fd_sync;
 gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 gboolean send_ais_text(int class, const char *data, gboolean local,
-                              const char *node, enum crm_ais_msg_types dest);
+                              crm_node_t *node, enum crm_ais_msg_types dest);
 gboolean get_ais_nodeid(uint32_t * id, char **uname);
 #  endif
 
