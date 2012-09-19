@@ -21,3 +21,7 @@ headerdir=$(pkgincludedir)/crm/cluster
 
 noinst_HEADERS		= internal.h
 header_HEADERS		= 
+
+if BUILD_CS_PLUGIN
+header_HEADERS        += plugin.h 
+endif

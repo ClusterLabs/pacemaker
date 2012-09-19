@@ -84,7 +84,29 @@ typedef struct crm_cluster_s
 
 gboolean crm_cluster_connect(crm_cluster_t *cluster);
 
-enum crm_ais_msg_types;
+enum crm_ais_msg_class {
+    crm_class_cluster = 0,
+    crm_class_members = 1,
+    crm_class_notify  = 2,
+    crm_class_nodeid  = 3,
+    crm_class_rmpeer  = 4,
+    crm_class_quorum  = 5,
+};
+
+/* order here matters - its used to index into the crm_children array */
+enum crm_ais_msg_types {
+    crm_msg_none     = 0,
+    crm_msg_ais      = 1,
+    crm_msg_lrmd     = 2,
+    crm_msg_cib      = 3,
+    crm_msg_crmd     = 4,
+    crm_msg_attrd    = 5,
+    crm_msg_stonithd = 6,
+    crm_msg_te       = 7,
+    crm_msg_pe       = 8,
+    crm_msg_stonith_ng = 9,
+};
+
 gboolean send_cluster_message(const char *node, enum crm_ais_msg_types service,
                               xmlNode * data, gboolean ordered);
 
