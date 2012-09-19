@@ -33,7 +33,6 @@
 #  define CIB_OP_DELETE	"cib_delete"
 #  define CIB_OP_ERASE	"cib_erase"
 #  define CIB_OP_REPLACE	"cib_replace"
-#  define CIB_OP_NOTIFY	"cib_notify"
 #  define CIB_OP_APPLY_DIFF "cib_apply_diff"
 #  define CIB_OP_UPGRADE    "cib_upgrade"
 #  define CIB_OP_DELETE_ALT	"cib_delete_alt"

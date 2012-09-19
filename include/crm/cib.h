@@ -65,6 +65,7 @@ enum cib_call_options {
 };
 
 #define cib_default_options = cib_none
+#define CIB_OP_NOTIFY	      "cib_notify"
 
 /* *INDENT-ON* */
 
