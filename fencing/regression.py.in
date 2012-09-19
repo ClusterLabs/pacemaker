@@ -55,10 +55,6 @@ class Test:
 
 		rsc_classes = output_from_command("crm_resource --list-standards")
 
-		self.has_systemd = 0
-		if "systemd" in rsc_classes:
-			self.has_systemd = 1
-
 	def __new_cmd(self, cmd, args, exitcode, stdout_match = "", no_wait = 0, stdout_negative_match = "", kill=None):
 		self.cmds.append(
 			{
@@ -76,30 +72,22 @@ class Test:
 		if self.enable_corosync == 0:
 			return
 
-		if self.has_systemd:
-			cmd = shlex.split("systemctl start corosync.service")
-		else:
-			cmd = shlex.split("service corosync start")
+		if self.verbose:
+			print "Starting corosync"
 
-		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		test = subprocess.Popen("corosync", stdout=subprocess.PIPE)
 		test.wait()
 
 	def stop_corosync(self):
 		if self.enable_corosync == 0:
 			return
 
-		if self.has_systemd:
-			cmd = shlex.split("systemctl stop corosync.service")
-		else:
-			cmd = shlex.split("service corosync stop")
+		cmd = shlex.split("killall -9q corosync")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
 	def stop_pacemaker(self):
-		if self.has_systemd:
-			cmd = shlex.split("systemctl stop pacemaker.service")
-		else:
-			cmd = shlex.split("service pacemaker stop")
+		cmd = shlex.split("killall -9q pacemakerd")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
@@ -108,11 +96,13 @@ class Test:
 		self.stop_pacemaker()
 		self.stop_corosync()
 
-		cmd = shlex.split("killall -q -9 stonithd")
+		cmd = shlex.split("killall -9q stonithd")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
 		self.start_corosync()
+		if self.verbose:
+			print "Starting stonithd with %s" % self.stonith_options
 
 		self.stonith_process = subprocess.Popen(
 			shlex.split("@CRM_DAEMON_DIR@/stonithd %s -V" % self.stonith_options),
@@ -563,45 +553,36 @@ class Tests:
 
 	def setup_environment(self):
 		if self.autogen_corosync_cfg:
-			corosync_conf = ("""compatibility: whitetank
+			corosync_conf = ("""
 totem {
         version: 2
-        token:          5000
-        token_retransmits_before_loss_const: 10
-        join:           1000
-        consensus:      6000
-        vsftype:        none
-        max_messages:   20
-        send_join: 45
-        clear_node_high_bit: yes
+        crypto_cipher: none
+        crypto_hash: none
+
+        nodeid:         101
         secauth:        off
-        threads:           0
+
         interface {
+                ttl: 1
                 ringnumber: 0
-                bindnetaddr: 127.0.0.1
+                mcastport: 6666
                 mcastaddr: 226.94.1.1
-                mcastport: 4000
+                bindnetaddr: 127.0.0.1
         }
 }
+
 logging {
         debug: off
         fileline: off
-        to_syslog: yes
-        to_stderr: off
+        to_syslog: no
+        to_stderr: no
         syslog_facility: daemon
         timestamp: on
+        to_logfile: yes
+        logfile: /var/log/corosync.log
+        logfile_priority: info
 }
-amf {
-        mode: disabled
-}
-quorum {
-   provider: corosync_votequorum
-   expected_votes: 2
-   votes: 1
-   wait_for_all: 0
-   last_man_standing: 0
-   auto_tie_breaker: 0
-}""")
+""")
 
 			os.system("cat <<-END >>/etc/corosync/corosync.conf\n%s\nEND" % (corosync_conf))
 

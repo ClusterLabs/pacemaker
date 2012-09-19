@@ -658,7 +658,9 @@ stonith_cleanup(void)
         cib->cmds->signoff(cib);
     }
 
-    qb_ipcs_destroy(ipcs);
+    if(ipcs) {
+        qb_ipcs_destroy(ipcs);
+    }
     crm_peer_destroy();
     g_hash_table_destroy(client_list);
     free(stonith_our_uname);
