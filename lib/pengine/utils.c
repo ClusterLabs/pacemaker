@@ -546,7 +546,6 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
 
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS,
                                NULL, action->meta, NULL, FALSE, data_set->now);
-
     g_hash_table_remove(action->meta, "id");
 
     class = g_hash_table_lookup(action->rsc->meta, "class");
@@ -780,11 +779,18 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
             }
 
             match_key = generate_op_key(rsc->id, name, number);
-
             if (safe_str_eq(key, match_key)) {
                 op = operation;
             }
             free(match_key);
+
+            if(rsc->clone_name) {
+                match_key = generate_op_key(rsc->clone_name, name, number);
+                if (safe_str_eq(key, match_key)) {
+                    op = operation;
+                }
+                free(match_key);
+            }
 
             if (op != NULL) {
                 free(local_key);
