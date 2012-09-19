@@ -727,14 +727,16 @@ internal_stonith_action_execute(stonith_action_t *action)
             }
             sleep(1);
             timeout--;
-        };
+        }
 
         if (timeout == 0) {
             int killrc = kill(pid, 9 /*SIGKILL*/);
 
             if (killrc && errno != ESRCH) {
-                crm_err("kill(%d, KILL) failed: %d", pid, errno);
+                crm_err("kill(%d, KILL) failed: %s (%d)",
+                        pid, pcmk_strerror(errno), errno);
             }
+            p = waitpid(pid, &status, WNOHANG);
         }
 
         if (p <= 0) {
@@ -746,7 +748,8 @@ internal_stonith_action_execute(stonith_action_t *action)
 
         action->output = read_output(p_read_fd);
 
-        action->rc = rc = -ECONNABORTED;
+        action->rc = -ECONNABORTED;
+        rc = action->rc;
         if (timeout == 0) {
             action->rc = -ETIME;
         } else if (WIFEXITED(status)) {
