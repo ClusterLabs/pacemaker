@@ -83,6 +83,14 @@ class Test:
 		if self.lrmd_process:
 			self.lrmd_process.terminate()
 			self.lrmd_process.wait()
+
+			if self.verbose:
+				print "Daemon output"
+				f = open('/tmp/lrmd-regression.log', 'r')
+				for line in f.readlines():
+					print line.strip()
+				os.remove('/tmp/lrmd-regression.log')
+
 		if self.stonith_process:
 			self.stonith_process.terminate()
 			self.stonith_process.wait()
