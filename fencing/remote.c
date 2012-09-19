@@ -241,8 +241,8 @@ static gboolean remote_op_timeout_one(gpointer userdata)
     remote_fencing_op_t *op = userdata;
     op->op_timer_one = 0;
 
-    crm_notice("Remote %s operation for %s.%8s timed out",
-               op->action, op->client_name, op->id);
+    crm_notice("Remote %s operation on %s for %s.%8s timed out",
+               op->action, op->target, op->client_name, op->id);
     call_remote_stonith(op, NULL);
     return FALSE;
 }
@@ -309,15 +309,15 @@ static int stonith_topology_next(remote_fencing_op_t *op)
     } while(op->level < ST_LEVEL_MAX && tp->levels[op->level] == NULL);
 
     if(op->level < ST_LEVEL_MAX) {
-        crm_trace("Attempting fencing level %d for %s (%d devices) - %s@%s",
+        crm_trace("Attempting fencing level %d for %s (%d devices) - %s@%s.%.8s",
                   op->level, op->target, g_list_length(tp->levels[op->level]),
-                  op->client_name, op->originator);
+                  op->client_name, op->originator, op->id);
         op->devices = tp->levels[op->level];
         return pcmk_ok;
     }
 
-    crm_notice("All fencing options to fence %s for %s@%s failed",
-               op->target, op->client_name, op->originator);
+    crm_notice("All fencing options to fence %s for %s@%s.%.8s failed",
+               op->target, op->client_name, op->originator, op->id);
     return -EINVAL;
 }
 
@@ -463,7 +463,7 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
             return op;
 
         case st_duplicate:
-            crm_notice("Initiating remote operation %s for %s: %s (duplicate)", op->action, op->target, op->id);
+            crm_info("Initiating remote operation %s for %s: %s (duplicate)", op->action, op->target, op->id);
             return op;
 
         default:
@@ -863,9 +863,9 @@ int process_remote_stonith_exec(xmlNode *msg)
     }
 
     if(safe_str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast")) {
-        crm_notice("Marking call to %s for %s on behalf of %s@%s: %s (%d)",
-                   op->action, op->target, op->client_name, op->originator,
-                   rc == pcmk_ok?"passed":"failed", rc);
+        crm_debug("Marking call to %s for %s on behalf of %s@%s.%.8s: %s (%d)",
+                  op->action, op->target, op->client_name, op->id, op->originator,
+                  rc == pcmk_ok?"passed":"failed", rc);
         if(rc == pcmk_ok) {
             op->state = st_done;
         } else {

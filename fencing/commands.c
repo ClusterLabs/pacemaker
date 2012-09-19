@@ -926,7 +926,7 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc, GPid 
         crm_trace("Never broadcast %s replies", cmd->action);
 
     } else if(!stand_alone && safe_str_eq(cmd->origin, cmd->victim)) {
-        crm_info("Broadcast %s reply for %s", cmd->action, cmd->victim);
+        crm_trace("Broadcast %s reply for %s", cmd->action, cmd->victim);
         crm_xml_add(reply, F_SUBTYPE, "broadcast");
         bcast = TRUE;
     }
@@ -935,10 +935,6 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc, GPid 
     crm_log_xml_trace(reply, "Reply");
 
     if(bcast) {
-        /* Send reply as T_STONITH_NOTIFY so everyone does notifications
-         * Potentially limit to unsucessful operations to the originator?
-         */
-        crm_trace("Broadcast reply");
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
 
