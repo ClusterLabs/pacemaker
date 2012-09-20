@@ -30,13 +30,16 @@ that here.
 Do not accept the default network settings.
 Cluster machines should never obtain an IP address via DHCP.
 
-Before clicking next, select +Configure Network+ to specify a fixed IPv4 address for +System eth0+.
-Here I will use the internal addresses for the clusterlab.org network.
+When you are presented with the +Configure Network+ advanced option, select that option
+before continuing with the installation process to specify a fixed IPv4 address for
++System eth0+. Be sure to also enter the +Routes+ section and add an entry for your
+default gateway.
 
 image::images/Network.png["Custom network settings",align="center"]
 
-Be sure to also enter the +Routes+ section and add an entry for your default gateway.
-
+If you miss this step, this can easily be configured after installation. You will have
+to navigate to +system settings+ and select +network+.  From there you can select
+what device to configure.
 ===========
 
 You will then be prompted to indicate the machine's physical location
@@ -74,7 +77,7 @@ installed. Don't enable updates yet, we'll do that (and install any
 extra software we need) later. After you click next, Fedora will begin
 installing.
 
-Go grab something to drink, this may take a while
+Go grab something to drink, this may take a while.
 
 Once the node reboots, you'll see a (possibly mangled) login prompt on
 the console.  Login using +root+ and the password you created earlier.
@@ -84,8 +87,7 @@ image::images/Console.png["Initial Console",align="center"]
 [NOTE]
 ======
 
-That was the last screenshot, from here on in we're going to be working
-exclusively from the terminal.
+From here on in we're going to be working exclusively from the terminal.
 
 ======
 
