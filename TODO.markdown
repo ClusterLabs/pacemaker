@@ -50,4 +50,8 @@
 - Document reload in Pacemaker Explained
 - Document advanced fencing logic in Pacemaker Explained
 - Use ann:defaultValue="..." instead of <optional> in the schema more often
-- Allow Clusters from Scratch to be built in two flavors - pcs and crm shell
+- Document in CFS an Appendix detailing with re-enabling firewall
+- Reference ocf:pacemaker resource agents instead of ocf:heartbeat resource agents in CFS
+- Document implicit operation creation in CFS once pcs supports it.
+- Document use of pcs resource move command in CFS once pcs supports it.
+- Make use of --clone option in pcs resource create dlm in CFS once pcs fully supports that option.
