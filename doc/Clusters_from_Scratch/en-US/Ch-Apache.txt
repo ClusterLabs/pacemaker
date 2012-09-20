@@ -742,7 +742,7 @@ op_defaults $id="op-options" \
 -----
 endif::[]
 
-Note that the automated constraint is now gone. If we check the cluster
+Note that the constraint is now gone. If we check the cluster
 status, we can also see that as expected the resources are still active
 on pcmk-1.
 
