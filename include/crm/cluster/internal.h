@@ -347,7 +347,7 @@ gboolean heartbeat_initialize_nodelist(void *cluster, gboolean force_member, xml
 gboolean corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_parent);
 
 gboolean send_ais_message(xmlNode * msg, gboolean local,
-                          const char *node, enum crm_ais_msg_types dest);
+                          crm_node_t *node, enum crm_ais_msg_types dest);
 
 enum cluster_type_e find_corosync_variant(void);
 

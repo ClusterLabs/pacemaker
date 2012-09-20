@@ -640,7 +640,7 @@ report_timeout_period(remote_fencing_op_t *op, int op_timeout)
     crm_xml_add(update, F_STONITH_CALLID, call_id);
     crm_xml_add_int(update, F_STONITH_TIMEOUT, op_timeout);
 
-    send_cluster_message(client_node, crm_msg_stonith_ng, update, FALSE);
+    send_cluster_message(crm_get_peer(0, client_node), crm_msg_stonith_ng, update, FALSE);
 
     free_xml(update);
 
@@ -710,7 +710,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         }
         op->op_timer_one = g_timeout_add((1000 * t), remote_op_timeout_one, op);
 
-        send_cluster_message(peer->host, crm_msg_stonith_ng, query, FALSE);
+        send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, query, FALSE);
         free_xml(query);
         return;
 

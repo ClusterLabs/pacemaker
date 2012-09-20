@@ -456,7 +456,7 @@ sync_our_cib(xmlNode * request, gboolean all)
 
     add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
 
-    if (send_cluster_message(all ? NULL : host, crm_msg_cib, replace_request, FALSE) == FALSE) {
+    if (send_cluster_message(all ? NULL : crm_get_peer(0, host), crm_msg_cib, replace_request, FALSE) == FALSE) {
         result = -ENOTCONN;
     }
     free_xml(replace_request);
