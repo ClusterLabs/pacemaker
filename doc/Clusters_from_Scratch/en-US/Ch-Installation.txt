@@ -287,10 +287,10 @@ clusterlabs.org
 ----
 
 === NTP ===
+
 It is highly recommended to enable NTP on your cluster nodes. Doing so
 ensures all nodes agree on the current time and makes reading log files
-significantly easier. Fedora Installation - Date and TimeFedora
-Installation: Enable NTP to keep the times on all your nodes consistent
+significantly easier. footnote:[http://docs.fedoraproject.org/en-US/Fedora/17/html-single/System_Administrators_Guide/index.html#ch-Configuring_the_Date_and_Time]
 
 == Before You Continue ==
 
