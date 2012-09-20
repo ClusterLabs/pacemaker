@@ -240,7 +240,7 @@
             </listitem>
             <listitem>
               <para>For any resource that has a value for <literal>is-managed</literal> reset it to <literal>true</literal> (so the cluster can recover the service if it fails) if desired:
-              <programlisting><command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false</command></programlisting></para>
+              <programlisting><command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v true</command></programlisting></para>
             </listitem>
           </orderedlist>
         </section>

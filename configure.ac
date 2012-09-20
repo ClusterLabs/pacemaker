@@ -279,6 +279,12 @@ AC_ARG_WITH(brand,
     [ PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
+ASCIIDOC_CLI_TYPE="pcs"
+AC_ARG_WITH(doc-cli,
+    [  --with-doc-cli=cli_type  CLI type to use for generated documentation. [$ASCIIDOC_CLI_TYPE]],
+    [ ASCIIDOC_CLI_TYPE="$withval" ])
+AC_SUBST(ASCIIDOC_CLI_TYPE)
+
 dnl ===============================================
 dnl General Processing
 dnl ===============================================

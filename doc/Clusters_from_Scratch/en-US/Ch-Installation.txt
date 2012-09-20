@@ -413,7 +413,7 @@ Since version 12, Fedora comes with recent versions of everything you
 need, so simply fire up the shell and run:
 
 [source,Bash]
-.....
+----
 # yum install -y pacemaker corosync
 fedora/metalink                                  |  38 kB     00:00
 fedora                                           | 4.2 kB     00:00
@@ -832,14 +832,92 @@ Dependency Installed:
 
 Complete!
 [root@pcmk-1 ~]#
-.....
+----
 
 Now install the cluster software on the second node.
 
+ifdef::pcs[]
+=== Install the Cluster Management Software ===
+The pcs cli command coupled with the pcs daemon creates a cluster
+management system capable of managing all aspects of the cluster stack
+across all nodes from a single location.
+
+[source,Bash]
+----
+# yum install -y pcs
+----
+
+Make sure to install the pcs packages on both nodes.
+endif::[]
+
 == Setup ==
+
+ifdef::pcs[]
+=== Enable pcs Daemon ===
+
+Before the cluster can be configured, the pcs daemon must be started and enabled
+to boot on startup on each node.  This daemon works with the pcs cli command to manage
+syncing the corosync configuration across all the nodes in the cluster.
+
+Start and enable the daemon by issuing the following commands on each node.
+
+[source,Bash]
+----
+# systemctl start pcsd.service
+# systemctl enable pcsd.service
+----
+
+Now setup a common pcs user account on each node in the cluster using the
+pcs_passwd command. In the example below, the user account 'pcmk' is created.
+You will be asked to supply a password.  Make sure the username and password is
+consistent across all the nodes.
+
+[source,Bash]
+----
+# pcs_passwd pcmk
+password:
+----
+
+The pcs daemon account is required on each node to enable remote pcs command
+authentication.  While the pcs cli command can be used locally without setting
+up a pcs daemon user account, access to pcs features that require access to remote
+nodes (such as syncing the corosync config, or starting/stopping the cluster on remote
+nodes) will be unavailable.  This tutorial will make use of these remote access commands.
+
+endif::[]
 
 === Configuring Corosync ===
 
+ifdef::pcs[]
+In the past, at this point in the tutorial an explanation of how to configure and
+propagate corosync's /etc/corosync.conf file would be necessary. Using pcs with the
+pcs daemon greatly simplifies this process by generating the corosync.conf
+across all the nodes in the cluster with a single command.  The only thing required
+to achieve this is to authenticate as the pcs user 'pcmk' on one of the nodes in the
+cluster, and then issue the 'pcs cluster setup' command with a list of all the
+node names in the cluster.
+
+[source,Bash]
+----
+# pcs cluster auth pcmk-1 pcmk-2
+Username: pcmk
+Password: 
+pcmk-1: Authorized
+pcmk-2: Authorized
+
+# pcs cluster setup pcmk pcmk-1 pcmk-2
+pcmk-1: Succeeded
+pcmk-2: Succeeded
+----
+
+That's it.  Corosync is configured across the cluster.  If you received an
+authorization error for either of those commands, make sure you setup the
+'pcmk' user account using the pcs_passwd command on every node in the cluster
+with the same password.
+
+endif::[]
+
+ifdef::crm[]
 Choose a port number and multi-cast footnote:[http://en.wikipedia.org/wiki/Multicast] address. footnote:[http://en.wikipedia.org/wiki/Multicast_address]
 Be sure that the values you chose do not conflict with any existing clusters you might have.
 For advice on choosing a multi-cast address, see
@@ -901,8 +979,10 @@ quorum {
 END
 ....
 
-The final configuration should look something like the sample in
-Appendix B, Sample Corosync Configuration.
+endif::[]
+
+The final /etc/corosync.conf configuration on each node should look
+something like the sample in Appendix B, Sample Corosync Configuration.
 
 
 [IMPORTANT]
@@ -918,6 +998,7 @@ Also, since Pacemaker used to use the plugin for message routing, a node using t
 Rolling upgrades between these versions are therefor not possible and an alternate strategy footnote:[http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/ap-upgrade.html] must be used.
 ===========
 
+ifdef::crm[]
 === Propagate the Configuration ===
 
 Now we need to copy the changes so far to the other node:
@@ -929,4 +1010,4 @@ corosync.conf                            100% 1528     1.5KB/s   00:00
 hosts                                    100%  281     0.3KB/s   00:00
 #
 ----
-
+endif::[]

@@ -8,6 +8,25 @@ version of Pacemaker being used.
 
 This is what the base configuration should look like.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs status
+Last updated: Fri Sep 14 10:12:01 2012
+Last change: Fri Sep 14 09:51:55 2012 via crmd on pcmk-2
+Stack: corosync
+Current DC: pcmk-1 (1) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+0 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm configure show
@@ -17,11 +36,59 @@ property $id="cib-bootstrap-options" \
 	dc-version="1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff" \
 	cluster-infrastructure="corosync"
 ----
+endif::[]
 
 For those that are not of afraid of XML, you can see the raw
 configuration by appending "xml" to the previous command.
 
 .The last XML you'll see in this document
+
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs cluster cib
+<cib epoch="4" num_updates="19" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="pcmk-1" update-client="crmd" cib-last-written="Wed Aug  1 16:08:52 2012" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="pcmk-1" type="normal"/>
+      <node id="2" uname="pcmk-2" type="normal"/>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="2" uname="pcmk-2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <lrm id="2">
+        <lrm_resources/>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1" uname="pcmk-1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <lrm id="1">
+        <lrm_resources/>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm configure show xml
@@ -43,13 +110,14 @@ configuration by appending "xml" to the previous command.
   </configuration>
 </cib>
 ----
+endif::[]
 
 Before we make any changes, its a good idea to check the validity of
 the configuration.
 
 [source,Bash]
 ----
-# crm_verify -L
+# crm_verify -L -V
    error: unpack_resources: Resource start-up disabled since no STONITH resources have been defined
    error: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option
    error: unpack_resources: NOTE: Clusters with shared data need STONITH to ensure data integrity
@@ -76,11 +144,21 @@ will even refuse to support clusters that have it disabled.
 To disable STONITH, we set the stonith-enabled cluster option to
 false.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs property set stonith-enabled=false
+# crm_verify -L
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm configure property stonith-enabled=false
 # crm_verify -L
 ----
+endif::[]
 
 With the new cluster option set, the configuration is now valid.
 
@@ -110,12 +188,22 @@ The chosen address must not be one already associated with
 a physical node
 ===========
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \
+    ip=192.168.0.120 cidr_netmask=32 op monitor interval=30s
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \
      params ip=192.168.122.120 cidr_netmask=32 \
      op monitor interval=30s
 ----
+endif::[]
 
 The other important piece of information here is ocf:heartbeat:IPaddr2.
 
@@ -125,6 +213,60 @@ script conforms to and where to find it. The second field is specific
 to OCF resources and tells the cluster which namespace to find the
 resource script in, in this case heartbeat. The last field indicates
 the name of the resource script.
+
+ifdef::pcs[]
+To obtain a list of the available resource standards (the ocf part of
+ocf:heartbeat:IPaddr2), run
+
+[source,Bash]
+----
+# pcs resource standards
+ocf
+lsb
+service
+systemd
+stonith
+----
+
+To obtain a list of the available ocf resource providers (the heartbeat
+part of ocf:heartbeat:IPaddr2), run
+
+[source,Bash]
+----
+# pcs resource providers
+heartbeat
+linbit
+pacemaker
+redhat
+----
+
+Finally, if you want to see all the resource agents available for
+a specific ocf provider (the IPaddr2 part of ocf:heartbeat:IPaddr2), run
+
+[source,Bash]
+----
+# pcs resource agents ocf:heartbeat
+AoEtarget
+AudibleAlarm
+CTDB
+ClusterMon
+Delay
+Dummy
+.
+. (skipping lots of resources to save space)
+.
+IPaddr2
+.
+.
+.
+symlink
+syslog-ng
+tomcat
+vmware
+----
+endif::[]
+
+ifdef::crm[]
 
 To obtain a list of the available resource classes, run
 
@@ -165,10 +307,33 @@ pingd                portblock            postfix              proftpd
 rsyncd               scsi2reservation     sfex                 symlink
 syslog-ng            tomcat               vmware
 ----
+endif::[]
 
 Now verify that the IP resource has been added and display the cluster's
 status to see that it is now active.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs status
+
+Last updated: Fri Sep 14 10:17:00 2012
+Last change: Fri Sep 14 10:15:48 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+1 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm configure show
@@ -196,6 +361,7 @@ Online: [ pcmk-1 pcmk-2 ]
 
  ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
 ----
+endif::[]
 
 == Perform a Failover ==
 
@@ -204,14 +370,69 @@ resource before moving on.
 
 First, find the node on which the IP address is running.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs status
+
+Last updated: Fri Sep 14 10:17:00 2012
+Last change: Fri Sep 14 10:15:48 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+1 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm resource status ClusterIP
 resource ClusterIP is running on: pcmk-1
 ----
+endif::[]
 
 Shut down Pacemaker and Corosync on that machine.
 
+ifdef::pcs[]
+[source,Bash]
+----
+#pcs cluster stop pcmk-1
+Stopping Cluster...
+----
+
+Once Corosync is no longer running, go to the other node and check the
+cluster status.
+
+[source,Bash]
+----
+# pcs status
+
+Last updated: Fri Sep 14 10:31:01 2012
+Last change: Fri Sep 14 10:15:48 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-2 (2) - partition WITHOUT quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+1 Resources configured.
+
+Online: [ pcmk-2 ]
+OFFLINE: [ pcmk-1 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # ssh pcmk-1 -- service pacemaker stop
@@ -237,6 +458,7 @@ Version: 1.1.7-2.fc17-ee0730e13d124c3d58f00016c3376a1de5323cff
 Online: [ pcmk-2 ]
 OFFLINE: [ pcmk-1 ]
 ----
+endif::[]
 
 There are three things to notice about the cluster's current
 state. The first is that, as expected, +pcmk-1+ is now offline. However
@@ -246,10 +468,9 @@ we can also see that +ClusterIP+ isn't running anywhere!
 === Quorum and Two-Node Clusters ===
 
 This is because the cluster no longer has quorum, as can be seen by
-the text "partition WITHOUT quorum" (emphasised green) in the output
-above.  In order to reduce the possibility of data corruption,
-Pacemaker's default behavior is to stop all resources if the cluster
-does not have quorum.
+the text "partition WITHOUT quorum" in the status output.  In order
+to reduce the possibility of data corruption, Pacemaker's default
+behavior is to stop all resources if the cluster does not have quorum.
 
 A cluster is said to have quorum when more than half the known or
 expected nodes are online, or for the mathematically inclined,
@@ -267,6 +488,19 @@ footnote:[Actually some would argue that two-node clusters are always pointless,
 is lost. In particular, we can tell the cluster to simply ignore
 quorum altogether.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs property set no-quorum-policy=ignore
+# pcs property
+dc-version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+cluster-infrastructure: corosync
+stonith-enabled: false
+no-quorum-policy: ignore
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm configure property no-quorum-policy=ignore
@@ -282,10 +516,33 @@ property $id="cib-bootstrap-options" \
 	stonith-enabled="false" \
 	no-quorum-policy="ignore"
 ----
+endif::[]
 
 After a few moments, the cluster will start the IP address on the
 remaining node. Note that the cluster still does not have quorum.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs status
+Last updated: Fri Sep 14 10:38:11 2012
+Last change: Fri Sep 14 10:37:53 2012 via cibadmin on pcmk-2
+Stack: corosync
+Current DC: pcmk-2 (2) - partition WITHOUT quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+1 Resources configured.
+
+Online: [ pcmk-2 ]
+OFFLINE: [ pcmk-1 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm_mon -1
@@ -304,16 +561,44 @@ OFFLINE: [ pcmk-1 ]
 
  ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
 ----
+endif::[]
 
 Now simulate node recovery by restarting the cluster stack on +pcmk-1+ and
-check the cluster's status.
+check the cluster's status.  Note, if you get an authentication error with
+the 'pcs cluster start pcmk-1' command, you must authenticate on the node
+using the 'pcs cluster auth pcmk pcmk-1 pcmk-2' command discussed earlier.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs cluster start pcmk-1
+Starting Cluster...
+# pcs status
+
+Last updated: Fri Sep 14 10:42:56 2012
+Last change: Fri Sep 14 10:37:53 2012 via cibadmin on pcmk-2
+Stack: corosync
+Current DC: pcmk-2 (2) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+1 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # service corosync start
 Starting Corosync Cluster Engine (corosync): [ OK ]
 # service pacemaker start
-Starting Pacemaker Cluster Manager: [ OK ]# crm_mon
+Starting Pacemaker Cluster Manager: [ OK ]
+# crm_mon
 ============
 Last updated: Fri Aug 28 15:32:13 2009
 Stack: openais
@@ -326,6 +611,7 @@ Online: [ pcmk-1 pcmk-2 ]
 
 ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2
 ----
+endif::[]
 
 [NOTE]
 ======
@@ -353,6 +639,16 @@ specified them]
 resource placement. We can specify a different stickiness for every
 resource, but it is often sufficient to change the default.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs resource rsc defaults resource-stickiness=100
+# pcs resource rsc defaults
+resource-stickiness: 100
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 ----
 # crm configure rsc_defaults resource-stickiness=100
@@ -370,3 +666,4 @@ property $id="cib-bootstrap-options" \
 rsc_defaults $id="rsc-options" \
 	resource-stickiness="100"
 ----
+endif::[]

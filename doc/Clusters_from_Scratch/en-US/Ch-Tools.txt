@@ -2,6 +2,110 @@
 
 == Using Pacemaker Tools ==
 
+ifdef::pcs[]
+In the dark past, configuring Pacemaker required the administrator to
+read and write XML.  In true UNIX style, there were also a number of
+different commands that specialized in different aspects of querying
+and updating the cluster.
+
+All of that has been greatly simplified with the creation of pcs. The pcs
+cluster management tool takes all the individual aspects required
+for managing and configuring a cluster, and packs them into one simple
+to use command line tool.
+
+Take some time to familiarize yourself with what pcs can do.
+
+[source,Bash]
+----
+# pcs
+Control and configure pacemaker and corosync.
+
+Options:
+    -h          Display usage and exit
+    -f file     Perform actions on file instead of active CIB
+
+Commands:
+    resource    Manage cluster resources
+    cluster     Configure cluster options and nodes
+    stonith     Configure fence devices
+    property    Set pacemaker properties
+    constraint  Set resource constraints
+    status      View cluster status
+----
+
+As you can see, the different aspects of cluster management are broken
+up into categories: resource, cluster, stonith, property, constraint,
+and status. To discover the functionality available in each of these
+categories, one can issue the command 'pcs <category> help'.  Below
+is an example of all the options available under the status category.
+
+[source,Bash]
+----
+# pcs status help
+
+Usage: pcs status [commands]...
+View current cluster and resource status
+Commands:
+    status
+        View all information about the cluster and resources
+
+    status resources
+        View current status of cluster resources
+
+    status groups
+        View currently configured groups and their resources
+
+    status cluster
+        View current cluster status
+
+    status corosync
+        View current corosync status
+
+    status nodes [corosync]
+        View current status of nodes from pacemaker, or if corosync is
+        specified, print nodes currently configured in corosync
+
+    status actions
+        View failed actions
+
+    status pcsd <node> ...
+        Show the current status of pcsd on the specified nodes
+
+    status xml
+        View xml version of status (output from crm_mon -r -1 -X)
+----
+
+Additionally, if you are interested in the Pacemaker version and
+supported cluster stack(s) available with your current Pacemaker
+installation, the pacemakerd --features option is available to you.
+
+
+pass:[# <command>pacemakerd --features</command>]
+------------------
+sys::[pacemakerd --features]
+------------------
+
+[NOTE]
+======
+If the SNMP and/or email options are not listed, then Pacemaker was not
+built to support them. This may be by the choice of your distribution or
+the required libraries may not have been available. Please contact
+whoever supplied you with the packages for more details.
+======
+
+While not covered in this tutorial, it is worth noting that there is
+another popular cluster management tool that predates pcs called crm.
+Besides having differing command syntax, there are several functional
+differences between these two tools.  The crm shell is limited to
+configuring Pacemaker only, while pcs has the ability to manage
+all aspects of the cluster (corosync and pacemaker).  As a result
+of the additional functionality present in pcs, the pcs tool requires
+a specific cluster stack to be in use, (corosync 2.0 with votequorum +
+Pacemaker version >= 1.8).  The crm shell lacks such a requirement.
+
+endif::[]
+
+ifdef::crm[]
 In the dark past, configuring Pacemaker required the administrator to
 read and write XML. In true UNIX style, there were also a number of
 different commands that specialized in different aspects of querying
@@ -51,3 +155,4 @@ built to support them. This may be by the choice of your distribution or
 the required libraries may not have been available. Please contact
 whoever supplied you with the packages for more details.
 ======
+endif::[]

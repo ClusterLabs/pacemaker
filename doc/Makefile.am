@@ -76,7 +76,8 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 # bits we don't want/need
 #
 %.xml:  %.txt
-	asciidoc -b docbook -d book -o $@ $<
+	asciidoc -b docbook -a $(ASCIIDOC_CLI_TYPE)=true -d book -o $@ $<
+	sed -i.sed 's///' $@
 	sed -i.sed 's///' $@                 # Fix line endings
 	sed -i.sed 's/\ lang="en"//' $@        # Never specify a language in the chapters
 	sed -i.sed 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara 
