@@ -77,6 +77,21 @@ is unmounted. We do this by telling the cluster to stop the WebFS resource.
 This will ensure that other resources (in our case, Apache) using WebFS
 are not only stopped, but stopped in the correct order.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs resource stop WebFS
+# pcs resource
+ ClusterIP	(ocf::heartbeat:IPaddr2) Started 
+ WebSite	(ocf::heartbeat:apache) Stopped 
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-2 ]
+     Slaves: [ pcmk-1 ]
+ WebFS	(ocf::heartbeat:Filesystem) Stopped 
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 # crm resource stop WebFS
@@ -98,6 +113,7 @@ Online: [ pcmk-1 pcmk-2 ]
      Masters: [ pcmk-2 ]
      Slaves: [ pcmk-1 ]
 -----
+endif::[]
 
 [NOTE]
 =======
@@ -126,9 +142,21 @@ First we must use the -p option to specify that we want to use the the
 Kernel's DLM. Next we use -j to indicate that it should reserve enough
 space for two journals (one per node accessing the filesystem).
 
+ifdef::pcs[]
 Lastly, we use -t to specify the lock table name. The format for this
 field is +clustername:fsname+. For the +fsname+, we need to use the same
-value as specified in 'cluster.conf' for +cluster_name+.  Just pick
+value as specified in 'corosync.conf' for +cluster_name+. If you setup
+corosync with the same cluster name we used in this tutorial, cluster
+name will be 'pcmk'.  If you are unsure what your cluster name is,
+open up /etc/corosync/corosync.conf, or execute the command
+'pcs cluster corosync pcmk-1' to view the corosync config.  The cluster
+name will be in the +totem+ block.
+endif::[]
+
+ifdef::crm[]
+Lastly, we use -t to specify the lock table name. The format for this
+field is +clustername:fsname+. For the +fsname+, we need to use the same
+value as specified in 'corosync.conf' for +cluster_name+.  Just pick
 something unique and descriptive and add somewhere inside the +totem+
 block.  For example:
 
@@ -150,6 +178,7 @@ totem {
 Do this on each node in the cluster and be sure to restart them before
 continuing.
 ===========
+endif::[]
 
 [IMPORTANT]
 ===========
@@ -178,6 +207,49 @@ Lock Table:                "webtest"
 UUID:                      ed293a02-9eee-3fa3-ed1c-435ef1fd0116
 -----
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs cluster cib dlm_cfg
+# pcs -f dlm_cfg resource create dlm ocf:pacemaker:controld op monitor interval=60s
+# pcs -f dlm_cfg resource clone dlm clone-max=2 clone-node-max=1
+# pcs -f dlm_cfg resource show
+ ClusterIP	(ocf::heartbeat:IPaddr2) Started 
+ WebSite	(ocf::heartbeat:apache) Stopped 
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-2 ]
+     Slaves: [ pcmk-1 ]
+ WebFS	(ocf::heartbeat:Filesystem) Stopped 
+ Clone Set: dlm-clone [dlm]
+     Stopped: [ dlm:0 dlm:1 ]
+# pcs cluster push cib dlm_cfg
+CIB updated
+# pcs status
+
+Last updated: Fri Sep 14 12:54:50 2012
+Last change: Fri Sep 14 12:54:43 2012 via cibadmin on pcmk-1
+Stack: corosync
+Current DC: pcmk-1 (1) - partition with quorum
+Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
+2 Nodes configured, unknown expected votes
+7 Resources configured.
+
+Online: [ pcmk-1 pcmk-2 ]
+
+Full list of resources:
+
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Stopped 
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-2 ]
+     Slaves: [ pcmk-1 ]
+ WebFS	(ocf::heartbeat:Filesystem):	Stopped 
+ Clone Set: dlm-clone [dlm]
+     Started: [ pcmk-1 pcmk-2 ]
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 # crm
@@ -249,6 +321,7 @@ Online: [ pcmk-1 pcmk-2 ]
  Clone Set: dlm_clone [dlm]
      Started: [ pcmk-1 pcmk-2 ]
 -----
+endif::[]
 
 Then (re)populate the new filesystem with data (web pages). For now we'll
 create another variation on our home page.
@@ -267,6 +340,37 @@ END
 
 == Reconfigure the Cluster for GFS2 ==
 
+
+ifdef::pcs[]
+
+With the WebFS resource stopped, lets update the configuration.
+
+[source,Bash]
+----
+# pcs resource show WebFS
+Resource: WebFS
+  device: /dev/drbd/by-res/wwwdata
+  directory: /var/www/html
+  fstype: ext4
+  target-role: Stopped
+----
+
+The fstype option needs to be updated to gfs2 instead of ext4.
+
+[source,Bash]
+----
+# pcs resource update WebFS fstype=gfs2
+# pcs resource show WebFS
+Resource: WebFS
+  device: /dev/drbd/by-res/wwwdata
+  directory: /var/www/html
+  fstype: gfs2
+  target-role: Stopped
+CIB updated
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 # crm
@@ -345,6 +449,7 @@ Master/Slave Set: WebDataClone
     Slaves: [ pcmk-2 ]
 ClusterIP    (ocf::heartbeat:IPaddr):    Started pcmk-2WebFS (ocf::heartbeat:Filesystem): Started pcmk-1
 -----
+endif::[]
 
 == Reconfigure Pacemaker for Active/Active ==
 
@@ -353,6 +458,17 @@ operating in Primary/Primary mode and the filesystem we're using is
 cluster aware. All we need to do now is reconfigure the cluster to take
 advantage of this.
 
+ifdef::pcs[]
+This will involve a number of changes, so we'll want work with a
+local cib file.
+
+[source,Bash]
+----
+# pcs cluster cib active_cfg
+----
+endif::[]
+
+ifdef::crm[]
 This will involve a number of changes, so we'll again use interactive
 mode.
 
@@ -361,6 +477,7 @@ mode.
 # crm
 # cib new active
 -----
+endif::[]
 
 There's no point making the services active on both locations if we can't
 reach them, so lets first clone the IP address. Cloned IPaddr2 resources
@@ -370,16 +487,54 @@ many instances of the clone we want (one "request bucket" for each node)
 and that if all other nodes fail, then the remaining node should hold all
 of them. Otherwise the requests would be simply discarded.
 
+
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs -f active_cfg resource clone ClusterIP \
+     globally-unique=true clone-max=2 clone-node-max=2
+----
+
+Notice when the ClusterIP becomes a clone, the constraints
+referencing ClusterIP now reference the clone.  This is
+done automatically by pcs.
+
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs -f active_cfg constraint
+Location Constraints:
+Ordering Constraints:
+  start ClusterIP-clone then start WebSite
+  WebFS then WebSite
+  promote WebDataClone then start WebFS
+Colocation Constraints:
+  WebSite with ClusterIP-clone
+  WebFS with WebDataClone (with-rsc-role:Master)
+  WebSite with WebFS
+----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 # configure clone WebIP ClusterIP \
     meta globally-unique="true" clone-max="2" clone-node-max="2"
 -----
+endif::[]
 
 Now we must tell the ClusterIP how to decide which requests are
 processed by which hosts. To do this we must specify the
 clusterip_hash parameter.
 
+ifdef::pcs[]
+[source,Bash]
+----
+# pcs -f active_cfg resource update ClusterIP clusterip_hash=sourceip
+----
+endif::[]
+
+ifdef::crm[]
 Open the ClusterIP resource
 
 [source,Bash]
@@ -444,9 +599,32 @@ rsc_defaults $id="rsc-options" \
 Notice how any constraints that referenced ClusterIP have been updated
 to use WebIP instead. This is an additional benefit of using the crm
 shell.
+endif::[]
 
 Next we need to convert the filesystem and Apache resources into
-clones.  Again, the shell will automatically update any relevant
+clones.
+
+ifdef::pcs[]
+Notice how pcs automatically updates the relevant constraints again.
+[source,Bash]
+----
+# pcs -f active_cfg resource clone WebFS
+# pcs -f active_cfg resource clone WebSite
+# pcs -f active_cfg constraint
+Location Constraints:
+Ordering Constraints:
+  start ClusterIP-clone then start WebSite-clone
+  WebFS-clone then WebSite-clone
+  promote WebDataClone then start WebFS-clone
+Colocation Constraints:
+  WebSite-clone with ClusterIP-clone
+  WebFS-clone with WebDataClone (with-rsc-role:Master)
+  WebSite-clone with WebFS-clone
+----
+endif::[]
+
+ifdef::crm[]
+Again, the shell will automatically update any relevant
 constraints.
 
 [source,Bash]
@@ -454,10 +632,19 @@ constraints.
 crm(active) # configure clone WebFSClone WebFS
 crm(active) # configure clone WebSiteClone WebSite
 -----
+endif::[]
 
 The last step is to tell the cluster that it is now allowed to promote
 both instances to be Primary (aka. Master).
 
+ifdef::pcs[]
+[source,Bash]
+-----
+# pcs -f active_cfg resource update WebDataClone master-max=2 
+-----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 crm(active) # configure edit WebDataClone
@@ -500,10 +687,39 @@ property $id="cib-bootstrap-options" \
 rsc_defaults $id="rsc-options" \
     resource-stickiness="100"
 -----
+endif::[]
 
 Review the configuration before uploading it to the cluster, quitting the
 shell and watching the cluster's response
 
+ifdef::pcs[]
+[source,Bash]
+-----
+# pcs cluster push cib active_cfg
+# pcs resource start WebFS
+-----
+
+After all the processes are started the status should look
+similar to this.
+
+[source,Bash]
+-----
+# pcs resource
+ Master/Slave Set: WebDataClone [WebData]
+     Masters: [ pcmk-2 pcmk-1 ]
+ Clone Set: dlm-clone [dlm]
+     Started: [ pcmk-2 pcmk-1 ]
+ Clone Set: ClusterIP-clone [ClusterIP] (unique)
+     ClusterIP:0	(ocf::heartbeat:IPaddr2) Started 
+     ClusterIP:1	(ocf::heartbeat:IPaddr2) Started 
+ Clone Set: WebFS-clone [WebFS]
+     Started: [ pcmk-1 pcmk-2 ]
+ Clone Set: WebSite-clone [WebSite]
+     Started: [ pcmk-1 pcmk-2 ]
+-----
+endif::[]
+
+ifdef::crm[]
 [source,Bash]
 -----
 crm(active) # cib commit active
@@ -527,7 +743,9 @@ Master/Slave Set: WebDataClone
 Clone Set: WebIP Started: [ pcmk-1 pcmk-2 ]
 Clone Set: WebFSClone Started: [ pcmk-1 pcmk-2 ]
 Clone Set: WebSiteClone Started: [ pcmk-1 pcmk-2 ]
+Clone Set: dlm_clone Started: [ pcmk-1 pcmk-2 ]
 -----
+endif::[]
 
 === Testing Recovery ===
 

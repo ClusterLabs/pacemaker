@@ -1,7 +1,42 @@
 [appendix]
-== Sample Corosync Configuration ==
 
-.Sample Corosync.conf for a two-node cluster
+
+== Sample Corosync Configuration  ==
+
+ifdef::pcs[]
+.Sample corosync.conf for two-node cluster using a node list.
+.....
+# Please read the corosync.conf.5 manual page
+totem {
+version: 2
+secauth: off
+cluster_name: pcmk
+transport: udpu
+}
+
+nodelist {
+  node {
+        ring0_addr: pcmk-1
+        nodeid: 1
+  }
+  node {
+        ring0_addr: pcmk-2
+        nodeid: 2
+  }
+}
+
+quorum {
+  provider: corosync_votequorum
+}
+
+logging {
+  to_syslog: yes
+}
+.....
+endif::[]
+
+ifdef::crm[]
+.Sample Corosync.conf for a two-node cluster using multicast.
 .....
 # Please read the corosync.conf.5 manual page
 totem {
@@ -83,3 +118,4 @@ quorum {
            expected_votes: 2
 }
 .....
+endif::[]
