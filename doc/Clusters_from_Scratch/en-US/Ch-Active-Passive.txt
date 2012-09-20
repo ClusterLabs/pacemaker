@@ -38,12 +38,13 @@ property $id="cib-bootstrap-options" \
 ----
 endif::[]
 
+ifdef::pcs[]
+
 For those that are not of afraid of XML, you can see the raw cluster
 configuration and status by using the +pcs cluster cib+ command.
 
 .The last XML you'll see in this document
 
-ifdef::pcs[]
 [source,Bash]
 ----
 # pcs cluster cib
@@ -89,6 +90,9 @@ ifdef::pcs[]
 endif::[]
 
 ifdef::crm[]
+For those that are not of afraid of XML, you can see the raw configuration by appending "xml" to the previous command.
+
+.The last XML you'll see in this document
 [source,Bash]
 ----
 # crm configure show xml
