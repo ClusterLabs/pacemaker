@@ -1,0 +1,20 @@
+See also:
+   http://powerman.name/doc/asciidoc
+
+Commands:    `some-tool --with option`
+Files:       '/tmp/file.name' 
+Italic:	     _some text_
+Mono:        +some text+
+Bold:        *some text*
+Super:	     ^some text^
+Sub:	     ~some text~
+Quotes:
+             ``double quoted''
+              `single quoted'
+
+Tool:        command
+Literal:     mono
+Varname:     mono
+Option:      italic
+Emphasis:    italic bold
+Replaceable: italic mono 
