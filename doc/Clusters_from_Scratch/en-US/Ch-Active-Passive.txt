@@ -38,8 +38,8 @@ property $id="cib-bootstrap-options" \
 ----
 endif::[]
 
-For those that are not of afraid of XML, you can see the raw
-configuration by appending "xml" to the previous command.
+For those that are not of afraid of XML, you can see the raw cluster
+configuration and status by using the +pcs cluster cib+ command.
 
 .The last XML you'll see in this document
 

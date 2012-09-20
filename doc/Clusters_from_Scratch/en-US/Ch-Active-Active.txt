@@ -147,7 +147,7 @@ Lastly, we use -t to specify the lock table name. The format for this
 field is +clustername:fsname+. For the +fsname+, we need to use the same
 value as specified in 'corosync.conf' for +cluster_name+. If you setup
 corosync with the same cluster name we used in this tutorial, cluster
-name will be 'pcmk'.  If you are unsure what your cluster name is,
+name will be 'mycluster'.  If you are unsure what your cluster name is,
 open up /etc/corosync/corosync.conf, or execute the command
 'pcs cluster corosync pcmk-1' to view the corosync config.  The cluster
 name will be in the +totem+ block.
@@ -169,7 +169,7 @@ totem {
         # secret with "corosync-keygen".
         crypto_cipher: none
         crypto_hash: none
-        cluster_name: webtest
+        cluster_name: mycluster
   ...
 .....
 
@@ -192,7 +192,7 @@ mounted.  Otherwise you will receive the message:
 
 [source,Bash]
 -----
-# ssh pcmk-2 -- mkfs.gfs2 -p lock_dlm -j 2 -t webtest:web /dev/drbd1
+# ssh pcmk-2 -- mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
 This will destroy any data on /dev/drbd1.
 It appears to contain: Linux rev 1.0 ext4 filesystem data, UUID=dc45fff3-c47a-4db2-96f7-a8049a323fe4 (extents) (large files) (huge files)
 Are you sure you want to proceed? [y/n]y
@@ -203,7 +203,7 @@ Filesystem Size:           0.97 GB (253932 blocks)
 Journals:                  2
 Resource Groups:           4
 Locking Protocol:          "lock_dlm"
-Lock Table:                "webtest"
+Lock Table:                "mycluster"
 UUID:                      ed293a02-9eee-3fa3-ed1c-435ef1fd0116
 -----
 

@@ -44,9 +44,6 @@ ifdef::pcs[]
   <stonith device type> [stonith device options]+
 
 . Set stonith-enable to true. +pcs -f stonith_cfg property set stonith-enabled=true+
-
-. Commit the new configuration. +pcs cluster push cib stonith_cfg+
-
 endif::[]
 
 ifdef::crm[]
@@ -81,6 +78,10 @@ endif::[]
 
 ifdef::crm[]
 . Upload it into the CIB from the shell: +cib commit stonith+
+endif::[]
+
+ifdef::pcs[]
+. Commit the new configuration. +pcs cluster push cib stonith_cfg+
 endif::[]
 
 . Once the stonith resource is running, you can test it by executing:
