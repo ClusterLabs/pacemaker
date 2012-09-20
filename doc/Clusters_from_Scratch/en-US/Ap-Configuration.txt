@@ -402,6 +402,10 @@ Resource: WebDataClone
   notify: true
   master-max: 2
   op monitor interval=60s
+# pcs constraint ref WebDataClone
+Resource: WebDataClone
+  colocation-WebFS-WebDataClone-INFINITY
+  order-WebDataClone-WebFS-mandatory
 ----
 endif::[]
 
@@ -433,6 +437,12 @@ Resource: WebFS-clone
   device: /dev/drbd/by-res/wwwdata
   directory: /var/www/html
   fstype: gfs2
+# pcs constraint ref WebFS-clone
+Resource: WebFS-clone
+  colocation-WebFS-WebDataClone-INFINITY
+  colocation-WebSite-WebFS-INFINITY
+  order-WebFS-WebSite-mandatory
+  order-WebDataClone-WebFS-mandatory
 ----
 endif::[]
 
@@ -464,6 +474,12 @@ Resource: WebSite-clone
   statusurl: http://localhost/server-status
   master-max: 2
   op monitor interval=1min
+# pcs constraint ref WebSite-clone
+Resource: WebSite-clone
+  colocation-WebSite-ClusterIP-INFINITY
+  colocation-WebSite-WebFS-INFINITY
+  order-ClusterIP-WebSite-mandatory
+  order-WebFS-WebSite-mandatory
 ----
 endif::[]
 
