@@ -115,7 +115,9 @@ crm_active_peers(void)
 {
     guint count = 0;
 
-    g_hash_table_foreach(crm_peer_cache, crm_count_peer, &count);
+    if(crm_peer_cache) {
+        g_hash_table_foreach(crm_peer_cache, crm_count_peer, &count);
+    }
     return count;
 }
 
