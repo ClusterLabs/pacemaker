@@ -30,13 +30,16 @@ that here.
 Do not accept the default network settings.
 Cluster machines should never obtain an IP address via DHCP.
 
-Before clicking next, select +Configure Network+ to specify a fixed IPv4 address for +System eth0+.
-Here I will use the internal addresses for the clusterlab.org network.
+When you are presented with the +Configure Network+ advanced option, select that option
+before continuing with the installation process to specify a fixed IPv4 address for
++System eth0+. Be sure to also enter the +Routes+ section and add an entry for your
+default gateway.
 
 image::images/Network.png["Custom network settings",align="center"]
 
-Be sure to also enter the +Routes+ section and add an entry for your default gateway.
-
+If you miss this step, this can easily be configured after installation. You will have
+to navigate to +system settings+ and select +network+.  From there you can select
+what device to configure.
 ===========
 
 You will then be prompted to indicate the machine's physical location
@@ -74,7 +77,7 @@ installed. Don't enable updates yet, we'll do that (and install any
 extra software we need) later. After you click next, Fedora will begin
 installing.
 
-Go grab something to drink, this may take a while
+Go grab something to drink, this may take a while.
 
 Once the node reboots, you'll see a (possibly mangled) login prompt on
 the console.  Login using +root+ and the password you created earlier.
@@ -84,8 +87,7 @@ image::images/Console.png["Initial Console",align="center"]
 [NOTE]
 ======
 
-That was the last screenshot, from here on in we're going to be working
-exclusively from the terminal.
+From here on in we're going to be working exclusively from the terminal.
 
 ======
 
@@ -285,10 +287,10 @@ clusterlabs.org
 ----
 
 === NTP ===
+
 It is highly recommended to enable NTP on your cluster nodes. Doing so
 ensures all nodes agree on the current time and makes reading log files
-significantly easier. Fedora Installation - Date and TimeFedora
-Installation: Enable NTP to keep the times on all your nodes consistent
+significantly easier. footnote:[http://docs.fedoraproject.org/en-US/Fedora/17/html-single/System_Administrators_Guide/index.html#ch-Configuring_the_Date_and_Time]
 
 == Before You Continue ==
 
@@ -994,7 +996,7 @@ This plugin also had the capability to start Pacemaker automatically when Corosy
 
 Neither behavior is possible with Corosync 2.0 and beyond as support for plugins was removed.
 
-Instead, Pacemaker must started as a separate job/initscript.
+Instead, Pacemaker must be started as a separate job/initscript.
 Also, since Pacemaker made use of the plugin for message routing, a node using the plugin (Corosync prior to 2.0) cannot talk to one that isn't (Corosync 2.0+).
 
 Rolling upgrades between these versions are therefor not possible and an alternate strategy footnote:[http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/ap-upgrade.html] must be used.

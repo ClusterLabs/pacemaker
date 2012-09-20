@@ -10,7 +10,7 @@ ifdef::pcs[]
 totem {
 version: 2
 secauth: off
-cluster_name: pcmk
+cluster_name: mycluster
 transport: udpu
 }
 
