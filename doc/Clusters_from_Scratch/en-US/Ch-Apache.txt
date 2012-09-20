@@ -9,11 +9,12 @@ configure.
 == Installation ==
 
 Before continuing, we need to make sure Apache is installed on both
-hosts.
+hosts. We also need the wget tool in order for the cluster to be able to check
+the status of the Apache server.
 
 [source,Bash]
 .....
-# yum install -y httpd
+# yum install -y httpd wget
 Loaded plugins: langpacks, presto, refresh-packagekit
 fedora/metalink                                               | 2.6 kB     00:00
 updates/metalink                                              | 3.2 kB     00:00
@@ -39,6 +40,7 @@ Dependencies Resolved
 =====================================================================================
 Installing:
  httpd               x86_64       2.2.22-3.fc17          updates-testing       823 k
+ wget                x86_64       1.13.4-2.fc17          fedora                495 k
 Installing for dependencies:
  apr                 x86_64       1.4.6-1.fc17           fedora                 99 k
  apr-util            x86_64       1.4.1-2.fc17           fedora                 78 k
@@ -52,75 +54,37 @@ Install  1 Package (+4 Dependent packages)
 Total download size: 1.1 M
 Installed size: 3.5 M
 Downloading Packages:
-(1/5): apr-1.4.6-1.fc17.x86_64.rpm                            |  99 kB     00:00
-(2/5): apr-util-1.4.1-2.fc17.x86_64.rpm                       |  78 kB     00:00
-(3/5): apr-util-ldap-1.4.1-2.fc17.x86_64.rpm                  |  17 kB     00:00
-(4/5): httpd-2.2.22-3.fc17.x86_64.rpm                         | 823 kB     00:01
-(5/5): httpd-tools-2.2.22-3.fc17.x86_64.rpm                   |  74 kB     00:00
+(1/6): apr-1.4.6-1.fc17.x86_64.rpm                            |  99 kB     00:00
+(2/6): apr-util-1.4.1-2.fc17.x86_64.rpm                       |  78 kB     00:00
+(3/6): apr-util-ldap-1.4.1-2.fc17.x86_64.rpm                  |  17 kB     00:00
+(4/6): httpd-2.2.22-3.fc17.x86_64.rpm                         | 823 kB     00:01
+(5/6): httpd-tools-2.2.22-3.fc17.x86_64.rpm                   |  74 kB     00:00
+(6/6): wget-1.13.4-2.fc17.x86_64.rpm                          | 495 kB     00:01
 -------------------------------------------------------------------------------------
 Total                                                238 kB/s | 1.1 MB     00:04
 Running Transaction Check
 Running Transaction Test
 Transaction Test Succeeded
 Running Transaction
-  Installing : apr-1.4.6-1.fc17.x86_64                                           1/5
-  Installing : apr-util-1.4.1-2.fc17.x86_64                                      2/5
-  Installing : apr-util-ldap-1.4.1-2.fc17.x86_64                                 3/5
-  Installing : httpd-tools-2.2.22-3.fc17.x86_64                                  4/5
-  Installing : httpd-2.2.22-3.fc17.x86_64                                        5/5
-  Verifying  : apr-util-ldap-1.4.1-2.fc17.x86_64                                 1/5
-  Verifying  : httpd-tools-2.2.22-3.fc17.x86_64                                  2/5
-  Verifying  : apr-util-1.4.1-2.fc17.x86_64                                      3/5
-  Verifying  : apr-1.4.6-1.fc17.x86_64                                           4/5
-  Verifying  : httpd-2.2.22-3.fc17.x86_64                                        5/5
+  Installing : apr-1.4.6-1.fc17.x86_64                                           1/6
+  Installing : apr-util-1.4.1-2.fc17.x86_64                                      2/6
+  Installing : apr-util-ldap-1.4.1-2.fc17.x86_64                                 3/6
+  Installing : httpd-tools-2.2.22-3.fc17.x86_64                                  4/6
+  Installing : httpd-2.2.22-3.fc17.x86_64                                        5/6
+  Installing : wget-1.13.4-2.fc17.x86_64                                         6/6
+  Verifying  : apr-util-ldap-1.4.1-2.fc17.x86_64                                 1/6
+  Verifying  : httpd-tools-2.2.22-3.fc17.x86_64                                  2/6
+  Verifying  : apr-util-1.4.1-2.fc17.x86_64                                      3/6
+  Verifying  : apr-1.4.6-1.fc17.x86_64                                           4/6
+  Verifying  : httpd-2.2.22-3.fc17.x86_64                                        5/6
+  Verifying  : wget-1.13.4-2.fc17.x86_64                                         6/6
 
 Installed:
-  httpd.x86_64 0:2.2.22-3.fc17
+  httpd.x86_64 0:2.2.22-3.fc17              wget.x86_64 0:1.13.4-2.fc17
 
 Dependency Installed:
   apr.x86_64 0:1.4.6-1.fc17                 apr-util.x86_64 0:1.4.1-2.fc17
   apr-util-ldap.x86_64 0:1.4.1-2.fc17       httpd-tools.x86_64 0:2.2.22-3.fc17
-
-Complete!
-.....
-
-Also, we need the wget tool in order for the cluster to be able to check
-the status of the Apache server.
-
-[source,Bash]
-.....
-# yum install -y wget
-Loaded plugins: langpacks, presto, refresh-packagekit
-Resolving Dependencies
---> Running transaction check
----> Package wget.x86_64 0:1.13.4-2.fc17 will be installed
---> Finished Dependency Resolution
-
-Dependencies Resolved
-
-=====================================================================================
- Package         Arch              Version                   Repository         Size
-=====================================================================================
-Installing:
- wget            x86_64            1.13.4-2.fc17             fedora            495 k
-
-Transaction Summary
-=====================================================================================
-Install  1 Package
-
-Total download size: 495 k
-Installed size: 1.8 M
-Downloading Packages:
-wget-1.13.4-2.fc17.x86_64.rpm                                 | 495 kB     00:01
-Running Transaction Check
-Running Transaction Test
-Transaction Test Succeeded
-Running Transaction
-  Installing : wget-1.13.4-2.fc17.x86_64                                         1/1
-  Verifying  : wget-1.13.4-2.fc17.x86_64                                         1/1
-
-Installed:
-  wget.x86_64 0:1.13.4-2.fc17
 
 Complete!
 .....
