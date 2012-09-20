@@ -996,7 +996,7 @@ This plugin also had the capability to start Pacemaker automatically when Corosy
 
 Neither behavior is possible with Corosync 2.0 and beyond as support for plugins was removed.
 
-Instead, Pacemaker must started as a separate job/initscript.
+Instead, Pacemaker must be started as a separate job/initscript.
 Also, since Pacemaker made use of the plugin for message routing, a node using the plugin (Corosync prior to 2.0) cannot talk to one that isn't (Corosync 2.0+).
 
 Rolling upgrades between these versions are therefor not possible and an alternate strategy footnote:[http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/ap-upgrade.html] must be used.
