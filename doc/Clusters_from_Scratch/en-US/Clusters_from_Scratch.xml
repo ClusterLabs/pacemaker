@@ -8,8 +8,8 @@
 	<xi:include href="Preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Installation.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-	<xi:include href="Ch-Verification.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Tools.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Ch-Verification.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Active-Passive.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Apache.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Shared-Storage.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
