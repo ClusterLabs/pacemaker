@@ -401,7 +401,8 @@ id_dsa.pub                           100%  616     0.6KB/s   00:00
 id_dsa                               100%  672     0.7KB/s   00:00
 known_hosts                          100%  400     0.4KB/s   00:00
 authorized_keys                      100%  616     0.6KB/s   00:00
-# ssh pcmk-2 -- uname -npcmk-2
+# ssh pcmk-2 -- uname -n
+pcmk-2
 #
 ----
 
@@ -867,9 +868,10 @@ Start and enable the daemon by issuing the following commands on each node.
 # systemctl enable pcsd.service
 ----
 
-Now setup a common pcs user account on each node in the cluster using the
-pcs_passwd command. In the example below, the user account 'pcmk' is created.
-You will be asked to supply a password.  Make sure the username and password is
+Now setup a common pcs user account on each node in the cluster using
+the pcs_passwd command. In the example below, the user account 'pcmk'
+is created.  You will be asked to supply a password (or supply one
+with the -p option).  Make sure the username and password is
 consistent across all the nodes.
 
 [source,Bash]
@@ -905,7 +907,7 @@ Password:
 pcmk-1: Authorized
 pcmk-2: Authorized
 
-# pcs cluster setup pcmk pcmk-1 pcmk-2
+# pcs cluster setup mycluster pcmk-1 pcmk-2
 pcmk-1: Succeeded
 pcmk-2: Succeeded
 ----
@@ -993,7 +995,7 @@ This plugin also had the capability to start Pacemaker automatically when Corosy
 Neither behavior is possible with Corosync 2.0 and beyond as support for plugins was removed.
 
 Instead, Pacemaker must started as a separate job/initscript.
-Also, since Pacemaker used to use the plugin for message routing, a node using the plugin (Corosync prior to 2.0) cannot talk to one that isn't (Corosync 2.0+).
+Also, since Pacemaker made use of the plugin for message routing, a node using the plugin (Corosync prior to 2.0) cannot talk to one that isn't (Corosync 2.0+).
 
 Rolling upgrades between these versions are therefor not possible and an alternate strategy footnote:[http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/ap-upgrade.html] must be used.
 ===========

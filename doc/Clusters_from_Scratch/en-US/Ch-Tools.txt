@@ -2,18 +2,42 @@
 
 == Using Pacemaker Tools ==
 
-ifdef::pcs[]
 In the dark past, configuring Pacemaker required the administrator to
 read and write XML.  In true UNIX style, there were also a number of
 different commands that specialized in different aspects of querying
 and updating the cluster.
 
-All of that has been greatly simplified with the creation of pcs. The pcs
-cluster management tool takes all the individual aspects required
-for managing and configuring a cluster, and packs them into one simple
-to use command line tool.
+All of that has been greatly simplified with the creation of unified
+command-line shells (and GUIs) that hide all the messy XML
+scaffolding.
 
-Take some time to familiarize yourself with what pcs can do.
+These shells take all the individual aspects required for managing and
+configuring a cluster, and packs them into one simple to use command
+line tool.
+
+They even allow you to queue up several changes at once and commit
+them atomically.
+
+There are currently two command-line shells that people use, `pcs` and
+the `crm shell`.
+
+[NOTE]
+===========
+The two shells share many concepts but the scope, layout and syntax
+does differ, so make sure you read the version of this guide that
+corresponds to the software installed on your system.
+===========
+
+ifdef::pcs[]
+This edition of Clusters from Scratch is based on `pcs`.
+Start by taking some time to familiarize yourself with what it can do.
+
+[IMPORTANT]
+===========
+Since `pcs` has the ability to manage all aspects of the cluster (both
+corosync and pacemaker), it requires a specific cluster stack to be in
+use, (corosync 2.0 with votequorum + Pacemaker version >= 1.8).
+===========
 
 [source,Bash]
 ----
@@ -93,30 +117,11 @@ the required libraries may not have been available. Please contact
 whoever supplied you with the packages for more details.
 ======
 
-While not covered in this tutorial, it is worth noting that there is
-another popular cluster management tool that predates pcs called crm.
-Besides having differing command syntax, there are several functional
-differences between these two tools.  The crm shell is limited to
-configuring Pacemaker only, while pcs has the ability to manage
-all aspects of the cluster (corosync and pacemaker).  As a result
-of the additional functionality present in pcs, the pcs tool requires
-a specific cluster stack to be in use, (corosync 2.0 with votequorum +
-Pacemaker version >= 1.8).  The crm shell lacks such a requirement.
-
 endif::[]
 
 ifdef::crm[]
-In the dark past, configuring Pacemaker required the administrator to
-read and write XML. In true UNIX style, there were also a number of
-different commands that specialized in different aspects of querying
-and updating the cluster.
-
-Since Pacemaker 1.0, this has all changed and we have an integrated,
-scriptable, cluster shell that hides all the messy XML scaffolding. It
-even allows you to queue up several changes at once and commit them
-atomically.
-
-Take some time to familiarize yourself with what it can do.
+This edition of Clusters from Scratch is based on the `crm` shell.
+Start by taking some time to familiarize yourself with what it can do.
 
 pass:[# <command>crm --help</command>]
 

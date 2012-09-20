@@ -129,9 +129,9 @@ As you can see, the tool has found some errors.
 
 In order to guarantee the safety of your data
 footnote:[If the data is corrupt, there is little point in continuing to make it available]
-, Pacemaker ships with STONITH
+, the default for STONITH
 footnote:[A common node fencing mechanism. Used to ensure data integrity by powering off "bad" nodes]
-enabled.  However it also knows when no STONITH configuration has been
+in Pacemaker is +enabled+.  However it also knows when no STONITH configuration has been
 supplied and reports this as a problem (since the cluster would not be
 able to make progress if a situation requiring node fencing arose).
 
@@ -141,7 +141,7 @@ STONITH is highly encouraged, turning it off tells the cluster to
 simply pretend that failed nodes are safely powered off. Some vendors
 will even refuse to support clusters that have it disabled.
 
-To disable STONITH, we set the stonith-enabled cluster option to
+To disable STONITH, we set the _stonith-enabled_ cluster option to
 false.
 
 ifdef::pcs[]
