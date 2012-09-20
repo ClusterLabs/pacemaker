@@ -1,14 +1,15 @@
+* Thu Sep 20 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.8-1
 
-* Thu Sep 06 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.8-1
-- Update source tarball to revision: 5a41af5
+- Update source tarball to revision: 1a5341f
+- Statistics:
+  Changesets: 1019
+  Diff:       2107 files changed, 117258 insertions(+), 73606 deletions(-)
+
 - All APIs have been cleaned up and reduced to essentials
 - Pacemaker now includes a replacement lrmd that supports systemd and upstart agents
 - Config and state files (cib.xml, PE inputs and core files) have moved to new locations
 - The crm shell has become a separate project and no longer included with Pacemaker
 - All daemons/tools now have a unified set of error codes based on errno.h (see crm_error)
-- Statistics:
-  Changesets: 940
-  Diff:       2102 files changed, 113820 insertions(+), 72511 deletions(-)
 
 - Changes since Pacemaker-1.1.7
   + Core: Bug cl#5032 - Rewrite the iso8601 date handling code
