@@ -457,13 +457,21 @@ tell the cluster where it can be located (only on the DRBD Primary)
 and when it is allowed to start (after the Primary was promoted).
 
 ifdef::pcs[]
+We are going to take a shortcut when creating the resource this time though.
+Instead of explicitly saying we want the 'ocf:heartbeat:Filesystem' script, we
+are only going to ask for 'Filesystem'. We can do this because we know there is only
+one resource script named 'Filesystem' available to pacemaker, and that pcs is smart
+enough to fill in the 'ocf:heartbeat' portion for us correctly in the configuration.
+If there were multiple 'Filesystem' scripts from different ocf providers, we would need
+to specify the exact one we wanted to use.
+
 Once again we will queue up our changes to a file and then push the
 new configuration to the cluster as the final step.
 
 [source,Bash]
 ----
 # pcs cluster cib fs_cfg
-# pcs -f fs_cfg resource create WebFS ocf:heartbeat:Filesystem \
+# pcs -f fs_cfg resource create WebFS Filesystem \
          device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" \
          fstype="ext4"
 # pcs -f fs_cfg constraint colocation add WebFS WebDataClone INFINITY with-rsc-role=Master
