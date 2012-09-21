@@ -51,7 +51,6 @@
 - Document advanced fencing logic in Pacemaker Explained
 - Use ann:defaultValue="..." instead of <optional> in the schema more often
 - Document in CFS an Appendix detailing with re-enabling firewall
-- Remove ocf:heartbeat part of resource create to demonstrate that the resource is automatically found.
 - Document implicit operation creation in CFS once pcs supports it.
 - Document use of pcs resource move command in CFS once pcs supports it.
 - Make use of --clone option in pcs resource create dlm in CFS once pcs fully supports that option.
