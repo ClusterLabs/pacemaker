@@ -43,6 +43,7 @@
 #include <crm/common/util.h>
 #include <internal.h>
 
+#define TIMEOUT_MULTIPLY_FACTOR 1.2
 
 typedef struct st_query_result_s
 {
@@ -359,6 +360,50 @@ static int stonith_topology_next(remote_fencing_op_t *op)
     return -EINVAL;
 }
 
+/*!
+ * \brief Check to see if this operation is a duplicate of another in flight
+ * operation. If so merge this operation into the inflight operation, and mark
+ * it as a duplicate.
+ */
+static void
+merge_duplicates(remote_fencing_op_t *op)
+{
+    GHashTableIter iter;
+    remote_fencing_op_t *other = NULL;
+    g_hash_table_iter_init(&iter, remote_op_list);
+    while(g_hash_table_iter_next(&iter, NULL, (void**)&other)) {
+        if(other->state > st_exec) {
+            /* Must be in-progress */
+            continue;
+        } else if (safe_str_neq(op->target, other->target)) {
+            /* Must be for the same node */
+            continue;
+        } else if(safe_str_neq(op->action, other->action)) {
+            crm_trace("Must be for the same action: %s vs. ", op->action, other->action);
+            continue;
+        } else if(safe_str_eq(op->client_name, other->client_name)) {
+            crm_trace("Must be for different clients: %s", op->client_name);
+            continue;
+        } else if(safe_str_eq(other->target, other->originator)) {
+            crm_trace("Can't be a suicide operation: %s", other->target);
+            continue;
+        }
+
+        /* There is another in-flight request to fence the same host
+         * Piggyback on that instead.  If it fails, so do we.
+         */
+        other->duplicates = g_list_append(other->duplicates, op);
+        if(other->total_timeout == 0) {
+            crm_trace("Making a best-guess as to the timeout used");
+            other->total_timeout = op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, NULL, op->base_timeout);
+        }
+        crm_notice("Merging stonith action %s for node %s originating from client %s.%.8s with identical request from %s@%s.%.8s (%ds)",
+                   op->action, op->target, op->client_name, op->id, other->client_name, other->originator, other->id, other->total_timeout);
+        report_timeout_period(op, other->total_timeout);
+        op->state = st_duplicate;
+    }
+}
+
 void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
@@ -433,43 +478,8 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
         }
     }
 
-    {
-        GHashTableIter iter;
-        remote_fencing_op_t *other = NULL;
-        g_hash_table_iter_init(&iter, remote_op_list); 
-        while(g_hash_table_iter_next(&iter, NULL, (void**)&other)) {
-            if(other->state > st_exec) {
-                /* Must be in-progress */
-                continue;
-            } else if (safe_str_neq(op->target, other->target)) {
-                /* Must be for the same node */
-                continue;
-            } else if(safe_str_neq(op->action, other->action)) {
-                crm_trace("Must be for the same action: %s vs. ", op->action, other->action);
-                continue;
-            } else if(safe_str_eq(op->client_name, other->client_name)) {
-                crm_trace("Must be for different clients: %s", op->client_name);
-                continue;
-            } else if(safe_str_eq(other->target, other->originator)) {
-                crm_trace("Can't be a suicide operation: %s", other->target);
-                continue;
-            }
-
-            /* There is another in-flight request to fence the same host
-             * Piggyback on that instead.  If it fails, so do we.
-             */
-            other->duplicates = g_list_append(other->duplicates, op);
-            if(other->total_timeout == 0) {
-                crm_trace("Making a best-guess as to the timeout used");
-                other->total_timeout = op->total_timeout = 1.2 * get_op_total_timeout(op, NULL, op->base_timeout);
-            }
-            crm_notice("Merging stonith action %s for node %s originating from client %s.%.8s with identical request from %s@%s.%.8s (%ds)",
-                       op->action, op->target, op->client_name, op->id, other->client_name, other->originator, other->id, other->total_timeout);
-            report_timeout_period(op, other->total_timeout);
-            op->state = st_duplicate;
-            return op;
-        }
-    }
+	/* check to see if this is a duplicate operation of another in-flight operation */
+	merge_duplicates(op);
 
     return op;
 }
@@ -701,7 +711,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
 
     if(op->op_timer_total <= 0) {
         int t = get_op_total_timeout(op, peer, op->base_timeout);
-        op->total_timeout = 1.2 * t;
+        op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * t;
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
         crm_info("Total remote op timeout set to %d for fencing of node %s for %s.%.8s",
@@ -719,7 +729,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     }
 
     if(peer) {
-        int t = 1.2 * get_device_timeout(peer, device, op->base_timeout);
+        int t = TIMEOUT_MULTIPLY_FACTOR * get_device_timeout(peer, device, op->base_timeout);
         xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);
 
         crm_xml_add(query, F_STONITH_REMOTE, op->id);
