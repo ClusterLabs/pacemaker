@@ -68,25 +68,6 @@ class Test:
 			}
 		)
 
-	def start_corosync(self):
-		if self.enable_corosync == 0:
-			return
-
-		if self.verbose:
-			print "Starting corosync"
-
-		test = subprocess.Popen("corosync", stdout=subprocess.PIPE)
-		test.wait()
-		time.sleep(10)
-
-	def stop_corosync(self):
-		if self.enable_corosync == 0:
-			return
-
-		cmd = shlex.split("killall -9 -q corosync")
-		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-		test.wait()
-
 	def stop_pacemaker(self):
 		cmd = shlex.split("killall -9 -q pacemakerd")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
@@ -95,13 +76,11 @@ class Test:
 	def start_environment(self):
 		### make sure we are in full control here ###
 		self.stop_pacemaker()
-		self.stop_corosync()
 
 		cmd = shlex.split("killall -9 -q stonithd")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
-		self.start_corosync()
 		if self.verbose:
 			print "Starting stonithd with %s" % self.stonith_options
 
@@ -121,15 +100,6 @@ class Test:
 
 		if self.verbose:
 			print self.stonith_output
-
-			if os.path.exists('/var/log/corosync.log'):
-				print "Daemon output"
-				f = open('/var/log/corosync.log', 'r')
-				for line in f.readlines():
-					print line.strip()
-				os.remove('/var/log/corosync.log')
-
-		self.stop_corosync()
 
 	def add_stonith_log_pattern(self, pattern):
 		self.stonith_patterns.append(pattern)
@@ -277,6 +247,20 @@ class Tests:
 		for test in self.tests:
 			print "%35s - %s" % (test.name, test.description)
 		print "==== END OF LIST ====\n"
+
+
+	def start_corosync(self):
+		if self.verbose:
+			print "Starting corosync"
+
+		test = subprocess.Popen("corosync", stdout=subprocess.PIPE)
+		test.wait()
+		time.sleep(10)
+
+	def stop_corosync(self):
+		cmd = shlex.split("killall -9 -q corosync")
+		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		test.wait()
 
 	def run_single(self, name):
 		for test in self.tests:
@@ -563,8 +547,8 @@ class Tests:
 
 			test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
 
-	def setup_environment(self):
-		if self.autogen_corosync_cfg:
+	def setup_environment(self, use_corosync):
+		if self.autogen_corosync_cfg and use_corosync:
 			corosync_conf = ("""
 totem {
         version: 2
@@ -598,10 +582,26 @@ logging {
 
 			os.system("cat <<-END >>/etc/corosync/corosync.conf\n%s\nEND" % (corosync_conf))
 
+
+		if use_corosync:
+			### make sure we are in control ###
+			self.stop_corosync()
+			self.start_corosync()
+
 		os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
 		os.system("cp /usr/share/pacemaker/tests/cts/fence_true /usr/sbin/fence_true")
 
-	def cleanup_environment(self):
+	def cleanup_environment(self, use_corosync):
+		if use_corosync:
+			self.stop_corosync()
+
+			if self.verbose and os.path.exists('/var/log/corosync.log'):
+				print "Daemon output"
+				f = open('/var/log/corosync.log', 'r')
+				for line in f.readlines():
+					print line.strip()
+				os.remove('/var/log/corosync.log')
+
 		if self.autogen_corosync_cfg:
 			os.system("rm -f /etc/corosync/corosync.conf")
 
@@ -662,20 +662,28 @@ def main(argv):
 	o = TestOptions()
 	o.build_options(argv)
 
+	use_corosync = 1
+
 	tests = Tests(o.options['verbose'])
 	tests.build_standalone_tests()
 	tests.build_custom_timeout_tests()
 	tests.build_api_sanity_tests()
 
-	print "Starting ..."
-
-	tests.setup_environment()
-
 	if o.options['list-tests']:
 		tests.print_list()
+		sys.exit(0)
 	elif o.options['show-usage']:
 		o.show_usage()
-	elif o.options['run-only-pattern'] != "":
+		sys.exit(0)
+
+	print "Starting ..."
+
+	if o.options['no-cpg']:
+		use_corosync = 0
+
+	tests.setup_environment(use_corosync)
+
+	if o.options['run-only-pattern'] != "":
 		tests.run_tests_matching(o.options['run-only-pattern'])
 		tests.print_results()
 	elif o.options['run-only'] != "":
@@ -691,7 +699,7 @@ def main(argv):
 		tests.run_tests()
 		tests.print_results()
 
-	tests.cleanup_environment()
+	tests.cleanup_environment(use_corosync)
 	tests.exit()
 if __name__=="__main__":
 	main(sys.argv)
