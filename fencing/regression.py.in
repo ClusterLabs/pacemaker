@@ -68,25 +68,6 @@ class Test:
 			}
 		)
 
-	def start_corosync(self):
-		if self.enable_corosync == 0:
-			return
-
-		if self.verbose:
-			print "Starting corosync"
-
-		test = subprocess.Popen("corosync", stdout=subprocess.PIPE)
-		test.wait()
-		time.sleep(10)
-
-	def stop_corosync(self):
-		if self.enable_corosync == 0:
-			return
-
-		cmd = shlex.split("killall -9 -q corosync")
-		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-		test.wait()
-
 	def stop_pacemaker(self):
 		cmd = shlex.split("killall -9 -q pacemakerd")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
@@ -95,13 +76,11 @@ class Test:
 	def start_environment(self):
 		### make sure we are in full control here ###
 		self.stop_pacemaker()
-		self.stop_corosync()
 
 		cmd = shlex.split("killall -9 -q stonithd")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
-		self.start_corosync()
 		if self.verbose:
 			print "Starting stonithd with %s" % self.stonith_options
 
@@ -121,15 +100,6 @@ class Test:
 
 		if self.verbose:
 			print self.stonith_output
-
-			if os.path.exists('/var/log/corosync.log'):
-				print "Daemon output"
-				f = open('/var/log/corosync.log', 'r')
-				for line in f.readlines():
-					print line.strip()
-				os.remove('/var/log/corosync.log')
-
-		self.stop_corosync()
 
 	def add_stonith_log_pattern(self, pattern):
 		self.stonith_patterns.append(pattern)
@@ -215,6 +185,7 @@ class Test:
 				cur = cur + 1
 				if line.count(pats[cur]):
 					del pats[cur]
+					break
 
 		if len(pats) > 0 or negative_matches:
 			if self.verbose:
@@ -277,6 +248,20 @@ class Tests:
 		for test in self.tests:
 			print "%35s - %s" % (test.name, test.description)
 		print "==== END OF LIST ====\n"
+
+
+	def start_corosync(self):
+		if self.verbose:
+			print "Starting corosync"
+
+		test = subprocess.Popen("corosync", stdout=subprocess.PIPE)
+		test.wait()
+		time.sleep(10)
+
+	def stop_corosync(self):
+		cmd = shlex.split("killall -9 -q corosync")
+		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		test.wait()
 
 	def run_single(self, name):
 		for test in self.tests:
@@ -366,6 +351,84 @@ class Tests:
 		test.add_cmd("stonith_admin", "-F node3 -t 2")
 		# timeout is 2+1+4000 = 4003
 		test.add_stonith_log_pattern("remote op timeout set to 4003")
+
+	def build_fence_merge_tests(self):
+
+		### Simple test that overlapping fencing operations get merged
+		test = self.new_test("cpg_custom_merge_single",
+				"Verify overlapping identical fencing operations are merged, no fencing levels used.", 1)
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" ")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
+		test.add_cmd("stonith_admin", "-F node3 -t 10")
+		### one merger will happen
+		test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+		### the pattern below signifies that both the original and duplicate operation completed
+		test.add_stonith_log_pattern("Operation off of node3 by")
+		test.add_stonith_log_pattern("Operation off of node3 by")
+
+		### Test that multiple mergers occur
+		test = self.new_test("cpg_custom_merge_multiple",
+				"Verify multiple overlapping identical fencing operations are merged", 1)
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" ")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
+		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
+		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
+		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
+		test.add_cmd("stonith_admin", "-F node3 -t 10")
+		### 4 mergers should occur
+		test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+		test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+		test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+		test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+		### the pattern below signifies that both the original and duplicate operation completed
+		test.add_stonith_log_pattern("Operation off of node3 by")
+		test.add_stonith_log_pattern("Operation off of node3 by")
+		test.add_stonith_log_pattern("Operation off of node3 by")
+		test.add_stonith_log_pattern("Operation off of node3 by")
+		test.add_stonith_log_pattern("Operation off of node3 by")
+
+		### Test that multiple mergers occur with topologies used
+		test = self.new_test("cpg_custom_merge_with_topology",
+				"Verify multiple overlapping identical fencing operations are merged with fencing levels.", 1)
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" ")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
+		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false2")
+		test.add_cmd("stonith_admin", "-r node3 -i 2 -v true1")
+		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
+		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
+		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
+		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
+		test.add_cmd("stonith_admin", "-F node3 -t 10")
+		### 4 mergers should occur
+		test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+		test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+		test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+		test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+		### the pattern below signifies that both the original and duplicate operation completed
+		test.add_stonith_log_pattern("Operation off of node3 by")
+		test.add_stonith_log_pattern("Operation off of node3 by")
+		test.add_stonith_log_pattern("Operation off of node3 by")
+		test.add_stonith_log_pattern("Operation off of node3 by")
+		test.add_stonith_log_pattern("Operation off of node3 by")
+
+
+		test = self.new_test("cpg_custom_no_merge",
+				"Verify differing fencing operations are not merged", 1)
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node3 node2\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3 node2\" ")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3 node2\"")
+		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
+		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false2")
+		test.add_cmd("stonith_admin", "-r node3 -i 2 -v true1")
+		test.add_cmd_no_wait("stonith_admin", "-F node2 -t 10")
+		test.add_cmd("stonith_admin", "-F node3 -t 10")
+		test.add_stonith_negative_log_pattern("Merging stonith action off for node node3 originating from client")
 
 	def build_standalone_tests(self):
 		test_types = [
@@ -563,8 +626,8 @@ class Tests:
 
 			test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
 
-	def setup_environment(self):
-		if self.autogen_corosync_cfg:
+	def setup_environment(self, use_corosync):
+		if self.autogen_corosync_cfg and use_corosync:
 			corosync_conf = ("""
 totem {
         version: 2
@@ -598,10 +661,26 @@ logging {
 
 			os.system("cat <<-END >>/etc/corosync/corosync.conf\n%s\nEND" % (corosync_conf))
 
+
+		if use_corosync:
+			### make sure we are in control ###
+			self.stop_corosync()
+			self.start_corosync()
+
 		os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
 		os.system("cp /usr/share/pacemaker/tests/cts/fence_true /usr/sbin/fence_true")
 
-	def cleanup_environment(self):
+	def cleanup_environment(self, use_corosync):
+		if use_corosync:
+			self.stop_corosync()
+
+			if self.verbose and os.path.exists('/var/log/corosync.log'):
+				print "Daemon output"
+				f = open('/var/log/corosync.log', 'r')
+				for line in f.readlines():
+					print line.strip()
+				os.remove('/var/log/corosync.log')
+
 		if self.autogen_corosync_cfg:
 			os.system("rm -f /etc/corosync/corosync.conf")
 
@@ -662,20 +741,29 @@ def main(argv):
 	o = TestOptions()
 	o.build_options(argv)
 
+	use_corosync = 1
+
 	tests = Tests(o.options['verbose'])
 	tests.build_standalone_tests()
 	tests.build_custom_timeout_tests()
 	tests.build_api_sanity_tests()
-
-	print "Starting ..."
-
-	tests.setup_environment()
+	tests.build_fence_merge_tests()
 
 	if o.options['list-tests']:
 		tests.print_list()
+		sys.exit(0)
 	elif o.options['show-usage']:
 		o.show_usage()
-	elif o.options['run-only-pattern'] != "":
+		sys.exit(0)
+
+	print "Starting ..."
+
+	if o.options['no-cpg']:
+		use_corosync = 0
+
+	tests.setup_environment(use_corosync)
+
+	if o.options['run-only-pattern'] != "":
 		tests.run_tests_matching(o.options['run-only-pattern'])
 		tests.print_results()
 	elif o.options['run-only'] != "":
@@ -691,7 +779,7 @@ def main(argv):
 		tests.run_tests()
 		tests.print_results()
 
-	tests.cleanup_environment()
+	tests.cleanup_environment(use_corosync)
 	tests.exit()
 if __name__=="__main__":
 	main(sys.argv)
