@@ -55,6 +55,7 @@ typedef struct st_query_result_s
 
 GHashTable *remote_op_list = NULL;
 void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer);
+static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int dup);
 extern xmlNode *stonith_create_op(
     int call_id, const char *token, const char *op, xmlNode *data, int call_options);
 
@@ -72,49 +73,9 @@ static void free_remote_query(gpointer data)
     }
 }
 
-static void free_remote_op(gpointer data)
+static void
+clear_remote_op_timers(remote_fencing_op_t *op)
 {
-    remote_fencing_op_t *op = data;
-
-    crm_trace("Free'ing op %s for %s", op->id, op->target);
-    crm_log_xml_debug(op->request, "Destroying");
-
-    free(op->id);
-    free(op->action);
-    free(op->target);
-    free(op->client_id);
-    free(op->client_name);
-    free(op->originator);
-
-    if(op->query_timer > 0) {
-        g_source_remove(op->query_timer);
-    }
-    if(op->op_timer_total > 0) {
-        g_source_remove(op->op_timer_total);
-    }
-    if(op->op_timer_one > 0) {
-        g_source_remove(op->op_timer_one);
-    }
-    if(op->query_results) {
-        g_list_free_full(op->query_results, free_remote_query);
-    }
-    if(op->request) {
-        free_xml(op->request);
-        op->request = NULL;
-    }
-    free(op);
-}
-
-static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int dup) 
-{
-    GListPtr iter = NULL;
-    const char *subt = NULL;
-
-    xmlNode *local_data = NULL;
-    xmlNode *notify_data = NULL;
-
-    op->completed = time(NULL);
-
     if(op->query_timer > 0) {
         g_source_remove(op->query_timer);
         op->query_timer = 0;
@@ -127,24 +88,38 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int d
         g_source_remove(op->op_timer_one);
         op->op_timer_one = 0;
     }
+}
 
-    if(op->request == NULL) {
-        crm_err("Already sent notifications for '%s of %s by %s' (for=%s@%s.%.8s, state=%d): %s",
-                op->action, op->target, op->delegate?op->delegate:"<no-one>",
-                op->client_name, op->originator, op->id, op->state, pcmk_strerror(rc));
-        return;
+static void free_remote_op(gpointer data)
+{
+    remote_fencing_op_t *op = data;
+
+    crm_trace("Free'ing op %s for %s", op->id, op->target);
+    crm_log_xml_debug(op->request, "Destroying");
+
+    clear_remote_op_timers(op);
+
+    free(op->id);
+    free(op->action);
+    free(op->target);
+    free(op->client_id);
+    free(op->client_name);
+    free(op->originator);
+
+    if(op->query_results) {
+        g_list_free_full(op->query_results, free_remote_query);
     }
-
-    if(data == NULL) {
-        data = create_xml_node(NULL, "remote-op");
-        local_data = data;
-
-    } else if(op->delegate == NULL) {
-        op->delegate = crm_element_value_copy(data, F_ORIG);
+    if(op->request) {
+        free_xml(op->request);
+        op->request = NULL;
     }
+    free(op);
+}
 
-    /* Do notification with a clean data object */
-    notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+static xmlNode *
+create_op_done_notify(remote_fencing_op_t *op, int rc)
+{
+    xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
     crm_xml_add_int(notify_data, "state", op->state);
     crm_xml_add_int(notify_data, F_STONITH_RC,    rc);
     crm_xml_add(notify_data, F_STONITH_TARGET,    op->target);
@@ -155,55 +130,66 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int d
     crm_xml_add(notify_data, F_STONITH_CLIENTID,  op->client_id);
     crm_xml_add(notify_data, F_STONITH_CLIENTNAME,op->client_name);
 
-    subt = crm_element_value(data, F_SUBTYPE);
-    if(dup == FALSE && safe_str_neq(subt, "broadcast")) {
-        static int count = 0;
-        xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
+    return notify_data;
+}
 
-        count++;
-        crm_trace("Broadcasting result to peers");
-        crm_xml_add(bcast, F_TYPE, T_STONITH_NOTIFY);
-        crm_xml_add(bcast, F_SUBTYPE, "broadcast");
-        crm_xml_add(bcast, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-        crm_xml_add_int(bcast, "count", count);
-        add_message_xml(bcast, F_STONITH_CALLDATA, notify_data);
-        send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
-        free_xml(notify_data);
-        free_xml(local_data);
-        free_xml(bcast);
+static void
+bcast_result_to_peers(remote_fencing_op_t *op, int rc)
+{
+    static int count = 0;
+    xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
+    xmlNode *notify_data = create_op_done_notify(op, rc);
 
-        /* Defer notification until the bcast message arrives */
+    count++;
+    crm_trace("Broadcasting result to peers");
+    crm_xml_add(bcast, F_TYPE, T_STONITH_NOTIFY);
+    crm_xml_add(bcast, F_SUBTYPE, "broadcast");
+    crm_xml_add(bcast, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+    crm_xml_add_int(bcast, "count", count);
+    add_message_xml(bcast, F_STONITH_CALLDATA, notify_data);
+    send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
+    free_xml(notify_data);
+    free_xml(bcast);
+
+    return;
+}
+
+static void
+handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data, int rc)
+{
+    xmlNode *notify_data = NULL;
+    xmlNode *reply = NULL;
+
+    if (op->notify_sent == TRUE) {
+        /* nothing to do */
         return;
     }
-    
-    {
-        int level = LOG_ERR;
-        xmlNode *reply = NULL;
 
-        crm_xml_add_int(data, "state", op->state);
-        crm_xml_add(data, F_STONITH_TARGET,    op->target);
-        crm_xml_add(data, F_STONITH_OPERATION, op->action); 
+    /* Do notification with a clean data object */
+    notify_data = create_op_done_notify(op, rc);
+    crm_xml_add_int(data, "state", op->state);
+    crm_xml_add(data, F_STONITH_TARGET,    op->target);
+    crm_xml_add(data, F_STONITH_OPERATION, op->action); 
 
-        reply = stonith_construct_reply(op->request, NULL, data, rc);
-        crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
+    reply = stonith_construct_reply(op->request, NULL, data, rc);
+    crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
 
-        if(rc == pcmk_ok || dup) {
-            level = LOG_NOTICE;
-        } else if(safe_str_neq(op->originator, stonith_our_uname)) {
-            level = LOG_NOTICE;
-        }
-        
-        do_crm_log(level,
-                   "Operation %s of %s by %s for %s@%s.%.8s: %s",
-                   op->action, op->target, op->delegate?op->delegate:"<no-one>",
-                   op->client_name, op->originator, op->id, pcmk_strerror(rc));
+    /* Send fencing OP reply to local client that initiated fencing */
+    do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
 
-        do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
-        free_xml(reply);
-    }
-
+    /* bcast to all local clients that the fencing operation happend */
     do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data, NULL);
 
+    /* mark this op as having notify's already sent */
+    op->notify_sent = TRUE;
+    free_xml(reply);
+    free_xml(notify_data);
+}
+
+static void
+handle_duplicates(remote_fencing_op_t *op, xmlNode *data, int rc)
+{
+    GListPtr iter = NULL;
     for(iter = op->duplicates; iter != NULL; iter = iter->next) {
         remote_fencing_op_t *other = iter->data;
 
@@ -217,9 +203,59 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int d
             crm_err("Skipping duplicate notification for %s@%s - %d", other->client_name, other->originator, other->state);
         }
     }
-    
-    free_xml(notify_data);
-    free_xml(local_data);
+}
+
+static void
+remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int dup)
+{
+    int level = LOG_ERR;
+    const char *subt = NULL;
+    xmlNode *local_data = NULL;
+
+    op->completed = time(NULL);
+    clear_remote_op_timers(op);
+
+    if(op->notify_sent == TRUE) {
+        crm_err("Already sent notifications for '%s of %s by %s' (for=%s@%s.%.8s, state=%d): %s",
+                op->action, op->target, op->delegate?op->delegate:"<no-one>",
+                op->client_name, op->originator, op->id, op->state, pcmk_strerror(rc));
+        goto remote_op_done_cleanup;
+    }
+
+    if(data == NULL) {
+        data = create_xml_node(NULL, "remote-op");
+        local_data = data;
+
+    } else if(op->delegate == NULL) {
+        op->delegate = crm_element_value_copy(data, F_ORIG);
+    }
+
+    /* Tell everyone the operation is done, we will continue
+     * with doing the local notifications once we receive
+     * the broadcast back. */
+    subt = crm_element_value(data, F_SUBTYPE);
+    if(dup == FALSE && safe_str_neq(subt, "broadcast")) {
+        /* Defer notification until the bcast message arrives */
+        bcast_result_to_peers(op, rc);
+        goto remote_op_done_cleanup;
+    }
+
+    if(rc == pcmk_ok || dup) {
+        level = LOG_NOTICE;
+    } else if(safe_str_neq(op->originator, stonith_our_uname)) {
+        level = LOG_NOTICE;
+    }
+
+    do_crm_log(level,
+               "Operation %s of %s by %s for %s@%s.%.8s: %s",
+               op->action, op->target, op->delegate?op->delegate:"<no-one>",
+               op->client_name, op->originator, op->id, pcmk_strerror(rc));
+
+    handle_local_reply_and_notify(op, data, rc);
+
+    if (dup == FALSE) {
+        handle_duplicates(op, data, rc);
+    }
 
     /* Free non-essential parts of the record
      * Keep the record around so we can query the history
@@ -234,6 +270,8 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int d
         op->request = NULL;
     }
 
+remote_op_done_cleanup:
+    free_xml(local_data);
 }
 
 static gboolean remote_op_timeout_one(gpointer userdata)

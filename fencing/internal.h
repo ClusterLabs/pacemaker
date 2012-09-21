@@ -61,6 +61,7 @@ typedef struct remote_fencing_op_s {
     GListPtr devices;
     GListPtr duplicates;
 
+    gboolean notify_sent;
 } remote_fencing_op_t;
 
 typedef struct stonith_topology_s {
