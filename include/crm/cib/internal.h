@@ -36,6 +36,7 @@
 #  define CIB_OP_APPLY_DIFF "cib_apply_diff"
 #  define CIB_OP_UPGRADE    "cib_upgrade"
 #  define CIB_OP_DELETE_ALT	"cib_delete_alt"
+#  define CIB_OP_NOTIFY	      "cib_notify"
 
 #  define F_CIB_CLIENTID  "cib_clientid"
 #  define F_CIB_CALLOPTS  "cib_callopt"
@@ -69,7 +70,6 @@
 #  define T_CIB_PRE_NOTIFY	"cib_pre_notify"
 #  define T_CIB_POST_NOTIFY	"cib_post_notify"
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
-#  define T_CIB_DIFF_NOTIFY	"cib_diff_notify"
 #  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
 
 #  define cib_channel_ro		"cib_ro"
