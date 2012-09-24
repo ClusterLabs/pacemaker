@@ -54,7 +54,7 @@ enum stonith_call_options {
 };
 
 #define stonith_default_options = stonith_none
-
+/*! Order matters here, do not change values */
 enum op_state
 {
     st_query,
