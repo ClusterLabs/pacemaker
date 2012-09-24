@@ -423,11 +423,11 @@ get_node_name(uint32_t nodeid)
     return name;
 }
 
-/* Only used by te_utils.c */
+/* Only used by update_failcount() in te_utils.c */
 const char *
 get_uname(const char *uuid)
 {
-    const char *uname = NULL;
+    char *uname = NULL;
 
     if (crm_uname_cache == NULL) {
         crm_uname_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
@@ -442,48 +442,48 @@ get_uname(const char *uuid)
         crm_trace("%s = %s (cached)", uuid, uname);
         return uname;
     }
+
 #if SUPPORT_COROSYNC
     if (is_openais_cluster()) {
         if (!uname_is_uuid() && is_corosync_cluster()) {
             uint32_t id = crm_int_helper(uuid, NULL);
             crm_node_t *node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
 
-            uname = node ? node->uname : NULL;
-        } else {
-            uname = uuid;
-        }
+            if(node && node->uname) {
+                uname = strdup(node->uname);
+            }
 
-        if (uname) {
-            crm_trace("Storing %s = %s", uuid, uname);
-            g_hash_table_insert(crm_uname_cache, strdup(uuid), strdup(uname));
+        } else {
+            uname = strdup(uuid);
         }
     }
 #endif
 
 #if SUPPORT_HEARTBEAT
     if (is_heartbeat_cluster()) {
-        if (heartbeat_cluster != NULL && uuid != NULL) {
+        if (heartbeat_cluster != NULL) {
             cl_uuid_t uuid_raw;
-            char *hb_uname = NULL;
             char *uuid_copy = strdup(uuid);
 
             cl_uuid_parse(uuid_copy, &uuid_raw);
-            hb_uname = malloc( MAX_NAME);
+            uname = malloc( MAX_NAME);
 
-            if (heartbeat_cluster->llc_ops->get_name_by_uuid(heartbeat_cluster, &uuid_raw, hb_uname,
-                                                             MAX_NAME) == HA_FAIL) {
+            if (heartbeat_cluster->llc_ops->get_name_by_uuid(
+                    heartbeat_cluster, &uuid_raw, uname, MAX_NAME) == HA_FAIL) {
                 crm_err("Could not calculate uname for %s", uuid);
                 free(uuid_copy);
-                free(hb_uname);
-
-            } else {
-                crm_trace("Storing %s = %s", uuid, uname);
-                g_hash_table_insert(crm_uname_cache, uuid_copy, hb_uname);
+                free(uname);
+                uname = NULL;
             }
         }
     }
 #endif
-    return g_hash_table_lookup(crm_uname_cache, uuid);
+
+    if (uname) {
+        crm_trace("Storing %s = %s", uuid, uname);
+        g_hash_table_insert(crm_uname_cache, strdup(uuid), uname);
+    }
+    return uname;
 }
 
 void
