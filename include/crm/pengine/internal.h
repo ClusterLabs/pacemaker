@@ -231,4 +231,6 @@ extern ticket_t *ticket_new(const char * ticket_id, pe_working_set_t * data_set)
 char *clone_strip(const char *last_rsc_id);
 char *clone_zero(const char *last_rsc_id);
 
+gint sort_node_uname(gconstpointer a, gconstpointer b);
+
 #endif

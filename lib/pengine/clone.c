@@ -364,13 +364,6 @@ clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
     free(child_text);
 }
 
-static gint sort_node_uname(gconstpointer a, gconstpointer b) 
-{
-    node_t *node_a = (node_t*)a;
-    node_t *node_b = (node_t*)b;
-    return strcmp(node_a->details->uname, node_b->details->uname);
-}
-
 void
 clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {

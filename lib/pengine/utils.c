@@ -131,7 +131,7 @@ node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
     return result;
 }
 
-static gint
+gint
 sort_node_uname(gconstpointer a, gconstpointer b)
 {
     const node_t *node_a = a;

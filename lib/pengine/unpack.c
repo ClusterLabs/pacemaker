@@ -190,15 +190,6 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     return TRUE;
 }
 
-static gint
-sort_nodes_uname(gconstpointer a, gconstpointer b)
-{
-    const node_t *na = a;
-    const node_t *nb = b;
-
-    return strcmp(na->details->uname, nb->details->uname);
-}
-
 gboolean
 unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 {
@@ -290,7 +281,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_UTILIZATION, NULL,
                                        new_node->details->utilization, NULL, FALSE, data_set->now);
 
-            data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_nodes_uname);
+            data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
             crm_trace("Done with node %s", crm_element_value(xml_obj, XML_ATTR_UNAME));
         }
     }
