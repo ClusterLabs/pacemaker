@@ -50,4 +50,4 @@ if [ -z "$OCF_RESOURCE_INSTANCE" ]; then
     exit 1
 fi
 
-crm_attribute -N `uname -n` -n master-$OCF_RESOURCE_INSTANCE $options
+crm_attribute -N `crm_node -n` -n master-$OCF_RESOURCE_INSTANCE $options

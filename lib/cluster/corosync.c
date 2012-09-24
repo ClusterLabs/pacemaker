@@ -66,36 +66,11 @@ static uint32_t pcmk_nodeid = 0;
         }                                               \
     } while(counter < max)
 
-#ifndef INTERFACE_MAX
-#  define INTERFACE_MAX 2 /* from the private coroapi.h header */
-#endif
-
-static gboolean
-corosync_name_is_valid(const char *key, const char *name) 
-{
-    int octet;
-
-    if(name == NULL) {
-        crm_trace("%s is empty", key);
-        return FALSE;
-
-    } else if(sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) == 4) {
-        crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
-        return FALSE;
-
-    } else if(strstr(name, ":") != NULL) {
-        crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
-        return FALSE;
-    }
-    crm_trace("%s is valid", key);
-    return TRUE;
-}
-
 /*
  * CFG functionality stolen from node_name() in corosync-quorumtool.c
  * This resolves the first address assigned to a node and returns the name or IP address.
  */
-static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
+char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid)
 {
     int lpc = 0;
     int rc = CS_OK;
@@ -106,6 +81,29 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
     corosync_cfg_handle_t cfg_handle = 0;
     static corosync_cfg_callbacks_t cfg_callbacks = {};
 
+    /* nodeid == 0 == CMAN_NODEID_US */
+    if(nodeid == 0 && pcmk_nodeid) {
+        nodeid = pcmk_nodeid;
+
+    } else if(nodeid == 0) {
+        /* Look it up */
+        int rc = -1;
+        int retries = 0;
+        cpg_handle_t handle = 0;
+        cpg_callbacks_t cb = {};
+
+        cs_repeat(retries, 5, rc = cpg_initialize(&handle, &cb));
+        if (rc == CS_OK) {
+            retries = 0;
+            cs_repeat(retries, 5, rc = cpg_local_get(handle, &pcmk_nodeid));
+        }
+
+        if (rc != CS_OK) {
+            crm_err("Could not get local node id from the CPG API: %d", rc);
+        }
+        cpg_finalize(handle);
+    }
+    
     if(cmap_handle == 0 && local_handle == 0) {
         retries = 0;
         crm_trace("Initializing CMAP connection");
@@ -120,7 +118,7 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
         } while(retries < 5 && rc != CS_OK);
 
         if (rc != CS_OK) {
-            crm_warn("Could not connect to Cluster Configuration Database API, error %d", cs_strerror(rc));
+            crm_warn("Could not connect to Cluster Configuration Database API, error %s", cs_strerror(rc));
             local_handle = 0;
         }
     }
@@ -149,7 +147,7 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
                 rc = cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s", key, name);
 
-                if(corosync_name_is_valid(key, name) == FALSE) {
+                if(node_name_is_valid(key, name) == FALSE) {
                     free(name); name = NULL;
                 }
                 g_free(key);
@@ -160,7 +158,7 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
                 rc = cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s %d", key, name, rc);
 
-                if(corosync_name_is_valid(key, name) == FALSE) {
+                if(node_name_is_valid(key, name) == FALSE) {
                     free(name); name = NULL;
                 }
                 g_free(key);
@@ -210,14 +208,14 @@ static char *corosync_node_name(cmap_handle_t cmap_handle, uint32_t nodeid)
             if (getnameinfo((struct sockaddr *)addrs[0].address, addrlen, buf, sizeof(buf), NULL, 0, 0) == 0) {
                 crm_notice("Inferred node name '%s' for nodeid %u from DNS", buf, nodeid);
 
-                if(corosync_name_is_valid("DNS", buf)) {
+                if(node_name_is_valid("DNS", buf)) {
                     name = strdup(buf);
                 }
             }
         } else {
             crm_debug("Unable to get node address for nodeid %u: %s", nodeid, cs_strerror(rc));
         }
-        cmap_finalize(cfg_handle); 
+        corosync_cfg_finalize(cfg_handle); 
     }
 
     if(local_handle) {
@@ -886,7 +884,6 @@ init_cs_connection(crm_cluster_t *cluster)
 gboolean
 init_cs_connection_once(crm_cluster_t *cluster)
 {
-    struct utsname res;
     enum cluster_type_e stack = get_cluster_type();
 
     crm_peer_init();
@@ -899,14 +896,8 @@ init_cs_connection_once(crm_cluster_t *cluster)
     
     if (init_cpg_connection(cluster->cs_dispatch, cluster->destroy, &pcmk_nodeid) == FALSE) {
         return FALSE;
-    } else if (uname(&res) < 0) {
-        crm_perror(LOG_ERR, "Could not determin the current host");
-        exit(100);
-        
-    } else {
-        pcmk_uname = strdup(res.nodename);
     }
-
+    pcmk_uname = get_local_node_name();
     crm_info("Connection to '%s': established", name_for_cluster_type(stack));
 
     CRM_ASSERT(pcmk_uname != NULL);

@@ -48,7 +48,7 @@ static struct cpg_name cpg_group = {
     .value[0] = 0,
 };
 
-gboolean use_cman = FALSE;
+enum cluster_type_e stack = pcmk_cluster_unknown;
 static cpg_handle_t cpg_handle;
 static corosync_cfg_handle_t cfg_handle;
 
@@ -422,42 +422,6 @@ get_config_opt(cmap_handle_t object_handle, const char *key, char **value, const
 
 #endif
 
-char *
-get_local_node_name(void)
-{
-    char *name = NULL;
-    struct utsname res;
-
-    if (use_cman) {
-#if SUPPORT_CMAN
-        cman_node_t us;
-        cman_handle_t cman;
-
-        cman = cman_init(NULL);
-        if (cman != NULL && cman_is_active(cman)) {
-            us.cn_name[0] = 0;
-            cman_get_node(cman, CMAN_NODEID_US, &us);
-            name = strdup(us.cn_name);
-            crm_info("Using CMAN node name: %s", name);
-
-        } else {
-            crm_err("Couldn't determin node name from CMAN");
-        }
-
-        cman_finish(cman);
-#endif
-
-    } else if (uname(&res) < 0) {
-        crm_perror(LOG_ERR, "Could not determin the current host");
-        exit(100);
-
-    } else {
-        name = strdup(res.nodename);
-    }
-    return name;
-}
-
-
 gboolean
 read_config(void)
 {
@@ -469,9 +433,7 @@ read_config(void)
     char *logging_logfile = NULL;
     char *logging_to_logfile = NULL;
     char *logging_to_syslog = NULL;
-    char *logging_syslog_facility = NULL;    
-
-    enum cluster_type_e stack = pcmk_cluster_unknown;
+    char *logging_syslog_facility = NULL;
 
 #if HAVE_CONFDB
     char *value = NULL;
@@ -532,7 +494,6 @@ read_config(void)
         setenv("HA_cluster_type", "cman", 1);
         setenv("HA_quorum_type",  "cman", 1);
         enable_crmd_as_root(TRUE);
-        use_cman = TRUE;
 
     } else if (stack == pcmk_cluster_classic_ais) {
         setenv("HA_cluster_type", "openais", 1);

@@ -674,35 +674,6 @@ cib_native_notify(gpointer data, gpointer user_data)
     crm_trace("Callback invoked...");
 }
 
-gboolean
-determine_host(cib_t * cib_conn, char **node_uname, char **node_uuid)
-{
-    CRM_CHECK(node_uname != NULL, return FALSE);
-
-    if (*node_uname == NULL) {
-        struct utsname name;
-
-        if (uname(&name) < 0) {
-            crm_perror(LOG_ERR, "uname(2) call failed");
-            return FALSE;
-        }
-        *node_uname = strdup(name.nodename);
-        crm_info("Detected uname: %s", *node_uname);
-    }
-
-    if (cib_conn && *node_uname != NULL && node_uuid != NULL && *node_uuid == NULL) {
-        int rc = query_node_uuid(cib_conn, *node_uname, node_uuid);
-
-        if (rc != pcmk_ok) {
-            fprintf(stderr, "Could not map uname=%s to a UUID: %s\n",
-                    *node_uname, pcmk_strerror(rc));
-            return FALSE;
-        }
-        crm_info("Mapped %s to %s", *node_uname, crm_str(*node_uuid));
-    }
-    return TRUE;
-}
-
 pe_cluster_option cib_opts[] = {
     /* name, old-name, validate, default, description */
     {"enable-acl", NULL, "boolean", NULL, "false", &check_boolean,

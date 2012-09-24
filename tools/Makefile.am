@@ -108,7 +108,7 @@ crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
 			$(COMMONLIBS)
 
 crm_attribute_SOURCES	= crm_attribute.c
-crm_attribute_LDADD	= $(COMMONLIBS)
+crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS) 
 
 crm_resource_SOURCES	= crm_resource.c
 crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \

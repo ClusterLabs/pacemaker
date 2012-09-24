@@ -71,7 +71,6 @@ int set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char
 
 xmlNode *get_cib_copy(cib_t * cib);
 xmlNode *cib_get_generation(cib_t * cib);
-gboolean determine_host(cib_t * cib_conn, char **node_uname, char **node_uuid);
 
 void cib_metadata(void);
 const char *cib_pref(GHashTable * options, const char *name);

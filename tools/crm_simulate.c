@@ -105,7 +105,7 @@ create_node_entry(cib_t * cib_conn, char *node)
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_NODES, cib_object,
                                cib_sync_call | cib_scope_local);
         /* Not bothering with subsequent query to see if it exists,
-           we'll bomb out later in the call to determine_host... */
+           we'll bomb out later in the call to query_node_uuid()... */
 
         free_xml(cib_object);
     }
@@ -138,8 +138,9 @@ inject_node_state(cib_t * cib_conn, char *node)
     if (rc == -ENXIO) {
         char *uuid = NULL;
 
+        query_node_uuid(cib_conn, node, &uuid);
+
         cib_object = create_xml_node(NULL, XML_CIB_TAG_STATE);
-        determine_host(cib_conn, &node, &uuid);
         crm_xml_add(cib_object, XML_ATTR_UUID, uuid);
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object,

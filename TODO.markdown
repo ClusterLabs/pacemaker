@@ -2,7 +2,6 @@
 
 ## Targeted for 1.2
 - Need a way to indicate when unfencing operations need to be initiated from the host to be unfenced
-- Remove all calls to uname() and replace with get_node_name() whcih redirects to ${stack}_node_name()
  
 ## Targeted for 1.2.x
 

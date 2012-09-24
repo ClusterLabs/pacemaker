@@ -35,6 +35,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/util.h>
+#include <crm/cluster.h>
 
 #include <crm/cib.h>
 #include <crm/attrd.h>
@@ -230,7 +231,12 @@ main(int argc, char **argv)
         type = XML_CIB_TAG_CRMCONFIG;
 
     } else if (safe_str_neq(type, XML_CIB_TAG_TICKETS)) {
-        determine_host(the_cib, &dest_uname, &dest_node);
+        if(dest_uname == NULL) {
+            dest_uname = get_local_node_name();
+        }
+        if (pcmk_ok != query_node_uuid(the_cib, dest_uname, &dest_node)) {
+            fprintf(stderr, "Could not map name=%s to a UUID\n", dest_uname);
+        }
     }
 
     if ((command == 'v' || command == 'D')

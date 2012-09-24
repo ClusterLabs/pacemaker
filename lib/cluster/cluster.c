@@ -19,13 +19,14 @@
 #include <crm_internal.h>
 #include <dlfcn.h>
 
-#include <sys/param.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/utsname.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -344,6 +345,85 @@ get_uuid(const char *uname)
     return get_node_uuid(0, uname);
 }
 
+char *
+get_local_node_name(void)
+{
+    int rc;
+    char *name = NULL;
+    struct utsname res;
+    enum cluster_type_e stack = get_cluster_type();
+
+    switch(stack) {
+
+#if SUPPORT_CMAN
+        case pcmk_cluster_cman:
+            name = cman_node_name(0 /* AKA. CMAN_NODEID_US */);
+            break;
+#endif
+
+#if SUPPORT_COROSYNC
+# if !SUPPORT_PLUGIN
+        case pcmk_cluster_corosync:
+            name = corosync_node_name(0, 0);
+            break;
+# endif
+#endif
+        case pcmk_cluster_heartbeat:
+        case pcmk_cluster_classic_ais:
+            rc = uname(&res);
+            if(rc == 0) {
+                name = strdup(res.nodename);
+            }
+            break;
+        default:
+            crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
+    }
+
+    if(name == NULL) {
+        crm_err("Could not obtain the local %s node name", name_for_cluster_type(stack));
+        exit(100);
+    }
+    return name;
+}
+
+char *
+get_node_name(uint32_t nodeid)
+{
+    char *name = NULL;
+    enum cluster_type_e stack = get_cluster_type();
+
+    switch (stack) {
+        case pcmk_cluster_heartbeat:
+            break;
+
+#if SUPPORT_PLUGIN
+        case pcmk_cluster_classic_ais:
+            name = classic_node_name(nodeid);
+            break;
+#else
+        case pcmk_cluster_corosync:
+            name = corosync_node_name(0, nodeid);
+            break;
+#endif
+
+#if SUPPORT_CMAN
+        case pcmk_cluster_cman:
+            name = cman_node_name(nodeid);
+            break;
+#endif
+
+        default:
+            crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
+    }
+    
+    if(name == NULL) {
+        crm_notice("Could not obtain a node name for %s nodeid %u",
+                   name_for_cluster_type(stack), nodeid);
+    }
+    return name;
+}
+
+/* Only used by te_utils.c */
 const char *
 get_uname(const char *uuid)
 {
@@ -562,4 +642,25 @@ gboolean
 is_heartbeat_cluster(void)
 {
     return get_cluster_type() == pcmk_cluster_heartbeat;
+}
+
+gboolean
+node_name_is_valid(const char *key, const char *name) 
+{
+    int octet;
+
+    if(name == NULL) {
+        crm_trace("%s is empty", key);
+        return FALSE;
+
+    } else if(sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) == 4) {
+        crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
+        return FALSE;
+
+    } else if(strstr(name, ":") != NULL) {
+        crm_trace("%s contains an ipv6 address, ignoring: %s", key, name);
+        return FALSE;
+    }
+    crm_trace("%s is valid", key);
+    return TRUE;
 }

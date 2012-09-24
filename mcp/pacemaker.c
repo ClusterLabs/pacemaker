@@ -28,6 +28,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>
+#include <crm/cluster.h>
 
 gboolean fatal_error = FALSE;
 GMainLoop *mainloop = NULL;

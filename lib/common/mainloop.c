@@ -500,7 +500,7 @@ qb_ipcs_service_t *mainloop_add_ipc_server(
 
     rc = qb_ipcs_run(server);
     if (rc < 0) {
-        crm_err("Could not start %s IPC server: %s (%d)", name, strerror(rc), rc);
+        crm_err("Could not start %s IPC server: %s (%d)", name, pcmk_strerror(rc), rc);
         return NULL;
     }
 

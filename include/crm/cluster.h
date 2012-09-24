@@ -170,4 +170,7 @@ gboolean is_openais_cluster(void);
 gboolean is_classic_ais_cluster(void);
 gboolean is_heartbeat_cluster(void);
 
+char *get_local_node_name(void);
+char *get_node_name(uint32_t nodeid);
+
 #endif

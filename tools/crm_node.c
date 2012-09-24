@@ -64,6 +64,8 @@ static struct crm_option long_options[] = {
 #endif
     
     {"-spacer-",      1, 0, '-', "\nCommands:"},
+    {"name",	      0, 0, 'n', "\tDisplay the name used by the cluster for this node"},
+    {"name-for-id",   1, 0, 'N', "\tDisplay the name used by the cluster for the node with the specified id"},
     {"epoch",	      0, 0, 'e', "\tDisplay the epoch during which this node joined the cluster"},
     {"quorum",        0, 0, 'q', "\tDisplay a 1 if our partition has quorum, 0 if not"},
     {"list",          0, 0, 'l', "\tDisplay all known members (past and present) of this cluster (Not available for heartbeat clusters)"},
@@ -673,6 +675,7 @@ main(int argc, char **argv)
 {
     int flag = 0;
     int argerr = 0;
+    uint32_t nodeid = 0;
     gboolean force_flag = FALSE;
     gboolean dangerous_cmd = FALSE;
     enum cluster_type_e try_stack = pcmk_cluster_unknown;
@@ -719,11 +722,16 @@ main(int argc, char **argv)
                 command = flag;
                 target_uname = optarg;
                 break;
+            case 'N':
+                command = flag;
+                nodeid = crm_parse_int(optarg, NULL);
+                break;
             case 'p':
             case 'e':
             case 'q':
             case 'i':
             case 'l':
+            case 'n':
                 command = flag;
                 break;
             default:
@@ -738,6 +746,15 @@ main(int argc, char **argv)
 
     if (argerr) {
         crm_help('?', EX_USAGE);
+    }
+
+    if(command == 'n') {
+        fprintf(stdout, "%s\n", get_local_node_name());
+        exit(0);
+
+    } else if(command == 'N') {
+        fprintf(stdout, "%s\n", get_node_name(nodeid));
+        exit(0);
     }
 
     if (dangerous_cmd && force_flag == FALSE) {

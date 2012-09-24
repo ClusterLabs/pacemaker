@@ -23,11 +23,14 @@
 #include <crm/cluster.h>
 #include <crm/common/mainloop.h>
 #include <sys/utsname.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #if SUPPORT_COROSYNC
 #    include <corosync/confdb.h>
 #    include <corosync/corodefs.h>
-#  include <corosync/cpg.h>
+#    include <corosync/cpg.h>
+#    include <corosync/cfg.h>
 cpg_handle_t pcmk_cpg_handle = 0;
 
 struct cpg_name pcmk_cpg_group = {
@@ -1059,37 +1062,95 @@ init_cs_connection(crm_cluster_t *cluster)
     return FALSE;
 }
 
-static char *
-get_local_node_name(void)
+char *classic_node_name(uint32_t nodeid)
+{
+    int rc = CS_OK;
+    int retries = 0;
+    char *name = NULL;
+
+    corosync_cfg_handle_t cfg_handle = 0;
+    static corosync_cfg_callbacks_t cfg_callbacks = {};
+
+    if(nodeid == 0 /* AKA. CMAN_NODEID_US */) {
+        nodeid = pcmk_nodeid;
+    }
+
+    if(name == NULL) {
+        retries = 0;
+        crm_trace("Initializing CFG connection");
+        do {
+            rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks);
+            if(rc != CS_OK) {
+                retries++;
+                crm_debug("API connection setup failed: %d.  Retrying in %ds", rc, retries);
+                sleep(retries);
+            }
+
+        } while(retries < 5 && rc != CS_OK);
+
+        if (rc != CS_OK) {
+            crm_warn("Could not connect to the Corosync CFG API, error %d", rc);
+            cfg_handle = 0;
+        }
+    }
+
+    if(name == NULL && cfg_handle != 0) {
+        int numaddrs;
+        char buf[INET6_ADDRSTRLEN];
+
+        socklen_t addrlen;
+        struct sockaddr_storage *ss;
+        corosync_cfg_node_address_t addrs[INTERFACE_MAX];
+
+        rc = corosync_cfg_get_node_addrs(cfg_handle, nodeid, INTERFACE_MAX, &numaddrs, addrs);
+        if (rc == CS_OK) {
+            ss = (struct sockaddr_storage *)addrs[0].address;
+            if (ss->ss_family == AF_INET6) {
+                addrlen = sizeof(struct sockaddr_in6);
+            } else {
+                addrlen = sizeof(struct sockaddr_in);
+            }
+
+            if (getnameinfo((struct sockaddr *)addrs[0].address, addrlen, buf, sizeof(buf), NULL, 0, 0) == 0) {
+                crm_notice("Inferred node name '%s' for nodeid %u from DNS", buf, nodeid);
+
+                if(node_name_is_valid("DNS", buf)) {
+                    name = strdup(buf);
+                }
+            }
+        } else {
+            crm_debug("Unable to get node address for nodeid %u: %d", nodeid, rc);
+        }
+        corosync_cfg_finalize(cfg_handle); 
+    }
+
+    if(name == NULL) {
+        crm_debug("Unable to get node name for nodeid %u", nodeid);
+    }
+    return name;
+}
+
+char *cman_node_name(uint32_t nodeid)
 {
     char *name = NULL;
-    struct utsname res;
 
-    if (is_cman_cluster()) {
 #  if SUPPORT_CMAN
-        cman_node_t us;
-        cman_handle_t cman;
+    cman_node_t us;
+    cman_handle_t cman;
 
-        cman = cman_init(NULL);
-        if (cman != NULL && cman_is_active(cman)) {
-            us.cn_name[0] = 0;
-            cman_get_node(cman, CMAN_NODEID_US, &us);
-            name = strdup(us.cn_name);
-            crm_info("Using CMAN node name: %s", name);
+    cman = cman_init(NULL);
+    if (cman != NULL && cman_is_active(cman)) {
+        us.cn_name[0] = 0;
+        cman_get_node(cman, nodeid, &us);
+        name = strdup(us.cn_name);
+        crm_info("Using CMAN node name %s for %u", name, nodeid);
+    }
 
-        } else {
-            crm_err("Couldn't determin node name from CMAN");
-        }
-
-        cman_finish(cman);
+    cman_finish(cman);
 #  endif
 
-    } else if (uname(&res) < 0) {
-        crm_perror(LOG_ERR, "Could not determin the current host");
-        exit(100);
-
-    } else {
-        name = strdup(res.nodename);
+    if(name == NULL) {
+        crm_debug("Unable to get node name for nodeid %u", nodeid);
     }
     return name;
 }
@@ -1114,7 +1175,7 @@ init_cs_connection_once(crm_cluster_t *cluster)
             if (init_cpg_connection(cluster) == FALSE) {
                 return FALSE;
             }
-            pcmk_uname = get_local_node_name();
+            pcmk_uname = cman_node_name(0 /* CMAN_NODEID_US */);
             break;
         case pcmk_cluster_heartbeat:
             crm_info("Could not find an active corosync based cluster");

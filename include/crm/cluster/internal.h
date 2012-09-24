@@ -25,6 +25,10 @@
 #  define AIS_IPC_MESSAGE_SIZE 8192*128
 #  define CRM_MESSAGE_IPC_ACK	0
 
+#ifndef INTERFACE_MAX
+#  define INTERFACE_MAX 2 /* from the private coroapi.h header */
+#endif
+
 typedef struct crm_ais_host_s AIS_Host;
 typedef struct crm_ais_msg_s AIS_Message;
 
@@ -344,6 +348,12 @@ gboolean heartbeat_initialize_nodelist(void *cluster, gboolean force_member, xml
 
 #  if SUPPORT_COROSYNC
 
+#  if SUPPORT_PLUGIN
+char *classic_node_name(uint32_t nodeid);
+#    else
+char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid);
+#  endif
+
 gboolean corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_parent);
 
 gboolean send_ais_message(xmlNode * msg, gboolean local,
@@ -355,6 +365,10 @@ void terminate_cs_connection(void);
 gboolean init_cs_connection(crm_cluster_t *cluster);
 gboolean init_cs_connection_once(crm_cluster_t *cluster);
 #  endif
+
+#ifdef SUPPORT_CMAN
+char *cman_node_name(uint32_t nodeid);
+#endif
 
 enum crm_quorum_source {
     crm_quorum_cman,
@@ -381,4 +395,7 @@ gboolean init_quorum_connection(
     gboolean(*dispatch) (unsigned long long, gboolean), void (*destroy) (gpointer));
 
 void set_node_uuid(const char *uname, const char *uuid);
+
+gboolean node_name_is_valid(const char *key, const char *name);
+
 #endif

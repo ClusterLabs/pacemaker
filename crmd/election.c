@@ -166,7 +166,7 @@ struct election_data_s {
 };
 
 static void
-log_member_uname(gpointer key, gpointer value, gpointer user_data)
+log_member_name(gpointer key, gpointer value, gpointer user_data)
 {
     const crm_node_t *node = value;
 
@@ -208,7 +208,7 @@ do_election_check(long long action,
             char *data = NULL;
 
             data = strdup("member");
-            g_hash_table_foreach(crm_peer_cache, log_member_uname, data);
+            g_hash_table_foreach(crm_peer_cache, log_member_name, data);
             free(data);
 
             data = strdup("voted");
