@@ -1216,6 +1216,47 @@ stonith_construct_async_reply(async_command_t *cmd, const char *output, xmlNode 
     return reply;
 }
 
+/*!
+ * \internal
+ * \brief Determine if we need to use an alternate node to
+ * fence the target. If so return that node's uname
+ *
+ * \retval NULL, no alternate host
+ * \retval uname, uname of alternate host to use
+ */
+static const char *
+check_alternate_host(const char *target)
+{
+    const char *alternate_host = NULL;
+
+    if(g_hash_table_lookup(topology, target) && safe_str_eq(target, stonith_our_uname)) {
+        GHashTableIter gIter;
+        crm_node_t *entry = NULL;
+        int membership = crm_proc_plugin | crm_proc_heartbeat | crm_proc_cpg;
+
+        g_hash_table_iter_init(&gIter, crm_peer_cache);
+        while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
+            crm_trace("Checking for %s.%d != %s",
+                      entry->uname, entry->id, target);
+            if(entry->uname
+               && (entry->processes & membership)
+               && safe_str_neq(entry->uname, target)) {
+                alternate_host = entry->uname;
+                break;
+            }
+        }
+        if(alternate_host == NULL) {
+            crm_err("No alternate host available to handle complex self fencing request");
+            g_hash_table_iter_init(&gIter, crm_peer_cache);
+            while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
+                crm_notice("Peer[%d] %s", entry->id, entry->uname);
+            }
+        }
+    }
+
+    return alternate_host;
+}
+
 void
 stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *request, const char *remote)
 {
@@ -1364,30 +1405,7 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
                            remote, action, target, device?device:"(any)");
             }
 
-            if(g_hash_table_lookup(topology, target) && safe_str_eq(target, stonith_our_uname)) {
-                GHashTableIter gIter;
-                crm_node_t *entry = NULL;
-                int membership = crm_proc_plugin | crm_proc_heartbeat | crm_proc_cpg;
-
-                g_hash_table_iter_init(&gIter, crm_peer_cache);
-                while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
-                    crm_trace("Checking for %s.%d != %s",
-                              entry->uname, entry->id, target);
-                    if(entry->uname
-                       && (entry->processes & membership)
-                       && safe_str_neq(entry->uname, target)) {
-                        alternate_host = entry->uname;
-                        break;
-                    }
-                }
-                if(alternate_host == NULL) {
-                    crm_err("No alternate host available to handle complex self fencing request");
-                    g_hash_table_iter_init(&gIter, crm_peer_cache);
-                    while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
-                        crm_notice("Peer[%d] %s", entry->id, entry->uname);
-                    }
-                }
-            }
+            alternate_host = check_alternate_host(target);
 
             if(alternate_host) {
                 crm_notice("Forwarding complex self fencing request to peer %s", alternate_host);
