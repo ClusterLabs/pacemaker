@@ -201,6 +201,10 @@ char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 xmlNode *crm_recv_remote_msg(void *session, gboolean encrypted);
 void crm_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted);
 
+const char *daemon_option(const char *option);
+void set_daemon_option(const char *option, const char *value);
+gboolean daemon_option_enabled(const char *daemon, const char *option);
+
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 

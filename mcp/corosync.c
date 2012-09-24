@@ -403,7 +403,7 @@ config_find_next(confdb_handle_t config, const char *name, confdb_handle_t top_h
 }
 #else
 static int
-get_config_opt(cmap_handle_t object_handle, const char *key, char **value, const char *fallback)
+get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, char **value, const char *fallback)
 {
     int rc = 0, retries = 0;
 
@@ -422,12 +422,20 @@ get_config_opt(cmap_handle_t object_handle, const char *key, char **value, const
 
 #endif
 
+#if HAVE_CONFDB
+#  define KEY_PREFIX ""
+#elif HAVE_CMAP
+#  define KEY_PREFIX "logging."
+#endif
+
 gboolean
 read_config(void)
 {
     int rc = CS_OK;
     int retries = 0;
     gboolean have_log = FALSE;
+
+    const char *const_value = NULL;
 
     char *logging_debug = NULL;
     char *logging_logfile = NULL;
@@ -456,6 +464,7 @@ read_config(void)
     } while(retries < 5);
 #elif HAVE_CMAP
     cmap_handle_t local_handle;
+    uint64_t config = 0;
 
     /* There can be only one (possibility if confdb isn't around) */
     do {
@@ -486,18 +495,18 @@ read_config(void)
     
     /* =::=::= Should we be here =::=::= */
     if (stack == pcmk_cluster_corosync) {
-        setenv("HA_cluster_type", "corosync", 1);
-        setenv("HA_quorum_type",  "corosync", 1);
+        set_daemon_option("cluster_type", "corosync");
+        set_daemon_option("quorum_type", "corosync");
 
 #if HAVE_CONFDB
     } else if (stack == pcmk_cluster_cman) {
-        setenv("HA_cluster_type", "cman", 1);
-        setenv("HA_quorum_type",  "cman", 1);
+        set_daemon_option("cluster_type", "cman");
+        set_daemon_option("quorum_type", "cman");
         enable_crmd_as_root(TRUE);
 
     } else if (stack == pcmk_cluster_classic_ais) {
-        setenv("HA_cluster_type", "openais", 1);
-        setenv("HA_quorum_type",  "pcmk", 1);
+        set_daemon_option("cluster_type", "openais");
+        set_daemon_option("quorum_type", "pcmk");
 
         /* Look for a service block to indicate our plugin is loaded */
         top_handle = config_find_init(config);
@@ -509,8 +518,8 @@ read_config(void)
                 get_config_opt(config, local_handle, "ver", &value, "0");
                 if (safe_str_eq(value, "1")) {
                     get_config_opt(config, local_handle, "use_logd", &value, "no");
-                    setenv("HA_use_logd", value, 1);
-                    setenv("HA_LOGD", value, 1);
+                    set_daemon_option("use_logd", value);
+                    set_daemon_option("LOGD", value);
 
                     get_config_opt(config, local_handle, "use_mgmtd", &value, "no");
                     enable_mgmtd(crm_is_true(value));
@@ -535,67 +544,85 @@ read_config(void)
 #if HAVE_CONFDB
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "logging", top_handle);
-    
-    get_config_opt(config, local_handle, "debug", &logging_debug, "off");
-    get_config_opt(config, local_handle, "logfile", &logging_logfile, "/var/log/pacemaker");
-    get_config_opt(config, local_handle, "to_logfile", &logging_to_logfile, "off");
-    get_config_opt(config, local_handle, "to_syslog", &logging_to_syslog, "on");
-    get_config_opt(config, local_handle, "syslog_facility", &logging_syslog_facility, "daemon");
+#endif
 
+    /* =::=::= Logging =::=::= */
+    get_config_opt(config, local_handle, KEY_PREFIX"debug", &logging_debug, "off");
+
+    const_value = daemon_option("debugfile");
+    if(const_value) {
+        logging_to_logfile = strdup("on");
+        logging_logfile = strdup(const_value);
+        crm_trace("Using debugfile setting from the environment: %s", logging_logfile);
+
+    } else {
+        get_config_opt(config, local_handle, KEY_PREFIX"to_logfile", &logging_to_logfile, "off");
+        get_config_opt(config, local_handle, KEY_PREFIX"logfile", &logging_logfile, "/var/log/pacemaker");
+    }
+    
+    const_value = daemon_option("logfacility");
+    if(const_value) {
+        logging_syslog_facility = strdup(const_value);
+        crm_trace("Using logfacility setting from the environment: %s", logging_syslog_facility);
+
+        if(safe_str_eq(logging_syslog_facility, "none")) {
+            logging_to_syslog = strdup("off");
+        } else {
+            logging_to_syslog = strdup("on");
+        }
+
+    } else {
+        get_config_opt(config, local_handle, KEY_PREFIX"to_syslog", &logging_to_syslog, "on");
+        get_config_opt(config, local_handle, KEY_PREFIX"syslog_facility", &logging_syslog_facility, "daemon");
+    }
+    
+#if HAVE_CONFDB
     confdb_finalize(config);    
 #elif HAVE_CMAP
-    /* =::=::= Logging =::=::= */
-    get_config_opt(local_handle, "logging.debug", &logging_debug, "off");
-    get_config_opt(local_handle, "logging.logfile", &logging_logfile, "/var/log/pacemaker");
-    get_config_opt(local_handle, "logging.to_logfile", &logging_to_logfile, "off");
-    get_config_opt(local_handle, "logging.to_syslog", &logging_to_syslog, "on");
-    get_config_opt(local_handle, "logging.syslog_facility", &logging_syslog_facility, "daemon");
-
     cmap_finalize(local_handle); 
 #endif
-    
-    if (crm_is_true(logging_debug)) {
-        setenv("HA_debug", "1", 1);
+
+    if(daemon_option("debug")) {
+        crm_trace("Using debug setting from the environment: %s", daemon_option("debug"));
+        if(get_crm_log_level() < LOG_DEBUG && daemon_option_enabled("pacemakerd", "debug")) {
+            set_crm_log_level(LOG_DEBUG);
+        }
+
+    } else if (crm_is_true(logging_debug)) {
+        set_daemon_option("debug", "1");
         if(get_crm_log_level() < LOG_DEBUG) {
             set_crm_log_level(LOG_DEBUG);
         }
 
     } else {
-        setenv("HA_debug", "0", 1);
+        set_daemon_option("debug", "0");
     }
 
     if (crm_is_true(logging_to_logfile)) {
         if(crm_add_logfile(logging_logfile)) {
-            setenv("HA_debugfile", logging_logfile, 1);
-            setenv("HA_DEBUGLOG", logging_logfile, 1);
-            setenv("HA_LOGFILE", logging_logfile, 1);
+            /* What a cluster fsck, eventually we need to mandate /one/ */ 
+            set_daemon_option("debugfile", logging_logfile);
+            set_daemon_option("DEBUGLOG", logging_logfile);
+            set_daemon_option("LOGFILE", logging_logfile);
             have_log = TRUE;
 
         } else {
             crm_err("Couldn't create logfile: %s", logging_logfile);
         }
     }
-
+    
     if (have_log && crm_is_true(logging_to_syslog) == FALSE) {
-        crm_info("User configured file based logging and explicitly disabled syslog.");
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
         free(logging_syslog_facility);
-        logging_syslog_facility = NULL;
+        logging_syslog_facility = strdup("none");
+        crm_info("User configured file based logging and explicitly disabled syslog.");
 
-    } else {
-        if (crm_is_true(logging_to_syslog) == FALSE) {
-            crm_err
-                ("Please enable some sort of logging, either 'to_logfile: on' or  'to_syslog: on'.");
-            crm_err("If you use file logging, be sure to also define a value for 'logfile'");
-        }
+    } else if (crm_is_true(logging_to_syslog) == FALSE) {
+        crm_err("Please enable some sort of logging, either 'to_logfile: on' or 'to_syslog: on'.");
+        crm_err("If you use file logging, be sure to also define a value for 'logfile'");
     }
 
-    if(logging_syslog_facility) {
-        setenv("HA_logfacility", logging_syslog_facility, 1);
-        setenv("HA_LOGFACILITY", logging_syslog_facility, 1);
-    } else {
-        unsetenv("HA_logfacility");
-        unsetenv("HA_LOGFACILITY");
-    }
+    set_daemon_option("logfacility", logging_syslog_facility);
     
     free(logging_debug);
     free(logging_logfile);

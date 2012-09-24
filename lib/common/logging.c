@@ -95,7 +95,7 @@ crm_trigger_blackbox(int nsig)
     crm_write_blackbox(nsig, NULL);
 }
 
-static const char *
+const char *
 daemon_option(const char *option)
 {
     char env_name[NAME_MAX];
@@ -104,19 +104,46 @@ daemon_option(const char *option)
     snprintf(env_name, NAME_MAX, "PCMK_%s", option);
     value = getenv(env_name);
     if (value != NULL) {
+        crm_trace("Found %s = %s", env_name, value);
         return value;
     }
 
     snprintf(env_name, NAME_MAX, "HA_%s", option);
     value = getenv(env_name);
     if (value != NULL) {
+        crm_trace("Found %s = %s", env_name, value);
         return value;
     }
 
+    crm_trace("Nothing found for %s", option);
     return NULL;
 }
 
-static gboolean
+void
+set_daemon_option(const char *option, const char *value)
+{
+    char env_name[NAME_MAX];
+
+    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
+    if(value) {
+        crm_trace("Setting %s to %s", env_name, value);
+        setenv(env_name, value, 1);
+    } else {
+        crm_trace("Unsetting %s", env_name);
+        unsetenv(env_name);
+    }
+
+    snprintf(env_name, NAME_MAX, "HA_%s", option);
+    if(value) {
+        crm_trace("Setting %s to %s", env_name, value);
+        setenv(env_name, value, 1);
+    } else {
+        crm_trace("Unsetting %s", env_name);
+        unsetenv(env_name);
+    }
+}
+
+gboolean
 daemon_option_enabled(const char *daemon, const char *option)
 {
     const char *value = daemon_option(option);
@@ -512,12 +539,12 @@ crm_update_callsites(void)
     static gboolean log = TRUE;
     if(log) {
         log = FALSE;
-        crm_info("Enabling callsites based on priority=%d, files=%s, functions=%s, formats=%s, tags=%s",
-                 crm_log_level, 
-                 getenv("PCMK_trace_files"),
-                 getenv("PCMK_trace_functions"),
-                 getenv("PCMK_trace_formats"),
-                 getenv("PCMK_trace_tags"));
+        crm_debug("Enabling callsites based on priority=%d, files=%s, functions=%s, formats=%s, tags=%s",
+                  crm_log_level, 
+                  getenv("PCMK_trace_files"),
+                  getenv("PCMK_trace_functions"),
+                  getenv("PCMK_trace_formats"),
+                  getenv("PCMK_trace_tags"));
     }
     qb_log_filter_fn_set(crm_log_filter);
 }
@@ -540,6 +567,7 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     int lpc = 0;
     const char *logfile = daemon_option("debugfile");
     const char *facility = daemon_option("logfacility");
+    const char *f_copy = facility;
 
     /* Redirect messages from glib functions to our handler */
 #ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
@@ -550,8 +578,11 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
 
     if (facility == NULL) {
-        /* Set a default */
         facility = "daemon";
+
+    } else if(safe_str_eq(facility, "none")) {
+        facility = "daemon";
+        quiet = TRUE;
     }
 
     if (entity) {
@@ -590,25 +621,28 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         set_format_string(lpc, crm_system_name);
     }
 
-    if (quiet) {
-        /* Nuke any syslog activity */
-        unsetenv("HA_logfacility");
-        unsetenv("PCMK_logfacility");
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+    crm_enable_stderr(to_stderr);
 
-    } else if(daemon) {
-        setenv("HA_logfacility", facility, TRUE);
-        setenv("PCMK_logfacility", facility, TRUE);
+    if(logfile) {
+        crm_add_logfile(logfile);
     }
 
     if (daemon_option_enabled(crm_system_name, "blackbox")) {
         crm_enable_blackbox(0);
     }
-    
-    crm_enable_stderr(to_stderr);
 
-    if(logfile) {
-        crm_add_logfile(logfile);
+    crm_trace("Quiet: %d, facility %s", quiet, f_copy);
+    daemon_option("debugfile");
+    daemon_option("logfacility");
+    
+    if (quiet) {
+        /* Nuke any syslog activity */
+        facility = NULL;
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+    }
+
+    if(daemon) {
+        set_daemon_option("logfacility", facility);
     }
 
     if(daemon

@@ -640,19 +640,16 @@ main(int argc, char **argv)
     struct rlimit cores;
     crm_ipc_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
+    const char *facility = daemon_option("logfacility");
 
-/* *INDENT-OFF* */
-    /* =::=::= Default Environment =::=::= */
-    setenv("HA_mcp",		"true",    1);
-    setenv("HA_COMPRESSION",	"bz2",     1);
-    setenv("HA_debug",		"0",       1);
-    setenv("HA_logfacility",	"daemon",  1);
-    setenv("HA_LOGFACILITY",	"daemon",  1);
-    setenv("HA_use_logd",       "off",     1);
-/* *INDENT-ON* */
+    set_daemon_option("mcp", "true");
+    set_daemon_option("use_logd", "off");
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "mode [options]", long_options, "Start/Stop Pacemaker\n");
+
+    /* Restore the original facility so that read_config() does the right thing */
+    set_daemon_option("logfacility", facility);
 
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);
