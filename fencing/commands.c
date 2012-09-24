@@ -47,8 +47,6 @@ GHashTable *device_list = NULL;
 GHashTable *topology = NULL;
 GList *cmd_list = NULL;
 
-extern GHashTable *remote_op_list;
-
 static int active_children = 0;
 static gboolean stonith_device_dispatch(gpointer user_data);
 static void st_child_done(GPid pid, int rc, const char *output, gpointer user_data);
@@ -1351,35 +1349,14 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
             if(client) {
                 int tolerance = 0;
 
-                crm_element_value_int(dev, F_STONITH_TOLERANCE, &tolerance);
                 crm_notice("Client %s.%.8s wants to fence (%s) '%s' with device '%s'",
                            client->name, client->id, action, target, device?device:"(any)");
 
-                crm_trace("tolerance=%d, remote_op_list=%p", tolerance, remote_op_list);
-                if(tolerance > 0 && remote_op_list) {
-                    GHashTableIter iter;
-                    time_t now = time(NULL);
-                    remote_fencing_op_t *rop = NULL;
+                crm_element_value_int(dev, F_STONITH_TOLERANCE, &tolerance);
 
-                    g_hash_table_iter_init(&iter, remote_op_list); 
-                    while(g_hash_table_iter_next(&iter, NULL, (void**)&rop)) {
-                        if (target == NULL || action == NULL) {
-                            continue;
-                        } else if(strcmp(rop->target, target) != 0) {
-                            continue;
-                        } else if(rop->state != st_done) {
-                            continue;
-                        } else if(strcmp(rop->action, action) != 0) {
-                            continue;
-                        } else if((rop->completed + tolerance) < now) {
-                            continue;
-                        }
-
-                        crm_notice("Target %s was fenced (%s) less than %ds ago by %s on behalf of %s",
-                                   target, action, tolerance, rop->delegate, rop->originator);
-                        rc = 0;
-                        goto done;
-                    }
+                if(stonith_check_fence_tolerance(tolerance, target, action)) {
+                    rc = 0;
+                    goto done;
                 }
 
             } else {

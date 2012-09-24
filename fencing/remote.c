@@ -1027,3 +1027,36 @@ int stonith_fence_history(xmlNode *msg, xmlNode **output)
     return rc;
 }
 
+gboolean
+stonith_check_fence_tolerance(int tolerance,
+                              const char *target,
+                              const char *action)
+{
+    GHashTableIter iter;
+    time_t now = time(NULL);
+    remote_fencing_op_t *rop = NULL;
+
+    crm_trace("tolerance=%d, remote_op_list=%p", tolerance, remote_op_list);
+
+    if (tolerance <= 0 || !remote_op_list || target == NULL || action == NULL) {
+        return FALSE;
+    }
+
+    g_hash_table_iter_init(&iter, remote_op_list);
+    while(g_hash_table_iter_next(&iter, NULL, (void**)&rop)) {
+        if(strcmp(rop->target, target) != 0) {
+            continue;
+        } else if(rop->state != st_done) {
+            continue;
+        } else if(strcmp(rop->action, action) != 0) {
+            continue;
+        } else if((rop->completed + tolerance) < now) {
+            continue;
+        }
+
+        crm_notice("Target %s was fenced (%s) less than %ds ago by %s on behalf of %s",
+                target, action, tolerance, rop->delegate, rop->originator);
+        return TRUE;
+    }
+    return FALSE;
+}

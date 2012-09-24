@@ -1,5 +1,19 @@
 #include <crm/common/mainloop.h>
 
+
+/*!
+ * \internal
+ * \brief Check to see if target was fenced in the last few seconds.
+ * \param tolerance, The number of seconds to look back in time
+ * \param target, The node to search for
+ * \param action, The action we want to match.
+ *
+ * \retval FALSE, not match
+ * \retval TRUE, fencing operation took place in the last 'tolerance' number of seconds.
+ */
+gboolean
+stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
+
 typedef struct stonith_device_s {
     char *id;
     char *agent;
