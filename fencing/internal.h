@@ -52,10 +52,22 @@ typedef struct remote_fencing_op_s {
     char *action;
     guint replies;
 
-    gint op_timer_total;
-    gint op_timer_one;
-    gint query_timer;
+    /*! Does this node own control of this operation */
+    gboolean owner;
+    /*! After query is complete, This the high level timer that expires the entire operation */
+    guint op_timer_total;
+    /*! This timer expires the current fencing request. Many fencing
+     * requests may exist in a single operation */
+    guint op_timer_one;
+    /*! This timer expires the query request sent out to determine
+     * what nodes are contain what devices, and who those devices can fence */
+    guint query_timer;
+    /*! This is the default timeout to use for each fencing device if no
+     * custom timeout is received in the query. */
     gint base_timeout;
+    /*! This is the calculated total timeout an operation can take before
+     * expiring. This is calculated by adding together all the timeout
+     * values associated with the devices this fencing operation may call */
     gint total_timeout;
 
     char *delegate;
