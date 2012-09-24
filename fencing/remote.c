@@ -794,6 +794,37 @@ static gint sort_peers(gconstpointer a, gconstpointer b)
     return 0;
 }
 
+static gboolean
+all_topology_devices_found(remote_fencing_op_t *op)
+{
+    GListPtr device = NULL;
+    GListPtr iter = NULL;
+    GListPtr match = NULL;
+    stonith_topology_t *tp = NULL;
+    int i;
+
+    tp = g_hash_table_lookup(topology, op->target);
+
+    if (!tp) {
+        return FALSE;
+    }
+
+    for (i = 0; i < ST_LEVEL_MAX; i++) {
+        for (device = tp->levels[i]; device; device = device->next) {
+            match = FALSE;
+            for(iter = op->query_results; iter != NULL; iter = iter->next) {
+                st_query_result_t *peer = iter->data;
+                match = g_list_find_custom(peer->device_list, device->data, sort_strings);
+            }
+            if (!match) {
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
+}
+
 int process_remote_stonith_query(xmlNode *msg) 
 {
     int devices = 0;
@@ -863,7 +894,16 @@ int process_remote_stonith_query(xmlNode *msg)
 
     op->query_results = g_list_insert_sorted(op->query_results, result, sort_peers);
 
-    if(op->state == st_query && is_set(op->call_options, st_opt_all_replies) == FALSE) {
+    /* All the query results are in for the topology, start the fencing ops. */
+    if(is_set(op->call_options, st_opt_topology)) {
+        /* If we start the fencing before all the topology results are in,
+         * it is possible fencing levels will be skipped because of the missing
+         * query results. */
+        if (op->state == st_query && all_topology_devices_found(op)) {
+            call_remote_stonith(op, result);
+        }
+    /* We have a result for a non-topology fencing op, start fencing */
+    } else if(op->state == st_query) {
         call_remote_stonith(op, result);
 
     } else if(op->state == st_done) {

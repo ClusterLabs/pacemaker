@@ -532,6 +532,28 @@ class Tests:
 			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true4' returned: 0")
 
+
+		# test what happens when the first fencing level had devices that no one has registered
+		for test_type in test_types:
+			if test_type["use_cpg"] == 0:
+				continue
+
+			test = self.new_test("%s_topology_missing_devices" % test_type["prefix"],
+					"Verify topology can continue with missing devices.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true2  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true4  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+
+			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
+			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true1")
+			test.add_cmd("stonith_admin", "-r node3 -i 2 -v true2")
+			test.add_cmd("stonith_admin", "-r node3 -i 2 -v false2")
+			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true3")
+			test.add_cmd("stonith_admin", "-r node3 -i 3 -v true4")
+
+			test.add_cmd("stonith_admin", "-F node3 -t 2")
+
 		# Test what happens if multiple fencing levels are defined, and then the first one is removed.
 		for test_type in test_types:
 			if test_type["use_cpg"] == 0:
