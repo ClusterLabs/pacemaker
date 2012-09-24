@@ -1257,13 +1257,12 @@ check_alternate_host(const char *target)
     return alternate_host;
 }
 
-void
-stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *request, const char *remote)
+static int
+handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *request, const char *remote)
 {
     int call_options = 0;
     int rc = -EOPNOTSUPP;
 
-    gboolean is_reply = FALSE;
     gboolean always_reply = FALSE;
 
     xmlNode *reply = NULL;
@@ -1272,19 +1271,13 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
     char *output = NULL;
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
     const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
-    
-    crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
-    if(get_xpath_object("//"T_STONITH_REPLY, request, LOG_DEBUG_3)) {
-        is_reply = TRUE;
-    }
 
-    crm_debug("Processing %s%s from %s (%16x)", op, is_reply?" reply":"",
-              client?client->name:remote, call_options);
+    crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
 
     if(is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(client == NULL || client->request_id == id);
     }
-    
+
     if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
         xmlNode *reply = create_xml_node(NULL, "reply");
 
@@ -1294,7 +1287,7 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
         crm_ipcs_send(client->channel, id, reply, FALSE);
         client->request_id = 0;
         free_xml(reply);
-        return;
+        return 0;
 
     } else if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
         rc = stonith_device_action(request, &output);
@@ -1306,11 +1299,7 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
 
         crm_element_value_int(request, F_STONITH_TIMEOUT, &op_timeout);
         do_stonith_async_timeout_update(client_id, call_id, op_timeout);
-        return;
-
-    } else if(is_reply && crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
-        process_remote_stonith_query(request);
-        return;
+        return 0;
 
     } else if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
         if (remote) {
@@ -1319,17 +1308,8 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
         rc = stonith_query(request, &data);
         always_reply = TRUE;
         if(!data) {
-            return;
+            return 0;
         }
-
-    } else if(is_reply && crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
-        process_remote_stonith_exec(request);
-        return;
-
-    } else if(is_reply && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
-        /* Reply to a complex fencing op */
-        process_remote_stonith_exec(request);
-        return;
 
     } else if(crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
         const char *flag_name = NULL;
@@ -1353,13 +1333,9 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
             crm_ipcs_send_ack(client->channel, id, "ack", __FUNCTION__, __LINE__);
             client->request_id = 0;
         }
-        return;
+        return 0;
 
-    /* } else if(is_reply && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) { */
-    /*         process_remote_stonith_exec(request); */
-    /*         return; */
-
-    } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_RELAY, TRUE)) {
+    } else if(crm_str_eq(op, STONITH_OP_RELAY, TRUE)) {
         xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_TRACE);
         crm_notice("Peer %s has received a forwarded fencing request from %s to fence (%s) peer %s",
             stonith_our_uname,
@@ -1371,7 +1347,7 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
             rc = -EINPROGRESS;
         }
 
-    } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
+    } else if(crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
 
         if(remote || stand_alone) {
             rc = stonith_fence(request);
@@ -1422,9 +1398,6 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
     } else if (crm_str_eq(op, STONITH_OP_FENCE_HISTORY, TRUE)) {
         rc = stonith_fence_history(request, &data);
         always_reply = TRUE;
-
-    } else if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
-        return;
 
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
         const char *id = NULL;
@@ -1482,16 +1455,12 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
         free_xml(reply);
 
     } else {
-        crm_err("Unknown %s%s from %s", op, is_reply?" reply":"",
-                 client?client->name:remote);
+        crm_err("Unknown %s from %s", op, client ? client->name : remote);
         crm_log_xml_warn(request, "UnknownOp");
     }
 
   done:
-    do_crm_log_unlikely(rc>0?LOG_DEBUG:LOG_INFO,"Processed %s%s from %s: %s (%d)", op, is_reply?" reply":"",
-               client?client->name:remote, rc>0?"":pcmk_strerror(rc), rc);
-
-    if(is_reply || rc == -EINPROGRESS) {
+    if (rc == -EINPROGRESS) {
         /* Nothing (yet) */
 
     } else if(remote) {
@@ -1507,4 +1476,55 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
 
     free(output);
     free_xml(data);
+
+    return rc;
+}
+
+static void
+handle_reply(stonith_client_t *client, xmlNode *request, const char *remote)
+{
+    const char *op = crm_element_value(request, F_STONITH_OPERATION);
+
+    if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
+        process_remote_stonith_query(request);
+    } else if(crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
+        process_remote_stonith_exec(request);
+    } else if(crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
+        /* Reply to a complex fencing op */
+        process_remote_stonith_exec(request);
+    } else {
+        crm_err("Unknown %s reply from %s", op, client ? client->name : remote);
+        crm_log_xml_warn(request, "UnknownOp");
+    }
+}
+
+void
+stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *request, const char *remote)
+{
+    int call_options = 0;
+    int rc = 0;
+    gboolean is_reply = FALSE;
+    const char *op = crm_element_value(request, F_STONITH_OPERATION);
+
+    if(get_xpath_object("//"T_STONITH_REPLY, request, LOG_DEBUG_3)) {
+        is_reply = TRUE;
+    }
+
+    crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
+    crm_debug("Processing %s%s from %s (%16x)", op, is_reply?" reply":"",
+              client?client->name:remote, call_options);
+
+    if(is_set(call_options, st_opt_sync_call)) {
+        CRM_ASSERT(client == NULL || client->request_id == id);
+    }
+
+    if (is_reply) {
+        handle_reply(client, request, remote);
+    } else {
+        rc = handle_request(client, id, flags, request, remote);
+    }
+
+    do_crm_log_unlikely(rc>0?LOG_DEBUG:LOG_INFO,"Processed %s%s from %s: %s (%d)", op, is_reply?" reply":"",
+               client?client->name:remote, rc>0?"":pcmk_strerror(rc), rc);
+
 }
