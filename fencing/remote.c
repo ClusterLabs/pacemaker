@@ -206,6 +206,31 @@ handle_duplicates(remote_fencing_op_t *op, xmlNode *data, int rc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Finalize a remote operation.
+ *
+ * \description This function has two code paths.
+ *
+ * Path 1. This node is the owner of the operation and needs
+ *         to notify the cpg group via a broadcast as to the operation's
+ *         results.
+ *
+ * Path 2. The cpg broadcast is received. All nodes notify their local
+ *         stonith clients the operation results.
+ *
+ * So, The owner of the operation first notifies the cluster of the result,
+ * and once that cpg notify is received back it notifies all the local clients.
+ *
+ * Nodes that are passive watchers of the operation will receive the
+ * broadcast and only need to notify their local clients the operation finished.
+ *
+ * \param op, The fencing operation to finalize
+ * \param data, The xml msg reply (if present) of the last delegated fencing
+ *              operation.
+ * \param dup, Is this operation a duplicate, if so treat it a little differently
+ *             making sure the broadcast is not sent out.
+ */
 static void
 remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int dup)
 {
