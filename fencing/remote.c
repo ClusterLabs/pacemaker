@@ -77,15 +77,15 @@ static void free_remote_query(gpointer data)
 static void
 clear_remote_op_timers(remote_fencing_op_t *op)
 {
-    if(op->query_timer > 0) {
+    if(op->query_timer) {
         g_source_remove(op->query_timer);
         op->query_timer = 0;
     }
-    if(op->op_timer_total > 0) {
+    if(op->op_timer_total) {
         g_source_remove(op->op_timer_total);
         op->op_timer_total = 0;
     }
-    if(op->op_timer_one > 0) {
+    if(op->op_timer_one) {
         g_source_remove(op->op_timer_one);
         op->op_timer_one = 0;
     }
@@ -427,9 +427,6 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
 
     op = calloc(1, sizeof(remote_fencing_op_t));
 
-    op->op_timer_total = -1;
-    op->query_timer = -1;
-
     crm_element_value_int(request, F_STONITH_TIMEOUT, (int*)&(op->base_timeout));
 
     if(peer && dev) {
@@ -497,7 +494,8 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
     }
 
     CRM_LOG_ASSERT(client_id != NULL);
-    op = create_remote_stonith_op(client_id, request, FALSE);    
+    op = create_remote_stonith_op(client_id, request, FALSE);
+    op->owner = TRUE;
 
     CRM_CHECK(op->action, return NULL);
 
@@ -709,7 +707,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         peer = stonith_choose_peer(op);
     }
 
-    if(op->op_timer_total <= 0) {
+    if(!op->op_timer_total) {
         int t = get_op_total_timeout(op, peer, op->base_timeout);
         op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * t;
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
@@ -753,7 +751,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         }
 
         op->state = st_exec;
-        if(op->op_timer_one > 0) {
+        if(op->op_timer_one) {
             g_source_remove(op->op_timer_one);
         }
         op->op_timer_one = g_timeout_add((1000 * t), remote_op_timeout_one, op);
@@ -762,10 +760,10 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         free_xml(query);
         return;
 
-    } else if(op->query_timer < 0) {
+    } else if(!op->owner) {
         crm_err("The termination of %s for %s is not ours to control", op->target, op->client_name);
 
-    } else if(op->query_timer == 0) {
+    } else if(!op->query_timer) {
         CRM_LOG_ASSERT(op->state < st_done);
 
         /* We've exhausted all available peers */
@@ -794,6 +792,37 @@ static gint sort_peers(gconstpointer a, gconstpointer b)
         return 1;
     }
     return 0;
+}
+
+static gboolean
+all_topology_devices_found(remote_fencing_op_t *op)
+{
+    GListPtr device = NULL;
+    GListPtr iter = NULL;
+    GListPtr match = NULL;
+    stonith_topology_t *tp = NULL;
+    int i;
+
+    tp = g_hash_table_lookup(topology, op->target);
+
+    if (!tp) {
+        return FALSE;
+    }
+
+    for (i = 0; i < ST_LEVEL_MAX; i++) {
+        for (device = tp->levels[i]; device; device = device->next) {
+            match = FALSE;
+            for(iter = op->query_results; iter != NULL; iter = iter->next) {
+                st_query_result_t *peer = iter->data;
+                match = g_list_find_custom(peer->device_list, device->data, sort_strings);
+            }
+            if (!match) {
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
 }
 
 int process_remote_stonith_query(xmlNode *msg) 
@@ -865,7 +894,16 @@ int process_remote_stonith_query(xmlNode *msg)
 
     op->query_results = g_list_insert_sorted(op->query_results, result, sort_peers);
 
-    if(op->state == st_query && is_set(op->call_options, st_opt_all_replies) == FALSE) {
+    /* All the query results are in for the topology, start the fencing ops. */
+    if(is_set(op->call_options, st_opt_topology)) {
+        /* If we start the fencing before all the topology results are in,
+         * it is possible fencing levels will be skipped because of the missing
+         * query results. */
+        if (op->state == st_query && all_topology_devices_found(op)) {
+            call_remote_stonith(op, result);
+        }
+    /* We have a result for a non-topology fencing op, start fencing */
+    } else if(op->state == st_query) {
         call_remote_stonith(op, result);
 
     } else if(op->state == st_done) {
@@ -1027,3 +1065,36 @@ int stonith_fence_history(xmlNode *msg, xmlNode **output)
     return rc;
 }
 
+gboolean
+stonith_check_fence_tolerance(int tolerance,
+                              const char *target,
+                              const char *action)
+{
+    GHashTableIter iter;
+    time_t now = time(NULL);
+    remote_fencing_op_t *rop = NULL;
+
+    crm_trace("tolerance=%d, remote_op_list=%p", tolerance, remote_op_list);
+
+    if (tolerance <= 0 || !remote_op_list || target == NULL || action == NULL) {
+        return FALSE;
+    }
+
+    g_hash_table_iter_init(&iter, remote_op_list);
+    while(g_hash_table_iter_next(&iter, NULL, (void**)&rop)) {
+        if(strcmp(rop->target, target) != 0) {
+            continue;
+        } else if(rop->state != st_done) {
+            continue;
+        } else if(strcmp(rop->action, action) != 0) {
+            continue;
+        } else if((rop->completed + tolerance) < now) {
+            continue;
+        }
+
+        crm_notice("Target %s was fenced (%s) less than %ds ago by %s on behalf of %s",
+                target, action, tolerance, rop->delegate, rop->originator);
+        return TRUE;
+    }
+    return FALSE;
+}

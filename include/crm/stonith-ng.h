@@ -41,7 +41,7 @@ enum stonith_call_options {
 
     st_opt_manual_ack      = 0x00000008,
     st_opt_discard_reply   = 0x00000010,
-    st_opt_all_replies     = 0x00000020,
+/*    st_opt_all_replies     = 0x00000020, */
     st_opt_topology        = 0x00000040,
     st_opt_scope_local     = 0x00000100,
     st_opt_cs_nodeid       = 0x00000200,
@@ -54,7 +54,7 @@ enum stonith_call_options {
 };
 
 #define stonith_default_options = stonith_none
-
+/*! Order matters here, do not change values */
 enum op_state
 {
     st_query,
