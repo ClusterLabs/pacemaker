@@ -506,6 +506,7 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
     switch(op->state) {
         case st_failed:
             crm_warn("Initiation of remote operation %s for %s: failed (%s)", op->action, op->target, op->id);
+            remote_op_done(op, NULL, -EINVAL, FALSE);
             return op;
 
         case st_duplicate:
@@ -579,9 +580,9 @@ static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
             && stonith_topology_next(op) == pcmk_ok);
 
     if(op->devices) {
-        crm_trace("Couldn't find anyone to fence %s with %s", op->target, (char*)op->devices->data);
+        crm_debug("Couldn't find anyone to fence %s with %s", op->target, (char*)op->devices->data);
     } else {
-        crm_trace("Couldn't find anyone to fence %s", op->target);
+        crm_debug("Couldn't find anyone to fence %s", op->target);
     }
 
     return NULL;
