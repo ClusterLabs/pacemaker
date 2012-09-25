@@ -213,7 +213,7 @@ st_ipc_destroy(qb_ipcs_connection_t *c)
 static void
 stonith_peer_callback(xmlNode * msg, void* private_data)
 {
-    const char *remote = crm_element_value(msg, F_ORIG);
+    const char *remote_peer = crm_element_value(msg, F_ORIG);
     const char *op = crm_element_value(msg, F_STONITH_OPERATION);
 
     if(crm_str_eq(op, "poke", TRUE)) {
@@ -221,7 +221,7 @@ stonith_peer_callback(xmlNode * msg, void* private_data)
     }
 
     crm_log_xml_trace(msg, "Peer[inbound]");
-    stonith_command(NULL, 0, 0, msg, remote);
+    stonith_command(NULL, 0, 0, msg, remote_peer);
 }
 
 #if SUPPORT_HEARTBEAT
@@ -402,9 +402,7 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
 }
 
 void
-do_stonith_notify(
-    int options, const char *type, int result, xmlNode *data,
-    const char *remote) 
+do_stonith_notify(int options, const char *type, int result, xmlNode *data)
 {
     /* TODO: Standardize the contents of data */
     xmlNode *update_msg = create_xml_node(NULL, "notify");
@@ -470,7 +468,7 @@ static void topology_remove_helper(const char *node, int level)
     crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
     crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
 
-    do_stonith_notify(0, STONITH_OP_LEVEL_DEL, rc, notify_data, NULL);
+    do_stonith_notify(0, STONITH_OP_LEVEL_DEL, rc, notify_data);
 
     free_xml(notify_data);
     free_xml(data);
@@ -489,7 +487,7 @@ static void topology_register_helper(const char *node, int level, stonith_key_va
     crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
     crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(topology));
 
-    do_stonith_notify(0, STONITH_OP_LEVEL_ADD, rc, notify_data, NULL);
+    do_stonith_notify(0, STONITH_OP_LEVEL_ADD, rc, notify_data);
 
     free_xml(notify_data);
     free_xml(data);

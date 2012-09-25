@@ -119,7 +119,7 @@ typedef struct stonith_topology_s {
 
 extern long long get_stonith_flag(const char *name);
 
-extern void stonith_command(stonith_client_t * client, uint32_t id, uint32_t flags, xmlNode * op_request, const char *remote);
+extern void stonith_command(stonith_client_t * client, uint32_t id, uint32_t flags, xmlNode * op_request, const char *remote_peer);
 
 extern int stonith_device_register(xmlNode * msg, const char **desc);
 
@@ -135,7 +135,7 @@ extern xmlNode *stonith_construct_reply(xmlNode * request, char *output, xmlNode
 void
 do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
 
-extern void do_stonith_notify(int options, const char *type, int result, xmlNode * data, const char *remote);
+extern void do_stonith_notify(int options, const char *type, int result, xmlNode * data);
 
 extern remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t * client, xmlNode * request,
                                                        gboolean manual_ack);
