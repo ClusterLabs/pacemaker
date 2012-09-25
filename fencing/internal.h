@@ -47,11 +47,17 @@ typedef struct stonith_client_s {
 } stonith_client_t;
 
 typedef struct remote_fencing_op_s {
+    /* The unique id associated with this operation */
     char *id;
+    /*! The node this operation will fence */
     char *target;
+    /*! The fencing action to perform on the target. (reboot, on, off) */
     char *action;
-    guint replies;
 
+    /*! Marks if the final notifications have been sent to local stonith clients. */
+    gboolean notify_sent;
+    /*! The number of query replies received */
+    guint replies;
     /*! Does this node own control of this operation */
     gboolean owner;
     /*! After query is complete, This the high level timer that expires the entire operation */
@@ -70,24 +76,39 @@ typedef struct remote_fencing_op_s {
      * values associated with the devices this fencing operation may call */
     gint total_timeout;
 
+    /*! Delegate is the node being asked to perform a fencing action
+     * on behalf of the node that owns the remote operation. Some operations
+     * will involve multiple delegates. This value represents the final delegate
+     * that is used. */
     char *delegate;
+    /*! The point at which the remote operation completed */
     time_t completed;
+    /*! The stonith_call_options associated with this remote operation */
     long long call_options;
 
+    /*! The current state of the remote operation. This indicates
+     * what phase the op is in, query, exec, done, duplicate, failed. */
     enum op_state state;
+    /*! The node that owns the remote operation */
     char *originator;
+    /*! The local client id that initiated the fencing request */
     char *client_id;
+    /*! The name of client that initiated the fencing request */
     char *client_name;
+    /*! List of the received query results for all the nodes in the cpg group */
     GListPtr query_results;
+    /*! The original request that initiated the remote stonith operation */
     xmlNode *request;
 
+    /*! The current topology level being executed */
     guint level;
-    int topology_device_number;
-
+    /*! The device list of all the devices at the current executing topology level. */
     GListPtr devices;
+
+    /*! List of duplicate operations attached to this operation. Once this operation
+     * completes, the duplicate operations will be closed out as well. */ 
     GListPtr duplicates;
 
-    gboolean notify_sent;
 } remote_fencing_op_t;
 
 typedef struct stonith_topology_s {

@@ -223,12 +223,13 @@ remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int dup)
         goto remote_op_done_cleanup;
     }
 
+    if(!op->delegate && data) {
+        op->delegate = crm_element_value_copy(data, F_ORIG);
+    }
+
     if(data == NULL) {
         data = create_xml_node(NULL, "remote-op");
         local_data = data;
-
-    } else if(op->delegate == NULL) {
-        op->delegate = crm_element_value_copy(data, F_ORIG);
     }
 
     /* Tell everyone the operation is done, we will continue
@@ -443,7 +444,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     op->originator = crm_element_value_copy(dev, F_STONITH_ORIGIN);
 
     if(op->originator == NULL) {
-        /* Local request */
+        /* Local or relayed request */
         op->originator = strdup(stonith_our_uname);
     }
 
