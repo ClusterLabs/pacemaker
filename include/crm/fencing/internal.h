@@ -58,7 +58,7 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #define F_STONITH_CALLDATA      "st_calldata"
 #define F_STONITH_OPERATION     "st_op"
 #define F_STONITH_TARGET        "st_target"
-#define F_STONITH_REMOTE        "st_remote_op"
+#define F_STONITH_REMOTE_OP_ID  "st_remote_op"
 #define F_STONITH_RC            "st_rc"
 /*! Timeout period per a device execution */
 #define F_STONITH_TIMEOUT       "st_timeout"
