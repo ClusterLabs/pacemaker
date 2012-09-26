@@ -494,6 +494,32 @@ static void topology_register_helper(const char *node, int level, stonith_key_va
     free(desc);
 }
 
+static void remove_cib_device(xmlXPathObjectPtr xpathObj)
+{
+    int max = 0, lpc = 0;
+
+    if(xpathObj && xpathObj->nodesetval) {
+        max = xpathObj->nodesetval->nodeNr;
+    }
+
+    for(lpc = 0; lpc < max; lpc++) {
+        const char *rsc_id = NULL;
+        const char *standard = NULL;
+        xmlNode *match = getXpathResult(xpathObj, lpc);
+        CRM_CHECK(match != NULL, continue);
+
+        standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+
+        if (safe_str_neq(standard, "stonith")) {
+            continue;
+        }
+
+        rsc_id = crm_element_value(match, XML_ATTR_ID);
+
+        stonith_device_remove(rsc_id);
+    }
+}
+
 static void remove_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
     int max = 0, lpc = 0;
@@ -526,6 +552,54 @@ static void remove_fencing_topology(xmlXPathObjectPtr xpathObj)
     }
 }
 
+static void register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
+{
+    int max = 0, lpc = 0;
+
+    if(xpathObj && xpathObj->nodesetval) {
+        max = xpathObj->nodesetval->nodeNr;
+    }
+
+    for(lpc = 0; lpc < max; lpc++) {
+        const char *rsc_id = NULL;
+        const char *agent = NULL;
+        const char *standard = NULL;
+        stonith_key_value_t *params = NULL;
+        xmlNode *match = getXpathResult(xpathObj, lpc);
+        xmlNode *attributes;
+        xmlNode *attr;
+        xmlNode *data;
+
+        CRM_CHECK(match != NULL, continue);
+
+        standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+        agent = crm_element_value(match, XML_EXPR_ATTR_TYPE);
+
+        if (safe_str_neq(standard, "stonith") || !agent) {
+            continue;
+        }
+
+        rsc_id = crm_element_value(match, XML_ATTR_ID);
+        attributes = find_xml_node(match, XML_TAG_ATTR_SETS, FALSE);
+
+        for (attr = __xml_first_child(attributes); attr; attr = __xml_next(attr)) {
+            const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+            const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
+
+            if (!name || !value) {
+                continue;
+            }
+            params = stonith_key_value_add(params, name, value);
+        }
+
+        data = create_device_registration_xml(rsc_id,
+            __FUNCTION__,
+            agent,
+            params);
+
+        stonith_device_register(data, NULL);
+    }
+}
 
 static void register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force)
 {
@@ -590,7 +664,7 @@ static void register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force
 */
 
 static void
-fencing_topology_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
+fencing_topology_init(xmlNode * msg)
 {
     xmlXPathObjectPtr xpathObj = NULL;
     const char *xpath = "//" XML_TAG_FENCING_LEVEL;
@@ -604,6 +678,46 @@ fencing_topology_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, 
 
     if(xpathObj) {
         xmlXPathFreeObject(xpathObj);
+    }
+}
+
+static void
+cib_stonith_devices_init(xmlNode *msg)
+{
+    xmlXPathObjectPtr xpathObj = NULL;
+    const char *xpath = "//" XML_CIB_TAG_RESOURCE;
+
+    crm_trace("Pushing in stonith devices");
+
+    /* Grab everything */
+    xpathObj = xpath_search(msg, xpath);
+
+    if(xpathObj) {
+        register_cib_device(xpathObj, TRUE);
+        xmlXPathFreeObject(xpathObj);
+    }
+}
+
+static void
+update_cib_stonith_devices(const char *event, xmlNode * msg)
+{
+
+    const char *xpath_add = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_RESOURCE;
+    const char *xpath_del = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_RESOURCE;
+    xmlXPathObjectPtr xpath_obj = NULL;
+
+    /* process deletions */
+    xpath_obj = xpath_search(msg, xpath_del);
+    if (xpath_obj) {
+        remove_cib_device(xpath_obj);
+        xmlXPathFreeObject(xpath_obj);
+    }
+
+    /* process additions */
+    xpath_obj = xpath_search(msg, xpath_add);
+    if (xpath_obj) {
+        register_cib_device(xpath_obj, FALSE);
+        xmlXPathFreeObject(xpath_obj);
     }
 }
 
@@ -632,6 +746,20 @@ update_fencing_topology(const char *event, xmlNode * msg)
     if(xpathObj) {
         xmlXPathFreeObject(xpathObj);
     }
+}
+
+static void
+update_cib_cache_cb(const char *event, xmlNode * msg)
+{
+    update_fencing_topology(event, msg);
+    update_cib_stonith_devices(event, msg);
+}
+
+static void
+init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
+{
+    fencing_topology_init(msg);
+    cib_stonith_devices_init(msg);
 }
 
 static void
@@ -715,12 +843,12 @@ setup_cib(void)
         crm_err("Could not connect to the CIB service: %d %p", rc, cib_err_fn);
 
     } else if (pcmk_ok != cib->cmds->add_notify_callback(
-                   cib, T_CIB_DIFF_NOTIFY, update_fencing_topology)) {
+                   cib, T_CIB_DIFF_NOTIFY, update_cib_cache_cb)) {
         crm_err("Could not set CIB notification callback");
 
     } else {
         rc = cib->cmds->query(cib, NULL, NULL, cib_scope_local);
-        add_cib_op_callback(cib, rc, FALSE, NULL, fencing_topology_callback);
+        add_cib_op_callback(cib, rc, FALSE, NULL, init_cib_cache_cb);
         crm_notice("Watching for stonith topology changes");
     }
 }

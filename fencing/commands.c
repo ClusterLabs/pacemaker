@@ -533,9 +533,36 @@ update_dynamic_list(stonith_device_t *dev)
     }
 }
 
+/*!
+ * \internal
+ * \brief Checks to see if an identical device already exists in the device_list
+ */
+static stonith_device_t *
+device_has_duplicate(stonith_device_t *device)
+{
+    char *key = NULL;
+    char *value = NULL;
+    GHashTableIter gIter;
+    stonith_device_t *dup = g_hash_table_lookup(device_list, device->id);
+
+    if (!dup || safe_str_neq(dup->agent, device->agent)) {
+        return NULL;
+    }
+    g_hash_table_iter_init(&gIter, device->params);
+    while (g_hash_table_iter_next(&gIter, (void **) &key, (void **) &value)) {
+        char *other_value = g_hash_table_lookup(dup->params, key);
+        if (!other_value || safe_str_neq(other_value, value)) {
+            return NULL;
+        }
+    }
+
+    return dup;
+}
+
 int stonith_device_register(xmlNode *msg, const char **desc) 
 {
     const char *value = NULL;
+    stonith_device_t *dup = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTLIST);
@@ -553,9 +580,15 @@ int stonith_device_register(xmlNode *msg, const char **desc)
         update_dynamic_list(device);
     }
 
-    g_hash_table_replace(device_list, device->id, device);
+    if ((dup = device_has_duplicate(device))) {
+        crm_notice("Device '%s' already existed in device list (%d active devices)", device->id, g_hash_table_size(device_list));
+        free_device(device);
+        device = dup;
+    } else {
+        g_hash_table_replace(device_list, device->id, device);
 
-    crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
+        crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
+    }
     if(desc) {
         *desc = device->id;
     }
