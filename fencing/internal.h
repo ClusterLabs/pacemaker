@@ -123,6 +123,8 @@ extern void stonith_command(stonith_client_t * client, uint32_t id, uint32_t fla
 
 extern int stonith_device_register(xmlNode * msg, const char **desc);
 
+extern int stonith_device_remove(const char *id);
+
 extern int stonith_level_register(xmlNode * msg, char **desc);
 
 extern int stonith_level_remove(xmlNode * msg, char **desc);
