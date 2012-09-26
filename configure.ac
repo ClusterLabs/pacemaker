@@ -839,6 +839,17 @@ if test x$ac_cv_header_bzlib_h != xyes; then
    AC_MSG_ERROR(BZ2 Development headers not found)
 fi
 
+dnl ========================================================================
+dnl sighandler_t is missing from Illumos, Solaris11 systems
+dnl ========================================================================
+
+AC_MSG_CHECKING([for sighandler_t])
+AC_TRY_COMPILE([#include <signal.h>],[sighandler_t *f;],
+has_sighandler_t=yes,has_sighandler_t=no)
+AC_MSG_RESULT($has_sighandler_t)
+if test "$has_sighandler_t" = "yes" ; then
+    AC_DEFINE( HAVE_SIGHANDLER_T, 1, [Define if sighandler_t available] )
+fi
 
 dnl ========================================================================
 dnl   ncurses
@@ -900,10 +911,12 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
     AC_LINK_IFELSE(
 	    [AC_LANG_PROGRAM(
 	      [
-#if defined(HAVE_CURSES_H)
-#  include <curses.h>
-#elif defined(HAVE_NCURSES_H)
+#if defined(HAVE_NCURSES_H)
 #  include <ncurses.h>
+#elif defined(HAVE_NCURSES_NCURSES_H)
+#  include <ncurses/ncurses.h>
+#elif defined(HAVE_CURSES_H)
+#  include <curses.h>
 #endif
 	      ],
 	      [printw((const char *)"Test");]

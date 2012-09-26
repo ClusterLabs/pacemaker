@@ -206,6 +206,9 @@ mon_shutdown(int nsig)
 #endif
 
 #if CURSES_ENABLED
+#ifndef HAVE_SIGHANDLER_T
+typedef void (*sighandler_t)(int);
+#endif
 static sighandler_t ncurses_winch_handler;
 static void
 mon_winresize(int nsig)
