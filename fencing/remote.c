@@ -881,6 +881,10 @@ static gint sort_peers(gconstpointer a, gconstpointer b)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Determine if all the devices in the topology are found or not
+ */
 static gboolean
 all_topology_devices_found(remote_fencing_op_t *op)
 {
@@ -888,6 +892,7 @@ all_topology_devices_found(remote_fencing_op_t *op)
     GListPtr iter = NULL;
     GListPtr match = NULL;
     stonith_topology_t *tp = NULL;
+    gboolean skip_target = FALSE;
     int i;
 
     tp = g_hash_table_lookup(topology, op->target);
@@ -895,12 +900,20 @@ all_topology_devices_found(remote_fencing_op_t *op)
     if (!tp) {
         return FALSE;
     }
+    if (safe_str_eq(op->action, "off") || safe_str_eq(op->action, "reboot")) {
+        /* Don't count the devices on the target node if we are killing
+         * the target node. */
+        skip_target = TRUE;
+    }
 
     for (i = 0; i < ST_LEVEL_MAX; i++) {
         for (device = tp->levels[i]; device; device = device->next) {
             match = FALSE;
             for(iter = op->query_results; iter != NULL; iter = iter->next) {
                 st_query_result_t *peer = iter->data;
+                if (skip_target && safe_str_eq(peer->host, op->target)) {
+                    continue;
+                }
                 match = g_list_find_custom(peer->device_list, device->data, sort_strings);
             }
             if (!match) {
