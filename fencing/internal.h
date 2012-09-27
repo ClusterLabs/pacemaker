@@ -30,6 +30,10 @@ typedef struct stonith_device_s {
     GList *pending_ops;
     crm_trigger_t *work;
 
+    /*! A verified device is one that has contacted the
+     * agent successfully to perform a monitor operation */
+    gboolean verified;
+
 } stonith_device_t;
 
 typedef struct stonith_client_s {

@@ -897,6 +897,7 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
             crm_xml_add(dev, XML_ATTR_ID, device->id);
             crm_xml_add(dev, "namespace", device->namespace);
             crm_xml_add(dev, "agent", device->agent);
+            crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
             if (action_specific_timeout) {
                 crm_xml_add_int(dev, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
             }
@@ -1039,6 +1040,14 @@ static void st_child_done(GPid pid, int rc, const char *output, gpointer user_da
     device = g_hash_table_lookup(device_list, cmd->device);
     if(device) {
         device->active_pid = 0;
+        if (rc == pcmk_ok &&
+            (safe_str_eq(cmd->action, "list") ||
+             safe_str_eq(cmd->action, "monitor") ||
+             safe_str_eq(cmd->action, "status"))) {
+
+            device->verified = TRUE;
+        }
+
         mainloop_set_trigger(device->work);
     }
 

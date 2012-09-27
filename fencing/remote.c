@@ -51,6 +51,8 @@ typedef struct st_query_result_s
     int devices;
     GListPtr device_list;
     GHashTable *custom_action_timeouts;
+    /* Subset of devices that peer has verified connectivity on */
+    GHashTable *verified_devices;
 
 } st_query_result_t;
 
@@ -70,6 +72,7 @@ static void free_remote_query(gpointer data)
         crm_trace("Free'ing query result from %s", query->host);
         free(query->host);
         g_hash_table_destroy(query->custom_action_timeouts);
+        g_hash_table_destroy(query->verified_devices);
         free(query);
     }
 }
@@ -582,34 +585,66 @@ static gint sort_strings(gconstpointer a, gconstpointer b)
     return strcmp(a, b);
 }
 
-static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
+static st_query_result_t *
+find_best_peer(const char *device, remote_fencing_op_t *op, gboolean verified_devices_only)
 {
     GListPtr iter = NULL;
+    gpointer verified = NULL;
+
+    if (!device && is_set(op->call_options, st_opt_topology)) {
+        return NULL;
+    }
+
+    for(iter = op->query_results; iter != NULL; iter = iter->next) {
+        st_query_result_t *peer = iter->data;
+        if(is_set(op->call_options, st_opt_topology)) {
+            /* Do they have the next device of the current fencing level? */
+            GListPtr match = NULL;
+            verified = g_hash_table_lookup(peer->verified_devices, device);
+            if (verified_devices_only && !verified) {
+                continue;
+            }
+
+            match = g_list_find_custom(peer->device_list, device, sort_strings);
+            if(match) {
+                crm_trace("Removing %s from %s (%d remaining)", (char*)match->data, peer->host, g_list_length(peer->device_list));
+                peer->device_list = g_list_remove(peer->device_list, match->data);
+                return peer;
+            }
+
+        } else if(peer->devices > 0) {
+            if (verified_devices_only && !g_hash_table_size(peer->verified_devices)) {
+                continue;
+            }
+
+            /* No topology: Use the current best peer */
+            crm_trace("Simple fencing");
+            return peer;
+        }
+    }
+
+    return NULL;
+}
+
+static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
+{
+    st_query_result_t *peer = NULL;
+    const char *device = NULL;
     do {
         if(op->devices) {
+            device = op->devices->data;
             crm_trace("Checking for someone to fence %s with %s", op->target, (char*)op->devices->data);
         } else {
             crm_trace("Checking for someone to fence %s", op->target);
         }
-        for(iter = op->query_results; iter != NULL; iter = iter->next) {
-            st_query_result_t *peer = iter->data;
-            if(is_set(op->call_options, st_opt_topology)) {
-                /* Do they have the next device of the current fencing level? */
-                GListPtr match = NULL;
-                if(op->devices) {
-                    match = g_list_find_custom(peer->device_list, op->devices->data, sort_strings);
-                }
-                if(match) {
-                    crm_trace("Removing %s from %s (%d remaining)", (char*)match->data, peer->host, g_list_length(peer->device_list));
-                    peer->device_list = g_list_remove(peer->device_list, match->data);
-                    return peer;
-                }
 
-            } else if(peer && peer->devices > 0) {
-                /* No topology: Use the current best peer */
-                crm_trace("Simple fencing");
-                return peer;
-            }
+        peer = find_best_peer(device, op, TRUE);
+        if (!peer) {
+            peer = find_best_peer(device, op, FALSE);
+        }
+
+        if (peer) {
+            return peer;
         }
 
         /* Try the next fencing level if there is one */
@@ -910,19 +945,30 @@ int process_remote_stonith_query(xmlNode *msg)
     result->devices = devices;
     result->custom_action_timeouts = g_hash_table_new_full(
         crm_str_hash, g_str_equal, free, NULL);
+    result->verified_devices = g_hash_table_new_full(
+        crm_str_hash, g_str_equal, free, NULL);
 
     for (child = __xml_first_child(dev); child != NULL; child = __xml_next(child)) {
         const char *device = ID(child);
         int action_timeout = 0;
+        int verified = 0;
         if(device) {
             result->device_list = g_list_prepend(result->device_list, strdup(device));
             crm_element_value_int(child, F_STONITH_ACTION_TIMEOUT, &action_timeout);
+            crm_element_value_int(child, F_STONITH_DEVICE_VERIFIED, &verified);
             if (action_timeout) {
                 crm_trace("Peer %s with device %s returned action timeout %d",
                     result->host, device, action_timeout);
                 g_hash_table_insert(result->custom_action_timeouts,
                     strdup(device),
                     GINT_TO_POINTER(action_timeout));
+            }
+            if (verified) {
+                crm_trace("Peer %s has confirmed a verified device %s",
+                    result->host, device);
+                g_hash_table_insert(result->verified_devices,
+                    strdup(device),
+                    GINT_TO_POINTER(verified));
             }
         }
     }
