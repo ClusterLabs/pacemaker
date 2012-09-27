@@ -497,7 +497,7 @@ update_dynamic_list(stonith_device_t *dev)
             return;
         }
 
-        action = stonith_action_create(dev->agent, "list", NULL, 5, dev->params, NULL);
+        action = stonith_action_create(dev->agent, "list", NULL, 10, dev->params, NULL);
         exec_rc = stonith_action_execute(action, &rc, &output);
 
         if(rc != 0 && dev->active_pid == 0) {
@@ -513,6 +513,10 @@ update_dynamic_list(stonith_device_t *dev)
                      dev->agent, rc, dev->active_pid, output);
 
         } else if(exec_rc < 0 || rc != 0) {
+            /* If we successfully got the targets earlier, don't disable. */
+            if (dev->targets) {
+                return;
+            }
             crm_notice("Disabling port list queries for %s (%d/%d): %s",
                            dev->id, exec_rc, rc, output);
             dev->targets_age = -1;
