@@ -564,6 +564,7 @@ static void register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
         const char *rsc_id = NULL;
         const char *agent = NULL;
         const char *standard = NULL;
+        const char *provider = NULL;
         stonith_key_value_t *params = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
         xmlNode *attributes;
@@ -574,6 +575,7 @@ static void register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
 
         standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
         agent = crm_element_value(match, XML_EXPR_ATTR_TYPE);
+        provider = crm_element_value(match, XML_AGENT_ATTR_PROVIDER);
 
         if (safe_str_neq(standard, "stonith") || !agent) {
             continue;
@@ -593,11 +595,16 @@ static void register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
         }
 
         data = create_device_registration_xml(rsc_id,
-            __FUNCTION__,
+            provider,
             agent,
             params);
 
-        stonith_device_register(data, NULL);
+        if(force == FALSE && crm_element_value(match, XML_DIFF_MARKER)) {
+            stonith_device_register(data, NULL);
+        } else {
+            stonith_device_remove(rsc_id);
+            stonith_device_register(data, NULL);
+        }
     }
 }
 
