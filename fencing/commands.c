@@ -913,6 +913,7 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     return available_devices;
 }
 
+#define ST_LOG_OUTPUT_MAX 512
 static void log_operation(async_command_t *cmd, int rc, int pid, const char *next, const char *output) 
 {
     if(rc == 0) {
@@ -934,6 +935,10 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
         /* Logging the whole string confuses syslog when the string is xml */ 
         char *local_copy = strdup(output);
         int lpc = 0, last = 0, more = strlen(local_copy);
+
+        /* Give the log output some reasonable boundary */
+        more = more > ST_LOG_OUTPUT_MAX ? ST_LOG_OUTPUT_MAX : more;
+
         for(lpc = 0; lpc < more; lpc++) {
             if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
                 local_copy[lpc] = 0;
