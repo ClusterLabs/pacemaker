@@ -585,11 +585,20 @@ static gint sort_strings(gconstpointer a, gconstpointer b)
     return strcmp(a, b);
 }
 
+enum find_best_peer_options {
+    /*! Skip checking the target peer for capable fencing devices */
+    FIND_PEER_SKIP_TARGET   = 0x0001,
+    /*! Only check the target peer for capable fencing devices */
+    FIND_PEER_TARGET_ONLY   = 0x0002,
+    /*! Skip peers and devices that are not verified */
+    FIND_PEER_VERIFIED_ONLY = 0x0004,
+};
+
 static st_query_result_t *
-find_best_peer(const char *device, remote_fencing_op_t *op, gboolean verified_devices_only)
+find_best_peer(const char *device, remote_fencing_op_t *op, enum find_best_peer_options options)
 {
     GListPtr iter = NULL;
-    gpointer verified = NULL;
+    gboolean verified_devices_only = (options & FIND_PEER_VERIFIED_ONLY) ? TRUE : FALSE;
 
     if (!device && is_set(op->call_options, st_opt_topology)) {
         return NULL;
@@ -597,11 +606,17 @@ find_best_peer(const char *device, remote_fencing_op_t *op, gboolean verified_de
 
     for(iter = op->query_results; iter != NULL; iter = iter->next) {
         st_query_result_t *peer = iter->data;
+        if ((options & FIND_PEER_SKIP_TARGET) && safe_str_eq(peer->host, op->target)) {
+            continue;
+        }
+        if ((options & FIND_PEER_TARGET_ONLY) && safe_str_neq(peer->host, op->target)) {
+            continue;
+        }
+
         if(is_set(op->call_options, st_opt_topology)) {
             /* Do they have the next device of the current fencing level? */
             GListPtr match = NULL;
-            verified = g_hash_table_lookup(peer->verified_devices, device);
-            if (verified_devices_only && !verified) {
+            if (verified_devices_only && !g_hash_table_lookup(peer->verified_devices, device)) {
                 continue;
             }
 
@@ -638,12 +653,11 @@ static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
             crm_trace("Checking for someone to fence %s", op->target);
         }
 
-        peer = find_best_peer(device, op, TRUE);
-        if (!peer) {
-            peer = find_best_peer(device, op, FALSE);
-        }
-
-        if (peer) {
+        if ((peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET | FIND_PEER_VERIFIED_ONLY))) {
+            return peer;
+        } else if ((peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET))) {
+            return peer;
+        } else if ((peer = find_best_peer(device, op, FIND_PEER_TARGET_ONLY))) {
             return peer;
         }
 
