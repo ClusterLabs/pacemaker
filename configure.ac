@@ -640,7 +640,7 @@ AC_MSG_RESULT(using $GLIBCONFIG)
 
 AC_CHECK_LIB(glib-2.0, g_hash_table_get_values)
 if test "x$ac_cv_lib_glib_2_0_g_hash_table_get_values" != x""yes; then
-   AC_MSG_WARN(Your version of Glib is too old, you should have at least 2.14)
+   AC_DEFINE_UNQUOTED(NEED_G_HASH_ITER, 1, glib-2.0 has no hashtable iterators)
 fi
 
 AC_CHECK_LIB(glib-2.0, g_list_free_full)
@@ -1183,6 +1183,7 @@ case $SUPPORT_HEARTBEAT in
 
    if test $SUPPORT_HEARTBEAT = 1 ; then
 	STACKS="$STACKS heartbeat"
+	dnl objdump -x ${libdir}/libccmclient.so | grep SONAME | awk '{print $2}'
 	AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
 	AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
    else
