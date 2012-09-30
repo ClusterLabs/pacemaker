@@ -8,15 +8,10 @@
 - Support
   http://cgit.freedesktop.org/systemd/systemd/commit/?id=96342de68d0d6de71a062d984dafd2a0905ed9fe
 - Allow stonith_admin to optionally route fencing requests via the CIB (terminate=true)
-- Add corosync to ComponentFail cts test
 - Support 'yesterday' and 'thursday' and '24-04' as dates in crm_report 
 - Allow the N in 'give up after N failed fencing attempts' to be configurable 
-- Check for uppercase letters in node names, warn if found
-- Imply startup-failure-is-fatal from on-fail="restart" 
 - Show an english version of the config with crm_resource --rules
 - Convert cts/CIB.py into a supported Python API for the CIB
-- Reduce the amount of stonith-ng logging
-- Use dlopen for snmp in crm_mon
 - Re-implement no-quorum filter for cib updates?
 
 ## Targeted for 1.4
