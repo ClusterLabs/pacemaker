@@ -126,7 +126,7 @@ create_op_done_notify(remote_fencing_op_t *op, int rc)
     crm_xml_add(notify_data, F_STONITH_TARGET,    op->target);
     crm_xml_add(notify_data, F_STONITH_ACTION,    op->action); 
     crm_xml_add(notify_data, F_STONITH_DELEGATE,  op->delegate);
-    crm_xml_add(notify_data, F_STONITH_REMOTE,    op->id);
+    crm_xml_add(notify_data, F_STONITH_REMOTE_OP_ID,    op->id);
     crm_xml_add(notify_data, F_STONITH_ORIGIN,    op->originator);
     crm_xml_add(notify_data, F_STONITH_CLIENTID,  op->client_id);
     crm_xml_add(notify_data, F_STONITH_CLIENTNAME,op->client_name);
@@ -179,7 +179,7 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data, int rc)
     do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
 
     /* bcast to all local clients that the fencing operation happend */
-    do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data, NULL);
+    do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data);
 
     /* mark this op as having notify's already sent */
     op->notify_sent = TRUE;
@@ -206,6 +206,31 @@ handle_duplicates(remote_fencing_op_t *op, xmlNode *data, int rc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Finalize a remote operation.
+ *
+ * \description This function has two code paths.
+ *
+ * Path 1. This node is the owner of the operation and needs
+ *         to notify the cpg group via a broadcast as to the operation's
+ *         results.
+ *
+ * Path 2. The cpg broadcast is received. All nodes notify their local
+ *         stonith clients the operation results.
+ *
+ * So, The owner of the operation first notifies the cluster of the result,
+ * and once that cpg notify is received back it notifies all the local clients.
+ *
+ * Nodes that are passive watchers of the operation will receive the
+ * broadcast and only need to notify their local clients the operation finished.
+ *
+ * \param op, The fencing operation to finalize
+ * \param data, The xml msg reply (if present) of the last delegated fencing
+ *              operation.
+ * \param dup, Is this operation a duplicate, if so treat it a little differently
+ *             making sure the broadcast is not sent out.
+ */
 static void
 remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int dup)
 {
@@ -223,12 +248,13 @@ remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int dup)
         goto remote_op_done_cleanup;
     }
 
+    if(!op->delegate && data) {
+        op->delegate = crm_element_value_copy(data, F_ORIG);
+    }
+
     if(data == NULL) {
         data = create_xml_node(NULL, "remote-op");
         local_data = data;
-
-    } else if(op->delegate == NULL) {
-        op->delegate = crm_element_value_copy(data, F_ORIG);
     }
 
     /* Tell everyone the operation is done, we will continue
@@ -404,6 +430,16 @@ merge_duplicates(remote_fencing_op_t *op)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a new remote stonith op
+ * \param client, he local stonith client id that initaited the operation
+ * \param request, The request from the client that started the operation 
+ * \param peer, Is this operation owned by another stonith peer? Operations
+ *        owned by other peers are stored on all the stonith nodes, but only the
+ *        owner executes the operation.  All the nodes get the results to the operation
+ *        once the owner finishes executing it.
+ */
 void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
@@ -414,13 +450,15 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
         crm_str_hash, g_str_equal, NULL, free_remote_op);
     }
 
+    /* If this operation is owned by another node, check to make
+     * sure we haven't already created this operation. */
     if(peer && dev) {
-        const char *peer_id = crm_element_value(dev, F_STONITH_REMOTE);
-        CRM_CHECK(peer_id != NULL, return NULL);
+        const char *op_id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
+        CRM_CHECK(op_id != NULL, return NULL);
 
-        op = g_hash_table_lookup(remote_op_list, peer_id);
+        op = g_hash_table_lookup(remote_op_list, op_id);
         if(op) {
-            crm_debug("%s already exists", peer_id);
+            crm_debug("%s already exists", op_id);
             return op;
         }
     }
@@ -430,7 +468,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     crm_element_value_int(request, F_STONITH_TIMEOUT, (int*)&(op->base_timeout));
 
     if(peer && dev) {
-        op->id = crm_element_value_copy(dev, F_STONITH_REMOTE);
+        op->id = crm_element_value_copy(dev, F_STONITH_REMOTE_OP_ID);
     } else {
         op->id = crm_generate_uuid();
     }
@@ -443,7 +481,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     op->originator = crm_element_value_copy(dev, F_STONITH_ORIGIN);
 
     if(op->originator == NULL) {
-        /* Local request */
+        /* Local or relayed request */
         op->originator = strdup(stonith_our_uname);
     }
 
@@ -475,8 +513,8 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
         }
     }
 
-	/* check to see if this is a duplicate operation of another in-flight operation */
-	merge_duplicates(op);
+    /* check to see if this is a duplicate operation of another in-flight operation */
+    merge_duplicates(op);
 
     return op;
 }
@@ -526,7 +564,7 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
         crm_xml_add(query, F_STONITH_DEVICE, "manual_ack");
     }
 
-    crm_xml_add(query, F_STONITH_REMOTE, op->id);
+    crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op->action);
     crm_xml_add(query, F_STONITH_ORIGIN,  op->originator);
@@ -682,7 +720,7 @@ report_timeout_period(remote_fencing_op_t *op, int op_timeout)
 
     /* The client is connected to another node, relay this update to them */
     update = stonith_create_op(0, op->id, STONITH_OP_TIMEOUT_UPDATE, NULL, 0);
-    crm_xml_add(update, F_STONITH_REMOTE, op->id);
+    crm_xml_add(update, F_STONITH_REMOTE_OP_ID, op->id);
     crm_xml_add(update, F_STONITH_CLIENTID, client_id);
     crm_xml_add(update, F_STONITH_CALLID, call_id);
     crm_xml_add_int(update, F_STONITH_TIMEOUT, op_timeout);
@@ -731,7 +769,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         int t = TIMEOUT_MULTIPLY_FACTOR * get_device_timeout(peer, device, op->base_timeout);
         xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);
 
-        crm_xml_add(query, F_STONITH_REMOTE, op->id);
+        crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
         crm_xml_add(query, F_STONITH_TARGET, op->target);
         crm_xml_add(query, F_STONITH_ACTION, op->action);
         crm_xml_add(query, F_STONITH_ORIGIN,  op->originator);
@@ -833,12 +871,12 @@ int process_remote_stonith_query(xmlNode *msg)
     const char *host = NULL;
     remote_fencing_op_t *op = NULL;
     st_query_result_t *result = NULL;
-    xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
     xmlNode *child = NULL;
 
     CRM_CHECK(dev != NULL, return -EPROTO);
 
-    id = crm_element_value(dev, F_STONITH_REMOTE);
+    id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
     CRM_CHECK(id != NULL, return -EPROTO);
 
     dev = get_xpath_object("//@st-available-devices", msg, LOG_ERR);
@@ -921,11 +959,11 @@ int process_remote_stonith_exec(xmlNode *msg)
     const char *id = NULL;
     const char *device = NULL;
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
 
     CRM_CHECK(dev != NULL, return -EPROTO);
 
-    id = crm_element_value(dev, F_STONITH_REMOTE);
+    id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
     CRM_CHECK(id != NULL, return -EPROTO);
 
     dev = get_xpath_object("//@"F_STONITH_RC, msg, LOG_ERR);
