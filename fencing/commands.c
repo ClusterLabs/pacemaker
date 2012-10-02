@@ -619,6 +619,7 @@ int stonith_device_remove(const char *id, gboolean from_cib)
     if (from_cib) {
         device->cib_registered = FALSE;
     } else {
+        device->verified = FALSE;
         device->api_registered = FALSE;
     }
 
