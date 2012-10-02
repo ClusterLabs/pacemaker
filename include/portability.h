@@ -154,18 +154,6 @@ g_hash_table_iter_remove (GHashTableIter *iter)
     iter->nth--; /* Or zero to be safe? */
 }
 
-#  endif                        /* !HAVE_LIBGLIB_2_0 */
-
-#ifdef NEED_G_LIST_FREE_FULL
-#  include <glib.h>
-#  include <string.h>
-/* Since: 2.28 */
-static inline void g_list_free_full(GList *list, GDestroyNotify free_func)
-{
-   g_list_foreach(list, (GFunc) free_func, NULL);
-   g_list_free(list);
-}
-
 /* Since: 2.16 */
 static inline int
 g_strcmp0 (const char     *str1,
@@ -176,6 +164,17 @@ g_strcmp0 (const char     *str1,
   if (!str2)
     return str1 != str2;
   return strcmp (str1, str2);
+}
+#  endif                        /* !HAVE_LIBGLIB_2_0 */
+
+#ifdef NEED_G_LIST_FREE_FULL
+#  include <glib.h>
+#  include <string.h>
+/* Since: 2.28 */
+static inline void g_list_free_full(GList *list, GDestroyNotify free_func)
+{
+   g_list_foreach(list, (GFunc) free_func, NULL);
+   g_list_free(list);
 }
 #endif
 
