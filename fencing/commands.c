@@ -497,7 +497,7 @@ update_dynamic_list(stonith_device_t *dev)
             return;
         }
 
-        action = stonith_action_create(dev->agent, "list", NULL, 5, dev->params, NULL);
+        action = stonith_action_create(dev->agent, "list", NULL, 10, dev->params, NULL);
         exec_rc = stonith_action_execute(action, &rc, &output);
 
         if(rc != 0 && dev->active_pid == 0) {
@@ -513,6 +513,10 @@ update_dynamic_list(stonith_device_t *dev)
                      dev->agent, rc, dev->active_pid, output);
 
         } else if(exec_rc < 0 || rc != 0) {
+            /* If we successfully got the targets earlier, don't disable. */
+            if (dev->targets) {
+                return;
+            }
             crm_notice("Disabling port list queries for %s (%d/%d): %s",
                            dev->id, exec_rc, rc, output);
             dev->targets_age = -1;
@@ -533,9 +537,36 @@ update_dynamic_list(stonith_device_t *dev)
     }
 }
 
-int stonith_device_register(xmlNode *msg, const char **desc) 
+/*!
+ * \internal
+ * \brief Checks to see if an identical device already exists in the device_list
+ */
+static stonith_device_t *
+device_has_duplicate(stonith_device_t *device)
+{
+    char *key = NULL;
+    char *value = NULL;
+    GHashTableIter gIter;
+    stonith_device_t *dup = g_hash_table_lookup(device_list, device->id);
+
+    if (!dup || safe_str_neq(dup->agent, device->agent)) {
+        return NULL;
+    }
+    g_hash_table_iter_init(&gIter, device->params);
+    while (g_hash_table_iter_next(&gIter, (void **) &key, (void **) &value)) {
+        char *other_value = g_hash_table_lookup(dup->params, key);
+        if (!other_value || safe_str_neq(other_value, value)) {
+            return NULL;
+        }
+    }
+
+    return dup;
+}
+
+int stonith_device_register(xmlNode *msg, const char **desc, gboolean from_cib)
 {
     const char *value = NULL;
+    stonith_device_t *dup = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTLIST);
@@ -553,28 +584,49 @@ int stonith_device_register(xmlNode *msg, const char **desc)
         update_dynamic_list(device);
     }
 
-    g_hash_table_replace(device_list, device->id, device);
+    if ((dup = device_has_duplicate(device))) {
+        crm_notice("Device '%s' already existed in device list (%d active devices)", device->id, g_hash_table_size(device_list));
+        free_device(device);
+        device = dup;
+    } else {
+        g_hash_table_replace(device_list, device->id, device);
 
-    crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
+        crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
+    }
     if(desc) {
         *desc = device->id;
     }
+
+    if (from_cib) {
+        device->cib_registered = TRUE;
+    } else {
+        device->api_registered = TRUE;
+    }
+
     return pcmk_ok;
 }
 
-static int stonith_device_remove(xmlNode *msg, const char **desc) 
+int stonith_device_remove(const char *id, gboolean from_cib)
 {
-    xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
-    const char *id = crm_element_value(dev, XML_ATTR_ID);
-    if(g_hash_table_remove(device_list, id)) {
-        crm_info("Removed '%s' from the device list (%d active devices)",
-                 id, g_hash_table_size(device_list));
-    } else {
+    stonith_device_t *device = g_hash_table_lookup(device_list, id);
+
+    if (!device) {
         crm_info("Device '%s' not found (%d active devices)",
                  id, g_hash_table_size(device_list));
+        return pcmk_ok;
     }
-    if(desc) {
-        *desc = id;
+
+    if (from_cib) {
+        device->cib_registered = FALSE;
+    } else {
+        device->verified = FALSE;
+        device->api_registered = FALSE;
+    }
+
+    if (!device->cib_registered && !device->api_registered) {
+        g_hash_table_remove(device_list, id);
+        crm_info("Removed '%s' from the device list (%d active devices)",
+                 id, g_hash_table_size(device_list));
     }
     return pcmk_ok;
 }
@@ -869,6 +921,7 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
             crm_xml_add(dev, XML_ATTR_ID, device->id);
             crm_xml_add(dev, "namespace", device->namespace);
             crm_xml_add(dev, "agent", device->agent);
+            crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
             if (action_specific_timeout) {
                 crm_xml_add_int(dev, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
             }
@@ -884,6 +937,7 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     return available_devices;
 }
 
+#define ST_LOG_OUTPUT_MAX 512
 static void log_operation(async_command_t *cmd, int rc, int pid, const char *next, const char *output) 
 {
     if(rc == 0) {
@@ -905,6 +959,10 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
         /* Logging the whole string confuses syslog when the string is xml */ 
         char *local_copy = strdup(output);
         int lpc = 0, last = 0, more = strlen(local_copy);
+
+        /* Give the log output some reasonable boundary */
+        more = more > ST_LOG_OUTPUT_MAX ? ST_LOG_OUTPUT_MAX : more;
+
         for(lpc = 0; lpc < more; lpc++) {
             if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
                 local_copy[lpc] = 0;
@@ -1011,6 +1069,14 @@ static void st_child_done(GPid pid, int rc, const char *output, gpointer user_da
     device = g_hash_table_lookup(device_list, cmd->device);
     if(device) {
         device->active_pid = 0;
+        if (rc == pcmk_ok &&
+            (safe_str_eq(cmd->action, "list") ||
+             safe_str_eq(cmd->action, "monitor") ||
+             safe_str_eq(cmd->action, "status"))) {
+
+            device->verified = TRUE;
+        }
+
         mainloop_set_trigger(device->work);
     }
 
@@ -1415,7 +1481,7 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
         const char *id = NULL;
         xmlNode *notify_data = create_xml_node(NULL, op);
-        rc = stonith_device_register(request, &id);
+        rc = stonith_device_register(request, &id, FALSE);
 
         crm_xml_add(notify_data, F_STONITH_DEVICE, id);
         crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(device_list));
@@ -1424,9 +1490,11 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
         free_xml(notify_data);
 
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
-        const char *id = NULL;
+        xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, request, LOG_ERR);
+        const char *id = crm_element_value(dev, XML_ATTR_ID);
         xmlNode *notify_data = create_xml_node(NULL, op);
-        rc = stonith_device_remove(request, &id);
+
+        rc = stonith_device_remove(id, FALSE);
 
         crm_xml_add(notify_data, F_STONITH_DEVICE, id);
         crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(device_list));
