@@ -516,7 +516,7 @@ static void remove_cib_device(xmlXPathObjectPtr xpathObj)
 
         rsc_id = crm_element_value(match, XML_ATTR_ID);
 
-        stonith_device_remove(rsc_id);
+        stonith_device_remove(rsc_id, TRUE);
     }
 }
 
@@ -600,10 +600,10 @@ static void register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
             params);
 
         if(force == FALSE && crm_element_value(match, XML_DIFF_MARKER)) {
-            stonith_device_register(data, NULL);
+            stonith_device_register(data, NULL, TRUE);
         } else {
-            stonith_device_remove(rsc_id);
-            stonith_device_register(data, NULL);
+            stonith_device_remove(rsc_id, TRUE);
+            stonith_device_register(data, NULL, TRUE);
         }
     }
 }

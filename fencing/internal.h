@@ -34,6 +34,8 @@ typedef struct stonith_device_s {
      * agent successfully to perform a monitor operation */
     gboolean verified;
 
+    gboolean cib_registered;
+    gboolean api_registered;
 } stonith_device_t;
 
 typedef struct stonith_client_s {
@@ -125,9 +127,9 @@ extern long long get_stonith_flag(const char *name);
 
 extern void stonith_command(stonith_client_t * client, uint32_t id, uint32_t flags, xmlNode * op_request, const char *remote_peer);
 
-extern int stonith_device_register(xmlNode * msg, const char **desc);
+extern int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib);
 
-extern int stonith_device_remove(const char *id);
+extern int stonith_device_remove(const char *id, gboolean from_cib);
 
 extern int stonith_level_register(xmlNode * msg, char **desc);
 

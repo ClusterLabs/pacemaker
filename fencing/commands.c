@@ -563,7 +563,7 @@ device_has_duplicate(stonith_device_t *device)
     return dup;
 }
 
-int stonith_device_register(xmlNode *msg, const char **desc) 
+int stonith_device_register(xmlNode *msg, const char **desc, gboolean from_cib)
 {
     const char *value = NULL;
     stonith_device_t *dup = NULL;
@@ -596,16 +596,35 @@ int stonith_device_register(xmlNode *msg, const char **desc)
     if(desc) {
         *desc = device->id;
     }
+
+    if (from_cib) {
+        device->cib_registered = TRUE;
+    } else {
+        device->api_registered = TRUE;
+    }
+
     return pcmk_ok;
 }
 
-int stonith_device_remove(const char *id)
+int stonith_device_remove(const char *id, gboolean from_cib)
 {
-    if(g_hash_table_remove(device_list, id)) {
-        crm_info("Removed '%s' from the device list (%d active devices)",
-                 id, g_hash_table_size(device_list));
-    } else {
+    stonith_device_t *device = g_hash_table_lookup(device_list, id);
+
+    if (!device) {
         crm_info("Device '%s' not found (%d active devices)",
+                 id, g_hash_table_size(device_list));
+        return pcmk_ok;
+    }
+
+    if (from_cib) {
+        device->cib_registered = FALSE;
+    } else {
+        device->api_registered = FALSE;
+    }
+
+    if (!device->cib_registered && !device->api_registered) {
+        g_hash_table_remove(device_list, id);
+        crm_info("Removed '%s' from the device list (%d active devices)",
                  id, g_hash_table_size(device_list));
     }
     return pcmk_ok;
@@ -1461,7 +1480,7 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
         const char *id = NULL;
         xmlNode *notify_data = create_xml_node(NULL, op);
-        rc = stonith_device_register(request, &id);
+        rc = stonith_device_register(request, &id, FALSE);
 
         crm_xml_add(notify_data, F_STONITH_DEVICE, id);
         crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(device_list));
@@ -1474,7 +1493,7 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
         const char *id = crm_element_value(dev, XML_ATTR_ID);
         xmlNode *notify_data = create_xml_node(NULL, op);
 
-        rc = stonith_device_remove(id);
+        rc = stonith_device_remove(id, FALSE);
 
         crm_xml_add(notify_data, F_STONITH_DEVICE, id);
         crm_xml_add_int(notify_data, F_STONITH_ACTIVE, g_hash_table_size(device_list));

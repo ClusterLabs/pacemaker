@@ -648,8 +648,7 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
             do_monitor = 1;
         }
     } else if (safe_str_eq(cmd->action, "stop")) {
-        /* Device removal now happens when the device is removed from the cib */
-        /* rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id); */
+        rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id);
         rsc->stonith_started = 0;
     } else if (safe_str_eq(cmd->action, "monitor")) {
         if (cmd->interval) {
