@@ -48,6 +48,8 @@ typedef struct lrmd_rsc_s {
      * that have been handed off from the pending ops list. */
     GList *recurring_ops;
 
+    int stonith_started;
+
     crm_trigger_t *work;
 } lrmd_rsc_t;
 
