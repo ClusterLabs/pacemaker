@@ -78,7 +78,7 @@
         <pseudo_event id="9" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
-        <crm_event id="54" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+        <crm_event id="54" operation="stonith" operation_key="stonith-c001n02" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
     </inputs>
   </synapse>
@@ -239,7 +239,7 @@
   </synapse>
   <synapse id="23">
     <action_set>
-      <crm_event id="54" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+      <crm_event id="54" operation="stonith" operation_key="stonith-c001n02" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <attributes CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -260,7 +260,7 @@
         <pseudo_event id="52" operation="stonith_up" operation_key="stonith_up"/>
       </trigger>
       <trigger>
-        <crm_event id="54" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+        <crm_event id="54" operation="stonith" operation_key="stonith-c001n02" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
     </inputs>
   </synapse>
@@ -379,7 +379,7 @@
         <pseudo_event id="34" operation="stop" operation_key="rsc_c001n02_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="54" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+        <crm_event id="54" operation="stonith" operation_key="stonith-c001n02" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
     </inputs>
   </synapse>

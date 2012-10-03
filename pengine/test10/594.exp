@@ -189,7 +189,7 @@
   </synapse>
   <synapse id="15">
     <action_set>
-      <crm_event id="38" operation="stonith" operation_key="stonith" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
+      <crm_event id="38" operation="stonith" operation_key="stonith-hadev3" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
         <attributes CRM_meta_on_node="hadev3" CRM_meta_on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -228,7 +228,7 @@
         <pseudo_event id="35" operation="stonith_up" operation_key="stonith_up"/>
       </trigger>
       <trigger>
-        <crm_event id="38" operation="stonith" operation_key="stonith" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
+        <crm_event id="38" operation="stonith" operation_key="stonith-hadev3" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
       </trigger>
     </inputs>
   </synapse>
@@ -302,7 +302,7 @@
         <rsc_op id="22" operation="stop" operation_key="rsc_hadev2_stop_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
       </trigger>
       <trigger>
-        <crm_event id="38" operation="stonith" operation_key="stonith" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
+        <crm_event id="38" operation="stonith" operation_key="stonith-hadev3" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
       </trigger>
     </inputs>
   </synapse>

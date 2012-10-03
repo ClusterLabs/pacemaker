@@ -74,7 +74,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="167" operation="stonith" operation_key="stonith" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="167" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -151,7 +151,7 @@
         <pseudo_event id="166" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
       <trigger>
-        <crm_event id="167" operation="stonith" operation_key="stonith" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="167" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -486,7 +486,7 @@
   </synapse>
   <synapse id="36">
     <action_set>
-      <crm_event id="167" operation="stonith" operation_key="stonith" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182">
+      <crm_event id="167" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182">
         <attributes CRM_meta_on_node="srv02" CRM_meta_on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -507,7 +507,7 @@
         <pseudo_event id="165" operation="stonith_up" operation_key="stonith_up"/>
       </trigger>
       <trigger>
-        <crm_event id="167" operation="stonith" operation_key="stonith" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="167" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -534,7 +534,7 @@
         <pseudo_event id="29" operation="stop" operation_key="Dummy02_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="167" operation="stonith" operation_key="stonith" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="167" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>

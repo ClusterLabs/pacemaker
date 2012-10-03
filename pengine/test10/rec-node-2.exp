@@ -243,7 +243,7 @@
   </synapse>
   <synapse id="18">
     <action_set>
-      <crm_event id="28" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1">
+      <crm_event id="28" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="uuid1">
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -264,7 +264,7 @@
         <pseudo_event id="26" operation="stonith_up" operation_key="stonith_up"/>
       </trigger>
       <trigger>
-        <crm_event id="28" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+        <crm_event id="28" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -330,7 +330,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="28" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+        <crm_event id="28" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
     </inputs>
   </synapse>
