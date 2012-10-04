@@ -7,7 +7,6 @@ digraph "g" {
 "stonith node2" -> "rsc1_stop_0 node2" [ style = bold]
 "stonith node2" -> "stonith_complete" [ style = bold]
 "stonith node2" [ style=bold color="green" fontcolor="black" ]
-"stonith_complete" -> "rsc1_stop_0 node2" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 "stonith_up" -> "stonith node2" [ style = bold]
 "stonith_up" -> "stonith_complete" [ style = bold]

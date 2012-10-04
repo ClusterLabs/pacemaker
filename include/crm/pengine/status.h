@@ -169,6 +169,9 @@ struct node_s {
 
 #  define pe_rsc_failure_ignored  0x01000000ULL
 
+#  define pe_rsc_needs_quorum	0x10000000ULL
+#  define pe_rsc_needs_fencing	0x20000000ULL
+
 enum pe_graph_flags {
     pe_graph_none = 0x00000,
     pe_graph_updated_first = 0x00001,

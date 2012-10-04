@@ -75,9 +75,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -138,9 +135,6 @@
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -157,9 +151,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
@@ -180,9 +171,6 @@
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -199,9 +187,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
@@ -222,9 +207,6 @@
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -238,9 +220,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
@@ -330,9 +309,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -344,9 +320,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
@@ -360,9 +333,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -374,9 +344,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
@@ -390,9 +357,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -404,9 +368,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
@@ -420,9 +381,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -434,9 +392,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
@@ -450,9 +405,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -464,9 +416,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
@@ -480,9 +429,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -494,9 +440,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
@@ -510,9 +453,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -524,9 +464,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
@@ -540,9 +477,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
@@ -554,9 +488,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="249" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
       <trigger>
         <crm_event id="250" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>

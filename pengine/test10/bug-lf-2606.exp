@@ -7,9 +7,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="24" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="25" operation="stonith" operation_key="stonith-node2" on_node="node2" on_node_uuid="node2"/>
       </trigger>
     </inputs>
@@ -51,9 +48,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="24" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="25" operation="stonith" operation_key="stonith-node2" on_node="node2" on_node_uuid="node2"/>
       </trigger>
     </inputs>
@@ -72,9 +66,6 @@
         <pseudo_event id="17" operation="stop" operation_key="ms3_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="24" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="25" operation="stonith" operation_key="stonith-node2" on_node="node2" on_node_uuid="node2"/>
       </trigger>
     </inputs>
@@ -88,9 +79,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="21" operation="demote" operation_key="ms3_demote_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="24" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
       <trigger>
         <crm_event id="25" operation="stonith" operation_key="stonith-node2" on_node="node2" on_node_uuid="node2"/>

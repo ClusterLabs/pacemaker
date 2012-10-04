@@ -7,9 +7,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="9" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="10" operation="stonith" operation_key="stonith-node2" on_node="node2" on_node_uuid="node2"/>
       </trigger>
     </inputs>

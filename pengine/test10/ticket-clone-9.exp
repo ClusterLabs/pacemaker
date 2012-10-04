@@ -10,9 +10,6 @@
         <pseudo_event id="10" operation="stop" operation_key="clone1_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-      <trigger>
         <crm_event id="14" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="node1"/>
       </trigger>
     </inputs>
@@ -26,9 +23,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="10" operation="stop" operation_key="clone1_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="13" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
       <trigger>
         <crm_event id="15" operation="stonith" operation_key="stonith-node2" on_node="node2" on_node_uuid="node2"/>
