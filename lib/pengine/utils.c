@@ -566,12 +566,20 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         action->needs = rsc_req_quorum;
 
     } else if (safe_str_eq(value, "unfencing")) {
-        action->needs = rsc_req_fence;
+        action->needs = rsc_req_stonith;
         set_bit(action->rsc->flags, pe_rsc_needs_unfencing);
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            crm_notice("%s requires (un)fencing but fencing is disabled",
+                       action->rsc->id);
+        }
 
     } else if (is_set(data_set->flags, pe_flag_stonith_enabled)
                && safe_str_eq(value, "fencing")) {
         action->needs = rsc_req_stonith;
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            crm_notice("%s requires fencing but fencing is disabled",
+                       action->rsc->id);
+        }
     /* End compatability code */
 
     } else if (is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
