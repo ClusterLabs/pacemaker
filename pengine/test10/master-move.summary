@@ -11,7 +11,7 @@ Online: [ bl460g1n13 bl460g1n14 ]
      Slaves: [ bl460g1n14 ]
 
 Transition Summary:
- * Move    dummy01	(Started bl460g1n13 -> bl460g1n14)
+ * Recover dummy01	(Started bl460g1n13 -> bl460g1n14)
  * Move    dummy02	(Started bl460g1n13 -> bl460g1n14)
  * Start   dummy03	(bl460g1n14)
  * Demote  prmDRBD:0	(Master -> Slave bl460g1n13)

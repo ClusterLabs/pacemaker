@@ -9,7 +9,7 @@ Online: [ node1 ]
 
 Transition Summary:
  * Start   stonith-1	(node1)
- * Move    rsc1	(Started node2 -> node1)
+ * Recover rsc1	(Started node2 -> node1)
  * Move    rsc2	(Started node2 -> node1)
 
 Executing cluster transition:

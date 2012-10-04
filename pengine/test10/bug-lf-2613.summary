@@ -30,7 +30,7 @@ Transition Summary:
  * Move    prmFsPostgreSQLDB1-2	(Started act1 -> sby1)
  * Move    prmFsPostgreSQLDB1-3	(Started act1 -> sby1)
  * Move    prmIpPostgreSQLDB1	(Started act1 -> sby1)
- * Move    prmApPostgreSQLDB1	(Started act1 -> sby1)
+ * Recover prmApPostgreSQLDB1	(Started act1 -> sby1)
 
 Executing cluster transition:
  * Pseudo action:   grpPostgreSQLDB1_stop_0

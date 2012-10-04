@@ -8,7 +8,7 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Stop    rsc1	(Started node1)
- * Move    rsc2	(Started node1 -> node2)
+ * Stop    rsc2	(Started node2)
  * Start   rsc3	(node1 - blocked)
 
 Executing cluster transition:

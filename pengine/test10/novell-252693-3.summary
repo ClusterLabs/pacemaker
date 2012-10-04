@@ -23,7 +23,7 @@ Transition Summary:
  * Start   stonithclone:1	(node1)
  * Start   evmsdclone:1	(node1)
  * Start   evmsclone:1	(node1)
- * Move    imagestoreclone:0	(Started node2 -> node1)
+ * Recover imagestoreclone:0	(Started node2 -> node1)
  * Start   imagestoreclone:1	(node2)
  * Start   configstoreclone:1	(node1)
  * Move    sles10	(Started node2 -> node1)

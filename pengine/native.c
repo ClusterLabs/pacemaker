@@ -1891,16 +1891,17 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
             pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
+        } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
+            log_change("Stop    %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+
         } else if (moving && current) {
-            log_change("Move    %s\t(%s %s -> %s)",
-                       rsc->id, role2text(rsc->role), current->details->uname,
-                       next->details->uname);
+            log_change("%s %s\t(%s %s -> %s)",
+                       is_set(rsc->flags, pe_rsc_failed)?"Recover":"Move   ",
+                       rsc->id, role2text(rsc->role),
+                       current->details->uname, next->details->uname);
 
         } else if (is_set(rsc->flags, pe_rsc_failed)) {
             log_change("Recover %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
-
-        } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            log_change("Stop    %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
         } else {
             log_change("Restart %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);

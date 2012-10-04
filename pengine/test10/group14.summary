@@ -34,7 +34,7 @@ OFFLINE: [ c001n02 c001n03 c001n04 c001n05 ]
 
 Transition Summary:
  * Start   DcIPaddr	(c001n06 - blocked)
- * Move    r192.168.100.181	(Started c001n06 -> c001n07)
+ * Stop    r192.168.100.181	(Started c001n07)
  * Start   r192.168.100.182	(c001n07 - blocked)
  * Start   r192.168.100.183	(c001n07 - blocked)
  * Start   lsb_dummy	(c001n06 - blocked)
