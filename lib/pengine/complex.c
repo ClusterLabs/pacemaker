@@ -544,8 +544,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     } else if (safe_str_eq(value, "quorum")) {
         set_bit((*rsc)->flags, pe_rsc_needs_quorum);
 
-    } else if (is_set(data_set->flags, pe_flag_stonith_enabled) /* TODO: Drop this condition */
-               && safe_str_eq(value, "fencing")) {
+    } else if (safe_str_eq(value, "fencing")) {
         set_bit((*rsc)->flags, pe_rsc_needs_fencing);
 
     } else {
