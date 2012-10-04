@@ -1,9 +1,15 @@
-  <appendix id="ap-samples"><title>Sample Configurations</title>
-    <section id="s-sample-empty">
-      <title>An Empty Configuration</title>
-      <example>
-        <title>An <indexterm significance="preferred"><primary>Empty Configuration</primary></indexterm><indexterm significance="preferred"><primary>Configuration</primary><secondary>Empty</secondary></indexterm>empty configuration</title>
-        <programlisting><![CDATA[<cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
+[appendix]
+
+== Sample Configurations ==
+
+=== Empty ===
+
+indexterm:[Configuration,Empty]
+
+.An Empty Configuration
+[source,XML]
+-------
+<cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -11,14 +17,17 @@
     <constraints/>
   </configuration>
   <status/>
-</cib> ]]> </programlisting>
-      </example>
-    </section>
-    <section id="s-sample-simple">
-      <title>A <indexterm significance="preferred"><primary>Simple</primary><secondary>Configuration</secondary></indexterm><indexterm significance="preferred"><primary>Configuration</primary><secondary>Simple</secondary></indexterm>Simple Configuration</title>
-      <example>
-        <title>2 nodes, some cluster options and a resource</title>
-        <programlisting><![CDATA[<cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false"
+</cib>
+-------
+
+=== Simple ===
+
+indexterm:[Configuration,Simple]
+
+.Simple Configuration - 2 nodes, some cluster options and a resource
+[source,XML]
+-------
+<cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false"
     validate-with="pacemaker-1.0">
   <configuration>
     <crm_config>
@@ -51,16 +60,21 @@
     </constraints>
   </configuration>
   <status/>
-</cib> ]]> </programlisting>
-      </example>
-      <para>In this example, we have one resource (an IP address) that we check every five minutes and will run on host <literal>c001n01</literal> until either the resource fails 10 times or the host shuts down.</para>
-    </section>
-    <section id="s-sample-advanced">
-      <title>An <indexterm significance="preferred"><primary>Advanced</primary><secondary>Configuration</secondary></indexterm><indexterm significance="preferred"><primary>Configuration</primary><secondary>Advanced</secondary></indexterm>Advanced Configuration</title>
-      <para/>
-      <example>
-        <title>groups and clones with stonith</title>
-        <programlisting><![CDATA[ <cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false"
+</cib>
+-------
+
+In this example, we have one resource (an IP address) that we check
+every five minutes and will run on host +c001n01+ until either the
+resource fails 10 times or the host shuts down.
+
+
+=== Advanced Configuration ===
+indexterm:[Configuration,Advanced]
+
+.Advanced configuration - groups and clones with stonith
+[source,XML]
+-------
+<cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false"
     validate-with="pacemaker-1.0">
   <configuration>
     <crm_config>
@@ -123,7 +137,5 @@
     </constraints>
   </configuration>
   <status/>
-</cib> ]]> </programlisting>
-      </example>
-    </section>
-  </appendix>
+</cib>
+-------

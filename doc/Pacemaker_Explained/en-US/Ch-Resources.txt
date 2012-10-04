@@ -1,0 +1,589 @@
+= Cluster Resources =
+
+== What is a Cluster Resource ==
+
+indexterm:[Resource,Description]
+
+The role of a resource agent is to abstract the service it provides
+and present a consistent view to the cluster, which allows the cluster
+to be agnostic about the resources it manages.
+
+The cluster doesn't need to understand how the resource works because
+it relies on the resource agent to do the right thing when given a
++start+, +stop+ or +monitor+ command.
+
+For this reason it is crucial that resource agents are well tested. 
+
+Typically resource agents come in the form of shell scripts, however
+they can be written using any technology (such as C, Python or Perl)
+that the author is comfortable with.
+
+== Supported Resource Classes ==
+
+indexterm:[Resource,Classes]
+anchor:s-resource-supported[Supported Resource Classes]
+
+There are three basic classes of agents supported by Pacemaker.
+In order of encouraged usage they are:
+
+=== Open Cluster Framework ===
+
+indexterm:[Resource,OCF]
+indexterm:[OCF,Resources]
+indexterm:[Open Cluster Framework,Resources]
+
+The OCF standard
+footnote:[
+http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD - at least as it relates to resource agents.
+] footnote:[
+The Pacemaker implementation has been somewhat extended from the OCF
+Specs, but none of those changes are incompatible with the original
+OCF specification.
+]
+is basically an extension of the Linux Standard Base conventions for
+init scripts to:
+
+* support parameters,
+* make them self describing and
+* extensible
+
+OCF specs have strict definitions of the exit codes that actions must return.
+footnote:[
+Included with the cluster is the ocf-tester script, which can be
+useful in this regard.
+]
+
+The cluster follows these specifications exactly, and giving the wrong
+exit code will cause the cluster to behave in ways you will likely
+find puzzling and annoying.  In particular, the cluster needs to
+distinguish a completely stopped resource from one which is in some
+erroneous and indeterminate state.
+
+Parameters are passed to the script as environment variables, with the
+special prefix +OCF_RESKEY_+.  So, a parameter which the user thinks
+of as ip it will be passed to the script as +OCF_RESKEY_ip+.  The
+number and purpose of the parameters is completely arbitrary, however
+your script should advertise any that it supports using the
++meta-data+ command.
+        
+
+The OCF class is the most preferred one as it is an industry standard,
+highly flexible (allowing parameters to be passed to agents in a
+non-positional manner) and self-describing.
+
+For more information, see the
+http://www.linux-ha.org/wiki/OCF_Resource_Agents[reference] and
+xref:ap-ocf[].
+
+=== Linux Standard Base ===
+indexterm:[Resource,LSB]
+indexterm:[LSB,Resources]
+indexterm:[Linus Standard Base,Resources]
+
+LSB resource agents are those found in '/etc/init.d'.
+
+Generally they are provided by the OS/distribution and, in order to be used with the cluster, they must conform to the LSB Spec.
+footnote:[
+See
+http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
+for the LSB Spec (as it relates to init scripts).
+]
+
+Many distributions claim LSB compliance but ship with broken init
+scripts.  To see if your init script is LSB-compatible, see the FAQ
+entry xref:ap-lsb[].  The most common problems are:
+
+* Not implementing the status operation at all
+* Not observing the correct exit status codes for start/stop/status actions
+* Starting a started resource returns an error (this violates the LSB spec)
+* Stopping a stopped resource returns an error (this violates the LSB spec)
+
+=== Legacy Heartbeat ===
+indexterm:[Resource,Heartbeat (legacy)]
+indexterm:[Heartbeat,Legacy Resources]
+
+Version 1 of Heartbeat came with its own style of resource agents and
+it is highly likely that many people have written their own agents
+based on its conventions.  To enable administrators to continue to use
+these agents, they are supported by the new cluster manager
+footnote:[
+See http://wiki.linux-ha.org/HeartbeatResourceAgent for more information
+]
+
+=== STONITH ===
+indexterm:[Resource,STONITH]
+indexterm:[STONITH,Resources]
+
+There is also an additional class, STONITH, which is used exclusively
+for fencing related resources.  This is discussed later in
+xref:ch-stonith[].
+
+== Properties ==
+
+These values tell the cluster which script to use for the resource, where to find that script and what standards it conforms to.
+
+.Properties of a Primitive Resource
+[width="95%",cols="1m,6<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+indexterm:[id]
+|Your name for the resource
+
+|class
+indexterm:[class,Resource Field]
+indexterm:[Resource,Field,class]
+|The standard the script conforms to. Allowed values: +heartbeat+, +lsb+, +ocf+, +stonith+
+
+|type
+indexterm:[type,Resource Field]
+indexterm:[Resource,Field,type]
+|The name of the Resource Agent you wish to use. Eg. _IPaddr_ or _Filesystem_
+
+|provider
+indexterm:[provider,Resource Field]
+indexterm:[Resource,Field,provider]
+
+|The OCF spec allows multiple vendors to supply the same
+ ResourceAgent. To use the OCF resource agents supplied with
+ Heartbeat, you should specify +heartbeat+ here.
+
+|=========================================================
+
+Resource definitions can be queried with the `crm_resource` tool. For example
+
+[source,Bash]
+crm_resource --resource Email --query-xml
+
+might produce:
+
+.An example LSB resource
+[source,XML]
+<primitive id="Email" class="lsb" type="exim"/>
+
+[NOTE]
+One of the main drawbacks to LSB resources is that they do not allow any parameters!
+
+Example for an OCF resource:
+
+.An example OCF resource
+[source,XML]
+-------
+<primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
+   <instance_attributes id="params-public-ip">
+      <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+   </instance_attributes>
+</primitive>
+-------
+
+Or, finally for the equivalent legacy Heartbeat resource:
+
+.An example Heartbeat resource
+[source,XML]
+-------
+<primitive id="Public-IP-legacy" class="heartbeat" type="IPaddr">
+   <instance_attributes id="params-public-ip-legacy">
+      <nvpair id="public-ip-addr-legacy" name="1" value="1.2.3.4"/>
+   </instance_attributes>
+</primitive>
+-------
+
+[NOTE]
+======
+Heartbeat resources take only ordered and unnamed parameters.  The
+supplied name therefore indicates the order in which they are passed
+to the script.  Only single digit values are allowed.
+======
+
+== Resource Options ==
+
+anchor:s-resource-options[Resource Options]
+Options are used by the cluster to decide how your resource should
+behave and can be easily set using the `--meta` option of the
+`crm_resource` command.
+
+.Options for a Primitive Resource
+[width="95%",cols="1m,1,4<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+            
+|priority
+|+0+
+|If not all resources can be active, the cluster will stop lower
+priority resources in order to keep higher priority ones active.
+indexterm:[priority,Resource Option]
+indexterm:[Resource,Option,priority]
+
+|target-role
+|+Started+
+|What state should the cluster attempt to keep this resource in? Allowed values:
+
+* 'Stopped' - Force the resource to be stopped
+
+* 'Started' - Allow the resource to be started (In the case of
+  xref:s-resource-multistate[] resources, they will not promoted to
+  master)
+
+* 'Master' - Allow the resource to be started and, if appropriate, promoted
+indexterm:[target-role,Resource Option]
+indexterm:[Resource,Option,target-role]
+
+|is-managed
+|+TRUE+
+|Is the cluster allowed to start and stop the resource?  Allowed
+ values: +true+, +false+
+ indexterm:[is-managed,Resource Option]
+ indexterm:[Resource,Option,is-managed]
+
+|resource-stickiness
+|Inherited
+|How much does the resource prefer to stay where it is?  Defaults to
+ the value of +resource-stickiness+ in the +rsc_defaults+ section
+ indexterm:[resource-stickiness,Resource Option]
+ indexterm:[Resource,Option,resource-stickiness]
+
+|migration-threshold
+|+INFINITY+ (disabled)
+
+|How many failures may occur for this resource on a node, before this
+ node is marked ineligible to host this resource.
+ indexterm:[migration-threshold,Resource Option]
+ indexterm:[Resource,Option,migration-threshold]
+
+|failure-timeout
+|+0+ (disabled)
+|How many seconds to wait before acting as if the failure had not
+ occurred, and potentially allowing the resource back to the node on
+ which it failed.
+ indexterm:[failure-timeout,Resource Option]
+ indexterm:[Resource,Option,failure-timeout]
+
+|multiple-active
+|+stop_start+
+|What should the cluster do if it ever finds the resource active on
+ more than one node. Allowed values:
+
+* 'block' - mark the resource as unmanaged
+
+* 'stop_only' - stop all active instances and leave them that way
+
+* 'stop_start' - stop all active instances and start the resource in
+  one location only
+
+indexterm:[multiple-active,Resource Option]
+indexterm:[Resource,Option,multiple-active]
+
+|=========================================================
+
+If you performed the following commands on the previous LSB Email resource
+
+[source,Bash]
+-------
+crm_resource --meta --resource Email --set-parameter priority --property-value 100
+crm_resource --meta --resource Email --set-parameter multiple-active --property-value block
+-------
+
+the resulting resource definition would be
+
+.An LSB resource with cluster options
+[source,XML]
+-------
+<primitive id="Email" class="lsb" type="exim">
+   <meta_attributes id="meta-email">
+      <nvpair id="email-priority" name="priority" value="100"/>
+      <nvpair id="email-active" name="multiple-active" value="block"/>
+   </meta_attributes>
+</primitive>
+-------
+
+== Setting Global Defaults for Resource Options ==
+
+anchor:s-resource-defaults[Resource Defaults]
+To set a default value for a resource option, simply add it to the
++rsc_defaults+ section with `crm_attribute`. Thus,
+
+[source,Bash]
+crm_attribute --type rsc_defaults --attr-name is-managed --attr-value false
+
+would prevent the cluster from starting or stopping any of the
+resources in the configuration (unless of course the individual
+resources were specifically enabled and had +is-managed+ set to
++true+).
+
+== Instance Attributes ==
+
+The scripts of some resource classes (LSB not being one of them) can
+be given parameters which determine how they behave and which instance
+of a service they control.
+
+If your resource agent supports parameters, you can add them with the
+`crm_resource` command. For instance
+
+[source,Bash]
+crm_resource --resource Public-IP --set-parameter ip --property-value 1.2.3.4
+
+would create an entry in the resource like this:
+
+.An example OCF resource with instance attributes
+[source,XML]
+-------
+<primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
+   <instance_attributes id="params-public-ip">
+      <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+   </instance_attributes>
+</primitive>
+-------
+
+For an OCF resource, the result would be an environment variable
+called +OCF_RESKEY_ip+ with a value of +1.2.3.4+.
+
+The list of instance attributes supported by an OCF script can be
+found by calling the resource script with the `meta-data` command.
+The output contains an XML description of all the supported
+attributes, their purpose and default values.
+      
+.Displaying the metadata for the Dummy resource agent template
+[source,XML]
+-------
+# export OCF_ROOT=/usr/lib/ocf
+# $OCF_ROOT/resource.d/pacemaker/Dummy meta-data
+
+<?xml version="1.0"?>
+  <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+  <resource-agent name="Dummy" version="0.9">
+    <version>1.0</version>
+  
+    <longdesc lang="en-US">
+      This is a Dummy Resource Agent. It does absolutely nothing except
+      keep track of whether its running or not.
+      Its purpose in life is for testing and to serve as a template for RA writers.
+    </longdesc>
+    <shortdesc lang="en-US">Dummy resource agent</shortdesc>
+  
+    <parameters>
+      <parameter name="state" unique="1">
+        <longdesc lang="en-US">
+          Location to store the resource state in.
+        </longdesc>
+        <shortdesc lang="en-US">State file</shortdesc>
+        <content type="string" default="/var/run/Dummy-{OCF_RESOURCE_INSTANCE}.state" />
+      </parameter>
+  
+      <parameter name="dummy" unique="0">
+        <longdesc lang="en-US">
+          Dummy attribute that can be changed to cause a reload
+        </longdesc>
+        <shortdesc lang="en-US">Dummy attribute that can be changed to cause a reload</shortdesc>
+        <content type="string" default="blah" />
+      </parameter>
+    </parameters>
+  
+    <actions>
+      <action name="start"        timeout="90" />
+      <action name="stop"         timeout="100" />
+      <action name="monitor"      timeout="20" interval="10",height="0" start-delay="0" />
+      <action name="reload"       timeout="90" />
+      <action name="migrate_to"   timeout="100" />
+      <action name="migrate_from" timeout="90" />
+      <action name="meta-data"    timeout="5" />
+      <action name="validate-all" timeout="30" />
+    </actions>
+  </resource-agent>
+-------
+
+== Resource Operations ==
+
+=== Monitoring Resources for Failure ===
+
+
+By default, the cluster will not ensure your resources are still
+healthy.  To instruct the cluster to do this, you need to add a
++monitor+ operation to the resource's definition.
+        
+.An OCF resource with a recurring health check
+[source,XML]
+-------
+<primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
+  <operations>
+     <op id="public-ip-check" name="monitor" interval="60s"/>
+  </operations>
+  <instance_attributes id="params-public-ip">
+     <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+  </instance_attributes>
+</primitive>
+-------
+
+.Properties of an Operation
+[width="95%",cols="1m,6<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+|Your name for the action. Must be unique.
+
+|name
+|The action to perform. Common values: +monitor+, +start+, +stop+
+
+|interval
+
+|How frequently (in seconds) to perform the operation. Default value:
+ +0+, meaning never.
+
+|timeout
+|How long to wait before declaring the action has failed.
+
+|requires
+
+|What conditions need to be satisfied before this action
+ occurs. Allowed values:
+
+* 'nothing' - The cluster may start this resource at any time
+
+* 'quorum' - The cluster can only start this resource if a majority of
+  the configured nodes are active
+
+* 'fencing' - The cluster can only start this resource if a majority
+  of the configured nodes are active _and_ any failed or unknown nodes
+  have been powered off.
+
+STONITH resources default to +nothing+, and all others default to
++fencing+ if STONITH is enabled and +quorum+ otherwise.
+                
+|on-fail
+|The action to take if this action ever fails. Allowed values:
+
+* 'ignore' - Pretend the resource did not fail
+
+* 'block' - Don't perform any further operations on the resource
+
+* 'stop' - Stop the resource and do not start it elsewhere
+
+* 'restart' - Stop the resource and start it again (possibly on a different node)
+
+* 'fence' - STONITH the node on which the resource failed
+
+* 'standby' - Move _all_ resources away from the node on which the resource failed
+
+The default for the +stop+ operation is +fence+ when STONITH is
+enabled and +block+ otherwise. All other operations default to +stop+.
+
+|enabled
+|If +false+, the operation is treated as if it does not exist. Allowed
+ values: +true+, +false+
+
+|=========================================================
+
+
+=== Setting Global Defaults for Operations ===
+
+anchor:s-operation-defaults[Operation Defaults]
+To set a default value for a operation option, simply add it to the
++op_defaults+ section with `crm_attribute`. Thus,
+
+[source,Bash]
+crm_attribute --type op_defaults --attr-name timeout --attr-value 20s
+
+
+would default each operation's +timeout+ to 20 seconds.  If an
+operation's definition also includes a value for +timeout+, then that
+value would be used instead (for that operation only).
+      
+==== When Resources Take a Long Time to Start/Stop ====
+
+There are a number of implicit operations that the cluster will always
+perform - +start+, +stop+ and a non-recurring +monitor+ operation
+(used at startup to check the resource isn't already active).  If one
+of these is taking too long, then you can create an entry for them and
+simply specify a new value.
+
+.An OCF resource with custom timeouts for its implicit actions     
+[source,XML]
+-------
+<primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
+  <operations>
+     <op id="public-ip-startup" name="monitor" interval="0" timeout="90s"/>
+     <op id="public-ip-start" name="start" interval="0" timeout="180s"/>
+     <op id="public-ip-stop" name="stop" interval="0" timeout="15min"/>
+  </operations>
+  <instance_attributes id="params-public-ip">
+     <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+  </instance_attributes>
+</primitive>
+-------
+
+==== Multiple Monitor Operations ====
+
+Provided no two operations (for a single resource) have the same name
+and interval you can have as many monitor operations as you like.  In
+this way you can do a superficial health check every minute and
+progressively more intense ones at higher intervals.
+
+To tell the resource agent what kind of check to perform, you need to
+provide each monitor with a different value for a common parameter.
+The OCF standard creates a special parameter called +OCF_CHECK_LEVEL+
+for this purpose and dictates that it is _"made available to the
+resource agent without the normal +OCF_RESKEY+ prefix"_.
+        
+Whatever name you choose, you can specify it by adding an
++instance_attributes+ block to the op tag.  Note that it is up to each
+resource agent to look for the parameter and decide how to use it.
+        
+.An OCF resource with two recurring health checks, performing different levels of checks - specified via +OCF_CHECK_LEVEL+.
+[source,XML]
+-------
+<primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
+   <operations>
+      <op id="public-ip-health-60" name="monitor" interval="60">
+         <instance_attributes id="params-public-ip-depth-60">
+            <nvpair id="public-ip-depth-60" name="OCF_CHECK_LEVEL" value="10"/>
+         </instance_attributes>
+      </op>
+      <op id="public-ip-health-300" name="monitor" interval="300">
+         <instance_attributes id="params-public-ip-depth-300">
+            <nvpair id="public-ip-depth-300" name="OCF_CHECK_LEVEL" value="20"/>
+       </instance_attributes>
+     </op>
+   </operations>
+   <instance_attributes id="params-public-ip">
+       <nvpair id="public-ip-level" name="ip" value="1.2.3.4"/>
+   </instance_attributes>
+</primitive>
+-------
+
+==== Disabling a Monitor Operation ====
+
+The easiest way to stop a recurring monitor is to just delete it.
+However, there can be times when you only want to disable it
+temporarily.  In such cases, simply add +enabled="false"+ to the
+operation's definition.
+
+.Example of an OCF resource with a disabled health check     
+[source,XML]
+-------
+<primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
+   <operations>
+      <op id="public-ip-check" name="monitor" interval="60s" enabled="false"/>
+   </operations>
+   <instance_attributes id="params-public-ip">
+      <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+   </instance_attributes>
+</primitive>
+-------
+
+This can be achieved from the command-line by executing
+
+[source,Bash]
+cibadmin -M -X ‘<op id="public-ip-check" enabled="false"/>'
+
+Once you've done whatever you needed to do, you can then re-enable it with
+
+[source,Bash]
+cibadmin -M -X ‘<op id="public-ip-check" enabled="true"/>'

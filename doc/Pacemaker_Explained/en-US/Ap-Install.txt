@@ -1,0 +1,122 @@
+[appendix]
+
+== Installation == 
+
+anchor:ap-install[Installation]
+
+[WARNING]
+The following text may no longer be accurate in some places.
+
+=== Choosing a Cluster Stack ===
+indexterm:[Cluster Stack,choosing one]
+
+Ultimately the choice of cluster stack is a personal decision that
+must be made in the context of you or your company's needs and
+strategic direction. Pacemaker currently functions equally well with
+both stacks.
+
+Here are some factors that may influence the decision:
+
+* SUSE/Novell, Red Hat and Oracle are all putting their collective
+  weight behind the Corosync cluster stack.
+  indexterm:[Cluster Stack,Corosync]
+  indexterm:[Corosync]
+* Using Corosync gives your applications access to the following
+  additional cluster services
+** distributed locking service
+** extended virtual synchronization service
+** cluster closed process group service
+* It is likely that Pacemaker, at some point in the future, will make
+  use of some of these additional services not provided by Heartbeat
+  indexterm:[Cluster Stack,Heartbeat]
+  indexterm:[Heartbeat]
+        
+=== Enabling Pacemaker ===
+
+==== For Corosync ====
+
+The Corosync configuration is normally located in
+'/etc/corosync/corosync.conf' and an example for a machine with an
+address of +1.2.3.4+ in a cluster communicating on port 1234 (without
+peer authentication and message encryption) is shown below.
+
+.An example Corosync configuration file
+[source,XML]
+-------
+  totem {
+      version: 2
+      secauth: off
+      threads: 0
+      interface {
+          ringnumber: 0
+          bindnetaddr: 1.2.3.4
+          mcastaddr: 239.255.1.1
+          mcastport: 1234
+      }
+  }
+  logging {
+      fileline: off
+      to_syslog: yes
+      syslog_facility: daemon
+  }
+  amf {
+      mode: disabled
+  }
+        
+-------
+
+The logging should be mostly obvious and the amf section refers to the
+Availability Management Framework and is not covered in this document.
+
+The interesting part of the configuration is the totem section. This
+is where we define how the node can communicate with the rest of the
+cluster and what protocol version and options (including encryption
+footnote:[
+Please consult the Corosync website (http://www.corosync.org/) and documentation for details on enabling encryption and peer authentication for the cluster.
+]
+) it should use. Beginners are encouraged to use the values shown and
+modify the interface section based on their network.
+
+It is also possible to configure Corosync for an IPv6 based
+environment. Simply configure +bindnetaddr+ and +mcastaddr+ with their
+IPv6 equivalents, eg.
+
+.Example options for an IPv6 environment
+[source,Bash]
+-------
+  bindnetaddr: fec0::1:a800:4ff:fe00:20
+  mcastaddr: ff05::1
+-------
+
+To tell Corosync to use the Pacemaker cluster manager, add the
+following fragment to a functional Corosync configuration and restart
+the cluster.
+
+.Configuration fragment for enabling Pacemaker under Corosync
+[source,XML]
+-------
+aisexec {
+    user:  root
+    group: root
+}
+service {
+    name: pacemaker
+    ver: 0
+}
+-------
+
+The cluster needs to be run as root so that its child processes (the
++lrmd+ in particular) have sufficient privileges to perform the
+actions requested of it. After all, a cluster manager that can't add
+an IP address or start apache is of little use.
+
+The second directive is the one that actually instructs the cluster to
+run Pacemaker.
+
+==== For Heartbeat ====
+
+Add the following to a functional _ha.cf_ configuration file and restart Heartbeat:
+
+.Configuration fragment for enabling Pacemaker under Heartbeat
+[source,Bash]
+crm respawn

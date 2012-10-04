@@ -1,0 +1,260 @@
+[appendix]
+
+== More About OCF Resource Agents ==
+
+anchor:ap-ocf[OCF Resource Agents]
+
+=== Location of Custom Scripts ===
+
+indexterm:[OCF Resource Agents]
+OCF Resource Agents are found in '/usr/lib/ocf/resource.d/+provider+'.
+
+When creating your own agents, you are encouraged to create a new
+directory under _/usr/lib/ocf/resource.d/_ so that they are not
+confused with (or overwritten by) the agents shipped with Heartbeat.
+
+So, for example, if you chose the provider name of bigCorp and wanted
+a new resource named bigApp, you would create a script called
+_/usr/lib/ocf/resource.d/bigCorp/bigApp_ and define a resource:
+ 
+[source,XML]
+<primitive id="custom-app" class="ocf" provider="bigCorp" type="bigApp"/>
+
+=== Actions ===
+
+All OCF Resource Agents are required to implement the following actions
+
+.Required Actions for OCF Agents
+[width="95%",cols="3m,3,7",options="header",align="center"]
+|=========================================================
+|Action
+|Description
+|Instructions
+
+|start
+|Start the resource
+indexterm:[start action]
+indexterm:[action,start]
+|Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully active.
+
+|stop
+|Stop the resource
+indexterm:[stop action]
+indexterm:[action,stop]
+|Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully stopped.
+
+|monitor
+|Check the resource's state 
+indexterm:[monitor action]
+indexterm:[action,monitor]
+|Exit 0 if the resource is running, 7 if it is stopped, and anything else if it is failed. 
+
+NOTE: The monitor script should test the state of the resource on the local machine only.
+
+|meta-data
+|Describe the resource
+indexterm:[meta-data action]
+indexterm:[action,meta-data]
+|Provide information about this resource as an XML snippet. Exit with 0.
+
+NOTE: This is *not* performed as root.
+
+|validate-all
+|Verify the supplied parameters
+indexterm:[validate-all action]
+indexterm:[action,validate-all]
+|Exit with 0 if parameters are valid, 2 if not valid, 6 if resource is not configured.
+
+|=========================================================
+
+Additional requirements (not part of the OCF specs) are placed on agents that will be used for advanced concepts like xref:s-resource-clone[clones] and xref:s-resource-multistate[multi-state] resources.
+
+.Optional Actions for OCF Agents
+[width="95%",cols="2m,6,3",options="header",align="center"]
+|=========================================================
+
+|Action
+|Description
+|Instructions
+
+|promote
+|Promote the local instance of a multi-state resource to the master/primary state.
+indexterm:[promote action]
+indexterm:[action,promote]
+|Return 0 on success
+
+|demote
+|Demote the local instance of a multi-state resource to the slave/secondary state.
+indexterm:[demote action]
+indexterm:[action,demote]
+|Return 0 on success
+
+|notify
+|Used by the cluster to send the agent pre and post notification events telling the resource what has happened and will happen.
+indexterm:[notify action]
+indexterm:[action,notify]
+|Must not fail. Must exit with 0
+
+|=========================================================
+
+One action specified in the OCF specs is not currently used by the cluster:
+
+* +recover+ - a variant of the +start+ action, this should try to
+  recover a resource locally.
+
+Remember to use indexterm:[ocf-tester]`ocf-tester` to verify that your
+new agent complies with the OCF standard properly.
+
+=== How are OCF Return Codes Interpreted? ===
+
+The first thing the cluster does is to check the return code against
+the expected result.  If the result does not match the expected value,
+then the operation is considered to have failed and recovery action is
+initiated.
+
+There are three types of failure recovery:
+
+.Types of recovery performed by the cluster
+[width="95%",cols="1m,4,4",options="header",align="center"]
+|=========================================================
+
+|Type
+|Description
+|Action Taken by the Cluster
+
+|soft
+indexterm:[soft error type]
+indexterm:[error type,soft]
+|A transient error occurred
+|Restart the resource or move it to a new location
+
+|hard
+indexterm:[hard error type]
+indexterm:[error type,hard]
+|A non-transient error that may be specific to the current node occurred
+|Move the resource elsewhere and prevent it from being retried on the current node
+
+|fatal
+indexterm:[fatal error type]
+indexterm:[error type,fatal]
+|A non-transient error that will be common to all cluster nodes (eg. a bad configuration was specified)
+|Stop the resource and prevent it from being started on any cluster node
+
+|=========================================================
+
+Assuming an action is considered to have failed, the following table
+outlines the different OCF return codes and the type of recovery the
+cluster will initiate when it is received.
+
+anchor:s-ocf-return-codes[OCF Return Codes]
+
+.OCF Return Codes and their Recovery Types
+[width="95%",cols="1m,5^m,6<,1m",options="header",align="center"]
+|=========================================================
+
+|RC
+|OCF Alias
+|Description
+|RT
+
+|indexterm:[return code,0]0
+|OCF_SUCCESS
+|Success. The command completed successfully. This is the expected result for all start, stop, promote and demote commands.
+indexterm:[OCF_SUCCESS]
+indexterm:[Environment Variable,OCF_SUCCESS]
+indexterm:[return code,OCF_SUCCESS]
+|soft
+
+|indexterm:[return code,1]1
+|OCF_ERR_GENERIC
+|Generic "there was a problem" error code.
+indexterm:[OCF_ERR_,GENERIC]
+indexterm:[Environment Variable,OCF_ERR_,GENERIC]
+indexterm:[return code,OCF_ERR_,GENERIC]
+|soft
+
+|indexterm:[return code,2]2
+|OCF_ERR_ARGS
+|The resource's configuration is not valid on this machine. Eg. refers to a location/tool not found on the node. 
+indexterm:[OCF_ERR_,ARGS]
+indexterm:[Environment Variable,OCF_ERR_,ARGS]
+indexterm:[return code,OCF_ERR_,ARGS]
+|hard
+
+|indexterm:[return code,3]3
+|OCF_ERR_UNIMPLEMENTED
+|The requested action is not implemented.
+indexterm:[OCF_ERR_,UNIMPLEMENTED]
+indexterm:[Environment Variable,OCF_ERR_,UNIMPLEMENTED]
+indexterm:[return code,OCF_ERR_,UNIMPLEMENTED]
+|hard
+
+|indexterm:[return code,4]4
+|OCF_ERR_PERM
+|The resource agent does not have sufficient privileges to complete the task.
+indexterm:[OCF_ERR_,PERM]
+indexterm:[Environment Variable,OCF_ERR_,PERM]
+indexterm:[return code,OCF_ERR_,PERM]
+|hard
+
+|indexterm:[return code,5]5
+|OCF_ERR_INSTALLED
+|The tools required by the resource are not installed on this machine.
+indexterm:[OCF_ERR_,INSTALLED]
+indexterm:[Environment Variable,OCF_ERR_,INSTALLED]
+indexterm:[return code,OCF_ERR_,INSTALLED]
+|hard
+
+|indexterm:[return code,6]6
+|OCF_ERR_CONFIGURED
+|The resource's configuration is invalid. Eg. required parameters are missing.
+indexterm:[OCF_ERR_,CONFIGURED]
+indexterm:[Environment Variable,OCF_ERR_,CONFIGURED]
+indexterm:[return code,OCF_ERR_,CONFIGURED]
+|fatal
+
+|indexterm:[return code,7]7
+|OCF_NOT_RUNNING
+|The resource is safely stopped. The cluster will not attempt to stop a resource that returns this for any action.
+indexterm:[OCF_NOT_RUNNING]
+indexterm:[Environment Variable,OCF_NOT_RUNNING]
+indexterm:[return code,OCF_NOT_RUNNING]
+|N/A
+
+|indexterm:[return code,8]8
+|OCF_RUNNING_MASTER
+|The resource is running in +Master+ mode.
+indexterm:[OCF_RUNNING_MASTER]
+indexterm:[Environment Variable,OCF_RUNNING_MASTER]
+indexterm:[return code,OCF_RUNNING_MASTER]
+|soft
+
+|indexterm:[return code,9]9
+|OCF_FAILED_MASTER
+|The resource is in +Master+ mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again.
+indexterm:[OCF_FAILED_MASTER]
+indexterm:[Environment Variable,OCF_FAILED_MASTER]
+indexterm:[return code,OCF_FAILED_MASTER]
+|soft
+
+|other
+|NA
+|Custom error code.
+indexterm:[other return codes]
+indexterm:[return code,other]
+|soft
+
+|=========================================================
+
+Although counterintuitive, even actions that return 0
+(aka. +OCF_SUCCESS+) can be considered to have failed.
+
+=== Exceptions ===
+
+* Non-recurring monitor actions (probes) that find a resource active
+  (or in Master mode) will not result in recovery action unless it is
+  also found active elsewhere
+* The recovery action taken when a resource is found active more than
+  once is determined by the _multiple-active_ property of the resource
+* Recurring actions that return +OCF_ERR_UNIMPLEMENTED+
+  do not cause any type of recovery

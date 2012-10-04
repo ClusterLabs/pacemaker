@@ -43,7 +43,7 @@ The configuration section itself is divided into four parts:
 
 Before one starts to configure a cluster, it is worth explaining how
 to view the finished product.  For this purpose we have created the
-pass:[<command>crm_mon</command>] utility that will display the
+`crm_mon` utility that will display the
 current state of an active cluster.  It can show the cluster status by
 node or by resource and can be used in either single-shot or
 dynamically-updating mode.  There are also modes for displaying a list
@@ -56,7 +56,7 @@ irregularities and see how it responds when you cause or simulate
 failures.
 
 Details on all the available options can be obtained using the
-pass:[<command>crm_mon --help</command>] command.
+`crm_mon --help` command.
       
 .Sample output from crm_mon
 -------
@@ -186,7 +186,7 @@ Next identify the resource's tag name and id (in this case we'll
 choose +primitive+ and +child_DoFencing+).  Then simply execute:
       
 
-pass:[<command>cibadmin --delete --crm_xml '&lt;primitive id="child_DoFencing"/>'</command>]
+`cibadmin --delete --crm_xml '&lt;primitive id="child_DoFencing"/>'`
 
 == Updating the Configuration Without Using XML ==
 
@@ -195,26 +195,26 @@ tools that avoid the need to read or edit XML.
 
 To enable stonith for example, one could run:
 
-pass:[<command>crm_attribute --attr-name stonith-enabled --attr-value true</command>]
+`crm_attribute --attr-name stonith-enabled --attr-value true`
 
 Or, to see if +somenode+ is allowed to run resources, there is:
 
-pass:[<command>crm_standby --get-value --node-uname somenode</command>]
+`crm_standby --get-value --node-uname somenode`
 
 Or, to find the current location of +my-test-rsc+, one can use:
 
-pass:[<command>crm_resource --locate --resource my-test-rsc</command>]
+`crm_resource --locate --resource my-test-rsc`
 
 [[s-config-sandboxes]]
 == Making Configuration Changes in a Sandbox ==
 
 Often it is desirable to preview the effects of a series of changes
 before updating the configuration atomically.  For this purpose we
-have created pass:[<command>crm_shadow</command>] which creates a
+have created `crm_shadow` which creates a
 "shadow" copy of the configuration and arranges for all the command
 line tools to use it.
 
-To begin, simply invoke pass:[<command>crm_shadow</command>] and give
+To begin, simply invoke `crm_shadow` and give
 it the name of a configuration to create footnote:[Shadow copies are
 identified with a name, making it possible to have more than one.]  ;
 be sure to follow the simple on-screen instructions.
@@ -241,7 +241,7 @@ changes, or discard them as shown below.  Again, be sure to follow the
 on-screen instructions carefully.
       
 
-For a full list of pass:[<command>crm_shadow</command>] options and
+For a full list of `crm_shadow` options and
 commands, invoke it with the <parameter>--help</parameter> option.
 
 .Using a sandbox to make multiple changes atomically
@@ -287,11 +287,11 @@ Making changes in a sandbox and verifying the real configuration is untouched
 
 We saw previously how to make a series of changes to a "shadow" copy
 of the configuration.  Before loading the changes back into the
-cluster (eg. pass:[<command>crm_shadow --commit mytest
---force</command>]), it is often advisable to simulate the effect of
-the changes with +ptest+, eg.
+cluster (eg. `crm_shadow --commit mytest
+--force`), it is often advisable to simulate the effect of
+the changes with +crm_simulate+, eg.
       
-pass:[<command>ptest --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot</command>]
+`crm_simulate --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot`
 
 
 The tool uses the same library as the live cluster to show what it
@@ -332,8 +332,8 @@ some problem and the cluster cannot or is not permitted to perform the
 stop actions which implies it also cannot perform the start actions.
 For some reason the cluster does not want to start +rsc3+ anywhere.
 
-For information on the options supported by ptest, use
-pass:[<command>ptest --help</command>].
+For information on the options supported by `crm_simulate`, use
+the `--help` option.
 
 === Complex Cluster Transition ===
 

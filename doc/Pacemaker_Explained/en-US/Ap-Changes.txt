@@ -1,0 +1,68 @@
+[appendix]
+
+
+== What Changed in 1.0 ==
+
+=== New ===
+
+* Failure timeouts. See xref:s-failure-migration[]
+* New section for resource and operation defaults. See xref:s-resource-defaults[] and xref:s-operation-defaults[]
+* Tool for making offline configuration changes. See xref:s-config-sandboxes[]
+* +Rules, instance_attributes, meta_attributes+ and sets of operations can be defined once and referenced in multiple places. See xref:s-reusing-config-elements[]
+* The CIB now accepts XPath-based create/modify/delete operations. See the pass:[<command>cibadmin</command>] help text.
+* Multi-dimensional colocation and ordering constraints. See xref:s-resource-sets-ordering[] and xref:s-resource-sets-collocation[]
+* The ability to connect to the CIB from non-cluster machines. See xref:s-remote-connection[]
+* Allow recurring actions to be triggered at known times. See xref:s-recurring-start[]
+
+
+=== Changed ===
+
+* Syntax
+** All resource and cluster options now use dashes (-) instead of underscores (_)
+** +master_slave+ was renamed to +master+
+** The +attributes+ container tag was removed
+** The operation field +pre-req+ has been renamed +requires+
+** All operations must have an +interval+, +start+/+stop+ must have it set to zero
+* The +stonith-enabled+ option now defaults to true.
+* The cluster will refuse to start resources if +stonith-enabled+ is true (or unset) and no STONITH resources have been defined
+* The attributes of colocation and ordering constraints were renamed for clarity. See xref:s-resource-ordering[] and xref:s-resource-colocation[]
+* +resource-failure-stickiness+ has been replaced by +migration-threshold+. See xref:s-failure-migration[]
+* The parameters for command-line tools have been made consistent
+* Switched to indexterm:[>RelaxNG]RelaxNG schema validation and indexterm:[>libxml2]_libxml2_ parser
+** id fields are now XML IDs which have the following limitations:
+*** id's cannot contain colons (:)
+*** id's cannot begin with a number
+*** id's must be globally unique (not just unique for that tag)
+** Some fields (such as those in constraints that refer to resources) are IDREFs.
++
+This means that they must reference existing resources or objects in
+order for the configuration to be valid.  Removing an object which is
+referenced elsewhere will therefore fail.
++              
+** The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed.
++
+This means that every CIB update will require a full refresh on any
+upgraded nodes until the cluster is fully upgraded to 1.0.  This will
+result in significant performance degradation and it is therefore
+highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than
+absolutely necessary.
++              
+* Ping node information no longer needs to be added to _ha.cf_.
++
+Simply include the lists of hosts in your ping resource(s).
++
+////
+Hack to force end list
+////
+
+
+
+=== Removed ===
+
+
+* Syntax
+** It is no longer possible to set resource meta options as top-level
+   attributes.  Use meta attributes instead.
+** Resource and operation defaults are no longer read from
+   +crm_config+.  See xref:s-resource-defaults[] and
+   xref:s-operation-defaults[] instead.

@@ -98,7 +98,7 @@ most cases the cluster will overwrite any values specified by the
 admin with the "correct" ones.  To change the +admin_epoch+, for
 example, one would use:
 
-pass:[<command>cibadmin --modify --crm_xml ‘&lt;cib admin_epoch="42"/>'</command>]
+`cibadmin --modify --crm_xml ‘&lt;cib admin_epoch="42"/>'`
 
 A complete set of fields will look something like this:
 
@@ -216,8 +216,8 @@ The number of "normal" PE inputs to save. Used when reporting problems.
 |=========================================================
 
 You can always obtain an up-to-date list of cluster options, including
-their default values, by running the pass:[<command>pengine
-metadata</command>] command.
+their default values, by running the `pengine
+metadata` command.
 
 == Querying and Setting Cluster Options ==
 
@@ -227,25 +227,25 @@ indexterm:[Cluster Options,Querying]
 indexterm:[Cluster Options,Setting]
 
 Cluster options can be queried and modified using the
-pass:[<command>crm_attribute</command>] tool.  To get the current
+`crm_attribute` tool.  To get the current
 value of +cluster-delay+, simply use:
 
-pass:[<command>crm_attribute --attr-name cluster-delay --get-value</command>]
+`crm_attribute --attr-name cluster-delay --get-value`
 
 which is more simply written as
 
-pass:[<command>crm_attribute --get-value -n cluster-delay</command>]
+`crm_attribute --get-value -n cluster-delay`
 
 If a value is found, you'll see a result like this:
 =======
-pass:[<command> # crm_attribute --get-value -n cluster-delay</command>]
+` # crm_attribute --get-value -n cluster-delay`
 
  name=cluster-delay value=60s
 ========
 
 However, if no value is found, the tool will display an error:
 =======
-pass:[<command># crm_attribute --get-value -n clusta-deway</command>]
+`# crm_attribute --get-value -n clusta-deway`
 
  name=clusta-deway value=(null)
  Error performing operation: The object/attribute does not exist
@@ -253,11 +253,11 @@ pass:[<command># crm_attribute --get-value -n clusta-deway</command>]
 
 To use a different value, eg. +30+, simply run:
 
-pass:[<command>crm_attribute --attr-name cluster-delay --attr-value 30s</command>]
+`crm_attribute --attr-name cluster-delay --attr-value 30s`
 
 To go back to the cluster's default value you can delete the value, for example with this command:
 
-pass:[<command>crm_attribute --attr-name cluster-delay --delete-attr</command>]
+`crm_attribute --attr-name cluster-delay --delete-attr`
 
 == When Options are Listed More Than Once ==
 
@@ -265,7 +265,7 @@ If you ever see something like the following, it means that the option you're mo
 
 .Deleting an option that is listed twice
 =======
-pass:[<command># crm_attribute --attr-name batch-limit --delete-attr</command>]
+`# crm_attribute --attr-name batch-limit --delete-attr`
 
  Multiple attributes match name=batch-limit in crm_config:
  Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)
