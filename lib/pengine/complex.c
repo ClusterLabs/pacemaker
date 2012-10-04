@@ -544,6 +544,10 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     } else if (safe_str_eq(value, "quorum")) {
         set_bit((*rsc)->flags, pe_rsc_needs_quorum);
 
+    } else if (safe_str_eq(value, "unfencing")) {
+        set_bit((*rsc)->flags, pe_rsc_needs_fencing);
+        set_bit((*rsc)->flags, pe_rsc_needs_unfencing);
+
     } else if (safe_str_eq(value, "fencing")) {
         set_bit((*rsc)->flags, pe_rsc_needs_fencing);
 

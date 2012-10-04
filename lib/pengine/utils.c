@@ -565,6 +565,10 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
     } else if (safe_str_eq(value, "quorum")) {
         action->needs = rsc_req_quorum;
 
+    } else if (safe_str_eq(value, "unfencing")) {
+        action->needs = rsc_req_fence;
+        set_bit(action->rsc->flags, pe_rsc_needs_unfencing);
+
     } else if (is_set(data_set->flags, pe_flag_stonith_enabled)
                && safe_str_eq(value, "fencing")) {
         action->needs = rsc_req_stonith;

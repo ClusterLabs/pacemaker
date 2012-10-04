@@ -2369,6 +2369,22 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     update_action_flags(probe, pe_action_optional | pe_action_clear);
 
+    /* Check if the node needs to be unfenced first */
+    if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        action_t *unfence = pe_fence_op(node, "on", data_set);
+
+        crm_notice("Unfencing %s for %s", node->details->uname, rsc->id);
+        order_actions(unfence, probe, pe_order_implies_then);
+
+        /* The lack of ordering constraints on STONITH_UP would
+         * traditionally mean unfencing is initiated /before/ the
+         * devices are started.
+         *
+         * However this is a non-issue as stonithd is now smart
+         * enough to be able to use devices directly from the cib
+         */
+    }
+
     /*
      * We need to know if it's running_on (not just known_on) this node
      * to correctly determine the target rc.
