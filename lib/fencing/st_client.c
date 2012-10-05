@@ -976,6 +976,9 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             free(buffer);
             buffer = dump_xml_formatted(xml);
             free_xml(xml);
+            if (!buffer) {
+                return -EINVAL;
+            }
         }
 
     } else {
